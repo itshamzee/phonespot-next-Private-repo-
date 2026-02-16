@@ -1,3 +1,5 @@
+import { FadeIn } from "@/components/ui/fade-in";
+
 const features = [
   {
     title: "12 mdr. garanti",
@@ -73,18 +75,20 @@ export function TrustSection() {
           Hvorfor v&aelig;lge PhoneSpot?
         </h2>
         <div className="grid gap-8 md:grid-cols-3 md:gap-12">
-          {features.map((feature) => (
-            <div key={feature.title} className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[12px] bg-green-eco/10 text-green-eco">
-                {feature.icon}
+          {features.map((feature, index) => (
+            <FadeIn key={feature.title} delay={index * 0.15}>
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[12px] bg-green-eco/10 text-green-eco">
+                  {feature.icon}
+                </div>
+                <h3 className="mb-2 font-display text-xl font-bold text-charcoal">
+                  {feature.title}
+                </h3>
+                <p className="max-w-xs text-sm leading-relaxed text-gray">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="mb-2 font-display text-xl font-bold text-charcoal">
-                {feature.title}
-              </h3>
-              <p className="max-w-xs text-sm leading-relaxed text-gray">
-                {feature.description}
-              </p>
-            </div>
+            </FadeIn>
           ))}
         </div>
       </div>

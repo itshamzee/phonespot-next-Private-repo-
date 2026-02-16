@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FadeIn } from "@/components/ui/fade-in";
 
 export function OutletTeaser() {
   return (
@@ -16,7 +17,7 @@ export function OutletTeaser() {
         </span>
       </div>
 
-      <div className="relative mx-auto max-w-3xl px-4 text-center">
+      <FadeIn className="relative mx-auto max-w-3xl px-4 text-center">
         <p className="font-display text-sm font-semibold uppercase tracking-[6px] text-green-eco">
           Outlet
         </p>
@@ -33,7 +34,7 @@ export function OutletTeaser() {
         >
           Se outlet &rarr;
         </Link>
-      </div>
+      </FadeIn>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FadeIn } from "@/components/ui/fade-in";
 
 export function Hero() {
   return (
@@ -26,45 +27,53 @@ export function Hero() {
 
       <div className="relative mx-auto flex max-w-7xl flex-col items-center px-4 py-24 text-center md:py-32">
         {/* Subtitle above logo */}
-        <p
-          className="font-display text-[13px] font-semibold uppercase tracking-[8px] text-white/35"
-        >
-          Refurbished Tech &middot; Denmark
-        </p>
+        <FadeIn>
+          <p
+            className="font-display text-[13px] font-semibold uppercase tracking-[8px] text-white/35"
+          >
+            Refurbished Tech &middot; Denmark
+          </p>
 
-        {/* Decorative line */}
-        <div className="my-6 h-[2px] w-12 bg-sand" />
+          {/* Decorative line */}
+          <div className="my-6 h-[2px] w-12 bg-sand" />
+        </FadeIn>
 
         {/* Logo */}
-        <img
-          src="/brand/logos/phonespot-wordmark-white.svg"
-          alt="PhoneSpot"
-          className="w-80 md:w-96"
-        />
+        <FadeIn delay={0.15}>
+          <img
+            src="/brand/logos/phonespot-wordmark-white.svg"
+            alt="PhoneSpot"
+            className="w-80 md:w-96"
+          />
 
-        {/* Decorative line */}
-        <div className="my-6 h-[2px] w-12 bg-sand" />
+          {/* Decorative line */}
+          <div className="my-6 h-[2px] w-12 bg-sand" />
+        </FadeIn>
 
         {/* Tagline */}
-        <p className="max-w-md text-lg text-white/70">
-          Premium tech uden premium pris. Kvalitetstestet med garanti.
-        </p>
+        <FadeIn delay={0.3}>
+          <p className="max-w-md text-lg text-white/70">
+            Premium tech uden premium pris. Kvalitetstestet med garanti.
+          </p>
+        </FadeIn>
 
         {/* CTA row */}
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-          <Link
-            href="/iphones"
-            className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Se produkter
-          </Link>
-          <Link
-            href="#trust"
-            className="rounded-full border border-white/20 px-8 py-3 font-semibold text-white transition-colors hover:border-white/40"
-          >
-            Hvorfor PhoneSpot?
-          </Link>
-        </div>
+        <FadeIn delay={0.45}>
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <Link
+              href="/iphones"
+              className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Se produkter
+            </Link>
+            <Link
+              href="#trust"
+              className="rounded-full border border-white/20 px-8 py-3 font-semibold text-white transition-colors hover:border-white/40"
+            >
+              Hvorfor PhoneSpot?
+            </Link>
+          </div>
+        </FadeIn>
       </div>
     </section>
   );
