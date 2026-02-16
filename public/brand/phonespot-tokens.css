@@ -1,0 +1,98 @@
+/* ============================================
+   PHONESPOT — Brand Design Tokens
+   Version 1.0 · 2025
+   ============================================ */
+
+/* ---- FONTS ---- */
+/* Import in HTML <head>:
+   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+*/
+
+:root {
+  /* ---- COLORS ---- */
+  --ps-charcoal:       #3a3d38;    /* Primary brand color — logo, headings, dark bg */
+  --ps-charcoal-light: #4a4d48;    /* Secondary charcoal */
+  --ps-black:          #1a1c19;    /* Nordic black — footer, overlays */
+  --ps-green-eco:      #5a8c6f;    /* Eco accent — CTAs, badges, sustainability */
+  --ps-green-light:    #7ab392;    /* Leaf green — hover states, success */
+  --ps-green-pale:     #e8f0eb;    /* Green tint — subtle eco backgrounds */
+  --ps-warm-white:     #f5f2ec;    /* Primary page background */
+  --ps-cream:          #eae5db;    /* Cards, sections, separators */
+  --ps-sand:           #d4cfc5;    /* Borders, dividers, muted text */
+  --ps-gray:           #8a8880;    /* Body text secondary, labels */
+  --ps-white:          #ffffff;    /* Card backgrounds, contrast */
+
+  /* ---- TYPOGRAPHY ---- */
+  --ps-font-display:   'Barlow Condensed', sans-serif;
+  --ps-font-body:      'DM Sans', sans-serif;
+
+  /* ---- LOGO SPECS ---- */
+  --ps-logo-skew:      -6deg;
+  --ps-logo-weight:    800;
+  --ps-logo-spacing:   2px;
+
+  /* ---- SPACING ---- */
+  --ps-radius-sm:      8px;
+  --ps-radius-md:      16px;
+  --ps-radius-lg:      24px;
+  --ps-radius-favicon: 18.75%;    /* 96/512 for favicon corners */
+
+  /* ---- SHADOWS ---- */
+  --ps-shadow-sm:      0 1px 3px rgba(58, 61, 56, 0.06);
+  --ps-shadow-md:      0 4px 12px rgba(58, 61, 56, 0.08);
+  --ps-shadow-lg:      0 8px 32px rgba(58, 61, 56, 0.12);
+}
+
+/* ---- LOGO COMPONENT ---- */
+.ps-logo {
+  font-family: var(--ps-font-display);
+  font-weight: var(--ps-logo-weight);
+  font-style: italic;
+  letter-spacing: var(--ps-logo-spacing);
+  text-transform: uppercase;
+  transform: skewX(var(--ps-logo-skew));
+  user-select: none;
+}
+
+.ps-logo--dark  { color: var(--ps-charcoal); }
+.ps-logo--light { color: var(--ps-white); }
+.ps-logo--green { color: var(--ps-green-eco); }
+
+/* ---- PATTERN USAGE (CSS background) ---- */
+/* Dot grid on green */
+.ps-pattern-dots-green {
+  background-color: var(--ps-green-eco);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Dot grid on dark */
+.ps-pattern-dots-dark {
+  background-color: var(--ps-charcoal);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Scan lines */
+.ps-pattern-scanlines {
+  background-color: var(--ps-cream);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 11px,
+    rgba(58,61,56,0.06) 11px,
+    rgba(58,61,56,0.06) 12px
+  );
+}
+
+/* Diagonal wordmark */
+.ps-pattern-diagonal {
+  background-color: var(--ps-charcoal);
+  background-image: repeating-linear-gradient(
+    -30deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,0.02) 40px,
+    rgba(255,255,255,0.02) 41px
+  );
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="400" height="200" fill="#3a3d38"/>
+  <g transform="rotate(-30 200 100)">
+    <text x="0" y="60" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="14" fill="rgba(255,255,255,0.04)" letter-spacing="12">PHONESPOT  PHONESPOT  PHONESPOT  PHONESPOT</text>
+    <text x="60" y="110" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="14" fill="rgba(255,255,255,0.04)" letter-spacing="12">PHONESPOT  PHONESPOT  PHONESPOT  PHONESPOT</text>
+    <text x="-30" y="160" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="14" fill="rgba(255,255,255,0.04)" letter-spacing="12">PHONESPOT  PHONESPOT  PHONESPOT  PHONESPOT</text>
+    <text x="30" y="10" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="14" fill="rgba(255,255,255,0.04)" letter-spacing="12">PHONESPOT  PHONESPOT  PHONESPOT  PHONESPOT</text>
+    <text x="-60" y="210" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="14" fill="rgba(255,255,255,0.04)" letter-spacing="12">PHONESPOT  PHONESPOT  PHONESPOT  PHONESPOT</text>
+  </g>
+</svg>

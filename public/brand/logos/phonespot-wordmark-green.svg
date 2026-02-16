@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&amp;display=swap');
+    </style>
+  </defs>
+  <text x="400" y="95" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="110" fill="#5a8c6f" text-anchor="middle" letter-spacing="2" transform="skewX(-6)">PHONESPOT</text>
+</svg>

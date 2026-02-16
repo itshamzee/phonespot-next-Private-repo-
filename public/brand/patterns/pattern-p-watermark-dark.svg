@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="600" height="600" fill="#3a3d38"/>
+  <text x="320" y="460" font-family="Barlow Condensed, sans-serif" font-weight="800" font-style="italic" font-size="500" fill="rgba(255,255,255,0.03)" text-anchor="middle" transform="skewX(-6)">P</text>
+</svg>
