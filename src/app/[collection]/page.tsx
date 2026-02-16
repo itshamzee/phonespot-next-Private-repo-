@@ -55,10 +55,13 @@ export default async function CollectionPage({
     notFound();
   }
 
-  const collectionData = await getCollectionProducts(
-    config.shopifyHandle,
-    sort,
-  );
+  let collectionData;
+  try {
+    collectionData = await getCollectionProducts(config.shopifyHandle, sort);
+  } catch {
+    // Shopify API not configured or unreachable
+    collectionData = null;
+  }
 
   const products = collectionData?.products ?? [];
   const description = collectionData?.description ?? "";

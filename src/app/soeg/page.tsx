@@ -32,7 +32,12 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
-  const products = query ? await searchProducts(query) : [];
+  let products;
+  try {
+    products = query ? await searchProducts(query) : [];
+  } catch {
+    products = [];
+  }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:py-12">

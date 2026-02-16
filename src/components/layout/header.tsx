@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 
 const NAV_LINKS = [
-  { label: "iPhones", href: "/collections/iphones" },
-  { label: "iPads", href: "/collections/ipads" },
-  { label: "Computere", href: "/collections/computere" },
-  { label: "Covers", href: "/collections/covers" },
-  { label: "Reservedele", href: "/collections/reservedele" },
-  { label: "Outlet", href: "/collections/outlet" },
+  { label: "iPhones", href: "/iphones" },
+  { label: "iPads", href: "/ipads" },
+  { label: "Computere", href: "/computere" },
+  { label: "Covers", href: "/covers" },
+  { label: "Reservedele", href: "/reservedele" },
+  { label: "Outlet", href: "/outlet" },
   { label: "Reparation", href: "/reparation" },
 ] as const;
 

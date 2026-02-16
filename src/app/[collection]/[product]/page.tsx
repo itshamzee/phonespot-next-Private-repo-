@@ -16,7 +16,13 @@ export async function generateMetadata({
   params: Promise<{ collection: string; product: string }>;
 }): Promise<Metadata> {
   const { product: productHandle } = await params;
-  const productData = await getProduct(productHandle);
+
+  let productData;
+  try {
+    productData = await getProduct(productHandle);
+  } catch {
+    return { title: "Produkt ikke fundet - PhoneSpot" };
+  }
 
   if (!productData) {
     return { title: "Produkt ikke fundet - PhoneSpot" };
@@ -48,7 +54,12 @@ export default async function ProductPage({
   }
 
   // Fetch product
-  const product = await getProduct(productHandle);
+  let product;
+  try {
+    product = await getProduct(productHandle);
+  } catch {
+    notFound();
+  }
   if (!product) {
     notFound();
   }

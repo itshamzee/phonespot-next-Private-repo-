@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 const PRODUCT_LINKS = [
-  { label: "iPhones", href: "/collections/iphones" },
-  { label: "iPads", href: "/collections/ipads" },
-  { label: "Computere", href: "/collections/computere" },
-  { label: "Covers", href: "/collections/covers" },
-  { label: "Reservedele", href: "/collections/reservedele" },
-  { label: "Tilbehor", href: "/collections/tilbehor" },
+  { label: "iPhones", href: "/iphones" },
+  { label: "iPads", href: "/ipads" },
+  { label: "Computere", href: "/computere" },
+  { label: "Covers", href: "/covers" },
+  { label: "Reservedele", href: "/reservedele" },
+  { label: "Tilbehor", href: "/tilbehor" },
 ] as const;
 
 const SERVICE_LINKS = [
