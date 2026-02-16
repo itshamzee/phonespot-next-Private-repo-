@@ -55,7 +55,7 @@ export default async function CollectionPage({
     notFound();
   }
 
-  let collectionData;
+  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
   try {
     collectionData = await getCollectionProducts(config.shopifyHandle, sort);
   } catch {

@@ -32,7 +32,7 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
-  let products;
+  let products: Awaited<ReturnType<typeof searchProducts>> = [];
   try {
     products = query ? await searchProducts(query) : [];
   } catch {
