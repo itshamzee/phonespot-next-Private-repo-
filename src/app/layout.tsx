@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/layout/header";
@@ -29,6 +30,11 @@ export default function RootLayout({
           <Footer />
           <CartDrawer />
         </CartProvider>
+        {/* e-maerket verification widget */}
+        <Script
+          src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
