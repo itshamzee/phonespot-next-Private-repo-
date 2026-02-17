@@ -91,6 +91,34 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
+const ANNOUNCEMENTS = [
+  "Fri fragt ved bestilling over 899,-",
+  "1-2 dages levering",
+  "Bestil før 16:00 — sendt samme dag",
+  "12 måneders garanti på alle produkter",
+];
+
+function AnnouncementBar() {
+  return (
+    <div className="bg-charcoal text-white overflow-hidden">
+      <div className="mx-auto flex h-8 max-w-7xl items-center justify-center gap-8 px-4 text-[11px] font-medium tracking-wide">
+        <div className="hidden sm:flex items-center gap-8">
+          {ANNOUNCEMENTS.map((msg, i) => (
+            <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="text-green-light">✓</span>
+              {msg}
+            </span>
+          ))}
+        </div>
+        <div className="sm:hidden flex items-center gap-1.5">
+          <span className="text-green-light">✓</span>
+          Fri fragt over 899,- · Sendt samme dag
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Header() {
   const { cart, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -106,6 +134,7 @@ export function Header() {
         WebkitBackdropFilter: "blur(16px)",
       }}
     >
+      <AnnouncementBar />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Mobile hamburger */}
         <button
