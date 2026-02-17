@@ -46,9 +46,79 @@ const grades = [
   },
 ];
 
+type ImageView = "display" | "frame";
+
+function ImageSlider({
+  displayImage,
+  frameImage,
+  title,
+}: {
+  displayImage: string;
+  frameImage: string;
+  title: string;
+}) {
+  const [view, setView] = useState<ImageView>("frame");
+
+  return (
+    <div className="relative aspect-[4/3] bg-sand/30">
+      {/* Image */}
+      <Image
+        src={view === "display" ? displayImage : frameImage}
+        alt={`${title} — ${view === "display" ? "forside" : "bagside"}`}
+        fill
+        className="object-contain p-4"
+      />
+
+      {/* Toggle pills */}
+      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-charcoal/70 p-1 backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={() => setView("frame")}
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[1px] transition-colors ${
+            view === "frame"
+              ? "bg-white text-charcoal"
+              : "text-white/70 hover:text-white"
+          }`}
+        >
+          Bagside
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("display")}
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[1px] transition-colors ${
+            view === "display"
+              ? "bg-white text-charcoal"
+              : "text-white/70 hover:text-white"
+          }`}
+        >
+          Forside
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type ConditionExplainerProps = {
   variant?: "full" | "compact";
 };
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
 
 function FullVariant() {
   return (
@@ -58,24 +128,11 @@ function FullVariant() {
           key={g.grade}
           className={`overflow-hidden rounded-radius-lg border-2 ${g.color} bg-white`}
         >
-          <div className="flex aspect-[4/3] items-center justify-center gap-2 bg-sand/30 p-4">
-            <div className="relative h-full w-1/2">
-              <Image
-                src={g.displayImage}
-                alt={`${g.title} display`}
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="relative h-full w-1/2">
-              <Image
-                src={g.frameImage}
-                alt={`${g.title} ramme`}
-                fill
-                className="object-contain"
-              />
-            </div>
-          </div>
+          <ImageSlider
+            displayImage={g.displayImage}
+            frameImage={g.frameImage}
+            title={g.title}
+          />
           <div className="p-6">
             <h3 className="font-display text-2xl font-bold text-charcoal">
               {g.title}
@@ -84,19 +141,7 @@ function FullVariant() {
             <ul className="space-y-2">
               {g.bullets.map((bullet) => (
                 <li key={bullet} className="flex items-start gap-2 text-sm text-charcoal">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="mt-0.5 h-4 w-4 shrink-0 text-green-eco"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
                   {bullet}
                 </li>
               ))}
@@ -139,36 +184,21 @@ function CompactVariant() {
           {grades.map((g) => (
             <div
               key={g.grade}
-              className={`flex gap-3 rounded-radius-lg border ${g.color} bg-white p-3`}
+              className={`overflow-hidden rounded-radius-lg border ${g.color} bg-white`}
             >
-              <div className="relative h-16 w-16 shrink-0">
-                <Image
-                  src={g.displayImage}
-                  alt={`${g.title} display`}
-                  fill
-                  className="rounded object-contain"
-                />
-              </div>
-              <div>
+              <ImageSlider
+                displayImage={g.displayImage}
+                frameImage={g.frameImage}
+                title={g.title}
+              />
+              <div className="p-3">
                 <p className="font-display text-sm font-bold text-charcoal">
                   {g.title}
                 </p>
                 <ul className="mt-1 space-y-0.5">
                   {g.bullets.slice(0, 2).map((bullet) => (
                     <li key={bullet} className="flex items-start gap-1 text-xs text-gray">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="mt-0.5 h-3 w-3 shrink-0 text-green-eco"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <CheckIcon className="mt-0.5 h-3 w-3 shrink-0 text-green-eco" />
                       {bullet}
                     </li>
                   ))}
