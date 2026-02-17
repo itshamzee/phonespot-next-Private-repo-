@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CookieConsent } from "@/components/ui/cookie-consent";
+import { NewsletterPopup } from "@/components/ui/newsletter-popup";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <CookieConsent />
+        <NewsletterPopup />
       </body>
     </html>
   );
