@@ -5,6 +5,7 @@ import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { CookieConsent } from "@/components/ui/cookie-consent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,11 +31,12 @@ export default function RootLayout({
           <Footer />
           <CartDrawer />
         </CartProvider>
-        {/* e-maerket verification widget */}
+        {/* e-mærket verification widget */}
         <Script
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
+        <CookieConsent />
       </body>
     </html>
   );
