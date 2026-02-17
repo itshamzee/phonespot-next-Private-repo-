@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
+import { SPARE_PART_CATEGORIES } from "@/lib/spare-parts";
 import { getCollectionProducts } from "@/lib/shopify/client";
 
 const BASE_URL = "https://phonespot.dk";
@@ -155,5 +156,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticPages, ...collectionPages, ...productPages];
+  // ---- Spare parts pages ---------------------------------------------------
+
+  const sparePartPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/reservedele`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+  ];
+
+  for (const cat of SPARE_PART_CATEGORIES) {
+    sparePartPages.push({
+      url: `${BASE_URL}/reservedele/${cat.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.7,
+    });
+
+    for (const model of cat.models) {
+      sparePartPages.push({
+        url: `${BASE_URL}/reservedele/${cat.slug}/${model.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "daily",
+        priority: 0.6,
+      });
+    }
+  }
+
+  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages];
 }

@@ -8,7 +8,7 @@ export const COLLECTION_MAP: Record<string, {
   iphones: {
     shopifyHandle: "iphones",
     title: "Refurbished iPhones",
-    description: "Kvalitetstestede iPhones med op til 40% rabat. Alle enheder er funktionelt perfekte med minimum 12 måneders garanti.",
+    description: "Kvalitetstestede iPhones med op til 40% rabat. Alle enheder er funktionelt perfekte med minimum 24 måneders garanti.",
     badge: "Spar op til 40%",
     showConditionWalkthrough: true,
   },
@@ -39,11 +39,6 @@ export const COLLECTION_MAP: Record<string, {
     shopifyHandle: "tilbehor",
     title: "Tilbehør",
     description: "Opladere, kabler og andet tilbehør til dine enheder.",
-  },
-  reservedele: {
-    shopifyHandle: "reservedele",
-    title: "Reservedele",
-    description: "Skærme, batterier og andre reservedele til reparation.",
   },
   outlet: {
     shopifyHandle: "outlet",
