@@ -1,117 +1,162 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Kontakt os | PhoneSpot",
-  description:
-    "Har du spørgsmål? Kontakt PhoneSpot via vores kontaktformular eller på info@phonespot.dk. Vi svarer inden for 24 timer.",
-};
+import { useState } from "react";
+import { SectionWrapper } from "@/components/ui/section-wrapper";
+import { Heading } from "@/components/ui/heading";
+import { FormField } from "@/components/ui/form-field";
+
+type Status = "idle" | "submitting" | "success" | "error";
 
 export default function KontaktPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "Support",
+    message: "",
+  });
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  function handleChange(
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("submitting");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Noget gik galt");
+      }
+
+      setStatus("success");
+      setFormData({ name: "", email: "", subject: "Support", message: "" });
+    } catch (err) {
+      setStatus("error");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Kunne ikke sende besked",
+      );
+    }
+  }
+
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-      <h1 className="mb-3 font-display text-3xl font-extrabold italic text-charcoal md:text-4xl">
+    <SectionWrapper>
+      <Heading as="h1" size="lg">
         Kontakt os
-      </h1>
-      <p className="mb-10 max-w-2xl text-gray">
-        Har du spørgsmål til en ordre, et produkt eller vores reparationsservice?
-        Udfyld formularen herunder, eller kontakt os direkte på e-mail. Vi
-        bestræber os på at svare inden for 24 timer.
+      </Heading>
+      <p className="mt-4 mb-10 max-w-2xl text-gray">
+        Har du spørgsmål til en ordre, et produkt eller vores
+        reparationsservice? Udfyld formularen herunder, eller kontakt os
+        direkte på e-mail. Vi bestræber os på at svare inden for 24 timer.
       </p>
 
       <div className="grid gap-10 lg:grid-cols-3">
         {/* Contact form */}
         <div className="lg:col-span-2">
-          <form
-            action="#"
-            method="POST"
-            className="rounded-[16px] border border-sand bg-white p-6 md:p-8"
-          >
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="mb-1.5 block text-sm font-semibold text-charcoal"
-                >
-                  Navn
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  placeholder="Dit fulde navn"
-                  className="w-full rounded-lg border border-sand bg-white px-4 py-3 focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-1.5 block text-sm font-semibold text-charcoal"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  placeholder="din@email.dk"
-                  className="w-full rounded-lg border border-sand bg-white px-4 py-3 focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <label
-                htmlFor="subject"
-                className="mb-1.5 block text-sm font-semibold text-charcoal"
-              >
-                Emne
-              </label>
-              <input
-                type="text"
-                id="subject"
-                name="subject"
-                required
-                placeholder="Hvad handler din henvendelse om?"
-                className="w-full rounded-lg border border-sand bg-white px-4 py-3 focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
-              />
-            </div>
-
-            <div className="mt-6">
-              <label
-                htmlFor="message"
-                className="mb-1.5 block text-sm font-semibold text-charcoal"
-              >
-                Besked
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                required
-                rows={6}
-                placeholder="Skriv din besked her..."
-                className="w-full resize-none rounded-lg border border-sand bg-white px-4 py-3 focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
-              />
-            </div>
-
-            <div className="mt-8">
+          {status === "success" ? (
+            <div className="rounded-2xl border border-green-eco/30 bg-green-pale p-8 text-center">
+              <p className="text-lg font-semibold text-charcoal">
+                Tak for din besked!
+              </p>
+              <p className="mt-2 text-gray">
+                Vi vender tilbage hurtigst muligt.
+              </p>
               <button
-                type="submit"
-                className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                type="button"
+                onClick={() => setStatus("idle")}
+                className="mt-6 rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
               >
-                Send besked
+                Send en ny besked
               </button>
             </div>
-          </form>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-2xl border border-soft-grey bg-white p-6 md:p-8"
+            >
+              <div className="grid gap-6 sm:grid-cols-2">
+                <FormField
+                  label="Navn"
+                  name="name"
+                  type="text"
+                  required
+                  placeholder="Dit fulde navn"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+                <FormField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="din@email.dk"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="mt-6">
+                <FormField
+                  label="Emne"
+                  name="subject"
+                  type="select"
+                  options={["Support", "Salg", "Andet"]}
+                  placeholder="Vælg emne..."
+                  value={formData.subject}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="mt-6">
+                <FormField
+                  label="Besked"
+                  name="message"
+                  type="textarea"
+                  required
+                  placeholder="Skriv din besked her..."
+                  value={formData.message}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {status === "error" && (
+                <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="mt-8">
+                <button
+                  type="submit"
+                  disabled={status === "submitting"}
+                  className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                >
+                  {status === "submitting" ? "Sender..." : "Send besked"}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Side info card */}
         <div className="lg:col-span-1">
-          <div className="rounded-[16px] border border-sand bg-white p-6 md:p-8">
-            <h2 className="mb-6 font-display text-xl font-bold italic text-charcoal">
+          <div className="rounded-2xl border border-soft-grey bg-white p-6 md:p-8">
+            <Heading as="h2" size="sm" className="mb-6">
               Kontaktoplysninger
-            </h2>
+            </Heading>
 
             <div className="flex flex-col gap-6">
               {/* Email */}
@@ -212,6 +257,6 @@ export default function KontaktPage() {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }
