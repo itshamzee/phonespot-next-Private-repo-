@@ -60,13 +60,13 @@ function ImageSlider({
   const [view, setView] = useState<ImageView>("frame");
 
   return (
-    <div className="relative aspect-[4/3] bg-sand/30">
+    <div className="relative aspect-[4/3] overflow-hidden bg-sand/30">
       {/* Image */}
       <Image
         src={view === "display" ? displayImage : frameImage}
         alt={`${title} — ${view === "display" ? "forside" : "bagside"}`}
         fill
-        className="object-contain p-4"
+        className="object-cover"
       />
 
       {/* Toggle pills */}
@@ -122,25 +122,27 @@ function CheckIcon({ className }: { className?: string }) {
 
 function FullVariant() {
   return (
-    <div className="grid gap-8 md:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-3">
       {grades.map((g) => (
         <div
           key={g.grade}
-          className={`overflow-hidden rounded-radius-lg border-2 ${g.color} bg-white`}
+          className={`group overflow-hidden rounded-3xl border ${g.color} bg-white shadow-sm transition-shadow hover:shadow-md`}
         >
           <ImageSlider
             displayImage={g.displayImage}
             frameImage={g.frameImage}
             title={g.title}
           />
-          <div className="p-6">
-            <h3 className="font-display text-2xl font-bold text-charcoal">
-              {g.title}
-            </h3>
-            <p className="mb-4 text-sm text-gray">{g.subtitle}</p>
+          <div className="px-6 pb-6 pt-5">
+            <div className="mb-3 flex items-baseline gap-2">
+              <h3 className="font-display text-xl font-bold text-charcoal">
+                {g.title}
+              </h3>
+              <span className="text-xs font-medium text-gray">{g.subtitle}</span>
+            </div>
             <ul className="space-y-2">
               {g.bullets.map((bullet) => (
-                <li key={bullet} className="flex items-start gap-2 text-sm text-charcoal">
+                <li key={bullet} className="flex items-start gap-2 text-sm text-charcoal/80">
                   <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
                   {bullet}
                 </li>
@@ -184,7 +186,7 @@ function CompactVariant() {
           {grades.map((g) => (
             <div
               key={g.grade}
-              className={`overflow-hidden rounded-radius-lg border ${g.color} bg-white`}
+              className={`overflow-hidden rounded-2xl border ${g.color} bg-white shadow-sm`}
             >
               <ImageSlider
                 displayImage={g.displayImage}
