@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
 import { getCollectionProducts } from "@/lib/shopify/client";
+import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
+import { ConditionExplainer } from "@/components/product/condition-explainer";
+import { TrustBar } from "@/components/ui/trust-bar";
 
 // ---------------------------------------------------------------------------
 // Static generation
@@ -64,31 +67,35 @@ export default async function CollectionPage({
   }
 
   const products = collectionData?.products ?? [];
-  const description = collectionData?.description ?? "";
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-      {/* Heading */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold italic text-charcoal">
-          {config.title}
-        </h1>
-        {description && (
-          <p className="mt-2 max-w-2xl font-body text-gray">{description}</p>
-        )}
-      </div>
-
-      {/* Sort + Grid */}
-      <div className="mb-6 flex items-center justify-end">
-        <Suspense fallback={null}>
-          <SortSelector />
-        </Suspense>
-      </div>
-
-      <ProductGrid
-        products={products}
-        collectionHandle={config.shopifyHandle}
+    <>
+      <CategoryHero
+        title={config.title}
+        description={config.description}
+        badge={config.badge}
       />
-    </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+        {config.showConditionWalkthrough && (
+          <div className="mb-8">
+            <ConditionExplainer variant="compact" />
+          </div>
+        )}
+
+        <TrustBar className="mb-8" />
+
+        <div className="mb-6 flex items-center justify-end">
+          <Suspense fallback={null}>
+            <SortSelector />
+          </Suspense>
+        </div>
+
+        <ProductGrid
+          products={products}
+          collectionHandle={config.shopifyHandle}
+        />
+      </section>
+    </>
   );
 }

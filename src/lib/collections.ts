@@ -1,12 +1,56 @@
-export const COLLECTION_MAP: Record<string, { shopifyHandle: string; title: string }> = {
-  iphones: { shopifyHandle: "iphones", title: "iPhones" },
-  ipads: { shopifyHandle: "ipads", title: "iPads" },
-  smartphones: { shopifyHandle: "smartphones", title: "Smartphones" },
-  computere: { shopifyHandle: "computere", title: "Computere" },
-  covers: { shopifyHandle: "covers", title: "Covers" },
-  tilbehor: { shopifyHandle: "tilbehor", title: "Tilbehor" },
-  reservedele: { shopifyHandle: "reservedele", title: "Reservedele" },
-  outlet: { shopifyHandle: "outlet", title: "Outlet" },
+export const COLLECTION_MAP: Record<string, {
+  shopifyHandle: string;
+  title: string;
+  description: string;
+  badge?: string;
+  showConditionWalkthrough?: boolean;
+}> = {
+  iphones: {
+    shopifyHandle: "iphones",
+    title: "Refurbished iPhones",
+    description: "Kvalitetstestede iPhones med op til 40% rabat. Alle enheder er funktionelt perfekte med minimum 12 måneders garanti.",
+    badge: "Spar op til 40%",
+    showConditionWalkthrough: true,
+  },
+  ipads: {
+    shopifyHandle: "ipads",
+    title: "Refurbished iPads",
+    description: "Find din næste iPad til en brøkdel af nyprisen. Testet og klar til brug.",
+    badge: "Fra 1.499 kr",
+    showConditionWalkthrough: true,
+  },
+  smartphones: {
+    shopifyHandle: "smartphones",
+    title: "Smartphones",
+    description: "Samsung, Google og andre topmodeller — kvalitetstestet med garanti.",
+    showConditionWalkthrough: true,
+  },
+  computere: {
+    shopifyHandle: "computere",
+    title: "Computere",
+    description: "Bærbare og stationære computere klar til arbejde og studie.",
+  },
+  covers: {
+    shopifyHandle: "covers",
+    title: "Covers & Beskyttelse",
+    description: "Beskyt din enhed med kvalitetscovers og panserglas.",
+  },
+  tilbehor: {
+    shopifyHandle: "tilbehor",
+    title: "Tilbehør",
+    description: "Opladere, kabler og andet tilbehør til dine enheder.",
+  },
+  reservedele: {
+    shopifyHandle: "reservedele",
+    title: "Reservedele",
+    description: "Skærme, batterier og andre reservedele til reparation.",
+  },
+  outlet: {
+    shopifyHandle: "outlet",
+    title: "Outlet",
+    description: "Ekstra skarpe priser på udvalgte produkter. Begrænset antal.",
+    badge: "Ekstra tilbud",
+  },
 };
 
 export function getCollectionConfig(slug: string) {

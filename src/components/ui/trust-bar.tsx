@@ -77,9 +77,9 @@ const trustItems = [
   },
 ];
 
-export function TrustBar() {
+export function TrustBar({ className = "" }: { className?: string }) {
   return (
-    <div className="border-y border-soft-grey py-5">
+    <div className={`border-y border-soft-grey py-5 ${className}`.trim()}>
       <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
