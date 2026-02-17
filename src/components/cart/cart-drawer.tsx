@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import { CartLineItem } from "@/components/cart/cart-line-item";
+import { CartUpsell } from "@/components/cart/cart-upsell";
 
 function formatPrice(amount: string, currencyCode = "DKK"): string {
   return new Intl.NumberFormat("da-DK", {
@@ -104,6 +105,9 @@ export function CartDrawer() {
               </div>
             )}
           </div>
+
+          {/* Upsell */}
+          {lines.length > 0 && <CartUpsell />}
 
           {/* Footer */}
           {lines.length > 0 && cart && (
