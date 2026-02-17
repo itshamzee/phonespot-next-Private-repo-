@@ -21,7 +21,7 @@ const FAQ_ITEMS = [
   {
     question: "Har I garanti?",
     answer:
-      "Ja, alle vores refurbished produkter leveres med 12 måneders garanti.",
+      "Ja, alle vores refurbished produkter leveres med 24 måneders garanti.",
   },
   {
     question: "Hvordan returnerer jeg et produkt?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   {
     question: "Er det sikkert at købe refurbished?",
     answer:
-      "Absolut. Alle enheder er testet og godkendt af vores teknikere. Derudover er du beskyttet af 12 måneders garanti og 14 dages fortrydelsesret.",
+      "Absolut. Alle enheder er testet og godkendt af vores teknikere. Derudover er du beskyttet af 24 måneders garanti og 14 dages fortrydelsesret.",
   },
   {
     question: "Kan jeg betale med MobilePay?",

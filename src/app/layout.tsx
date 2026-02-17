@@ -12,7 +12,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "PhoneSpot - Kvalitetstestede iPhones & iPads",
   description:
-    "Kvalitetstestede iPhones og iPads med 12 maneders garanti. Spar op til 40% og handl trygt med e-maerket.",
+    "Kvalitetstestede iPhones og iPads med 24 maneders garanti. Spar op til 40% og handl trygt med e-maerket.",
   icons: {
     icon: "/brand/favicons/favicon-dark.svg",
   },

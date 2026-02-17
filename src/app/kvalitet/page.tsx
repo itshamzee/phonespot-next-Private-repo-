@@ -8,7 +8,7 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 export const metadata: Metadata = {
   title: "Kvalitet & Stand - Hvad betyder Grade A, B og C? | PhoneSpot",
   description:
-    "Forstå vores graderingssystem. Alle enheder er kvalitetstestede med minimum 12 måneders garanti.",
+    "Forstå vores graderingssystem. Alle enheder er kvalitetstestede med minimum 24 måneders garanti.",
 };
 
 const testSteps = [

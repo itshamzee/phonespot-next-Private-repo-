@@ -41,7 +41,7 @@ const sections = [
   {
     title: "Garanti",
     content:
-      "PhoneSpot tilbyder 12 måneders egen garanti på alle refurbished produkter. Garantien dækker fabrikationsfejl og funktionelle mangler, der ikke skyldes forkert brug, uheld eller slitage. Kontakt vores kundeservice for garantisager.",
+      "PhoneSpot tilbyder 24 måneders egen garanti på alle refurbished produkter. Garantien dækker fabrikationsfejl og funktionelle mangler, der ikke skyldes forkert brug, uheld eller slitage. Kontakt vores kundeservice for garantisager.",
   },
 ];
 

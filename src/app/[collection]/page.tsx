@@ -35,7 +35,7 @@ export async function generateMetadata({
 
   return {
     title: `${config.title} - Kob brugte ${config.title} hos PhoneSpot`,
-    description: `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 12 maneders garanti.`,
+    description: `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 24 maneders garanti.`,
   };
 }
 

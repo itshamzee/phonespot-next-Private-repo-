@@ -95,7 +95,7 @@ const ANNOUNCEMENTS = [
   "Fri fragt ved bestilling over 899,-",
   "1-2 dages levering",
   "Bestil før 16:00 — sendt samme dag",
-  "12 måneders garanti på alle produkter",
+  "24 måneders garanti på alle produkter",
 ];
 
 function AnnouncementBar() {
