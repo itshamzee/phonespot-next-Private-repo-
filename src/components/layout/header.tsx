@@ -7,7 +7,8 @@ import { useCart } from "@/components/cart/cart-context";
 const NAV_LINKS = [
   { label: "iPhones", href: "/iphones" },
   { label: "iPads", href: "/ipads" },
-  { label: "Computere", href: "/computere" },
+  { label: "Smartphones", href: "/smartphones" },
+  { label: "Bærbare", href: "/baerbare" },
   { label: "Covers", href: "/covers" },
   { label: "Reservedele", href: "/reservedele" },
   { label: "Outlet", href: "/outlet" },
