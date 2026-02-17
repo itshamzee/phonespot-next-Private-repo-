@@ -1,6 +1,6 @@
 const badges = [
   {
-    label: "12 mdr. garanti",
+    label: "24 mdr. garanti",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

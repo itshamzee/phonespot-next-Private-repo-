@@ -34,8 +34,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${config.title} - Kob brugte ${config.title} hos PhoneSpot`,
-    description: `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 24 maneders garanti.`,
+    title: `${config.title} - Køb brugte ${config.title} hos PhoneSpot`,
+    description: `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 24 måneders garanti.`,
   };
 }
 

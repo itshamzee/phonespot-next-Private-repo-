@@ -12,15 +12,15 @@ export async function generateMetadata({
 
   if (!query) {
     return {
-      title: "Sog - PhoneSpot",
+      title: "Søg - PhoneSpot",
       description:
-        "Sog efter brugte iPhones, iPads og tilbehor hos PhoneSpot.",
+        "Søg efter brugte iPhones, iPads og tilbehør hos PhoneSpot.",
     };
   }
 
   return {
-    title: `Sog efter ${query} - PhoneSpot`,
-    description: `Sogeresultater for "${query}" hos PhoneSpot.`,
+    title: `Søg efter ${query} - PhoneSpot`,
+    description: `Søgeresultater for "${query}" hos PhoneSpot.`,
   };
 }
 
@@ -45,14 +45,14 @@ export default async function SearchPage({
       <div className="mx-auto mb-10 max-w-2xl">
         <form action="/soeg" method="get">
           <label htmlFor="search-input" className="sr-only">
-            Sog
+            Søg
           </label>
           <input
             id="search-input"
             type="search"
             name="q"
             defaultValue={query}
-            placeholder="Sog efter produkter..."
+            placeholder="Søg efter produkter..."
             autoFocus
             className="w-full rounded-full border border-sand bg-white px-6 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
           />
@@ -63,7 +63,7 @@ export default async function SearchPage({
       {query ? (
         <>
           <h1 className="mb-8 font-display text-3xl md:text-4xl font-extrabold italic text-charcoal">
-            Sogeresultater for &lsquo;{query}&rsquo;
+            Søgeresultater for &lsquo;{query}&rsquo;
           </h1>
           {products.length > 0 ? (
             <ProductGrid products={products} collectionHandle="soeg" />
@@ -73,7 +73,7 @@ export default async function SearchPage({
                 Ingen produkter fundet for &lsquo;{query}&rsquo;.
               </p>
               <p className="mt-2 text-gray">
-                Prove at soge efter noget andet.
+                Prøv at søge efter noget andet.
               </p>
             </div>
           )}
@@ -81,10 +81,10 @@ export default async function SearchPage({
       ) : (
         <div className="py-16 text-center">
           <h1 className="mb-4 font-display text-3xl md:text-4xl font-extrabold italic text-charcoal">
-            Sog
+            Søg
           </h1>
           <p className="text-lg text-gray">
-            Indtast et sogord ovenfor for at finde produkter.
+            Indtast et søgeord ovenfor for at finde produkter.
           </p>
         </div>
       )}

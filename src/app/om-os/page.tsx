@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const stats = [
   { value: "1000+", label: "Enheder solgt" },
   { value: "4.5/5", label: "Trustpilot score" },
-  { value: "12 mdr", label: "Garanti på alt" },
+  { value: "24 mdr", label: "Garanti på alt" },
   { value: "14 dage", label: "Fuld returret" },
 ];
 

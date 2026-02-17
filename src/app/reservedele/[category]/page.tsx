@@ -31,7 +31,7 @@ export async function generateMetadata({
   if (!cat) return { title: "Ikke fundet - PhoneSpot" };
 
   return {
-    title: `${cat.label} - Vaelg model | PhoneSpot`,
+    title: `${cat.label} - Vælg model | PhoneSpot`,
     description: cat.description,
   };
 }
@@ -76,7 +76,7 @@ export default async function CategoryPage({
       {/* Model grid */}
       <SectionWrapper>
         <Heading as="h2" size="md" className="mb-8 text-center">
-          Vaelg din model
+          Vælg din model
         </Heading>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -141,7 +141,7 @@ export function Header() {
           type="button"
           className="lg:hidden text-charcoal"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Luk menu" : "Abn menu"}
+          aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
         >
           {mobileOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
@@ -174,7 +174,7 @@ export function Header() {
           <Link
             href="/soeg"
             className="text-charcoal transition-colors hover:text-green-eco"
-            aria-label="Sog"
+            aria-label="Søg"
           >
             <SearchIcon />
           </Link>
@@ -183,7 +183,7 @@ export function Header() {
             type="button"
             className="relative text-charcoal transition-colors hover:text-green-eco"
             onClick={openCart}
-            aria-label="Abn kurv"
+            aria-label="Åbn kurv"
           >
             <CartIcon />
             {totalItems > 0 && (

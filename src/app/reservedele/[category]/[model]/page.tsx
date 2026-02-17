@@ -34,7 +34,7 @@ export async function generateMetadata({
 
   return {
     title: `${result.model.label} Reservedele | PhoneSpot`,
-    description: `Kob reservedele til ${result.model.label}. Skaerme, batterier og mere med 24 maneders garanti hos PhoneSpot.`,
+    description: `Køb reservedele til ${result.model.label}. Skærme, batterier og mere med 24 måneders garanti hos PhoneSpot.`,
   };
 }
 
@@ -88,8 +88,8 @@ export default async function ModelPartsPage({
           {modelConfig.label} Reservedele
         </Heading>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-white/70">
-          Find skaerme, batterier og andre reservedele til{" "}
-          {modelConfig.label}. Alle dele leveres med 24 maneders garanti.
+          Find skærme, batterier og andre reservedele til{" "}
+          {modelConfig.label}. Alle dele leveres med 24 måneders garanti.
         </p>
       </SectionWrapper>
 
@@ -98,7 +98,7 @@ export default async function ModelPartsPage({
         {products.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-lg text-gray">
-              Ingen reservedele fundet for {modelConfig.label} i oebliekket.
+              Ingen reservedele fundet for {modelConfig.label} i øjeblikket.
             </p>
             <Link
               href={`/reservedele/${cat.slug}`}

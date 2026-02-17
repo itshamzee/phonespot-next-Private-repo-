@@ -5,9 +5,9 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 
 export const metadata: Metadata = {
-  title: "Refurbished Baerbare - MacBook, Lenovo & HP | PhoneSpot",
+  title: "Refurbished Bærbare - MacBook, Lenovo & HP | PhoneSpot",
   description:
-    "Kvalitetstestede baerbare fra Apple, Lenovo og HP med 24 maneders garanti. Spar op til 40% og fa en computer der er testet, rengjort og klar til brug.",
+    "Kvalitetstestede bærbare fra Apple, Lenovo og HP med 24 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
 };
 
 // ---------------------------------------------------------------------------
@@ -20,8 +20,8 @@ const BRANDS = [
     title: "MacBook",
     subtitle: "MacBook Air & MacBook Pro",
     description:
-      "Apples legendariske laptops med Retina-skaerm, aluminium-kabinet og macOS. Fra studerende til professionelle — der er en MacBook til alle.",
-    highlights: ["Retina-skaerm", "macOS klar", "M-chip eller Intel"],
+      "Apples legendariske laptops med Retina-skærm, aluminium-kabinet og macOS. Fra studerende til professionelle — der er en MacBook til alle.",
+    highlights: ["Retina-skærm", "macOS klar", "M-chip eller Intel"],
     priceFrom: "3.499 kr",
   },
   {
@@ -29,7 +29,7 @@ const BRANDS = [
     title: "Lenovo ThinkPad",
     subtitle: "ThinkPad & IdeaPad serien",
     description:
-      "Verdens mest palidelige forretnings-laptop. ThinkPad er bygget til at holde — med legendariske tastaturer og mil-spec holdbarhed.",
+      "Verdens mest pålidelige forretnings-laptop. ThinkPad er bygget til at holde — med legendariske tastaturer og mil-spec holdbarhed.",
     highlights: ["MIL-STD holdbarhed", "Bedste tastatur", "Op til 10 timers batteri"],
     priceFrom: "1.999 kr",
   },
@@ -38,7 +38,7 @@ const BRANDS = [
     title: "HP EliteBook",
     subtitle: "EliteBook & ProBook serien",
     description:
-      "Business-grade laptops med kraftige processorer og fremragende skaarme. Perfekte til kontor, studie og hjemmearbejde.",
+      "Business-grade laptops med kraftige processorer og fremragende skærme. Perfekte til kontor, studie og hjemmearbejde.",
     highlights: ["Business kvalitet", "Bang & Olufsen lyd", "Kraftig ydelse"],
     priceFrom: "1.999 kr",
   },
@@ -49,25 +49,25 @@ const LAPTOP_TEST_STEPS = [
     step: "01",
     title: "Visuel inspektion",
     description:
-      "Kabinet, skaerm og haengsler inspiceres for ridser, buler og slid. Kosmetisk grade fastsaettes.",
+      "Kabinet, skærm og hængsler inspiceres for ridser, buler og slid. Kosmetisk grade fastsættes.",
   },
   {
     step: "02",
-    title: "Skaerm & pixels",
+    title: "Skærm & pixels",
     description:
-      "Skaermen testes for dead pixels, farvegengivelse, lysstyrke og jaevn baggrundsbelysning.",
+      "Skærmen testes for dead pixels, farvegengivelse, lysstyrke og jævn baggrundsbelysning.",
   },
   {
     step: "03",
     title: "Tastatur & trackpad",
     description:
-      "Alle taster testes individuelt. Trackpad tjekkes for praecision, klik og multitouch-gestus.",
+      "Alle taster testes individuelt. Trackpad tjekkes for præcision, klik og multitouch-gestus.",
   },
   {
     step: "04",
     title: "Batterilevetid",
     description:
-      "Batteriet testes under realistisk brug. Minimum 4 timers levetid kraeves for alle grades.",
+      "Batteriet testes under realistisk brug. Minimum 4 timers levetid kræves for alle grades.",
   },
   {
     step: "05",
@@ -89,42 +89,42 @@ const LAPTOP_TEST_STEPS = [
   },
   {
     step: "08",
-    title: "Rengoering & pakning",
+    title: "Rengøring & pakning",
     description:
-      "Computeren rengores grundigt og pakkes omhyggeligt i vores emballage med oplader.",
+      "Computeren rengøres grundigt og pakkes omhyggeligt i vores emballage med oplader.",
   },
 ];
 
 const LAPTOP_FAQ = [
   {
-    question: "Hvilken baerbar skal jeg vaelge til studiet?",
+    question: "Hvilken bærbar skal jeg vælge til studiet?",
     answer:
-      "Til studiet anbefaler vi en Lenovo ThinkPad eller HP EliteBook med min. 8 GB RAM og SSD. De er robuste, har gode tastaturer og holder hele dagen pa en opladning. Se vores studiecomputer-udvalg for haandplukkede modeller fra 1.999 kr.",
+      "Til studiet anbefaler vi en Lenovo ThinkPad eller HP EliteBook med min. 8 GB RAM og SSD. De er robuste, har gode tastaturer og holder hele dagen på en opladning. Se vores studiecomputer-udvalg for håndplukkede modeller fra 1.999 kr.",
   },
   {
-    question: "Er en refurbished MacBook lige sa god som en ny?",
+    question: "Er en refurbished MacBook lige så god som en ny?",
     answer:
-      "Funktionelt ja — 100%. Alle MacBooks gennemgar vores 30-punkts test og leveres med ren macOS-installation. Kosmetisk afhaenger det af graden: Grade A er naesten umulig at skelne fra ny. Du sparer typisk 30-40% sammenlignet med ny pris.",
+      "Funktionelt ja — 100%. Alle MacBooks gennemgår vores 30-punkts test og leveres med ren macOS-installation. Kosmetisk afhænger det af graden: Grade A er næsten umulig at skelne fra ny. Du sparer typisk 30-40% sammenlignet med ny pris.",
   },
   {
     question: "Hvor lang tid holder batteriet?",
     answer:
-      "Alle vores baerbare har minimum 4 timers batterilevetid under realistisk brug. Mange modeller holder 6-8 timer. Vi oplyser altid batterisundhed, sa du ved praecis hvad du far.",
+      "Alle vores bærbare har minimum 4 timers batterilevetid under realistisk brug. Mange modeller holder 6-8 timer. Vi oplyser altid batterisundhed, så du ved præcis hvad du får.",
   },
   {
     question: "Kan jeg opgradere RAM eller SSD bagefter?",
     answer:
-      "Det afhaenger af modellen. De fleste Lenovo ThinkPads og HP EliteBooks tillader opgradering af RAM og SSD. MacBooks med M-chip har loddet RAM, men SSD kan i nogle tilfaelde opgraderes. Sporger du os, hjaelper vi gerne.",
+      "Det afhænger af modellen. De fleste Lenovo ThinkPads og HP EliteBooks tillader opgradering af RAM og SSD. MacBooks med M-chip har loddet RAM, men SSD kan i nogle tilfælde opgraderes. Spørger du os, hjælper vi gerne.",
   },
   {
-    question: "Hvilken oplader foelger med?",
+    question: "Hvilken oplader følger med?",
     answer:
-      "Alle baerbare leveres med en kompatibel oplader. MacBooks leveres med USB-C oplader, Lenovo og HP med deres respektive opladere. Det er altid en funktionel oplader — enten original eller certificeret kompatibel.",
+      "Alle bærbare leveres med en kompatibel oplader. MacBooks leveres med USB-C oplader, Lenovo og HP med deres respektive opladere. Det er altid en funktionel oplader — enten original eller certificeret kompatibel.",
   },
   {
-    question: "Hvad med garanti pa en refurbished laptop?",
+    question: "Hvad med garanti på en refurbished laptop?",
     answer:
-      "Du far 24 maneders garanti fra PhoneSpot. Det daekker fabrikationsfejl og funktionelle mangler. Har du problemer, kontakt os — vi reparerer, bytter eller refunderer.",
+      "Du får 24 måneders garanti fra PhoneSpot. Det dækker fabrikationsfejl og funktionelle mangler. Har du problemer, kontakt os — vi reparerer, bytter eller refunderer.",
   },
 ];
 
@@ -132,7 +132,7 @@ const USE_CASES = [
   {
     title: "Til studiet",
     description:
-      "Word, PowerPoint, browsing og Zoom. En ThinkPad eller EliteBook med 8 GB RAM klarer alt hvad du har brug for pa universitetet.",
+      "Word, PowerPoint, browsing og Zoom. En ThinkPad eller EliteBook med 8 GB RAM klarer alt hvad du har brug for på universitetet.",
     cta: "Se studiecomputere",
     href: "/baerbare/studiecomputer",
     icon: (
@@ -145,7 +145,7 @@ const USE_CASES = [
   {
     title: "Til kontoret",
     description:
-      "Multitasking, regneark og videomoder. En kraftig EliteBook eller ThinkPad med 16 GB RAM og SSD giver dig professionel ydelse.",
+      "Multitasking, regneark og videomøder. En kraftig EliteBook eller ThinkPad med 16 GB RAM og SSD giver dig professionel ydelse.",
     cta: "Se Lenovo",
     href: "/baerbare/lenovo",
     icon: (
@@ -159,7 +159,7 @@ const USE_CASES = [
   {
     title: "Til kreativt arbejde",
     description:
-      "Foto, video og design kraever en staerk skaerm og kraftig processor. MacBook Pro med Retina er det oplagte valg.",
+      "Foto, video og design kræver en stærk skærm og kraftig processor. MacBook Pro med Retina er det oplagte valg.",
     cta: "Se MacBooks",
     href: "/baerbare/apple",
     icon: (
@@ -175,7 +175,7 @@ const COMPARISON = [
   { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "24 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
   { feature: "Software", new: "Forinstalleret", refurbished: "Ren installation" },
-  { feature: "Baeredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
+  { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
   { feature: "Levering", new: "3-5 hverdage", refurbished: "1-2 hverdage" },
 ];
 
@@ -189,13 +189,13 @@ export default function BaerbarePage() {
       {/* ── Hero ── */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-          Refurbished baerbare
+          Refurbished bærbare
         </p>
         <Heading size="xl" className="text-white">
-          Baerbare du kan stole pa
+          Bærbare du kan stole på
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede laptops fra Apple, Lenovo og HP — med 24 maneders
+          Kvalitetstestede laptops fra Apple, Lenovo og HP — med 24 måneders
           garanti. Hver eneste computer er testet med 30+ kontroller, rengjort
           og klar til brug fra dag et.
         </p>
@@ -204,7 +204,7 @@ export default function BaerbarePage() {
             <span className="text-green-eco">✓</span> Fra 1.999 kr
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 24 maneders garanti
+            <span className="text-green-eco">✓</span> 24 måneders garanti
           </span>
           <span className="flex items-center gap-2">
             <span className="text-green-eco">✓</span> Spar op til 40%
@@ -219,10 +219,10 @@ export default function BaerbarePage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
-            Vaelg dit maerke
+            Vælg dit mærke
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            Vi forer de mest palidelige laptop-maerker pa markedet. Alle er
+            Vi fører de mest pålidelige laptop-mærker på markedet. Alle er
             testet efter samme grundige standard.
           </p>
         </div>
@@ -269,7 +269,7 @@ export default function BaerbarePage() {
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
-            Hvad skal du bruge din baerbare til?
+            Hvad skal du bruge din bærbare til?
           </Heading>
           <p className="mt-4 text-lg text-gray">
             Find den rigtige computer til dit behov — uanset om det er studie,
@@ -311,9 +311,9 @@ export default function BaerbarePage() {
           Studiecomputer fra 1.999 kr
         </Heading>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
-          Du behover ikke bruge hele SU&apos;en pa en computer. Vores
-          studiecomputere er haandplukket til studiet — med minimum 8 GB RAM,
-          SSD og 4+ timers batteri. Alle testet og klar med 24 maneders garanti.
+          Du behøver ikke bruge hele SU&apos;en på en computer. Vores
+          studiecomputere er håndplukket til studiet — med minimum 8 GB RAM,
+          SSD og 4+ timers batteri. Alle testet og klar med 24 måneders garanti.
         </p>
         <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-4 text-sm text-white/70">
           <span className="flex items-center gap-1.5">
@@ -341,10 +341,10 @@ export default function BaerbarePage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
-            Sadan tester vi hver eneste laptop
+            Sådan tester vi hver eneste laptop
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            8 trin der sikrer at din baerbare er 100% klar. Ingen genveje —
+            8 trin der sikrer at din bærbare er 100% klar. Ingen genveje —
             alle computere testes individuelt af vores teknikere.
           </p>
         </div>
@@ -377,20 +377,20 @@ export default function BaerbarePage() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-              Baeredygtigt valg
+              Bæredygtigt valg
             </p>
             <Heading as="h2" size="md">
-              Hvorfor kobe en refurbished laptop?
+              Hvorfor købe en refurbished laptop?
             </Heading>
             <p className="mt-4 text-gray leading-relaxed">
-              En ny laptop kraever raastoffer, energi og transport. Ved at
-              vaelge refurbished forlaenger du enhedens levetid og reducerer
+              En ny laptop kræver råstoffer, energi og transport. Ved at
+              vælge refurbished forlænger du enhedens levetid og reducerer
               e-affald med op til 80%.
             </p>
             <p className="mt-3 text-gray leading-relaxed">
               Hos PhoneSpot er en refurbished laptop ikke bare billigere — den
-              er ogsa grundigere testet end en ny. Vi koerer 30+ individuelle
-              tests pa hver computer, sa du far en enhed der virker perfekt fra
+              er også grundigere testet end en ny. Vi kører 30+ individuelle
+              tests på hver computer, så du får en enhed der virker perfekt fra
               dag et.
             </p>
             <ul className="mt-6 space-y-3">
@@ -398,7 +398,7 @@ export default function BaerbarePage() {
                 "Spar 20-40% sammenlignet med ny pris",
                 "80% mindre CO2-aftryk end ny produktion",
                 "Grundigere testet end en fabriksny enhed",
-                "24 maneders garanti og 14 dages returret",
+                "24 måneders garanti og 14 dages returret",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
                   <svg
@@ -446,7 +446,7 @@ export default function BaerbarePage() {
           {[
             { value: "30+", label: "Tests per computer" },
             { value: "4+", label: "Timers min. batteri" },
-            { value: "24", label: "Maneders garanti" },
+            { value: "24", label: "Måneders garanti" },
             { value: "1-2", label: "Dages levering" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
@@ -463,7 +463,7 @@ export default function BaerbarePage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
-            Ofte stillede sporgsmal om baerbare
+            Ofte stillede spørgsmål om bærbare
           </Heading>
         </div>
         <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
@@ -502,10 +502,10 @@ export default function BaerbarePage() {
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="md">
-            Find din naeste baerbare
+            Find din næste bærbare
           </Heading>
           <p className="mt-4 text-gray">
-            Alle computere er testet, rengjort og klar med 24 maneders garanti
+            Alle computere er testet, rengjort og klar med 24 måneders garanti
             og 14 dages fortrydelsesret.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">

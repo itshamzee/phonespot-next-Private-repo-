@@ -8,7 +8,7 @@ import { TrustBar } from "@/components/ui/trust-bar";
 export const metadata: Metadata = {
   title: "Reservedele til iPhone, iPad, MacBook & Samsung | PhoneSpot",
   description:
-    "Kob reservedele til iPhone, Samsung, iPad og MacBook hos PhoneSpot. Skaerme, batterier, kameraer og mere med 24 maneders garanti.",
+    "Køb reservedele til iPhone, Samsung, iPad og MacBook hos PhoneSpot. Skærme, batterier, kameraer og mere med 24 måneders garanti.",
 };
 
 function CategoryIcon({ path }: { path: string }) {
@@ -38,15 +38,15 @@ export default function ReservedelePage() {
           Reservedele
         </Heading>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-white/70">
-          Find kvalitetsreservedele til din enhed. Skaerme, batterier, kameraer
-          og meget mere — alt med 24 maneders garanti.
+          Find kvalitetsreservedele til din enhed. Skærme, batterier, kameraer
+          og meget mere — alt med 24 måneders garanti.
         </p>
       </SectionWrapper>
 
       {/* Category grid */}
       <SectionWrapper>
         <Heading as="h2" size="md" className="mb-8 text-center">
-          Vaelg enhedstype
+          Vælg enhedstype
         </Heading>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

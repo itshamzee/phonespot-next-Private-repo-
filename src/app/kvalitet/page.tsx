@@ -8,7 +8,7 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 export const metadata: Metadata = {
   title: "Kvalitet & Stand - Hvad betyder Grade A, B og C? | PhoneSpot",
   description:
-    "Forstaa vores graderingssystem og 30-punkts testproces. Alle enheder er kvalitetstestede med minimum 24 maaneders garanti.",
+    "Forstå vores graderingssystem og 30-punkts testproces. Alle enheder er kvalitetstestede med minimum 24 måneders garanti.",
 };
 
 // ---------------------------------------------------------------------------
@@ -177,19 +177,19 @@ const TEST_PROCESS = [
   {
     title: "Visuel inspektion",
     description:
-      "Skarm, kabinet og porte inspiceres under forstorrelseslampe for ridser, buler og misfarvninger. Kosmetisk grade fastsaettes.",
+      "Skærm, kabinet og porte inspiceres under forstørrelseslampe for ridser, buler og misfarvninger. Kosmetisk grade fastsættes.",
     icon: <EyeIcon />,
   },
   {
-    title: "Skaerm & touch",
+    title: "Skærm & touch",
     description:
-      "Fuld touchscreen-test pa alle zoner. Vi tjekker for dead pixels, farvegengivelse, lysstyrke og True Tone-funktion.",
+      "Fuld touchscreen-test på alle zoner. Vi tjekker for dead pixels, farvegengivelse, lysstyrke og True Tone-funktion.",
     icon: <SmartphoneIcon />,
   },
   {
     title: "Batterikapacitet",
     description:
-      "Batteriets sundhed males med professionelt vaerktoej. Grade A kraever min. 85%, Grade B min. 80%, Grade C min. 75%.",
+      "Batteriets sundhed måles med professionelt værktøj. Grade A kræver min. 85%, Grade B min. 80%, Grade C min. 75%.",
     icon: <BatteryIcon />,
   },
   {
@@ -199,27 +199,27 @@ const TEST_PROCESS = [
     icon: <CameraIcon />,
   },
   {
-    title: "Hoejttaler & mikrofon",
+    title: "Højttaler & mikrofon",
     description:
-      "Lydtest af hoejttaler, oerehoejttaler og mikrofon. Telefonsamtaler simuleres for at sikre klar lyd i begge retninger.",
+      "Lydtest af højttaler, ørehøjttaler og mikrofon. Telefonsamtaler simuleres for at sikre klar lyd i begge retninger.",
     icon: <VolumeIcon />,
   },
   {
     title: "Wi-Fi, Bluetooth & GPS",
     description:
-      "Alle traadlose forbindelser testes. Wi-Fi-hastighed verificeres, Bluetooth-pairing testes, og GPS-praecision tjekkes.",
+      "Alle trådløse forbindelser testes. Wi-Fi-hastighed verificeres, Bluetooth-pairing testes, og GPS-præcision tjekkes.",
     icon: <WifiIcon />,
   },
   {
     title: "Sensorer & knapper",
     description:
-      "Accelerometer, gyroskop, kompas, naerhedssensor og lysensor testes. Alle fysiske knapper skal have korrekt respons.",
+      "Accelerometer, gyroskop, kompas, nærhedssensor og lysensor testes. Alle fysiske knapper skal have korrekt respons.",
     icon: <CheckCircleIcon />,
   },
   {
-    title: "Fabriksnulstilling & klargoring",
+    title: "Fabriksnulstilling & klargøring",
     description:
-      "Enheden nulstilles, opdateres til nyeste software, rengores grundigt og pakkes i vores emballage med tilbehor.",
+      "Enheden nulstilles, opdateres til nyeste software, rengøres grundigt og pakkes i vores emballage med tilbehør.",
     icon: <ShieldIcon />,
   },
 ];
@@ -233,45 +233,45 @@ const BATTERY_GRADES = [
   {
     grade: "Grade B",
     minCapacity: "80%",
-    description: "Udemaarket batterilevetid til daglig brug.",
+    description: "Udmærket batterilevetid til daglig brug.",
   },
   {
     grade: "Grade C",
     minCapacity: "75%",
-    description: "God batterilevetid — perfekt med en opladning i lobet af dagen.",
+    description: "God batterilevetid — perfekt med en opladning i løbet af dagen.",
   },
 ];
 
 const QUALITY_FAQ = [
   {
-    question: "Hvad er forskellen pa refurbished og brugt?",
+    question: "Hvad er forskellen på refurbished og brugt?",
     answer:
-      "En brugt telefon saelges som den er — uden test eller garanti. En refurbished enhed fra PhoneSpot er professionelt inspiceret, testet med 30+ kontroller, rengjort og leveres med 24 maneders garanti. Det er en helt anden oplevelse.",
+      "En brugt telefon sælges som den er — uden test eller garanti. En refurbished enhed fra PhoneSpot er professionelt inspiceret, testet med 30+ kontroller, rengjort og leveres med 24 måneders garanti. Det er en helt anden oplevelse.",
   },
   {
-    question: "Kan en Grade A enhed virkelig vaere som ny?",
+    question: "Kan en Grade A enhed virkelig være som ny?",
     answer:
-      "Ja. Grade A enheder har ingen synlige brugstegn pa skaerm eller kabinet. De fleste kunder kan ikke se forskel pa en Grade A og en fabriksny enhed. Den eneste forskel er prisen — du sparer typisk 30-40%.",
+      "Ja. Grade A enheder har ingen synlige brugstegn på skærm eller kabinet. De fleste kunder kan ikke se forskel på en Grade A og en fabriksny enhed. Den eneste forskel er prisen — du sparer typisk 30-40%.",
   },
   {
     question: "Hvad sker der hvis min enhed har en fejl?",
     answer:
-      "Du er daekket af 24 maneders garanti. Kontakt os, og vi loser problemet — enten med reparation, ombytning eller fuld refundering. Vi har ogsa 14 dages fortrydelsesret, ingen spoergsmaal stillet.",
+      "Du er dækket af 24 måneders garanti. Kontakt os, og vi løser problemet — enten med reparation, ombytning eller fuld refundering. Vi har også 14 dages fortrydelsesret, ingen spørgsmål stillet.",
   },
   {
-    question: "Kan jeg se billeder af den specifikke enhed jeg kober?",
+    question: "Kan jeg se billeder af den specifikke enhed jeg køber?",
     answer:
-      "Vores graderingssystem sikrer at du ved praecis hvad du kan forvente kosmetisk. Pa kvalitetssiden her kan du se eksempler pa hver grade. Alle enheder inden for samme grade har samme kosmetiske standard.",
+      "Vores graderingssystem sikrer at du ved præcis hvad du kan forvente kosmetisk. På kvalitetssiden her kan du se eksempler på hver grade. Alle enheder inden for samme grade har samme kosmetiske standard.",
   },
   {
-    question: "Tester I ogsa baerbare computere pa samme made?",
+    question: "Tester I også bærbare computere på samme måde?",
     answer:
-      "Ja. Baerbare gennemgar samme grundige testproces plus ekstra kontroller: tastatur, trackpad, skaermshaengsler, porte og batterilevetid under belastning. Vi installerer en ren version af operativsystemet.",
+      "Ja. Bærbare gennemgår samme grundige testproces plus ekstra kontroller: tastatur, trackpad, skærmhængsler, porte og batterilevetid under belastning. Vi installerer en ren version af operativsystemet.",
   },
   {
     question: "Hvad med vandskade — tjekker I for det?",
     answer:
-      "Absolut. Alle enheder inspiceres for vandskadeindikatorer. Enheder med vandskade saelges aldrig som refurbished hos PhoneSpot.",
+      "Absolut. Alle enheder inspiceres for vandskadeindikatorer. Enheder med vandskade sælges aldrig som refurbished hos PhoneSpot.",
   },
 ];
 
@@ -279,7 +279,7 @@ const COMPARISON = [
   { feature: "Pris", new: "Fuld pris", refurbished: "Spar 20-40%" },
   { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "24 mdr. (PhoneSpot)" },
   { feature: "Kvalitetstest", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Baeredygtighed", new: "Ny produktion", refurbished: "Genbrugt — 80% mindre CO2" },
+  { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "Genbrugt — 80% mindre CO2" },
   { feature: "Levering", new: "1-3 hverdage", refurbished: "1-2 hverdage" },
   { feature: "Fortrydelsesret", new: "14 dage", refurbished: "14 dage" },
   { feature: "Funktionalitet", new: "100%", refurbished: "100%" },
@@ -295,28 +295,28 @@ export default function KvalitetPage() {
       {/* ── Hero ── */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-          Vores kvalitetslofte
+          Vores kvalitetsløfte
         </p>
         <Heading size="xl" className="text-white">
-          Kvalitet du kan stole pa
+          Kvalitet du kan stole på
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Hver eneste enhed hos PhoneSpot gennemgar en grundig 30-punkts
-          testproces, foer den nar dig. Vi graderer aerligt, tester grundigt
-          og giver dig 24 maneders garanti — fordi vi tror pa det vi saelger.
+          Hver eneste enhed hos PhoneSpot gennemgår en grundig 30-punkts
+          testproces, før den når dig. Vi graderer ærligt, tester grundigt
+          og giver dig 24 måneders garanti — fordi vi tror på det vi sælger.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
           <span className="flex items-center gap-2">
             <span className="text-green-eco">✓</span> 30+ kvalitetstests
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 24 maneders garanti
+            <span className="text-green-eco">✓</span> 24 måneders garanti
           </span>
           <span className="flex items-center gap-2">
             <span className="text-green-eco">✓</span> 14 dages fortrydelsesret
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> e-maerket godkendt
+            <span className="text-green-eco">✓</span> e-mærket godkendt
           </span>
         </div>
       </SectionWrapper>
@@ -328,7 +328,7 @@ export default function KvalitetPage() {
             Vores graderingssystem
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            Vi bruger tre graderinger baseret pa enhedens kosmetiske stand.
+            Vi bruger tre graderinger baseret på enhedens kosmetiske stand.
             Funktionelt er alle enheder 100% — forskellen er udelukkende
             kosmetisk. Swipe mellem forside og bagside for at se eksempler.
           </p>
@@ -346,7 +346,7 @@ export default function KvalitetPage() {
           </Heading>
           <p className="mt-4 text-lg text-gray">
             Hver enhed testes individuelt af vores teknikere. Her er de 8
-            vigtigste trin i processen — fra inspektion til klargoring.
+            vigtigste trin i processen — fra inspektion til klargøring.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -384,12 +384,12 @@ export default function KvalitetPage() {
             </Heading>
             <p className="mt-4 text-gray leading-relaxed">
               Batteriet er en af de vigtigste dele af din enhed. Derfor tester
-              vi batterikapaciteten pa alle enheder med professionelt
-              diagnostisk vaerktoej — ikke bare Apples egen batteriindikator.
+              vi batterikapaciteten på alle enheder med professionelt
+              diagnostisk værktøj — ikke bare Apples egen batteriindikator.
             </p>
             <p className="mt-3 text-gray leading-relaxed">
-              Vores minimumsgraenser er strengere end branchestandarden, og
-              enheder der ikke opfylder kravene saelges ikke som refurbished.
+              Vores minimumsgrænser er strengere end branchestandarden, og
+              enheder der ikke opfylder kravene sælges ikke som refurbished.
             </p>
           </div>
           <div className="space-y-4">
@@ -421,7 +421,7 @@ export default function KvalitetPage() {
           </Heading>
           <p className="mt-4 text-lg text-gray">
             Se hvordan en refurbished enhed fra PhoneSpot sammenligner med at
-            kobe ny.
+            købe ny.
           </p>
         </div>
         <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -463,11 +463,11 @@ export default function KvalitetPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
-            24 maneders garanti — uden besas
+            24 måneders garanti — uden besvær
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            Alle refurbished produkter fra PhoneSpot leveres med 24 maneders
-            garanti. Hvis noget gar galt, loser vi det hurtigt og ukompliceret.
+            Alle refurbished produkter fra PhoneSpot leveres med 24 måneders
+            garanti. Hvis noget går galt, løser vi det hurtigt og ukompliceret.
           </p>
         </div>
         <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3">
@@ -479,7 +479,7 @@ export default function KvalitetPage() {
               24 mdr. garanti
             </h3>
             <p className="mt-2 text-sm text-gray">
-              Daekker fabrikationsfejl og funktionelle mangler. Kontakt os, og
+              Dækker fabrikationsfejl og funktionelle mangler. Kontakt os, og
               vi tager os af resten.
             </p>
           </div>
@@ -504,8 +504,8 @@ export default function KvalitetPage() {
               14 dages returret
             </h3>
             <p className="mt-2 text-sm text-gray">
-              Ikke tilfreds? Returner enheden inden 14 dage og fa dine penge
-              tilbage. Ingen spoergsmaal.
+              Ikke tilfreds? Returner enheden inden 14 dage og få dine penge
+              tilbage. Ingen spørgsmål.
             </p>
           </div>
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
@@ -528,8 +528,8 @@ export default function KvalitetPage() {
               Dansk support
             </h3>
             <p className="mt-2 text-sm text-gray">
-              Kontakt os pa dansk via email eller telefon. Vi svarer typisk
-              inden for 24 timer pa hverdage.
+              Kontakt os på dansk via email eller telefon. Vi svarer typisk
+              inden for 24 timer på hverdage.
             </p>
           </div>
         </div>
@@ -546,8 +546,8 @@ export default function KvalitetPage() {
           {[
             { value: "1.000+", label: "Enheder solgt" },
             { value: "30+", label: "Kvalitetstests per enhed" },
-            { value: "24", label: "Maneders garanti" },
-            { value: "4.5/5", label: "Pa Trustpilot" },
+            { value: "24", label: "Måneders garanti" },
+            { value: "4.5/5", label: "På Trustpilot" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="font-display text-4xl font-bold text-green-eco md:text-5xl">
@@ -563,7 +563,7 @@ export default function KvalitetPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
-            Ofte stillede sporgsmal om kvalitet
+            Ofte stillede spørgsmål om kvalitet
           </Heading>
         </div>
         <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
@@ -602,10 +602,10 @@ export default function KvalitetPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="md">
-            Overbevist? Find din naeste enhed
+            Overbevist? Find din næste enhed
           </Heading>
           <p className="mt-4 text-gray">
-            Udforsk vores udvalg af kvalitetstestede enheder med 24 maneders
+            Udforsk vores udvalg af kvalitetstestede enheder med 24 måneders
             garanti og 14 dages fortrydelsesret.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -625,7 +625,7 @@ export default function KvalitetPage() {
               href="/baerbare"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
-              Se baerbare &rarr;
+              Se bærbare &rarr;
             </Link>
           </div>
         </div>

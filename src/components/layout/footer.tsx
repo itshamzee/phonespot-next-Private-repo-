@@ -45,12 +45,12 @@ export function Footer() {
               height={32}
             />
             <p className="mt-4 text-sm leading-relaxed text-white/60">
-              Kvalitetstestede iPhones og iPads med 24 maneders garanti.
+              Kvalitetstestede iPhones og iPads med 24 måneders garanti.
             </p>
             <div className="mt-6">
               <img
                 src="/emaerket.png"
-                alt="e-maerket"
+                alt="e-mærket"
                 width={60}
                 height={60}
               />
