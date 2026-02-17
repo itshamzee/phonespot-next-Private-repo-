@@ -6,6 +6,12 @@ type FormFieldProps = {
   placeholder?: string;
   options?: string[];
   className?: string;
+  value?: string;
+  onChange?: (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => void;
 };
 
 const inputStyles =
@@ -19,6 +25,8 @@ export function FormField({
   placeholder,
   options,
   className = "",
+  value,
+  onChange,
 }: FormFieldProps) {
   const id = `field-${name}`;
 
@@ -36,10 +44,19 @@ export function FormField({
           required={required}
           placeholder={placeholder}
           rows={5}
+          value={value}
+          onChange={onChange}
           className={inputStyles}
         />
       ) : type === "select" ? (
-        <select id={id} name={name} required={required} className={inputStyles}>
+        <select
+          id={id}
+          name={name}
+          required={required}
+          value={value}
+          onChange={onChange}
+          className={inputStyles}
+        >
           <option value="">{placeholder ?? "Vælg..."}</option>
           {options?.map((opt) => (
             <option key={opt} value={opt}>
@@ -54,6 +71,8 @@ export function FormField({
           type={type}
           required={required}
           placeholder={placeholder}
+          value={value}
+          onChange={onChange}
           className={inputStyles}
         />
       )}
