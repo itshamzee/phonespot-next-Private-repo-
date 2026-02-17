@@ -8,6 +8,7 @@ import { ConditionBadge } from "@/components/ui/condition-badge";
 import { VariantSelector } from "@/components/product/variant-selector";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { TrustBadges } from "@/components/product/trust-badges";
+import { ConditionExplainer } from "@/components/product/condition-explainer";
 
 function getConditionGrade(tags: string[]): "A" | "B" | "C" | null {
   const lower = tags.map((t) => t.toLowerCase());
@@ -74,8 +75,13 @@ function ProductInfoInner({ product }: { product: Product }) {
         {product.title}
       </h1>
 
-      {/* Condition badge */}
-      {grade && <ConditionBadge grade={grade} />}
+      {/* Condition badge + explainer */}
+      {grade && (
+        <div className="space-y-3">
+          <ConditionBadge grade={grade} />
+          <ConditionExplainer variant="compact" />
+        </div>
+      )}
 
       {/* Price */}
       <Price
