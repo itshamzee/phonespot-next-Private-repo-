@@ -38,31 +38,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE_URL}/hvorfor-phonespot`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.3,
+      priority: 0.6,
     },
     {
       url: `${BASE_URL}/reparation`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.3,
+      priority: 0.6,
     },
     {
       url: `${BASE_URL}/kvalitet`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/om-os`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.3,
+      priority: 0.5,
     },
     {
       url: `${BASE_URL}/reklamation`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/smartwatches`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/baerbare`,
@@ -185,5 +191,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages];
+  // ---- Blog & guide pages (Task 4 will populate dynamically) ----------------
+
+  const blogPages: MetadataRoute.Sitemap = [];
+  // TODO: Task 4 — dynamically populate from MDX blog posts
+
+  // ---- Comparison pages (Task 6 will populate dynamically) -------------------
+
+  const comparisonPages: MetadataRoute.Sitemap = [];
+  // TODO: Task 6 — dynamically populate from comparison data
+
+  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages];
 }
