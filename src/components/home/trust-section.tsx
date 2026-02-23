@@ -2,9 +2,9 @@ import { FadeIn } from "@/components/ui/fade-in";
 
 const features = [
   {
-    title: "24 mdr. garanti",
+    title: "36 mdr. garanti",
     description:
-      "Alle produkter leveres med 24 måneders garanti. Tryg handel hver gang.",
+      "Alle produkter leveres med 36 måneders garanti. Tryg handel hver gang.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

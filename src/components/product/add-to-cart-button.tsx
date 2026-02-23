@@ -7,13 +7,15 @@ import { createCart, addToCart } from "@/lib/shopify/client";
 type AddToCartButtonProps = {
   variantId: string;
   availableForSale: boolean;
+  showUpsellOnAdd?: boolean;
 };
 
 export function AddToCartButton({
   variantId,
   availableForSale,
+  showUpsellOnAdd,
 }: AddToCartButtonProps) {
-  const { cart, setCart, openCart } = useCart();
+  const { cart, setCart, openCart, openUpsell } = useCart();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddToCart = useCallback(async () => {
@@ -29,13 +31,18 @@ export function AddToCartButton({
 
       const updatedCart = await addToCart(currentCart.id, variantId);
       setCart(updatedCart);
-      openCart();
+
+      if (showUpsellOnAdd) {
+        openUpsell();
+      } else {
+        openCart();
+      }
     } catch (error) {
       console.error("Failed to add to cart:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [variantId, availableForSale, cart, setCart, openCart]);
+  }, [variantId, availableForSale, cart, setCart, openCart, showUpsellOnAdd, openUpsell]);
 
   if (!availableForSale) {
     return (

@@ -2,17 +2,20 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { getCollectionProducts } from "@/lib/shopify/client";
+import type { Product } from "@/lib/shopify/types";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
+import { ProductCard } from "@/components/product/product-card";
+import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
   title: "Refurbished iPads - Spar op til 40% | PhoneSpot",
   description:
-    "Køb kvalitetstestede refurbished iPads med 24 måneders garanti. Fra iPad Air 2 til iPad Pro — alle testet med 30+ kontroller og klar til brug.",
+    "Køb kvalitetstestede refurbished iPads med 36 måneders garanti. Fra iPad Air 2 til iPad Pro — alle testet med 30+ kontroller og klar til brug.",
 };
 
 // ---------------------------------------------------------------------------
@@ -23,53 +26,87 @@ const MODEL_TIERS = [
   {
     tier: "Budget",
     tagline: "Perfekt til basale behov",
-    priceRange: "Fra 899 kr",
-    color: "bg-sand/60",
-    models: [
-      {
-        name: "iPad Air 2",
-        price: "Fra 899 kr",
-        desc: "Den originale tynde iPad med Touch ID.",
-      },
-      {
-        name: "iPad 6. generation",
-        price: "Fra 900 kr",
-        desc: "Klassisk iPad med A10 chip og Touch ID.",
-      },
-    ],
+    cardBg: "bg-white",
+    cardBorder: "border border-sand",
+    badgeBg: "bg-sand/70",
+    badgeText: "text-charcoal",
+    taglineColor: "text-gray",
+    iconColor: "text-charcoal/50",
+    patterns: ["ipad air 2", "ipad 5", "ipad 6"],
   },
   {
     tier: "Populær",
     tagline: "Bedste værdi for pengene",
-    priceRange: "Fra 1.500 kr",
-    color: "bg-green-eco/10",
-    models: [
-      {
-        name: "iPad 7. generation",
-        price: "Fra 1.500 kr",
-        desc: "10,2\" skærm med Smart Connector.",
-      },
-      {
-        name: "iPad 8. generation",
-        price: "Fra 1.700 kr",
-        desc: "A12 Bionic chip — hurtig til alt fra studie til streaming.",
-      },
-    ],
+    cardBg: "bg-green-eco/[0.03]",
+    cardBorder: "border-2 border-green-eco/20",
+    badgeBg: "bg-green-eco",
+    badgeText: "text-white",
+    taglineColor: "text-green-eco",
+    iconColor: "text-green-eco",
+    patterns: ["ipad 7", "ipad 8", "ipad 9", "ipad air"],
   },
   {
     tier: "Premium",
     tagline: "Det bedste Apple tilbyder",
-    priceRange: "Fra 2.000 kr",
-    color: "bg-charcoal/5",
-    models: [
-      {
-        name: "iPad Pro 10,5\"",
-        price: "Fra 2.000 kr",
-        desc: "ProMotion 120Hz skærm og quad-speakers.",
-      },
-    ],
+    cardBg: "bg-charcoal",
+    cardBorder: "border-0",
+    badgeBg: "bg-white/15",
+    badgeText: "text-white",
+    taglineColor: "text-white/60",
+    iconColor: "text-white/70",
+    patterns: ["ipad pro", "ipad mini"],
   },
 ];
+
+function TierIcon({ tier, className }: { tier: string; className?: string }) {
+  if (tier === "Budget") {
+    // Coin icon
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      </svg>
+    );
+  }
+  if (tier === "Populær") {
+    // Star icon
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+      </svg>
+    );
+  }
+  // Premium — diamond/gem icon
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12l4.5 6-10.5 12L1.5 9 6 3Zm0 0 3 6m6-6-3 6m-6 0h12" />
+    </svg>
+  );
+}
+
+/** Assign a product to the best-matching tier. More specific patterns match first. */
+function getProductTier(product: Product): number | null {
+  const title = product.title.toLowerCase();
+
+  // Check tiers in reverse (Premium first) so more specific patterns
+  // like "ipad pro" match before the broader "ipad air".
+  for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
+    if (MODEL_TIERS[i].patterns.some((p) => title.includes(p))) {
+      return i;
+    }
+  }
+  return null;
+}
+
+function groupProductsByTier(products: Product[]): Map<number, Product[]> {
+  const map = new Map<number, Product[]>();
+  for (const product of products) {
+    const tier = getProductTier(product);
+    if (tier === null) continue;
+    if (!map.has(tier)) map.set(tier, []);
+    map.get(tier)!.push(product);
+  }
+  return map;
+}
 
 const IPAD_FAQ = [
   {
@@ -106,7 +143,7 @@ const IPAD_FAQ = [
 
 const COMPARISON = [
   { feature: "Pris", new: "3.000-12.000 kr", refurbished: "899-2.000 kr" },
-  { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "24 mdr. (PhoneSpot)" },
+  { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
   { feature: "Batteri", new: "100% kapacitet", refurbished: "Min. 75-85% (gradafhængig)" },
   { feature: "iPadOS", new: "Nyeste version", refurbished: "Nyeste version" },
@@ -131,6 +168,7 @@ export default async function IpadsPage({
     collectionData = null;
   }
   const products = collectionData?.products ?? [];
+  const tierGroups = groupProductsByTier(products);
 
   return (
     <>
@@ -144,7 +182,7 @@ export default async function IpadsPage({
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
           Kvalitetstestede iPads fra 899 kr. Alle enheder gennemgår 30+
-          kontroller, leveres med 24 måneders garanti og er klar til brug
+          kontroller, leveres med 36 måneders garanti og er klar til brug
           fra dag ét. Samme iPad — bare smartere købt.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
@@ -152,7 +190,7 @@ export default async function IpadsPage({
             <span className="text-green-eco">✓</span> Fra 899 kr
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 24 mdr. garanti
+            <span className="text-green-eco">✓</span> 36 mdr. garanti
           </span>
           <span className="flex items-center gap-2">
             <span className="text-green-eco">✓</span> Alle testet
@@ -176,37 +214,47 @@ export default async function IpadsPage({
         </div>
 
         <div className="mt-12 space-y-8">
-          {MODEL_TIERS.map((tier) => (
-            <div key={tier.tier} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
-              <div className="mb-6 flex flex-wrap items-center gap-3">
-                <span className={`rounded-full ${tier.color} px-4 py-1.5 text-xs font-bold uppercase tracking-[2px] text-charcoal`}>
-                  {tier.tier}
-                </span>
-                <span className="text-sm text-gray">{tier.tagline}</span>
-                <span className="ml-auto text-sm font-semibold text-green-eco">
-                  {tier.priceRange}
-                </span>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {tier.models.map((model) => (
-                  <div
-                    key={model.name}
-                    className="rounded-2xl bg-sand/30 p-4"
-                  >
-                    <h4 className="font-display text-base font-bold text-charcoal">
-                      {model.name}
-                    </h4>
-                    <p className="mt-1 text-xs font-semibold text-green-eco">
-                      {model.price}
-                    </p>
-                    <p className="mt-2 text-xs leading-relaxed text-gray">
-                      {model.desc}
+          {MODEL_TIERS.map((tier, tierIndex) => {
+            const tierProducts = tierGroups.get(tierIndex) ?? [];
+            if (tierProducts.length === 0) return null;
+
+            return (
+              <div
+                key={tier.tier}
+                className={`rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 md:p-8`}
+              >
+                {/* Tier header */}
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <TierIcon tier={tier.tier} className={`h-6 w-6 ${tier.iconColor}`} />
+                  <div>
+                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-[2px]`}>
+                      {tier.tier}
+                    </span>
+                    <p className={`mt-1 text-sm ${tier.taglineColor}`}>
+                      {tier.tagline}
                     </p>
                   </div>
-                ))}
+                  <span className={`ml-auto text-sm font-semibold ${tierIndex === 2 ? "text-white/60" : "text-green-eco"}`}>
+                    {tierProducts.length} modeller
+                  </span>
+                </div>
+
+                {/* Product cards — horizontal scroll */}
+                <div className="-mx-5 px-5 md:-mx-8 md:px-8">
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide md:gap-5">
+                    {tierProducts.slice(0, 10).map((product, idx) => (
+                      <FadeIn key={product.id} delay={idx * 0.04} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                        <ProductCard
+                          product={product}
+                          collectionHandle="ipads"
+                        />
+                      </FadeIn>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </SectionWrapper>
 
@@ -242,7 +290,7 @@ export default async function IpadsPage({
           </Heading>
           <p className="mt-4 text-gray">
             {products.length} iPads på lager lige nu. Alle testet og klar
-            med 24 måneders garanti.
+            med 36 måneders garanti.
           </p>
         </div>
 
@@ -276,7 +324,7 @@ export default async function IpadsPage({
                 "Spar 20-40% sammenlignet med ny pris",
                 "Samme iPadOS, samme apps, samme hastighed",
                 "80% mindre CO₂ end ny produktion",
-                "24 måneders garanti og 14 dages returret",
+                "36 måneders garanti og 14 dages returret",
                 "Perfekt til studie, streaming og kreativt arbejde",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
@@ -315,7 +363,7 @@ export default async function IpadsPage({
           {[
             { value: "30+", label: "Tests per enhed" },
             { value: "899 kr", label: "Billigste iPad" },
-            { value: "24", label: "Måneders garanti" },
+            { value: "36", label: "Måneders garanti" },
             { value: "1-2", label: "Dages levering" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">

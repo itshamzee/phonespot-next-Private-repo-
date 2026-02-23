@@ -1,48 +1,123 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { getCollectionProducts } from "@/lib/shopify/client";
+import type { Product } from "@/lib/shopify/types";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
+import { ProductCard } from "@/components/product/product-card";
+import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
   title: "Refurbished Bærbare - MacBook, Lenovo & HP | PhoneSpot",
   description:
-    "Kvalitetstestede bærbare fra Apple, Lenovo og HP med 24 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
+    "Kvalitetstestede bærbare fra Apple, Lenovo og HP med 36 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
 };
+
+// ---------------------------------------------------------------------------
+// Brand tiers (mirrors iPhone tier pattern)
+// ---------------------------------------------------------------------------
+
+const BRAND_TIERS = [
+  {
+    brand: "Apple",
+    slug: "apple",
+    tagline: "Premium design & ydelse",
+    cardBg: "bg-white",
+    cardBorder: "border border-sand",
+    badgeBg: "bg-sand/70",
+    badgeText: "text-charcoal",
+    taglineColor: "text-gray",
+    iconColor: "text-charcoal/50",
+    countColor: "text-green-eco",
+    logoPath: "/brand/logos/apple-logo.svg",
+    patterns: ["macbook", "mac"],
+  },
+  {
+    brand: "Lenovo",
+    slug: "lenovo",
+    tagline: "Bedste værdi for pengene",
+    cardBg: "bg-green-eco/[0.03]",
+    cardBorder: "border-2 border-green-eco/20",
+    badgeBg: "bg-green-eco",
+    badgeText: "text-white",
+    taglineColor: "text-green-eco",
+    iconColor: "text-green-eco",
+    countColor: "text-green-eco",
+    logoPath: "/brand/logos/lenovo-logo.svg",
+    patterns: ["thinkpad", "lenovo", "ideapad"],
+  },
+  {
+    brand: "HP",
+    slug: "hp",
+    tagline: "Business kvalitet",
+    cardBg: "bg-charcoal",
+    cardBorder: "border-0",
+    badgeBg: "bg-white/15",
+    badgeText: "text-white",
+    taglineColor: "text-white/60",
+    iconColor: "text-white/70",
+    countColor: "text-white/60",
+    logoPath: "/brand/logos/hp-logo.svg",
+    patterns: ["elitebook", "hp", "probook"],
+  },
+];
+
+// SVG icon fallbacks per brand
+function BrandIcon({ brand, className }: { brand: string; className?: string }) {
+  if (brand === "Apple") {
+    // Laptop icon
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
+      </svg>
+    );
+  }
+  if (brand === "Lenovo") {
+    // Shield / durability icon
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+      </svg>
+    );
+  }
+  // HP — briefcase / business icon
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+  );
+}
+
+/** Assign a product to the best-matching brand tier. */
+function getProductBrand(product: Product): number | null {
+  const title = product.title.toLowerCase();
+
+  // Check tiers in reverse so more specific patterns match first
+  // (e.g. "thinkpad" before "lenovo" which is broader)
+  for (let i = BRAND_TIERS.length - 1; i >= 0; i--) {
+    if (BRAND_TIERS[i].patterns.some((p) => title.includes(p))) {
+      return i;
+    }
+  }
+  return null;
+}
+
+function groupProductsByBrand(products: Product[]): Map<number, Product[]> {
+  const map = new Map<number, Product[]>();
+  for (const product of products) {
+    const brand = getProductBrand(product);
+    if (brand === null) continue;
+    if (!map.has(brand)) map.set(brand, []);
+    map.get(brand)!.push(product);
+  }
+  return map;
+}
 
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
-
-const BRANDS = [
-  {
-    slug: "apple",
-    title: "MacBook",
-    subtitle: "MacBook Air & MacBook Pro",
-    description:
-      "Apples legendariske laptops med Retina-skærm, aluminium-kabinet og macOS. Fra studerende til professionelle — der er en MacBook til alle.",
-    highlights: ["Retina-skærm", "macOS klar", "M-chip eller Intel"],
-    priceFrom: "3.499 kr",
-  },
-  {
-    slug: "lenovo",
-    title: "Lenovo ThinkPad",
-    subtitle: "ThinkPad & IdeaPad serien",
-    description:
-      "Verdens mest pålidelige forretnings-laptop. ThinkPad er bygget til at holde — med legendariske tastaturer og mil-spec holdbarhed.",
-    highlights: ["MIL-STD holdbarhed", "Bedste tastatur", "Op til 10 timers batteri"],
-    priceFrom: "1.999 kr",
-  },
-  {
-    slug: "hp",
-    title: "HP EliteBook",
-    subtitle: "EliteBook & ProBook serien",
-    description:
-      "Business-grade laptops med kraftige processorer og fremragende skærme. Perfekte til kontor, studie og hjemmearbejde.",
-    highlights: ["Business kvalitet", "Bang & Olufsen lyd", "Kraftig ydelse"],
-    priceFrom: "1.999 kr",
-  },
-];
 
 const LAPTOP_TEST_STEPS = [
   {
@@ -124,7 +199,7 @@ const LAPTOP_FAQ = [
   {
     question: "Hvad med garanti på en refurbished laptop?",
     answer:
-      "Du får 24 måneders garanti fra PhoneSpot. Det dækker fabrikationsfejl og funktionelle mangler. Har du problemer, kontakt os — vi reparerer, bytter eller refunderer.",
+      "Du får 36 måneders garanti fra PhoneSpot. Det dækker fabrikationsfejl og funktionelle mangler. Har du problemer, kontakt os — vi reparerer, bytter eller refunderer.",
   },
 ];
 
@@ -172,7 +247,7 @@ const USE_CASES = [
 
 const COMPARISON = [
   { feature: "Pris (typisk)", new: "8.000-15.000 kr", refurbished: "1.999-7.999 kr" },
-  { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "24 mdr. (PhoneSpot)" },
+  { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
   { feature: "Software", new: "Forinstalleret", refurbished: "Ren installation" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
@@ -183,10 +258,25 @@ const COMPARISON = [
 // Page
 // ---------------------------------------------------------------------------
 
-export default function BaerbarePage() {
+export default async function BaerbarePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
+  const { sort } = await searchParams;
+
+  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
+  try {
+    collectionData = await getCollectionProducts("computere", sort);
+  } catch {
+    collectionData = null;
+  }
+  const products = collectionData?.products ?? [];
+  const brandGroups = groupProductsByBrand(products);
+
   return (
     <>
-      {/* ── Hero ── */}
+      {/* -- Hero -- */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
           Refurbished bærbare
@@ -195,7 +285,7 @@ export default function BaerbarePage() {
           Bærbare du kan stole på
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede laptops fra Apple, Lenovo og HP — med 24 måneders
+          Kvalitetstestede laptops fra Apple, Lenovo og HP — med 36 måneders
           garanti. Hver eneste computer er testet med 30+ kontroller, rengjort
           og klar til brug fra dag et.
         </p>
@@ -204,7 +294,7 @@ export default function BaerbarePage() {
             <span className="text-green-eco">✓</span> Fra 1.999 kr
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 24 måneders garanti
+            <span className="text-green-eco">✓</span> 36 måneders garanti
           </span>
           <span className="flex items-center gap-2">
             <span className="text-green-eco">✓</span> Spar op til 40%
@@ -215,7 +305,7 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Brand showcase ── */}
+      {/* -- Brand showcase -- */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
@@ -226,46 +316,80 @@ export default function BaerbarePage() {
             testet efter samme grundige standard.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 lg:grid-cols-3">
-          {BRANDS.map((brand) => (
-            <Link
-              key={brand.slug}
-              href={`/baerbare/${brand.slug}`}
-              className="group rounded-3xl bg-white p-8 shadow-sm transition-all hover:shadow-md"
-            >
-              <div className="mb-4">
-                <h3 className="font-display text-2xl font-bold text-charcoal">
-                  {brand.title}
-                </h3>
-                <p className="text-sm text-gray">{brand.subtitle}</p>
-              </div>
-              <p className="text-sm leading-relaxed text-charcoal/70">
-                {brand.description}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {brand.highlights.map((h) => (
-                  <span
-                    key={h}
-                    className="rounded-full bg-sand/60 px-3 py-1 text-xs font-medium text-charcoal"
-                  >
-                    {h}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-6 flex items-center justify-between">
-                <span className="text-sm text-gray">
-                  Fra <span className="font-bold text-charcoal">{brand.priceFrom}</span>
-                </span>
-                <span className="text-sm font-semibold text-green-eco transition-transform group-hover:translate-x-1">
-                  Se udvalg &rarr;
-                </span>
-              </div>
-            </Link>
-          ))}
+
+        <div className="mt-12 space-y-8">
+          {BRAND_TIERS.map((tier, tierIndex) => {
+            const brandProducts = brandGroups.get(tierIndex) ?? [];
+
+            return (
+              <Link
+                key={tier.slug}
+                href={`/baerbare/${tier.slug}`}
+                className={`group block rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 transition-shadow hover:shadow-md md:p-8`}
+              >
+                {/* Brand header */}
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  {/* Try brand logo image, fall back to SVG icon */}
+                  <div className="relative flex h-8 w-8 items-center justify-center">
+                    <Image
+                      src={tier.logoPath}
+                      alt={`${tier.brand} logo`}
+                      width={32}
+                      height={32}
+                      className={`h-8 w-8 object-contain ${tierIndex === 2 ? "brightness-0 invert" : ""}`}
+                      onError={undefined}
+                    />
+                  </div>
+                  <BrandIcon brand={tier.brand} className={`h-6 w-6 ${tier.iconColor} hidden`} />
+                  <div>
+                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-[2px]`}>
+                      {tier.brand}
+                    </span>
+                    <p className={`mt-1 text-sm ${tier.taglineColor}`}>
+                      {tier.tagline}
+                    </p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-3">
+                    {brandProducts.length > 0 && (
+                      <span className={`text-sm font-semibold ${tier.countColor}`}>
+                        {brandProducts.length} modeller
+                      </span>
+                    )}
+                    <span className={`text-sm font-semibold ${tierIndex === 2 ? "text-white/80 group-hover:text-white" : "text-green-eco"} transition-transform group-hover:translate-x-1`}>
+                      Se alle &rarr;
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product cards - horizontal scroll */}
+                {brandProducts.length > 0 && (
+                  <div className="-mx-5 px-5 md:-mx-8 md:px-8">
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide md:gap-5">
+                      {brandProducts.slice(0, 10).map((product, idx) => (
+                        <FadeIn key={product.id} delay={idx * 0.04} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                          <ProductCard
+                            product={product}
+                            collectionHandle="baerbare"
+                          />
+                        </FadeIn>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback when no products loaded */}
+                {brandProducts.length === 0 && (
+                  <p className={`text-sm ${tierIndex === 2 ? "text-white/40" : "text-gray"}`}>
+                    Se vores udvalg af {tier.brand} bærbare &rarr;
+                  </p>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </SectionWrapper>
 
-      {/* ── Hvem er du? Use cases ── */}
+      {/* -- Hvem er du? Use cases -- */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
@@ -302,7 +426,7 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Studiecomputer highlight ── */}
+      {/* -- Studiecomputer highlight -- */}
       <SectionWrapper background="green" className="text-center text-white">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-white/60">
           For studerende
@@ -313,7 +437,7 @@ export default function BaerbarePage() {
         <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
           Du behøver ikke bruge hele SU&apos;en på en computer. Vores
           studiecomputere er håndplukket til studiet — med minimum 8 GB RAM,
-          SSD og 4+ timers batteri. Alle testet og klar med 24 måneders garanti.
+          SSD og 4+ timers batteri. Alle testet og klar med 36 måneders garanti.
         </p>
         <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-4 text-sm text-white/70">
           <span className="flex items-center gap-1.5">
@@ -337,7 +461,7 @@ export default function BaerbarePage() {
         </Link>
       </SectionWrapper>
 
-      {/* ── Testproces ── */}
+      {/* -- Testproces -- */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
@@ -372,7 +496,7 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Hvorfor refurbished? ── */}
+      {/* -- Hvorfor refurbished? -- */}
       <SectionWrapper background="cream">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
@@ -398,7 +522,7 @@ export default function BaerbarePage() {
                 "Spar 20-40% sammenlignet med ny pris",
                 "80% mindre CO2-aftryk end ny produktion",
                 "Grundigere testet end en fabriksny enhed",
-                "24 måneders garanti og 14 dages returret",
+                "36 måneders garanti og 14 dages returret",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
                   <svg
@@ -440,13 +564,13 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Tal ── */}
+      {/* -- Tal -- */}
       <SectionWrapper background="charcoal" className="text-white">
         <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
           {[
             { value: "30+", label: "Tests per computer" },
             { value: "4+", label: "Timers min. batteri" },
-            { value: "24", label: "Måneders garanti" },
+            { value: "36", label: "Måneders garanti" },
             { value: "1-2", label: "Dages levering" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
@@ -459,7 +583,7 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── FAQ ── */}
+      {/* -- FAQ -- */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
@@ -493,19 +617,19 @@ export default function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Trust ── */}
+      {/* -- Trust -- */}
       <SectionWrapper background="sand">
         <TrustBar />
       </SectionWrapper>
 
-      {/* ── CTA ── */}
+      {/* -- CTA -- */}
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="md">
             Find din næste bærbare
           </Heading>
           <p className="mt-4 text-gray">
-            Alle computere er testet, rengjort og klar med 24 måneders garanti
+            Alle computere er testet, rengjort og klar med 36 måneders garanti
             og 14 dages fortrydelsesret.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">

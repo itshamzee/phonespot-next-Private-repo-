@@ -5,14 +5,16 @@ import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { UpsellModal } from "@/components/cart/upsell-modal";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { NewsletterPopup } from "@/components/ui/newsletter-popup";
+import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PhoneSpot - Kvalitetstestede iPhones & iPads",
   description:
-    "Kvalitetstestede iPhones og iPads med 24 måneders garanti. Spar op til 40% og handl trygt med e-mærket.",
+    "Kvalitetstestede iPhones og iPads med 36 måneders garanti. Spar op til 40% og handl trygt med e-mærket.",
   icons: {
     icon: "/brand/favicons/favicon-dark.svg",
   },
@@ -26,11 +28,13 @@ export default function RootLayout({
   return (
     <html lang="da" className={`${barlowCondensed.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-warm-white font-body text-charcoal antialiased">
+        <JsonLd data={ORGANIZATION_JSONLD} />
         <CartProvider>
           <Header />
           <main>{children}</main>
           <Footer />
           <CartDrawer />
+          <UpsellModal />
         </CartProvider>
         {/* e-mærket verification widget */}
         <Script

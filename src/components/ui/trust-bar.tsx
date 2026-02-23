@@ -19,7 +19,7 @@ const trustItems = [
     ),
   },
   {
-    label: "24 mdr. garanti",
+    label: "36 mdr. garanti",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

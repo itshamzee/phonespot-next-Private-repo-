@@ -8,7 +8,7 @@ export const COLLECTION_MAP: Record<string, {
   iphones: {
     shopifyHandle: "iphones",
     title: "Refurbished iPhones",
-    description: "Kvalitetstestede iPhones med op til 40% rabat. Alle enheder er funktionelt perfekte med minimum 24 måneders garanti.",
+    description: "Kvalitetstestede iPhones med op til 40% rabat. Alle enheder er funktionelt perfekte med minimum 36 måneders garanti.",
     badge: "Spar op til 40%",
     showConditionWalkthrough: true,
   },
@@ -39,6 +39,13 @@ export const COLLECTION_MAP: Record<string, {
     shopifyHandle: "tilbehor",
     title: "Tilbehør",
     description: "Opladere, kabler og andet tilbehør til dine enheder.",
+  },
+  smartwatches: {
+    shopifyHandle: "smartwatches",
+    title: "Smartwatches",
+    description: "Refurbished Apple Watch og Samsung Galaxy Watch med 36 måneders garanti.",
+    badge: "Fra 999 kr",
+    showConditionWalkthrough: true,
   },
   outlet: {
     shopifyHandle: "outlet",

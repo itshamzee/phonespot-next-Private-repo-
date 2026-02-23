@@ -118,14 +118,16 @@ function ShieldIcon() {
 const deliveryItems = [
   { label: "1-2 dages levering", icon: <TruckIcon /> },
   { label: "14 dages returret", icon: <ReturnIcon /> },
-  { label: "24 mdr. garanti", icon: <ShieldIcon /> },
+  { label: "36 mdr. garanti", icon: <ShieldIcon /> },
 ];
 
 /* ------------------------------------------------------------------ */
 /*  Main inner component                                              */
 /* ------------------------------------------------------------------ */
 
-function ProductInfoInner({ product }: { product: Product }) {
+const UPSELL_COLLECTIONS = ["iphones", "ipads", "smartphones"];
+
+function ProductInfoInner({ product, collectionSlug }: { product: Product; collectionSlug?: string }) {
   const searchParams = useSearchParams();
   const grade = getConditionGrade(product.tags);
   const options = useMemo(
@@ -152,6 +154,7 @@ function ProductInfoInner({ product }: { product: Product }) {
   const availableForSale =
     selectedVariant?.availableForSale ?? product.availableForSale;
   const savingsPercent = getSavingsPercent(price.amount, compareAt?.amount ?? null);
+  const showUpsellOnAdd = UPSELL_COLLECTIONS.includes(collectionSlug ?? "");
 
   return (
     <div className="flex flex-col gap-6">
@@ -213,6 +216,7 @@ function ProductInfoInner({ product }: { product: Product }) {
       <AddToCartButton
         variantId={selectedVariant?.id ?? ""}
         availableForSale={availableForSale}
+        showUpsellOnAdd={showUpsellOnAdd}
       />
 
       {/* ---- 8. Delivery info strip ---- */}
@@ -240,7 +244,7 @@ function ProductInfoInner({ product }: { product: Product }) {
 /*  Exported wrapper with Suspense                                    */
 /* ------------------------------------------------------------------ */
 
-export function ProductInfo({ product }: { product: Product }) {
+export function ProductInfo({ product, collectionSlug }: { product: Product; collectionSlug?: string }) {
   return (
     <Suspense
       fallback={
@@ -259,7 +263,7 @@ export function ProductInfo({ product }: { product: Product }) {
         </div>
       }
     >
-      <ProductInfoInner product={product} />
+      <ProductInfoInner product={product} collectionSlug={collectionSlug} />
     </Suspense>
   );
 }

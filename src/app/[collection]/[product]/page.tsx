@@ -143,7 +143,7 @@ function getGenericSpecs(productType: string): { label: string; value: string }[
   return [
     { label: "Type", value: productType || "Elektronik" },
     { label: "Stand", value: "Testet & kvalitetssikret" },
-    { label: "Garanti", value: "24 måneders garanti" },
+    { label: "Garanti", value: "36 måneders garanti" },
   ];
 }
 
@@ -175,7 +175,7 @@ export async function generateMetadata({
     productData.seo.title ?? `${productData.title} - Refurbished | PhoneSpot`;
   const description =
     productData.seo.description ??
-    `Køb ${productData.title} refurbished med 24 mdr. garanti hos PhoneSpot. ${productData.description.slice(0, 120)}`;
+    `Køb ${productData.title} refurbished med 36 mdr. garanti hos PhoneSpot. ${productData.description.slice(0, 120)}`;
 
   return {
     title,
@@ -300,7 +300,7 @@ export default async function ProductPage({
           <ImageGallery images={product.images} title={product.title} />
 
           {/* Right: Product info */}
-          <ProductInfo product={product} />
+          <ProductInfo product={product} collectionSlug={collectionSlug} />
         </div>
       </section>
 
@@ -627,7 +627,7 @@ export default async function ProductPage({
               </svg>
             </summary>
             <div className="px-6 pb-5 text-sm leading-relaxed text-charcoal/70">
-              Alle vores produkter leveres med 24 måneders garanti. Hvis du
+              Alle vores produkter leveres med 36 måneders garanti. Hvis du
               oplever en fejl, kontakt vores kundeservice, og vi finder en
               løsning hurtigst muligt — enten reparation, ombytning eller
               refundering. Du er altid dækket.

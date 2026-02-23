@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Hvorfor PhoneSpot? | PhoneSpot",
   description:
-    "PhoneSpot gør premium tech tilgængeligt og bæredygtigt. Kvalitetstestede produkter med 24 måneders garanti og dansk kundeservice.",
+    "PhoneSpot gør premium tech tilgængeligt og bæredygtigt. Kvalitetstestede produkter med 36 måneders garanti og dansk kundeservice.",
 };
 
 const VALUES = [
@@ -106,9 +106,9 @@ const TRUST_ITEMS = [
     description: "Vi er e-mærket — din garanti for sikker nethandel i Danmark.",
   },
   {
-    title: "24 mdr. garanti",
+    title: "36 mdr. garanti",
     description:
-      "Alle refurbished produkter leveres med 24 måneders garanti som standard.",
+      "Alle refurbished produkter leveres med 36 måneders garanti som standard.",
   },
 ];
 

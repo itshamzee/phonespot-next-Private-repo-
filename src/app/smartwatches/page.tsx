@@ -13,9 +13,9 @@ import { ProductCard } from "@/components/product/product-card";
 import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
-  title: "Refurbished iPhones - Spar op til 40% | PhoneSpot",
+  title: "Refurbished Smartwatches - Apple Watch & Samsung | PhoneSpot",
   description:
-    "Køb kvalitetstestede refurbished iPhones med 36 måneders garanti. Fra iPhone 8 til iPhone 14 Pro Max — alle testet med 30+ kontroller og klar til brug.",
+    "Køb kvalitetstestede refurbished smartwatches med 36 måneders garanti. Apple Watch og Samsung Galaxy Watch — alle testet med 30+ kontroller og klar til brug.",
 };
 
 // ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ const MODEL_TIERS = [
     badgeText: "text-charcoal",
     taglineColor: "text-gray",
     iconColor: "text-charcoal/50",
-    patterns: ["iphone se", "iphone 11", "iphone xr", "iphone 8"],
+    patterns: ["apple watch se", "apple watch series 3", "apple watch series 4", "galaxy watch 4"],
   },
   {
     tier: "Populær",
@@ -43,18 +43,18 @@ const MODEL_TIERS = [
     badgeText: "text-white",
     taglineColor: "text-green-eco",
     iconColor: "text-green-eco",
-    patterns: ["iphone 12", "iphone 13"],
+    patterns: ["apple watch series 5", "apple watch series 6", "apple watch series 7", "galaxy watch 5"],
   },
   {
     tier: "Premium",
-    tagline: "Det bedste Apple tilbyder",
+    tagline: "Det bedste inden for smartwatches",
     cardBg: "bg-charcoal",
     cardBorder: "border-0",
     badgeBg: "bg-white/15",
     badgeText: "text-white",
     taglineColor: "text-white/60",
     iconColor: "text-white/70",
-    patterns: ["iphone 14", "iphone 13 pro", "iphone 12 pro", "iphone 11 pro", "iphone 15"],
+    patterns: ["apple watch series 8", "apple watch series 9", "apple watch ultra", "galaxy watch 6"],
   },
 ];
 
@@ -88,7 +88,7 @@ function getProductTier(product: Product): number | null {
   const title = product.title.toLowerCase();
 
   // Check tiers in reverse (Premium first) so more specific patterns
-  // like "iphone 13 pro" match before the broader "iphone 13".
+  // like "apple watch ultra" match before the broader "apple watch se".
   for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
     if (MODEL_TIERS[i].patterns.some((p) => title.includes(p))) {
       return i;
@@ -108,45 +108,45 @@ function groupProductsByTier(products: Product[]): Map<number, Product[]> {
   return map;
 }
 
-const IPHONE_FAQ = [
+const SMARTWATCH_FAQ = [
   {
-    question: "Hvilken iPhone skal jeg vælge?",
+    question: "Hvilken smartwatch skal jeg vælge?",
     answer:
-      "Det afhænger af dit budget og behov. Til basalt brug (opkald, SMS, sociale medier) er iPhone 11 eller SE perfekt. Vil du have et godt kamera og 5G, så gå efter iPhone 12 eller 13. Vil du have det allerbedste, så er iPhone 14 Pro vejen frem.",
+      "Det afhænger af dit budget og behov. Til basalt brug (notifikationer, fitness-tracking) er Apple Watch SE eller Galaxy Watch 4 perfekt. Vil du have avanceret sundhedsmonitorering, så gå efter Series 7 eller Galaxy Watch 5. Vil du have det allerbedste, så er Apple Watch Ultra eller Series 9 vejen frem.",
   },
   {
-    question: "Er en refurbished iPhone lige så hurtig som en ny?",
+    question: "Er en refurbished Apple Watch vandtæt?",
     answer:
-      "Ja, 100%. Ydelsen er identisk — vi nulstiller til fabriksindstillinger og opdaterer til nyeste iOS. Du får præcis samme hastighed og funktioner som en ny enhed.",
+      "Ja. Alle Apple Watch-modeller fra Series 2 og nyere har en vandtæthed på WR50 (50 meter). Vi tester vandtætheden som en del af vores 30+ kvalitetskontroller, så du kan trygt bruge dit ur til svømning og i regnvejr.",
   },
   {
-    question: "Får jeg den nyeste iOS-version?",
+    question: "Kan jeg bruge den med min iPhone/Android?",
     answer:
-      "Alle iPhones fra iPhone 8 og nyere kører den seneste iOS-version. Vi opdaterer enheden før afsendelse, så du er klar fra dag et.",
+      "Apple Watch kræver en iPhone (iPhone 8 eller nyere) for opsætning og daglig brug. Samsung Galaxy Watch virker bedst med Android-telefoner, men har også begrænset funktionalitet med iPhone. Vi rådgiver dig gerne, hvis du er i tvivl.",
   },
   {
-    question: "Hvad med batteriet på en refurbished iPhone?",
+    question: "Hvad med batteriet?",
     answer:
-      "Vi tester alle batterier med professionelt værktøj. Grade A kræver min. 85% kapacitet, Grade B min. 80%, Grade C min. 75%. Du får altid oplyst batterikapaciteten.",
+      "Vi tester alle batterier med professionelt værktøj. Grade A kræver min. 85% kapacitet, Grade B min. 80%, Grade C min. 75%. De fleste smartwatches holder en hel dag på en opladning, og vi oplyser altid batterikapaciteten.",
   },
   {
-    question: "Kan jeg bruge alle danske mobilabonnementer?",
+    question: "Får jeg den nyeste watchOS/Tizen?",
     answer:
-      "Ja. Alle vores iPhones er ulåste (factory unlocked) og virker med alle danske operatører — TDC, Telenor, Telia, 3, Lebara og andre.",
+      "Vi opdaterer alle smartwatches til den nyeste kompatible softwareversion før afsendelse. Apple Watch Series 4 og nyere kører den seneste watchOS. Samsung Galaxy Watch opdateres til nyeste Wear OS/Tizen.",
   },
   {
     question: "Kommer der tilbehør med?",
     answer:
-      "Alle iPhones leveres med oplader-kabel. Vi anbefaler at tilkøbe et cover og panserglas for at beskytte din nye enhed — se vores tilbehør.",
+      "Alle smartwatches leveres med oplader (magnetisk for Apple Watch, trådløs for Samsung). Vi anbefaler at tilkøbe en ekstra rem, hvis du ønsker en anden stil — se vores tilbehør.",
   },
 ];
 
 const COMPARISON = [
-  { feature: "Pris", new: "6.000-13.000 kr", refurbished: "999-6.200 kr" },
-  { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "36 mdr. (PhoneSpot)" },
+  { feature: "Pris", new: "2.000-6.000 kr", refurbished: "999-4.500 kr" },
+  { feature: "Garanti", new: "24 mdr. (Apple/Samsung)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Batteri", new: "100% kapacitet", refurbished: "Min. 75-85% (grad-afhængig)" },
-  { feature: "iOS", new: "Nyeste version", refurbished: "Nyeste version" },
+  { feature: "Batteri", new: "100% kapacitet", refurbished: "Min. 80% (gradafhængig)" },
+  { feature: "Software", new: "Nyeste version", refurbished: "Nyeste version" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
 ];
 
@@ -154,7 +154,7 @@ const COMPARISON = [
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function IphonesPage({
+export default async function SmartwatchesPage({
   searchParams,
 }: {
   searchParams: Promise<{ sort?: string }>;
@@ -163,7 +163,7 @@ export default async function IphonesPage({
 
   let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
   try {
-    collectionData = await getCollectionProducts("iphones", sort);
+    collectionData = await getCollectionProducts("smartwatches", sort);
   } catch {
     collectionData = null;
   }
@@ -178,12 +178,12 @@ export default async function IphonesPage({
           Spar op til 40%
         </span>
         <Heading size="xl" className="text-white">
-          Refurbished iPhones
+          Refurbished Smartwatches
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede iPhones fra 999 kr. Alle enheder gennemgår 30+
+          Kvalitetstestede smartwatches fra 999 kr. Alle enheder gennemgår 30+
           kontroller, leveres med 36 måneders garanti og er klar til brug
-          fra dag et. Samme iPhone — bare smartere købt.
+          fra dag et. Samme smartwatch — bare smartere købt.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
           <span className="flex items-center gap-2">
@@ -193,10 +193,10 @@ export default async function IphonesPage({
             <span className="text-green-eco">✓</span> 36 mdr. garanti
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Alle ulåste
+            <span className="text-green-eco">✓</span> Alle testet
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Nyeste iOS
+            <span className="text-green-eco">✓</span> Vandtætte
           </span>
         </div>
       </SectionWrapper>
@@ -205,11 +205,11 @@ export default async function IphonesPage({
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
-            Find den rigtige iPhone til dig
+            Find det rigtige smartwatch til dig
           </Heading>
           <p className="mt-4 text-lg text-gray">
             Vi har delt vores udvalg op i tre prisgrupper, så det er nemt at
-            finde den iPhone der passer til dit budget og behov.
+            finde det smartwatch der passer til dit budget og behov.
           </p>
         </div>
 
@@ -246,7 +246,7 @@ export default async function IphonesPage({
                       <FadeIn key={product.id} delay={idx * 0.04} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
                         <ProductCard
                           product={product}
-                          collectionHandle="iphones"
+                          collectionHandle="smartwatches"
                         />
                       </FadeIn>
                     ))}
@@ -265,7 +265,7 @@ export default async function IphonesPage({
             Hvad betyder standen?
           </Heading>
           <p className="mt-4 text-gray">
-            Alle iPhones er 100% funktionelle. Forskellen mellem graderne er
+            Alle smartwatches er 100% funktionelle. Forskellen mellem graderne er
             udelukkende kosmetisk. Swipe mellem forside og bagside.
           </p>
         </div>
@@ -286,10 +286,10 @@ export default async function IphonesPage({
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
-            Alle iPhones
+            Alle Smartwatches
           </Heading>
           <p className="mt-4 text-gray">
-            {products.length} iPhones på lager lige nu. Alle testet og klar
+            {products.length} smartwatches på lager lige nu. Alle testet og klar
             med 36 måneders garanti.
           </p>
         </div>
@@ -300,11 +300,11 @@ export default async function IphonesPage({
               <SortSelector />
             </Suspense>
           </div>
-          <ProductGrid products={products} collectionHandle="iphones" />
+          <ProductGrid products={products} collectionHandle="smartwatches" />
         </div>
       </SectionWrapper>
 
-      {/* ── Hvorfor refurbished iPhone ── */}
+      {/* ── Hvorfor refurbished smartwatch ── */}
       <SectionWrapper background="cream">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
@@ -312,20 +312,20 @@ export default async function IphonesPage({
               Smart valg
             </p>
             <Heading as="h2" size="md">
-              Hvorfor købe en refurbished iPhone?
+              Hvorfor købe et refurbished smartwatch?
             </Heading>
             <p className="mt-4 text-gray leading-relaxed">
-              En ny iPhone 14 Pro koster over 10.000 kr. Den samme model
-              koster fra 5.500 kr hos PhoneSpot — testet med 30+ kontroller
+              Et nyt Apple Watch Series 9 koster over 3.500 kr. Den samme model
+              koster fra 2.500 kr hos PhoneSpot — testet med 30+ kontroller
               og med 36 måneders garanti. Du får præcis samme oplevelse.
             </p>
             <ul className="mt-6 space-y-3">
               {[
                 "Spar 20-40% sammenlignet med ny pris",
-                "Samme iOS, samme apps, samme hastighed",
+                "Samme watchOS, samme apps, samme funktioner",
                 "80% mindre CO2 end ny produktion",
                 "36 måneders garanti og 14 dages returret",
-                "Alle telefoner er ulåste og virker med alle operatører",
+                "Alle smartwatches er testet for vandtæthed",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" aria-hidden="true">
@@ -362,7 +362,7 @@ export default async function IphonesPage({
         <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
           {[
             { value: "30+", label: "Tests per enhed" },
-            { value: "999 kr", label: "Billigste iPhone" },
+            { value: "999 kr", label: "Billigste watch" },
             { value: "36", label: "Måneders garanti" },
             { value: "1-2", label: "Dages levering" },
           ].map((stat) => (
@@ -380,11 +380,11 @@ export default async function IphonesPage({
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
-            Spørgsmål om refurbished iPhones
+            Spørgsmål om refurbished smartwatches
           </Heading>
         </div>
         <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
-          {IPHONE_FAQ.map((item) => (
+          {SMARTWATCH_FAQ.map((item) => (
             <details key={item.question} className="group py-5">
               <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-charcoal">
                 {item.question}
@@ -407,7 +407,7 @@ export default async function IphonesPage({
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="md">
-            Klar til at finde din iPhone?
+            Klar til at finde dit smartwatch?
           </Heading>
           <p className="mt-4 text-gray">
             Scroll op og udforsk vores udvalg — eller se vores tilbehør for at
