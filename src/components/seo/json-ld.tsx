@@ -19,12 +19,13 @@ export function JsonLd({ data }: JsonLdProps) {
 
 export const ORGANIZATION_JSONLD: Record<string, unknown> = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": ["Organization", "LocalBusiness"],
   name: "PhoneSpot",
   url: "https://phonespot.dk",
   logo: "https://phonespot.dk/brand/logo.svg",
+  image: "https://phonespot.dk/brand/logo.svg",
   description:
-    "Danmarks specialist i kvalitetstestet refurbished elektronik. iPhones, iPads og bærbare med 36 måneders garanti.",
+    "Danmarks specialist i kvalitetstestet refurbished elektronik. iPhones, iPads, MacBooks, Samsung og Apple Watch med 36 måneders garanti, prismatch-garanti og 30+ kvalitetstests.",
   address: {
     "@type": "PostalAddress",
     addressCountry: "DK",
@@ -33,5 +34,7 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
     "@type": "ContactPoint",
     contactType: "customer service",
     availableLanguage: "Danish",
+    email: "info@phonespot.dk",
   },
+  priceRange: "$$",
 };

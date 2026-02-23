@@ -543,6 +543,40 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
+      {/* ── Alternative: buy refurbished ── */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-2xl text-center">
+          <Heading as="h2" size="sm">
+            Overvejer du en ny enhed i stedet?
+          </Heading>
+          <p className="mt-3 text-sm text-gray">
+            Hvis reparationen ikke kan betale sig, kan en kvalitetstestet
+            refurbished enhed være det smartere valg — med 36 måneders garanti
+            og op til 40% besparelse.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/iphones"
+              className="text-sm font-semibold text-green-eco hover:underline"
+            >
+              Se refurbished iPhones &rarr;
+            </Link>
+            <Link
+              href="/ipads"
+              className="text-sm font-semibold text-green-eco hover:underline"
+            >
+              Se refurbished iPads &rarr;
+            </Link>
+            <Link
+              href="/baerbare"
+              className="text-sm font-semibold text-green-eco hover:underline"
+            >
+              Se refurbished bærbare &rarr;
+            </Link>
+          </div>
+        </div>
+      </SectionWrapper>
+
       {/* ── Trust bar ── */}
       <SectionWrapper>
         <TrustBar />

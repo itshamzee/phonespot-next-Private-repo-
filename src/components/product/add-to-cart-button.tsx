@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useCart } from "@/components/cart/cart-context";
-import { createCart, addToCart } from "@/lib/shopify/client";
+import { createCart, addToCart } from "@/lib/medusa/client";
 
 type AddToCartButtonProps = {
   variantId: string;

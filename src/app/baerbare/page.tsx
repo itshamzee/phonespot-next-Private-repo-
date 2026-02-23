@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { getCollectionProducts } from "@/lib/shopify/client";
-import type { Product } from "@/lib/shopify/types";
+import { getCollectionProducts } from "@/lib/medusa/client";
+import type { Product } from "@/lib/medusa/types";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
 import { FadeIn } from "@/components/ui/fade-in";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Refurbished Bærbare - MacBook, Lenovo & HP | PhoneSpot",
@@ -276,6 +277,28 @@ export default async function BaerbarePage({
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+            { "@type": "ListItem", position: 2, name: "Refurbished Bærbare", item: "https://phonespot.dk/baerbare" },
+          ],
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: LAPTOP_FAQ.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
+
       {/* -- Hero -- */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
@@ -620,6 +643,39 @@ export default async function BaerbarePage({
       {/* -- Trust -- */}
       <SectionWrapper background="sand">
         <TrustBar />
+      </SectionWrapper>
+
+      {/* -- Guides -- */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-3xl text-center">
+          <Heading as="h2" size="sm">
+            Læs mere om refurbished bærbare
+          </Heading>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <Link
+              href="/blog/guide-refurbished-baerbar"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Sådan vælger du den rigtige refurbished bærbar
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                MacBook, ThinkPad eller EliteBook? Komplet guide
+              </p>
+            </Link>
+            <Link
+              href="/sammenlign/refurbished-vs-brugt-vs-ny"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Refurbished vs brugt vs ny
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Se den komplette sammenligning
+              </p>
+            </Link>
+          </div>
+        </div>
       </SectionWrapper>
 
       {/* -- CTA -- */}

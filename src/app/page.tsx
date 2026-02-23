@@ -12,46 +12,59 @@ import { GradeSlider } from "@/components/home/grade-slider";
 // Data
 // ---------------------------------------------------------------------------
 
-const CATEGORIES = [
+const HERO_CATEGORIES = [
   {
     name: "iPhones",
     href: "/iphones",
     tagline: "Fra 999 kr",
-    description: "Kvalitetstestede iPhones med 36 måneders garanti. Fra iPhone SE til 14 Pro Max.",
-    span: "md:col-span-2 md:row-span-2",
-    accent: true,
+    description: "Kvalitetstestede iPhones med 36 måneders garanti. Fra iPhone SE til 15 Pro Max.",
     image: "/categories/iphone.png",
+    bg: "bg-green-eco",
   },
+  {
+    name: "Smartphones",
+    href: "/smartphones",
+    tagline: "Fra 799 kr",
+    description: "Samsung Galaxy, OnePlus og mere — testet og klar med fuld garanti.",
+    image: null,
+    bg: "bg-charcoal",
+  },
+];
+
+const CATEGORIES = [
   {
     name: "iPads",
     href: "/ipads",
     tagline: "Fra 899 kr",
-    description: "iPad Air, iPad Pro og mere — testet og klar til brug.",
-    span: "",
+    description: "iPad Air, Pro og mere",
     image: "/categories/ipad.png",
+  },
+  {
+    name: "Smartwatches",
+    href: "/smartwatches",
+    tagline: "Fra 1.099 kr",
+    description: "Apple Watch SE, Series og Ultra",
+    image: null,
   },
   {
     name: "Bærbare",
     href: "/baerbare",
     tagline: "Fra 1.999 kr",
-    description: "MacBook, ThinkPad og EliteBook med ren installation.",
-    span: "",
+    description: "MacBook, ThinkPad og EliteBook",
     image: null,
   },
   {
     name: "Reservedele",
     href: "/reservedele",
     tagline: "Skærme & batterier",
-    description: "Originale reservedele til iPhone, iPad og MacBook.",
-    span: "",
+    description: "Originale dele til iPhone og iPad",
     image: null,
   },
   {
     name: "Covers",
     href: "/covers",
     tagline: "Beskyt din enhed",
-    description: "Covers, panserglas og tilbehør til alle modeller.",
-    span: "",
+    description: "Covers, panserglas og tilbehør",
     image: "/categories/covers.png",
   },
 ];
@@ -282,6 +295,16 @@ export default function HomePage() {
             </svg>
             <span className="text-sm font-medium text-charcoal">1-2 dages levering</span>
           </div>
+
+          <span className="hidden h-6 w-px bg-sand md:block" aria-hidden="true" />
+
+          {/* Fysisk butik */}
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+            </svg>
+            <span className="text-sm font-medium text-charcoal">Fysisk butik</span>
+          </div>
         </div>
       </div>
 
@@ -296,56 +319,75 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-4 md:grid-rows-2">
-          {CATEGORIES.map((cat) => (
+        {/* Hero row — two large cards */}
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
+          {HERO_CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
               href={cat.href}
-              className={`group relative overflow-hidden rounded-3xl p-6 transition-all hover:shadow-lg ${
-                cat.accent
-                  ? "bg-green-eco text-white md:col-span-2 md:row-span-2 md:p-10"
-                  : "bg-cream text-charcoal hover:bg-sand/60"
-              } ${cat.span}`}
+              className={`group relative overflow-hidden rounded-3xl p-8 text-white transition-all hover:shadow-xl md:p-10 ${cat.bg}`}
             >
               <div className="relative z-10 flex h-full flex-col">
-                <p className={`text-xs font-semibold uppercase tracking-[2px] ${cat.accent ? "text-white/60" : "text-green-eco"}`}>
+                <p className="text-xs font-semibold uppercase tracking-[2px] text-white/60">
                   {cat.tagline}
                 </p>
-                <h3 className={`mt-2 font-display font-bold ${cat.accent ? "text-3xl md:text-4xl" : "text-xl"}`}>
+                <h3 className="mt-2 font-display text-3xl font-bold md:text-4xl">
                   {cat.name}
                 </h3>
-                <p className={`mt-2 text-sm leading-relaxed ${cat.accent ? "max-w-xs text-white/70" : "text-gray"}`}>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/70">
                   {cat.description}
                 </p>
-                {cat.accent ? (
-                  <>
-                    <span className="mt-6 inline-block w-fit rounded-full bg-white px-6 py-3 text-sm font-semibold text-green-eco transition-transform group-hover:scale-105">
-                      Se udvalg &rarr;
-                    </span>
-                    <div className="mt-auto flex flex-wrap gap-x-5 gap-y-1 pt-6 text-xs text-white/50">
-                      <span>✓ 36 mdr. garanti</span>
-                      <span>✓ 30+ tests</span>
-                      <span>✓ Spar op til 40%</span>
-                      <span>✓ 14 dages returret</span>
-                    </div>
-                  </>
-                ) : (
-                  <span className={`mt-4 inline-block text-sm font-semibold transition-transform group-hover:translate-x-1 text-green-eco`}>
-                    Se udvalg &rarr;
-                  </span>
-                )}
+                <span className="mt-6 inline-block w-fit rounded-full bg-white px-6 py-3 text-sm font-semibold text-charcoal transition-transform group-hover:scale-105">
+                  Se udvalg &rarr;
+                </span>
+                <div className="mt-auto flex flex-wrap gap-x-5 gap-y-1 pt-6 text-xs text-white/50">
+                  <span>✓ 36 mdr. garanti</span>
+                  <span>✓ 30+ tests</span>
+                  <span>✓ 14 dages returret</span>
+                </div>
               </div>
               {cat.image && (
                 <Image
                   src={cat.image}
                   alt={cat.name}
-                  width={cat.accent ? 800 : 200}
-                  height={cat.accent ? 1060 : 200}
-                  className={
-                    cat.accent
-                      ? "absolute inset-y-0 -right-12 z-0 my-auto h-[200%] w-[55%] object-contain object-right opacity-95 transition-transform duration-300 group-hover:scale-105"
-                      : "absolute inset-y-0 right-0 z-0 my-auto h-[120%] w-1/2 object-contain object-right opacity-25 transition-transform duration-300 group-hover:scale-110"
-                  }
+                  width={800}
+                  height={1060}
+                  className="absolute inset-y-0 -right-12 z-0 my-auto h-[200%] w-[55%] object-contain object-right opacity-95 transition-transform duration-300 group-hover:scale-105"
+                />
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Secondary row — smaller category cards */}
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.href}
+              href={cat.href}
+              className="group relative overflow-hidden rounded-2xl bg-cream p-5 transition-all hover:bg-sand/60 hover:shadow-md"
+            >
+              <div className="relative z-10">
+                <p className="text-[10px] font-semibold uppercase tracking-[2px] text-green-eco">
+                  {cat.tagline}
+                </p>
+                <h3 className="mt-1 font-display text-lg font-bold text-charcoal">
+                  {cat.name}
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-gray">
+                  {cat.description}
+                </p>
+                <span className="mt-3 inline-block text-sm font-semibold text-green-eco transition-transform group-hover:translate-x-1">
+                  Se udvalg &rarr;
+                </span>
+              </div>
+              {cat.image && (
+                <Image
+                  src={cat.image}
+                  alt={cat.name}
+                  width={200}
+                  height={200}
+                  className="absolute inset-y-0 right-0 z-0 my-auto h-[120%] w-1/2 object-contain object-right opacity-20 transition-transform duration-300 group-hover:scale-110"
                 />
               )}
             </Link>

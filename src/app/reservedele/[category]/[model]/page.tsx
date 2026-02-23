@@ -5,11 +5,10 @@ import {
   getAllSparePartPaths,
   getSparePartModel,
 } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getCollectionProducts } from "@/lib/medusa/client";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { ProductCard } from "@/components/product/product-card";
 import { PartTypeFilter } from "@/components/spare-parts/part-type-filter";
 
 // ---------------------------------------------------------------------------
@@ -109,30 +108,10 @@ export default async function ModelPartsPage({
             </Link>
           </div>
         ) : (
-          <PartTypeFilter products={products}>
-            {(filtered) => (
-              <>
-                <p className="mb-6 text-sm text-gray">
-                  {filtered.length} reservedel{filtered.length !== 1 ? "e" : ""}{" "}
-                  fundet
-                </p>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filtered.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      collectionHandle={`reservedele/${cat.slug}/${modelConfig.slug}`}
-                    />
-                  ))}
-                </div>
-                {filtered.length === 0 && (
-                  <p className="py-8 text-center text-gray">
-                    Ingen produkter matcher det valgte filter.
-                  </p>
-                )}
-              </>
-            )}
-          </PartTypeFilter>
+          <PartTypeFilter
+            products={products}
+            collectionHandle={`reservedele/${cat.slug}/${modelConfig.slug}`}
+          />
         )}
       </SectionWrapper>
 

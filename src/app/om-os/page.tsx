@@ -4,6 +4,7 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
+import { StoreLocation } from "@/components/ui/store-location";
 
 export const metadata: Metadata = {
   title: "Om PhoneSpot | Danmarks Specialist i Refurbished Tech",
@@ -607,6 +608,27 @@ export default function OmOsPage() {
               </div>
             </FadeIn>
           ))}
+        </div>
+      </SectionWrapper>
+
+      {/* ── Besøg os ── */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-3xl text-center">
+          <FadeIn>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              Fysisk butik
+            </p>
+            <Heading as="h2" size="md">
+              Besøg os
+            </Heading>
+            <p className="mt-4 text-lg text-gray">
+              Vi har også en fysisk butik, hvor du kan se og prøve vores
+              produkter. Kig forbi og få personlig rådgivning.
+            </p>
+          </FadeIn>
+        </div>
+        <div className="mx-auto mt-10 max-w-2xl">
+          <StoreLocation variant="full" />
         </div>
       </SectionWrapper>
 

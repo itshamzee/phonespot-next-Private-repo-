@@ -2,12 +2,13 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getCollectionProducts } from "@/lib/medusa/client";
 import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { TrustBar } from "@/components/ui/trust-bar";
+import { JsonLd } from "@/components/seo/json-ld";
 
 // ---------------------------------------------------------------------------
 // Static generation
@@ -68,8 +69,28 @@ export default async function CollectionPage({
 
   const products = collectionData?.products ?? [];
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Forside",
+        item: "https://phonespot.dk",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: config.title,
+        item: `https://phonespot.dk/${slug}`,
+      },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd} />
       <CategoryHero
         title={config.title}
         description={config.description}

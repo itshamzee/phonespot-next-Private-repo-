@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import type { CartItem } from "@/lib/shopify/types";
+import type { CartItem } from "@/lib/medusa/types";
 import { useCart } from "@/components/cart/cart-context";
-import { updateCartLine, removeFromCart } from "@/lib/shopify/client";
+import { updateCartLine, removeFromCart } from "@/lib/medusa/client";
 
 function formatPrice(amount: string, currencyCode = "DKK"): string {
   return new Intl.NumberFormat("da-DK", {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { Product } from "@/lib/shopify/types";
+import type { Product } from "@/lib/medusa/types";
 
 type UpsellStripProps = {
   accessories: Product[];

@@ -3,8 +3,10 @@ import Link from "next/link";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
+  { label: "Smartphones", href: "/smartphones" },
   { label: "iPads", href: "/ipads" },
   { label: "Bærbare", href: "/baerbare" },
+  { label: "Smartwatches", href: "/smartwatches" },
   { label: "Covers", href: "/covers" },
   { label: "Reservedele", href: "/reservedele" },
   { label: "Outlet", href: "/outlet" },
@@ -12,6 +14,7 @@ const PRODUCT_LINKS = [
 
 const SERVICE_LINKS = [
   { label: "Kvalitet", href: "/kvalitet" },
+  { label: "Garanti", href: "/garanti" },
   { label: "Reparation", href: "/reparation" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },
@@ -21,6 +24,8 @@ const INFO_LINKS = [
   { label: "Om os", href: "/om-os" },
   { label: "FAQ", href: "/faq" },
   { label: "Hvorfor PhoneSpot", href: "/hvorfor-phonespot" },
+  { label: "Blog", href: "/blog" },
+  { label: "Sammenligninger", href: "/sammenlign" },
 ] as const;
 
 const LEGAL_LINKS = [
@@ -130,6 +135,13 @@ export function Footer() {
               <a href="https://www.emaerket.dk" target="_blank" rel="noopener noreferrer">
                 <Image src="/emaerket.png" alt="e-mærket certificeret" width={48} height={48} className="h-12 w-12 rounded-lg" />
               </a>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-green-eco" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+              </svg>
+              <span className="text-xs text-white/50">Fysisk butik i CENTRETS NAVN</span>
             </div>
           </div>
 

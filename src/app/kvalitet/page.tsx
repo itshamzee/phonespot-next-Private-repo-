@@ -1006,6 +1006,50 @@ export default function KvalitetPage() {
         </div>
       </SectionWrapper>
 
+      {/* ── Guides ── */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-3xl text-center">
+          <Heading as="h2" size="sm">
+            Læs mere om refurbished
+          </Heading>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <Link
+              href="/blog/refurbished-vs-brugt-guide"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Refurbished vs brugt
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Forstå forskellen og vælg det rigtige
+              </p>
+            </Link>
+            <Link
+              href="/blog/bedste-refurbished-iphone-2026"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Bedste refurbished iPhone 2026
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Guide til at vælge den rigtige model
+              </p>
+            </Link>
+            <Link
+              href="/garanti"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Vores 36 mdr. garanti
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Fuld dækning og tryghed
+              </p>
+            </Link>
+          </div>
+        </div>
+      </SectionWrapper>
+
       {/* ── Trust bar ── */}
       <SectionWrapper background="sand">
         <TrustBar />

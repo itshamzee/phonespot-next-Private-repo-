@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import type { ShopifyImage } from "@/lib/shopify/types";
+import type { ShopifyImage } from "@/lib/medusa/types";
 
 type ImageGalleryProps = {
   images: ShopifyImage[];

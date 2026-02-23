@@ -8,7 +8,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import type { Cart } from "@/lib/shopify/types";
+import type { Cart } from "@/lib/medusa/types";
 
 interface CartContextValue {
   cart: Cart | null;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getCollectionProducts } from "@/lib/medusa/client";
 import { ProductCard } from "@/components/product/product-card";
 
 export async function FeaturedProducts() {

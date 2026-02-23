@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Product, ProductVariant } from "@/lib/shopify/types";
+import type { Product, ProductVariant } from "@/lib/medusa/types";
 import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
 import { VariantSelector } from "@/components/product/variant-selector";
@@ -233,6 +233,18 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
           </div>
         ))}
       </div>
+
+      {/* ---- Prismatch badge ---- */}
+      <a
+        href="/prismatch"
+        className="flex items-center gap-2 rounded-xl border border-green-eco/20 bg-green-eco/5 px-4 py-2.5 transition-colors hover:bg-green-eco/10"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        <span className="text-xs font-semibold text-green-eco">Prismatch-garanti</span>
+        <span className="text-xs text-gray">— Vi matcher lavere priser</span>
+      </a>
 
       {/* ---- 9. Trust badges ---- */}
       <TrustBadges />

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
-import type { ProductVariant } from "@/lib/shopify/types";
+import type { ProductVariant } from "@/lib/medusa/types";
 
 type VariantSelectorProps = {
   variants: ProductVariant[];

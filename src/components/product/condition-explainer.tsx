@@ -3,9 +3,21 @@
 import { useState } from "react";
 import Image from "next/image";
 
-const grades = [
+type DeviceType = "phone" | "watch" | "ipad";
+
+type GradeData = {
+  grade: "A" | "B" | "C";
+  title: string;
+  subtitle: string;
+  color: string;
+  bullets: string[];
+  displayImage: string;
+  frameImage: string;
+};
+
+const PHONE_GRADES: GradeData[] = [
   {
-    grade: "A" as const,
+    grade: "A",
     title: "Som ny",
     subtitle: "Grade A",
     color: "border-green-eco",
@@ -18,7 +30,7 @@ const grades = [
     frameImage: "/quality/grade-a-frame.png",
   },
   {
-    grade: "B" as const,
+    grade: "B",
     title: "Meget god",
     subtitle: "Grade B",
     color: "border-green-light",
@@ -31,7 +43,7 @@ const grades = [
     frameImage: "/quality/grade-b-frame.png",
   },
   {
-    grade: "C" as const,
+    grade: "C",
     title: "OK stand",
     subtitle: "Grade C",
     color: "border-gray",
@@ -45,6 +57,98 @@ const grades = [
     frameImage: "/quality/grade-c-frame.png",
   },
 ];
+
+const WATCH_GRADES: GradeData[] = [
+  {
+    grade: "A",
+    title: "Som ny",
+    subtitle: "Grade A",
+    color: "border-green-eco",
+    bullets: [
+      "Glasset er fejlfrit",
+      "Kassen har ingen synlige ridser",
+      "Batteriet er testet til min. 85% kapacitet",
+    ],
+    displayImage: "/quality/watch-grade-a-display.png",
+    frameImage: "/quality/watch-grade-a-frame.png",
+  },
+  {
+    grade: "B",
+    title: "Meget god",
+    subtitle: "Grade B",
+    color: "border-green-light",
+    bullets: [
+      "Glasset er i perfekt stand",
+      "Kassen kan have lette brugsridser",
+      "Batteriet er testet til min. 80% kapacitet",
+    ],
+    displayImage: "/quality/watch-grade-b-display.png",
+    frameImage: "/quality/watch-grade-b-frame.png",
+  },
+  {
+    grade: "C",
+    title: "OK stand",
+    subtitle: "Grade C",
+    color: "border-gray",
+    bullets: [
+      "Glasset kan have lette ridser",
+      "Kassen har synlige brugsspor",
+      "Batteriet er testet til min. 75% kapacitet",
+      "Mest budgetvenlige valg",
+    ],
+    displayImage: "/quality/watch-grade-c-display.png",
+    frameImage: "/quality/watch-grade-c-frame.png",
+  },
+];
+
+const IPAD_GRADES: GradeData[] = [
+  {
+    grade: "A",
+    title: "Som ny",
+    subtitle: "Grade A",
+    color: "border-green-eco",
+    bullets: [
+      "Skærmen er fejlfri",
+      "Kabinettet har ingen synlige ridser",
+      "Batteriet er testet til min. 85% kapacitet",
+    ],
+    displayImage: "/quality/ipad-grade-a-display.png",
+    frameImage: "/quality/ipad-grade-a-frame.png",
+  },
+  {
+    grade: "B",
+    title: "Meget god",
+    subtitle: "Grade B",
+    color: "border-green-light",
+    bullets: [
+      "Skærmen er i perfekt stand",
+      "Kabinettet kan have lette brugsridser",
+      "Batteriet er testet til min. 80% kapacitet",
+    ],
+    displayImage: "/quality/ipad-grade-b-display.png",
+    frameImage: "/quality/ipad-grade-b-frame.png",
+  },
+  {
+    grade: "C",
+    title: "OK stand",
+    subtitle: "Grade C",
+    color: "border-gray",
+    bullets: [
+      "Skærmen kan have lette ridser",
+      "Kabinettet har synlige brugsspor",
+      "Batteriet er testet til min. 75% kapacitet",
+      "Mest budgetvenlige valg",
+    ],
+    displayImage: "/quality/ipad-grade-c-display.png",
+    frameImage: "/quality/ipad-grade-c-frame.png",
+  },
+];
+
+const GRADES_MAP: Record<DeviceType, GradeData[]> = {
+  phone: PHONE_GRADES,
+  watch: WATCH_GRADES,
+  ipad: IPAD_GRADES,
+};
 
 type ImageView = "display" | "frame";
 
@@ -100,6 +204,7 @@ function ImageSlider({
 
 type ConditionExplainerProps = {
   variant?: "full" | "compact";
+  deviceType?: DeviceType;
 };
 
 function CheckIcon({ className }: { className?: string }) {
@@ -120,7 +225,7 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-function FullVariant() {
+function FullVariant({ grades }: { grades: GradeData[] }) {
   return (
     <div className="grid gap-6 md:grid-cols-3">
       {grades.map((g) => (
@@ -155,7 +260,7 @@ function FullVariant() {
   );
 }
 
-function CompactVariant() {
+function CompactVariant({ grades }: { grades: GradeData[] }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -214,9 +319,11 @@ function CompactVariant() {
   );
 }
 
-export function ConditionExplainer({ variant = "full" }: ConditionExplainerProps) {
+export function ConditionExplainer({ variant = "full", deviceType = "phone" }: ConditionExplainerProps) {
+  const grades = GRADES_MAP[deviceType];
+
   if (variant === "compact") {
-    return <CompactVariant />;
+    return <CompactVariant grades={grades} />;
   }
-  return <FullVariant />;
+  return <FullVariant grades={grades} />;
 }

@@ -2,7 +2,10 @@ import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
 import { SPARE_PART_CATEGORIES } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getCollectionProducts } from "@/lib/medusa/client";
+import { getAllPosts } from "@/lib/blog";
+import { COMPARISONS } from "@/lib/comparisons";
+import { MODEL_PAGES } from "@/lib/model-pages";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -63,6 +66,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/prismatch`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/garanti`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/smartwatches`,
@@ -193,13 +208,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ---- Blog & guide pages (Task 4 will populate dynamically) ----------------
 
-  const blogPages: MetadataRoute.Sitemap = [];
-  // TODO: Task 4 — dynamically populate from MDX blog posts
+  const allPosts = getAllPosts();
+  const blogPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    ...allPosts.map((post) => ({
+      url: `${BASE_URL}/blog/${post.frontmatter.slug}`,
+      lastModified: new Date(post.frontmatter.date),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+  ];
 
   // ---- Comparison pages (Task 6 will populate dynamically) -------------------
 
-  const comparisonPages: MetadataRoute.Sitemap = [];
-  // TODO: Task 6 — dynamically populate from comparison data
+  const comparisonPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/sammenlign`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    },
+    ...COMPARISONS.map((c) => ({
+      url: `${BASE_URL}/sammenlign/${c.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+  ];
 
-  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages];
+  // ---- Model landing pages ---------------------------------------------------
+
+  const modelPages: MetadataRoute.Sitemap = MODEL_PAGES.map((m) => ({
+    url: `${BASE_URL}/refurbished/${m.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages];
 }

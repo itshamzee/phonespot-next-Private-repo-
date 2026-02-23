@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { SPARE_PART_TYPES } from "@/lib/spare-parts";
-import type { Product } from "@/lib/shopify/types";
+import type { Product } from "@/lib/medusa/types";
+import { ProductCard } from "@/components/product/product-card";
 
 type PartTypeFilterProps = {
   products: Product[];
-  children: (filtered: Product[]) => React.ReactNode;
+  collectionHandle: string;
 };
 
-export function PartTypeFilter({ products, children }: PartTypeFilterProps) {
+export function PartTypeFilter({ products, collectionHandle }: PartTypeFilterProps) {
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
   const filtered = activeTag
@@ -41,7 +42,24 @@ export function PartTypeFilter({ products, children }: PartTypeFilterProps) {
           </button>
         ))}
       </div>
-      {children(filtered)}
+      <p className="mb-6 text-sm text-gray">
+        {filtered.length} reservedel{filtered.length !== 1 ? "e" : ""}{" "}
+        fundet
+      </p>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {filtered.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            collectionHandle={collectionHandle}
+          />
+        ))}
+      </div>
+      {filtered.length === 0 && (
+        <p className="py-8 text-center text-gray">
+          Ingen produkter matcher det valgte filter.
+        </p>
+      )}
     </div>
   );
 }

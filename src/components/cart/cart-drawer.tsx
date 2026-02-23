@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { CartLineItem } from "@/components/cart/cart-line-item";
 import { CartUpsell } from "@/components/cart/cart-upsell";
@@ -124,12 +125,13 @@ export function CartDrawer() {
                 </span>
               </div>
 
-              <a
-                href={cart.checkoutUrl}
+              <Link
+                href="/checkout"
+                onClick={closeCart}
                 className="flex w-full items-center justify-center rounded-full bg-green-eco px-6 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-green-light"
               >
-                Ga til betaling
-              </a>
+                Gå til betaling
+              </Link>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getLaptopBrand, getAllLaptopBrandSlugs } from "@/lib/laptop-brands";
-import { searchProducts } from "@/lib/shopify/client";
+import { searchProducts } from "@/lib/medusa/client";
 import { BrandHero } from "@/components/collection/brand-hero";
 import { ProductGrid } from "@/components/collection/product-grid";
 import { TrustBar } from "@/components/ui/trust-bar";

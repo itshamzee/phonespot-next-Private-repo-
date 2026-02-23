@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
-import type { Product } from "@/lib/shopify/types";
+import { getCollectionProducts } from "@/lib/medusa/client";
+import type { Product } from "@/lib/medusa/types";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -11,6 +11,7 @@ import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
 import { ProductCard } from "@/components/product/product-card";
 import { FadeIn } from "@/components/ui/fade-in";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Refurbished iPads - Spar op til 40% | PhoneSpot",
@@ -172,6 +173,28 @@ export default async function IpadsPage({
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+            { "@type": "ListItem", position: 2, name: "Refurbished iPads", item: "https://phonespot.dk/ipads" },
+          ],
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: IPAD_FAQ.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
+
       {/* ── Hero ── */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <span className="mb-4 inline-block rounded-full bg-green-eco/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-[2px] text-green-eco">
@@ -270,7 +293,7 @@ export default async function IpadsPage({
           </p>
         </div>
         <div className="mt-10">
-          <ConditionExplainer />
+          <ConditionExplainer deviceType="ipad" />
         </div>
         <div className="mt-6 text-center">
           <Link
@@ -316,7 +339,7 @@ export default async function IpadsPage({
             </Heading>
             <p className="mt-4 text-gray leading-relaxed">
               En ny iPad koster fra 3.000 kr og op. Den samme model koster fra
-              899 kr hos PhoneSpot — testet med 30+ kontroller og med 24
+              899 kr hos PhoneSpot — testet med 30+ kontroller og med 36
               måneders garanti. Du får præcis samme oplevelse.
             </p>
             <ul className="mt-6 space-y-3">
@@ -401,6 +424,39 @@ export default async function IpadsPage({
       {/* ── Trust ── */}
       <SectionWrapper background="sand">
         <TrustBar />
+      </SectionWrapper>
+
+      {/* ── Guides ── */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-3xl text-center">
+          <Heading as="h2" size="sm">
+            Læs mere om refurbished elektronik
+          </Heading>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <Link
+              href="/blog/refurbished-vs-brugt-guide"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Refurbished vs brugt — den komplette guide
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Forstå forskellen og vælg det rigtige for dig
+              </p>
+            </Link>
+            <Link
+              href="/sammenlign/refurbished-vs-brugt-vs-ny"
+              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            >
+              <p className="font-display text-sm font-bold text-charcoal">
+                Refurbished vs brugt vs ny
+              </p>
+              <p className="mt-1 text-xs text-gray">
+                Se den komplette sammenligning
+              </p>
+            </Link>
+          </div>
+        </div>
       </SectionWrapper>
 
       {/* ── CTA ── */}

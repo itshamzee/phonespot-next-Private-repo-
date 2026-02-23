@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Product } from "@/lib/shopify/types";
+import type { Product } from "@/lib/medusa/types";
 import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
 
@@ -17,6 +17,14 @@ type ProductCardProps = {
   collectionHandle?: string;
 };
 
+function getSavingsPercent(price: string, compareAt: string | null): number | null {
+  if (!compareAt) return null;
+  const current = parseFloat(price);
+  const original = parseFloat(compareAt);
+  if (original <= current) return null;
+  return Math.round(((original - current) / original) * 100);
+}
+
 export function ProductCard({
   product,
   collectionHandle = "iphones",
@@ -25,6 +33,7 @@ export function ProductCard({
   const image = product.images[0];
   const { minVariantPrice } = product.priceRange;
   const compareAt = product.variants[0]?.compareAtPrice;
+  const savingsPercent = getSavingsPercent(minVariantPrice.amount, compareAt?.amount ?? null);
 
   return (
     <Link
@@ -36,6 +45,13 @@ export function ProductCard({
         {grade && (
           <div className="absolute top-3 left-3 z-10">
             <ConditionBadge grade={grade} />
+          </div>
+        )}
+        {savingsPercent && (
+          <div className="absolute top-3 right-3 z-10">
+            <span className="inline-flex items-center rounded-full bg-green-eco px-2.5 py-1 text-xs font-bold text-white">
+              -{savingsPercent}%
+            </span>
           </div>
         )}
         {image ? (
