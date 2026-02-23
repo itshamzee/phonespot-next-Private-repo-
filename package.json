@@ -11,11 +11,16 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@medusajs/js-sdk": "^2.13.1",
     "@shopify/hydrogen-react": "^2026.1.0",
+    "@stripe/react-stripe-js": "^5.6.0",
+    "@stripe/stripe-js": "^8.8.0",
     "framer-motion": "^12.34.0",
     "graphql": "^16.12.0",
+    "gray-matter": "^4.0.3",
     "isomorphic-dompurify": "^3.0.0-rc.2",
     "next": "16.1.6",
+    "next-mdx-remote": "^6.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2"
