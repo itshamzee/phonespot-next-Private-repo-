@@ -9,6 +9,8 @@ import { VariantSelector } from "@/components/product/variant-selector";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { TrustBadges } from "@/components/product/trust-badges";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
+import { GradePicker } from "@/components/product/grade-picker";
+import { SizeSelector } from "@/components/product/size-selector";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -135,6 +137,44 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
     [product.variants],
   );
 
+  // Detect grade-based product (has "stand" option)
+  const hasGradeVariants = options.some(
+    (opt) => opt.name.toLowerCase() === "stand",
+  );
+  const hasSizeOption = options.some(
+    (opt) => opt.name.toLowerCase() === "size" || opt.name.toLowerCase() === "størrelse",
+  );
+
+  // Get available sizes
+  const sizes = hasSizeOption
+    ? options.find((opt) => opt.name.toLowerCase() === "size" || opt.name.toLowerCase() === "størrelse")?.values ?? []
+    : [];
+  const selectedSize = searchParams.get("size") ?? searchParams.get("størrelse") ?? sizes[0] ?? "";
+
+  // Get selected grade
+  const selectedGradeLabel = searchParams.get("stand")?.toLowerCase() ?? "som ny";
+  const selectedGrade: "A" | "B" | "C" =
+    selectedGradeLabel === "god stand" ? "B" :
+    selectedGradeLabel === "okay stand" ? "C" : "A";
+
+  // Filter variants by selected size (for grade picker)
+  const sizeFilteredVariants = hasSizeOption
+    ? product.variants.filter((v) =>
+        v.selectedOptions.some(
+          (opt) =>
+            (opt.name.toLowerCase() === "size" || opt.name.toLowerCase() === "størrelse") &&
+            opt.value === selectedSize,
+        ),
+      )
+    : product.variants;
+
+  // Build grade images from product tags: "grade-image-a:url", "grade-image-b:url", "grade-image-c:url"
+  const gradeImages = {
+    A: product.tags.find((t) => t.startsWith("grade-image-a:"))?.slice(14) ?? product.images[0]?.url ?? "",
+    B: product.tags.find((t) => t.startsWith("grade-image-b:"))?.slice(14) ?? product.images[0]?.url ?? "",
+    C: product.tags.find((t) => t.startsWith("grade-image-c:"))?.slice(14) ?? product.images[0]?.url ?? "",
+  };
+
   // Determine selected variant from URL search params
   const selectedVariant = useMemo(() => {
     if (product.variants.length === 1) return product.variants[0];
@@ -210,7 +250,18 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
       </div>
 
       {/* ---- 6. Variant selector ---- */}
-      <VariantSelector variants={product.variants} options={options} />
+      {hasGradeVariants ? (
+        <>
+          <SizeSelector sizes={sizes} selectedSize={selectedSize} />
+          <GradePicker
+            variants={sizeFilteredVariants}
+            selectedGrade={selectedGrade}
+            gradeImages={gradeImages}
+          />
+        </>
+      ) : (
+        <VariantSelector variants={product.variants} options={options} />
+      )}
 
       {/* ---- 7. Add to cart button ---- */}
       <AddToCartButton
