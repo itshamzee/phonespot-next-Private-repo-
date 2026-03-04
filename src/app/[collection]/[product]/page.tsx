@@ -12,6 +12,10 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
+import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
+import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
+import { JsonLd } from "@/components/seo/json-ld";
+import { Suspense } from "react";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -31,9 +35,63 @@ function parseSpecTags(tags: string[]): Record<string, string> {
   return specs;
 }
 
+/** Build Product JSON-LD for SEO / PriceRunner. */
+function getProductJsonLd(product: Product, url: string): Record<string, unknown> {
+  const price = product.priceRange.minVariantPrice;
+  const condition = product.tags.some((t) => t.toLowerCase().includes("grade-a"))
+    ? "https://schema.org/NewCondition"
+    : "https://schema.org/RefurbishedCondition";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: product.images.map((img) => img.url),
+    brand: {
+      "@type": "Brand",
+      name: product.vendor || "PhoneSpot",
+    },
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice: parseFloat(product.priceRange.minVariantPrice.amount),
+      highPrice: parseFloat(product.priceRange.maxVariantPrice.amount),
+      priceCurrency: price.currencyCode,
+      availability: product.availableForSale
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      itemCondition: condition,
+      seller: {
+        "@type": "Organization",
+        name: "PhoneSpot",
+      },
+      url,
+    },
+    ...(product.tags.find((t) => t.startsWith("ean:"))
+      ? { gtin13: product.tags.find((t) => t.startsWith("ean:"))!.slice(4) }
+      : {}),
+    ...(product.tags.find((t) => t.startsWith("mpn:"))
+      ? { mpn: product.tags.find((t) => t.startsWith("mpn:"))!.slice(4) }
+      : {}),
+  };
+}
+
 /** Return generic specs based on productType when tags don't provide data. */
 function getGenericSpecs(productType: string): { label: string; value: string }[] {
   const lower = productType.toLowerCase();
+
+  if (lower.includes("watch") || lower.includes("apple watch")) {
+    return [
+      { label: "Display", value: "OLED Retina (Always-On)" },
+      { label: "Processor", value: "Apple S-serie chip" },
+      { label: "Sensorer", value: "Puls, SpO2, accelerometer, gyroskop" },
+      { label: "Vandtæthed", value: "WR50 / IP6X (modellafhængig)" },
+      { label: "Batteri", value: "Op til 18 timer (standard brug)" },
+      { label: "Størrelse", value: "Se variantvælger" },
+      { label: "Forbindelse", value: "Wi-Fi, Bluetooth 5.x, GPS" },
+      { label: "Operativsystem", value: "watchOS (seneste understøttede version)" },
+    ];
+  }
 
   if (lower.includes("iphone")) {
     return [
@@ -262,6 +320,9 @@ export default async function ProductPage({
 
   return (
     <>
+      {/* Product JSON-LD for SEO / PriceRunner */}
+      <JsonLd data={getProductJsonLd(product, `https://phonespot.dk/${collectionSlug}/${productHandle}`)} />
+
       {/* ----------------------------------------------------------------- */}
       {/* 1. Breadcrumbs                                                     */}
       {/* ----------------------------------------------------------------- */}
@@ -300,7 +361,12 @@ export default async function ProductPage({
           <ImageGallery images={product.images} title={product.title} />
 
           {/* Right: Product info */}
-          <ProductInfo product={product} collectionSlug={collectionSlug} />
+          <div className="flex flex-col gap-4">
+            <Suspense fallback={null}>
+              <TrustpilotStars />
+            </Suspense>
+            <ProductInfo product={product} collectionSlug={collectionSlug} />
+          </div>
         </div>
       </section>
 
@@ -538,6 +604,20 @@ export default async function ProductPage({
           </div>
         </SectionWrapper>
       )}
+
+      {/* ----------------------------------------------------------------- */}
+      {/* 6b. Trustpilot Reviews                                              */}
+      {/* ----------------------------------------------------------------- */}
+      <SectionWrapper>
+        <Heading as="h2" size="lg">
+          Trustpilot Anmeldelser
+        </Heading>
+        <div className="mt-8">
+          <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
+            <TrustpilotReviews />
+          </Suspense>
+        </div>
+      </SectionWrapper>
 
       {/* ----------------------------------------------------------------- */}
       {/* 7. Accessory upsell                                                */}
