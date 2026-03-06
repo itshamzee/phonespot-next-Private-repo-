@@ -4,21 +4,28 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
+import { JsonLd } from "@/components/seo/json-ld";
+import { STORE } from "@/lib/store-config";
+import { getActiveBrands } from "@/lib/supabase/repairs";
+import type { DeviceType, RepairBrand } from "@/lib/supabase/types";
+import { RepairForm } from "./repair-form";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title:
-    "iPhone & iPad Reparation | Skærm, Batteri & Mere | PhoneSpot",
+    "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse",
   description:
-    "Professionel reparation af iPhones, iPads og MacBooks. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
+    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
   keywords:
-    "iphone reparation, ipad reparation, skærmskift iphone, batteriskift iphone, reparation københavn, reparation danmark, macbook reparation",
+    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
   openGraph: {
-    title: "iPhone & iPad Reparation | PhoneSpot",
+    title: "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse",
     description:
-      "Professionel reparation med kvalitetsdele og garanti. Skærmskift, batteriskift, vandskade og mere. Faste priser og hurtig service.",
+      "Professionel reparation med kvalitetsdele og garanti. Skærmskift, batteriskift, vandskade og mere. Faste priser og hurtig service i Slagelse.",
     url: "https://phonespot.dk/reparation",
     type: "website",
   },
@@ -109,6 +116,34 @@ function TagIcon() {
   );
 }
 
+function ChevronRightIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
+  smartphone: "Smartphones",
+  tablet: "Tablets",
+  laptop: "Bærbare",
+  watch: "Ure",
+  console: "Konsoller",
+};
+
+const DEVICE_TYPE_ORDER: DeviceType[] = [
+  "smartphone",
+  "tablet",
+  "laptop",
+  "watch",
+  "console",
+];
+
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
@@ -124,7 +159,7 @@ const SERVICES = [
   {
     title: "Batteriskift",
     description:
-      "Holder batteriet ikke en hel dag længere? Vi skifter til et nyt, højkapacitets batteri så din enhed kører som da den var ny. Batteriets sundhed verificeres efter montering.",
+      "Holder batteriet ikke en hel dag længere? Vi skifter til et nyt, højkapacitets batteri saa din enhed kører som da den var ny. Batteriets sundhed verificeres efter montering.",
     details: "Ny batterikapacitet: 100%",
     icon: <BatteryChargingIcon />,
   },
@@ -138,21 +173,21 @@ const SERVICES = [
   {
     title: "Kamera-reparation",
     description:
-      "Sløret billede, defekt autofokus eller sort kamera? Vi reparerer og udskifter front- og bagkamera, så du igen kan tage skarpe billeder og bruge Face ID uden problemer.",
+      "Sløret billede, defekt autofokus eller sort kamera? Vi reparerer og udskifter front- og bagkamera, saa du igen kan tage skarpe billeder og bruge Face ID uden problemer.",
     details: "Front- og bagkamera",
     icon: <CameraIcon />,
   },
   {
     title: "Ladestik & porte",
     description:
-      "Lader din enhed ikke ordentligt, eller virker stikket løst? Vi udskifter ladestik og Lightning/USB-C porte, så din enhed oplader pålideligt igen. Også hovedtelefonport.",
+      "Lader din enhed ikke ordentligt, eller virker stikket løst? Vi udskifter ladestik og Lightning/USB-C porte, saa din enhed oplader pålideligt igen. Også hovedtelefonport.",
     details: "Lightning & USB-C",
     icon: <PlugIcon />,
   },
   {
     title: "Øvrige reparationer",
     description:
-      "Højttalere, mikrofon, knapper, vibrationsmotor, bagglas eller andre fejl — vi diagnosticerer og reparerer de fleste problemer på iPhones, iPads og MacBooks.",
+      "Højtalere, mikrofon, knapper, vibrationsmotor, bagglas eller andre fejl — vi diagnosticerer og reparerer de fleste problemer på iPhones, iPads og MacBooks.",
     details: "Gratis fejlfinding",
     icon: <WrenchIcon />,
   },
@@ -169,7 +204,7 @@ const PROCESS_STEPS = [
     step: "02",
     title: "Indsend enheden",
     description:
-      "Send enheden til os med posten, eller aflever den personligt. Vi sender dig en returlabel, så forsendelsen er enkel og sporbar.",
+      "Send enheden til os med posten, eller aflever den personligt. Vi sender dig en returlabel, saa forsendelsen er enkel og sporbar.",
   },
   {
     step: "03",
@@ -189,7 +224,7 @@ const REPAIR_FAQ = [
   {
     question: "Hvad koster en skærmudskiftning på en iPhone?",
     answer:
-      "Prisen afhænger af iPhone-modellen. Kontakt os med din model, og vi giver dig en fast pris inden reparationen. Vi bruger kvalitetsdele der matcher originalen, og alle skærmskift leveres med garanti.",
+      "Prisen afhænger af iPhone-modellen. Se vores prisliste ved at vælge dit mærke og model ovenfor, eller kontakt os for en fast pris inden reparationen. Vi bruger kvalitetsdele der matcher originalen, og alle skærmskift leveres med garanti.",
   },
   {
     question: "Hvor lang tid tager en reparation?",
@@ -199,7 +234,7 @@ const REPAIR_FAQ = [
   {
     question: "Får jeg garanti på reparationen?",
     answer:
-      "Ja. Alle reparationer fra PhoneSpot leveres med garanti på både arbejde og reservedele. Hvis den samme fejl opstår igen inden for garantiperioden, reparerer vi enheden uden beregning.",
+      "Ja. Alle reparationer fra PhoneSpot leveres med garanti på baade arbejde og reservedele. Hvis den samme fejl opstår igen inden for garantiperioden, reparerer vi enheden uden beregning.",
   },
   {
     question: "Bruger I originale reservedele?",
@@ -229,13 +264,162 @@ const REPAIR_FAQ = [
 ];
 
 // ---------------------------------------------------------------------------
+// Brand Picker Component
+// ---------------------------------------------------------------------------
+
+function BrandPickerSection({ brands }: { brands: RepairBrand[] }) {
+  // Group brands by device type
+  const grouped = DEVICE_TYPE_ORDER.reduce<Record<DeviceType, RepairBrand[]>>(
+    (acc, type) => {
+      const matching = brands.filter((b) => b.device_type === type);
+      if (matching.length > 0) acc[type] = matching;
+      return acc;
+    },
+    {} as Record<DeviceType, RepairBrand[]>,
+  );
+
+  const deviceTypes = Object.keys(grouped) as DeviceType[];
+
+  if (deviceTypes.length === 0) return null;
+
+  return (
+    <SectionWrapper>
+      <div className="mx-auto max-w-3xl text-center">
+        <FadeIn>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            Priser & reparation
+          </p>
+          <Heading as="h2" size="lg">
+            Vælg dit mærke
+          </Heading>
+          <p className="mt-4 text-lg text-gray">
+            Find priser og book reparation for dit mærke og model. Vælg
+            herunder for at se alle tilgængelige reparationer og faste priser.
+          </p>
+        </FadeIn>
+      </div>
+
+      <div className="mt-12 space-y-10">
+        {deviceTypes.map((type) => (
+          <div key={type}>
+            <FadeIn>
+              <h3 className="mb-4 font-display text-sm font-semibold uppercase tracking-[2px] text-charcoal/60">
+                {DEVICE_TYPE_LABELS[type]}
+              </h3>
+            </FadeIn>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {grouped[type].map((brand, i) => (
+                <FadeIn key={brand.id} delay={i * 0.05}>
+                  <Link
+                    href={`/reparation/${brand.slug}`}
+                    className="group flex h-full flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    {brand.logo_url ? (
+                      <img
+                        src={brand.logo_url}
+                        alt={`${brand.name} logo`}
+                        className="mb-4 h-12 w-12 object-contain"
+                      />
+                    ) : (
+                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                        <SmartphoneIcon />
+                      </div>
+                    )}
+                    <span className="font-display text-lg font-bold text-charcoal">
+                      {brand.name}
+                    </span>
+                    <span className="mt-1 text-xs text-gray/60">
+                      {DEVICE_TYPE_LABELS[brand.device_type]}
+                    </span>
+                    <span className="mt-3 flex items-center gap-1 text-sm font-semibold text-green-eco transition-colors group-hover:text-green-eco/80">
+                      Se priser <ChevronRightIcon />
+                    </span>
+                  </Link>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// JSON-LD
+// ---------------------------------------------------------------------------
+
+const REPAIR_SERVICE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: STORE.name,
+  description:
+    "Professionel reparation af smartphones, tablets og bærbare i Slagelse. Skærmskift, batteriskift, vandskade og mere med faste priser og garanti.",
+  url: "https://phonespot.dk/reparation",
+  telephone: STORE.phone,
+  email: STORE.email,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: STORE.street,
+    addressLocality: STORE.city,
+    postalCode: STORE.zip,
+    addressCountry: STORE.countryCode,
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: STORE.coordinates.lat,
+    longitude: STORE.coordinates.lng,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "10:00",
+      closes: "18:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: "10:00",
+      closes: "16:00",
+    },
+  ],
+  priceRange: "$$",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Reparationsservices",
+    itemListElement: [
+      {
+        "@type": "OfferCatalog",
+        name: "Skærmskift",
+        description: "Professionel udskiftning af skærm på smartphones og tablets",
+      },
+      {
+        "@type": "OfferCatalog",
+        name: "Batteriskift",
+        description: "Udskiftning af batteri med højkapacitets reservedele",
+      },
+      {
+        "@type": "OfferCatalog",
+        name: "Vandskade-behandling",
+        description: "Professionel rensning og reparation af vandskadede enheder",
+      },
+    ],
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default function ReparationPage() {
+export default async function ReparationPage() {
+  const brands = await getActiveBrands();
+
   return (
     <>
-      {/* ── Hero ── */}
+      <JsonLd data={REPAIR_SERVICE_JSONLD} />
+
+      {/* -- Hero -- */}
       <SectionWrapper background="charcoal" className="text-center text-white">
         <FadeIn>
           <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
@@ -252,21 +436,21 @@ export default function ReparationPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
             <span className="flex items-center gap-2">
-              <span className="text-green-eco">✓</span> Faste priser
+              <span className="text-green-eco">&#10003;</span> Faste priser
             </span>
             <span className="flex items-center gap-2">
-              <span className="text-green-eco">✓</span> Garanti på reparation
+              <span className="text-green-eco">&#10003;</span> Garanti på reparation
             </span>
             <span className="flex items-center gap-2">
-              <span className="text-green-eco">✓</span> Kvalitetsdele
+              <span className="text-green-eco">&#10003;</span> Kvalitetsdele
             </span>
             <span className="flex items-center gap-2">
-              <span className="text-green-eco">✓</span> Hurtig service
+              <span className="text-green-eco">&#10003;</span> Hurtig service
             </span>
           </div>
           <div className="mt-8">
             <Link
-              href="/kontakt"
+              href="#book-reparation"
               className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
               Book en reparation &rarr;
@@ -275,8 +459,11 @@ export default function ReparationPage() {
         </FadeIn>
       </SectionWrapper>
 
-      {/* ── Services ── */}
-      <SectionWrapper>
+      {/* -- Brand Picker -- */}
+      <BrandPickerSection brands={brands} />
+
+      {/* -- Services -- */}
+      <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
@@ -287,7 +474,7 @@ export default function ReparationPage() {
             </Heading>
             <p className="mt-4 text-lg text-gray">
               Vi reparerer de fleste fejl på iPhones, iPads og MacBooks.
-              Uanset om det er en smadret skærm, et slidet batteri eller en
+              Uanset om det er en smadret skærm, et slidt batteri eller en
               vandskade — vi har løsningen.
             </p>
           </FadeIn>
@@ -314,8 +501,8 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Hvorfor PhoneSpot ── */}
-      <SectionWrapper background="sand">
+      {/* -- Hvorfor PhoneSpot -- */}
+      <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
@@ -353,7 +540,7 @@ export default function ReparationPage() {
               <p className="mt-2 text-sm text-gray">
                 De fleste reparationer udføres inden for 1-3 hverdage.
                 Skærmskift og batteriskift kan ofte klares på 1-2 dage. Vi
-                prioriterer at få din enhed tilbage til dig hurtigst muligt.
+                prioriterer at faa din enhed tilbage til dig hurtigst muligt.
               </p>
             </div>
           </FadeIn>
@@ -366,7 +553,7 @@ export default function ReparationPage() {
                 Garanti på alt
               </h3>
               <p className="mt-2 text-sm text-gray">
-                Alle reparationer leveres med garanti på både arbejde og
+                Alle reparationer leveres med garanti på baade arbejde og
                 reservedele. Hvis den samme fejl opstår igen, reparerer vi det
                 uden beregning. Du er dækket.
               </p>
@@ -375,7 +562,7 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Sådan fungerer det ── */}
+      {/* -- Sådan fungerer det -- */}
       <SectionWrapper background="charcoal" className="text-white">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
@@ -410,101 +597,7 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Priser ── */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-3xl text-center">
-          <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-              Priser
-            </p>
-            <Heading as="h2" size="md">
-              Vejledende priser på reparation
-            </Heading>
-            <p className="mt-4 text-lg text-gray">
-              Alle priser er vejledende og afhænger af model og skadens omfang.
-              Kontakt os for en præcis pris på din reparation — vi oplyser
-              altid prisen inden vi starter.
-            </p>
-          </FadeIn>
-        </div>
-        <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-sand bg-sand/50">
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
-                  Reparation
-                </th>
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
-                  Tidsestimat
-                </th>
-                <th className="px-5 py-3 text-right font-display text-xs font-semibold uppercase tracking-[2px] text-green-eco">
-                  Fra pris
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  service: "Skærmskift iPhone",
-                  time: "1-2 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Batteriskift iPhone",
-                  time: "1-2 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Skærmskift iPad",
-                  time: "2-3 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Kamera-reparation",
-                  time: "1-3 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Ladestik-reparation",
-                  time: "1-2 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Vandskade-behandling",
-                  time: "2-5 hverdage",
-                  price: "Kontakt os",
-                },
-                {
-                  service: "Diagnostik / fejlfinding",
-                  time: "1 hverdag",
-                  price: "Gratis",
-                },
-              ].map((row, i, arr) => (
-                <tr
-                  key={row.service}
-                  className={
-                    i < arr.length - 1 ? "border-b border-sand/60" : ""
-                  }
-                >
-                  <td className="px-5 py-3 font-semibold text-charcoal">
-                    {row.service}
-                  </td>
-                  <td className="px-5 py-3 text-gray">{row.time}</td>
-                  <td className="px-5 py-3 text-right font-medium text-green-eco">
-                    {row.price}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mx-auto mt-4 max-w-3xl text-center text-xs text-gray">
-          Alle priser er inkl. moms, reservedele og garanti. Vi oplyser altid
-          den endelige pris inden reparationen starter.
-        </p>
-      </SectionWrapper>
-
-      {/* ── FAQ ── */}
+      {/* -- FAQ -- */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
@@ -543,7 +636,7 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Alternative: buy refurbished ── */}
+      {/* -- Alternative: buy refurbished -- */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="sm">
@@ -568,7 +661,7 @@ export default function ReparationPage() {
               Se refurbished iPads &rarr;
             </Link>
             <Link
-              href="/baerbare"
+              href="/bærbare"
               className="text-sm font-semibold text-green-eco hover:underline"
             >
               Se refurbished bærbare &rarr;
@@ -577,17 +670,38 @@ export default function ReparationPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Trust bar ── */}
+      {/* -- Trust bar -- */}
       <SectionWrapper>
         <TrustBar />
       </SectionWrapper>
 
-      {/* ── CTA ── */}
+      {/* -- Book reparation form -- */}
+      <SectionWrapper id="book-reparation">
+        <div className="mx-auto max-w-3xl">
+          <FadeIn>
+            <div className="text-center">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+                Book reparation
+              </p>
+              <Heading as="h2" size="md">
+                Send en reparationsanmodning
+              </Heading>
+              <p className="mt-4 mb-10 text-lg text-gray">
+                Udfyld formularen herunder, og vi vender tilbage med et tilbud
+                og tidsestimat. Gratis diagnostik og ingen forpligtelse.
+              </p>
+            </div>
+          </FadeIn>
+          <RepairForm />
+        </div>
+      </SectionWrapper>
+
+      {/* -- CTA -- */}
       <SectionWrapper background="charcoal" className="text-white">
         <div className="mx-auto max-w-2xl text-center">
           <FadeIn>
             <Heading as="h2" size="md" className="text-white">
-              Klar til at få din enhed fikset?
+              Klar til at faa din enhed fikset?
             </Heading>
             <p className="mt-4 text-white/60">
               Beskriv problemet, og vi vender hurtigt tilbage med en fast pris
