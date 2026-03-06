@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
 import { SPARE_PART_CATEGORIES } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/medusa/client";
+import { getCollectionProducts } from "@/lib/shopify/client";
 import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
+import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -46,8 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${BASE_URL}/reparation`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${BASE_URL}/kvalitet`,
@@ -250,5 +251,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages];
+  // ---- Repair pages -----------------------------------------------------------
+
+  const repairBrands = await getActiveBrands();
+  const repairBrandPages: MetadataRoute.Sitemap = repairBrands.map((brand) => ({
+    url: `${BASE_URL}/reparation/${brand.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  const repairModelSlugs = await getAllModelSlugs();
+  const repairModelPages: MetadataRoute.Sitemap = repairModelSlugs.map(({ brand, model }) => ({
+    url: `${BASE_URL}/reparation/${brand}/${model}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages];
 }
