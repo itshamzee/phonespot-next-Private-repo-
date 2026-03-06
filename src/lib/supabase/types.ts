@@ -42,6 +42,13 @@ export type RepairStatus =
   | "faerdig"
   | "afhentet";
 
+export interface BookingDetails {
+  selected_services: { id: string; name: string; price_dkk: number }[];
+  total_price_dkk: number;
+  discount_percent: number;
+  includes_tempered_glass: boolean;
+}
+
 export interface RepairTicket {
   id: string;
   customer_name: string;
@@ -52,6 +59,7 @@ export interface RepairTicket {
   issue_description: string;
   service_type: string;
   status: RepairStatus;
+  booking_details: BookingDetails | null;
   created_at: string;
   updated_at: string;
 }
