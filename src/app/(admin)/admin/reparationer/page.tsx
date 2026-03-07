@@ -59,7 +59,8 @@ export default function AdminReparationerPage() {
     }
 
     loadTickets();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredTickets = tickets.filter((ticket) => {
     // Status filter

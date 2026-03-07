@@ -25,7 +25,8 @@ export default function AdminKunderPage() {
       setLoading(false);
     }
     loadCustomers();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = customers.filter((c) => {
     if (!search.trim()) return true;

@@ -36,7 +36,8 @@ export default function AdminSmsLogPage() {
       setLoading(false);
     }
     load();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = entries.filter((e) => {
     if (!search.trim()) return true;

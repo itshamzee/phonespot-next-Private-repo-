@@ -50,6 +50,7 @@ export default function AdminDashboardPage() {
     async function loadDashboard() {
       setLoading(true);
 
+      try {
       // Fetch all tickets for stat calculations
       const { data: allTickets } = await supabase
         .from("repair_tickets")
@@ -94,27 +95,37 @@ export default function AdminDashboardPage() {
       );
 
       // New inquiries count
-      const { count: inquiryCount } = await supabase
-        .from("contact_inquiries")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "ny");
+      let newInquiries = 0;
+      try {
+        const { count: inquiryCount } = await supabase
+          .from("contact_inquiries")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "ny");
+        newInquiries = inquiryCount ?? 0;
+      } catch {
+        // Table may not exist yet if migration hasn't been run
+      }
 
       setStats({
         activeCases,
         pendingQuotes,
         finishedToday,
         revenueThisMonth,
-        newInquiries: inquiryCount ?? 0,
+        newInquiries,
       });
 
       // Recent 10 tickets
       setRecentTickets(tickets.slice(0, 10));
+      } catch (err) {
+        console.error("Dashboard load error:", err);
+      }
 
       setLoading(false);
     }
 
     loadDashboard();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("da-DK", {
