@@ -31,6 +31,25 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/admin/indlevering",
+    label: "Indlevering",
+    icon: (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/reparationer",
     label: "Reparationer",
     icon: (
@@ -45,6 +64,44 @@ const NAV_ITEMS = [
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M11.42 15.17l-5.384-5.383a2.025 2.025 0 01-.586-1.504c.012-.754.328-1.472.886-2.01a2.72 2.72 0 013.93.036l.455.457.457-.457a2.72 2.72 0 013.928-.036 2.72 2.72 0 01.037 3.514l-5.384 5.383a.75.75 0 01-1.06 0zM21.75 6.75a3 3 0 00-3-3h-1.5a3 3 0 00-3 3v.75h7.5v-.75zM21.75 9h-7.5v6.75a3 3 0 003 3h1.5a3 3 0 003-3V9z"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/kunder",
+    label: "Kunder",
+    icon: (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/henvendelser",
+    label: "Henvendelser",
+    icon: (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859M12 3v8.25m0 0l-3-3m3 3l3-3"
         />
       </svg>
     ),
@@ -74,8 +131,8 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: "/admin/kunder",
-    label: "Kunder",
+    href: "/admin/sms-log",
+    label: "SMS Log",
     icon: (
       <svg
         className="h-5 w-5"
@@ -87,7 +144,7 @@ const NAV_ITEMS = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+          d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM2.25 12c0 4.556 3.694 8.25 8.25 8.25 1.28 0 2.492-.292 3.573-.818l4.177.818-1.091-3.817A8.22 8.22 0 0018.75 12c0-4.556-3.694-8.25-8.25-8.25S2.25 7.444 2.25 12z"
         />
       </svg>
     ),
