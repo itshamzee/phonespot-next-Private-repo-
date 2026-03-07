@@ -47,6 +47,7 @@ export async function GET(
   const services = (ticket.services ?? []) as { name: string; price_dkk: number }[];
   const totalPrice = services.reduce((sum: number, s: { price_dkk: number }) => sum + s.price_dkk, 0);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
     React.createElement(IntakeReceiptDocument, {
       data: {
@@ -66,10 +67,10 @@ export async function GET(
         services,
         totalPrice,
       },
-    }),
+    }) as any,
   );
 
-  return new Response(pdfBuffer, {
+  return new Response(pdfBuffer as unknown as BodyInit, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

@@ -417,7 +417,6 @@ export default function AdminTicketDetailPage({
               </div>
             </div>
           )}
-        </div>
 
           {/* Payment status */}
           <div className="rounded-2xl border border-soft-grey bg-white p-6">

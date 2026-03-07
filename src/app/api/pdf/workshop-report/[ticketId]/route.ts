@@ -49,6 +49,7 @@ export async function GET(
     .map((n) => n.text)
     .join("\n");
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
     React.createElement(WorkshopReportDocument, {
       data: {
@@ -64,10 +65,10 @@ export async function GET(
         services,
         internalNotes,
       },
-    }),
+    }) as any,
   );
 
-  return new Response(pdfBuffer, {
+  return new Response(pdfBuffer as unknown as BodyInit, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
