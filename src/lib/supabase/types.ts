@@ -16,6 +16,7 @@ export interface RepairModel {
   brand_id: string;
   slug: string;
   name: string;
+  series: string | null;
   image_url: string | null;
   sort_order: number;
   active: boolean;
@@ -36,6 +37,7 @@ export interface RepairService {
 
 export type RepairStatus =
   | "modtaget"
+  | "diagnostik"
   | "tilbud_sendt"
   | "godkendt"
   | "i_gang"
@@ -60,6 +62,17 @@ export interface RepairTicket {
   service_type: string;
   status: RepairStatus;
   booking_details: BookingDetails | null;
+  customer_id: string | null;
+  device_id: string | null;
+  services: { id: string; name: string; price_dkk: number }[] | null;
+  internal_notes: InternalNote[];
+  intake_checklist: ChecklistItem[] | null;
+  intake_photos: string[];
+  checkout_photos: string[];
+  shopify_draft_order_id: string | null;
+  shopify_order_id: string | null;
+  paid: boolean;
+  paid_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,6 +95,71 @@ export interface RepairStatusLog {
   old_status: string | null;
   new_status: string;
   note: string | null;
+  created_at: string;
+}
+
+export type CustomerType = "privat" | "erhverv";
+
+export interface Customer {
+  id: string;
+  type: CustomerType;
+  name: string;
+  email: string | null;
+  phone: string;
+  company_name: string | null;
+  cvr: string | null;
+  created_at: string;
+}
+
+export interface CustomerDevice {
+  id: string;
+  customer_id: string;
+  brand: string;
+  model: string;
+  serial_number: string | null;
+  color: string | null;
+  condition_notes: string | null;
+  photos: string[];
+  created_at: string;
+}
+
+export type ChecklistStatus = "ok" | "fejl" | "ikke_relevant";
+
+export interface ChecklistItem {
+  label: string;
+  status: ChecklistStatus;
+  note: string;
+  photo_url: string | null;
+}
+
+export interface InternalNote {
+  text: string;
+  author: string;
+  timestamp: string;
+}
+
+export type InquiryStatus = "ny" | "besvaret" | "lukket";
+
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  message: string;
+  status: InquiryStatus;
+  admin_notes: string | null;
+  created_at: string;
+}
+
+export interface SmsLogEntry {
+  id: string;
+  ticket_id: string | null;
+  customer_id: string | null;
+  phone: string;
+  message: string;
+  provider_message_id: string | null;
+  status: "pending" | "sent" | "failed";
   created_at: string;
 }
 
@@ -117,6 +195,26 @@ export interface Database {
         Row: RepairService;
         Insert: Omit<RepairService, "id" | "created_at">;
         Update: Partial<RepairService>;
+      };
+      customers: {
+        Row: Customer;
+        Insert: Omit<Customer, "id" | "created_at">;
+        Update: Partial<Customer>;
+      };
+      customer_devices: {
+        Row: CustomerDevice;
+        Insert: Omit<CustomerDevice, "id" | "created_at">;
+        Update: Partial<CustomerDevice>;
+      };
+      contact_inquiries: {
+        Row: ContactInquiry;
+        Insert: Omit<ContactInquiry, "id" | "created_at">;
+        Update: Partial<ContactInquiry>;
+      };
+      sms_log: {
+        Row: SmsLogEntry;
+        Insert: Omit<SmsLogEntry, "id" | "created_at">;
+        Update: Partial<SmsLogEntry>;
       };
     };
   };
