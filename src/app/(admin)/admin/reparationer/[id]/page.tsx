@@ -12,6 +12,7 @@ import type {
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
+  diagnostik: "Diagnostik",
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
   modtaget: "bg-blue-100 text-blue-800",
+  diagnostik: "bg-indigo-100 text-indigo-800",
   tilbud_sendt: "bg-yellow-100 text-yellow-800",
   godkendt: "bg-green-100 text-green-800",
   i_gang: "bg-orange-100 text-orange-800",
@@ -29,7 +31,8 @@ const STATUS_COLORS: Record<RepairStatus, string> = {
 };
 
 const STATUS_PROGRESSION: Record<RepairStatus, RepairStatus | null> = {
-  modtaget: null, // Use quote flow instead
+  modtaget: "diagnostik",
+  diagnostik: null, // Use quote flow
   tilbud_sendt: "godkendt",
   godkendt: "i_gang",
   i_gang: "faerdig",
@@ -57,6 +60,14 @@ export default function AdminTicketDetailPage({
 
   // Status update state
   const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // Internal note state
+  const [noteText, setNoteText] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+
+  // SMS state
+  const [smsMessage, setSmsMessage] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
 
   const supabase = createBrowserClient();
 
@@ -148,6 +159,40 @@ export default function AdminTicketDetailPage({
       hour: "2-digit",
       minute: "2-digit",
     });
+  }
+
+  async function handleAddNote() {
+    if (!ticket || !noteText.trim()) return;
+    setNoteSaving(true);
+    const existingNotes = ticket.internal_notes ?? [];
+    const newNotes = [
+      ...existingNotes,
+      { text: noteText.trim(), author: "Admin", timestamp: new Date().toISOString() },
+    ];
+    await supabase
+      .from("repair_tickets")
+      .update({ internal_notes: newNotes, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    setNoteText("");
+    await loadData();
+    setNoteSaving(false);
+  }
+
+  async function handleSendSms() {
+    if (!ticket || !smsMessage.trim()) return;
+    setSmsSending(true);
+    await fetch("/api/sms/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ticket_id: id,
+        customer_id: ticket.customer_id,
+        phone: ticket.customer_phone,
+        message: smsMessage.trim(),
+      }),
+    });
+    setSmsMessage("");
+    setSmsSending(false);
   }
 
   if (loading) {
@@ -372,6 +417,149 @@ export default function AdminTicketDetailPage({
               </div>
             </div>
           )}
+        </div>
+
+          {/* Payment status */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-6">
+            <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+              Betaling
+            </h3>
+            <div className="flex items-center gap-3">
+              <span
+                className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                  ticket.paid
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-50 text-red-600"
+                }`}
+              >
+                {ticket.paid ? "Betalt" : "Ikke betalt"}
+              </span>
+              {ticket.paid_at && (
+                <span className="text-xs text-gray">
+                  {formatDateTime(ticket.paid_at)}
+                </span>
+              )}
+            </div>
+            {ticket.shopify_draft_order_id && (
+              <p className="mt-2 text-xs text-gray">
+                Shopify Draft: {ticket.shopify_draft_order_id}
+              </p>
+            )}
+          </div>
+
+          {/* PDF downloads */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-6">
+            <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+              Dokumenter
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={`/api/pdf/intake-receipt/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-charcoal px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Indleveringsbevis
+              </a>
+              <a
+                href={`/api/pdf/workshop-report/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-soft-grey px-5 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-sand"
+              >
+                Vaerkstedsrapport
+              </a>
+            </div>
+          </div>
+
+          {/* Intake checklist */}
+          {ticket.intake_checklist && (ticket.intake_checklist as unknown[]).length > 0 && (
+            <div className="rounded-2xl border border-soft-grey bg-white p-6">
+              <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+                Tjekliste
+              </h3>
+              <div className="space-y-2">
+                {(ticket.intake_checklist as { label: string; status: string; note: string }[]).map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 text-sm">
+                    <span
+                      className={`w-10 text-xs font-bold ${
+                        item.status === "fejl"
+                          ? "text-red-600"
+                          : item.status === "ok"
+                            ? "text-green-600"
+                            : "text-gray"
+                      }`}
+                    >
+                      {item.status === "ok" ? "OK" : item.status === "fejl" ? "FEJL" : "N/A"}
+                    </span>
+                    <span className="text-charcoal">{item.label}</span>
+                    {item.note && <span className="text-gray">— {item.note}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Internal notes */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-6">
+            <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+              Interne noter
+            </h3>
+            {ticket.internal_notes && ticket.internal_notes.length > 0 && (
+              <div className="mb-4 space-y-3">
+                {ticket.internal_notes.map((note, i) => (
+                  <div key={i} className="rounded-lg bg-sand/50 p-3">
+                    <p className="text-sm text-charcoal">{note.text}</p>
+                    <p className="mt-1 text-xs text-gray">
+                      {note.author} · {formatDateTime(note.timestamp)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Tilfoej note..."
+                className="min-w-0 flex-1 rounded-lg border border-soft-grey bg-white px-4 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddNote}
+                disabled={noteSaving || !noteText.trim()}
+                className="rounded-lg bg-charcoal px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {noteSaving ? "..." : "Tilfoej"}
+              </button>
+            </div>
+          </div>
+
+          {/* SMS */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-6">
+            <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+              Send SMS
+            </h3>
+            <p className="mb-2 text-sm text-gray">Til: {ticket.customer_phone}</p>
+            <div className="flex gap-2">
+              <textarea
+                rows={2}
+                value={smsMessage}
+                onChange={(e) => setSmsMessage(e.target.value)}
+                placeholder="Skriv besked..."
+                className="min-w-0 flex-1 rounded-lg border border-soft-grey bg-white px-4 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleSendSms}
+                disabled={smsSending || !smsMessage.trim()}
+                className="self-end rounded-lg bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {smsSending ? "Sender..." : "Send"}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar — status history */}

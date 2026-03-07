@@ -7,6 +7,7 @@ import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
+  diagnostik: "Diagnostik",
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
@@ -16,6 +17,7 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
   modtaget: "bg-blue-100 text-blue-800",
+  diagnostik: "bg-indigo-100 text-indigo-800",
   tilbud_sendt: "bg-yellow-100 text-yellow-800",
   godkendt: "bg-green-100 text-green-800",
   i_gang: "bg-orange-100 text-orange-800",
@@ -28,6 +30,7 @@ interface DashboardStats {
   pendingQuotes: number;
   finishedToday: number;
   revenueThisMonth: number;
+  newInquiries: number;
 }
 
 export default function AdminDashboardPage() {
@@ -36,6 +39,7 @@ export default function AdminDashboardPage() {
     pendingQuotes: 0,
     finishedToday: 0,
     revenueThisMonth: 0,
+    newInquiries: 0,
   });
   const [recentTickets, setRecentTickets] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +93,19 @@ export default function AdminDashboardPage() {
         0
       );
 
-      setStats({ activeCases, pendingQuotes, finishedToday, revenueThisMonth });
+      // New inquiries count
+      const { count: inquiryCount } = await supabase
+        .from("contact_inquiries")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "ny");
+
+      setStats({
+        activeCases,
+        pendingQuotes,
+        finishedToday,
+        revenueThisMonth,
+        newInquiries: inquiryCount ?? 0,
+      });
 
       // Recent 10 tickets
       setRecentTickets(tickets.slice(0, 10));
@@ -132,7 +148,7 @@ export default function AdminDashboardPage() {
       </h2>
 
       {/* Stat cards */}
-      <div className="mb-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-10 grid grid-cols-2 gap-4 lg:grid-cols-5">
         <div className="rounded-2xl border border-soft-grey bg-white p-6">
           <p className="text-3xl font-bold text-green-eco">
             {stats.activeCases}
@@ -156,6 +172,12 @@ export default function AdminDashboardPage() {
             {formatCurrency(stats.revenueThisMonth)}
           </p>
           <p className="mt-1 text-sm text-gray">Omsaetning denne maaned</p>
+        </div>
+        <div className="rounded-2xl border border-soft-grey bg-white p-6">
+          <p className="text-3xl font-bold text-green-eco">
+            {stats.newInquiries}
+          </p>
+          <p className="mt-1 text-sm text-gray">Nye henvendelser</p>
         </div>
       </div>
 
@@ -205,10 +227,22 @@ export default function AdminDashboardPage() {
       {/* Quick actions */}
       <div className="flex flex-wrap gap-3">
         <Link
+          href="/admin/indlevering"
+          className="rounded-xl bg-green-eco px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          + Ny indlevering
+        </Link>
+        <Link
           href="/admin/reparationer"
           className="rounded-xl border border-soft-grey bg-white px-5 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-sand"
         >
           Se ventende sager
+        </Link>
+        <Link
+          href="/admin/henvendelser"
+          className="rounded-xl border border-soft-grey bg-white px-5 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-sand"
+        >
+          Se henvendelser
         </Link>
         <Link
           href="/admin/prisliste"

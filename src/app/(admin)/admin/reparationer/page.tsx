@@ -7,6 +7,7 @@ import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
+  diagnostik: "Diagnostik",
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
@@ -16,6 +17,7 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
   modtaget: "bg-blue-100 text-blue-800",
+  diagnostik: "bg-indigo-100 text-indigo-800",
   tilbud_sendt: "bg-yellow-100 text-yellow-800",
   godkendt: "bg-green-100 text-green-800",
   i_gang: "bg-orange-100 text-orange-800",
@@ -26,6 +28,7 @@ const STATUS_COLORS: Record<RepairStatus, string> = {
 const ALL_STATUSES: (RepairStatus | "alle")[] = [
   "alle",
   "modtaget",
+  "diagnostik",
   "tilbud_sendt",
   "godkendt",
   "i_gang",
@@ -85,9 +88,17 @@ export default function AdminReparationerPage() {
 
   return (
     <div>
-      <h2 className="mb-6 font-display text-2xl font-bold text-charcoal">
-        Reparationssager
-      </h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="font-display text-2xl font-bold text-charcoal">
+          Reparationssager
+        </h2>
+        <Link
+          href="/admin/indlevering"
+          className="rounded-full bg-green-eco px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          + Ny indlevering
+        </Link>
+      </div>
 
       {/* Search */}
       <div className="mb-4">
@@ -149,9 +160,20 @@ export default function AdminReparationerPage() {
                   >
                     {STATUS_LABELS[ticket.status]}
                   </span>
-                  <span className="text-xs text-gray">
-                    {formatDate(ticket.created_at)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        ticket.paid
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {ticket.paid ? "Betalt" : "Ikke betalt"}
+                    </span>
+                    <span className="text-xs text-gray">
+                      {formatDate(ticket.created_at)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>
