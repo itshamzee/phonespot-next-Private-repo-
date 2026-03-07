@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createServerClient } from "@/lib/supabase/client";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, subject, message } = body;
+  const { name, email, phone, subject, message } = body;
 
   if (!name || !email || !message) {
     return NextResponse.json({ error: "Udfyld alle felter" }, { status: 400 });
   }
+
+  const supabase = createServerClient();
+
+  // Save to database
+  await supabase.from("contact_inquiries").insert({
+    name: name.trim(),
+    email: email.trim(),
+    phone: phone?.trim() || null,
+    subject: subject?.trim() || null,
+    message: message.trim(),
+  });
 
   try {
     await resend.emails.send({
@@ -17,7 +29,7 @@ export async function POST(request: Request) {
       to: "info@phonespot.dk",
       replyTo: email,
       subject: `Kontakt: ${subject || "Generel henvendelse"}`,
-      text: `Navn: ${name}\nEmail: ${email}\n\n${message}`,
+      text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}\n${message}`,
     });
 
     return NextResponse.json({ success: true });
