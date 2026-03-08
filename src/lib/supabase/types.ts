@@ -163,6 +163,83 @@ export interface SmsLogEntry {
   created_at: string;
 }
 
+// SEO Analytics types
+
+export interface SeoSite {
+  id: string;
+  name: string;
+  domain: string;
+  gsc_property: string;
+  gsc_credentials_env: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface SeoKeyword {
+  id: string;
+  site_id: string;
+  date: string;
+  query: string;
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  created_at: string;
+}
+
+export interface SeoPage {
+  id: string;
+  site_id: string;
+  date: string;
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  top_query: string | null;
+  created_at: string;
+}
+
+export type ContentAuditType =
+  | "service_page"
+  | "product_page"
+  | "landing_page"
+  | "external";
+export type IssueSeverity = "high" | "medium" | "low";
+
+export interface AuditIssue {
+  type: string;
+  severity: IssueSeverity;
+  message: string;
+}
+
+export interface SeoContentAudit {
+  id: string;
+  site_id: string;
+  page_path: string;
+  content_type: ContentAuditType;
+  content_id: string | null;
+  score: number;
+  issues: AuditIssue[];
+  recommendations: string[];
+  last_audited: string;
+  created_at: string;
+}
+
+export type SyncStatus = "success" | "error";
+
+export interface SeoSyncLog {
+  id: string;
+  site_id: string;
+  status: SyncStatus;
+  keywords_synced: number;
+  pages_synced: number;
+  error_message: string | null;
+  started_at: string;
+  completed_at: string | null;
+}
+
 export interface Database {
   public: {
     Tables: {
