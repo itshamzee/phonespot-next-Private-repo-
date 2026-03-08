@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCollectionConfig } from "@/lib/collections";
-import { getProduct, searchProducts, getCollectionProducts } from "@/lib/medusa/client";
-import type { Product } from "@/lib/medusa/types";
-import { sanitizeHtml } from "@/lib/sanitize";
-import { ImageGallery } from "@/components/product/image-gallery";
+import { getProduct, searchProducts, getCollectionProducts } from "@/lib/shopify/client";
+import type { Product } from "@/lib/shopify/types";
+import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
+import { ProductDetails } from "@/components/product/product-details";
 import { UpsellWrapper } from "@/components/product/upsell-wrapper";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
@@ -14,33 +14,21 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
 import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
+import { ConditionIllustrations } from "@/components/product/condition-illustrations";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Suspense } from "react";
+
+// Allow any product handle to be rendered on-demand (not just pre-built ones)
+export const dynamicParams = true;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Parse "spec:Key:Value" tags into a key-value map. */
-function parseSpecTags(tags: string[]): Record<string, string> {
-  const specs: Record<string, string> = {};
-  for (const tag of tags) {
-    if (tag.startsWith("spec:")) {
-      const parts = tag.split(":");
-      if (parts.length >= 3) {
-        specs[parts[1]] = parts.slice(2).join(":");
-      }
-    }
-  }
-  return specs;
-}
-
 /** Build Product JSON-LD for SEO / PriceRunner. */
 function getProductJsonLd(product: Product, url: string): Record<string, unknown> {
   const price = product.priceRange.minVariantPrice;
-  const condition = product.tags.some((t) => t.toLowerCase().includes("grade-a"))
-    ? "https://schema.org/NewCondition"
-    : "https://schema.org/RefurbishedCondition";
+  const condition = "https://schema.org/RefurbishedCondition";
 
   return {
     "@context": "https://schema.org",
@@ -76,134 +64,6 @@ function getProductJsonLd(product: Product, url: string): Record<string, unknown
   };
 }
 
-/** Return generic specs based on productType when tags don't provide data. */
-function getGenericSpecs(productType: string): { label: string; value: string }[] {
-  const lower = productType.toLowerCase();
-
-  if (lower.includes("watch") || lower.includes("apple watch")) {
-    return [
-      { label: "Display", value: "OLED Retina (Always-On)" },
-      { label: "Processor", value: "Apple S-serie chip" },
-      { label: "Sensorer", value: "Puls, SpO2, accelerometer, gyroskop" },
-      { label: "Vandtæthed", value: "WR50 / IP6X (modellafhængig)" },
-      { label: "Batteri", value: "Op til 18 timer (standard brug)" },
-      { label: "Størrelse", value: "Se variantvælger" },
-      { label: "Forbindelse", value: "Wi-Fi, Bluetooth 5.x, GPS" },
-      { label: "Operativsystem", value: "watchOS (seneste understøttede version)" },
-    ];
-  }
-
-  if (lower.includes("iphone")) {
-    return [
-      { label: "Display", value: "Super Retina XDR OLED" },
-      { label: "Processor", value: "Apple A-serie chip" },
-      { label: "Kamera", value: "Dual/Triple kamera-system" },
-      { label: "Batteri", value: "Li-Ion, hurtigopladning" },
-      { label: "Lagerplads", value: "Se variantvælger" },
-      { label: "Forbindelse", value: "5G, Wi-Fi 6, Bluetooth 5.3, NFC" },
-      { label: "Operativsystem", value: "iOS (seneste understøttede version)" },
-    ];
-  }
-
-  if (lower.includes("ipad")) {
-    return [
-      { label: "Display", value: "Liquid Retina / Retina" },
-      { label: "Processor", value: "Apple M-serie / A-serie chip" },
-      { label: "Kamera", value: "Vidvinkel + ultravid" },
-      { label: "Batteri", value: "Li-Ion, op til 10 timers brug" },
-      { label: "Lagerplads", value: "Se variantvælger" },
-      { label: "Forbindelse", value: "Wi-Fi 6, Bluetooth 5.x" },
-      { label: "Operativsystem", value: "iPadOS (seneste understøttede)" },
-    ];
-  }
-
-  if (lower.includes("samsung") || lower.includes("galaxy") || lower.includes("smartphone")) {
-    return [
-      { label: "Display", value: "Dynamic AMOLED 2X" },
-      { label: "Processor", value: "Qualcomm / Exynos" },
-      { label: "Kamera", value: "Multi-kamera system" },
-      { label: "Batteri", value: "Li-Ion, hurtigopladning" },
-      { label: "Lagerplads", value: "Se variantvælger" },
-      { label: "Forbindelse", value: "5G, Wi-Fi, Bluetooth, NFC" },
-      { label: "Operativsystem", value: "Android (seneste understøttede)" },
-    ];
-  }
-
-  if (lower.includes("macbook") || lower.includes("mac")) {
-    return [
-      { label: "Processortype", value: "Apple M-serie / Intel Core" },
-      { label: "Display", value: "Retina / Liquid Retina, True Tone" },
-      { label: "Displaystørrelse", value: "13,3\" / 14\" / 15\" / 16\"" },
-      { label: "Grafik", value: "Integreret Apple GPU / Intel Iris Plus" },
-      { label: "RAM", value: "Se variantvælger" },
-      { label: "Lagerplads", value: "SSD — se variantvælger" },
-      { label: "Porte", value: "USB-C / Thunderbolt, MagSafe, HDMI (udvalgte)" },
-      { label: "Trådløs", value: "Wi-Fi 6, Bluetooth 5.0+" },
-      { label: "Batteri", value: "Li-Po, op til 18 timers brug" },
-      { label: "Tastatur", value: "Baggrundsbelyst, dansk layout" },
-      { label: "Trackpad", value: "Force Touch trackpad" },
-      { label: "Operativsystem", value: "macOS (seneste understøttede version)" },
-      { label: "Vægt", value: "Ca. 1,24 - 2,14 kg (modelafhængig)" },
-    ];
-  }
-
-  if (lower.includes("thinkpad") || lower.includes("lenovo")) {
-    return [
-      { label: "Processortype", value: "Intel Core i5 / i7" },
-      { label: "Display", value: "IPS Full HD (1920×1080)" },
-      { label: "Displaystørrelse", value: "14\" / 15,6\"" },
-      { label: "Grafik", value: "Intel UHD / Iris Xe Graphics" },
-      { label: "RAM", value: "Se variantvælger" },
-      { label: "Lagerplads", value: "SSD — se variantvælger" },
-      { label: "Porte", value: "USB-A, USB-C, HDMI, Ethernet (udvalgte)" },
-      { label: "Trådløs", value: "Wi-Fi 5/6, Bluetooth 5.x" },
-      { label: "Batteri", value: "Li-Ion, op til 10 timers brug" },
-      { label: "Tastatur", value: "ThinkPad-tastatur, baggrundsbelyst" },
-      { label: "Sikkerhed", value: "Fingeraftrykslæser, TPM 2.0" },
-      { label: "Operativsystem", value: "Windows 11 (ren installation)" },
-      { label: "Holdbarhed", value: "MIL-STD-810G testet" },
-      { label: "Vægt", value: "Ca. 1,4 - 1,9 kg (modelafhængig)" },
-    ];
-  }
-
-  if (lower.includes("elitebook") || lower.includes("hp") || lower.includes("probook")) {
-    return [
-      { label: "Processortype", value: "Intel Core i5 / i7" },
-      { label: "Display", value: "IPS Full HD (1920×1080)" },
-      { label: "Displaystørrelse", value: "14\" / 15,6\"" },
-      { label: "Grafik", value: "Intel UHD / Iris Xe Graphics" },
-      { label: "RAM", value: "Se variantvælger" },
-      { label: "Lagerplads", value: "SSD — se variantvælger" },
-      { label: "Porte", value: "USB-A, USB-C, HDMI, DisplayPort" },
-      { label: "Trådløs", value: "Wi-Fi 6, Bluetooth 5.x" },
-      { label: "Batteri", value: "Li-Ion, op til 8 timers brug" },
-      { label: "Lyd", value: "Bang & Olufsen højttalere" },
-      { label: "Sikkerhed", value: "Fingeraftrykslæser, IR-kamera" },
-      { label: "Operativsystem", value: "Windows 11 (ren installation)" },
-      { label: "Vægt", value: "Ca. 1,3 - 1,8 kg (modelafhængig)" },
-    ];
-  }
-
-  if (lower.includes("computer") || lower.includes("laptop") || lower.includes("notebook")) {
-    return [
-      { label: "Processortype", value: "Intel Core / AMD Ryzen" },
-      { label: "Display", value: "Full HD IPS" },
-      { label: "Grafik", value: "Integreret" },
-      { label: "RAM", value: "Se variantvælger" },
-      { label: "Lagerplads", value: "SSD — se variantvælger" },
-      { label: "Porte", value: "USB-A, USB-C, HDMI" },
-      { label: "Trådløs", value: "Wi-Fi, Bluetooth" },
-      { label: "Batteri", value: "Li-Ion, min. 4 timers brug" },
-      { label: "Operativsystem", value: "Windows 11 / macOS (ren installation)" },
-    ];
-  }
-
-  return [
-    { label: "Type", value: productType || "Elektronik" },
-    { label: "Stand", value: "Testet & kvalitetssikret" },
-    { label: "Garanti", value: "36 måneders garanti" },
-  ];
-}
 
 // ---------------------------------------------------------------------------
 // Metadata
@@ -249,7 +109,7 @@ export async function generateMetadata({
       type: "website",
     },
     alternates: {
-      canonical: `/${collectionSlug}/${productHandle}`,
+      canonical: `https://phonespot.dk/${collectionSlug}/${productHandle}`,
     },
   };
 }
@@ -265,13 +125,10 @@ export default async function ProductPage({
 }) {
   const { collection: collectionSlug, product: productHandle } = await params;
 
-  // Validate collection slug
+  // Look up collection config (may be null for spare-parts etc.)
   const config = getCollectionConfig(collectionSlug);
-  if (!config) {
-    notFound();
-  }
 
-  // Fetch product
+  // Fetch product — this is what matters, not the collection slug
   let product: Product | null = null;
   try {
     product = await getProduct(productHandle);
@@ -281,11 +138,6 @@ export default async function ProductPage({
   if (!product) {
     notFound();
   }
-
-  // Sanitize HTML description using DOMPurify via sanitizeHtml utility
-  const cleanDescription = product.descriptionHtml
-    ? sanitizeHtml(product.descriptionHtml)
-    : "";
 
   // Find compatible accessories via product tags
   const compatibleTag = product.tags.find((t) => t.startsWith("compatible:"));
@@ -300,23 +152,18 @@ export default async function ProductPage({
     }
   }
 
-  // Fetch related products from same collection
+  // Fetch related products from same collection (only if collection is mapped)
   let relatedProducts: Product[] = [];
-  try {
-    const related = await getCollectionProducts(config.shopifyHandle);
-    relatedProducts = (related?.products ?? [])
-      .filter((p) => p.handle !== productHandle)
-      .slice(0, 4);
-  } catch {
-    relatedProducts = [];
+  if (config) {
+    try {
+      const related = await getCollectionProducts(config.shopifyHandle);
+      relatedProducts = (related?.products ?? [])
+        .filter((p) => p.handle !== productHandle)
+        .slice(0, 4);
+    } catch {
+      relatedProducts = [];
+    }
   }
-
-  // Parse specs from tags or fall back to generic
-  const parsedSpecs = parseSpecTags(product.tags);
-  const specs =
-    Object.keys(parsedSpecs).length > 0
-      ? Object.entries(parsedSpecs).map(([label, value]) => ({ label, value }))
-      : getGenericSpecs(product.productType);
 
   return (
     <>
@@ -342,7 +189,7 @@ export default async function ProductPage({
               href={`/${collectionSlug}`}
               className="transition-colors hover:text-charcoal"
             >
-              {config.title}
+              {config?.title ?? collectionSlug}
             </Link>
           </li>
           <li aria-hidden="true">/</li>
@@ -357,8 +204,16 @@ export default async function ProductPage({
       {/* ----------------------------------------------------------------- */}
       <section className="mx-auto max-w-7xl px-4 py-8 md:py-12">
         <div className="grid gap-8 md:grid-cols-2 md:gap-12">
-          {/* Left: Image gallery */}
-          <ImageGallery images={product.images} title={product.title} />
+          {/* Left: Image gallery — syncs with grade picker via URL params */}
+          <ImageGalleryWithGrade
+            images={product.images}
+            title={product.title}
+            deviceType={
+              collectionSlug.includes("watch") || collectionSlug.includes("smartwatch") ? "watch" :
+              collectionSlug.includes("ipad") ? "ipad" :
+              collectionSlug.includes("baerbar") || collectionSlug.includes("laptop") ? "laptop" : "phone"
+            }
+          />
 
           {/* Right: Product info */}
           <div className="flex flex-col gap-4">
@@ -371,7 +226,62 @@ export default async function ProductPage({
       </section>
 
       {/* ----------------------------------------------------------------- */}
-      {/* 3. Inkluderet i boksen                                             */}
+      {/* 3. Hvad betyder standen? (linked from grade picker)                */}
+      {/* ----------------------------------------------------------------- */}
+      <SectionWrapper background="default" id="hvad-betyder-standen">
+        <Heading as="h2" size="md" className="mb-4 text-center">
+          Hvad betyder standen?
+        </Heading>
+        <p className="mx-auto mb-8 max-w-2xl text-center font-body text-charcoal/70">
+          Alle vores enheder er 100&nbsp;% funktionelle og gennemgår en
+          grundig kvalitetstest med mindst 30 kontrolpunkter. Standen
+          beskriver udelukkende det kosmetiske udseende.
+        </p>
+
+        <ConditionIllustrations
+          deviceType={
+            collectionSlug.includes("watch") || collectionSlug.includes("smartwatch") ? "watch" :
+            collectionSlug.includes("ipad") ? "ipad" :
+            collectionSlug.includes("baerbar") || collectionSlug.includes("laptop") ? "laptop" : "phone"
+          }
+        />
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/kvalitet"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-green-eco transition-colors hover:text-charcoal"
+          >
+            Læs mere om vores kvalitetsgaranti
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-4 w-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+              />
+            </svg>
+          </Link>
+        </div>
+      </SectionWrapper>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* 4. Om dette produkt — intro, highlights & specs                    */}
+      {/* ----------------------------------------------------------------- */}
+      <SectionWrapper background="cream">
+        <Heading as="h2" size="md" className="mb-8 text-center">
+          Om dette produkt
+        </Heading>
+        <ProductDetails product={product} />
+      </SectionWrapper>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* 5. Inkluderet i boksen                                             */}
       {/* ----------------------------------------------------------------- */}
       <SectionWrapper background="sand">
         <Heading as="h2" size="md" className="mb-10 text-center">
@@ -472,138 +382,6 @@ export default async function ProductPage({
           </div>
         </div>
       </SectionWrapper>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* 4. Stand & kvalitet                                                */}
-      {/* ----------------------------------------------------------------- */}
-      <SectionWrapper background="default">
-        <Heading as="h2" size="md" className="mb-4 text-center">
-          Hvad betyder standen?
-        </Heading>
-        <p className="mx-auto mb-10 max-w-2xl text-center font-body text-charcoal/70">
-          Alle vores enheder er 100&nbsp;% funktionelle og gennemgår en
-          grundig kvalitetstest med mindst 30 kontrolpunkter. Standen
-          beskriver udelukkende det kosmetiske udseende.
-        </p>
-        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-          {/* Grade A */}
-          <div className="rounded-2xl border border-sand bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-eco/10 text-lg font-bold text-green-eco">
-                A
-              </span>
-              <span className="font-display text-lg font-bold text-charcoal">
-                Som ny
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-charcoal/70">
-              Enheden fremstår næsten som ny. Ingen synlige ridser eller
-              brugstegn. Skærmen er perfekt og batteriet er i top tilstand.
-            </p>
-          </div>
-
-          {/* Grade B */}
-          <div className="rounded-2xl border border-sand bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-lg font-bold text-amber-700">
-                B
-              </span>
-              <span className="font-display text-lg font-bold text-charcoal">
-                Meget god
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-charcoal/70">
-              Enheden kan have lette brugsspor som små ridser på bagsiden
-              eller rammen. Skærmen er fri for ridser. Fuldt funktionel.
-            </p>
-          </div>
-
-          {/* Grade C */}
-          <div className="rounded-2xl border border-sand bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-lg font-bold text-orange-600">
-                C
-              </span>
-              <span className="font-display text-lg font-bold text-charcoal">
-                God
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-charcoal/70">
-              Enheden har tydelige brugsspor såsom ridser eller små mærker.
-              Alle funktioner virker perfekt. Bedste pris.
-            </p>
-          </div>
-        </div>
-        <div className="mt-8 text-center">
-          <Link
-            href="/kvalitet"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-green-eco transition-colors hover:text-charcoal"
-          >
-            Læs mere om vores kvalitetsgaranti
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-              />
-            </svg>
-          </Link>
-        </div>
-      </SectionWrapper>
-
-      {/* ----------------------------------------------------------------- */}
-      {/* 5. Product description (sanitized with DOMPurify)                  */}
-      {/* ----------------------------------------------------------------- */}
-      {cleanDescription && (
-        <SectionWrapper background="default">
-          <Heading as="h2" size="md" className="mb-6">
-            Produktbeskrivelse
-          </Heading>
-          <div
-            className="prose prose-sm md:prose-base max-w-none font-body text-charcoal/80 prose-headings:font-display prose-headings:text-charcoal prose-a:text-green-eco prose-strong:text-charcoal"
-            dangerouslySetInnerHTML={{ __html: cleanDescription }}
-          />
-        </SectionWrapper>
-      )}
-
-      {/* ----------------------------------------------------------------- */}
-      {/* 6. Specifikationer                                                 */}
-      {/* ----------------------------------------------------------------- */}
-      {specs.length > 0 && (
-        <SectionWrapper background="cream">
-          <Heading as="h2" size="md" className="mb-8 text-center">
-            Specifikationer
-          </Heading>
-          <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-sand bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
-              <tbody>
-                {specs.map((spec, idx) => (
-                  <tr
-                    key={spec.label}
-                    className={
-                      idx % 2 === 0 ? "bg-white" : "bg-sand/40"
-                    }
-                  >
-                    <td className="px-5 py-3.5 font-semibold text-charcoal w-2/5">
-                      {spec.label}
-                    </td>
-                    <td className="px-5 py-3.5 text-charcoal/70">
-                      {spec.value}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </SectionWrapper>
-      )}
 
       {/* ----------------------------------------------------------------- */}
       {/* 6b. Trustpilot Reviews                                              */}
