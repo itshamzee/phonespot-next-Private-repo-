@@ -1,8 +1,9 @@
-const domain = process.env.SHOPIFY_STORE_DOMAIN ?? "";
+const adminDomain = process.env.SHOPIFY_ADMIN_DOMAIN ?? "";
 const adminAccessToken = process.env.SHOPIFY_ADMIN_API_TOKEN ?? "";
 const API_VERSION = "2024-10";
 
-const adminEndpoint = `https://${domain}/admin/api/${API_VERSION}/graphql.json`;
+// Admin API requires the .myshopify.com domain, not the custom domain
+const adminEndpoint = `https://${adminDomain}/admin/api/${API_VERSION}/graphql.json`;
 
 async function shopifyAdminFetch<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
   const res = await fetch(adminEndpoint, {

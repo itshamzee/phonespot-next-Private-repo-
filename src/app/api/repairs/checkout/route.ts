@@ -136,7 +136,6 @@ export async function POST(request: NextRequest) {
 
     const draftOrder = await createDraftOrder({
       customerEmail: body.customer_email.trim().toLowerCase(),
-      customerPhone: body.customer_phone.trim(),
       lineItems,
       note: noteLines,
       tags: ["reparation", "online-booking", "forudbetaling"],
@@ -196,10 +195,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Repair checkout error:", error);
+    const message = error instanceof Error ? error.message : "Ukendt fejl";
     return NextResponse.json(
       {
         success: false,
-        error: "Der opstod en fejl. Prøv venligst igen.",
+        error: message,
       },
       { status: 500 },
     );
