@@ -137,6 +137,16 @@ export async function getCollectionProducts(
  * Fetch ALL products from a Shopify collection using cursor pagination.
  * Fetches in batches of 250 (Shopify max) until no more pages.
  */
+
+interface PaginatedCollectionResponse {
+  collection: {
+    products: {
+      nodes: ShopifyProductRaw[];
+      pageInfo: ShopifyPageInfo;
+    };
+  } | null;
+}
+
 export async function getAllCollectionProducts(
   handle: string,
   sortKey?: string,
@@ -146,21 +156,12 @@ export async function getAllCollectionProducts(
   let cursor: string | null = null;
 
   while (hasNextPage) {
-    const data = await shopifyFetch<{
-      collection: {
-        products: {
-          nodes: ShopifyProductRaw[];
-          pageInfo: ShopifyPageInfo;
-        };
-      } | null;
-    }>({
+    const vars: Record<string, unknown> = { handle, first: 250, after: cursor };
+    if (sortKey) vars.sortKey = sortKey;
+
+    const data = await shopifyFetch<PaginatedCollectionResponse>({
       query: GET_COLLECTION_PRODUCTS_PAGINATED,
-      variables: {
-        handle,
-        first: 250,
-        after: cursor,
-        ...(sortKey ? { sortKey } : {}),
-      },
+      variables: vars,
     });
 
     if (!data.collection) break;
