@@ -16,6 +16,16 @@ export interface ShopifyImage {
   height: number;
 }
 
+/** Store availability for a variant at a physical location. */
+export interface StoreAvailability {
+  available: boolean;
+  pickUpTime: string | null;
+  location: {
+    id: string;
+    name: string;
+  };
+}
+
 /** A single product variant (size, colour, etc.). */
 export interface ProductVariant {
   id: string;
@@ -24,6 +34,7 @@ export interface ProductVariant {
   selectedOptions: { name: string; value: string }[];
   price: Money;
   compareAtPrice: Money | null;
+  storeAvailability?: StoreAvailability[];
 }
 
 /** Full product representation used throughout the storefront. */
@@ -103,9 +114,23 @@ export interface ShopifyConnection<T> {
   nodes: T[];
 }
 
+export interface ShopifyPageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
+}
+
+export interface ShopifyConnectionWithPageInfo<T> {
+  nodes: T[];
+  pageInfo: ShopifyPageInfo;
+}
+
+export interface ShopifyProductVariantRaw extends Omit<ProductVariant, "storeAvailability"> {
+  storeAvailability?: ShopifyConnection<StoreAvailability>;
+}
+
 export interface ShopifyProductRaw extends Omit<Product, "images" | "variants"> {
   images: ShopifyConnection<ShopifyImage>;
-  variants: ShopifyConnection<ProductVariant>;
+  variants: ShopifyConnection<ShopifyProductVariantRaw>;
 }
 
 export interface ShopifyCollectionRaw extends Omit<Collection, "products"> {

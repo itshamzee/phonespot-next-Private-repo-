@@ -56,6 +56,16 @@ const PRODUCT_FRAGMENT = /* GraphQL */ `
           amount
           currencyCode
         }
+        storeAvailability(first: 5) {
+          nodes {
+            available
+            pickUpTime
+            location {
+              id
+              name
+            }
+          }
+        }
       }
     }
     seo {
@@ -72,7 +82,7 @@ export const GET_PRODUCTS_BY_COLLECTION = /* GraphQL */ `
   ${PRODUCT_FRAGMENT}
   query GetProductsByCollection(
     $handle: String!
-    $first: Int = 50
+    $first: Int = 250
     $sortKey: ProductCollectionSortKeys = BEST_SELLING
   ) {
     collection(handle: $handle) {
@@ -133,6 +143,39 @@ export const SEARCH_PRODUCTS = /* GraphQL */ `
       nodes {
         ... on Product {
           ...ProductFields
+        }
+      }
+    }
+  }
+`;
+
+export const GET_COLLECTION_PRODUCTS_PAGINATED = /* GraphQL */ `
+  ${IMAGE_FRAGMENT}
+  ${PRODUCT_FRAGMENT}
+  query GetCollectionProductsPaginated(
+    $handle: String!
+    $first: Int = 250
+    $after: String
+    $sortKey: ProductCollectionSortKeys = BEST_SELLING
+  ) {
+    collection(handle: $handle) {
+      handle
+      title
+      description
+      image {
+        ...ImageFields
+      }
+      seo {
+        title
+        description
+      }
+      products(first: $first, after: $after, sortKey: $sortKey) {
+        nodes {
+          ...ProductFields
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
         }
       }
     }

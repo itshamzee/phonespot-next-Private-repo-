@@ -9,6 +9,7 @@ import type {
   ShopifyCartRaw,
   ShopifyCollectionRaw,
   ShopifyConnection,
+  ShopifyPageInfo,
   ShopifyProductRaw,
 } from "./types";
 
@@ -16,6 +17,7 @@ import {
   GET_COLLECTIONS,
   GET_PRODUCT_BY_HANDLE,
   GET_PRODUCTS_BY_COLLECTION,
+  GET_COLLECTION_PRODUCTS_PAGINATED,
   SEARCH_PRODUCTS,
 } from "./queries";
 
@@ -85,7 +87,10 @@ function reshapeProduct(raw: ShopifyProductRaw): Product {
   return {
     ...raw,
     images: raw.images.nodes,
-    variants: raw.variants.nodes,
+    variants: raw.variants.nodes.map((v) => ({
+      ...v,
+      storeAvailability: v.storeAvailability?.nodes,
+    })),
   };
 }
 
@@ -126,6 +131,48 @@ export async function getCollectionProducts(
   });
 
   return data.collection ? reshapeCollection(data.collection) : null;
+}
+
+/**
+ * Fetch ALL products from a Shopify collection using cursor pagination.
+ * Fetches in batches of 250 (Shopify max) until no more pages.
+ */
+export async function getAllCollectionProducts(
+  handle: string,
+  sortKey?: string,
+): Promise<Product[]> {
+  const allProducts: Product[] = [];
+  let hasNextPage = true;
+  let cursor: string | null = null;
+
+  while (hasNextPage) {
+    const data = await shopifyFetch<{
+      collection: {
+        products: {
+          nodes: ShopifyProductRaw[];
+          pageInfo: ShopifyPageInfo;
+        };
+      } | null;
+    }>({
+      query: GET_COLLECTION_PRODUCTS_PAGINATED,
+      variables: {
+        handle,
+        first: 250,
+        after: cursor,
+        ...(sortKey ? { sortKey } : {}),
+      },
+    });
+
+    if (!data.collection) break;
+
+    const products = data.collection.products.nodes.map(reshapeProduct);
+    allProducts.push(...products);
+
+    hasNextPage = data.collection.products.pageInfo.hasNextPage;
+    cursor = data.collection.products.pageInfo.endCursor;
+  }
+
+  return allProducts;
 }
 
 export async function getCollections(): Promise<Collection[]> {
