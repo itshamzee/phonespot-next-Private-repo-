@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 
 /* ------------------------------------------------------------------ */
@@ -471,12 +472,201 @@ function AnnouncementBar() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Search overlay                                                     */
+/* ------------------------------------------------------------------ */
+
+type SearchResult = {
+  handle: string;
+  title: string;
+  image: string | null;
+  price: string;
+  compareAtPrice: string;
+  currency: string;
+  available: boolean;
+  productType: string;
+};
+
+const PRODUCT_TYPE_TO_COLLECTION: Record<string, string> = {
+  iphone: "iphones",
+  ipad: "ipads",
+  smartphone: "smartphones",
+  laptop: "baerbare",
+  smartwatch: "smartwatches",
+  cover: "covers",
+  tilbehoer: "tilbehor",
+};
+
+function getCollectionSlug(productType: string): string {
+  const lower = productType.toLowerCase();
+  for (const [key, slug] of Object.entries(PRODUCT_TYPE_TO_COLLECTION)) {
+    if (lower.includes(key)) return slug;
+  }
+  return "iphones";
+}
+
+function formatPrice(amount: string, currency: string) {
+  return new Intl.NumberFormat("da-DK", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(amount));
+}
+
+function SearchOverlay({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const doSearch = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+      if (res.ok) {
+        const data: SearchResult[] = await res.json();
+        setResults(data);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(value), 300);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/soeg?q=${encodeURIComponent(query.trim())}`);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+      <div
+        className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative mx-auto mt-20 w-[calc(100%-2rem)] max-w-2xl">
+        <form onSubmit={handleSubmit} className="relative">
+          <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray" />
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder="Søg efter produkter..."
+            className="w-full rounded-2xl border border-sand bg-white py-4 pl-12 pr-12 text-charcoal shadow-xl placeholder:text-gray focus:border-green-eco focus:ring-2 focus:ring-green-eco/20 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray transition-colors hover:bg-sand/50 hover:text-charcoal"
+            aria-label="Luk søgning"
+          >
+            <CloseIcon className="h-5 w-5" />
+          </button>
+        </form>
+
+        {query.trim() && (
+          <div className="mt-2 max-h-[60vh] overflow-y-auto rounded-2xl border border-sand bg-white shadow-xl">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-sand border-t-green-eco" />
+              </div>
+            ) : results.length > 0 ? (
+              <div className="p-2">
+                {results.map((r) => (
+                  <Link
+                    key={r.handle}
+                    href={`/${getCollectionSlug(r.productType)}/${r.handle}`}
+                    onClick={onClose}
+                    className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-cream"
+                  >
+                    {r.image ? (
+                      <img
+                        src={r.image}
+                        alt={r.title}
+                        className="h-14 w-14 rounded-lg bg-sand/30 object-contain"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-sand/30 text-gray">
+                        <SearchIcon className="h-5 w-5" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-charcoal">
+                        {r.title}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-green-eco">
+                          {formatPrice(r.price, r.currency)}
+                        </span>
+                        {Number(r.compareAtPrice) > Number(r.price) && (
+                          <span className="text-xs text-gray line-through">
+                            {formatPrice(r.compareAtPrice, r.currency)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                <Link
+                  href={`/soeg?q=${encodeURIComponent(query.trim())}`}
+                  onClick={onClose}
+                  className="mt-1 flex items-center justify-center rounded-xl py-3 text-sm font-medium text-green-eco transition-colors hover:bg-green-eco/5"
+                >
+                  Se alle resultater
+                </Link>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-sm text-gray">
+                  Ingen produkter fundet for &lsquo;{query}&rsquo;
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Header                                                             */
 /* ------------------------------------------------------------------ */
 
 export function Header() {
   const { cart, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const totalItems = cart?.totalQuantity ?? 0;
 
@@ -515,30 +705,40 @@ export function Header() {
         <nav className="hidden lg:flex items-center gap-8">
           <NavDropdown label="Produkter" items={PRODUKT_ITEMS} />
           <Link
+            href="/tilbehoer"
+            className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+          >
+            Tilbehør
+          </Link>
+          <Link
             href="/reservedele"
             className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
           >
             Reservedele
           </Link>
-          <Link
-            href="/outlet"
-            className="flex items-center gap-1.5 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
-          >
-            Outlet
-            <span className="h-1.5 w-1.5 rounded-full bg-green-eco" />
-          </Link>
           <NavDropdown label="Om PhoneSpot" items={ABOUT_ITEMS} />
         </nav>
 
-        {/* Right side: search + cart */}
+        {/* Right side: reparation CTA + search + cart */}
         <div className="flex items-center gap-3">
           <Link
-            href="/soeg"
+            href="/reparation"
+            className="hidden sm:flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-green-eco/90 hover:shadow-md"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
+            </svg>
+            Reparation
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
             className="text-charcoal transition-colors hover:text-green-eco"
             aria-label="Søg"
           >
             <SearchIcon />
-          </Link>
+          </button>
 
           <button
             type="button"
@@ -561,6 +761,13 @@ export function Header() {
         <nav className="lg:hidden border-t border-sand bg-warm-white px-4 pb-4">
           <MobileAccordion label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
           <Link
+            href="/tilbehoer"
+            className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+            onClick={() => setMobileOpen(false)}
+          >
+            Tilbehør
+          </Link>
+          <Link
             href="/reservedele"
             className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
             onClick={() => setMobileOpen(false)}
@@ -568,16 +775,21 @@ export function Header() {
             Reservedele
           </Link>
           <Link
-            href="/outlet"
-            className="flex items-center gap-2 border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+            href="/reparation"
+            className="flex items-center gap-2 border-b border-sand/50 py-3 text-sm font-bold text-green-eco"
             onClick={() => setMobileOpen(false)}
           >
-            Outlet
-            <span className="h-1.5 w-1.5 rounded-full bg-green-eco" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
+            </svg>
+            Reparation
           </Link>
           <MobileAccordion label="Om PhoneSpot" items={ABOUT_ITEMS} onNavigate={() => setMobileOpen(false)} />
         </nav>
       )}
+
+      {/* Search overlay */}
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </header>
   );
 }
