@@ -11,11 +11,21 @@ export interface TilbehoerCategory {
   description: string;
 }
 
+export type DeviceBrand = "apple" | "samsung" | "oneplus" | "huawei" | "google";
+
 export interface TilbehoerDevice {
   slug: string;
   label: string;
-  brand: "apple" | "samsung";
+  brand: DeviceBrand;
 }
+
+export const DEVICE_BRANDS: { slug: DeviceBrand; label: string }[] = [
+  { slug: "apple", label: "Apple" },
+  { slug: "samsung", label: "Samsung" },
+  { slug: "oneplus", label: "OnePlus" },
+  { slug: "huawei", label: "Huawei" },
+  { slug: "google", label: "Google" },
+];
 
 export interface TilbehoerRoute {
   category: string;
@@ -60,6 +70,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
 ];
 
 export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
+  // Apple - iPhones
   { slug: "iphone-16-pro-max", label: "iPhone 16 Pro Max", brand: "apple" },
   { slug: "iphone-16-pro", label: "iPhone 16 Pro", brand: "apple" },
   { slug: "iphone-16", label: "iPhone 16", brand: "apple" },
@@ -72,16 +83,48 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "iphone-13", label: "iPhone 13", brand: "apple" },
   { slug: "iphone-12", label: "iPhone 12", brand: "apple" },
   { slug: "iphone-11", label: "iPhone 11", brand: "apple" },
+  { slug: "iphone-se", label: "iPhone SE", brand: "apple" },
+  // Apple - iPads
   { slug: "ipad-pro-13", label: "iPad Pro 13\"", brand: "apple" },
+  { slug: "ipad-pro-11", label: "iPad Pro 11\"", brand: "apple" },
   { slug: "ipad-air-m2", label: "iPad Air M2", brand: "apple" },
+  { slug: "ipad-air-m1", label: "iPad Air M1", brand: "apple" },
   { slug: "ipad-10", label: "iPad 10. gen", brand: "apple" },
-  { slug: "samsung-s25-ultra", label: "Samsung S25 Ultra", brand: "samsung" },
-  { slug: "samsung-s25", label: "Samsung S25", brand: "samsung" },
-  { slug: "samsung-s24-ultra", label: "Samsung S24 Ultra", brand: "samsung" },
-  { slug: "samsung-s24", label: "Samsung S24", brand: "samsung" },
-  { slug: "samsung-s23", label: "Samsung S23", brand: "samsung" },
-  { slug: "samsung-a55", label: "Samsung A55", brand: "samsung" },
-  { slug: "samsung-a54", label: "Samsung A54", brand: "samsung" },
+  { slug: "ipad-9", label: "iPad 9. gen", brand: "apple" },
+  { slug: "ipad-mini-6", label: "iPad Mini 6", brand: "apple" },
+  // Samsung - S-serie
+  { slug: "samsung-s25-ultra", label: "Galaxy S25 Ultra", brand: "samsung" },
+  { slug: "samsung-s25-plus", label: "Galaxy S25+", brand: "samsung" },
+  { slug: "samsung-s25", label: "Galaxy S25", brand: "samsung" },
+  { slug: "samsung-s24-ultra", label: "Galaxy S24 Ultra", brand: "samsung" },
+  { slug: "samsung-s24-plus", label: "Galaxy S24+", brand: "samsung" },
+  { slug: "samsung-s24", label: "Galaxy S24", brand: "samsung" },
+  { slug: "samsung-s23-ultra", label: "Galaxy S23 Ultra", brand: "samsung" },
+  { slug: "samsung-s23", label: "Galaxy S23", brand: "samsung" },
+  // Samsung - A-serie
+  { slug: "samsung-a55", label: "Galaxy A55", brand: "samsung" },
+  { slug: "samsung-a54", label: "Galaxy A54", brand: "samsung" },
+  { slug: "samsung-a35", label: "Galaxy A35", brand: "samsung" },
+  { slug: "samsung-a25", label: "Galaxy A25", brand: "samsung" },
+  { slug: "samsung-a15", label: "Galaxy A15", brand: "samsung" },
+  // Samsung - Tabs
+  { slug: "samsung-tab-s9", label: "Galaxy Tab S9", brand: "samsung" },
+  { slug: "samsung-tab-s8", label: "Galaxy Tab S8", brand: "samsung" },
+  // OnePlus
+  { slug: "oneplus-13", label: "OnePlus 13", brand: "oneplus" },
+  { slug: "oneplus-12", label: "OnePlus 12", brand: "oneplus" },
+  { slug: "oneplus-nord-4", label: "OnePlus Nord 4", brand: "oneplus" },
+  { slug: "oneplus-nord-3", label: "OnePlus Nord 3", brand: "oneplus" },
+  // Huawei
+  { slug: "huawei-p60-pro", label: "Huawei P60 Pro", brand: "huawei" },
+  { slug: "huawei-p50-pro", label: "Huawei P50 Pro", brand: "huawei" },
+  { slug: "huawei-nova-12", label: "Huawei Nova 12", brand: "huawei" },
+  { slug: "huawei-matepad-11", label: "Huawei MatePad 11", brand: "huawei" },
+  // Google
+  { slug: "google-pixel-9-pro", label: "Pixel 9 Pro", brand: "google" },
+  { slug: "google-pixel-9", label: "Pixel 9", brand: "google" },
+  { slug: "google-pixel-8-pro", label: "Pixel 8 Pro", brand: "google" },
+  { slug: "google-pixel-8", label: "Pixel 8", brand: "google" },
 ];
 
 export const TILBEHOER_ROUTES: TilbehoerRoute[] = [
@@ -126,7 +169,7 @@ export function getCategoryDevices(category: string): TilbehoerDevice[] {
   return TILBEHOER_DEVICES.filter((d) => deviceSlugs.includes(d.slug));
 }
 
-export function getDevicesByBrand(brand: "apple" | "samsung"): TilbehoerDevice[] {
+export function getDevicesByBrand(brand: DeviceBrand): TilbehoerDevice[] {
   return TILBEHOER_DEVICES.filter((d) => d.brand === brand);
 }
 
