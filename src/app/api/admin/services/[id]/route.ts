@@ -16,6 +16,10 @@ export async function PATCH(
     "estimated_minutes",
     "sort_order",
     "active",
+    "description",
+    "warranty_info",
+    "includes",
+    "estimated_time_label",
   ];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
