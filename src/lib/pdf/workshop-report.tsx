@@ -8,101 +8,253 @@ import {
 } from "@react-pdf/renderer";
 import type { ChecklistItem } from "@/lib/supabase/types";
 
+const colors = {
+  charcoal: "#2D2D2D",
+  greenEco: "#22C55E",
+  sand: "#F5F0EB",
+  gray: "#6B7280",
+  white: "#FFFFFF",
+  softGrey: "#E5E7EB",
+};
+
 const styles = StyleSheet.create({
-  page: { padding: 30, fontSize: 10, fontFamily: "Helvetica" },
-  bigId: {
-    fontSize: 28,
-    fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    marginBottom: 4,
-    letterSpacing: 2,
+  page: {
+    padding: 0,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+    color: colors.charcoal,
+    backgroundColor: colors.white,
   },
-  dateCenter: { textAlign: "center", color: "#666", marginBottom: 16 },
-  section: { marginBottom: 14 },
-  sectionTitle: {
-    fontSize: 11,
+
+  /* ── Header ─────────────────────────────── */
+  header: {
+    backgroundColor: colors.charcoal,
+    paddingHorizontal: 40,
+    paddingVertical: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  headerLeft: {},
+  brandName: {
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
+    color: colors.white,
+    letterSpacing: 3,
+  },
+  headerTitle: {
+    fontSize: 11,
+    color: colors.softGrey,
+    marginTop: 4,
+  },
+  headerRight: {
+    alignItems: "flex-end",
+  },
+  headerDate: {
+    fontSize: 9,
+    color: colors.softGrey,
+  },
+  headerTicketId: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: colors.white,
+    marginTop: 2,
+  },
+
+  /* ── Body wrapper ───────────────────────── */
+  body: {
+    paddingHorizontal: 40,
+    paddingTop: 20,
+  },
+
+  /* ── Two-column cards row ───────────────── */
+  cardsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+
+  /* ── Customer Info Card ─────────────────── */
+  customerCard: {
+    flex: 1,
+    backgroundColor: colors.sand,
+    borderRadius: 6,
+    padding: 16,
+  },
+  cardTitle: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: colors.charcoal,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  fieldRow: {
     marginBottom: 6,
-    backgroundColor: "#f3f4f6",
-    padding: "4 8",
+  },
+  fieldLabel: {
+    fontSize: 8,
+    color: colors.gray,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 1,
+  },
+  fieldValue: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: colors.charcoal,
+  },
+
+  /* ── Device Info Card ───────────────────── */
+  deviceCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.softGrey,
+    borderRadius: 6,
+    padding: 16,
+  },
+
+  /* ── Checklist ──────────────────────────── */
+  checklistSection: {
+    marginBottom: 16,
+  },
+  checklistGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  checklistItem: {
+    width: "50%",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 3,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusOk: {
+    backgroundColor: colors.greenEco,
+  },
+  statusFejl: {
+    backgroundColor: "#EF4444",
+  },
+  statusNa: {
+    backgroundColor: "#D1D5DB",
+  },
+  checklistLabel: {
+    fontSize: 9,
+    color: colors.charcoal,
+  },
+  checklistNote: {
+    fontSize: 8,
+    color: colors.gray,
+    fontStyle: "italic",
+    marginLeft: 14,
+  },
+
+  /* ── Repairs Table ──────────────────────── */
+  repairsSection: {
+    marginBottom: 16,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: colors.charcoal,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  tableHeaderText: {
+    color: colors.white,
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  infoRow: { flexDirection: "row", marginBottom: 3, paddingHorizontal: 8 },
-  infoLabel: { width: 100, color: "#666" },
-  infoValue: { flex: 1, fontFamily: "Helvetica-Bold" },
-  checklistItem: {
+  tableRow: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     borderBottomWidth: 0.5,
-    borderBottomColor: "#e5e5e5",
-  },
-  checkbox: {
-    width: 14,
-    height: 14,
-    borderWidth: 1.5,
-    borderColor: "#333",
-    marginRight: 8,
-    borderRadius: 2,
-  },
-  checkboxChecked: {
-    width: 14,
-    height: 14,
-    borderWidth: 1.5,
-    borderColor: "#16a34a",
-    backgroundColor: "#dcfce7",
-    marginRight: 8,
-    borderRadius: 2,
-  },
-  serviceItem: {
-    flexDirection: "row",
+    borderBottomColor: colors.softGrey,
     alignItems: "center",
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#e5e5e5",
+  },
+  repairCheckbox: {
+    width: 10,
+    height: 10,
+    borderWidth: 1.5,
+    borderColor: colors.charcoal,
+    borderRadius: 2,
+    marginRight: 8,
+  },
+  tableServiceName: {
+    flex: 1,
+    fontSize: 10,
+  },
+  tableServicePrice: {
+    width: 80,
+    textAlign: "right",
+    fontSize: 10,
+  },
+
+  /* ── Internal Notes ─────────────────────── */
+  notesSection: {
+    marginBottom: 16,
   },
   notesBox: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 4,
-    padding: 8,
-    minHeight: 60,
-    marginHorizontal: 8,
-  },
-  techNotesSection: {
-    marginTop: 20,
-    borderWidth: 1.5,
-    borderColor: "#333",
-    borderRadius: 4,
+    borderColor: colors.softGrey,
+    borderRadius: 6,
     padding: 12,
+    minHeight: 50,
+    backgroundColor: "#F9FAFB",
+  },
+  notesText: {
+    fontSize: 9,
+    color: colors.charcoal,
+    lineHeight: 1.5,
+  },
+
+  /* ── Technician Notes ───────────────────── */
+  techNotesSection: {
+    marginBottom: 20,
+  },
+  techNotesBox: {
+    borderWidth: 1.5,
+    borderColor: colors.charcoal,
+    borderRadius: 6,
+    padding: 14,
     minHeight: 120,
   },
-  techNotesTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 8,
+  techNotesLine: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.softGrey,
+    height: 22,
   },
-  techNotesLines: { borderBottomWidth: 0.5, borderBottomColor: "#d1d5db", height: 20 },
+
+  /* ── Footer ─────────────────────────────── */
   footer: {
     position: "absolute",
-    bottom: 20,
-    left: 30,
-    right: 30,
-    fontSize: 8,
-    color: "#999",
-    textAlign: "center",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  faultBadge: {
+  footerText: {
     fontSize: 8,
-    color: "#dc2626",
+    color: colors.gray,
+  },
+  footerBrand: {
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
-    backgroundColor: "#fee2e2",
-    padding: "1 4",
-    borderRadius: 2,
-    marginLeft: 4,
+    color: colors.charcoal,
   },
 });
 
@@ -121,107 +273,151 @@ interface WorkshopReportData {
 }
 
 export function WorkshopReportDocument({ data }: { data: WorkshopReportData }) {
-  const shortId = data.ticketId.slice(0, 8).toUpperCase();
+  const shortId = `#${data.ticketId.slice(0, 8).toUpperCase()}`;
   const dateStr = new Date(data.createdAt).toLocaleDateString("da-DK", {
     day: "numeric",
-    month: "short",
+    month: "long",
     year: "numeric",
   });
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Large ticket ID */}
-        <Text style={styles.bigId}>SAG: {shortId}</Text>
-        <Text style={styles.dateCenter}>{dateStr}</Text>
-
-        {/* Customer + device info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kunde & Enhed</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Kunde:</Text>
-            <Text style={styles.infoValue}>{data.customerName}</Text>
+        {/* ── Header ──────────────────────────── */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.brandName}>PHONESPOT</Text>
+            <Text style={styles.headerTitle}>Vaerkstedsrapport</Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Telefon:</Text>
-            <Text style={styles.infoValue}>{data.customerPhone}</Text>
+          <View style={styles.headerRight}>
+            <Text style={styles.headerDate}>{dateStr}</Text>
+            <Text style={styles.headerTicketId}>{shortId}</Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Enhed:</Text>
-            <Text style={styles.infoValue}>
-              {data.deviceBrand} {data.deviceModel}
-            </Text>
-          </View>
-          {data.serialNumber && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Serienr:</Text>
-              <Text style={styles.infoValue}>{data.serialNumber}</Text>
-            </View>
-          )}
-          {data.deviceColor && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Farve:</Text>
-              <Text style={styles.infoValue}>{data.deviceColor}</Text>
-            </View>
-          )}
         </View>
 
-        {/* Checklist */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tilstandstjekliste</Text>
-          {data.checklist.map((item) => (
-            <View key={item.label} style={styles.checklistItem}>
-              <View
-                style={
-                  item.status === "fejl"
-                    ? [styles.checkbox, { borderColor: "#dc2626", backgroundColor: "#fee2e2" }]
-                    : item.status === "ok"
-                      ? styles.checkboxChecked
-                      : [styles.checkbox, { borderColor: "#999" }]
-                }
-              />
-              <Text style={{ flex: 1 }}>
-                {item.label}
-                {item.note ? ` — ${item.note}` : ""}
+        <View style={styles.body}>
+          {/* ── Customer & Device Info (side-by-side) ── */}
+          <View style={styles.cardsRow}>
+            <View style={styles.customerCard}>
+              <Text style={styles.cardTitle}>Kundeoplysninger</Text>
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Navn</Text>
+                <Text style={styles.fieldValue}>{data.customerName}</Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Telefon</Text>
+                <Text style={styles.fieldValue}>{data.customerPhone}</Text>
+              </View>
+            </View>
+
+            <View style={styles.deviceCard}>
+              <Text style={styles.cardTitle}>Enhed</Text>
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Brand</Text>
+                <Text style={styles.fieldValue}>{data.deviceBrand}</Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Model</Text>
+                <Text style={styles.fieldValue}>{data.deviceModel}</Text>
+              </View>
+              {data.serialNumber ? (
+                <View style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>Serienummer</Text>
+                  <Text style={styles.fieldValue}>{data.serialNumber}</Text>
+                </View>
+              ) : null}
+              {data.deviceColor ? (
+                <View style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>Farve</Text>
+                  <Text style={styles.fieldValue}>{data.deviceColor}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {/* ── Checklist ────────────────────────── */}
+          <View style={styles.checklistSection}>
+            <Text style={styles.cardTitle}>Tilstandstjekliste</Text>
+            <View style={styles.checklistGrid}>
+              {data.checklist.map((item) => (
+                <View key={item.label}>
+                  <View style={styles.checklistItem}>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        item.status === "ok"
+                          ? styles.statusOk
+                          : item.status === "fejl"
+                            ? styles.statusFejl
+                            : styles.statusNa,
+                      ]}
+                    />
+                    <Text style={styles.checklistLabel}>{item.label}</Text>
+                  </View>
+                  {item.note ? (
+                    <Text style={styles.checklistNote}>{item.note}</Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* ── Repairs Performed ─────────────────── */}
+          <View style={styles.repairsSection}>
+            <Text style={styles.cardTitle}>Udfoerte reparationer</Text>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderText, { width: 18 }]} />
+              <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                Ydelse
               </Text>
-              {item.status === "fejl" && <Text style={styles.faultBadge}>FEJL</Text>}
+              <Text
+                style={[
+                  styles.tableHeaderText,
+                  { width: 80, textAlign: "right" },
+                ]}
+              >
+                Pris
+              </Text>
             </View>
-          ))}
-        </View>
+            {data.services.map((s, i) => (
+              <View key={i} style={styles.tableRow}>
+                <View style={styles.repairCheckbox} />
+                <Text style={styles.tableServiceName}>{s.name}</Text>
+                <Text style={styles.tableServicePrice}>
+                  {s.price_dkk} DKK
+                </Text>
+              </View>
+            ))}
+          </View>
 
-        {/* Repairs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Reparationer</Text>
-          {data.services.map((s, i) => (
-            <View key={i} style={styles.serviceItem}>
-              <View style={styles.checkbox} />
-              <Text style={{ flex: 1 }}>{s.name}</Text>
-              <Text style={{ color: "#666" }}>{s.price_dkk} DKK</Text>
+          {/* ── Internal Notes ────────────────────── */}
+          {data.internalNotes ? (
+            <View style={styles.notesSection}>
+              <Text style={styles.cardTitle}>Interne noter</Text>
+              <View style={styles.notesBox}>
+                <Text style={styles.notesText}>{data.internalNotes}</Text>
+              </View>
             </View>
-          ))}
-        </View>
+          ) : null}
 
-        {/* Internal notes */}
-        {data.internalNotes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Interne noter</Text>
-            <View style={styles.notesBox}>
-              <Text>{data.internalNotes}</Text>
+          {/* ── Technician Notes (blank lines) ────── */}
+          <View style={styles.techNotesSection}>
+            <Text style={styles.cardTitle}>Tekniker noter</Text>
+            <View style={styles.techNotesBox}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <View key={n} style={styles.techNotesLine} />
+              ))}
             </View>
           </View>
-        )}
-
-        {/* Technician notes (empty for handwriting) */}
-        <View style={styles.techNotesSection}>
-          <Text style={styles.techNotesTitle}>Tekniker noter:</Text>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <View key={n} style={styles.techNotesLines} />
-          ))}
         </View>
 
-        <Text style={styles.footer}>
-          PhoneSpot Vaerkstedsrapport · {shortId} · {dateStr}
-        </Text>
+        {/* ── Footer ──────────────────────────── */}
+        <View style={styles.footer}>
+          <Text style={styles.footerBrand}>PHONESPOT</Text>
+          <Text style={styles.footerText}>
+            CVR: 44702027 | phonespot.dk | info@phonespot.dk
+          </Text>
+        </View>
       </Page>
     </Document>
   );
