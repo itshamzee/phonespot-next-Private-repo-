@@ -30,6 +30,10 @@ export interface RepairService {
   name: string;
   price_dkk: number;
   estimated_minutes: number | null;
+  description: string | null;
+  warranty_info: string | null;
+  includes: string | null;
+  estimated_time_label: string | null;
   sort_order: number;
   active: boolean;
   created_at: string;
