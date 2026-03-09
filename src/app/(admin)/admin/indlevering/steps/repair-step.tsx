@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
+import { ServiceInfoTooltip } from "@/components/repair/service-info-tooltip";
 import type { IntakeFormData } from "../page";
 
 interface AvailableService {
   id: string;
   name: string;
   price_dkk: number;
+  description?: string | null;
+  warranty_info?: string | null;
+  includes?: string | null;
+  estimated_time_label?: string | null;
+  estimated_minutes?: number | null;
 }
 
 interface Props {
@@ -63,7 +69,7 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
       // Get services for this model
       const { data: services } = await supabase
         .from("repair_services")
-        .select("id, name, price_dkk")
+        .select("id, name, price_dkk, description, warranty_info, includes, estimated_time_label, estimated_minutes")
         .eq("model_id", models[0].id)
         .eq("active", true)
         .order("sort_order");
@@ -73,6 +79,11 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
           id: s.id,
           name: s.name,
           price_dkk: s.price_dkk,
+          description: s.description,
+          warranty_info: s.warranty_info,
+          includes: s.includes,
+          estimated_time_label: s.estimated_time_label,
+          estimated_minutes: s.estimated_minutes,
         })),
       );
       setLoading(false);
@@ -161,7 +172,10 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
                         </svg>
                       )}
                     </div>
-                    <span className="font-medium text-charcoal">{service.name}</span>
+                    <span className="flex items-center font-medium text-charcoal">
+                      {service.name}
+                      <ServiceInfoTooltip info={service} />
+                    </span>
                   </div>
                   <span className="font-bold text-charcoal">{service.price_dkk} DKK</span>
                 </button>
