@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
 import { DeviceImage } from "@/components/repair/device-image";
+import { ServiceInfoTooltip } from "@/components/repair/service-info-tooltip";
 import {
   getBrandBySlug,
   getModelBySlug,
@@ -334,7 +335,10 @@ export default async function ModelPricePage({ params }: Props) {
 
                     <div className="flex-1 min-w-0">
                       <p className="font-display text-sm font-bold text-charcoal">
-                        {service.name}
+                        <span className="flex items-center">
+                          {service.name}
+                          <ServiceInfoTooltip info={service} />
+                        </span>
                       </p>
                       {service.estimated_minutes && (
                         <p className="text-xs text-gray">
