@@ -107,6 +107,15 @@ export default function AdminServiceEditorPage({
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Edit info modal
+  const [editingInfo, setEditingInfo] = useState<string | null>(null);
+  const [infoForm, setInfoForm] = useState({
+    description: "",
+    warranty_info: "",
+    includes: "",
+    estimated_time_label: "",
+  });
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -228,6 +237,26 @@ export default function AdminServiceEditorPage({
     }
   }
 
+  async function saveServiceInfo(serviceId: string) {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: infoForm.description || null,
+          warranty_info: infoForm.warranty_info || null,
+          includes: infoForm.includes || null,
+          estimated_time_label: infoForm.estimated_time_label || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setEditingInfo(null);
+      await loadData();
+    } catch {
+      alert("Kunne ikke gemme info");
+    }
+  }
+
   if (loading) {
     return <p className="text-gray">Indlaeser reparationer...</p>;
   }
@@ -322,32 +351,50 @@ export default function AdminServiceEditorPage({
                     </button>
                   </td>
                   <td className="px-5 py-3 text-center">
-                    {deletingId === service.id ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(service.id)}
-                          className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
-                        >
-                          Bekraeft
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(null)}
-                          className="rounded border border-soft-grey px-3 py-1 text-xs font-medium text-charcoal hover:bg-sand"
-                        >
-                          Annuller
-                        </button>
-                      </div>
-                    ) : (
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setDeletingId(service.id)}
-                        className="rounded px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => {
+                          setEditingInfo(service.id);
+                          setInfoForm({
+                            description: service.description ?? "",
+                            warranty_info: service.warranty_info ?? "",
+                            includes: service.includes ?? "",
+                            estimated_time_label: service.estimated_time_label ?? "",
+                          });
+                        }}
+                        className="rounded px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Rediger ydelsesinfo"
                       >
-                        Slet
+                        i
                       </button>
-                    )}
+                      {deletingId === service.id ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(service.id)}
+                            className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                          >
+                            Bekraeft
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingId(null)}
+                            className="rounded border border-soft-grey px-3 py-1 text-xs font-medium text-charcoal hover:bg-sand"
+                          >
+                            Annuller
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingId(service.id)}
+                          className="rounded px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Slet
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -428,6 +475,83 @@ export default function AdminServiceEditorPage({
           </button>
         </div>
       </form>
+
+      {/* Edit info modal */}
+      {editingInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="font-display text-lg font-semibold text-charcoal">
+              Rediger ydelsesinfo
+            </h3>
+            <p className="mb-5 text-sm text-gray">
+              Denne info vises som tooltip på reparationssiden og i admin.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-charcoal">Beskrivelse</label>
+                <textarea
+                  rows={2}
+                  value={infoForm.description}
+                  onChange={(e) => setInfoForm({ ...infoForm, description: e.target.value })}
+                  placeholder="Hvad indebærer denne reparation..."
+                  className="rounded-lg border border-soft-grey p-3 text-sm focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-charcoal">Inkluderer</label>
+                <textarea
+                  rows={2}
+                  value={infoForm.includes}
+                  onChange={(e) => setInfoForm({ ...infoForm, includes: e.target.value })}
+                  placeholder="Reservedele, arbejdsløn, test..."
+                  className="rounded-lg border border-soft-grey p-3 text-sm focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-charcoal">Estimeret tid</label>
+                <input
+                  type="text"
+                  value={infoForm.estimated_time_label}
+                  onChange={(e) => setInfoForm({ ...infoForm, estimated_time_label: e.target.value })}
+                  placeholder="30-60 min"
+                  className="rounded-lg border border-soft-grey p-3 text-sm focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-charcoal">Garanti</label>
+                <input
+                  type="text"
+                  value={infoForm.warranty_info}
+                  onChange={(e) => setInfoForm({ ...infoForm, warranty_info: e.target.value })}
+                  placeholder="Livstidsgaranti på reservedelen"
+                  className="rounded-lg border border-soft-grey p-3 text-sm focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingInfo(null)}
+                className="rounded-full border border-soft-grey px-5 py-2 text-sm hover:bg-sand"
+              >
+                Annuller
+              </button>
+              <button
+                type="button"
+                onClick={() => saveServiceInfo(editingInfo)}
+                className="rounded-full bg-green-eco px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+              >
+                Gem
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
