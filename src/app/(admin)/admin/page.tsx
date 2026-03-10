@@ -17,6 +17,10 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   i_gang: "I gang",
   faerdig: "Faerdig",
   afhentet: "Afhentet",
+  bero: "Bero",
+  reklamation_modtaget: "Reklamation modtaget",
+  reklamation_vurderet: "Reklamation vurderet",
+  reklamation_loest: "Reklamation løst",
 };
 
 const STATUS_DOT_COLORS: Record<RepairStatus, string> = {
@@ -27,6 +31,10 @@ const STATUS_DOT_COLORS: Record<RepairStatus, string> = {
   i_gang: "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.4)]",
   faerdig: "bg-green-eco shadow-[0_0_6px_rgba(34,197,94,0.4)]",
   afhentet: "bg-stone-400",
+  bero: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]",
+  reklamation_modtaget: "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]",
+  reklamation_vurderet: "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.4)]",
+  reklamation_loest: "bg-teal-500 shadow-[0_0_6px_rgba(20,184,166,0.4)]",
 };
 
 /* ------------------------------------------------------------------ */

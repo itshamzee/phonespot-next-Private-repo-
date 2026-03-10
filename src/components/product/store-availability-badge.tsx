@@ -16,7 +16,7 @@ export function StoreAvailabilityBadge({ storeAvailability }: Props) {
     (sa) =>
       sa.location.name.toLowerCase().includes("slagelse") ||
       sa.location.name.toLowerCase().includes("vestsjælland") ||
-      sa.location.id.includes(STORE.shopifyLocationId),
+      (STORE.shopifyLocationId && sa.location.id.includes(STORE.shopifyLocationId)),
   );
 
   if (!slagelse) return null;

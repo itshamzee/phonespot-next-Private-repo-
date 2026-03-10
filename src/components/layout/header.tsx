@@ -708,6 +708,12 @@ export function Header() {
           >
             Tilbehør
           </Link>
+          <Link
+            href="/saelg-din-enhed"
+            className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+          >
+            Sælg din enhed
+          </Link>
           <NavDropdown label="Om PhoneSpot" items={ABOUT_ITEMS} />
         </nav>
 
@@ -765,6 +771,13 @@ export function Header() {
             onClick={() => setMobileOpen(false)}
           >
             Tilbehør
+          </Link>
+          <Link
+            href="/saelg-din-enhed"
+            className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+            onClick={() => setMobileOpen(false)}
+          >
+            Sælg din enhed
           </Link>
           <MobileAccordion label="Om PhoneSpot" items={ABOUT_ITEMS} onNavigate={() => setMobileOpen(false)} />
         </nav>

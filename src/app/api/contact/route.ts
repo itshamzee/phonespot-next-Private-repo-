@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, phone, subject, message } = body;
+  const { name, email, phone, subject, message, source, metadata } = body;
 
   if (!name || !email || !message) {
     return NextResponse.json({ error: "Udfyld alle felter" }, { status: 400 });
@@ -21,6 +21,8 @@ export async function POST(request: Request) {
     phone: phone?.trim() || null,
     subject: subject?.trim() || null,
     message: message.trim(),
+    source: source?.trim() || "kontaktformular",
+    metadata: metadata || null,
   });
 
   try {

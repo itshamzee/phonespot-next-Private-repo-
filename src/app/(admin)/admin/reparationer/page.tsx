@@ -13,6 +13,10 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   i_gang: "I gang",
   faerdig: "Faerdig",
   afhentet: "Afhentet",
+  bero: "Bero",
+  reklamation_modtaget: "Reklamation modtaget",
+  reklamation_vurderet: "Reklamation vurderet",
+  reklamation_loest: "Reklamation løst",
 };
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
@@ -23,6 +27,10 @@ const STATUS_COLORS: Record<RepairStatus, string> = {
   i_gang: "bg-orange-50 text-orange-600",
   faerdig: "bg-green-50 text-green-700",
   afhentet: "bg-stone-100 text-stone-500",
+  bero: "bg-rose-50 text-rose-600",
+  reklamation_modtaget: "bg-red-50 text-red-600",
+  reklamation_vurderet: "bg-purple-50 text-purple-600",
+  reklamation_loest: "bg-teal-50 text-teal-600",
 };
 
 const ALL_STATUSES: (RepairStatus | "alle")[] = [

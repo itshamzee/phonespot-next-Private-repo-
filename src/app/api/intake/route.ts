@@ -154,10 +154,12 @@ export async function POST(request: Request) {
     // 7. Send SMS (if enabled)
     if (shouldSendSms && customer.phone) {
       try {
+        const trackingUrl = `https://phonespot.dk/reparation/status/${ticket.id}`;
         const smsMessage = getSmsTemplate("modtaget", {
           customerName: customer.name,
           deviceName,
           ticketId: ticket.id,
+          trackingUrl,
         });
 
         if (smsMessage) {
@@ -194,6 +196,8 @@ export async function POST(request: Request) {
             ...allServices.map((s: { name: string; price_dkk: number }) => `- ${s.name}: ${s.price_dkk} DKK`),
             "",
             `Estimeret total: ${totalPrice} DKK`,
+            "",
+            `Foelg din reparation her: https://phonespot.dk/reparation/status/${ticket.id}`,
             "",
             "Vi kontakter dig, naar din enhed er klar til afhentning.",
             "",
