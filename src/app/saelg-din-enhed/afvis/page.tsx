@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 type PageState = "loading" | "form" | "success" | "error";
 
 export default function AfvisPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-green-eco border-t-transparent" /></div>}>
+      <AfvisContent />
+    </Suspense>
+  );
+}
+
+function AfvisContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 

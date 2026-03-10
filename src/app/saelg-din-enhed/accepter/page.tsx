@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 
@@ -21,6 +21,14 @@ interface OfferData {
 }
 
 export default function AccepterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-green-eco border-t-transparent" /></div>}>
+      <AccepterContent />
+    </Suspense>
+  );
+}
+
+function AccepterContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
