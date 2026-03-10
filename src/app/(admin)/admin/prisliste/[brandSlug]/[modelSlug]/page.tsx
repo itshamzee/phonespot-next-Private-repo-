@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import React, { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
 import type { RepairBrand, RepairModel, RepairService } from "@/lib/supabase/types";
 
@@ -102,7 +102,14 @@ export default function AdminServiceEditorPage({
   const [formPrice, setFormPrice] = useState("");
   const [formMinutes, setFormMinutes] = useState("");
   const [formSortOrder, setFormSortOrder] = useState(0);
+  const [formQualityTier, setFormQualityTier] = useState("");
+  const [formServiceCategory, setFormServiceCategory] = useState("");
+  const [formInfoNote, setFormInfoNote] = useState("");
+  const [formTimeEstimate, setFormTimeEstimate] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Info note expansion state
+  const [expandedInfoId, setExpandedInfoId] = useState<string | null>(null);
 
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -170,6 +177,9 @@ export default function AdminServiceEditorPage({
           price_dkk: Number(formPrice),
           estimated_minutes: formMinutes ? Number(formMinutes) : null,
           sort_order: formSortOrder,
+          quality_tier: formQualityTier || null,
+          service_category: formServiceCategory || null,
+          info_note: formInfoNote.trim() || null,
         }),
       });
       const data = await res.json();
@@ -179,6 +189,10 @@ export default function AdminServiceEditorPage({
       setFormPrice("");
       setFormMinutes("");
       setFormSortOrder(0);
+      setFormQualityTier("");
+      setFormServiceCategory("");
+      setFormInfoNote("");
+      setFormTimeEstimate("");
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kunne ikke oprette reparation");
@@ -304,11 +318,17 @@ export default function AdminServiceEditorPage({
             <thead>
               <tr className="border-b border-soft-grey bg-soft-grey/20">
                 <th className="px-5 py-3 font-semibold text-charcoal">Navn</th>
+                <th className="px-5 py-3 font-semibold text-charcoal text-center">
+                  Kvalitet
+                </th>
                 <th className="px-5 py-3 font-semibold text-charcoal text-right">
                   Pris (DKK)
                 </th>
                 <th className="px-5 py-3 font-semibold text-charcoal text-right">
                   Estimeret tid
+                </th>
+                <th className="px-5 py-3 font-semibold text-charcoal text-center">
+                  Info
                 </th>
                 <th className="px-5 py-3 font-semibold text-charcoal text-center">
                   Aktiv
@@ -320,11 +340,31 @@ export default function AdminServiceEditorPage({
             </thead>
             <tbody>
               {services.map((service) => (
+                <React.Fragment key={service.id}>
                 <tr
-                  key={service.id}
                   className="border-b border-soft-grey/50 last:border-0 hover:bg-sand/30 transition-colors"
                 >
-                  <td className="px-5 py-3 text-charcoal font-medium">{service.name}</td>
+                  <td className="px-5 py-3 text-charcoal font-medium">
+                    <span>{service.name}</span>
+                    {service.service_category && (
+                      <span className="ml-2 text-xs text-gray">({service.service_category})</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-center">
+                    {service.quality_tier && (
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          service.quality_tier === "standard"
+                            ? "bg-stone-200 text-stone-600"
+                            : service.quality_tier === "premium"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-green-eco/10 text-green-eco"
+                        }`}
+                      >
+                        {service.quality_tier.charAt(0).toUpperCase() + service.quality_tier.slice(1)}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-5 py-3 text-right">
                     <InlinePrice
                       value={service.price_dkk}
@@ -332,7 +372,27 @@ export default function AdminServiceEditorPage({
                     />
                   </td>
                   <td className="px-5 py-3 text-right text-gray">
-                    {service.estimated_minutes ? `${service.estimated_minutes} min` : "—"}
+                    {service.estimated_time_label
+                      ? service.estimated_time_label
+                      : service.estimated_minutes
+                        ? `${service.estimated_minutes} min`
+                        : "\u2014"}
+                  </td>
+                  <td className="px-5 py-3 text-center">
+                    {service.info_note ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedInfoId(expandedInfoId === service.id ? null : service.id)
+                        }
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600 hover:bg-blue-100 transition-colors"
+                        title={service.info_note}
+                      >
+                        ?
+                      </button>
+                    ) : (
+                      <span className="text-stone-300">\u2014</span>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-center">
                     <button
@@ -397,6 +457,16 @@ export default function AdminServiceEditorPage({
                     </div>
                   </td>
                 </tr>
+                {expandedInfoId === service.id && service.info_note && (
+                  <tr className="bg-blue-50/30">
+                    <td colSpan={7} className="px-5 py-3">
+                      <p className="text-sm text-charcoal">
+                        <span className="font-semibold">Bemærkning:</span> {service.info_note}
+                      </p>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -462,6 +532,77 @@ export default function AdminServiceEditorPage({
               value={formSortOrder}
               onChange={(e) => setFormSortOrder(Number(e.target.value))}
               className="rounded-lg border border-soft-grey bg-white px-4 py-2.5 text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-charcoal">Kvalitetsniveau</label>
+            <select
+              value={formQualityTier}
+              onChange={(e) => setFormQualityTier(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-4 py-2.5 text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            >
+              <option value="">Ingen</option>
+              <option value="standard">Standard</option>
+              <option value="premium">Premium</option>
+              <option value="original">Original</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-charcoal">Kategori</label>
+            <select
+              value={formServiceCategory}
+              onChange={(e) => setFormServiceCategory(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-4 py-2.5 text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            >
+              <option value="">Vaelg...</option>
+              <option value="Skaerm">Skaerm</option>
+              <option value="Batteri">Batteri</option>
+              <option value="Opladning">Opladning</option>
+              <option value="Kamera">Kamera</option>
+              <option value="Hoejtaler">Hoejtaler</option>
+              <option value="Andet">Andet</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-charcoal">Tidsestimat</label>
+            <select
+              value={formTimeEstimate}
+              onChange={(e) => {
+                setFormTimeEstimate(e.target.value);
+                // Auto-set estimated_minutes based on selection
+                const minutesMap: Record<string, string> = {
+                  "15 min": "15",
+                  "30 min": "30",
+                  "45 min": "45",
+                  "1 time": "60",
+                  "1-2 timer": "90",
+                  "2-3 timer": "150",
+                  "Indlevering": "",
+                };
+                setFormMinutes(minutesMap[e.target.value] ?? "");
+              }}
+              className="rounded-lg border border-soft-grey bg-white px-4 py-2.5 text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            >
+              <option value="">Vaelg...</option>
+              <option value="15 min">15 min</option>
+              <option value="30 min">30 min</option>
+              <option value="45 min">45 min</option>
+              <option value="1 time">1 time</option>
+              <option value="1-2 timer">1-2 timer</option>
+              <option value="2-3 timer">2-3 timer</option>
+              <option value="Indlevering">Indlevering</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-charcoal">Bemærkning til kunden</label>
+            <textarea
+              rows={1}
+              value={formInfoNote}
+              onChange={(e) => setFormInfoNote(e.target.value)}
+              placeholder="Vises som tooltip..."
+              className="rounded-lg border border-soft-grey bg-white px-4 py-2.5 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             />
           </div>
         </div>

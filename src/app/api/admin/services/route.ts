@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const body = await request.json();
 
-  const { model_id, slug, name, price_dkk, estimated_minutes, sort_order } = body;
+  const { model_id, slug, name, price_dkk, estimated_minutes, sort_order, quality_tier, info_note, service_category } = body;
 
   if (!model_id || !slug || !name || price_dkk == null) {
     return NextResponse.json(
@@ -49,6 +49,9 @@ export async function POST(request: Request) {
       estimated_minutes: estimated_minutes ? Number(estimated_minutes) : null,
       sort_order: sort_order ?? 0,
       active: true,
+      quality_tier: quality_tier || null,
+      info_note: info_note || null,
+      service_category: service_category || null,
     })
     .select()
     .single();
