@@ -30,8 +30,9 @@ function isGradeOption(name: string) {
 }
 
 /** Map any Stand value from Shopify to a normalized grade. */
-function normalizeGrade(value: string): "A" | "B" | "C" | null {
+function normalizeGrade(value: string): "Ny" | "A" | "B" | "C" | null {
   const v = value.toLowerCase().trim();
+  if (v === "ny" || v === "ny stand" || v === "new" || v === "fabriksny") return "Ny";
   if (v === "som ny" || v === "som new") return "A";
   if (v === "god" || v === "god stand") return "B";
   if (v === "okay" || v === "ok" || v === "okay stand" || v === "ok stand") return "C";
@@ -134,9 +135,19 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
     return sel;
   });
 
-  const selectedGrade: "A" | "B" | "C" = selectedStand
-    ? (normalizeGrade(selectedStand) ?? "A")
-    : "A";
+  // Determine the default grade: prefer "Ny" if a variant has it, else "A"
+  const defaultGrade: "Ny" | "A" | "B" | "C" = (() => {
+    const hasNy = product.variants.some((v) =>
+      v.selectedOptions.some(
+        (opt) => opt.name.toLowerCase() === "stand" && normalizeGrade(opt.value) === "Ny",
+      ),
+    );
+    return hasNy ? "Ny" : "A";
+  })();
+
+  const selectedGrade: "Ny" | "A" | "B" | "C" = selectedStand
+    ? (normalizeGrade(selectedStand) ?? defaultGrade)
+    : defaultGrade;
 
   // Sync URL when selections change (no navigation, instant)
   useEffect(() => {
@@ -162,7 +173,7 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
     setSelectedColor(color);
   }, []);
 
-  const handleGradeSelect = useCallback((_grade: "A" | "B" | "C", standValue: string) => {
+  const handleGradeSelect = useCallback((_grade: "Ny" | "A" | "B" | "C", standValue: string) => {
     setSelectedStand(standValue);
   }, []);
 

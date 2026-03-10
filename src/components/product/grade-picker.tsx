@@ -2,12 +2,19 @@
 
 import type { ProductVariant } from "@/lib/shopify/types";
 
-type Grade = "A" | "B" | "C";
+type Grade = "Ny" | "A" | "B" | "C";
 
 const GRADE_META: Record<
   Grade,
   { label: string; sublabel: string; ring: string; badgeBg: string; badgeColor: string }
 > = {
+  Ny: {
+    label: "Ny",
+    sublabel: "Fabriksny — uåbnet eller nyåbnet",
+    ring: "border-blue-500 ring-blue-500/20",
+    badgeBg: "bg-blue-50",
+    badgeColor: "text-blue-600",
+  },
   A: {
     label: "Som ny",
     sublabel: "Ingen synlige brugsspor",
@@ -34,6 +41,7 @@ const GRADE_META: Record<
 /** Map any Stand value from Shopify to a normalized grade. */
 function normalizeGrade(value: string): Grade | null {
   const v = value.toLowerCase().trim();
+  if (v === "ny" || v === "ny stand" || v === "new" || v === "fabriksny") return "Ny";
   if (v === "som ny" || v === "som new") return "A";
   if (v === "god" || v === "god stand") return "B";
   if (v === "okay" || v === "ok" || v === "okay stand" || v === "ok stand") return "C";
@@ -64,7 +72,22 @@ export function GradePicker({
   selectedGrade,
   onSelect,
 }: GradePickerProps) {
-  const grades = (["A", "B", "C"] as Grade[]).map((grade) => {
+  // Detect which grades actually exist in variants
+  const allGrades: Grade[] = ["Ny", "A", "B", "C"];
+  const existingGrades = new Set<Grade>();
+  for (const v of variants) {
+    for (const opt of v.selectedOptions) {
+      if (opt.name.toLowerCase() === "stand") {
+        const g = normalizeGrade(opt.value);
+        if (g) existingGrades.add(g);
+      }
+    }
+  }
+
+  // Only show grades that exist in the product variants
+  const gradesToShow = allGrades.filter((g) => existingGrades.has(g));
+
+  const grades = gradesToShow.map((grade) => {
     const variant =
       variants.find((v) =>
         v.selectedOptions.some(
@@ -82,11 +105,13 @@ export function GradePicker({
     return { grade, variant, standValue };
   });
 
-  const gradeAPrice = grades[0]?.variant?.price?.amount ?? "0";
+  const highestPrice = grades[0]?.variant?.price?.amount ?? "0";
 
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-charcoal">Vælg stand</p>
+      <p className="mb-2 text-sm font-semibold text-charcoal">
+        {gradesToShow.length === 1 && gradesToShow[0] === "Ny" ? "Stand" : "Vælg stand"}
+      </p>
 
       {/* Grade options */}
       <div className="flex flex-col gap-2">
@@ -95,7 +120,7 @@ export function GradePicker({
           const isSelected = grade === selectedGrade;
           const isUnavailable = !variant || !variant.availableForSale;
           const price = variant?.price;
-          const savings = price ? getSavings(price.amount, gradeAPrice) : null;
+          const savings = price ? getSavings(price.amount, highestPrice) : null;
 
           return (
             <button
