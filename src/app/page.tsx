@@ -5,6 +5,7 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FeaturedProducts } from "@/components/home/featured-products";
+import { HighlightedProducts } from "@/components/home/highlighted-products";
 import { FadeIn } from "@/components/ui/fade-in";
 import { GradeSlider } from "@/components/home/grade-slider";
 
@@ -408,6 +409,17 @@ export default function HomePage() {
           ))}
         </div>
       </SectionWrapper>
+
+      {/* ── Highlighted Products (campaign) ── */}
+      <Suspense
+        fallback={
+          <div className="px-4 py-16 text-center text-gray">
+            Indlæser tilbud...
+          </div>
+        }
+      >
+        <HighlightedProducts />
+      </Suspense>
 
       {/* ── Featured Products ── */}
       <Suspense
