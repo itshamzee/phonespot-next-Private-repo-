@@ -70,12 +70,11 @@ export default function RootLayout({
         <Script
           src="https://invitejs.trustpilot.com/tp.min.js"
           strategy="afterInteractive"
-          onLoad={() => {
-            if (typeof window !== "undefined" && (window as any).tp) {
-              (window as any).tp("register", "samJZr5LOOVwoRYo");
-            }
-          }}
         />
+        <Script
+          id="trustpilot-register"
+          strategy="lazyOnload"
+        >{`if(window.tp){window.tp("register","samJZr5LOOVwoRYo")}`}</Script>
       </body>
     </html>
   );
