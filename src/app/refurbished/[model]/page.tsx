@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 import {
   getModelPage,
   getAllModelSlugs,
   MODEL_PAGES,
 } from "@/lib/model-pages";
-import { getCollectionProducts } from "@/lib/medusa/client";
+import { getCollectionProducts } from "@/lib/shopify/client";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -49,9 +51,11 @@ export async function generateMetadata({
 const COLLECTION_SLUG_MAP: Record<string, string> = {
   iphones: "iphones",
   ipads: "ipads",
-  computere: "computere",
+  computere: "baerbare",
+  baerbare: "baerbare",
   smartphones: "smartphones",
   smartwatches: "smartwatches",
+  "apple-watch": "smartwatches",
 };
 
 /* ------------------------------------------------------------------ */

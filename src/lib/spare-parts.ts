@@ -108,7 +108,7 @@ const IPHONE_MODELS: SparePartModel[] = [
   { label: "iPhone 13 Pro", slug: "iphone-13-pro", shopifyHandle: "iphone-13-pro-reservedele", generation: "13-serien" },
   { label: "iPhone 13", slug: "iphone-13", shopifyHandle: "iphone-13-reservedele", generation: "13-serien" },
   { label: "iPhone 13 Mini", slug: "iphone-13-mini", shopifyHandle: "iphone-13-mini-reservedele", generation: "13-serien" },
-  { label: "iPhone 12 Pro Max", slug: "iphone-12-pro-max", shopifyHandle: "iphone-12-pro-max-reservedeaee", generation: "12-serien" },
+  { label: "iPhone 12 Pro Max", slug: "iphone-12-pro-max", shopifyHandle: "iphone-12-pro-max-reservedele", generation: "12-serien" },
   { label: "iPhone 12 Pro", slug: "iphone-12-pro", shopifyHandle: "iphone-12-pro-reservedele", generation: "12-serien" },
   { label: "iPhone 12", slug: "iphone-12", shopifyHandle: "iphone-12-reservedele", generation: "12-serien" },
   { label: "iPhone 12 Mini", slug: "iphone-12-mini", shopifyHandle: "iphone-12-mini-reservedele", generation: "12-serien" },

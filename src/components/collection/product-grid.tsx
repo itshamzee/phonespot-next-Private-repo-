@@ -1,4 +1,4 @@
-import type { Product } from "@/lib/medusa/types";
+import type { Product } from "@/lib/shopify/types";
 import { ProductCard } from "@/components/product/product-card";
 import { FadeIn } from "@/components/ui/fade-in";
 

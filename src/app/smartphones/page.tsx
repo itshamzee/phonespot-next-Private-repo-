@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/medusa/client";
-import type { Product } from "@/lib/medusa/types";
+import { getCollectionProducts } from "@/lib/shopify/client";
+
+export const dynamic = "force-dynamic";
+import type { Product } from "@/lib/shopify/types";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -10,13 +12,19 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
 import { ProductCard } from "@/components/product/product-card";
-import { FadeIn } from "@/components/ui/fade-in";
+
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Refurbished Smartphones - Samsung, OnePlus & mere | PhoneSpot",
   description:
     "Køb kvalitetstestede refurbished smartphones med 36 måneders garanti. Samsung Galaxy, OnePlus og mere — alle testet med 30+ kontroller og klar til brug.",
+  alternates: { canonical: "https://phonespot.dk/smartphones" },
+  openGraph: {
+    title: "Refurbished Smartphones - Samsung, OnePlus & mere | PhoneSpot",
+    description: "Køb kvalitetstestede refurbished smartphones med 36 måneders garanti. Samsung Galaxy, OnePlus og mere — alle testet med 30+ kontroller og klar til brug.",
+    url: "https://phonespot.dk/smartphones",
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -250,19 +258,19 @@ export default async function SmartphonesPage({
                     </p>
                   </div>
                   <span className="ml-auto text-sm font-semibold text-green-eco">
-                    {tierProducts.length} modeller
+                    {tierProducts.length} {tierProducts.length === 1 ? "model" : "modeller"}
                   </span>
                 </div>
 
                 <div className="-mx-5 px-5 md:-mx-8 md:px-8">
-                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide md:gap-5">
-                    {tierProducts.slice(0, 10).map((product, idx) => (
-                      <FadeIn key={product.id} delay={idx * 0.04} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                  <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
+                    {tierProducts.slice(0, 10).map((product) => (
+                      <div key={product.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
                         <ProductCard
                           product={product}
                           collectionHandle="smartphones"
                         />
-                      </FadeIn>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -435,7 +443,7 @@ export default async function SmartphonesPage({
               Se iPhones &rarr;
             </Link>
             <Link
-              href="/covers"
+              href="/reservedele"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
               Se covers & tilbehør &rarr;

@@ -201,7 +201,7 @@ export default function ReservedelePage() {
           Populære modeller
         </Heading>
 
-        <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+        <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2">
           {POPULAR_SPARE_PART_MODELS.map((model) => (
             <Link
               key={model.href}

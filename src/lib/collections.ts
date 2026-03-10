@@ -25,13 +25,14 @@ export const COLLECTION_MAP: Record<string, {
     description: "Samsung, Google og andre topmodeller — kvalitetstestet med garanti.",
     showConditionWalkthrough: true,
   },
-  computere: {
-    shopifyHandle: "computere",
-    title: "Computere",
-    description: "Bærbare og stationære computere klar til arbejde og studie.",
+  baerbare: {
+    shopifyHandle: "baerbare",
+    title: "Bærbare Computere",
+    description: "Refurbished bærbare computere klar til arbejde og studie. Testet og med garanti.",
+    showConditionWalkthrough: true,
   },
   covers: {
-    shopifyHandle: "covers",
+    shopifyHandle: "covers-1",
     title: "Covers & Beskyttelse",
     description: "Beskyt din enhed med kvalitetscovers og panserglas.",
   },
@@ -40,8 +41,24 @@ export const COLLECTION_MAP: Record<string, {
     title: "Tilbehør",
     description: "Opladere, kabler og andet tilbehør til dine enheder.",
   },
+  lyd: {
+    shopifyHandle: "lyd",
+    title: "Lyd & Høretelefoner",
+    description: "Høretelefoner, earbuds og headsets til alle enheder.",
+  },
+  opladere: {
+    shopifyHandle: "opladere",
+    title: "Opladere",
+    description: "Opladere og kabler til iPhone, iPad og andre enheder.",
+  },
+  restsalg: {
+    shopifyHandle: "restsalg",
+    title: "Restsalg",
+    description: "Ekstra skarpe priser på udvalgte produkter. Begrænset antal.",
+    badge: "Ekstra tilbud",
+  },
   smartwatches: {
-    shopifyHandle: "smartwatches",
+    shopifyHandle: "apple-watch",
     title: "Smartwatches",
     description: "Refurbished Apple Watch og Samsung Galaxy Watch med 36 måneders garanti.",
     badge: "Fra 999 kr",

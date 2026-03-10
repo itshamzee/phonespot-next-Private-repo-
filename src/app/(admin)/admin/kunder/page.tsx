@@ -50,12 +50,12 @@ export default function AdminKunderPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-display text-2xl font-bold text-charcoal">
+        <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal">
           Kunder
         </h2>
         <Link
           href="/admin/indlevering"
-          className="rounded-full bg-green-eco px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          className="rounded-xl bg-green-eco px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:brightness-110"
         >
           + Ny indlevering
         </Link>
@@ -67,21 +67,21 @@ export default function AdminKunderPage() {
           placeholder="Soeg efter navn, email, telefon eller firma..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+          className="w-full max-w-md rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-charcoal placeholder:text-stone-400 transition-colors focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
         />
       </div>
 
       {loading ? (
-        <p className="text-gray">Indlaeser kunder...</p>
+        <p className="text-stone-400">Indlaeser kunder...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-gray">Ingen kunder fundet.</p>
+        <p className="text-stone-400">Ingen kunder fundet.</p>
       ) : (
         <div className="grid gap-4">
           {filtered.map((customer) => (
             <Link
               key={customer.id}
               href={`/admin/kunder/${customer.id}`}
-              className="block rounded-2xl border border-soft-grey bg-white p-5 transition-shadow hover:shadow-md"
+              className="block rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex-1">
@@ -90,30 +90,30 @@ export default function AdminKunderPage() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                         customer.type === "erhverv"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-blue-100 text-blue-800"
+                          ? "bg-violet-50 text-violet-600"
+                          : "bg-blue-50 text-blue-600"
                       }`}
                     >
                       {customer.type === "erhverv" ? "Erhverv" : "Privat"}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-gray">
+                  <p className="mt-1 text-sm text-stone-400">
                     {customer.phone}
                     {customer.email && ` · ${customer.email}`}
                   </p>
                   {customer.type === "erhverv" && customer.company_name && (
-                    <p className="mt-0.5 text-sm text-gray">
+                    <p className="mt-0.5 text-sm text-stone-400">
                       {customer.company_name}
                       {customer.cvr && ` (CVR: ${customer.cvr})`}
                     </p>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="rounded-full bg-sand px-3 py-1 text-xs font-semibold text-charcoal">
+                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-500">
                     {customer.customer_devices.length}{" "}
                     {customer.customer_devices.length === 1 ? "enhed" : "enheder"}
                   </span>
-                  <span className="text-xs text-gray">
+                  <span className="text-xs text-stone-400">
                     Oprettet: {formatDate(customer.created_at)}
                   </span>
                 </div>

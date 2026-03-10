@@ -107,7 +107,7 @@ export function UpsellModal() {
         <Image
           src="/brand/logos/phonespot-wordmark-dark.svg"
           alt="PhoneSpot"
-          width={130}
+          width={146}
           height={28}
           className="h-7 w-auto"
         />

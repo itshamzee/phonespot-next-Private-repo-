@@ -7,7 +7,7 @@ export function CartUpsell() {
         Glem ikke
       </p>
       <Link
-        href="/covers"
+        href="/reservedele"
         className="mt-2 flex items-center gap-3 rounded-radius-md border border-soft-grey bg-cream/50 p-3 transition-colors hover:border-green-eco"
       >
         <span className="text-2xl">{"\u{1F6E1}\uFE0F"}</span>

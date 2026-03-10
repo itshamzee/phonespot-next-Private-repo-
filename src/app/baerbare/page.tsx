@@ -1,120 +1,32 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { getCollectionProducts } from "@/lib/medusa/client";
-import type { Product } from "@/lib/medusa/types";
+import { getCollectionProducts } from "@/lib/shopify/client";
+
+export const dynamic = "force-dynamic";
+import type { Product } from "@/lib/shopify/types";
+import {
+  LAPTOP_TIERS,
+  filterProductsByTier,
+  filterRealLaptops,
+} from "@/lib/laptop-tiers";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
-import { FadeIn } from "@/components/ui/fade-in";
+
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "Refurbished Bærbare - MacBook, Lenovo & HP | PhoneSpot",
+  title: "Refurbished Bærbare - Fra 1.359 kr med 36 mdr. garanti | PhoneSpot",
   description:
-    "Kvalitetstestede bærbare fra Apple, Lenovo og HP med 36 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
+    "Kvalitetstestede bærbare med 36 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
+  alternates: { canonical: "https://phonespot.dk/baerbare" },
+  openGraph: {
+    title: "Refurbished Bærbare - Fra 1.359 kr med 36 mdr. garanti | PhoneSpot",
+    description: "Kvalitetstestede bærbare med 36 måneders garanti. Spar op til 40% og få en computer der er testet, rengjort og klar til brug.",
+    url: "https://phonespot.dk/baerbare",
+  },
 };
-
-// ---------------------------------------------------------------------------
-// Brand tiers (mirrors iPhone tier pattern)
-// ---------------------------------------------------------------------------
-
-const BRAND_TIERS = [
-  {
-    brand: "Apple",
-    slug: "apple",
-    tagline: "Premium design & ydelse",
-    cardBg: "bg-white",
-    cardBorder: "border border-sand",
-    badgeBg: "bg-sand/70",
-    badgeText: "text-charcoal",
-    taglineColor: "text-gray",
-    iconColor: "text-charcoal/50",
-    countColor: "text-green-eco",
-    logoPath: "/brand/logos/apple-logo.svg",
-    patterns: ["macbook", "mac"],
-  },
-  {
-    brand: "Lenovo",
-    slug: "lenovo",
-    tagline: "Bedste værdi for pengene",
-    cardBg: "bg-green-eco/[0.03]",
-    cardBorder: "border-2 border-green-eco/20",
-    badgeBg: "bg-green-eco",
-    badgeText: "text-white",
-    taglineColor: "text-green-eco",
-    iconColor: "text-green-eco",
-    countColor: "text-green-eco",
-    logoPath: "/brand/logos/lenovo-logo.svg",
-    patterns: ["thinkpad", "lenovo", "ideapad"],
-  },
-  {
-    brand: "HP",
-    slug: "hp",
-    tagline: "Business kvalitet",
-    cardBg: "bg-charcoal",
-    cardBorder: "border-0",
-    badgeBg: "bg-white/15",
-    badgeText: "text-white",
-    taglineColor: "text-white/60",
-    iconColor: "text-white/70",
-    countColor: "text-white/60",
-    logoPath: "/brand/logos/hp-logo.svg",
-    patterns: ["elitebook", "hp", "probook"],
-  },
-];
-
-// SVG icon fallbacks per brand
-function BrandIcon({ brand, className }: { brand: string; className?: string }) {
-  if (brand === "Apple") {
-    // Laptop icon
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-      </svg>
-    );
-  }
-  if (brand === "Lenovo") {
-    // Shield / durability icon
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    );
-  }
-  // HP — briefcase / business icon
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-    </svg>
-  );
-}
-
-/** Assign a product to the best-matching brand tier. */
-function getProductBrand(product: Product): number | null {
-  const title = product.title.toLowerCase();
-
-  // Check tiers in reverse so more specific patterns match first
-  // (e.g. "thinkpad" before "lenovo" which is broader)
-  for (let i = BRAND_TIERS.length - 1; i >= 0; i--) {
-    if (BRAND_TIERS[i].patterns.some((p) => title.includes(p))) {
-      return i;
-    }
-  }
-  return null;
-}
-
-function groupProductsByBrand(products: Product[]): Map<number, Product[]> {
-  const map = new Map<number, Product[]>();
-  for (const product of products) {
-    const brand = getProductBrand(product);
-    if (brand === null) continue;
-    if (!map.has(brand)) map.set(brand, []);
-    map.get(brand)!.push(product);
-  }
-  return map;
-}
 
 // ---------------------------------------------------------------------------
 // Data
@@ -175,12 +87,12 @@ const LAPTOP_FAQ = [
   {
     question: "Hvilken bærbar skal jeg vælge til studiet?",
     answer:
-      "Til studiet anbefaler vi en Lenovo ThinkPad eller HP EliteBook med min. 8 GB RAM og SSD. De er robuste, har gode tastaturer og holder hele dagen på en opladning. Se vores studiecomputer-udvalg for håndplukkede modeller fra 1.999 kr.",
+      "Til studiet anbefaler vi en budget-bærbar med min. 8 GB RAM og SSD. De er robuste, har gode tastaturer og holder hele dagen på en opladning. Se vores budget-udvalg for modeller fra 1.359 kr.",
   },
   {
-    question: "Er en refurbished MacBook lige så god som en ny?",
+    question: "Hvad er forskellen på budget, mellem og premium?",
     answer:
-      "Funktionelt ja — 100%. Alle MacBooks gennemgår vores 30-punkts test og leveres med ren macOS-installation. Kosmetisk afhænger det af graden: Grade A er næsten umulig at skelne fra ny. Du sparer typisk 30-40% sammenlignet med ny pris.",
+      "Budget (under 2.000 kr) er perfekt til studiet og daglig brug. Mellem (2.000-4.000 kr) giver mere kraft til multitasking og kontor. Premium (over 4.000 kr) har de nyeste processorer og mest RAM til krævende opgaver. Alle er 100% testet med 36 måneders garanti.",
   },
   {
     question: "Hvor lang tid holder batteriet?",
@@ -190,12 +102,12 @@ const LAPTOP_FAQ = [
   {
     question: "Kan jeg opgradere RAM eller SSD bagefter?",
     answer:
-      "Det afhænger af modellen. De fleste Lenovo ThinkPads og HP EliteBooks tillader opgradering af RAM og SSD. MacBooks med M-chip har loddet RAM, men SSD kan i nogle tilfælde opgraderes. Spørger du os, hjælper vi gerne.",
+      "De fleste af vores Lenovo ThinkPads tillader opgradering af RAM og SSD. Spørger du os, hjælper vi gerne med at finde de rigtige komponenter.",
   },
   {
     question: "Hvilken oplader følger med?",
     answer:
-      "Alle bærbare leveres med en kompatibel oplader. MacBooks leveres med USB-C oplader, Lenovo og HP med deres respektive opladere. Det er altid en funktionel oplader — enten original eller certificeret kompatibel.",
+      "Alle bærbare leveres med en kompatibel oplader. Det er altid en funktionel oplader — enten original eller certificeret kompatibel.",
   },
   {
     question: "Hvad med garanti på en refurbished laptop?",
@@ -208,9 +120,9 @@ const USE_CASES = [
   {
     title: "Til studiet",
     description:
-      "Word, PowerPoint, browsing og Zoom. En ThinkPad eller EliteBook med 8 GB RAM klarer alt hvad du har brug for på universitetet.",
-    cta: "Se studiecomputere",
-    href: "/baerbare/studiecomputer",
+      "Word, PowerPoint, browsing og Zoom. En bærbar med 8 GB RAM klarer alt hvad du har brug for på universitetet.",
+    cta: "Se budget bærbare",
+    href: "/baerbare/budget",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -221,9 +133,9 @@ const USE_CASES = [
   {
     title: "Til kontoret",
     description:
-      "Multitasking, regneark og videomøder. En kraftig EliteBook eller ThinkPad med 16 GB RAM og SSD giver dig professionel ydelse.",
-    cta: "Se Lenovo",
-    href: "/baerbare/lenovo",
+      "Multitasking, regneark og videomøder. En mellem-klasse bærbar med mere kraft giver dig professionel ydelse.",
+    cta: "Se mellem bærbare",
+    href: "/baerbare/mellem",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -233,11 +145,11 @@ const USE_CASES = [
     ),
   },
   {
-    title: "Til kreativt arbejde",
+    title: "Til krævende arbejde",
     description:
-      "Foto, video og design kræver en stærk skærm og kraftig processor. MacBook Pro med Retina er det oplagte valg.",
-    cta: "Se MacBooks",
-    href: "/baerbare/apple",
+      "Tunge programmer, store regneark og mange åbne faner. En premium bærbar med kraftig processor og masser af RAM.",
+    cta: "Se premium bærbare",
+    href: "/baerbare/premium",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -247,13 +159,39 @@ const USE_CASES = [
 ];
 
 const COMPARISON = [
-  { feature: "Pris (typisk)", new: "8.000-15.000 kr", refurbished: "1.999-7.999 kr" },
+  { feature: "Pris (typisk)", new: "8.000-15.000 kr", refurbished: "1.359-5.339 kr" },
   { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
   { feature: "Software", new: "Forinstalleret", refurbished: "Ren installation" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
   { feature: "Levering", new: "3-5 hverdage", refurbished: "1-2 hverdage" },
 ];
+
+// Tier icons
+function TierIcon({ tier }: { tier: string }) {
+  if (tier === "budget") {
+    // Piggy bank / savings
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+      </svg>
+    );
+  }
+  if (tier === "mellem") {
+    // Scale / balance
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" />
+      </svg>
+    );
+  }
+  // Premium - rocket
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+    </svg>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -268,12 +206,12 @@ export default async function BaerbarePage({
 
   let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
   try {
-    collectionData = await getCollectionProducts("computere", sort);
+    collectionData = await getCollectionProducts("baerbare", sort);
   } catch {
     collectionData = null;
   }
-  const products = collectionData?.products ?? [];
-  const brandGroups = groupProductsByBrand(products);
+  const allProducts = collectionData?.products ?? [];
+  const products = filterRealLaptops(allProducts);
 
   return (
     <>
@@ -308,41 +246,40 @@ export default async function BaerbarePage({
           Bærbare du kan stole på
         </Heading>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede laptops fra Apple, Lenovo og HP — med 36 måneders
-          garanti. Hver eneste computer er testet med 30+ kontroller, rengjort
-          og klar til brug fra dag et.
+          Kvalitetstestede laptops med 36 måneders garanti. Hver eneste computer
+          er testet med 30+ kontroller, rengjort og klar til brug fra dag et.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Fra 1.999 kr
+            <span className="text-green-eco">&#10003;</span> Fra 1.359 kr
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 36 måneders garanti
+            <span className="text-green-eco">&#10003;</span> 36 måneders garanti
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Spar op til 40%
+            <span className="text-green-eco">&#10003;</span> Spar op til 40%
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Ren installation
+            <span className="text-green-eco">&#10003;</span> Ren installation
           </span>
         </div>
       </SectionWrapper>
 
-      {/* -- Brand showcase -- */}
+      {/* -- Price tier showcase -- */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
-            Vælg dit mærke
+            Vælg dit prisniveau
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            Vi fører de mest pålidelige laptop-mærker på markedet. Alle er
-            testet efter samme grundige standard.
+            Find den rigtige bærbar til dit budget. Alle er testet efter samme
+            grundige standard — uanset pris.
           </p>
         </div>
 
         <div className="mt-12 space-y-8">
-          {BRAND_TIERS.map((tier, tierIndex) => {
-            const brandProducts = brandGroups.get(tierIndex) ?? [];
+          {LAPTOP_TIERS.map((tier, tierIndex) => {
+            const tierProducts = filterProductsByTier(products, tier);
 
             return (
               <Link
@@ -350,32 +287,23 @@ export default async function BaerbarePage({
                 href={`/baerbare/${tier.slug}`}
                 className={`group block rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 transition-shadow hover:shadow-md md:p-8`}
               >
-                {/* Brand header */}
+                {/* Tier header */}
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  {/* Try brand logo image, fall back to SVG icon */}
-                  <div className="relative flex h-8 w-8 items-center justify-center">
-                    <Image
-                      src={tier.logoPath}
-                      alt={`${tier.brand} logo`}
-                      width={32}
-                      height={32}
-                      className={`h-8 w-8 object-contain ${tierIndex === 2 ? "brightness-0 invert" : ""}`}
-                      onError={undefined}
-                    />
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tier.badgeBg} ${tier.badgeText}`}>
+                    <TierIcon tier={tier.slug} />
                   </div>
-                  <BrandIcon brand={tier.brand} className={`h-6 w-6 ${tier.iconColor} hidden`} />
                   <div>
                     <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-[2px]`}>
-                      {tier.brand}
+                      {tier.title}
                     </span>
                     <p className={`mt-1 text-sm ${tier.taglineColor}`}>
                       {tier.tagline}
                     </p>
                   </div>
                   <div className="ml-auto flex items-center gap-3">
-                    {brandProducts.length > 0 && (
+                    {tierProducts.length > 0 && (
                       <span className={`text-sm font-semibold ${tier.countColor}`}>
-                        {brandProducts.length} modeller
+                        {tierProducts.length} {tierProducts.length === 1 ? "model" : "modeller"}
                       </span>
                     )}
                     <span className={`text-sm font-semibold ${tierIndex === 2 ? "text-white/80 group-hover:text-white" : "text-green-eco"} transition-transform group-hover:translate-x-1`}>
@@ -385,25 +313,25 @@ export default async function BaerbarePage({
                 </div>
 
                 {/* Product cards - horizontal scroll */}
-                {brandProducts.length > 0 && (
+                {tierProducts.length > 0 && (
                   <div className="-mx-5 px-5 md:-mx-8 md:px-8">
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide md:gap-5">
-                      {brandProducts.slice(0, 10).map((product, idx) => (
-                        <FadeIn key={product.id} delay={idx * 0.04} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                    <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
+                      {tierProducts.slice(0, 10).map((product) => (
+                        <div key={product.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
                           <ProductCard
                             product={product}
                             collectionHandle="baerbare"
                           />
-                        </FadeIn>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
 
                 {/* Fallback when no products loaded */}
-                {brandProducts.length === 0 && (
+                {tierProducts.length === 0 && (
                   <p className={`text-sm ${tierIndex === 2 ? "text-white/40" : "text-gray"}`}>
-                    Se vores udvalg af {tier.brand} bærbare &rarr;
+                    Se vores {tier.title.toLowerCase()} bærbare &rarr;
                   </p>
                 )}
               </Link>
@@ -420,7 +348,7 @@ export default async function BaerbarePage({
           </Heading>
           <p className="mt-4 text-lg text-gray">
             Find den rigtige computer til dit behov — uanset om det er studie,
-            kontor eller kreativt arbejde.
+            kontor eller krævende arbejde.
           </p>
         </div>
         <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-3">
@@ -449,38 +377,38 @@ export default async function BaerbarePage({
         </div>
       </SectionWrapper>
 
-      {/* -- Studiecomputer highlight -- */}
+      {/* -- Budget highlight -- */}
       <SectionWrapper background="green" className="text-center text-white">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-white/60">
-          For studerende
+          Bedste pris
         </p>
         <Heading as="h2" size="lg" className="text-white">
-          Studiecomputer fra 1.999 kr
+          Bærbare fra 1.359 kr
         </Heading>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
-          Du behøver ikke bruge hele SU&apos;en på en computer. Vores
-          studiecomputere er håndplukket til studiet — med minimum 8 GB RAM,
+          Du behøver ikke bruge en formue på en god computer. Vores
+          budget-bærbare er håndplukket — med minimum 8 GB RAM,
           SSD og 4+ timers batteri. Alle testet og klar med 36 måneders garanti.
         </p>
         <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-4 text-sm text-white/70">
           <span className="flex items-center gap-1.5">
-            <span className="text-white">✓</span> Min. 8 GB RAM
+            <span className="text-white">&#10003;</span> Min. 8 GB RAM
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="text-white">✓</span> SSD-disk
+            <span className="text-white">&#10003;</span> SSD-disk
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="text-white">✓</span> 4+ timers batteri
+            <span className="text-white">&#10003;</span> 4+ timers batteri
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="text-white">✓</span> Windows installeret
+            <span className="text-white">&#10003;</span> Windows installeret
           </span>
         </div>
         <Link
-          href="/baerbare/studiecomputer"
+          href="/baerbare/budget"
           className="mt-8 inline-block rounded-full bg-white px-8 py-3 font-semibold text-green-eco transition-opacity hover:opacity-90"
         >
-          Se studiecomputere &rarr;
+          Se budget bærbare &rarr;
         </Link>
       </SectionWrapper>
 
@@ -660,7 +588,7 @@ export default async function BaerbarePage({
                 Sådan vælger du den rigtige refurbished bærbar
               </p>
               <p className="mt-1 text-xs text-gray">
-                MacBook, ThinkPad eller EliteBook? Komplet guide
+                Budget, mellem eller premium? Komplet guide
               </p>
             </Link>
             <Link
@@ -690,28 +618,22 @@ export default async function BaerbarePage({
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/baerbare/apple"
+              href="/baerbare/budget"
               className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
-              Se MacBooks &rarr;
+              Se budget &rarr;
             </Link>
             <Link
-              href="/baerbare/lenovo"
+              href="/baerbare/mellem"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
-              Se Lenovo &rarr;
+              Se mellem &rarr;
             </Link>
             <Link
-              href="/baerbare/hp"
+              href="/baerbare/premium"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
-              Se HP &rarr;
-            </Link>
-            <Link
-              href="/baerbare/studiecomputer"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
-            >
-              Se studiecomputere &rarr;
+              Se premium &rarr;
             </Link>
           </div>
         </div>

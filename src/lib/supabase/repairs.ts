@@ -75,6 +75,24 @@ export async function getAllBrandSlugs(): Promise<string[]> {
   return brands.map((b) => b.slug);
 }
 
+export async function getAllModelsWithBrand(): Promise<
+  (RepairModel & { brand_slug: string; brand_name: string })[]
+> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("repair_models")
+    .select("*, repair_brands!inner(slug, name)")
+    .eq("active", true)
+    .order("sort_order");
+  if (!data) return [];
+  return data.map((row: any) => ({
+    ...row,
+    brand_slug: row.repair_brands.slug,
+    brand_name: row.repair_brands.name,
+    repair_brands: undefined,
+  }));
+}
+
 export async function getAllModelSlugs(): Promise<{ brand: string; model: string }[]> {
   const supabase = createServerClient();
   const { data } = await supabase

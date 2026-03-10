@@ -87,7 +87,7 @@ export function DeviceChips({ category, devices, activeDevice }: DeviceChipsProp
       {isOpen && (
         <div className="absolute left-0 top-full z-40 mt-2 w-full max-w-xl rounded-2xl border border-sand bg-white p-4 shadow-lg">
           {/* Brand tabs */}
-          <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-cream p-1">
+          <div className="mb-4 flex gap-1 overflow-x-auto overscroll-x-contain rounded-lg bg-cream p-1">
             {availableBrands.map((brand) => (
               <button
                 key={brand.slug}

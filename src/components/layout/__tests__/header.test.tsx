@@ -18,7 +18,7 @@ describe("Header", () => {
     render(<Header />);
     expect(screen.getByText("Produkter")).toBeDefined();
     expect(screen.getByText("Om PhoneSpot")).toBeDefined();
-    expect(screen.getByText("Outlet")).toBeDefined();
+    expect(screen.getByText("Reservedele")).toBeDefined();
   });
 
   it("does not show dropdown items by default", () => {

@@ -9,6 +9,10 @@ import type {
   RepairStatusLog,
   RepairStatus,
 } from "@/lib/supabase/types";
+import {
+  PDFPreviewModal,
+  type PDFPreviewData,
+} from "@/components/admin/pdf-preview-modal";
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
@@ -68,6 +72,9 @@ export default function AdminTicketDetailPage({
   // SMS state
   const [smsMessage, setSmsMessage] = useState("");
   const [smsSending, setSmsSending] = useState(false);
+
+  // PDF preview modal state
+  const [pdfModal, setPdfModal] = useState<{ type: "intake-receipt" | "workshop-report" } | null>(null);
 
   const supabase = createBrowserClient();
 
@@ -452,22 +459,20 @@ export default function AdminTicketDetailPage({
               Dokumenter
             </h3>
             <div className="flex flex-wrap gap-3">
-              <a
-                href={`/api/pdf/intake-receipt/${id}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => setPdfModal({ type: "intake-receipt" })}
                 className="rounded-full bg-charcoal px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Indleveringsbevis
-              </a>
-              <a
-                href={`/api/pdf/workshop-report/${id}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              </button>
+              <button
+                type="button"
+                onClick={() => setPdfModal({ type: "workshop-report" })}
                 className="rounded-full border border-soft-grey px-5 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-sand"
               >
                 Vaerkstedsrapport
-              </a>
+              </button>
             </div>
           </div>
 
@@ -600,6 +605,33 @@ export default function AdminTicketDetailPage({
           </div>
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      {pdfModal && ticket && (
+        <PDFPreviewModal
+          type={pdfModal.type}
+          data={{
+            ticketId: ticket.id,
+            customerName: ticket.customer_name,
+            customerPhone: ticket.customer_phone,
+            customerEmail: ticket.customer_email,
+            deviceBrand: ticket.device_type,
+            deviceModel: ticket.device_model,
+            services: (ticket.services ?? []).map((s) => ({
+              name: s.name,
+              price: s.price_dkk,
+            })),
+            internalNotes: (ticket.internal_notes ?? [])
+              .map((n) => n.text)
+              .join("\n"),
+            checklist: (ticket.intake_checklist ?? []).map((c) => ({
+              label: c.label,
+              status: c.status,
+            })),
+          }}
+          onClose={() => setPdfModal(null)}
+        />
+      )}
     </div>
   );
 }

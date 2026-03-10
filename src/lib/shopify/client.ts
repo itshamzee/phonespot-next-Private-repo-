@@ -102,8 +102,30 @@ function reshapeCollection(raw: ShopifyCollectionRaw): Collection {
 }
 
 function reshapeCart(raw: ShopifyCartRaw): Cart {
+  // Shopify returns checkoutUrl with the custom domain (e.g. phonespot.dk),
+  // but since Next.js is serving that domain, we need to rewrite it to the
+  // .myshopify.com domain so the browser goes to Shopify's checkout.
+  let checkoutUrl = raw.checkoutUrl;
+  const shopifyDomain =
+    process.env.SHOPIFY_ADMIN_DOMAIN ||
+    process.env.SHOPIFY_STORE_DOMAIN ||
+    process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN ||
+    "";
+  if (shopifyDomain && checkoutUrl) {
+    try {
+      const url = new URL(checkoutUrl);
+      if (!url.hostname.endsWith(".myshopify.com")) {
+        url.hostname = shopifyDomain.replace(/^https?:\/\//, "");
+        checkoutUrl = url.toString();
+      }
+    } catch {
+      // keep original URL if parsing fails
+    }
+  }
+
   return {
     ...raw,
+    checkoutUrl,
     lines: raw.lines.nodes,
   };
 }

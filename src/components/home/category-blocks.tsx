@@ -14,12 +14,12 @@ const categories = [
   },
   {
     name: "Computere",
-    href: "/computere",
+    href: "/baerbare",
     description: "B\u00e6rbare & station\u00e6re",
   },
   {
     name: "Covers",
-    href: "/covers",
+    href: "/reservedele",
     description: "Covers, sleeves & beskyttelse",
   },
   {

@@ -59,7 +59,7 @@ async function medusaFetch<T>(
 
 function toMoney(amount: number, currencyCode: string): Money {
   return {
-    amount: (amount / 100).toFixed(2), // Medusa stores amounts in cents
+    amount: amount.toFixed(2), // Medusa Cloud stores amounts in base currency unit
     currencyCode: currencyCode.toUpperCase(),
   };
 }
@@ -144,7 +144,7 @@ function reshapeMedusaProduct(raw: MedusaProduct): Product {
     title: raw.title,
     description: raw.description ?? "",
     descriptionHtml: raw.description ?? "",
-    vendor: "",
+    vendor: (raw.metadata?.vendor as string) ?? "",
     productType: raw.type?.value ?? "",
     tags: raw.tags.map((t) => t.value),
     availableForSale: variants.some((v) => v.availableForSale),

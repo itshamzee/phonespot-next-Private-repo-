@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Scripts with hardcoded secrets (use .env instead)
+scripts/check-missing-series.mjs
+scripts/fix-remaining-series.mjs
+scripts/update-series-and-xbox.mjs
+scripts/check-all-routes.mjs
+scripts/fix-orphan-products.mjs
+scripts/fix-orphan-tags.mjs
+scripts/inspect-store.mjs
+scripts/set-iphone-sold-out.mjs

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { STORE } from "@/lib/store-config";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -7,15 +8,15 @@ const PRODUCT_LINKS = [
   { label: "iPads", href: "/ipads" },
   { label: "Bærbare", href: "/baerbare" },
   { label: "Smartwatches", href: "/smartwatches" },
-  { label: "Covers", href: "/covers" },
   { label: "Reservedele", href: "/reservedele" },
-  { label: "Outlet", href: "/outlet" },
+  { label: "Reparation", href: "/reparation" },
 ] as const;
 
 const SERVICE_LINKS = [
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Garanti", href: "/garanti" },
   { label: "Reparation", href: "/reparation" },
+  { label: "Butik", href: "/butik" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },
 ] as const;
@@ -123,7 +124,7 @@ export function Footer() {
             <Image
               src="/brand/logos/phonespot-wordmark-white.svg"
               alt="PhoneSpot"
-              width={140}
+              width={166}
               height={32}
               className="h-8 w-auto"
             />
@@ -141,7 +142,7 @@ export function Footer() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
               </svg>
-              <span className="text-xs text-white/50">Fysisk butik i CENTRETS NAVN</span>
+              <span className="text-xs text-white/50">Fysisk butik i {STORE.mall}, {STORE.city}</span>
             </div>
           </div>
 
@@ -258,7 +259,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 lg:px-8">
           <p className="text-xs text-white/30">
-            &copy; {year} PhoneSpot ApS &middot; CVR: XXXXXXXX &middot; Alle rettigheder forbeholdes.
+            &copy; {year} PhoneSpot ApS &middot; CVR: 38688766 &middot; Alle rettigheder forbeholdes.
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-white/30">Betalingsmuligheder:</span>

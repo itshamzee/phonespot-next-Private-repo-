@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
-import { getCollectionProducts } from "@/lib/medusa/client";
+import { getCollectionProducts } from "@/lib/shopify/client";
+
+export const dynamic = "force-dynamic";
 import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
@@ -114,7 +116,7 @@ export default async function CollectionPage({
 
         <ProductGrid
           products={products}
-          collectionHandle={config.shopifyHandle}
+          collectionHandle={slug}
         />
       </section>
     </>

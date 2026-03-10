@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { FormField } from "@/components/ui/form-field";
+import { STORE } from "@/lib/store-config";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -209,9 +210,11 @@ export default function KontaktPage() {
                 <div>
                   <p className="text-sm font-semibold text-charcoal">Adresse</p>
                   <p className="text-sm text-gray">
-                    PhoneSpot ApS
+                    {STORE.company}
                     <br />
-                    Danmark
+                    {STORE.street}
+                    <br />
+                    {STORE.zip} {STORE.city}
                   </p>
                 </div>
               </div>
@@ -239,9 +242,11 @@ export default function KontaktPage() {
                     Åbningstider
                   </p>
                   <p className="text-sm text-gray">
-                    Mandag - Fredag: 9:00 - 16:00
+                    Man – Fre: {STORE.hours.weekdays}
                     <br />
-                    Weekend: Lukket
+                    Lørdag: {STORE.hours.saturday}
+                    <br />
+                    Søndag: {STORE.hours.sunday}
                   </p>
                 </div>
               </div>

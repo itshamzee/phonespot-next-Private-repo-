@@ -1,22 +1,53 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
-import { CartProvider } from "@/components/cart/cart-context";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { CartDrawer } from "@/components/cart/cart-drawer";
-import { UpsellModal } from "@/components/cart/upsell-modal";
-import { CookieConsent } from "@/components/ui/cookie-consent";
-import { NewsletterPopup } from "@/components/ui/newsletter-popup";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
+import { LayoutShell } from "@/components/layout/public-shell";
 import "./globals.css";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
-  title: "PhoneSpot - Kvalitetstestede iPhones & iPads",
+  metadataBase: new URL("https://phonespot.dk"),
+  title: {
+    default: "PhoneSpot - Kvalitetstestede iPhones & iPads",
+    template: "%s",
+  },
   description:
     "Kvalitetstestede iPhones og iPads med 36 måneders garanti. Spar op til 40% og handl trygt med e-mærket.",
   icons: {
     icon: "/brand/favicons/favicon-dark.svg",
+  },
+  openGraph: {
+    type: "website",
+    locale: "da_DK",
+    siteName: "PhoneSpot",
+    title: "PhoneSpot - Kvalitetstestede iPhones & iPads",
+    description:
+      "Kvalitetstestede iPhones og iPads med 36 måneders garanti. Spar op til 40% og handl trygt med e-mærket.",
+    url: "https://phonespot.dk",
+    images: [
+      {
+        url: "/brand/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PhoneSpot - Refurbished tech du kan stole på",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  alternates: {
+    canonical: "https://phonespot.dk",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -29,20 +60,12 @@ export default function RootLayout({
     <html lang="da" className={`${barlowCondensed.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-warm-white font-body text-charcoal antialiased">
         <JsonLd data={ORGANIZATION_JSONLD} />
-        <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <CartDrawer />
-          <UpsellModal />
-        </CartProvider>
-        {/* e-mærket verification widget */}
+        <LayoutShell>{children}</LayoutShell>
+        {/* e-maerket verification widget */}
         <Script
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"
           strategy="afterInteractive"
         />
-        <CookieConsent />
-        <NewsletterPopup />
       </body>
     </html>
   );

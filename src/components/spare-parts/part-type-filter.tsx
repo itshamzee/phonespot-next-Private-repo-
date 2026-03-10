@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { SPARE_PART_TYPES } from "@/lib/spare-parts";
-import type { Product } from "@/lib/medusa/types";
+import type { Product } from "@/lib/shopify/types";
 import { ProductCard } from "@/components/product/product-card";
 
 type PartTypeFilterProps = {

@@ -67,16 +67,6 @@ const PRODUKT_ITEMS: NavItem[] = [
       </svg>
     ),
   },
-  {
-    label: "Covers",
-    href: "/covers",
-    description: "Covers og panserglas",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    ),
-  },
 ];
 
 const ABOUT_ITEMS: NavItem[] = [
@@ -97,16 +87,6 @@ const ABOUT_ITEMS: NavItem[] = [
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Reparation",
-    href: "/reparation",
-    description: "Professionel reparation af enheder",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
       </svg>
     ),
   },
@@ -670,6 +650,18 @@ export function Header() {
 
   const totalItems = cart?.totalQuantity ?? 0;
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
     <header
       className="sticky top-0 z-50 border-b border-sand"
@@ -705,16 +697,16 @@ export function Header() {
         <nav className="hidden lg:flex items-center gap-8">
           <NavDropdown label="Produkter" items={PRODUKT_ITEMS} />
           <Link
+            href="/butik"
+            className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+          >
+            Butik
+          </Link>
+          <Link
             href="/tilbehoer"
             className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
           >
             Tilbehør
-          </Link>
-          <Link
-            href="/reservedele"
-            className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
-          >
-            Reservedele
           </Link>
           <NavDropdown label="Om PhoneSpot" items={ABOUT_ITEMS} />
         </nav>
@@ -758,31 +750,21 @@ export function Header() {
 
       {/* Mobile nav slide-down */}
       {mobileOpen && (
-        <nav className="lg:hidden border-t border-sand bg-warm-white px-4 pb-4">
+        <nav className="lg:hidden border-t border-sand bg-warm-white px-4 pb-4 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain">
           <MobileAccordion label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+          <Link
+            href="/butik"
+            className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+            onClick={() => setMobileOpen(false)}
+          >
+            Butik
+          </Link>
           <Link
             href="/tilbehoer"
             className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
             onClick={() => setMobileOpen(false)}
           >
             Tilbehør
-          </Link>
-          <Link
-            href="/reservedele"
-            className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
-            onClick={() => setMobileOpen(false)}
-          >
-            Reservedele
-          </Link>
-          <Link
-            href="/reparation"
-            className="flex items-center gap-2 border-b border-sand/50 py-3 text-sm font-bold text-green-eco"
-            onClick={() => setMobileOpen(false)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
-            </svg>
-            Reparation
           </Link>
           <MobileAccordion label="Om PhoneSpot" items={ABOUT_ITEMS} onNavigate={() => setMobileOpen(false)} />
         </nav>

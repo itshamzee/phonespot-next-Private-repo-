@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { IntakeFormData } from "../page";
+import { PDFPreviewModal } from "@/components/admin/pdf-preview-modal";
 
 interface Props {
   formData: IntakeFormData;
@@ -23,6 +24,7 @@ export function SummaryStep({
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [pdfModal, setPdfModal] = useState<{ type: "intake-receipt" | "workshop-report" } | null>(null);
 
   const allServices = [
     ...formData.selectedServices.map((s) => ({ name: s.name, price_dkk: s.price_dkk })),
@@ -75,6 +77,24 @@ export function SummaryStep({
     setSubmitting(false);
   }
 
+  const pdfPreviewData = submittedTicketId
+    ? {
+        ticketId: submittedTicketId,
+        customerName: formData.customer?.name ?? "",
+        customerPhone: formData.customer?.phone ?? "",
+        customerEmail: formData.customer?.email ?? "",
+        companyName: formData.customer?.company_name ?? undefined,
+        cvr: formData.customer?.cvr ?? undefined,
+        deviceBrand: formData.device?.brand ?? formData.newDevice.brand,
+        deviceModel: formData.device?.model ?? formData.newDevice.model,
+        serialNumber: formData.device?.serial_number ?? (formData.newDevice.serial_number || undefined),
+        deviceColor: formData.device?.color ?? (formData.newDevice.color || undefined),
+        services: allServices.map((s) => ({ name: s.name, price: s.price_dkk })),
+        internalNotes: formData.internalNotes,
+        checklist: formData.checklist.map((c) => ({ label: c.label, status: c.status })),
+      }
+    : null;
+
   if (submittedTicketId) {
     return (
       <div className="max-w-2xl">
@@ -92,22 +112,20 @@ export function SummaryStep({
           </p>
 
           <div className="flex flex-wrap justify-center gap-3">
-            <a
-              href={`/api/pdf/intake-receipt/${submittedTicketId}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setPdfModal({ type: "intake-receipt" })}
               className="rounded-full bg-charcoal px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               Download indleveringsbevis
-            </a>
-            <a
-              href={`/api/pdf/workshop-report/${submittedTicketId}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            </button>
+            <button
+              type="button"
+              onClick={() => setPdfModal({ type: "workshop-report" })}
               className="rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-semibold text-charcoal transition-colors hover:bg-sand"
             >
               Download vaerkstedsrapport
-            </a>
+            </button>
           </div>
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -126,6 +144,14 @@ export function SummaryStep({
             </button>
           </div>
         </div>
+
+        {pdfModal && pdfPreviewData && (
+          <PDFPreviewModal
+            type={pdfModal.type}
+            data={pdfPreviewData}
+            onClose={() => setPdfModal(null)}
+          />
+        )}
       </div>
     );
   }

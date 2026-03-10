@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getAllCollectionProducts } from "@/lib/shopify/client";
+import { getAllCollectionProducts, getProduct } from "@/lib/shopify/client";
+import type { Product } from "@/lib/shopify/types";
+
+export const dynamic = "force-dynamic";
 import {
   getCategoryConfig,
   getDeviceConfig,
@@ -29,6 +33,10 @@ import { FilterDrawer } from "@/components/tilbehoer/filter-drawer";
 import { ActiveFilters } from "@/components/tilbehoer/active-filters";
 import { TilbehoerSortSelector } from "@/components/tilbehoer/sort-selector";
 import { Pagination } from "@/components/tilbehoer/pagination";
+import { CoverProductHero } from "@/components/cover/cover-product-hero";
+import { ProductCard } from "@/components/product/product-card";
+
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return getAllDeviceParams();
@@ -43,22 +51,28 @@ export async function generateMetadata({
   const catConfig = getCategoryConfig(category);
   const devConfig = getDeviceConfig(device);
 
-  if (!catConfig || !devConfig) return { title: "Ikke fundet" };
+  if (catConfig && devConfig) {
+    const title = `${devConfig.label} ${catConfig.label} | PhoneSpot`;
+    const description = `${catConfig.label} til ${devConfig.label}. Beskyt din enhed med kvalitetstilbehør fra PhoneSpot.`;
+    return {
+      title,
+      description,
+      alternates: { canonical: `https://phonespot.dk/tilbehoer/${category}/${device}` },
+      openGraph: { title, description, url: `https://phonespot.dk/tilbehoer/${category}/${device}` },
+    };
+  }
 
-  const title = `${devConfig.label} ${catConfig.label} | PhoneSpot`;
-  const description = `${catConfig.label} til ${devConfig.label}. Beskyt din enhed med kvalitetstilbehør fra PhoneSpot.`;
+  // Fallback: try as product handle
+  let product: Product | null = null;
+  try { product = await getProduct(device); } catch { /* */ }
+  if (!product) return { title: "Ikke fundet - PhoneSpot" };
 
+  const title = product.seo.title ?? `${product.title} | PhoneSpot`;
+  const description = product.seo.description ?? `Køb ${product.title} hos PhoneSpot. Hurtig levering og skarpe priser.`;
   return {
     title,
     description,
-    alternates: {
-      canonical: `https://phonespot.dk/tilbehoer/${category}/${device}`,
-    },
-    openGraph: {
-      title,
-      description,
-      url: `https://phonespot.dk/tilbehoer/${category}/${device}`,
-    },
+    openGraph: { title, description, images: product.images[0] ? [{ url: product.images[0].url }] : undefined },
   };
 }
 
@@ -76,7 +90,58 @@ export default async function DevicePage({
   const devConfig = getDeviceConfig(device);
   const routeConfig = getRouteConfig(category, device);
 
-  if (!catConfig || !devConfig || !routeConfig) notFound();
+  // If device slug isn't a known device, try rendering as a product page
+  if (!catConfig || !devConfig || !routeConfig) {
+    let product: Product | null = null;
+    try { product = await getProduct(device); } catch { /* */ }
+    if (!product) notFound();
+
+    const parentCatConfig = getCategoryConfig(category);
+    const compatibleModels = product.tags.filter((t) =>
+      /^(iPhone|iPad|Samsung|Galaxy|Google Pixel|OnePlus|Huawei)/i.test(t),
+    );
+
+    // Fetch related products from the parent category
+    let relatedProducts: Product[] = [];
+    if (parentCatConfig) {
+      try {
+        const all = await getAllCollectionProducts(parentCatConfig.shopifyHandle);
+        relatedProducts = all.filter((p) => p.handle !== device).slice(0, 4);
+      } catch { /* */ }
+    }
+
+    return (
+      <>
+        <nav aria-label="Brødkrumme" className="mx-auto max-w-7xl px-4 pt-4 pb-2">
+          <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray">
+            <li><Link href="/" className="transition-colors hover:text-charcoal">Hjem</Link></li>
+            <li aria-hidden="true">/</li>
+            <li><Link href="/tilbehoer" className="transition-colors hover:text-charcoal">Tilbehør</Link></li>
+            <li aria-hidden="true">/</li>
+            {parentCatConfig && (
+              <>
+                <li><Link href={`/tilbehoer/${category}`} className="transition-colors hover:text-charcoal">{parentCatConfig.label}</Link></li>
+                <li aria-hidden="true">/</li>
+              </>
+            )}
+            <li className="font-medium text-charcoal truncate max-w-[200px] md:max-w-none">{product.title}</li>
+          </ol>
+        </nav>
+        <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-12"><div className="h-[500px] animate-pulse rounded-3xl bg-sand" /></div>}>
+          <CoverProductHero product={product} compatibleModels={compatibleModels} />
+        </Suspense>
+        {relatedProducts.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 pb-16">
+            <h2 className="mb-8 font-display text-2xl font-bold text-charcoal md:text-3xl">Relaterede produkter</h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+              {relatedProducts.map((p) => (<ProductCard key={p.id} product={p} collectionHandle={`tilbehoer/${category}`} />))}
+            </div>
+          </section>
+        )}
+        <section className="mx-auto max-w-7xl px-4 pb-16"><TrustBar /></section>
+      </>
+    );
+  }
 
   // Fetch products from device-specific collection
   // Fallback: if collection doesn't exist, fetch parent and filter by title

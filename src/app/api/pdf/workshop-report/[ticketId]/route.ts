@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 import { WorkshopReportDocument } from "@/lib/pdf/workshop-report";
+import type { ChecklistItem } from "@/lib/supabase/types";
 
 export async function GET(
   _request: Request,
@@ -64,6 +65,64 @@ export async function GET(
         checklist: (ticket.intake_checklist ?? []) as { label: string; status: "ok" | "fejl" | "ikke_relevant"; note: string; photo_url: string | null }[],
         services,
         internalNotes,
+      },
+    }) as any,
+  );
+
+  return new Response(pdfBuffer as unknown as BodyInit, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="vaerkstedsrapport-${ticketId.slice(0, 8)}.pdf"`,
+    },
+  });
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ ticketId: string }> },
+) {
+  const { ticketId } = await params;
+
+  let body: {
+    customerName: string;
+    customerPhone: string;
+    customerEmail?: string;
+    deviceBrand: string;
+    deviceModel: string;
+    serialNumber?: string;
+    deviceColor?: string;
+    services: { name: string; price: number }[];
+    internalNotes: string;
+    checklist?: { label: string; status: string }[];
+  };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const services = (body.services ?? []).map((s) => ({
+    name: s.name,
+    price_dkk: s.price,
+  }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfBuffer = await renderToBuffer(
+    React.createElement(WorkshopReportDocument, {
+      data: {
+        ticketId,
+        createdAt: new Date().toISOString(),
+        customerName: body.customerName,
+        customerPhone: body.customerPhone,
+        deviceBrand: body.deviceBrand,
+        deviceModel: body.deviceModel,
+        serialNumber: body.serialNumber,
+        deviceColor: body.deviceColor,
+        checklist: (body.checklist ?? []) as ChecklistItem[],
+        services,
+        internalNotes: body.internalNotes ?? "",
       },
     }) as any,
   );

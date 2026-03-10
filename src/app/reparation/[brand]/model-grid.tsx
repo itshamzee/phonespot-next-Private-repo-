@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DeviceImage } from "@/components/repair/device-image";
 import type { DeviceType } from "@/lib/supabase/types";
@@ -8,11 +8,78 @@ import type { DeviceType } from "@/lib/supabase/types";
 export type ModelCardData = {
   slug: string;
   name: string;
+  series: string | null;
   cheapestPrice: number | null;
   brandSlug: string;
   imageUrl: string | null;
   deviceType: DeviceType;
 };
+
+type SeriesGroup = {
+  series: string;
+  models: ModelCardData[];
+};
+
+function groupBySeries(models: ModelCardData[]): SeriesGroup[] {
+  const groups: Map<string, ModelCardData[]> = new Map();
+  for (const m of models) {
+    const key = m.series ?? "__ungrouped__";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(m);
+  }
+  return Array.from(groups.entries()).map(([series, models]) => ({
+    series: series === "__ungrouped__" ? "" : series,
+    models,
+  }));
+}
+
+function ModelCard({ model }: { model: ModelCardData }) {
+  return (
+    <Link
+      href={`/reparation/${model.brandSlug}/${model.slug}`}
+      className="group relative flex flex-col items-center rounded-2xl border border-soft-grey bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10"
+    >
+      {/* Device image */}
+      <div className="mb-4 h-40 w-28">
+        <DeviceImage
+          brandSlug={model.brandSlug}
+          deviceType={model.deviceType}
+          imageUrl={model.imageUrl}
+          modelName={model.name}
+          className="h-full w-full"
+        />
+      </div>
+
+      {/* Model name */}
+      <span className="text-center font-display text-lg font-bold leading-tight text-charcoal transition-colors group-hover:text-green-eco">
+        {model.name}
+      </span>
+
+      {/* Price badge */}
+      {model.cheapestPrice != null && model.cheapestPrice > 0 && (
+        <span className="mt-2.5 rounded-full bg-green-eco/10 px-3.5 py-1.5 text-sm font-bold text-green-eco">
+          fra {model.cheapestPrice} kr.
+        </span>
+      )}
+
+      {/* CTA hint */}
+      <span className="mt-2.5 flex items-center gap-1 text-sm font-medium text-gray transition-colors group-hover:text-green-eco">
+        Se priser
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
+          <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+        </svg>
+      </span>
+
+      {/* Guarantee micro-badge — visible on hover */}
+      <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-eco/10 px-2.5 py-1 text-xs font-bold text-green-eco opacity-0 transition-opacity group-hover:opacity-100">
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+          <path d="M8 1l6 2.5v4c0 3.5-2.5 6.5-6 8-3.5-1.5-6-4.5-6-8v-4L8 1z" />
+        </svg>
+        Garanti
+      </span>
+    </Link>
+  );
+}
 
 export function ModelGrid({ models, brandName }: { models: ModelCardData[]; brandName: string }) {
   const [search, setSearch] = useState("");
@@ -20,6 +87,9 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
   const filtered = models.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const hasSeries = models.some((m) => m.series);
+  const groups = useMemo(() => groupBySeries(filtered), [filtered]);
 
   return (
     <>
@@ -45,8 +115,8 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Soeg efter ${brandName} model...`}
-              className="w-full rounded-2xl border border-soft-grey bg-white py-4 pl-12 pr-4 text-charcoal shadow-sm placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20"
+              placeholder={`Søg efter ${brandName} model...`}
+              className="w-full rounded-xl border border-soft-grey bg-white py-3.5 pl-12 pr-4 text-charcoal shadow-sm placeholder:text-gray/60 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20"
             />
             {search && (
               <button
@@ -60,61 +130,45 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
               </button>
             )}
           </div>
-          <p className="mt-2 text-center text-sm text-gray">
+          <p className="mt-2 text-center text-xs text-gray">
             {filtered.length} {filtered.length === 1 ? "model" : "modeller"} fundet
           </p>
         </div>
       </div>
 
-      {/* Model grid — dense 5 columns like telerepair */}
+      {/* Model grid */}
       {filtered.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-lg font-semibold text-charcoal">
+          <p className="text-lg font-bold text-charcoal">
             Ingen modeller fundet for &quot;{search}&quot;
           </p>
           <p className="mt-2 text-sm text-gray">
-            Proev at soege efter et andet modelnavn
+            Prøv at søge efter et andet modelnavn
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {filtered.map((model) => (
-            <Link
-              key={model.slug}
-              href={`/reparation/${model.brandSlug}/${model.slug}`}
-              className="group flex flex-col items-center rounded-2xl border border-soft-grey bg-white p-4 transition-all hover:border-green-eco hover:shadow-md"
-            >
-              {/* Device image */}
-              <div className="mb-3 h-28 w-20">
-                <DeviceImage
-                  brandSlug={model.brandSlug}
-                  deviceType={model.deviceType}
-                  imageUrl={model.imageUrl}
-                  modelName={model.name}
-                  className="h-full w-full"
-                />
-              </div>
-
-              {/* Model name */}
-              <span className="text-center font-display text-sm font-bold leading-tight text-charcoal transition-colors group-hover:text-green-eco">
-                {model.name}
-              </span>
-
-              {/* Price badge */}
-              {model.cheapestPrice != null && model.cheapestPrice > 0 && (
-                <span className="mt-2 rounded-full bg-green-eco/10 px-3 py-1 text-xs font-semibold text-green-eco">
-                  fra {model.cheapestPrice} DKK
-                </span>
+      ) : hasSeries && !search ? (
+        /* Grouped by series */
+        <div className="space-y-10">
+          {groups.map((group) => (
+            <div key={group.series || "other"}>
+              {group.series && (
+                <h3 className="mb-5 font-display text-xl font-bold uppercase tracking-wide text-charcoal">
+                  {group.series}
+                </h3>
               )}
-
-              {/* CTA hint */}
-              <span className="mt-2 flex items-center gap-1 text-xs font-medium text-gray transition-colors group-hover:text-green-eco">
-                Se priser
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 transition-transform group-hover:translate-x-0.5">
-                  <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </span>
-            </Link>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {group.models.map((model) => (
+                  <ModelCard key={model.slug} model={model} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Flat grid (no series or active search) */
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {filtered.map((model) => (
+            <ModelCard key={model.slug} model={model} />
           ))}
         </div>
       )}

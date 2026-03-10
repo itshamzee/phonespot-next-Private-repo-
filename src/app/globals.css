@@ -25,10 +25,15 @@
   --shadow-lg: 0 8px 32px rgba(58, 61, 56, 0.12);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--color-warm-white);
   color: var(--color-charcoal);
   font-family: var(--font-body);
+  overflow-x: hidden;
 }
 
 .ps-pattern-dots-green {

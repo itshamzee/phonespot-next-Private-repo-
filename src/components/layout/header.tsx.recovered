@@ -1,0 +1,584 @@
+     1→"use client";
+     2→
+     3→import { useState, useRef, useEffect, useMemo } from "react";
+     4→import Link from "next/link";
+     5→import { useCart } from "@/components/cart/cart-context";
+     6→
+     7→/* ------------------------------------------------------------------ */
+     8→/*  Navigation data                                                    */
+     9→/* ------------------------------------------------------------------ */
+    10→
+    11→type NavItem = {
+    12→  label: string;
+    13→  href: string;
+    14→  description: string;
+    15→  icon: React.ReactNode;
+    16→};
+    17→
+    18→const PRODUKT_ITEMS: NavItem[] = [
+    19→  {
+    20→    label: "iPhones",
+    21→    href: "/iphones",
+    22→    description: "Fra iPhone SE til 16 Pro Max",
+    23→    icon: (
+    24→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    25→        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+    26→      </svg>
+    27→    ),
+    28→  },
+    29→  {
+    30→    label: "Smartphones",
+    31→    href: "/smartphones",
+    32→    description: "Samsung, OnePlus og mere",
+    33→    icon: (
+    34→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    35→        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+    36→      </svg>
+    37→    ),
+    38→  },
+    39→  {
+    40→    label: "iPads",
+    41→    href: "/ipads",
+    42→    description: "iPad Air, iPad Pro og mere",
+    43→    icon: (
+    44→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    45→        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.5a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 4.5v15a2.25 2.25 0 0 0 2.25 2.25Z" />
+    46→      </svg>
+    47→    ),
+    48→  },
+    49→  {
+    50→    label: "Bærbare",
+    51→    href: "/baerbare",
+    52→    description: "MacBook, ThinkPad, EliteBook",
+    53→    icon: (
+    54→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    55→        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
+    56→      </svg>
+    57→    ),
+    58→  },
+    59→  {
+    60→    label: "Smartwatches",
+    61→    href: "/smartwatches",
+    62→    description: "Apple Watch fra 1.099 kr",
+    63→    icon: (
+    64→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    65→        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    66→      </svg>
+    67→    ),
+    68→  },
+    69→  {
+    70→    label: "Covers",
+    71→    href: "/covers",
+    72→    description: "Covers og panserglas",
+    73→    icon: (
+    74→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    75→        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+    76→      </svg>
+    77→    ),
+    78→  },
+    79→];
+    80→
+    81→const ABOUT_ITEMS: NavItem[] = [
+    82→  {
+    83→    label: "Om os",
+    84→    href: "/om-os",
+    85→    description: "Mød teamet bag PhoneSpot",
+    86→    icon: (
+    87→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    88→        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+    89→      </svg>
+    90→    ),
+    91→  },
+    92→  {
+    93→    label: "Kvalitet",
+    94→    href: "/kvalitet",
+    95→    description: "30+ tests og vores graderingssystem",
+    96→    icon: (
+    97→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+    98→        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    99→      </svg>
+   100→    ),
+   101→  },
+   102→  {
+   103→    label: "Reparation",
+   104→    href: "/reparation",
+   105→    description: "Professionel reparation af enheder",
+   106→    icon: (
+   107→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+   108→        <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
+   109→      </svg>
+   110→    ),
+   111→  },
+   112→  {
+   113→    label: "FAQ",
+   114→    href: "/faq",
+   115→    description: "Svar på ofte stillede spørgsmål",
+   116→    icon: (
+   117→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+   118→        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+   119→      </svg>
+   120→    ),
+   121→  },
+   122→  {
+   123→    label: "Kontakt",
+   124→    href: "/kontakt",
+   125→    description: "Skriv eller ring til os",
+   126→    icon: (
+   127→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+   128→        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+   129→      </svg>
+   130→    ),
+   131→  },
+   132→  {
+   133→    label: "Blog",
+   134→    href: "/blog",
+   135→    description: "Guides og nyheder om refurbished",
+   136→    icon: (
+   137→      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+   138→        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+   139→      </svg>
+   140→    ),
+   141→  },
+   142→];
+   143→
+   144→/* ------------------------------------------------------------------ */
+   145→/*  Icon components                                                    */
+   146→/* ------------------------------------------------------------------ */
+   147→
+   148→function SearchIcon({ className }: { className?: string }) {
+   149→  return (
+   150→    <svg
+   151→      xmlns="http://www.w3.org/2000/svg"
+   152→      fill="none"
+   153→      viewBox="0 0 24 24"
+   154→      strokeWidth={1.5}
+   155→      stroke="currentColor"
+   156→      className={className ?? "h-5 w-5"}
+   157→    >
+   158→      <path
+   159→        strokeLinecap="round"
+   160→        strokeLinejoin="round"
+   161→        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+   162→      />
+   163→    </svg>
+   164→  );
+   165→}
+   166→
+   167→function CartIcon({ className }: { className?: string }) {
+   168→  return (
+   169→    <svg
+   170→      xmlns="http://www.w3.org/2000/svg"
+   171→      fill="none"
+   172→      viewBox="0 0 24 24"
+   173→      strokeWidth={1.5}
+   174→      stroke="currentColor"
+   175→      className={className ?? "h-5 w-5"}
+   176→    >
+   177→      <path
+   178→        strokeLinecap="round"
+   179→        strokeLinejoin="round"
+   180→        d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+   181→      />
+   182→    </svg>
+   183→  );
+   184→}
+   185→
+   186→function MenuIcon({ className }: { className?: string }) {
+   187→  return (
+   188→    <svg
+   189→      xmlns="http://www.w3.org/2000/svg"
+   190→      fill="none"
+   191→      viewBox="0 0 24 24"
+   192→      strokeWidth={1.5}
+   193→      stroke="currentColor"
+   194→      className={className ?? "h-6 w-6"}
+   195→    >
+   196→      <path
+   197→        strokeLinecap="round"
+   198→        strokeLinejoin="round"
+   199→        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+   200→      />
+   201→    </svg>
+   202→  );
+   203→}
+   204→
+   205→function CloseIcon({ className }: { className?: string }) {
+   206→  return (
+   207→    <svg
+   208→      xmlns="http://www.w3.org/2000/svg"
+   209→      fill="none"
+   210→      viewBox="0 0 24 24"
+   211→      strokeWidth={1.5}
+   212→      stroke="currentColor"
+   213→      className={className ?? "h-6 w-6"}
+   214→    >
+   215→      <path
+   216→        strokeLinecap="round"
+   217→        strokeLinejoin="round"
+   218→        d="M6 18 18 6M6 6l12 12"
+   219→      />
+   220→    </svg>
+   221→  );
+   222→}
+   223→
+   224→function ChevronIcon({ className }: { className?: string }) {
+   225→  return (
+   226→    <svg
+   227→      xmlns="http://www.w3.org/2000/svg"
+   228→      fill="none"
+   229→      viewBox="0 0 24 24"
+   230→      strokeWidth={2}
+   231→      stroke="currentColor"
+   232→      className={className ?? "h-3.5 w-3.5"}
+   233→    >
+   234→      <path
+   235→        strokeLinecap="round"
+   236→        strokeLinejoin="round"
+   237→        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+   238→      />
+   239→    </svg>
+   240→  );
+   241→}
+   242→
+   243→/* ------------------------------------------------------------------ */
+   244→/*  NavDropdown (desktop)                                              */
+   245→/* ------------------------------------------------------------------ */
+   246→
+   247→function NavDropdown({ label, items }: { label: string; items: NavItem[] }) {
+   248→  const [open, setOpen] = useState(false);
+   249→  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   250→
+   251→  const handleEnter = () => {
+   252→    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+   253→    setOpen(true);
+   254→  };
+   255→
+   256→  const handleLeave = () => {
+   257→    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+   258→  };
+   259→
+   260→  useEffect(() => {
+   261→    if (!open) return;
+   262→    const onKey = (e: KeyboardEvent) => {
+   263→      if (e.key === "Escape") setOpen(false);
+   264→    };
+   265→    document.addEventListener("keydown", onKey);
+   266→    return () => document.removeEventListener("keydown", onKey);
+   267→  }, [open]);
+   268→
+   269→  return (
+   270→    <div
+   271→      className="relative"
+   272→      onMouseEnter={handleEnter}
+   273→      onMouseLeave={handleLeave}
+   274→    >
+   275→      <button
+   276→        type="button"
+   277→        onClick={() => setOpen((v) => !v)}
+   278→        className="flex items-center gap-1.5 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+   279→        aria-expanded={open}
+   280→      >
+   281→        {label}
+   282→        <ChevronIcon
+   283→          className={`h-3.5 w-3.5 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+   284→        />
+   285→      </button>
+   286→
+   287→      {open && (
+   288→        <div className="absolute left-1/2 top-full z-50 mt-3 w-72 -translate-x-1/2 rounded-2xl border border-sand/50 bg-white p-2 shadow-lg">
+   289→          {items.map((item) => (
+   290→            <Link
+   291→              key={item.href}
+   292→              href={item.href}
+   293→              onClick={() => setOpen(false)}
+   294→              className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-cream"
+   295→            >
+   296→              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-eco/10 text-green-eco">
+   297→                {item.icon}
+   298→              </span>
+   299→              <div>
+   300→                <p className="text-sm font-semibold text-charcoal">{item.label}</p>
+   301→                <p className="text-xs text-gray">{item.description}</p>
+   302→              </div>
+   303→            </Link>
+   304→          ))}
+   305→        </div>
+   306→      )}
+   307→    </div>
+   308→  );
+   309→}
+   310→
+   311→/* ------------------------------------------------------------------ */
+   312→/*  MobileAccordion                                                    */
+   313→/* ------------------------------------------------------------------ */
+   314→
+   315→function MobileAccordion({
+   316→  label,
+   317→  items,
+   318→  onNavigate,
+   319→}: {
+   320→  label: string;
+   321→  items: NavItem[];
+   322→  onNavigate: () => void;
+   323→}) {
+   324→  const [expanded, setExpanded] = useState(false);
+   325→
+   326→  return (
+   327→    <div className="border-b border-sand/50">
+   328→      <button
+   329→        type="button"
+   330→        onClick={() => setExpanded((v) => !v)}
+   331→        className="flex w-full items-center justify-between py-3 text-sm font-medium text-charcoal"
+   332→      >
+   333→        {label}
+   334→        <ChevronIcon
+   335→          className={`h-4 w-4 text-gray transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+   336→        />
+   337→      </button>
+   338→      {expanded && (
+   339→        <div className="pb-3 pl-2">
+   340→          {items.map((item) => (
+   341→            <Link
+   342→              key={item.href}
+   343→              href={item.href}
+   344→              onClick={onNavigate}
+   345→              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-cream"
+   346→            >
+   347→              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-green-eco/10 text-green-eco">
+   348→                {item.icon}
+   349→              </span>
+   350→              <div>
+   351→                <p className="text-sm font-semibold text-charcoal">{item.label}</p>
+   352→                <p className="text-xs text-gray">{item.description}</p>
+   353→              </div>
+   354→            </Link>
+   355→          ))}
+   356→        </div>
+   357→      )}
+   358→    </div>
+   359→  );
+   360→}
+   361→
+   362→/* ------------------------------------------------------------------ */
+   363→/*  Announcement bar                                                   */
+   364→/* ------------------------------------------------------------------ */
+   365→
+   366→/** Returns ms until 16:00 today (or 0 if past 16:00). */
+   367→function msUntilCutoff(): number {
+   368→  const now = new Date();
+   369→  const cutoff = new Date(now);
+   370→  cutoff.setHours(16, 0, 0, 0);
+   371→  const diff = cutoff.getTime() - now.getTime();
+   372→  return diff > 0 ? diff : 0;
+   373→}
+   374→
+   375→function CountdownTimer() {
+   376→  const [remaining, setRemaining] = useState<number | null>(null);
+   377→
+   378→  useEffect(() => {
+   379→    setRemaining(msUntilCutoff());
+   380→    const id = setInterval(() => setRemaining(msUntilCutoff()), 1000);
+   381→    return () => clearInterval(id);
+   382→  }, []);
+   383→
+   384→  // Server render / first paint — static fallback to avoid hydration mismatch
+   385→  if (remaining === null) {
+   386→    return <span>Bestil nu — sendt samme dag</span>;
+   387→  }
+   388→
+   389→  if (remaining <= 0) {
+   390→    return <span>Bestil nu — sendt i morgen</span>;
+   391→  }
+   392→
+   393→  const totalSec = Math.floor(remaining / 1000);
+   394→  const hours = Math.floor(totalSec / 3600);
+   395→  const minutes = Math.floor((totalSec % 3600) / 60);
+   396→  const seconds = totalSec % 60;
+   397→
+   398→  const pad = (n: number) => String(n).padStart(2, "0");
+   399→
+   400→  return (
+   401→    <span>
+   402→      Bestil nu — sendt om{" "}
+   403→      <span className="font-bold tabular-nums text-green-light">
+   404→        {pad(hours)}:{pad(minutes)}:{pad(seconds)}
+   405→      </span>
+   406→    </span>
+   407→  );
+   408→}
+   409→
+   410→function TrustpilotBadge() {
+   411→  return (
+   412→    <a
+   413→      href="https://dk.trustpilot.com/review/phonespot.dk"
+   414→      target="_blank"
+   415→      rel="noopener noreferrer"
+   416→      className="flex items-center gap-1.5 whitespace-nowrap"
+   417→    >
+   418→      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
+   419→        <path d="M12 1.5l2.76 8.49h8.93l-7.22 5.25 2.76 8.49L12 18.49l-7.23 5.24 2.76-8.49L.31 9.99h8.93z" fill="#00B67A" />
+   420→      </svg>
+   421→      <span className="font-bold text-[#00B67A]">Trustpilot</span>
+   422→      <span className="text-white/70">4.4</span>
+   423→    </a>
+   424→  );
+   425→}
+   426→
+   427→function AnnouncementBar() {
+   428→  return (
+   429→    <div className="bg-charcoal text-white overflow-hidden">
+   430→      <div className="mx-auto flex h-8 max-w-7xl items-center justify-center gap-8 px-4 text-[11px] font-medium tracking-wide">
+   431→        <div className="hidden lg:flex items-center gap-8">
+   432→          <TrustpilotBadge />
+   433→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   434→            <span className="text-green-light">✓</span>
+   435→            Fri fragt over 899,-
+   436→          </span>
+   437→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   438→            <span className="text-green-light">✓</span>
+   439→            <CountdownTimer />
+   440→          </span>
+   441→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   442→            <span className="text-green-light">✓</span>
+   443→            36 mdr. garanti
+   444→          </span>
+   445→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   446→            <span className="text-green-light">✓</span>
+   447→            Prismatch-garanti
+   448→          </span>
+   449→        </div>
+   450→        <div className="hidden sm:flex lg:hidden items-center gap-6">
+   451→          <TrustpilotBadge />
+   452→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   453→            <span className="text-green-light">✓</span>
+   454→            <CountdownTimer />
+   455→          </span>
+   456→          <span className="flex items-center gap-1.5 whitespace-nowrap">
+   457→            <span className="text-green-light">✓</span>
+   458→            36 mdr. garanti
+   459→          </span>
+   460→        </div>
+   461→        <div className="sm:hidden flex items-center gap-4">
+   462→          <TrustpilotBadge />
+   463→          <span className="flex items-center gap-1.5">
+   464→            <span className="text-green-light">✓</span>
+   465→            <CountdownTimer />
+   466→          </span>
+   467→        </div>
+   468→      </div>
+   469→    </div>
+   470→  );
+   471→}
+   472→
+   473→/* ------------------------------------------------------------------ */
+   474→/*  Header                                                             */
+   475→/* ------------------------------------------------------------------ */
+   476→
+   477→export function Header() {
+   478→  const { cart, openCart } = useCart();
+   479→  const [mobileOpen, setMobileOpen] = useState(false);
+   480→
+   481→  const totalItems = cart?.totalQuantity ?? 0;
+   482→
+   483→  return (
+   484→    <header
+   485→      className="sticky top-0 z-50 border-b border-sand"
+   486→      style={{
+   487→        backgroundColor: "rgba(245,242,236,0.92)",
+   488→        backdropFilter: "blur(16px)",
+   489→        WebkitBackdropFilter: "blur(16px)",
+   490→      }}
+   491→    >
+   492→      <AnnouncementBar />
+   493→      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
+   494→        {/* Mobile hamburger */}
+   495→        <button
+   496→          type="button"
+   497→          className="lg:hidden text-charcoal"
+   498→          onClick={() => setMobileOpen(!mobileOpen)}
+   499→          aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
+   500→        >
+   501→          {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+   502→        </button>
+   503→
+   504→        {/* Logo */}
+   505→        <Link href="/" className="flex-shrink-0">
+   506→          <img
+   507→            src="/brand/logos/phonespot-wordmark-dark.svg"
+   508→            alt="PhoneSpot"
+   509→            width={140}
+   510→            height={32}
+   511→          />
+   512→        </Link>
+   513→
+   514→        {/* Desktop nav */}
+   515→        <nav className="hidden lg:flex items-center gap-8">
+   516→          <NavDropdown label="Produkter" items={PRODUKT_ITEMS} />
+   517→          <Link
+   518→            href="/reservedele"
+   519→            className="text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+   520→          >
+   521→            Reservedele
+   522→          </Link>
+   523→          <Link
+   524→            href="/outlet"
+   525→            className="flex items-center gap-1.5 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+   526→          >
+   527→            Outlet
+   528→            <span className="h-1.5 w-1.5 rounded-full bg-green-eco" />
+   529→          </Link>
+   530→          <NavDropdown label="Om PhoneSpot" items={ABOUT_ITEMS} />
+   531→        </nav>
+   532→
+   533→        {/* Right side: search + cart */}
+   534→        <div className="flex items-center gap-3">
+   535→          <Link
+   536→            href="/soeg"
+   537→            className="text-charcoal transition-colors hover:text-green-eco"
+   538→            aria-label="Søg"
+   539→          >
+   540→            <SearchIcon />
+   541→          </Link>
+   542→
+   543→          <button
+   544→            type="button"
+   545→            className="relative text-charcoal transition-colors hover:text-green-eco"
+   546→            onClick={openCart}
+   547→            aria-label="Åbn kurv"
+   548→          >
+   549→            <CartIcon />
+   550→            {totalItems > 0 && (
+   551→              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-green-eco text-[10px] font-semibold text-white">
+   552→                {totalItems}
+   553→              </span>
+   554→            )}
+   555→          </button>
+   556→        </div>
+   557→      </div>
+   558→
+   559→      {/* Mobile nav slide-down */}
+   560→      {mobileOpen && (
+   561→        <nav className="lg:hidden border-t border-sand bg-warm-white px-4 pb-4">
+   562→          <MobileAccordion label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+   563→          <Link
+   564→            href="/reservedele"
+   565→            className="flex items-center border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+   566→            onClick={() => setMobileOpen(false)}
+   567→          >
+   568→            Reservedele
+   569→          </Link>
+   570→          <Link
+   571→            href="/outlet"
+   572→            className="flex items-center gap-2 border-b border-sand/50 py-3 text-sm font-medium text-charcoal transition-colors hover:text-green-eco"
+   573→            onClick={() => setMobileOpen(false)}
+   574→          >
+   575→            Outlet
+   576→            <span className="h-1.5 w-1.5 rounded-full bg-green-eco" />
+   577→          </Link>
+   578→          <MobileAccordion label="Om PhoneSpot" items={ABOUT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+   579→        </nav>
+   580→      )}
+   581→    </header>
+   582→  );
+   583→}
+   584→

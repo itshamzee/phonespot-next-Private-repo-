@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCollectionProducts } from "@/lib/shopify/client";
+
+export const dynamic = "force-dynamic";
 import type { Product } from "@/lib/shopify/types";
 import { TILBEHOER_CATEGORIES } from "@/lib/tilbehoer-config";
 import { ProductCard } from "@/components/product/product-card";

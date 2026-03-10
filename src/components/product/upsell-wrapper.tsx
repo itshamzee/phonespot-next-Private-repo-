@@ -1,9 +1,9 @@
 "use client";
 
-import type { Product } from "@/lib/medusa/types";
+import type { Product } from "@/lib/shopify/types";
 import { UpsellStrip } from "./upsell-strip";
 import { useCart } from "@/components/cart/cart-context";
-import { addToCart, createCart } from "@/lib/medusa/client";
+import { addToCart, createCart } from "@/lib/shopify/client";
 
 export function UpsellWrapper({ accessories }: { accessories: Product[] }) {
   const { cart, setCart, openCart } = useCart();

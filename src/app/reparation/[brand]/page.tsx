@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${brand.name} Reparation Slagelse — Se Priser | PhoneSpot`,
-    description: `Professionel ${brand.name} reparation i Slagelse. Se priser pa skaermskift, batteriskift og mere for alle ${brand.name} modeller. Garanti pa alle reparationer.`,
+    description: `Professionel ${brand.name} reparation i Slagelse. Se priser på skærmskift, batteriskift og mere for alle ${brand.name} modeller. Livstidsgaranti på alle reparationer.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}`,
     },
@@ -45,6 +45,7 @@ export default async function BrandPage({ params }: Props) {
     models.map(async (model) => ({
       slug: model.slug,
       name: model.name,
+      series: model.series,
       cheapestPrice: await getCheapestPrice(model.id),
       brandSlug: brand.slug,
       imageUrl: model.image_url,
@@ -57,7 +58,7 @@ export default async function BrandPage({ params }: Props) {
     "@type": "LocalBusiness",
     name: `${brand.name} Reparation - ${STORE.name}`,
     url: `https://phonespot.dk/reparation/${brand.slug}`,
-    description: `Professionel ${brand.name} reparation i ${STORE.city}. Garanti pa alle reparationer.`,
+    description: `Professionel ${brand.name} reparation i ${STORE.city}. Livstidsgaranti på alle reparationer.`,
     address: {
       "@type": "PostalAddress",
       streetAddress: STORE.street,
@@ -91,62 +92,110 @@ export default async function BrandPage({ params }: Props) {
     <>
       <JsonLd data={jsonLd} />
 
-      {/* Compact header with breadcrumb */}
-      <div className="border-b border-soft-grey bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <nav className="mb-3 text-sm text-gray" aria-label="Breadcrumb">
-            <Link href="/reparation" className="text-green-eco hover:underline">
-              Reparation
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="font-medium text-charcoal">{brand.name}</span>
+      {/* ================================================================= */}
+      {/*  HERO HEADER — Bold brand identity with trust signals              */}
+      {/* ================================================================= */}
+      <section className="relative overflow-hidden bg-charcoal">
+        {/* Grain texture */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
+        {/* Accent gradient */}
+        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-eco/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-12 md:py-16">
+          {/* Breadcrumb */}
+          <nav className="mb-6 text-sm" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-1.5 text-white/40">
+              <li>
+                <Link href="/reparation" className="transition-colors hover:text-white/70">
+                  Reparation
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="font-medium text-white">{brand.name}</li>
+            </ol>
           </nav>
 
-          <h1 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal md:text-4xl">
-            {brand.name} Reparation
-          </h1>
-          <p className="mt-2 max-w-xl text-gray">
-            Vaelg din {brand.name} model herunder for at se priser og booke reparation.
-            Alle reparationer udfoeres med garanti i vores butik i {STORE.city}.
-          </p>
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="font-display text-4xl font-bold uppercase leading-[0.95] tracking-tight text-white md:text-5xl">
+                {brand.name}<br />
+                <span className="text-green-eco">Reparation</span>
+              </h1>
+              <p className="mt-4 max-w-lg text-white/60">
+                Vælg din {brand.name} model herunder for at se priser og booke reparation.
+                Alle reparationer udføres med livstidsgaranti i vores butik i {STORE.city}.
+              </p>
+            </div>
 
-          {/* Trust badges inline */}
-          <div className="mt-4 flex flex-wrap gap-4 text-xs font-medium text-charcoal/70">
-            <span className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                <path fillRule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7V4.5A3.5 3.5 0 0 0 8 1Zm2 6V4.5a2 2 0 1 0-4 0V7h4Z" clipRule="evenodd" />
-              </svg>
-              Garanti
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                <path fillRule="evenodd" d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z" clipRule="evenodd" />
-              </svg>
-              1-3 hverdage
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                <path fillRule="evenodd" d="M2.5 7.775V2.75a.25.25 0 0 1 .25-.25h2.025a.25.25 0 0 1 .177.073l6.25 6.25a.25.25 0 0 1 0 .354l-2.025 2.025a.25.25 0 0 1-.354 0l-6.25-6.25a.25.25 0 0 1-.073-.177Z" clipRule="evenodd" />
-              </svg>
-              Faste priser
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
-              </svg>
-              {STORE.city}
-            </span>
+            {/* Trust badges — horizontal on desktop */}
+            <div className="hidden items-center gap-6 lg:flex">
+              {[
+                { icon: "shield", label: "Livstidsgaranti" },
+                { icon: "clock", label: "30 min service" },
+                { icon: "tag", label: "Faste priser" },
+                { icon: "walk", label: "Walk-in" },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-green-eco">
+                    {icon === "shield" && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    )}
+                    {icon === "clock" && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    )}
+                    {icon === "tag" && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+                        <line x1="7" y1="7" x2="7.01" y2="7" />
+                      </svg>
+                    )}
+                    {icon === "walk" && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <circle cx="12" cy="11" r="3" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium text-white/50">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile trust badges */}
+          <div className="mt-6 flex flex-wrap gap-3 lg:hidden">
+            {["Livstidsgaranti", "30 min service", "Faste priser", "Walk-in"].map((label) => (
+              <span
+                key={label}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70"
+              >
+                {label}
+              </span>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Model grid section */}
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <ModelGrid models={modelCards} brandName={brand.name} />
-      </div>
 
-      {/* SEO content */}
-      <div className="border-t border-soft-grey bg-white">
+      </section>
+
+      {/* ================================================================= */}
+      {/*  MODEL GRID — Dense, searchable                                    */}
+      {/* ================================================================= */}
+      <section className="bg-warm-white">
+        <div className="mx-auto max-w-7xl px-4 py-8">
+          <ModelGrid models={modelCards} brandName={brand.name} />
+        </div>
+      </section>
+
+      {/* ================================================================= */}
+      {/*  SEO CONTENT                                                       */}
+      {/* ================================================================= */}
+      <section className="border-t border-soft-grey bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16">
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-charcoal">
             {brand.name} Reparation hos PhoneSpot
@@ -156,8 +205,8 @@ export default async function BrandPage({ params }: Props) {
             <p>
               Hos PhoneSpot i {STORE.mall}, {STORE.city}, tilbyder vi professionel
               reparation af alle {brand.name} modeller. Uanset om du har brug for
-              skaermskift, batteriskift eller anden reparation, staar vi klar til
-              at hjaelpe dig med hurtig service og faste priser.
+              skærmskift, batteriskift eller anden reparation, står vi klar til
+              at hjælpe dig med hurtig service og faste priser.
             </p>
 
             <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
@@ -166,9 +215,27 @@ export default async function BrandPage({ params }: Props) {
             <p>
               Vores teknikere er specialuddannede i {brand.name} reparation og
               bruger kun kvalitetsdele der matcher de originale specifikationer.
-              Det sikrer at din enhed fungerer praecis som den skal efter
+              Det sikrer at din enhed fungerer præcis som den skal efter
               reparationen — med korrekt farvegengivelse, touch-respons og fuld
               funktionalitet.
+            </p>
+
+            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+              Livstidsgaranti på alle reparationer
+            </h3>
+            <p>
+              Alle {brand.name} reparationer fra PhoneSpot dækkes af vores livstidsgaranti.
+              Det betyder at hvis den samme fejl opstår igen — uanset hvornår — reparerer
+              vi enheden uden beregning. Vi står bag vores arbejde, altid.
+            </p>
+
+            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+              Walk-in service eller book online
+            </h3>
+            <p>
+              Du finder os i {STORE.mall}, {STORE.street}, {STORE.zip} {STORE.city}.
+              Du kan komme forbi som walk-in i vores åbningstider (hverdage {STORE.hours.weekdays},
+              lørdage {STORE.hours.saturday}) eller booke tid online for at sikre dig en plads.
             </p>
 
             <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
@@ -176,17 +243,8 @@ export default async function BrandPage({ params }: Props) {
             </h3>
             <p>
               Vi oplyser altid prisen inden vi starter reparationen. Alle priser
-              er inkl. moms, reservedele og garanti. Vaelg din {brand.name} model
-              ovenfor for at se de aktuelle priser paa alle reparationer.
-            </p>
-
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
-              Beliggenhed og aabningstider
-            </h3>
-            <p>
-              Du finder os i {STORE.mall}, {STORE.street}, {STORE.zip} {STORE.city}.
-              Vi har aabent hverdage {STORE.hours.weekdays} og loerdage {STORE.hours.saturday}.
-              Du kan baade booke tid online eller komme forbi som drop-in.
+              er inkl. moms, reservedele og garanti. Vælg din {brand.name} model
+              ovenfor for at se de aktuelle priser på alle reparationer.
             </p>
           </div>
 
@@ -196,17 +254,25 @@ export default async function BrandPage({ params }: Props) {
               Kan du ikke finde din model?
             </h3>
             <p className="mt-2 text-sm text-white/70">
-              Kontakt os, og vi hjaelper dig med at finde den rette reparation.
+              Kontakt os, og vi hjælper dig med at finde den rette reparation.
             </p>
-            <Link
-              href="/kontakt"
-              className="mt-4 inline-block rounded-full bg-green-eco px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              Kontakt os
-            </Link>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/kontakt"
+                className="inline-block rounded-full bg-green-eco px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Kontakt os
+              </Link>
+              <Link
+                href="/reparation"
+                className="inline-block rounded-full border border-white/20 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/5"
+              >
+                Alle mærker
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }

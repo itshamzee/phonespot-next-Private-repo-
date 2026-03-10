@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { searchProducts } from "@/lib/medusa/client";
+import { searchProducts } from "@/lib/shopify/client";
 import { ProductGrid } from "@/components/collection/product-grid";
 
 export async function generateMetadata({

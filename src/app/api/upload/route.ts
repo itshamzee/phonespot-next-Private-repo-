@@ -25,9 +25,9 @@ export async function POST(request: Request) {
     });
 
   if (error) {
-    console.error("Upload error:", error);
+    console.error("Upload error:", JSON.stringify(error, null, 2));
     return NextResponse.json(
-      { error: "Kunne ikke uploade fil" },
+      { error: `Upload fejl: ${error.message || JSON.stringify(error)}` },
       { status: 500 },
     );
   }

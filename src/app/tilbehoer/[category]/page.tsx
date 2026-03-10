@@ -28,6 +28,9 @@ import { ActiveFilters } from "@/components/tilbehoer/active-filters";
 import { TilbehoerSortSelector } from "@/components/tilbehoer/sort-selector";
 import { Pagination } from "@/components/tilbehoer/pagination";
 
+export const dynamicParams = true;
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return getAllCategoryParams();
 }
@@ -133,7 +136,7 @@ export default async function CategoryPage({
           <ActiveFilters />
         </Suspense>
 
-        <div className="flex gap-8">
+        <div className="flex gap-4 lg:gap-8">
           <Suspense fallback={null}>
             <FilterSidebar brands={availableBrands} />
           </Suspense>

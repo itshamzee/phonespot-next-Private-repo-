@@ -11,9 +11,9 @@ const STATUS_LABELS: Record<InquiryStatus, string> = {
 };
 
 const STATUS_COLORS: Record<InquiryStatus, string> = {
-  ny: "bg-blue-100 text-blue-800",
-  besvaret: "bg-green-100 text-green-800",
-  lukket: "bg-gray-100 text-gray-800",
+  ny: "bg-blue-50 text-blue-600",
+  besvaret: "bg-emerald-50 text-emerald-600",
+  lukket: "bg-stone-100 text-stone-500",
 };
 
 const ALL_STATUSES: (InquiryStatus | "alle")[] = ["alle", "ny", "besvaret", "lukket"];
@@ -99,7 +99,7 @@ export default function AdminHenvendelserPage() {
 
   return (
     <div>
-      <h2 className="mb-6 font-display text-2xl font-bold text-charcoal">
+      <h2 className="mb-6 font-display text-2xl font-bold tracking-tight text-charcoal">
         Henvendelser
       </h2>
 
@@ -109,7 +109,7 @@ export default function AdminHenvendelserPage() {
           placeholder="Soeg efter navn, email eller besked..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+          className="w-full max-w-md rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-charcoal placeholder:text-stone-400 transition-colors focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
         />
       </div>
 
@@ -119,10 +119,10 @@ export default function AdminHenvendelserPage() {
             key={s}
             type="button"
             onClick={() => setFilter(s)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-2 text-sm font-medium ${
               filter === s
-                ? "bg-green-eco text-white"
-                : "bg-white text-charcoal border border-soft-grey hover:bg-sand"
+                ? "bg-green-eco text-white shadow-sm shadow-green-eco/15"
+                : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300 hover:text-charcoal transition-colors"
             }`}
           >
             {s === "alle" ? "Alle" : STATUS_LABELS[s]}
@@ -131,9 +131,9 @@ export default function AdminHenvendelserPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray">Indlaeser henvendelser...</p>
+        <p className="text-stone-400">Indlaeser henvendelser...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-gray">Ingen henvendelser fundet.</p>
+        <p className="text-stone-400">Ingen henvendelser fundet.</p>
       ) : (
         <div className="grid gap-4">
           {filtered.map((inq) => {
@@ -141,7 +141,7 @@ export default function AdminHenvendelserPage() {
             return (
               <div
                 key={inq.id}
-                className="rounded-2xl border border-soft-grey bg-white transition-shadow hover:shadow-md"
+                className="rounded-xl border border-stone-200/60 bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 <button
                   type="button"
@@ -150,13 +150,13 @@ export default function AdminHenvendelserPage() {
                 >
                   <div className="flex-1">
                     <p className="font-semibold text-charcoal">{inq.name}</p>
-                    <p className="mt-0.5 text-sm text-gray">{inq.email}</p>
+                    <p className="mt-0.5 text-sm text-stone-400">{inq.email}</p>
                     {inq.subject && (
                       <p className="mt-1 text-sm font-medium text-charcoal">
                         {inq.subject}
                       </p>
                     )}
-                    <p className="mt-1 line-clamp-2 text-sm text-gray">
+                    <p className="mt-1 line-clamp-2 text-sm text-stone-400">
                       {inq.message}
                     </p>
                   </div>
@@ -166,16 +166,16 @@ export default function AdminHenvendelserPage() {
                     >
                       {STATUS_LABELS[inq.status]}
                     </span>
-                    <span className="text-xs text-gray">
+                    <span className="text-xs text-stone-400">
                       {formatDate(inq.created_at)}
                     </span>
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-soft-grey px-5 pb-5 pt-4">
+                  <div className="border-t border-stone-100 px-5 pb-5 pt-4">
                     <div className="mb-4">
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-400">
                         Fuld besked
                       </p>
                       <p className="whitespace-pre-wrap text-sm text-charcoal">
@@ -184,27 +184,27 @@ export default function AdminHenvendelserPage() {
                     </div>
 
                     {inq.phone && (
-                      <p className="mb-4 text-sm text-gray">
+                      <p className="mb-4 text-sm text-stone-400">
                         Telefon: {inq.phone}
                       </p>
                     )}
 
                     <div className="mb-4">
-                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray">
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-400">
                         Admin noter
                       </label>
                       <textarea
                         rows={3}
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
-                        className="w-full rounded-lg border border-soft-grey bg-white px-4 py-3 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                        className="w-full rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-charcoal placeholder:text-stone-400 focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
                         placeholder="Tilfoej noter..."
                       />
                       <button
                         type="button"
                         onClick={() => saveNote(inq.id)}
                         disabled={saving}
-                        className="mt-2 rounded-full bg-charcoal px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                        className="mt-2 rounded-xl bg-green-eco px-4 py-2 text-sm font-bold text-white transition-all hover:brightness-110 disabled:opacity-60"
                       >
                         {saving ? "Gemmer..." : "Gem noter"}
                       </button>
@@ -217,10 +217,10 @@ export default function AdminHenvendelserPage() {
                           type="button"
                           onClick={() => updateStatus(inq.id, s)}
                           disabled={saving || inq.status === s}
-                          className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-40 ${
+                          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 ${
                             inq.status === s
-                              ? "bg-green-eco text-white"
-                              : "border border-soft-grey bg-white text-charcoal hover:bg-sand"
+                              ? "bg-green-eco text-white shadow-sm shadow-green-eco/15"
+                              : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300 hover:text-charcoal"
                           }`}
                         >
                           {STATUS_LABELS[s]}

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCollectionConfig } from "@/lib/collections";
 import { getProduct, searchProducts, getCollectionProducts } from "@/lib/shopify/client";
+
+export const dynamic = "force-dynamic";
 import type { Product } from "@/lib/shopify/types";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
@@ -175,7 +177,7 @@ export default async function ProductPage({
       {/* ----------------------------------------------------------------- */}
       <nav
         aria-label="Brødkrumme"
-        className="mx-auto max-w-7xl px-4 pt-4 pb-2"
+        className="mx-auto max-w-7xl px-4 pt-2 pb-1 md:pt-4 md:pb-2"
       >
         <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray">
           <li>
@@ -202,8 +204,8 @@ export default async function ProductPage({
       {/* ----------------------------------------------------------------- */}
       {/* 2. Product hero (two-column)                                       */}
       {/* ----------------------------------------------------------------- */}
-      <section className="mx-auto max-w-7xl px-4 py-8 md:py-12">
-        <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+      <section className="mx-auto max-w-7xl px-4 py-4 md:py-12">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-12">
           {/* Left: Image gallery — syncs with grade picker via URL params */}
           <ImageGalleryWithGrade
             images={product.images}

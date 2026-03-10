@@ -6,9 +6,9 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import type { SmsLogEntry } from "@/lib/supabase/types";
 
 const SMS_STATUS_COLORS: Record<string, string> = {
-  sent: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800",
-  pending: "bg-yellow-100 text-yellow-800",
+  sent: "bg-emerald-50 text-emerald-600",
+  failed: "bg-rose-50 text-rose-600",
+  pending: "bg-amber-50 text-amber-600",
 };
 
 const SMS_STATUS_LABELS: Record<string, string> = {
@@ -57,7 +57,7 @@ export default function AdminSmsLogPage() {
 
   return (
     <div>
-      <h2 className="mb-6 font-display text-2xl font-bold text-charcoal">
+      <h2 className="mb-6 font-display text-2xl font-bold tracking-tight text-charcoal">
         SMS Log
       </h2>
 
@@ -67,14 +67,14 @@ export default function AdminSmsLogPage() {
           placeholder="Soeg efter telefonnummer eller besked..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+          className="w-full max-w-md rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-charcoal placeholder:text-stone-400 transition-colors focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
         />
       </div>
 
       {loading ? (
-        <p className="text-gray">Indlaeser SMS-log...</p>
+        <p className="text-stone-400">Indlaeser SMS-log...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-gray">Ingen SMS-beskeder fundet.</p>
+        <p className="text-stone-400">Ingen SMS-beskeder fundet.</p>
       ) : (
         <div className="grid gap-3">
           {filtered.map((entry) => {
@@ -82,48 +82,48 @@ export default function AdminSmsLogPage() {
             return (
               <div
                 key={entry.id}
-                className="rounded-2xl border border-soft-grey bg-white transition-shadow hover:shadow-md"
+                className="rounded-xl border border-stone-200/60 bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 <button
                   type="button"
                   onClick={() => setExpandedId(isExpanded ? null : entry.id)}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left"
+                  className="flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200/60 bg-white shadow-sm transition-shadow hover:shadow-md p-4 text-left"
                 >
                   <div className="flex-1">
                     <p className="font-semibold text-charcoal">{entry.phone}</p>
-                    <p className="mt-0.5 line-clamp-1 text-sm text-gray">
+                    <p className="mt-0.5 line-clamp-1 text-sm text-stone-400">
                       {entry.message}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        SMS_STATUS_COLORS[entry.status] ?? "bg-gray-100 text-gray-800"
+                        SMS_STATUS_COLORS[entry.status] ?? "bg-stone-100 text-stone-500"
                       }`}
                     >
                       {SMS_STATUS_LABELS[entry.status] ?? entry.status}
                     </span>
-                    <span className="text-xs text-gray">
+                    <span className="text-xs text-stone-400">
                       {formatDate(entry.created_at)}
                     </span>
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-soft-grey px-4 pb-4 pt-3">
+                  <div className="border-t border-stone-100 px-4 pb-4 pt-3">
                     <p className="mb-2 whitespace-pre-wrap text-sm text-charcoal">
                       {entry.message}
                     </p>
                     {entry.ticket_id && (
                       <Link
                         href={`/admin/reparationer/${entry.ticket_id}`}
-                        className="text-sm font-medium text-green-eco hover:underline"
+                        className="text-sm font-medium text-green-eco hover:text-green-eco/80"
                       >
                         Gaa til sag
                       </Link>
                     )}
                     {entry.provider_message_id && (
-                      <p className="mt-1 text-xs text-gray">
+                      <p className="mt-1 text-xs text-stone-400">
                         Provider ID: {entry.provider_message_id}
                       </p>
                     )}

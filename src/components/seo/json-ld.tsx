@@ -1,3 +1,5 @@
+import { STORE } from "@/lib/store-config";
+
 type JsonLdProps = {
   data: Record<string, unknown>;
 };
@@ -28,7 +30,10 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
     "Danmarks specialist i kvalitetstestet refurbished elektronik. iPhones, iPads, MacBooks, Samsung og Apple Watch med 36 måneders garanti, prismatch-garanti og 30+ kvalitetstests.",
   address: {
     "@type": "PostalAddress",
-    addressCountry: "DK",
+    streetAddress: STORE.street,
+    addressLocality: STORE.city,
+    postalCode: STORE.zip,
+    addressCountry: STORE.countryCode,
   },
   contactPoint: {
     "@type": "ContactPoint",

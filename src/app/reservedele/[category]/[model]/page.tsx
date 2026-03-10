@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 import {
   getAllSparePartPaths,
   getSparePartModel,
 } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/medusa/client";
+import { getCollectionProducts } from "@/lib/shopify/client";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -110,7 +112,7 @@ export default async function ModelPartsPage({
         ) : (
           <PartTypeFilter
             products={products}
-            collectionHandle={`reservedele/${cat.slug}/${modelConfig.slug}`}
+            collectionHandle={modelConfig.shopifyHandle}
           />
         )}
       </SectionWrapper>

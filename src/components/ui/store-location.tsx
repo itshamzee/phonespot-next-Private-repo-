@@ -1,19 +1,5 @@
 import { FadeIn } from "@/components/ui/fade-in";
-
-const STORE_INFO = {
-  name: "PhoneSpot",
-  mall: "CENTRETS NAVN",       // TODO: Update with actual mall name
-  street: "GADENAVN XX",       // TODO: Update with actual street
-  city: "XXXX By",             // TODO: Update with actual city
-  zip: "XXXX",                 // TODO: Update with actual zip
-  phone: "+45 XX XX XX XX",    // TODO: Update with actual phone
-  hours: {
-    weekdays: "10:00 – 18:00",
-    saturday: "10:00 – 16:00",
-    sunday: "Lukket",
-  },
-  googleMapsUrl: "#",          // TODO: Add Google Maps link
-};
+import { STORE } from "@/lib/store-config";
 
 type StoreLocationProps = {
   variant?: "full" | "compact";
@@ -69,7 +55,7 @@ function CompactStoreLocation() {
     <div className="flex items-center gap-1.5">
       <MapPinIcon className="h-4 w-4 text-green-eco" />
       <span className="text-xs font-medium text-charcoal">
-        Besøg os i {STORE_INFO.mall}
+        Besøg os i {STORE.mall}
       </span>
     </div>
   );
@@ -91,7 +77,7 @@ function FullStoreLocation() {
               Besøg vores butik
             </h3>
             <p className="mt-1 text-sm text-gray">
-              Vi har en fysisk butik i {STORE_INFO.mall}, hvor du er velkommen
+              Vi har en fysisk butik i {STORE.mall}, hvor du er velkommen
               til at kigge forbi og se vores udvalg.
             </p>
 
@@ -103,11 +89,11 @@ function FullStoreLocation() {
                   Adresse
                 </p>
                 <p className="mt-1 text-sm text-charcoal">
-                  {STORE_INFO.mall}
+                  {STORE.mall}
                 </p>
-                <p className="text-sm text-charcoal">{STORE_INFO.street}</p>
+                <p className="text-sm text-charcoal">{STORE.street}</p>
                 <p className="text-sm text-charcoal">
-                  {STORE_INFO.zip} {STORE_INFO.city}
+                  {STORE.zip} {STORE.city}
                 </p>
               </div>
 
@@ -119,24 +105,24 @@ function FullStoreLocation() {
                 <div className="mt-1 space-y-0.5 text-sm text-charcoal">
                   <p>
                     <span className="text-gray">Man–Fre:</span>{" "}
-                    {STORE_INFO.hours.weekdays}
+                    {STORE.hours.weekdays}
                   </p>
                   <p>
                     <span className="text-gray">Lørdag:</span>{" "}
-                    {STORE_INFO.hours.saturday}
+                    {STORE.hours.saturday}
                   </p>
                   <p>
                     <span className="text-gray">Søndag:</span>{" "}
-                    {STORE_INFO.hours.sunday}
+                    {STORE.hours.sunday}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Google Maps link (only if URL is not "#") */}
-            {STORE_INFO.googleMapsUrl !== "#" && (
+            {/* Google Maps link */}
+            {STORE.googleMapsUrl && (
               <a
-                href={STORE_INFO.googleMapsUrl}
+                href={STORE.googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-green-eco hover:underline"

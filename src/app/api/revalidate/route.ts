@@ -2,26 +2,26 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const secret = request.headers.get("x-medusa-webhook-secret");
+  const secret = request.headers.get("x-shopify-webhook-hmac-sha256");
 
-  if (secret !== process.env.MEDUSA_WEBHOOK_SECRET) {
+  if (secret !== process.env.SHOPIFY_REVALIDATION_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const body = await request.json();
-    const event = body.event ?? "";
+    const topic = request.headers.get("x-shopify-topic") ?? "";
 
-    // Revalidate relevant pages based on event type
-    if (event.startsWith("product.")) {
+    // Revalidate relevant pages based on Shopify webhook topic
+    if (topic.startsWith("products/")) {
       revalidatePath("/", "layout");
       revalidatePath("/iphones");
       revalidatePath("/smartphones");
       revalidatePath("/ipads");
       revalidatePath("/smartwatches");
       revalidatePath("/baerbare");
-    } else if (event.startsWith("order.")) {
-      // Orders don't need page revalidation typically
+    } else if (topic.startsWith("collections/")) {
+      revalidatePath("/", "layout");
     }
 
     return NextResponse.json({ revalidated: true });

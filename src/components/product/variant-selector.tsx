@@ -1,60 +1,41 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback } from "react";
-import type { ProductVariant } from "@/lib/medusa/types";
+import { useMemo } from "react";
+import type { ProductVariant } from "@/lib/shopify/types";
 
 type VariantSelectorProps = {
   variants: ProductVariant[];
   options: { name: string; values: string[] }[];
+  onOptionChange?: (optionName: string, value: string) => void;
+  selectedOptions?: Record<string, string>;
 };
 
-export function VariantSelector({ variants, options }: VariantSelectorProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const handleOptionChange = useCallback(
-    (optionName: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      const key = optionName.toLowerCase();
-      params.set(key, value);
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams],
-  );
-
-  // Determine which variant options are available based on current selections
-  const isOptionAvailable = useCallback(
-    (optionName: string, value: string) => {
-      // Build a map of current selections
-      const currentSelections: Record<string, string> = {};
-      for (const opt of options) {
-        const key = opt.name.toLowerCase();
-        const param = searchParams.get(key);
-        if (param) {
-          currentSelections[opt.name] = param;
-        }
+export function VariantSelector({ variants, options, onOptionChange, selectedOptions }: VariantSelectorProps) {
+  // Determine which variant options are available
+  const availabilityMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const opt of options) {
+      for (const value of opt.values) {
+        const key = `${opt.name}:${value}`;
+        const available = variants.some(
+          (variant) =>
+            variant.availableForSale &&
+            variant.selectedOptions.some(
+              (so) => so.name === opt.name && so.value === value,
+            ),
+        );
+        map.set(key, available);
       }
-
-      // Check if any variant with this option value is available
-      return variants.some(
-        (variant) =>
-          variant.availableForSale &&
-          variant.selectedOptions.some(
-            (so) => so.name === optionName && so.value === value,
-          ),
-      );
-    },
-    [variants, options, searchParams],
-  );
+    }
+    return map;
+  }, [variants, options]);
 
   if (options.length === 0) return null;
 
   return (
     <div className="space-y-4">
       {options.map((option) => {
-        const currentValue = searchParams.get(option.name.toLowerCase());
+        const currentValue = selectedOptions?.[option.name.toLowerCase()] ?? "";
 
         return (
           <div key={option.name}>
@@ -64,13 +45,13 @@ export function VariantSelector({ variants, options }: VariantSelectorProps) {
             <div className="flex flex-wrap gap-2">
               {option.values.map((value) => {
                 const isSelected = currentValue === value;
-                const available = isOptionAvailable(option.name, value);
+                const available = availabilityMap.get(`${option.name}:${value}`) ?? false;
 
                 return (
                   <button
                     key={value}
                     type="button"
-                    onClick={() => handleOptionChange(option.name, value)}
+                    onClick={() => onOptionChange?.(option.name, value)}
                     disabled={!available}
                     className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
                       isSelected

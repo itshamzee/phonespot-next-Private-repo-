@@ -54,7 +54,7 @@ export function NewsletterPopup() {
         onClick={dismiss}
         aria-hidden="true"
       />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-radius-lg bg-white p-8 shadow-lg">
+      <div className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-lg sm:p-8">
         <button
           onClick={dismiss}
           className="absolute right-4 top-4 text-gray hover:text-charcoal"

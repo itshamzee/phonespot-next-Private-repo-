@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import type { CartItem } from "@/lib/medusa/types";
+import type { CartItem } from "@/lib/shopify/types";
 import { useCart } from "@/components/cart/cart-context";
-import { updateCartLine, removeFromCart } from "@/lib/medusa/client";
+import { updateCartLine, removeFromCart } from "@/lib/shopify/client";
 
 function formatPrice(amount: string, currencyCode = "DKK"): string {
   return new Intl.NumberFormat("da-DK", {
@@ -122,7 +122,7 @@ export function CartLineItem({ item }: { item: CartItem }) {
               type="button"
               className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream"
               onClick={() => handleUpdateQuantity(item.quantity + 1)}
-              aria-label="Tilf en"
+              aria-label="Tilføj en"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Product } from "@/lib/medusa/types";
+import type { Product } from "@/lib/shopify/types";
 import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
 

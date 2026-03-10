@@ -7,7 +7,7 @@ import { BookingWizard } from "@/components/repair/booking-wizard";
 export const metadata: Metadata = {
   title: "Book Reparation | PhoneSpot",
   description:
-    "Book din reparation online. Vaelg enhed, reparation og send din anmodning.",
+    "Book din reparation online. Vælg enhed, reparation og send din anmodning.",
   robots: { index: false },
 };
 
@@ -20,11 +20,11 @@ export default function BookingPage() {
             Book Reparation
           </Heading>
           <p className="mt-4 text-gray">
-            Vaelg din enhed og reparation herunder.
+            Vælg din enhed og reparation herunder.
           </p>
         </div>
         <Suspense
-          fallback={<p className="text-center text-gray">Indlaeser...</p>}
+          fallback={<p className="text-center text-gray">Indlæser...</p>}
         >
           <BookingWizard />
         </Suspense>

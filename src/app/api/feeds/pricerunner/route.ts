@@ -1,5 +1,6 @@
-import { getCollections, getCollectionProducts } from "@/lib/medusa/client";
+import { getCollections, getCollectionProducts } from "@/lib/shopify/client";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600; // Revalidate every hour
 
 function escapeXml(str: string): string {
@@ -14,6 +15,11 @@ function escapeXml(str: string): string {
 function getEan(tags: string[]): string | null {
   const eanTag = tags.find((t) => t.startsWith("ean:"));
   return eanTag ? eanTag.slice(4) : null;
+}
+
+function getMpn(tags: string[]): string | null {
+  const mpnTag = tags.find((t) => t.startsWith("mpn:"));
+  return mpnTag ? mpnTag.slice(4) : null;
 }
 
 export async function GET() {
@@ -62,8 +68,10 @@ export async function GET() {
       const url = `https://phonespot.dk/${collectionHandle}/${product.handle}`;
       const imageUrl = product.images[0]?.url ?? "";
       const ean = getEan(product.tags);
+      const mpn = getMpn(product.tags);
       const price = parseFloat(variant.price.amount);
       const shippingCost = price >= 500 ? 0 : 49; // Free shipping over 500 DKK
+      const manufacturer = product.vendor || "PhoneSpot";
 
       xml += `  <product>\n`;
       xml += `    <ProductName>${escapeXml(product.title + (variant.title !== "Default Title" ? " - " + variant.title : ""))}</ProductName>\n`;
@@ -72,13 +80,16 @@ export async function GET() {
       xml += `    <ProductUrl>${escapeXml(url)}</ProductUrl>\n`;
       xml += `    <ImageUrl>${escapeXml(imageUrl)}</ImageUrl>\n`;
       xml += `    <Category>${escapeXml(collectionTitle)}</Category>\n`;
-      xml += `    <Manufacturer>${escapeXml(product.vendor || "")}</Manufacturer>\n`;
+      xml += `    <Manufacturer>${escapeXml(manufacturer)}</Manufacturer>\n`;
       xml += `    <ShippingCost>${shippingCost.toFixed(2)}</ShippingCost>\n`;
       xml += `    <StockStatus>in stock</StockStatus>\n`;
       xml += `    <Condition>refurbished</Condition>\n`;
       xml += `    <SKU>${escapeXml(variant.id)}</SKU>\n`;
       if (ean) {
         xml += `    <Ean>${escapeXml(ean)}</Ean>\n`;
+      }
+      if (mpn) {
+        xml += `    <MPN>${escapeXml(mpn)}</MPN>\n`;
       }
       xml += `  </product>\n`;
     }

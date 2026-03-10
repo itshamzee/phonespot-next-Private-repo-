@@ -47,9 +47,9 @@ const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; fram
     C: { display: "/quality/ipad-grade-c-display.png", frame: "/quality/ipad-grade-c-frame.png" },
   },
   laptop: {
-    A: { display: "/quality/laptop-grade-a-display.png", frame: "/quality/laptop-grade-a-frame.png" },
-    B: { display: "/quality/laptop-grade-b-display.png", frame: "/quality/laptop-grade-b-frame.png" },
-    C: { display: "/quality/laptop-grade-c-display.png", frame: "/quality/laptop-grade-c-frame.png" },
+    A: { display: "/quality/grade-a-display.png", frame: "/quality/grade-a-frame.png" },
+    B: { display: "/quality/grade-b-display.png", frame: "/quality/grade-b-frame.png" },
+    C: { display: "/quality/grade-c-display.png", frame: "/quality/grade-c-frame.png" },
   },
 };
 

@@ -54,6 +54,13 @@ const CATEGORIES = [
     image: null,
   },
   {
+    name: "Tilbehør",
+    href: "/tilbehoer",
+    tagline: "Covers & kabler",
+    description: "Cases, panserglas og opladere",
+    image: null,
+  },
+  {
     name: "Reservedele",
     href: "/reservedele",
     tagline: "Skærme & batterier",
@@ -61,11 +68,18 @@ const CATEGORIES = [
     image: null,
   },
   {
-    name: "Covers",
-    href: "/covers",
-    tagline: "Beskyt din enhed",
-    description: "Covers, panserglas og tilbehør",
-    image: "/categories/covers.png",
+    name: "Reparation",
+    href: "/reparation",
+    tagline: "Fra 199 kr",
+    description: "Skærm, batteri og mere — livstidsgaranti",
+    image: null,
+  },
+  {
+    name: "Outlet",
+    href: "/outlet",
+    tagline: "Ekstra skarpe priser",
+    description: "Begrænset antal, store besparelser",
+    image: null,
   },
 ];
 
@@ -175,9 +189,9 @@ export default function HomePage() {
                 <span className="text-green-eco">Smart pris.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/70">
-                iPhones, iPads og bærbare — alle testet med 30+ kontroller og
-                leveret med 36 måneders garanti. Spar op til 40% sammenlignet
-                med nypris.
+                iPhones, iPads, bærbare og tilbehør — alle testet med 30+
+                kontroller og leveret med 36 måneders garanti. Spar op til 40%
+                sammenlignet med nypris.
               </p>
             </FadeIn>
             <FadeIn delay={0.2}>
@@ -360,7 +374,7 @@ export default function HomePage() {
         </div>
 
         {/* Secondary row — smaller category cards */}
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
@@ -551,26 +565,32 @@ export default function HomePage() {
         </FadeIn>
       </SectionWrapper>
 
-      {/* ── Outlet teaser ── */}
+      {/* ── Reparation teaser ── */}
       <SectionWrapper>
         <div className="relative overflow-hidden rounded-3xl bg-charcoal p-8 md:p-12 lg:p-16">
+          {/* Grain texture */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-eco/10 blur-3xl" />
+
           <div className="relative z-10 grid items-center gap-8 lg:grid-cols-2">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-                Outlet
+                Reparation
               </p>
               <h2 className="font-display text-3xl font-extrabold italic text-white md:text-4xl">
-                Spar ekstra på udvalgte produkter
+                Smadret skærm?
+                <br />
+                Vi fikser det på 30 min.
               </h2>
               <p className="mt-4 max-w-lg text-white/60">
-                Udvalgte produkter til ekstra skarpe priser. Samme kvalitet, samme
-                36 måneders garanti — bare billigere. Begrænset antal.
+                Professionel reparation af iPhones, iPads, Samsung, MacBooks og
+                mere. Faste priser, livstidsgaranti og 90% klar mens du venter.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {[
-                  { text: "Op til 40% rabat", accent: true },
-                  { text: "Samme garanti", accent: false },
-                  { text: "Begrænset antal", accent: false },
+                  { text: "Livstidsgaranti", accent: true },
+                  { text: "Faste priser", accent: false },
+                  { text: "Walk-in service", accent: false },
                 ].map((tag) => (
                   <span
                     key={tag.text}
@@ -585,27 +605,23 @@ export default function HomePage() {
                 ))}
               </div>
               <Link
-                href="/outlet"
+                href="/reparation"
                 className="mt-8 inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
               >
-                Se outlet &rarr;
+                Se reparationer &rarr;
               </Link>
             </div>
-            <div className="relative">
-              <Image
-                src="/outlet-banner.png"
-                alt="MacBook, iPad og iPhone — outlet tilbud"
-                width={600}
-                height={325}
-                className="w-full object-contain drop-shadow-2xl"
-              />
-              {/* Discount badges */}
-              <div className="absolute -right-2 -top-2 flex h-16 w-16 items-center justify-center rounded-full bg-green-eco font-display text-lg font-bold text-white shadow-lg md:h-20 md:w-20 md:text-xl">
-                -40%
-              </div>
-              <div className="absolute -left-2 bottom-4 flex h-14 w-14 items-center justify-center rounded-full bg-white font-display text-base font-bold text-green-eco shadow-lg md:h-16 md:w-16 md:text-lg">
-                -25%
-              </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { value: "30 min", label: "Hurtig service" },
+                { value: "5.000+", label: "Reparationer" },
+                { value: "4.8★", label: "Trustpilot" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-2xl bg-white/[0.06] p-5 text-center backdrop-blur-sm">
+                  <p className="font-display text-2xl font-bold text-green-eco md:text-3xl">{stat.value}</p>
+                  <p className="mt-1 text-xs text-white/50">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -659,16 +675,16 @@ export default function HomePage() {
               Se iPhones &rarr;
             </Link>
             <Link
-              href="/ipads"
+              href="/tilbehoer"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
-              Se iPads &rarr;
+              Se tilbehør &rarr;
             </Link>
             <Link
-              href="/baerbare"
+              href="/reparation"
               className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
             >
-              Se bærbare &rarr;
+              Book reparation &rarr;
             </Link>
           </div>
         </div>
