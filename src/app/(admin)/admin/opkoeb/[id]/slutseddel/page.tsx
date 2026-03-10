@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -87,7 +87,7 @@ function formatDate(dateStr: string) {
 export default function AdminSlutseddelPage() {
   const params = useParams();
   const inquiryId = params.id as string;
-  const supabase = createBrowserClient();
+  const supabase = useMemo(() => createBrowserClient(), []);
 
   /* ---- State ---- */
   const [loading, setLoading] = useState(true);

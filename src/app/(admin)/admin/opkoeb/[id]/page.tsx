@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -52,7 +52,7 @@ function formatDate(dateStr: string) {
 export default function AdminOpkoebDetailPage() {
   const params = useParams();
   const inquiryId = params.id as string;
-  const supabase = createBrowserClient();
+  const supabase = useMemo(() => createBrowserClient(), []);
 
   const [inquiry, setInquiry] = useState<ContactInquiry | null>(null);
   const [offers, setOffers] = useState<TradeInOffer[]>([]);
