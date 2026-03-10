@@ -8,6 +8,7 @@ import type {
   RepairQuote,
   RepairStatusLog,
   RepairStatus,
+  RepairComment,
 } from "@/lib/supabase/types";
 import {
   PDFPreviewModal,
@@ -22,6 +23,10 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   i_gang: "I gang",
   faerdig: "Faerdig",
   afhentet: "Afhentet",
+  bero: "Bero",
+  reklamation_modtaget: "Reklamation modtaget",
+  reklamation_vurderet: "Reklamation vurderet",
+  reklamation_loest: "Reklamation loest",
 };
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
@@ -32,6 +37,10 @@ const STATUS_COLORS: Record<RepairStatus, string> = {
   i_gang: "bg-orange-100 text-orange-800",
   faerdig: "bg-emerald-100 text-emerald-800",
   afhentet: "bg-gray-100 text-gray-800",
+  bero: "bg-amber-100 text-amber-800",
+  reklamation_modtaget: "bg-rose-100 text-rose-800",
+  reklamation_vurderet: "bg-rose-50 text-rose-700",
+  reklamation_loest: "bg-emerald-50 text-emerald-700",
 };
 
 const STATUS_PROGRESSION: Record<RepairStatus, RepairStatus | null> = {
@@ -42,7 +51,18 @@ const STATUS_PROGRESSION: Record<RepairStatus, RepairStatus | null> = {
   i_gang: "faerdig",
   faerdig: "afhentet",
   afhentet: null,
+  bero: null, // goes back to previous status via dedicated handler
+  reklamation_modtaget: "reklamation_vurderet",
+  reklamation_vurderet: "reklamation_loest",
+  reklamation_loest: null,
 };
+
+const BERO_REASONS = [
+  "Venter paa dele",
+  "Venter paa kundesvar",
+  "Venter paa godkendelse",
+  "Andet",
+];
 
 export default function AdminTicketDetailPage({
   params,
@@ -76,6 +96,20 @@ export default function AdminTicketDetailPage({
   // PDF preview modal state
   const [pdfModal, setPdfModal] = useState<{ type: "intake-receipt" | "workshop-report" } | null>(null);
 
+  // Comments state
+  const [comments, setComments] = useState<RepairComment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentVisibility, setCommentVisibility] = useState<"intern" | "kunde">("intern");
+  const [commentSending, setCommentSending] = useState(false);
+
+  // Urgent / Bero / Reklamation state
+  const [urgentUpdating, setUrgentUpdating] = useState(false);
+  const [showBeroDropdown, setShowBeroDropdown] = useState(false);
+  const [beroReason, setBeroReason] = useState(BERO_REASONS[0]);
+  const [beroUpdating, setBeroUpdating] = useState(false);
+  const [reklamationUpdating, setReklamationUpdating] = useState(false);
+  const [previousStatusBeforeBero, setPreviousStatusBeforeBero] = useState<RepairStatus | null>(null);
+
   const supabase = createBrowserClient();
 
   async function loadData() {
@@ -93,9 +127,25 @@ export default function AdminTicketDetailPage({
       .eq("ticket_id", id)
       .order("created_at", { ascending: false });
 
+    const commentsRes = await supabase
+      .from("repair_comments")
+      .select("*")
+      .eq("ticket_id", id)
+      .order("created_at", { ascending: true });
+
     if (ticketRes.data) setTicket(ticketRes.data as unknown as RepairTicket);
     if (quotesRes.data) setQuotes(quotesRes.data as unknown as RepairQuote[]);
     if (logsRes.data) setStatusLogs(logsRes.data as unknown as RepairStatusLog[]);
+    if (commentsRes.data) setComments(commentsRes.data as unknown as RepairComment[]);
+
+    // Track what status was before bero (from status logs)
+    if (ticketRes.data && (ticketRes.data as unknown as RepairTicket).status === "bero" && logsRes.data) {
+      const logs = logsRes.data as unknown as RepairStatusLog[];
+      const beroLog = logs.find((l) => l.new_status === "bero");
+      if (beroLog?.old_status) {
+        setPreviousStatusBeforeBero(beroLog.old_status as RepairStatus);
+      }
+    }
 
     setLoading(false);
   }
@@ -202,6 +252,90 @@ export default function AdminTicketDetailPage({
     setSmsSending(false);
   }
 
+  async function handleAddComment() {
+    if (!newComment.trim()) return;
+    setCommentSending(true);
+    try {
+      await fetch(`/api/repairs/${id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: newComment.trim(),
+          visibility: commentVisibility,
+          author: "Admin",
+        }),
+      });
+      setNewComment("");
+      await loadData();
+    } catch {
+      // Silently handle error
+    }
+    setCommentSending(false);
+  }
+
+  async function handleToggleUrgent() {
+    if (!ticket) return;
+    setUrgentUpdating(true);
+    try {
+      await fetch(`/api/repairs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_urgent: !ticket.is_urgent }),
+      });
+      await loadData();
+    } catch {
+      // Silently handle error
+    }
+    setUrgentUpdating(false);
+  }
+
+  async function handleSetBero() {
+    setBeroUpdating(true);
+    try {
+      await fetch(`/api/repairs/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "bero", note: beroReason }),
+      });
+      setShowBeroDropdown(false);
+      await loadData();
+    } catch {
+      // Silently handle error
+    }
+    setBeroUpdating(false);
+  }
+
+  async function handleResumeBero() {
+    if (!previousStatusBeforeBero) return;
+    setStatusUpdating(true);
+    try {
+      await fetch(`/api/repairs/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: previousStatusBeforeBero, note: "Genoptaget fra bero" }),
+      });
+      await loadData();
+    } catch {
+      // Silently handle error
+    }
+    setStatusUpdating(false);
+  }
+
+  async function handleReklamation() {
+    setReklamationUpdating(true);
+    try {
+      await fetch(`/api/repairs/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "reklamation_modtaget" }),
+      });
+      await loadData();
+    } catch {
+      // Silently handle error
+    }
+    setReklamationUpdating(false);
+  }
+
   if (loading) {
     return <p className="text-gray">Indlaeser sag...</p>;
   }
@@ -230,11 +364,102 @@ export default function AdminTicketDetailPage({
               <h2 className="font-display text-xl font-bold text-charcoal">
                 Sag: {ticket.id.slice(0, 8)}
               </h2>
-              <span
-                className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[ticket.status]}`}
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[ticket.status]}`}
+                >
+                  {STATUS_LABELS[ticket.status]}
+                </span>
+                {ticket.is_urgent && (
+                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                    Hastesag
+                  </span>
+                )}
+                {ticket.status === "bero" && ticket.on_hold_reason && (
+                  <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                    {ticket.on_hold_reason}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Urgent / Bero / Reklamation controls */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleToggleUrgent}
+                disabled={urgentUpdating}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60 ${
+                  ticket.is_urgent
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-stone-200 text-stone-600 hover:bg-stone-300"
+                }`}
               >
-                {STATUS_LABELS[ticket.status]}
-              </span>
+                {urgentUpdating ? "..." : "Hastesag"}
+              </button>
+
+              {ticket.status === "bero" ? (
+                <button
+                  type="button"
+                  onClick={handleResumeBero}
+                  disabled={statusUpdating}
+                  className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
+                >
+                  {statusUpdating ? "..." : "Genoptag fra bero"}
+                </button>
+              ) : (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowBeroDropdown(!showBeroDropdown)}
+                    className="rounded-full bg-stone-200 px-4 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-stone-300"
+                  >
+                    Bero
+                  </button>
+                  {showBeroDropdown && (
+                    <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-soft-grey bg-white p-4 shadow-lg">
+                      <p className="mb-2 text-xs font-semibold text-charcoal">Vaelg aarsag:</p>
+                      <select
+                        value={beroReason}
+                        onChange={(e) => setBeroReason(e.target.value)}
+                        className="mb-3 w-full rounded-lg border border-soft-grey px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none"
+                      >
+                        {BERO_REASONS.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSetBero}
+                          disabled={beroUpdating}
+                          className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
+                        >
+                          {beroUpdating ? "..." : "Saet paa bero"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowBeroDropdown(false)}
+                          className="rounded-full border border-soft-grey px-4 py-1.5 text-xs text-charcoal hover:bg-sand"
+                        >
+                          Annuller
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!["reklamation_modtaget", "reklamation_vurderet", "reklamation_loest"].includes(ticket.status) && (
+                <button
+                  type="button"
+                  onClick={handleReklamation}
+                  disabled={reklamationUpdating}
+                  className="rounded-full bg-stone-200 px-4 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-stone-300 disabled:opacity-60"
+                >
+                  {reklamationUpdating ? "..." : "Reklamation"}
+                </button>
+              )}
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
@@ -562,6 +787,78 @@ export default function AdminTicketDetailPage({
               >
                 {smsSending ? "Sender..." : "Send"}
               </button>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-6">
+            <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
+              Kommentarer
+            </h3>
+            {comments.length > 0 && (
+              <div className="mb-4 space-y-3">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="rounded-lg bg-sand/50 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-charcoal">{comment.author}</span>
+                      <span className="text-xs text-gray">{formatDateTime(comment.created_at)}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          comment.visibility === "intern"
+                            ? "bg-stone-200 text-stone-600"
+                            : "bg-green-eco/10 text-green-eco"
+                        }`}
+                      >
+                        {comment.visibility === "intern" ? "Intern" : "Kunde"}
+                      </span>
+                    </div>
+                    <p className="text-sm text-charcoal">{comment.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-3">
+              <textarea
+                rows={3}
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Skriv kommentar..."
+                className="w-full rounded-lg border border-soft-grey bg-white px-4 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none"
+              />
+              <div className="flex items-center gap-3">
+                <div className="flex overflow-hidden rounded-lg border border-soft-grey">
+                  <button
+                    type="button"
+                    onClick={() => setCommentVisibility("intern")}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      commentVisibility === "intern"
+                        ? "bg-stone-200 text-charcoal"
+                        : "bg-white text-gray hover:bg-stone-50"
+                    }`}
+                  >
+                    Intern
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCommentVisibility("kunde")}
+                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      commentVisibility === "kunde"
+                        ? "bg-green-eco/10 text-green-eco"
+                        : "bg-white text-gray hover:bg-stone-50"
+                    }`}
+                  >
+                    Kundesynlig
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddComment}
+                  disabled={commentSending || !newComment.trim()}
+                  className="rounded-lg bg-charcoal px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {commentSending ? "..." : "Tilfoej"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
