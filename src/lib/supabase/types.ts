@@ -417,3 +417,14 @@ export interface Database {
     };
   };
 }
+
+// Trade-in types
+export type {
+  TradeInOffer,
+  TradeInOfferStatus,
+  TradeInReceipt,
+  TradeInReceiptStatus,
+  TradeInReceiptItem,
+  TradeInDerivedStatus,
+} from "./trade-in-types";
+export { formatDKK, deriveTradeInStatus } from "./trade-in-types";
