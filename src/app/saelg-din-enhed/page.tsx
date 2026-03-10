@@ -273,7 +273,7 @@ export default function SaelgDinEnhedPage() {
                     <span className="text-xs font-bold text-green-eco">Åben nu</span>
                   </div>
                   <p className="font-display text-lg font-bold text-charcoal">PhoneSpot Slagelse</p>
-                  <p className="mt-1 text-sm text-gray">Jernbanegade 6, 4200 Slagelse</p>
+                  <p className="mt-1 text-sm text-gray">Vestsjællandscentret 10A, 103, 4200 Slagelse</p>
                   <p className="mt-0.5 text-sm text-gray">Man-Fre 10-17:30 · Lør 10-14</p>
                 </div>
                 <div className="rounded-2xl border border-sand bg-warm-white p-6">

@@ -680,7 +680,7 @@ export function SellDeviceWizard() {
                 onChange={(e) => setContact((prev) => ({ ...prev, preferredStore: e.target.value }))}
                 className={inputStyles}
               >
-                <option value="Slagelse">PhoneSpot Slagelse — Jernbanegade 6</option>
+                <option value="Slagelse">PhoneSpot Slagelse — Vestsjællandscentret 10A, 103</option>
                 <option value="Vejle">PhoneSpot Vejle — Åbner april 2026</option>
               </select>
             </div>
