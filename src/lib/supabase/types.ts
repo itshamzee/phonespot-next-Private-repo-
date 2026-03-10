@@ -34,6 +34,9 @@ export interface RepairService {
   warranty_info: string | null;
   includes: string | null;
   estimated_time_label: string | null;
+  quality_tier: "standard" | "premium" | "original" | null;
+  info_note: string | null;
+  service_category: string | null;
   sort_order: number;
   active: boolean;
   created_at: string;
@@ -46,7 +49,11 @@ export type RepairStatus =
   | "godkendt"
   | "i_gang"
   | "faerdig"
-  | "afhentet";
+  | "afhentet"
+  | "bero"
+  | "reklamation_modtaget"
+  | "reklamation_vurderet"
+  | "reklamation_loest";
 
 export interface BookingDetails {
   selected_services: { id: string; name: string; price_dkk: number }[];
@@ -77,6 +84,11 @@ export interface RepairTicket {
   shopify_order_id: string | null;
   paid: boolean;
   paid_at: string | null;
+  is_urgent: boolean;
+  on_hold_reason: string | null;
+  parent_ticket_id: string | null;
+  ticket_number: string | null;
+  store_location_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -142,7 +154,22 @@ export interface InternalNote {
   timestamp: string;
 }
 
-export type InquiryStatus = "ny" | "besvaret" | "lukket";
+// --- Repair Comments ---
+export type CommentVisibility = "intern" | "kunde";
+
+export interface RepairComment {
+  id: string;
+  ticket_id: string;
+  author: string;
+  message: string;
+  visibility: CommentVisibility;
+  created_at: string;
+}
+
+// --- Inquiry types ---
+export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel";
+export type InquiryChannel = "email" | "sms" | "form";
+export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 
 export interface ContactInquiry {
   id: string;
@@ -153,6 +180,71 @@ export interface ContactInquiry {
   message: string;
   status: InquiryStatus;
   admin_notes: string | null;
+  source: InquirySource;
+  assigned_to: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface InquiryMessage {
+  id: string;
+  inquiry_id: string;
+  sender: "staff" | "customer";
+  channel: InquiryChannel;
+  body: string;
+  staff_name: string | null;
+  created_at: string;
+}
+
+// --- Reply Templates ---
+export type TemplateChannel = "sms" | "email" | "quick-reply";
+
+export interface ReplyTemplate {
+  id: string;
+  channel: TemplateChannel;
+  name: string;
+  subject: string | null;
+  body: string;
+  variables: string[];
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+}
+
+// --- Mail Log ---
+export type MailStatus = "delivered" | "bounced" | "failed" | "pending";
+
+export interface MailLogEntry {
+  id: string;
+  ticket_id: string | null;
+  inquiry_id: string | null;
+  to_email: string;
+  subject: string;
+  body: string;
+  status: MailStatus;
+  resend_id: string | null;
+  created_at: string;
+}
+
+// --- Store Locations ---
+export interface StoreLocation {
+  id: string;
+  slug: string;
+  name: string;
+  street: string;
+  city: string;
+  zip: string;
+  phone: string;
+  email: string;
+  mall: string | null;
+  hours_weekdays: string;
+  hours_saturday: string;
+  hours_sunday: string;
+  google_maps_url: string;
+  google_maps_embed: string;
+  latitude: number;
+  longitude: number;
+  active: boolean;
   created_at: string;
 }
 
@@ -296,6 +388,31 @@ export interface Database {
         Row: SmsLogEntry;
         Insert: Omit<SmsLogEntry, "id" | "created_at">;
         Update: Partial<SmsLogEntry>;
+      };
+      repair_comments: {
+        Row: RepairComment;
+        Insert: Omit<RepairComment, "id" | "created_at">;
+        Update: Partial<RepairComment>;
+      };
+      inquiry_messages: {
+        Row: InquiryMessage;
+        Insert: Omit<InquiryMessage, "id" | "created_at">;
+        Update: Partial<InquiryMessage>;
+      };
+      reply_templates: {
+        Row: ReplyTemplate;
+        Insert: Omit<ReplyTemplate, "id" | "created_at">;
+        Update: Partial<ReplyTemplate>;
+      };
+      mail_log: {
+        Row: MailLogEntry;
+        Insert: Omit<MailLogEntry, "id" | "created_at">;
+        Update: Partial<MailLogEntry>;
+      };
+      store_locations: {
+        Row: StoreLocation;
+        Insert: Omit<StoreLocation, "id" | "created_at">;
+        Update: Partial<StoreLocation>;
       };
     };
   };
