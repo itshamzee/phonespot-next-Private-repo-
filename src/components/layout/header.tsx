@@ -427,6 +427,10 @@ function AnnouncementBar() {
             <span className="text-green-light">✓</span>
             Prismatch-garanti
           </span>
+          <span className="flex items-center gap-1.5 whitespace-nowrap">
+            <span className="text-[#FFB3C7]">✦</span>
+            Klarna — del betaling op
+          </span>
         </div>
         <div className="hidden sm:flex lg:hidden items-center gap-6">
           <TrustpilotBadge />

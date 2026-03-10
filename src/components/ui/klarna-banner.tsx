@@ -1,3 +1,5 @@
+import { KlarnaIcon } from "@/components/ui/payment-icons";
+
 interface KlarnaBannerProps {
   priceAmount: string;
   currencyCode?: string;
@@ -28,22 +30,8 @@ export function KlarnaBanner({
       className={`overflow-hidden rounded-2xl border border-[#FFB3C7]/25 bg-gradient-to-r from-[#FFB3C7]/[0.07] via-white to-[#FFB3C7]/[0.05] ${className}`.trim()}
     >
       <div className="flex items-center gap-4 px-5 py-4">
-        {/* Klarna icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFB3C7]/15">
-          <svg
-            className="h-5 w-5 text-[#E8367C]"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"
-            />
-          </svg>
-        </div>
+        {/* Klarna logo */}
+        <KlarnaIcon className="h-9 w-auto shrink-0 rounded" />
 
         {/* Content */}
         <div className="flex-1">

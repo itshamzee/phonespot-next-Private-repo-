@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-type DeviceType = "phone" | "watch" | "ipad";
+type DeviceType = "phone" | "watch" | "ipad" | "laptop";
 
 type GradeData = {
   grade: "A" | "B" | "C";
@@ -144,10 +144,54 @@ const IPAD_GRADES: GradeData[] = [
   },
 ];
 
+const LAPTOP_GRADES: GradeData[] = [
+  {
+    grade: "A",
+    title: "Som ny",
+    subtitle: "Grade A",
+    color: "border-green-eco",
+    bullets: [
+      "Skærmen og tastaturet er fejlfri",
+      "Kabinettet har ingen synlige ridser",
+      "Batteriet er testet til min. 85% kapacitet",
+    ],
+    displayImage: "/quality/laptop-grade-a-display.png",
+    frameImage: "/quality/laptop-grade-a-frame.png",
+  },
+  {
+    grade: "B",
+    title: "Meget god",
+    subtitle: "Grade B",
+    color: "border-green-light",
+    bullets: [
+      "Skærmen og tastaturet er i perfekt stand",
+      "Kabinettet kan have lette brugsridser",
+      "Batteriet er testet til min. 80% kapacitet",
+    ],
+    displayImage: "/quality/laptop-grade-b-display.png",
+    frameImage: "/quality/laptop-grade-b-frame.png",
+  },
+  {
+    grade: "C",
+    title: "OK stand",
+    subtitle: "Grade C",
+    color: "border-gray",
+    bullets: [
+      "Skærmen kan have lette ridser",
+      "Kabinettet har synlige brugsspor",
+      "Batteriet er testet til min. 75% kapacitet",
+      "Mest budgetvenlige valg",
+    ],
+    displayImage: "/quality/laptop-grade-c-display.png",
+    frameImage: "/quality/laptop-grade-c-frame.png",
+  },
+];
+
 const GRADES_MAP: Record<DeviceType, GradeData[]> = {
   phone: PHONE_GRADES,
   watch: WATCH_GRADES,
   ipad: IPAD_GRADES,
+  laptop: LAPTOP_GRADES,
 };
 
 type ImageView = "display" | "frame";

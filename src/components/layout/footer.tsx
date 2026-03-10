@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { STORE } from "@/lib/store-config";
+import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -263,12 +264,12 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-white/30">Betalingsmuligheder:</span>
-            <div className="flex items-center gap-2">
-              {["Visa", "Mastercard", "MobilePay"].map((method) => (
-                <span key={method} className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
-                  {method}
-                </span>
-              ))}
+            <div className="flex items-center gap-1.5">
+              <VisaIcon className="h-6 w-auto rounded-[3px]" />
+              <MastercardIcon className="h-6 w-auto rounded-[3px]" />
+              <MobilePayIcon className="h-6 w-auto rounded-[3px]" />
+              <ApplePayIcon className="h-6 w-auto rounded-[3px]" />
+              <KlarnaIcon className="h-6 w-auto rounded-[3px]" />
             </div>
           </div>
         </div>

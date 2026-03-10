@@ -10,6 +10,7 @@ import { GradePicker } from "@/components/product/grade-picker";
 import { SizeSelector } from "@/components/product/size-selector";
 import { ColorSelector } from "@/components/product/color-selector";
 import { StoreAvailabilityBadge } from "@/components/product/store-availability-badge";
+import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
 
 /* ------------------------------------------------------------------ */
 /*  Option name recognition                                           */
@@ -296,13 +297,23 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
       <StoreAvailabilityBadge storeAvailability={selectedVariant?.storeAvailability} />
 
       {/* ---- Klarna split payment ---- */}
-      <div className="flex items-center gap-2.5 rounded-xl bg-[#FFB3C7]/10 border border-[#FFB3C7]/25 px-4 py-2.5">
-        <svg className="h-4 w-4 shrink-0 text-[#E8367C]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-        </svg>
+      <div className="flex items-center gap-3 rounded-xl bg-[#FFB3C7]/10 border border-[#FFB3C7]/25 px-4 py-2.5">
+        <KlarnaIcon className="h-6 w-auto shrink-0 rounded-[3px]" />
         <span className="text-[11px] font-medium text-charcoal/80">
           Betal i 3 rater med <span className="font-bold">Klarna</span> — fra {Math.ceil(parseFloat(price.amount) / 3)} kr/md.
         </span>
+      </div>
+
+      {/* ---- Payment icons ---- */}
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-charcoal/40">Betalingsmuligheder:</span>
+        <div className="flex items-center gap-1">
+          <VisaIcon className="h-5 w-auto rounded-[2px]" />
+          <MastercardIcon className="h-5 w-auto rounded-[2px]" />
+          <MobilePayIcon className="h-5 w-auto rounded-[2px]" />
+          <ApplePayIcon className="h-5 w-auto rounded-[2px]" />
+          <KlarnaIcon className="h-5 w-auto rounded-[2px]" />
+        </div>
       </div>
 
       {/* ---- Compact trust strip ---- */}

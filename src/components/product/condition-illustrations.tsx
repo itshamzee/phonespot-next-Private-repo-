@@ -6,7 +6,9 @@ import Image from "next/image";
 type Grade = "A" | "B" | "C";
 type DeviceType = "watch" | "phone" | "ipad" | "laptop";
 
-const GRADE_META: Record<Grade, { label: string; description: string; badgeBg: string; badgeColor: string; ringColor: string }> = {
+type GradeMeta = { label: string; description: string; badgeBg: string; badgeColor: string; ringColor: string };
+
+const DEFAULT_GRADE_META: Record<Grade, GradeMeta> = {
   A: {
     label: "Som ny",
     description: "Enheden fremstår næsten som ny. Ingen synlige ridser eller brugstegn. Skærmen er perfekt og batteriet er i top tilstand.",
@@ -30,6 +32,34 @@ const GRADE_META: Record<Grade, { label: string; description: string; badgeBg: s
   },
 };
 
+const LAPTOP_GRADE_META: Record<Grade, GradeMeta> = {
+  A: {
+    label: "Som ny",
+    description: "Laptop fremstår næsten som ny. Ingen synlige ridser på låg eller kabinet. Skærm, tastatur og trackpad er i perfekt stand.",
+    badgeBg: "bg-green-eco/10",
+    badgeColor: "text-green-eco",
+    ringColor: "ring-green-eco",
+  },
+  B: {
+    label: "God stand",
+    description: "Laptop kan have lette brugsspor på låg eller kabinet. Skærm og tastatur er fri for ridser. Fuldt funktionel.",
+    badgeBg: "bg-amber-50",
+    badgeColor: "text-amber-600",
+    ringColor: "ring-amber-500",
+  },
+  C: {
+    label: "Okay stand",
+    description: "Laptop har tydelige brugsspor på låg og kabinet. Skærm og tastatur kan have lette ridser. Alle funktioner virker perfekt. Bedste pris.",
+    badgeBg: "bg-gray/10",
+    badgeColor: "text-gray",
+    ringColor: "ring-gray",
+  },
+};
+
+function getGradeMeta(deviceType: DeviceType): Record<Grade, GradeMeta> {
+  return deviceType === "laptop" ? LAPTOP_GRADE_META : DEFAULT_GRADE_META;
+}
+
 const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; frame: string }>> = {
   watch: {
     A: { display: "/quality/watch-grade-a-display.png", frame: "/quality/watch-grade-a-frame.png" },
@@ -47,9 +77,9 @@ const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; fram
     C: { display: "/quality/ipad-grade-c-display.png", frame: "/quality/ipad-grade-c-frame.png" },
   },
   laptop: {
-    A: { display: "/quality/grade-a-display.png", frame: "/quality/grade-a-frame.png" },
-    B: { display: "/quality/grade-b-display.png", frame: "/quality/grade-b-frame.png" },
-    C: { display: "/quality/grade-c-display.png", frame: "/quality/grade-c-frame.png" },
+    A: { display: "/quality/laptop-grade-a-display.png", frame: "/quality/laptop-grade-a-frame.png" },
+    B: { display: "/quality/laptop-grade-b-display.png", frame: "/quality/laptop-grade-b-frame.png" },
+    C: { display: "/quality/laptop-grade-c-display.png", frame: "/quality/laptop-grade-c-frame.png" },
   },
 };
 
@@ -92,7 +122,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
       {/* Grade cards with images */}
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(["A", "B", "C"] as Grade[]).map((grade) => {
-          const meta = GRADE_META[grade];
+          const meta = getGradeMeta(deviceType)[grade];
           const imgs = CONDITION_IMAGES[deviceType][grade];
 
           return (

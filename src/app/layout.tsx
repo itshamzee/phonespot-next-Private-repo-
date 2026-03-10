@@ -66,6 +66,16 @@ export default function RootLayout({
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"
           strategy="afterInteractive"
         />
+        {/* Trustpilot invitation API */}
+        <Script
+          src="https://invitejs.trustpilot.com/tp.min.js"
+          strategy="afterInteractive"
+          onLoad={() => {
+            if (typeof window !== "undefined" && (window as any).tp) {
+              (window as any).tp("register", "samJZr5LOOVwoRYo");
+            }
+          }}
+        />
       </body>
     </html>
   );
