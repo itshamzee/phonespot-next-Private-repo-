@@ -100,6 +100,41 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     },
   });
 
+  if (status === "confirmed") {
+    // Check if this is a click & collect order
+    const { data: fullOrder } = await supabase
+      .from("orders")
+      .select("*, customer:customers(*)")
+      .eq("id", id)
+      .single();
+
+    if (fullOrder?.shipping_method?.startsWith("click_collect_") && fullOrder?.customer?.email) {
+      const locationInfo = fullOrder.shipping_method === "click_collect_vejle"
+        ? { name: "PhoneSpot Vejle", address: "Nørregade 22, 7100 Vejle", phone: "71 99 48 48" }
+        : { name: "PhoneSpot Slagelse", address: "Løvegade 12, 4200 Slagelse", phone: "71 99 48 48" };
+
+      try {
+        const { Resend } = await import("resend");
+        const { default: ReadyForPickupEmail } = await import("@/lib/email/templates/ready-for-pickup");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: "PhoneSpot <ordre@phonespot.dk>",
+          to: fullOrder.customer.email,
+          subject: `Din ordre ${fullOrder.order_number} er klar til afhentning`,
+          react: ReadyForPickupEmail({
+            orderNumber: fullOrder.order_number,
+            customerName: fullOrder.customer.name ?? "Kunde",
+            locationName: locationInfo.name,
+            locationAddress: locationInfo.address,
+            locationPhone: locationInfo.phone,
+          }),
+        });
+      } catch {
+        console.warn("Failed to send ready-for-pickup email, continuing...");
+      }
+    }
+  }
+
   return NextResponse.json({ success: true, status });
 }
 
