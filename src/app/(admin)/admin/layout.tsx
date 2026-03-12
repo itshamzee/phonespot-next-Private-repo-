@@ -122,6 +122,43 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  /* ---- PLATFORM ---- */
+  {
+    href: "/admin/platform/intake",
+    label: "Registrer enhed",
+    icon: (
+      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/stock",
+    label: "Lagerstyring",
+    icon: (
+      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/sku",
+    label: "Tilbehør",
+    icon: (
+      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/transfers",
+    label: "Overførsler",
+    icon: (
+      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+      </svg>
+    ),
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -314,27 +351,36 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <div className="flex flex-col gap-0.5">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.map((item, idx) => {
               const active = isActive(item.href);
+              const isPlatform = item.href.startsWith("/admin/platform/");
+              const prevIsPlatform = idx > 0 && NAV_ITEMS[idx - 1].href.startsWith("/admin/platform/");
+              const showSeparator = isPlatform && !prevIsPlatform;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
-                    active
-                      ? "bg-green-eco/[0.07] text-green-eco"
-                      : "text-stone-500 hover:bg-stone-50 hover:text-charcoal"
-                  }`}
-                >
-                  {/* Active indicator bar */}
-                  {active && (
-                    <div className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-green-eco shadow-[2px_0_8px_rgba(34,197,94,0.3)]" />
+                <div key={item.href}>
+                  {showSeparator && (
+                    <p className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">
+                      Platform
+                    </p>
                   )}
-                  <span className={active ? "text-green-eco" : "text-stone-400 group-hover:text-stone-600"}>
-                    {item.icon}
-                  </span>
-                  {item.label}
-                </Link>
+                  <Link
+                    href={item.href}
+                    className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
+                      active
+                        ? "bg-green-eco/[0.07] text-green-eco"
+                        : "text-stone-500 hover:bg-stone-50 hover:text-charcoal"
+                    }`}
+                  >
+                    {/* Active indicator bar */}
+                    {active && (
+                      <div className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-green-eco shadow-[2px_0_8px_rgba(34,197,94,0.3)]" />
+                    )}
+                    <span className={active ? "text-green-eco" : "text-stone-400 group-hover:text-stone-600"}>
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </Link>
+                </div>
               );
             })}
           </div>
