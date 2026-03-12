@@ -1,24 +1,61 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { CartLineItem } from "@/components/cart/cart-line-item";
 import { CartUpsell } from "@/components/cart/cart-upsell";
+import { formatOere } from "@/lib/cart/utils";
+import { cartItemKey } from "@/lib/cart/types";
+import type { CartDeviceItem } from "@/lib/cart/types";
 
-function formatPrice(amount: string, currencyCode = "DKK"): string {
-  return new Intl.NumberFormat("da-DK", {
-    style: "currency",
-    currency: currencyCode,
-    minimumFractionDigits: 0,
-  }).format(parseFloat(amount));
+// ---------------------------------------------------------------------------
+// Reservation countdown for device items
+// ---------------------------------------------------------------------------
+
+function ReservationTimer({ reservedAt }: { reservedAt: string }) {
+  const RESERVATION_MS = 15 * 60 * 1000;
+
+  function msLeft() {
+    return Math.max(0, new Date(reservedAt).getTime() + RESERVATION_MS - Date.now());
+  }
+
+  const [remaining, setRemaining] = useState(msLeft);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const ms = msLeft();
+      setRemaining(ms);
+      if (ms <= 0) clearInterval(interval);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [reservedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+
+  if (remaining <= 0) {
+    return (
+      <span className="text-xs text-red-500 font-medium">Reservation udløbet</span>
+    );
+  }
+
+  return (
+    <span className="text-xs text-amber-600 font-medium tabular-nums">
+      Reserveret i {minutes}:{String(seconds).padStart(2, "0")} min
+    </span>
+  );
 }
 
-export function CartDrawer() {
-  const { cart, isOpen, closeCart } = useCart();
+// ---------------------------------------------------------------------------
+// Cart drawer
+// ---------------------------------------------------------------------------
 
-  const totalItems = cart?.totalQuantity ?? 0;
-  const lines = cart?.lines ?? [];
+export function CartDrawer() {
+  const { cartState, totals, isOpen, closeCart } = useCart();
+
+  const items = cartState.items;
+  const totalItems = totals.itemCount;
 
   // Prevent body scrolling when the drawer is open.
   useEffect(() => {
@@ -94,43 +131,85 @@ export function CartDrawer() {
 
           {/* Items */}
           <div className="flex-1 overflow-y-auto px-5">
-            {lines.length === 0 ? (
+            {items.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <p className="text-sm text-gray">Din kurv er tom</p>
               </div>
             ) : (
               <div className="divide-y divide-sand">
-                {lines.map((item) => (
-                  <CartLineItem key={item.id} item={item} />
+                {items.map((item) => (
+                  <div key={cartItemKey(item)}>
+                    {item.type === "device" && (
+                      <div className="pt-3 pb-1">
+                        <ReservationTimer reservedAt={(item as CartDeviceItem).reservedAt} />
+                      </div>
+                    )}
+                    <CartLineItem item={item} />
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
           {/* Upsell */}
-          {lines.length > 0 && <CartUpsell />}
+          {items.length > 0 && <CartUpsell />}
 
           {/* Footer */}
-          {lines.length > 0 && cart && (
+          {items.length > 0 && (
             <div className="border-t border-sand px-5 py-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-charcoal">
-                  Subtotal
-                </span>
-                <span className="text-lg font-semibold text-charcoal">
-                  {formatPrice(
-                    cart.cost.subtotalAmount.amount,
-                    cart.cost.subtotalAmount.currencyCode,
-                  )}
-                </span>
+              {/* Discount badge */}
+              {cartState.discount && (
+                <div className="mb-3 flex items-center justify-between rounded-lg bg-green-50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-green-eco">
+                      Rabatkode
+                    </span>
+                    <span className="rounded bg-green-eco px-1.5 py-0.5 text-xs font-bold text-white">
+                      {cartState.discount.code}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-green-eco">
+                    −{formatOere(totals.discountAmount)}
+                  </span>
+                </div>
+              )}
+
+              {/* Subtotal / total rows */}
+              <div className="space-y-1.5 mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray">Subtotal</span>
+                  <span className="text-sm font-medium text-charcoal">
+                    {formatOere(totals.subtotal)}
+                  </span>
+                </div>
+                {totals.shippingCost > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray">Fragt</span>
+                    <span className="text-sm font-medium text-charcoal">
+                      {formatOere(totals.shippingCost)}
+                    </span>
+                  </div>
+                )}
+                {totals.shippingCost === 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray">Fragt</span>
+                    <span className="text-sm font-medium text-green-eco">Gratis</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-sand pt-1.5">
+                  <span className="text-sm font-semibold text-charcoal">Total</span>
+                  <span className="text-lg font-semibold text-charcoal">
+                    {formatOere(totals.total)}
+                  </span>
+                </div>
               </div>
 
               <Link
-                href="/checkout"
+                href="/kasse"
                 onClick={closeCart}
                 className="flex w-full items-center justify-center rounded-full bg-green-eco px-6 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-green-light"
               >
-                Gå til betaling
+                Gå til kassen
               </Link>
             </div>
           )}
