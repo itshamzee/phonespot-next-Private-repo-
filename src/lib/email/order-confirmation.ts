@@ -203,6 +203,133 @@ function buildHtml(params: SendOrderConfirmationParams): string {
 </html>`;
 }
 
+// ---------------------------------------------------------------------------
+// Plain-text order confirmation (used for plain-text email parts and testing)
+// ---------------------------------------------------------------------------
+
+type OrderConfirmationData = {
+  orderNumber: string;
+  customerName: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    unitPrice: number; // in øre
+  }>;
+  subtotal: number; // in øre
+  shippingCost: number; // in øre
+  discountAmount: number; // in øre
+  total: number; // in øre
+  shippingAddress: string;
+  shippingMethod: string;
+  withdrawalUrl: string; // e.g. https://phonespot.dk/fortryd/[token]
+};
+
+function formatDKK(øre: number): string {
+  return (
+    (øre / 100).toLocaleString("da-DK", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + " kr."
+  );
+}
+
+/**
+ * Build the plain-text order confirmation email.
+ * Includes the standard fortrydelsesformular as required by
+ * Forbrugeraftalelovens § 18.
+ */
+export function buildOrderConfirmationEmail(
+  data: OrderConfirmationData,
+): string {
+  const itemLines = data.items.map(
+    (item) =>
+      `  ${item.name} x${item.quantity} — ${formatDKK(item.unitPrice * item.quantity)}`,
+  );
+
+  return [
+    `Kære ${data.customerName},`,
+    "",
+    `Tak for din ordre hos PhoneSpot! Her er din ordrebekræftelse.`,
+    "",
+    "══════════════════════════════════════",
+    `ORDREBEKRÆFTELSE — #${data.orderNumber}`,
+    "══════════════════════════════════════",
+    "",
+    "Produkter:",
+    ...itemLines,
+    "",
+    `Subtotal: ${formatDKK(data.subtotal)}`,
+    data.discountAmount > 0
+      ? `Rabat: -${formatDKK(data.discountAmount)}`
+      : null,
+    `Fragt (${data.shippingMethod}): ${formatDKK(data.shippingCost)}`,
+    `Total (inkl. moms): ${formatDKK(data.total)}`,
+    "",
+    `Leveres til: ${data.shippingAddress}`,
+    "",
+    "══════════════════════════════════════",
+    "FORTRYDELSESRET (14 DAGE)",
+    "══════════════════════════════════════",
+    "",
+    "Du har 14 dages fortrydelsesret fra den dag, du modtager varen.",
+    "Fortrydelsesfristen udløber 14 dage efter den dag, du eller en",
+    "af dig angiven tredjemand, som ikke er transportøren, får varerne",
+    "i fysisk besiddelse.",
+    "",
+    "Du kan fortryde dit køb her:",
+    data.withdrawalUrl,
+    "",
+    "Returomkostninger afholdes af dig som køber.",
+    "Tilbagebetaling sker senest 14 dage efter modtagelse af din",
+    "fortrydelsesmeddelelse, dog tidligst når varen er modtaget retur.",
+    "",
+    "══════════════════════════════════════",
+    "STANDARDFORTRYDELSESFORMULAR",
+    "══════════════════════════════════════",
+    "",
+    "(Denne formular udfyldes og returneres kun, hvis du ønsker at",
+    "fortryde aftalen)",
+    "",
+    "Til: PhoneSpot ApS, VestsjællandsCentret 10, 4200 Slagelse,",
+    "     info@phonespot.dk",
+    "",
+    "Jeg/vi (*) meddeler herved, at jeg/vi (*) ønsker at gøre",
+    "fortrydelsesretten gældende i forbindelse med min/vores (*)",
+    "købsaftale om følgende varer (*)/levering af følgende",
+    "tjenesteydelser (*):",
+    "",
+    "_______________________________________________",
+    "",
+    `Bestilt den (*)/modtaget den (*): _______________`,
+    `Forbrugerens/forbrugernes navn(e): _______________`,
+    `Forbrugerens/forbrugernes adresse: _______________`,
+    `Ordrenummer: ${data.orderNumber}`,
+    "",
+    "Forbrugerens/forbrugernes underskrift",
+    "(kun hvis denne formular indleveres på papir):",
+    "",
+    "_______________________________________________",
+    "",
+    "Dato: _______________",
+    "",
+    "(*) Det ikke-relevante streges.",
+    "",
+    "══════════════════════════════════════",
+    "",
+    "Har du spørgsmål? Kontakt os på info@phonespot.dk.",
+    "",
+    "Med venlig hilsen,",
+    "PhoneSpot ApS",
+    "CVR: 38688766",
+    "VestsjællandsCentret 10, 4200 Slagelse",
+    "info@phonespot.dk | phonespot.dk",
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+}
+
+// ---------------------------------------------------------------------------
+
 export async function sendOrderConfirmation(
   params: SendOrderConfirmationParams,
 ): Promise<void> {
