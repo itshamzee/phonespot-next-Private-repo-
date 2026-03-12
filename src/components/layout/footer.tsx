@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { STORE } from "@/lib/store-config";
 import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
+import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -16,6 +17,7 @@ const PRODUCT_LINKS = [
 const SERVICE_LINKS = [
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Garanti", href: "/garanti" },
+  { label: "Delbetaling", href: "/delbetaling" },
   { label: "Reparation", href: "/reparation" },
   { label: "Butik", href: "/butik" },
   { label: "Reklamation", href: "/reklamation" },
@@ -220,6 +222,7 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li><CookieSettingsButton /></li>
             </ul>
           </div>
         </div>
