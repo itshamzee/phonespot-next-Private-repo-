@@ -47,5 +47,22 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq("entity_id", id)
     .order("created_at", { ascending: false });
 
-  return <OrderDetail order={order} activity={activity ?? []} />;
+  const { data: warranties } = await supabase
+    .from("warranties")
+    .select(`
+      id,
+      guarantee_number,
+      status,
+      pdf_url,
+      issued_at,
+      expires_at,
+      qr_verification_code,
+      devices (
+        product_templates ( display_name )
+      )
+    `)
+    .eq("order_id", id)
+    .order("created_at", { ascending: true });
+
+  return <OrderDetail order={order} activity={activity ?? []} warranties={warranties ?? []} />;
 }

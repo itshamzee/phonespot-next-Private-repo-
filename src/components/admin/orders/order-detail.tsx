@@ -32,9 +32,10 @@ function formatDate(iso: string): string {
 interface OrderDetailProps {
   order: any;
   activity: any[];
+  warranties?: any[];
 }
 
-export function OrderDetail({ order, activity }: OrderDetailProps) {
+export function OrderDetail({ order, activity, warranties = [] }: OrderDetailProps) {
   const router = useRouter();
 
   function refresh() {
@@ -237,6 +238,61 @@ export function OrderDetail({ order, activity }: OrderDetailProps) {
               onStatusChange={refresh}
             />
           </div>
+
+          {/* Warranties */}
+          {warranties.length > 0 && (
+            <div className="rounded-xl border border-stone-200 bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+                Garantibeviser
+              </h2>
+              <div className="space-y-2">
+                {warranties.map((w: any) => {
+                  const deviceName =
+                    w.devices?.product_templates?.display_name || "Enhed";
+                  const isExpired = new Date(w.expires_at) < new Date();
+                  const statusLabel = isExpired
+                    ? "Udløbet"
+                    : w.status === "claimed"
+                      ? "Benyttet"
+                      : "Aktiv";
+                  const statusColor = isExpired
+                    ? "text-red-600"
+                    : w.status === "claimed"
+                      ? "text-amber-600"
+                      : "text-green-600";
+
+                  return (
+                    <div
+                      key={w.id}
+                      className="flex items-center justify-between rounded-lg border border-stone-100 p-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-stone-800">
+                          {w.guarantee_number}
+                        </p>
+                        <p className="text-xs text-stone-500">{deviceName}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-medium ${statusColor}`}>
+                          {statusLabel}
+                        </span>
+                        {w.pdf_url && (
+                          <a
+                            href={w.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                          >
+                            PDF
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Activity timeline */}
           <div className="rounded-xl border border-stone-200 bg-white p-5">
