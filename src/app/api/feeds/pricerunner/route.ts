@@ -1,7 +1,9 @@
-import { getCollections, getCollectionProducts } from "@/lib/shopify/client";
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/client";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600; // Revalidate every hour
 
 function escapeXml(str: string): string {
   return str
@@ -12,95 +14,95 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function getEan(tags: string[]): string | null {
-  const eanTag = tags.find((t) => t.startsWith("ean:"));
-  return eanTag ? eanTag.slice(4) : null;
-}
-
-function getMpn(tags: string[]): string | null {
-  const mpnTag = tags.find((t) => t.startsWith("mpn:"));
-  return mpnTag ? mpnTag.slice(4) : null;
-}
-
+/**
+ * GET /api/feeds/pricerunner
+ * PriceRunner XML product feed — uses platform data (Supabase).
+ */
 export async function GET() {
-  const collections = await getCollections();
-  const allProducts: Array<{
-    product: {
-      title: string;
-      handle: string;
-      description: string;
-      vendor: string;
-      images: { url: string }[];
-      tags: string[];
-      variants: Array<{
-        id: string;
-        title: string;
-        price: { amount: string; currencyCode: string };
-        availableForSale: boolean;
-      }>;
-    };
-    collectionHandle: string;
-    collectionTitle: string;
-  }> = [];
+  try {
+    const supabase = createServerClient();
 
-  // Fetch all products from all collections
-  for (const collection of collections) {
-    const col = await getCollectionProducts(collection.handle);
-    if (col?.products) {
-      for (const product of col.products) {
-        allProducts.push({
-          product,
-          collectionHandle: collection.handle,
-          collectionTitle: collection.title,
-        });
-      }
-    }
-  }
+    // Fetch listed devices
+    const { data: devices } = await supabase
+      .from("devices")
+      .select(`
+        id, barcode, grade, storage, color, selling_price, photos,
+        product_templates ( display_name, brand, model, category, slug, images )
+      `)
+      .eq("status", "listed")
+      .not("selling_price", "is", null);
 
-  // Generate XML
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<products>\n`;
+    // Fetch active SKU products
+    const { data: skuProducts } = await supabase
+      .from("sku_products")
+      .select("id, title, ean, selling_price, sale_price, brand, category, images")
+      .eq("is_active", true);
 
-  for (const { product, collectionHandle, collectionTitle } of allProducts) {
-    for (const variant of product.variants) {
-      if (!variant.availableForSale) continue;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<products>\n`;
 
-      const url = `https://phonespot.dk/${collectionHandle}/${product.handle}`;
-      const imageUrl = product.images[0]?.url ?? "";
-      const ean = getEan(product.tags);
-      const mpn = getMpn(product.tags);
-      const price = parseFloat(variant.price.amount);
-      const shippingCost = price >= 500 ? 0 : 49; // Free shipping over 500 DKK
-      const manufacturer = product.vendor || "PhoneSpot";
+    for (const dev of devices ?? []) {
+      const template = dev.product_templates as {
+        display_name: string;
+        brand: string;
+        model: string;
+        category: string;
+        slug: string;
+        images: string[];
+      } | null;
+
+      const title = `${template?.display_name ?? "Enhed"} - Grade ${dev.grade}${dev.storage ? ` ${dev.storage}` : ""}`;
+      const price = ((dev.selling_price ?? 0) / 100).toFixed(2);
+      const imageUrl = dev.photos?.[0] ?? template?.images?.[0] ?? "";
+      const productUrl = `${SITE_URL}/produkt/${template?.slug ?? dev.id}`;
 
       xml += `  <product>\n`;
-      xml += `    <ProductName>${escapeXml(product.title + (variant.title !== "Default Title" ? " - " + variant.title : ""))}</ProductName>\n`;
-      xml += `    <Price>${price.toFixed(2)}</Price>\n`;
+      xml += `    <ProductName>${escapeXml(title)}</ProductName>\n`;
+      xml += `    <Price>${price}</Price>\n`;
       xml += `    <Currency>DKK</Currency>\n`;
-      xml += `    <ProductUrl>${escapeXml(url)}</ProductUrl>\n`;
+      xml += `    <ProductUrl>${escapeXml(productUrl)}</ProductUrl>\n`;
       xml += `    <ImageUrl>${escapeXml(imageUrl)}</ImageUrl>\n`;
-      xml += `    <Category>${escapeXml(collectionTitle)}</Category>\n`;
-      xml += `    <Manufacturer>${escapeXml(manufacturer)}</Manufacturer>\n`;
-      xml += `    <ShippingCost>${shippingCost.toFixed(2)}</ShippingCost>\n`;
+      xml += `    <Category>${escapeXml(template?.category ?? "Elektronik")}</Category>\n`;
+      xml += `    <Manufacturer>${escapeXml(template?.brand ?? "")}</Manufacturer>\n`;
+      xml += `    <ShippingCost>0.00</ShippingCost>\n`;
       xml += `    <StockStatus>in stock</StockStatus>\n`;
       xml += `    <Condition>refurbished</Condition>\n`;
-      xml += `    <SKU>${escapeXml(variant.id)}</SKU>\n`;
-      if (ean) {
-        xml += `    <Ean>${escapeXml(ean)}</Ean>\n`;
-      }
-      if (mpn) {
-        xml += `    <MPN>${escapeXml(mpn)}</MPN>\n`;
-      }
+      xml += `    <SKU>device-${dev.id}</SKU>\n`;
+      xml += `    <Ean>${escapeXml(dev.barcode)}</Ean>\n`;
       xml += `  </product>\n`;
     }
+
+    for (const sku of skuProducts ?? []) {
+      const effectivePrice = sku.sale_price && sku.sale_price < sku.selling_price
+        ? sku.sale_price
+        : sku.selling_price;
+      const price = (effectivePrice / 100).toFixed(2);
+
+      xml += `  <product>\n`;
+      xml += `    <ProductName>${escapeXml(sku.title)}</ProductName>\n`;
+      xml += `    <Price>${price}</Price>\n`;
+      xml += `    <Currency>DKK</Currency>\n`;
+      xml += `    <ProductUrl>${escapeXml(`${SITE_URL}/tilbehoer/${sku.id}`)}</ProductUrl>\n`;
+      xml += `    <ImageUrl>${escapeXml(sku.images?.[0] ?? "")}</ImageUrl>\n`;
+      xml += `    <Category>${escapeXml(sku.category ?? "Tilbehor")}</Category>\n`;
+      xml += `    <Manufacturer>${escapeXml(sku.brand ?? "")}</Manufacturer>\n`;
+      xml += `    <ShippingCost>0.00</ShippingCost>\n`;
+      xml += `    <StockStatus>in stock</StockStatus>\n`;
+      xml += `    <Condition>new</Condition>\n`;
+      xml += `    <SKU>sku-${sku.id}</SKU>\n`;
+      if (sku.ean) xml += `    <Ean>${escapeXml(sku.ean)}</Ean>\n`;
+      xml += `  </product>\n`;
+    }
+
+    xml += `</products>\n`;
+
+    return new NextResponse(xml, {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    });
+  } catch (err) {
+    console.error("PriceRunner feed error:", err);
+    return NextResponse.json({ error: "Feed error" }, { status: 500 });
   }
-
-  xml += `</products>\n`;
-
-  return new Response(xml, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-    },
-  });
 }
