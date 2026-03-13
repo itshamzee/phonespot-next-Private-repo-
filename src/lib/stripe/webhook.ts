@@ -2,10 +2,21 @@ import type Stripe from "stripe";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
+import { convertDraftToOrder } from "@/lib/draft-orders/convert";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  // Draft order payment: if the session was created for a draft order,
+  // convert it to a confirmed order and return early.
+  const draftOrderId = session.metadata?.draft_order_id;
+  if (draftOrderId) {
+    console.log("[webhook] draft order payment received, converting:", draftOrderId);
+    await convertDraftToOrder(draftOrderId);
+    console.log("[webhook] draft order converted:", draftOrderId);
+    return;
+  }
+
   const supabase = createServerClient();
   const orderId = session.metadata?.order_id;
   if (!orderId) {

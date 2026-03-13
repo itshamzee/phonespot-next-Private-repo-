@@ -124,6 +124,8 @@ export async function POST(request: Request) {
     });
 
     // 6. Create Shopify Draft Order (if enabled)
+    // TODO: Migrate this Shopify draft order creation to use the new `draft_orders` table
+    // and generate a Stripe Checkout session via the platform draft order flow instead.
     if (createShopifyPayment && allServices.length > 0) {
       try {
         const draftOrder = await createDraftOrder({

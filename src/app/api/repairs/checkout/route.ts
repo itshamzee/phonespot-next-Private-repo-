@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Build line items for Shopify Draft Order
+    // TODO: Migrate this Shopify draft order creation to use the new `draft_orders` table
+    // and generate a Stripe Checkout session via the platform draft order flow instead.
     const lineItems = body.selected_services.map((svc) => ({
       title: `${body.device_model} - ${svc.name}`,
       quantity: 1,
