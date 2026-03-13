@@ -36,7 +36,7 @@ export async function GET() {
     const { data: skuProducts } = await supabase
       .from("sku_products")
       .select("id, title, ean, selling_price, sale_price, brand, category, images")
-      .eq("is_active", true);
+      .eq("status", "published");
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<products>\n`;
 

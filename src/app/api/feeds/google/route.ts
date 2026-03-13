@@ -26,7 +26,7 @@ export async function GET() {
     const { data: skuProducts } = await supabase
       .from("sku_products")
       .select("id, title, description, ean, selling_price, sale_price, brand, category, images")
-      .eq("is_active", true);
+      .eq("status", "published");
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
