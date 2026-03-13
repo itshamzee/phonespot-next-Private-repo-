@@ -60,6 +60,14 @@ export interface ProductTemplate {
   slug: string;
   description: string | null;
   images: string[];
+  short_description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  specifications: Record<string, string>;
+  status: "draft" | "published";
+  base_price_a: number | null;
+  base_price_b: number | null;
+  base_price_c: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +116,21 @@ export interface SkuProduct {
   supplier_id: string | null;
   images: string[];
   is_active: boolean;
+  short_description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  slug: string | null;
+  variants: Array<{
+    name: string;
+    options: Array<{
+      value: string;
+      price_override: number | null;
+      sku: string | null;
+      image: string | null;
+    }>;
+  }>;
+  barcode: string | null;
+  status: "draft" | "published";
   created_at: string;
   updated_at: string;
 }
@@ -119,6 +142,11 @@ export interface SkuStock {
   min_level: number;
   max_level: number | null;
   updated_at: string;
+}
+
+export interface SkuProductTemplate {
+  sku_product_id: string;
+  template_id: string;
 }
 
 export interface PurchaseDocument {
