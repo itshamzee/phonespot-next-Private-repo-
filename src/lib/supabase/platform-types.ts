@@ -379,6 +379,40 @@ export interface NotifyRequest {
   status: NotifyStatus;
 }
 
+export interface DraftLineItem {
+  type: "device" | "sku" | "custom";
+  id?: string;
+  title: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+}
+
+export interface DraftOrder {
+  id: string;
+  draft_number: string;
+  customer_id: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  status: "draft" | "sent" | "paid" | "converting" | "cancelled";
+  line_items: DraftLineItem[];
+  subtotal: number;
+  discount_amount: number;
+  shipping_cost: number;
+  tax_amount: number;
+  total: number;
+  currency: string;
+  internal_note: string | null;
+  customer_note: string | null;
+  payment_url: string | null;
+  stripe_session_id: string | null;
+  paid_at: string | null;
+  converted_order_id: string | null;
+  repair_ticket_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ============================================
 // Insert types (omit auto-generated fields)
 // ============================================
