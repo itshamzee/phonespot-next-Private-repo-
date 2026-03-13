@@ -285,10 +285,10 @@ export default function SEOPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-zinc-100">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal">
             SEO Analytics
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-stone-500">
             Sogeords-tracking &amp; performance
           </p>
         </div>
@@ -298,15 +298,15 @@ export default function SEOPage() {
       {/* Tabs + Date Range */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-900 p-1">
+        <div className="flex gap-1 rounded-xl border border-stone-200 bg-white p-1">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
                 tab === t.key
-                  ? "bg-amber-500/10 text-amber-500 shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-green-eco/[0.07] text-green-eco shadow-sm"
+                  : "text-stone-500 hover:text-charcoal"
               }`}
             >
               {t.label}
@@ -316,15 +316,15 @@ export default function SEOPage() {
 
         {/* Date range */}
         {tab !== "audit" && (
-          <div className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-900 p-1">
+          <div className="flex gap-1 rounded-xl border border-stone-200 bg-white p-1">
             {DATE_RANGES.map((dr) => (
               <button
                 key={dr.key}
                 onClick={() => setRange(dr.key)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   range === dr.key
-                    ? "bg-zinc-800 text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "bg-stone-100 text-charcoal"
+                    : "text-stone-500 hover:text-charcoal"
                 }`}
               >
                 {dr.label}
@@ -336,9 +336,9 @@ export default function SEOPage() {
 
       {/* No site selected */}
       {!site && (
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900 px-5 py-16 text-center">
+        <div className="rounded-xl border border-stone-200/60 bg-white px-5 py-16 text-center">
           <svg
-            className="mx-auto mb-3 h-8 w-8 text-zinc-700"
+            className="mx-auto mb-3 h-8 w-8 text-stone-300"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
@@ -350,7 +350,7 @@ export default function SEOPage() {
               d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
             />
           </svg>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-stone-500">
             Vaelg et site for at se SEO-data.
           </p>
         </div>
@@ -373,41 +373,41 @@ export default function SEOPage() {
 
       {/* Pages tab */}
       {site && tab === "pages" && (
-        <div className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900">
-          <div className="border-b border-zinc-800/50 px-5 py-3.5">
-            <h3 className="text-sm font-semibold text-zinc-200">
+        <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white">
+          <div className="border-b border-stone-200 px-5 py-3.5">
+            <h3 className="text-sm font-semibold text-charcoal">
               Side-performance
             </h3>
           </div>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-3">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-amber-500" />
-                <p className="text-sm text-zinc-600">Indlaeser...</p>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-stone-200 border-t-green-eco" />
+                <p className="text-sm text-stone-400">Indlaeser...</p>
               </div>
             </div>
           ) : pageRows.length === 0 ? (
-            <p className="px-5 py-12 text-center text-sm text-zinc-600">
+            <p className="px-5 py-12 text-center text-sm text-stone-400">
               Ingen sidedata endnu.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800/50">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-zinc-500">
+                  <tr className="border-b border-stone-200">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-stone-500">
                       Side
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-zinc-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-stone-500">
                       Klik
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-zinc-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-stone-500">
                       Visninger
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-zinc-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-stone-500">
                       Gns. position
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-zinc-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-stone-500">
                       Top sogeord
                     </th>
                   </tr>
@@ -426,24 +426,24 @@ export default function SEOPage() {
                     return (
                       <tr
                         key={i}
-                        className="border-b border-zinc-800/30 last:border-0 transition-colors hover:bg-zinc-800/30"
+                        className="border-b border-stone-100 last:border-0 transition-colors hover:bg-stone-50"
                       >
                         <td
-                          className="max-w-[350px] truncate px-4 py-2.5 font-mono text-xs text-zinc-300"
+                          className="max-w-[350px] truncate px-4 py-2.5 font-mono text-xs text-stone-700"
                           title={row.page}
                         >
                           {displayUrl}
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-zinc-300">
+                        <td className="px-4 py-2.5 font-mono text-stone-700">
                           {row.clicks}
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-zinc-300">
+                        <td className="px-4 py-2.5 font-mono text-stone-700">
                           {row.impressions.toLocaleString("da-DK")}
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-zinc-300">
+                        <td className="px-4 py-2.5 font-mono text-stone-700">
                           {row.position.toFixed(1)}
                         </td>
-                        <td className="max-w-[200px] truncate px-4 py-2.5 text-zinc-400">
+                        <td className="max-w-[200px] truncate px-4 py-2.5 text-stone-500">
                           {row.topQuery ?? "—"}
                         </td>
                       </tr>

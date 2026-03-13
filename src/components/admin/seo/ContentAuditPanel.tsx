@@ -15,21 +15,21 @@ const SEVERITY_CONFIG: Record<
 > = {
   high: {
     label: "Hoej",
-    color: "text-rose-400",
-    dotColor: "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.5)]",
-    bg: "bg-rose-500/5",
+    color: "text-rose-600",
+    dotColor: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]",
+    bg: "bg-rose-50",
   },
   medium: {
     label: "Medium",
-    color: "text-amber-400",
-    dotColor: "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]",
-    bg: "bg-amber-500/5",
+    color: "text-amber-600",
+    dotColor: "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
+    bg: "bg-amber-50",
   },
   low: {
     label: "Lav",
-    color: "text-blue-400",
-    dotColor: "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.5)]",
-    bg: "bg-blue-500/5",
+    color: "text-blue-600",
+    dotColor: "bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.4)]",
+    bg: "bg-blue-50",
   },
 };
 
@@ -41,12 +41,12 @@ export function ContentAuditPanel({
 }: ContentAuditPanelProps) {
   if (loading) {
     return (
-      <div className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900 p-5">
-        <h3 className="text-sm font-semibold text-zinc-200">Content Audit</h3>
+      <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white p-5">
+        <h3 className="text-sm font-semibold text-charcoal">Content Audit</h3>
         <div className="flex h-48 items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-amber-500" />
-            <p className="text-sm text-zinc-600">Indlaeser...</p>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-stone-200 border-t-green-eco" />
+            <p className="text-sm text-stone-400">Indlaeser...</p>
           </div>
         </div>
       </div>
@@ -73,23 +73,23 @@ export function ContentAuditPanel({
   const lowIssues = allIssues.filter((i) => i.severity === "low");
 
   function scoreColor(score: number) {
-    if (score >= 80) return "text-emerald-400";
-    if (score >= 50) return "text-amber-400";
-    return "text-rose-400";
+    if (score >= 80) return "text-emerald-600";
+    if (score >= 50) return "text-amber-600";
+    return "text-rose-600";
   }
 
   return (
     <div className="space-y-4">
       {/* Overview */}
-      <div className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900 p-5">
+      <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white p-5">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-zinc-200">
+          <h3 className="text-sm font-semibold text-charcoal">
             Content Audit
           </h3>
           <button
             onClick={onRunAudit}
             disabled={auditing}
-            className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 transition-all hover:bg-amber-400 active:scale-[0.98] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-green-eco px-4 py-2 text-xs font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
           >
             <svg
               className={`h-3.5 w-3.5 ${auditing ? "animate-spin" : ""}`}
@@ -109,29 +109,29 @@ export function ContentAuditPanel({
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-lg border border-zinc-800/40 bg-zinc-800/20 p-4 text-center">
+          <div className="rounded-lg border border-stone-200/60 bg-stone-50 p-4 text-center">
             <p className={`font-mono text-2xl font-bold ${scoreColor(avgScore)}`}>
               {avgScore}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">Gns. SEO-score</p>
+            <p className="mt-1 text-xs text-stone-500">Gns. SEO-score</p>
           </div>
-          <div className="rounded-lg border border-zinc-800/40 bg-zinc-800/20 p-4 text-center">
-            <p className="font-mono text-2xl font-bold text-rose-400">
+          <div className="rounded-lg border border-stone-200/60 bg-stone-50 p-4 text-center">
+            <p className="font-mono text-2xl font-bold text-rose-600">
               {highIssues.length}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">Hoej prioritet</p>
+            <p className="mt-1 text-xs text-stone-500">Hoej prioritet</p>
           </div>
-          <div className="rounded-lg border border-zinc-800/40 bg-zinc-800/20 p-4 text-center">
-            <p className="font-mono text-2xl font-bold text-amber-400">
+          <div className="rounded-lg border border-stone-200/60 bg-stone-50 p-4 text-center">
+            <p className="font-mono text-2xl font-bold text-amber-600">
               {mediumIssues.length}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">Medium prioritet</p>
+            <p className="mt-1 text-xs text-stone-500">Medium prioritet</p>
           </div>
-          <div className="rounded-lg border border-zinc-800/40 bg-zinc-800/20 p-4 text-center">
-            <p className="font-mono text-2xl font-bold text-blue-400">
+          <div className="rounded-lg border border-stone-200/60 bg-stone-50 p-4 text-center">
+            <p className="font-mono text-2xl font-bold text-blue-600">
               {lowIssues.length}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">Lav prioritet</p>
+            <p className="mt-1 text-xs text-stone-500">Lav prioritet</p>
           </div>
         </div>
       </div>
@@ -150,9 +150,9 @@ export function ContentAuditPanel({
         return (
           <div
             key={severity}
-            className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900"
+            className="overflow-hidden rounded-xl border border-stone-200/60 bg-white"
           >
-            <div className="border-b border-zinc-800/50 px-5 py-3">
+            <div className="border-b border-stone-200 px-5 py-3">
               <h4
                 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${config.color}`}
               >
@@ -162,13 +162,13 @@ export function ContentAuditPanel({
                 {config.label} prioritet ({issues.length})
               </h4>
             </div>
-            <div className="divide-y divide-zinc-800/30">
+            <div className="divide-y divide-stone-100">
               {issues.map((issue, i) => (
                 <div key={i} className={`px-5 py-3 ${config.bg}`}>
-                  <p className="text-sm font-medium text-zinc-200">
+                  <p className="text-sm font-medium text-charcoal">
                     {issue.message}
                   </p>
-                  <p className="mt-0.5 font-mono text-xs text-zinc-500">
+                  <p className="mt-0.5 font-mono text-xs text-stone-500">
                     {issue.pagePath}
                   </p>
                 </div>
@@ -179,11 +179,11 @@ export function ContentAuditPanel({
       })}
 
       {allIssues.length === 0 && audits.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900 p-8 text-center">
-          <p className="text-lg font-semibold text-emerald-400">
+        <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white p-8 text-center">
+          <p className="text-lg font-semibold text-emerald-600">
             Alt ser godt ud!
           </p>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-stone-500">
             Ingen SEO-problemer fundet.
           </p>
         </div>

@@ -85,40 +85,13 @@ export default function SaelgDinEnhedPage() {
               </div>
             </div>
 
-            {/* Right: Device icons grid */}
-            <div className="hidden lg:block">
-              <div className="relative">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="mb-4 h-12 w-12 text-green-eco">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                    </svg>
-                    <p className="font-display text-lg font-bold text-white">Telefoner</p>
-                    <p className="mt-1 text-sm text-white/40">iPhone, Samsung, m.fl.</p>
-                  </div>
-                  <div className="translate-y-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="mb-4 h-12 w-12 text-green-eco">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-15a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 4.5v15a2.25 2.25 0 0 0 2.25 2.25Z" />
-                    </svg>
-                    <p className="font-display text-lg font-bold text-white">Tablets</p>
-                    <p className="mt-1 text-sm text-white/40">iPad, Samsung Tab, m.fl.</p>
-                  </div>
-                  <div className="-translate-y-2 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="mb-4 h-12 w-12 text-green-eco">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-                    </svg>
-                    <p className="font-display text-lg font-bold text-white">Laptops</p>
-                    <p className="mt-1 text-sm text-white/40">MacBook, ThinkPad, m.fl.</p>
-                  </div>
-                  <div className="translate-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="mb-4 h-12 w-12 text-green-eco">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                    <p className="font-display text-lg font-bold text-white">Smartwatches</p>
-                    <p className="mt-1 text-sm text-white/40">Apple Watch, Galaxy Watch</p>
-                  </div>
-                </div>
-              </div>
+            {/* Right: Hero image */}
+            <div className="hidden lg:flex items-center justify-center">
+              <img
+                src="/images/sell-hero.png"
+                alt="Sælg din brugte iPhone, iPad, Samsung, MacBook eller Apple Watch til PhoneSpot"
+                className="w-full max-w-lg rounded-3xl object-cover shadow-2xl shadow-black/30"
+              />
             </div>
           </div>
         </div>

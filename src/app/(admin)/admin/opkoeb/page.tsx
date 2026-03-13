@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import type { ContactInquiry } from "@/lib/supabase/types";
@@ -30,10 +30,10 @@ export default function OpkoebPage() {
   const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">("alle");
   const [search, setSearch] = useState("");
 
-  const supabase = useMemo(() => createBrowserClient(), []);
-
   const loadData = useCallback(async () => {
     setLoading(true);
+
+    const supabase = createBrowserClient();
 
     // Fetch all sell-device inquiries
     const { data: inquiries } = await supabase
@@ -70,7 +70,7 @@ export default function OpkoebPage() {
 
     setRows(result);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
 

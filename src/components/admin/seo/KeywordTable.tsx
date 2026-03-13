@@ -58,19 +58,19 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
   });
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900">
-      <div className="border-b border-zinc-800/50 px-5 py-3.5">
-        <h3 className="text-sm font-semibold text-zinc-200">Sogeord</h3>
+    <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white">
+      <div className="border-b border-stone-200 px-5 py-3.5">
+        <h3 className="text-sm font-semibold text-charcoal">Sogeord</h3>
       </div>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-amber-500" />
-            <p className="text-sm text-zinc-600">Indlaeser...</p>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-stone-200 border-t-green-eco" />
+            <p className="text-sm text-stone-400">Indlaeser...</p>
           </div>
         </div>
       ) : rows.length === 0 ? (
-        <p className="px-5 py-12 text-center text-sm text-zinc-600">
+        <p className="px-5 py-12 text-center text-sm text-stone-400">
           Ingen sogeordsdata endnu. Synkroniser med Google Search Console
           foerst.
         </p>
@@ -78,12 +78,12 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800/50">
+              <tr className="border-b border-stone-200">
                 {HEADERS.map((h) => (
                   <th
                     key={h.key}
                     onClick={() => handleSort(h.key)}
-                    className="cursor-pointer select-none px-4 py-2.5 text-left text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
+                    className="cursor-pointer select-none px-4 py-2.5 text-left text-xs font-medium text-stone-500 transition-colors hover:text-charcoal"
                   >
                     <span className="flex items-center gap-1">
                       {h.label}
@@ -109,21 +109,21 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
               {sorted.slice(0, 50).map((row, i) => (
                 <tr
                   key={i}
-                  className="border-b border-zinc-800/30 last:border-0 transition-colors hover:bg-zinc-800/30"
+                  className="border-b border-stone-100 last:border-0 transition-colors hover:bg-stone-50"
                 >
-                  <td className="max-w-[300px] truncate px-4 py-2.5 font-medium text-zinc-200">
+                  <td className="max-w-[300px] truncate px-4 py-2.5 font-medium text-charcoal">
                     {row.query}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300">
+                  <td className="px-4 py-2.5 font-mono text-stone-700">
                     {row.clicks}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300">
+                  <td className="px-4 py-2.5 font-mono text-stone-700">
                     {row.impressions.toLocaleString("da-DK")}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300">
+                  <td className="px-4 py-2.5 font-mono text-stone-700">
                     {(row.ctr * 100).toFixed(1)}%
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300">
+                  <td className="px-4 py-2.5 font-mono text-stone-700">
                     {row.position.toFixed(1)}
                   </td>
                   <td className="px-4 py-2.5">
@@ -141,11 +141,11 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
 
 function PositionChange({ change }: { change: number | null }) {
   if (change === null || change === 0) {
-    return <span className="font-mono text-zinc-600">—</span>;
+    return <span className="font-mono text-stone-400">—</span>;
   }
   if (change > 0) {
     return (
-      <span className="flex items-center gap-1 font-mono text-emerald-400">
+      <span className="flex items-center gap-1 font-mono text-emerald-600">
         <svg
           className="h-3.5 w-3.5"
           fill="none"
@@ -164,7 +164,7 @@ function PositionChange({ change }: { change: number | null }) {
     );
   }
   return (
-    <span className="flex items-center gap-1 font-mono text-rose-400">
+    <span className="flex items-center gap-1 font-mono text-rose-600">
       <svg
         className="h-3.5 w-3.5"
         fill="none"

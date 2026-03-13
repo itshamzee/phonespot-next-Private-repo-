@@ -12,25 +12,25 @@ const CARDS = [
   {
     key: "clicks",
     label: "Klik (periode)",
-    color: "text-blue-400",
+    color: "text-blue-600",
     borderColor: "from-blue-500",
   },
   {
     key: "impressions",
     label: "Visninger",
-    color: "text-violet-400",
+    color: "text-violet-600",
     borderColor: "from-violet-500",
   },
   {
     key: "position",
     label: "Gns. position",
-    color: "text-amber-400",
+    color: "text-amber-600",
     borderColor: "from-amber-500",
   },
   {
     key: "ctr",
     label: "Gns. CTR",
-    color: "text-emerald-400",
+    color: "text-emerald-600",
     borderColor: "from-emerald-500",
   },
 ] as const;
@@ -54,7 +54,7 @@ export function SEOKPICards({
       {CARDS.map((card, i) => (
         <div
           key={card.key}
-          className="group relative overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900 p-5 transition-colors hover:border-zinc-700/60"
+          className="group relative overflow-hidden rounded-xl border border-stone-200/60 bg-white p-5 transition-colors hover:border-stone-300/60"
           style={{ animationDelay: `${i * 60}ms` }}
         >
           <div
@@ -65,7 +65,7 @@ export function SEOKPICards({
           >
             {loading ? "..." : values[card.key]}
           </p>
-          <p className="mt-1.5 text-xs font-medium text-zinc-500">
+          <p className="mt-1.5 text-xs font-medium text-stone-500">
             {card.label}
           </p>
         </div>

@@ -200,8 +200,10 @@ export function SkuStockTable({
         return;
       }
 
-      const productsData: SkuProduct[] = await productsRes.json();
-      const locationsData: Location[] = await locationsRes.json();
+      const productsRaw = await productsRes.json();
+      const locationsRaw = await locationsRes.json();
+      const productsData: SkuProduct[] = Array.isArray(productsRaw) ? productsRaw : [];
+      const locationsData: Location[] = Array.isArray(locationsRaw) ? locationsRaw : [];
 
       setProducts(productsData);
       setLocations(locationsData);

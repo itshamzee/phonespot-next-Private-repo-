@@ -126,10 +126,11 @@ export function DeviceIntakeForm({ onSuccess }: DeviceIntakeFormProps) {
   useEffect(() => {
     fetch("/api/platform/locations")
       .then((r) => r.json())
-      .then((data: Location[]) => {
-        setLocations(data);
-        if (data.length === 1) {
-          setForm((prev) => ({ ...prev, location_id: data[0].id }));
+      .then((data) => {
+        const locs = Array.isArray(data) ? data : [];
+        setLocations(locs);
+        if (locs.length === 1) {
+          setForm((prev) => ({ ...prev, location_id: locs[0].id }));
         }
       })
       .catch(() => {});

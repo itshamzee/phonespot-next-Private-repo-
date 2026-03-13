@@ -22,8 +22,8 @@ export function LowStockBanner() {
       try {
         const res = await fetch("/api/platform/sku-stock?low_stock=true");
         if (res.ok) {
-          const data: StockItem[] = await res.json();
-          setCount(data.length);
+          const data = await res.json();
+          setCount(Array.isArray(data) ? data.length : 0);
         }
       } catch {
         // silently fail — banner stays hidden

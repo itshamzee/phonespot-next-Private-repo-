@@ -43,8 +43,8 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
       try {
         const res = await fetch("/api/platform/locations");
         if (res.ok) {
-          const data: Location[] = await res.json();
-          setLocations(data);
+          const data = await res.json();
+          setLocations(Array.isArray(data) ? data : []);
         }
       } catch {
         // silently fail — filter still works without locations

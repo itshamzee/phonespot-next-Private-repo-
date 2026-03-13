@@ -44,8 +44,8 @@ export function SupplierSelect({ value, onChange }: SupplierSelectProps) {
     try {
       const res = await fetch("/api/platform/suppliers");
       if (res.ok) {
-        const data: Supplier[] = await res.json();
-        setSuppliers(data);
+        const data = await res.json();
+        setSuppliers(Array.isArray(data) ? data : []);
       }
     } catch {
       // silently fail

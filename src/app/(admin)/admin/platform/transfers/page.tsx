@@ -66,7 +66,7 @@ export default function TransfersPage() {
   useEffect(() => {
     fetch("/api/platform/locations")
       .then((r) => r.json())
-      .then((data: Location[]) => setLocations(data ?? []))
+      .then((data) => setLocations(Array.isArray(data) ? data : []))
       .catch(() => setLocations([]));
   }, []);
 

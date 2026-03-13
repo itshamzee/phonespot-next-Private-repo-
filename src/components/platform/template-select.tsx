@@ -55,8 +55,8 @@ export function TemplateSelect({ value, onChange }: TemplateSelectProps) {
         : `/api/platform/templates`;
       const res = await fetch(url);
       if (res.ok) {
-        const data: Template[] = await res.json();
-        setTemplates(data);
+        const data = await res.json();
+        setTemplates(Array.isArray(data) ? data : []);
       }
     } catch {
       // silently fail — empty list shown
