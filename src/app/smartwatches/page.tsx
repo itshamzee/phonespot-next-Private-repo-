@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
-
-export const dynamic = "force-dynamic";
-import type { Product } from "@/lib/shopify/types";
+import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { SortSelector } from "@/components/collection/sort-selector";
-import { ProductGrid } from "@/components/collection/product-grid";
-import { ProductCard } from "@/components/product/product-card";
 import { FadeIn } from "@/components/ui/fade-in";
+import { CategoryHero } from "@/components/product/category-hero";
+import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Refurbished Apple Watch - Spar op til 50% | PhoneSpot",
@@ -26,10 +23,6 @@ export const metadata: Metadata = {
     url: "https://phonespot.dk/smartwatches",
   },
 };
-
-// ---------------------------------------------------------------------------
-// Deal banner config — UPDATE THIS when deals change
-// ---------------------------------------------------------------------------
 
 const CURRENT_DEAL = {
   active: true,
@@ -51,10 +44,6 @@ const CURRENT_DEAL = {
   ctaHref: "/smartwatches",
   badge: "Begrænset antal",
 };
-
-// ---------------------------------------------------------------------------
-// Model tiers
-// ---------------------------------------------------------------------------
 
 const MODEL_TIERS = [
   {
@@ -114,27 +103,6 @@ function TierIcon({ tier, className }: { tier: string; className?: string }) {
   );
 }
 
-function getProductTier(product: Product): number | null {
-  const title = product.title.toLowerCase();
-  for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
-    if (MODEL_TIERS[i].patterns.some((p) => title.includes(p))) {
-      return i;
-    }
-  }
-  return null;
-}
-
-function groupProductsByTier(products: Product[]): Map<number, Product[]> {
-  const map = new Map<number, Product[]>();
-  for (const product of products) {
-    const tier = getProductTier(product);
-    if (tier === null) continue;
-    if (!map.has(tier)) map.set(tier, []);
-    map.get(tier)!.push(product);
-  }
-  return map;
-}
-
 const SMARTWATCH_FAQ = [
   {
     question: "Hvilken Apple Watch skal jeg vælge?",
@@ -177,25 +145,26 @@ const COMPARISON = [
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO₂" },
 ];
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+export default async function SmartwatchesPage() {
+  const templates = await getPublishedTemplates("smartwatch");
 
-export default async function SmartwatchesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sort?: string }>;
-}) {
-  const { sort } = await searchParams;
-
-  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
-  try {
-    collectionData = await getCollectionProducts("apple-watch", sort);
-  } catch {
-    collectionData = null;
+  const tierGroups = new Map<number, typeof templates>();
+  for (const t of templates) {
+    const name = t.display_name.toLowerCase();
+    let matched = false;
+    for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
+      if (MODEL_TIERS[i].patterns.some((p) => name.includes(p))) {
+        if (!tierGroups.has(i)) tierGroups.set(i, []);
+        tierGroups.get(i)!.push(t);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      if (!tierGroups.has(0)) tierGroups.set(0, []);
+      tierGroups.get(0)!.push(t);
+    }
   }
-  const products = collectionData?.products ?? [];
-  const tierGroups = groupProductsByTier(products);
 
   return (
     <>
@@ -222,38 +191,17 @@ export default async function SmartwatchesPage({
       />
 
       {/* ── Hero ── */}
-      <SectionWrapper background="charcoal" className="text-center text-white">
-        <span className="mb-4 inline-block rounded-full bg-green-eco/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-[2px] text-green-eco">
-          Spar op til 50%
-        </span>
-        <Heading size="xl" className="text-white">
-          Refurbished Apple Watch
-        </Heading>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede Apple Watches fra 1.099 kr. Alle enheder gennemgår 30+
-          kontroller, leveres med 36 måneders garanti og er klar til brug
-          fra dag ét. Samme Apple Watch — bare smartere købt.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Fra 1.099 kr
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 36 mdr. garanti
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Alle testet
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> Vandtætte
-          </span>
-        </div>
-      </SectionWrapper>
+      <div className="px-4 pt-8 max-w-7xl mx-auto">
+        <CategoryHero
+          title="Refurbished Apple Watch"
+          description="Kvalitetstestede Apple Watches fra 1.099 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag ét."
+          productCount={templates.length}
+        />
+      </div>
 
       {/* ── Deal Banner ── */}
       {CURRENT_DEAL.active && (
         <section className="relative overflow-hidden bg-gradient-to-br from-charcoal via-[#2a3a2e] to-charcoal">
-          {/* Background pattern */}
           <div className="absolute inset-0 opacity-5">
             <div
               className="h-full w-full"
@@ -266,9 +214,7 @@ export default async function SmartwatchesPage({
 
           <div className="relative mx-auto max-w-7xl px-4 py-16 md:py-20">
             <div className="grid items-center gap-10 md:grid-cols-2">
-              {/* Deal info */}
               <div>
-                {/* Badge */}
                 <FadeIn>
                   <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-charcoal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -290,7 +236,6 @@ export default async function SmartwatchesPage({
                   </p>
                 </FadeIn>
 
-                {/* Price */}
                 <FadeIn delay={0.2}>
                   <div className="mt-6 flex items-end gap-4">
                     <span className="font-display text-5xl font-extrabold text-white md:text-6xl">
@@ -308,7 +253,6 @@ export default async function SmartwatchesPage({
                   </div>
                 </FadeIn>
 
-                {/* CTA */}
                 <FadeIn delay={0.3}>
                   <div className="mt-8">
                     <Link
@@ -324,7 +268,6 @@ export default async function SmartwatchesPage({
                 </FadeIn>
               </div>
 
-              {/* Features grid */}
               <FadeIn delay={0.15}>
                 <div className="grid grid-cols-2 gap-3">
                   {CURRENT_DEAL.features.map((feature) => (
@@ -361,15 +304,14 @@ export default async function SmartwatchesPage({
 
         <div className="mt-12 space-y-8">
           {MODEL_TIERS.map((tier, tierIndex) => {
-            const tierProducts = tierGroups.get(tierIndex) ?? [];
-            if (tierProducts.length === 0) return null;
+            const tierTemplates = tierGroups.get(tierIndex) ?? [];
+            if (tierTemplates.length === 0) return null;
 
             return (
               <div
                 key={tier.tier}
                 className={`rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 md:p-8`}
               >
-                {/* Tier header */}
                 <div className="mb-6 flex flex-wrap items-center gap-3">
                   <TierIcon tier={tier.tier} className={`h-6 w-6 ${tier.iconColor}`} />
                   <div>
@@ -381,18 +323,22 @@ export default async function SmartwatchesPage({
                     </p>
                   </div>
                   <span className={`ml-auto text-sm font-semibold ${tierIndex === 2 ? "text-white/60" : "text-green-eco"}`}>
-                    {tierProducts.length} {tierProducts.length === 1 ? "model" : "modeller"}
+                    {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
                   </span>
                 </div>
 
-                {/* Product cards — horizontal scroll */}
                 <div className="-mx-5 px-5 md:-mx-8 md:px-8">
                   <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
-                    {tierProducts.slice(0, 10).map((product) => (
-                      <div key={product.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
-                        <ProductCard
-                          product={product}
-                          collectionHandle="smartwatches"
+                    {tierTemplates.slice(0, 10).map((t) => (
+                      <div key={t.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                        <ProductGridCard
+                          slug={t.slug}
+                          image={t.images[0]}
+                          title={t.display_name}
+                          minPrice={t.min_price}
+                          deviceCount={t.device_count}
+                          brand={t.brand}
+                          category={t.category}
                         />
                       </div>
                     ))}
@@ -428,25 +374,31 @@ export default async function SmartwatchesPage({
         </div>
       </SectionWrapper>
 
-      {/* ── Product grid ── */}
+      {/* ── All smartwatches grid ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
             Alle Smartwatches
           </Heading>
           <p className="mt-4 text-gray">
-            {products.length} smartwatches på lager lige nu. Alle testet og klar
+            {templates.length} smartwatches på lager lige nu. Alle testet og klar
             med 36 måneders garanti.
           </p>
         </div>
 
-        <div className="mt-8">
-          <div className="mb-6 flex items-center justify-end">
-            <Suspense fallback={null}>
-              <SortSelector />
-            </Suspense>
-          </div>
-          <ProductGrid products={products} collectionHandle="smartwatches" />
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {templates.map((t) => (
+            <ProductGridCard
+              key={t.id}
+              slug={t.slug}
+              image={t.images[0]}
+              title={t.display_name}
+              minPrice={t.min_price}
+              deviceCount={t.device_count}
+              brand={t.brand}
+              category={t.category}
+            />
+          ))}
         </div>
       </SectionWrapper>
 
@@ -548,39 +500,6 @@ export default async function SmartwatchesPage({
       {/* ── Trust ── */}
       <SectionWrapper background="sand">
         <TrustBar />
-      </SectionWrapper>
-
-      {/* ── Guides ── */}
-      <SectionWrapper background="cream">
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="sm">
-            Læs mere om refurbished elektronik
-          </Heading>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/blog/refurbished-vs-brugt-guide"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
-            >
-              <p className="font-display text-sm font-bold text-charcoal">
-                Refurbished vs brugt — den komplette guide
-              </p>
-              <p className="mt-1 text-xs text-gray">
-                Forstå forskellen og vælg det rigtige for dig
-              </p>
-            </Link>
-            <Link
-              href="/sammenlign/refurbished-vs-brugt-vs-ny"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
-            >
-              <p className="font-display text-sm font-bold text-charcoal">
-                Refurbished vs brugt vs ny
-              </p>
-              <p className="mt-1 text-xs text-gray">
-                Se den komplette sammenligning
-              </p>
-            </Link>
-          </div>
-        </div>
       </SectionWrapper>
 
       {/* ── CTA ── */}

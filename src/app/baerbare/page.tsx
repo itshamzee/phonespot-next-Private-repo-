@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
-
-export const dynamic = "force-dynamic";
-import type { Product } from "@/lib/shopify/types";
-import {
-  LAPTOP_TIERS,
-  filterProductsByTier,
-  filterRealLaptops,
-} from "@/lib/laptop-tiers";
+import { getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { LAPTOP_TIERS } from "@/lib/laptop-tiers";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { ProductCard } from "@/components/product/product-card";
-
+import { CategoryHero } from "@/components/product/category-hero";
+import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Refurbished Bærbare - Fra 1.359 kr med 36 mdr. garanti | PhoneSpot",
@@ -27,10 +22,6 @@ export const metadata: Metadata = {
     url: "https://phonespot.dk/baerbare",
   },
 };
-
-// ---------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------
 
 const LAPTOP_TEST_STEPS = [
   {
@@ -167,10 +158,8 @@ const COMPARISON = [
   { feature: "Levering", new: "3-5 hverdage", refurbished: "1-2 hverdage" },
 ];
 
-// Tier icons
 function TierIcon({ tier }: { tier: string }) {
   if (tier === "budget") {
-    // Piggy bank / savings
     return (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
@@ -178,14 +167,12 @@ function TierIcon({ tier }: { tier: string }) {
     );
   }
   if (tier === "mellem") {
-    // Scale / balance
     return (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" />
       </svg>
     );
   }
-  // Premium - rocket
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
@@ -193,25 +180,21 @@ function TierIcon({ tier }: { tier: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+export default async function BaerbarePage() {
+  const templates = await getPublishedTemplates("laptop");
 
-export default async function BaerbarePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sort?: string }>;
-}) {
-  const { sort } = await searchParams;
-
-  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
-  try {
-    collectionData = await getCollectionProducts("baerbare", sort);
-  } catch {
-    collectionData = null;
+  // Group by price tier using min_price (øre)
+  const tierGroups = new Map<string, typeof templates>();
+  for (const tier of LAPTOP_TIERS) {
+    tierGroups.set(tier.slug, []);
   }
-  const allProducts = collectionData?.products ?? [];
-  const products = filterRealLaptops(allProducts);
+  for (const t of templates) {
+    const priceKr = t.min_price != null ? t.min_price / 100 : 0;
+    const tier =
+      LAPTOP_TIERS.find((lt) => priceKr >= lt.minPrice && priceKr < lt.maxPrice) ??
+      LAPTOP_TIERS[0];
+    tierGroups.get(tier.slug)!.push(t);
+  }
 
   return (
     <>
@@ -238,32 +221,13 @@ export default async function BaerbarePage({
       />
 
       {/* -- Hero -- */}
-      <SectionWrapper background="charcoal" className="text-center text-white">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-          Refurbished bærbare
-        </p>
-        <Heading size="xl" className="text-white">
-          Bærbare du kan stole på
-        </Heading>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Kvalitetstestede laptops med 36 måneders garanti. Hver eneste computer
-          er testet med 30+ kontroller, rengjort og klar til brug fra dag et.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">&#10003;</span> Fra 1.359 kr
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">&#10003;</span> 36 måneders garanti
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">&#10003;</span> Spar op til 40%
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">&#10003;</span> Ren installation
-          </span>
-        </div>
-      </SectionWrapper>
+      <div className="px-4 pt-8 max-w-7xl mx-auto">
+        <CategoryHero
+          title="Bærbare du kan stole på"
+          description="Kvalitetstestede laptops med 36 måneders garanti. Hver eneste computer er testet med 30+ kontroller, rengjort og klar til brug fra dag et."
+          productCount={templates.length}
+        />
+      </div>
 
       {/* -- Price tier showcase -- */}
       <SectionWrapper>
@@ -279,7 +243,7 @@ export default async function BaerbarePage({
 
         <div className="mt-12 space-y-8">
           {LAPTOP_TIERS.map((tier, tierIndex) => {
-            const tierProducts = filterProductsByTier(products, tier);
+            const tierTemplates = tierGroups.get(tier.slug) ?? [];
 
             return (
               <Link
@@ -287,7 +251,6 @@ export default async function BaerbarePage({
                 href={`/baerbare/${tier.slug}`}
                 className={`group block rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 transition-shadow hover:shadow-md md:p-8`}
               >
-                {/* Tier header */}
                 <div className="mb-6 flex flex-wrap items-center gap-3">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tier.badgeBg} ${tier.badgeText}`}>
                     <TierIcon tier={tier.slug} />
@@ -301,9 +264,9 @@ export default async function BaerbarePage({
                     </p>
                   </div>
                   <div className="ml-auto flex items-center gap-3">
-                    {tierProducts.length > 0 && (
+                    {tierTemplates.length > 0 && (
                       <span className={`text-sm font-semibold ${tier.countColor}`}>
-                        {tierProducts.length} {tierProducts.length === 1 ? "model" : "modeller"}
+                        {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
                       </span>
                     )}
                     <span className={`text-sm font-semibold ${tierIndex === 2 ? "text-white/80 group-hover:text-white" : "text-green-eco"} transition-transform group-hover:translate-x-1`}>
@@ -312,15 +275,19 @@ export default async function BaerbarePage({
                   </div>
                 </div>
 
-                {/* Product cards - horizontal scroll */}
-                {tierProducts.length > 0 && (
+                {tierTemplates.length > 0 && (
                   <div className="-mx-5 px-5 md:-mx-8 md:px-8">
                     <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
-                      {tierProducts.slice(0, 10).map((product) => (
-                        <div key={product.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
-                          <ProductCard
-                            product={product}
-                            collectionHandle="baerbare"
+                      {tierTemplates.slice(0, 10).map((t) => (
+                        <div key={t.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                          <ProductGridCard
+                            slug={t.slug}
+                            image={t.images[0]}
+                            title={t.display_name}
+                            minPrice={t.min_price}
+                            deviceCount={t.device_count}
+                            brand={t.brand}
+                            category={t.category}
                           />
                         </div>
                       ))}
@@ -328,8 +295,7 @@ export default async function BaerbarePage({
                   </div>
                 )}
 
-                {/* Fallback when no products loaded */}
-                {tierProducts.length === 0 && (
+                {tierTemplates.length === 0 && (
                   <p className={`text-sm ${tierIndex === 2 ? "text-white/40" : "text-gray"}`}>
                     Se vores {tier.title.toLowerCase()} bærbare &rarr;
                   </p>
@@ -340,7 +306,7 @@ export default async function BaerbarePage({
         </div>
       </SectionWrapper>
 
-      {/* -- Hvem er du? Use cases -- */}
+      {/* -- Use cases -- */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
@@ -515,7 +481,7 @@ export default async function BaerbarePage({
         </div>
       </SectionWrapper>
 
-      {/* -- Tal -- */}
+      {/* -- Stats -- */}
       <SectionWrapper background="charcoal" className="text-white">
         <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
           {[
@@ -571,39 +537,6 @@ export default async function BaerbarePage({
       {/* -- Trust -- */}
       <SectionWrapper background="sand">
         <TrustBar />
-      </SectionWrapper>
-
-      {/* -- Guides -- */}
-      <SectionWrapper background="cream">
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="sm">
-            Læs mere om refurbished bærbare
-          </Heading>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <Link
-              href="/blog/guide-refurbished-baerbar"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
-            >
-              <p className="font-display text-sm font-bold text-charcoal">
-                Sådan vælger du den rigtige refurbished bærbar
-              </p>
-              <p className="mt-1 text-xs text-gray">
-                Budget, mellem eller premium? Komplet guide
-              </p>
-            </Link>
-            <Link
-              href="/sammenlign/refurbished-vs-brugt-vs-ny"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
-            >
-              <p className="font-display text-sm font-bold text-charcoal">
-                Refurbished vs brugt vs ny
-              </p>
-              <p className="mt-1 text-xs text-gray">
-                Se den komplette sammenligning
-              </p>
-            </Link>
-          </div>
-        </div>
       </SectionWrapper>
 
       {/* -- CTA -- */}

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import React from "react";
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
-
-export const dynamic = "force-dynamic";
-import type { Product } from "@/lib/shopify/types";
+import { getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { TILBEHOER_CATEGORIES } from "@/lib/tilbehoer-config";
-import { ProductCard } from "@/components/product/product-card";
 import { Heading } from "@/components/ui/heading";
 import { FadeIn } from "@/components/ui/fade-in";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { JsonLd } from "@/components/seo/json-ld";
+import type { SkuProduct } from "@/lib/supabase/platform-types";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Tilbehør til iPhone, iPad & Samsung | PhoneSpot",
@@ -86,13 +86,55 @@ const CATEGORY_VISUALS: Record<
   },
 };
 
-async function fetchCategoryProducts(shopifyHandle: string): Promise<Product[]> {
-  try {
-    const collection = await getCollectionProducts(shopifyHandle);
-    return collection?.products ?? [];
-  } catch {
-    return [];
-  }
+function formatDKK(oere: number): string {
+  return new Intl.NumberFormat("da-DK", {
+    style: "currency",
+    currency: "DKK",
+    maximumFractionDigits: 0,
+  }).format(oere / 100);
+}
+
+function AccessoryCard({ product }: { product: SkuProduct }) {
+  const href = product.slug ? `/tilbehoer/${product.category ?? ""}/${product.slug}` : "#";
+  const price = product.sale_price ?? product.selling_price;
+
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col overflow-hidden rounded-xl border border-sand bg-white transition-shadow hover:shadow-md"
+    >
+      <div className="relative aspect-square overflow-hidden bg-cream">
+        {product.images[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.images[0]}
+            alt={product.title}
+            className="h-full w-full object-contain p-4 transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sand">
+            <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+            </svg>
+          </div>
+        )}
+        {product.sale_price != null && product.sale_price < product.selling_price && (
+          <div className="absolute top-2 left-2">
+            <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+              SALE
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        {product.brand && (
+          <p className="text-xs text-gray">{product.brand}</p>
+        )}
+        <p className="text-sm font-semibold text-charcoal line-clamp-2">{product.title}</p>
+        <p className="mt-1 text-sm font-bold text-green-eco">{formatDKK(price)}</p>
+      </div>
+    </Link>
+  );
 }
 
 export default async function TilbehoerPage() {
@@ -105,12 +147,18 @@ export default async function TilbehoerPage() {
     ],
   };
 
-  const categoryPreviews = await Promise.all(
-    TILBEHOER_CATEGORIES.map(async (cat) => ({
-      ...cat,
-      products: await fetchCategoryProducts(cat.shopifyHandle),
-    })),
-  );
+  // Fetch all accessories, group by category slug
+  const allAccessories = await getPublishedSkuProducts();
+  const byCategory = new Map<string, SkuProduct[]>();
+  for (const cat of TILBEHOER_CATEGORIES) {
+    byCategory.set(cat.slug, []);
+  }
+  for (const product of allAccessories) {
+    const catSlug = product.category ?? "covers";
+    if (byCategory.has(catSlug)) {
+      byCategory.get(catSlug)!.push(product);
+    }
+  }
 
   return (
     <>
@@ -183,11 +231,12 @@ export default async function TilbehoerPage() {
       {/* Category previews */}
       <section className="mx-auto max-w-7xl px-4 py-12 md:py-16">
         <div className="space-y-16">
-          {categoryPreviews.map((cat) => {
-            if (cat.products.length === 0) return null;
+          {TILBEHOER_CATEGORIES.map((cat) => {
+            const products = byCategory.get(cat.slug) ?? [];
+            if (products.length === 0) return null;
             const vis = CATEGORY_VISUALS[cat.slug];
-            const previewProducts = cat.products.slice(0, 4);
-            const hasMore = cat.products.length > 4;
+            const previewProducts = products.slice(0, 4);
+            const hasMore = products.length > 4;
 
             return (
               <div key={cat.slug}>
@@ -200,7 +249,7 @@ export default async function TilbehoerPage() {
                           {cat.label}
                         </Heading>
                         <p className="mt-0.5 text-sm text-charcoal/50">
-                          {cat.products.length} produkter
+                          {products.length} produkter
                         </p>
                       </div>
                     </div>
@@ -221,10 +270,7 @@ export default async function TilbehoerPage() {
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
                   {previewProducts.map((product, index) => (
                     <FadeIn key={product.id} delay={index * 0.05}>
-                      <ProductCard
-                        product={product}
-                        collectionHandle={`tilbehoer/${cat.slug}`}
-                      />
+                      <AccessoryCard product={product} />
                     </FadeIn>
                   ))}
                 </div>
