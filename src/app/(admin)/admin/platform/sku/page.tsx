@@ -30,7 +30,7 @@ export default function SkuPage() {
     setEditingProduct(null);
   }
 
-  function handleSaved(product: any) {
+  function handleSaved() {
     closePanel();
     // Refresh table
     setTableKey((k) => k + 1);
@@ -134,7 +134,7 @@ export default function SkuPage() {
 
           <SkuProductForm
             product={panelMode === "edit" ? editingProduct : undefined}
-            onSaved={handleSaved}
+            onSave={handleSaved}
             onCancel={closePanel}
           />
         </div>
