@@ -7,7 +7,7 @@
 export type DeviceGrade = 'A' | 'B' | 'C';
 export type DeviceStatus = 'intake' | 'graded' | 'listed' | 'reserved' | 'sold' | 'shipped' | 'picked_up' | 'returned';
 export type VatScheme = 'brugtmoms' | 'regular';
-export type OrderType = 'online' | 'pos';
+export type OrderType = 'online' | 'pos' | 'draft' | 'shopify';
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'picked_up' | 'delivered' | 'cancelled' | 'refunded';
 export type StaffRole = 'employee' | 'manager' | 'owner';
 export type LocationType = 'store' | 'warehouse' | 'online';
@@ -198,6 +198,11 @@ export interface Order {
   discount_code_id: string | null;
   withdrawal_token: string | null;
   notes: string | null;
+  payment_status: "pending" | "paid" | "refunded" | "partially_refunded";
+  fulfillment_status: "unfulfilled" | "processing" | "shipped" | "delivered" | "returned";
+  tracking_url: string | null;
+  internal_notes: string | null;
+  shopify_order_id: string | null;
   created_at: string;
   updated_at: string;
   confirmed_at: string | null;
