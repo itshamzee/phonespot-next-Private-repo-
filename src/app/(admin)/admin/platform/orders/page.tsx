@@ -21,7 +21,10 @@ export default async function OrdersPage({ searchParams }: PageProps) {
 
   let query = supabase
     .from("orders")
-    .select("*, customer:customers(name, email, phone)", { count: "exact" })
+    .select(
+      "id, order_number, status, payment_status, fulfillment_status, type, total_amount, created_at, location_id, customer:customers(name, email, phone)",
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false })
     .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
 
@@ -33,8 +36,14 @@ export default async function OrdersPage({ searchParams }: PageProps) {
 
   const { data, count } = await query;
 
-  const initialOrders = data ?? [];
-  const initialTotal  = count ?? 0;
+  /* Normalise the Supabase join — customer comes back as an array for
+     one-to-many relations; flatten it to a single object or null. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const initialOrders = (data ?? []).map((row: any) => ({
+    ...row,
+    customer: Array.isArray(row.customer) ? (row.customer[0] ?? null) : (row.customer ?? null),
+  }));
+  const initialTotal = count ?? 0;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
