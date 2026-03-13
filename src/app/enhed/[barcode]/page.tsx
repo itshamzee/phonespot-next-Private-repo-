@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps) {
     .eq("barcode", barcode)
     .single();
 
-  const name = (data?.product_templates as { display_name: string } | null)?.display_name ?? "Enhed";
+  const name = (data?.product_templates as unknown as { display_name: string } | null)?.display_name ?? "Enhed";
   return {
     title: `${name} — Enhedshistorik | PhoneSpot`,
     description: `Se kvalitetsoplysninger, batterikapacitet og grading for denne enhed.`,
@@ -55,7 +55,7 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
     notFound();
   }
 
-  const template = device.product_templates as {
+  const template = device.product_templates as unknown as {
     display_name: string;
     brand: string;
     model: string;

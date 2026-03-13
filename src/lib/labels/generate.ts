@@ -23,7 +23,7 @@ export async function generateDeviceLabels(deviceIds: string[]): Promise<Buffer>
   }
 
   const labels = devices.map((d) => ({
-    model: (d.product_templates as { display_name: string } | null)?.display_name || "Enhed",
+    model: (d.product_templates as unknown as { display_name: string } | null)?.display_name || "Enhed",
     grade: d.grade,
     storage: d.storage,
     color: d.color,
@@ -31,7 +31,8 @@ export async function generateDeviceLabels(deviceIds: string[]): Promise<Buffer>
     barcode: d.barcode,
   }));
 
-  return renderToBuffer(createElement(DeviceLabelPDF, { labels }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return renderToBuffer(createElement(DeviceLabelPDF, { labels }) as any);
 }
 
 /**
@@ -57,5 +58,6 @@ export async function generateSkuLabels(productIds: string[]): Promise<Buffer> {
     ean: p.ean,
   }));
 
-  return renderToBuffer(createElement(SkuLabelPDF, { labels }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return renderToBuffer(createElement(SkuLabelPDF, { labels }) as any);
 }

@@ -13,10 +13,10 @@ function formatPrice(amount: string, currencyCode = "DKK"): string {
 }
 
 export default function CheckoutPage() {
-  const { cart } = useCart();
-  const lines = cart?.lines ?? [];
+  const { cartState, totals } = useCart();
+  const items = cartState.items;
 
-  if (!cart || lines.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
         <h1 className="font-display text-2xl font-bold text-charcoal">
@@ -63,12 +63,12 @@ export default function CheckoutPage() {
         </h2>
 
         <div className="divide-y divide-sand/60">
-          {lines.map((item) => (
-            <div key={item.id} className="flex gap-4 py-4">
-              {item.merchandise.product.featuredImage && (
+          {items.map((item, idx) => (
+            <div key={idx} className="flex gap-4 py-4">
+              {item.image && (
                 <Image
-                  src={item.merchandise.product.featuredImage.url}
-                  alt={item.merchandise.product.title}
+                  src={item.image}
+                  alt={item.title}
                   width={72}
                   height={72}
                   className="h-[72px] w-[72px] rounded-xl bg-sand/30 object-cover"
@@ -76,14 +76,14 @@ export default function CheckoutPage() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-charcoal line-clamp-2">
-                  {item.merchandise.product.title}
+                  {item.title}
                 </p>
                 <p className="mt-0.5 text-sm text-gray">
-                  {item.merchandise.title} &times; {item.quantity}
+                  {item.type === "device" ? `Grade ${item.grade}` : `× ${item.quantity}`}
                 </p>
               </div>
               <p className="font-semibold text-charcoal">
-                {formatPrice(item.cost.totalAmount.amount)}
+                {formatPrice(String((item.type === "device" ? item.price : item.price * item.quantity) / 100))}
               </p>
             </div>
           ))}
@@ -93,22 +93,22 @@ export default function CheckoutPage() {
           <div className="flex justify-between text-sm">
             <span className="text-gray">Subtotal</span>
             <span className="text-charcoal">
-              {formatPrice(cart.cost.subtotalAmount.amount)}
+              {formatPrice(String(totals.subtotal / 100))}
             </span>
           </div>
           <div className="flex justify-between border-t border-sand pt-2 text-lg font-bold">
             <span className="text-charcoal">Total</span>
             <span className="text-charcoal">
-              {formatPrice(cart.cost.totalAmount.amount)}
+              {formatPrice(String(totals.total / 100))}
             </span>
           </div>
           <p className="text-xs text-gray">Inkl. moms. Fragt beregnes ved checkout.</p>
         </div>
       </div>
 
-      {/* CTA — redirect to Shopify checkout */}
+      {/* CTA — redirect to Stripe checkout */}
       <a
-        href={cart.checkoutUrl}
+        href="/api/checkout"
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco py-4 text-lg font-semibold text-white transition-opacity hover:opacity-90"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">

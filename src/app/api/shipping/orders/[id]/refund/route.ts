@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { Resend } from "resend";
 import RefundConfirmationEmail from "@/lib/email/templates/refund-confirmation";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia",
-});
+import { stripe } from "@/lib/stripe/client";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 type RouteParams = { params: Promise<{ id: string }> };

@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
     let sent = 0;
 
     for (const warranty of warranties) {
-      const customer = warranty.customers as { name: string; email: string } | null;
-      const device = warranty.devices as {
+      const customer = warranty.customers as unknown as { name: string; email: string } | null;
+      const device = warranty.devices as unknown as {
         serial_number: string | null;
         product_templates: { display_name: string } | null;
       } | null;

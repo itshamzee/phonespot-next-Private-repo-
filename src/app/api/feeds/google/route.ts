@@ -38,7 +38,7 @@ export async function GET() {
 
     // Device items
     for (const dev of devices ?? []) {
-      const template = dev.product_templates as {
+      const template = dev.product_templates as unknown as {
         display_name: string;
         brand: string;
         model: string;

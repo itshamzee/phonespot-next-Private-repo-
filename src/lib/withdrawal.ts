@@ -5,7 +5,24 @@ export function generateWithdrawalToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
-export async function validateWithdrawalToken(token: string) {
+type WithdrawalResult = {
+  id: string;
+  order_number: string;
+  status: string;
+  type: string;
+  is_b2b: boolean;
+  total: number;
+  created_at: string;
+  confirmed_at: string | null;
+  delivered_at: string | null;
+  customer_id: string | null;
+  customers: unknown;
+  eligible: boolean;
+  reason?: string;
+  daysRemaining?: number;
+};
+
+export async function validateWithdrawalToken(token: string): Promise<WithdrawalResult | null> {
   const supabase = createServerClient();
 
   const { data: order, error } = await supabase

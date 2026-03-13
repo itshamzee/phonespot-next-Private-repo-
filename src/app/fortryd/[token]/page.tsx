@@ -51,7 +51,7 @@ export default async function WithdrawalPage({ params }: Props) {
           <div className="mt-6">
             <div className="rounded-xl border border-green-eco/20 bg-green-eco/5 p-4">
               <p className="text-sm text-charcoal/80">
-                Du har <strong>{order.daysRemaining} dag{order.daysRemaining !== 1 ? "e" : ""}</strong> tilbage
+                Du har <strong>{order.daysRemaining ?? 0} dag{(order.daysRemaining ?? 0) !== 1 ? "e" : ""}</strong> tilbage
                 af din 14-dages fortrydelsesret.
               </p>
             </div>

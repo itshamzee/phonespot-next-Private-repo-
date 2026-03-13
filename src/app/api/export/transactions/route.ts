@@ -121,8 +121,8 @@ export async function GET(request: NextRequest) {
   const rows: string[][] = [];
 
   for (const order of orders || []) {
-    const customer = order.customers as { name: string; email: string } | null;
-    const items = (order.order_items || []) as Array<{
+    const customer = order.customers as unknown as { name: string; email: string } | null;
+    const items = (order.order_items || []) as unknown as Array<{
       item_type: string;
       quantity: number;
       unit_price: number;

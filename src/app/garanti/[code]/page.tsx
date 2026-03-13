@@ -42,7 +42,7 @@ export default async function WarrantyVerificationPage({ params }: Props) {
     notFound();
   }
 
-  const device = warranty.devices as {
+  const device = warranty.devices as unknown as {
     serial_number: string | null;
     imei: string | null;
     grade: string;

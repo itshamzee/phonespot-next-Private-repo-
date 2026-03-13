@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/components/cart/cart-context", () => ({
-  useCart: () => ({ cart: null, openCart: vi.fn() }),
+  useCart: () => ({ totals: { itemCount: 0, subtotal: 0, discountAmount: 0, shippingCost: 0, total: 0 }, openCart: vi.fn() }),
 }));
 
 import { Header } from "../header";

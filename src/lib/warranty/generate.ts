@@ -68,6 +68,7 @@ export async function generateWarranty(
   const qrBuffer = await generateWarrantyQR(verificationCode);
   const qrDataUrl = `data:image/png;base64,${qrBuffer.toString("base64")}`;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
     createElement(WarrantyPDF, {
       guaranteeNumber,
@@ -81,7 +82,7 @@ export async function generateWarranty(
       purchaseDate: input.purchaseDate,
       expiryDate: expiryDate.toISOString(),
       qrCodeDataUrl: qrDataUrl,
-    })
+    }) as any
   );
 
   const storagePath = `warranties/${guaranteeNumber}.pdf`;
@@ -152,10 +153,10 @@ export async function generateWarrantiesForOrder(orderId: string): Promise<Gener
     throw new Error(`Order not found: ${orderId}`);
   }
 
-  const customerName = (order.customers as { name: string } | null)?.name || "Kunde";
+  const customerName = (order.customers as unknown as { name: string } | null)?.name || "Kunde";
   const results: GenerateWarrantyResult[] = [];
 
-  for (const item of order.order_items as Array<{
+  for (const item of order.order_items as unknown as Array<{
     item_type: string;
     device_id: string | null;
     devices: {

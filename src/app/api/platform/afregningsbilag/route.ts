@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Device not found" }, { status: 404 });
   }
 
-  const template = device.template as {
+  const template = device.template as unknown as {
     brand: string;
     model: string;
     display_name: string;

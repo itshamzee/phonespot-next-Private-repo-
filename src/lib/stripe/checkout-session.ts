@@ -42,10 +42,9 @@ function buildLineItems(
           product_data: {
             name,
             images: item.image ? [item.image] : [],
-            metadata:
-              item.type === "device"
-                ? { device_id: item.deviceId, item_type: "device" }
-                : { sku_product_id: item.skuProductId, item_type: "sku_product" },
+            metadata: item.type === "device"
+                ? { device_id: item.deviceId, item_type: "device", sku_product_id: "" }
+                : { sku_product_id: item.skuProductId, item_type: "sku_product", device_id: "" },
           },
           unit_amount: vi.serverPrice,
         },

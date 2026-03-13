@@ -41,7 +41,7 @@ export async function GET() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<products>\n`;
 
     for (const dev of devices ?? []) {
-      const template = dev.product_templates as {
+      const template = dev.product_templates as unknown as {
         display_name: string;
         brand: string;
         model: string;

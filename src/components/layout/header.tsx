@@ -409,7 +409,7 @@ function AnnouncementBar() {
   return (
     <div className="bg-charcoal text-white overflow-hidden">
       <div className="mx-auto flex h-8 max-w-7xl items-center justify-center gap-8 px-4 text-[11px] font-medium tracking-wide">
-        <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6">
           <TrustpilotBadge />
           <span className="flex items-center gap-1.5 whitespace-nowrap">
             <span className="text-green-light">✓</span>
@@ -424,12 +424,8 @@ function AnnouncementBar() {
             36 mdr. garanti
           </span>
           <span className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-green-light">✓</span>
-            Prismatch-garanti
-          </span>
-          <span className="flex items-center gap-1.5 whitespace-nowrap">
             <span className="text-[#FFB3C7]">✦</span>
-            Klarna — del betaling op
+            Klarna delbetaling
           </span>
         </div>
         <div className="hidden sm:flex lg:hidden items-center gap-6">
@@ -648,11 +644,11 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
 /* ------------------------------------------------------------------ */
 
 export function Header() {
-  const { cart, openCart } = useCart();
+  const { totals, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const totalItems = cart?.totalQuantity ?? 0;
+  const totalItems = totals.itemCount;
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {

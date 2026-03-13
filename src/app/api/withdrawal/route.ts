@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!order.eligible) {
-      return NextResponse.json({ error: order.reason }, { status: 400 });
+      return NextResponse.json({ error: (order as { reason: string }).reason }, { status: 400 });
     }
 
     const supabase = createServerClient();
@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
       .eq("id", order.id);
 
     // Send confirmation email
-    const customerEmail = (order.customers as { email: string } | null)?.email;
-    const customerName = (order.customers as { name: string } | null)?.name;
+    const customerEmail = (order.customers as unknown as { email: string } | null)?.email;
+    const customerName = (order.customers as unknown as { name: string } | null)?.name;
 
     if (customerEmail) {
       await resend.emails.send({

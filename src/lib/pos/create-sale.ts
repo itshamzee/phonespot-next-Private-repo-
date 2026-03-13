@@ -88,7 +88,7 @@ export async function createPosSale(input: CreateSaleInput): Promise<SaleResult>
     deviceMap = new Map(
       devices.map((d) => [d.id, {
         ...d,
-        display_name: (d.product_templates as { display_name: string } | null)?.display_name || "Enhed",
+        display_name: (d.product_templates as unknown as { display_name: string } | null)?.display_name || "Enhed",
       }])
     );
   }
@@ -299,6 +299,7 @@ export async function createPosSale(input: CreateSaleInput): Promise<SaleResult>
   }
 
   // 15. Generate receipt PDF
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const receiptPdf = await renderToBuffer(
     createElement(PosReceiptPDF, {
       receipt: {
@@ -317,7 +318,7 @@ export async function createPosSale(input: CreateSaleInput): Promise<SaleResult>
         hasRegularVatItems,
         regularVatTotal,
       },
-    })
+    }) as any
   );
 
   return {

@@ -2,35 +2,41 @@
 
 import { useState, useCallback } from "react";
 import { useCart } from "@/components/cart/cart-context";
-import { createCart, addToCart } from "@/lib/shopify/client";
 
 type AddToCartButtonProps = {
   variantId: string;
   availableForSale: boolean;
   showUpsellOnAdd?: boolean;
+  skuProductId?: string;
+  title?: string;
+  price?: number;
+  image?: string;
 };
 
 export function AddToCartButton({
-  variantId,
   availableForSale,
   showUpsellOnAdd,
+  skuProductId,
+  title,
+  price,
+  image,
 }: AddToCartButtonProps) {
-  const { cart, setCart, openCart, openUpsell } = useCart();
+  const { addSku, openCart, openUpsell } = useCart();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddToCart = useCallback(async () => {
-    if (!variantId || !availableForSale) return;
+    if (!availableForSale || !skuProductId) return;
 
     setIsLoading(true);
     try {
-      let currentCart = cart;
-
-      if (!currentCart) {
-        currentCart = await createCart();
-      }
-
-      const updatedCart = await addToCart(currentCart.id, variantId);
-      setCart(updatedCart);
+      addSku({
+        type: "sku_product",
+        skuProductId,
+        title: title ?? "Produkt",
+        price: price ?? 0,
+        quantity: 1,
+        image: image ?? "",
+      });
 
       if (showUpsellOnAdd) {
         openUpsell();
@@ -42,7 +48,7 @@ export function AddToCartButton({
     } finally {
       setIsLoading(false);
     }
-  }, [variantId, availableForSale, cart, setCart, openCart, showUpsellOnAdd, openUpsell]);
+  }, [availableForSale, skuProductId, title, price, image, addSku, openCart, showUpsellOnAdd, openUpsell]);
 
   if (!availableForSale) {
     return (
