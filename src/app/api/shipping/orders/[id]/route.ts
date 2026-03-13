@@ -138,6 +138,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   return NextResponse.json({ success: true, status });
 }
 
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+  const body = await request.json();
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      ...body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json(data);
+}
+
 function getValidTransitions(current: string): string[] {
   const transitions: Record<string, string[]> = {
     pending: ["confirmed", "cancelled"],
