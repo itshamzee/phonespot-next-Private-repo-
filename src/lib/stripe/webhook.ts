@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
+import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -145,14 +146,24 @@ export async function handleCheckoutCompleted(
     }
   }
 
-  // 7. Fetch customer details for confirmation email
+  // 7. Generate warranty certificates for device items
+  if (deviceIds.length > 0) {
+    try {
+      await generateWarrantiesForOrder(orderId);
+    } catch (warrantyErr) {
+      console.error("[webhook] failed to generate warranties:", warrantyErr);
+      // Non-fatal: warranties can be regenerated manually
+    }
+  }
+
+  // 8. Fetch customer details for confirmation email
   const { data: customer } = await supabase
     .from("customers")
     .select("email, name, phone")
     .eq("id", order.customer_id)
     .single();
 
-  // 8. Send order confirmation email
+  // 9. Send order confirmation email
   if (customer) {
     try {
       await sendOrderConfirmation({
