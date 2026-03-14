@@ -291,6 +291,10 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
         variantId={selectedVariant?.id ?? ""}
         availableForSale={availableForSale}
         showUpsellOnAdd={showUpsellOnAdd}
+        skuProductId={product.id}
+        title={product.title}
+        price={Math.round(parseFloat(price.amount) * 100)}
+        image={product.images[0]?.url}
       />
 
       {/* ---- Store availability ---- */}

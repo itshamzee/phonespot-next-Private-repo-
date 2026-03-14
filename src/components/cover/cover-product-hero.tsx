@@ -148,6 +148,10 @@ export function CoverProductHero({
             <AddToCartButton
               variantId={variant?.id ?? ""}
               availableForSale={product.availableForSale}
+              skuProductId={product.id}
+              title={product.title}
+              price={Math.round(parseFloat(price.amount) * 100)}
+              image={images[0]?.url}
             />
 
             {/* Klarna split payment */}

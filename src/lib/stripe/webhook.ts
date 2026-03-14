@@ -29,6 +29,7 @@ export async function handleCheckoutCompleted(
     .from("orders")
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
+       subtotal, discount_amount, shipping_cost, withdrawal_token,
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)`,
     )
     .eq("id", orderId)
@@ -193,14 +194,14 @@ export async function handleCheckoutCompleted(
           unitPrice: i.unit_price,
           totalPrice: i.unit_price * i.quantity,
         })),
-        subtotal: orderItems.reduce(
+        subtotal: order.subtotal ?? orderItems.reduce(
           (sum, i) => sum + i.unit_price * i.quantity,
           0,
         ),
-        discountAmount: 0, // fetched from order if needed
-        shippingCost: 0,   // fetched from order if needed
+        discountAmount: order.discount_amount ?? 0,
+        shippingCost: order.shipping_cost ?? 0,
         total: order.total,
-        withdrawalToken: "",
+        withdrawalToken: order.withdrawal_token ?? "",
       });
     } catch (emailErr) {
       console.error("[webhook] failed to send confirmation email:", emailErr);
