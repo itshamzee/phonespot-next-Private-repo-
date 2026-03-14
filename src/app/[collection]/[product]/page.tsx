@@ -592,8 +592,8 @@ export default async function ProductPage({
         </div>
       </SectionWrapper>
 
-      {/* ── 7. Accessory upsell ── */}
-      {accessories.length > 0 && (
+      {/* ── 7. Accessory upsell (phones/smartphones only) ── */}
+      {accessories.length > 0 && (deviceType === "phone") && (
         <SectionWrapper background="default">
           <Heading as="h2" size="md" className="mb-8 text-center">
             Beskyt din enhed

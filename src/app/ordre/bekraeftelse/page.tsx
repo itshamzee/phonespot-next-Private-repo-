@@ -12,6 +12,27 @@ import { formatOere } from "@/lib/cart/utils";
 // Types for the order data fetched from Supabase
 // -----------------------------------------------------------------------
 
+interface RawOrderItem {
+  id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  item_type: "device" | "sku_product";
+  device: {
+    grade: string | null;
+    color: string | null;
+    storage: string | null;
+    template: {
+      display_name: string;
+      images: string[];
+    } | null;
+  } | null;
+  sku_product: {
+    title: string;
+    images: string[];
+  } | null;
+}
+
 interface OrderItem {
   id: string;
   title: string;
@@ -23,6 +44,22 @@ interface OrderItem {
   grade: string | null;
   color: string | null;
   storage: string | null;
+}
+
+interface RawOrder {
+  id: string;
+  order_number: string;
+  status: string;
+  subtotal: number;
+  discount_amount: number;
+  shipping_cost: number;
+  total: number;
+  created_at: string;
+  customer: {
+    name: string;
+    email: string;
+  } | null;
+  order_items: RawOrderItem[];
 }
 
 interface Order {
@@ -76,20 +113,30 @@ function ConfirmationContent() {
           discount_amount,
           shipping_cost,
           total,
-          customer_name,
-          customer_email,
           created_at,
+          customer:customers!customer_id (
+            name,
+            email
+          ),
           order_items (
             id,
-            title,
-            image_url,
             quantity,
             unit_price,
-            line_total,
+            total_price,
             item_type,
-            grade,
-            color,
-            storage
+            device:devices!device_id (
+              grade,
+              color,
+              storage,
+              template:product_templates!template_id (
+                display_name,
+                images
+              )
+            ),
+            sku_product:sku_products!sku_product_id (
+              title,
+              images
+            )
           )
         `,
         )
@@ -102,7 +149,43 @@ function ConfirmationContent() {
         return;
       }
 
-      setOrder(data as Order);
+      // Transform raw data into the display format
+      const raw = data as unknown as RawOrder;
+      const transformedOrder: Order = {
+        id: raw.id,
+        order_number: raw.order_number,
+        status: raw.status,
+        subtotal: raw.subtotal,
+        discount_amount: raw.discount_amount,
+        shipping_cost: raw.shipping_cost,
+        total: raw.total,
+        customer_name: raw.customer?.name ?? "",
+        customer_email: raw.customer?.email ?? "",
+        created_at: raw.created_at,
+        order_items: raw.order_items.map((item) => {
+          const isDevice = item.item_type === "device";
+          const title = isDevice
+            ? item.device?.template?.display_name ?? "Enhed"
+            : item.sku_product?.title ?? "Produkt";
+          const image = isDevice
+            ? item.device?.template?.images?.[0] ?? null
+            : item.sku_product?.images?.[0] ?? null;
+          return {
+            id: item.id,
+            title,
+            image_url: image,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            line_total: item.total_price,
+            item_type: item.item_type,
+            grade: isDevice ? item.device?.grade ?? null : null,
+            color: isDevice ? item.device?.color ?? null : null,
+            storage: isDevice ? item.device?.storage ?? null : null,
+          };
+        }),
+      };
+
+      setOrder(transformedOrder);
       setLoading(false);
 
       // Clear the cart once — only do it once even on React strict-mode double-invoke

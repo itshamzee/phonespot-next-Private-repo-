@@ -7,6 +7,7 @@ const shopifyDomain =
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "cdn.shopify.com" },
       { protocol: "https", hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com" },

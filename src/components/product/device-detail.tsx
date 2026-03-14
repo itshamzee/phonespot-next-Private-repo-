@@ -222,7 +222,12 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
         price: bestMatch.selling_price ?? price,
         reservedAt: new Date().toISOString(),
       });
-      openUpsell();
+      // Only show screen protector upsell for phones/smartphones
+      if (deviceType === "phone") {
+        openUpsell();
+      } else {
+        openCart();
+      }
     } catch (err) {
       setCartError(err instanceof Error ? err.message : "Kunne ikke tilføje til kurv. Prøv igen.");
     } finally {
