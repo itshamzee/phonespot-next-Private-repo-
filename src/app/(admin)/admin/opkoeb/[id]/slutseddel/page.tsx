@@ -117,6 +117,7 @@ export default function AdminSlutseddelPage() {
   const [buyerAddress, setBuyerAddress] = useState("");
   const [buyerPostalCity, setBuyerPostalCity] = useState("");
   const [selectedStoreSlug, setSelectedStoreSlug] = useState("slagelse");
+  const [locationUuidMap, setLocationUuidMap] = useState<Record<string, string>>({});
 
   const [items, setItems] = useState<DeviceItemForm[]>([emptyItem()]);
   const [staffInitials, setStaffInitials] = useState("");
@@ -144,6 +145,24 @@ export default function AdminSlutseddelPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+
+    // Build a slug→UUID map from the locations table
+    const { data: locData } = await supabase
+      .from("locations")
+      .select("id, name");
+    if (locData) {
+      const map: Record<string, string> = {};
+      for (const loc of locData) {
+        // Match by lowercased city name in location name
+        const nameLC = loc.name.toLowerCase();
+        for (const store of Object.values(STORES)) {
+          if (nameLC.includes(store.city.toLowerCase()) || nameLC.includes(store.slug)) {
+            map[store.slug] = loc.id;
+          }
+        }
+      }
+      setLocationUuidMap(map);
+    }
 
     // Fetch inquiry
     const { data: inq } = await supabase
@@ -293,7 +312,7 @@ export default function AdminSlutseddelPage() {
     return {
       inquiry_id: inquiryId,
       offer_id: acceptedOffer?.id ?? null,
-      store_location_id: selectedStoreSlug,
+      store_location_id: locationUuidMap[selectedStoreSlug] ?? null,
       seller_name: sellerName,
       seller_address: sellerAddress || null,
       seller_postal_city: sellerPostalCity || null,
