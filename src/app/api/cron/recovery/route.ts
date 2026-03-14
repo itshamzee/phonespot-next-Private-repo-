@@ -6,8 +6,6 @@ import AbandonedCartEmail, {
   subject as emailSubject,
   from as emailFrom,
 } from "@/lib/email/templates/abandoned-cart-email";
-import { renderToStaticMarkup } from "react-dom/server";
-import React from "react";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -81,20 +79,16 @@ export async function GET(req: NextRequest) {
             }))
           : [];
 
-        const emailHtml = renderToStaticMarkup(
-          React.createElement(AbandonedCartEmail, {
-            customerName: order.customer_name ?? "Kunde",
-            items,
-            total: order.total_amount ?? 0,
-            recoveryUrl,
-          })
-        );
-
         const { error: sendError } = await resend.emails.send({
           from: EMAIL_FROM,
           to: order.customer_email,
           subject: emailSubject,
-          html: emailHtml,
+          react: AbandonedCartEmail({
+            customerName: order.customer_name ?? "Kunde",
+            items,
+            total: order.total_amount ?? 0,
+            recoveryUrl,
+          }),
         });
 
         if (sendError) {
