@@ -15,38 +15,164 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
-  faerdig: "Faerdig",
+  faerdig: "F\u00e6rdig",
   afhentet: "Afhentet",
   bero: "Bero",
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
-  reklamation_loest: "Reklamation løst",
+  reklamation_loest: "Reklamation l\u00f8st",
 };
 
-const STATUS_DOT_COLORS: Record<RepairStatus, string> = {
-  modtaget: "bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.4)]",
-  diagnostik: "bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.4)]",
-  tilbud_sendt: "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
-  godkendt: "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]",
-  i_gang: "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.4)]",
-  faerdig: "bg-green-eco shadow-[0_0_6px_rgba(34,197,94,0.4)]",
-  afhentet: "bg-stone-400",
-  bero: "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]",
-  reklamation_modtaget: "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]",
-  reklamation_vurderet: "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.4)]",
-  reklamation_loest: "bg-teal-500 shadow-[0_0_6px_rgba(20,184,166,0.4)]",
+const STATUS_COLORS: Record<RepairStatus, string> = {
+  modtaget: "bg-blue-400",
+  diagnostik: "bg-indigo-400",
+  tilbud_sendt: "bg-amber-400",
+  godkendt: "bg-emerald-400",
+  i_gang: "bg-orange-400",
+  faerdig: "bg-green-400",
+  afhentet: "bg-stone-300",
+  bero: "bg-rose-400",
+  reklamation_modtaget: "bg-red-400",
+  reklamation_vurderet: "bg-purple-400",
+  reklamation_loest: "bg-teal-400",
 };
 
 /* ------------------------------------------------------------------ */
-/*  Stat card config                                                   */
+/*  Stat card definitions                                              */
 /* ------------------------------------------------------------------ */
 
-const STAT_CARDS: { key: keyof DashboardStats; label: string; color: string; borderColor: string; isCurrency?: boolean }[] = [
-  { key: "activeCases", label: "Aktive sager", color: "text-blue-600", borderColor: "via-blue-500" },
-  { key: "pendingQuotes", label: "Ventende tilbud", color: "text-amber-600", borderColor: "via-amber-500" },
-  { key: "finishedToday", label: "Faerdige i dag", color: "text-emerald-600", borderColor: "via-emerald-500" },
-  { key: "revenueThisMonth", label: "Omsaetning", color: "text-violet-600", borderColor: "via-violet-500", isCurrency: true },
-  { key: "newInquiries", label: "Nye henvendelser", color: "text-rose-600", borderColor: "via-rose-500" },
+const STAT_CARDS: {
+  key: keyof DashboardStats;
+  label: string;
+  gradient: string;
+  iconColor: string;
+  icon: React.ReactNode;
+  isCurrency?: boolean;
+}[] = [
+  {
+    key: "activeCases",
+    label: "Aktive sager",
+    gradient: "from-blue-500/10 to-blue-500/[0.02]",
+    iconColor: "text-blue-500",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384-5.383a2.025 2.025 0 01-.586-1.504c.012-.754.328-1.472.886-2.01a2.72 2.72 0 013.93.036l.455.457.457-.457a2.72 2.72 0 013.928-.036 2.72 2.72 0 01.037 3.514l-5.384 5.383a.75.75 0 01-1.06 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: "pendingQuotes",
+    label: "Ventende tilbud",
+    gradient: "from-amber-500/10 to-amber-500/[0.02]",
+    iconColor: "text-amber-500",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: "finishedToday",
+    label: "F\u00e6rdige i dag",
+    gradient: "from-emerald-500/10 to-emerald-500/[0.02]",
+    iconColor: "text-emerald-500",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: "revenueThisMonth",
+    label: "Oms\u00e6tning",
+    gradient: "from-violet-500/10 to-violet-500/[0.02]",
+    iconColor: "text-violet-500",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+      </svg>
+    ),
+    isCurrency: true,
+  },
+  {
+    key: "newInquiries",
+    label: "Nye henvendelser",
+    gradient: "from-rose-500/10 to-rose-500/[0.02]",
+    iconColor: "text-rose-500",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+      </svg>
+    ),
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Quick actions                                                      */
+/* ------------------------------------------------------------------ */
+
+const QUICK_ACTIONS = [
+  {
+    href: "/admin/indlevering",
+    label: "Ny indlevering",
+    desc: "Modtag enhed til reparation",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    ),
+    primary: true,
+  },
+  {
+    href: "/admin/platform/pos",
+    label: "Kasseapparat",
+    desc: "Start nyt salg",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/stock",
+    label: "Lagerstyring",
+    desc: "Se lagerstatus",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/platform/orders",
+    label: "Ordrer",
+    desc: "Administrer ordrer",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/reparationer",
+    label: "Reparationer",
+    desc: "Se alle sager",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384-5.383a2.025 2.025 0 01-.586-1.504c.012-.754.328-1.472.886-2.01a2.72 2.72 0 013.93.036l.455.457.457-.457a2.72 2.72 0 013.928-.036 2.72 2.72 0 01.037 3.514l-5.384 5.383a.75.75 0 01-1.06 0z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/kunder",
+    label: "Kunder",
+    desc: "Kundeoversigt",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    ),
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -154,95 +280,108 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-stone-200 border-t-green-eco" />
-          <p className="text-sm text-stone-400">Indlaeser dashboard...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative h-10 w-10">
+            <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
+            <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-b-emerald-500/20" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+          </div>
+          <p className="text-sm text-charcoal/30">Indl\u00e6ser dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h2 className="font-display text-xl font-bold tracking-tight text-charcoal sm:text-2xl">
+      <div className="mb-8">
+        <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
           Dashboard
         </h2>
-        <p className="mt-1 text-xs text-stone-400 sm:text-sm" suppressHydrationWarning>
-          Overblik over din butik &middot;{" "}
-          {new Date().toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" })}
+        <p className="mt-1 text-sm text-charcoal/35" suppressHydrationWarning>
+          {new Date().toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
 
       {/* Stat cards */}
-      <div className="mb-6 grid grid-cols-2 gap-2 sm:mb-8 sm:gap-3 lg:grid-cols-5">
-        {STAT_CARDS.map((card) => {
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+        {STAT_CARDS.map((card, i) => {
           const value = stats[card.key];
           return (
             <div
               key={card.key}
-              className="group relative overflow-hidden rounded-xl border border-stone-200/60 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-5"
+              className="group relative overflow-hidden rounded-2xl border border-black/[0.04] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
-              {/* Top accent line */}
-              <div className={`absolute left-4 right-4 top-0 h-[2px] bg-gradient-to-r from-transparent ${card.borderColor} to-transparent opacity-50`} />
+              {/* Gradient bg */}
+              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${card.gradient}`} />
 
-              <p className={`font-mono text-xl font-bold tracking-tight ${card.color} sm:text-2xl lg:text-3xl`}>
-                {card.isCurrency ? formatCurrency(value) : value}
-              </p>
-              <p className="mt-1 text-[11px] font-medium text-stone-400 sm:mt-1.5 sm:text-xs">
-                {card.label}
-              </p>
+              <div className="relative">
+                <div className={`mb-3 ${card.iconColor} opacity-60`}>
+                  {card.icon}
+                </div>
+                <p className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+                  {card.isCurrency ? formatCurrency(value) : value}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-charcoal/30">
+                  {card.label}
+                </p>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Recent tickets + Quick actions */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_280px]">
+      {/* Main content grid */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         {/* Recent tickets */}
-        <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3.5">
-            <h3 className="text-sm font-semibold text-charcoal">Seneste sager</h3>
+        <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4">
+            <h3 className="font-display text-[15px] font-bold text-charcoal">Seneste sager</h3>
             <Link
               href="/admin/reparationer"
-              className="text-xs font-medium text-stone-400 transition-colors hover:text-green-eco"
+              className="text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700"
             >
               Se alle &rarr;
             </Link>
           </div>
 
           {recentTickets.length === 0 ? (
-            <div className="px-5 py-12 text-center">
-              <p className="text-sm text-stone-400">Ingen sager endnu.</p>
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-charcoal/[0.03]">
+                <svg className="h-5 w-5 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+              </div>
+              <p className="text-sm text-charcoal/30">Ingen sager endnu</p>
             </div>
           ) : (
-            <div className="divide-y divide-stone-100">
+            <div className="divide-y divide-black/[0.03]">
               {recentTickets.map((ticket) => (
                 <Link
                   key={ticket.id}
                   href={`/admin/reparationer/${ticket.id}`}
-                  className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-stone-50"
+                  className="group/row flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-black/[0.015]"
                 >
                   {/* Status dot */}
-                  <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${STATUS_DOT_COLORS[ticket.status]}`} />
+                  <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_COLORS[ticket.status]}`} />
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-charcoal">
+                    <p className="truncate text-sm font-semibold text-charcoal group-hover/row:text-emerald-700">
                       {ticket.customer_name}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-stone-400">
+                    <p className="mt-0.5 truncate text-xs text-charcoal/35">
                       {ticket.device_model} &middot; {ticket.service_type}
                     </p>
                   </div>
 
-                  {/* Status + Date */}
+                  {/* Status badge + date */}
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[11px] font-medium text-stone-500">
+                    <span className="rounded-full bg-charcoal/[0.04] px-2.5 py-0.5 text-[10px] font-semibold text-charcoal/50">
                       {STATUS_LABELS[ticket.status]}
                     </span>
-                    <span className="font-mono text-[10px] text-stone-300">
+                    <span className="text-[10px] font-medium text-charcoal/20">
                       {formatDate(ticket.created_at)}
                     </span>
                   </div>
@@ -253,58 +392,36 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Quick actions */}
-        <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-semibold text-charcoal">Hurtige handlinger</h3>
-          <Link
-            href="/admin/indlevering"
-            className="flex items-center gap-3 rounded-xl bg-green-eco px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:brightness-110 hover:shadow-lg hover:shadow-green-eco/20 active:scale-[0.98]"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Ny indlevering
-          </Link>
-          <Link
-            href="/admin/reparationer"
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 text-sm font-medium text-charcoal shadow-sm transition-all hover:border-stone-300 hover:shadow-md"
-          >
-            <svg className="h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384-5.383a2.025 2.025 0 01-.586-1.504c.012-.754.328-1.472.886-2.01a2.72 2.72 0 013.93.036l.455.457.457-.457a2.72 2.72 0 013.928-.036 2.72 2.72 0 01.037 3.514l-5.384 5.383a.75.75 0 01-1.06 0z" />
-            </svg>
-            Se alle sager
-          </Link>
-          <Link
-            href="/admin/henvendelser"
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 text-sm font-medium text-charcoal shadow-sm transition-all hover:border-stone-300 hover:shadow-md"
-          >
-            <svg className="h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-            Henvendelser
-            {stats.newInquiries > 0 && (
-              <span className="ml-auto rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600">
-                {stats.newInquiries}
-              </span>
-            )}
-          </Link>
-          <Link
-            href="/admin/prisliste"
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 text-sm font-medium text-charcoal shadow-sm transition-all hover:border-stone-300 hover:shadow-md"
-          >
-            <svg className="h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-            </svg>
-            Prisliste
-          </Link>
-          <Link
-            href="/admin/kunder"
-            className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 text-sm font-medium text-charcoal shadow-sm transition-all hover:border-stone-300 hover:shadow-md"
-          >
-            <svg className="h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
-            Kunder
-          </Link>
+        <div>
+          <h3 className="mb-4 font-display text-[15px] font-bold text-charcoal">Hurtige handlinger</h3>
+          <div className="flex flex-col gap-2">
+            {QUICK_ACTIONS.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={`group flex items-center gap-3.5 rounded-xl px-4 py-3.5 transition-all duration-150 ${
+                  action.primary
+                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/15 hover:shadow-lg hover:shadow-emerald-500/25 hover:brightness-110 active:scale-[0.98]"
+                    : "border border-black/[0.04] bg-white text-charcoal shadow-sm hover:-translate-y-px hover:shadow-md"
+                }`}
+              >
+                <div className={action.primary ? "text-white/80" : "text-charcoal/25 group-hover:text-emerald-500 transition-colors"}>
+                  {action.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-semibold ${action.primary ? "" : "group-hover:text-emerald-700 transition-colors"}`}>
+                    {action.label}
+                  </p>
+                  <p className={`text-[11px] ${action.primary ? "text-white/60" : "text-charcoal/30"}`}>
+                    {action.desc}
+                  </p>
+                </div>
+                <svg className={`h-4 w-4 ${action.primary ? "text-white/40" : "text-charcoal/15"}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
