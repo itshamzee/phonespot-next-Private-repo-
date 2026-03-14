@@ -20,23 +20,24 @@ export default function AbandonedCheckoutsPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-800">Forladt checkout</h1>
-          <p className="mt-1 text-sm text-stone-400">
-            Ordrer der ikke blev gennemført — send påmindelser eller kopier recovery-links
+          <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+            Forladt checkout
+          </h2>
+          <p className="mt-0.5 text-sm text-charcoal/35">
+            Ordrer der ikke blev gennemf\u00f8rt — send p\u00e5mindelser eller kopier recovery-links
           </p>
         </div>
         {count !== null && (
-          <span className="ml-auto inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
+          <span className="rounded-full bg-amber-500/10 px-3.5 py-1.5 text-sm font-bold text-amber-600">
             {count} {count === 1 ? "ordre" : "ordrer"}
           </span>
         )}
       </div>
 
-      {/* List */}
       <AbandonedCheckoutList />
     </div>
   );

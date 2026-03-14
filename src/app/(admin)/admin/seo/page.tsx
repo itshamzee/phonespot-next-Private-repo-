@@ -285,11 +285,11 @@ export default function SEOPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
             SEO Analytics
           </h2>
-          <p className="mt-1 text-sm text-stone-500">
-            Sogeords-tracking &amp; performance
+          <p className="mt-0.5 text-sm text-charcoal/35">
+            S\u00f8geords-tracking & performance
           </p>
         </div>
         <SiteSelector onSiteChange={setSite} />
@@ -298,15 +298,15 @@ export default function SEOPage() {
       {/* Tabs + Date Range */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl border border-stone-200 bg-white p-1">
+        <div className="flex gap-2">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all ${
+              className={`rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-all ${
                 tab === t.key
-                  ? "bg-green-eco/[0.07] text-green-eco shadow-sm"
-                  : "text-stone-500 hover:text-charcoal"
+                  ? "bg-charcoal text-white shadow-sm"
+                  : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"
               }`}
             >
               {t.label}
@@ -316,15 +316,15 @@ export default function SEOPage() {
 
         {/* Date range */}
         {tab !== "audit" && (
-          <div className="flex gap-1 rounded-xl border border-stone-200 bg-white p-1">
+          <div className="flex gap-1 rounded-xl border border-black/[0.04] bg-white p-1 shadow-sm">
             {DATE_RANGES.map((dr) => (
               <button
                 key={dr.key}
                 onClick={() => setRange(dr.key)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   range === dr.key
-                    ? "bg-stone-100 text-charcoal"
-                    : "text-stone-500 hover:text-charcoal"
+                    ? "bg-charcoal text-white"
+                    : "text-charcoal/40 hover:text-charcoal/60"
                 }`}
               >
                 {dr.label}
@@ -336,22 +336,14 @@ export default function SEOPage() {
 
       {/* No site selected */}
       {!site && (
-        <div className="rounded-xl border border-stone-200/60 bg-white px-5 py-16 text-center">
-          <svg
-            className="mx-auto mb-3 h-8 w-8 text-stone-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-            />
-          </svg>
-          <p className="text-sm text-stone-500">
-            Vaelg et site for at se SEO-data.
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-black/[0.04] bg-white py-20 shadow-sm">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-charcoal/[0.03]">
+            <svg className="h-5 w-5 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-charcoal/30">
+            V\u00e6lg et site for at se SEO-data
           </p>
         </div>
       )}

@@ -36,8 +36,6 @@ export default async function OrdersPage({ searchParams }: PageProps) {
 
   const { data, count } = await query;
 
-  /* Normalise the Supabase join — customer comes back as an array for
-     one-to-many relations; flatten it to a single object or null. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialOrders = (data ?? []).map((row: any) => ({
     ...row,
@@ -46,11 +44,12 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   const initialTotal = count ?? 0;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      {/* Page header */}
+    <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Ordrer</h1>
-        <p className="mt-1 text-sm text-stone-400">
+        <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+          Ordrer
+        </h2>
+        <p className="mt-0.5 text-sm text-charcoal/35">
           Overblik over alle online- og POS-ordrer
         </p>
       </div>

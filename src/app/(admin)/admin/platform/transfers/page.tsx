@@ -42,7 +42,6 @@ interface Transfer {
 /* ------------------------------------------------------------------ */
 
 export default function TransfersPage() {
-  /* ---- Quick-transfer state ---- */
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState<DeviceSuggestion[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -53,16 +52,12 @@ export default function TransfersPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
-  /* ---- Reference data ---- */
   const [locations, setLocations] = useState<Location[]>([]);
-
-  /* ---- Transfer log ---- */
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [logLoading, setLogLoading] = useState(true);
 
   const searchRef = useRef<HTMLDivElement>(null);
 
-  /* ---- Load locations + transfers on mount ---- */
   useEffect(() => {
     fetch("/api/platform/locations")
       .then((r) => r.json())
@@ -88,9 +83,8 @@ export default function TransfersPage() {
     loadTransfers();
   }, [loadTransfers]);
 
-  /* ---- Device autocomplete ---- */
   useEffect(() => {
-    if (selectedDevice) return; // already selected — don't re-search
+    if (selectedDevice) return;
     if (search.trim().length < 2) {
       setSuggestions([]);
       setSuggestionsOpen(false);
@@ -108,7 +102,6 @@ export default function TransfersPage() {
     return () => clearTimeout(timer);
   }, [search, selectedDevice]);
 
-  /* ---- Close dropdown on outside click ---- */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -119,10 +112,9 @@ export default function TransfersPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  /* ---- Handlers ---- */
   function selectDevice(d: DeviceSuggestion) {
     setSelectedDevice(d);
-    setSearch(`${d.barcode}${d.template ? " — " + d.template.display_name : ""}`);
+    setSearch(`${d.barcode}${d.template ? " \u2014 " + d.template.display_name : ""}`);
     setSuggestionsOpen(false);
     setSubmitError(null);
   }
@@ -157,7 +149,7 @@ export default function TransfersPage() {
       } else {
         const toName = locations.find((l) => l.id === toLocationId)?.name ?? toLocationId;
         setSubmitSuccess(
-          `${selectedDevice.barcode} er overført til ${toName}.`,
+          `${selectedDevice.barcode} er overf\u00f8rt til ${toName}.`,
         );
         clearDevice();
         setToLocationId("");
@@ -165,48 +157,37 @@ export default function TransfersPage() {
         loadTransfers();
       }
     } catch {
-      setSubmitError("Netværksfejl — prøv igen");
+      setSubmitError("Netv\u00e6rksfejl \u2014 pr\u00f8v igen");
     } finally {
       setSubmitting(false);
     }
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Render                                                            */
-  /* ---------------------------------------------------------------- */
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Overførsler</h1>
-        <p className="mt-1 text-sm text-stone-400">
-          Overfør enheder mellem lokationer og se overførselshistorik
+        <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+          Overf\u00f8rsler
+        </h2>
+        <p className="mt-0.5 text-sm text-charcoal/35">
+          Overf\u00f8r enheder mellem lokationer og se overf\u00f8rselshistorik
         </p>
       </div>
 
-      {/* ── Quick-transfer card ──────────────────────────────────────── */}
-      <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-stone-700">
-          <svg
-            className="h-4 w-4 text-green-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-            />
+      {/* Quick-transfer card */}
+      <div className="rounded-2xl border border-black/[0.04] bg-white p-6 shadow-sm">
+        <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-charcoal">
+          <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
           </svg>
-          Hurtigoverførsel
-        </h2>
+          Hurtigoverf\u00f8rsel
+        </h3>
 
         <form onSubmit={handleTransfer} className="flex flex-col gap-4 sm:flex-row sm:items-end">
           {/* Device search */}
           <div className="relative min-w-0 flex-1" ref={searchRef}>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-400">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-charcoal/35">
               Enhed (barcode / serienr / IMEI)
             </label>
             <div className="relative">
@@ -218,15 +199,15 @@ export default function TransfersPage() {
                   if (selectedDevice) setSelectedDevice(null);
                 }}
                 onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
-                placeholder="Søg efter enhed…"
-                className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 pr-9 text-sm text-stone-800 placeholder:text-stone-400 focus:border-green-500/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/10"
+                placeholder="S\u00f8g efter enhed\u2026"
+                className="w-full rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 pr-9 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                 autoComplete="off"
               />
               {selectedDevice && (
                 <button
                   type="button"
                   onClick={clearDevice}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-charcoal/30 hover:text-charcoal/60"
                   aria-label="Ryd valg"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -236,21 +217,20 @@ export default function TransfersPage() {
               )}
             </div>
 
-            {/* Autocomplete dropdown */}
             {suggestionsOpen && suggestions.length > 0 && (
-              <ul className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-lg">
+              <ul className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-lg">
                 {suggestions.map((d) => (
                   <li key={d.id}>
                     <button
                       type="button"
                       onMouseDown={() => selectDevice(d)}
-                      className="flex w-full items-start gap-3 px-4 py-2.5 text-left text-sm hover:bg-stone-50"
+                      className="flex w-full items-start gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-charcoal/[0.02]"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-stone-800">{d.barcode}</p>
-                        <p className="truncate text-xs text-stone-400">
+                        <p className="font-semibold text-charcoal">{d.barcode}</p>
+                        <p className="truncate text-xs text-charcoal/35">
                           {d.template?.display_name ?? "Ukendt model"}
-                          {d.location ? ` · ${d.location.name}` : ""}
+                          {d.location ? ` \u00b7 ${d.location.name}` : ""}
                         </p>
                       </div>
                     </button>
@@ -262,15 +242,15 @@ export default function TransfersPage() {
 
           {/* Target location */}
           <div className="w-full sm:w-52">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-400">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-charcoal/35">
               Til lokation
             </label>
             <select
               value={toLocationId}
               onChange={(e) => setToLocationId(e.target.value)}
-              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-800 focus:border-green-500/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/10"
+              className="w-full rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm text-charcoal transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
             >
-              <option value="">Vælg lokation…</option>
+              <option value="">V\u00e6lg lokation\u2026</option>
               {locations.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
@@ -281,36 +261,35 @@ export default function TransfersPage() {
 
           {/* Reason */}
           <div className="w-full sm:w-48">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-400">
-              Årsag (valgfri)
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-charcoal/35">
+              \u00c5rsag (valgfri)
             </label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="f.eks. salg, reparation…"
-              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-green-500/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/10"
+              placeholder="f.eks. salg, reparation\u2026"
+              className="w-full rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
             />
           </div>
 
-          {/* Submit button */}
+          {/* Submit */}
           <div className="shrink-0">
-            <label className="mb-1.5 hidden sm:block text-xs font-semibold uppercase tracking-wider text-transparent select-none">
+            <label className="mb-1.5 hidden text-[11px] font-bold uppercase tracking-wider text-transparent sm:block select-none">
               &nbsp;
             </label>
             <button
               type="submit"
               disabled={submitting || !selectedDevice || !toLocationId}
-              className="w-full rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-green-600/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/15 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
-              {submitting ? "Overfører…" : "Overfør"}
+              {submitting ? "Overf\u00f8rer\u2026" : "Overf\u00f8r"}
             </button>
           </div>
         </form>
 
-        {/* Feedback */}
         {submitSuccess && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-700">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">
             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
@@ -318,114 +297,95 @@ export default function TransfersPage() {
           </div>
         )}
         {submitError && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-600">
             {submitError}
           </div>
         )}
       </div>
 
-      {/* ── Transfer log ─────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-stone-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
-          <h2 className="text-[15px] font-semibold text-stone-700">Overførselslog</h2>
-          <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-500">
+      {/* Transfer log */}
+      <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-black/[0.03] px-6 py-4">
+          <h3 className="text-sm font-bold text-charcoal">Overf\u00f8rselslog</h3>
+          <span className="rounded-full bg-charcoal/[0.04] px-2.5 py-1 text-[10px] font-bold text-charcoal/35">
             {transfers.length} poster
           </span>
         </div>
 
         {logLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
           </div>
         ) : transfers.length === 0 ? (
-          <div className="py-16 text-center">
-            <svg
-              className="mx-auto mb-3 h-10 w-10 text-stone-200"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-              />
-            </svg>
-            <p className="text-sm text-stone-400">Ingen overførsler registreret endnu</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-charcoal/[0.03]">
+              <svg className="h-5 w-5 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-charcoal/30">Ingen overf\u00f8rsler registreret endnu</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-stone-100 bg-stone-50/60 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <tr className="border-b border-black/[0.03] text-left text-[11px] font-bold uppercase tracking-wider text-charcoal/30">
                   <th className="px-6 py-3">Dato</th>
                   <th className="px-6 py-3">Enhed</th>
                   <th className="px-6 py-3">Fra</th>
                   <th className="px-6 py-3">Til</th>
-                  <th className="px-6 py-3">Overført af</th>
-                  <th className="px-6 py-3">Årsag</th>
+                  <th className="px-6 py-3">Overf\u00f8rt af</th>
+                  <th className="px-6 py-3">\u00c5rsag</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-black/[0.02]">
                 {transfers.map((t) => (
-                  <tr key={t.id} className="group transition-colors hover:bg-stone-50/50">
-                    {/* Date */}
-                    <td className="whitespace-nowrap px-6 py-3 text-stone-500">
+                  <tr key={t.id} className="transition-colors hover:bg-black/[0.015]">
+                    <td className="whitespace-nowrap px-6 py-3 text-charcoal/40">
                       {formatDate(t.transferred_at)}
                     </td>
-
-                    {/* Device — linked to stock detail */}
                     <td className="px-6 py-3">
                       {t.device ? (
                         <Link
                           href={`/admin/platform/stock/${t.device.id}`}
                           className="group/link flex flex-col"
                         >
-                          <span className="font-mono text-xs font-semibold text-green-700 group-hover/link:underline">
+                          <span className="font-mono text-xs font-bold text-emerald-600 group-hover/link:underline">
                             {t.device.barcode}
                           </span>
                           {t.device.template && (
-                            <span className="text-xs text-stone-400">
+                            <span className="text-xs text-charcoal/35">
                               {t.device.template.display_name}
                             </span>
                           )}
                         </Link>
                       ) : (
-                        <span className="text-stone-400">—</span>
+                        <span className="text-charcoal/20">\u2014</span>
                       )}
                     </td>
-
-                    {/* From location */}
                     <td className="px-6 py-3">
                       {t.from_location ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
+                        <span className="rounded-full bg-charcoal/[0.04] px-2.5 py-1 text-[10px] font-bold text-charcoal/40">
                           {t.from_location.name}
                         </span>
                       ) : (
-                        <span className="text-stone-300">—</span>
+                        <span className="text-charcoal/20">\u2014</span>
                       )}
                     </td>
-
-                    {/* To location */}
                     <td className="px-6 py-3">
                       {t.to_location ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
                           {t.to_location.name}
                         </span>
                       ) : (
-                        <span className="text-stone-300">—</span>
+                        <span className="text-charcoal/20">\u2014</span>
                       )}
                     </td>
-
-                    {/* Transferred by */}
-                    <td className="px-6 py-3 text-xs text-stone-500">
-                      {t.transferred_by ?? <span className="text-stone-300">—</span>}
+                    <td className="px-6 py-3 text-xs text-charcoal/40">
+                      {t.transferred_by ?? <span className="text-charcoal/20">\u2014</span>}
                     </td>
-
-                    {/* Reason */}
-                    <td className="px-6 py-3 text-xs text-stone-500">
-                      {t.reason ?? <span className="text-stone-300">—</span>}
+                    <td className="px-6 py-3 text-xs text-charcoal/40">
+                      {t.reason ?? <span className="text-charcoal/20">\u2014</span>}
                     </td>
                   </tr>
                 ))}
