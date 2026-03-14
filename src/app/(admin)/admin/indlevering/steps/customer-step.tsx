@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createBrowserClient } from "@/lib/supabase/client";
 import type { Customer, CustomerType } from "@/lib/supabase/types";
 import type { IntakeFormData } from "../page";
 
@@ -8,6 +9,15 @@ interface Props {
   formData: IntakeFormData;
   updateFormData: (partial: Partial<IntakeFormData>) => void;
   onNext: () => void;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const supabase = createBrowserClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    return { Authorization: `Bearer ${session.access_token}` };
+  }
+  return {};
 }
 
 export function CustomerStep({ formData, updateFormData, onNext }: Props) {
@@ -37,7 +47,10 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
     timerRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/customers/search?q=${encodeURIComponent(query)}`);
+        const auth = await getAuthHeaders();
+        const res = await fetch(`/api/customers/search?q=${encodeURIComponent(query)}`, {
+          headers: auth,
+        });
         const data = await res.json();
         if (Array.isArray(data)) setResults(data);
       } catch {
@@ -68,9 +81,10 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
     setError("");
 
     try {
+      const auth = await getAuthHeaders();
       const res = await fetch("/api/customers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...auth },
         body: JSON.stringify({
           type: newType,
           name: newName.trim(),

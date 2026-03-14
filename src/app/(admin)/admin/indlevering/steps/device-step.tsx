@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createBrowserClient } from "@/lib/supabase/client";
 import type { CustomerDevice } from "@/lib/supabase/types";
 import type { IntakeFormData } from "../page";
 import { Checklist } from "./checklist";
@@ -19,15 +20,25 @@ export function DeviceStep({ formData, updateFormData, onNext, onBack }: Props) 
   useEffect(() => {
     if (!formData.customer) return;
     setLoadingDevices(true);
-    fetch(`/api/customers/${formData.customer.id}`)
-      .then((r) => r.json())
-      .then((data) => {
+    (async () => {
+      try {
+        const supabase = createBrowserClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+        const r = await fetch(`/api/customers/${formData.customer!.id}`, { headers });
+        const data = await r.json();
         if (data.customer_devices) {
           setExistingDevices(data.customer_devices);
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoadingDevices(false));
+      } catch {
+        // ignore
+      } finally {
+        setLoadingDevices(false);
+      }
+    })();
   }, [formData.customer]);
 
   function selectExistingDevice(device: CustomerDevice) {

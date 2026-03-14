@@ -1,9 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q")?.trim();
+export async function GET(request: NextRequest) {
+  const staff = await requireStaff(request);
+  if (!staff) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const q = request.nextUrl.searchParams.get("q")?.trim();
 
   if (!q || q.length < 2) {
     return NextResponse.json([]);
