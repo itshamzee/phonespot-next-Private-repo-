@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
-import { createDraftOrder } from "@/lib/shopify/admin-client";
+import { stripe } from "@/lib/stripe/client";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -123,33 +123,47 @@ export async function POST(request: Request) {
       note: "Sag oprettet via indlevering",
     });
 
-    // 6. Create Shopify Draft Order (if enabled)
-    // TODO: Migrate this Shopify draft order creation to use the new `draft_orders` table
-    // and generate a Stripe Checkout session via the platform draft order flow instead.
+    // 6. Create Stripe payment link (if enabled)
     if (createShopifyPayment && allServices.length > 0) {
       try {
-        const draftOrder = await createDraftOrder({
-          customerEmail: customer.email || undefined,
-          customerPhone: customer.phone,
-          lineItems: allServices.map((s: { name: string; price_dkk: number }) => ({
-            title: s.name,
-            quantity: 1,
-            originalUnitPrice: String(s.price_dkk.toFixed(2)),
-          })),
-          note: `PhoneSpot reparation - ${deviceName} - Sag: ${ticket.id.slice(0, 8)}`,
-          tags: ["reparation", `sag-${ticket.id.slice(0, 8)}`],
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
+
+        const stripeLineItems = allServices.map((s: { name: string; price_dkk: number }) => ({
+          price_data: {
+            currency: "dkk" as const,
+            product_data: { name: s.name },
+            unit_amount: Math.round(s.price_dkk * 100),
+          },
+          quantity: 1,
+        }));
+
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          payment_method_types: ["card", "mobilepay", "klarna"],
+          line_items: stripeLineItems,
+          customer_email: customer.email || undefined,
+          locale: "da",
+          currency: "dkk",
+          expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+          success_url: `${baseUrl}/reparation/bekraeftelse?session_id={CHECKOUT_SESSION_ID}&ticket_id=${ticket.id}`,
+          cancel_url: `${baseUrl}/reparation/status/${ticket.id}`,
+          metadata: {
+            type: "repair",
+            repair_ticket_id: ticket.id,
+            device_model: deviceName,
+          },
         });
 
         await supabase
           .from("repair_tickets")
           .update({
-            shopify_draft_order_id: draftOrder.id,
+            stripe_session_id: session.id,
+            payment_url: session.url,
             updated_at: new Date().toISOString(),
           })
           .eq("id", ticket.id);
       } catch (err) {
-        console.error("Shopify Draft Order error:", err);
-        // Don't fail the whole intake for this
+        console.error("Stripe payment link error:", err);
       }
     }
 

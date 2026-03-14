@@ -94,7 +94,7 @@ export async function POST(
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    payment_method_types: ["card", "mobilepay"],
+    payment_method_types: ["card", "mobilepay", "klarna"],
     line_items: stripeLineItems,
     customer_email: draft.customer_email ?? undefined,
     locale: "da",

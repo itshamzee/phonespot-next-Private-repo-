@@ -133,7 +133,7 @@ export default function AbandonedCartEmail({
 
           <Section style={footerStyle}>
             <Text style={footerTextStyle}>
-              PhoneSpot.dk — Refurbished elektronik | CVR: 44138827
+              PhoneSpot.dk — Refurbished elektronik | CVR: 38688766
             </Text>
           </Section>
         </Container>

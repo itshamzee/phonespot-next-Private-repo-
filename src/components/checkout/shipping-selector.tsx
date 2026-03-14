@@ -11,21 +11,21 @@ export interface ShippingMethod {
 
 export const SHIPPING_METHODS: ShippingMethod[] = [
   {
-    id: "gls",
-    label: "GLS PakkeShop",
-    description: "Afhentning i nærmeste GLS PakkeShop (2–4 hverdage)",
-    cost: 3900,
+    id: "dao",
+    label: "DAO Pakke",
+    description: "Afhentning i nærmeste pakkeshop (2–4 hverdage)",
+    cost: 4900,
   },
   {
     id: "postnord",
     label: "PostNord Levering",
     description: "Levering til døren (2–4 hverdage)",
-    cost: 4900,
+    cost: 5900,
   },
   {
-    id: "pickup",
+    id: "free",
     label: "Afhentning i butik",
-    description: "Schweizerpladsen 5, 4200 Slagelse — gratis",
+    description: "VestsjællandsCentret 10, 4200 Slagelse — gratis",
     cost: 0,
   },
 ];

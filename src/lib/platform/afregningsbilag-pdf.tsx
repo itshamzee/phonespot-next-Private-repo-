@@ -240,7 +240,7 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
         <View style={styles.headerBar}>
           <Text style={styles.companyName}>PhoneSpot ApS</Text>
           <Text style={styles.companyMeta}>
-            CVR: 44138827{"  "}|{"  "}Schweizerpladsen 5, 4200 Slagelse
+            CVR: 38688766{"  "}|{"  "}VestsjællandsCentret 10, 4200 Slagelse
           </Text>
         </View>
 
@@ -274,8 +274,8 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
               <Text style={styles.partyLabel}>Køber</Text>
               <Text style={styles.partyName}>PhoneSpot ApS</Text>
               <Text style={styles.partyDetail}>
-                CVR: 44138827{"\n"}
-                Schweizerpladsen 5{"\n"}
+                CVR: 38688766{"\n"}
+                VestsjællandsCentret 10{"\n"}
                 4200 Slagelse
               </Text>
             </View>

@@ -91,8 +91,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 // Shipping cost (flat rate, free above threshold)
 // ---------------------------------------------------------------------------
 
-const SHIPPING_COST_OERE = 4900; // 49 DKK in øre
-const FREE_SHIPPING_THRESHOLD_OERE = 49900; // 499 DKK in øre
+const SHIPPING_COST_OERE = 4900; // 49 DKK in øre (DAO standard)
+const FREE_SHIPPING_THRESHOLD_OERE = 50000; // 500 DKK in øre
 
 function resolveShippingCost(subtotal: number): number {
   return subtotal >= FREE_SHIPPING_THRESHOLD_OERE ? 0 : SHIPPING_COST_OERE;

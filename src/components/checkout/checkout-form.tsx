@@ -122,13 +122,15 @@ export function CheckoutForm() {
 
       const data = (await res.json()) as
         | { url: string; sessionId: string; orderId: string; orderNumber: string }
-        | { error: string };
+        | { error: string; errors?: string[] };
 
       if (!res.ok || "error" in data) {
-        setSubmitError(
-          ("error" in data ? data.error : null) ??
-            "Der skete en fejl. Prøv igen.",
-        );
+        const errData = data as { error: string; errors?: string[] };
+        const errors = Array.isArray(errData.errors) ? errData.errors : [];
+        const errorMsg = errors.length > 0
+          ? `${errData.error}: ${errors.join(", ")}`
+          : errData.error ?? "Der skete en fejl. Prøv igen.";
+        setSubmitError(errorMsg);
         setIsSubmitting(false);
         return;
       }
@@ -398,7 +400,7 @@ export function CheckoutForm() {
       <button
         type="submit"
         disabled={isSubmitting || cartState.items.length === 0}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
       >
         {isSubmitting ? (
           <>
@@ -425,13 +427,21 @@ export function CheckoutForm() {
             Sender…
           </>
         ) : (
-          "Gå til betaling"
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+              <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+            </svg>
+            Gå til sikker betaling
+          </>
         )}
       </button>
 
-      <p className="text-center text-xs text-gray-400">
-        Du viderestilles til Stripe for sikker betaling.
-      </p>
+      <div className="flex items-center justify-center gap-2 text-xs text-gray">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-green-eco">
+          <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+        </svg>
+        SSL-krypteret · Du viderestilles til Stripe for sikker betaling
+      </div>
     </form>
   );
 }

@@ -106,7 +106,7 @@ export async function createCheckoutSession(
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    payment_method_types: ["card", "mobilepay"],
+    payment_method_types: ["card", "mobilepay", "klarna"],
     line_items: lineItems,
     ...(discountIds.length > 0
       ? { discounts: discountIds.map((id) => ({ coupon: id })) }

@@ -77,7 +77,7 @@ export default function RefundConfirmationEmail({
           {/* Footer */}
           <Section style={{ backgroundColor: "#f3f4f6", padding: "16px 32px" }}>
             <Text style={{ fontSize: "12px", color: "#9ca3af", margin: 0, textAlign: "center" as const }}>
-              PhoneSpot | CVR: 44138827 | info@phonespot.dk | 71 99 48 48
+              PhoneSpot | CVR: 38688766 | info@phonespot.dk | 71 99 48 48
             </Text>
           </Section>
         </Container>

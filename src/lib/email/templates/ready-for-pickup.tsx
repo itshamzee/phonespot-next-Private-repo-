@@ -75,7 +75,7 @@ export default function ReadyForPickupEmail({
           {/* Footer */}
           <Section style={{ backgroundColor: "#f9fafb", padding: "16px 32px", borderTop: "1px solid #e5e7eb" }}>
             <Text style={{ fontSize: "12px", color: "#9ca3af", margin: 0 }}>
-              PhoneSpot | CVR: 44138827 | info@phonespot.dk | 71 99 48 48
+              PhoneSpot | CVR: 38688766 | info@phonespot.dk | 71 99 48 48
             </Text>
           </Section>
         </Container>

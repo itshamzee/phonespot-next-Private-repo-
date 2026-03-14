@@ -188,7 +188,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
               PhoneSpot &bull; Vestsjællandscentret 10A, 103 &bull; 4200 Slagelse
             </p>
             <p style="margin:0 0 4px;font-size:12px;color:#999;">
-              CVR: 44138827 &bull; ha@phonespot.dk &bull; phonespot.dk
+              CVR: 38688766 &bull; ha@phonespot.dk &bull; phonespot.dk
             </p>
             <p style="margin:8px 0 0;font-size:11px;color:#bbb;">
               Denne e-mail er automatisk genereret. Gem den som dokumentation for dit køb.

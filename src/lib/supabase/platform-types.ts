@@ -4,7 +4,7 @@
 // ============================================
 // Enums (union types matching CHECK constraints)
 // ============================================
-export type DeviceGrade = 'A' | 'B' | 'C';
+export type DeviceGrade = 'N' | 'A' | 'B' | 'C';
 export type DeviceStatus = 'intake' | 'graded' | 'listed' | 'reserved' | 'sold' | 'shipped' | 'picked_up' | 'returned';
 export type VatScheme = 'brugtmoms' | 'regular';
 export type OrderType = 'online' | 'pos' | 'draft' | 'shopify';

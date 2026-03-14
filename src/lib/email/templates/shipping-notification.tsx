@@ -93,7 +93,7 @@ export default function ShippingNotificationEmail({
 
           <Section style={footerStyle}>
             <Text style={footerTextStyle}>
-              PhoneSpot | CVR: 44138827 | info@phonespot.dk | 71 99 48 48
+              PhoneSpot | CVR: 38688766 | info@phonespot.dk | 71 99 48 48
             </Text>
           </Section>
         </Container>

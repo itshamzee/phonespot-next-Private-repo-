@@ -214,7 +214,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
   // Create new Stripe Checkout Session
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    payment_method_types: ["card", "mobilepay"],
+    payment_method_types: ["card", "mobilepay", "klarna"],
     line_items: lineItems,
     customer_email: customer?.email ?? undefined,
     locale: "da",

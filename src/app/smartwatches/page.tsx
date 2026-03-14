@@ -24,27 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const CURRENT_DEAL = {
-  active: true,
-  headline: "Apple Watch Tilbud",
-  model: "Apple Watch SE",
-  tagline: "Perfekt til fitness, notifikationer og daglig brug",
-  originalPrice: "2.149",
-  dealPrice: "1.099",
-  savingsPercent: "49",
-  features: [
-    "Retina OLED-skærm",
-    "Pulsmåler & faldregistrering",
-    "Vandtæt til 50 meter",
-    "GPS & Bluetooth",
-    "watchOS med alle apps",
-    "36 mdr. PhoneSpot-garanti",
-  ],
-  ctaText: "Se Apple Watch SE tilbud",
-  ctaHref: "/smartwatches",
-  badge: "Begrænset antal",
-};
-
 const MODEL_TIERS = [
   {
     tier: "Budget",
@@ -194,101 +173,10 @@ export default async function SmartwatchesPage() {
       <div className="px-4 pt-8 max-w-7xl mx-auto">
         <CategoryHero
           title="Refurbished Apple Watch"
-          description="Kvalitetstestede Apple Watches fra 1.099 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag ét."
+          description="Kvalitetstestede Apple Watches med op til 50% besparelse. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag ét."
           productCount={templates.length}
         />
       </div>
-
-      {/* ── Deal Banner ── */}
-      {CURRENT_DEAL.active && (
-        <section className="relative overflow-hidden bg-gradient-to-br from-charcoal via-[#2a3a2e] to-charcoal">
-          <div className="absolute inset-0 opacity-5">
-            <div
-              className="h-full w-full"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(90,140,111,0.3) 35px, rgba(90,140,111,0.3) 36px)",
-              }}
-            />
-          </div>
-
-          <div className="relative mx-auto max-w-7xl px-4 py-16 md:py-20">
-            <div className="grid items-center gap-10 md:grid-cols-2">
-              <div>
-                <FadeIn>
-                  <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-charcoal">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                      <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clipRule="evenodd" />
-                    </svg>
-                    {CURRENT_DEAL.badge}
-                  </span>
-                </FadeIn>
-
-                <FadeIn delay={0.1}>
-                  <p className="text-xs font-semibold uppercase tracking-[4px] text-green-eco">
-                    {CURRENT_DEAL.headline}
-                  </p>
-                  <h2 className="mt-3 font-display text-4xl font-extrabold italic leading-tight text-white md:text-5xl lg:text-6xl">
-                    {CURRENT_DEAL.model}
-                  </h2>
-                  <p className="mt-2 text-lg text-white/60">
-                    {CURRENT_DEAL.tagline}
-                  </p>
-                </FadeIn>
-
-                <FadeIn delay={0.2}>
-                  <div className="mt-6 flex items-end gap-4">
-                    <span className="font-display text-5xl font-extrabold text-white md:text-6xl">
-                      {CURRENT_DEAL.dealPrice}
-                      <span className="text-2xl"> kr</span>
-                    </span>
-                    <div className="mb-2 flex flex-col">
-                      <span className="text-sm text-white/40 line-through">
-                        Nypris: {CURRENT_DEAL.originalPrice} kr
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-eco px-3 py-0.5 text-sm font-bold text-white">
-                        Spar {CURRENT_DEAL.savingsPercent}%
-                      </span>
-                    </div>
-                  </div>
-                </FadeIn>
-
-                <FadeIn delay={0.3}>
-                  <div className="mt-8">
-                    <Link
-                      href={CURRENT_DEAL.ctaHref}
-                      className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-4 font-semibold text-white transition-opacity hover:opacity-90"
-                    >
-                      {CURRENT_DEAL.ctaText}
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                      </svg>
-                    </Link>
-                  </div>
-                </FadeIn>
-              </div>
-
-              <FadeIn delay={0.15}>
-                <div className="grid grid-cols-2 gap-3">
-                  {CURRENT_DEAL.features.map((feature) => (
-                    <div
-                      key={feature}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-green-eco" aria-hidden="true">
-                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm font-medium text-white/80">
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </FadeIn>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── Model tiers ── */}
       <SectionWrapper>

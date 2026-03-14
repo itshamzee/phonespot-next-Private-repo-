@@ -39,9 +39,9 @@ export function PrePurchaseInfo() {
           <div>
             <p className="font-semibold">Sælger</p>
             <p className="text-gray-600 text-xs mt-0.5">
-              PhoneSpot ApS · CVR: 44138827
+              PhoneSpot ApS · CVR: 38688766
               <br />
-              Schweizerpladsen 5, 4200 Slagelse
+              VestsjællandsCentret 10, 4200 Slagelse
             </p>
           </div>
 

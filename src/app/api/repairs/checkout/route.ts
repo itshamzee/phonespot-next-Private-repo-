@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { createDraftOrder } from "@/lib/shopify/admin-client";
+import { stripe } from "@/lib/stripe/client";
 import { STORE } from "@/lib/store-config";
 import { Resend } from "resend";
 
@@ -34,11 +34,9 @@ function validateInput(body: CheckoutRequestBody): string | null {
   if (!body.selected_services?.length) return "Mindst én service skal vælges";
   if (!body.preferred_date?.trim()) return "Foretrukken dato er påkrævet";
 
-  // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(body.customer_email)) return "Ugyldig email-adresse";
 
-  // Validate date format YYYY-MM-DD
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(body.preferred_date)) return "Ugyldig datoformat (brug YYYY-MM-DD)";
 
@@ -103,58 +101,85 @@ export async function POST(request: NextRequest) {
 
     if (logError) {
       console.error("Failed to create status log:", logError);
-      // Non-fatal — continue
     }
 
-    // 4. Build line items for Shopify Draft Order
-    // TODO: Migrate this Shopify draft order creation to use the new `draft_orders` table
-    // and generate a Stripe Checkout session via the platform draft order flow instead.
-    const lineItems = body.selected_services.map((svc) => ({
-      title: `${body.device_model} - ${svc.name}`,
+    // 4. Build Stripe line items
+    const lineItems: {
+      price_data: {
+        currency: string;
+        product_data: { name: string };
+        unit_amount: number;
+      };
+      quantity: number;
+    }[] = body.selected_services.map((svc) => ({
+      price_data: {
+        currency: "dkk",
+        product_data: {
+          name: `${body.device_model} - ${svc.name}`,
+        },
+        unit_amount: Math.round(svc.price_dkk * 100), // Convert DKK to øre
+      },
       quantity: 1,
-      originalUnitPrice: svc.price_dkk.toFixed(2),
     }));
 
     if (body.includes_tempered_glass) {
       lineItems.push({
-        title: `${body.device_model} - Panserglas`,
+        price_data: {
+          currency: "dkk",
+          product_data: {
+            name: `${body.device_model} - Panserglas`,
+          },
+          unit_amount: TEMPERED_GLASS_PRICE * 100,
+        },
         quantity: 1,
-        originalUnitPrice: TEMPERED_GLASS_PRICE.toFixed(2),
       });
     }
 
-    // 5. Create Shopify Draft Order
-    const noteLines = [
-      `Reparation: ${body.device_type} ${body.device_model}`,
-      `Services: ${body.service_type}`,
-      `Foretrukken dato: ${body.preferred_date}`,
-      `Kunde: ${body.customer_name} / ${body.customer_phone}`,
-      body.issue_description ? `Beskrivelse: ${body.issue_description}` : "",
-      body.discount_percent > 0 ? `Rabat: ${body.discount_percent}%` : "",
-      `Sag ID: ${ticket.id}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    // 5. Apply discount via Stripe coupon if applicable
+    const discounts: { coupon: string }[] = [];
+    if (body.discount_percent > 0) {
+      const coupon = await stripe.coupons.create({
+        percent_off: body.discount_percent,
+        duration: "once",
+        name: `Reparationsrabat ${body.discount_percent}%`,
+        metadata: { repair_ticket_id: ticket.id },
+      });
+      discounts.push({ coupon: coupon.id });
+    }
 
-    const draftOrder = await createDraftOrder({
-      customerEmail: body.customer_email.trim().toLowerCase(),
-      lineItems,
-      note: noteLines,
-      tags: ["reparation", "online-booking", "forudbetaling"],
+    // 6. Create Stripe Checkout session
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card", "mobilepay", "klarna"],
+      line_items: lineItems,
+      ...(discounts.length > 0 ? { discounts } : {}),
+      customer_email: body.customer_email.trim().toLowerCase(),
+      locale: "da",
+      currency: "dkk",
+      expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
+      success_url: `${baseUrl}/reparation/bekraeftelse?session_id={CHECKOUT_SESSION_ID}&ticket_id=${ticket.id}`,
+      cancel_url: `${baseUrl}/reparation/booking?cancelled=true`,
+      metadata: {
+        type: "repair",
+        repair_ticket_id: ticket.id,
+        device_model: body.device_model,
+        preferred_date: body.preferred_date,
+      },
     });
 
-    // 6. Update ticket with Shopify draft order ID
+    // 7. Update ticket with Stripe session ID
     const { error: updateError } = await supabase
       .from("repair_tickets")
-      .update({ shopify_draft_order_id: draftOrder.id })
+      .update({ stripe_session_id: session.id })
       .eq("id", ticket.id);
 
     if (updateError) {
-      console.error("Failed to update ticket with draft order ID:", updateError);
-      // Non-fatal — continue
+      console.error("Failed to update ticket with Stripe session ID:", updateError);
     }
 
-    // 7. Send staff notification email
+    // 8. Send staff notification email
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -181,19 +206,18 @@ export async function POST(request: NextRequest) {
           <h3>Valgte services</h3>
           <ul>${servicesHtml}</ul>
           ${body.issue_description ? `<h3>Beskrivelse</h3><p>${body.issue_description}</p>` : ""}
-          <p style="margin-top:16px;color:#666;">Shopify kladdeordre: ${draftOrder.name}<br/>Sag ID: ${ticket.id}</p>
+          <p style="margin-top:16px;color:#666;">Sag ID: ${ticket.id}</p>
         `,
       });
     } catch (emailError) {
       console.error("Failed to send staff notification email:", emailError);
-      // Non-fatal — the booking still goes through
     }
 
-    // 8. Return success with invoice URL
+    // 9. Return Stripe checkout URL
     return NextResponse.json({
       success: true,
       ticketId: ticket.id,
-      invoiceUrl: draftOrder.invoiceUrl,
+      invoiceUrl: session.url,
     });
   } catch (error) {
     console.error("Repair checkout error:", error);

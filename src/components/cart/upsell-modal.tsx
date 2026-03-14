@@ -10,8 +10,8 @@ const UPSELL_PRODUCTS = [
     title: "Tempered Glass",
     subtitle: "Kant til kant",
     description: "9H hårdheds skærmbeskyttelse der dækker hele skærmen",
-    price: 159,
-    variantId: "", // Will be connected to Shopify later
+    price: 15900, // øre
+    displayPrice: 159,
     image: "/images/panserglas.png",
   },
   {
@@ -19,15 +19,15 @@ const UPSELL_PRODUCTS = [
     title: "Privacy Glass",
     subtitle: "Anti-kig beskyttelse",
     description: "Skærmbeskyttelse med privacy-filter — kun du kan se skærmen",
-    price: 249,
-    variantId: "", // Will be connected to Shopify later
+    price: 24900, // øre
+    displayPrice: 249,
     image: "/images/privacy-glas.png",
     popular: true,
   },
 ];
 
 export function UpsellModal() {
-  const { showUpsell, closeUpsell, openCart } = useCart();
+  const { showUpsell, closeUpsell, openCart, addSku } = useCart();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Reset selection when modal opens
@@ -41,8 +41,18 @@ export function UpsellModal() {
   };
 
   const handleAdd = () => {
-    // No-op for now — variantId is empty until Shopify variant is configured
-    // When ready: await addToCart(cart.id, selected.variantId)
+    const selected = UPSELL_PRODUCTS.find((p) => p.id === selectedId);
+    if (!selected) return;
+
+    addSku({
+      type: "sku_product",
+      skuProductId: selected.id,
+      title: selected.title,
+      price: selected.price,
+      quantity: 1,
+      image: selected.image,
+    });
+
     closeUpsell();
     openCart();
   };
@@ -137,7 +147,7 @@ export function UpsellModal() {
                 }`}
               >
                 {/* Popular badge */}
-                {product.popular && (
+                {"popular" in product && product.popular && (
                   <span className="absolute -top-2.5 right-4 rounded-full bg-green-eco px-3 py-0.5 text-xs font-semibold text-white">
                     Populær
                   </span>
@@ -194,7 +204,7 @@ export function UpsellModal() {
                     {product.description}
                   </p>
                   <p className="mt-1 text-lg font-bold text-green-eco md:mt-2 md:text-2xl">
-                    {product.price} kr
+                    {product.displayPrice} kr
                   </p>
                   <p className="text-xs font-semibold text-green-eco md:text-sm">
                     Inkl. gratis montering
@@ -215,7 +225,7 @@ export function UpsellModal() {
               onClick={handleAdd}
               className="w-full rounded-full bg-green-eco py-3.5 font-semibold text-white transition-colors hover:bg-green-light"
             >
-              Tilføj {selected.title} — {selected.price} kr
+              Tilføj {selected.title} — {selected.displayPrice} kr
             </button>
           ) : (
             <button

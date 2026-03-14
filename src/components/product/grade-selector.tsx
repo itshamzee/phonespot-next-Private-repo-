@@ -14,8 +14,17 @@ type GradeSelectorProps = {
 
 const GRADE_META: Record<
   string,
-  { label: string; description: string; tooltip: string; color: string; bg: string }
+  { label: string; description: string; tooltip: string; color: string; bg: string; badge?: string }
 > = {
+  N: {
+    label: "Fabriksny",
+    description: "Uåbnet originalemballage",
+    tooltip:
+      "Fabriksny: Enheden er helt ny og uåbnet i original emballage med fuld producent-garanti.",
+    color: "text-blue-600",
+    bg: "bg-blue-500/10",
+    badge: "NY",
+  },
   A: {
     label: "Perfekt",
     description: "Ingen synlige brugsspor",
@@ -89,9 +98,9 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
 
               {/* Grade badge */}
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${meta.bg} ${meta.color}`}
+                className={`flex h-6 shrink-0 items-center justify-center rounded-md px-1.5 text-xs font-bold ${meta.bg} ${meta.color}`}
               >
-                {grade}
+                {meta.badge ?? grade}
               </span>
 
               {/* Label */}
@@ -107,7 +116,14 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               {/* Price / stock */}
               <div className="shrink-0 text-right">
                 {isUnavailable ? (
-                  <span className="text-xs font-medium text-gray">Udsolgt</span>
+                  <div className="flex flex-col items-end">
+                    {price != null && (
+                      <span className="font-display text-sm font-bold text-charcoal/30">
+                        {formatPrice(price)} kr.
+                      </span>
+                    )}
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-charcoal/30">Udsolgt</span>
+                  </div>
                 ) : price != null ? (
                   <span className="font-display text-sm font-bold text-charcoal">
                     {formatPrice(price)} kr.
