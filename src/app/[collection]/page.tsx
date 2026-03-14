@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getPublishedSkuProducts, getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 
 export const dynamic = "force-dynamic";
 import { CategoryHero } from "@/components/collection/category-hero";
@@ -61,15 +62,36 @@ export default async function CollectionPage({
     notFound();
   }
 
-  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
-  try {
-    collectionData = await getCollectionProducts(config.shopifyHandle, sort);
-  } catch {
-    // Shopify API not configured or unreachable
-    collectionData = null;
-  }
+  // Map collection slugs to Supabase categories
+  const SLUG_TO_CATEGORY: Record<string, string> = {
+    iphones: "iphone",
+    ipads: "ipad",
+    smartphones: "smartphone",
+    baerbare: "laptop",
+    smartwatches: "smartwatch",
+    covers: "accessory",
+    tilbehor: "accessory",
+    lyd: "accessory",
+    opladere: "accessory",
+    restsalg: "accessory",
+    outlet: "accessory",
+  };
 
-  const products = collectionData?.products ?? [];
+  const category = SLUG_TO_CATEGORY[slug];
+  let products: import("@/lib/shopify/types").Product[] = [];
+  try {
+    // Device categories: use product templates
+    if (["iphone", "ipad", "smartphone", "laptop", "smartwatch"].includes(category ?? "")) {
+      const templates = await getPublishedTemplates(category);
+      products = templates.map(templateToProduct);
+    } else {
+      // Accessory categories: use SKU products
+      const skuProducts = await getPublishedSkuProducts(category);
+      products = skuProducts.map(skuProductToProduct);
+    }
+  } catch {
+    products = [];
+  }
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",

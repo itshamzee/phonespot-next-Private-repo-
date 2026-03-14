@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCollectionConfig } from "@/lib/collections";
-import { getProduct, searchProducts, getCollectionProducts } from "@/lib/shopify/client";
+import { getSkuProductBySlug, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
+import { skuProductToProduct } from "@/lib/supabase/product-adapter";
 
 export const dynamic = "force-dynamic";
 import type { Product } from "@/lib/shopify/types";
@@ -80,16 +81,11 @@ export async function generateMetadata({
 
   const config = getCollectionConfig(collectionSlug);
 
-  let productData: Product | null = null;
-  try {
-    productData = await getProduct(productHandle);
-  } catch {
+  const skuProduct = await getSkuProductBySlug(productHandle);
+  if (!skuProduct) {
     return { title: "Produkt ikke fundet - PhoneSpot" };
   }
-
-  if (!productData) {
-    return { title: "Produkt ikke fundet - PhoneSpot" };
-  }
+  const productData = skuProductToProduct(skuProduct);
 
   const title =
     productData.seo.title ?? `${productData.title} - Refurbished | PhoneSpot`;
@@ -130,41 +126,22 @@ export default async function ProductPage({
   // Look up collection config (may be null for spare-parts etc.)
   const config = getCollectionConfig(collectionSlug);
 
-  // Fetch product — this is what matters, not the collection slug
-  let product: Product | null = null;
-  try {
-    product = await getProduct(productHandle);
-  } catch {
-    notFound();
-  }
-  if (!product) {
-    notFound();
-  }
+  // Fetch product from Supabase
+  const skuProduct = await getSkuProductBySlug(productHandle);
+  if (!skuProduct) notFound();
+  const product = skuProductToProduct(skuProduct);
 
-  // Find compatible accessories via product tags
-  const compatibleTag = product.tags.find((t) => t.startsWith("compatible:"));
-  let accessories: Product[] = [];
-  if (compatibleTag) {
-    try {
-      accessories = await searchProducts(
-        compatibleTag.replace("compatible:", ""),
-      );
-    } catch {
-      // Silently fail — upsell is optional
-    }
-  }
-
-  // Fetch related products from same collection (only if collection is mapped)
+  // Fetch related products from same category
+  const accessories: Product[] = [];
   let relatedProducts: Product[] = [];
-  if (config) {
-    try {
-      const related = await getCollectionProducts(config.shopifyHandle);
-      relatedProducts = (related?.products ?? [])
-        .filter((p) => p.handle !== productHandle)
-        .slice(0, 4);
-    } catch {
-      relatedProducts = [];
-    }
+  try {
+    const related = await getPublishedSkuProducts(skuProduct.category ?? undefined);
+    relatedProducts = related
+      .filter((p) => p.slug !== productHandle)
+      .slice(0, 4)
+      .map(skuProductToProduct);
+  } catch {
+    relatedProducts = [];
   }
 
   return (

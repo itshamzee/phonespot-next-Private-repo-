@@ -1,32 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getProduct } from "@/lib/shopify/client";
+import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
+import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 import { Price } from "@/components/ui/price";
 import type { Product } from "@/lib/shopify/types";
-
-type HighlightedItem = {
-  handle: string;
-  collection: string;
-  badge?: string;
-};
-
-const HIGHLIGHTED: HighlightedItem[] = [
-  {
-    handle: "apple-watch-se-40-mm-2022",
-    collection: "smartwatches",
-    badge: "Spar 600 kr.",
-  },
-  {
-    handle: "apple-watch-se-44-mm-2022",
-    collection: "smartwatches",
-    badge: "Spar 740 kr.",
-  },
-  {
-    handle: "lenovo-thinkpad-t14-g4-i7-1365u-14",
-    collection: "baerbare",
-    badge: "Fabriksny",
-  },
-];
 
 function HighlightedCard({
   product,
@@ -46,7 +23,6 @@ function HighlightedCard({
       href={`/${collection}/${product.handle}`}
       className="group relative flex flex-col overflow-hidden rounded-[16px] border border-sand bg-white transition-shadow hover:shadow-lg"
     >
-      {/* Badge */}
       {badge && (
         <div className="absolute left-3 top-3 z-10">
           <span className="inline-flex items-center bg-green-eco px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
@@ -55,7 +31,6 @@ function HighlightedCard({
         </div>
       )}
 
-      {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-cream">
         {image ? (
           <Image
@@ -73,7 +48,6 @@ function HighlightedCard({
         )}
       </div>
 
-      {/* Info */}
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <h3 className="font-display text-base font-bold text-charcoal sm:text-lg">
           {product.title}
@@ -93,45 +67,61 @@ function HighlightedCard({
 }
 
 export async function HighlightedProducts() {
-  let products: { product: Product; collection: string; badge?: string }[];
-
   try {
-    const results = await Promise.all(
-      HIGHLIGHTED.map(async (item) => {
-        const product = await getProduct(item.handle);
-        return product
-          ? { product, collection: item.collection, badge: item.badge }
-          : null;
-      }),
+    // Show a mix of popular products from different categories
+    const [iphones, ipads] = await Promise.all([
+      getPublishedTemplates("iphone"),
+      getPublishedTemplates("ipad"),
+    ]);
+
+    const items: { product: Product; collection: string; badge?: string }[] = [];
+
+    // Pick top iPhones
+    if (iphones.length > 0) {
+      items.push({
+        product: templateToProduct(iphones[0]),
+        collection: "refurbished",
+        badge: "Populær",
+      });
+    }
+    if (iphones.length > 1) {
+      items.push({
+        product: templateToProduct(iphones[1]),
+        collection: "refurbished",
+        badge: "God pris",
+      });
+    }
+    // Pick an iPad
+    if (ipads.length > 0) {
+      items.push({
+        product: templateToProduct(ipads[0]),
+        collection: "refurbished",
+        badge: "Spar op til 40%",
+      });
+    }
+
+    if (items.length === 0) return null;
+
+    return (
+      <section className="mx-auto max-w-7xl px-4 py-16 md:py-20">
+        <div className="mb-8 flex items-baseline justify-between">
+          <h2 className="font-display text-3xl font-bold italic text-charcoal">
+            Udvalgte tilbud
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
+          {items.map(({ product, collection, badge }) => (
+            <HighlightedCard
+              key={product.id}
+              product={product}
+              collection={collection}
+              badge={badge}
+            />
+          ))}
+        </div>
+      </section>
     );
-    products = results.filter(Boolean) as {
-      product: Product;
-      collection: string;
-      badge?: string;
-    }[];
   } catch {
     return null;
   }
-
-  if (products.length === 0) return null;
-
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-16 md:py-20">
-      <div className="mb-8 flex items-baseline justify-between">
-        <h2 className="font-display text-3xl font-bold italic text-charcoal">
-          Udvalgte tilbud
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
-        {products.map(({ product, collection, badge }) => (
-          <HighlightedCard
-            key={product.id}
-            product={product}
-            collection={collection}
-            badge={badge}
-          />
-        ))}
-      </div>
-    </section>
-  );
 }

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
 import { SPARE_PART_CATEGORIES } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
@@ -149,33 +149,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  // ---- Product pages -------------------------------------------------------
+  // ---- Product pages (from Supabase) ----------------------------------------
 
   const productPages: MetadataRoute.Sitemap = [];
 
-  const collectionResults = await Promise.allSettled(
-    collectionSlugs.map((slug) => {
-      const { shopifyHandle } = COLLECTION_MAP[slug]!;
-      return getCollectionProducts(shopifyHandle).then((collection) => ({
-        slug,
-        collection,
-      }));
-    }),
-  );
+  try {
+    const [allTemplates, allSkuProducts] = await Promise.all([
+      getPublishedTemplates(),
+      getPublishedSkuProducts(),
+    ]);
 
-  for (const result of collectionResults) {
-    if (result.status !== "fulfilled" || !result.value.collection) continue;
-
-    const { slug, collection } = result.value;
-
-    for (const product of collection.products) {
+    for (const t of allTemplates) {
       productPages.push({
-        url: `${BASE_URL}/${slug}/${product.handle}`,
+        url: `${BASE_URL}/refurbished/${t.slug}`,
         lastModified: new Date(),
         changeFrequency: "weekly",
-        priority: 0.6,
+        priority: 0.7,
       });
     }
+
+    for (const p of allSkuProducts) {
+      if (p.slug) {
+        productPages.push({
+          url: `${BASE_URL}/tilbehoer/${p.category ?? "covers"}/${p.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 0.5,
+        });
+      }
+    }
+  } catch {
+    // Silently continue if product queries fail
   }
 
   // ---- Spare parts pages ---------------------------------------------------

@@ -4,10 +4,6 @@
 
 import { createAdminClient } from "../src/lib/supabase/admin";
 
-/**
- * Shopify Admin REST API response shape (simplified).
- * Extend as needed when running against real credentials.
- */
 interface ShopifyCustomer {
   id: number;
   email: string | null;
@@ -23,6 +19,13 @@ interface ShopifyLineItem {
   price: string;
   variant_id: number | null;
   product_id: number | null;
+  sku: string;
+}
+
+interface ShopifyShippingLine {
+  title: string;
+  price: string;
+  code: string;
 }
 
 interface ShopifyOrder {
@@ -30,22 +33,64 @@ interface ShopifyOrder {
   name: string; // e.g. "#1001"
   email: string | null;
   created_at: string;
+  closed_at: string | null;
   financial_status: string;
   fulfillment_status: string | null;
   total_price: string;
   subtotal_price: string;
+  total_discounts: string;
   total_tax: string;
   currency: string;
   customer: ShopifyCustomer | null;
   line_items: ShopifyLineItem[];
+  shipping_lines: ShopifyShippingLine[];
   shipping_address: Record<string, string> | null;
   billing_address: Record<string, string> | null;
   note: string | null;
   tags: string;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
 }
 
 interface ShopifyOrdersResponse {
   orders: ShopifyOrder[];
+}
+
+function dkkToOere(dkkString: string): number {
+  return Math.round(parseFloat(dkkString) * 100);
+}
+
+function mapOrderStatus(order: ShopifyOrder): string {
+  if (order.cancelled_at) return "cancelled";
+  if (order.financial_status === "refunded") return "refunded";
+  if (order.fulfillment_status === "fulfilled") return "delivered";
+  if (order.fulfillment_status === "partial") return "shipped";
+  if (order.financial_status === "paid") return "confirmed";
+  return "pending";
+}
+
+function mapPaymentStatus(financialStatus: string): string {
+  switch (financialStatus) {
+    case "paid":
+      return "paid";
+    case "refunded":
+      return "refunded";
+    case "partially_refunded":
+      return "partially_refunded";
+    default:
+      return "pending";
+  }
+}
+
+function mapFulfillmentStatus(status: string | null): string {
+  switch (status) {
+    case "fulfilled":
+      return "delivered";
+    case "partial":
+      return "shipped";
+    default:
+      return "unfulfilled";
+  }
 }
 
 async function fetchShopifyOrders(
@@ -80,27 +125,19 @@ async function main() {
   const supabase = createAdminClient();
   console.log("Starting Shopify order export...");
 
-  // TODO: Implement when ready to run with real credentials.
-  // Set these env vars before running:
-  //   SHOPIFY_ADMIN_DOMAIN=your-store.myshopify.com
-  //   SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_xxx
   const domain = process.env.SHOPIFY_ADMIN_DOMAIN;
-  const accessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  const accessToken = process.env.SHOPIFY_ADMIN_API_TOKEN;
 
   if (!domain || !accessToken) {
-    console.warn(
-      "SHOPIFY_ADMIN_DOMAIN and SHOPIFY_ADMIN_ACCESS_TOKEN are not set.\n" +
-        "This script is a skeleton — set credentials to run the actual export.",
-    );
-    console.log("Export complete (dry run — no credentials)");
-    return;
+    console.error("SHOPIFY_ADMIN_DOMAIN and SHOPIFY_ADMIN_API_TOKEN must be set.");
+    process.exit(1);
   }
 
   let totalInserted = 0;
   let totalSkipped = 0;
+  let totalErrors = 0;
   let sinceId: number | undefined;
 
-  // Paginate through all orders (Shopify max 250 per page, use since_id cursor)
   // eslint-disable-next-line no-constant-condition
   while (true) {
     console.log(
@@ -115,138 +152,138 @@ async function main() {
 
     for (const order of orders) {
       try {
-        // 1. Find or create customer
+        // Check if already imported
+        const { data: existing } = await supabase
+          .from("orders")
+          .select("id")
+          .eq("shopify_order_id", String(order.id))
+          .maybeSingle();
+
+        if (existing) {
+          totalSkipped++;
+          continue;
+        }
+
+        // Find or create customer
         let customerId: string | null = null;
 
         if (order.customer?.email) {
           const email = order.customer.email.toLowerCase();
 
-          // Check if customer already exists
           const { data: existingCustomer } = await supabase
             .from("customers")
             .select("id")
             .eq("email", email)
-            .single();
+            .maybeSingle();
 
           if (existingCustomer) {
             customerId = existingCustomer.id;
           } else {
-            // Create customer
             const { data: newCustomer, error: customerError } = await supabase
               .from("customers")
               .insert({
                 email,
                 name:
-                  [
-                    order.customer.first_name,
-                    order.customer.last_name,
-                  ]
+                  [order.customer.first_name, order.customer.last_name]
                     .filter(Boolean)
                     .join(" ") || email,
-                phone: order.customer.phone ?? null,
+                phone: order.customer.phone || "",
               })
               .select("id")
               .single();
 
             if (customerError) {
-              console.error(
-                `Failed to create customer for order ${order.name}:`,
-                customerError.message,
-              );
+              console.error(`  Customer create failed for ${order.name}: ${customerError.message}`);
             } else {
               customerId = newCustomer?.id ?? null;
             }
           }
         }
 
-        // 2. Map order to orders table format
-        const amountCents = Math.round(parseFloat(order.total_price) * 100);
+        // Calculate amounts in øre
+        const subtotal = dkkToOere(order.subtotal_price);
+        const discountAmount = dkkToOere(order.total_discounts);
+        const shippingCost = order.shipping_lines.reduce(
+          (sum, sl) => sum + dkkToOere(sl.price),
+          0,
+        );
+        const total = dkkToOere(order.total_price);
 
-        const orderRow = {
-          type: "shopify" as const,
-          shopify_order_id: String(order.id),
-          customer_id: customerId,
-          status: mapFinancialStatus(order.financial_status),
-          amount_cents: amountCents,
-          currency: order.currency,
-          created_at: order.created_at,
-          metadata: {
-            shopify_order_name: order.name,
-            fulfillment_status: order.fulfillment_status,
-            line_items: order.line_items.map((li) => ({
-              title: li.title,
-              quantity: li.quantity,
-              price_cents: Math.round(parseFloat(li.price) * 100),
-            })),
-            shipping_address: order.shipping_address,
-            note: order.note,
-            tags: order.tags,
-          },
-        };
+        const shippingAddress = order.shipping_address
+          ? {
+              name: order.shipping_address.name,
+              address1: order.shipping_address.address1,
+              address2: order.shipping_address.address2,
+              city: order.shipping_address.city,
+              zip: order.shipping_address.zip,
+              country: order.shipping_address.country,
+              phone: order.shipping_address.phone,
+            }
+          : null;
 
-        // 3. Insert order (skip if already exists)
-        const { error: insertError } = await supabase
+        // Insert order
+        const { data: insertedOrder, error: insertError } = await supabase
           .from("orders")
-          .insert(orderRow)
+          .insert({
+            order_number: order.name.replace("#", "S-"),
+            type: "shopify",
+            customer_id: customerId,
+            status: mapOrderStatus(order),
+            payment_status: mapPaymentStatus(order.financial_status),
+            fulfillment_status: mapFulfillmentStatus(order.fulfillment_status),
+            payment_method: "shopify",
+            shipping_method: order.shipping_lines[0]?.title ?? null,
+            shipping_address: shippingAddress,
+            subtotal,
+            discount_amount: discountAmount,
+            shipping_cost: shippingCost,
+            total,
+            shopify_order_id: String(order.id),
+            notes: order.note,
+            internal_notes: `Imported from Shopify. Tags: ${order.tags}`,
+            created_at: order.created_at,
+            confirmed_at: order.financial_status === "paid" ? order.created_at : null,
+            delivered_at: order.fulfillment_status === "fulfilled" ? (order.closed_at ?? order.created_at) : null,
+          })
           .select("id")
           .single();
 
         if (insertError) {
-          if (insertError.code === "23505") {
-            // Unique constraint violation — order already imported
-            totalSkipped++;
-          } else {
-            console.error(
-              `Failed to insert order ${order.name}:`,
-              insertError.message,
-            );
-          }
-        } else {
-          totalInserted++;
-          if (totalInserted % 50 === 0) {
-            console.log(`  Inserted ${totalInserted} orders so far...`);
-          }
+          console.error(`  Order ${order.name}: ${insertError.message}`);
+          totalErrors++;
+          continue;
+        }
+
+        // Store line items in internal_notes (order_items requires FK refs we don't have)
+        if (insertedOrder && order.line_items.length > 0) {
+          const lineItemsSummary = order.line_items
+            .map((li) => `${li.quantity}x ${li.title} @ ${li.price} DKK`)
+            .join("\n");
+          await supabase
+            .from("orders")
+            .update({
+              internal_notes: `Imported from Shopify. Tags: ${order.tags}\n\nLine items:\n${lineItemsSummary}`,
+            })
+            .eq("id", insertedOrder.id);
+        }
+
+        totalInserted++;
+        if (totalInserted % 25 === 0) {
+          console.log(`  Inserted ${totalInserted} orders so far...`);
         }
       } catch (err) {
-        console.error(
-          `Unexpected error processing order ${order.name}:`,
-          err,
-        );
+        console.error(`  Unexpected error for ${order.name}:`, err);
+        totalErrors++;
       }
     }
 
-    // Advance cursor to last order ID for next page
     sinceId = orders[orders.length - 1]!.id;
-
-    // If we got fewer than 250, we're done
     if (orders.length < 250) break;
   }
 
   console.log(
-    `Export complete: ${totalInserted} inserted, ${totalSkipped} skipped (already exists).`,
+    `\nExport complete: ${totalInserted} inserted, ${totalSkipped} skipped, ${totalErrors} errors.`,
   );
-}
-
-/**
- * Map Shopify financial_status to our internal order status.
- */
-function mapFinancialStatus(status: string): string {
-  switch (status) {
-    case "paid":
-      return "paid";
-    case "partially_paid":
-      return "partial";
-    case "refunded":
-      return "refunded";
-    case "partially_refunded":
-      return "partially_refunded";
-    case "pending":
-      return "pending";
-    case "voided":
-      return "cancelled";
-    default:
-      return "unknown";
-  }
 }
 
 main().catch(console.error);

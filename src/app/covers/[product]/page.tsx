@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getProduct, getCollectionProducts } from "@/lib/shopify/client";
+import { getSkuProductBySlug, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
+import { skuProductToProduct } from "@/lib/supabase/product-adapter";
 import type { Product } from "@/lib/shopify/types";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ProductCard } from "@/components/product/product-card";
@@ -59,16 +60,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { product: productHandle } = await params;
 
-  let product: Product | null = null;
-  try {
-    product = await getProduct(productHandle);
-  } catch {
-    return { title: "Cover ikke fundet - PhoneSpot" };
-  }
-
-  if (!product) {
-    return { title: "Cover ikke fundet - PhoneSpot" };
-  }
+  const skuData = await getSkuProductBySlug(productHandle);
+  if (!skuData) return { title: "Cover ikke fundet - PhoneSpot" };
+  const product = skuProductToProduct(skuData);
 
   const title = product.seo.title ?? `${product.title} | PhoneSpot`;
   const description =
@@ -103,23 +97,20 @@ export default async function CoverProductPage({
 }) {
   const { product: productHandle } = await params;
 
-  let product: Product | null = null;
-  try {
-    product = await getProduct(productHandle);
-  } catch {
-    notFound();
-  }
-  if (!product) notFound();
+  const skuData = await getSkuProductBySlug(productHandle);
+  if (!skuData) notFound();
+  const product = skuProductToProduct(skuData);
 
   const compatibleModels = getCompatibleModels(product.tags);
 
   // Fetch related covers
   let relatedProducts: Product[] = [];
   try {
-    const collection = await getCollectionProducts("covers-1");
-    relatedProducts = (collection?.products ?? [])
-      .filter((p) => p.handle !== productHandle)
-      .slice(0, 4);
+    const related = await getPublishedSkuProducts("accessory");
+    relatedProducts = related
+      .filter((p) => p.slug !== productHandle)
+      .slice(0, 4)
+      .map(skuProductToProduct);
   } catch {
     // non-fatal
   }

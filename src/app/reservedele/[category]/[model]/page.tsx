@@ -7,7 +7,8 @@ import {
   getAllSparePartPaths,
   getSparePartModel,
 } from "@/lib/spare-parts";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getPublishedSkuProducts } from "@/lib/supabase/product-queries";
+import { skuProductToProduct } from "@/lib/supabase/product-adapter";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -55,14 +56,18 @@ export default async function ModelPartsPage({
 
   const { category: cat, model: modelConfig } = result;
 
-  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
+  let products: import("@/lib/shopify/types").Product[] = [];
   try {
-    collectionData = await getCollectionProducts(modelConfig.shopifyHandle);
+    // Fetch spare parts (accessories/subcategory matching the model)
+    const skuProducts = await getPublishedSkuProducts("accessory");
+    // Filter by model name in title
+    const modelLabel = modelConfig.label.toLowerCase();
+    products = skuProducts
+      .filter((p) => p.title.toLowerCase().includes(modelLabel))
+      .map(skuProductToProduct);
   } catch {
-    collectionData = null;
+    products = [];
   }
-
-  const products = collectionData?.products ?? [];
 
   return (
     <>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { searchProducts } from "@/lib/shopify/client";
+import { searchProducts } from "@/lib/supabase/product-queries";
+import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 import { ProductGrid } from "@/components/collection/product-grid";
 
 export async function generateMetadata({
@@ -32,9 +33,15 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
-  let products: Awaited<ReturnType<typeof searchProducts>> = [];
+  let products: import("@/lib/shopify/types").Product[] = [];
   try {
-    products = query ? await searchProducts(query) : [];
+    if (query) {
+      const { templates, skuProducts } = await searchProducts(query);
+      products = [
+        ...templates.map(templateToProduct),
+        ...skuProducts.map(skuProductToProduct),
+      ];
+    }
   } catch {
     products = [];
   }

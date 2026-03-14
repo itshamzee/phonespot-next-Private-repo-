@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { getCollectionProducts } from "@/lib/shopify/client";
+import { getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { templateToProduct } from "@/lib/supabase/product-adapter";
 import { ProductCard } from "@/components/product/product-card";
 
 export async function FeaturedProducts() {
   let products;
 
   try {
-    const collection = await getCollectionProducts("iphones");
-    products = collection?.products.slice(0, 8) ?? [];
+    const templates = await getPublishedTemplates("iphone");
+    products = templates.slice(0, 8).map(templateToProduct);
   } catch {
-    // Shopify API not configured or unreachable — fail gracefully
     return null;
   }
 

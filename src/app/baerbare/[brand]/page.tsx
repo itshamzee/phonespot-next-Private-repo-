@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCollectionProducts, getProduct } from "@/lib/shopify/client";
+import { getPublishedSkuProducts, getSkuProductBySlug, getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-adapter";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -48,9 +49,9 @@ export async function generateMetadata({
   }
 
   // Fallback: try as product handle
-  let product: Product | null = null;
-  try { product = await getProduct(brand); } catch { /* */ }
-  if (!product) return { title: "Ikke fundet - PhoneSpot" };
+  const skuData = await getSkuProductBySlug(brand);
+  if (!skuData) return { title: "Ikke fundet - PhoneSpot" };
+  const product = skuProductToProduct(skuData);
 
   const title = product.seo.title ?? `${product.title} - Refurbished | PhoneSpot`;
   const description = product.seo.description ?? `Køb ${product.title} refurbished med 36 mdr. garanti hos PhoneSpot.`;
@@ -75,18 +76,15 @@ export default async function BrandPage({
 
   // If not a tier slug, try rendering as a product page
   if (!tier) {
-    let product: Product | null = null;
-    try { product = await getProduct(brand); } catch { /* */ }
-    if (!product) notFound();
+    const skuData = await getSkuProductBySlug(brand);
+    if (!skuData) notFound();
+    const product = skuProductToProduct(skuData);
 
-    const config = getCollectionConfig("baerbare");
     let relatedProducts: Product[] = [];
-    if (config) {
-      try {
-        const related = await getCollectionProducts(config.shopifyHandle);
-        relatedProducts = (related?.products ?? []).filter((p) => p.handle !== brand).slice(0, 4);
-      } catch { /* */ }
-    }
+    try {
+      const templates = await getPublishedTemplates("laptop");
+      relatedProducts = templates.slice(0, 4).map(templateToProduct);
+    } catch { /* */ }
 
     return (
       <>
@@ -134,14 +132,17 @@ export default async function BrandPage({
     );
   }
 
-  let collectionData: Awaited<ReturnType<typeof getCollectionProducts>> = null;
+  let allProducts: Product[] = [];
   try {
-    collectionData = await getCollectionProducts("baerbare", sort);
+    const templates = await getPublishedTemplates("laptop");
+    const skuProducts = await getPublishedSkuProducts("laptop");
+    allProducts = [
+      ...templates.map(templateToProduct),
+      ...skuProducts.map(skuProductToProduct),
+    ];
   } catch {
-    collectionData = null;
+    allProducts = [];
   }
-
-  const allProducts = collectionData?.products ?? [];
   const laptops = filterRealLaptops(allProducts);
   const products = filterProductsByTier(laptops, tier);
 
