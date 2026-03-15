@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
     const entries = [
       { consent_type: "cookies_statistics", granted: Boolean(statistics) },
       { consent_type: "cookies_marketing", granted: Boolean(marketing) },
-      { consent_type: "cookies_preferences", granted: Boolean(preferences) },
     ];
 
     const rows = entries.map((entry) => ({

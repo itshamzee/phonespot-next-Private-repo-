@@ -5,7 +5,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
 export const dynamic = "force-dynamic";
 
-function escapeXml(str: string): string {
+function escapeXml(str: string | null | undefined): string {
+  if (!str) return "";
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
