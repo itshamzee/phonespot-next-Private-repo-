@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (brand) query = query.ilike("brand", `%${brand}%`);
   if (model) query = query.contains("compatible_models", [model]);
   if (search) query = query.ilike("name", `%${search}%`);
-  if (inStore) query = query.gt("store_stock", 0);
+  if (inStore) query = query.or("store_stock.gt.0,always_in_stock.eq.true");
 
   const { data, error } = await query.limit(100);
 

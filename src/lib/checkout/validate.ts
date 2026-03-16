@@ -55,7 +55,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
     const skuIds = skus.map((s) => s.skuProductId);
     const { data: dbSkus } = await supabase
       .from("sku_products")
-      .select("id, selling_price, sale_price, is_active")
+      .select("id, selling_price, sale_price, is_active, always_in_stock")
       .in("id", skuIds);
     const { data: stocks } = await supabase
       .from("sku_stock")
@@ -72,11 +72,14 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
         errors.push(`${item.title} er ikke tilgængelig`);
         continue;
       }
-      const stock = stockMap.get(item.skuProductId) ?? 0;
-      if (stock < item.quantity) {
-        validated.push({ item, serverPrice: db.sale_price ?? db.selling_price, available: false, error: `Kun ${stock} på lager` });
-        errors.push(`${item.title}: kun ${stock} på lager`);
-        continue;
+      // Skip stock check for always-in-stock products (e.g., screen protectors)
+      if (!db.always_in_stock) {
+        const stock = stockMap.get(item.skuProductId) ?? 0;
+        if (stock < item.quantity) {
+          validated.push({ item, serverPrice: db.sale_price ?? db.selling_price, available: false, error: `Kun ${stock} på lager` });
+          errors.push(`${item.title}: kun ${stock} på lager`);
+          continue;
+        }
       }
       validated.push({ item, serverPrice: db.sale_price ?? db.selling_price, available: true });
     }

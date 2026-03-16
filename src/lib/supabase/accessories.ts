@@ -101,7 +101,8 @@ export async function getAccessories(
     );
   }
   if (options.inStoreOnly) {
-    query = query.gt("store_stock", 0);
+    // Show always-in-stock products regardless of stock level
+    query = query.or("store_stock.gt.0,always_in_stock.eq.true");
   }
   if (options.store_id) {
     query = query.eq("store_id", options.store_id);
@@ -302,26 +303,30 @@ export async function createReservation(
   if (input.product_type === "accessory") {
     const { data: accessory, error: stockError } = await supabase
       .from("accessories")
-      .select("store_stock, name")
+      .select("store_stock, name, always_in_stock")
       .eq("id", input.product_id)
       .single();
 
     if (stockError || !accessory) {
       throw new Error("Tilbehøret blev ikke fundet");
     }
-    if (accessory.store_stock <= 0) {
-      throw new Error("Ikke på lager i butik");
-    }
 
-    // Decrement store_stock atomically
-    const { error: updateError } = await supabase
-      .from("accessories")
-      .update({ store_stock: accessory.store_stock - 1 })
-      .eq("id", input.product_id)
-      .eq("store_stock", accessory.store_stock); // optimistic lock
+    // Skip stock check and decrement for always-in-stock products
+    if (!accessory.always_in_stock) {
+      if (accessory.store_stock <= 0) {
+        throw new Error("Ikke på lager i butik");
+      }
 
-    if (updateError) {
-      throw new Error("Lagerbeholdning kunne ikke opdateres");
+      // Decrement store_stock atomically
+      const { error: updateError } = await supabase
+        .from("accessories")
+        .update({ store_stock: accessory.store_stock - 1 })
+        .eq("id", input.product_id)
+        .eq("store_stock", accessory.store_stock); // optimistic lock
+
+      if (updateError) {
+        throw new Error("Lagerbeholdning kunne ikke opdateres");
+      }
     }
   }
 
