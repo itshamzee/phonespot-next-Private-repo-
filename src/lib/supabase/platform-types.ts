@@ -456,3 +456,60 @@ export type StaffUpdate = Partial<Omit<Staff, 'id' | 'created_at'>> & { id: stri
 export type TradeInUpdate = Partial<Omit<TradeIn, 'id' | 'created_at'>> & { id: string };
 export type InvoiceUpdate = Partial<Omit<Invoice, 'id' | 'created_at'>> & { id: string };
 export type WarrantyUpdate = Partial<Omit<Warranty, 'id' | 'created_at'>> & { id: string };
+
+// ============================================
+// Accessories
+// ============================================
+export interface Accessory {
+  id: string;
+  name: string;
+  slug: string;
+  category: 'cover' | 'screen_protector' | 'charger' | 'cable' | 'audio' | 'other';
+  brand: string | null;
+  compatible_models: string[];
+  price: number;
+  cost_price: number;
+  sku: string | null;
+  ean: string | null;
+  image_url: string | null;
+  description: string | null;
+  online_stock: number;
+  store_stock: number;
+  store_id: string;
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccessoryTemplate {
+  id: string;
+  name: string;
+  category: string;
+  default_price: number | null;
+  default_cost_price: number | null;
+  image_url: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+export interface Reservation {
+  id: string;
+  product_type: 'accessory' | 'device';
+  product_id: string;
+  product_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  store_id: string;
+  status: 'pending' | 'ready' | 'collected' | 'expired' | 'cancelled';
+  created_at: string;
+  expires_at: string;
+  ready_at: string | null;
+  collected_at: string | null;
+}
+
+export type AccessoryInsert = Omit<Accessory, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+export type AccessoryUpdate = Partial<Omit<Accessory, 'id' | 'created_at'>> & { id: string };
+export type AccessoryTemplateInsert = Omit<AccessoryTemplate, 'id' | 'created_at'> & { id?: string };
+export type ReservationInsert = Omit<Reservation, 'id' | 'created_at'> & { id?: string };
+export type ReservationUpdate = Partial<Omit<Reservation, 'id' | 'created_at'>> & { id: string };
