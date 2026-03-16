@@ -56,6 +56,14 @@ interface CustomerInfo {
   description: string;
 }
 
+interface DeviceBooking {
+  id: string;
+  brandId: string;
+  modelId: string;
+  serviceIds: Set<string>;
+  includesTemperedGlass: boolean;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Step Icons                                                         */
 /* ------------------------------------------------------------------ */
@@ -243,6 +251,78 @@ function NavButtons({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Device Tabs                                                        */
+/* ------------------------------------------------------------------ */
+
+function DeviceTabs({
+  deviceBookings,
+  activeDeviceIndex,
+  brands,
+  modelsMap,
+  onSelect,
+  onAdd,
+  onRemove,
+}: {
+  deviceBookings: DeviceBooking[];
+  activeDeviceIndex: number;
+  brands: RepairBrand[];
+  modelsMap: Map<string, RepairModel[]>;
+  onSelect: (i: number) => void;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        {deviceBookings.map((booking, i) => {
+          const brand = brands.find((b) => b.id === booking.brandId);
+          const models = modelsMap.get(booking.id) ?? [];
+          const model = models.find((m) => m.id === booking.modelId);
+          return (
+            <button
+              key={booking.id}
+              type="button"
+              onClick={() => onSelect(i)}
+              className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                i === activeDeviceIndex
+                  ? "bg-green-eco text-white shadow-sm"
+                  : "border border-soft-grey bg-white text-charcoal hover:border-green-eco/30"
+              }`}
+            >
+              Enhed {i + 1}
+              {model && (
+                <span className="font-normal opacity-80">
+                  — {brand?.name} {model.name}
+                </span>
+              )}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={onAdd}
+          className="flex items-center gap-1 whitespace-nowrap rounded-full border-2 border-dashed border-green-eco/30 px-4 py-2 text-sm font-bold text-green-eco transition-all hover:border-green-eco/50 hover:bg-green-eco/5"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+            <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+          </svg>
+          Tilføj enhed
+        </button>
+      </div>
+      {deviceBookings.length > 1 && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="mt-2 text-xs font-semibold text-red-500 hover:underline"
+        >
+          Fjern enhed {activeDeviceIndex + 1}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -258,19 +338,27 @@ export function BookingWizard() {
     error?: string;
   } | null>(null);
 
-  /* ---- step 1: device ---- */
-  const [brands, setBrands] = useState<RepairBrand[]>([]);
-  const [models, setModels] = useState<RepairModel[]>([]);
-  const [selectedBrandId, setSelectedBrandId] = useState("");
-  const [selectedModelId, setSelectedModelId] = useState("");
-  const [brandsLoading, setBrandsLoading] = useState(true);
-  const [modelsLoading, setModelsLoading] = useState(false);
+  /* ---- multi-device state ---- */
+  const [deviceBookings, setDeviceBookings] = useState<DeviceBooking[]>([
+    {
+      id: crypto.randomUUID(),
+      brandId: "",
+      modelId: "",
+      serviceIds: new Set(),
+      includesTemperedGlass: false,
+    },
+  ]);
+  const [activeDeviceIndex, setActiveDeviceIndex] = useState(0);
 
-  /* ---- step 2: services ---- */
-  const [services, setServices] = useState<RepairService[]>([]);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set());
-  const [includesTemperedGlass, setIncludesTemperedGlass] = useState(false);
-  const [servicesLoading, setServicesLoading] = useState(false);
+  /* ---- global brands (fetched once) ---- */
+  const [brands, setBrands] = useState<RepairBrand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(true);
+
+  /* ---- per-device models and services ---- */
+  const [modelsMap, setModelsMap] = useState<Map<string, RepairModel[]>>(new Map());
+  const [servicesMap, setServicesMap] = useState<Map<string, RepairService[]>>(new Map());
+  const [modelsLoadingSet, setModelsLoadingSet] = useState<Set<string>>(new Set());
+  const [servicesLoadingSet, setServicesLoadingSet] = useState<Set<string>>(new Set());
 
   /* ---- step 3: customer ---- */
   const [customer, setCustomer] = useState<CustomerInfo>({
@@ -283,18 +371,28 @@ export function BookingWizard() {
   /* ---- step 4: date ---- */
   const [preferredDate, setPreferredDate] = useState("");
 
-  /* ---- derived ---- */
-  const selectedBrand = brands.find((b) => b.id === selectedBrandId);
-  const selectedModel = models.find((m) => m.id === selectedModelId);
-  const selectedServices = services.filter((s) => selectedServiceIds.has(s.id));
+  /* ---- active device shorthand ---- */
+  const activeDevice = deviceBookings[activeDeviceIndex];
+  const activeModels = activeDevice ? (modelsMap.get(activeDevice.id) ?? []) : [];
+  const activeServices = activeDevice ? (servicesMap.get(activeDevice.id) ?? []) : [];
+  const isActiveModelsLoading = activeDevice ? modelsLoadingSet.has(activeDevice.id) : false;
+  const isActiveServicesLoading = activeDevice ? servicesLoadingSet.has(activeDevice.id) : false;
 
-  const subtotal =
-    selectedServices.reduce((sum, s) => sum + s.price_dkk, 0) +
-    (includesTemperedGlass ? TEMPERED_GLASS_PRICE : 0);
+  /* ---- price calculations across all devices ---- */
+  const totalServiceCount = deviceBookings.reduce((sum, b) => sum + b.serviceIds.size, 0);
 
-  const discountPercent =
-    selectedServiceIds.size >= 3 ? 15 : selectedServiceIds.size >= 2 ? 10 : 0;
+  const subtotal = deviceBookings.reduce((sum, booking) => {
+    const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
+      booking.serviceIds.has(s.id),
+    );
+    return (
+      sum +
+      deviceServices.reduce((s, svc) => s + svc.price_dkk, 0) +
+      (booking.includesTemperedGlass ? TEMPERED_GLASS_PRICE : 0)
+    );
+  }, 0);
 
+  const discountPercent = totalServiceCount >= 3 ? 15 : totalServiceCount >= 2 ? 10 : 0;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
 
@@ -304,6 +402,7 @@ export function BookingWizard() {
   /*  Data fetching                                                    */
   /* ---------------------------------------------------------------- */
 
+  // Fetch brands once
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -316,84 +415,205 @@ export function BookingWizard() {
     })();
   }, [supabase]);
 
-  useEffect(() => {
-    if (!selectedBrandId) {
-      setModels([]);
-      return;
-    }
-    setModelsLoading(true);
-    setSelectedModelId("");
-    setServices([]);
-    setSelectedServiceIds(new Set());
-    (async () => {
+  // Fetch models when a device's brandId changes
+  const fetchModelsForDevice = useCallback(
+    async (deviceId: string, brandId: string) => {
+      if (!brandId) {
+        setModelsMap((prev) => {
+          const next = new Map(prev);
+          next.delete(deviceId);
+          return next;
+        });
+        return;
+      }
+      setModelsLoadingSet((prev) => new Set(prev).add(deviceId));
       const { data } = await supabase
         .from("repair_models")
         .select("*")
-        .eq("brand_id", selectedBrandId)
+        .eq("brand_id", brandId)
         .eq("active", true)
         .order("sort_order");
-      setModels((data as RepairModel[]) ?? []);
-      setModelsLoading(false);
-    })();
-  }, [selectedBrandId, supabase]);
+      setModelsMap((prev) => {
+        const next = new Map(prev);
+        next.set(deviceId, (data as RepairModel[]) ?? []);
+        return next;
+      });
+      setModelsLoadingSet((prev) => {
+        const next = new Set(prev);
+        next.delete(deviceId);
+        return next;
+      });
+    },
+    [supabase],
+  );
 
-  useEffect(() => {
-    if (!selectedModelId) {
-      setServices([]);
-      setSelectedServiceIds(new Set());
-      return;
-    }
-    setServicesLoading(true);
-    (async () => {
+  // Fetch services when a device's modelId changes
+  const fetchServicesForDevice = useCallback(
+    async (deviceId: string, modelId: string) => {
+      if (!modelId) {
+        setServicesMap((prev) => {
+          const next = new Map(prev);
+          next.delete(deviceId);
+          return next;
+        });
+        return;
+      }
+      setServicesLoadingSet((prev) => new Set(prev).add(deviceId));
       const { data } = await supabase
         .from("repair_services")
         .select("*")
-        .eq("model_id", selectedModelId)
+        .eq("model_id", modelId)
         .eq("active", true)
         .order("sort_order");
-      setServices((data as RepairService[]) ?? []);
-      setServicesLoading(false);
-    })();
-  }, [selectedModelId, supabase]);
+      setServicesMap((prev) => {
+        const next = new Map(prev);
+        next.set(deviceId, (data as RepairService[]) ?? []);
+        return next;
+      });
+      setServicesLoadingSet((prev) => {
+        const next = new Set(prev);
+        next.delete(deviceId);
+        return next;
+      });
+    },
+    [supabase],
+  );
 
-  /* ---- pre-fill from URL ---- */
+  /* ---- pre-fill first device from URL params ---- */
   useEffect(() => {
     if (brands.length === 0) return;
     const brandSlug = searchParams.get("brand");
     if (!brandSlug) return;
     const matchedBrand = brands.find((b) => b.slug === brandSlug);
-    if (matchedBrand && !selectedBrandId) setSelectedBrandId(matchedBrand.id);
-  }, [brands, searchParams, selectedBrandId]);
+    if (matchedBrand && deviceBookings[0]?.brandId === "") {
+      updateDeviceBrand(deviceBookings[0].id, matchedBrand.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brands, searchParams]);
 
   useEffect(() => {
-    if (models.length === 0) return;
+    if (activeModels.length === 0) return;
     const modelSlug = searchParams.get("model");
     if (!modelSlug) return;
-    const matchedModel = models.find((m) => m.slug === modelSlug);
-    if (matchedModel && !selectedModelId) setSelectedModelId(matchedModel.id);
-  }, [models, searchParams, selectedModelId]);
+    const matchedModel = activeModels.find((m) => m.slug === modelSlug);
+    if (matchedModel && activeDevice?.modelId === "") {
+      updateDeviceModel(activeDevice.id, matchedModel.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeModels, searchParams]);
 
   useEffect(() => {
-    if (services.length === 0) return;
+    if (activeServices.length === 0) return;
     const serviceSlug = searchParams.get("service");
     if (!serviceSlug) return;
-    const matchedService = services.find((s) => s.slug === serviceSlug);
-    if (matchedService && selectedServiceIds.size === 0)
-      setSelectedServiceIds(new Set([matchedService.id]));
-  }, [services, searchParams, selectedServiceIds.size]);
+    const matchedService = activeServices.find((s) => s.slug === serviceSlug);
+    if (matchedService && activeDevice?.serviceIds.size === 0) {
+      setDeviceBookings((prev) =>
+        prev.map((b) =>
+          b.id === activeDevice.id
+            ? { ...b, serviceIds: new Set([matchedService.id]) }
+            : b,
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeServices, searchParams]);
 
   /* ---------------------------------------------------------------- */
-  /*  Handlers                                                         */
+  /*  Device mutation helpers                                          */
   /* ---------------------------------------------------------------- */
 
-  const toggleService = useCallback((id: string) => {
-    setSelectedServiceIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const updateDeviceBrand = useCallback(
+    (deviceId: string, brandId: string) => {
+      setDeviceBookings((prev) =>
+        prev.map((b) =>
+          b.id === deviceId
+            ? { ...b, brandId, modelId: "", serviceIds: new Set(), includesTemperedGlass: false }
+            : b,
+        ),
+      );
+      // Clear stale services when brand changes
+      setServicesMap((prev) => {
+        const next = new Map(prev);
+        next.delete(deviceId);
+        return next;
+      });
+      fetchModelsForDevice(deviceId, brandId);
+    },
+    [fetchModelsForDevice],
+  );
+
+  const updateDeviceModel = useCallback(
+    (deviceId: string, modelId: string) => {
+      setDeviceBookings((prev) =>
+        prev.map((b) =>
+          b.id === deviceId
+            ? { ...b, modelId, serviceIds: new Set(), includesTemperedGlass: false }
+            : b,
+        ),
+      );
+      fetchServicesForDevice(deviceId, modelId);
+    },
+    [fetchServicesForDevice],
+  );
+
+  const toggleServiceForDevice = useCallback((deviceId: string, serviceId: string) => {
+    setDeviceBookings((prev) =>
+      prev.map((b) => {
+        if (b.id !== deviceId) return b;
+        const next = new Set(b.serviceIds);
+        if (next.has(serviceId)) next.delete(serviceId);
+        else next.add(serviceId);
+        return { ...b, serviceIds: next };
+      }),
+    );
   }, []);
+
+  const toggleTemperedGlassForDevice = useCallback((deviceId: string) => {
+    setDeviceBookings((prev) =>
+      prev.map((b) =>
+        b.id === deviceId
+          ? { ...b, includesTemperedGlass: !b.includesTemperedGlass }
+          : b,
+      ),
+    );
+  }, []);
+
+  const addDevice = useCallback(() => {
+    const newDevice: DeviceBooking = {
+      id: crypto.randomUUID(),
+      brandId: "",
+      modelId: "",
+      serviceIds: new Set(),
+      includesTemperedGlass: false,
+    };
+    setDeviceBookings((prev) => [...prev, newDevice]);
+    setActiveDeviceIndex((prev) => prev + 1);
+  }, []);
+
+  const removeActiveDevice = useCallback(() => {
+    setDeviceBookings((prev) => {
+      if (prev.length <= 1) return prev;
+      const removed = prev[activeDeviceIndex];
+      // Clean up maps for removed device
+      setModelsMap((m) => {
+        const next = new Map(m);
+        next.delete(removed.id);
+        return next;
+      });
+      setServicesMap((s) => {
+        const next = new Map(s);
+        next.delete(removed.id);
+        return next;
+      });
+      return prev.filter((_, i) => i !== activeDeviceIndex);
+    });
+    setActiveDeviceIndex((prev) => Math.max(0, prev - 1));
+  }, [activeDeviceIndex]);
+
+  /* ---------------------------------------------------------------- */
+  /*  Other handlers                                                   */
+  /* ---------------------------------------------------------------- */
 
   const handleCustomerChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -404,33 +624,79 @@ export function BookingWizard() {
 
   const canGoNext = useMemo(() => {
     switch (step) {
-      case 0: return !!selectedBrandId && !!selectedModelId;
-      case 1: return selectedServiceIds.size > 0;
-      case 2: return !!(customer.name.trim() && customer.email.trim() && customer.phone.trim() && customer.description.trim());
-      case 3: return !!preferredDate;
-      case 4: return true;
-      default: return false;
+      case 0:
+        // All devices must have brand and model selected
+        return deviceBookings.every((b) => !!b.brandId && !!b.modelId);
+      case 1:
+        // All devices must have at least one service selected
+        return deviceBookings.every((b) => b.serviceIds.size > 0);
+      case 2:
+        return !!(
+          customer.name.trim() &&
+          customer.email.trim() &&
+          customer.phone.trim() &&
+          customer.description.trim()
+        );
+      case 3:
+        return !!preferredDate;
+      case 4:
+        return true;
+      default:
+        return false;
     }
-  }, [step, selectedBrandId, selectedModelId, selectedServiceIds.size, customer, preferredDate]);
+  }, [step, deviceBookings, customer, preferredDate]);
 
-  const buildPayload = () => ({
-    customer_name: customer.name.trim(),
-    customer_email: customer.email.trim(),
-    customer_phone: customer.phone.trim(),
-    device_type: selectedBrand?.name ?? "",
-    device_model: selectedModel?.name ?? "",
-    issue_description: customer.description.trim(),
-    service_type: selectedServices.map((s) => s.name).join(", "),
-    selected_services: selectedServices.map((s) => ({
-      id: s.id,
-      name: s.name,
-      price_dkk: s.price_dkk,
-    })),
-    total_price_dkk: totalPrice,
-    discount_percent: discountPercent,
-    includes_tempered_glass: includesTemperedGlass,
-    preferred_date: preferredDate,
-  });
+  const buildPayload = () => {
+    const firstBooking = deviceBookings[0];
+    const firstBrand = brands.find((b) => b.id === firstBooking?.brandId);
+    const firstModels = firstBooking ? (modelsMap.get(firstBooking.id) ?? []) : [];
+    const firstModel = firstModels.find((m) => m.id === firstBooking?.modelId);
+    const firstServices = firstBooking
+      ? (servicesMap.get(firstBooking.id) ?? []).filter((s) =>
+          firstBooking.serviceIds.has(s.id),
+        )
+      : [];
+
+    return {
+      customer_name: customer.name.trim(),
+      customer_email: customer.email.trim(),
+      customer_phone: customer.phone.trim(),
+      issue_description: customer.description.trim(),
+      preferred_date: preferredDate,
+      // Backward-compatible top-level fields from first device
+      device_type: firstBrand?.name ?? "",
+      device_model: firstModel?.name ?? "",
+      service_type: firstServices.map((s) => s.name).join(", "),
+      selected_services: firstServices.map((s) => ({
+        id: s.id,
+        name: s.name,
+        price_dkk: s.price_dkk,
+      })),
+      includes_tempered_glass: firstBooking?.includesTemperedGlass ?? false,
+      // All devices
+      devices: deviceBookings.map((booking) => {
+        const brand = brands.find((b) => b.id === booking.brandId);
+        const models = modelsMap.get(booking.id) ?? [];
+        const model = models.find((m) => m.id === booking.modelId);
+        const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
+          booking.serviceIds.has(s.id),
+        );
+        return {
+          device_type: brand?.name ?? "",
+          device_model: model?.name ?? "",
+          service_type: deviceServices.map((s) => s.name).join(", "),
+          selected_services: deviceServices.map((s) => ({
+            id: s.id,
+            name: s.name,
+            price_dkk: s.price_dkk,
+          })),
+          includes_tempered_glass: booking.includesTemperedGlass,
+        };
+      }),
+      total_price_dkk: totalPrice,
+      discount_percent: discountPercent,
+    };
+  };
 
   /** "Betal i butikken" — existing flow, no payment */
   const handleSubmitNoPay = async () => {
@@ -477,7 +743,6 @@ export function BookingWizard() {
   };
 
   const goNext = () => setStep((s) => Math.min(s + 1, 4));
-
   const goPrev = () => setStep((s) => Math.max(s - 1, 0));
 
   /* ---------------------------------------------------------------- */
@@ -508,11 +773,18 @@ export function BookingWizard() {
         )}
         {preferredDate && (
           <p className="mt-2 text-sm text-gray">
-            Ønsket aflevering: <span className="font-medium text-charcoal">{formatDateDanish(preferredDate)}</span>
+            Ønsket aflevering:{" "}
+            <span className="font-medium text-charcoal">{formatDateDanish(preferredDate)}</span>
           </p>
         )}
         <div className="mt-6 flex items-center justify-center gap-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5 text-green-eco">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            className="h-5 w-5 text-green-eco"
+          >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
           <span className="text-sm font-bold text-green-eco">Livstidsgaranti inkluderet</span>
@@ -541,7 +813,11 @@ export function BookingWizard() {
       {submitResult?.error && (
         <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+              clipRule="evenodd"
+            />
           </svg>
           {submitResult.error}
         </div>
@@ -551,64 +827,122 @@ export function BookingWizard() {
       {step === 0 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">
-              Vælg din enhed
-            </h2>
-            <p className="mt-1 text-sm text-gray">Vælg mærke og model for at se tilgængelige reparationer.</p>
+            <h2 className="font-display text-xl font-bold text-charcoal">Vælg din enhed</h2>
+            <p className="mt-1 text-sm text-gray">
+              Vælg mærke og model for at se tilgængelige reparationer. Du kan tilføje flere enheder.
+            </p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="brand" className={labelStyles}>Mærke</label>
-            {brandsLoading ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-gray">
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Indlæser mærker...
-              </div>
-            ) : (
-              <select
-                id="brand"
-                value={selectedBrandId}
-                onChange={(e) => setSelectedBrandId(e.target.value)}
-                className={inputStyles}
-              >
-                <option value="">Vælg mærke...</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
+          <DeviceTabs
+            deviceBookings={deviceBookings}
+            activeDeviceIndex={activeDeviceIndex}
+            brands={brands}
+            modelsMap={modelsMap}
+            onSelect={setActiveDeviceIndex}
+            onAdd={addDevice}
+            onRemove={removeActiveDevice}
+          />
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="model" className={labelStyles}>Model</label>
-            {modelsLoading ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-gray">
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Indlæser modeller...
+          {activeDevice && (
+            <>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="brand" className={labelStyles}>
+                  Mærke
+                </label>
+                {brandsLoading ? (
+                  <div className="flex items-center gap-2 py-3 text-sm text-gray">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Indlæser mærker...
+                  </div>
+                ) : (
+                  <select
+                    id="brand"
+                    value={activeDevice.brandId}
+                    onChange={(e) => updateDeviceBrand(activeDevice.id, e.target.value)}
+                    className={inputStyles}
+                  >
+                    <option value="">Vælg mærke...</option>
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
-            ) : (
-              <select
-                id="model"
-                value={selectedModelId}
-                onChange={(e) => setSelectedModelId(e.target.value)}
-                disabled={!selectedBrandId}
-                className={inputStyles}
-              >
-                <option value="">
-                  {selectedBrandId ? "Vælg model..." : "Vælg mærke først..."}
-                </option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="model" className={labelStyles}>
+                  Model
+                </label>
+                {isActiveModelsLoading ? (
+                  <div className="flex items-center gap-2 py-3 text-sm text-gray">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Indlæser modeller...
+                  </div>
+                ) : (
+                  <select
+                    id="model"
+                    value={activeDevice.modelId}
+                    onChange={(e) => updateDeviceModel(activeDevice.id, e.target.value)}
+                    disabled={!activeDevice.brandId}
+                    className={inputStyles}
+                  >
+                    <option value="">
+                      {activeDevice.brandId ? "Vælg model..." : "Vælg mærke først..."}
+                    </option>
+                    {activeModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Incomplete devices warning */}
+              {deviceBookings.length > 1 && !canGoNext && (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-amber-500">
+                    <path
+                      fillRule="evenodd"
+                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Alle enheder skal have valgt mærke og model.
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -616,119 +950,211 @@ export function BookingWizard() {
       {step === 1 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">
-              Vælg reparation
-            </h2>
+            <h2 className="font-display text-xl font-bold text-charcoal">Vælg reparation</h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg en eller flere reparationer. Flere reparationer = større rabat!
+              Vælg reparationer for hver enhed. Flere reparationer = større rabat!
             </p>
           </div>
 
-          {servicesLoading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-gray">
-              <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Indlæser reparationer...
-            </div>
-          ) : services.length === 0 ? (
-            <p className="py-4 text-sm text-gray">Ingen reparationer tilgængelige for denne model.</p>
-          ) : (
-            <div className="space-y-2">
-              {services.map((s) => {
-                const isChecked = selectedServiceIds.has(s.id);
-                return (
-                  <button
-                    type="button"
-                    key={s.id}
-                    onClick={() => toggleService(s.id)}
-                    className={`flex w-full cursor-pointer items-center justify-between rounded-xl border-2 p-4 text-left transition-all ${
-                      isChecked
-                        ? "border-green-eco bg-green-eco/5 shadow-sm"
-                        : "border-soft-grey hover:border-green-eco/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
-                        isChecked
+          <DeviceTabs
+            deviceBookings={deviceBookings}
+            activeDeviceIndex={activeDeviceIndex}
+            brands={brands}
+            modelsMap={modelsMap}
+            onSelect={setActiveDeviceIndex}
+            onAdd={addDevice}
+            onRemove={removeActiveDevice}
+          />
+
+          {activeDevice && (
+            <>
+              {isActiveServicesLoading ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-gray">
+                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Indlæser reparationer...
+                </div>
+              ) : activeServices.length === 0 ? (
+                <p className="py-4 text-sm text-gray">
+                  Ingen reparationer tilgængelige for denne model.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {activeServices.map((s) => {
+                    const isChecked = activeDevice.serviceIds.has(s.id);
+                    return (
+                      <button
+                        type="button"
+                        key={s.id}
+                        onClick={() => toggleServiceForDevice(activeDevice.id, s.id)}
+                        className={`flex w-full cursor-pointer items-center justify-between rounded-xl border-2 p-4 text-left transition-all ${
+                          isChecked
+                            ? "border-green-eco bg-green-eco/5 shadow-sm"
+                            : "border-soft-grey hover:border-green-eco/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
+                              isChecked
+                                ? "border-green-eco bg-green-eco text-white"
+                                : "border-soft-grey"
+                            }`}
+                          >
+                            {isChecked && (
+                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-bold text-charcoal">{s.name}</span>
+                            {s.estimated_minutes && (
+                              <span className="ml-2 text-xs text-gray">
+                                ca. {s.estimated_minutes} min
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="font-display font-bold text-charcoal">{s.price_dkk} DKK</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Tempered glass upsell */}
+              <div
+                className={`rounded-xl border-2 p-4 transition-all ${
+                  activeDevice.includesTemperedGlass
+                    ? "border-green-eco bg-green-eco/5"
+                    : "border-dashed border-green-eco/30 bg-green-eco/[0.02]"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleTemperedGlassForDevice(activeDevice.id)}
+                  className="flex w-full cursor-pointer items-center justify-between text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
+                        activeDevice.includesTemperedGlass
                           ? "border-green-eco bg-green-eco text-white"
-                          : "border-soft-grey"
-                      }`}>
-                        {isChecked && (
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                            <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <span className="font-bold text-charcoal">{s.name}</span>
-                        {s.estimated_minutes && (
-                          <span className="ml-2 text-xs text-gray">ca. {s.estimated_minutes} min</span>
-                        )}
-                      </div>
+                          : "border-green-eco/30"
+                      }`}
+                    >
+                      {activeDevice.includesTemperedGlass && (
+                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                          <path
+                            fillRule="evenodd"
+                            d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
                     </div>
-                    <span className="font-display font-bold text-charcoal">{s.price_dkk} DKK</span>
-                  </button>
-                );
-              })}
-            </div>
+                    <div>
+                      <span className="font-bold text-charcoal">Tilføj panserglas</span>
+                      <p className="text-xs text-gray">Beskyt din skærm med hærdet glas</p>
+                    </div>
+                  </div>
+                  <span className="font-display font-bold text-green-eco">
+                    {TEMPERED_GLASS_PRICE} DKK
+                  </span>
+                </button>
+              </div>
+            </>
           )}
 
-          {/* Tempered glass upsell */}
-          <div className={`rounded-xl border-2 p-4 transition-all ${
-            includesTemperedGlass
-              ? "border-green-eco bg-green-eco/5"
-              : "border-dashed border-green-eco/30 bg-green-eco/[0.02]"
-          }`}>
-            <button type="button" onClick={() => setIncludesTemperedGlass((v) => !v)} className="flex w-full cursor-pointer items-center justify-between text-left">
-              <div className="flex items-center gap-3">
-                <div className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
-                  includesTemperedGlass
-                    ? "border-green-eco bg-green-eco text-white"
-                    : "border-green-eco/30"
-                }`}>
-                  {includesTemperedGlass && (
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                      <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <span className="font-bold text-charcoal">Tilføj panserglas</span>
-                  <p className="text-xs text-gray">Beskyt din skærm med hærdet glas</p>
-                </div>
-              </div>
-              <span className="font-display font-bold text-green-eco">{TEMPERED_GLASS_PRICE} DKK</span>
-            </button>
-          </div>
-
-          {/* Discount badge */}
+          {/* Discount badge — based on total across all devices */}
           {discountPercent > 0 && (
             <div className="flex items-center gap-3 rounded-xl bg-green-eco/10 p-4">
               <span className="rounded-full bg-green-eco px-3 py-1.5 text-xs font-bold text-white">
                 -{discountPercent}%
               </span>
               <span className="text-sm font-medium text-charcoal">
-                Rabat ved {selectedServiceIds.size} reparationer — du sparer {discountAmount} DKK!
+                Rabat ved {totalServiceCount} reparationer — du sparer {discountAmount} DKK!
               </span>
             </div>
           )}
 
-          {/* Running total */}
-          {selectedServiceIds.size > 0 && (
-            <div className="rounded-xl bg-charcoal/[0.03] p-4">
-              {discountPercent > 0 && (
-                <div className="flex justify-between text-sm text-gray">
-                  <span>Subtotal</span>
-                  <span className="line-through">{subtotal} DKK</span>
+          {/* Running total — all devices */}
+          {deviceBookings.some((b) => b.serviceIds.size > 0) && (
+            <div className="mt-6 rounded-xl bg-charcoal/[0.03] p-4 space-y-3">
+              {deviceBookings.map((booking) => {
+                const brand = brands.find((b) => b.id === booking.brandId);
+                const models = modelsMap.get(booking.id) ?? [];
+                const model = models.find((m) => m.id === booking.modelId);
+                const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
+                  booking.serviceIds.has(s.id),
+                );
+                if (deviceServices.length === 0 && !booking.includesTemperedGlass) return null;
+                return (
+                  <div key={booking.id}>
+                    <p className="text-xs font-bold text-green-eco">
+                      {brand?.name} {model?.name}
+                    </p>
+                    {deviceServices.map((s) => (
+                      <div key={s.id} className="flex justify-between text-sm">
+                        <span className="text-charcoal">{s.name}</span>
+                        <span className="font-bold text-charcoal">{s.price_dkk} DKK</span>
+                      </div>
+                    ))}
+                    {booking.includesTemperedGlass && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-charcoal">Panserglas</span>
+                        <span className="font-bold text-charcoal">99 DKK</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {/* Total */}
+              <div className="border-t border-soft-grey pt-3">
+                {discountPercent > 0 && (
+                  <div className="flex justify-between text-sm text-gray">
+                    <span>Subtotal</span>
+                    <span className="line-through">{subtotal} DKK</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold text-charcoal">
+                  <span>Total</span>
+                  <span className="text-green-eco">{totalPrice} DKK</span>
                 </div>
-              )}
-              <div className="mt-1 flex justify-between text-lg font-bold text-charcoal">
-                <span>Total</span>
-                <span className="text-green-eco">{totalPrice} DKK</span>
+                <p className="mt-1 text-xs text-gray">Inkl. moms, reservedele og livstidsgaranti</p>
               </div>
-              <p className="mt-1 text-xs text-gray">Inkl. moms, reservedele og livstidsgaranti</p>
+            </div>
+          )}
+
+          {/* Incomplete devices warning */}
+          {deviceBookings.length > 1 && !canGoNext && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-amber-500">
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Alle enheder skal have mindst én reparation valgt.
             </div>
           )}
         </div>
@@ -738,50 +1164,73 @@ export function BookingWizard() {
       {step === 2 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">
-              Dine oplysninger
-            </h2>
-            <p className="mt-1 text-sm text-gray">Vi bruger disse oplysninger til at kontakte dig om reparationen.</p>
+            <h2 className="font-display text-xl font-bold text-charcoal">Dine oplysninger</h2>
+            <p className="mt-1 text-sm text-gray">
+              Vi bruger disse oplysninger til at kontakte dig om reparationen.
+            </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <label htmlFor="name" className={labelStyles}>Fulde navn</label>
+              <label htmlFor="name" className={labelStyles}>
+                Fulde navn
+              </label>
               <input
-                id="name" name="name" type="text" required
+                id="name"
+                name="name"
+                type="text"
+                required
                 placeholder="Anders Andersen"
-                value={customer.name} onChange={handleCustomerChange}
+                value={customer.name}
+                onChange={handleCustomerChange}
                 className={inputStyles}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="phone" className={labelStyles}>Telefon</label>
+              <label htmlFor="phone" className={labelStyles}>
+                Telefon
+              </label>
               <input
-                id="phone" name="phone" type="tel" required
+                id="phone"
+                name="phone"
+                type="tel"
+                required
                 placeholder="+45 XX XX XX XX"
-                value={customer.phone} onChange={handleCustomerChange}
+                value={customer.phone}
+                onChange={handleCustomerChange}
                 className={inputStyles}
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="email" className={labelStyles}>Email</label>
+            <label htmlFor="email" className={labelStyles}>
+              Email
+            </label>
             <input
-              id="email" name="email" type="email" required
+              id="email"
+              name="email"
+              type="email"
+              required
               placeholder="din@email.dk"
-              value={customer.email} onChange={handleCustomerChange}
+              value={customer.email}
+              onChange={handleCustomerChange}
               className={inputStyles}
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="description" className={labelStyles}>Beskriv problemet</label>
+            <label htmlFor="description" className={labelStyles}>
+              Beskriv problemet
+            </label>
             <textarea
-              id="description" name="description" required
-              placeholder="Beskriv hvad der er galt med din enhed — hvad skete der, og hvornår startede det?"
+              id="description"
+              name="description"
+              required
+              placeholder="Beskriv hvad der er galt med dine enheder — hvad skete der, og hvornår startede det?"
               rows={4}
-              value={customer.description} onChange={handleCustomerChange}
+              value={customer.description}
+              onChange={handleCustomerChange}
               className={inputStyles}
             />
           </div>
@@ -793,10 +1242,10 @@ export function BookingWizard() {
         <div className="space-y-6">
           <div>
             <h2 className="font-display text-xl font-bold text-charcoal">
-              Hvornår vil du aflevere din enhed?
+              Hvornår vil du aflevere dine enheder?
             </h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg en dato hvor du kan aflevere din enhed i butikken.
+              Vælg en dato hvor du kan aflevere dine enheder i butikken.
             </p>
           </div>
 
@@ -814,11 +1263,18 @@ export function BookingWizard() {
                       : "border-soft-grey hover:border-green-eco/30"
                   }`}
                 >
-                  <p className={`text-sm font-bold ${isSelected ? "text-green-eco" : "text-charcoal"}`}>
-                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", { weekday: "long" })}
+                  <p
+                    className={`text-sm font-bold ${isSelected ? "text-green-eco" : "text-charcoal"}`}
+                  >
+                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", {
+                      weekday: "long",
+                    })}
                   </p>
                   <p className="mt-0.5 text-xs text-gray">
-                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", { day: "numeric", month: "long" })}
+                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", {
+                      day: "numeric",
+                      month: "long",
+                    })}
                   </p>
                 </button>
               );
@@ -827,11 +1283,21 @@ export function BookingWizard() {
 
           {/* Parts availability note */}
           <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-amber-500">
-              <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-5 w-5 shrink-0 text-amber-500"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
             </svg>
             <p className="text-sm text-amber-800">
-              <span className="font-bold">Bemærk:</span> Nogle reservedele har vi ikke på lager, men vi har dag-til-dag levering og kan have dem klar til næste dag. Vi kontakter dig hvis din valgte dato skal justeres.
+              <span className="font-bold">Bemærk:</span> Nogle reservedele har vi ikke på lager,
+              men vi har dag-til-dag levering og kan have dem klar til næste dag. Vi kontakter dig
+              hvis din valgte dato skal justeres.
             </p>
           </div>
         </div>
@@ -841,39 +1307,51 @@ export function BookingWizard() {
       {step === 4 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">
-              Bekræft din booking
-            </h2>
+            <h2 className="font-display text-xl font-bold text-charcoal">Bekræft din booking</h2>
             <p className="mt-1 text-sm text-gray">Gennemgå dine valg og vælg betalingsmetode.</p>
           </div>
 
-          {/* Device */}
-          <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray">Enhed</p>
-            <p className="mt-1 font-display text-lg font-bold text-charcoal">
-              {selectedBrand?.name} {selectedModel?.name}
+          {/* All devices and their services */}
+          <div className="rounded-xl bg-charcoal/[0.03] p-5 space-y-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray">
+              {deviceBookings.length === 1 ? "Enhed" : "Enheder"}
             </p>
-          </div>
+            {deviceBookings.map((booking, i) => {
+              const brand = brands.find((b) => b.id === booking.brandId);
+              const models = modelsMap.get(booking.id) ?? [];
+              const model = models.find((m) => m.id === booking.modelId);
+              const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
+                booking.serviceIds.has(s.id),
+              );
+              return (
+                <div key={booking.id} className={i > 0 ? "border-t border-soft-grey pt-4" : ""}>
+                  <p className="font-display text-base font-bold text-charcoal">
+                    {deviceBookings.length > 1 && (
+                      <span className="mr-2 text-xs font-bold text-green-eco uppercase tracking-wide">
+                        Enhed {i + 1}
+                      </span>
+                    )}
+                    {brand?.name} {model?.name}
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {deviceServices.map((s) => (
+                      <li key={s.id} className="flex justify-between text-sm">
+                        <span className="text-charcoal">{s.name}</span>
+                        <span className="font-bold text-charcoal">{s.price_dkk} DKK</span>
+                      </li>
+                    ))}
+                    {booking.includesTemperedGlass && (
+                      <li className="flex justify-between text-sm">
+                        <span className="text-charcoal">Panserglas</span>
+                        <span className="font-bold text-charcoal">{TEMPERED_GLASS_PRICE} DKK</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              );
+            })}
 
-          {/* Services */}
-          <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray">Reparationer</p>
-            <ul className="space-y-2">
-              {selectedServices.map((s) => (
-                <li key={s.id} className="flex justify-between text-sm">
-                  <span className="text-charcoal">{s.name}</span>
-                  <span className="font-bold text-charcoal">{s.price_dkk} DKK</span>
-                </li>
-              ))}
-              {includesTemperedGlass && (
-                <li className="flex justify-between text-sm">
-                  <span className="text-charcoal">Panserglas</span>
-                  <span className="font-bold text-charcoal">{TEMPERED_GLASS_PRICE} DKK</span>
-                </li>
-              )}
-            </ul>
-
-            <div className="mt-4 border-t border-soft-grey pt-3">
+            <div className="border-t border-soft-grey pt-3">
               {discountPercent > 0 && (
                 <>
                   <div className="flex justify-between text-sm text-gray">
@@ -904,13 +1382,17 @@ export function BookingWizard() {
 
           {/* Customer */}
           <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray">Kontaktoplysninger</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray">
+              Kontaktoplysninger
+            </p>
             <dl className="space-y-2 text-sm">
-              {[
-                ["Navn", customer.name],
-                ["Email", customer.email],
-                ["Telefon", customer.phone],
-              ].map(([label, value]) => (
+              {(
+                [
+                  ["Navn", customer.name],
+                  ["Email", customer.email],
+                  ["Telefon", customer.phone],
+                ] as [string, string][]
+              ).map(([label, value]) => (
                 <div key={label} className="flex justify-between">
                   <dt className="text-gray">{label}</dt>
                   <dd className="font-medium text-charcoal">{value}</dd>
@@ -925,13 +1407,21 @@ export function BookingWizard() {
 
           {/* Guarantee reminder */}
           <div className="flex items-center gap-3 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6 shrink-0 text-green-eco">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              className="h-6 w-6 shrink-0 text-green-eco"
+            >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               <path d="M9 12l2 2 4-4" />
             </svg>
             <div>
               <p className="text-sm font-bold text-charcoal">Livstidsgaranti inkluderet</p>
-              <p className="text-xs text-gray">Alle reparationer dækkes af livstidsgaranti på arbejde og reservedele.</p>
+              <p className="text-xs text-gray">
+                Alle reparationer dækkes af livstidsgaranti på arbejde og reservedele.
+              </p>
             </div>
           </div>
 
@@ -946,8 +1436,19 @@ export function BookingWizard() {
               {isSubmitting ? (
                 <>
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Sender...
                 </>
@@ -983,7 +1484,11 @@ export function BookingWizard() {
               className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
             >
               <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
+                  clipRule="evenodd"
+                />
               </svg>
               Tilbage
             </button>

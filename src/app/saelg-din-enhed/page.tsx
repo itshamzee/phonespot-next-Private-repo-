@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { SellDeviceWizard } from "@/components/sell-device/sell-device-wizard";
 import { TrustBar } from "@/components/ui/trust-bar";
+import { SectionWrapper } from "@/components/ui/section-wrapper";
+import { Heading } from "@/components/ui/heading";
 
 export const metadata: Metadata = {
   title: "Sælg din brugte telefon, tablet eller laptop | Bedste pris | PhoneSpot",
@@ -273,6 +275,148 @@ export default function SaelgDinEnhedPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Sammenligning ── */}
+      <SectionWrapper background="sand">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            Sammenligning
+          </p>
+          <Heading as="h2" size="md">
+            PhoneSpot vs. privatsalg
+          </Heading>
+          <p className="mt-4 text-base text-gray">
+            Se hvorfor flere og flere vælger at sælge til os fremfor at sælge privat.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-soft-grey bg-white">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-soft-grey bg-cream">
+                <th className="px-6 py-4 text-sm font-bold text-charcoal"></th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-green-eco">PhoneSpot</th>
+                <th className="px-6 py-4 text-center text-sm font-bold text-charcoal">Privatsalg (DBA/Facebook)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-soft-grey">
+              {[
+                { feature: "Betaling", ps: "Straks ved aflevering", private: "Når køber betaler (dage/uger)" },
+                { feature: "Forsendelse", ps: "Gratis — vi sender label", private: "Du betaler og pakker selv" },
+                { feature: "Svindel-risiko", ps: "Ingen risiko", private: "Risiko for falske betalinger" },
+                { feature: "Tidsforbrugt", ps: "2 minutter", private: "Annonce, beskeder, møder..." },
+                { feature: "Datasletning", ps: "Professionel & certificeret", private: "Gør det selv (måske)" },
+                { feature: "Pris", ps: "Fair markedspris", private: "Potentielt lidt højere" },
+              ].map((row) => (
+                <tr key={row.feature}>
+                  <td className="px-6 py-4 text-sm font-semibold text-charcoal">{row.feature}</td>
+                  <td className="px-6 py-4 text-center text-sm text-charcoal">
+                    <span className="inline-flex items-center gap-1.5">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-green-eco" aria-hidden="true">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                      {row.ps}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-gray">{row.private}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionWrapper>
+
+      {/* ── Datasikkerhed & Miljø ── */}
+      <SectionWrapper>
+        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
+          {/* Data security */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-8">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco/10 text-green-eco">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+              </svg>
+            </div>
+            <h3 className="font-display text-xl font-bold text-charcoal">
+              Dine data er i sikre hænder
+            </h3>
+            <p className="mt-3 text-base leading-relaxed text-gray">
+              Alle enheder vi modtager gennemgår en professionel fabriksnulstilling. Vi sletter alt — fotos, apps, konti og personlige data. Du modtager bekræftelse når processen er gennemført.
+            </p>
+            <ul className="mt-4 space-y-2">
+              {["Fuld fabriksnulstilling", "Certificeret datasletning", "Bekræftelse sendes til dig"].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm text-charcoal">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-green-eco" aria-hidden="true">
+                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                  </svg>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Environment */}
+          <div className="rounded-2xl border border-soft-grey bg-white p-8">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco/10 text-green-eco">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+              </svg>
+            </div>
+            <h3 className="font-display text-xl font-bold text-charcoal">
+              Godt for miljøet
+            </h3>
+            <p className="mt-3 text-base leading-relaxed text-gray">
+              Når du sælger din enhed til os, forlænger du dens levetid og reducerer behovet for ny produktion. Hver genbrugt telefon sparer op til 45 kg CO₂ sammenlignet med at producere en ny.
+            </p>
+            <div className="mt-6 rounded-xl bg-green-eco/5 p-4">
+              <p className="text-center font-display text-2xl font-bold text-green-eco">80% mindre CO₂</p>
+              <p className="mt-1 text-center text-sm text-gray">per enhed ved genbrug vs. nyproduktion</p>
+            </div>
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* ── Kundeanmeldelser ── */}
+      <SectionWrapper background="sand">
+        <div className="mx-auto max-w-3xl text-center">
+          <Heading as="h2" size="md">
+            Andre der har solgt til os
+          </Heading>
+        </div>
+        <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3">
+          {[
+            {
+              name: "Peter H.",
+              location: "Roskilde",
+              text: "Fik et fair tilbud på min gamle iPhone 12 Pro inden for 24 timer. Sendte den gratis og havde pengene på kontoen 2 dage efter.",
+            },
+            {
+              name: "Camilla S.",
+              location: "Slagelse",
+              text: "Afleverede min Samsung i butikken og fik pengene med det samme. Super nemt og hurtigt — ingen bøvl som ved privatsalg.",
+            },
+            {
+              name: "Mikkel R.",
+              location: "Vejle",
+              text: "Solgte 3 gamle telefoner på én gang. God pris på dem alle, og jeg behøvede ikke bekymre mig om datasletning. Anbefales!",
+            },
+          ].map((review) => (
+            <div key={review.name} className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="mb-3 flex">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} viewBox="0 0 24 24" className="h-4 w-4 fill-[#00b67a]" aria-hidden="true">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                ))}
+              </div>
+              <p className="text-base leading-relaxed text-charcoal">&ldquo;{review.text}&rdquo;</p>
+              <div className="mt-4">
+                <p className="text-sm font-bold text-charcoal">{review.name}</p>
+                <p className="text-xs text-gray">{review.location}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </SectionWrapper>
 
       {/* ── FAQ (SEO) ── */}
       <section className="bg-warm-white">

@@ -23,21 +23,16 @@ const PRODUKT_ITEMS: NavItem[] = [
   { label: "Bærbare", href: "/baerbare", description: "MacBook, ThinkPad, EliteBook" },
   { label: "Smartwatches", href: "/smartwatches", description: "Apple Watch fra 1.099 kr" },
   { label: "Tilbehør", href: "/tilbehoer", description: "Covers, kabler og panserglas" },
-];
-
-const SERVICE_ITEMS: NavItem[] = [
-  { label: "Reparation", href: "/reparation", description: "Skærm, batteri og mere — fra 30 min" },
-  { label: "Sælg din enhed", href: "/saelg-din-enhed", description: "Få et tilbud på din brugte enhed" },
   { label: "Reservedele", href: "/reservedele", description: "Skærme, batterier og værktøj" },
 ];
 
-const INFO_ITEMS: NavItem[] = [
+const OM_PHONESPOT_ITEMS: NavItem[] = [
   { label: "Om os", href: "/om-os", description: "Mød teamet bag PhoneSpot" },
   { label: "Kvalitet", href: "/kvalitet", description: "30+ tests og vores graderingssystem" },
   { label: "FAQ", href: "/faq", description: "Svar på ofte stillede spørgsmål" },
-  { label: "Kontakt", href: "/kontakt", description: "Skriv eller ring til os" },
   { label: "Blog", href: "/blog", description: "Guides og nyheder" },
   { label: "Butik", href: "/butik", description: "Besøg os i Slagelse" },
+  { label: "Garanti", href: "/garanti", description: "36 måneders garanti på alt" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -133,7 +128,7 @@ function AnnouncementBar() {
   return (
     <div className="relative bg-charcoal text-white overflow-hidden">
       {/* Desktop: static row */}
-      <div className="hidden lg:flex h-8 items-center justify-center gap-8 px-4 text-[11px] font-medium tracking-wide">
+      <div className="hidden lg:flex h-8 items-center justify-center gap-8 px-4 text-xs font-medium tracking-wide">
         {ANNOUNCEMENT_ITEMS.map((item, i) => (
           <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
             <span className={item.color ?? "text-green-light"}>{item.icon}</span>
@@ -148,16 +143,20 @@ function AnnouncementBar() {
         ))}
       </div>
 
-      {/* Mobile/tablet: scrolling marquee */}
-      <div className="lg:hidden flex h-8 items-center">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...ANNOUNCEMENT_ITEMS, ...ANNOUNCEMENT_ITEMS].map((item, i) => (
-            <span key={i} className="mx-6 flex items-center gap-1.5 text-[11px] font-medium tracking-wide">
-              <span className={item.color ?? "text-green-light"}>{item.icon}</span>
-              {item.isCountdown ? <CountdownTimer /> : item.text}
-            </span>
-          ))}
-        </div>
+      {/* Mobile/tablet: static — show top 3 items */}
+      <div className="lg:hidden flex h-8 items-center justify-center gap-4 px-4 text-xs font-medium tracking-wide">
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="text-[#00B67A]">★</span>
+          <span>Trustpilot 4.4</span>
+        </span>
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="text-green-light">🛡</span>
+          <span>36 mdr. garanti</span>
+        </span>
+        <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="text-green-light">✓</span>
+          <span>Fri fragt over 500,-</span>
+        </span>
       </div>
     </div>
   );
@@ -555,25 +554,22 @@ export function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-6 flex-1">
+          <nav className="hidden lg:flex items-center gap-5 flex-1">
             <NavDropdown label="Produkter" items={PRODUKT_ITEMS} columns={2} />
-            <NavDropdown label="Service" items={SERVICE_ITEMS} />
-            <NavDropdown label="Info" items={INFO_ITEMS} columns={2} />
+            <Link href="/saelg-din-enhed" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+              Sælg din enhed
+            </Link>
+            <Link href="/reparation" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+              Reparation
+            </Link>
+            <NavDropdown label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} columns={2} />
+            <Link href="/kontakt" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+              Kontakt
+            </Link>
           </nav>
 
           {/* Right side: actions */}
           <div className="flex items-center gap-1.5 lg:gap-2">
-            {/* Repair CTA — desktop only */}
-            <Link
-              href="/reparation"
-              className="hidden lg:flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all hover:bg-green-eco/90 hover:shadow-md"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
-              </svg>
-              Reparation
-            </Link>
-
             {/* Search */}
             <button
               type="button"
@@ -606,30 +602,40 @@ export function Header() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-x-0 top-[calc(var(--header-h,6.5rem))] bottom-0 z-40 overflow-y-auto bg-warm-white/98 backdrop-blur-xl">
           <nav className="mx-auto max-w-lg px-5 pb-8 pt-2">
-            <MobileSection label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
-            <MobileSection label="Service" items={SERVICE_ITEMS} onNavigate={() => setMobileOpen(false)} />
-            <MobileSection label="Info" items={INFO_ITEMS} onNavigate={() => setMobileOpen(false)} />
-
-            {/* Mobile repair CTA */}
-            <div className="mt-6">
+            {/* Highlighted service links at top */}
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <Link
+                href="/saelg-din-enhed"
+                onClick={() => setMobileOpen(false)}
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                </svg>
+                <span className="text-sm font-bold text-charcoal">Sælg din enhed</span>
+                <span className="text-[11px] text-gray">Få tilbud på din brugte enhed</span>
+              </Link>
               <Link
                 href="/reparation"
                 onClick={() => setMobileOpen(false)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-eco px-6 py-3.5 font-display text-sm font-bold uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
                 </svg>
-                Book reparation
+                <span className="text-sm font-bold text-charcoal">Reparation</span>
+                <span className="text-[11px] text-gray">Book tid eller walk-in</span>
               </Link>
             </div>
+
+            <MobileSection label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+            <MobileSection label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} onNavigate={() => setMobileOpen(false)} />
 
             {/* Quick links */}
             <div className="mt-6 flex flex-wrap gap-2">
               {[
-                { label: "Sælg din enhed", href: "/saelg-din-enhed" },
-                { label: "Butik", href: "/butik" },
                 { label: "Kontakt", href: "/kontakt" },
+                { label: "Butik", href: "/butik" },
               ].map((link) => (
                 <Link
                   key={link.href}

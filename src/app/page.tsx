@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -41,13 +42,6 @@ const CATEGORIES = [
     image: "/categories/ipad.png",
   },
   {
-    name: "Smartwatches",
-    href: "/smartwatches",
-    tagline: "Fra 1.099 kr",
-    description: "Apple Watch SE, Series og Ultra",
-    image: null,
-  },
-  {
     name: "Bærbare",
     href: "/baerbare",
     tagline: "Fra 1.999 kr",
@@ -55,24 +49,10 @@ const CATEGORIES = [
     image: null,
   },
   {
-    name: "Tilbehør",
-    href: "/tilbehoer",
-    tagline: "Covers & kabler",
-    description: "Cases, panserglas og opladere",
-    image: null,
-  },
-  {
-    name: "Reservedele",
-    href: "/reservedele",
-    tagline: "Skærme & batterier",
-    description: "Originale dele til iPhone og iPad",
-    image: null,
-  },
-  {
-    name: "Reparation",
-    href: "/reparation",
-    tagline: "Fra 199 kr",
-    description: "Skærm, batteri og mere — livstidsgaranti",
+    name: "Smartwatches",
+    href: "/smartwatches",
+    tagline: "Fra 1.099 kr",
+    description: "Apple Watch SE, Series og Ultra",
     image: null,
   },
   {
@@ -318,7 +298,7 @@ export default function HomePage() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
             </svg>
-            <span className="text-sm font-medium text-charcoal">Fysisk butik</span>
+            <span className="text-sm font-medium text-charcoal">Fysisk butik i Slagelse</span>
           </div>
         </div>
       </div>
@@ -375,7 +355,7 @@ export default function HomePage() {
         </div>
 
         {/* Secondary row — smaller category cards */}
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
@@ -408,29 +388,8 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+
       </SectionWrapper>
-
-      {/* ── Highlighted Products (campaign) ── */}
-      <Suspense
-        fallback={
-          <div className="px-4 py-16 text-center text-gray">
-            Indlæser tilbud...
-          </div>
-        }
-      >
-        <HighlightedProducts />
-      </Suspense>
-
-      {/* ── Featured Products ── */}
-      <Suspense
-        fallback={
-          <div className="px-4 py-16 text-center text-gray">
-            Indlæser produkter...
-          </div>
-        }
-      >
-        <FeaturedProducts />
-      </Suspense>
 
       {/* ── Hvorfor PhoneSpot ── */}
       <SectionWrapper background="sand">
@@ -458,12 +417,61 @@ export default function HomePage() {
                 <h3 className="font-display text-base font-bold text-charcoal">
                   {feature.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray">
+                <p className="mt-2 text-base leading-relaxed text-gray">
                   {feature.description}
                 </p>
               </div>
             </FadeIn>
           ))}
+        </div>
+
+        <div className="mt-10 text-center">
+          <Link
+            href="/iphones"
+            className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+          >
+            Se alle kvalitetstestede enheder &rarr;
+          </Link>
+        </div>
+      </SectionWrapper>
+
+      {/* ── Highlighted Products (campaign) ── */}
+      <Suspense
+        fallback={
+          <div className="px-4 py-16 text-center text-gray">
+            Indlæser tilbud...
+          </div>
+        }
+      >
+        <HighlightedProducts />
+      </Suspense>
+
+      {/* ── Featured Products ── */}
+      <Suspense
+        fallback={
+          <div className="px-4 py-16 text-center text-gray">
+            Indlæser produkter...
+          </div>
+        }
+      >
+        <FeaturedProducts />
+      </Suspense>
+
+      {/* ── Kundeanmeldelser ── */}
+      <SectionWrapper background="sand">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            Kundeanmeldelser
+          </p>
+          <Heading as="h2" size="lg">
+            Det siger vores kunder
+          </Heading>
+        </div>
+
+        <div className="mt-10">
+          <Suspense fallback={<div className="py-8 text-center text-gray">Indlæser anmeldelser...</div>}>
+            <TrustpilotReviews />
+          </Suspense>
         </div>
       </SectionWrapper>
 
@@ -490,7 +498,7 @@ export default function HomePage() {
                 "Ren software-installation og nyeste opdateringer",
                 "Grundig rengøring og omhyggelig pakning",
               ].map((point) => (
-                <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
+                <li key={point} className="flex items-start gap-2 text-base text-charcoal">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" aria-hidden="true">
                     <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                   </svg>
@@ -503,6 +511,12 @@ export default function HomePage() {
               className="mt-8 inline-block text-sm font-semibold text-green-eco hover:underline"
             >
               Læs mere om vores testproces &rarr;
+            </Link>
+            <Link
+              href="/iphones"
+              className="mt-4 inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Se kvalitetstestede enheder &rarr;
             </Link>
           </div>
 
@@ -549,11 +563,10 @@ export default function HomePage() {
             Nyhedsbrev
           </p>
           <Heading as="h2" size="lg" className="text-white">
-            Få eksklusive tilbud direkte i indbakken
+            Få 10% på dit første køb
           </Heading>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/70">
-            Tilmeld dig vores nyhedsbrev og vær den første til at høre om nye
-            produkter, tilbud og outlet-deals.
+            Tilmeld dig vores nyhedsbrev og få en rabatkode på 10% til dit første køb. Plus ugentlige deals og nyheder om nye produkter.
           </p>
           <form
             action="/api/newsletter"
@@ -623,17 +636,19 @@ export default function HomePage() {
                 Se reparationer &rarr;
               </Link>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { value: "30 min", label: "Hurtig service" },
-                { value: "5.000+", label: "Reparationer" },
-                { value: "4.8★", label: "Trustpilot" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl bg-white/[0.06] p-5 text-center backdrop-blur-sm">
-                  <p className="font-display text-2xl font-bold text-green-eco md:text-3xl">{stat.value}</p>
-                  <p className="mt-1 text-xs text-white/50">{stat.label}</p>
-                </div>
-              ))}
+            <div>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: "30 min", label: "Hurtig service" },
+                  { value: "5.000+", label: "Reparationer" },
+                  { value: "4.8★", label: "Trustpilot" },
+                ].map((stat) => (
+                  <div key={stat.label} className="rounded-2xl bg-white/[0.06] p-5 text-center backdrop-blur-sm">
+                    <p className="font-display text-2xl font-bold text-green-eco md:text-3xl">{stat.value}</p>
+                    <p className="mt-1 text-xs text-white/50">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -658,7 +673,7 @@ export default function HomePage() {
                   <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                 </svg>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-gray">{item.answer}</p>
+              <p className="mt-3 text-base leading-relaxed text-gray">{item.answer}</p>
             </details>
           ))}
         </div>

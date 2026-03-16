@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
 import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
-import type { RepairBrand } from "@/lib/supabase/types";
 import { BrandPicker } from "./brand-picker";
-import { RepairForm } from "./repair-form";
+import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
+import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
 
 export const revalidate = 3600;
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description:
     "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
   keywords:
-    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse",
+    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
@@ -30,11 +30,6 @@ export const metadata: Metadata = {
 };
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-
-// ---------------------------------------------------------------------------
 // Services data
 // ---------------------------------------------------------------------------
 
@@ -43,19 +38,16 @@ const SERVICES = [
     title: "Skærmskift",
     description: "Smadret eller ridset skærm? Vi udskifter med kvalitetsdele der matcher originalen.",
     badge: "Ca. 30 min",
-    image: "/images/repair/cracked-screen.png",
   },
   {
     title: "Batteriskift",
     description: "Holder batteriet ikke? Nyt højkapacitets batteri så din enhed kører som ny.",
     badge: "100% kapacitet",
-    image: "/images/repair/battery-swap.png",
   },
   {
     title: "Vandskade",
     description: "Fået vand? Jo hurtigere du handler, jo større chance for at redde den.",
     badge: "Akut service",
-    image: "/images/repair/water-damage.png",
   },
   {
     title: "Kamera",
@@ -106,35 +98,6 @@ const REPAIR_FAQ = [
       "Ved de fleste reparationer bevares dine data. Vi anbefaler altid backup inden indsendelse, men data-tab er sjældent ved standard reparationer.",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Brand Picker
-// ---------------------------------------------------------------------------
-
-
-// ---------------------------------------------------------------------------
-// Trustpilot Badge
-// ---------------------------------------------------------------------------
-
-function TrustpilotBadge({ variant = "dark" }: { variant?: "dark" | "light" }) {
-  const textColor = variant === "dark" ? "text-white" : "text-charcoal";
-  const subColor = variant === "dark" ? "text-white/60" : "text-gray";
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-0.5">
-        {[...Array(5)].map((_, i) => (
-          <svg key={i} viewBox="0 0 24 24" className="h-5 w-5 fill-[#00b67a]">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-        ))}
-      </div>
-      <div className="flex flex-col">
-        <span className={`text-sm font-bold leading-tight ${textColor}`}>4.8 / 5</span>
-        <span className={`text-[10px] leading-tight ${subColor}`}>Trustpilot</span>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Guarantee Badge
@@ -248,19 +211,20 @@ export default async function ReparationPage() {
 
         <div className="relative mx-auto max-w-4xl px-4 py-20 text-center md:py-28">
           <div className="mb-6 inline-flex">
-            <TrustpilotBadge variant="dark" />
+            <Suspense fallback={<div className="text-white/40 text-sm">Indlæser anmeldelser...</div>}>
+              <TrustpilotStars />
+            </Suspense>
           </div>
 
           <h1 className="font-display text-4xl font-bold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl md:text-6xl">
-            Vi fikser din{" "}
-            <span className="text-green-eco">enhed</span>
+            Reparation i{" "}
+            <span className="text-green-eco">Slagelse</span>
             <br />
-            hurtigt og professionelt
+            — hurtigt og professionelt
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/60">
-            Smadret skærm? Dårligt batteri? Vandskade? PhoneSpot reparerer alle
-            mærker med livstidsgaranti og faste priser. Ingen overraskelser.
+            Professionel reparation af iPhones, iPads, Samsung, MacBooks og mere i VestsjællandsCentret, Slagelse. Livstidsgaranti, faste priser og 90% klar på 30 minutter.
           </p>
 
           {/* USP cards */}
@@ -271,7 +235,7 @@ export default async function ReparationPage() {
               { icon: "tag", title: "Faste priser", desc: "Inkl. moms & dele" },
               { icon: "walk", title: "Walk-in", desc: "Ingen tidsbestilling" },
             ].map(({ icon, title, desc }) => (
-              <div key={title} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-5 backdrop-blur-sm">
+              <div key={title} className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-6 backdrop-blur-sm">
                 <span className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-eco/15 text-green-eco">
                   {icon === "shield" && (
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
@@ -294,7 +258,7 @@ export default async function ReparationPage() {
                     </svg>
                   )}
                 </span>
-                <p className="font-display text-sm font-bold text-white">{title}</p>
+                <p className="font-display text-base font-bold text-white">{title}</p>
                 <p className="mt-0.5 text-xs text-white/50">{desc}</p>
               </div>
             ))}
@@ -303,16 +267,16 @@ export default async function ReparationPage() {
           {/* Dual CTA */}
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
-              href="#book-reparation"
+              href="#vaelg-maerke"
               className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-sm font-bold uppercase tracking-wide text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25"
             >
-              Book reparation
+              Se priser
             </Link>
             <Link
-              href="#vaelg-maerke"
+              href="#book-reparation"
               className="inline-flex items-center gap-2 rounded-full border-2 border-white/20 px-8 py-4 font-display text-sm font-bold uppercase tracking-wide text-white transition-all hover:border-white/50 hover:bg-white/5"
             >
-              Se priser
+              Book reparation
             </Link>
           </div>
         </div>
@@ -388,37 +352,112 @@ export default async function ReparationPage() {
             {SERVICES.map((service) => (
               <div
                 key={service.title}
-                className="group relative overflow-hidden rounded-2xl border border-soft-grey bg-white transition-all hover:border-green-eco/40 hover:shadow-md"
+                className="group rounded-2xl border border-soft-grey bg-white p-6 transition-all hover:border-green-eco/40 hover:shadow-md"
               >
-                {/* Service image */}
-                {service.image && (
-                  <div className="relative h-40 overflow-hidden bg-charcoal/5">
-                    <img
-                      src={service.image}
-                      alt={service.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <span className="absolute left-3 top-3 rounded-full bg-green-eco px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
-                      {service.badge}
-                    </span>
-                  </div>
-                )}
-
-                <div className="p-5">
-                  {!service.image && (
-                    <span className="mb-3 inline-block rounded-full bg-green-eco/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-green-eco">
-                      {service.badge}
-                    </span>
-                  )}
-                  <h3 className="font-display text-lg font-bold text-charcoal">
-                    {service.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray">
-                    {service.description}
-                  </p>
-                </div>
+                <span className="mb-4 inline-flex items-center rounded-full bg-green-eco/10 px-4 py-1.5 text-sm font-bold text-green-eco">
+                  {service.badge}
+                </span>
+                <h3 className="font-display text-lg font-bold text-charcoal">
+                  {service.title}
+                </h3>
+                <p className="mt-2 text-base leading-relaxed text-gray">
+                  {service.description}
+                </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================= */}
+      {/*  LOCATION — Local SEO for Slagelse                                */}
+      {/* ================================================================= */}
+      <section className="bg-warm-white">
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 font-display text-xs font-bold uppercase tracking-[3px] text-green-eco">
+                Find os
+              </p>
+              <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal">
+                PhoneSpot Slagelse
+              </h2>
+              <p className="mt-4 text-base text-gray">
+                Vi holder til i VestsjællandsCentret i Slagelse, hvor vi tilbyder walk-in reparation
+                uden tidsbestilling. De fleste reparationer tager kun 30 minutter.
+              </p>
+
+              <div className="mt-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                      <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <circle cx="12" cy="11" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal">{STORE.mall}</p>
+                    <p className="text-sm text-gray">{STORE.street}, {STORE.zip} {STORE.city}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal">Åbningstider</p>
+                    <p className="text-sm text-gray">Hverdage: {STORE.hours.weekdays}</p>
+                    <p className="text-sm text-gray">Lørdag: {STORE.hours.saturday}</p>
+                    <p className="text-sm text-gray">Søndag: {STORE.hours.sunday}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                      <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal">Kontakt</p>
+                    <p className="text-sm text-gray">{STORE.phone}</p>
+                    <p className="text-sm text-gray">{STORE.email}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Store photos */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/vestsjællandscentret.jpg"
+                  alt="VestsjællandsCentret i Slagelse — her finder du PhoneSpot"
+                  className="h-48 w-full object-cover sm:h-56"
+                  loading="lazy"
+                />
+              </div>
+              <div className="overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/butik-indvendig.jpg"
+                  alt="PhoneSpot butik indvendig — stort udvalg af covers og tilbehør"
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/butik-produkter.jpg"
+                  alt="Refurbished telefoner i PhoneSpot butikken"
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -431,12 +470,27 @@ export default async function ReparationPage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* Left — happy customer image */}
             <div className="relative">
-              {/* IMAGE: happy-customer.png — smiling person holding repaired phone, no background */}
-              <img
-                src="/images/repair/happy-customer.png"
-                alt="Glad kunde med repareret telefon"
-                className="mx-auto h-auto max-h-[450px] w-auto object-contain"
-              />
+              {/* Real store photos */}
+              <div className="grid grid-cols-2 gap-3">
+                <img
+                  src="/images/repair/tekniker-reparerer.jpg"
+                  alt="PhoneSpot tekniker reparerer en iPad professionelt"
+                  className="h-52 w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+                <img
+                  src="/images/store/kunde-afhenter.jpg"
+                  alt="Kunde afhenter sin reparerede telefon hos PhoneSpot"
+                  className="h-52 w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+                <img
+                  src="/images/store/kunde-afleverer.jpg"
+                  alt="Medarbejder modtager en enhed til reparation"
+                  className="col-span-2 h-44 w-full rounded-2xl object-cover"
+                  loading="lazy"
+                />
+              </div>
               {/* Floating badge */}
               <div className="absolute bottom-4 left-4 rounded-xl bg-white p-3 shadow-lg sm:bottom-8 sm:left-8">
                 <div className="flex items-center gap-3">
@@ -575,7 +629,7 @@ export default async function ReparationPage() {
                     <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                   </svg>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-gray">
+                <p className="mt-3 text-base leading-relaxed text-gray">
                   {item.answer}
                 </p>
               </details>
@@ -585,81 +639,46 @@ export default async function ReparationPage() {
       </section>
 
       {/* ================================================================= */}
-      {/*  BOOKING FORM                                                      */}
+      {/*  TRUSTPILOT REVIEWS — Real reviews                                 */}
+      {/* ================================================================= */}
+      <section className="bg-warm-white">
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <div className="mb-10 text-center">
+            <p className="mb-2 font-display text-xs font-bold uppercase tracking-[3px] text-green-eco">
+              Kundeanmeldelser
+            </p>
+            <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal">
+              Det siger vores kunder
+            </h2>
+          </div>
+          <Suspense fallback={<div className="py-8 text-center text-gray">Indlæser anmeldelser...</div>}>
+            <TrustpilotReviews />
+          </Suspense>
+        </div>
+      </section>
+
+      {/* ================================================================= */}
+      {/*  BOOK CTA — Simple redirect to brand/model pages                   */}
       {/* ================================================================= */}
       <section id="book-reparation" className="bg-warm-white">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="grid gap-10 lg:grid-cols-[1fr_400px]">
-            {/* Left — form */}
-            <div>
-              <p className="mb-2 font-display text-xs font-bold uppercase tracking-[3px] text-green-eco">
-                Book reparation
-              </p>
-              <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal">
-                Send en reparationsanmodning
-              </h2>
-              <p className="mt-3 mb-8 text-gray">
-                Udfyld formularen, og vi vender tilbage med et tilbud inden for
-                få timer. Gratis diagnostik og ingen forpligtelse.
-              </p>
-              <RepairForm />
-            </div>
-
-            {/* Right — info sidebar */}
-            <div className="hidden space-y-6 lg:block">
-              {/* Walk-in card */}
-              <div className="rounded-2xl border border-soft-grey bg-white p-6">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                      <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <circle cx="12" cy="11" r="3" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-display text-sm font-bold text-charcoal">Walk-in service</p>
-                    <p className="text-xs text-gray">Ingen tidsbestilling nødvendig</p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm text-charcoal">
-                  <p className="font-medium">{STORE.mall}</p>
-                  <p className="text-gray">{STORE.street}, {STORE.zip} {STORE.city}</p>
-                  <div className="mt-3 space-y-1 border-t border-soft-grey pt-3 text-xs text-gray">
-                    <p>Hverdage: {STORE.hours.weekdays}</p>
-                    <p>Lørdag: {STORE.hours.saturday}</p>
-                    <p>Søndag: {STORE.hours.sunday}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Guarantee card */}
-              <div className="rounded-2xl border border-soft-grey bg-white p-6">
-                <div className="flex items-center gap-4">
-                  <GuaranteeBadge size="sm" />
-                  <div>
-                    <p className="font-display text-sm font-bold text-charcoal">
-                      Livstidsgaranti
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-gray">
-                      Alle reparationer fra PhoneSpot dækkes af livstidsgaranti
-                      på arbejde og reservedele.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trustpilot card */}
-              <div className="rounded-2xl border border-soft-grey bg-white p-6">
-                <TrustpilotBadge variant="light" />
-                <p className="mt-3 text-xs italic text-gray">
-                  &ldquo;Super hurtig service og fair priser. Min iPhone blev
-                  fikset på under en time. Kan varmt anbefales!&rdquo;
-                </p>
-                <p className="mt-2 text-xs font-medium text-charcoal">
-                  — Marie K., Slagelse
-                </p>
-              </div>
-            </div>
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <p className="mb-2 font-display text-xs font-bold uppercase tracking-[3px] text-green-eco">
+            Book reparation
+          </p>
+          <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal">
+            Find din enhed og se priser
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base text-gray">
+            Vælg dit mærke og model ovenfor for at se faste priser på alle reparationer.
+            Tilføj de reparationer du har brug for og book direkte.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <a href="#vaelg-maerke" className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-sm font-bold uppercase tracking-wide text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25">
+              Find din enhed
+            </a>
+            <Link href="/kontakt" className="inline-flex items-center gap-2 rounded-full border-2 border-charcoal px-8 py-4 font-display text-sm font-bold uppercase tracking-wide text-charcoal transition-all hover:bg-charcoal hover:text-white">
+              Kontakt os
+            </Link>
           </div>
         </div>
       </section>
@@ -674,14 +693,14 @@ export default async function ReparationPage() {
             Klar til at få din enhed fikset?
           </h2>
           <p className="mt-4 text-white/60">
-            Walk-in eller book online — vi er klar til at hjælpe dig i {STORE.mall}, {STORE.city}.
+            Walk-in eller book online — vi er klar til at hjælpe dig i VestsjællandsCentret, Slagelse.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="#book-reparation"
+              href="#vaelg-maerke"
               className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-sm font-bold uppercase tracking-wide text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25"
             >
-              Book reparation
+              Find din enhed
             </Link>
             <Link
               href="/kontakt"
@@ -690,8 +709,10 @@ export default async function ReparationPage() {
               Kontakt os
             </Link>
           </div>
-          <div className="mt-6">
-            <TrustpilotBadge variant="dark" />
+          <div className="mt-6 flex justify-center">
+            <Suspense fallback={null}>
+              <TrustpilotStars />
+            </Suspense>
           </div>
         </div>
       </section>

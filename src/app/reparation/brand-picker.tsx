@@ -167,6 +167,22 @@ export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; mo
           )}
         </div>
 
+        {/* Popular search chips */}
+        {!query && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {["iPhone 15 Pro", "iPhone 14", "Samsung S24", "iPad Pro", "MacBook Air"].map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => { setQuery(term); setIsFocused(true); }}
+                className="rounded-full border border-green-eco/20 bg-green-eco/5 px-4 py-2 text-sm font-medium text-green-eco transition-all hover:bg-green-eco/10"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Search results dropdown */}
         <AnimatePresence>
           {showResults && (

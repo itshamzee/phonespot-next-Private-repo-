@@ -6,6 +6,7 @@ type ProductGridCardProps = {
   image?: string;
   title: string;
   minPrice: number | null;
+  compareAtPrice?: number | null;
   deviceCount: number;
   brand: string;
   category: string;
@@ -23,6 +24,7 @@ export function ProductGridCard({
   image,
   title,
   minPrice,
+  compareAtPrice,
   deviceCount,
   brand,
   category,
@@ -34,10 +36,17 @@ export function ProductGridCard({
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-cream">
-        {deviceCount > 0 && (
+        {deviceCount > 3 && (
           <div className="absolute top-3 left-3 z-10">
             <span className="inline-flex items-center rounded-full bg-green-eco px-2.5 py-1 text-xs font-semibold text-white">
               {deviceCount} på lager
+            </span>
+          </div>
+        )}
+        {deviceCount > 0 && deviceCount <= 3 && (
+          <div className="absolute top-3 right-3 z-10">
+            <span className="inline-flex items-center rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
+              Kun {deviceCount} tilbage
             </span>
           </div>
         )}
@@ -68,7 +77,7 @@ export function ProductGridCard({
 
       {/* Info */}
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray">
+        <p className="text-sm font-medium uppercase tracking-wide text-gray">
           {brand} · {category}
         </p>
         <h3 className="mt-1 line-clamp-2 font-semibold text-charcoal">
@@ -76,12 +85,24 @@ export function ProductGridCard({
         </h3>
         <div className="mt-auto pt-3">
           {minPrice != null ? (
-            <p className="text-sm font-bold text-charcoal">
-              fra{" "}
-              <span className="text-base text-green-eco">
-                {formatFromPrice(minPrice)} kr.
-              </span>
-            </p>
+            <div>
+              {compareAtPrice != null && compareAtPrice > minPrice && (
+                <p className="text-xs text-gray line-through">
+                  Nypris: {formatFromPrice(compareAtPrice)} kr.
+                </p>
+              )}
+              <p className="text-sm font-bold text-charcoal">
+                fra{" "}
+                <span className="text-lg text-green-eco">
+                  {formatFromPrice(minPrice)} kr.
+                </span>
+              </p>
+              {compareAtPrice != null && compareAtPrice > minPrice && (
+                <p className="mt-0.5 text-xs font-semibold text-green-eco">
+                  Spar op til {Math.round((1 - minPrice / compareAtPrice) * 100)}%
+                </p>
+              )}
+            </div>
           ) : (
             <p className="text-sm font-medium text-gray">Ikke på lager</p>
           )}

@@ -103,7 +103,7 @@ export function TrustBar({ className = "" }: { className?: string }) {
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
             <span className="text-green-eco">{item.icon}</span>
-            <span className="text-sm font-medium text-charcoal">
+            <span className="text-base font-medium text-charcoal">
               {item.label}
             </span>
           </div>
