@@ -65,7 +65,22 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     customerId = newCustomer.id;
   }
 
+  // Generate next order number (S-XXXX)
+  const { data: lastOrder } = await supabase
+    .from("orders")
+    .select("order_number")
+    .like("order_number", "S-%")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  const lastNum = lastOrder?.order_number
+    ? parseInt(lastOrder.order_number.replace("S-", ""), 10)
+    : 1000;
+  const orderNumber = `S-${lastNum + 1}`;
+
   const { data: order, error: orderError } = await supabase.from("orders").insert({
+    order_number: orderNumber,
     type: "online",
     customer_id: customerId,
     status: "pending",
