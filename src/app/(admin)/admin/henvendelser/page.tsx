@@ -68,6 +68,7 @@ export default function AdminHenvendelserPage() {
   const [messages, setMessages] = useState<Record<string, InquiryMessage[]>>({});
   const [replyText, setReplyText] = useState("");
   const [replySending, setReplySending] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
   const [templates, setTemplates] = useState<ReplyTemplate[]>([]);
 
   const [showNewModal, setShowNewModal] = useState(false);
@@ -156,6 +157,37 @@ export default function AdminHenvendelserPage() {
     });
     await loadInquiries();
     setSaving(false);
+  }
+
+  async function generateAiReply(inq: ContactInquiry) {
+    setAiGenerating(true);
+    try {
+      const inqMessages = messages[inq.id] ?? [];
+      const customerMessage = inqMessages.length > 0
+        ? inqMessages.filter(m => m.sender === "customer").map(m => m.body).join("\n")
+        : inq.message;
+
+      const res = await fetch("/api/admin/ai-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: inq.name,
+          customerMessage,
+          subject: inq.subject,
+          context: inq.source === "saelg-enhed" ? "Kunden vil sælge sin enhed" : inq.source === "reparation-booking" ? "Kunden har en reparationsforespørgsel" : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.reply) {
+        setReplyText(data.reply);
+      } else {
+        alert(data.error || "Kunne ikke generere svar");
+      }
+    } catch {
+      alert("Netværksfejl — prøv igen");
+    } finally {
+      setAiGenerating(false);
+    }
   }
 
   async function handleReply(inquiryId: string, channel: "email" | "sms") {
@@ -446,11 +478,36 @@ export default function AdminHenvendelserPage() {
                           </select>
                         </div>
                       )}
+                      {/* AI generate button */}
+                      <button
+                        type="button"
+                        onClick={() => generateAiReply(inq)}
+                        disabled={aiGenerating}
+                        className="mb-2 flex w-full items-center justify-center gap-2 rounded-lg border border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-2.5 text-sm font-semibold text-violet-700 transition-all hover:from-violet-100 hover:to-purple-100 disabled:opacity-50"
+                      >
+                        {aiGenerating ? (
+                          <>
+                            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Genererer svar...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                            </svg>
+                            Generer svar med AI
+                          </>
+                        )}
+                      </button>
+
                       <textarea
                         rows={3}
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Skriv svar..."
+                        placeholder="Skriv svar eller brug AI..."
                         className="w-full rounded-lg border border-black/[0.06] bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                       />
                       <div className="mt-2 flex flex-wrap gap-2">
