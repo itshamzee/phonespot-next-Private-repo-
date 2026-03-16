@@ -6,7 +6,7 @@ import { useCart } from "@/components/cart/cart-context";
 
 const UPSELL_PRODUCTS = [
   {
-    id: "tempered-glass",
+    id: "0a718861-eae0-4c83-8cea-70d114a89fea",
     title: "Tempered Glass",
     subtitle: "Kant til kant",
     description: "9H hårdheds skærmbeskyttelse der dækker hele skærmen",
@@ -15,7 +15,7 @@ const UPSELL_PRODUCTS = [
     image: "/images/panserglas.png",
   },
   {
-    id: "privacy-glass",
+    id: "979b3baf-96a8-4b80-b284-74941229dd2b",
     title: "Privacy Glass",
     subtitle: "Anti-kig beskyttelse",
     description: "Skærmbeskyttelse med privacy-filter — kun du kan se skærmen",
