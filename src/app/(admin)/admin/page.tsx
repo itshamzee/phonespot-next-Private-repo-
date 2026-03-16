@@ -15,12 +15,12 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
-  faerdig: "F\u00e6rdig",
+  faerdig: "F\ærdig",
   afhentet: "Afhentet",
   bero: "Bero",
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
-  reklamation_loest: "Reklamation l\u00f8st",
+  reklamation_loest: "Reklamation l\øst",
 };
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
@@ -73,7 +73,7 @@ const STAT_CARDS: {
   },
   {
     key: "finishedToday",
-    label: "F\u00e6rdige i dag",
+    label: "F\ærdige i dag",
     gradient: "from-emerald-500/10 to-emerald-500/[0.02]",
     iconColor: "text-emerald-500",
     icon: (
@@ -84,7 +84,7 @@ const STAT_CARDS: {
   },
   {
     key: "revenueThisMonth",
-    label: "Oms\u00e6tning",
+    label: "Oms\ætning",
     gradient: "from-violet-500/10 to-violet-500/[0.02]",
     iconColor: "text-violet-500",
     icon: (
@@ -285,7 +285,7 @@ export default function AdminDashboardPage() {
             <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
             <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-b-emerald-500/20" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
           </div>
-          <p className="text-sm text-charcoal/30">Indl\u00e6ser dashboard...</p>
+          <p className="text-sm text-charcoal/30">Indl\æser dashboard...</p>
         </div>
       </div>
     );

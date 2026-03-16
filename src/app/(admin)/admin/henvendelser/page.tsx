@@ -13,7 +13,7 @@ import type {
 const STATUS_LABELS: Record<InquiryStatus, string> = {
   ny: "Ny",
   besvaret: "Besvaret",
-  venter_paa_svar: "Venter p\u00e5 svar",
+  venter_paa_svar: "Venter p\å svar",
   lukket: "Lukket",
 };
 
@@ -36,7 +36,7 @@ const ALL_STATUSES: (InquiryStatus | "alle")[] = ["alle", "ny", "besvaret", "ven
 const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   alle: "Alle",
   kontaktformular: "Kontaktformular",
-  "saelg-enhed": "S\u00e6lg enhed",
+  "saelg-enhed": "S\ælg enhed",
   "reparation-booking": "Booking",
   manuel: "Manuel",
 };
@@ -260,7 +260,7 @@ export default function AdminHenvendelserPage() {
           </div>
           <input
             type="text"
-            placeholder="S\u00f8g efter navn, email eller besked..."
+            placeholder="S\øg efter navn, email eller besked..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -310,7 +310,7 @@ export default function AdminHenvendelserPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\u00e6ser henvendelser...</p>
+            <p className="text-sm text-charcoal/30">Indl\æser henvendelser...</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -347,7 +347,7 @@ export default function AdminHenvendelserPage() {
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-semibold text-charcoal">{inq.name}</p>
                       {inq.subject && (
-                        <span className="truncate text-xs text-charcoal/35">\u2014 {inq.subject}</span>
+                        <span className="truncate text-xs text-charcoal/35">\— {inq.subject}</span>
                       )}
                     </div>
                     <p className="mt-0.5 line-clamp-1 text-xs text-charcoal/30">{inq.message}</p>
@@ -439,7 +439,7 @@ export default function AdminHenvendelserPage() {
                             defaultValue=""
                             className="w-full rounded-lg border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none"
                           >
-                            <option value="" disabled>V\u00e6lg skabelon...</option>
+                            <option value="" disabled>V\ælg skabelon...</option>
                             {templates.map((tpl) => (
                               <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                             ))}
@@ -489,7 +489,7 @@ export default function AdminHenvendelserPage() {
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
                         className="w-full rounded-lg border border-black/[0.06] bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
-                        placeholder="Tilf\u00f8j noter..."
+                        placeholder="Tilf\øj noter..."
                       />
                       <button
                         type="button"

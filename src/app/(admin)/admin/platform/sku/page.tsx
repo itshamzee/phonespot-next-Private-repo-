@@ -42,10 +42,10 @@ export default function SkuPage() {
   const CATEGORIES = [
     { value: "", label: "Alle kategorier" },
     { value: "covers", label: "Covers" },
-    { value: "screen_protectors", label: "Sk\u00e6rmbeskyttere" },
+    { value: "screen_protectors", label: "Sk\ærmbeskyttere" },
     { value: "cables", label: "Kabler" },
     { value: "chargers", label: "Opladere" },
-    { value: "earphones", label: "\u00d8retelefoner" },
+    { value: "earphones", label: "\Øretelefoner" },
     { value: "other", label: "Andet" },
   ];
 
@@ -55,10 +55,10 @@ export default function SkuPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-            Tilbeh\u00f8r & Reservedele
+            Tilbeh\ør & Reservedele
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
-            Administrer SKU-produkter og lagerbeholdning p\u00e5 tv\u00e6rs af lokationer
+            Administrer SKU-produkter og lagerbeholdning p\å tv\ærs af lokationer
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export default function SkuPage() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Tilf\u00f8j produkt
+            Tilf\øj produkt
           </button>
         )}
       </div>
@@ -91,7 +91,7 @@ export default function SkuPage() {
                 </svg>
               </div>
               <h3 className="font-display text-base font-bold text-charcoal">
-                {panelMode === "create" ? "Nyt produkt" : `Redig\u00e9r: ${editingProduct?.title}`}
+                {panelMode === "create" ? "Nyt produkt" : `Redig\ér: ${editingProduct?.title}`}
               </h3>
             </div>
             <button
@@ -126,7 +126,7 @@ export default function SkuPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="S\u00f8g efter produkt, EAN, m\u00e6rke..."
+            placeholder="S\øg efter produkt, EAN, m\ærke..."
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
           />
         </div>
@@ -174,13 +174,13 @@ export default function SkuPage() {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-amber-200" />
-          P\u00e5 minimum
+          P\å minimum
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-emerald-200" />
           Over minimum
         </span>
-        <span className="ml-auto text-charcoal/25">Klik p\u00e5 et antal for at redigere</span>
+        <span className="ml-auto text-charcoal/25">Klik p\å et antal for at redigere</span>
       </div>
     </div>
   );

@@ -11,12 +11,12 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
-  faerdig: "F\u00e6rdig",
+  faerdig: "F\ærdig",
   afhentet: "Afhentet",
   bero: "Bero",
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
-  reklamation_loest: "Reklamation l\u00f8st",
+  reklamation_loest: "Reklamation l\øst",
 };
 
 const STATUS_BADGE: Record<RepairStatus, string> = {
@@ -124,7 +124,7 @@ export default function AdminReparationerPage() {
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
             {filteredTickets.length} {filteredTickets.length === 1 ? "sag" : "sager"}
-            {filter !== "alle" && ` \u2014 ${STATUS_LABELS[filter]}`}
+            {filter !== "alle" && ` \— ${STATUS_LABELS[filter]}`}
           </p>
         </div>
         <Link
@@ -148,7 +148,7 @@ export default function AdminReparationerPage() {
           </div>
           <input
             type="text"
-            placeholder="S\u00f8g efter navn, email eller model..."
+            placeholder="S\øg efter navn, email eller model..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -190,7 +190,7 @@ export default function AdminReparationerPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\u00e6ser sager...</p>
+            <p className="text-sm text-charcoal/30">Indl\æser sager...</p>
           </div>
         </div>
       ) : filteredTickets.length === 0 ? (
@@ -220,7 +220,7 @@ export default function AdminReparationerPage() {
                     {ticket.customer_name}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-charcoal/35">
-                    {ticket.device_type} \u2014 {ticket.device_model} \u00b7 {ticket.service_type}
+                    {ticket.device_type} \— {ticket.device_model} \· {ticket.service_type}
                   </p>
                 </div>
 

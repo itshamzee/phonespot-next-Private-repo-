@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "already_rejected", message: "Du har allerede afvist dette tilbud." }, { status: 410 });
   }
   if (offer.status === "expired") {
-    return NextResponse.json({ error: "expired", message: "Dit tilbud er desv\u00e6rre udl\u00f8bet." }, { status: 410 });
+    return NextResponse.json({ error: "expired", message: "Dit tilbud er desv\ærre udl\øbet." }, { status: 410 });
   }
 
   // Check expiry
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       .from("trade_in_offers")
       .update({ status: "expired" })
       .eq("id", offer.id);
-    return NextResponse.json({ error: "expired", message: "Dit tilbud er desv\u00e6rre udl\u00f8bet." }, { status: 410 });
+    return NextResponse.json({ error: "expired", message: "Dit tilbud er desv\ærre udl\øbet." }, { status: 410 });
   }
 
   // Fetch inquiry for pre-fill data

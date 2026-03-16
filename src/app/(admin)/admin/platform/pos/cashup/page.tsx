@@ -92,7 +92,7 @@ export default function CashupPage() {
             \u2190 Tilbage til POS
           </Link>
           <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-            Dagsoversigt \u2014 {locationName}
+            Dagsoversigt \— {locationName}
           </h2>
         </div>
         <input
@@ -107,7 +107,7 @@ export default function CashupPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\u00e6ser...</p>
+            <p className="text-sm text-charcoal/30">Indl\æser...</p>
           </div>
         </div>
       ) : !data ? (
@@ -126,7 +126,7 @@ export default function CashupPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-charcoal/35">Total oms\u00e6tning</p>
+                  <p className="text-[13px] font-medium text-charcoal/35">Total oms\ætning</p>
                   <p className="text-2xl font-bold text-charcoal">{formatOere(data.totalSales)}</p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function CashupPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-charcoal/35">Tilbeh\u00f8r solgt</p>
+                  <p className="text-[13px] font-medium text-charcoal/35">Tilbeh\ør solgt</p>
                   <p className="text-2xl font-bold text-charcoal">{data.skuCount}</p>
                 </div>
               </div>
@@ -230,7 +230,7 @@ export default function CashupPage() {
                               hour: "2-digit",
                               minute: "2-digit",
                             })
-                          : "\u2014"}
+                          : "\—"}
                       </td>
                       <td className="px-6 py-3 text-charcoal/40">
                         {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}

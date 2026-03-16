@@ -376,7 +376,7 @@ export default function AdminServiceEditorPage({
                       ? service.estimated_time_label
                       : service.estimated_minutes
                         ? `${service.estimated_minutes} min`
-                        : "\u2014"}
+                        : "\—"}
                   </td>
                   <td className="px-5 py-3 text-center">
                     {service.info_note ? (
@@ -391,7 +391,7 @@ export default function AdminServiceEditorPage({
                         ?
                       </button>
                     ) : (
-                      <span className="text-stone-300">\u2014</span>
+                      <span className="text-stone-300">\—</span>
                     )}
                   </td>
                   <td className="px-5 py-3 text-center">

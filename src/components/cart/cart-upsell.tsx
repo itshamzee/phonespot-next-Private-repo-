@@ -13,7 +13,7 @@ export function CartUpsell() {
         <span className="text-2xl">{"\u{1F6E1}\uFE0F"}</span>
         <div>
           <p className="text-sm font-medium text-charcoal">Beskyt din enhed</p>
-          <p className="text-xs text-gray">{"Se covers og panserglas \u2192"}</p>
+          <p className="text-xs text-gray">{"Se covers og panserglas \→"}</p>
         </div>
       </Link>
     </div>

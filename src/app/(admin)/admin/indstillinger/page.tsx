@@ -173,7 +173,7 @@ export default function AdminIndstillingerPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Er du sikker p\u00e5 du vil slette denne template?")) return;
+    if (!confirm("Er du sikker p\å du vil slette denne template?")) return;
     try {
       await fetch(`/api/admin/templates?id=${id}`, { method: "DELETE" });
       fetchTemplates(activeTab);
@@ -220,7 +220,7 @@ export default function AdminIndstillingerPage() {
             <div className="col-span-3 flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-                <p className="text-sm text-charcoal/30">Indl\u00e6ser status...</p>
+                <p className="text-sm text-charcoal/30">Indl\æser status...</p>
               </div>
             </div>
           ) : apiStatus ? (
@@ -250,7 +250,7 @@ export default function AdminIndstillingerPage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Tilf\u00f8j template
+              Tilf\øj template
             </button>
           </div>
 
@@ -258,7 +258,7 @@ export default function AdminIndstillingerPage() {
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-                <p className="text-sm text-charcoal/30">Indl\u00e6ser templates...</p>
+                <p className="text-sm text-charcoal/30">Indl\æser templates...</p>
               </div>
             </div>
           ) : templates.length === 0 ? (

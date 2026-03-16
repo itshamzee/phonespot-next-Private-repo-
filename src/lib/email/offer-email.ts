@@ -61,7 +61,7 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
             <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
               <tr><td align="center">
                 <a href="${acceptUrl}" style="display:inline-block;background:#5A8C6F;color:#ffffff;font-size:16px;font-weight:700;padding:16px 48px;border-radius:8px;text-decoration:none;">
-                  Accept\u00e9r tilbud
+                  Accept\ér tilbud
                 </a>
               </td></tr>
             </table>
@@ -80,7 +80,7 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
         <tr>
           <td style="background:#f9f7f4;padding:20px 40px;text-align:center;">
             <p style="margin:0;font-size:12px;color:#999;">
-              PhoneSpot \u00b7 Vestsj\u00e6llandscentret 10A, 103 \u00b7 4200 Slagelse \u00b7 ha@phonespot.dk
+              PhoneSpot \· Vestsj\ællandscentret 10A, 103 \· 4200 Slagelse \· ha@phonespot.dk
             </p>
           </td>
         </tr>
@@ -92,5 +92,5 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
 }
 
 export function buildOfferEmailSubject(model: string, amountKr: string): string {
-  return `Dit tilbud fra PhoneSpot \u2014 ${amountKr} for din ${model}`;
+  return `Dit tilbud fra PhoneSpot \— ${amountKr} for din ${model}`;
 }

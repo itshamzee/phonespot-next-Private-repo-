@@ -67,7 +67,7 @@ export default function IntakePage() {
           </div>
           <h3 className="mb-1 font-display text-base font-bold text-charcoal">Masse-import via CSV</h3>
           <p className="mb-5 text-sm text-charcoal/35">
-            Importer op til hundredvis af enheder p\u00e5 \u00e9n gang med en CSV-fil
+            Importer op til hundredvis af enheder p\å \én gang med en CSV-fil
           </p>
 
           {lastImportedCount !== null && (
@@ -85,7 +85,7 @@ export default function IntakePage() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            \u00c5ben CSV Import
+            \Åben CSV Import
           </button>
 
           <div className="mt-6 rounded-xl bg-charcoal/[0.02] p-4 text-left">

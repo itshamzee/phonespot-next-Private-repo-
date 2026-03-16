@@ -28,7 +28,7 @@ export default function AbandonedCheckoutsPage() {
             Forladt checkout
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
-            Ordrer der ikke blev gennemf\u00f8rt — send p\u00e5mindelser eller kopier recovery-links
+            Ordrer der ikke blev gennemf\ørt — send p\åmindelser eller kopier recovery-links
           </p>
         </div>
         {count !== null && (

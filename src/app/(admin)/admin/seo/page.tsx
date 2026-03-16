@@ -289,7 +289,7 @@ export default function SEOPage() {
             SEO Analytics
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
-            S\u00f8geords-tracking & performance
+            S\øgeords-tracking & performance
           </p>
         </div>
         <SiteSelector onSiteChange={setSite} />
@@ -343,7 +343,7 @@ export default function SEOPage() {
             </svg>
           </div>
           <p className="text-sm font-medium text-charcoal/30">
-            V\u00e6lg et site for at se SEO-data
+            V\ælg et site for at se SEO-data
           </p>
         </div>
       )}

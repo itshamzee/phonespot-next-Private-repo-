@@ -35,7 +35,7 @@ type DashboardData = {
 const PERIOD_LABELS: Record<string, string> = {
   today: "I dag",
   week: "Sidste 7 dage",
-  month: "Denne m\u00e5ned",
+  month: "Denne m\åned",
   quarter: "Sidste kvartal",
 };
 
@@ -139,25 +139,25 @@ export default function PlatformDashboardPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\u00e6ser dashboard...</p>
+            <p className="text-sm text-charcoal/30">Indl\æser dashboard...</p>
           </div>
         </div>
       ) : (
         <div className="space-y-6">
           {/* KPI cards — row 1 */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <KpiCard icon={KPI_ICONS.revenue} label="Oms\u00e6tning" value={formatOere(data.kpis.totalRevenue)} accent="emerald" />
-            <KpiCard icon={KPI_ICONS.orders} label="Ordrer" value={String(data.kpis.totalOrders)} sub={`${data.kpis.onlineOrders} online \u00b7 ${data.kpis.posOrders} POS`} accent="blue" />
+            <KpiCard icon={KPI_ICONS.revenue} label="Oms\ætning" value={formatOere(data.kpis.totalRevenue)} accent="emerald" />
+            <KpiCard icon={KPI_ICONS.orders} label="Ordrer" value={String(data.kpis.totalOrders)} sub={`${data.kpis.onlineOrders} online \· ${data.kpis.posOrders} POS`} accent="blue" />
             <KpiCard icon={KPI_ICONS.devices} label="Enheder solgt" value={String(data.kpis.devicesSold)} accent="violet" />
-            <KpiCard icon={KPI_ICONS.accessories} label="Tilbeh\u00f8r solgt" value={String(data.kpis.skusSold)} accent="amber" />
+            <KpiCard icon={KPI_ICONS.accessories} label="Tilbeh\ør solgt" value={String(data.kpis.skusSold)} accent="amber" />
           </div>
 
           {/* KPI cards — row 2 */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <KpiCard label="Bruttomargin" value={formatOere(data.kpis.totalMargin)} accent="emerald" />
-            <KpiCard label="Gns. ordrev\u00e6rdi" value={formatOere(data.kpis.avgOrderValue)} accent="violet" />
+            <KpiCard label="Gns. ordrev\ærdi" value={formatOere(data.kpis.avgOrderValue)} accent="violet" />
             <KpiCard label="Brugtmoms (skyldig)" value={formatOere(data.kpis.brugtmomsTotal)} accent="rose" />
-            <KpiCard label="Lager (enheder)" value={String(data.inventory.listedCount)} sub={`V\u00e6rdi: ${formatOere(data.inventory.retailValue)}`} accent="blue" />
+            <KpiCard label="Lager (enheder)" value={String(data.inventory.listedCount)} sub={`V\ærdi: ${formatOere(data.inventory.retailValue)}`} accent="blue" />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -176,7 +176,7 @@ export default function PlatformDashboardPage() {
                   </div>
                 ))}
                 {Object.keys(data.inventory.byLocation).length === 0 && (
-                  <p className="text-sm text-charcoal/30">Ingen enheder p\u00e5 lager</p>
+                  <p className="text-sm text-charcoal/30">Ingen enheder p\å lager</p>
                 )}
               </div>
             </div>

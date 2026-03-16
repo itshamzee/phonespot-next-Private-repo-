@@ -21,12 +21,12 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !offer) {
-    return NextResponse.json({ error: "Token er ugyldigt eller udl\u00f8bet" }, { status: 400 });
+    return NextResponse.json({ error: "Token er ugyldigt eller udl\øbet" }, { status: 400 });
   }
 
   if (new Date(offer.token_expires_at) < new Date()) {
     await supabase.from("trade_in_offers").update({ status: "expired" }).eq("id", offer.id);
-    return NextResponse.json({ error: "Tilbuddet er udl\u00f8bet" }, { status: 410 });
+    return NextResponse.json({ error: "Tilbuddet er udl\øbet" }, { status: 410 });
   }
 
   // Update offer
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: "PhoneSpot <noreply@phonespot.dk>",
         to: "ha@phonespot.dk",
-        subject: `Tilbud afvist: ${inquiry.name} \u2014 ${metadata.device?.model || "enhed"}`,
+        subject: `Tilbud afvist: ${inquiry.name} \— ${metadata.device?.model || "enhed"}`,
         html: `<p>${inquiry.name} har afvist tilbuddet.</p>
 ${customer_response_note ? `<p>Kundens kommentar: ${customer_response_note}</p>` : ""}
 <p><a href="https://phonespot.dk/admin/opkoeb/${offer.inquiry_id}">Se henvendelse</a></p>`,

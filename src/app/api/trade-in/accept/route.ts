@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   if (!token) return NextResponse.json({ error: "token required" }, { status: 400 });
   if (!seller_name || !seller_bank_reg || !seller_bank_account) {
-    return NextResponse.json({ error: "Navn og bankoplysninger er p\u00e5kr\u00e6vet" }, { status: 400 });
+    return NextResponse.json({ error: "Navn og bankoplysninger er p\åkr\ævet" }, { status: 400 });
   }
 
   const supabase = createServerClient();
@@ -25,12 +25,12 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !offer) {
-    return NextResponse.json({ error: "Token er ugyldigt eller udl\u00f8bet" }, { status: 400 });
+    return NextResponse.json({ error: "Token er ugyldigt eller udl\øbet" }, { status: 400 });
   }
 
   if (new Date(offer.token_expires_at) < new Date()) {
     await supabase.from("trade_in_offers").update({ status: "expired" }).eq("id", offer.id);
-    return NextResponse.json({ error: "Tilbuddet er udl\u00f8bet" }, { status: 410 });
+    return NextResponse.json({ error: "Tilbuddet er udl\øbet" }, { status: 410 });
   }
 
   // 2. Update offer with customer details + accepted status
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         from: "PhoneSpot <noreply@phonespot.dk>",
         to: inquiry.email,
         replyTo: "ha@phonespot.dk",
-        subject: "Tilbud accepteret \u2014 PhoneSpot",
+        subject: "Tilbud accepteret \— PhoneSpot",
         html: `<p>Hej ${seller_name},</p>
 <p>Tak! Du har accepteret vores tilbud. ${deliveryText}</p>
 <p>Med venlig hilsen,<br>PhoneSpot</p>`,
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       await resend.emails.send({
         from: "PhoneSpot <noreply@phonespot.dk>",
         to: "ha@phonespot.dk",
-        subject: `Tilbud accepteret: ${inquiry.name} \u2014 ${metadata.device?.model || "enhed"}`,
+        subject: `Tilbud accepteret: ${inquiry.name} \— ${metadata.device?.model || "enhed"}`,
         html: `<p>${inquiry.name} har accepteret tilbuddet.</p>
 <p>Bankinfo: Reg ${seller_bank_reg}, Konto ${seller_bank_account}</p>
 <p><a href="https://phonespot.dk/admin/opkoeb/${offer.inquiry_id}">Se henvendelse</a></p>`,

@@ -181,7 +181,7 @@ export default function AdminReservationerPage() {
             <p className="mt-0.5 text-sm text-charcoal/35">
               {displayed.length}{" "}
               {displayed.length === 1 ? "reservation" : "reservationer"}
-              {filter !== "alle" && ` \u2014 ${FILTER_LABELS[filter]}`}
+              {filter !== "alle" && ` \— ${FILTER_LABELS[filter]}`}
             </p>
           </div>
         </div>

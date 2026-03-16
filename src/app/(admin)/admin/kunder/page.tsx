@@ -85,7 +85,7 @@ export default function AdminKunderPage() {
           </div>
           <input
             type="text"
-            placeholder="S\u00f8g efter navn, email, telefon eller firma..."
+            placeholder="S\øg efter navn, email, telefon eller firma..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -123,7 +123,7 @@ export default function AdminKunderPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\u00e6ser kunder...</p>
+            <p className="text-sm text-charcoal/30">Indl\æser kunder...</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -169,8 +169,8 @@ export default function AdminKunderPage() {
                   </div>
                   <p className="mt-0.5 truncate text-xs text-charcoal/35">
                     {customer.phone}
-                    {customer.email && ` \u00b7 ${customer.email}`}
-                    {customer.type === "erhverv" && customer.company_name && ` \u00b7 ${customer.company_name}`}
+                    {customer.email && ` \· ${customer.email}`}
+                    {customer.type === "erhverv" && customer.company_name && ` \· ${customer.company_name}`}
                   </p>
                 </div>
 

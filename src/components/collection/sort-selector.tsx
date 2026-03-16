@@ -5,8 +5,8 @@ import { useCallback } from "react";
 
 const SORT_OPTIONS = [
   { label: "Bestsellere", value: "BEST_SELLING" },
-  { label: "Pris: Lav \u2192 H\u00f8j", value: "PRICE" },
-  { label: "Pris: H\u00f8j \u2192 Lav", value: "PRICE_DESC" },
+  { label: "Pris: Lav \→ H\øj", value: "PRICE" },
+  { label: "Pris: H\øj \→ Lav", value: "PRICE_DESC" },
   { label: "Nyeste", value: "CREATED" },
   { label: "Navn A-Z", value: "TITLE" },
 ] as const;

@@ -89,7 +89,7 @@ function extractHeadings(content: string): { id: string; text: string; level: nu
     const text = match[2].replace(/\*\*/g, "").trim();
     const id = text
       .toLowerCase()
-      .replace(/[^a-z0-9\u00e6\u00f8\u00e5]+/g, "-")
+      .replace(/[^a-z0-9\æ\ø\å]+/g, "-")
       .replace(/^-|-$/g, "");
     headings.push({ id, text, level: match[1].length });
   }
@@ -162,7 +162,7 @@ function createHeading(level: 2 | 3) {
     const id = text
       .toLowerCase()
       .replace(/\*\*/g, "")
-      .replace(/[^a-z0-9\u00e6\u00f8\u00e5]+/g, "-")
+      .replace(/[^a-z0-9\æ\ø\å]+/g, "-")
       .replace(/^-|-$/g, "");
     return <Tag id={id}>{children}</Tag>;
   };

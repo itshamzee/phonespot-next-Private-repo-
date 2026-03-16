@@ -15,7 +15,7 @@ const categories = [
   {
     name: "Computere",
     href: "/baerbare",
-    description: "B\u00e6rbare & station\u00e6re",
+    description: "B\ærbare & station\ære",
   },
   {
     name: "Covers",
@@ -25,12 +25,12 @@ const categories = [
   {
     name: "Reservedele",
     href: "/reservedele",
-    description: "Sk\u00e6rme, batterier & mere",
+    description: "Sk\ærme, batterier & mere",
   },
   {
     name: "Outlet",
     href: "/outlet",
-    description: "Spar ekstra p\u00e5 udvalgte produkter",
+    description: "Spar ekstra p\å udvalgte produkter",
     isOutlet: true,
   },
 ] as const;
