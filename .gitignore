@@ -50,3 +50,4 @@ scripts/fix-orphan-products.mjs
 scripts/fix-orphan-tags.mjs
 scripts/inspect-store.mjs
 scripts/set-iphone-sold-out.mjs
+scripts/
