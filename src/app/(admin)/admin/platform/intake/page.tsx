@@ -67,7 +67,7 @@ export default function IntakePage() {
           </div>
           <h3 className="mb-1 font-display text-base font-bold text-charcoal">Masse-import via CSV</h3>
           <p className="mb-5 text-sm text-charcoal/35">
-            Importer op til hundredvis af enheder p\å \én gang med en CSV-fil
+            Importer op til hundredvis af enheder på \én gang med en CSV-fil
           </p>
 
           {lastImportedCount !== null && (

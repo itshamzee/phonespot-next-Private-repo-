@@ -24,7 +24,7 @@ const features = [
   {
     title: "Kvalitetstestet",
     description:
-      "Hvert produkt gennemg\år 30+ tests for batteri, sk\ærm, kamera og mere.",
+      "Hvert produkt gennemgår 30+ tests for batteri, skærm, kamera og mere.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ const features = [
   {
     title: "Hurtig levering",
     description:
-      "Bestil f\ør kl. 15 og f\å din pakke allerede n\æste hverdag.",
+      "Bestil før kl. 15 og få din pakke allerede næste hverdag.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

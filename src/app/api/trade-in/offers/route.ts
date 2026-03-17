@@ -76,7 +76,7 @@ export async function POST(req: Request) {
   const amountKr = formatDKK(offer_amount);
 
   const conditionParts = [
-    condition.screen ? `Sk\ærm: ${condition.screen}` : null,
+    condition.screen ? `Skærm: ${condition.screen}` : null,
     condition.back ? `Bagside: ${condition.back}` : null,
     condition.battery ? `Batteri: ${condition.battery}` : null,
   ].filter(Boolean).join(", ");

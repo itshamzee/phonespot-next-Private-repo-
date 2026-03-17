@@ -80,7 +80,7 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
         <tr>
           <td style="background:#f9f7f4;padding:20px 40px;text-align:center;">
             <p style="margin:0;font-size:12px;color:#999;">
-              PhoneSpot \· Vestsj\ællandscentret 10A, 103 \· 4200 Slagelse \· ha@phonespot.dk
+              PhoneSpot \· Vestsjællandscentret 10A, 103 \· 4200 Slagelse \· ha@phonespot.dk
             </p>
           </td>
         </tr>

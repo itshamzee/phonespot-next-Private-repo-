@@ -9,10 +9,11 @@ import type {
 const BASE_URL = "https://app.shipmondo.com/api/public/v3";
 
 function getHeaders(): HeadersInit {
+  const apiUser = process.env.SHIPMONDO_API_USER;
   const apiKey = process.env.SHIPMONDO_API_KEY;
-  if (!apiKey) throw new Error("SHIPMONDO_API_KEY not configured");
+  if (!apiUser || !apiKey) throw new Error("SHIPMONDO_API_USER or SHIPMONDO_API_KEY not configured");
   return {
-    Authorization: `Basic ${Buffer.from(apiKey + ":").toString("base64")}`,
+    Authorization: `Basic ${Buffer.from(`${apiUser}:${apiKey}`).toString("base64")}`,
     "Content-Type": "application/json",
   };
 }
@@ -54,6 +55,25 @@ export async function getPickupPoints(
     per_page: String(limit),
   });
   return shipmondoFetch<ShipmondoPickupPoint[]>(`/pickup_points?${params}`);
+}
+
+export async function getShipmentLabel(shipmentId: number): Promise<string> {
+  const res = await fetch(`${BASE_URL}/shipments/${shipmentId}/labels`, {
+    headers: {
+      ...getHeaders(),
+      Accept: "application/pdf",
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Shipmondo label error ${res.status}: ${body}`);
+  }
+  const buffer = await res.arrayBuffer();
+  return Buffer.from(buffer).toString("base64");
+}
+
+export async function getProducts(senderCountry = "DK", receiverCountry = "DK") {
+  return shipmondoFetch<any[]>(`/products?sender_country=${senderCountry}&receiver_country=${receiverCountry}`);
 }
 
 export async function getShipmentQuotes(

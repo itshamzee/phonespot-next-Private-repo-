@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   if (!token) return NextResponse.json({ error: "token required" }, { status: 400 });
   if (!seller_name || !seller_bank_reg || !seller_bank_account) {
-    return NextResponse.json({ error: "Navn og bankoplysninger er p\åkr\ævet" }, { status: 400 });
+    return NextResponse.json({ error: "Navn og bankoplysninger er påkrævet" }, { status: 400 });
   }
 
   const supabase = createServerClient();
@@ -25,12 +25,12 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !offer) {
-    return NextResponse.json({ error: "Token er ugyldigt eller udl\øbet" }, { status: 400 });
+    return NextResponse.json({ error: "Token er ugyldigt eller udløbet" }, { status: 400 });
   }
 
   if (new Date(offer.token_expires_at) < new Date()) {
     await supabase.from("trade_in_offers").update({ status: "expired" }).eq("id", offer.id);
-    return NextResponse.json({ error: "Tilbuddet er udl\øbet" }, { status: 410 });
+    return NextResponse.json({ error: "Tilbuddet er udløbet" }, { status: 410 });
   }
 
   // 2. Update offer with customer details + accepted status

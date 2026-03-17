@@ -149,7 +149,7 @@ export default function TransfersPage() {
       } else {
         const toName = locations.find((l) => l.id === toLocationId)?.name ?? toLocationId;
         setSubmitSuccess(
-          `${selectedDevice.barcode} er overf\ørt til ${toName}.`,
+          `${selectedDevice.barcode} er overført til ${toName}.`,
         );
         clearDevice();
         setToLocationId("");
@@ -157,7 +157,7 @@ export default function TransfersPage() {
         loadTransfers();
       }
     } catch {
-      setSubmitError("Netv\ærksfejl \— pr\øv igen");
+      setSubmitError("Netværksfejl \— prøv igen");
     } finally {
       setSubmitting(false);
     }
@@ -168,10 +168,10 @@ export default function TransfersPage() {
       {/* Page header */}
       <div>
         <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-          Overf\ørsler
+          Overførsler
         </h2>
         <p className="mt-0.5 text-sm text-charcoal/35">
-          Overf\ør enheder mellem lokationer og se overf\ørselshistorik
+          Overfør enheder mellem lokationer og se overførselshistorik
         </p>
       </div>
 
@@ -181,7 +181,7 @@ export default function TransfersPage() {
           <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
           </svg>
-          Hurtigoverf\ørsel
+          Hurtigoverførsel
         </h3>
 
         <form onSubmit={handleTransfer} className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -199,7 +199,7 @@ export default function TransfersPage() {
                   if (selectedDevice) setSelectedDevice(null);
                 }}
                 onFocus={() => suggestions.length > 0 && setSuggestionsOpen(true)}
-                placeholder="S\øg efter enhed\u2026"
+                placeholder="Søg efter enhed\u2026"
                 className="w-full rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 pr-9 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                 autoComplete="off"
               />
@@ -250,7 +250,7 @@ export default function TransfersPage() {
               onChange={(e) => setToLocationId(e.target.value)}
               className="w-full rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm text-charcoal transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
             >
-              <option value="">V\ælg lokation\u2026</option>
+              <option value="">Vælg lokation\u2026</option>
               {locations.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
@@ -283,7 +283,7 @@ export default function TransfersPage() {
               disabled={submitting || !selectedDevice || !toLocationId}
               className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/15 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
-              {submitting ? "Overf\ører\u2026" : "Overf\ør"}
+              {submitting ? "Overfører\u2026" : "Overfør"}
             </button>
           </div>
         </form>
@@ -306,7 +306,7 @@ export default function TransfersPage() {
       {/* Transfer log */}
       <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-black/[0.03] px-6 py-4">
-          <h3 className="text-sm font-bold text-charcoal">Overf\ørselslog</h3>
+          <h3 className="text-sm font-bold text-charcoal">Overførselslog</h3>
           <span className="rounded-full bg-charcoal/[0.04] px-2.5 py-1 text-[10px] font-bold text-charcoal/35">
             {transfers.length} poster
           </span>
@@ -323,7 +323,7 @@ export default function TransfersPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-charcoal/30">Ingen overf\ørsler registreret endnu</p>
+            <p className="text-sm font-medium text-charcoal/30">Ingen overførsler registreret endnu</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -334,7 +334,7 @@ export default function TransfersPage() {
                   <th className="px-6 py-3">Enhed</th>
                   <th className="px-6 py-3">Fra</th>
                   <th className="px-6 py-3">Til</th>
-                  <th className="px-6 py-3">Overf\ørt af</th>
+                  <th className="px-6 py-3">Overført af</th>
                   <th className="px-6 py-3">\Årsag</th>
                 </tr>
               </thead>

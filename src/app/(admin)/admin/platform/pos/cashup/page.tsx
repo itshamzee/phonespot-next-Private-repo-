@@ -107,7 +107,7 @@ export default function CashupPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\æser...</p>
+            <p className="text-sm text-charcoal/30">Indlæser...</p>
           </div>
         </div>
       ) : !data ? (
@@ -126,7 +126,7 @@ export default function CashupPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-charcoal/35">Total oms\ætning</p>
+                  <p className="text-[13px] font-medium text-charcoal/35">Total omsætning</p>
                   <p className="text-2xl font-bold text-charcoal">{formatOere(data.totalSales)}</p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function CashupPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-charcoal/35">Tilbeh\ør solgt</p>
+                  <p className="text-[13px] font-medium text-charcoal/35">Tilbehør solgt</p>
                   <p className="text-2xl font-bold text-charcoal">{data.skuCount}</p>
                 </div>
               </div>

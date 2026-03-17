@@ -459,7 +459,7 @@ export default function PosPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-charcoal sm:text-3xl">Kasseapparat</h1>
-          <p className="mt-0.5 text-sm text-charcoal/35">Scan, s\øg og gennemf\ør salg</p>
+          <p className="mt-0.5 text-sm text-charcoal/35">Scan, søg og gennemfør salg</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Location selector */}
@@ -506,7 +506,7 @@ export default function PosPage() {
               </div>
               <div>
                 <p className="font-display text-lg font-bold text-emerald-900">
-                  Salg gennemf\ørt!
+                  Salg gennemført!
                 </p>
                 <p className="text-sm text-emerald-700/60">
                   Ordre {lastSale.orderNumber} &middot; {formatOere(lastSale.total)}
@@ -557,7 +557,7 @@ export default function PosPage() {
                   value={query}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onKeyDown={handleScan}
-                  placeholder="Scan stregkode, IMEI, EAN eller s\øg..."
+                  placeholder="Scan stregkode, IMEI, EAN eller søg..."
                   className="w-full rounded-xl border border-black/[0.06] bg-[#f4f3f0] py-4 pl-12 pr-4 font-mono text-base text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                   autoComplete="off"
                 />
@@ -613,7 +613,7 @@ export default function PosPage() {
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-charcoal">{sku.title}</p>
-                            <p className="text-xs text-charcoal/35">{sku.category ?? "Tilbeh\ør"}</p>
+                            <p className="text-xs text-charcoal/35">{sku.category ?? "Tilbehør"}</p>
                           </div>
                         </div>
                         <span className="font-display text-sm font-bold text-charcoal">
@@ -656,7 +656,7 @@ export default function PosPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-charcoal/25">Scan eller s\øg for at tilf\øje varer</p>
+                <p className="text-sm font-medium text-charcoal/25">Scan eller søg for at tilføje varer</p>
               </div>
             ) : (
               <div className="divide-y divide-black/[0.03]">
@@ -786,7 +786,7 @@ export default function PosPage() {
                     onClick={lookupCustomer}
                     className="rounded-xl border border-black/[0.06] px-4 py-2.5 text-sm font-semibold text-charcoal/50 transition-all hover:bg-black/[0.02] hover:text-charcoal"
                   >
-                    S\øg
+                    Søg
                   </button>
                 </div>
               )}
@@ -939,7 +939,7 @@ export default function PosPage() {
                     Behandler...
                   </span>
                 ) : (
-                  "Gennemf\ør salg"
+                  "Gennemfør salg"
                 )}
               </button>
             </div>

@@ -13,7 +13,7 @@ import type {
 const STATUS_LABELS: Record<InquiryStatus, string> = {
   ny: "Ny",
   besvaret: "Besvaret",
-  venter_paa_svar: "Venter p\å svar",
+  venter_paa_svar: "Venter på svar",
   lukket: "Lukket",
 };
 
@@ -36,7 +36,7 @@ const ALL_STATUSES: (InquiryStatus | "alle")[] = ["alle", "ny", "besvaret", "ven
 const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   alle: "Alle",
   kontaktformular: "Kontaktformular",
-  "saelg-enhed": "S\ælg enhed",
+  "saelg-enhed": "Sælg enhed",
   "reparation-booking": "Booking",
   manuel: "Manuel",
 };
@@ -292,7 +292,7 @@ export default function AdminHenvendelserPage() {
           </div>
           <input
             type="text"
-            placeholder="S\øg efter navn, email eller besked..."
+            placeholder="Søg efter navn, email eller besked..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -342,7 +342,7 @@ export default function AdminHenvendelserPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\æser henvendelser...</p>
+            <p className="text-sm text-charcoal/30">Indlæser henvendelser...</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -471,7 +471,7 @@ export default function AdminHenvendelserPage() {
                             defaultValue=""
                             className="w-full rounded-lg border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none"
                           >
-                            <option value="" disabled>V\ælg skabelon...</option>
+                            <option value="" disabled>Vælg skabelon...</option>
                             {templates.map((tpl) => (
                               <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                             ))}
@@ -546,7 +546,7 @@ export default function AdminHenvendelserPage() {
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
                         className="w-full rounded-lg border border-black/[0.06] bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/25 transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
-                        placeholder="Tilf\øj noter..."
+                        placeholder="Tilføj noter..."
                       />
                       <button
                         type="button"

@@ -107,7 +107,7 @@ export default function OpkoebPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-            Opk\øb
+            Opkøb
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
             {rows.length} henvendelser totalt
@@ -125,7 +125,7 @@ export default function OpkoebPage() {
           </div>
           <input
             type="text"
-            placeholder="S\øg efter kunde eller enhed..."
+            placeholder="Søg efter kunde eller enhed..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -167,7 +167,7 @@ export default function OpkoebPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\æser opk\øb...</p>
+            <p className="text-sm text-charcoal/30">Indlæser opkøb...</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (

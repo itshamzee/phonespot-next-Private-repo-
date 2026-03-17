@@ -21,12 +21,12 @@ export async function POST(req: Request) {
     .single();
 
   if (error || !offer) {
-    return NextResponse.json({ error: "Token er ugyldigt eller udl\øbet" }, { status: 400 });
+    return NextResponse.json({ error: "Token er ugyldigt eller udløbet" }, { status: 400 });
   }
 
   if (new Date(offer.token_expires_at) < new Date()) {
     await supabase.from("trade_in_offers").update({ status: "expired" }).eq("id", offer.id);
-    return NextResponse.json({ error: "Tilbuddet er udl\øbet" }, { status: 410 });
+    return NextResponse.json({ error: "Tilbuddet er udløbet" }, { status: 410 });
   }
 
   // Update offer

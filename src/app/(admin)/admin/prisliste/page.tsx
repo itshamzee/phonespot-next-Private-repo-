@@ -61,7 +61,7 @@ export default function AdminPrislistePage() {
         })),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunne ikke hente m\ærker");
+      setError(err instanceof Error ? err.message : "Kunne ikke hente mærker");
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AdminPrislistePage() {
       setShowForm(false);
       await loadBrands();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunne ikke oprette m\ærke");
+      setError(err instanceof Error ? err.message : "Kunne ikke oprette mærke");
     } finally {
       setSubmitting(false);
     }
@@ -128,7 +128,7 @@ export default function AdminPrislistePage() {
             Prisliste
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
-            {brands.length} m\ærker registreret
+            {brands.length} mærker registreret
           </p>
         </div>
         <button
@@ -152,7 +152,7 @@ export default function AdminPrislistePage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Tilf\øj m\ærke
+              Tilføj mærke
             </>
           )}
         </button>
@@ -171,7 +171,7 @@ export default function AdminPrislistePage() {
           className="mb-6 rounded-2xl border border-black/[0.04] bg-white p-6 shadow-sm"
         >
           <h3 className="mb-4 font-display text-lg font-bold text-charcoal">
-            Nyt m\ærke
+            Nyt mærke
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-1.5">
@@ -224,7 +224,7 @@ export default function AdminPrislistePage() {
               disabled={submitting}
               className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/15 transition-all hover:brightness-110 disabled:opacity-50"
             >
-              {submitting ? "Opretter..." : "Opret m\ærke"}
+              {submitting ? "Opretter..." : "Opret mærke"}
             </button>
           </div>
         </form>
@@ -235,7 +235,7 @@ export default function AdminPrislistePage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\æser m\ærker...</p>
+            <p className="text-sm text-charcoal/30">Indlæser mærker...</p>
           </div>
         </div>
       ) : brands.length === 0 ? (
@@ -246,7 +246,7 @@ export default function AdminPrislistePage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-charcoal/30">Ingen m\ærker fundet</p>
+          <p className="text-sm font-medium text-charcoal/30">Ingen mærker fundet</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

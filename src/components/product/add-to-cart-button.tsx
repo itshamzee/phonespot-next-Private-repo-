@@ -69,7 +69,7 @@ export function AddToCartButton({
       disabled={isLoading}
       className="w-full rounded-full bg-green-eco py-4 font-semibold text-white transition-colors hover:bg-green-light disabled:opacity-70"
     >
-      {isLoading ? "Tilf\øjer..." : "L\æg i kurv"}
+      {isLoading ? "Tilføjer..." : "Læg i kurv"}
     </button>
   );
 }

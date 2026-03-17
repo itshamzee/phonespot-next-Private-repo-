@@ -52,11 +52,11 @@ function isPhonespotAdvantage(phonespot: string, competitor: string): boolean {
   if (p.includes("30+") && c.includes("25+")) return true;
   if (p.includes("1\u20132") && c.includes("2\u20135")) return true;
   if (
-    (p.includes("iphones") || p.includes("b\ærbare")) &&
+    (p.includes("iphones") || p.includes("bærbare")) &&
     c.startsWith("kun")
   )
     return true;
-  if (p.includes("konkurrencedygtige") && c.includes("h\øjere")) return true;
+  if (p.includes("konkurrencedygtige") && c.includes("højere")) return true;
   if (p === "dansk" && c !== "dansk") return true;
   if (p.includes("specialbutik") && c.includes("markedsplads")) return true;
   if (p.includes("egen testproces") && c.includes("varierer")) return true;

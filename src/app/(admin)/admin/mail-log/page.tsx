@@ -161,7 +161,7 @@ export default function AdminMailLogPage() {
               </svg>
             </div>
             <div>
-              <p className="text-[13px] font-medium text-charcoal/35">Sendt denne m\åned</p>
+              <p className="text-[13px] font-medium text-charcoal/35">Sendt denne måned</p>
               <p className="text-2xl font-bold text-charcoal">{sentThisMonth}</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function AdminMailLogPage() {
           </div>
           <input
             type="text"
-            placeholder="S\øg efter email eller emne..."
+            placeholder="Søg efter email eller emne..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -220,7 +220,7 @@ export default function AdminMailLogPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <p className="text-sm text-charcoal/30">Indl\æser mail-log...</p>
+            <p className="text-sm text-charcoal/30">Indlæser mail-log...</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
