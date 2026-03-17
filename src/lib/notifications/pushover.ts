@@ -65,18 +65,31 @@ export async function sendPushover(msg: PushoverMessage): Promise<boolean> {
 export async function notifyNewOrder(params: {
   orderNumber: string;
   customerName: string;
+  customerEmail?: string;
   totalKr: string;
   itemCount: number;
+  itemSummary?: string; // e.g., "iPhone 15 Pro 256GB, Privacy Glass"
+  shippingKr?: string;
+  discountKr?: string;
   adminUrl?: string;
 }): Promise<void> {
+  const lines: string[] = [];
+  lines.push(`Kunde: ${params.customerName}`);
+  if (params.customerEmail) lines.push(`Email: ${params.customerEmail}`);
+  if (params.itemSummary) lines.push(`\nVarer:\n${params.itemSummary}`);
+  lines.push(`\n${params.itemCount} ${params.itemCount === 1 ? "vare" : "varer"}`);
+  if (params.discountKr) lines.push(`Rabat: -${params.discountKr}`);
+  if (params.shippingKr) lines.push(`Fragt: ${params.shippingKr}`);
+  lines.push(`\nTotal: ${params.totalKr}`);
+
   await sendPushover({
     title: `Ny ordre! ${params.orderNumber}`,
-    message: `${params.customerName} — ${params.totalKr}\n${params.itemCount} ${params.itemCount === 1 ? "vare" : "varer"}`,
+    message: lines.join("\n"),
     sound: "cashregister",
-    priority: 2, // emergency — repeats until acknowledged
-    retry: 30, // repeat every 30 seconds
-    expire: 300, // stop after 5 minutes if not acknowledged
+    priority: 2,
+    retry: 30,
+    expire: 300,
     url: params.adminUrl || "https://phonespot.dk/admin/platform/orders",
-    url_title: "Se ordre",
+    url_title: "Se ordre i admin",
   });
 }

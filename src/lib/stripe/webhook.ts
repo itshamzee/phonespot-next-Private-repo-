@@ -212,16 +212,42 @@ export async function handleCheckoutCompleted(
 
   // 10. Send push notification to staff (Pushover — cashregister sound)
   try {
-    const totalKr = new Intl.NumberFormat("da-DK", {
-      style: "currency",
-      currency: "DKK",
-    }).format(order.total / 100);
+    const fmtKr = (ore: number) =>
+      new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
+
+    // Build item summary with product names
+    const itemNames: string[] = [];
+    for (const item of orderItems) {
+      if (item.item_type === "device" && item.device_id) {
+        const { data: dev } = await supabase
+          .from("devices")
+          .select("template:product_templates(brand, model, storage)")
+          .eq("id", item.device_id)
+          .single();
+        const t = (dev as any)?.template;
+        if (t) {
+          itemNames.push(`• ${[t.brand, t.model, t.storage].filter(Boolean).join(" ")} — ${fmtKr(item.unit_price)}`);
+        }
+      } else if (item.sku_product_id) {
+        const { data: sku } = await supabase
+          .from("sku_products")
+          .select("title")
+          .eq("id", item.sku_product_id)
+          .single();
+        const qty = item.quantity > 1 ? ` x${item.quantity}` : "";
+        itemNames.push(`• ${sku?.title || "Tilbehør"}${qty} — ${fmtKr(item.unit_price * item.quantity)}`);
+      }
+    }
 
     await notifyNewOrder({
       orderNumber: order.order_number,
       customerName: customer?.name || "Ukendt kunde",
-      totalKr,
+      customerEmail: customer?.email,
+      totalKr: fmtKr(order.total),
       itemCount: orderItems.length,
+      itemSummary: itemNames.join("\n") || undefined,
+      shippingKr: order.shipping_cost ? fmtKr(order.shipping_cost) : undefined,
+      discountKr: order.discount_amount ? fmtKr(order.discount_amount) : undefined,
     });
   } catch (notifyErr) {
     console.error("[webhook] pushover notification failed:", notifyErr);
