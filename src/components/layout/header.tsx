@@ -600,7 +600,7 @@ export function Header() {
 
       {/* Mobile nav panel */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-x-0 top-[calc(var(--header-h,6.5rem))] bottom-0 z-40 overflow-y-auto bg-warm-white/98 backdrop-blur-xl">
+        <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 overflow-y-auto bg-warm-white/98 backdrop-blur-xl" style={{ top: "5.5rem" }}>
           <nav className="mx-auto max-w-lg px-5 pb-8 pt-2">
             {/* Highlighted service links at top */}
             <div className="mb-4 grid grid-cols-2 gap-3">
