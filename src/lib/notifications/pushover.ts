@@ -9,6 +9,8 @@ interface PushoverMessage {
   message: string;
   sound?: string; // "cashregister", "bugle", "cosmic", etc.
   priority?: -2 | -1 | 0 | 1 | 2; // -2 silent, 0 normal, 1 high, 2 emergency
+  retry?: number; // seconds between retries (required for priority 2, min 30)
+  expire?: number; // seconds until retries stop (required for priority 2, max 10800)
   url?: string;
   url_title?: string;
 }
@@ -38,6 +40,7 @@ export async function sendPushover(msg: PushoverMessage): Promise<boolean> {
         message: msg.message,
         sound: msg.sound || "cashregister",
         priority: msg.priority ?? 0,
+        ...(msg.priority === 2 ? { retry: msg.retry || 30, expire: msg.expire || 300 } : {}),
         url: msg.url,
         url_title: msg.url_title,
       }),
@@ -67,10 +70,12 @@ export async function notifyNewOrder(params: {
   adminUrl?: string;
 }): Promise<void> {
   await sendPushover({
-    title: `💰 Ny ordre! ${params.orderNumber}`,
+    title: `Ny ordre! ${params.orderNumber}`,
     message: `${params.customerName} — ${params.totalKr}\n${params.itemCount} ${params.itemCount === 1 ? "vare" : "varer"}`,
     sound: "cashregister",
-    priority: 1, // high priority — bypasses Do Not Disturb
+    priority: 2, // emergency — repeats until acknowledged
+    retry: 30, // repeat every 30 seconds
+    expire: 300, // stop after 5 minutes if not acknowledged
     url: params.adminUrl || "https://phonespot.dk/admin/platform/orders",
     url_title: "Se ordre",
   });
