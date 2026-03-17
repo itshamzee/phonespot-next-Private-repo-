@@ -12,9 +12,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = `PhoneSpot <${emailFrom}>`;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://phonespot.dk";
 
-// 24-hour per-customer throttle: track which emails have been sent in this run
-// (The authoritative throttle is checked via recovery_email_sent_at in the DB)
-
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -37,7 +34,9 @@ export async function GET(req: NextRequest) {
   const { data: emailCandidates, error: emailFetchError } = await supabase
     .from("orders")
     .select(
-      "id, customer_email, customer_name, customer_phone, marketing_consent, items, total_amount, recovery_token, abandoned_at, recovery_email_sent_at, recovery_status"
+      `id, total, recovery_token, abandoned_at, recovery_email_sent_at, recovery_status,
+       customer:customers!inner(email, name, phone, marketing_consent),
+       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)`
     )
     .eq("status", "abandoned")
     .neq("recovery_status", "recovered")
@@ -50,16 +49,20 @@ export async function GET(req: NextRequest) {
   } else if (emailCandidates && emailCandidates.length > 0) {
     for (const order of emailCandidates) {
       try {
-        if (!order.customer_email || !order.recovery_token) {
+        const customer = order.customer as any;
+        const customerEmail = customer?.email;
+        const customerName = customer?.name;
+
+        if (!customerEmail || !order.recovery_token) {
           console.warn(`[recovery] Order ${order.id} missing email or recovery_token, skipping`);
           continue;
         }
 
-        // 24h per-customer throttle: check if we sent an email to this address within 24h
+        // 24h per-customer throttle
         const { data: recentEmail } = await supabase
           .from("orders")
-          .select("id")
-          .eq("customer_email", order.customer_email)
+          .select("id, customer:customers!inner(email)")
+          .eq("customers.email", customerEmail)
           .not("recovery_email_sent_at", "is", null)
           .gt("recovery_email_sent_at", twentyFourHoursAgo)
           .neq("id", order.id)
@@ -67,26 +70,49 @@ export async function GET(req: NextRequest) {
           .maybeSingle();
 
         if (recentEmail) {
-          console.log(`[recovery] Throttled email for ${order.customer_email} (sent within 24h)`);
+          console.log(`[recovery] Throttled email for ${customerEmail} (sent within 24h)`);
           continue;
         }
 
+        // Build item list from order_items with product names
+        const orderItems = (order.order_items as any[]) ?? [];
+        const items: Array<{ title: string; price: number }> = [];
+
+        for (const item of orderItems) {
+          if (item.item_type === "device" && item.device_id) {
+            const { data: dev } = await supabase
+              .from("devices")
+              .select("template:product_templates(brand, model, storage)")
+              .eq("id", item.device_id)
+              .single();
+            const t = (dev as any)?.template;
+            items.push({
+              title: t ? [t.brand, t.model, t.storage].filter(Boolean).join(" ") : "Enhed",
+              price: item.unit_price,
+            });
+          } else if (item.sku_product_id) {
+            const { data: sku } = await supabase
+              .from("sku_products")
+              .select("title")
+              .eq("id", item.sku_product_id)
+              .single();
+            items.push({
+              title: sku?.title || "Tilbehør",
+              price: item.unit_price * item.quantity,
+            });
+          }
+        }
+
         const recoveryUrl = `${BASE_URL}/checkout/recover/${order.recovery_token}`;
-        const items: Array<{ title: string; price: number }> = Array.isArray(order.items)
-          ? order.items.map((item: { title?: string; price?: number; unit_price?: number }) => ({
-              title: item.title ?? "Produkt",
-              price: item.price ?? item.unit_price ?? 0,
-            }))
-          : [];
 
         const { error: sendError } = await resend.emails.send({
           from: EMAIL_FROM,
-          to: order.customer_email,
+          to: customerEmail,
           subject: emailSubject,
           react: AbandonedCartEmail({
-            customerName: order.customer_name ?? "Kunde",
+            customerName: customerName ?? "Kunde",
             items,
-            total: order.total_amount ?? 0,
+            total: order.total ?? 0,
             recoveryUrl,
           }),
         });
@@ -106,7 +132,7 @@ export async function GET(req: NextRequest) {
           .eq("id", order.id);
 
         emailsSent++;
-        console.log(`[recovery] Email sent for order ${order.id}`);
+        console.log(`[recovery] Email sent for order ${order.id} to ${customerEmail}`);
       } catch (err) {
         console.error(`[recovery] Unexpected error for order ${order.id}:`, err);
         errors++;
@@ -120,7 +146,8 @@ export async function GET(req: NextRequest) {
   const { data: smsCandidates, error: smsFetchError } = await supabase
     .from("orders")
     .select(
-      "id, customer_email, customer_name, customer_phone, marketing_consent, total_amount, recovery_token, abandoned_at, recovery_email_sent_at, recovery_sms_sent_at, recovery_status"
+      `id, total, recovery_token, abandoned_at, recovery_email_sent_at, recovery_sms_sent_at, recovery_status,
+       customer:customers!inner(email, name, phone, marketing_consent)`
     )
     .eq("status", "abandoned")
     .neq("recovery_status", "recovered")
@@ -134,8 +161,13 @@ export async function GET(req: NextRequest) {
   } else if (smsCandidates && smsCandidates.length > 0) {
     for (const order of smsCandidates) {
       try {
-        // Must have phone and marketing consent
-        if (!order.customer_phone || !order.marketing_consent) {
+        const customer = order.customer as any;
+        const customerPhone = customer?.phone;
+        const customerName = customer?.name;
+        const customerEmail = customer?.email;
+        const marketingConsent = customer?.marketing_consent;
+
+        if (!customerPhone || !marketingConsent) {
           console.log(`[recovery] Order ${order.id} no phone or no consent, skipping SMS`);
           continue;
         }
@@ -145,11 +177,11 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // 24h per-customer throttle via email address
+        // 24h per-customer throttle
         const { data: recentSms } = await supabase
           .from("orders")
-          .select("id")
-          .eq("customer_email", order.customer_email)
+          .select("id, customer:customers!inner(email)")
+          .eq("customers.email", customerEmail)
           .not("recovery_sms_sent_at", "is", null)
           .gt("recovery_sms_sent_at", twentyFourHoursAgo)
           .neq("id", order.id)
@@ -157,15 +189,15 @@ export async function GET(req: NextRequest) {
           .maybeSingle();
 
         if (recentSms) {
-          console.log(`[recovery] Throttled SMS for ${order.customer_email} (sent within 24h)`);
+          console.log(`[recovery] Throttled SMS for ${customerEmail} (sent within 24h)`);
           continue;
         }
 
         const recoveryUrl = `${BASE_URL}/checkout/recover/${order.recovery_token}`;
-        const message = `Hej ${order.customer_name ?? ""}! Du har varer i din kurv på PhoneSpot. Fuldfør dit køb her: ${recoveryUrl}`.trim();
+        const message = `Hej ${customerName ?? ""}! Du har varer i din kurv på PhoneSpot. Fuldfør dit køb her: ${recoveryUrl}`.trim();
 
         const { success } = await sendSms({
-          to: order.customer_phone,
+          to: customerPhone,
           message,
         });
 
