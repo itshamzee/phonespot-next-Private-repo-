@@ -422,7 +422,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
               </div>
               <div className="space-y-2">
                 {group.options.map((opt, oi) => (
-                  <div key={oi} className="flex items-center gap-2">
+                  <div key={oi} className="flex flex-wrap items-center gap-2">
                     <input
                       value={opt.value}
                       onChange={(e) => updateVariantOption(gi, oi, "value", e.target.value)}
@@ -583,7 +583,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
       </section>
 
       {/* Status + actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-3">
           <input
             type="checkbox"
@@ -593,18 +593,18 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
           />
           <span className="text-sm font-medium text-stone-700">Publiceret</span>
         </label>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full sm:w-auto">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-stone-200 bg-white px-6 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+            className="flex-1 sm:flex-none rounded-xl border border-stone-200 bg-white px-6 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
           >
             Annuller
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-green-600/20 hover:brightness-110 disabled:opacity-50"
+            className="flex-1 sm:flex-none rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-green-600/20 hover:brightness-110 disabled:opacity-50"
           >
             {saving ? "Gemmer..." : isEdit ? "Gem ændringer" : "Opret produkt"}
           </button>

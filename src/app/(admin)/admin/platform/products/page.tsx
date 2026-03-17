@@ -35,7 +35,7 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
             Produkter
@@ -63,10 +63,10 @@ export default function ProductsPage() {
 
       {/* Tabs */}
       {view === "list" && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
             onClick={() => setTab("templates")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all whitespace-nowrap ${
               tab === "templates"
                 ? "bg-charcoal text-white shadow-sm"
                 : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"
@@ -79,7 +79,7 @@ export default function ProductsPage() {
           </button>
           <button
             onClick={() => setTab("sku")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all whitespace-nowrap ${
               tab === "sku"
                 ? "bg-charcoal text-white shadow-sm"
                 : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"
@@ -92,7 +92,7 @@ export default function ProductsPage() {
           </button>
           <button
             onClick={() => setTab("spare-parts")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all whitespace-nowrap ${
               tab === "spare-parts"
                 ? "bg-charcoal text-white shadow-sm"
                 : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"

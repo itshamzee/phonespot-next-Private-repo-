@@ -124,20 +124,20 @@ export function ProductTemplateList({ onEdit }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-stone-100 bg-stone-50/60 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-                <th className="px-4 py-3">Billede</th>
+                <th className="hidden sm:table-cell px-4 py-3">Billede</th>
                 <th className="px-4 py-3">Model</th>
-                <th className="px-4 py-3">Brand</th>
-                <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3">Lagre</th>
-                <th className="px-4 py-3">Pris (A)</th>
-                <th className="px-4 py-3">Status</th>
+                <th className="hidden md:table-cell px-4 py-3">Brand</th>
+                <th className="hidden md:table-cell px-4 py-3">Kategori</th>
+                <th className="hidden lg:table-cell px-4 py-3">Lagre</th>
+                <th className="hidden sm:table-cell px-4 py-3">Pris (A)</th>
+                <th className="hidden sm:table-cell px-4 py-3">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {filtered.map((t) => (
                 <tr key={t.id} className="hover:bg-stone-50/50">
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-4 py-3">
                     {t.images?.[0] ? (
                       <img
                         src={t.images[0]}
@@ -155,19 +155,19 @@ export function ProductTemplateList({ onEdit }: Props) {
                   <td className="px-4 py-3 font-medium text-stone-800">
                     {t.display_name}
                   </td>
-                  <td className="px-4 py-3 text-stone-500">{t.brand}</td>
-                  <td className="px-4 py-3">
+                  <td className="hidden md:table-cell px-4 py-3 text-stone-500">{t.brand}</td>
+                  <td className="hidden md:table-cell px-4 py-3">
                     <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
                       {t.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-stone-500">
+                  <td className="hidden lg:table-cell px-4 py-3 text-xs text-stone-500">
                     {t.storage_options?.join(", ") ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-stone-600">
+                  <td className="hidden sm:table-cell px-4 py-3 text-stone-600">
                     {t.base_price_a ? formatDKK(t.base_price_a) : "—"}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-4 py-3">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         t.status === "published"

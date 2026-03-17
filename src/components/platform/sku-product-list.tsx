@@ -272,14 +272,14 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                     className="rounded"
                   />
                 </th>
-                <th className="px-4 py-3">Billede</th>
+                <th className="hidden sm:table-cell px-4 py-3">Billede</th>
                 <th className="px-4 py-3">Titel</th>
-                <th className="px-4 py-3">Kategori</th>
+                <th className="hidden md:table-cell px-4 py-3">Kategori</th>
                 <th className="px-4 py-3">Salgspris</th>
                 {stockLocationIds.map(l => (
-                  <th key={l.id} className="px-4 py-3 text-center">{l.name}</th>
+                  <th key={l.id} className="hidden lg:table-cell px-4 py-3 text-center">{l.name}</th>
                 ))}
-                <th className="px-4 py-3">Status</th>
+                <th className="hidden sm:table-cell px-4 py-3">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -294,7 +294,7 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                       className="rounded"
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-4 py-3">
                     {p.images?.[0] ? (
                       <img
                         src={p.images[0]}
@@ -312,7 +312,7 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                   <td className="px-4 py-3 font-medium text-stone-800">
                     {p.title}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="hidden md:table-cell px-4 py-3">
                     {p.category ? (
                       <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
                         {CATEGORY_LABELS[p.category] ?? p.category}
@@ -325,11 +325,11 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                     {formatDKK(p.selling_price)}
                   </td>
                   {stockLocationIds.map(l => (
-                    <td key={l.id} className="px-4 py-3 text-center text-xs">
+                    <td key={l.id} className="hidden lg:table-cell px-4 py-3 text-center text-xs">
                       <StockBadge qty={getStock(p, l.id)} />
                     </td>
                   ))}
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-4 py-3">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         p.status === "published"
