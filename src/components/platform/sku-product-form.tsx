@@ -5,11 +5,13 @@ import type { SkuProduct, ProductTemplate } from "@/lib/supabase/platform-types"
 import { ProductImageUploader } from "./product-image-uploader";
 
 const CATEGORIES = [
-  { value: "covers", label: "Covers" },
-  { value: "screen_protectors", label: "Skærmbeskyttere" },
-  { value: "cables", label: "Kabler" },
-  { value: "chargers", label: "Opladere" },
-  { value: "earphones", label: "Øretelefoner" },
+  { value: "iphone", label: "iPhone" },
+  { value: "ipad", label: "iPad" },
+  { value: "smartphone", label: "Smartphone" },
+  { value: "laptop", label: "Laptop" },
+  { value: "smartwatch", label: "Smartwatch" },
+  { value: "accessory", label: "Tilbehør" },
+  { value: "skaermbeskyttelse", label: "Skærmbeskyttelse" },
   { value: "other", label: "Andet" },
 ] as const;
 
@@ -56,6 +58,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
     barcode: product?.barcode ?? "",
     brand: product?.brand ?? "",
     category: product?.category ?? "",
+    subcategory: product?.subcategory ?? "",
     images: product?.images ?? [],
     slug: product?.slug ?? "",
     meta_title: product?.meta_title ?? "",
@@ -199,6 +202,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
       cost_price: form.cost_price ? Math.round(parseFloat(form.cost_price) * 100) : null,
       sale_price: form.sale_price ? Math.round(parseFloat(form.sale_price) * 100) : null,
       category: form.category || null,
+      subcategory: form.subcategory || null,
       variants: variants.map((g) => ({
         name: g.name,
         options: g.options.map((o) => ({
@@ -272,6 +276,22 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
               ))}
             </select>
           </div>
+          {form.category === "accessory" && (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-stone-500">Underkategori</label>
+              <select
+                value={form.subcategory}
+                onChange={(e) => set("subcategory", e.target.value)}
+                className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
+              >
+                <option value="">Ingen</option>
+                <option value="cable">Kabel</option>
+                <option value="powerbank">Powerbank</option>
+                <option value="audio">Audio / Høretelefoner</option>
+                <option value="spare-part">Reservedel</option>
+              </select>
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-xs font-semibold text-stone-500">EAN</label>
             <input

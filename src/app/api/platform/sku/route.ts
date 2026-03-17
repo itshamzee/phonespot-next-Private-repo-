@@ -24,6 +24,17 @@ export async function GET(request: NextRequest) {
   if (active !== null) query = query.eq("is_active", active === "true");
   if (search) query = query.or(`title.ilike.%${search}%,ean.ilike.%${search}%,product_number.ilike.%${search}%`);
 
+  const templateId = params.get("template_id");
+  if (templateId) {
+    const { data: links } = await supabase
+      .from("sku_product_templates")
+      .select("sku_product_id")
+      .eq("template_id", templateId);
+    const ids = (links ?? []).map((l: { sku_product_id: string }) => l.sku_product_id);
+    if (ids.length === 0) return NextResponse.json([]);
+    query = query.in("id", ids);
+  }
+
   const { data, error } = await query;
 
   if (error) {

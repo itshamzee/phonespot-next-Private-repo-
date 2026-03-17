@@ -37,17 +37,21 @@ interface StockMap {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  covers: "Covers",
-  screen_protectors: "Skærmbeskyttere",
-  cables: "Kabler",
-  chargers: "Opladere",
-  earphones: "Øretelefoner",
+  iphone: "iPhone",
+  ipad: "iPad",
+  smartphone: "Smartphone",
+  laptop: "Laptop",
+  smartwatch: "Smartwatch",
+  accessory: "Tilbehør",
+  skaermbeskyttelse: "Skærmbeskyttelse",
   other: "Andet",
 };
 
 interface SkuStockTableProps {
   searchFilter?: string;
   categoryFilter?: string;
+  brandFilter?: string;
+  templateFilter?: string;
   onEditProduct?: (product: SkuProduct) => void;
 }
 
@@ -174,6 +178,8 @@ function StockCell({
 export function SkuStockTable({
   searchFilter = "",
   categoryFilter = "",
+  brandFilter = "",
+  templateFilter = "",
   onEditProduct,
 }: SkuStockTableProps) {
   const [products, setProducts] = useState<SkuProduct[]>([]);
@@ -189,6 +195,8 @@ export function SkuStockTable({
       const params = new URLSearchParams({ active: "true" });
       if (searchFilter) params.set("search", searchFilter);
       if (categoryFilter) params.set("category", categoryFilter);
+      if (brandFilter) params.set("brand", brandFilter);
+      if (templateFilter) params.set("template_id", templateFilter);
 
       const [productsRes, locationsRes] = await Promise.all([
         fetch(`/api/platform/sku?${params}`),
@@ -232,7 +240,7 @@ export function SkuStockTable({
     } finally {
       setLoading(false);
     }
-  }, [searchFilter, categoryFilter]);
+  }, [searchFilter, categoryFilter, brandFilter, templateFilter]);
 
   useEffect(() => {
     fetchData();
@@ -285,7 +293,7 @@ export function SkuStockTable({
         </div>
         <p className="text-sm font-medium text-stone-600">Ingen produkter fundet</p>
         <p className="mt-1 text-xs text-stone-400">
-          {searchFilter || categoryFilter ? "Prøv at ændre filtrene" : "Tilføj dit første SKU produkt"}
+          {searchFilter || categoryFilter || brandFilter || templateFilter ? "Prøv at ændre filtrene" : "Tilføj dit første SKU produkt"}
         </p>
       </div>
     );
