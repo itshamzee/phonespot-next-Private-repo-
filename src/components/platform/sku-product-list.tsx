@@ -43,7 +43,7 @@ export function SkuProductList({ onEdit }: Props) {
 
   useEffect(() => {
     fetch("/api/platform/sku/brands").then(r => r.ok ? r.json() : []).then(setBrands);
-    fetch("/api/platform/templates").then(r => r.ok ? r.json() : []).then((data: any[]) => {
+    fetch("/api/platform/sku/compatible-models").then(r => r.ok ? r.json() : []).then((data: any[]) => {
       if (Array.isArray(data)) setTemplates(data.map(t => ({ id: t.id, display_name: t.display_name })));
     });
   }, []);

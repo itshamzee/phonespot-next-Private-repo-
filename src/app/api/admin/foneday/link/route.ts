@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createAccessory, slugify } from "@/lib/supabase/accessories";
 import { mapCategory, parseCompatibleModels, cleanTitle } from "@/lib/foneday/mapper";
+import { autoLinkTemplates } from "@/lib/foneday/sync";
 
 /**
  * POST /api/admin/foneday/link
@@ -91,6 +92,11 @@ export async function POST(req: NextRequest) {
 
   if (linkErr) {
     return NextResponse.json({ error: linkErr.message }, { status: 500 });
+  }
+
+  // Auto-populate sku_product_templates from Foneday model compatibility data.
+  if (accessoryId) {
+    await autoLinkTemplates(supabase, accessoryId, catalogProduct.id);
   }
 
   return NextResponse.json({ link, accessory_id: accessoryId });

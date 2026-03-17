@@ -21,7 +21,7 @@ export default function SkuPage() {
     fetch("/api/platform/sku/brands")
       .then((r) => (r.ok ? r.json() : []))
       .then(setBrands);
-    fetch("/api/platform/templates")
+    fetch("/api/platform/sku/compatible-models")
       .then((r) => (r.ok ? r.json() : []))
       .then((data: any[]) => {
         if (Array.isArray(data)) {

@@ -6,6 +6,59 @@ import { getProducts } from "./client";
 import { clearMapCache } from "./mapper";
 import type { FonedayProduct, FonedaySettings, SyncStats } from "./types";
 
+/**
+ * Auto-link a SKU accessory to device templates based on Foneday compatibility
+ * data (model_codes array and suitable_for string).
+ *
+ * Called after a foneday_sku_link row is created or updated.
+ */
+export async function autoLinkTemplates(
+  supabase: ReturnType<typeof createAdminClient>,
+  accessoryId: string,
+  fonedayCatalogId: string,
+): Promise<void> {
+  const { data: catalog } = await supabase
+    .from("foneday_catalog")
+    .select("model_codes, suitable_for")
+    .eq("id", fonedayCatalogId)
+    .single();
+
+  if (!catalog) return;
+
+  // Build a deduplicated list of search terms from both fields.
+  const termSet = new Set<string>();
+  if (Array.isArray(catalog.model_codes)) {
+    for (const mc of catalog.model_codes) {
+      if (mc && typeof mc === "string") termSet.add(mc.trim());
+    }
+  }
+  if (catalog.suitable_for && typeof catalog.suitable_for === "string") {
+    termSet.add(catalog.suitable_for.trim());
+  }
+
+  if (termSet.size === 0) return;
+
+  // For each term, find matching product_templates by display_name ILIKE.
+  for (const term of termSet) {
+    const { data: templates } = await supabase
+      .from("product_templates")
+      .select("id")
+      .ilike("display_name", `%${term}%`);
+
+    if (!templates?.length) continue;
+
+    await supabase
+      .from("sku_product_templates")
+      .upsert(
+        templates.map((t: { id: string }) => ({
+          sku_product_id: accessoryId,
+          template_id: t.id,
+        })),
+        { onConflict: "sku_product_id,template_id", ignoreDuplicates: true },
+      );
+  }
+}
+
 async function getFonedaySettings(): Promise<FonedaySettings> {
   const supabase = createAdminClient();
   const { data } = await supabase
@@ -141,6 +194,9 @@ export async function syncCatalog(): Promise<SyncStats> {
     } else {
       stats.linked_updated++;
     }
+
+    // Keep sku_product_templates in sync with Foneday compatibility data.
+    await autoLinkTemplates(supabase, link.accessory_id, link.foneday_catalog_id);
   }
 
   // 5. Archive stale products (missing > 7 days with retail link)
