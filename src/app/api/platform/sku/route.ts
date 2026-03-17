@@ -11,15 +11,18 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("sku_products")
-    .select("*, supplier:suppliers(id, name)")
+    .select("*, supplier:suppliers(id, name), stock:sku_stock(location_id, quantity, location:locations(id, name))")
     .order("title");
 
   const category = params.get("category");
+  const subcategory = params.get("subcategory");
   const brand = params.get("brand");
   const search = params.get("search");
   const active = params.get("active");
+  const locationId = params.get("location_id");
 
   if (category) query = query.eq("category", category);
+  if (subcategory) query = query.eq("subcategory", subcategory);
   if (brand) query = query.eq("brand", brand);
   if (active !== null) query = query.eq("is_active", active === "true");
   if (search) query = query.or(`title.ilike.%${search}%,ean.ilike.%${search}%,product_number.ilike.%${search}%`);
@@ -31,6 +34,18 @@ export async function GET(request: NextRequest) {
       .select("sku_product_id")
       .eq("template_id", templateId);
     const ids = (links ?? []).map((l: { sku_product_id: string }) => l.sku_product_id);
+    if (ids.length === 0) return NextResponse.json([]);
+    query = query.in("id", ids);
+  }
+
+  // Filter by "has stock > 0 at location"
+  if (locationId) {
+    const { data: stockRows } = await supabase
+      .from("sku_stock")
+      .select("product_id")
+      .eq("location_id", locationId)
+      .gt("quantity", 0);
+    const ids = (stockRows ?? []).map((s: { product_id: string }) => s.product_id);
     if (ids.length === 0) return NextResponse.json([]);
     query = query.in("id", ids);
   }

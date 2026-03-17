@@ -7,8 +7,23 @@ import { formatDKK } from "@/lib/platform/format";
 interface Props {
   onEdit: (product: SkuProduct) => void;
   lockedCategory?: string;
+  lockedSubcategory?: string;
   excludeSubcategory?: string;
 }
+
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface StockRow {
+  location_id: string;
+  quantity: number;
+  location: { id: string; name: string } | null;
+}
+
+type ProductWithStock = SkuProduct & { stock?: StockRow[] };
 
 const SKU_CATEGORIES = [
   { value: "iphone", label: "iPhone" },
@@ -32,21 +47,32 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Andet",
 };
 
-export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: Props) {
-  const [products, setProducts] = useState<SkuProduct[]>([]);
+function StockBadge({ qty }: { qty: number }) {
+  if (qty <= 0) return <span className="text-stone-300">0</span>;
+  if (qty <= 2) return <span className="font-semibold text-amber-600">{qty}</span>;
+  return <span className="font-semibold text-green-700">{qty}</span>;
+}
+
+export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excludeSubcategory }: Props) {
+  const [products, setProducts] = useState<ProductWithStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [templateFilter, setTemplateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [templates, setTemplates] = useState<{ id: string; display_name: string }[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     fetch("/api/platform/sku/brands").then(r => r.ok ? r.json() : []).then(setBrands);
     fetch("/api/platform/sku/compatible-models").then(r => r.ok ? r.json() : []).then((data: any[]) => {
       if (Array.isArray(data)) setTemplates(data.map(t => ({ id: t.id, display_name: t.display_name })));
+    });
+    fetch("/api/platform/locations").then(r => r.ok ? r.json() : []).then((data: any[]) => {
+      if (Array.isArray(data)) setLocations(data);
     });
   }, []);
 
@@ -57,20 +83,22 @@ export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: P
     if (search) params.set("search", search);
     const cat = lockedCategory || categoryFilter;
     if (cat) params.set("category", cat);
+    if (lockedSubcategory) params.set("subcategory", lockedSubcategory);
     if (brandFilter) params.set("brand", brandFilter);
     if (templateFilter) params.set("template_id", templateFilter);
+    if (locationFilter) params.set("location_id", locationFilter);
 
     const res = await fetch(`/api/platform/sku?${params}`);
     if (res.ok) {
       const raw = await res.json();
-      let data: SkuProduct[] = Array.isArray(raw) ? raw : [];
+      let data: ProductWithStock[] = Array.isArray(raw) ? raw : [];
       if (excludeSubcategory) {
         data = data.filter((p) => p.subcategory !== excludeSubcategory);
       }
       setProducts(data);
     }
     setLoading(false);
-  }, [search, categoryFilter, brandFilter, templateFilter, lockedCategory, excludeSubcategory]);
+  }, [search, categoryFilter, brandFilter, templateFilter, statusFilter, locationFilter, lockedCategory, lockedSubcategory, excludeSubcategory]);
 
   useEffect(() => {
     load();
@@ -80,7 +108,15 @@ export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: P
     ? products.filter((p) => p.status === statusFilter)
     : products;
 
-  const hasFilters = search || categoryFilter || brandFilter || templateFilter || statusFilter;
+  const hasFilters = search || categoryFilter || brandFilter || templateFilter || statusFilter || locationFilter;
+
+  // Get stock qty for a product at a specific location
+  function getStock(p: ProductWithStock, locationId: string): number {
+    return p.stock?.find(s => s.location_id === locationId)?.quantity ?? 0;
+  }
+
+  // Determine which locations to show as columns (only store/warehouse locations present in data)
+  const stockLocationIds = locations.filter(l => l.type === "store" || l.type === "warehouse");
 
   return (
     <div className="space-y-4">
@@ -138,10 +174,22 @@ export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: P
           <option value="published">Publiceret</option>
           <option value="draft">Kladde</option>
         </select>
+        {stockLocationIds.length > 0 && (
+          <select
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+          >
+            <option value="">Alle lokationer</option>
+            {stockLocationIds.map((l) => (
+              <option key={l.id} value={l.id}>På lager: {l.name}</option>
+            ))}
+          </select>
+        )}
         {hasFilters && (
           <button
             type="button"
-            onClick={() => { setSearch(""); setCategoryFilter(""); setBrandFilter(""); setTemplateFilter(""); setStatusFilter(""); }}
+            onClick={() => { setSearch(""); setCategoryFilter(""); setBrandFilter(""); setTemplateFilter(""); setStatusFilter(""); setLocationFilter(""); }}
             className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-500 hover:text-stone-700"
           >
             Nulstil
@@ -167,6 +215,9 @@ export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: P
                 <th className="px-4 py-3">Titel</th>
                 <th className="px-4 py-3">Kategori</th>
                 <th className="px-4 py-3">Salgspris</th>
+                {stockLocationIds.map(l => (
+                  <th key={l.id} className="px-4 py-3 text-center">{l.name}</th>
+                ))}
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -204,6 +255,11 @@ export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: P
                   <td className="px-4 py-3 text-stone-600">
                     {formatDKK(p.selling_price)}
                   </td>
+                  {stockLocationIds.map(l => (
+                    <td key={l.id} className="px-4 py-3 text-center text-xs">
+                      <StockBadge qty={getStock(p, l.id)} />
+                    </td>
+                  ))}
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
