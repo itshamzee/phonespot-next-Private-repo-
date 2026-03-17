@@ -85,7 +85,7 @@ function LinkModal({
       }),
     });
     // If custom price or store stock was set, update the accessory directly
-    if (customPriceKr != null || storeStock > 0) {
+    if (customPriceKr != null || stockSlagelse > 0 || stockVejle > 0) {
       // TODO: Update accessory price/stock after link — for now the markup is applied server-side
     }
     setLinking(false);
@@ -211,7 +211,7 @@ function CatalogTab() {
   const [linkModalProduct, setLinkModalProduct] = useState<CatalogProduct | null>(null);
   const [bulkLinking, setBulkLinking] = useState(false);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchCatalog = useCallback(async () => {
     setLoading(true);
@@ -447,7 +447,7 @@ function LinkedTab() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchLinked = useCallback(async () => {
     setLoading(true);
