@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmation";
 import { sendPushover } from "@/lib/notifications/pushover";
+import { sendTrustpilotInvitation } from "@/lib/trustpilot/invite";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -39,6 +40,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       entity_id: id,
       details: {},
     });
+
+    // Send Trustpilot review invitation (7 days after delivery)
+    if (order.customer?.email) {
+      try {
+        await sendTrustpilotInvitation({
+          customerEmail: order.customer.email,
+          customerName: order.customer.name ?? "Kunde",
+          orderNumber: order.order_number,
+        });
+      } catch (tpErr) {
+        console.error("[fulfill] Trustpilot invitation failed:", tpErr);
+      }
+    }
 
     return NextResponse.json(order);
   }
