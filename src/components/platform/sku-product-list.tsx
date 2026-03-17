@@ -9,20 +9,44 @@ interface Props {
 }
 
 const SKU_CATEGORIES = [
-  { value: "covers", label: "Covers" },
-  { value: "screen_protectors", label: "Skærmbeskyttere" },
-  { value: "cables", label: "Kabler" },
-  { value: "chargers", label: "Opladere" },
-  { value: "earphones", label: "Øretelefoner" },
+  { value: "iphone", label: "iPhone" },
+  { value: "ipad", label: "iPad" },
+  { value: "smartphone", label: "Smartphone" },
+  { value: "laptop", label: "Laptop" },
+  { value: "smartwatch", label: "Smartwatch" },
+  { value: "accessory", label: "Tilbehør" },
+  { value: "skaermbeskyttelse", label: "Skærmbeskyttelse" },
   { value: "other", label: "Andet" },
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  iphone: "iPhone",
+  ipad: "iPad",
+  smartphone: "Smartphone",
+  laptop: "Laptop",
+  smartwatch: "Smartwatch",
+  accessory: "Tilbehør",
+  skaermbeskyttelse: "Skærmbeskyttelse",
+  other: "Andet",
+};
 
 export function SkuProductList({ onEdit }: Props) {
   const [products, setProducts] = useState<SkuProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
+  const [templateFilter, setTemplateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [brands, setBrands] = useState<string[]>([]);
+  const [templates, setTemplates] = useState<{ id: string; display_name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/platform/sku/brands").then(r => r.ok ? r.json() : []).then(setBrands);
+    fetch("/api/platform/templates").then(r => r.ok ? r.json() : []).then((data: any[]) => {
+      if (Array.isArray(data)) setTemplates(data.map(t => ({ id: t.id, display_name: t.display_name })));
+    });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -30,6 +54,8 @@ export function SkuProductList({ onEdit }: Props) {
     params.set("active", "true");
     if (search) params.set("search", search);
     if (categoryFilter) params.set("category", categoryFilter);
+    if (brandFilter) params.set("brand", brandFilter);
+    if (templateFilter) params.set("template_id", templateFilter);
 
     const res = await fetch(`/api/platform/sku?${params}`);
     if (res.ok) {
@@ -37,7 +63,7 @@ export function SkuProductList({ onEdit }: Props) {
       setProducts(Array.isArray(data) ? data : []);
     }
     setLoading(false);
-  }, [search, categoryFilter]);
+  }, [search, categoryFilter, brandFilter, templateFilter]);
 
   useEffect(() => {
     load();
@@ -47,6 +73,8 @@ export function SkuProductList({ onEdit }: Props) {
     ? products.filter((p) => p.status === statusFilter)
     : products;
 
+  const hasFilters = search || categoryFilter || brandFilter || templateFilter || statusFilter;
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -55,12 +83,12 @@ export function SkuProductList({ onEdit }: Props) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Søg efter produkt…"
-          className="w-64 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/10"
+          placeholder="Søg produkt, EAN, mærke…"
+          className="w-56 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/10"
         />
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={(e) => { setCategoryFilter(e.target.value); setTemplateFilter(""); }}
           className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
         >
           <option value="">Alle kategorier</option>
@@ -68,6 +96,30 @@ export function SkuProductList({ onEdit }: Props) {
             <option key={c.value} value={c.value}>{c.label}</option>
           ))}
         </select>
+        {brands.length > 0 && (
+          <select
+            value={brandFilter}
+            onChange={(e) => setBrandFilter(e.target.value)}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+          >
+            <option value="">Alle mærker</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+        )}
+        {templates.length > 0 && (
+          <select
+            value={templateFilter}
+            onChange={(e) => setTemplateFilter(e.target.value)}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+          >
+            <option value="">Alle enheder</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.display_name}</option>
+            ))}
+          </select>
+        )}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -77,6 +129,15 @@ export function SkuProductList({ onEdit }: Props) {
           <option value="published">Publiceret</option>
           <option value="draft">Kladde</option>
         </select>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => { setSearch(""); setCategoryFilter(""); setBrandFilter(""); setTemplateFilter(""); setStatusFilter(""); }}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-500 hover:text-stone-700"
+          >
+            Nulstil
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -125,7 +186,7 @@ export function SkuProductList({ onEdit }: Props) {
                   <td className="px-4 py-3">
                     {p.category ? (
                       <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
-                        {SKU_CATEGORIES.find((c) => c.value === p.category)?.label ?? p.category}
+                        {CATEGORY_LABELS[p.category] ?? p.category}
                       </span>
                     ) : (
                       <span className="text-stone-400">—</span>
