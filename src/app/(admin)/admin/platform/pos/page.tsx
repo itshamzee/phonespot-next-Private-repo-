@@ -1,8 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { formatOere } from "@/lib/cart/utils";
+import {
+  initTerminal,
+  discoverReaders,
+  discoverSimulatedReaders,
+  connectReader,
+  disconnectReader,
+  collectPayment,
+  cancelCollect,
+  getConnectedReader,
+} from "@/lib/stripe/terminal";
+import type { Reader } from "@stripe/terminal-js";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -104,6 +115,10 @@ export default function PosPage() {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash" | "mobilepay">("card");
   const [processing, setProcessing] = useState(false);
+  const [terminalStatus, setTerminalStatus] = useState<"disconnected" | "connecting" | "connected" | "collecting">("disconnected");
+  const [terminalReaders, setTerminalReaders] = useState<Reader[]>([]);
+  const [terminalError, setTerminalError] = useState<string>("");
+  const [showReaderPicker, setShowReaderPicker] = useState(false);
   const [lastSale, setLastSale] = useState<{
     orderNumber: string;
     total: number;
@@ -287,12 +302,93 @@ export default function PosPage() {
     }
   }
 
+  // --- Stripe Terminal ---
+
+  async function handleConnectTerminal() {
+    setTerminalError("");
+    setTerminalStatus("connecting");
+    try {
+      await initTerminal();
+      // Try real readers first, fall back to simulated
+      let readers = await discoverReaders();
+      if (readers.length === 0) {
+        readers = await discoverSimulatedReaders();
+      }
+      setTerminalReaders(readers);
+      if (readers.length === 1) {
+        await connectReader(readers[0]);
+        setTerminalStatus("connected");
+      } else if (readers.length > 1) {
+        setShowReaderPicker(true);
+        setTerminalStatus("disconnected");
+      } else {
+        setTerminalError("Ingen kortlæsere fundet. Tjek at din Stripe Reader S700 er tændt og forbundet til WiFi.");
+        setTerminalStatus("disconnected");
+      }
+    } catch (err) {
+      setTerminalError(err instanceof Error ? err.message : "Terminal-fejl");
+      setTerminalStatus("disconnected");
+    }
+  }
+
+  async function handleSelectReader(reader: Reader) {
+    setTerminalStatus("connecting");
+    setShowReaderPicker(false);
+    try {
+      await connectReader(reader);
+      setTerminalStatus("connected");
+    } catch (err) {
+      setTerminalError(err instanceof Error ? err.message : "Kunne ikke forbinde til læser");
+      setTerminalStatus("disconnected");
+    }
+  }
+
+  async function handleDisconnectTerminal() {
+    await disconnectReader();
+    setTerminalStatus("disconnected");
+  }
+
+  // --- Complete sale ---
+
   async function completeSale() {
     if (cart.length === 0 || !locationId) return;
 
     setProcessing(true);
+    setTerminalError("");
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
+
+      // Calculate total for terminal payment
+      const cartTotal = cart.reduce((sum, item) => {
+        if (item.type === "device") return sum + item.price;
+        return sum + item.price * item.quantity;
+      }, 0);
+
+      // If card payment: collect via Stripe Terminal first
+      let stripePaymentId: string | undefined;
+      if (paymentMethod === "card") {
+        if (terminalStatus !== "connected") {
+          setTerminalError("Forbind kortlæser først");
+          setProcessing(false);
+          return;
+        }
+
+        setTerminalStatus("collecting");
+        try {
+          // Create a temporary order ID for tracking
+          const tempId = crypto.randomUUID();
+          const result = await collectPayment(cartTotal, tempId);
+          stripePaymentId = result.paymentIntentId;
+        } catch (err) {
+          setTerminalError(err instanceof Error ? err.message : "Kortbetaling fejlede");
+          setTerminalStatus("connected");
+          setProcessing(false);
+          return;
+        }
+        setTerminalStatus("connected");
+      }
+
       const items = cart.map((item) => {
         if (item.type === "device") {
           return { type: "device" as const, deviceId: item.deviceId };
@@ -315,6 +411,7 @@ export default function PosPage() {
           paymentMethod,
           locationId,
           customerId: customerId ?? undefined,
+          stripePaymentId,
         }),
       });
 
@@ -723,6 +820,87 @@ export default function PosPage() {
             </div>
           </div>
 
+          {/* Stripe Terminal status (only visible when card is selected) */}
+          {paymentMethod === "card" && (
+            <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
+              <div className="px-5 py-4">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-charcoal/25">
+                  Kortlæser
+                </p>
+
+                {terminalStatus === "disconnected" && (
+                  <div>
+                    <button
+                      onClick={handleConnectTerminal}
+                      className="w-full rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 py-3 text-sm font-semibold text-emerald-600 transition-all hover:border-emerald-400 hover:bg-emerald-50"
+                    >
+                      Forbind kortlæser
+                    </button>
+                    {terminalError && (
+                      <p className="mt-2 text-xs text-red-500">{terminalError}</p>
+                    )}
+                  </div>
+                )}
+
+                {terminalStatus === "connecting" && (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-500" />
+                    <span className="text-sm text-charcoal/60">Søger efter kortlæsere...</span>
+                  </div>
+                )}
+
+                {terminalStatus === "connected" && (
+                  <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                      <span className="text-sm font-medium text-emerald-700">
+                        {getConnectedReader()?.label || "Kortlæser forbundet"}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleDisconnectTerminal}
+                      className="text-xs text-emerald-500/60 hover:text-emerald-600"
+                    >
+                      Afbryd
+                    </button>
+                  </div>
+                )}
+
+                {terminalStatus === "collecting" && (
+                  <div className="flex flex-col items-center gap-3 rounded-xl bg-amber-50 px-4 py-5">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-200 border-t-amber-500" />
+                    <span className="text-sm font-semibold text-amber-700">Venter på kort...</span>
+                    <button
+                      onClick={async () => { await cancelCollect(); setTerminalStatus("connected"); }}
+                      className="text-xs text-amber-500 hover:text-amber-600"
+                    >
+                      Annuller
+                    </button>
+                  </div>
+                )}
+
+                {/* Reader picker modal */}
+                {showReaderPicker && terminalReaders.length > 1 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-charcoal/40">Vælg kortlæser:</p>
+                    {terminalReaders.map((reader) => (
+                      <button
+                        key={reader.id}
+                        onClick={() => handleSelectReader(reader)}
+                        className="w-full rounded-lg border border-charcoal/10 px-4 py-2.5 text-left text-sm font-medium text-charcoal hover:bg-emerald-50 hover:border-emerald-300"
+                      >
+                        {reader.label || reader.id}
+                        {reader.status && (
+                          <span className="ml-2 text-xs text-charcoal/30">{reader.status}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Total + Complete sale */}
           <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
             <div className="p-5">
@@ -752,7 +930,7 @@ export default function PosPage() {
               {/* Complete button */}
               <button
                 onClick={completeSale}
-                disabled={cart.length === 0 || processing}
+                disabled={cart.length === 0 || processing || (paymentMethod === "card" && terminalStatus !== "connected")}
                 className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-4.5 text-center font-display text-lg font-bold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
               >
                 {processing ? (
