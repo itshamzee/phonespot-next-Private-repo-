@@ -15,6 +15,18 @@ export function ProductTemplateList({ onEdit }: Props) {
   const [brandFilter, setBrandFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [brands, setBrands] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/platform/templates")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: any[]) => {
+        if (Array.isArray(data)) {
+          const unique = [...new Set(data.map((t) => t.brand).filter(Boolean))].sort() as string[];
+          setBrands(unique);
+        }
+      });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,6 +51,8 @@ export function ProductTemplateList({ onEdit }: Props) {
     ? templates.filter((t) => t.status === statusFilter)
     : templates;
 
+  const hasFilters = search || brandFilter || categoryFilter || statusFilter;
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -48,7 +62,7 @@ export function ProductTemplateList({ onEdit }: Props) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Søg efter model…"
-          className="w-64 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/10"
+          className="w-56 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/10"
         />
         <select
           value={categoryFilter}
@@ -64,6 +78,18 @@ export function ProductTemplateList({ onEdit }: Props) {
           <option value="smartwatch">Smartwatch</option>
           <option value="console">Konsol</option>
         </select>
+        {brands.length > 0 && (
+          <select
+            value={brandFilter}
+            onChange={(e) => setBrandFilter(e.target.value)}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+          >
+            <option value="">Alle mærker</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+        )}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -73,6 +99,15 @@ export function ProductTemplateList({ onEdit }: Props) {
           <option value="published">Publiceret</option>
           <option value="draft">Kladde</option>
         </select>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => { setSearch(""); setBrandFilter(""); setCategoryFilter(""); setStatusFilter(""); }}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-500 hover:text-stone-700"
+          >
+            Nulstil
+          </button>
+        )}
       </div>
 
       {/* Table */}
