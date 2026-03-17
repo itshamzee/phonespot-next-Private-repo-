@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { StoreBadge } from "@/components/ui/store-badge";
+import { useCart } from "@/components/cart/cart-context";
 
 interface AccessoryCardProps {
   id: string;
@@ -218,6 +220,8 @@ function ReservationModal({
 export function AccessoryCard({
   id,
   name,
+  slug,
+  category,
   price,
   image_url,
   store_stock,
@@ -225,16 +229,32 @@ export function AccessoryCard({
   brand,
 }: AccessoryCardProps) {
   const [showReservation, setShowReservation] = useState(false);
+  const { addSku, openCart } = useCart();
 
   const priceFormatted = (price / 100).toLocaleString("da-DK", {
     minimumFractionDigits: 0,
   });
 
+  const href = `/tilbehoer/${category}/${slug}`;
+
+  function handleAddToCart(e: React.MouseEvent) {
+    e.preventDefault();
+    addSku({
+      type: "sku_product",
+      skuProductId: id,
+      title: name,
+      price,
+      quantity: 1,
+      image: image_url ?? "",
+    });
+    openCart();
+  }
+
   return (
     <>
       <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-shadow hover:shadow-md">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden bg-cream">
+        {/* Image — clickable */}
+        <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
           {image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -260,7 +280,7 @@ export function AccessoryCard({
           <div className="absolute top-3 left-3">
             <StoreBadge storeStock={store_stock} />
           </div>
-        </div>
+        </Link>
 
         {/* Info */}
         <div className="flex flex-1 flex-col p-4">
@@ -269,9 +289,11 @@ export function AccessoryCard({
               {brand}
             </p>
           )}
-          <h3 className="mt-1 line-clamp-2 font-semibold text-charcoal">
-            {name}
-          </h3>
+          <Link href={href}>
+            <h3 className="mt-1 line-clamp-2 font-semibold text-charcoal hover:text-green-eco transition-colors">
+              {name}
+            </h3>
+          </Link>
           <div className="mt-auto pt-3">
             <p className="text-lg font-bold text-green-eco">
               {priceFormatted} kr.
@@ -283,7 +305,10 @@ export function AccessoryCard({
             )}
           </div>
           <div className="mt-3 flex gap-2">
-            <button className="flex-1 rounded-full bg-green-eco py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 rounded-full bg-green-eco py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+            >
               Tilføj til kurv
             </button>
             {store_stock > 0 && (

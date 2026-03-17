@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
+import { getAccessoryBySlug } from "@/lib/supabase/accessories";
+import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { getCategoryConfig } from "@/lib/tilbehoer-config";
 import { AccessoryDetail } from "@/components/product/accessory-detail";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -13,9 +15,45 @@ type Props = {
   params: Promise<{ category: string; slug: string }>;
 };
 
+async function resolveProduct(slug: string): Promise<SkuProduct | null> {
+  const sku = await getSkuProductBySlug(slug);
+  if (sku) return sku;
+
+  // Fallback: accessories table (old system)
+  const acc = await getAccessoryBySlug(slug);
+  if (!acc) return null;
+
+  // Map Accessory → SkuProduct shape
+  return {
+    id: acc.id,
+    title: acc.name,
+    description: acc.description,
+    ean: acc.ean,
+    product_number: acc.sku,
+    cost_price: acc.cost_price,
+    selling_price: acc.price,
+    sale_price: null,
+    brand: acc.brand,
+    category: "accessory",
+    subcategory: null,
+    supplier_id: null,
+    images: acc.image_url ? [acc.image_url] : [],
+    is_active: acc.status === "published",
+    short_description: null,
+    meta_title: null,
+    meta_description: null,
+    slug: acc.slug,
+    variants: [],
+    barcode: null,
+    status: acc.status === "archived" ? "draft" : acc.status,
+    created_at: acc.created_at,
+    updated_at: acc.updated_at,
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, category } = await params;
-  const product = await getSkuProductBySlug(slug);
+  const product = await resolveProduct(slug);
   if (!product) return { title: "Produkt ikke fundet" };
 
   const catConfig = getCategoryConfig(category);
@@ -40,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AccessoryDetailPage({ params }: Props) {
   const { category, slug } = await params;
 
-  const product = await getSkuProductBySlug(slug);
+  const product = await resolveProduct(slug);
   if (!product) notFound();
 
   const catConfig = getCategoryConfig(category);
