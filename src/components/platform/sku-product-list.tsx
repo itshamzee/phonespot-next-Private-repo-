@@ -6,6 +6,8 @@ import { formatDKK } from "@/lib/platform/format";
 
 interface Props {
   onEdit: (product: SkuProduct) => void;
+  lockedCategory?: string;
+  excludeSubcategory?: string;
 }
 
 const SKU_CATEGORIES = [
@@ -30,7 +32,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Andet",
 };
 
-export function SkuProductList({ onEdit }: Props) {
+export function SkuProductList({ onEdit, lockedCategory, excludeSubcategory }: Props) {
   const [products, setProducts] = useState<SkuProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -53,17 +55,22 @@ export function SkuProductList({ onEdit }: Props) {
     const params = new URLSearchParams();
     params.set("active", "true");
     if (search) params.set("search", search);
-    if (categoryFilter) params.set("category", categoryFilter);
+    const cat = lockedCategory || categoryFilter;
+    if (cat) params.set("category", cat);
     if (brandFilter) params.set("brand", brandFilter);
     if (templateFilter) params.set("template_id", templateFilter);
 
     const res = await fetch(`/api/platform/sku?${params}`);
     if (res.ok) {
-      const data = await res.json();
-      setProducts(Array.isArray(data) ? data : []);
+      const raw = await res.json();
+      let data: SkuProduct[] = Array.isArray(raw) ? raw : [];
+      if (excludeSubcategory) {
+        data = data.filter((p) => p.subcategory !== excludeSubcategory);
+      }
+      setProducts(data);
     }
     setLoading(false);
-  }, [search, categoryFilter, brandFilter, templateFilter]);
+  }, [search, categoryFilter, brandFilter, templateFilter, lockedCategory, excludeSubcategory]);
 
   useEffect(() => {
     load();
@@ -86,16 +93,18 @@ export function SkuProductList({ onEdit }: Props) {
           placeholder="Søg produkt, EAN, mærke…"
           className="w-56 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/10"
         />
-        <select
-          value={categoryFilter}
-          onChange={(e) => { setCategoryFilter(e.target.value); setTemplateFilter(""); }}
-          className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
-        >
-          <option value="">Alle kategorier</option>
-          {SKU_CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
+        {!lockedCategory && (
+          <select
+            value={categoryFilter}
+            onChange={(e) => { setCategoryFilter(e.target.value); setTemplateFilter(""); }}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+          >
+            <option value="">Alle kategorier</option>
+            {SKU_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        )}
         {brands.length > 0 && (
           <select
             value={brandFilter}

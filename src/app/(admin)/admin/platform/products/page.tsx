@@ -98,7 +98,7 @@ export default function ProductsPage() {
         tab === "templates" ? (
           <ProductTemplateList onEdit={handleEditTemplate} />
         ) : (
-          <SkuProductList onEdit={handleEditSku} />
+          <SkuProductList onEdit={handleEditSku} lockedCategory="accessory" excludeSubcategory="spare-part" />
         )
       ) : tab === "templates" ? (
         <ProductTemplateForm
