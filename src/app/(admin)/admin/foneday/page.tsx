@@ -64,11 +64,12 @@ function LinkModal({
 }) {
   const costDkk = product.price_dkk ?? 0;
   const [markupPct, setMarkupPct] = useState(40);
-  const [customPrice, setCustomPrice] = useState<number | null>(null);
+  const [customPriceKr, setCustomPriceKr] = useState<number | null>(null);
   const [storeStock, setStoreStock] = useState(0);
   const [linking, setLinking] = useState(false);
 
-  const calculatedPrice = customPrice ?? Math.round(costDkk * (1 + markupPct / 100));
+  // customPriceKr is in whole DKK (e.g. 199), internally we work in oere
+  const calculatedPriceOere = customPriceKr != null ? customPriceKr * 100 : Math.round(costDkk * (1 + markupPct / 100));
 
   async function handleConfirm() {
     setLinking(true);
@@ -78,12 +79,12 @@ function LinkModal({
       body: JSON.stringify({
         foneday_sku: product.foneday_sku,
         use_type: "retail",
-        markup_percentage: customPrice ? 0 : markupPct,
+        markup_percentage: customPriceKr != null ? 0 : markupPct,
         store_id: "00000000-0000-0000-0000-000000000000",
       }),
     });
     // If custom price or store stock was set, update the accessory directly
-    if (customPrice || storeStock > 0) {
+    if (customPriceKr != null || storeStock > 0) {
       // TODO: Update accessory price/stock after link — for now the markup is applied server-side
     }
     setLinking(false);
@@ -113,9 +114,9 @@ function LinkModal({
               {[30, 40, 50, 60, 80, 100].map((pct) => (
                 <button
                   key={pct}
-                  onClick={() => { setMarkupPct(pct); setCustomPrice(null); }}
+                  onClick={() => { setMarkupPct(pct); setCustomPriceKr(null); }}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    markupPct === pct && !customPrice
+                    markupPct === pct && customPriceKr == null
                       ? "bg-charcoal text-white"
                       : "border border-sand bg-white text-charcoal/70 hover:border-charcoal/30"
                   }`}
@@ -128,21 +129,24 @@ function LinkModal({
 
           {/* Custom price override */}
           <div>
-            <label className="block text-sm font-semibold text-charcoal">Eller fast salgspris (oere)</label>
-            <input
-              type="number"
-              placeholder={String(Math.round(costDkk * (1 + markupPct / 100)))}
-              value={customPrice ?? ""}
-              onChange={(e) => setCustomPrice(e.target.value ? Number(e.target.value) : null)}
-              className="mt-1 w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
-            />
-            <p className="mt-0.5 text-xs text-charcoal/40">Lad vaere tom for at bruge markup</p>
+            <label className="block text-sm font-semibold text-charcoal">Eller fast salgspris (DKK)</label>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="number"
+                placeholder={String(Math.round(costDkk * (1 + markupPct / 100) / 100))}
+                value={customPriceKr ?? ""}
+                onChange={(e) => { setCustomPriceKr(e.target.value ? Number(e.target.value) : null); }}
+                className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+              />
+              <span className="text-sm text-charcoal/50 whitespace-nowrap">kr.</span>
+            </div>
+            <p className="mt-0.5 text-xs text-charcoal/40">Skriv f.eks. 199 for 199 kr. Lad vaere tom for at bruge markup.</p>
           </div>
 
           {/* Selling price preview */}
           <div className="flex items-center justify-between rounded-lg bg-green-eco/10 px-4 py-3">
             <span className="text-sm font-semibold text-green-eco">Salgspris</span>
-            <span className="font-mono text-lg font-bold text-green-eco">{formatDKK(calculatedPrice)}</span>
+            <span className="font-mono text-lg font-bold text-green-eco">{formatDKK(calculatedPriceOere)}</span>
           </div>
 
           {/* Store stock */}
