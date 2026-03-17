@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
@@ -12,28 +12,48 @@ type AccessoryStatus = "draft" | "published" | "archived";
 interface Accessory {
   id: string;
   name: string;
+  slug: string;
   category: string;
-  price_oere: number;
-  store_stock: number;
+  brand: string | null;
+  compatible_models: string[];
+  price: number; // oere
+  sale_price?: number | null; // oere
+  cost_price: number;
+  sku: string | null;
+  ean: string | null;
+  image_url: string | null;
+  description: string | null;
   online_stock: number;
+  store_stock: number;
+  always_in_stock: boolean;
+  store_id: string;
   status: AccessoryStatus;
-  image_url?: string | null;
-  ean?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                           */
 /* ------------------------------------------------------------------ */
 
-const CATEGORY_FILTERS = [
+const CATEGORY_QUICK_FILTERS = [
   { value: "alle", label: "Alle" },
-  { value: "Cover", label: "Covers" },
-  { value: "Skaermbeskyttelse", label: "Skærmbeskyttelse" },
-  { value: "Oplader", label: "Opladere" },
-  { value: "Kabel", label: "Kabler" },
-  { value: "Lyd", label: "Lyd" },
-  { value: "Outlet", label: "Outlet" },
+  { value: "cover", label: "Covers" },
+  { value: "screen_protector", label: "Panserglas" },
+  { value: "cable", label: "Kabler" },
+  { value: "charger", label: "Opladere" },
+  { value: "audio", label: "Lyd" },
+  { value: "other", label: "Andet" },
 ];
+
+const CATEGORY_DISPLAY: Record<string, string> = {
+  cover: "Cover",
+  screen_protector: "Panserglas",
+  cable: "Kabel",
+  charger: "Oplader",
+  audio: "Lyd",
+  other: "Andet",
+};
 
 const STATUS_LABEL: Record<AccessoryStatus, string> = {
   draft: "Kladde",
@@ -46,6 +66,13 @@ const STATUS_BADGE: Record<AccessoryStatus, string> = {
   published: "bg-emerald-500/10 text-emerald-600",
   archived: "bg-stone-500/10 text-stone-500",
 };
+
+const STOCK_LOCATIONS = [
+  { value: "alle", label: "Alle lokationer" },
+  { value: "slagelse", label: "Paa lager i Slagelse" },
+  { value: "vejle", label: "Paa lager i Vejle" },
+  { value: "udsolgt", label: "Ikke paa lager" },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Toast                                                               */
@@ -60,7 +87,7 @@ interface Toast {
 let toastCounter = 0;
 
 /* ------------------------------------------------------------------ */
-/*  Inline stock cell                                                   */
+/*  Inline editable cells                                               */
 /* ------------------------------------------------------------------ */
 
 function StockCell({
@@ -78,6 +105,10 @@ function StockCell({
   useEffect(() => {
     if (editing) inputRef.current?.select();
   }, [editing]);
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
 
   async function commit() {
     const n = parseInt(draft, 10);
@@ -122,11 +153,11 @@ function StockCell({
     <button
       type="button"
       onClick={() => setEditing(true)}
-      className="group flex items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-emerald-500/5"
+      className="group/stock flex items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-emerald-500/5"
     >
       <span className="text-sm font-semibold tabular-nums text-charcoal">{value}</span>
       <svg
-        className="h-3 w-3 text-charcoal/25 opacity-0 transition-opacity group-hover:opacity-100"
+        className="h-3 w-3 text-charcoal/25 opacity-0 transition-opacity group-hover/stock:opacity-100"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth={2}
@@ -134,6 +165,185 @@ function StockCell({
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
       </svg>
+    </button>
+  );
+}
+
+function PriceCell({
+  value,
+  onSave,
+}: {
+  value: number; // oere
+  onSave: (v: number) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value / 100));
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  useEffect(() => {
+    setDraft(String(value / 100));
+  }, [value]);
+
+  async function commit() {
+    const n = parseFloat(draft);
+    if (isNaN(n) || n < 0) {
+      setDraft(String(value / 100));
+      setEditing(false);
+      return;
+    }
+    const oere = Math.round(n * 100);
+    if (oere === value) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    await onSave(oere);
+    setSaving(false);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        min={0}
+        step={1}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            setDraft(String(value / 100));
+            setEditing(false);
+          }
+        }}
+        disabled={saving}
+        className="w-20 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-1 text-right text-sm font-semibold text-charcoal focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="group/price flex items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-emerald-500/5"
+    >
+      <span className="text-sm font-semibold tabular-nums text-charcoal">
+        {(value / 100).toLocaleString("da-DK", {
+          style: "currency",
+          currency: "DKK",
+          maximumFractionDigits: 0,
+        })}
+      </span>
+      <svg
+        className="h-3 w-3 text-charcoal/25 opacity-0 transition-opacity group-hover/price:opacity-100"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+      </svg>
+    </button>
+  );
+}
+
+function SalePriceInline({
+  currentSalePrice,
+  onSave,
+  onClear,
+}: {
+  currentSalePrice: number | null | undefined; // oere or null
+  onSave: (v: number) => Promise<void>;
+  onClear: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(currentSalePrice ? String(currentSalePrice / 100) : "");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setDraft(currentSalePrice ? String(currentSalePrice / 100) : "");
+      setTimeout(() => inputRef.current?.select(), 0);
+    }
+  }, [open, currentSalePrice]);
+
+  async function commit() {
+    const n = parseFloat(draft);
+    if (isNaN(n) || n <= 0) {
+      // Clear sale price
+      if (currentSalePrice) {
+        setSaving(true);
+        await onClear();
+        setSaving(false);
+      }
+      setOpen(false);
+      return;
+    }
+    const oere = Math.round(n * 100);
+    setSaving(true);
+    await onSave(oere);
+    setSaving(false);
+    setOpen(false);
+  }
+
+  if (open) {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef}
+          type="number"
+          min={0}
+          step={1}
+          placeholder="Tilbud kr"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") setOpen(false);
+          }}
+          disabled={saving}
+          className="w-20 rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-1 text-right text-xs font-semibold text-charcoal focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50"
+        />
+      </div>
+    );
+  }
+
+  if (currentSalePrice && currentSalePrice > 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-bold text-red-600 hover:bg-red-500/20 transition-colors"
+        title="Rediger tilbudspris"
+      >
+        {(currentSalePrice / 100).toLocaleString("da-DK", {
+          style: "currency",
+          currency: "DKK",
+          maximumFractionDigits: 0,
+        })}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[11px] font-bold text-charcoal/30 hover:bg-amber-500/10 hover:text-amber-600 transition-colors"
+      title="Tilfoej tilbudspris"
+    >
+      %
     </button>
   );
 }
@@ -148,10 +358,15 @@ export default function TilbehoerListPage() {
   const [categoryFilter, setCategoryFilter] = useState("alle");
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
+  const [brandFilter, setBrandFilter] = useState("alle");
+  const [modelFilter, setModelFilter] = useState("");
+  const [modelFilterDebounced, setModelFilterDebounced] = useState("");
+  const [locationFilter, setLocationFilter] = useState("alle");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ---- Toast helpers ---- */
 
@@ -171,6 +386,14 @@ export default function TilbehoerListPage() {
     };
   }, [search]);
 
+  useEffect(() => {
+    if (modelTimeout.current) clearTimeout(modelTimeout.current);
+    modelTimeout.current = setTimeout(() => setModelFilterDebounced(modelFilter), 350);
+    return () => {
+      if (modelTimeout.current) clearTimeout(modelTimeout.current);
+    };
+  }, [modelFilter]);
+
   /* ---- Fetch ---- */
 
   const fetchAccessories = useCallback(async () => {
@@ -181,11 +404,11 @@ export default function TilbehoerListPage() {
 
     try {
       const res = await fetch(`/api/admin/accessories?${params}`);
-      if (!res.ok) throw new Error("Kunne ikke hente tilbehør");
+      if (!res.ok) throw new Error("Kunne ikke hente tilbehoer");
       const data = await res.json();
       setAccessories(Array.isArray(data) ? data : (data.accessories ?? []));
     } catch {
-      addToast("error", "Fejl ved indlæsning af tilbehør");
+      addToast("error", "Fejl ved indlaesning af tilbehoer");
     } finally {
       setLoading(false);
     }
@@ -194,6 +417,43 @@ export default function TilbehoerListPage() {
   useEffect(() => {
     fetchAccessories();
   }, [fetchAccessories]);
+
+  /* ---- Derived: unique brands ---- */
+
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of accessories) {
+      if (a.brand) set.add(a.brand);
+    }
+    return Array.from(set).sort();
+  }, [accessories]);
+
+  /* ---- Client-side filters (brand, model, location) ---- */
+
+  const filteredAccessories = useMemo(() => {
+    let list = accessories;
+
+    if (brandFilter !== "alle") {
+      list = list.filter((a) => a.brand === brandFilter);
+    }
+
+    if (modelFilterDebounced) {
+      const q = modelFilterDebounced.toLowerCase();
+      list = list.filter((a) =>
+        a.compatible_models?.some((m) => m.toLowerCase().includes(q)),
+      );
+    }
+
+    if (locationFilter === "slagelse") {
+      list = list.filter((a) => a.store_stock > 0);
+    } else if (locationFilter === "vejle") {
+      list = list.filter((a) => a.online_stock > 0);
+    } else if (locationFilter === "udsolgt") {
+      list = list.filter((a) => a.store_stock === 0 && a.online_stock === 0);
+    }
+
+    return list;
+  }, [accessories, brandFilter, modelFilterDebounced, locationFilter]);
 
   /* ---- Update helper ---- */
 
@@ -218,7 +478,7 @@ export default function TilbehoerListPage() {
   const saveStoreStock = useCallback(
     async (id: string, store_stock: number) => {
       try {
-        await updateAccessory(id, { store_stock });
+        await updateAccessory(id, { store_stock } as Partial<Accessory>);
         addToast("success", "Butiklager opdateret");
       } catch {
         addToast("error", "Fejl ved opdatering af lager");
@@ -230,10 +490,48 @@ export default function TilbehoerListPage() {
   const saveOnlineStock = useCallback(
     async (id: string, online_stock: number) => {
       try {
-        await updateAccessory(id, { online_stock });
+        await updateAccessory(id, { online_stock } as Partial<Accessory>);
         addToast("success", "Online-lager opdateret");
       } catch {
         addToast("error", "Fejl ved opdatering af lager");
+      }
+    },
+    [updateAccessory, addToast],
+  );
+
+  /* ---- Price save ---- */
+
+  const savePrice = useCallback(
+    async (id: string, price: number) => {
+      try {
+        await updateAccessory(id, { price } as Partial<Accessory>);
+        addToast("success", "Pris opdateret");
+      } catch {
+        addToast("error", "Fejl ved opdatering af pris");
+      }
+    },
+    [updateAccessory, addToast],
+  );
+
+  const saveSalePrice = useCallback(
+    async (id: string, sale_price: number) => {
+      try {
+        await updateAccessory(id, { sale_price } as Partial<Accessory>);
+        addToast("success", "Tilbudspris sat");
+      } catch {
+        addToast("error", "Fejl ved opdatering af tilbudspris");
+      }
+    },
+    [updateAccessory, addToast],
+  );
+
+  const clearSalePrice = useCallback(
+    async (id: string) => {
+      try {
+        await updateAccessory(id, { sale_price: null } as Partial<Accessory>);
+        addToast("success", "Tilbudspris fjernet");
+      } catch {
+        addToast("error", "Fejl ved fjernelse af tilbudspris");
       }
     },
     [updateAccessory, addToast],
@@ -246,7 +544,7 @@ export default function TilbehoerListPage() {
       const next: AccessoryStatus =
         item.status === "published" ? "draft" : "published";
       try {
-        await updateAccessory(item.id, { status: next });
+        await updateAccessory(item.id, { status: next } as Partial<Accessory>);
         addToast("success", next === "published" ? "Publiceret" : "Sat som kladde");
       } catch {
         addToast("error", "Fejl ved statusskift");
@@ -277,11 +575,28 @@ export default function TilbehoerListPage() {
     [addToast],
   );
 
+  /* ---- Reset all filters ---- */
+
+  const resetFilters = useCallback(() => {
+    setCategoryFilter("alle");
+    setSearch("");
+    setBrandFilter("alle");
+    setModelFilter("");
+    setLocationFilter("alle");
+  }, []);
+
+  const hasActiveFilters =
+    categoryFilter !== "alle" ||
+    search !== "" ||
+    brandFilter !== "alle" ||
+    modelFilter !== "" ||
+    locationFilter !== "alle";
+
   /* ---- Stats ---- */
 
-  const total = accessories.length;
-  const published = accessories.filter((a) => a.status === "published").length;
-  const draft = accessories.filter((a) => a.status === "draft").length;
+  const total = filteredAccessories.length;
+  const published = filteredAccessories.filter((a) => a.status === "published").length;
+  const draft = filteredAccessories.filter((a) => a.status === "draft").length;
 
   /* ---- Render ---- */
 
@@ -315,7 +630,7 @@ export default function TilbehoerListPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold text-charcoal">Tilbehør</h2>
+          <h2 className="font-display text-2xl font-bold text-charcoal">Tilbehoer</h2>
           <p className="mt-1 text-sm text-charcoal/50">
             Administrer accessories, lager og priser
           </p>
@@ -352,28 +667,28 @@ export default function TilbehoerListPage() {
         ))}
       </div>
 
-      {/* Filters + Search */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Category filter chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORY_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              onClick={() => setCategoryFilter(f.value)}
-              className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-all ${
-                categoryFilter === f.value
-                  ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/20"
-                  : "bg-white text-charcoal/50 hover:bg-emerald-500/5 hover:text-emerald-600 border border-black/[0.04]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Category quick-filter pills */}
+      <div className="flex flex-wrap gap-1.5">
+        {CATEGORY_QUICK_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setCategoryFilter(f.value)}
+            className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-all ${
+              categoryFilter === f.value
+                ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/20"
+                : "bg-white text-charcoal/50 hover:bg-emerald-500/5 hover:text-emerald-600 border border-black/[0.04]"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         {/* Search */}
-        <div className="relative sm:ml-auto">
+        <div className="relative">
           <svg
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/30"
             fill="none"
@@ -385,12 +700,59 @@ export default function TilbehoerListPage() {
           </svg>
           <input
             type="text"
-            placeholder="Sog pa navn, EAN..."
+            placeholder="Soeg paa navn, EAN..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-black/[0.06] bg-white py-2 pl-9 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 sm:w-64"
+            className="w-full rounded-xl border border-black/[0.06] bg-white py-2 pl-9 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 sm:w-56"
           />
         </div>
+
+        {/* Brand dropdown */}
+        <select
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          className="rounded-xl border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+        >
+          <option value="alle">Alle brands</option>
+          {availableBrands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+
+        {/* Enhed/Model input */}
+        <input
+          type="text"
+          placeholder="Enhed/model fx iPhone 16"
+          value={modelFilter}
+          onChange={(e) => setModelFilter(e.target.value)}
+          className="w-full rounded-xl border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 sm:w-52"
+        />
+
+        {/* Location dropdown */}
+        <select
+          value={locationFilter}
+          onChange={(e) => setLocationFilter(e.target.value)}
+          className="rounded-xl border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+        >
+          {STOCK_LOCATIONS.map((l) => (
+            <option key={l.value} value={l.value}>
+              {l.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Reset filters */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="rounded-xl border border-black/[0.06] bg-white px-3 py-2 text-sm font-medium text-charcoal/50 hover:bg-stone-50 hover:text-charcoal transition-colors"
+          >
+            Nulstil
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -401,16 +763,16 @@ export default function TilbehoerListPage() {
               <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-400" />
             </div>
           </div>
-        ) : accessories.length === 0 ? (
+        ) : filteredAccessories.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-20 text-charcoal/40">
             <svg className="h-12 w-12 text-charcoal/15" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
             </svg>
-            <p className="text-sm font-medium">Ingen tilbehorsartikler fundet</p>
-            {(categoryFilter !== "alle" || search) && (
+            <p className="text-sm font-medium">Ingen tilbehoersartikler fundet</p>
+            {hasActiveFilters && (
               <button
                 type="button"
-                onClick={() => { setCategoryFilter("alle"); setSearch(""); }}
+                onClick={resetFilters}
                 className="text-xs text-emerald-600 hover:underline"
               >
                 Nulstil filtre
@@ -419,28 +781,31 @@ export default function TilbehoerListPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="border-b border-black/[0.04] bg-stone-50/60">
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-12">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-14">
                     Billede
                   </th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
                     Navn
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-32">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-28">
                     Kategori
                   </th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-24">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-40">
+                    Passer til
+                  </th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-32">
                     Pris
                   </th>
-                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-28">
-                    Butiklager
+                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-24">
+                    Slagelse
                   </th>
-                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-28">
-                    Online-lager
+                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-24">
+                    Vejle
                   </th>
-                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-28">
+                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-24">
                     Status
                   </th>
                   <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35 w-24">
@@ -449,14 +814,14 @@ export default function TilbehoerListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/[0.03]">
-                {accessories.map((item) => (
+                {filteredAccessories.map((item) => (
                   <tr
                     key={item.id}
                     className="group transition-colors hover:bg-stone-50/50"
                   >
-                    {/* Image */}
+                    {/* Image — 48x48 */}
                     <td className="px-4 py-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-lg border border-black/[0.05] bg-stone-100">
+                      <div className="h-12 w-12 overflow-hidden rounded-lg border border-black/[0.05] bg-stone-100">
                         {item.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -466,7 +831,7 @@ export default function TilbehoerListPage() {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
-                            <svg className="h-4 w-4 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <svg className="h-5 w-5 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                             </svg>
                           </div>
@@ -474,35 +839,85 @@ export default function TilbehoerListPage() {
                       </div>
                     </td>
 
-                    {/* Name */}
+                    {/* Name + brand + EAN */}
                     <td className="px-4 py-3">
                       <p className="font-medium text-charcoal line-clamp-1">{item.name}</p>
-                      {item.ean && (
-                        <p className="mt-0.5 font-mono text-[11px] text-charcoal/30">
-                          EAN: {item.ean}
-                        </p>
-                      )}
+                      <div className="mt-0.5 flex items-center gap-2">
+                        {item.brand && (
+                          <span className="text-[11px] font-semibold text-charcoal/40">
+                            {item.brand}
+                          </span>
+                        )}
+                        {item.ean && (
+                          <span className="font-mono text-[11px] text-charcoal/30">
+                            EAN: {item.ean}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Category */}
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-semibold text-charcoal/60">
-                        {item.category}
+                        {CATEGORY_DISPLAY[item.category] || item.category}
                       </span>
                     </td>
 
-                    {/* Price */}
-                    <td className="px-4 py-3 text-right">
-                      <span className="font-semibold tabular-nums text-charcoal">
-                        {(item.price_oere / 100).toLocaleString("da-DK", {
-                          style: "currency",
-                          currency: "DKK",
-                          maximumFractionDigits: 0,
-                        })}
-                      </span>
+                    {/* Compatible models */}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {item.compatible_models && item.compatible_models.length > 0 ? (
+                          <>
+                            {item.compatible_models.slice(0, 3).map((model) => (
+                              <span
+                                key={model}
+                                className="inline-block rounded-md bg-blue-500/8 px-1.5 py-0.5 text-[10px] font-medium text-blue-700/70"
+                              >
+                                {model}
+                              </span>
+                            ))}
+                            {item.compatible_models.length > 3 && (
+                              <span
+                                className="inline-block rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-charcoal/40"
+                                title={item.compatible_models.slice(3).join(", ")}
+                              >
+                                +{item.compatible_models.length - 3}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[10px] text-charcoal/25">--</span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Store stock */}
+                    {/* Price + sale */}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <PriceCell
+                            value={item.price}
+                            onSave={(v) => savePrice(item.id, v)}
+                          />
+                          <SalePriceInline
+                            currentSalePrice={item.sale_price}
+                            onSave={(v) => saveSalePrice(item.id, v)}
+                            onClear={() => clearSalePrice(item.id)}
+                          />
+                        </div>
+                        {item.sale_price && item.sale_price > 0 && (
+                          <span className="text-[10px] text-charcoal/30 line-through tabular-nums">
+                            {(item.price / 100).toLocaleString("da-DK", {
+                              style: "currency",
+                              currency: "DKK",
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Store stock (Slagelse) */}
                     <td className="px-4 py-3">
                       <div className="flex justify-center">
                         <StockCell
@@ -512,7 +927,7 @@ export default function TilbehoerListPage() {
                       </div>
                     </td>
 
-                    {/* Online stock */}
+                    {/* Online stock (Vejle) */}
                     <td className="px-4 py-3">
                       <div className="flex justify-center">
                         <StockCell
