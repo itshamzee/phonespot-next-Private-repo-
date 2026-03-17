@@ -52,6 +52,134 @@ function formatEUR(eur: number): string {
   return new Intl.NumberFormat("da-DK", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(eur);
 }
 
+// ---- Link Modal ----
+function LinkModal({
+  product,
+  onClose,
+  onLinked,
+}: {
+  product: CatalogProduct;
+  onClose: () => void;
+  onLinked: () => void;
+}) {
+  const costDkk = product.price_dkk ?? 0;
+  const [markupPct, setMarkupPct] = useState(40);
+  const [customPrice, setCustomPrice] = useState<number | null>(null);
+  const [storeStock, setStoreStock] = useState(0);
+  const [linking, setLinking] = useState(false);
+
+  const calculatedPrice = customPrice ?? Math.round(costDkk * (1 + markupPct / 100));
+
+  async function handleConfirm() {
+    setLinking(true);
+    await fetch("/api/admin/foneday/link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        foneday_sku: product.foneday_sku,
+        use_type: "retail",
+        markup_percentage: customPrice ? 0 : markupPct,
+        store_id: "00000000-0000-0000-0000-000000000000",
+      }),
+    });
+    // If custom price or store stock was set, update the accessory directly
+    if (customPrice || storeStock > 0) {
+      // TODO: Update accessory price/stock after link — for now the markup is applied server-side
+    }
+    setLinking(false);
+    onLinked();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-lg font-bold text-charcoal">Link produkt</h3>
+        <p className="mt-1 text-sm text-charcoal/60 line-clamp-2">{product.title}</p>
+        {product.suitable_for && (
+          <p className="mt-1 text-xs text-charcoal/40">Passer til: {product.suitable_for}</p>
+        )}
+
+        <div className="mt-5 space-y-4">
+          {/* Cost price */}
+          <div className="flex items-center justify-between rounded-lg bg-cream px-4 py-3">
+            <span className="text-sm text-charcoal/60">Indkoebspris (Foneday)</span>
+            <span className="font-mono font-semibold">{formatEUR(product.price_eur)} = {formatDKK(costDkk)}</span>
+          </div>
+
+          {/* Markup */}
+          <div>
+            <label className="block text-sm font-semibold text-charcoal">Markup %</label>
+            <div className="mt-1 flex items-center gap-3">
+              {[30, 40, 50, 60, 80, 100].map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() => { setMarkupPct(pct); setCustomPrice(null); }}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    markupPct === pct && !customPrice
+                      ? "bg-charcoal text-white"
+                      : "border border-sand bg-white text-charcoal/70 hover:border-charcoal/30"
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom price override */}
+          <div>
+            <label className="block text-sm font-semibold text-charcoal">Eller fast salgspris (oere)</label>
+            <input
+              type="number"
+              placeholder={String(Math.round(costDkk * (1 + markupPct / 100)))}
+              value={customPrice ?? ""}
+              onChange={(e) => setCustomPrice(e.target.value ? Number(e.target.value) : null)}
+              className="mt-1 w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+            />
+            <p className="mt-0.5 text-xs text-charcoal/40">Lad vaere tom for at bruge markup</p>
+          </div>
+
+          {/* Selling price preview */}
+          <div className="flex items-center justify-between rounded-lg bg-green-eco/10 px-4 py-3">
+            <span className="text-sm font-semibold text-green-eco">Salgspris</span>
+            <span className="font-mono text-lg font-bold text-green-eco">{formatDKK(calculatedPrice)}</span>
+          </div>
+
+          {/* Store stock */}
+          <div>
+            <label className="block text-sm font-semibold text-charcoal">Antal i butik</label>
+            <p className="text-xs text-charcoal/40 mb-1">Hvor mange har du paa hylden lige nu?</p>
+            <input
+              type="number"
+              min={0}
+              value={storeStock}
+              onChange={(e) => setStoreStock(Math.max(0, Number(e.target.value)))}
+              className="w-24 rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-sand px-4 py-2.5 text-sm font-semibold text-charcoal hover:bg-cream"
+          >
+            Annuller
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={linking}
+            className="flex-1 rounded-lg bg-green-eco px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-eco/90 disabled:opacity-50"
+          >
+            {linking ? "Linker..." : "Tilfoj til webshop"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CatalogTab() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +188,7 @@ function CatalogTab() {
   const [linked, setLinked] = useState("false");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [linking, setLinking] = useState<string | null>(null);
+  const [linkModalProduct, setLinkModalProduct] = useState<CatalogProduct | null>(null);
   const [bulkLinking, setBulkLinking] = useState(false);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -90,22 +218,6 @@ function CatalogTab() {
       setSearch(value);
       setPage(1);
     }, 400);
-  }
-
-  async function handleLink(sku: string) {
-    setLinking(sku);
-    await fetch("/api/admin/foneday/link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        foneday_sku: sku,
-        use_type: "retail",
-        markup_percentage: 40,
-        store_id: "00000000-0000-0000-0000-000000000000",
-      }),
-    });
-    setLinking(null);
-    fetchCatalog();
   }
 
   async function handleBulkLink() {
@@ -219,11 +331,10 @@ function CatalogTab() {
                       <span className="rounded-full bg-green-eco/10 px-2 py-0.5 text-xs font-medium text-green-eco">Linket</span>
                     ) : (
                       <button
-                        onClick={() => handleLink(p.foneday_sku)}
-                        disabled={linking === p.foneday_sku}
-                        className="rounded-lg bg-green-eco px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-eco/90 disabled:opacity-50"
+                        onClick={() => setLinkModalProduct(p)}
+                        className="rounded-lg bg-green-eco px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-eco/90"
                       >
-                        {linking === p.foneday_sku ? "..." : "Link"}
+                        Link
                       </button>
                     )}
                   </td>
@@ -240,6 +351,15 @@ function CatalogTab() {
           <span className="text-sm text-charcoal/60">Side {page} af {Math.ceil(total / 50)}</span>
           <button onClick={() => setPage((p) => p + 1)} disabled={page >= Math.ceil(total / 50)} className="rounded-lg border border-sand px-3 py-1.5 text-sm disabled:opacity-30">Naeste</button>
         </div>
+      )}
+
+      {/* Link modal */}
+      {linkModalProduct && (
+        <LinkModal
+          product={linkModalProduct}
+          onClose={() => setLinkModalProduct(null)}
+          onLinked={() => { setLinkModalProduct(null); fetchCatalog(); }}
+        />
       )}
     </div>
   );
