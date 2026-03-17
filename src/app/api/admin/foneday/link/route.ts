@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createAccessory, slugify } from "@/lib/supabase/accessories";
-import { mapCategory, parseCompatibleModels, cleanTitle } from "@/lib/foneday/mapper";
+import { mapCategory, cleanTitle } from "@/lib/foneday/mapper";
 import { autoLinkTemplates } from "@/lib/foneday/sync";
 
 /**
@@ -41,49 +40,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Product already linked" }, { status: 409 });
   }
 
-  let accessoryId: string | null = null;
+  let skuProductId: string | null = null;
 
-  if (use_type === "retail") {
-    const mappedCategory = category_override ?? await mapCategory(catalogProduct.category);
-    if (!mappedCategory) {
-      return NextResponse.json(
-        { error: "Category maps to repair_part — use use_type='repair_part' instead" },
-        { status: 400 }
-      );
-    }
+  // Map Foneday category to sku_products category/subcategory
+  const rawCategory = category_override ?? await mapCategory(catalogProduct.category);
+  const isRepairPart = rawCategory === null;
+  const skuCategory = "accessory";
+  const skuSubcategory = isRepairPart ? "spare-part" : (use_type === "repair_part" ? "spare-part" : null);
 
-    const compatibleModels = parseCompatibleModels(catalogProduct.suitable_for);
-    const costDkk = catalogProduct.price_dkk ?? 0;
-    const markup = Number(markup_percentage) || 0;
-    const sellingPrice = Math.round(costDkk * (1 + markup / 100));
-    const name = cleanTitle(catalogProduct.title);
+  const costDkk = catalogProduct.price_dkk ?? 0;
+  const markup = Number(markup_percentage) || 0;
+  const sellingPrice = Math.round(costDkk * (1 + markup / 100));
+  const title = cleanTitle(catalogProduct.title);
+  const brand = catalogProduct.product_brand ?? null;
 
-    const accessory = await createAccessory({
-      name,
-      slug: slugify(name),
-      category: mappedCategory as any,
-      brand: catalogProduct.product_brand ?? "NovaNL",
-      compatible_models: compatibleModels,
-      price: sellingPrice,
+  const { data: skuProduct, error: skuErr } = await supabase
+    .from("sku_products")
+    .insert({
+      title,
+      brand,
+      category: skuCategory,
+      subcategory: skuSubcategory,
+      selling_price: sellingPrice,
       cost_price: costDkk,
-      sku: catalogProduct.foneday_sku,
-      ean: catalogProduct.ean,
-      image_url: null,
-      description: null,
-      online_stock: catalogProduct.in_stock ? 99 : 0,
-      store_stock: 0,
-      store_id,
+      ean: catalogProduct.ean ?? null,
+      product_number: catalogProduct.foneday_sku,
+      images: catalogProduct.image_url ? [catalogProduct.image_url] : [],
       status: "published",
-    });
+      is_active: true,
+    })
+    .select()
+    .single();
 
-    accessoryId = accessory.id;
+  if (skuErr) {
+    return NextResponse.json({ error: skuErr.message }, { status: 500 });
   }
+
+  skuProductId = skuProduct.id;
 
   const { data: link, error: linkErr } = await supabase
     .from("foneday_sku_link")
     .insert({
       foneday_catalog_id: catalogProduct.id,
-      accessory_id: accessoryId,
+      sku_product_id: skuProductId,
       use_type,
       markup_percentage: Number(markup_percentage) || 0,
     })
@@ -95,11 +94,11 @@ export async function POST(req: NextRequest) {
   }
 
   // Auto-populate sku_product_templates from Foneday model compatibility data.
-  if (accessoryId) {
-    await autoLinkTemplates(supabase, accessoryId, catalogProduct.id);
+  if (skuProductId) {
+    await autoLinkTemplates(supabase, skuProductId, catalogProduct.id);
   }
 
-  return NextResponse.json({ link, accessory_id: accessoryId });
+  return NextResponse.json({ link, sku_product_id: skuProductId });
 }
 
 /**
@@ -135,7 +134,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Not linked" }, { status: 404 });
   }
 
-  if (link.accessory_id) {
+  if (link.sku_product_id) {
+    await supabase
+      .from("sku_products")
+      .update({ status: "draft", is_active: false })
+      .eq("id", link.sku_product_id);
+  } else if (link.accessory_id) {
+    // Legacy: old products that were created in the accessories table
     await supabase
       .from("accessories")
       .update({ status: "archived", online_stock: 0, updated_at: new Date().toISOString() })
