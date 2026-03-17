@@ -7,8 +7,8 @@
 export interface TilbehoerCategory {
   slug: string;
   label: string;
-  shopifyHandle: string;
   description: string;
+  deviceSpecific: boolean;
 }
 
 export type DeviceBrand = "apple" | "samsung" | "oneplus" | "huawei" | "google";
@@ -30,7 +30,6 @@ export const DEVICE_BRANDS: { slug: DeviceBrand; label: string }[] = [
 export interface TilbehoerRoute {
   category: string;
   device?: string;
-  shopifyHandle: string;
   categoryLabel: string;
   deviceLabel?: string;
   brand?: string;
@@ -40,32 +39,38 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   {
     slug: "covers",
     label: "Covers & Cases",
-    shopifyHandle: "covers-1",
     description: "Beskyt din enhed med stilfulde covers og cases.",
+    deviceSpecific: true,
   },
   {
     slug: "skaermbeskyttelse",
     label: "Skærmbeskyttelse",
-    shopifyHandle: "tilbehor",
     description: "Panserglas og screen protectors til alle enheder.",
+    deviceSpecific: true,
   },
   {
     slug: "opladere",
     label: "Kabler & Opladere",
-    shopifyHandle: "opladere",
     description: "Lightning, USB-C, trådløs opladning og kabler.",
+    deviceSpecific: false,
   },
   {
     slug: "lyd",
     label: "Lyd & Høretelefoner",
-    shopifyHandle: "lyd",
     description: "Earbuds, headsets og højttalere til alle enheder.",
+    deviceSpecific: false,
+  },
+  {
+    slug: "holdere",
+    label: "Holdere & Mounts",
+    description: "Bilholdere, stander og mounts til din enhed.",
+    deviceSpecific: false,
   },
   {
     slug: "outlet",
     label: "Outlet",
-    shopifyHandle: "restsalg",
     description: "Ekstra skarpe priser på udvalgte tilbehør. Begrænset antal.",
+    deviceSpecific: false,
   },
 ];
 
@@ -130,13 +135,11 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
 export const TILBEHOER_ROUTES: TilbehoerRoute[] = [
   ...TILBEHOER_CATEGORIES.map((cat) => ({
     category: cat.slug,
-    shopifyHandle: cat.shopifyHandle,
     categoryLabel: cat.label,
   })),
   ...TILBEHOER_DEVICES.map((device) => ({
     category: "covers",
     device: device.slug,
-    shopifyHandle: `${device.slug}-covers`,
     categoryLabel: "Covers & Cases",
     deviceLabel: device.label,
     brand: device.brand,
@@ -182,3 +185,22 @@ export function getAllDeviceParams(): { category: string; device: string }[] {
     .filter((r) => r.device)
     .map((r) => ({ category: r.category, device: r.device! }));
 }
+
+/** Maps accessories.category DB values to tilbehoer URL slugs */
+export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
+  cover: "covers",
+  screen_protector: "skaermbeskyttelse",
+  charger: "opladere",
+  cable: "opladere",
+  audio: "lyd",
+  other: "holdere",
+};
+
+export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
+  covers: ["cover"],
+  skaermbeskyttelse: ["screen_protector"],
+  opladere: ["charger", "cable"],
+  lyd: ["audio"],
+  holdere: ["other"],
+  outlet: ["cover", "screen_protector", "charger", "cable", "audio", "other"],
+};
