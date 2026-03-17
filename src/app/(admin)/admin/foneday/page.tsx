@@ -385,28 +385,121 @@ function CatalogTab() {
   );
 }
 
+// ---- Inline editable cell (click to edit, enter to save) ----
+function EditableCell({
+  value,
+  suffix,
+  onSave,
+}: {
+  value: number;
+  suffix?: string;
+  onSave: (v: number) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  async function commit() {
+    const n = parseInt(draft, 10);
+    if (isNaN(n) || n < 0) { setDraft(String(value)); setEditing(false); return; }
+    if (n === value) { setEditing(false); return; }
+    setSaving(true);
+    await onSave(n);
+    setSaving(false);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setDraft(String(value)); setEditing(false); } }}
+        disabled={saving}
+        className="w-16 rounded-lg border border-green-eco/30 bg-green-eco/5 px-2 py-1 text-center text-sm font-semibold focus:outline-none disabled:opacity-50"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => { setDraft(String(value)); setEditing(true); }}
+      className="group flex items-center gap-1 rounded-lg px-2 py-1 transition-colors hover:bg-green-eco/5"
+    >
+      <span className="text-sm font-semibold tabular-nums">{value}{suffix}</span>
+      <svg className="h-3 w-3 text-charcoal/20 opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+      </svg>
+    </button>
+  );
+}
+
+// ---- Linked Tab with full management ----
 function LinkedTab() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    fetch("/api/admin/foneday/catalog?linked=true&limit=100")
-      .then((r) => r.json())
-      .then((data) => { setProducts(data.data ?? []); setLoading(false); });
-  }, []);
+  const fetchLinked = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ linked: "true", limit: "200" });
+    if (search) params.set("search", search);
+    const res = await fetch(`/api/admin/foneday/catalog?${params}`);
+    const data = await res.json();
+    setProducts(data.data ?? []);
+    setLoading(false);
+  }, [search]);
+
+  useEffect(() => { fetchLinked(); }, [fetchLinked]);
+
+  function handleSearch(value: string) {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setSearch(value), 400);
+  }
+
+  async function updateAccessory(accessoryId: string, updates: Record<string, unknown>) {
+    await fetch(`/api/admin/accessories/${accessoryId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+  }
 
   async function handleUnlink(sku: string) {
     await fetch(`/api/admin/foneday/link?foneday_sku=${encodeURIComponent(sku)}`, { method: "DELETE" });
     setProducts((prev) => prev.filter((p) => p.foneday_sku !== sku));
   }
 
-  if (loading) return <div className="py-8 text-center text-charcoal/40">Indlaeser...</div>;
-
   return (
-    <div>
-      <p className="mb-4 text-sm text-charcoal/50">{products.length} linkede produkter</p>
-      {products.length === 0 ? (
-        <div className="py-12 text-center text-charcoal/40">Ingen linkede produkter endnu. Gaa til Katalog og link produkter.</div>
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <input
+          type="search"
+          placeholder="Soeg SKU, titel eller enhed..."
+          defaultValue={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="min-w-[300px] rounded-lg border border-sand bg-white px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+        />
+        <span className="ml-auto text-sm text-charcoal/50">{products.length} linkede produkter</span>
+      </div>
+
+      <p className="text-xs text-charcoal/40">Klik paa et tal for at redigere. Brug soegning til at finde produkter via SKU naar du taeller op.</p>
+
+      {loading ? (
+        <div className="py-12 text-center text-charcoal/40">Indlaeser...</div>
+      ) : products.length === 0 ? (
+        <div className="py-12 text-center text-charcoal/40">
+          {search ? "Ingen produkter matcher din soegning" : "Ingen linkede produkter endnu. Gaa til Katalog og link produkter."}
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-sand">
           <table className="w-full text-sm">
@@ -415,7 +508,9 @@ function LinkedTab() {
                 <th className="px-4 py-3">Produkt</th>
                 <th className="px-4 py-3">Passer til</th>
                 <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3 text-right">Pris (DKK)</th>
+                <th className="px-4 py-3 text-right">Pris</th>
+                <th className="px-4 py-3 text-center">Slagelse</th>
+                <th className="px-4 py-3 text-center">Vejle</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -423,14 +518,34 @@ function LinkedTab() {
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-cream/50">
                   <td className="px-4 py-3">
-                    <div className="font-medium">{p.title}</div>
+                    <div className="font-medium max-w-xs">{p.title}</div>
                     <div className="text-xs text-charcoal/40 font-mono">{p.foneday_sku}</div>
                   </td>
-                  <td className="px-4 py-3 text-charcoal/70">{p.suitable_for ?? "Universal"}</td>
+                  <td className="px-4 py-3 text-charcoal/70 text-xs">{p.suitable_for ?? "Universal"}</td>
                   <td className="px-4 py-3"><span className="rounded-full bg-sand/50 px-2 py-0.5 text-xs">{p.category}</span></td>
                   <td className="px-4 py-3 text-right font-mono">{p.price_dkk ? formatDKK(p.price_dkk) : "—"}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center">
+                      {p.link?.accessory_id ? (
+                        <EditableCell
+                          value={0}
+                          onSave={async (v) => { await updateAccessory(p.link!.accessory_id!, { store_stock: v }); }}
+                        />
+                      ) : <span className="text-charcoal/30">—</span>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-center">
+                      {p.link?.accessory_id ? (
+                        <EditableCell
+                          value={0}
+                          onSave={async (v) => { await updateAccessory(p.link!.accessory_id!, { online_stock: v }); }}
+                        />
+                      ) : <span className="text-charcoal/30">—</span>}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => handleUnlink(p.foneday_sku)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50">Fjern</button>
+                    <button onClick={() => handleUnlink(p.foneday_sku)} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-500 hover:bg-red-50">Fjern</button>
                   </td>
                 </tr>
               ))}
