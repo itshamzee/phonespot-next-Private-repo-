@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
+import { resend } from "@/lib/email/resend";
+import { render } from "@react-email/render";
+import InquiryReplyEmail from "@/lib/email/templates/inquiry-reply";
 import { sendSms } from "@/lib/gateway-api/client";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(
   req: Request,
@@ -63,27 +63,71 @@ export async function POST(
       );
     }
 
+    // Fetch staff profile for signature
+    let staffProfile = null;
+    try {
+      const { data } = await supabase
+        .from("staff_profiles")
+        .select("*")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+      staffProfile = data;
+    } catch {
+      // No staff profile — email will be sent without signature
+    }
+
+    // Fetch company settings
+    const { data: companySettings } = await supabase
+      .from("company_settings")
+      .select("*")
+      .single();
+
+    const subject = `Re: ${inquiry.subject || "Din henvendelse"}`;
+
+    // Render styled email with signature
+    const html = await render(
+      InquiryReplyEmail({
+        customerName: inquiry.name,
+        replyBody: body,
+        staffProfile,
+        companySettings,
+      })
+    );
+
     try {
       const emailResult = await resend.emails.send({
-        from: "PhoneSpot <noreply@phonespot.dk>",
+        from: "PhoneSpot <support@phonespot.dk>",
         to: inquiry.email,
-        subject: `Re: ${inquiry.subject || "Din henvendelse"}`,
-        text: body,
+        replyTo: "support@reply.phonespot.dk",
+        subject,
+        html,
       });
+
+      const messageId = `<${emailResult.data?.id}@reply.phonespot.dk>`;
 
       await supabase.from("mail_log").insert({
         inquiry_id: id,
         to_email: inquiry.email,
-        subject: `Re: ${inquiry.subject || "Din henvendelse"}`,
+        subject,
         body,
         status: "delivered",
         resend_id: emailResult.data?.id ?? null,
+        message_id: messageId,
       });
+
+      // Set email_thread_id if not already set
+      if (!inquiry.email_thread_id) {
+        await supabase
+          .from("contact_inquiries")
+          .update({ email_thread_id: crypto.randomUUID() })
+          .eq("id", id);
+      }
     } catch {
       await supabase.from("mail_log").insert({
         inquiry_id: id,
         to_email: inquiry.email,
-        subject: `Re: ${inquiry.subject || "Din henvendelse"}`,
+        subject,
         body,
         status: "failed",
         resend_id: null,
