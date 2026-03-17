@@ -7,8 +7,8 @@ import {
   getAllSparePartPaths,
   getSparePartModel,
 } from "@/lib/spare-parts";
-import { getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { skuProductToProduct } from "@/lib/supabase/product-adapter";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -58,13 +58,32 @@ export default async function ModelPartsPage({
 
   let products: import("@/lib/shopify/types").Product[] = [];
   try {
-    // Fetch spare parts (accessories/subcategory matching the model)
-    const skuProducts = await getPublishedSkuProducts("accessory");
-    // Filter by model name in title
-    const modelLabel = modelConfig.label.toLowerCase();
-    products = skuProducts
-      .filter((p) => p.title.toLowerCase().includes(modelLabel))
-      .map(skuProductToProduct);
+    const supabase = createAdminClient();
+    // Query Supabase directly with model name filter — much faster than fetching all
+    const modelLabel = modelConfig.label;
+    const { data: skuProducts } = await supabase
+      .from("sku_products")
+      .select("*")
+      .eq("status", "published")
+      .eq("is_active", true)
+      .ilike("title", `%${modelLabel}%`)
+      .order("selling_price", { ascending: true });
+
+    // If no exact match, try broader search with just the model slug words
+    let matched = skuProducts ?? [];
+    if (matched.length === 0) {
+      const keywords = modelConfig.slug.replace(/-/g, " ");
+      const { data: broadMatch } = await supabase
+        .from("sku_products")
+        .select("*")
+        .eq("status", "published")
+        .eq("is_active", true)
+        .ilike("title", `%${keywords}%`)
+        .order("selling_price", { ascending: true });
+      matched = broadMatch ?? [];
+    }
+
+    products = matched.map(skuProductToProduct);
   } catch {
     products = [];
   }

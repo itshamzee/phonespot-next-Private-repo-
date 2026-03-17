@@ -101,7 +101,7 @@ const IPHONE_MODELS: SparePartModel[] = [
   { label: "iPhone 15 Plus", slug: "iphone-15-plus", shopifyHandle: "iphone-15-plus-reservedele", generation: "15-serien" },
   { label: "iPhone 15", slug: "iphone-15", shopifyHandle: "iphone-15-reservedele", generation: "15-serien" },
   { label: "iPhone 14 Pro Max", slug: "iphone-14-pro-max", shopifyHandle: "iphone-14-pro-max-reservedele", generation: "14-serien" },
-  { label: "iPhone 14 Pro", slug: "iphone-14-pro", shopifyHandle: "iphone-14-pro-reservedel", generation: "14-serien" },
+  { label: "iPhone 14 Pro", slug: "iphone-14-pro", shopifyHandle: "iphone-14-pro-reservedele", generation: "14-serien" },
   { label: "iPhone 14 Plus", slug: "iphone-14-plus", shopifyHandle: "iphone-14-plus-reservedele", generation: "14-serien" },
   { label: "iPhone 14", slug: "iphone-14", shopifyHandle: "iphone-14-reservedele", generation: "14-serien" },
   { label: "iPhone 13 Pro Max", slug: "iphone-13-pro-max", shopifyHandle: "iphone-13-pro-max", generation: "13-serien" },
@@ -139,7 +139,13 @@ const IPAD_MODELS: SparePartModel[] = [
 // ---------------------------------------------------------------------------
 
 const MACBOOK_MODELS: SparePartModel[] = [
-  { label: "Alle MacBook reservedele", slug: "alle", shopifyHandle: "macbook-reservedele" },
+  { label: "MacBook Pro 16\"", slug: "macbook-pro-16", shopifyHandle: "macbook-pro-16-reservedele", generation: "MacBook Pro" },
+  { label: "MacBook Pro 14\"", slug: "macbook-pro-14", shopifyHandle: "macbook-pro-14-reservedele", generation: "MacBook Pro" },
+  { label: "MacBook Pro 13\"", slug: "macbook-pro-13", shopifyHandle: "macbook-pro-13-reservedele", generation: "MacBook Pro" },
+  { label: "MacBook Air M2", slug: "macbook-air-m2", shopifyHandle: "macbook-air-m2-reservedele", generation: "MacBook Air" },
+  { label: "MacBook Air M1", slug: "macbook-air-m1", shopifyHandle: "macbook-air-m1-reservedele", generation: "MacBook Air" },
+  { label: "MacBook Air 13\" (2017-2020)", slug: "macbook-air-13", shopifyHandle: "macbook-air-13-reservedele", generation: "MacBook Air" },
+  { label: "Alle MacBook reservedele", slug: "alle", shopifyHandle: "macbook-reservedele", generation: "Alle" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -147,7 +153,21 @@ const MACBOOK_MODELS: SparePartModel[] = [
 // ---------------------------------------------------------------------------
 
 const SAMSUNG_MODELS: SparePartModel[] = [
-  { label: "Alle Samsung Galaxy reservedele", slug: "alle", shopifyHandle: "samsung-galaxy-reservedele" },
+  { label: "Galaxy S25 Ultra", slug: "galaxy-s25-ultra", shopifyHandle: "galaxy-s25-ultra-reservedele", generation: "S25-serien" },
+  { label: "Galaxy S25+", slug: "galaxy-s25-plus", shopifyHandle: "galaxy-s25-plus-reservedele", generation: "S25-serien" },
+  { label: "Galaxy S25", slug: "galaxy-s25", shopifyHandle: "galaxy-s25-reservedele", generation: "S25-serien" },
+  { label: "Galaxy S24 Ultra", slug: "galaxy-s24-ultra", shopifyHandle: "galaxy-s24-ultra-reservedele", generation: "S24-serien" },
+  { label: "Galaxy S24+", slug: "galaxy-s24-plus", shopifyHandle: "galaxy-s24-plus-reservedele", generation: "S24-serien" },
+  { label: "Galaxy S24", slug: "galaxy-s24", shopifyHandle: "galaxy-s24-reservedele", generation: "S24-serien" },
+  { label: "Galaxy S23 Ultra", slug: "galaxy-s23-ultra", shopifyHandle: "galaxy-s23-ultra-reservedele", generation: "S23-serien" },
+  { label: "Galaxy S23+", slug: "galaxy-s23-plus", shopifyHandle: "galaxy-s23-plus-reservedele", generation: "S23-serien" },
+  { label: "Galaxy S23", slug: "galaxy-s23", shopifyHandle: "galaxy-s23-reservedele", generation: "S23-serien" },
+  { label: "Galaxy S22 Ultra", slug: "galaxy-s22-ultra", shopifyHandle: "galaxy-s22-ultra-reservedele", generation: "S22-serien" },
+  { label: "Galaxy S22+", slug: "galaxy-s22-plus", shopifyHandle: "galaxy-s22-plus-reservedele", generation: "S22-serien" },
+  { label: "Galaxy S22", slug: "galaxy-s22", shopifyHandle: "galaxy-s22-reservedele", generation: "S22-serien" },
+  { label: "Galaxy S21 Ultra", slug: "galaxy-s21-ultra", shopifyHandle: "galaxy-s21-ultra-reservedele", generation: "S21-serien" },
+  { label: "Galaxy S21", slug: "galaxy-s21", shopifyHandle: "galaxy-s21-reservedele", generation: "S21-serien" },
+  { label: "Alle Samsung reservedele", slug: "alle", shopifyHandle: "samsung-galaxy-reservedele", generation: "Alle" },
 ];
 
 // ---------------------------------------------------------------------------
