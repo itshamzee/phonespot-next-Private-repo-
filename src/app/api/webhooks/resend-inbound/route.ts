@@ -20,33 +20,32 @@ function checkRateLimit(email: string): boolean {
 export async function POST(req: Request) {
   const supabase = createServerClient();
 
-  // 1. Verify webhook signature (Svix)
+  // 1. Verify webhook signature (Svix) — skip if secret not configured yet
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    console.error("RESEND_WEBHOOK_SECRET not configured");
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
-  }
-
-  const svixId = req.headers.get("svix-id");
-  const svixTimestamp = req.headers.get("svix-timestamp");
-  const svixSignature = req.headers.get("svix-signature");
-
-  if (!svixId || !svixTimestamp || !svixSignature) {
-    return NextResponse.json({ error: "Missing webhook headers" }, { status: 401 });
-  }
-
-  // Verify using Svix
-  const { Webhook } = await import("svix");
-  const wh = new Webhook(webhookSecret);
   const rawBody = await req.text();
-  try {
-    wh.verify(rawBody, {
-      "svix-id": svixId,
-      "svix-timestamp": svixTimestamp,
-      "svix-signature": svixSignature,
-    });
-  } catch {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+
+  if (webhookSecret) {
+    const svixId = req.headers.get("svix-id");
+    const svixTimestamp = req.headers.get("svix-timestamp");
+    const svixSignature = req.headers.get("svix-signature");
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json({ error: "Missing webhook headers" }, { status: 401 });
+    }
+
+    const { Webhook } = await import("svix");
+    const wh = new Webhook(webhookSecret);
+    try {
+      wh.verify(rawBody, {
+        "svix-id": svixId,
+        "svix-timestamp": svixTimestamp,
+        "svix-signature": svixSignature,
+      });
+    } catch {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  } else {
+    console.warn("[resend-inbound] RESEND_WEBHOOK_SECRET not set — skipping verification");
   }
 
   const parsedBody = JSON.parse(rawBody);
