@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+export const dynamic = "force-dynamic";
 
 /**
  * POST /api/pos/terminal/create-payment-intent
  * Creates a PaymentIntent for in-person Terminal payments.
- * Body: { amount: number (øre), orderId?: string }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +16,9 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    const Stripe = (await import("stripe")).default;
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
