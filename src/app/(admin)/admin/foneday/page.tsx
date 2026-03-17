@@ -14,7 +14,7 @@ interface CatalogProduct {
   price_eur: number;
   price_dkk: number | null;
   in_stock: boolean;
-  link: { foneday_catalog_id: string; accessory_id: string | null; use_type: string } | null;
+  link: { foneday_catalog_id: string; accessory_id: string | null; sku_product_id: string | null; use_type: string } | null;
 }
 
 interface FonedaySettings {
@@ -52,6 +52,12 @@ function formatEUR(eur: number): string {
   return new Intl.NumberFormat("da-DK", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(eur);
 }
 
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+}
+
 // ---- Link Modal ----
 function LinkModal({
   product,
@@ -65,16 +71,29 @@ function LinkModal({
   const costDkk = product.price_dkk ?? 0;
   const [markupPct, setMarkupPct] = useState(40);
   const [customPriceKr, setCustomPriceKr] = useState<number | null>(null);
-  const [stockSlagelse, setStockSlagelse] = useState(0);
-  const [stockVejle, setStockVejle] = useState(0);
+  const [stockMap, setStockMap] = useState<Record<string, number>>({});
+  const [locations, setLocations] = useState<Location[]>([]);
   const [linking, setLinking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // customPriceKr is in whole DKK (e.g. 199), internally we work in oere
+  useEffect(() => {
+    fetch("/api/platform/locations")
+      .then((r) => r.json())
+      .then((data: Location[]) => {
+        const store = data.filter((l) => l.type === "store" || l.type === "warehouse");
+        setLocations(store);
+        const initial: Record<string, number> = {};
+        store.forEach((l) => { initial[l.id] = 0; });
+        setStockMap(initial);
+      });
+  }, []);
+
   const calculatedPriceOere = customPriceKr != null ? customPriceKr * 100 : Math.round(costDkk * (1 + markupPct / 100));
 
   async function handleConfirm() {
     setLinking(true);
-    await fetch("/api/admin/foneday/link", {
+    setError(null);
+    const linkRes = await fetch("/api/admin/foneday/link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -84,10 +103,31 @@ function LinkModal({
         store_id: "00000000-0000-0000-0000-000000000000",
       }),
     });
-    // If custom price or store stock was set, update the accessory directly
-    if (customPriceKr != null || stockSlagelse > 0 || stockVejle > 0) {
-      // TODO: Update accessory price/stock after link — for now the markup is applied server-side
+
+    if (!linkRes.ok) {
+      const body = await linkRes.json().catch(() => ({}));
+      setError(body.error ?? "Link mislykkedes");
+      setLinking(false);
+      return;
     }
+
+    const { sku_product_id } = await linkRes.json();
+
+    // Write stock per location
+    if (sku_product_id) {
+      await Promise.all(
+        Object.entries(stockMap)
+          .filter(([, qty]) => qty > 0)
+          .map(([location_id, quantity]) =>
+            fetch("/api/platform/sku-stock", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ product_id: sku_product_id, location_id, quantity }),
+            })
+          )
+      );
+    }
+
     setLinking(false);
     onLinked();
   }
@@ -141,7 +181,6 @@ function LinkModal({
               />
               <span className="text-sm text-charcoal/50 whitespace-nowrap">kr.</span>
             </div>
-            <p className="mt-0.5 text-xs text-charcoal/40">Skriv f.eks. 199 for 199 kr. Lad vaere tom for at bruge markup.</p>
           </div>
 
           {/* Selling price preview */}
@@ -151,32 +190,30 @@ function LinkModal({
           </div>
 
           {/* Store stock per location */}
-          <div>
-            <label className="block text-sm font-semibold text-charcoal mb-2">Antal paa lager</label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-charcoal/50 mb-1">Slagelse</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={stockSlagelse}
-                  onChange={(e) => setStockSlagelse(Math.max(0, Number(e.target.value)))}
-                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
-                />
+          {locations.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-charcoal mb-2">Antal paa lager</label>
+              <div className={`grid gap-3 ${locations.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}>
+                {locations.map((loc) => (
+                  <div key={loc.id}>
+                    <label className="block text-xs text-charcoal/50 mb-1">{loc.name}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={stockMap[loc.id] ?? 0}
+                      onChange={(e) => setStockMap((prev) => ({ ...prev, [loc.id]: Math.max(0, Number(e.target.value)) }))}
+                      className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+                    />
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-xs text-charcoal/50 mb-1">Vejle</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={stockVejle}
-                  onChange={(e) => setStockVejle(Math.max(0, Number(e.target.value)))}
-                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
-                />
-              </div>
+              <p className="mt-1 text-xs text-charcoal/40">Online lager styres automatisk via Foneday sync</p>
             </div>
-            <p className="mt-1 text-xs text-charcoal/40">Online lager styres automatisk via Foneday sync</p>
-          </div>
+          )}
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          )}
         </div>
 
         {/* Actions */}
@@ -445,17 +482,39 @@ function EditableCell({
 // ---- Linked Tab with full management ----
 function LinkedTab() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  // stockData: sku_product_id → location_id → quantity
+  const [stockData, setStockData] = useState<Record<string, Record<string, number>>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Load locations once
+  useEffect(() => {
+    fetch("/api/platform/locations")
+      .then((r) => r.json())
+      .then((data: Location[]) => setLocations(data.filter((l) => l.type === "store" || l.type === "warehouse")));
+  }, []);
 
   const fetchLinked = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ linked: "true", limit: "200" });
     if (search) params.set("search", search);
-    const res = await fetch(`/api/admin/foneday/catalog?${params}`);
-    const data = await res.json();
-    setProducts(data.data ?? []);
+    const [catalogRes, stockRes] = await Promise.all([
+      fetch(`/api/admin/foneday/catalog?${params}`).then((r) => r.json()),
+      fetch("/api/platform/sku-stock").then((r) => r.json()),
+    ]);
+    setProducts(catalogRes.data ?? []);
+
+    // Build stock map: sku_product_id → location_id → quantity
+    const map: Record<string, Record<string, number>> = {};
+    if (Array.isArray(stockRes)) {
+      for (const row of stockRes) {
+        if (!map[row.product_id]) map[row.product_id] = {};
+        map[row.product_id][row.location_id] = row.quantity;
+      }
+    }
+    setStockData(map);
     setLoading(false);
   }, [search]);
 
@@ -466,12 +525,16 @@ function LinkedTab() {
     searchTimer.current = setTimeout(() => setSearch(value), 400);
   }
 
-  async function updateAccessory(accessoryId: string, updates: Record<string, unknown>) {
-    await fetch(`/api/admin/accessories/${accessoryId}`, {
-      method: "PUT",
+  async function updateSkuStock(skuProductId: string, locationId: string, quantity: number) {
+    await fetch("/api/platform/sku-stock", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
+      body: JSON.stringify({ product_id: skuProductId, location_id: locationId, quantity }),
     });
+    setStockData((prev) => ({
+      ...prev,
+      [skuProductId]: { ...(prev[skuProductId] ?? {}), [locationId]: quantity },
+    }));
   }
 
   async function handleUnlink(sku: string) {
@@ -509,46 +572,42 @@ function LinkedTab() {
                 <th className="px-4 py-3">Passer til</th>
                 <th className="px-4 py-3">Kategori</th>
                 <th className="px-4 py-3 text-right">Pris</th>
-                <th className="px-4 py-3 text-center">Slagelse</th>
-                <th className="px-4 py-3 text-center">Vejle</th>
+                {locations.map((loc) => (
+                  <th key={loc.id} className="px-4 py-3 text-center">{loc.name}</th>
+                ))}
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-sand">
-              {products.map((p) => (
-                <tr key={p.id} className="hover:bg-cream/50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium max-w-xs">{p.title}</div>
-                    <div className="text-xs text-charcoal/40 font-mono">{p.foneday_sku}</div>
-                  </td>
-                  <td className="px-4 py-3 text-charcoal/70 text-xs">{p.suitable_for ?? "Universal"}</td>
-                  <td className="px-4 py-3"><span className="rounded-full bg-sand/50 px-2 py-0.5 text-xs">{p.category}</span></td>
-                  <td className="px-4 py-3 text-right font-mono">{p.price_dkk ? formatDKK(p.price_dkk) : "—"}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center">
-                      {p.link?.accessory_id ? (
-                        <EditableCell
-                          value={0}
-                          onSave={async (v) => { await updateAccessory(p.link!.accessory_id!, { store_stock: v }); }}
-                        />
-                      ) : <span className="text-charcoal/30">—</span>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center">
-                      {p.link?.accessory_id ? (
-                        <EditableCell
-                          value={0}
-                          onSave={async (v) => { await updateAccessory(p.link!.accessory_id!, { online_stock: v }); }}
-                        />
-                      ) : <span className="text-charcoal/30">—</span>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => handleUnlink(p.foneday_sku)} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-500 hover:bg-red-50">Fjern</button>
-                  </td>
-                </tr>
-              ))}
+              {products.map((p) => {
+                const skuId = p.link?.sku_product_id ?? null;
+                return (
+                  <tr key={p.id} className="hover:bg-cream/50">
+                    <td className="px-4 py-3">
+                      <div className="font-medium max-w-xs">{p.title}</div>
+                      <div className="text-xs text-charcoal/40 font-mono">{p.foneday_sku}</div>
+                    </td>
+                    <td className="px-4 py-3 text-charcoal/70 text-xs">{p.suitable_for ?? "Universal"}</td>
+                    <td className="px-4 py-3"><span className="rounded-full bg-sand/50 px-2 py-0.5 text-xs">{p.category}</span></td>
+                    <td className="px-4 py-3 text-right font-mono">{p.price_dkk ? formatDKK(p.price_dkk) : "—"}</td>
+                    {locations.map((loc) => (
+                      <td key={loc.id} className="px-4 py-3">
+                        <div className="flex justify-center">
+                          {skuId ? (
+                            <EditableCell
+                              value={stockData[skuId]?.[loc.id] ?? 0}
+                              onSave={(v) => updateSkuStock(skuId, loc.id, v)}
+                            />
+                          ) : <span className="text-charcoal/30">—</span>}
+                        </div>
+                      </td>
+                    ))}
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => handleUnlink(p.foneday_sku)} className="rounded-lg border border-red-200 px-2 py-1 text-xs font-semibold text-red-500 hover:bg-red-50">Fjern</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

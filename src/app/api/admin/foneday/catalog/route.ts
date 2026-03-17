@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
   const ids = results.map((r) => r.id);
   const { data: linkData } = await supabase
     .from("foneday_sku_link")
-    .select("foneday_catalog_id, accessory_id, use_type")
+    .select("foneday_catalog_id, accessory_id, sku_product_id, use_type")
     .in("foneday_catalog_id", ids.length > 0 ? ids : ["__none__"]);
 
   const linkMap = new Map(
