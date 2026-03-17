@@ -462,6 +462,14 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                 >
                   Print faktura
                 </a>
+                <a
+                  href={`/api/pos/packing-slip?order_id=${order.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                >
+                  Print packing slip
+                </a>
                 <OrderStatusActions
                   orderId={order.id}
                   currentStatus={order.status}
