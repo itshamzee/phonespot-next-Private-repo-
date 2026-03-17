@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
+import { notifyNewOrder } from "@/lib/notifications/pushover";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -207,6 +208,23 @@ export async function handleCheckoutCompleted(
       console.error("[webhook] failed to send confirmation email:", emailErr);
       // Non-fatal: don't throw — order is already confirmed
     }
+  }
+
+  // 10. Send push notification to staff (Pushover — cashregister sound)
+  try {
+    const totalKr = new Intl.NumberFormat("da-DK", {
+      style: "currency",
+      currency: "DKK",
+    }).format(order.total / 100);
+
+    await notifyNewOrder({
+      orderNumber: order.order_number,
+      customerName: customer?.name || "Ukendt kunde",
+      totalKr,
+      itemCount: orderItems.length,
+    });
+  } catch (notifyErr) {
+    console.error("[webhook] pushover notification failed:", notifyErr);
   }
 
   console.log("[webhook] order confirmed:", order.order_number);
