@@ -32,7 +32,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
     zip: "4200",
     country: "Danmark",
     countryCode: "DK",
-    phone: "+45 XX XX XX XX",
+    phone: "+45 61 10 00 48",
     email: "info@phonespot.dk",
     shopifyLocationId: "90389381464",
     hours: {

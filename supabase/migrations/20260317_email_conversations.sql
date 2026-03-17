@@ -54,7 +54,7 @@ CREATE POLICY "Authenticated users can update company_settings"
 
 -- Seed default row
 INSERT INTO company_settings (company_name, address, postal_city, phone, email, website)
-VALUES ('PhoneSpot', 'Nørrebrogade 42', '2200 København N', '+45 50 50 50 50', 'support@phonespot.dk', 'https://phonespot.dk')
+VALUES ('PhoneSpot', 'VestsjællandsCentret 10', '4200 Slagelse', '+45 61 10 00 48', 'support@phonespot.dk', 'https://phonespot.dk')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Shipping Labels

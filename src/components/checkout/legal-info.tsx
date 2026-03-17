@@ -28,7 +28,7 @@ export function CheckoutLegalInfo({ tcVersionId, onAccept }: CheckoutLegalInfoPr
       {/* Business info summary */}
       <div className="text-xs text-charcoal/60">
         <p><strong>PhoneSpot ApS</strong> &middot; CVR: 38688766 &middot; VestsjællandsCentret 10, 4200 Slagelse</p>
-        <p>Telefon: +45 XX XX XX XX &middot; E-mail: info@phonespot.dk</p>
+        <p>Telefon: +45 61 10 00 48 &middot; E-mail: info@phonespot.dk</p>
       </div>
 
       {/* Key legal summaries */}

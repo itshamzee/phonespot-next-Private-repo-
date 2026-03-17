@@ -24,9 +24,9 @@ export default function BaseLayout({
 }: BaseLayoutProps) {
   const company = companySettings || {
     company_name: "PhoneSpot",
-    address: "Nørrebrogade 42",
-    postal_city: "2200 København N",
-    phone: "+45 50 50 50 50",
+    address: "VestsjællandsCentret 10",
+    postal_city: "4200 Slagelse",
+    phone: "+45 61 10 00 48",
     email: "support@phonespot.dk",
     website: "https://phonespot.dk",
     logo_url: null,
