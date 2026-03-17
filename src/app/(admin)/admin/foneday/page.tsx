@@ -65,7 +65,8 @@ function LinkModal({
   const costDkk = product.price_dkk ?? 0;
   const [markupPct, setMarkupPct] = useState(40);
   const [customPriceKr, setCustomPriceKr] = useState<number | null>(null);
-  const [storeStock, setStoreStock] = useState(0);
+  const [stockSlagelse, setStockSlagelse] = useState(0);
+  const [stockVejle, setStockVejle] = useState(0);
   const [linking, setLinking] = useState(false);
 
   // customPriceKr is in whole DKK (e.g. 199), internally we work in oere
@@ -149,17 +150,32 @@ function LinkModal({
             <span className="font-mono text-lg font-bold text-green-eco">{formatDKK(calculatedPriceOere)}</span>
           </div>
 
-          {/* Store stock */}
+          {/* Store stock per location */}
           <div>
-            <label className="block text-sm font-semibold text-charcoal">Antal i butik</label>
-            <p className="text-xs text-charcoal/40 mb-1">Hvor mange har du paa hylden lige nu?</p>
-            <input
-              type="number"
-              min={0}
-              value={storeStock}
-              onChange={(e) => setStoreStock(Math.max(0, Number(e.target.value)))}
-              className="w-24 rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
-            />
+            <label className="block text-sm font-semibold text-charcoal mb-2">Antal paa lager</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-charcoal/50 mb-1">Slagelse</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={stockSlagelse}
+                  onChange={(e) => setStockSlagelse(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-charcoal/50 mb-1">Vejle</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={stockVejle}
+                  onChange={(e) => setStockVejle(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
+                />
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-charcoal/40">Online lager styres automatisk via Foneday sync</p>
           </div>
         </div>
 
