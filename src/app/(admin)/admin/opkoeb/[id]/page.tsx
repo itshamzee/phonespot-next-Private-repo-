@@ -71,6 +71,10 @@ export default function AdminOpkoebDetailPage() {
   const [replyText, setReplyText] = useState("");
   const [replySending, setReplySending] = useState(false);
 
+  // Shipping
+  const [shippingLabel, setShippingLabel] = useState<Record<string, unknown> | null>(null);
+  const [labelLoading, setLabelLoading] = useState(false);
+
   /* ---- Data fetching ---- */
 
   async function loadInquiry() {
@@ -112,9 +116,28 @@ export default function AdminOpkoebDetailPage() {
     }
   }
 
+  async function loadShippingLabel(offerId: string) {
+    const { data } = await supabase
+      .from("shipping_labels")
+      .select("*")
+      .eq("offer_id", offerId)
+      .single();
+    setShippingLabel(data ?? null);
+  }
+
   async function loadAll() {
     setLoading(true);
     await Promise.all([loadInquiry(), loadOffers(), loadReceipts(), loadMessages()]);
+    // Load shipping label for accepted offer if present
+    // We load offers first, then check — but since loadOffers sets state async,
+    // we need to fetch separately here:
+    const { data: offersData } = await supabase
+      .from("trade_in_offers")
+      .select("*")
+      .eq("inquiry_id", inquiryId)
+      .order("created_at", { ascending: false });
+    const accepted = (offersData as any[])?.find((o) => o.status === "accepted");
+    if (accepted) await loadShippingLabel(accepted.id);
     setLoading(false);
   }
 
@@ -186,6 +209,35 @@ export default function AdminOpkoebDetailPage() {
       // Silently handle
     }
     setReplySending(false);
+  }
+
+  async function handleCreateShipment(offerId: string) {
+    setLabelLoading(true);
+    try {
+      const res = await fetch(`/api/trade-in/${offerId}/create-shipment`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        await loadShippingLabel(offerId);
+      } else {
+        alert(data.error || "Fejl ved oprettelse af forsendelse");
+      }
+    } finally {
+      setLabelLoading(false);
+    }
+  }
+
+  async function handleSendAcceptance(offerId: string) {
+    const res = await fetch(`/api/trade-in/${offerId}/send-acceptance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (res.ok) {
+      alert("Accepterings-email sendt!");
+    } else {
+      const data = await res.json().catch(() => ({ error: "Ukendt fejl" }));
+      alert(data.error || "Fejl ved afsendelse af email");
+    }
   }
 
   /* ---- Extract metadata ---- */
@@ -407,6 +459,73 @@ export default function AdminOpkoebDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Shipping label */}
+          {hasAcceptedOffer && (() => {
+            const acceptedOffer = offers.find((o) => o.status === "accepted");
+            if (!acceptedOffer) return null;
+            return (
+              <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  Forsendelse
+                </h3>
+                {shippingLabel ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-stone-400">Status</span>
+                        <span className="font-medium text-charcoal capitalize">
+                          {String(shippingLabel.status).replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      {Boolean(shippingLabel.tracking_number) && (
+                        <div className="flex justify-between">
+                          <span className="text-stone-400">Tracking</span>
+                          <a
+                            href={`https://tracking.postnord.com/tracking/${shippingLabel.tracking_number}`}
+                            target="_blank"
+                            rel="noopener"
+                            className="font-medium text-green-eco hover:underline"
+                          >
+                            {String(shippingLabel.tracking_number)}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {Boolean(shippingLabel.label_url) && (
+                        <a
+                          href={String(shippingLabel.label_url)}
+                          target="_blank"
+                          rel="noopener"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        >
+                          Download label (PDF)
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleSendAcceptance(acceptedOffer.id)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-stone-50"
+                      >
+                        Send accepterings-email
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-stone-400">Ingen forsendelsesmaerkat endnu.</p>
+                    <button
+                      onClick={() => handleCreateShipment(acceptedOffer.id)}
+                      disabled={labelLoading}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {labelLoading ? "Opretter..." : "Generer e-label (Shipmondo)"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Opret slutseddel button */}
           {hasAcceptedOffer && (
