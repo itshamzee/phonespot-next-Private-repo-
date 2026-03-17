@@ -509,150 +509,157 @@ export function Header() {
   }, [mobileOpen]);
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-shadow duration-300 ${
-        scrolled ? "shadow-md" : ""
-      }`}
-      style={{
-        backgroundColor: "rgba(245,242,236,0.96)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-      }}
-    >
-      <AnnouncementBar />
+    <>
+      <header
+        className={`sticky top-0 z-50 transition-shadow duration-300 ${
+          scrolled ? "shadow-md" : ""
+        }`}
+        style={{
+          backgroundColor: "rgba(245,242,236,0.96)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
+      >
+        <AnnouncementBar />
 
-      {/* Main nav bar */}
-      <div className="border-b border-sand/40">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:h-16 lg:px-8">
-          {/* Left: hamburger (mobile) */}
-          <button
-            type="button"
-            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
-          >
-            {mobileOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            )}
-          </button>
-
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0 lg:mr-10">
-            <img
-              src="/brand/logos/phonespot-wordmark-dark.svg"
-              alt="PhoneSpot"
-              width={130}
-              height={30}
-              className="h-7 w-auto lg:h-8"
-            />
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-5 flex-1">
-            <NavDropdown label="Produkter" items={PRODUKT_ITEMS} columns={2} />
-            <Link href="/saelg-din-enhed" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
-              Sælg din enhed
-            </Link>
-            <Link href="/reparation" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
-              Reparation
-            </Link>
-            <NavDropdown label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} columns={2} />
-            <Link href="/kontakt" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
-              Kontakt
-            </Link>
-          </nav>
-
-          {/* Right side: actions */}
-          <div className="flex items-center gap-1.5 lg:gap-2">
-            {/* Search */}
+        {/* Main nav bar */}
+        <div className="border-b border-sand/40">
+          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 lg:h-16 lg:px-8">
+            {/* Left: hamburger (mobile) */}
             <button
               type="button"
-              onClick={() => setSearchOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5 hover:text-green-eco"
-              aria-label="Søg"
+              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
             >
-              <SearchIcon className="h-[18px] w-[18px]" />
-            </button>
-
-            {/* Cart */}
-            <button
-              type="button"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5 hover:text-green-eco"
-              onClick={openCart}
-              aria-label="Åbn kurv"
-            >
-              <CartIcon className="h-[18px] w-[18px]" />
-              {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-green-eco px-1 text-[10px] font-bold text-white shadow-sm">
-                  {totalItems}
-                </span>
+              {mobileOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
               )}
             </button>
+
+            {/* Logo */}
+            <Link href="/" className="flex-shrink-0 lg:mr-10">
+              <img
+                src="/brand/logos/phonespot-wordmark-dark.svg"
+                alt="PhoneSpot"
+                width={130}
+                height={30}
+                className="h-7 w-auto lg:h-8"
+              />
+            </Link>
+
+            {/* Desktop nav */}
+            <nav className="hidden lg:flex items-center gap-5 flex-1">
+              <NavDropdown label="Produkter" items={PRODUKT_ITEMS} columns={2} />
+              <Link href="/saelg-din-enhed" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+                Sælg din enhed
+              </Link>
+              <Link href="/reparation" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+                Reparation
+              </Link>
+              <NavDropdown label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} columns={2} />
+              <Link href="/kontakt" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
+                Kontakt
+              </Link>
+            </nav>
+
+            {/* Right side: actions */}
+            <div className="flex items-center gap-1.5 lg:gap-2">
+              {/* Search */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5 hover:text-green-eco"
+                aria-label="Søg"
+              >
+                <SearchIcon className="h-[18px] w-[18px]" />
+              </button>
+
+              {/* Cart */}
+              <button
+                type="button"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-charcoal/5 hover:text-green-eco"
+                onClick={openCart}
+                aria-label="Åbn kurv"
+              >
+                <CartIcon className="h-[18px] w-[18px]" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-green-eco px-1 text-[10px] font-bold text-white shadow-sm">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile nav panel */}
+        {/* Search overlay */}
+        {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+      </header>
+
+      {/* Mobile nav panel — OUTSIDE header to avoid backdrop-filter stacking context bug */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 overflow-y-auto bg-warm-white/98 backdrop-blur-xl" style={{ top: "5.5rem" }}>
-          <nav className="mx-auto max-w-lg px-5 pb-8 pt-2">
-            {/* Highlighted service links at top */}
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <Link
-                href="/saelg-din-enhed"
-                onClick={() => setMobileOpen(false)}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-                </svg>
-                <span className="text-sm font-bold text-charcoal">Sælg din enhed</span>
-                <span className="text-[11px] text-gray">Få tilbud på din brugte enhed</span>
-              </Link>
-              <Link
-                href="/reparation"
-                onClick={() => setMobileOpen(false)}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
-                </svg>
-                <span className="text-sm font-bold text-charcoal">Reparation</span>
-                <span className="text-[11px] text-gray">Book tid eller walk-in</span>
-              </Link>
-            </div>
-
-            <MobileSection label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
-            <MobileSection label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} onNavigate={() => setMobileOpen(false)} />
-
-            {/* Quick links */}
-            <div className="mt-6 flex flex-wrap gap-2">
-              {[
-                { label: "Kontakt", href: "/kontakt" },
-                { label: "Butik", href: "/butik" },
-              ].map((link) => (
+        <div className="lg:hidden fixed inset-0 z-[60]">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/20" onClick={() => setMobileOpen(false)} />
+          {/* Panel */}
+          <div className="absolute inset-x-0 top-[5.5rem] bottom-0 overflow-y-auto bg-warm-white" style={{ WebkitOverflowScrolling: "touch" }}>
+            <nav className="mx-auto max-w-lg px-5 pb-8 pt-4">
+              {/* Highlighted service links at top */}
+              <div className="mb-4 grid grid-cols-2 gap-3">
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  href="/saelg-din-enhed"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-full border border-sand px-4 py-2 text-xs font-semibold text-charcoal transition-colors hover:bg-cream"
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
                 >
-                  {link.label}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                  </svg>
+                  <span className="text-sm font-bold text-charcoal">Sælg din enhed</span>
+                  <span className="text-[11px] text-gray">Få tilbud på din brugte enhed</span>
                 </Link>
-              ))}
-            </div>
-          </nav>
+                <Link
+                  href="/reparation"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-green-eco/20 bg-green-eco/5 p-4 text-center transition-colors hover:bg-green-eco/10"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
+                  </svg>
+                  <span className="text-sm font-bold text-charcoal">Reparation</span>
+                  <span className="text-[11px] text-gray">Book tid eller walk-in</span>
+                </Link>
+              </div>
+
+              <MobileSection label="Produkter" items={PRODUKT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+              <MobileSection label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} onNavigate={() => setMobileOpen(false)} />
+
+              {/* Quick links */}
+              <div className="mt-6 flex flex-wrap gap-2">
+                {[
+                  { label: "Kontakt", href: "/kontakt" },
+                  { label: "Butik", href: "/butik" },
+                ].map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-full border border-sand px-4 py-2 text-xs font-semibold text-charcoal transition-colors hover:bg-cream"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          </div>
         </div>
       )}
-
-      {/* Search overlay */}
-      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
-    </header>
+    </>
   );
 }
