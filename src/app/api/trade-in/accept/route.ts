@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     try {
       await resend.emails.send({
         from: "PhoneSpot <noreply@phonespot.dk>",
-        to: "ha@phonespot.dk",
+        to: "info@phonespot.dk",
         subject: `Tilbud accepteret: ${inquiry.name} \— ${(deviceMeta.model as string) || "enhed"}`,
         html: `<p>${inquiry.name} har accepteret tilbuddet.</p>
 <p>Bankinfo: Reg ${seller_bank_reg}, Konto ${seller_bank_account}</p>
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
             zipcode: companyPC?.[1] || "2200",
             city: companyPC?.[2] || "København N",
             country_code: "DK",
-            email: company?.email || "support@phonespot.dk",
+            email: company?.email || "info@phonespot.dk",
           },
           receiver: {
             name: seller_name || inquiry.name,
@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       }));
 
       await resend.emails.send({
-        from: "PhoneSpot <support@phonespot.dk>",
+        from: "PhoneSpot <info@phonespot.dk>",
         to: inquiry.email,
         replyTo: "support@reply.phonespot.dk",
         subject: `Tilbud accepteret — ${[brand, model].filter(Boolean).join(" ")}`,

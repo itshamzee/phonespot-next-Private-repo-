@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ActivityAction =
   | "device_intake"
+  | "device_quick_add"
   | "device_update"
   | "device_delete"
   | "device_import"

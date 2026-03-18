@@ -110,8 +110,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (fullOrder?.shipping_method?.startsWith("click_collect_") && fullOrder?.customer?.email) {
       const locationInfo = fullOrder.shipping_method === "click_collect_vejle"
-        ? { name: "PhoneSpot Vejle", address: "Nørregade 22, 7100 Vejle", phone: "71 99 48 48" }
-        : { name: "PhoneSpot Slagelse", address: "Løvegade 12, 4200 Slagelse", phone: "71 99 48 48" };
+        ? { name: "PhoneSpot Vejle", address: "Nørregade 22, 7100 Vejle", phone: "61 10 00 48" }
+        : { name: "PhoneSpot Slagelse", address: "Løvegade 12, 4200 Slagelse", phone: "61 10 00 48" };
 
       try {
         const { Resend } = await import("resend");

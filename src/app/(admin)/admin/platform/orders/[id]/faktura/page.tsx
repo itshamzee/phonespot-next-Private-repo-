@@ -151,8 +151,8 @@ export default function FakturaPage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase" as const, color: "#999", marginBottom: 6 }}>Fra</div>
             <div style={{ fontWeight: "bold" }}>PhoneSpot / PhoneGo ApS</div>
-            <div>CVR: 44780018</div>
-            <div>support@phonespot.dk</div>
+            <div>CVR: 38688766</div>
+            <div>info@phonespot.dk</div>
             <div>phonespot.dk</div>
           </div>
           <div style={{ flex: 1 }}>
@@ -219,7 +219,7 @@ export default function FakturaPage() {
 
         {/* Footer */}
         <div style={{ marginTop: 48, paddingTop: 16, borderTop: "1px solid #eee", fontSize: 11, color: "#999", textAlign: "center" }}>
-          PhoneSpot / PhoneGo ApS | CVR: 44780018 | support@phonespot.dk | phonespot.dk
+          PhoneSpot / PhoneGo ApS | CVR: 38688766 | info@phonespot.dk | phonespot.dk
         </div>
 
         {/* Print button */}

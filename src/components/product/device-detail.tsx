@@ -198,6 +198,18 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
 
+  // Compute store availability from matching devices
+  const storeLocations = new Map<string, { name: string; count: number }>();
+  for (const d of matchingDevices) {
+    const loc = (d as unknown as Record<string, unknown>).location as { name: string; type: string } | null;
+    if (loc && loc.type === "store") {
+      const entry = storeLocations.get(loc.name) || { name: loc.name, count: 0 };
+      entry.count++;
+      storeLocations.set(loc.name, entry);
+    }
+  }
+  const pickupLocations = Array.from(storeLocations.values());
+
   const categoryName = getCategoryName(template.category);
   const deviceType = getDeviceType(template.category);
 
@@ -210,6 +222,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     setIsAddingToCart(true);
     setCartError(null);
     try {
+      const loc = (bestMatch as unknown as Record<string, unknown>).location as { id: string; name: string } | null;
       await addDevice({
         type: "device",
         deviceId: bestMatch.id,
@@ -221,6 +234,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
         image: template.images[0] ?? null,
         price: bestMatch.selling_price ?? price,
         reservedAt: new Date().toISOString(),
+        locationId: loc?.id,
+        locationName: loc?.name,
       });
       // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
@@ -394,6 +409,30 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             </button>
 
             {cartError && <p className="text-sm text-red-600">{cartError}</p>}
+
+            {/* Pickup / delivery info */}
+            {inStock && (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {pickupLocations.map((loc) => (
+                  <span
+                    key={loc.name}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-green-eco/10 px-3 py-1.5 text-xs font-semibold text-green-700"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                    </svg>
+                    Kan hentes i {loc.name}
+                  </span>
+                ))}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-semibold text-stone-500">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25h-.375a3 3 0 013-3V7.5h9.75" />
+                  </svg>
+                  Kan sendes
+                </span>
+              </div>
+            )}
 
             {/* Quick trust signals */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
@@ -613,12 +652,23 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
                   <TrustIcon type="truck" className="h-5 w-5 text-amber-600" />
                 </div>
-                <h4 className="font-display text-base font-bold text-charcoal">Levering</h4>
+                <h4 className="font-display text-base font-bold text-charcoal">Levering &amp; afhentning</h4>
                 <ul className="mt-3 space-y-2.5 text-sm text-charcoal/60">
+                  {pickupLocations.length > 0 && pickupLocations.map((loc) => (
+                    <li key={loc.name} className="flex items-start gap-2">
+                      <span className="mt-0.5 text-green-eco">&#10003;</span>
+                      <span><strong>Hent i {loc.name} (gratis)</strong> — Klar til afhentning i dag</span>
+                    </li>
+                  ))}
+                  {pickupLocations.length === 0 && (
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 text-green-eco">&#10003;</span>
+                      <span><strong>Afhentning i butik (gratis)</strong> — Slagelse &amp; Vejle</span>
+                    </li>
+                  )}
                   {[
                     { label: "DAO Pakke (49 kr)", desc: "Afhentning i nærmeste pakkeshop, 2-4 hverdage" },
                     { label: "PostNord (59 kr)", desc: "Levering til døren, 2-4 hverdage" },
-                    { label: "Afhentning i butik (gratis)", desc: "VestsjællandsCentret 10, 4200 Slagelse" },
                     { label: "Fri fragt", desc: "Ved køb over 500 kr" },
                     { label: "Samme dag", desc: "Bestil før kl. 16 — sendt samme dag" },
                   ].map((item) => (

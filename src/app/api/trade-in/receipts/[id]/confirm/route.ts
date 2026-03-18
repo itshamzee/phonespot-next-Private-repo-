@@ -69,7 +69,7 @@ export async function POST(
     try {
       await resend.emails.send({
         from: "PhoneSpot <noreply@phonespot.dk>",
-        to: "ha@phonespot.dk",
+        to: "info@phonespot.dk",
         subject: `Slutseddel bekræftet: ${receipt.receipt_number}`,
         html: `<p>Slutseddel ${receipt.receipt_number} er bekræftet for ${receipt.seller_name}.</p>`,
         attachments,

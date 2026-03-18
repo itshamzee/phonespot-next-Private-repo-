@@ -314,6 +314,7 @@ export function CheckoutForm() {
       <section>
         <ShippingSelector
           selected={shippingMethod}
+          items={cartState.items}
           onSelect={(method, cost) => {
             setShippingMethod(method);
             setShippingCost(cost);

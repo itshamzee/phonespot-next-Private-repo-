@@ -65,7 +65,7 @@ export async function POST(
         zipcode: senderPostal,
         city: senderCity,
         country_code: "DK",
-        email: company?.email || "support@phonespot.dk",
+        email: company?.email || "info@phonespot.dk",
         phone: company?.phone || "",
       },
       receiver: {

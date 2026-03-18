@@ -370,6 +370,7 @@ export default async function ProductPage({
                   title={t.display_name}
                   minPrice={t.min_price}
                   deviceCount={t.device_count}
+                  locations={t.locations}
                   brand={t.brand}
                   category={t.category}
                 />

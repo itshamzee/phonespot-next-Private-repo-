@@ -104,9 +104,9 @@ export async function POST(req: Request) {
   // 5. Send email via Resend
   try {
     const emailResult = await resend.emails.send({
-      from: "PhoneSpot <support@phonespot.dk>",
+      from: "PhoneSpot <info@phonespot.dk>",
       to: inquiry.email,
-      replyTo: "support@phonespot.dk",
+      replyTo: "info@phonespot.dk",
       subject,
       html: emailHtml,
     });

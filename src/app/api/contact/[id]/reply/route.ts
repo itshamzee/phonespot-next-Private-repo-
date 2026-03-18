@@ -97,7 +97,7 @@ export async function POST(
 
     try {
       const emailResult = await resend.emails.send({
-        from: "PhoneSpot <support@phonespot.dk>",
+        from: "PhoneSpot <info@phonespot.dk>",
         to: inquiry.email,
         replyTo: "support@reply.phonespot.dk",
         subject,

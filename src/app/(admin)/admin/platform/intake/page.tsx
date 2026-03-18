@@ -1,123 +1,630 @@
 "use client";
 
-import { useState } from "react";
-import { DeviceIntakeForm } from "@/components/platform/device-intake-form";
-import { CsvImportDialog } from "@/components/platform/csv-import-dialog";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { parseDKKToOere, formatDKK } from "@/lib/platform/format";
 
-type ActiveTab = "single" | "csv";
+interface Template {
+  id: string;
+  brand: string;
+  model: string;
+  category: string;
+  display_name: string;
+  storage_options: string[];
+  colors: string[];
+  base_price_a?: number | null;
+  base_price_b?: number | null;
+  base_price_c?: number | null;
+}
 
-export default function IntakePage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("single");
-  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
-  const [lastImportedCount, setLastImportedCount] = useState<number | null>(null);
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+}
 
-  return (
-    <div className="mx-auto max-w-3xl">
-      {/* Page header */}
-      <div className="mb-6">
-        <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-          Registrer enhed
-        </h2>
-        <p className="mt-0.5 text-sm text-charcoal/35">
-          Registrer enkeltvis eller importer flere enheder via CSV
-        </p>
-      </div>
+type Grade = "A" | "B" | "C";
 
-      {/* Tab bar */}
-      <div className="mb-8 flex gap-2">
-        {(
-          [
-            ["single", "Enkelt enhed", (
-              <svg key="s" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18h3" />
-              </svg>
-            )],
-            ["csv", "CSV Import", (
-              <svg key="c" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-              </svg>
-            )],
-          ] as const
-        ).map(([tab, label, icon]) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-all ${
-              activeTab === tab
-                ? "bg-charcoal text-white shadow-sm"
-                : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"
-            }`}
-          >
-            {icon}
-            {label}
-          </button>
-        ))}
-      </div>
+const GRADE_CONFIG: { value: Grade; label: string; desc: string; color: string; activeColor: string }[] = [
+  { value: "A", label: "A", desc: "Som ny", color: "border-stone-200 bg-white text-stone-600", activeColor: "border-green-500 bg-green-50 text-green-800 ring-2 ring-green-500/20" },
+  { value: "B", label: "B", desc: "God stand", color: "border-stone-200 bg-white text-stone-600", activeColor: "border-yellow-500 bg-yellow-50 text-yellow-800 ring-2 ring-yellow-500/20" },
+  { value: "C", label: "C", desc: "Brugt", color: "border-stone-200 bg-white text-stone-600", activeColor: "border-orange-500 bg-orange-50 text-orange-800 ring-2 ring-orange-500/20" },
+];
 
-      {/* Tab content */}
-      {activeTab === "single" ? (
-        <DeviceIntakeForm onSuccess={() => {}} />
-      ) : (
-        <div className="rounded-2xl border border-black/[0.04] bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-charcoal/[0.03]">
-            <svg className="h-7 w-7 text-charcoal/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+export default function QuickAddPage() {
+  // Template search state
+  const [search, setSearch] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Device details
+  const [storage, setStorage] = useState("");
+  const [color, setColor] = useState("");
+  const [grade, setGrade] = useState<Grade | null>(null);
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [imei, setImei] = useState("");
+  const [batteryHealth, setBatteryHealth] = useState("");
+  const [locationId, setLocationId] = useState<string | null>(null);
+
+  // UI state
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ barcode: string; name: string } | null>(null);
+  const [showImei, setShowImei] = useState(false);
+  const [addedCount, setAddedCount] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+
+  // Load locations on mount
+  useEffect(() => {
+    fetch("/api/platform/locations")
+      .then((r) => r.json())
+      .then((data) => {
+        const locs = Array.isArray(data) ? data : [];
+        setLocations(locs);
+        // Default to first physical store
+        const store = locs.find((l: Location) => l.type === "store");
+        if (store) setLocationId(store.id);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Search templates (debounced)
+  const searchTemplates = useCallback(async (q: string) => {
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/platform/templates?search=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTemplates(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      /* empty */
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (value.length >= 2) {
+      searchTimeoutRef.current = setTimeout(() => searchTemplates(value), 200);
+    } else {
+      setTemplates([]);
+    }
+  }
+
+  // Fetch full template details including prices
+  async function selectTemplate(t: Template) {
+    setSelectedTemplate(t);
+    setSearch("");
+    setTemplates([]);
+    setStorage(t.storage_options?.[0] ?? "");
+    setColor(t.colors?.[0] ?? "");
+    setGrade(null);
+    setSellingPrice("");
+
+    // Fetch full template with prices
+    try {
+      const res = await fetch(`/api/platform/templates/${t.id}`);
+      if (res.ok) {
+        const full = await res.json();
+        setSelectedTemplate(full);
+      }
+    } catch {
+      /* use partial data */
+    }
+  }
+
+  // Auto-fill selling price when grade changes
+  function handleGradeChange(g: Grade) {
+    setGrade(g);
+    if (selectedTemplate) {
+      const priceKey = `base_price_${g.toLowerCase()}` as keyof Template;
+      const basePrice = selectedTemplate[priceKey] as number | null | undefined;
+      if (basePrice && basePrice > 0) {
+        setSellingPrice(String(basePrice / 100));
+      }
+    }
+  }
+
+  function resetForm() {
+    setSelectedTemplate(null);
+    setSearch("");
+    setStorage("");
+    setColor("");
+    setGrade(null);
+    setPurchasePrice("");
+    setSellingPrice("");
+    setImei("");
+    setBatteryHealth("");
+    setError(null);
+    setSuccess(null);
+    setShowImei(false);
+    setTimeout(() => searchRef.current?.focus(), 100);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedTemplate || !grade || !locationId) return;
+
+    const purchaseOere = parseDKKToOere(purchasePrice);
+    const sellingOere = parseDKKToOere(sellingPrice);
+
+    if (!purchaseOere || purchaseOere <= 0) {
+      setError("Indkøbspris er påkrævet");
+      return;
+    }
+    if (!sellingOere || sellingOere <= 0) {
+      setError("Salgspris er påkrævet");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const baseBody: Record<string, unknown> = {
+        template_id: selectedTemplate.id,
+        grade,
+        purchase_price: purchaseOere,
+        selling_price: sellingOere,
+        location_id: locationId,
+        vat_scheme: "brugtmoms",
+      };
+      if (storage) baseBody.storage = storage;
+      if (color) baseBody.color = color;
+      if (batteryHealth) baseBody.battery_health = parseInt(batteryHealth, 10);
+
+      // For quantity=1, include IMEI. For batch, IMEI is skipped (each device is unique)
+      const barcodes: string[] = [];
+      const count = Math.max(1, Math.min(quantity, 50));
+
+      for (let i = 0; i < count; i++) {
+        const body = { ...baseBody };
+        if (count === 1 && imei.trim()) body.imei = imei.trim();
+
+        const res = await fetch("/api/platform/devices/quick-add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setError(data.error ?? `Fejl ved enhed ${i + 1}`);
+          if (barcodes.length > 0) {
+            // Some succeeded — show partial success
+            setAddedCount((c) => c + barcodes.length);
+            setSuccess({
+              barcode: barcodes.join(", "),
+              name: `${barcodes.length}x ${selectedTemplate.display_name}${storage ? ` ${storage}` : ""} — Grade ${grade}`,
+            });
+          }
+          return;
+        }
+
+        const device = await res.json();
+        barcodes.push(device.barcode);
+      }
+
+      setAddedCount((c) => c + count);
+      setSuccess({
+        barcode: count === 1 ? barcodes[0] : `${count} enheder oprettet`,
+        name: `${count > 1 ? `${count}x ` : ""}${selectedTemplate.display_name}${storage ? ` ${storage}` : ""}${color ? ` ${color}` : ""} — Grade ${grade}`,
+      });
+    } catch {
+      setError("Netværksfejl — prøv igen");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const canSubmit = selectedTemplate && grade && purchasePrice && sellingPrice && locationId;
+
+  // ─── Success state ───
+  if (success) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <div className="rounded-2xl border-2 border-green-200 bg-gradient-to-b from-green-50 to-white p-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-eco text-white">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>
-          <h3 className="mb-1 font-display text-base font-bold text-charcoal">Masse-import via CSV</h3>
-          <p className="mb-5 text-sm text-charcoal/35">
-            Importer op til hundredvis af enheder på \én gang med en CSV-fil
-          </p>
 
-          {lastImportedCount !== null && (
-            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              Seneste import: {lastImportedCount} enhed
-              {lastImportedCount !== 1 ? "er" : ""} importeret
-            </div>
+          <h2 className="font-display text-xl font-bold text-stone-800">Tilføjet til salg!</h2>
+          <p className="mt-2 text-sm text-stone-600">{success.name}</p>
+          <p className="mt-1 font-mono text-xs text-stone-400">{success.barcode}</p>
+
+          {addedCount > 1 && (
+            <p className="mt-3 text-xs font-semibold text-green-600">
+              {addedCount} enheder tilføjet i denne session
+            </p>
           )}
 
-          <button
-            type="button"
-            onClick={() => setCsvDialogOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/15 transition-all hover:shadow-lg hover:brightness-110 active:scale-[0.98]"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            \Åben CSV Import
-          </button>
-
-          <div className="mt-6 rounded-xl bg-charcoal/[0.02] p-4 text-left">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-charcoal/35">
-              Forventede kolonner
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                "serial_number", "imei", "template_id", "grade", "battery_health",
-                "storage", "color", "condition_notes", "purchase_price",
-                "selling_price", "vat_scheme", "supplier_id", "location_id", "status",
-              ].map((col) => (
-                <span
-                  key={col}
-                  className="rounded-md border border-black/[0.04] bg-white px-2 py-0.5 font-mono text-xs text-charcoal/50"
-                >
-                  {col}
-                </span>
-              ))}
-            </div>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                // Keep model, grade, prices — just clear IMEI and reset success
+                setImei("");
+                setQuantity(1);
+                setError(null);
+                setSuccess(null);
+              }}
+              className="flex items-center justify-center gap-2 rounded-xl bg-green-eco px-6 py-3 text-sm font-bold text-white shadow-md shadow-green-eco/20 transition hover:brightness-110 active:scale-[0.98]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Tilføj endnu én (samme model)
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
+            >
+              Ny model
+            </button>
+            <Link
+              href="/admin/platform/stock"
+              className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-600 transition hover:bg-stone-50"
+            >
+              Se lager
+            </Link>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <CsvImportDialog
-        open={csvDialogOpen}
-        onClose={() => setCsvDialogOpen(false)}
-        onImported={(count) => {
-          setLastImportedCount(count);
-          setCsvDialogOpen(false);
-        }}
-      />
+  // ─── Main form ───
+  return (
+    <div className="mx-auto max-w-2xl">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+            Tilføj til salg
+          </h2>
+          <p className="mt-0.5 text-sm text-charcoal/35">
+            Vælg model → sæt pris → færdig
+          </p>
+        </div>
+        {addedCount > 0 && (
+          <span className="rounded-full bg-green-eco/10 px-3 py-1 text-sm font-bold text-green-700">
+            {addedCount} tilføjet
+          </span>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* ─── Model search ─── */}
+        <div className="relative">
+          {selectedTemplate ? (
+            <div className="flex items-center justify-between rounded-2xl border-2 border-green-eco/30 bg-green-eco/5 px-5 py-4">
+              <div>
+                <p className="font-display text-lg font-bold text-stone-800">
+                  {selectedTemplate.display_name}
+                </p>
+                <p className="text-xs text-stone-400">
+                  {selectedTemplate.brand} · {selectedTemplate.category}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  setGrade(null);
+                  setSellingPrice("");
+                  setTimeout(() => searchRef.current?.focus(), 50);
+                }}
+                className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-500 hover:bg-stone-50"
+              >
+                Skift
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="relative">
+                <svg
+                  className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Søg model... f.eks. iPhone 13 Pro"
+                  autoFocus
+                  className="w-full rounded-2xl border-2 border-stone-200 bg-white py-4 pl-12 pr-4 text-base text-stone-800 placeholder:text-stone-400 transition focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/10"
+                />
+              </div>
+
+              {/* Search results */}
+              {templates.length > 0 && (
+                <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-xl">
+                  <ul className="max-h-72 overflow-y-auto divide-y divide-stone-100">
+                    {templates.map((t) => (
+                      <li key={t.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectTemplate(t)}
+                          className="flex w-full items-center gap-4 px-5 py-3.5 text-left transition hover:bg-stone-50 active:bg-stone-100"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-100">
+                            <svg className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-stone-800">{t.display_name}</p>
+                            <p className="text-xs text-stone-400">{t.brand} · {t.category}</p>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {searching && (
+                <div className="absolute z-50 mt-2 w-full rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-xl">
+                  <p className="text-sm text-stone-400">Søger...</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ─── Options (only when template selected) ─── */}
+        {selectedTemplate && (
+          <>
+            {/* Storage + Color row */}
+            {(selectedTemplate.storage_options?.length > 0 || selectedTemplate.colors?.length > 0) && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {selectedTemplate.storage_options?.length > 0 && (
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                      Lagerkapacitet
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTemplate.storage_options.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setStorage(opt)}
+                          className={[
+                            "rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition active:scale-[0.97]",
+                            storage === opt
+                              ? "border-charcoal bg-charcoal text-white"
+                              : "border-stone-200 bg-white text-stone-600 hover:border-stone-300",
+                          ].join(" ")}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedTemplate.colors?.length > 0 && (
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                      Farve
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTemplate.colors.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setColor(c)}
+                          className={[
+                            "rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition active:scale-[0.97]",
+                            color === c
+                              ? "border-charcoal bg-charcoal text-white"
+                              : "border-stone-200 bg-white text-stone-600 hover:border-stone-300",
+                          ].join(" ")}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Grade */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Stand
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {GRADE_CONFIG.map((g) => (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => handleGradeChange(g.value)}
+                    className={[
+                      "flex flex-col items-center rounded-2xl border-2 py-4 transition active:scale-[0.97]",
+                      grade === g.value ? g.activeColor : g.color,
+                    ].join(" ")}
+                  >
+                    <span className="font-display text-2xl font-black">{g.label}</span>
+                    <span className="mt-0.5 text-xs font-medium opacity-60">{g.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Prices */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  Indkøbspris (DKK)
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-2xl border-2 border-stone-200 bg-white px-4 py-3.5 text-center font-mono text-lg font-bold text-stone-800 placeholder:text-stone-300 transition focus:border-green-eco/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  Salgspris (DKK)
+                  {grade && selectedTemplate[`base_price_${grade.toLowerCase()}` as keyof Template] ? (
+                    <span className="ml-2 font-normal normal-case text-green-600">
+                      anbefalet: {formatDKK((selectedTemplate[`base_price_${grade.toLowerCase()}` as keyof Template] as number) ?? 0)}
+                    </span>
+                  ) : null}
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={sellingPrice}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-2xl border-2 border-stone-200 bg-white px-4 py-3.5 text-center font-mono text-lg font-bold text-stone-800 placeholder:text-stone-300 transition focus:border-green-eco/50 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Lokation
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {locations.map((loc) => (
+                  <button
+                    key={loc.id}
+                    type="button"
+                    onClick={() => setLocationId(loc.id)}
+                    className={[
+                      "rounded-xl border-2 px-5 py-3 text-sm font-semibold transition active:scale-[0.97]",
+                      locationId === loc.id
+                        ? "border-charcoal bg-charcoal text-white"
+                        : "border-stone-200 bg-white text-stone-600 hover:border-stone-300",
+                    ].join(" ")}
+                  >
+                    {loc.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Optional: IMEI + Battery */}
+            <div>
+              {!showImei ? (
+                <button
+                  type="button"
+                  onClick={() => setShowImei(true)}
+                  className="text-xs font-medium text-stone-400 underline decoration-stone-300 underline-offset-2 hover:text-stone-600"
+                >
+                  + IMEI / Batteri (valgfrit)
+                </button>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-stone-400">IMEI</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={imei}
+                      onChange={(e) => setImei(e.target.value)}
+                      placeholder="15-cifret IMEI"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-mono text-stone-800 placeholder:text-stone-400 focus:border-green-eco/50 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-stone-400">Batteri %</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={100}
+                      value={batteryHealth}
+                      onChange={(e) => setBatteryHealth(e.target.value)}
+                      placeholder="85"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-green-eco/50 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quantity */}
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Antal
+              </label>
+              <div className="flex items-center rounded-xl border-2 border-stone-200 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="px-3 py-2 text-lg font-bold text-stone-400 hover:text-stone-700 transition"
+                >
+                  −
+                </button>
+                <span className="min-w-[2.5rem] text-center font-mono text-lg font-bold text-stone-800">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+                  className="px-3 py-2 text-lg font-bold text-stone-400 hover:text-stone-700 transition"
+                >
+                  +
+                </button>
+              </div>
+              {quantity > 1 && (
+                <span className="text-xs text-stone-400">
+                  {quantity} identiske enheder oprettes
+                </span>
+              )}
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={!canSubmit || submitting}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-green-eco py-4 text-base font-bold text-white shadow-lg shadow-green-eco/25 transition hover:brightness-110 active:scale-[0.99] disabled:opacity-40 disabled:shadow-none"
+            >
+              {submitting ? (
+                <>
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  Tilføjer {quantity > 1 ? `${quantity} enheder` : ""}...
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  {quantity > 1 ? `Tilføj ${quantity} til salg` : "Tilføj til salg"}
+                </>
+              )}
+            </button>
+          </>
+        )}
+      </form>
     </div>
   );
 }

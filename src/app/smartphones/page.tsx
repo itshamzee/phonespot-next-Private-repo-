@@ -201,6 +201,7 @@ export default async function SmartphonesPage() {
                           title={t.display_name}
                           minPrice={t.min_price}
                           deviceCount={t.device_count}
+                          locations={t.locations}
                           brand={t.brand}
                           category={t.category}
                         />
@@ -259,6 +260,7 @@ export default async function SmartphonesPage() {
               title={t.display_name}
               minPrice={t.min_price}
               deviceCount={t.device_count}
+              locations={t.locations}
               brand={t.brand}
               category={t.category}
             />

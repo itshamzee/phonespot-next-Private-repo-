@@ -10,11 +10,21 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const params = request.nextUrl.searchParams;
 
+  const category = params.get("category");
+  const brand = params.get("brand");
+
+  // Use !inner join when filtering on template columns so rows without
+  // matching templates are excluded (PostgREST requirement)
+  const needsInner = !!(category || brand);
+  const templateJoin = needsInner
+    ? "template:product_templates!inner(id, brand, model, display_name, category)"
+    : "template:product_templates(id, brand, model, display_name, category)";
+
   let query = supabase
     .from("devices")
     .select(`
       *,
-      template:product_templates(id, brand, model, display_name, category),
+      ${templateJoin},
       location:locations(id, name),
       supplier:suppliers(id, name)
     `)
@@ -23,9 +33,7 @@ export async function GET(request: NextRequest) {
   const location = params.get("location_id");
   const status = params.get("status");
   const grade = params.get("grade");
-  const category = params.get("category");
   const search = params.get("search");
-  const brand = params.get("brand");
   const limit = parseInt(params.get("limit") ?? "50");
   const offset = parseInt(params.get("offset") ?? "0");
 
@@ -34,7 +42,26 @@ export async function GET(request: NextRequest) {
   if (grade) query = query.eq("grade", grade);
   if (category) query = query.eq("template.category", category);
   if (search) {
-    query = query.or(`serial_number.ilike.%${search}%,imei.ilike.%${search}%,barcode.ilike.%${search}%`);
+    // Search device fields (serial, imei, barcode) AND template display_name.
+    // PostgREST can't mix embedded resource filters in or(), so we first
+    // look up template IDs whose display_name matches, then combine both
+    // conditions with or().
+    const { data: matchingTemplates } = await supabase
+      .from("product_templates")
+      .select("id")
+      .ilike("display_name", `%${search}%`);
+
+    const templateIds = matchingTemplates?.map((t) => t.id) ?? [];
+
+    if (templateIds.length > 0) {
+      query = query.or(
+        `serial_number.ilike.%${search}%,imei.ilike.%${search}%,barcode.ilike.%${search}%,template_id.in.(${templateIds.join(",")})`,
+      );
+    } else {
+      query = query.or(
+        `serial_number.ilike.%${search}%,imei.ilike.%${search}%,barcode.ilike.%${search}%`,
+      );
+    }
   }
   if (brand) {
     query = query.eq("template.brand", brand);

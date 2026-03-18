@@ -23,7 +23,7 @@ export const SENDER_ADDRESSES = {
     city: "Slagelse",
     country_code: "DK",
     email: "info@phonespot.dk",
-    phone: "71994848",
+    phone: "61100048",
   },
   vejle: {
     name: "PhoneSpot",
@@ -32,7 +32,7 @@ export const SENDER_ADDRESSES = {
     city: "Vejle",
     country_code: "DK",
     email: "info@phonespot.dk",
-    phone: "71994848",
+    phone: "61100048",
   },
 } as const;
 

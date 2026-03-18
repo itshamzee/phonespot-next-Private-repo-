@@ -74,7 +74,7 @@ function AfvisContent() {
           <h1 className="font-display text-2xl font-bold text-charcoal">Tilbud ikke tilgængeligt</h1>
           <p className="mt-4 text-gray">{errorMsg}</p>
           <p className="mt-6 text-sm text-gray">
-            Kontakt os på <a href="mailto:ha@phonespot.dk" className="text-green-eco underline">ha@phonespot.dk</a> for hjælp.
+            Kontakt os på <a href="mailto:info@phonespot.dk" className="text-green-eco underline">info@phonespot.dk</a> for hjælp.
           </p>
         </div>
       </div>
@@ -91,7 +91,7 @@ function AfvisContent() {
             er du velkommen til at kontakte os.
           </p>
           <a
-            href="mailto:ha@phonespot.dk"
+            href="mailto:info@phonespot.dk"
             className="mt-6 inline-block text-sm font-medium text-green-eco underline"
           >
             Kontakt os

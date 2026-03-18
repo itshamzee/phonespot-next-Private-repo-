@@ -7,6 +7,7 @@ export interface StockFilters {
   status?: string;
   grade?: string;
   search?: string;
+  category?: string;
 }
 
 interface Location {
@@ -77,7 +78,7 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
           type="search"
           value={filters.search ?? ""}
           onChange={(e) => update({ search: e.target.value || undefined })}
-          placeholder="Serienr., IMEI, stregkode…"
+          placeholder="Søg model, serienr., IMEI…"
           className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-4 text-sm text-stone-800 placeholder:text-stone-400 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
         />
       </div>
@@ -128,7 +129,7 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
       {hasActiveFilters && (
         <button
           type="button"
-          onClick={() => onChange({})}
+          onClick={() => onChange({ category: filters.category })}
           className="flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-500 transition hover:border-stone-300 hover:text-stone-700"
         >
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

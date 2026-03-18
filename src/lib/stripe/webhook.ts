@@ -4,6 +4,7 @@ import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
 import { notifyNewOrder } from "@/lib/notifications/pushover";
+import { sendStaffOrderNotification } from "@/lib/email/staff-order-notification";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -30,7 +31,7 @@ export async function handleCheckoutCompleted(
     .from("orders")
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
-       subtotal, discount_amount, shipping_cost, withdrawal_token,
+       subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token,
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)`,
     )
     .eq("id", orderId)
@@ -176,7 +177,69 @@ export async function handleCheckoutCompleted(
     .eq("id", order.customer_id)
     .single();
 
-  // 9. Send order confirmation email
+  // 9. Resolve product names and images for email (shared by all notifications)
+  const fmtKr = (ore: number) =>
+    new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
+
+  const itemNames: string[] = [];
+  const enrichedItems: Array<{
+    id: string;
+    itemType: "device" | "sku_product";
+    deviceId: string | null;
+    skuProductId: string | null;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    title: string;
+    image?: string;
+  }> = [];
+
+  for (const item of orderItems) {
+    let title = "";
+    let image: string | undefined;
+
+    if (item.item_type === "device" && item.device_id) {
+      const { data: dev } = await supabase
+        .from("devices")
+        .select("storage, color, grade, template:product_templates(brand, model, display_name, images)")
+        .eq("id", item.device_id)
+        .single();
+      const t = (dev as any)?.template;
+      if (t) {
+        const parts = [t.display_name || [t.brand, t.model].filter(Boolean).join(" ")];
+        if (dev?.storage) parts.push(dev.storage);
+        if (dev?.color) parts.push(dev.color);
+        if (dev?.grade) parts.push(`Grade ${dev.grade}`);
+        title = parts.join(" · ");
+        image = t.images?.[0] || undefined;
+        itemNames.push(`• ${title} — ${fmtKr(item.unit_price)}`);
+      }
+    } else if (item.sku_product_id) {
+      const { data: sku } = await supabase
+        .from("sku_products")
+        .select("title, images")
+        .eq("id", item.sku_product_id)
+        .single();
+      title = sku?.title || "Tilbehør";
+      image = sku?.images?.[0] || undefined;
+      const qty = item.quantity > 1 ? ` x${item.quantity}` : "";
+      itemNames.push(`• ${title}${qty} — ${fmtKr(item.unit_price * item.quantity)}`);
+    }
+
+    enrichedItems.push({
+      id: item.id,
+      itemType: item.item_type as "device" | "sku_product",
+      deviceId: item.device_id,
+      skuProductId: item.sku_product_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      totalPrice: item.unit_price * item.quantity,
+      title: title || (item.item_type === "device" ? "Brugt enhed" : "Produkt"),
+      image,
+    });
+  }
+
+  // 10. Send order confirmation email with product names + images
   if (customer) {
     try {
       await sendOrderConfirmation({
@@ -186,15 +249,7 @@ export async function handleCheckoutCompleted(
           email: customer.email,
           name: customer.name,
         },
-        items: orderItems.map((i) => ({
-          id: i.id,
-          itemType: i.item_type as "device" | "sku_product",
-          deviceId: i.device_id,
-          skuProductId: i.sku_product_id,
-          quantity: i.quantity,
-          unitPrice: i.unit_price,
-          totalPrice: i.unit_price * i.quantity,
-        })),
+        items: enrichedItems,
         subtotal: order.subtotal ?? orderItems.reduce(
           (sum, i) => sum + i.unit_price * i.quantity,
           0,
@@ -203,42 +258,15 @@ export async function handleCheckoutCompleted(
         shippingCost: order.shipping_cost ?? 0,
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
+        shippingMethod: (order as any).shipping_method ?? undefined,
       });
     } catch (emailErr) {
       console.error("[webhook] failed to send confirmation email:", emailErr);
-      // Non-fatal: don't throw — order is already confirmed
     }
   }
 
-  // 10. Send push notification to staff (Pushover — cashregister sound)
+  // 11. Send push notification to staff (Pushover — cashregister sound)
   try {
-    const fmtKr = (ore: number) =>
-      new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
-
-    // Build item summary with product names
-    const itemNames: string[] = [];
-    for (const item of orderItems) {
-      if (item.item_type === "device" && item.device_id) {
-        const { data: dev } = await supabase
-          .from("devices")
-          .select("template:product_templates(brand, model, storage)")
-          .eq("id", item.device_id)
-          .single();
-        const t = (dev as any)?.template;
-        if (t) {
-          itemNames.push(`• ${[t.brand, t.model, t.storage].filter(Boolean).join(" ")} — ${fmtKr(item.unit_price)}`);
-        }
-      } else if (item.sku_product_id) {
-        const { data: sku } = await supabase
-          .from("sku_products")
-          .select("title")
-          .eq("id", item.sku_product_id)
-          .single();
-        const qty = item.quantity > 1 ? ` x${item.quantity}` : "";
-        itemNames.push(`• ${sku?.title || "Tilbehør"}${qty} — ${fmtKr(item.unit_price * item.quantity)}`);
-      }
-    }
-
     await notifyNewOrder({
       orderNumber: order.order_number,
       customerName: customer?.name || "Ukendt kunde",
@@ -251,6 +279,33 @@ export async function handleCheckoutCompleted(
     });
   } catch (notifyErr) {
     console.error("[webhook] pushover notification failed:", notifyErr);
+  }
+
+  // 12. Send staff email notification (non-fatal)
+  try {
+    await sendStaffOrderNotification({
+      orderNumber: order.order_number,
+      customerName: customer?.name || "Ukendt kunde",
+      customerEmail: customer?.email,
+      customerPhone: customer?.phone,
+      total: order.total,
+      shippingCost: order.shipping_cost ?? 0,
+      shippingMethod: (order as any).shipping_method ?? null,
+      items: itemNames.length > 0
+        ? orderItems.map((item, idx) => {
+            // Re-use the item name built for Pushover, stripping the bullet and price
+            const rawLine = itemNames[idx] || "";
+            const name = rawLine.replace(/^•\s*/, "").replace(/\s*—\s*[\d.,]+\s*kr\.\s*$/, "").trim() || "Produkt";
+            return { name, quantity: item.quantity, unitPrice: item.unit_price };
+          })
+        : orderItems.map((i) => ({
+            name: i.item_type === "device" ? "Brugt enhed" : "Tilbehør",
+            quantity: i.quantity,
+            unitPrice: i.unit_price,
+          })),
+    });
+  } catch (staffEmailErr) {
+    console.error("[webhook] staff order notification email failed:", staffEmailErr);
   }
 
   console.log("[webhook] order confirmed:", order.order_number);

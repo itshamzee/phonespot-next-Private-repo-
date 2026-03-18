@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS trade_in_receipts (
   buyer_cvr text NOT NULL DEFAULT '38688766',
   buyer_address text,
   buyer_postal_city text,
-  buyer_email text NOT NULL DEFAULT 'ha@phonespot.dk',
+  buyer_email text NOT NULL DEFAULT 'info@phonespot.dk',
   buyer_phone text,
   total_amount integer NOT NULL DEFAULT 0,
   status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'confirmed', 'paid', 'completed')),

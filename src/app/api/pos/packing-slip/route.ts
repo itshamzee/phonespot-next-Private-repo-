@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
   ${order.notes ? `<h2>Note</h2><div style="font-size:10px;color:#333">${order.notes}</div>` : ""}
 
   <div class="footer">
-    PhoneSpot / PhoneGo ApS · CVR 44780018 · phonespot.dk
+    PhoneSpot / PhoneGo ApS · CVR 38688766 · phonespot.dk
   </div>
 
   <script>window.onload = function() { window.print(); }</script>

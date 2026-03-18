@@ -7,7 +7,9 @@ import {
   Text,
   Button,
   Hr,
+  Link,
 } from "@react-email/components";
+import { BRAND } from "@/lib/email/brand";
 
 interface ShippingConfirmationEmailProps {
   orderNumber: string;
@@ -28,37 +30,73 @@ export default function ShippingConfirmationEmail({
     <Html lang="da">
       <Head />
       <Body style={bodyStyle}>
-        {/* Green header bar */}
+        {/* Header */}
         <Section style={headerStyle}>
-          <Text style={headerTextStyle}>PhoneSpot</Text>
+          <a href={BRAND.website} style={{ textDecoration: "none" }}>
+            <img
+              src={BRAND.logoWhite}
+              alt="PhoneSpot"
+              height={34}
+              style={{ height: "34px", display: "inline-block" }}
+            />
+          </a>
         </Section>
 
         <Container style={containerStyle}>
+          {/* Progress bar */}
+          <Section style={progressBarSectionStyle}>
+            <table
+              width="100%"
+              cellPadding={0}
+              cellSpacing={0}
+              style={{ tableLayout: "fixed" as const }}
+            >
+              <tbody>
+                <tr>
+                  <td style={progressStepDoneStyle}>
+                    <span style={progressCheckStyle}>&#10003;</span> Ordre
+                  </td>
+                  <td style={progressArrowStyle}>&rarr;</td>
+                  <td style={progressStepActiveStyle}>
+                    <span style={progressCheckStyle}>&#10003;</span> Sendt
+                  </td>
+                  <td style={progressArrowStyle}>&rarr;</td>
+                  <td style={progressStepPendingStyle}>Leveret</td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
           <Section style={contentStyle}>
-            <Text style={greetingStyle}>
-              Hej {customerName},
-            </Text>
-            <Text style={headlineStyle}>
-              Din ordre {orderNumber} er på vej!
-            </Text>
+            <Text style={greetingStyle}>Hej {customerName},</Text>
+            <Text style={headlineStyle}>Din ordre {orderNumber} er på vej!</Text>
             <Text style={paragraphStyle}>
               Vi har sendt din pakke afsted. Du kan spore din forsendelse med
               sporingsnummeret nedenfor.
             </Text>
 
-            <Hr style={hrStyle} />
-
-            <Text style={labelStyle}>Sporingsnummer</Text>
-            <Text style={trackingNumberStyle}>{trackingNumber}</Text>
-
-            {shippingMethod && (
-              <>
-                <Text style={labelStyle}>Fragtmetode</Text>
-                <Text style={paragraphStyle}>{shippingMethod}</Text>
-              </>
-            )}
-
-            <Hr style={hrStyle} />
+            {/* Tracking card */}
+            <table
+              width="100%"
+              cellPadding={0}
+              cellSpacing={0}
+              style={trackingCardStyle}
+            >
+              <tbody>
+                <tr>
+                  <td style={trackingCardInnerStyle}>
+                    <p style={trackingLabelStyle}>Sporingsnummer</p>
+                    <p style={trackingNumberStyle}>{trackingNumber}</p>
+                    {shippingMethod && (
+                      <>
+                        <p style={trackingLabelStyle}>Fragtmetode</p>
+                        <p style={trackingCarrierStyle}>{shippingMethod}</p>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
             {trackingUrl && (
               <Section style={buttonSectionStyle}>
@@ -68,24 +106,75 @@ export default function ShippingConfirmationEmail({
               </Section>
             )}
 
+            <Hr style={hrStyle} />
+
             <Text style={paragraphStyle}>
               Har du spørgsmål? Kontakt os gerne på{" "}
-              <a href="mailto:info@phonespot.dk" style={linkStyle}>
-                info@phonespot.dk
-              </a>{" "}
+              <Link href={`mailto:${BRAND.email}`} style={linkStyle}>
+                {BRAND.email}
+              </Link>{" "}
               eller ring til os på{" "}
-              <a href="tel:71994848" style={linkStyle}>
-                71 99 48 48
-              </a>
+              <Link href="tel:+4561100048" style={linkStyle}>
+                {BRAND.phone}
+              </Link>
               .
             </Text>
           </Section>
 
           <Hr style={hrStyle} />
 
+          {/* USP section */}
+          <Section style={uspSectionStyle}>
+            <table width="100%" cellPadding={0} cellSpacing={0}>
+              <tbody>
+                <tr>
+                  {BRAND.usps.map((usp, i) => (
+                    <td key={i} style={uspCellStyle}>
+                      <span style={uspCheckStyle}>&#10003;</span>
+                      <span style={uspTextStyle}>{usp}</span>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          <Hr style={hrStyle} />
+
+          {/* Footer */}
           <Section style={footerStyle}>
-            <Text style={footerTextStyle}>
-              PhoneSpot | CVR: 38688766 | info@phonespot.dk | 71 99 48 48
+            <Text style={footerStoreNameStyle}>
+              {BRAND.store.name} &middot; {BRAND.store.address}
+            </Text>
+            <Text style={footerHoursStyle}>{BRAND.store.hours}</Text>
+            <Text style={footerContactStyle}>
+              <Link href="tel:+4561100048" style={footerPhoneLinkStyle}>
+                {BRAND.phone}
+              </Link>
+              {" · "}
+              <Link href={`mailto:${BRAND.email}`} style={footerEmailLinkStyle}>
+                {BRAND.email}
+              </Link>
+            </Text>
+            <Text style={footerSocialRowStyle}>
+              <Link href={BRAND.facebook} style={facebookBadgeStyle}>
+                &#xf; Facebook
+              </Link>
+              {"  "}
+              <Link href={BRAND.trustpilot} style={trustpilotBadgeStyle}>
+                &#9733; Trustpilot
+              </Link>
+            </Text>
+            <Text style={footerLegalStyle}>
+              PhoneSpot &middot; CVR: {BRAND.cvr}
+            </Text>
+            <Text style={footerUnsubStyle}>
+              Denne e-mail er sendt i forbindelse med din handel hos PhoneSpot.
+              Du kan kontakte os på{" "}
+              <Link href={`mailto:${BRAND.email}`} style={footerUnsubLinkStyle}>
+                {BRAND.email}
+              </Link>{" "}
+              for at afmelde transaktionsmails.
             </Text>
           </Section>
         </Container>
@@ -94,31 +183,74 @@ export default function ShippingConfirmationEmail({
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const bodyStyle = {
-  backgroundColor: "#f5f5f5",
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  backgroundColor: BRAND.warmWhite,
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   margin: "0",
   padding: "0",
 };
 
 const headerStyle = {
-  backgroundColor: "#22c55e",
-  padding: "20px 40px",
-};
-
-const headerTextStyle = {
-  color: "#ffffff",
-  fontSize: "24px",
-  fontWeight: "700",
-  margin: "0",
-  letterSpacing: "-0.5px",
+  backgroundColor: BRAND.green,
+  padding: "28px 40px",
+  textAlign: "center" as const,
 };
 
 const containerStyle = {
   backgroundColor: "#ffffff",
   maxWidth: "600px",
   margin: "0 auto",
+  borderRadius: "0 0 8px 8px",
 };
+
+// Progress bar
+
+const progressBarSectionStyle = {
+  backgroundColor: BRAND.sand,
+  padding: "12px 40px",
+};
+
+const progressStepDoneStyle = {
+  textAlign: "center" as const,
+  fontSize: "12px",
+  fontWeight: "700",
+  color: BRAND.green,
+  padding: "4px 0",
+};
+
+const progressStepActiveStyle = {
+  textAlign: "center" as const,
+  fontSize: "12px",
+  fontWeight: "700",
+  color: BRAND.green,
+  padding: "4px 0",
+};
+
+const progressStepPendingStyle = {
+  textAlign: "center" as const,
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#aaa",
+  padding: "4px 0",
+};
+
+const progressArrowStyle = {
+  textAlign: "center" as const,
+  fontSize: "14px",
+  color: "#aaa",
+  width: "24px",
+  padding: "0",
+};
+
+const progressCheckStyle = {
+  color: BRAND.green,
+  marginRight: "4px",
+};
+
+// Content
 
 const contentStyle = {
   padding: "32px 40px",
@@ -126,44 +258,58 @@ const contentStyle = {
 
 const greetingStyle = {
   fontSize: "16px",
-  color: "#374151",
-  margin: "0 0 8px 0",
+  color: BRAND.charcoal,
+  margin: "0 0 6px 0",
 };
 
 const headlineStyle = {
   fontSize: "22px",
   fontWeight: "700",
-  color: "#111827",
+  color: BRAND.charcoal,
   margin: "0 0 16px 0",
 };
 
 const paragraphStyle = {
   fontSize: "15px",
-  color: "#4b5563",
+  color: "#555",
   lineHeight: "1.6",
   margin: "0 0 16px 0",
 };
 
-const labelStyle = {
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#6b7280",
+// Tracking card
+
+const trackingCardStyle = {
+  borderRadius: "8px",
+  border: `1px solid ${BRAND.sand}`,
+  marginBottom: "24px",
+};
+
+const trackingCardInnerStyle = {
+  padding: "20px 24px",
+};
+
+const trackingLabelStyle = {
+  fontSize: "11px",
+  fontWeight: "700",
+  color: "#999",
   textTransform: "uppercase" as const,
-  letterSpacing: "0.05em",
+  letterSpacing: "0.07em",
   margin: "0 0 4px 0",
 };
 
 const trackingNumberStyle = {
-  fontSize: "18px",
+  fontSize: "20px",
   fontWeight: "700",
-  color: "#111827",
+  color: BRAND.charcoal,
   fontFamily: "monospace",
   margin: "0 0 16px 0",
+  letterSpacing: "0.05em",
 };
 
-const hrStyle = {
-  borderColor: "#e5e7eb",
-  margin: "24px 0",
+const trackingCarrierStyle = {
+  fontSize: "15px",
+  color: BRAND.charcoal,
+  margin: "0",
 };
 
 const buttonSectionStyle = {
@@ -172,28 +318,133 @@ const buttonSectionStyle = {
 };
 
 const buttonStyle = {
-  backgroundColor: "#22c55e",
+  backgroundColor: BRAND.green,
   color: "#ffffff",
-  padding: "12px 32px",
-  borderRadius: "6px",
+  padding: "14px 36px",
+  borderRadius: "8px",
   fontSize: "15px",
-  fontWeight: "600",
+  fontWeight: "700",
   textDecoration: "none",
   display: "inline-block",
+  letterSpacing: "0.2px",
+};
+
+const hrStyle = {
+  borderColor: BRAND.sand,
+  margin: "0",
 };
 
 const linkStyle = {
-  color: "#22c55e",
+  color: BRAND.green,
   textDecoration: "underline",
 };
 
-const footerStyle = {
-  padding: "16px 40px 24px",
+// USP section
+
+const uspSectionStyle = {
+  padding: "20px 40px",
 };
 
-const footerTextStyle = {
-  fontSize: "12px",
-  color: "#9ca3af",
+const uspCellStyle = {
   textAlign: "center" as const,
+  fontSize: "12px",
+  color: BRAND.charcoal,
+  padding: "0 8px",
+  verticalAlign: "top" as const,
+  whiteSpace: "nowrap" as const,
+};
+
+const uspCheckStyle = {
+  color: BRAND.greenLight,
+  fontSize: "15px",
+  fontWeight: "700",
+  marginRight: "4px",
+};
+
+const uspTextStyle = {
+  fontSize: "12px",
+  color: BRAND.charcoal,
+};
+
+// Footer
+
+const footerStyle = {
+  padding: "20px 40px 32px",
+  textAlign: "center" as const,
+};
+
+const footerStoreNameStyle = {
+  fontSize: "13px",
+  fontWeight: "600",
+  color: BRAND.charcoal,
+  margin: "0 0 2px 0",
+};
+
+const footerHoursStyle = {
+  fontSize: "12px",
+  color: "#888",
+  margin: "0 0 10px 0",
+};
+
+const footerContactStyle = {
+  fontSize: "13px",
+  color: "#888",
+  margin: "0 0 10px 0",
+};
+
+const footerPhoneLinkStyle = {
+  color: BRAND.charcoal,
+  textDecoration: "none",
+  fontWeight: "600",
+};
+
+const footerEmailLinkStyle = {
+  color: BRAND.greenLight,
+  textDecoration: "none",
+};
+
+const footerSocialRowStyle = {
+  fontSize: "12px",
+  margin: "0 0 12px 0",
+};
+
+const facebookBadgeStyle = {
+  display: "inline-block",
+  backgroundColor: "#1877F2",
+  color: "#ffffff",
+  borderRadius: "4px",
+  padding: "5px 10px",
+  fontSize: "12px",
+  fontWeight: "600",
+  textDecoration: "none",
+  marginRight: "6px",
+};
+
+const trustpilotBadgeStyle = {
+  display: "inline-block",
+  backgroundColor: "#00B67A",
+  color: "#ffffff",
+  borderRadius: "4px",
+  padding: "5px 10px",
+  fontSize: "12px",
+  fontWeight: "600",
+  textDecoration: "none",
+};
+
+const footerLegalStyle = {
+  fontSize: "11px",
+  color: "#aaa",
+  margin: "0 0 6px 0",
+};
+
+const footerUnsubStyle = {
+  fontSize: "11px",
+  color: "#bbb",
+  lineHeight: "1.5",
   margin: "0",
+};
+
+const footerUnsubLinkStyle = {
+  color: "#bbb",
+  textDecoration: "underline",
 };

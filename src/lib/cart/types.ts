@@ -13,6 +13,8 @@ export interface CartDeviceItem {
   image: string | null;
   price: number;
   reservedAt: string;
+  locationId?: string;
+  locationName?: string;
 }
 
 export interface CartSkuItem {

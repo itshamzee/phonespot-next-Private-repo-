@@ -171,8 +171,8 @@ export default function InvoiceEmail({
                 info@phonespot.dk
               </Link>{" "}
               eller ring på{" "}
-              <Link href="tel:71994848" style={linkStyle}>
-                71 99 48 48
+              <Link href="tel:61100048" style={linkStyle}>
+                61 10 00 48
               </Link>
               .
             </Text>

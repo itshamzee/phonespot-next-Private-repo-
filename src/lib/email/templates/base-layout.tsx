@@ -27,7 +27,7 @@ export default function BaseLayout({
     address: "VestsjællandsCentret 10",
     postal_city: "4200 Slagelse",
     phone: "+45 61 10 00 48",
-    email: "support@phonespot.dk",
+    email: "info@phonespot.dk",
     website: "https://phonespot.dk",
     logo_url: null,
   };

@@ -443,10 +443,10 @@ export function RepairCart({
                     key={category}
                     type="button"
                     onClick={() => toggleService(service.id)}
-                    className={`flex flex-col rounded-2xl border-2 p-5 text-left transition-all ${
+                    className={`group flex flex-col rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
                       isSelected
                         ? "border-green-eco bg-green-eco/[0.03] shadow-md shadow-green-eco/10"
-                        : "border-soft-grey bg-white hover:border-green-eco/20 hover:shadow-sm"
+                        : "border-soft-grey bg-white hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10 hover:-translate-y-0.5"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -457,8 +457,10 @@ export function RepairCart({
                       </div>
                       <div className="text-right">
                         <p className="font-display text-lg font-bold text-charcoal">{service.price_dkk} kr.</p>
-                        {isSelected && (
+                        {isSelected ? (
                           <span className="text-xs font-bold text-green-eco">Tilføjet ✓</span>
+                        ) : (
+                          <span className="text-xs font-bold text-green-eco opacity-0 transition-opacity duration-200 group-hover:opacity-100">+ Tilføj</span>
                         )}
                       </div>
                     </div>
@@ -478,7 +480,7 @@ export function RepairCart({
                       ? "border-green-eco shadow-md shadow-green-eco/10"
                       : hasSelection
                         ? "border-green-eco/50"
-                        : "border-soft-grey hover:border-green-eco/20 hover:shadow-sm"
+                        : "border-soft-grey hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10 hover:-translate-y-0.5"
                   }`}
                 >
                   {/* Header — always visible */}
@@ -529,10 +531,10 @@ export function RepairCart({
                             key={service.id}
                             type="button"
                             onClick={() => toggleService(service.id)}
-                            className={`flex w-full flex-col px-5 py-4 text-left transition-all ${
+                            className={`group flex w-full flex-col px-5 py-4 text-left transition-all duration-150 ${
                               isSelected
-                                ? "bg-green-eco/[0.04]"
-                                : "hover:bg-cream/50"
+                                ? "bg-green-eco/[0.06]"
+                                : "hover:bg-green-eco/[0.04]"
                             } ${i < items.length - 1 ? "border-b border-soft-grey/30" : ""}`}
                           >
                             <div className="flex items-center justify-between">
@@ -540,7 +542,10 @@ export function RepairCart({
                                 <span className="text-sm font-bold text-charcoal">{tierLabel}</span>
                                 <span className="ml-2 text-xs text-gray">{service.estimated_minutes ?? 30} MINUTTER</span>
                               </div>
-                              <span className="font-display text-lg font-bold text-charcoal">{service.price_dkk}<span className="text-sm font-bold text-charcoal/60">kr</span></span>
+                              <div className="flex items-center gap-2">
+                                {!isSelected && <span className="text-xs font-bold text-green-eco opacity-0 transition-opacity duration-150 group-hover:opacity-100">+ Tilføj</span>}
+                                <span className="font-display text-lg font-bold text-charcoal">{service.price_dkk}<span className="text-sm font-bold text-charcoal/60">kr</span></span>
+                              </div>
                             </div>
                             <p className="mt-1.5 text-sm leading-relaxed text-gray">
                               {service.info_note || (service.quality_tier === "original"

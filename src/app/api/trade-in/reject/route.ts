@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     try {
       await resend.emails.send({
         from: "PhoneSpot <noreply@phonespot.dk>",
-        to: "ha@phonespot.dk",
+        to: "info@phonespot.dk",
         subject: `Tilbud afvist: ${inquiry.name} \— ${metadata.device?.model || "enhed"}`,
         html: `<p>${inquiry.name} har afvist tilbuddet.</p>
 ${customer_response_note ? `<p>Kundens kommentar: ${customer_response_note}</p>` : ""}
