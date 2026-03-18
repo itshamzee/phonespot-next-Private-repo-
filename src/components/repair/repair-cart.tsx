@@ -237,11 +237,8 @@ export function RepairCart({
     error?: string;
   } | null>(null);
 
-  /* Price formatter respecting moms toggle */
-  const fmtPrice = (dkk: number) => {
-    const val = showExclMoms ? Math.round(dkk * 0.8) : dkk;
-    return val;
-  };
+  /* Price formatter respecting moms toggle (display only — actual payment always inkl. moms) */
+  const fmtPrice = (dkk: number) => showExclMoms ? Math.round(dkk * 0.8) : dkk;
 
   /* Derived values */
   const selectedServices = services.filter((s) => selectedIds.has(s.id));
@@ -400,7 +397,7 @@ export function RepairCart({
           {selectedServices.map((s) => (
             <div key={s.id} className="mt-1 flex justify-between text-gray">
               <span>{s.name}</span>
-              <span>{s.price_dkk} DKK</span>
+              <span>{fmtPrice(s.price_dkk)} DKK</span>
             </div>
           ))}
           {includesTemperedGlass && (
@@ -477,9 +474,12 @@ export function RepairCart({
               onClick={() => setShowExclMoms((v) => !v)}
               className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-3 py-1.5 text-xs font-semibold text-charcoal transition hover:border-charcoal/30"
             >
-              <span className={showExclMoms ? "text-gray" : "text-green-eco font-bold"}>Inkl. moms</span>
-              <span className="text-gray">/</span>
-              <span className={showExclMoms ? "text-green-eco font-bold" : "text-gray"}>Eksl. moms</span>
+              <span className={showExclMoms ? "text-gray" : "font-bold text-charcoal"}>Inkl. moms</span>
+              {/* Toggle track */}
+              <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${showExclMoms ? "bg-green-eco" : "bg-soft-grey"}`}>
+                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${showExclMoms ? "translate-x-4" : "translate-x-0.5"}`} />
+              </span>
+              <span className={showExclMoms ? "font-bold text-charcoal" : "text-gray"}>Eksl. moms</span>
             </button>
           </div>
 
@@ -521,7 +521,7 @@ export function RepairCart({
                         <p className="text-xs text-gray">ca. {service.estimated_minutes ?? 30} min</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display text-lg font-bold text-charcoal">{service.price_dkk} kr.</p>
+                        <p className="font-display text-lg font-bold text-charcoal">{fmtPrice(service.price_dkk)} kr.</p>
                         {isSelected ? (
                           <span className="text-xs font-bold text-green-eco">Tilføjet ✓</span>
                         ) : (
@@ -563,14 +563,14 @@ export function RepairCart({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="rounded bg-green-eco px-2 py-0.5 text-[10px] font-bold text-white">
-                        {hasSelection ? `${selectedInGroup[0].price_dkk}` : `priser fra`}
+                        {hasSelection ? `${fmtPrice(selectedInGroup[0].price_dkk)}` : `priser fra`}
                       </span>
                       <span className="font-display text-xl font-bold text-charcoal">
-                        {hasSelection ? "" : `${cheapest}`}
+                        {hasSelection ? "" : `${fmtPrice(cheapest)}`}
                       </span>
                       {hasSelection && (
                         <span className="font-display text-xl font-bold text-charcoal">
-                          {selectedInGroup[0].price_dkk}
+                          {fmtPrice(selectedInGroup[0].price_dkk)}
                         </span>
                       )}
                       <span className="text-sm font-bold text-charcoal/60">kr</span>
@@ -609,7 +609,7 @@ export function RepairCart({
                               </div>
                               <div className="flex items-center gap-2">
                                 {!isSelected && <span className="text-xs font-bold text-green-eco opacity-0 transition-opacity duration-150 group-hover:opacity-100">+ Tilføj</span>}
-                                <span className="font-display text-lg font-bold text-charcoal">{service.price_dkk}<span className="text-sm font-bold text-charcoal/60">kr</span></span>
+                                <span className="font-display text-lg font-bold text-charcoal">{fmtPrice(service.price_dkk)}<span className="text-sm font-bold text-charcoal/60">kr</span></span>
                               </div>
                             </div>
                             <p className="mt-1.5 text-sm leading-relaxed text-gray">
@@ -722,7 +722,7 @@ export function RepairCart({
                     <span className="text-charcoal">{s.name}</span>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-charcoal">
-                        {s.price_dkk} DKK
+                        {fmtPrice(s.price_dkk)} DKK
                       </span>
                       <button
                         type="button"
@@ -834,6 +834,7 @@ export function RepairCart({
               onBack={() => setShowBookingForm(false)}
               onSubmitNoPay={handleSubmitNoPay}
               onSubmitAndPay={handleSubmitAndPay}
+              showExclMoms={showExclMoms}
             />
           )}
         </div>
@@ -887,6 +888,7 @@ export function RepairCart({
             onBack={() => setShowBookingForm(false)}
             onSubmitNoPay={handleSubmitNoPay}
             onSubmitAndPay={handleSubmitAndPay}
+            showExclMoms={showExclMoms}
           />
         </div>
       )}
@@ -922,6 +924,7 @@ interface BookingFormProps {
   onBack: () => void;
   onSubmitNoPay: () => void;
   onSubmitAndPay: () => void;
+  showExclMoms: boolean;
 }
 
 function BookingForm({
@@ -946,7 +949,9 @@ function BookingForm({
   onBack,
   onSubmitNoPay,
   onSubmitAndPay,
+  showExclMoms,
 }: BookingFormProps) {
+  const fmtPrice = (dkk: number) => showExclMoms ? Math.round(dkk * 0.8) : dkk;
   const availableDates = getAvailableDates(6);
   const inputClass =
     "mt-1 w-full rounded-xl border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray/50 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20";
@@ -975,7 +980,7 @@ function BookingForm({
         {selectedServices.map((s) => (
           <div key={s.id} className="flex justify-between text-sm">
             <span className="text-charcoal">{s.name}</span>
-            <span className="font-bold">{s.price_dkk} DKK</span>
+            <span className="font-bold">{fmtPrice(s.price_dkk)} DKK</span>
           </div>
         ))}
         {includesTemperedGlass && (
@@ -1069,7 +1074,7 @@ function BookingForm({
         {/* Delivery method */}
         <div>
           <label className="text-sm font-bold text-charcoal">Hvordan vil du levere? *</label>
-          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-2 flex flex-col gap-2">
             {[
               { value: "Slagelse", label: "Aflever i Slagelse", desc: "VestsjællandsCentret 10", icon: "pin" },
               { value: "Vejle", label: "Aflever i Vejle", desc: "Åbner april 2026", icon: "pin" },
