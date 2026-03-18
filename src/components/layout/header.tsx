@@ -561,12 +561,6 @@ export function Header() {
               <Link href="/saelg-din-enhed" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
                 Sælg din enhed
               </Link>
-              <Link href="/reparation" className="inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-1.5 text-[13px] font-bold tracking-wide uppercase text-white transition-all hover:bg-green-eco/90 hover:shadow-md hover:shadow-green-eco/20">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
-                </svg>
-                Reparation
-              </Link>
               <NavDropdown label="Om PhoneSpot" items={OM_PHONESPOT_ITEMS} columns={2} />
               <Link href="/kontakt" className="text-[13px] font-semibold tracking-wide uppercase text-charcoal hover:text-green-eco transition-colors">
                 Kontakt
@@ -574,8 +568,8 @@ export function Header() {
             </nav>
 
             {/* Right side: actions */}
-            <div className="flex items-center gap-1.5 lg:gap-2">
-              {/* Phone number — desktop only */}
+            <div className="flex items-center gap-2 lg:gap-3">
+              {/* Phone number — xl only */}
               <a
                 href={`tel:${STORE.phone.replace(/\s/g, "")}`}
                 className="hidden xl:flex items-center gap-1.5 rounded-full border border-charcoal/10 px-3 py-1.5 text-[13px] font-semibold text-charcoal transition-all hover:border-green-eco/40 hover:text-green-eco"
@@ -586,6 +580,17 @@ export function Header() {
                 </svg>
                 {STORE.phone}
               </a>
+
+              {/* Reparation CTA button — desktop only */}
+              <Link
+                href="/reparation"
+                className="hidden lg:inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-1.5 text-[13px] font-bold tracking-wide uppercase text-white transition-all hover:bg-green-eco/90 hover:shadow-md hover:shadow-green-eco/20"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5 shrink-0">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.192-.14 1.743Z" />
+                </svg>
+                Reparation
+              </Link>
 
               {/* Search */}
               <button
