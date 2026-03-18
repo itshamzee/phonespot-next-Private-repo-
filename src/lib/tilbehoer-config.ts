@@ -9,6 +9,9 @@ export interface TilbehoerCategory {
   label: string;
   description: string;
   deviceSpecific: boolean;
+  icon: string;           // emoji for category card
+  heroDescription: string; // 1-2 sentence hero subtext
+  faq: { q: string; a: string }[]; // 3 FAQ items
 }
 
 export type DeviceBrand = "apple" | "samsung" | "oneplus" | "huawei" | "google";
@@ -41,36 +44,132 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Covers & Cases",
     description: "Beskyt din enhed med stilfulde covers og cases.",
     deviceSpecific: true,
+    icon: "📱",
+    heroDescription: "Find det perfekte cover til din model — TPU, hardcase og MagSafe-kompatible varianter til alle populære telefoner.",
+    faq: [
+      {
+        q: "Hvad er forskellen på TPU og hardcase?",
+        a: "TPU covers er bløde og absorberer stød bedre. Hardcases er stivere og giver mere kantbeskyttelse. Vi anbefaler TPU til daglig brug og hybrid-cases til maksimal beskyttelse.",
+      },
+      {
+        q: "Passer et cover til iPhone 15 på iPhone 15 Pro?",
+        a: "Nej — iPhone 15 og 15 Pro har forskellig kamerahul-placering og knap-layout. Vælg altid cover der er specifikt til din model.",
+      },
+      {
+        q: "Understøtter coverene MagSafe?",
+        a: "Vores MagSafe-kompatible covers er mærket med 'MagSafe' og har den nødvendige magnet-ring. Tjek produktbeskrivelsen for din model.",
+      },
+    ],
   },
   {
     slug: "skaermbeskyttelse",
     label: "Skærmbeskyttelse",
     description: "Panserglas og screen protectors til alle enheder.",
     deviceSpecific: true,
+    icon: "🛡️",
+    heroDescription: "Hærdet panserglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
+    faq: [
+      {
+        q: "Hvad er forskellen på hærdet glas og plastfolie?",
+        a: "Hærdet glas (panserglas) er hårdere, skraber ikke og giver en skarpere touchfornemmelse. Plastfolie er tyndere og billigere men slides hurtigere.",
+      },
+      {
+        q: "Dækker skærmbeskyttelsen hele skærmen?",
+        a: "Edge-to-edge modeller dækker hele skærmen inkl. kanter. Tjek om din model er kompatibel med edge-to-edge eller flat-skærm-variant.",
+      },
+      {
+        q: "Kan jeg sætte panserglas på med cover på?",
+        a: "Ja, de fleste panserglas-modeller er designet til at fungere med tynde covers. Tjek produktets kompatibilitets-noter.",
+      },
+    ],
   },
   {
     slug: "opladere",
     label: "Kabler & Opladere",
     description: "Lightning, USB-C, trådløs opladning og kabler.",
     deviceSpecific: false,
+    icon: "⚡",
+    heroDescription: "Hurtigopladere, USB-C kabler og trådløse opladere til iPhone, Samsung og alle Android-modeller.",
+    faq: [
+      {
+        q: "Hvad er forskellen på USB-C og Lightning?",
+        a: "iPhone 15 og nyere bruger USB-C. Ældre iPhones (14 og tidligere) bruger Lightning. Samsung og de fleste Android-telefoner bruger USB-C.",
+      },
+      {
+        q: "Hvad er hurtigopladning og har jeg brug for det?",
+        a: "Hurtigopladning (f.eks. 20W, 45W eller 65W) lader din telefon markant hurtigere end standard 5W. Din telefon skal understøtte hurtigopladning for at drage nytte af det.",
+      },
+      {
+        q: "Virker trådløs opladning med alle telefoner?",
+        a: "Trådløs opladning (Qi-standard) virker med alle iPhones fra iPhone 8 og frem samt de fleste Samsung Galaxy-modeller fra 2018 og frem.",
+      },
+    ],
   },
   {
     slug: "lyd",
     label: "Lyd & Høretelefoner",
     description: "Earbuds, headsets og højttalere til alle enheder.",
     deviceSpecific: false,
+    icon: "🎧",
+    heroDescription: "Trådløse earbuds, over-ear headphones og Bluetooth højttalere — til hjemmet, kontoret og på farten.",
+    faq: [
+      {
+        q: "Hvad er forskellen på in-ear og on-ear høretelefoner?",
+        a: "In-ear (earbuds) sidder i øregangen og er kompakte til sport og pendling. On-ear/over-ear giver typisk bedre lydkvalitet og er bedre til hjemmebrug og kontoret.",
+      },
+      {
+        q: "Understøtter alle earbuds noise cancelling?",
+        a: "Nej — aktiv støjreduktion (ANC) er en premium-funktion. Tjek produktspecifikationerne for ANC hvis det er vigtigt for dig.",
+      },
+      {
+        q: "Virker trådløse earbuds med alle telefoner?",
+        a: "Ja, alle Bluetooth earbuds virker med iPhone, Samsung og Android-telefoner. Apple AirPods giver dog ekstra funktioner (Siri, automatisk pausering) med iPhone.",
+      },
+    ],
   },
   {
     slug: "holdere",
     label: "Holdere & Mounts",
     description: "Bilholdere, stander og mounts til din enhed.",
     deviceSpecific: false,
+    icon: "🚗",
+    heroDescription: "Bilholdere, skrivebords-standere og MagSafe mounts — hold din telefon stabilt og tilgængeligt.",
+    faq: [
+      {
+        q: "Hvad er den bedste bilholder til min telefon?",
+        a: "Det afhænger af din bil. Ventilationsholere passer til de fleste biler og er nemme at montere. Magnetiske holdere kræver en metalplate bag coverret men er hurtige at sætte telefonen i.",
+      },
+      {
+        q: "Er MagSafe bilholdere bedre end klips-holdere?",
+        a: "MagSafe-holdere (til iPhone 12 og nyere) sidder solidt og er meget nemme at bruge med én hånd. Klips-holdere virker med alle telefoner uanset model.",
+      },
+      {
+        q: "Virker skrivebords-standere med alle telefoner?",
+        a: "Ja, justerbare standere passer til alle telefonstørrelser fra 4\" til 7\". Tjek at stativets bredde passer til din telefons bredde.",
+      },
+    ],
   },
   {
     slug: "outlet",
     label: "Outlet",
     description: "Ekstra skarpe priser på udvalgte tilbehør. Begrænset antal.",
     deviceSpecific: false,
+    icon: "🏷️",
+    heroDescription: "Overskydende lager og kampagnevarer til ekstra skarpe priser. Begrænset antal — køb mens lager haves.",
+    faq: [
+      {
+        q: "Hvad er outlet-varer?",
+        a: "Outlet-varer er nye produkter fra overskydende lager eller kampagner. De er i perfekt stand og leveres med samme garanti som resten af vores sortiment.",
+      },
+      {
+        q: "Kan jeg returnere outlet-varer?",
+        a: "Ja — alle vores produkter inkl. outlet-varer er dækket af 14 dages returret i henhold til dansk forbrugerret.",
+      },
+      {
+        q: "Skiftes outlet-sortimentet?",
+        a: "Ja, vi opdaterer løbende outlet-sortimentet. Tilmeld dig vores nyhedsbrev for at få besked når nye tilbud er tilgængelige.",
+      },
+    ],
   },
 ];
 
