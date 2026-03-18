@@ -954,7 +954,7 @@ export function BookingWizard() {
               {activeDevice.modelId && (
                 <div className="flex flex-col gap-3">
                   <label className={labelStyles}>
-                    Farve <span className="font-normal text-gray">(valgfrit)</span>
+                    Hvilken farve har din enhed?
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {DEVICE_COLORS.map((c) => {
@@ -1660,14 +1660,43 @@ export function BookingWizard() {
               <div className="h-px flex-1 bg-soft-grey" />
             </div>
 
-            <button
-              type="button"
-              onClick={handleSubmitNoPay}
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-soft-grey bg-white px-8 py-4 text-base font-bold text-charcoal transition-all hover:border-green-eco/30 hover:bg-sand disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Betal i butikken
-            </button>
+            {/* Betal i butikken — with store info */}
+            <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-eco/10">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5 text-green-eco">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="font-display text-sm font-bold text-charcoal">Aflever i butikken</p>
+                  <p className="mt-0.5 text-xs text-gray">VestsjællandsCentret 10, 4200 Slagelse</p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray">
+                    <span className="flex items-center gap-1">
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z" clipRule="evenodd" /></svg>
+                      Man-Fre 10-19 · Lør-Søn 10-17
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" /></svg>
+                      61 10 00 48
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSubmitNoPay}
+                disabled={isSubmitting}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-charcoal bg-charcoal px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-charcoal/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? "Sender..." : "Book og betal i butikken"}
+              </button>
+              <p className="mt-2 text-center text-xs text-gray">
+                Ingen betaling nu — du betaler når du afhenter din enhed
+              </p>
+            </div>
           </div>
 
           {/* Back button */}
