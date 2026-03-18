@@ -19,6 +19,19 @@ const STEPS = [
 
 const TEMPERED_GLASS_PRICE = 99;
 
+const DEVICE_COLORS = [
+  { name: "Sort", hex: "#1c1c1e" },
+  { name: "Hvid", hex: "#f2f2f0", border: true },
+  { name: "Sølv", hex: "#c8c8cc" },
+  { name: "Guld", hex: "#d4af6e" },
+  { name: "Blå", hex: "#4a7fc1" },
+  { name: "Lilla", hex: "#8e6abf" },
+  { name: "Grøn", hex: "#3a8c5e" },
+  { name: "Rød", hex: "#d94040" },
+  { name: "Titan", hex: "#5a5a60" },
+  { name: "Gul", hex: "#e0c040" },
+];
+
 /* ------------------------------------------------------------------ */
 /*  Utility functions                                                  */
 /* ------------------------------------------------------------------ */
@@ -60,6 +73,7 @@ interface DeviceBooking {
   id: string;
   brandId: string;
   modelId: string;
+  color: string;
   serviceIds: Set<string>;
   includesTemperedGlass: boolean;
 }
@@ -344,6 +358,7 @@ export function BookingWizard() {
       id: crypto.randomUUID(),
       brandId: "",
       modelId: "",
+      color: "",
       serviceIds: new Set(),
       includesTemperedGlass: false,
     },
@@ -557,6 +572,12 @@ export function BookingWizard() {
     [fetchServicesForDevice],
   );
 
+  const updateDeviceColor = useCallback((deviceId: string, color: string) => {
+    setDeviceBookings((prev) =>
+      prev.map((b) => (b.id === deviceId ? { ...b, color } : b)),
+    );
+  }, []);
+
   const toggleServiceForDevice = useCallback((deviceId: string, serviceId: string) => {
     setDeviceBookings((prev) =>
       prev.map((b) => {
@@ -584,6 +605,7 @@ export function BookingWizard() {
       id: crypto.randomUUID(),
       brandId: "",
       modelId: "",
+      color: "",
       serviceIds: new Set(),
       includesTemperedGlass: false,
     };
@@ -928,6 +950,43 @@ export function BookingWizard() {
                 )}
               </div>
 
+              {/* Color selector */}
+              {activeDevice.modelId && (
+                <div className="flex flex-col gap-3">
+                  <label className={labelStyles}>
+                    Farve <span className="font-normal text-gray">(valgfrit)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DEVICE_COLORS.map((c) => {
+                      const isSelected = activeDevice.color === c.name;
+                      return (
+                        <button
+                          key={c.name}
+                          type="button"
+                          title={c.name}
+                          onClick={() => updateDeviceColor(activeDevice.id, isSelected ? "" : c.name)}
+                          className={`flex items-center gap-2 rounded-full border-2 py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-all ${
+                            isSelected
+                              ? "border-charcoal bg-charcoal text-white"
+                              : "border-soft-grey bg-white text-charcoal hover:border-charcoal/30"
+                          }`}
+                        >
+                          <span
+                            className="h-5 w-5 shrink-0 rounded-full"
+                            style={{
+                              background: c.hex,
+                              border: c.border ? "1px solid #d1d5db" : undefined,
+                              boxShadow: isSelected ? "0 0 0 2px white, 0 0 0 3px #1c1c1e" : undefined,
+                            }}
+                          />
+                          {c.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Incomplete devices warning */}
               {deviceBookings.length > 1 && !canGoNext && (
                 <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -948,6 +1007,8 @@ export function BookingWizard() {
 
       {/* ---- Step 2: Reparation ---- */}
       {step === 1 && (
+        <div className="md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
+        {/* Left column: service list */}
         <div className="space-y-6">
           <div>
             <h2 className="font-display text-xl font-bold text-charcoal">Tilføj reparationer til booking</h2>
@@ -1179,6 +1240,117 @@ export function BookingWizard() {
               Alle enheder skal have mindst én reparation valgt.
             </div>
           )}
+        </div>{/* end left column */}
+
+        {/* Right column: sticky Oversigt sidebar (desktop only) */}
+        <div className="hidden md:block">
+          <div className="sticky top-4 overflow-hidden rounded-2xl border border-charcoal/10 bg-charcoal text-white shadow-lg">
+            {/* Header */}
+            <div className="bg-green-eco px-5 py-3">
+              <div className="flex items-center gap-2">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-white">
+                  <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-bold text-white">Du booker her</span>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Device(s) */}
+              {deviceBookings.map((booking) => {
+                const brand = brands.find((b) => b.id === booking.brandId);
+                const models = modelsMap.get(booking.id) ?? [];
+                const model = models.find((m) => m.id === booking.modelId);
+                const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
+                  booking.serviceIds.has(s.id),
+                );
+                const colorDot = DEVICE_COLORS.find((c) => c.name === booking.color);
+                return (
+                  <div key={booking.id} className="space-y-2">
+                    {/* Device label */}
+                    <div className="flex items-center gap-2">
+                      {colorDot && (
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-full border border-white/20"
+                          style={{ background: colorDot.hex }}
+                        />
+                      )}
+                      <p className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                        {brand?.name ?? "—"} {model?.name ?? ""}
+                        {booking.color ? ` · ${booking.color}` : ""}
+                      </p>
+                    </div>
+                    {/* Services */}
+                    {deviceServices.length === 0 && !booking.includesTemperedGlass ? (
+                      <p className="text-xs text-white/40 italic">Ingen valgt endnu</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {deviceServices.map((s) => (
+                          <div key={s.id} className="flex justify-between text-sm">
+                            <span className="text-white/80">{s.name}</span>
+                            <span className="font-bold text-white">{s.price_dkk} kr</span>
+                          </div>
+                        ))}
+                        {booking.includesTemperedGlass && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/80">Panserglas</span>
+                            <span className="font-bold text-white">99 kr</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Divider */}
+              <div className="border-t border-white/10" />
+
+              {/* Discount */}
+              {discountPercent > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
+                    -{discountPercent}% rabat
+                  </span>
+                  <span className="text-white/50 line-through">{subtotal} kr</span>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-bold text-white/60">Total</span>
+                <span className="font-display text-2xl font-bold text-white">
+                  {totalPrice > 0 ? `${totalPrice} kr` : "—"}
+                </span>
+              </div>
+              {totalPrice > 0 && (
+                <p className="text-[11px] text-white/40">Inkl. moms & livstidsgaranti</p>
+              )}
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!canGoNext}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-eco py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Fortsæt
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+                  <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {/* Trust */}
+              <div className="flex items-center gap-1.5 justify-center">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-green-eco">
+                  <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
+                </svg>
+                <span className="text-[11px] text-white/50">Livstidsgaranti på alle reparationer</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         </div>
       )}
 
