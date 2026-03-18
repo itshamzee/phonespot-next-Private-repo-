@@ -194,6 +194,19 @@ function ServiceIcon({ slug }: { slug: string }) {
 /*  Main component                                                      */
 /* ------------------------------------------------------------------ */
 
+const DEVICE_COLORS = [
+  { name: "Sort", hex: "#1c1c1e" },
+  { name: "Hvid", hex: "#f2f2f0", border: true },
+  { name: "Sølv", hex: "#c8c8cc" },
+  { name: "Guld", hex: "#d4af6e" },
+  { name: "Blå", hex: "#4a7fc1" },
+  { name: "Lilla", hex: "#8e6abf" },
+  { name: "Grøn", hex: "#3a8c5e" },
+  { name: "Rød", hex: "#d94040" },
+  { name: "Titan", hex: "#5a5a60" },
+  { name: "Gul", hex: "#e0c040" },
+];
+
 export function RepairCart({
   services,
   brandName,
@@ -204,6 +217,8 @@ export function RepairCart({
   const [includesTemperedGlass, setIncludesTemperedGlass] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [showExclMoms, setShowExclMoms] = useState(false);
 
   /* Booking form state */
   const [customer, setCustomer] = useState({
@@ -221,6 +236,12 @@ export function RepairCart({
     ticketId?: string;
     error?: string;
   } | null>(null);
+
+  /* Price formatter respecting moms toggle */
+  const fmtPrice = (dkk: number) => {
+    const val = showExclMoms ? Math.round(dkk * 0.8) : dkk;
+    return val;
+  };
 
   /* Derived values */
   const selectedServices = services.filter((s) => selectedIds.has(s.id));
@@ -278,6 +299,7 @@ export function RepairCart({
     customer_phone: customer.phone.trim(),
     device_type: brandName,
     device_model: modelName,
+    device_color: selectedColor || undefined,
     issue_description: customer.description.trim() || `Booking via ${modelName} prisside`,
     service_type: selectedServices.map((s) => s.name).join(", "),
     selected_services: selectedServices.map((s) => ({
@@ -410,12 +432,55 @@ export function RepairCart({
         {/* LEFT COLUMN — service list                                   */}
         {/* ============================================================ */}
         <div>
-          {/* Section header */}
+          {/* Color selector */}
+          <div className="mb-6">
+            <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[2px] text-charcoal/50">
+              Vælg farve
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {DEVICE_COLORS.map((c) => {
+                const isSelected = selectedColor === c.name;
+                return (
+                  <button
+                    key={c.name}
+                    type="button"
+                    title={c.name}
+                    onClick={() => setSelectedColor(isSelected ? "" : c.name)}
+                    className={`flex items-center gap-2 rounded-full border-2 py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-all ${
+                      isSelected
+                        ? "border-charcoal bg-charcoal text-white"
+                        : "border-soft-grey bg-white text-charcoal hover:border-charcoal/30"
+                    }`}
+                  >
+                    <span
+                      className="h-5 w-5 shrink-0 rounded-full"
+                      style={{
+                        background: c.hex,
+                        border: c.border ? "1px solid #d1d5db" : undefined,
+                        boxShadow: isSelected ? "0 0 0 2px white, 0 0 0 3px #1c1c1e" : undefined,
+                      }}
+                    />
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section header with moms toggle */}
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold uppercase tracking-[2px] text-charcoal/50">
-              Prisliste
-            </h2>
-            <span className="text-xs text-gray">Alle priser inkl. moms</span>
+            <h3 className="font-display text-sm font-bold uppercase tracking-[2px] text-charcoal/50">
+              Vælg reparation
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowExclMoms((v) => !v)}
+              className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-3 py-1.5 text-xs font-semibold text-charcoal transition hover:border-charcoal/30"
+            >
+              <span className={showExclMoms ? "text-gray" : "text-green-eco font-bold"}>Inkl. moms</span>
+              <span className="text-gray">/</span>
+              <span className={showExclMoms ? "text-green-eco font-bold" : "text-gray"}>Eksl. moms</span>
+            </button>
           </div>
 
           {/* Services — 2-column card grid, 1 card per category */}
@@ -612,8 +677,9 @@ export function RepairCart({
           {selectedIds.size === 0 && !showBookingForm && (
             <div className="sticky top-24 rounded-2xl border border-soft-grey bg-white p-6">
               <h3 className="font-display text-base font-bold text-charcoal">
-                Din reparation
+                Oversigt
               </h3>
+              <p className="mt-1 text-xs text-gray">{brandName} {modelName}{selectedColor ? ` · ${selectedColor}` : ""}</p>
               <p className="mt-3 text-sm text-gray">
                 Vælg en eller flere reparationer fra listen for at se pris og booke.
               </p>
@@ -643,8 +709,9 @@ export function RepairCart({
           {selectedIds.size > 0 && !showBookingForm && (
             <div className="sticky top-24 rounded-2xl border border-soft-grey bg-white p-6 shadow-sm">
               <h3 className="font-display text-base font-bold text-charcoal">
-                Din reparation
+                Oversigt
               </h3>
+              <p className="mt-1 text-xs text-gray">{brandName} {modelName}{selectedColor ? ` · ${selectedColor}` : ""}</p>
 
               <div className="mt-4 space-y-2">
                 {selectedServices.map((s) => (
@@ -1002,26 +1069,35 @@ function BookingForm({
         {/* Delivery method */}
         <div>
           <label className="text-sm font-bold text-charcoal">Hvordan vil du levere? *</label>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
-              { value: "Slagelse", label: "Aflever i Slagelse", desc: "Vestsjællandscentret" },
-              { value: "Vejle", label: "Aflever i Vejle", desc: "Åbner april 2026" },
-              { value: "Send ind", label: "Send ind", desc: "Gratis forsendelse" },
+              { value: "Slagelse", label: "Aflever i Slagelse", desc: "VestsjællandsCentret 10", icon: "pin" },
+              { value: "Vejle", label: "Aflever i Vejle", desc: "Åbner april 2026", icon: "pin" },
+              { value: "Send ind", label: "Send ind", desc: "Gratis forsendelse", icon: "truck" },
             ].map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setDeliveryMethod(opt.value)}
-                className={`rounded-xl border-2 p-3 text-left transition-all ${
+                className={`flex items-start gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all ${
                   deliveryMethod === opt.value
                     ? "border-green-eco bg-green-eco/5"
                     : "border-soft-grey hover:border-green-eco/30"
                 }`}
               >
-                <p className={`text-sm font-bold ${deliveryMethod === opt.value ? "text-green-eco" : "text-charcoal"}`}>
-                  {opt.label}
-                </p>
-                <p className="text-[11px] text-gray">{opt.desc}</p>
+                <span className={`mt-0.5 shrink-0 ${deliveryMethod === opt.value ? "text-green-eco" : "text-gray"}`}>
+                  {opt.icon === "pin" ? (
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5"><path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.274 1.765 11.604 11.604 0 00.757.433l.04.021.01.006.004.002zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5"><path d="M6.5 3c-1.051 0-2.093.04-3.125.117A1.49 1.49 0 002 4.607V10.5h-.5a.5.5 0 000 1H2v2.257a1.49 1.49 0 001.375 1.49A41.7 41.7 0 006.5 15.5c1.051 0 2.093-.04 3.125-.117A1.49 1.49 0 0011 13.893V11.5h1.256a1.5 1.5 0 001.32-.776l1.162-2.164c.201-.374.212-.825.03-1.21A1.203 1.203 0 0013.756 6.5H11V4.607a1.49 1.49 0 00-1.375-1.49A41.7 41.7 0 006.5 3zM16 10h.5a.5.5 0 010 1H16v2.257a3.49 3.49 0 01-1 2.464V17.5a.5.5 0 01-1 0v-1.07a42.19 42.19 0 01-3-.193V17.5a.5.5 0 01-1 0V16.1a42.19 42.19 0 01-3 .193V17.5a.5.5 0 01-1 0v-1.779a3.49 3.49 0 01-1-2.464V11h-.5a.5.5 0 010-1H5V4.607a3.49 3.49 0 011-2.464V.5a.5.5 0 011 0v1.07c.97-.067 1.983-.1 3-.1s2.03.033 3 .1V.5a.5.5 0 011 0v1.643a3.49 3.49 0 011 2.464V10z" /></svg>
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold leading-tight ${deliveryMethod === opt.value ? "text-green-eco" : "text-charcoal"}`}>
+                    {opt.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-tight text-gray">{opt.desc}</p>
+                </div>
               </button>
             ))}
           </div>
