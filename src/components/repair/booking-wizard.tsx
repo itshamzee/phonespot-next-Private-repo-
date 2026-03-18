@@ -950,9 +950,9 @@ export function BookingWizard() {
       {step === 1 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">Vælg reparation</h2>
+            <h2 className="font-display text-xl font-bold text-charcoal">Tilføj reparationer til booking</h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg reparationer for hver enhed. Flere reparationer = større rabat!
+              Vælg de reparationer du ønsker — alt er inkl. moms og livstidsgaranti. Flere reparationer = større rabat!
             </p>
           </div>
 
@@ -993,6 +993,9 @@ export function BookingWizard() {
                 </p>
               ) : (
                 <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray/70">
+                    Klik på en reparation for at føje den til din booking
+                  </p>
                   {activeServices.map((s) => {
                     const isChecked = activeDevice.serviceIds.has(s.id);
                     return (
@@ -1000,18 +1003,18 @@ export function BookingWizard() {
                         type="button"
                         key={s.id}
                         onClick={() => toggleServiceForDevice(activeDevice.id, s.id)}
-                        className={`flex w-full cursor-pointer items-center justify-between rounded-xl border-2 p-4 text-left transition-all ${
+                        className={`group flex w-full cursor-pointer items-center justify-between rounded-xl border-2 p-4 text-left transition-all duration-150 ${
                           isChecked
                             ? "border-green-eco bg-green-eco/5 shadow-sm"
-                            : "border-soft-grey hover:border-green-eco/30"
+                            : "border-soft-grey hover:border-green-eco/40 hover:bg-green-eco/[0.03] hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
                               isChecked
                                 ? "border-green-eco bg-green-eco text-white"
-                                : "border-soft-grey"
+                                : "border-soft-grey group-hover:border-green-eco/50"
                             }`}
                           >
                             {isChecked && (
@@ -1033,7 +1036,26 @@ export function BookingWizard() {
                             )}
                           </div>
                         </div>
-                        <span className="font-display font-bold text-charcoal">{s.price_dkk} DKK</span>
+                        <div className="flex items-center gap-3">
+                          <span className={`font-display font-bold ${isChecked ? "text-green-eco" : "text-charcoal"}`}>
+                            {s.price_dkk} DKK
+                          </span>
+                          {isChecked ? (
+                            <span className="flex items-center gap-1 rounded-full bg-green-eco px-2.5 py-1 text-xs font-bold text-white">
+                              <svg viewBox="0 0 12 12" fill="currentColor" className="h-2.5 w-2.5">
+                                <path fillRule="evenodd" d="M10.28 2.28a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06 0l-2.5-2.5a.75.75 0 0 1 1.06-1.06L4.25 7.19l4.97-4.91a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                              </svg>
+                              Tilføjet
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 rounded-full border border-green-eco/30 px-2.5 py-1 text-xs font-bold text-green-eco opacity-0 transition-opacity group-hover:opacity-100">
+                              <svg viewBox="0 0 12 12" fill="currentColor" className="h-2.5 w-2.5">
+                                <path d="M6.75 2.75a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" />
+                              </svg>
+                              Tilføj
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
