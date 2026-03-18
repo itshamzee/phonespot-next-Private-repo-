@@ -138,12 +138,17 @@ function SkeletonCard() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function AccessoryGrid() {
+interface AccessoryGridProps {
+  externalModel?: string;
+  initialCategory?: string;
+}
+
+export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridProps = {}) {
   const [filters, setFilters] = useState<Filters>({
     search: "",
-    category: "",
+    category: initialCategory ?? "",
     brand: "",
-    model: "",
+    model: externalModel ?? "",
     inStore: false,
   });
   const [products, setProducts] = useState<Accessory[]>([]);
@@ -152,6 +157,13 @@ export function AccessoryGrid() {
 
   const debouncedSearch = useDebounce(filters.search, 350);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Sync external model prop changes
+  useEffect(() => {
+    if (externalModel !== undefined) {
+      setFilter("model", externalModel);
+    }
+  }, [externalModel]);
 
   // Derive available brand list from currently loaded products before brand filter
   const availableBrands = useMemo(() => {
@@ -219,52 +231,54 @@ export function AccessoryGrid() {
 
   return (
     <div className="space-y-6">
-      {/* Model filter — prominent */}
-      <div className="rounded-2xl border border-sand bg-cream p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-charcoal/50">
-          Find tilbehør til din mobil
-        </p>
-        <div className="relative mb-3">
-          <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4 text-charcoal/40">
-              <rect x="7" y="2" width="10" height="20" rx="2" />
-              <circle cx="12" cy="18" r="1" />
-            </svg>
-          </div>
-          <input
-            type="search"
-            value={filters.model}
-            onChange={(e) => setFilter("model", e.target.value)}
-            placeholder="F.eks. iPhone 15 eller Samsung S24..."
-            className="w-full rounded-full border border-sand bg-white py-2.5 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
-          />
-          {filters.model && (
-            <button
-              onClick={() => setFilter("model", "")}
-              className="absolute inset-y-0 right-3 flex items-center px-1 text-charcoal/30 hover:text-charcoal"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      {/* Model filter — only shown when no external picker */}
+      {externalModel === undefined && (
+        <div className="rounded-2xl border border-sand bg-cream p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-charcoal/50">
+            Find tilbehør til din mobil
+          </p>
+          <div className="relative mb-3">
+            <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4 text-charcoal/40">
+                <rect x="7" y="2" width="10" height="20" rx="2" />
+                <circle cx="12" cy="18" r="1" />
               </svg>
-            </button>
-          )}
+            </div>
+            <input
+              type="search"
+              value={filters.model}
+              onChange={(e) => setFilter("model", e.target.value)}
+              placeholder="F.eks. iPhone 15 eller Samsung S24..."
+              className="w-full rounded-full border border-sand bg-white py-2.5 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
+            />
+            {filters.model && (
+              <button
+                onClick={() => setFilter("model", "")}
+                className="absolute inset-y-0 right-3 flex items-center px-1 text-charcoal/30 hover:text-charcoal"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_MODELS.map((m) => (
+              <button
+                key={m}
+                onClick={() => setFilter("model", filters.model === m ? "" : m)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  filters.model === m
+                    ? "bg-charcoal text-white"
+                    : "bg-white border border-sand text-charcoal hover:border-charcoal/30"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {POPULAR_MODELS.map((m) => (
-            <button
-              key={m}
-              onClick={() => setFilter("model", filters.model === m ? "" : m)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                filters.model === m
-                  ? "bg-charcoal text-white"
-                  : "bg-white border border-sand text-charcoal hover:border-charcoal/30"
-              }`}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Top bar: search + store toggle */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -350,7 +364,9 @@ export function AccessoryGrid() {
         <p className="text-sm text-charcoal/50">
           {products.length === 0
             ? "Ingen produkter"
-            : `${products.length} produkt${products.length !== 1 ? "er" : ""}`}
+            : externalModel
+              ? `${products.length} produkt${products.length !== 1 ? "er" : ""} til ${externalModel}`
+              : `${products.length} produkt${products.length !== 1 ? "er" : ""}`}
         </p>
       )}
 
