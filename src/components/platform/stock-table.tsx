@@ -63,6 +63,7 @@ const STATUS_BADGE: Record<string, string> = {
   shipped: "bg-sky-100 text-sky-700 border-sky-200",
   picked_up: "bg-teal-100 text-teal-700 border-teal-200",
   returned: "bg-red-100 text-red-700 border-red-200",
+  archived: "bg-stone-200 text-stone-500 border-stone-300",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -74,6 +75,7 @@ const STATUS_LABELS: Record<string, string> = {
   shipped: "Sendt",
   picked_up: "Afhentet",
   returned: "Returneret",
+  archived: "Arkiveret",
 };
 
 export function StockTable({ filters }: StockTableProps) {
@@ -445,6 +447,30 @@ export function StockTable({ filters }: StockTableProps) {
                           {updatingId === device.id ? (
                             <span className="h-3 w-3 animate-spin rounded-full border border-green-700/30 border-t-green-700 inline-block" />
                           ) : "Til salg"}
+                        </button>
+                      )}
+                      {device.status === "listed" && (
+                        <button
+                          type="button"
+                          disabled={updatingId === device.id}
+                          onClick={() => quickStatusChange(device.id, "archived")}
+                          className="rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 disabled:opacity-40"
+                        >
+                          {updatingId === device.id ? (
+                            <span className="h-3 w-3 animate-spin rounded-full border border-stone-500/30 border-t-stone-500 inline-block" />
+                          ) : "Arkiver"}
+                        </button>
+                      )}
+                      {device.status === "archived" && (
+                        <button
+                          type="button"
+                          disabled={updatingId === device.id}
+                          onClick={() => quickStatusChange(device.id, "listed")}
+                          className="rounded-lg bg-green-eco/10 px-2.5 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-eco/20 disabled:opacity-40"
+                        >
+                          {updatingId === device.id ? (
+                            <span className="h-3 w-3 animate-spin rounded-full border border-green-700/30 border-t-green-700 inline-block" />
+                          ) : "Aktiver"}
                         </button>
                       )}
                       <button

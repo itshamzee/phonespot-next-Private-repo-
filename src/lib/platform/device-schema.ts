@@ -27,7 +27,7 @@ export const deviceUpdateSchema = z.object({
   battery_health: z.number().int().min(0).max(100).optional(),
   condition_notes: z.string().optional(),
   selling_price: z.number().int().positive().optional(),
-  status: z.enum(["intake", "graded", "listed", "reserved", "sold", "shipped", "picked_up", "returned"]).optional(),
+  status: z.enum(["intake", "graded", "listed", "reserved", "sold", "shipped", "picked_up", "returned", "archived"]).optional(),
   location_id: z.string().uuid().optional(),
 });
 

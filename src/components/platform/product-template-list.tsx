@@ -16,6 +16,7 @@ export function ProductTemplateList({ onEdit }: Props) {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/platform/templates")
@@ -46,6 +47,27 @@ export function ProductTemplateList({ onEdit }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function togglePublishStatus(template: ProductTemplate) {
+    const newStatus = template.status === "published" ? "draft" : "published";
+    setTogglingId(template.id);
+    try {
+      const res = await fetch(`/api/platform/templates/${template.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setTemplates((prev) =>
+          prev.map((t) => (t.id === template.id ? { ...t, status: newStatus } : t)),
+        );
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setTogglingId(null);
+    }
+  }
 
   const filtered = statusFilter
     ? templates.filter((t) => t.status === statusFilter)
@@ -168,15 +190,21 @@ export function ProductTemplateList({ onEdit }: Props) {
                     {t.base_price_a ? formatDKK(t.base_price_a) : "—"}
                   </td>
                   <td className="hidden sm:table-cell px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    <button
+                      type="button"
+                      disabled={togglingId === t.id}
+                      onClick={() => togglePublishStatus(t)}
+                      title={t.status === "published" ? "Klik for at sætte som kladde" : "Klik for at publicere"}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition hover:opacity-80 disabled:opacity-40 ${
                         t.status === "published"
                           ? "bg-green-50 text-green-700"
                           : "bg-stone-100 text-stone-500"
                       }`}
                     >
-                      {t.status === "published" ? "Publiceret" : "Kladde"}
-                    </span>
+                      {togglingId === t.id ? (
+                        <span className="inline-block h-3 w-3 animate-spin rounded-full border border-current/30 border-t-current" />
+                      ) : t.status === "published" ? "Publiceret" : "Kladde"}
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <button

@@ -159,14 +159,14 @@ export async function syncCatalog(): Promise<SyncStats> {
     stats.missing = missingRows.length;
   }
 
-  // 4. Update linked retail accessories
-  const { data: links } = await supabase
+  // 4a. Update linked retail accessories (legacy accessories table)
+  const { data: legacyLinks } = await supabase
     .from("foneday_sku_link")
     .select("*, foneday_catalog:foneday_catalog_id(*)")
     .eq("use_type", "retail")
     .not("accessory_id", "is", null);
 
-  for (const link of links ?? []) {
+  for (const link of legacyLinks ?? []) {
     const catalog = link.foneday_catalog as any;
     if (!catalog || !link.accessory_id) continue;
 
@@ -199,8 +199,54 @@ export async function syncCatalog(): Promise<SyncStats> {
     await autoLinkTemplates(supabase, link.accessory_id, link.foneday_catalog_id);
   }
 
+  // 4b. Update linked retail sku_products (new Foneday-linked products)
+  const { data: skuLinks } = await supabase
+    .from("foneday_sku_link")
+    .select("*, foneday_catalog:foneday_catalog_id(*)")
+    .eq("use_type", "retail")
+    .not("sku_product_id", "is", null);
+
+  for (const link of skuLinks ?? []) {
+    const catalog = link.foneday_catalog as any;
+    if (!catalog || !link.sku_product_id) continue;
+
+    const updates: Record<string, unknown> = { updated_at: now };
+
+    if (link.auto_sync_price) {
+      const costDkk = eurToOere(catalog.price_eur, settings.eur_dkk_rate);
+      const markup = Number(link.markup_percentage) || 0;
+      const sellingPrice = Math.round(costDkk * (1 + markup / 100));
+      updates.cost_price = costDkk;
+      updates.selling_price = sellingPrice;
+    }
+
+    if (link.auto_sync_stock) {
+      // For sku_products, update is_active based on stock status
+      updates.is_active = catalog.in_stock;
+      if (!catalog.in_stock) {
+        updates.status = "draft";
+      }
+    }
+
+    const { error } = await supabase
+      .from("sku_products")
+      .update(updates)
+      .eq("id", link.sku_product_id);
+
+    if (error) {
+      stats.errors.push(`Update sku_product ${link.sku_product_id}: ${error.message}`);
+    } else {
+      stats.linked_updated++;
+    }
+
+    // Keep sku_product_templates in sync with Foneday compatibility data.
+    await autoLinkTemplates(supabase, link.sku_product_id, link.foneday_catalog_id);
+  }
+
   // 5. Archive stale products (missing > 7 days with retail link)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  // 5a. Archive stale legacy accessories
   const { data: staleLinks } = await supabase
     .from("foneday_sku_link")
     .select("accessory_id, foneday_catalog:foneday_catalog_id(missing_since)")
@@ -215,6 +261,24 @@ export async function syncCatalog(): Promise<SyncStats> {
         .from("accessories")
         .update({ status: "archived", online_stock: 0, updated_at: now })
         .eq("id", link.accessory_id);
+    }
+  }
+
+  // 5b. Archive stale sku_products
+  const { data: staleSkuLinks } = await supabase
+    .from("foneday_sku_link")
+    .select("sku_product_id, foneday_catalog:foneday_catalog_id(missing_since)")
+    .eq("use_type", "retail")
+    .not("sku_product_id", "is", null);
+
+  for (const link of staleSkuLinks ?? []) {
+    const catalog = link.foneday_catalog as any;
+    if (!catalog?.missing_since || !link.sku_product_id) continue;
+    if (catalog.missing_since < sevenDaysAgo) {
+      await supabase
+        .from("sku_products")
+        .update({ status: "draft", is_active: false, updated_at: now })
+        .eq("id", link.sku_product_id);
     }
   }
 

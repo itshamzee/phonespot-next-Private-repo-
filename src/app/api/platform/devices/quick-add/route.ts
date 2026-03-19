@@ -1,5 +1,5 @@
 // POST /api/platform/devices/quick-add
-// Creates a device with status "listed" and auto-publishes the template
+// Creates a device with status "listed" — template publishing is controlled manually by admin
 
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -70,13 +70,6 @@ export async function POST(request: Request) {
   if (deviceError) {
     return NextResponse.json({ error: deviceError.message }, { status: 500 });
   }
-
-  // Auto-publish template if it's still a draft
-  await supabase
-    .from("product_templates")
-    .update({ status: "published", updated_at: now.toISOString() })
-    .eq("id", data.template_id)
-    .eq("status", "draft");
 
   // Log activity
   await logActivity({

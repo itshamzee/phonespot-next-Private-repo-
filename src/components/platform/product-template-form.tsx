@@ -12,7 +12,7 @@ interface Props {
 
 const CATEGORIES = [
   { value: "iphone", label: "iPhone" },
-  { value: "smartphone", label: "Smartphone" },
+  { value: "smartphone", label: "Smartphone (Android / Samsung)" },
   { value: "ipad", label: "iPad" },
   { value: "tablet", label: "Tablet" },
   { value: "laptop", label: "Laptop" },
