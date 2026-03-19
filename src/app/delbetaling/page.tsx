@@ -225,21 +225,21 @@ export default function DelbetalingPage() {
       <JsonLd data={faqJsonLd} />
 
       {/* ── Hero ── */}
-      <SectionWrapper background="charcoal">
+      <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
             <div className="mb-6 flex items-center justify-center gap-3">
               <KlarnaIcon className="h-10 w-auto rounded-lg" />
             </div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Fleksibel betaling
             </p>
-            <Heading size="lg" className="text-white">
+            <Heading size="lg" className="text-[#111111]">
               Del betalingen op med Klarna
             </Heading>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
               Køb kvalitetstestet refurbished tech og betal i{" "}
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-[#111111]">
                 3 rentefrie rater
               </span>
               . Ingen skjulte gebyrer — samme pris, mere fleksibilitet.
@@ -253,7 +253,7 @@ export default function DelbetalingPage() {
         <div className="mx-auto max-w-4xl">
           <FadeIn>
             <div className="text-center">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 3 nemme trin
               </p>
               <Heading as="h2" size="md">
@@ -265,20 +265,20 @@ export default function DelbetalingPage() {
           <div className="mt-14 grid gap-8 md:grid-cols-3">
             {STEPS.map((step, i) => (
               <FadeIn key={step.number} delay={i * 0.15}>
-                <div className="relative rounded-2xl border border-soft-grey bg-white p-8 text-center">
+                <div className="relative rounded-2xl border border-[#E5E5EA] bg-white p-8 text-center">
                   {/* Step number */}
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-eco font-display text-lg font-bold text-white">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1A3D2E] font-display text-lg font-bold text-white">
                     {step.number}
                   </div>
-                  <h3 className="mt-5 font-display text-lg font-bold uppercase tracking-tight text-charcoal">
+                  <h3 className="mt-5 font-display text-lg font-bold tracking-tight text-[#111111]">
                     {step.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-gray">
+                  <p className="mt-3 text-sm leading-relaxed text-[#86868B]">
                     {step.description}
                   </p>
                   {/* Connector arrow (between cards on desktop) */}
                   {i < STEPS.length - 1 && (
-                    <div className="absolute -right-5 top-1/2 hidden -translate-y-1/2 text-soft-grey md:block">
+                    <div className="absolute -right-5 top-1/2 hidden -translate-y-1/2 text-[#E5E5EA] md:block">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -308,13 +308,13 @@ export default function DelbetalingPage() {
         <div className="mx-auto max-w-4xl">
           <FadeIn>
             <div className="text-center">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Priseksempler
               </p>
               <Heading as="h2" size="md">
                 Se hvad det koster pr. måned
               </Heading>
-              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-gray">
+              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#86868B]">
                 Her er eksempler på populære produkter og hvad de koster med
                 Klarna delbetaling i 3 rater.
               </p>
@@ -324,26 +324,26 @@ export default function DelbetalingPage() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {EXAMPLES.map((item, i) => (
               <FadeIn key={item.product} delay={i * 0.1}>
-                <div className="rounded-2xl border border-soft-grey bg-white p-6 text-center">
-                  <p className="text-xs font-medium uppercase tracking-wider text-gray">
+                <div className="rounded-2xl border border-[#E5E5EA] bg-white p-6 text-center">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#86868B]">
                     {item.grade}
                   </p>
-                  <h3 className="mt-1 font-display text-base font-bold uppercase tracking-tight text-charcoal">
+                  <h3 className="mt-1 font-display text-base font-bold tracking-tight text-[#111111]">
                     {item.product}
                   </h3>
-                  <div className="mt-4 border-t border-soft-grey pt-4">
-                    <p className="text-xs text-gray">Totalpris</p>
-                    <p className="text-lg font-bold text-charcoal">
+                  <div className="mt-4 border-t border-[#E5E5EA] pt-4">
+                    <p className="text-xs text-[#86868B]">Totalpris</p>
+                    <p className="text-lg font-bold text-[#111111]">
                       {item.total} kr.
                     </p>
                   </div>
                   <div className="mt-3 rounded-xl bg-[#FFB3C7]/10 px-4 py-3">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-charcoal/50">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-[#111111]/50">
                       3 rater med Klarna
                     </p>
-                    <p className="mt-0.5 text-xl font-bold text-charcoal">
+                    <p className="mt-0.5 text-xl font-bold text-[#111111]">
                       {item.monthly} kr.
-                      <span className="text-sm font-normal text-gray">
+                      <span className="text-sm font-normal text-[#86868B]">
                         /md.
                       </span>
                     </p>
@@ -360,7 +360,7 @@ export default function DelbetalingPage() {
         <div className="mx-auto max-w-4xl">
           <FadeIn>
             <div className="text-center">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Fordele
               </p>
               <Heading as="h2" size="md">
@@ -372,15 +372,15 @@ export default function DelbetalingPage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {BENEFITS.map((benefit, i) => (
               <FadeIn key={benefit.title} delay={i * 0.1}>
-                <div className="flex gap-5 rounded-2xl border border-soft-grey bg-white p-6">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-green-pale text-green-eco">
+                <div className="flex gap-5 rounded-2xl border border-[#E5E5EA] bg-white p-6">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#F7F7F8] text-[#1A3D2E]">
                     {benefit.icon}
                   </div>
                   <div>
-                    <h3 className="font-display text-base font-bold uppercase tracking-tight text-charcoal">
+                    <h3 className="font-display text-base font-bold tracking-tight text-[#111111]">
                       {benefit.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-gray">
+                    <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
                       {benefit.description}
                     </p>
                   </div>
@@ -392,21 +392,21 @@ export default function DelbetalingPage() {
       </SectionWrapper>
 
       {/* ── Refurbished + delbetaling = smart valg ── */}
-      <SectionWrapper background="charcoal">
+      <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Bæredygtigt & fleksibelt
             </p>
-            <Heading as="h2" size="md" className="text-white">
+            <Heading as="h2" size="md" className="text-[#111111]">
               Refurbished + delbetaling = det smarte valg
             </Heading>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70">
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#86868B]">
               Når du køber refurbished, sparer du allerede op til{" "}
-              <span className="font-semibold text-white">40%</span>{" "}
+              <span className="font-semibold text-[#111111]">40%</span>{" "}
               sammenlignet med nypris. Med Klarna delbetaling kan du fordele
               besparelsen over 3 måneder — og stadig få{" "}
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-[#111111]">
                 36 måneders garanti
               </span>
               , grundig kvalitetstest og 14 dages returret.
@@ -418,11 +418,11 @@ export default function DelbetalingPage() {
                 { value: "36 mdr.", label: "Fuld garanti" },
               ].map((stat, i) => (
                 <FadeIn key={stat.label} delay={i * 0.15}>
-                  <div className="rounded-xl bg-white/[0.06] px-6 py-5">
-                    <p className="font-display text-2xl font-bold text-green-eco">
+                  <div className="rounded-xl border border-[#E5E5EA] bg-white px-6 py-5">
+                    <p className="font-display text-2xl font-bold text-[#1A3D2E]">
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-sm text-white/50">{stat.label}</p>
+                    <p className="mt-1 text-sm text-[#86868B]">{stat.label}</p>
                   </div>
                 </FadeIn>
               ))}
@@ -436,7 +436,7 @@ export default function DelbetalingPage() {
         <div className="mx-auto max-w-3xl">
           <FadeIn>
             <div className="text-center">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Ofte stillede spørgsmål
               </p>
               <Heading as="h2" size="md">
@@ -448,8 +448,8 @@ export default function DelbetalingPage() {
           <div className="mt-12 space-y-4">
             {FAQ.map((item, i) => (
               <FadeIn key={i} delay={i * 0.05}>
-                <details className="group rounded-2xl border border-soft-grey bg-white">
-                  <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-display text-sm font-bold uppercase tracking-tight text-charcoal [&::-webkit-details-marker]:hidden">
+                <details className="group rounded-2xl border border-[#E5E5EA] bg-white">
+                  <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-display text-sm font-bold tracking-tight text-[#111111] [&::-webkit-details-marker]:hidden">
                     {item.question}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -457,7 +457,7 @@ export default function DelbetalingPage() {
                       viewBox="0 0 24 24"
                       strokeWidth={2}
                       stroke="currentColor"
-                      className="h-5 w-5 shrink-0 text-gray transition-transform group-open:rotate-45"
+                      className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-45"
                       aria-hidden="true"
                     >
                       <path
@@ -467,8 +467,8 @@ export default function DelbetalingPage() {
                       />
                     </svg>
                   </summary>
-                  <div className="border-t border-soft-grey px-6 pb-5 pt-4">
-                    <p className="text-sm leading-relaxed text-gray">
+                  <div className="border-t border-[#E5E5EA] px-6 pb-5 pt-4">
+                    <p className="text-sm leading-relaxed text-[#86868B]">
                       {item.answer}
                     </p>
                   </div>
@@ -486,33 +486,33 @@ export default function DelbetalingPage() {
             <Heading as="h2" size="md">
               Klar til at handle?
             </Heading>
-            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-gray">
+            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-[#86868B]">
               Udforsk vores udvalg af kvalitetstestede refurbished produkter og
               vælg Klarna ved checkout for rentefri delbetaling.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/iphones"
-                className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                className="rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Se iPhones
               </Link>
               <Link
                 href="/ipads"
-                className="rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+                className="rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
               >
                 Se iPads
               </Link>
               <Link
                 href="/baerbare"
-                className="rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+                className="rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
               >
                 Se MacBooks
               </Link>
             </div>
             <div className="mt-6 flex items-center justify-center gap-2">
               <KlarnaIcon className="h-7 w-auto rounded" />
-              <span className="text-xs text-gray">
+              <span className="text-xs text-[#86868B]">
                 Sikker betaling med Klarna
               </span>
             </div>

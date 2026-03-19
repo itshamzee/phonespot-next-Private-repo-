@@ -169,22 +169,24 @@ export default function ButikPage() {
       <JsonLd data={ORGANIZATION_JSONLD} />
 
       {/* -- Hero -- */}
-      <SectionWrapper background="charcoal">
-        <div className="mx-auto max-w-4xl text-center">
-          <FadeIn>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-              Fysiske butikker
-            </p>
-            <Heading size="xl" className="text-white">
-              Besøg PhoneSpot
-            </Heading>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-              Vi har butikker i Slagelse og Vejle, hvor du er velkommen til at
-              kigge forbi, prøve produkter og få personlig rådgivning.
-            </p>
-          </FadeIn>
+      <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-4xl text-center">
+            <FadeIn>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+                Fysiske butikker
+              </p>
+              <Heading size="xl" className="text-[#111111]">
+                Besøg PhoneSpot
+              </Heading>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
+                Vi har butikker i Slagelse og Vejle, hvor du er velkommen til at
+                kigge forbi, prøve produkter og få personlig rådgivning.
+              </p>
+            </FadeIn>
+          </div>
         </div>
-      </SectionWrapper>
+      </div>
 
       {/* -- Store cards -- */}
       <SectionWrapper>
@@ -192,43 +194,43 @@ export default function ButikPage() {
           <div className="grid gap-8 md:grid-cols-2">
             {storeList.map((store, i) => (
               <FadeIn key={store.slug} delay={i * 0.1}>
-                <div className="flex h-full flex-col rounded-2xl border border-soft-grey bg-white p-6 shadow-sm transition-shadow hover:shadow-md md:p-8">
+                <div className="flex h-full flex-col rounded-2xl border border-[#E5E5EA] bg-white p-6 shadow-sm transition-shadow hover:shadow-md md:p-8">
                   <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-eco/10 text-green-eco">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1A3D2E]/10 text-[#1A3D2E]">
                       <StorefrontIcon className="h-6 w-6" />
                     </div>
                     <div>
-                      <h2 className="font-display text-xl font-bold text-charcoal">
+                      <h2 className="font-display text-xl font-bold text-[#111111]">
                         {store.name}
                       </h2>
                       {store.mall && (
-                        <p className="text-sm text-gray">{store.mall}</p>
+                        <p className="text-sm text-[#86868B]">{store.mall}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start gap-3">
-                      <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
-                      <p className="text-sm text-gray">
+                      <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" />
+                      <p className="text-sm text-[#86868B]">
                         {store.street}, {store.zip} {store.city}
                       </p>
                     </div>
                     <div className="flex items-start gap-3">
-                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
-                      <div className="text-sm text-gray">
-                        <p>Man-Fre: {store.hours.weekdays}</p>
-                        <p>Lør: {store.hours.saturday}</p>
-                        <p>Søn: {store.hours.sunday}</p>
+                      <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" />
+                      <div className="text-sm text-[#86868B]">
+                        <p>Man-Fre: 10–19</p>
+                        <p>Lør: 10–17</p>
+                        <p>Søn: 10–17</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
+                      <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" />
                       <a
-                        href={`tel:${store.phone.replace(/\s/g, "")}`}
-                        className="text-sm text-green-eco hover:underline"
+                        href="tel:+4561100048"
+                        className="text-sm text-[#1A3D2E] hover:underline"
                       >
-                        {store.phone}
+                        61 10 00 48
                       </a>
                     </div>
                   </div>
@@ -236,7 +238,7 @@ export default function ButikPage() {
                   <div className="mt-6">
                     <Link
                       href={`/butik/${store.slug}`}
-                      className="inline-flex items-center gap-2 rounded-full bg-green-eco px-6 py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25"
+                      className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-6 py-3 text-sm font-bold text-white transition-all hover:bg-[#1A3D2E]/90 hover:shadow-lg hover:shadow-[#1A3D2E]/25"
                     >
                       Se butik
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
@@ -255,13 +257,13 @@ export default function ButikPage() {
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               I butikken
             </p>
             <Heading as="h2" size="lg">
               Hvad kan du gøre i butikken?
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Hos PhoneSpot tilbyder vi mere end bare produkter. Kom forbi og oplev vores service.
             </p>
           </FadeIn>
@@ -270,18 +272,18 @@ export default function ButikPage() {
           {IN_STORE_SERVICES.map((service, i) => (
             <FadeIn key={service.title} delay={i * 0.1}>
               <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                   {service.icon}
                 </div>
-                <h3 className="font-display text-lg font-bold text-charcoal">
+                <h3 className="font-display text-lg font-bold text-[#111111]">
                   {service.title}
                 </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-[#86868B]">
                   {service.description}
                 </p>
                 <Link
                   href={service.href}
-                  className="mt-4 inline-flex text-sm font-semibold text-green-eco hover:underline"
+                  className="mt-4 inline-flex text-sm font-semibold text-[#1A3D2E] hover:underline"
                 >
                   Læs mere &rarr;
                 </Link>
@@ -292,32 +294,34 @@ export default function ButikPage() {
       </SectionWrapper>
 
       {/* -- Trustpilot reference -- */}
-      <SectionWrapper background="charcoal">
-        <div className="mx-auto max-w-2xl text-center">
-          <FadeIn>
-            <div className="mb-4 flex items-center justify-center gap-2">
-              <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-                <path d="M12 1.5l2.76 8.49h8.93l-7.22 5.25 2.76 8.49L12 18.49l-7.23 5.24 2.76-8.49L.31 9.99h8.93z" fill="#00B67A" />
-              </svg>
-              <span className="text-lg font-bold text-[#00B67A]">Trustpilot</span>
-            </div>
-            <Heading as="h2" size="md" className="text-white">
-              Vores kunder anbefaler os
-            </Heading>
-            <p className="mt-4 text-white/60">
-              Vi er stolte af vores kundetilfredshed. Læs anmeldelser fra rigtige kunder på Trustpilot.
-            </p>
-            <a
-              href="https://dk.trustpilot.com/review/phonespot.dk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-block rounded-full border-2 border-white/30 px-8 py-3 font-semibold text-white transition-colors hover:border-white hover:bg-white hover:text-charcoal"
-            >
-              Se anmeldelser på Trustpilot &rarr;
-            </a>
-          </FadeIn>
+      <div className="bg-[#F7F7F8] border-y border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <FadeIn>
+              <div className="mb-4 flex items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+                  <path d="M12 1.5l2.76 8.49h8.93l-7.22 5.25 2.76 8.49L12 18.49l-7.23 5.24 2.76-8.49L.31 9.99h8.93z" fill="#00B67A" />
+                </svg>
+                <span className="text-lg font-bold text-[#00B67A]">Trustpilot</span>
+              </div>
+              <Heading as="h2" size="md" className="text-[#111111]">
+                Vores kunder anbefaler os
+              </Heading>
+              <p className="mt-4 text-[#86868B]">
+                Vi er stolte af vores kundetilfredshed. Læs anmeldelser fra rigtige kunder på Trustpilot.
+              </p>
+              <a
+                href="https://dk.trustpilot.com/review/phonespot.dk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-block rounded-full border-2 border-[#E5E5EA] px-8 py-3 font-semibold text-[#111111] transition-colors hover:border-[#111111] hover:bg-[#111111] hover:text-white"
+              >
+                Se anmeldelser på Trustpilot &rarr;
+              </a>
+            </FadeIn>
+          </div>
         </div>
-      </SectionWrapper>
+      </div>
 
       {/* -- Trust bar -- */}
       <SectionWrapper background="sand">

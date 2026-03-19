@@ -36,9 +36,9 @@ export const STORES: Record<string, StoreLocationConfig> = {
     email: "info@phonespot.dk",
     shopifyLocationId: "90389381464",
     hours: {
-      weekdays: "10:00 – 18:00",
-      saturday: "10:00 – 16:00",
-      sunday: "Lukket",
+      weekdays: "10:00 – 19:00",
+      saturday: "10:00 – 17:00",
+      sunday: "10:00 – 17:00",
     },
     googleMapsUrl:
       "https://maps.google.com/?q=VestsjællandsCentret+10,+4200+Slagelse",

@@ -45,7 +45,7 @@ export async function generateMetadata({
 const CATEGORY_STYLES: Record<string, { label: string; className: string }> = {
   guide: {
     label: "Guide",
-    className: "bg-[#5A8C6F]/15 text-[#5A8C6F]",
+    className: "bg-[#1A3D2E]/15 text-[#1A3D2E]",
   },
   sammenligning: {
     label: "Sammenligning",
@@ -102,13 +102,13 @@ function extractHeadings(content: string): { id: string; text: string; level: nu
 
 function Callout({ children, type = "info" }: { children: React.ReactNode; type?: "info" | "tip" | "warning" }) {
   const styles = {
-    info: "border-[#5A8C6F] bg-[#5A8C6F]/5",
+    info: "border-[#1A3D2E] bg-[#1A3D2E]/5",
     tip: "border-amber-400 bg-amber-50",
     warning: "border-red-400 bg-red-50",
   };
   const icons = {
     info: (
-      <svg className="h-5 w-5 shrink-0 text-[#5A8C6F]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <svg className="h-5 w-5 shrink-0 text-[#1A3D2E]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
       </svg>
     ),
@@ -138,7 +138,7 @@ function KeyTakeaway({ children }: { children: React.ReactNode }) {
         <svg className="h-5 w-5 text-green-eco" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span className="font-display text-sm font-bold uppercase tracking-wider text-green-eco">
+        <span className="font-display text-sm font-bold tracking-tight text-green-eco">
           Kort sagt
         </span>
       </div>
@@ -183,7 +183,7 @@ const mdxComponents = {
     <thead className="bg-charcoal text-white" {...props}>{children}</thead>
   ),
   th: ({ children, ...props }: React.ComponentPropsWithoutRef<"th">) => (
-    <th className="px-4 py-3 text-left font-display text-xs font-bold uppercase tracking-wider" {...props}>{children}</th>
+    <th className="px-4 py-3 text-left font-display text-xs font-bold uppercase tracking-wide" {...props}>{children}</th>
   ),
   td: ({ children, ...props }: React.ComponentPropsWithoutRef<"td">) => (
     <td className="border-t border-sand/30 px-4 py-3 font-body text-charcoal/80" {...props}>{children}</td>
@@ -193,7 +193,7 @@ const mdxComponents = {
   ),
   blockquote: ({ children, ...props }: React.ComponentPropsWithoutRef<"blockquote">) => (
     <blockquote
-      className="not-prose my-8 border-l-4 border-[#5A8C6F] bg-[#5A8C6F]/5 py-4 pl-6 pr-4 font-body text-base italic leading-relaxed text-charcoal/80"
+      className="not-prose my-8 border-l-4 border-[#1A3D2E] bg-[#1A3D2E]/5 py-4 pl-6 pr-4 font-body text-base italic leading-relaxed text-charcoal/80"
       {...props}
     >
       {children}
@@ -275,7 +275,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <span className="text-sm text-white/40">&middot; {readingTime} min</span>
             </div>
 
-            <h1 className="mt-4 font-display text-3xl font-extrabold italic leading-tight text-white md:text-4xl lg:text-5xl">
+            <h1 className="mt-4 font-display text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
               {frontmatter.title}
             </h1>
 
@@ -309,8 +309,8 @@ export default async function BlogPostPage({ params }: PageProps) {
               prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-charcoal
               prose-h2:mt-14 prose-h2:mb-6 prose-h2:border-b prose-h2:border-sand/40 prose-h2:pb-3 prose-h2:text-2xl
               prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-xl
-              prose-a:text-[#5A8C6F] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
-              prose-li:marker:text-[#5A8C6F]
+              prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
+              prose-li:marker:text-[#1A3D2E]
               prose-strong:text-charcoal prose-strong:font-semibold
               prose-p:text-charcoal/75 prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
               prose-li:text-charcoal/75 prose-li:font-body prose-li:leading-[1.8]
@@ -328,7 +328,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           {headings.length > 3 && (
             <aside className="hidden lg:block">
               <div className="sticky top-24">
-                <p className="mb-4 font-display text-xs font-bold uppercase tracking-[3px] text-charcoal/40">
+                <p className="mb-4 font-display text-xs font-bold uppercase tracking-wide text-charcoal/40">
                   Indhold
                 </p>
                 <nav className="space-y-1 border-l border-sand/40">
@@ -336,7 +336,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                     <a
                       key={h.id}
                       href={`#${h.id}`}
-                      className={`block border-l-2 border-transparent py-1.5 font-body text-[13px] leading-snug text-charcoal/50 transition-colors hover:border-[#5A8C6F] hover:text-charcoal ${
+                      className={`block border-l-2 border-transparent py-1.5 font-body text-[13px] leading-snug text-charcoal/50 transition-colors hover:border-[#1A3D2E] hover:text-charcoal ${
                         h.level === 2 ? "pl-4 font-medium" : "pl-7"
                       }`}
                     >
@@ -424,13 +424,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                       {formatDate(related.frontmatter.date)}
                     </time>
                   </div>
-                  <h3 className="font-display text-lg font-bold text-charcoal transition-colors group-hover:text-[#5A8C6F]">
+                  <h3 className="font-display text-lg font-bold text-charcoal transition-colors group-hover:text-[#1A3D2E]">
                     {related.frontmatter.title}
                   </h3>
                   <p className="mt-2 line-clamp-2 flex-1 font-body text-sm leading-relaxed text-charcoal/60">
                     {related.frontmatter.description}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#5A8C6F]">
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E]">
                     Laes mere
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 transition-transform group-hover:translate-x-1">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />

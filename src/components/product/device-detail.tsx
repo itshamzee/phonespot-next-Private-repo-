@@ -96,7 +96,7 @@ function TrustpilotBadge() {
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
         </div>
-        <span className="text-[10px] font-medium text-charcoal/50">
+        <span className="text-[10px] font-medium text-[#111111]/50">
           4.4/5 — Trustpilot
         </span>
       </div>
@@ -266,8 +266,10 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                   <button
                     key={i}
                     onClick={() => setMainImageIndex(i)}
-                    className={`relative h-16 w-16 overflow-hidden rounded-xl border-2 transition-all ${
-                      i === mainImageIndex ? "border-green-eco shadow-sm" : "border-sand/60 hover:border-charcoal/30"
+                    className={`relative h-16 w-16 overflow-hidden rounded-xl border transition-all ${
+                      i === mainImageIndex
+                        ? "border-[#1A3D2E] shadow-sm ring-1 ring-[#1A3D2E]/20"
+                        : "border-[#E5E5EA] hover:border-[#86868B]/50"
                     }`}
                   >
                     <Image src={img} alt={`${template.display_name} billede ${i + 1}`} fill className="object-contain p-1" sizes="64px" />
@@ -277,31 +279,41 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             )}
 
             {/* Main image */}
-            <div className="relative flex-1 overflow-hidden rounded-2xl bg-cream aspect-square">
+            <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F7F7F8] aspect-square">
               {mainImage ? (
                 <Image src={mainImage} alt={template.display_name} fill className="object-contain p-8" sizes="(min-width: 1024px) 58vw, 100vw" priority />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <svg viewBox="0 0 64 64" className="h-20 w-20 text-sand" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <svg viewBox="0 0 64 64" className="h-20 w-20 text-[#E5E5EA]" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <rect x="16" y="8" width="32" height="48" rx="4" /><circle cx="32" cy="52" r="2" /><line x1="26" y1="14" x2="38" y2="14" />
                   </svg>
                 </div>
               )}
 
-              {/* Badges */}
+              {/* Garanti badge — clean corner ribbon */}
+              <div className="absolute top-4 right-4 z-20">
+                <div className="flex items-center gap-1.5 rounded-lg bg-[#1A3D2E] px-3 py-1.5 shadow-md">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-white/90">
+                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-[11px] font-bold text-white">36 mdr. garanti</span>
+                </div>
+              </div>
+
+              {/* Stock + savings badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {inStock ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-eco/90 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-3 py-1 text-xs font-semibold text-white shadow-sm">
                     <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                     {matchingDevices.length} på lager
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-charcoal/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#86868B] px-3 py-1 text-xs font-semibold text-white shadow-sm">
                     Udsolgt
                   </span>
                 )}
                 {savingsPercent && savingsPercent > 5 && (
-                  <span className="inline-flex items-center rounded-full bg-red-500/90 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+                  <span className="inline-flex items-center rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-sm">
                     Spar {savingsPercent}%
                   </span>
                 )}
@@ -316,8 +328,10 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 <button
                   key={i}
                   onClick={() => setMainImageIndex(i)}
-                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 ${
-                    i === mainImageIndex ? "border-green-eco" : "border-sand/60"
+                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border transition-all ${
+                    i === mainImageIndex
+                      ? "border-[#1A3D2E] ring-1 ring-[#1A3D2E]/20"
+                      : "border-[#E5E5EA]"
                   }`}
                 >
                   <Image src={img} alt="" fill className="object-contain p-1" sizes="56px" />
@@ -331,14 +345,14 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
         <div className="lg:col-span-5 flex flex-col gap-5">
           {/* Title + brand */}
           <div>
-            <p className="text-xs font-bold uppercase tracking-[3px] text-green-eco">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               {template.brand} · {selectedGrade === "N" ? "Fabriksny" : "Refurbished"} {categoryName}
             </p>
-            <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-charcoal lg:text-4xl">
+            <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
               {template.display_name}
             </h1>
             {template.short_description && (
-              <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">{template.short_description}</p>
+              <p className="mt-2 text-sm text-[#86868B] leading-relaxed">{template.short_description}</p>
             )}
 
             {/* Trustpilot inline */}
@@ -363,50 +377,107 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
           )}
 
           {/* ── Price card + CTA ── */}
-          <div className="rounded-2xl border border-sand bg-white p-5 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5 shadow-sm space-y-4">
             {/* Price */}
             <div>
               <div className="flex items-end gap-3">
-                <span className="font-display text-4xl font-bold text-charcoal">
+                <span className="font-display text-4xl font-bold text-[#1A3D2E]">
                   {price != null ? formatDKK(price) : "—"}
                 </span>
                 {compareAtPrice && (
-                  <span className="mb-1 text-lg text-charcoal/30 line-through">
+                  <span className="mb-1 text-lg text-[#86868B] line-through">
                     {formatDKK(compareAtPrice)}
                   </span>
                 )}
               </div>
               {price != null && (
-                <p className="mt-1 text-xs text-charcoal/50">
+                <p className="mt-1 text-xs text-[#86868B]">
                   inkl. moms · 36 mdr. garanti · Fri fragt over 500 kr
                 </p>
               )}
+
+              {/* 1. Savings comparison vs new price */}
+              {compareAtPrice && price && compareAtPrice > price && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-[#EFF5F1] px-3 py-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-[#1A3D2E]">
+                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm text-[#1A3D2E] font-semibold">
+                    Du sparer {formatDKK(compareAtPrice - price)}{savingsPercent ? ` (${savingsPercent}%)` : ""} sammenlignet med ny pris
+                  </span>
+                </div>
+              )}
+
+              {/* 2. Klarna split payment */}
+              {price && price > 30000 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <svg width="18" height="18" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Klarna" className="shrink-0">
+                    <rect width="36" height="36" rx="6" fill="#FFB3C7" />
+                    <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#1A1A1A">K</text>
+                  </svg>
+                  <span className="text-xs text-[#6E6E73]">
+                    Eller betal <strong className="text-[#111111]">{formatDKK(Math.round(price / 3))}/md</strong> med Klarna
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Add to cart button */}
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={!inStock || isAddingToCart}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-eco px-6 py-4 text-base font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isAddingToCart ? (
-                <>
-                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4Z" />
-                  </svg>
-                  Reserverer...
-                </>
-              ) : !inStock ? "Udsolgt" : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                  </svg>
-                  Læg i kurv
-                </>
-              )}
-            </button>
+            {/* Add to cart button — or out-of-stock state with notify form */}
+            {!inStock ? (
+              <div className="space-y-3">
+                <button disabled className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#6E6E73] px-6 py-4 text-base font-bold text-white cursor-not-allowed opacity-70">
+                  Udsolgt
+                </button>
+                {/* 3. Notify me when back in stock */}
+                <div className="rounded-xl border border-[#E5E5EA] p-4">
+                  <p className="text-sm font-semibold text-[#111111]">Få besked når den er på lager</p>
+                  <form
+                    className="mt-2 flex gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      /* TODO: save email to waitlist */
+                    }}
+                  >
+                    <input
+                      type="email"
+                      placeholder="Din email"
+                      required
+                      className="flex-1 rounded-lg border border-[#E5E5EA] px-3 py-2 text-sm outline-none focus:border-[#1A3D2E] focus:ring-1 focus:ring-[#1A3D2E]/20"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-[#1A3D2E] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#2D6B45]"
+                    >
+                      Giv besked
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isAddingToCart}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3D2E] px-6 py-4 text-base font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isAddingToCart ? (
+                  <>
+                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4Z" />
+                    </svg>
+                    Reserverer...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    Læg i kurv
+                  </>
+                )}
+              </button>
+            )}
 
             {cartError && <p className="text-sm text-red-600">{cartError}</p>}
 
@@ -416,7 +487,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 {pickupLocations.map((loc) => (
                   <span
                     key={loc.name}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-green-eco/10 px-3 py-1.5 text-xs font-semibold text-green-700"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E]/8 px-3 py-1.5 text-xs font-semibold text-[#1A3D2E]"
                   >
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -425,7 +496,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                     Kan hentes i {loc.name}
                   </span>
                 ))}
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-semibold text-stone-500">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25h-.375a3 3 0 013-3V7.5h9.75" />
                   </svg>
@@ -435,15 +506,45 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             )}
 
             {/* Quick trust signals */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 border-t border-[#E5E5EA]">
               {["36 mdr. garanti", "14 dages returret", "Sendt samme dag"].map((text) => (
-                <span key={text} className="flex items-center gap-1 text-xs text-charcoal/50">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-green-eco">
+                <span key={text} className="flex items-center gap-1.5 text-xs text-[#86868B]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#1A3D2E]">
                     <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                   </svg>
                   {text}
                 </span>
               ))}
+            </div>
+
+            {/* 4. Share buttons */}
+            <div className="flex items-center gap-3 pt-2 border-t border-[#E5E5EA]">
+              <span className="text-xs text-[#6E6E73]">Del:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    navigator.clipboard.writeText(window.location.href);
+                  }
+                }}
+                title="Kopier link"
+                className="flex items-center justify-center rounded-lg border border-[#E5E5EA] bg-[#F7F7F8] p-1.5 text-[#6E6E73] transition-colors hover:border-[#1A3D2E]/30 hover:bg-[#EFF5F1] hover:text-[#1A3D2E]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                </svg>
+              </button>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Del på Facebook"
+                className="flex items-center justify-center rounded-lg border border-[#E5E5EA] bg-[#F7F7F8] p-1.5 text-[#6E6E73] transition-colors hover:border-[#1877F2]/30 hover:bg-[#1877F2]/[0.06] hover:text-[#1877F2]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z" />
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -458,39 +559,39 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* GRADE EXPLANATION — "Hvad betyder standen?"                   */}
       {/* ============================================================ */}
       {gradeDetail && (
-        <div className="mt-10 rounded-2xl border border-sand bg-white p-6">
+        <div className="mt-10 rounded-2xl border border-[#E5E5EA] bg-white p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg font-bold text-charcoal">
+            <h3 className="font-display text-lg font-bold text-[#111111]">
               {selectedGrade === "N" ? "Fabriksny enhed" : `Grade ${selectedGrade}: ${gradeDetail.label}`}
             </h3>
-            <Link href="/kvalitet" className="text-xs font-semibold text-green-eco hover:underline">
+            <Link href="/kvalitet" className="text-xs font-semibold text-[#1A3D2E] hover:underline">
               Læs mere om grader &rarr;
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex items-start gap-3 rounded-xl bg-green-eco/[0.04] p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-eco/10">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-green-eco">
+            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1A3D2E]/10">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-[#1A3D2E]">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-bold text-charcoal">100% funktionel</p>
-                <p className="mt-0.5 text-xs text-charcoal/50">Alle funktioner testet og virker</p>
+                <p className="text-sm font-bold text-[#111111]">100% funktionel</p>
+                <p className="mt-0.5 text-xs text-[#86868B]">Alle funktioner testet og virker</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-xl bg-amber-500/[0.04] p-3.5">
+            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 18h15A2.25 2.25 0 0 0 21 15.75v-6a2.25 2.25 0 0 0-2.25-2.25h-15A2.25 2.25 0 0 0 1.5 9.75v6A2.25 2.25 0 0 0 3.75 18Z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-bold text-charcoal">Batteri</p>
-                <p className="mt-0.5 text-xs text-charcoal/50">{gradeDetail.battery}</p>
+                <p className="text-sm font-bold text-[#111111]">Batteri</p>
+                <p className="mt-0.5 text-xs text-[#86868B]">{gradeDetail.battery}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-xl bg-blue-500/[0.04] p-3.5">
+            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -498,8 +599,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-bold text-charcoal">Kosmetisk</p>
-                <p className="mt-0.5 text-xs text-charcoal/50">{gradeDetail.cosmetic}</p>
+                <p className="text-sm font-bold text-[#111111]">Kosmetisk</p>
+                <p className="mt-0.5 text-xs text-[#86868B]">{gradeDetail.cosmetic}</p>
               </div>
             </div>
           </div>
@@ -511,12 +612,15 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* ============================================================ */}
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TRUST_POINTS.map((point) => (
-          <div key={point.label} className="flex flex-col items-center rounded-2xl border border-sand/60 bg-white p-4 text-center transition-shadow hover:shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-eco/10 text-green-eco">
+          <div
+            key={point.label}
+            className="flex flex-col items-center rounded-2xl border border-[#E5E5EA] bg-white p-4 text-center transition-shadow hover:shadow-sm"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3D2E]/8 text-[#1A3D2E]">
               <TrustIcon type={point.icon} />
             </div>
-            <p className="mt-2 text-xs font-bold text-charcoal">{point.label}</p>
-            <p className="mt-0.5 text-[10px] text-charcoal/40 leading-tight">{point.desc}</p>
+            <p className="mt-2 text-xs font-bold text-[#111111]">{point.label}</p>
+            <p className="mt-0.5 text-[10px] text-[#86868B] leading-tight">{point.desc}</p>
           </div>
         ))}
       </div>
@@ -532,7 +636,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* TABS: Beskrivelse / Specifikationer / Garanti & Levering      */}
       {/* ============================================================ */}
       <div className="mt-12">
-        <div className="flex border-b border-sand">
+        <div className="flex border-b border-[#E5E5EA]">
           {(["beskrivelse", "specifikationer", "garanti"] as Tab[]).map((tab) => {
             const labels: Record<Tab, string> = {
               beskrivelse: "Beskrivelse",
@@ -545,8 +649,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 onClick={() => setActiveTab(tab)}
                 className={`px-5 py-3.5 text-sm font-semibold transition-colors ${
                   activeTab === tab
-                    ? "border-b-2 border-green-eco text-green-eco"
-                    : "text-charcoal/40 hover:text-charcoal"
+                    ? "border-b-2 border-[#1A3D2E] text-[#1A3D2E]"
+                    : "text-[#86868B] hover:text-[#111111]"
                 }`}
               >
                 {labels[tab]}
@@ -559,7 +663,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
           {/* ── Beskrivelse ── */}
           {activeTab === "beskrivelse" && (
             <div className="space-y-8">
-              <div className="prose prose-sm max-w-none text-charcoal/80">
+              <div className="prose prose-sm max-w-none text-[#111111]/80">
                 {template.description ? (
                   <p className="whitespace-pre-line leading-relaxed">{template.description}</p>
                 ) : (
@@ -587,8 +691,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
               </div>
 
               {/* Why refurbished */}
-              <div className="rounded-2xl bg-cream p-6">
-                <h3 className="mb-4 font-display text-base font-bold text-charcoal">
+              <div className="rounded-2xl bg-[#F7F7F8] p-6">
+                <h3 className="mb-4 font-display text-base font-bold text-[#111111]">
                   Hvorfor vælge refurbished?
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -599,12 +703,12 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                     { title: "Længere garanti", desc: "36 måneders garanti — 12 måneder mere end producentens standard." },
                   ].map((item) => (
                     <div key={item.title} className="flex gap-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-green-eco">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]">
                         <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                       </svg>
                       <div>
-                        <p className="text-sm font-semibold text-charcoal">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-charcoal/50 leading-relaxed">{item.desc}</p>
+                        <p className="text-sm font-semibold text-[#111111]">{item.title}</p>
+                        <p className="mt-0.5 text-xs text-[#86868B] leading-relaxed">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -618,7 +722,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             <div className="space-y-4">
               <SpecificationsTable specs={template.specifications} />
               {Object.keys(template.specifications).length === 0 && (
-                <p className="text-sm text-charcoal/40">Specifikationer er endnu ikke tilgængelige for dette produkt.</p>
+                <p className="text-sm text-[#86868B]">Specifikationer er endnu ikke tilgængelige for dette produkt.</p>
               )}
             </div>
           )}
@@ -627,43 +731,43 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
           {activeTab === "garanti" && (
             <div className="space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
-                <div className="rounded-2xl border border-sand bg-white p-5">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-green-eco/10">
-                    <TrustIcon type="shield" className="h-5 w-5 text-green-eco" />
+                <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3D2E]/10">
+                    <TrustIcon type="shield" className="h-5 w-5 text-[#1A3D2E]" />
                   </div>
-                  <h4 className="font-display text-base font-bold text-charcoal">36 måneders garanti</h4>
-                  <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">
+                  <h4 className="font-display text-base font-bold text-[#111111]">36 måneders garanti</h4>
+                  <p className="mt-2 text-sm text-[#86868B] leading-relaxed">
                     Din {template.display_name} er dækket af 36 måneders garanti. Det dækker alle
                     fabrikationsfejl og funktionelle mangler. Har du problemer? Vi reparerer, bytter eller refunderer.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-sand bg-white p-5">
+                <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5">
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
                     <TrustIcon type="return" className="h-5 w-5 text-blue-600" />
                   </div>
-                  <h4 className="font-display text-base font-bold text-charcoal">14 dages fortrydelsesret</h4>
-                  <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">
+                  <h4 className="font-display text-base font-bold text-[#111111]">14 dages fortrydelsesret</h4>
+                  <p className="mt-2 text-sm text-[#86868B] leading-relaxed">
                     Ikke tilfreds? Returner din enhed inden for 14 dage og få fuld refundering.
                     Ingen spørgsmål stillet. Vi betaler returfragt.
                   </p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-sand bg-white p-5">
+              <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5">
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
                   <TrustIcon type="truck" className="h-5 w-5 text-amber-600" />
                 </div>
-                <h4 className="font-display text-base font-bold text-charcoal">Levering &amp; afhentning</h4>
-                <ul className="mt-3 space-y-2.5 text-sm text-charcoal/60">
+                <h4 className="font-display text-base font-bold text-[#111111]">Levering &amp; afhentning</h4>
+                <ul className="mt-3 space-y-2.5 text-sm text-[#86868B]">
                   {pickupLocations.length > 0 && pickupLocations.map((loc) => (
                     <li key={loc.name} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-green-eco">&#10003;</span>
-                      <span><strong>Hent i {loc.name} (gratis)</strong> — Klar til afhentning i dag</span>
+                      <span className="mt-0.5 text-[#1A3D2E] font-bold">&#10003;</span>
+                      <span><strong className="text-[#111111]">Hent i {loc.name} (gratis)</strong> — Klar til afhentning i dag</span>
                     </li>
                   ))}
                   {pickupLocations.length === 0 && (
                     <li className="flex items-start gap-2">
-                      <span className="mt-0.5 text-green-eco">&#10003;</span>
-                      <span><strong>Afhentning i butik (gratis)</strong> — Slagelse &amp; Vejle</span>
+                      <span className="mt-0.5 text-[#1A3D2E] font-bold">&#10003;</span>
+                      <span><strong className="text-[#111111]">Afhentning i butik (gratis)</strong> — Slagelse &amp; Vejle</span>
                     </li>
                   )}
                   {[
@@ -673,8 +777,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                     { label: "Samme dag", desc: "Bestil før kl. 16 — sendt samme dag" },
                   ].map((item) => (
                     <li key={item.label} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-green-eco">&#10003;</span>
-                      <span><strong>{item.label}</strong> — {item.desc}</span>
+                      <span className="mt-0.5 text-[#1A3D2E] font-bold">&#10003;</span>
+                      <span><strong className="text-[#111111]">{item.label}</strong> — {item.desc}</span>
                     </li>
                   ))}
                 </ul>
@@ -688,10 +792,10 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* FAQ                                                           */}
       {/* ============================================================ */}
       <div className="mt-12">
-        <h2 className="mb-6 font-display text-xl font-bold text-charcoal">
+        <h2 className="mb-6 font-display text-xl font-bold text-[#111111]">
           Ofte stillede spørgsmål om {template.display_name}
         </h2>
-        <div className="divide-y divide-sand rounded-2xl border border-sand bg-white">
+        <div className="divide-y divide-[#E5E5EA] rounded-2xl border border-[#E5E5EA] bg-white overflow-hidden">
           {[
             {
               q: `Er denne ${template.display_name} fuldt funktionel?`,
@@ -715,13 +819,13 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             },
           ].map((faq) => (
             <details key={faq.q} className="group">
-              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-semibold text-charcoal">
+              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-semibold text-[#111111] hover:bg-[#F7F7F8] transition-colors select-none">
                 {faq.q}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-charcoal/30 transition-transform group-open:rotate-180">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180">
                   <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                 </svg>
               </summary>
-              <p className="px-5 pb-4 text-sm text-charcoal/60 leading-relaxed">{faq.a}</p>
+              <p className="px-5 pb-4 text-sm text-[#86868B] leading-relaxed">{faq.a}</p>
             </details>
           ))}
         </div>
@@ -733,10 +837,10 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {accessories.length > 0 && (
         <div className="mt-12">
           <div className="mb-4 flex items-end justify-between">
-            <h2 className="font-display text-xl font-bold text-charcoal">
+            <h2 className="font-display text-xl font-bold text-[#111111]">
               Kompatibelt tilbehør
             </h2>
-            <Link href="/tilbehoer" className="text-sm font-semibold text-green-eco hover:underline">
+            <Link href="/tilbehoer" className="text-sm font-semibold text-[#1A3D2E] hover:underline">
               Se alt tilbehør &rarr;
             </Link>
           </div>
@@ -745,21 +849,21 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
               <Link
                 key={acc.id}
                 href={acc.slug ? `/tilbehoer/${acc.category ?? ""}/${acc.slug}` : "#"}
-                className="group flex flex-col overflow-hidden rounded-xl border border-sand bg-white transition-shadow hover:shadow-md"
+                className="group flex flex-col overflow-hidden rounded-xl border border-[#E5E5EA] bg-white transition-shadow hover:shadow-md"
               >
-                <div className="relative aspect-square overflow-hidden bg-cream">
+                <div className="relative aspect-square overflow-hidden bg-[#F7F7F8]">
                   {acc.images[0] ? (
                     <Image src={acc.images[0]} alt={acc.title} fill className="object-contain p-4 transition-transform group-hover:scale-105" sizes="(min-width: 768px) 25vw, 50vw" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-sand">
+                    <div className="flex h-full items-center justify-center text-[#E5E5EA]">
                       <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
                     </div>
                   )}
                 </div>
                 <div className="p-3">
-                  {acc.brand && <p className="text-xs text-charcoal/50">{acc.brand}</p>}
-                  <p className="text-sm font-semibold text-charcoal line-clamp-2">{acc.title}</p>
-                  <p className="mt-1 text-sm font-bold text-green-eco">{formatDKK(acc.sale_price ?? acc.selling_price)}</p>
+                  {acc.brand && <p className="text-xs text-[#86868B]">{acc.brand}</p>}
+                  <p className="text-sm font-semibold text-[#111111] line-clamp-2">{acc.title}</p>
+                  <p className="mt-1 text-sm font-bold text-[#1A3D2E]">{formatDKK(acc.sale_price ?? acc.selling_price)}</p>
                 </div>
               </Link>
             ))}

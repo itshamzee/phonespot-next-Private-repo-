@@ -68,7 +68,7 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
     <div className="mx-auto max-w-2xl px-4 py-12">
       {/* Header */}
       <div className="mb-8 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wider text-green-600">
+        <p className="text-sm font-semibold tracking-tight text-green-600">
           PhoneSpot Enhedshistorik
         </p>
         <h1 className="mt-2 text-3xl font-bold text-stone-800">

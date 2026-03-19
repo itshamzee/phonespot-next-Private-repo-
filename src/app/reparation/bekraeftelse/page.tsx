@@ -53,7 +53,7 @@ export default async function BekraeftelsePage({
           <div className="mb-8 flex flex-col items-center gap-1">
             <span className="text-sm text-charcoal/60">Ticket&nbsp;ID</span>
             <div className="rounded-lg bg-white px-6 py-3 shadow-sm">
-              <span className="font-mono text-lg tracking-wider text-charcoal">
+              <span className="font-mono text-lg tracking-wide text-charcoal">
                 {shortTicket}
               </span>
             </div>

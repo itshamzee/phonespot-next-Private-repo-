@@ -116,34 +116,39 @@ export default function HvorforPhonespotPage() {
   return (
     <>
       {/* Hero section */}
-      <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="mb-4 font-display text-3xl font-extrabold italic text-charcoal md:text-4xl">
-            Hvorfor PhoneSpot?
-          </h1>
-          <p className="text-lg leading-relaxed text-gray">
-            Vi tror på, at premium tech skal være tilgængeligt for alle — uden at
-            det koster jorden. Bogstaveligt talt. PhoneSpot gør det nemt at
-            vælge kvalitetstestet, bæredygtig teknologi til en fair pris.
-          </p>
+      <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+              Hvorfor PhoneSpot
+            </p>
+            <h1 className="mb-4 font-display text-3xl font-bold text-[#111111] md:text-4xl">
+              Hvorfor PhoneSpot?
+            </h1>
+            <p className="text-lg leading-relaxed text-[#86868B]">
+              Vi tror på, at premium tech skal være tilgængeligt for alle — uden at
+              det koster jorden. Bogstaveligt talt. PhoneSpot gør det nemt at
+              vælge kvalitetstestet, bæredygtig teknologi til en fair pris.
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
 
       {/* Value cards */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {VALUES.map((value) => (
             <div
               key={value.title}
-              className="rounded-[16px] border border-sand bg-white p-6"
+              className="rounded-[16px] border border-[#E5E5EA] bg-white p-6"
             >
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[12px] bg-green-eco/10 text-green-eco">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[12px] bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 {value.icon}
               </div>
-              <h3 className="mb-2 font-display text-xl font-bold italic text-charcoal">
+              <h3 className="mb-2 font-display text-xl font-bold text-[#111111]">
                 {value.title}
               </h3>
-              <p className="text-sm leading-relaxed text-gray">
+              <p className="text-sm leading-relaxed text-[#86868B]">
                 {value.description}
               </p>
             </div>
@@ -152,10 +157,10 @@ export default function HvorforPhonespotPage() {
       </section>
 
       {/* Eco-banner section */}
-      <section className="bg-green-eco text-white">
+      <section className="bg-[#1A3D2E] text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="mb-4 font-display text-3xl font-extrabold italic md:text-4xl">
+            <h2 className="mb-4 font-display text-3xl font-bold md:text-4xl">
               Et grønnere valg
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-white/80">
@@ -164,7 +169,7 @@ export default function HvorforPhonespotPage() {
             </p>
             <div className="grid gap-8 sm:grid-cols-3">
               <div>
-                <p className="font-display text-4xl font-extrabold italic">
+                <p className="font-display text-4xl font-bold">
                   80%
                 </p>
                 <p className="mt-1 text-sm text-white/70">
@@ -172,7 +177,7 @@ export default function HvorforPhonespotPage() {
                 </p>
               </div>
               <div>
-                <p className="font-display text-4xl font-extrabold italic">
+                <p className="font-display text-4xl font-bold">
                   50 mio.
                 </p>
                 <p className="mt-1 text-sm text-white/70">
@@ -180,7 +185,7 @@ export default function HvorforPhonespotPage() {
                 </p>
               </div>
               <div>
-                <p className="font-display text-4xl font-extrabold italic">
+                <p className="font-display text-4xl font-bold">
                   2+ år
                 </p>
                 <p className="mt-1 text-sm text-white/70">
@@ -194,19 +199,19 @@ export default function HvorforPhonespotPage() {
 
       {/* Trust section */}
       <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
-        <h2 className="mb-10 text-center font-display text-3xl font-extrabold italic text-charcoal md:text-4xl">
+        <h2 className="mb-10 text-center font-display text-3xl font-bold text-[#111111] md:text-4xl">
           Handl med tryghed
         </h2>
         <div className="grid gap-6 sm:grid-cols-3">
           {TRUST_ITEMS.map((item) => (
             <div
               key={item.title}
-              className="rounded-[16px] border border-sand bg-white p-6 text-center"
+              className="rounded-[16px] border border-[#E5E5EA] bg-white p-6 text-center"
             >
-              <h3 className="mb-2 font-display text-xl font-bold italic text-charcoal">
+              <h3 className="mb-2 font-display text-xl font-bold text-[#111111]">
                 {item.title}
               </h3>
-              <p className="text-sm leading-relaxed text-gray">
+              <p className="text-sm leading-relaxed text-[#86868B]">
                 {item.description}
               </p>
             </div>
@@ -216,17 +221,17 @@ export default function HvorforPhonespotPage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 pb-16 lg:px-8">
-        <div className="rounded-[16px] border border-sand bg-white p-10 text-center md:p-14">
-          <h2 className="mb-3 font-display text-2xl font-extrabold italic text-charcoal md:text-3xl">
+        <div className="rounded-[16px] border border-[#E5E5EA] bg-[#F7F7F8] p-10 text-center md:p-14">
+          <h2 className="mb-3 font-display text-2xl font-bold text-[#111111] md:text-3xl">
             Klar til at finde din næste enhed?
           </h2>
-          <p className="mb-8 text-gray">
+          <p className="mb-8 text-[#86868B]">
             Udforsk vores udvalg af kvalitetstestede iPhones, iPads og meget
             mere.
           </p>
           <Link
             href="/iphones"
-            className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+            className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
           >
             Se produkter
           </Link>

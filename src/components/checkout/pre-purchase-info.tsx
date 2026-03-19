@@ -38,7 +38,7 @@ export function PrePurchaseInfo() {
           {/* Seller info */}
           <div>
             <p className="font-semibold">Sælger</p>
-            <p className="text-gray-600 text-xs mt-0.5">
+            <p className="text-gray text-xs mt-0.5">
               PhoneSpot ApS · CVR: 38688766
               <br />
               VestsjællandsCentret 10, 4200 Slagelse
@@ -48,7 +48,7 @@ export function PrePurchaseInfo() {
           {/* Consumer rights */}
           <div>
             <p className="font-semibold">Dine rettigheder</p>
-            <ul className="mt-1 space-y-1 text-xs text-gray-600 list-disc list-inside">
+            <ul className="mt-1 space-y-1 text-xs text-gray list-disc list-inside">
               <li>14 dages fortrydelsesret fra modtagelse</li>
               <li>24 måneders reklamationsret (mangelsansvar)</li>
               <li>36 måneders garanti fra PhoneSpot</li>
@@ -58,13 +58,13 @@ export function PrePurchaseInfo() {
           {/* Payment methods */}
           <div>
             <p className="font-semibold">Betalingsmetoder</p>
-            <p className="text-xs text-gray-600 mt-0.5">
+            <p className="text-xs text-gray mt-0.5">
               Dankort · Visa/Mastercard · MobilePay
             </p>
           </div>
 
           {/* Used-goods VAT note */}
-          <div className="rounded-lg bg-warm-white border border-sand px-3 py-2 text-xs text-gray-600">
+          <div className="rounded-lg bg-warm-white border border-sand px-3 py-2 text-xs text-gray">
             <strong className="text-charcoal">Brugtmomsordning:</strong> Varer er solgt
             under brugtmomsordningen. Køber har ikke fradragsret for moms.
           </div>

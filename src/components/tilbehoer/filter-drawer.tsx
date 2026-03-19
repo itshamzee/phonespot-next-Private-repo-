@@ -81,7 +81,7 @@ export function FilterDrawer({ brands, totalCount }: FilterDrawerProps) {
 
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
               <div>
-                <h3 className="font-display text-sm font-bold uppercase tracking-wide text-charcoal">Pris</h3>
+                <h3 className="font-display text-sm font-bold tracking-tight text-charcoal">Pris</h3>
                 <div className="mt-3 space-y-3">
                   {PRICE_RANGES.map((range) => (
                     <label key={range.value} className="flex cursor-pointer items-center gap-3 text-sm text-charcoal/80">
@@ -105,7 +105,7 @@ export function FilterDrawer({ brands, totalCount }: FilterDrawerProps) {
 
               {brands.length > 0 && (
                 <div>
-                  <h3 className="font-display text-sm font-bold uppercase tracking-wide text-charcoal">Mærke</h3>
+                  <h3 className="font-display text-sm font-bold tracking-tight text-charcoal">Mærke</h3>
                   <div className="mt-3 space-y-3">
                     {brands.map((brand) => (
                       <label key={brand.name} className="flex cursor-pointer items-center gap-3 text-sm text-charcoal/80">

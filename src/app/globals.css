@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-charcoal: #3A3D38;
-  --color-charcoal-light: #4A4D48;
-  --color-black: #1A1C19;
-  --color-green-eco: #5A8C6F;
-  --color-green-light: #7AB392;
-  --color-green-pale: #E8F0EB;
-  --color-warm-white: #F5F2EC;
-  --color-cream: #EAE5DB;
-  --color-sand: #D4CFC5;
-  --color-gray: #8A8880;
-  --color-soft-grey: #E2E0DB;
+  /* ── Premium Nordic palette ─────────────────────────── */
+  --color-charcoal: #111111;
+  --color-charcoal-light: #333333;
+  --color-black: #000000;
+  --color-green-eco: #1A3D2E;
+  --color-green-light: #2D6B45;
+  --color-green-pale: #EAF2ED;
+  --color-warm-white: #FFFFFF;
+  --color-cream: #F7F7F8;
+  --color-sand: #E5E5EA;
+  --color-gray: #6E6E73;
+  --color-soft-grey: #E8E8ED;
 
   --font-display: "Barlow Condensed", sans-serif;
   --font-body: "DM Sans", sans-serif;
@@ -20,9 +21,9 @@
   --radius-md: 16px;
   --radius-lg: 24px;
 
-  --shadow-sm: 0 1px 3px rgba(58, 61, 56, 0.06);
-  --shadow-md: 0 4px 12px rgba(58, 61, 56, 0.08);
-  --shadow-lg: 0 8px 32px rgba(58, 61, 56, 0.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 html {
@@ -34,25 +35,27 @@ body {
   color: var(--color-charcoal);
   font-family: var(--font-body);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .ps-pattern-dots-green {
-  background-color: #5A8C6F;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
+  background-color: #1A3D2E;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 .ps-pattern-dots-dark {
-  background-color: #3A3D38;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
+  background-color: #111111;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 .ps-pattern-scanlines {
-  background-color: #EAE5DB;
-  background-image: repeating-linear-gradient(0deg, transparent, transparent 11px, rgba(58,61,56,0.06) 11px, rgba(58,61,56,0.06) 12px);
+  background-color: #F7F7F8;
+  background-image: none;
 }
 .ps-pattern-diagonal {
-  background-color: #3A3D38;
-  background-image: repeating-linear-gradient(-30deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 41px);
+  background-color: #111111;
+  background-image: none;
 }
 
 /* Hide scrollbar but keep scroll functionality */
@@ -76,8 +79,8 @@ body {
 /* Global minimum font size for readability */
 @layer base {
   body {
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 17px;
+    line-height: 1.65;
   }
 
   /* Ensure inputs don't trigger iOS zoom (requires 16px minimum) */

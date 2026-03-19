@@ -31,7 +31,7 @@ export default async function OrderConfirmationPage({
         </p>
 
         <div className="mt-8 rounded-2xl border border-sand bg-cream p-6">
-          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-charcoal">
+          <h3 className="font-display text-sm font-semibold tracking-tight text-charcoal">
             Hvad sker der nu?
           </h3>
           <div className="mt-4 space-y-3 text-left">

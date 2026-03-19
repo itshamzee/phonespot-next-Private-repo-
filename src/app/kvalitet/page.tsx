@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { GradeSlider } from "@/components/home/grade-slider";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title:
@@ -454,100 +456,109 @@ const COMPARISON = [
 export default function KvalitetPage() {
   return (
     <>
-      {/* JSON-LD structured data for FAQ rich snippets (static content only) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      <JsonLd data={faqJsonLd} />
 
       {/* ── Hero ── */}
-      <SectionWrapper background="charcoal" className="text-center text-white">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-          Vores kvalitetsløfte
-        </p>
-        <Heading size="xl" className="text-white">
-          Refurbished kvalitet du kan mærke forskel på
-        </Heading>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          Hos PhoneSpot er &ldquo;refurbished&rdquo; ikke bare et ord — det er
-          et løfte. Hver eneste iPhone, iPad og bærbar gennemgår vores grundige
-          30-punkts testproces, før den når dine hænder. Vi graderer ærligt,
-          tester grundigt og giver dig 36 måneders garanti — fordi vi tror på
-          det vi sælger. Spar op til 40% sammenlignet med ny, uden at gå på
-          kompromis med kvaliteten.
-        </p>
+      <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 text-center lg:px-8 lg:py-24">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+            Vores kvalitetsløfte
+          </p>
+          <Heading size="xl" className="text-[#111111]">
+            Refurbished kvalitet du kan mærke forskel på
+          </Heading>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
+            Hos PhoneSpot er &ldquo;refurbished&rdquo; ikke bare et ord — det er
+            et løfte. Hver eneste iPhone, iPad og bærbar gennemgår vores grundige
+            30-punkts testproces, før den når dine hænder. Vi graderer ærligt,
+            tester grundigt og giver dig 36 måneders garanti — fordi vi tror på
+            det vi sælger. Spar op til 40% sammenlignet med ny, uden at gå på
+            kompromis med kvaliteten.
+          </p>
 
-        {/* Kvalitetsløfte checkliste fra forsiden */}
-        <div className="mx-auto mt-10 max-w-2xl">
-          <ul className="grid gap-3 text-left sm:grid-cols-2">
-            {[
-              "Professionel diagnostik med certificeret værktøj",
-              "Ærlig gradering — A, B eller C, aldrig pyntet på",
-              "Batterikapacitet altid oplyst og verificeret",
-              "Ren software-installation og nyeste opdateringer",
-              "Grundig rengøring og omhyggelig pakning",
-            ].map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-3 text-sm text-white/80"
-              >
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-eco/20 text-green-eco">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="h-3.5 w-3.5"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+          {/* Kvalitetsløfte checkliste fra forsiden */}
+          <div className="mx-auto mt-10 max-w-2xl">
+            <ul className="grid gap-3 text-left sm:grid-cols-2">
+              {[
+                "Professionel diagnostik med certificeret værktøj",
+                "Ærlig gradering — A, B eller C, aldrig pyntet på",
+                "Batterikapacitet altid oplyst og verificeret",
+                "Ren software-installation og nyeste opdateringer",
+                "Grundig rengøring og omhyggelig pakning",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-3 text-sm text-[#111111]"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/20 text-[#1A3D2E]">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 30+ kvalitetstests
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 36 måneders garanti
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> 14 dages fortrydelsesret
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="text-green-eco">✓</span> e-mærket godkendt
-          </span>
-        </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-[#86868B]">
+            <span className="flex items-center gap-2">
+              <span className="text-[#1A3D2E]">✓</span> 30+ kvalitetstests
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-[#1A3D2E]">✓</span> 36 måneders garanti
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-[#1A3D2E]">✓</span> 14 dages fortrydelsesret
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-[#1A3D2E]">✓</span> e-mærket godkendt
+            </span>
+          </div>
 
-        <div className="mt-8">
-          <Link
-            href="/iphones"
-            className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Se vores udvalg &rarr;
-          </Link>
+          <div className="mt-8">
+            <Link
+              href="/iphones"
+              className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Se vores udvalg &rarr;
+            </Link>
+          </div>
         </div>
-      </SectionWrapper>
+      </div>
 
       {/* ── Kvalitetsløfte med GradeSlider ── */}
       <SectionWrapper>
+        {/* Quality testing photo */}
+        <div className="mx-auto mb-12 max-w-4xl overflow-hidden rounded-3xl">
+          <Image
+            src="/images/quality/quality-testing.jpg"
+            alt="PhoneSpot tekniker udfører kvalitetstest på en refurbished enhed"
+            width={900}
+            height={400}
+            className="h-64 w-full object-cover md:h-80"
+          />
+        </div>
+
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Vores kvalitetsløfte
             </p>
             <Heading as="h2" size="md">
               30+ tests. Hver eneste enhed.
             </Heading>
-            <p className="mt-4 text-gray leading-relaxed">
+            <p className="mt-4 text-[#86868B] leading-relaxed">
               Skærm, batteri, kamera, sensorer, højttalere, Face ID — vi tester
               alt. Enheder der ikke lever op til vores standard, sælges ikke som
               refurbished. Vælg mellem Grade A, B og C og se præcis hvad du kan
@@ -563,13 +574,13 @@ export default function KvalitetPage() {
               ].map((point) => (
                 <li
                   key={point}
-                  className="flex items-start gap-2 text-sm text-charcoal"
+                  className="flex items-start gap-2 text-sm text-[#111111]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="mt-0.5 h-4 w-4 shrink-0 text-green-eco"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]"
                     aria-hidden="true"
                   >
                     <path
@@ -590,7 +601,7 @@ export default function KvalitetPage() {
             <div className="mt-4 text-center">
               <Link
                 href="/iphones"
-                className="inline-block text-sm font-semibold text-green-eco hover:underline"
+                className="inline-block text-sm font-semibold text-[#1A3D2E] hover:underline"
               >
                 Se detaljerede eksempler &rarr;
               </Link>
@@ -602,13 +613,22 @@ export default function KvalitetPage() {
       {/* ── Grading system detaljeret ── */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+          <div className="mx-auto mb-8 max-w-xs overflow-hidden rounded-2xl">
+            <Image
+              src="/images/quality/quality-grading.jpg"
+              alt="Graderingssystem — Grade A, B og C eksempler"
+              width={320}
+              height={200}
+              className="h-48 w-full object-cover"
+            />
+          </div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Graderingssystem
           </p>
           <Heading as="h2" size="lg">
             Grade A, B og C — hvad betyder det?
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Vi bruger tre graderinger baseret på enhedens kosmetiske stand.
             Funktionelt er alle enheder 100% — forskellen er udelukkende
             kosmetisk. Det betyder, at uanset om du vælger Grade A, B eller C,
@@ -622,7 +642,7 @@ export default function KvalitetPage() {
         <div className="mt-8 text-center">
           <Link
             href="/iphones"
-            className="text-sm font-medium text-green-eco underline underline-offset-2 transition-colors hover:text-green-eco/80"
+            className="text-sm font-medium text-[#1A3D2E] underline underline-offset-2 transition-colors hover:text-[#1A3D2E]/80"
           >
             Se priser på alle grades &rarr;
           </Link>
@@ -632,19 +652,28 @@ export default function KvalitetPage() {
       {/* ── 30-punkt testproces ── */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Vores proces
           </p>
           <Heading as="h2" size="lg">
             30+ kvalitetstests — hver eneste enhed
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             De fleste forhandlere af brugte telefoner kigger enheden hurtigt
             igennem og sender den videre. Hos PhoneSpot gør vi det anderledes.
             Hver enhed testes individuelt af vores teknikere i en systematisk
             proces med over 30 kontrolpunkter. Her er de 8 vigtigste trin — fra
             den første inspektion til den færdige pakning.
           </p>
+          <div className="mx-auto mt-8 max-w-2xl overflow-hidden rounded-2xl">
+            <Image
+              src="/images/lifestyle/workshop.jpg"
+              alt="PhoneSpot workshop — hvor vi tester og klargør alle enheder"
+              width={700}
+              height={350}
+              className="h-56 w-full object-cover md:h-72"
+            />
+          </div>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {TEST_PROCESS.map((step, index) => (
@@ -652,22 +681,22 @@ export default function KvalitetPage() {
               key={step.title}
               className="rounded-2xl bg-white p-6 shadow-sm"
             >
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 {step.icon}
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-green-eco">
+              <p className="text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
                 Trin {index + 1}
               </p>
-              <h3 className="mt-1 font-display text-lg font-bold text-charcoal">
+              <h3 className="mt-1 font-display text-lg font-bold text-[#111111]">
                 {step.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray">
+              <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
                 {step.description}
               </p>
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-gray">
+        <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-[#86868B]">
           Enheder der ikke består alle 30+ tests, sælges ikke som refurbished
           hos PhoneSpot. Vores afvisningsrate sikrer, at kun de bedste enheder
           når videre til dig.
@@ -678,26 +707,26 @@ export default function KvalitetPage() {
       <SectionWrapper>
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Batteri
             </p>
             <Heading as="h2" size="md">
               Batteri du kan regne med — hver dag
             </Heading>
-            <p className="mt-4 text-gray leading-relaxed">
+            <p className="mt-4 text-[#86868B] leading-relaxed">
               Batteriet er hjertet i din enhed, og det er noget mange
               konkurrenter springer let hen over. Hos PhoneSpot tester vi
               batterikapaciteten på alle enheder med professionelt diagnostisk
               værktøj — ikke blot Apples egen batteriindikator, der kan være
               upræcis.
             </p>
-            <p className="mt-3 text-gray leading-relaxed">
+            <p className="mt-3 text-[#86868B] leading-relaxed">
               Vores minimumsgrænser er strengere end branchestandarden. En
               iPhone med 85% batterikapacitet holder stadig en fuld dags brug
               med skærmtid, opkald og apps. Enheder der ikke opfylder vores
               krav, sælges ganske enkelt ikke som refurbished.
             </p>
-            <p className="mt-3 text-sm font-medium text-charcoal">
+            <p className="mt-3 text-sm font-medium text-[#111111]">
               Batterikapaciteten oplyses altid, så du ved præcis hvad du køber.
             </p>
           </div>
@@ -707,15 +736,15 @@ export default function KvalitetPage() {
                 key={bg.grade}
                 className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm"
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-eco text-lg font-bold text-white">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E] text-lg font-bold text-white">
                   {bg.minCapacity}
                 </div>
                 <div>
-                  <p className="font-display text-sm font-bold uppercase tracking-[1px] text-charcoal">
+                  <p className="font-display text-sm font-bold uppercase tracking-wide text-[#111111]">
                     {bg.grade}
                   </p>
-                  <p className="mt-0.5 text-sm text-gray">{bg.description}</p>
-                  <p className="mt-0.5 text-xs text-gray/70">{bg.detail}</p>
+                  <p className="mt-0.5 text-sm text-[#86868B]">{bg.description}</p>
+                  <p className="mt-0.5 text-xs text-[#86868B]/70">{bg.detail}</p>
                 </div>
               </div>
             ))}
@@ -726,13 +755,13 @@ export default function KvalitetPage() {
       {/* ── Ny vs Refurbished sammenligning ── */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Sammenligning
           </p>
           <Heading as="h2" size="md">
             Ny vs. refurbished — hvad får du egentlig?
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Mange tøver med at købe refurbished, fordi de tror det er det samme
             som &ldquo;brugt&rdquo;. Sandheden er, at en professionelt
             refurbished enhed fra PhoneSpot matcher en ny på alle de punkter der
@@ -742,14 +771,14 @@ export default function KvalitetPage() {
         <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl bg-white shadow-sm">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-sand bg-sand/50">
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
+              <tr className="border-b border-[#E5E5EA] bg-[#F7F7F8]">
+                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
                   &nbsp;
                 </th>
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
+                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
                   Ny enhed
                 </th>
-                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-[2px] text-green-eco">
+                <th className="px-5 py-3 font-display text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                   PhoneSpot Refurbished
                 </th>
               </tr>
@@ -759,14 +788,14 @@ export default function KvalitetPage() {
                 <tr
                   key={row.feature}
                   className={
-                    i < COMPARISON.length - 1 ? "border-b border-sand/60" : ""
+                    i < COMPARISON.length - 1 ? "border-b border-[#E5E5EA]/60" : ""
                   }
                 >
-                  <td className="px-5 py-3 font-semibold text-charcoal">
+                  <td className="px-5 py-3 font-semibold text-[#111111]">
                     {row.feature}
                   </td>
-                  <td className="px-5 py-3 text-gray">{row.newDevice}</td>
-                  <td className="px-5 py-3 font-medium text-green-eco">
+                  <td className="px-5 py-3 text-[#86868B]">{row.newDevice}</td>
+                  <td className="px-5 py-3 font-medium text-[#1A3D2E]">
                     {row.refurbished}
                   </td>
                 </tr>
@@ -777,7 +806,7 @@ export default function KvalitetPage() {
         <div className="mt-8 text-center">
           <Link
             href="/iphones"
-            className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+            className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
           >
             Se hvad du kan spare &rarr;
           </Link>
@@ -788,60 +817,60 @@ export default function KvalitetPage() {
       <SectionWrapper>
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Bæredygtighed
             </p>
             <Heading as="h2" size="md">
               Et bedre valg for din pung — og for planeten
             </Heading>
-            <p className="mt-4 text-gray leading-relaxed">
+            <p className="mt-4 text-[#86868B] leading-relaxed">
               Produktion af en ny smartphone kræver sjældne mineraler,
               energikrævende processer og skaber betydelig CO&#8322;-udledning.
               Ved at vælge refurbished forlænger du enhedens levetid og sparer
               op til 80% af den CO&#8322; der bruges til at producere en ny.
             </p>
-            <p className="mt-3 text-gray leading-relaxed">
+            <p className="mt-3 text-[#86868B] leading-relaxed">
               Det er et af de nemmeste klimavalg du kan træffe i hverdagen — og
               du sparer tusindvis af kroner samtidig. Med PhoneSpot behøver du
               ikke vælge mellem kvalitet, pris og samvittighed.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 <LeafIcon />
               </div>
-              <p className="font-display text-3xl font-bold text-green-eco">
+              <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                 80%
               </p>
-              <p className="mt-1 text-xs text-gray">Mindre CO&#8322;</p>
+              <p className="mt-1 text-xs text-[#86868B]">Mindre CO&#8322;</p>
             </div>
-            <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 <SmartphoneIcon />
               </div>
-              <p className="font-display text-3xl font-bold text-green-eco">
+              <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                 2+ år
               </p>
-              <p className="mt-1 text-xs text-gray">Ekstra levetid</p>
+              <p className="mt-1 text-xs text-[#86868B]">Ekstra levetid</p>
             </div>
-            <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 <BatteryIcon />
               </div>
-              <p className="font-display text-3xl font-bold text-green-eco">
+              <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                 40%
               </p>
-              <p className="mt-1 text-xs text-gray">Lavere pris</p>
+              <p className="mt-1 text-xs text-[#86868B]">Lavere pris</p>
             </div>
-            <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 <CheckCircleIcon />
               </div>
-              <p className="font-display text-3xl font-bold text-green-eco">
+              <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                 100%
               </p>
-              <p className="mt-1 text-xs text-gray">Funktionalitet</p>
+              <p className="mt-1 text-xs text-[#86868B]">Funktionalitet</p>
             </div>
           </div>
         </div>
@@ -850,13 +879,13 @@ export default function KvalitetPage() {
       {/* ── Garanti & tryghed ── */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Din tryghed
           </p>
           <Heading as="h2" size="md">
             36 måneders garanti — uden besvær
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Alle refurbished produkter fra PhoneSpot leveres med 36 måneders
             garanti — præcis som ved køb af nyt. Hvis noget går galt, løser vi
             det hurtigt og ukompliceret. Mange af vores konkurrenter tilbyder
@@ -866,20 +895,20 @@ export default function KvalitetPage() {
         </div>
         <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
               <ShieldIcon />
             </div>
-            <h3 className="font-display text-base font-bold text-charcoal">
+            <h3 className="font-display text-base font-bold text-[#111111]">
               36 mdr. garanti
             </h3>
-            <p className="mt-2 text-sm text-gray">
+            <p className="mt-2 text-sm text-[#86868B]">
               Dækker fabrikationsfejl og funktionelle mangler i hele 36 måneder.
               Kontakt os, og vi tager os af resten — reparation, ombytning eller
               refundering.
             </p>
           </div>
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -895,17 +924,17 @@ export default function KvalitetPage() {
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
               </svg>
             </div>
-            <h3 className="font-display text-base font-bold text-charcoal">
+            <h3 className="font-display text-base font-bold text-[#111111]">
               14 dages returret
             </h3>
-            <p className="mt-2 text-sm text-gray">
+            <p className="mt-2 text-sm text-[#86868B]">
               Ikke tilfreds? Returner enheden inden 14 dage og få dine penge
               tilbage. Ingen spørgsmål stillet, ingen skjulte gebyrer. Vi sender
               dig et returetiket.
             </p>
           </div>
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -920,10 +949,10 @@ export default function KvalitetPage() {
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
             </div>
-            <h3 className="font-display text-base font-bold text-charcoal">
+            <h3 className="font-display text-base font-bold text-[#111111]">
               Dansk support
             </h3>
-            <p className="mt-2 text-sm text-gray">
+            <p className="mt-2 text-sm text-[#86868B]">
               Kontakt os på dansk via email eller telefon. Vi svarer typisk
               inden for 24 timer på hverdage. Rigtige mennesker, ikke chatbots.
             </p>
@@ -932,63 +961,65 @@ export default function KvalitetPage() {
       </SectionWrapper>
 
       {/* ── Tal der taler ── */}
-      <SectionWrapper background="charcoal" className="text-white">
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="md" className="text-white">
-            Tal der taler for sig selv
-          </Heading>
-          <p className="mt-4 text-white/50">
-            Bag ordene står resultaterne. Her er de tal vi er mest stolte af.
-          </p>
+      <div className="bg-[#F7F7F8] border-y border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <Heading as="h2" size="md" className="text-[#111111]">
+              Tal der taler for sig selv
+            </Heading>
+            <p className="mt-4 text-[#86868B]">
+              Bag ordene står resultaterne. Her er de tal vi er mest stolte af.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
+            {[
+              { value: "1.000+", label: "Enheder solgt" },
+              { value: "30+", label: "Kvalitetstests per enhed" },
+              { value: "36", label: "Måneders garanti" },
+              { value: "4.5/5", label: "På Trustpilot" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="font-display text-4xl font-bold text-[#1A3D2E] md:text-5xl">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[#86868B]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
-          {[
-            { value: "1.000+", label: "Enheder solgt" },
-            { value: "30+", label: "Kvalitetstests per enhed" },
-            { value: "36", label: "Måneders garanti" },
-            { value: "4.5/5", label: "På Trustpilot" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-4xl font-bold text-green-eco md:text-5xl">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-white/60">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </SectionWrapper>
+      </div>
 
       {/* ── FAQ ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Spørgsmål & svar
           </p>
           <Heading as="h2" size="md">
             Alt du vil vide om refurbished kvalitet
           </Heading>
-          <p className="mt-4 text-gray">
+          <p className="mt-4 text-[#86868B]">
             Vi har samlet de mest stillede spørgsmål om vores kvalitetsproces,
             gradering og garanti. Kan du ikke finde svar på dit spørgsmål?{" "}
             <Link
               href="/kontakt"
-              className="font-medium text-green-eco underline underline-offset-2"
+              className="font-medium text-[#1A3D2E] underline underline-offset-2"
             >
               Kontakt os
             </Link>
             .
           </p>
         </div>
-        <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
+        <div className="mx-auto mt-10 max-w-3xl divide-y divide-[#E5E5EA]">
           {QUALITY_FAQ.map((item) => (
             <details key={item.question} className="group py-5">
-              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-charcoal">
+              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-[#111111]">
                 {item.question}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="h-5 w-5 shrink-0 text-gray transition-transform group-open:rotate-180"
+                  className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180"
                   aria-hidden="true"
                 >
                   <path
@@ -998,7 +1029,7 @@ export default function KvalitetPage() {
                   />
                 </svg>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-gray">
+              <p className="mt-3 text-sm leading-relaxed text-[#86868B]">
                 {item.answer}
               </p>
             </details>
@@ -1017,10 +1048,10 @@ export default function KvalitetPage() {
               href="/blog/refurbished-vs-brugt-guide"
               className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Refurbished vs brugt
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Forstå forskellen og vælg det rigtige
               </p>
             </Link>
@@ -1028,10 +1059,10 @@ export default function KvalitetPage() {
               href="/blog/bedste-refurbished-iphone-2026"
               className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Bedste refurbished iPhone 2026
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Guide til at vælge den rigtige model
               </p>
             </Link>
@@ -1039,10 +1070,10 @@ export default function KvalitetPage() {
               href="/garanti"
               className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Vores 36 mdr. garanti
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Fuld dækning og tryghed
               </p>
             </Link>
@@ -1061,7 +1092,7 @@ export default function KvalitetPage() {
           <Heading as="h2" size="md">
             Klar til at spare — uden at gå på kompromis?
           </Heading>
-          <p className="mt-4 text-gray">
+          <p className="mt-4 text-[#86868B]">
             Udforsk vores udvalg af kvalitetstestede refurbished iPhones, iPads
             og bærbare med 36 måneders garanti og 14 dages fortrydelsesret.
             Levering på 1-2 hverdage.
@@ -1069,19 +1100,19 @@ export default function KvalitetPage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/iphones"
-              className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
               Se iPhones &rarr;
             </Link>
             <Link
               href="/ipads"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
             >
               Se iPads &rarr;
             </Link>
             <Link
               href="/baerbare"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
             >
               Se bærbare &rarr;
             </Link>

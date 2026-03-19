@@ -47,20 +47,20 @@ export default function ComparisonIndexPage() {
       />
 
       {/* Hero */}
-      <SectionWrapper background="charcoal" className="!py-16 md:!py-20">
-        <div className="text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[4px] text-green-eco">
+      <section className="bg-[#F7F7F8] py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 text-center">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
             Sammenligninger
           </p>
-          <Heading as="h1" size="lg" className="!text-white">
+          <Heading as="h1" size="lg" className="!text-[#111111]">
             Hvad skal du vaelge?
           </Heading>
-          <p className="mx-auto mt-4 max-w-2xl font-body text-lg text-white/70">
+          <p className="mx-auto mt-4 max-w-2xl font-body text-lg text-[#6E6E73]">
             Forstaa forskellen mellem refurbished, brugt og ny elektronik — og
             find ud af hvad der passer bedst til dig.
           </p>
         </div>
-      </SectionWrapper>
+      </section>
 
       {/* Comparison cards */}
       <SectionWrapper>

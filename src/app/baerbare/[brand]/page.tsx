@@ -160,24 +160,26 @@ export default async function BrandPage({
         }}
       />
 
-      <SectionWrapper background="charcoal" className="text-center text-white">
-        <Link
-          href="/baerbare"
-          className="mb-6 inline-flex items-center gap-1 text-sm text-white/50 transition-colors hover:text-white/80"
-        >
-          &larr; Alle bærbare
-        </Link>
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-          {tier.title} bærbare
-        </p>
-        <Heading size="xl" className="text-white">
-          {tier.title} bærbare
-        </Heading>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-          {tier.tagline}. Alle er testet med 30+ kontroller, rengjort og klar
-          til brug med 36 måneders garanti.
-        </p>
-      </SectionWrapper>
+      <section className="bg-[#F7F7F8] py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 text-center">
+          <Link
+            href="/baerbare"
+            className="mb-6 inline-flex items-center gap-1 text-sm text-[#6E6E73] transition-colors hover:text-[#111111]"
+          >
+            &larr; Alle bærbare
+          </Link>
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+            {tier.title} bærbare
+          </p>
+          <Heading size="xl" className="!text-[#111111]">
+            {tier.title} bærbare
+          </Heading>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#6E6E73]">
+            {tier.tagline}. Alle er testet med 30+ kontroller, rengjort og klar
+            til brug med 36 måneders garanti.
+          </p>
+        </div>
+      </section>
 
       <SectionWrapper>
         {products.length > 0 ? (

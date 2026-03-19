@@ -93,7 +93,7 @@ export default async function CategoryPage({
                       <path d={cat.iconPath} />
                     </svg>
                   </div>
-                  <span className="font-display text-sm font-semibold uppercase tracking-[1.5px] text-charcoal transition-colors group-hover:text-green-eco">
+                  <span className="font-display text-sm font-semibold uppercase tracking-wide text-charcoal transition-colors group-hover:text-green-eco">
                     {model.label}
                   </span>
                 </Link>
@@ -109,7 +109,7 @@ export default async function CategoryPage({
             <div className="space-y-12">
               {generations.map(({ generation, models }) => (
                 <div key={generation}>
-                  <h3 className="mb-4 flex items-center gap-3 font-display text-lg font-semibold uppercase tracking-[2px] text-charcoal">
+                  <h3 className="mb-4 flex items-center gap-3 font-display text-lg font-semibold tracking-tight text-charcoal">
                     <span className="h-px flex-1 bg-sand" />
                     <span>{generation}</span>
                     <span className="h-px flex-1 bg-sand" />
@@ -126,7 +126,7 @@ export default async function CategoryPage({
                             <path d={cat.iconPath} />
                           </svg>
                         </div>
-                        <span className="font-display text-sm font-semibold uppercase tracking-[1.5px] text-charcoal transition-colors group-hover:text-green-eco">
+                        <span className="font-display text-sm font-semibold uppercase tracking-wide text-charcoal transition-colors group-hover:text-green-eco">
                           {model.label}
                         </span>
                       </Link>

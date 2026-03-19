@@ -8,8 +8,8 @@ type HeadingProps = {
 };
 
 const sizeStyles = {
-  xl: "text-5xl md:text-7xl",
-  lg: "text-3xl md:text-5xl",
+  xl: "text-4xl md:text-6xl lg:text-7xl",
+  lg: "text-3xl md:text-4xl lg:text-5xl",
   md: "text-2xl md:text-3xl",
   sm: "text-xl md:text-2xl",
 };
@@ -22,7 +22,7 @@ export function Heading({
 }: HeadingProps) {
   return (
     <Tag
-      className={`font-display font-bold uppercase tracking-tight text-charcoal ${sizeStyles[size]} ${className}`}
+      className={`font-display font-bold tracking-tight text-[#111111] ${sizeStyles[size]} ${className}`}
     >
       {children}
     </Tag>

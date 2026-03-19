@@ -23,7 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-green-100 text-green-700",
   claimed: "bg-amber-100 text-amber-700",
-  expired: "bg-stone-100 text-stone-500",
+  expired: "bg-[#F7F7F8] text-[#6E6E73]",
 };
 
 export default function WarrantiesPage() {
@@ -50,14 +50,14 @@ export default function WarrantiesPage() {
   }, []);
 
   if (loading) {
-    return <div className="py-12 text-center text-stone-400">Indlaeser garantier...</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Indlaeser garantier...</div>;
   }
 
   if (warranties.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-stone-400">Du har ingen garantibeviser endnu</p>
-        <p className="mt-2 text-xs text-stone-400">
+        <p className="text-[#6E6E73]">Du har ingen garantibeviser endnu</p>
+        <p className="mt-2 text-xs text-[#6E6E73]">
           Garantibeviser udstedes automatisk ved kob af enheder.
         </p>
       </div>
@@ -73,18 +73,18 @@ export default function WarrantiesPage() {
         const effectiveStatus = isExpired ? "expired" : w.status;
 
         return (
-          <div key={w.id} className="rounded-xl border border-stone-200 bg-white p-5">
+          <div key={w.id} className="rounded-xl border border-[#E5E5EA] bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-stone-800">{w.guarantee_number}</p>
-                <p className="mt-1 text-sm text-stone-600">{deviceName}</p>
-                <div className="mt-2 flex gap-4 text-xs text-stone-500">
+                <p className="text-sm font-bold text-[#111111]">{w.guarantee_number}</p>
+                <p className="mt-1 text-sm text-[#6E6E73]">{deviceName}</p>
+                <div className="mt-2 flex gap-4 text-xs text-[#6E6E73]">
                   <span>Udstedt: {new Date(w.issued_at).toLocaleDateString("da-DK")}</span>
                   <span>Udlober: {new Date(w.expires_at).toLocaleDateString("da-DK")}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[effectiveStatus] ?? "bg-stone-100 text-stone-500"}`}>
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[effectiveStatus] ?? "bg-[#F7F7F8] text-[#6E6E73]"}`}>
                   {STATUS_LABELS[effectiveStatus] ?? effectiveStatus}
                 </span>
               </div>
@@ -96,7 +96,7 @@ export default function WarrantiesPage() {
                   href={w.pdf_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                  className="rounded-lg border border-[#E5E5EA] px-3 py-1.5 text-xs font-medium text-[#6E6E73] hover:bg-[#F7F7F8]"
                 >
                   Download PDF
                 </a>
@@ -104,7 +104,7 @@ export default function WarrantiesPage() {
               {w.qr_verification_code && (
                 <a
                   href={`/garanti/${w.qr_verification_code}`}
-                  className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-50"
+                  className="rounded-lg border border-[#E5E5EA] px-3 py-1.5 text-xs font-medium text-[#1A3D2E] hover:bg-[#EFF5F1]"
                 >
                   Verificer garanti
                 </a>

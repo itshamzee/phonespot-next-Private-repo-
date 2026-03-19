@@ -52,17 +52,30 @@ const FAQ_ITEMS = [
 
 export default function FaqPage() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="mb-3 font-display text-3xl font-extrabold italic text-charcoal md:text-4xl">
-          Ofte stillede spørgsmål
-        </h1>
-        <p className="mb-10 text-gray">
-          Her finder du svar på de mest almindelige spørgsmål om vores
-          refurbished produkter, garanti, levering og meget mere.
-        </p>
-        <FaqAccordion items={FAQ_ITEMS} />
+    <>
+      {/* ── Hero ── */}
+      <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+              FAQ
+            </p>
+            <h1 className="mb-4 font-display text-3xl font-bold text-[#111111] md:text-4xl">
+              Ofte stillede spørgsmål
+            </h1>
+            <p className="text-lg leading-relaxed text-[#86868B]">
+              Her finder du svar på de mest almindelige spørgsmål om vores
+              refurbished produkter, garanti, levering og meget mere.
+            </p>
+          </div>
+        </div>
       </div>
-    </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <FaqAccordion items={FAQ_ITEMS} />
+        </div>
+      </section>
+    </>
   );
 }

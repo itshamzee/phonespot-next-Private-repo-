@@ -1275,7 +1275,7 @@ export function BookingWizard() {
                           style={{ background: colorDot.hex }}
                         />
                       )}
-                      <p className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                      <p className="text-xs font-bold text-white/80 uppercase tracking-wide">
                         {brand?.name ?? "—"} {model?.name ?? ""}
                         {booking.color ? ` · ${booking.color}` : ""}
                       </p>

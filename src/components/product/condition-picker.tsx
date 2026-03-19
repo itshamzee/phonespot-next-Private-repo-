@@ -40,7 +40,7 @@ export function ConditionPicker({ grades, selected, onSelect }: ConditionPickerP
                 : "border-soft-grey bg-white hover:border-green-eco/40"
             } ${isUnavailable ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
-            <p className="font-display text-sm font-bold uppercase tracking-wider text-charcoal">
+            <p className="font-display text-sm font-bold tracking-tight text-charcoal">
               Grade {g.grade}
             </p>
             <p className="mt-1 text-sm font-medium text-charcoal">{g.label}</p>

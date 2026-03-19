@@ -93,35 +93,30 @@ export default async function BrandPage({ params }: Props) {
       <JsonLd data={jsonLd} />
 
       {/* ================================================================= */}
-      {/*  HERO HEADER — Bold brand identity with trust signals              */}
+      {/*  HERO HEADER — Clean light brand header                           */}
       {/* ================================================================= */}
-      <section className="relative overflow-hidden bg-charcoal">
-        {/* Grain texture */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
-        {/* Accent gradient */}
-        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-eco/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-12 md:py-16">
+      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
           {/* Breadcrumb */}
           <nav className="mb-6 text-sm" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1.5 text-white/40">
+            <ol className="flex items-center gap-1.5 text-[#86868B]">
               <li>
-                <Link href="/reparation" className="transition-colors hover:text-white/70">
+                <Link href="/reparation" className="transition-colors hover:text-[#111111]">
                   Reparation
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
-              <li className="font-medium text-white">{brand.name}</li>
+              <li className="font-medium text-[#111111]">{brand.name}</li>
             </ol>
           </nav>
 
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="font-display text-4xl font-bold uppercase leading-[0.95] tracking-tight text-white md:text-5xl">
+              <h1 className="font-display text-4xl font-bold leading-[0.95] tracking-tight text-[#111111] md:text-5xl">
                 {brand.name}<br />
-                <span className="text-green-eco">Reparation</span>
+                <span className="text-[#1A3D2E]">Reparation</span>
               </h1>
-              <p className="mt-4 max-w-lg text-white/60">
+              <p className="mt-4 max-w-lg text-[#86868B]">
                 Vælg din {brand.name} model herunder for at se priser og booke reparation.
                 Alle reparationer udføres med livstidsgaranti i vores butik i {STORE.city}.
               </p>
@@ -136,7 +131,7 @@ export default async function BrandPage({ params }: Props) {
                 { icon: "walk", label: "Walk-in" },
               ].map(({ icon, label }) => (
                 <div key={label} className="flex flex-col items-center gap-1.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-green-eco">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                     {icon === "shield" && (
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -161,7 +156,7 @@ export default async function BrandPage({ params }: Props) {
                       </svg>
                     )}
                   </div>
-                  <span className="text-[10px] font-medium text-white/50">{label}</span>
+                  <span className="text-[10px] font-medium text-[#86868B]">{label}</span>
                 </div>
               ))}
             </div>
@@ -172,21 +167,19 @@ export default async function BrandPage({ params }: Props) {
             {["Livstidsgaranti", "30 min service", "Faste priser", "Walk-in"].map((label) => (
               <span
                 key={label}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70"
+                className="rounded-full border border-[#E5E5EA] bg-white px-3 py-1.5 text-xs font-medium text-[#86868B]"
               >
                 {label}
               </span>
             ))}
           </div>
         </div>
-
-
       </section>
 
       {/* ================================================================= */}
       {/*  MODEL GRID — Dense, searchable                                    */}
       {/* ================================================================= */}
-      <section className="bg-warm-white">
+      <section className="bg-[#F7F7F8]">
         <div className="mx-auto max-w-7xl px-4 py-8">
           <ModelGrid models={modelCards} brandName={brand.name} />
         </div>
@@ -195,13 +188,13 @@ export default async function BrandPage({ params }: Props) {
       {/* ================================================================= */}
       {/*  SEO CONTENT                                                       */}
       {/* ================================================================= */}
-      <section className="border-t border-soft-grey bg-white">
+      <section className="border-t border-[#E5E5EA] bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-charcoal">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111]">
             {brand.name} Reparation hos PhoneSpot
           </h2>
 
-          <div className="mt-6 space-y-4 text-sm leading-relaxed text-charcoal/70">
+          <div className="mt-6 space-y-4 text-sm leading-relaxed text-[#111111]/70">
             <p>
               Hos PhoneSpot i {STORE.mall}, {STORE.city}, tilbyder vi professionel
               reparation af alle {brand.name} modeller. Uanset om du har brug for
@@ -209,7 +202,7 @@ export default async function BrandPage({ params }: Props) {
               at hjælpe dig med hurtig service og faste priser.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Specialister i {brand.name} reparation
             </h3>
             <p>
@@ -220,7 +213,7 @@ export default async function BrandPage({ params }: Props) {
               funktionalitet.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Livstidsgaranti på alle reparationer
             </h3>
             <p>
@@ -229,7 +222,7 @@ export default async function BrandPage({ params }: Props) {
               vi enheden uden beregning. Vi står bag vores arbejde, altid.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Walk-in service eller book online
             </h3>
             <p>
@@ -238,7 +231,7 @@ export default async function BrandPage({ params }: Props) {
               lørdage {STORE.hours.saturday}) eller booke tid online for at sikre dig en plads.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Konkurrencedygtige priser uden overraskelser
             </h3>
             <p>
@@ -249,23 +242,23 @@ export default async function BrandPage({ params }: Props) {
           </div>
 
           {/* CTA */}
-          <div className="mt-12 rounded-2xl bg-charcoal p-8 text-center text-white">
-            <h3 className="font-display text-xl font-bold uppercase">
+          <div className="mt-12 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-8 text-center">
+            <h3 className="font-display text-xl font-bold text-[#111111]">
               Kan du ikke finde din model?
             </h3>
-            <p className="mt-2 text-sm text-white/70">
+            <p className="mt-2 text-sm text-[#86868B]">
               Kontakt os, og vi hjælper dig med at finde den rette reparation.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/kontakt"
-                className="inline-block rounded-full bg-green-eco px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Kontakt os
               </Link>
               <Link
                 href="/reparation"
-                className="inline-block rounded-full border border-white/20 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/5"
+                className="inline-block rounded-full border border-[#E5E5EA] bg-white px-8 py-3 text-sm font-semibold text-[#111111] transition-colors hover:bg-[#F7F7F8]"
               >
                 Alle mærker
               </Link>

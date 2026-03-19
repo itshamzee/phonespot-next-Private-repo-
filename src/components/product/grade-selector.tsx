@@ -122,7 +122,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
                         {formatPrice(price)} kr.
                       </span>
                     )}
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-charcoal/30">Udsolgt</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-charcoal/30">Udsolgt</span>
                   </div>
                 ) : price != null ? (
                   <span className="font-display text-sm font-bold text-charcoal">

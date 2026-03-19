@@ -85,7 +85,7 @@ function FullStoreLocation() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {/* Address */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[1px] text-charcoal/60">
+                <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">
                   Adresse
                 </p>
                 <p className="mt-1 text-sm text-charcoal">
@@ -99,7 +99,7 @@ function FullStoreLocation() {
 
               {/* Hours */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[1px] text-charcoal/60">
+                <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">
                   Åbningstider
                 </p>
                 <div className="mt-1 space-y-0.5 text-sm text-charcoal">

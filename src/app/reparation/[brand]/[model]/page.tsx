@@ -92,56 +92,53 @@ export default async function ModelPricePage({ params }: Props) {
       <JsonLd data={jsonLd} />
 
       {/* ================================================================= */}
-      {/*  HERO HEADER                                                       */}
+      {/*  HERO HEADER — Clean light header                                  */}
       {/* ================================================================= */}
-      <section className="relative bg-charcoal">
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
-        <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-green-eco/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-10 md:py-14">
+      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-10 md:py-14">
           {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" className="mb-6 text-sm">
-            <ol className="flex flex-wrap items-center gap-1.5 text-white/40">
-              <li><Link href="/reparation" className="hover:text-white/70">Reparation</Link></li>
+            <ol className="flex flex-wrap items-center gap-1.5 text-[#86868B]">
+              <li><Link href="/reparation" className="hover:text-[#111111]">Reparation</Link></li>
               <li aria-hidden="true">/</li>
-              <li><Link href={`/reparation/${brand.slug}`} className="hover:text-white/70">{brand.name}</Link></li>
+              <li><Link href={`/reparation/${brand.slug}`} className="hover:text-[#111111]">{brand.name}</Link></li>
               <li aria-hidden="true">/</li>
-              <li className="font-medium text-white">{model.name}</li>
+              <li className="font-medium text-[#111111]">{model.name}</li>
             </ol>
           </nav>
 
           <div className="flex items-center gap-6">
             {/* Device image */}
-            <div className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/5 md:flex">
+            <div className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-[#E5E5EA] bg-white md:flex">
               <DeviceImage
                 brandSlug={brand.slug}
                 deviceType={brand.device_type}
                 imageUrl={model.image_url}
                 modelName={model.name}
-                className="h-14 w-14 object-contain drop-shadow-lg"
+                className="h-14 w-14 object-contain drop-shadow-sm"
               />
             </div>
 
             <div>
-              <h1 className="font-display text-3xl font-bold uppercase leading-[0.95] tracking-tight text-white md:text-4xl">
-                {model.name} <span className="text-green-eco">Reparation</span>
+              <h1 className="font-display text-3xl font-bold leading-[0.95] tracking-tight text-[#111111] md:text-4xl">
+                {model.name} <span className="text-[#1A3D2E]">Reparation</span>
               </h1>
-              <p className="mt-3 max-w-lg text-white/60">
+              <p className="mt-3 max-w-lg text-[#86868B]">
                 Se priser på alle {model.name} reparationer herunder. Alle priser er inkl. moms,
                 reservedele og livstidsgaranti.
               </p>
 
               {/* Quick stats */}
-              <div className="mt-4 flex flex-wrap gap-4">
+              <div className="mt-4 flex flex-wrap gap-3">
                 {cheapest && (
-                  <span className="rounded-full bg-green-eco/20 px-4 py-1.5 text-sm font-bold text-green-eco">
+                  <span className="rounded-full bg-[#1A3D2E] px-4 py-1.5 text-sm font-bold text-white">
                     Fra {cheapest} DKK
                   </span>
                 )}
-                <span className="rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white/70">
+                <span className="rounded-full border border-[#E5E5EA] bg-white px-4 py-1.5 text-sm font-medium text-[#86868B]">
                   {totalServices} reparationer
                 </span>
-                <span className="rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white/70">
+                <span className="rounded-full border border-[#E5E5EA] bg-white px-4 py-1.5 text-sm font-medium text-[#86868B]">
                   Livstidsgaranti
                 </span>
               </div>
@@ -153,7 +150,7 @@ export default async function ModelPricePage({ params }: Props) {
       {/* ================================================================= */}
       {/*  MAIN CONTENT — RepairCart (service list + interactive sidebar)  */}
       {/* ================================================================= */}
-      <section className="bg-warm-white">
+      <section className="bg-[#F7F7F8]">
         <div className="mx-auto max-w-7xl px-4 py-8">
           <RepairCart
             services={services.map((s) => ({
@@ -180,13 +177,13 @@ export default async function ModelPricePage({ params }: Props) {
       {/* ================================================================= */}
       {/*  RICH SEO CONTENT                                                  */}
       {/* ================================================================= */}
-      <section className="border-t border-soft-grey bg-white">
+      <section className="border-t border-[#E5E5EA] bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16">
-          <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-charcoal">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111]">
             {model.name} Reparation
           </h2>
 
-          <div className="mt-6 space-y-4 text-sm leading-relaxed text-charcoal/70">
+          <div className="mt-6 space-y-4 text-sm leading-relaxed text-[#111111]/70">
             <p>
               Har din {model.name} brug for en reparation? Hos PhoneSpot i {STORE.mall}, {STORE.city},
               tilbyder vi professionel reparation af din {model.name} til faste priser.
@@ -194,7 +191,7 @@ export default async function ModelPricePage({ params }: Props) {
               livstidsgaranti på både arbejde og reservedele.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Specialister i {model.name} reparation
             </h3>
             <p>
@@ -203,7 +200,7 @@ export default async function ModelPricePage({ params }: Props) {
               så din enhed fungerer præcis som ny efter reparationen.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Skærmskift, batteriskift og meget mere
             </h3>
             <p>
@@ -213,7 +210,7 @@ export default async function ModelPricePage({ params }: Props) {
               med faste priser.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Livstidsgaranti på alle reparationer
             </h3>
             <p>
@@ -222,7 +219,7 @@ export default async function ModelPricePage({ params }: Props) {
               vi enheden uden beregning. {cheapest && `Priser på ${model.name} reparation starter fra ${cheapest} DKK.`}
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Walk-in service eller book online
             </h3>
             <p>
@@ -231,7 +228,7 @@ export default async function ModelPricePage({ params }: Props) {
               Du kan komme forbi som walk-in eller booke tid online.
             </p>
 
-            <h3 className="!mt-8 font-display text-lg font-bold text-charcoal">
+            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Ofte stillede spørgsmål
             </h3>
             <ul className="list-disc space-y-2 pl-5">
@@ -251,24 +248,24 @@ export default async function ModelPricePage({ params }: Props) {
             </ul>
           </div>
 
-          {/* Bottom CTA */}
-          <div className="mt-12 overflow-hidden rounded-2xl bg-charcoal p-8 text-center text-white">
-            <h3 className="font-display text-xl font-bold uppercase">
+          {/* Bottom CTA — clean light version */}
+          <div className="mt-12 overflow-hidden rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-8 text-center">
+            <h3 className="font-display text-xl font-bold text-[#111111]">
               Klar til at booke din {model.name} reparation?
             </h3>
-            <p className="mt-2 text-sm text-white/60">
+            <p className="mt-2 text-sm text-[#86868B]">
               Vælg din reparation ovenfor eller kontakt os for en gratis vurdering.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={`/reparation/booking?brand=${brand.slug}&model=${model.slug}`}
-                className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3 text-sm font-bold text-white transition-all hover:bg-[#1A3D2E]/90 hover:shadow-lg hover:shadow-[#1A3D2E]/20"
               >
                 Book reparation
               </Link>
               <Link
                 href="/kontakt"
-                className="inline-block rounded-full border border-white/20 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/5"
+                className="inline-block rounded-full border border-[#E5E5EA] bg-white px-8 py-3 text-sm font-semibold text-[#111111] transition-colors hover:bg-[#F7F7F8]"
               >
                 Kontakt os
               </Link>

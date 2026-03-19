@@ -75,7 +75,7 @@ export function ShippingSelector({ onSelect, selected, items = [] }: ShippingSel
 
   return (
     <fieldset>
-      <legend className="mb-3 font-display text-lg font-bold uppercase tracking-wide text-charcoal">
+      <legend className="mb-3 font-display text-lg font-bold tracking-tight text-charcoal">
         Leveringsmetode
       </legend>
       <div className="space-y-2">

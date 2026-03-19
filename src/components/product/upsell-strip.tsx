@@ -20,7 +20,7 @@ export function UpsellStrip({ accessories, onAdd }: UpsellStripProps) {
 
   return (
     <div className="rounded-radius-md border border-soft-grey bg-cream/50 p-4">
-      <p className="font-display text-sm font-bold uppercase tracking-wider text-charcoal">
+      <p className="font-display text-sm font-bold tracking-tight text-charcoal">
         Beskyt din enhed
       </p>
       <div className="mt-3 space-y-3">

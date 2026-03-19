@@ -12,13 +12,13 @@ export function CheckoutSummary() {
 
   return (
     <div className="rounded-2xl border border-sand bg-cream p-6 space-y-5">
-      <h2 className="font-display text-lg font-bold uppercase tracking-wide text-charcoal">
+      <h2 className="font-display text-lg font-bold tracking-tight text-charcoal">
         Din ordre
       </h2>
 
       {/* Line items */}
       {items.length === 0 ? (
-        <p className="text-sm text-gray-500">Kurven er tom.</p>
+        <p className="text-sm text-gray">Kurven er tom.</p>
       ) : (
         <ul className="divide-y divide-sand">
           {items.map((item) => {
@@ -41,7 +41,7 @@ export function CheckoutSummary() {
                       className="h-full w-full object-contain"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-gray-300">
+                    <div className="flex h-full w-full items-center justify-center text-gray/40">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -67,13 +67,13 @@ export function CheckoutSummary() {
                   </p>
 
                   {item.type === "device" && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray">
                       Stand {item.grade} · {item.color} · {item.storage}
                     </p>
                   )}
 
                   {item.type === "sku_product" && item.quantity > 1 && (
-                    <p className="text-xs text-gray-500">Antal: {item.quantity}</p>
+                    <p className="text-xs text-gray">Antal: {item.quantity}</p>
                   )}
                 </div>
 
@@ -89,7 +89,7 @@ export function CheckoutSummary() {
 
       {/* Totals */}
       <div className="space-y-2 border-t border-sand pt-4 text-sm">
-        <div className="flex items-center justify-between text-gray-600">
+        <div className="flex items-center justify-between text-gray">
           <span>Subtotal</span>
           <span>{formatOere(subtotal)}</span>
         </div>
@@ -106,7 +106,7 @@ export function CheckoutSummary() {
           </div>
         )}
 
-        <div className="flex items-center justify-between text-gray-600">
+        <div className="flex items-center justify-between text-gray">
           <span>Fragt</span>
           <span>{shippingCost === 0 ? "Gratis" : formatOere(shippingCost)}</span>
         </div>

@@ -7,12 +7,12 @@ type SectionWrapperProps = {
   id?: string;
 };
 
-const bgStyles = {
-  default: "bg-warm-white",
-  sand: "bg-sand",
-  cream: "bg-cream",
-  charcoal: "ps-pattern-diagonal text-white",
-  green: "ps-pattern-dots-green text-white",
+const bgStyles: Record<NonNullable<SectionWrapperProps["background"]>, string> = {
+  default: "bg-white",
+  sand: "bg-[#F2F2F5]",
+  cream: "bg-[#F7F7F8]",
+  charcoal: "bg-[#F7F7F8]",
+  green: "bg-[#EFF5F1]", // subtle green tint for eco/sustainability sections
 };
 
 export function SectionWrapper({

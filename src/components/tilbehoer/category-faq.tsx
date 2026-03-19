@@ -18,7 +18,7 @@ export function CategoryFaq({ items }: CategoryFaqProps) {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
-      <h2 className="mb-6 font-display text-2xl font-bold uppercase tracking-tight text-charcoal">
+      <h2 className="mb-6 font-display text-2xl font-bold tracking-tight text-charcoal">
         Ofte stillede spørgsmål
       </h2>
       <div className="divide-y divide-sand">

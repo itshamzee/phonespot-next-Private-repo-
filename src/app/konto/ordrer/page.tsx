@@ -43,7 +43,7 @@ const STATUS_COLORS: Record<string, string> = {
   shipped: "bg-indigo-100 text-indigo-700",
   picked_up: "bg-green-100 text-green-700",
   delivered: "bg-green-100 text-green-700",
-  cancelled: "bg-stone-100 text-stone-500",
+  cancelled: "bg-[#F7F7F8] text-[#6E6E73]",
   refunded: "bg-red-100 text-red-700",
 };
 
@@ -79,11 +79,11 @@ export default function OrdersPage() {
   }, []);
 
   if (loading) {
-    return <div className="py-12 text-center text-stone-400">Indlaeser ordrer...</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Indlaeser ordrer...</div>;
   }
 
   if (orders.length === 0) {
-    return <div className="py-12 text-center text-stone-400">Du har ingen ordrer endnu</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Du har ingen ordrer endnu</div>;
   }
 
   return (
@@ -95,27 +95,27 @@ export default function OrdersPage() {
           !["cancelled", "refunded"].includes(order.status);
 
         return (
-          <div key={order.id} id={order.id} className="rounded-xl border border-stone-200 bg-white">
+          <div key={order.id} id={order.id} className="rounded-xl border border-[#E5E5EA] bg-white">
             {/* Order header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 px-5 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5EA] px-5 py-3">
               <div>
-                <p className="text-sm font-bold text-stone-800">{order.order_number}</p>
-                <p className="text-xs text-stone-500">
+                <p className="text-sm font-bold text-[#111111]">{order.order_number}</p>
+                <p className="text-xs text-[#6E6E73]">
                   {new Date(order.created_at).toLocaleDateString("da-DK", {
                     day: "numeric", month: "long", year: "numeric",
                   })}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[order.status] ?? "bg-stone-100 text-stone-500"}`}>
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[order.status] ?? "bg-[#F7F7F8] text-[#6E6E73]"}`}>
                   {STATUS_LABELS[order.status] ?? order.status}
                 </span>
-                <span className="text-sm font-bold text-stone-800">{formatOere(order.total)}</span>
+                <span className="text-sm font-bold text-[#111111]">{formatOere(order.total)}</span>
               </div>
             </div>
 
             {/* Items */}
-            <div className="divide-y divide-stone-50 px-5">
+            <div className="divide-y divide-[#E5E5EA] px-5">
               {order.order_items.map((item) => {
                 const name = item.item_type === "device"
                   ? item.device?.product_templates?.display_name ?? "Enhed"
@@ -123,21 +123,21 @@ export default function OrdersPage() {
                 return (
                   <div key={item.id} className="flex items-center justify-between py-2">
                     <div>
-                      <p className="text-sm text-stone-700">{name}</p>
+                      <p className="text-sm text-[#6E6E73]">{name}</p>
                       {item.quantity > 1 && (
-                        <p className="text-xs text-stone-400">{item.quantity} stk</p>
+                        <p className="text-xs text-[#6E6E73]">{item.quantity} stk</p>
                       )}
                     </div>
-                    <span className="text-sm text-stone-600">{formatOere(item.total_price)}</span>
+                    <span className="text-sm text-[#6E6E73]">{formatOere(item.total_price)}</span>
                   </div>
                 );
               })}
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-2 border-t border-stone-100 px-5 py-3">
+            <div className="flex flex-wrap gap-2 border-t border-[#E5E5EA] px-5 py-3">
               {order.tracking_number && (
-                <span className="rounded-lg bg-stone-50 px-3 py-1.5 text-xs text-stone-600">
+                <span className="rounded-lg bg-[#F7F7F8] px-3 py-1.5 text-xs text-[#6E6E73]">
                   Tracking: {order.tracking_number}
                 </span>
               )}

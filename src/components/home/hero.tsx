@@ -10,7 +10,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
       >
         <div
-          className="absolute whitespace-nowrap font-display text-[14px] font-extrabold italic uppercase tracking-[12px] text-white/[0.04]"
+          className="absolute whitespace-nowrap font-display text-[14px] font-bold text-white/[0.04]"
           style={{
             transform: "rotate(-30deg)",
             width: "300%",
@@ -29,7 +29,7 @@ export function Hero() {
         {/* Subtitle above logo */}
         <FadeIn>
           <p
-            className="font-display text-[13px] font-semibold uppercase tracking-[8px] text-white/35"
+            className="font-display text-[13px] font-semibold uppercase tracking-wide text-white/35"
           >
             Refurbished Tech &middot; Denmark
           </p>

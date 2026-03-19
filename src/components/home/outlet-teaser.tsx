@@ -10,7 +10,7 @@ export function OutletTeaser() {
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
         <span
-          className="select-none font-display font-extrabold italic text-white/[0.03]"
+          className="select-none font-display font-bold text-white/[0.03]"
           style={{ fontSize: "280px", lineHeight: 1 }}
         >
           P
@@ -18,7 +18,7 @@ export function OutletTeaser() {
       </div>
 
       <FadeIn className="relative mx-auto max-w-3xl px-4 text-center">
-        <p className="font-display text-sm font-semibold uppercase tracking-[6px] text-green-eco">
+        <p className="font-display text-sm font-semibold uppercase tracking-wide text-green-eco">
           Outlet
         </p>
         <h2 className="mt-4 font-display text-3xl font-bold italic text-white md:text-4xl">

@@ -122,42 +122,42 @@ export default async function ComparisonPage({ params }: PageProps) {
       />
 
       {/* Hero with image */}
-      <section className="relative overflow-hidden bg-charcoal">
+      <section className="relative overflow-hidden bg-[#F7F7F8]">
         <div className="mx-auto grid max-w-7xl md:grid-cols-2">
           {/* Text side */}
           <div className="flex flex-col justify-center px-4 py-16 md:py-20 md:pr-12 lg:py-24 lg:pr-16">
             {/* Breadcrumb nav */}
-            <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-white/50">
-              <Link href="/" className="transition-colors hover:text-white">
+            <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[#6E6E73]">
+              <Link href="/" className="transition-colors hover:text-[#111111]">
                 Forside
               </Link>
               <span>/</span>
               <Link
                 href="/sammenlign"
-                className="transition-colors hover:text-white"
+                className="transition-colors hover:text-[#111111]"
               >
                 Sammenligninger
               </Link>
               <span>/</span>
-              <span className="text-white/70">{title}</span>
+              <span className="text-[#111111]">{title}</span>
             </nav>
 
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[4px] text-green-eco">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Sammenligning
             </p>
 
-            <h1 className="font-display text-3xl font-extrabold italic leading-tight text-white md:text-4xl lg:text-5xl">
+            <h1 className="font-display text-3xl font-bold leading-tight text-[#111111] md:text-4xl lg:text-5xl">
               {title}
             </h1>
 
-            <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-white/60">
+            <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-[#6E6E73]">
               {rows.length} kategorier sammenlignet
             </p>
           </div>
 
           {/* Image side */}
           <div className="relative hidden aspect-square md:block">
-            <div className="absolute inset-0 z-10 bg-gradient-to-r from-charcoal to-transparent" />
+            <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#F7F7F8] to-transparent" />
             <Image
               src={image}
               alt={title}
@@ -183,10 +183,10 @@ export default async function ComparisonPage({ params }: PageProps) {
             <table className="w-full border-collapse overflow-hidden rounded-2xl border border-sand text-left">
               <thead>
                 <tr>
-                  <th className="bg-cream px-5 py-4 font-display text-sm font-bold uppercase tracking-wider text-charcoal">
+                  <th className="bg-cream px-5 py-4 font-display text-sm font-bold uppercase tracking-wide text-charcoal">
                     Funktion
                   </th>
-                  <th className="bg-green-eco px-5 py-4 font-display text-sm font-bold uppercase tracking-wider text-white">
+                  <th className="bg-green-eco px-5 py-4 font-display text-sm font-bold uppercase tracking-wide text-white">
                     <span className="flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -203,7 +203,7 @@ export default async function ComparisonPage({ params }: PageProps) {
                       PhoneSpot
                     </span>
                   </th>
-                  <th className="bg-charcoal px-5 py-4 font-display text-sm font-bold uppercase tracking-wider text-white/70">
+                  <th className="bg-charcoal px-5 py-4 font-display text-sm font-bold uppercase tracking-wide text-white/70">
                     {competitor}
                   </th>
                 </tr>

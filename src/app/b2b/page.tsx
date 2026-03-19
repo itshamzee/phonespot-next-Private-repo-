@@ -45,8 +45,11 @@ export default function B2BRegistrationPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-stone-800">Erhvervskunde</h1>
-        <p className="mt-2 text-stone-500">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+          B2B
+        </p>
+        <h1 className="text-3xl font-bold text-[#111111]">Erhvervskunde</h1>
+        <p className="mt-2 text-[#86868B]">
           Registrer din virksomhed for at fa adgang til vores B2B-priser og vilkar.
         </p>
       </div>
@@ -61,19 +64,19 @@ export default function B2BRegistrationPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-stone-200 bg-white p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-[#E5E5EA] bg-white p-6">
         <div>
-          <label className="block text-sm font-medium text-stone-600">Firmanavn *</label>
+          <label className="block text-sm font-medium text-[#111111]">Firmanavn *</label>
           <input
             type="text"
             required
             value={form.companyName}
             onChange={(e) => update("companyName", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none"
+            className="mt-1 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-600">CVR-nummer *</label>
+          <label className="block text-sm font-medium text-[#111111]">CVR-nummer *</label>
           <input
             type="text"
             required
@@ -82,46 +85,46 @@ export default function B2BRegistrationPage() {
             value={form.cvrNummer}
             onChange={(e) => update("cvrNummer", e.target.value)}
             placeholder="12345678"
-            className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none"
+            className="mt-1 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-600">Kontaktperson *</label>
+          <label className="block text-sm font-medium text-[#111111]">Kontaktperson *</label>
           <input
             type="text"
             required
             value={form.contactName}
             onChange={(e) => update("contactName", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none"
+            className="mt-1 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-600">Email *</label>
+          <label className="block text-sm font-medium text-[#111111]">Email *</label>
           <input
             type="email"
             required
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none"
+            className="mt-1 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-stone-600">Telefon</label>
+          <label className="block text-sm font-medium text-[#111111]">Telefon</label>
           <input
             type="tel"
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none"
+            className="mt-1 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-green-600 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-full bg-[#1A3D2E] py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? "Sender..." : "Ansog om erhvervskonto"}
         </button>
-        <p className="text-xs text-stone-400 text-center">
+        <p className="text-xs text-[#86868B] text-center">
           Ansoegninger behandles inden for 1-2 hverdage.
           Alle priser er ekskl. moms for godkendte erhvervskunder.
         </p>

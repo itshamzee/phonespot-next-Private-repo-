@@ -57,22 +57,22 @@ export default function ReklamationPage() {
       <Heading as="h1" size="lg">
         Reklamation
       </Heading>
-      <p className="mt-4 mb-10 max-w-2xl text-gray">
+      <p className="mt-4 mb-10 max-w-2xl text-[#86868B]">
         Har du modtaget en defekt vare eller oplever problemer med dit produkt?
         Udfyld formularen herunder, og vi vender tilbage inden for 2 hverdage.
       </p>
 
       <div className="mx-auto max-w-2xl">
         {status === "success" ? (
-          <div className="rounded-2xl border border-green-eco/30 bg-green-pale p-8 text-center">
-            <p className="text-lg font-semibold text-charcoal">
+          <div className="rounded-2xl border border-[#1A3D2E]/30 bg-[#F7F7F8] p-8 text-center">
+            <p className="text-lg font-semibold text-[#111111]">
               Tak! Vi har modtaget din reklamation og vender tilbage inden for 2
               hverdage.
             </p>
             <button
               type="button"
               onClick={() => setStatus("idle")}
-              className="mt-6 rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              className="mt-6 rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
               Indsend en ny reklamation
             </button>
@@ -80,7 +80,7 @@ export default function ReklamationPage() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="rounded-2xl border border-soft-grey bg-white p-6 md:p-8"
+            className="rounded-2xl border border-[#E5E5EA] bg-white p-6 md:p-8"
           >
             <div className="grid gap-6 sm:grid-cols-2">
               <FormField
@@ -137,7 +137,7 @@ export default function ReklamationPage() {
               <button
                 type="submit"
                 disabled={status === "submitting"}
-                className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {status === "submitting"
                   ? "Sender..."

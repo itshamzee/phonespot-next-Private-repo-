@@ -44,11 +44,11 @@ export default function AccountOverview() {
   }, []);
 
   if (loading) {
-    return <div className="py-12 text-center text-stone-400">Indlaeser...</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Indlaeser...</div>;
   }
 
   if (!data) {
-    return <div className="py-12 text-center text-stone-400">Kunne ikke hente kontooplysninger</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Kunne ikke hente kontooplysninger</div>;
   }
 
   const activeWarranties = data.warranties.filter((w) => w.status === "active").length;
@@ -57,55 +57,55 @@ export default function AccountOverview() {
   return (
     <div className="space-y-6">
       {/* Welcome */}
-      <div className="rounded-xl border border-stone-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-stone-800">
+      <div className="rounded-xl border border-[#E5E5EA] bg-white p-5">
+        <h2 className="text-lg font-bold text-[#111111]">
           Hej, {data.customer.name}!
         </h2>
-        <p className="mt-1 text-sm text-stone-500">{data.customer.email}</p>
+        <p className="mt-1 text-sm text-[#6E6E73]">{data.customer.email}</p>
         {data.customer.phone && (
-          <p className="text-sm text-stone-500">{data.customer.phone}</p>
+          <p className="text-sm text-[#6E6E73]">{data.customer.phone}</p>
         )}
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-stone-200 bg-white p-4 text-center">
-          <p className="text-2xl font-bold text-stone-800">{data.orders.length}</p>
-          <p className="text-xs text-stone-500">Ordrer</p>
+        <div className="rounded-xl border border-[#E5E5EA] bg-white p-4 text-center">
+          <p className="text-2xl font-bold text-[#111111]">{data.orders.length}</p>
+          <p className="text-xs text-[#6E6E73]">Ordrer</p>
         </div>
-        <div className="rounded-xl border border-stone-200 bg-white p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">{activeWarranties}</p>
-          <p className="text-xs text-stone-500">Aktive garantier</p>
+        <div className="rounded-xl border border-[#E5E5EA] bg-white p-4 text-center">
+          <p className="text-2xl font-bold text-[#1A3D2E]">{activeWarranties}</p>
+          <p className="text-xs text-[#6E6E73]">Aktive garantier</p>
         </div>
-        <div className="rounded-xl border border-stone-200 bg-white p-4 text-center">
-          <p className="text-2xl font-bold text-stone-800">{data.tradeIns.length}</p>
-          <p className="text-xs text-stone-500">Trade-ins</p>
+        <div className="rounded-xl border border-[#E5E5EA] bg-white p-4 text-center">
+          <p className="text-2xl font-bold text-[#111111]">{data.tradeIns.length}</p>
+          <p className="text-xs text-[#6E6E73]">Trade-ins</p>
         </div>
       </div>
 
       {/* Recent orders */}
-      <div className="rounded-xl border border-stone-200 bg-white">
-        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3">
-          <h3 className="text-sm font-semibold text-stone-700">Seneste ordrer</h3>
-          <a href="/konto/ordrer" className="text-xs text-green-600 hover:underline">Se alle</a>
+      <div className="rounded-xl border border-[#E5E5EA] bg-white">
+        <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-3">
+          <h3 className="text-sm font-semibold text-[#6E6E73]">Seneste ordrer</h3>
+          <a href="/konto/ordrer" className="text-xs text-[#1A3D2E] hover:underline">Se alle</a>
         </div>
         {recentOrders.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-stone-400">Ingen ordrer endnu</p>
+          <p className="px-5 py-8 text-center text-sm text-[#6E6E73]">Ingen ordrer endnu</p>
         ) : (
-          <div className="divide-y divide-stone-100">
+          <div className="divide-y divide-[#E5E5EA]">
             {recentOrders.map((order) => (
               <a
                 key={order.id}
                 href={`/konto/ordrer#${order.id}`}
-                className="flex items-center justify-between px-5 py-3 hover:bg-stone-50"
+                className="flex items-center justify-between px-5 py-3 hover:bg-[#F7F7F8]"
               >
                 <div>
-                  <p className="text-sm font-medium text-stone-800">{order.order_number}</p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-sm font-medium text-[#111111]">{order.order_number}</p>
+                  <p className="text-xs text-[#6E6E73]">
                     {new Date(order.created_at).toLocaleDateString("da-DK")} · {STATUS_LABELS[order.status] ?? order.status}
                   </p>
                 </div>
-                <span className="text-sm font-bold text-stone-800">{formatOere(order.total)}</span>
+                <span className="text-sm font-bold text-[#111111]">{formatOere(order.total)}</span>
               </a>
             ))}
           </div>
@@ -113,9 +113,9 @@ export default function AccountOverview() {
       </div>
 
       {/* Data export / deletion */}
-      <div className="rounded-xl border border-stone-200 bg-white p-5">
-        <h3 className="mb-3 text-sm font-semibold text-stone-700">Dine data (GDPR)</h3>
-        <p className="mb-4 text-xs text-stone-500">
+      <div className="rounded-xl border border-[#E5E5EA] bg-white p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#6E6E73]">Dine data (GDPR)</h3>
+        <p className="mb-4 text-xs text-[#6E6E73]">
           Du kan eksportere eller slette dine personoplysninger i henhold til GDPR.
         </p>
         <div className="flex gap-3">
@@ -135,7 +135,7 @@ export default function AccountOverview() {
                 a.click();
               }
             }}
-            className="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50"
+            className="rounded-lg border border-[#E5E5EA] px-4 py-2 text-sm font-medium text-[#6E6E73] hover:bg-[#F7F7F8]"
           >
             Eksporter mine data
           </button>

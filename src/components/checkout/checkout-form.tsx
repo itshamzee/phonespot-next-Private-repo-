@@ -149,7 +149,7 @@ export function CheckoutForm() {
       {/* Customer info                                                      */}
       {/* ---------------------------------------------------------------- */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold uppercase tracking-wide text-charcoal">
+        <h2 className="font-display text-lg font-bold tracking-tight text-charcoal">
           Dine oplysninger
         </h2>
 
@@ -218,7 +218,7 @@ export function CheckoutForm() {
       {/* Shipping address                                                   */}
       {/* ---------------------------------------------------------------- */}
       <section className="space-y-4">
-        <h2 className="font-display text-lg font-bold uppercase tracking-wide text-charcoal">
+        <h2 className="font-display text-lg font-bold tracking-tight text-charcoal">
           Leveringsadresse
         </h2>
 
@@ -326,7 +326,7 @@ export function CheckoutForm() {
       {/* Discount code                                                      */}
       {/* ---------------------------------------------------------------- */}
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold uppercase tracking-wide text-charcoal">
+        <h2 className="font-display text-lg font-bold tracking-tight text-charcoal">
           Rabatkode
         </h2>
 
@@ -401,7 +401,7 @@ export function CheckoutForm() {
       <button
         type="submit"
         disabled={isSubmitting || cartState.items.length === 0}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
       >
         {isSubmitting ? (
           <>

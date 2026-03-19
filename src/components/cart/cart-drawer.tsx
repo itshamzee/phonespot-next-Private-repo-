@@ -84,7 +84,7 @@ export function CartDrawer() {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={closeCart}
@@ -93,7 +93,7 @@ export function CartDrawer() {
 
       {/* Drawer panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-warm-white shadow-lg transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-white shadow-xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -102,13 +102,13 @@ export function CartDrawer() {
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-sand px-5 py-4">
-            <h2 className="font-display text-lg font-semibold uppercase tracking-wider text-charcoal">
+          <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-[#111111]">
               Kurv ({totalItems})
             </h2>
             <button
               type="button"
-              className="text-charcoal transition-colors hover:text-green-eco"
+              className="text-[#86868B] transition-colors hover:text-[#111111]"
               onClick={closeCart}
               aria-label="Luk kurv"
             >
@@ -133,10 +133,10 @@ export function CartDrawer() {
           <div className="flex-1 overflow-y-auto px-5">
             {items.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <p className="text-sm text-gray">Din kurv er tom</p>
+                <p className="text-sm text-[#86868B]">Din kurv er tom</p>
               </div>
             ) : (
-              <div className="divide-y divide-sand">
+              <div className="divide-y divide-[#E5E5EA]">
                 {items.map((item) => (
                   <div key={cartItemKey(item)}>
                     {item.type === "device" && (
@@ -156,19 +156,19 @@ export function CartDrawer() {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-sand px-5 py-5">
+            <div className="border-t border-[#E5E5EA] px-5 py-5">
               {/* Discount badge */}
               {cartState.discount && (
-                <div className="mb-3 flex items-center justify-between rounded-lg bg-green-50 px-3 py-2">
+                <div className="mb-3 flex items-center justify-between rounded-lg bg-[#F7F7F8] px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-green-eco">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                       Rabatkode
                     </span>
-                    <span className="rounded bg-green-eco px-1.5 py-0.5 text-xs font-bold text-white">
+                    <span className="rounded bg-[#1A3D2E] px-1.5 py-0.5 text-xs font-bold text-white">
                       {cartState.discount.code}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-green-eco">
+                  <span className="text-sm font-semibold text-[#1A3D2E]">
                     −{formatOere(totals.discountAmount)}
                   </span>
                 </div>
@@ -177,28 +177,28 @@ export function CartDrawer() {
               {/* Subtotal / total rows */}
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray">Subtotal</span>
-                  <span className="text-sm font-medium text-charcoal">
+                  <span className="text-sm text-[#86868B]">Subtotal</span>
+                  <span className="text-sm font-medium text-[#111111]">
                     {formatOere(totals.subtotal)}
                   </span>
                 </div>
                 {totals.shippingCost > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray">Fragt</span>
-                    <span className="text-sm font-medium text-charcoal">
+                    <span className="text-sm text-[#86868B]">Fragt</span>
+                    <span className="text-sm font-medium text-[#111111]">
                       {formatOere(totals.shippingCost)}
                     </span>
                   </div>
                 )}
                 {totals.shippingCost === 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray">Fragt</span>
-                    <span className="text-sm font-medium text-green-eco">Gratis</span>
+                    <span className="text-sm text-[#86868B]">Fragt</span>
+                    <span className="text-sm font-medium text-[#1A3D2E]">Gratis</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between border-t border-sand pt-1.5">
-                  <span className="text-sm font-semibold text-charcoal">Total</span>
-                  <span className="text-lg font-semibold text-charcoal">
+                <div className="flex items-center justify-between border-t border-[#E5E5EA] pt-1.5">
+                  <span className="text-sm font-semibold text-[#111111]">Total</span>
+                  <span className="text-lg font-semibold text-[#111111]">
                     {formatOere(totals.total)}
                   </span>
                 </div>
@@ -207,7 +207,7 @@ export function CartDrawer() {
               <Link
                 href="/kasse"
                 onClick={closeCart}
-                className="flex w-full items-center justify-center rounded-full bg-green-eco px-6 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-green-light"
+                className="flex w-full items-center justify-center rounded-full bg-[#1A3D2E] px-6 py-3 font-display text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Gå til kassen
               </Link>

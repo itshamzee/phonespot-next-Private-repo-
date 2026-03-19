@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { FilteredGrid } from "@/components/product/filtered-grid";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { CategoryHero } from "@/components/product/category-hero";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 // ---------------------------------------------------------------------------
-// Model tiers (Swappie-inspired)
+// Model tiers
 // ---------------------------------------------------------------------------
 
 const MODEL_TIERS = [
@@ -33,33 +34,33 @@ const MODEL_TIERS = [
     tier: "Budget",
     tagline: "Perfekt til basale behov",
     cardBg: "bg-white",
-    cardBorder: "border border-sand",
-    badgeBg: "bg-sand/70",
-    badgeText: "text-charcoal",
-    taglineColor: "text-gray",
-    iconColor: "text-charcoal/50",
+    cardBorder: "border border-[#E5E5EA]",
+    badgeBg: "bg-[#E5E5EA]",
+    badgeText: "text-[#111111]",
+    taglineColor: "text-[#86868B]",
+    iconColor: "text-[#86868B]",
     patterns: ["iphone se", "iphone 11", "iphone xr", "iphone 8"],
   },
   {
     tier: "Populær",
     tagline: "Bedste værdi for pengene",
-    cardBg: "bg-green-eco/[0.03]",
-    cardBorder: "border-2 border-green-eco/20",
-    badgeBg: "bg-green-eco",
+    cardBg: "bg-[#F7F7F8]",
+    cardBorder: "border-2 border-[#1A3D2E]/20",
+    badgeBg: "bg-[#1A3D2E]",
     badgeText: "text-white",
-    taglineColor: "text-green-eco",
-    iconColor: "text-green-eco",
+    taglineColor: "text-[#1A3D2E]",
+    iconColor: "text-[#1A3D2E]",
     patterns: ["iphone 12", "iphone 13"],
   },
   {
     tier: "Premium",
     tagline: "Det bedste Apple tilbyder",
-    cardBg: "bg-charcoal",
-    cardBorder: "border-0",
-    badgeBg: "bg-white/15",
+    cardBg: "bg-white",
+    cardBorder: "border-2 border-[#111111]",
+    badgeBg: "bg-[#111111]",
     badgeText: "text-white",
-    taglineColor: "text-white/60",
-    iconColor: "text-white/70",
+    taglineColor: "text-[#86868B]",
+    iconColor: "text-[#111111]",
     patterns: ["iphone 14", "iphone 13 pro", "iphone 12 pro", "iphone 11 pro", "iphone 15"],
   },
 ];
@@ -149,7 +150,6 @@ export default async function IphonesPage() {
       }
     }
     if (!matched) {
-      // Default to budget tier
       if (!tierGroups.has(0)) tierGroups.set(0, []);
       tierGroups.get(0)!.push(t);
     }
@@ -180,13 +180,75 @@ export default async function IphonesPage() {
       />
 
       {/* ── Hero ── */}
-      <div className="px-4 pt-8 max-w-7xl mx-auto">
-        <CategoryHero
-          title="Refurbished iPhones"
-          description="Kvalitetstestede iPhones fra 999 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag et."
-          productCount={templates.length}
-        />
-      </div>
+      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+          {/* Breadcrumb */}
+          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[#111111] font-medium">Refurbished iPhones</span>
+          </nav>
+
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              {/* Category badge */}
+              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E]" />
+                Apple iPhone
+              </span>
+
+              <h1 className="font-display text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
+                Refurbished iPhones
+              </h1>
+
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-[#86868B] md:text-lg">
+                Kvalitetstestede iPhones fra 999 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag et.
+              </p>
+
+              {/* Quick stats */}
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">Fra 999 DKK</strong>
+                </span>
+                <span className="text-[#E5E5EA]">|</span>
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path d="M10.75 10.818v2.614A3.13 3.13 0 0 0 11.888 13c.482-.315.612-.648.612-.875 0-.227-.13-.56-.612-.875a3.13 3.13 0 0 0-1.138-.432ZM8.33 8.62c.053.055.108.11.162.165.1.1.295.1.395 0l3.038-3.04a.75.75 0 0 0-1.06-1.06L8.99 6.549l-.663-.664a.75.75 0 0 0-1.06 1.06l1.063 1.063Z" />
+                    <path fillRule="evenodd" d="M9.018 2.198a1.5 1.5 0 0 1 1.964 0l3.75 3.336A1.5 1.5 0 0 1 15.25 6.67V16.5a1.5 1.5 0 0 1-1.5 1.5h-7.5a1.5 1.5 0 0 1-1.5-1.5V6.67a1.5 1.5 0 0 1 .518-1.136l3.75-3.336ZM10 11.25c-2.032 0-3.5 1.026-3.5 2.25S7.968 15.75 10 15.75s3.5-1.026 3.5-2.25-1.468-2.25-3.5-2.25Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">{templates.length} modeller</strong>
+                </span>
+                <span className="text-[#E5E5EA]">|</span>
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">36 mdr. garanti</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Product image */}
+            <div className="hidden lg:flex lg:shrink-0 lg:items-center lg:justify-center">
+              <div className="relative">
+                <div className="absolute -inset-8 rounded-full bg-[#1A3D2E]/5" />
+                <Image
+                  src="/images/products/iphone-lineup.jpg"
+                  alt="iPhone lineup"
+                  width={320}
+                  height={400}
+                  className="relative h-64 w-auto object-contain drop-shadow-xl"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── Model tiers ── */}
       <SectionWrapper>
@@ -194,7 +256,7 @@ export default async function IphonesPage() {
           <Heading as="h2" size="lg">
             Find den rigtige iPhone til dig
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Vi har delt vores udvalg op i tre prisgrupper, så det er nemt at
             finde den iPhone der passer til dit budget og behov.
           </p>
@@ -213,14 +275,14 @@ export default async function IphonesPage() {
                 <div className="mb-6 flex flex-wrap items-center gap-3">
                   <TierIcon tier={tier.tier} className={`h-6 w-6 ${tier.iconColor}`} />
                   <div>
-                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-[2px]`}>
+                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-wide`}>
                       {tier.tier}
                     </span>
                     <p className={`mt-1 text-sm ${tier.taglineColor}`}>
                       {tier.tagline}
                     </p>
                   </div>
-                  <span className={`ml-auto text-sm font-semibold ${tierIndex === 2 ? "text-white/60" : "text-green-eco"}`}>
+                  <span className="ml-auto text-sm font-semibold text-[#1A3D2E]">
                     {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
                   </span>
                 </div>
@@ -255,7 +317,7 @@ export default async function IphonesPage() {
           <Heading as="h2" size="md">
             Hvad betyder standen?
           </Heading>
-          <p className="mt-4 text-gray">
+          <p className="mt-4 text-[#86868B]">
             Alle iPhones er 100% funktionelle. Forskellen mellem graderne er
             udelukkende kosmetisk. Swipe mellem forside og bagside.
           </p>
@@ -266,53 +328,29 @@ export default async function IphonesPage() {
         <div className="mt-6 text-center">
           <Link
             href="/kvalitet"
-            className="text-sm font-semibold text-green-eco hover:underline"
+            className="text-sm font-semibold text-[#1A3D2E] hover:underline"
           >
             Læs mere om vores graderingssystem &rarr;
           </Link>
         </div>
       </SectionWrapper>
 
-      {/* ── All iPhones grid ── */}
+      {/* ── All iPhones grid with filters ── */}
       <SectionWrapper>
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="lg">
-            Alle iPhones
-          </Heading>
-          <p className="mt-4 text-gray">
-            {templates.length} iPhones på lager lige nu. Alle testet og klar
-            med 36 måneders garanti.
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {templates.map((t) => (
-            <ProductGridCard
-              key={t.id}
-              slug={t.slug}
-              image={t.images[0]}
-              title={t.display_name}
-              minPrice={t.min_price}
-              deviceCount={t.device_count}
-              locations={t.locations}
-              brand={t.brand}
-              category={t.category}
-            />
-          ))}
-        </div>
+        <FilteredGrid templates={templates} heading="Alle iPhones" />
       </SectionWrapper>
 
       {/* ── Hvorfor refurbished iPhone ── */}
       <SectionWrapper background="cream">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Smart valg
             </p>
             <Heading as="h2" size="md">
               Hvorfor købe en refurbished iPhone?
             </Heading>
-            <p className="mt-4 text-gray leading-relaxed">
+            <p className="mt-4 text-[#86868B] leading-relaxed">
               En ny iPhone 14 Pro koster over 10.000 kr. Den samme model
               koster fra 5.500 kr hos PhoneSpot — testet med 30+ kontroller
               og med 36 måneders garanti. Du får præcis samme oplevelse.
@@ -325,8 +363,8 @@ export default async function IphonesPage() {
                 "36 måneders garanti og 14 dages returret",
                 "Alle telefoner er ulåste og virker med alle operatører",
               ].map((point) => (
-                <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" aria-hidden="true">
+                <li key={point} className="flex items-start gap-2 text-sm text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" aria-hidden="true">
                     <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                   </svg>
                   {point}
@@ -334,18 +372,18 @@ export default async function IphonesPage() {
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl bg-white p-8 shadow-sm">
-            <h3 className="mb-6 font-display text-lg font-bold text-charcoal">
+          <div className="rounded-3xl bg-white p-8 shadow-sm border border-[#E5E5EA]">
+            <h3 className="mb-6 font-display text-lg font-bold text-[#111111]">
               Ny vs. PhoneSpot
             </h3>
-            <div className="divide-y divide-sand/60">
+            <div className="divide-y divide-[#E5E5EA]">
               {COMPARISON.map((row) => (
                 <div key={row.feature} className="flex items-start gap-4 py-3">
-                  <span className="w-24 shrink-0 text-sm font-semibold text-charcoal">
+                  <span className="w-24 shrink-0 text-sm font-semibold text-[#111111]">
                     {row.feature}
                   </span>
-                  <span className="flex-1 text-sm text-gray">{row.new}</span>
-                  <span className="flex-1 text-sm font-medium text-green-eco">
+                  <span className="flex-1 text-sm text-[#86868B]">{row.new}</span>
+                  <span className="flex-1 text-sm font-medium text-[#1A3D2E]">
                     {row.refurbished}
                   </span>
                 </div>
@@ -356,23 +394,25 @@ export default async function IphonesPage() {
       </SectionWrapper>
 
       {/* ── Stats ── */}
-      <SectionWrapper background="charcoal" className="text-white">
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
-          {[
-            { value: "30+", label: "Tests per enhed" },
-            { value: "999 kr", label: "Billigste iPhone" },
-            { value: "36", label: "Måneders garanti" },
-            { value: "1-2", label: "Dages levering" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-3xl font-bold text-green-eco md:text-4xl">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-white/60">{stat.label}</p>
-            </div>
-          ))}
+      <section className="bg-[#F7F7F8] border-y border-[#E5E5EA] py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 lg:grid-cols-4">
+            {[
+              { value: "30+", label: "Tests per enhed" },
+              { value: "999 kr", label: "Billigste iPhone" },
+              { value: "36", label: "Måneders garanti" },
+              { value: "1-2", label: "Dages levering" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl bg-white border border-[#E5E5EA] p-6 text-center shadow-sm">
+                <p className="font-display text-3xl font-bold text-[#1A3D2E] md:text-4xl">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[#86868B]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </SectionWrapper>
+      </section>
 
       {/* ── FAQ ── */}
       <SectionWrapper>
@@ -381,16 +421,16 @@ export default async function IphonesPage() {
             Spørgsmål om refurbished iPhones
           </Heading>
         </div>
-        <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
+        <div className="mx-auto mt-10 max-w-3xl divide-y divide-[#E5E5EA]">
           {IPHONE_FAQ.map((item) => (
             <details key={item.question} className="group py-5">
-              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-charcoal">
+              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-[#111111]">
                 {item.question}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-gray transition-transform group-open:rotate-180" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180" aria-hidden="true">
                   <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                 </svg>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-gray">{item.answer}</p>
+              <p className="mt-3 text-sm leading-relaxed text-[#86868B]">{item.answer}</p>
             </details>
           ))}
         </div>
@@ -410,34 +450,34 @@ export default async function IphonesPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <Link
               href="/blog/bedste-refurbished-iphone-2026"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+              className="rounded-2xl bg-white border border-[#E5E5EA] p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Bedste refurbished iPhone i 2026
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Komplet guide til at vælge den rigtige model
               </p>
             </Link>
             <Link
               href="/blog/refurbished-vs-brugt-guide"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+              className="rounded-2xl bg-white border border-[#E5E5EA] p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Refurbished vs brugt
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Forstå forskellen og vælg det rigtige for dig
               </p>
             </Link>
             <Link
               href="/sammenlign/refurbished-vs-brugt-vs-ny"
-              className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+              className="rounded-2xl bg-white border border-[#E5E5EA] p-5 text-left transition-shadow hover:shadow-md"
             >
-              <p className="font-display text-sm font-bold text-charcoal">
+              <p className="font-display text-sm font-bold text-[#111111]">
                 Refurbished vs brugt vs ny
               </p>
-              <p className="mt-1 text-xs text-gray">
+              <p className="mt-1 text-xs text-[#86868B]">
                 Se en komplet sammenligning
               </p>
             </Link>
@@ -451,20 +491,20 @@ export default async function IphonesPage() {
           <Heading as="h2" size="md">
             Klar til at finde din iPhone?
           </Heading>
-          <p className="mt-4 text-gray">
+          <p className="mt-4 text-[#86868B]">
             Scroll op og udforsk vores udvalg — eller se vores tilbehør for at
             beskytte din nye enhed.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/reservedele"
-              className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
               Se reservedele &amp; tilbehør &rarr;
             </Link>
             <Link
               href="/kvalitet"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
             >
               Læs om vores kvalitet &rarr;
             </Link>

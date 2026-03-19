@@ -183,7 +183,7 @@ export default async function RepairStatusPage({
       <div className="mx-auto max-w-2xl px-4 py-12">
         {/* Page title */}
         <div className="mb-8 text-center">
-          <h1 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal md:text-4xl">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
             Reparationsstatus
           </h1>
           <p className="mt-2 text-gray">

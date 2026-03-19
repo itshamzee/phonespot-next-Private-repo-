@@ -152,7 +152,7 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
           {groups.map((group) => (
             <div key={group.series || "other"}>
               {group.series && (
-                <h3 className="mb-5 font-display text-xl font-bold uppercase tracking-wide text-charcoal">
+                <h3 className="mb-5 font-display text-xl font-bold tracking-tight text-charcoal">
                   {group.series}
                 </h3>
               )}

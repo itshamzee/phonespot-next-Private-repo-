@@ -8,7 +8,7 @@ const trustItems = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="h-5 w-5"
+        className="h-4 w-4"
       >
         <path
           strokeLinecap="round"
@@ -27,7 +27,7 @@ const trustItems = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="h-5 w-5"
+        className="h-4 w-4"
       >
         <path
           strokeLinecap="round"
@@ -46,7 +46,7 @@ const trustItems = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="h-5 w-5"
+        className="h-4 w-4"
       >
         <path
           strokeLinecap="round"
@@ -65,7 +65,7 @@ const trustItems = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="h-5 w-5"
+        className="h-4 w-4"
       >
         <path
           strokeLinecap="round"
@@ -84,7 +84,7 @@ const trustItems = [
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="h-5 w-5"
+        className="h-4 w-4"
       >
         <path
           strokeLinecap="round"
@@ -98,12 +98,12 @@ const trustItems = [
 
 export function TrustBar({ className = "" }: { className?: string }) {
   return (
-    <div className={`border-y border-soft-grey py-5 ${className}`.trim()}>
-      <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+    <div className={`bg-[#F7F7F8] border-y border-[#E5E5EA] py-4 ${className}`.trim()}>
+      <div className="flex flex-wrap items-center justify-center gap-5 md:gap-8">
         {trustItems.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
-            <span className="text-green-eco">{item.icon}</span>
-            <span className="text-base font-medium text-charcoal">
+          <div key={item.label} className="flex items-center gap-1.5">
+            <span className="text-[#1A3D2E]">{item.icon}</span>
+            <span className="text-sm font-medium text-[#111111]/70">
               {item.label}
             </span>
           </div>

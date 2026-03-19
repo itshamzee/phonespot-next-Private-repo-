@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import Image from "next/image";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -12,6 +13,10 @@ interface DeviceInfo {
   model: string;
   storage: string;
   ram: string;
+  /** Set to true when user clicked "Min enhed findes ikke" */
+  useCustom: boolean;
+  brandCustom: string;
+  modelCustom: string;
 }
 
 interface ConditionInfo {
@@ -43,7 +48,16 @@ type Status = "idle" | "submitting" | "success" | "error";
 
 const STEPS = ["Enheder", "Stand", "Levering & kontakt"] as const;
 
-const EMPTY_DEVICE: DeviceInfo = { deviceType: "", brand: "", model: "", storage: "", ram: "" };
+const EMPTY_DEVICE: DeviceInfo = {
+  deviceType: "",
+  brand: "",
+  model: "",
+  storage: "",
+  ram: "",
+  useCustom: false,
+  brandCustom: "",
+  modelCustom: "",
+};
 const EMPTY_CONDITION: ConditionInfo = { screen: "", back: "", battery: "", allWorking: "", brokenParts: [], cloudLocked: "" };
 
 function makeEntry(): DeviceEntry {
@@ -57,9 +71,7 @@ const DEVICE_CATEGORIES = [
     label: "Telefon",
     sublabel: "iPhone, Samsung, m.fl.",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="h-12 w-12">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-      </svg>
+      <Image src="/images/products/sell-phone.png" alt="Telefon" width={80} height={80} className="h-[80px] w-[80px] object-contain" />
     ),
   },
   {
@@ -67,9 +79,7 @@ const DEVICE_CATEGORIES = [
     label: "Tablet",
     sublabel: "iPad, Galaxy Tab, m.fl.",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="h-12 w-12">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5h3m-6.75 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-15a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 4.5v15a2.25 2.25 0 0 0 2.25 2.25Z" />
-      </svg>
+      <Image src="/images/products/sell-tablet.png" alt="Tablet" width={80} height={80} className="h-[80px] w-[80px] object-contain" />
     ),
   },
   {
@@ -77,9 +87,7 @@ const DEVICE_CATEGORIES = [
     label: "Laptop",
     sublabel: "MacBook, ThinkPad, m.fl.",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="h-12 w-12">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-      </svg>
+      <Image src="/images/products/sell-laptop.png" alt="Laptop" width={80} height={80} className="h-[80px] w-[80px] object-contain" />
     ),
   },
   {
@@ -87,9 +95,7 @@ const DEVICE_CATEGORIES = [
     label: "Smartwatch",
     sublabel: "Apple Watch, Galaxy Watch",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor" className="h-12 w-12">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
+      <Image src="/images/products/sell-watch.png" alt="Smartwatch" width={80} height={80} className="h-[80px] w-[80px] object-contain" />
     ),
   },
 ];
@@ -129,21 +135,273 @@ const BROKEN_PARTS: Record<string, string[]> = {
   Smartwatch: ["Skærm-touch", "Højtaler", "Mikrofon", "Bluetooth", "Opladning", "Knapper"],
 };
 
-/* ---- Screen condition emojis ---- */
-function screenEmoji(opt: string): string {
-  if (opt === "Perfekt") return "✨";
-  if (opt === "Små ridser") return "👌";
-  if (opt === "Revnet" || opt === "Skærmfejl" || opt === "Knækket") return "⚠️";
-  return "❌";
+/* ---- Condition SVG icons (replaces emoji) ---- */
+const CONDITION_ICONS: Record<string, React.ReactNode> = {
+  perfect: (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+  ),
+  minor: (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+    </svg>
+  ),
+  damaged: (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+    </svg>
+  ),
+  broken: (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  ),
+};
+
+function conditionIcon(opt: string): React.ReactNode {
+  if (opt === "Perfekt") return CONDITION_ICONS.perfect;
+  if (opt === "Små ridser" || opt === "Ridser" || opt === "Buler/ridser") return CONDITION_ICONS.minor;
+  if (opt === "Revnet" || opt === "Skærmfejl" || opt === "Knækket") return CONDITION_ICONS.damaged;
+  return CONDITION_ICONS.broken;
 }
 
-/* ---- Back condition emojis ---- */
-function backEmoji(opt: string): string {
-  if (opt === "Perfekt") return "✨";
-  if (opt === "Små ridser" || opt === "Ridser") return "👌";
-  if (opt === "Buler/ridser") return "😕";
-  return "⚠️";
+function conditionIconColor(opt: string): string {
+  if (opt === "Perfekt") return "text-[#1A3D2E]";
+  if (opt === "Små ridser" || opt === "Ridser" || opt === "Buler/ridser") return "text-amber-500";
+  if (opt === "Revnet" || opt === "Skærmfejl" || opt === "Knækket") return "text-orange-500";
+  return "text-red-500";
 }
+
+/* ---- Brand / model data per device type ---- */
+interface BrandEntry {
+  name: string;
+  models: string[];
+}
+
+const BRANDS_BY_TYPE: Record<string, BrandEntry[]> = {
+  Telefon: [
+    {
+      name: "Apple",
+      models: [
+        "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
+        "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
+        "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
+        "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13 mini", "iPhone 13",
+        "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12 mini", "iPhone 12",
+        "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
+        "iPhone XS Max", "iPhone XS", "iPhone XR", "iPhone X",
+        "iPhone SE (3. gen)", "iPhone SE (2. gen)",
+      ],
+    },
+    {
+      name: "Samsung",
+      models: [
+        "Galaxy S25 Ultra", "Galaxy S25+", "Galaxy S25",
+        "Galaxy S24 Ultra", "Galaxy S24+", "Galaxy S24",
+        "Galaxy S23 Ultra", "Galaxy S23+", "Galaxy S23",
+        "Galaxy S22 Ultra", "Galaxy S22+", "Galaxy S22",
+        "Galaxy S21 Ultra", "Galaxy S21+", "Galaxy S21",
+        "Galaxy Z Fold 6", "Galaxy Z Fold 5", "Galaxy Z Fold 4",
+        "Galaxy Z Flip 6", "Galaxy Z Flip 5", "Galaxy Z Flip 4",
+        "Galaxy A55", "Galaxy A54", "Galaxy A53", "Galaxy A35", "Galaxy A34",
+        "Galaxy A15", "Galaxy A14",
+      ],
+    },
+    {
+      name: "Google",
+      models: [
+        "Pixel 9 Pro XL", "Pixel 9 Pro", "Pixel 9",
+        "Pixel 8 Pro", "Pixel 8", "Pixel 7 Pro", "Pixel 7", "Pixel 6 Pro", "Pixel 6",
+      ],
+    },
+    {
+      name: "OnePlus",
+      models: [
+        "OnePlus 13", "OnePlus 12", "OnePlus 11", "OnePlus 10 Pro",
+        "OnePlus Nord 4", "OnePlus Nord 3", "OnePlus Nord 2T",
+      ],
+    },
+    {
+      name: "Xiaomi",
+      models: [
+        "Xiaomi 14 Ultra", "Xiaomi 14", "Xiaomi 13 Pro", "Xiaomi 13",
+        "Redmi Note 13 Pro+", "Redmi Note 13 Pro", "Redmi Note 13",
+        "Redmi Note 12", "POCO X6 Pro", "POCO X6",
+      ],
+    },
+    {
+      name: "Huawei",
+      models: [
+        "P60 Pro", "P50 Pro", "P50", "P40 Pro", "P40",
+        "Mate 60 Pro", "Mate 50 Pro", "Mate 40 Pro",
+        "Nova 12", "Nova 11",
+      ],
+    },
+    {
+      name: "Sony",
+      models: [
+        "Xperia 1 VI", "Xperia 1 V", "Xperia 5 VI", "Xperia 5 V",
+        "Xperia 10 VI", "Xperia 10 V",
+      ],
+    },
+    {
+      name: "Motorola",
+      models: [
+        "Edge 50 Ultra", "Edge 50 Pro", "Edge 50",
+        "Razr 50 Ultra", "Razr 50",
+        "Moto G85", "Moto G54",
+      ],
+    },
+    {
+      name: "Nokia",
+      models: ["Nokia G42", "Nokia G22", "Nokia XR21", "Nokia X30"],
+    },
+    {
+      name: "Oppo",
+      models: [
+        "Find X8 Pro", "Find X7 Ultra", "Reno 12 Pro", "Reno 11 Pro",
+        "A98", "A78",
+      ],
+    },
+  ],
+  Tablet: [
+    {
+      name: "Apple",
+      models: [
+        "iPad Pro 13\" (M4)", "iPad Pro 11\" (M4)",
+        "iPad Pro 13\" (M2)", "iPad Pro 11\" (M2)",
+        "iPad Air 13\" (M2)", "iPad Air 11\" (M2)",
+        "iPad Air (M1)", "iPad (10. gen)", "iPad (9. gen)",
+        "iPad mini (7. gen)", "iPad mini (6. gen)",
+      ],
+    },
+    {
+      name: "Samsung",
+      models: [
+        "Galaxy Tab S10 Ultra", "Galaxy Tab S10+", "Galaxy Tab S10",
+        "Galaxy Tab S9 Ultra", "Galaxy Tab S9+", "Galaxy Tab S9",
+        "Galaxy Tab S8 Ultra", "Galaxy Tab S8+", "Galaxy Tab S8",
+        "Galaxy Tab A9+", "Galaxy Tab A9", "Galaxy Tab A8",
+      ],
+    },
+    {
+      name: "Lenovo",
+      models: ["Tab P12 Pro", "Tab P11 Pro Gen 2", "Tab P11 Gen 2", "Tab M11"],
+    },
+    {
+      name: "Huawei",
+      models: ["MatePad Pro 13.2", "MatePad Pro 11", "MatePad 11.5"],
+    },
+    {
+      name: "Microsoft",
+      models: ["Surface Pro 11", "Surface Pro 10", "Surface Pro 9", "Surface Go 4"],
+    },
+  ],
+  Laptop: [
+    {
+      name: "Apple",
+      models: [
+        "MacBook Pro 16\" (M4)", "MacBook Pro 14\" (M4)",
+        "MacBook Pro 16\" (M3)", "MacBook Pro 14\" (M3)",
+        "MacBook Pro 16\" (M2)", "MacBook Pro 14\" (M2)",
+        "MacBook Air 15\" (M3)", "MacBook Air 13\" (M3)",
+        "MacBook Air 15\" (M2)", "MacBook Air 13\" (M2)",
+      ],
+    },
+    {
+      name: "Lenovo",
+      models: [
+        "ThinkPad X1 Carbon Gen 12", "ThinkPad X1 Carbon Gen 11",
+        "ThinkPad T14s Gen 5", "ThinkPad T14s Gen 4",
+        "ThinkPad E14 Gen 5", "ThinkPad E15 Gen 4",
+        "IdeaPad Slim 5", "IdeaPad Slim 3",
+        "Yoga Slim 7", "Yoga Pro 7",
+      ],
+    },
+    {
+      name: "Dell",
+      models: [
+        "XPS 15 (2024)", "XPS 13 (2024)", "XPS 15 (2023)", "XPS 13 (2023)",
+        "Inspiron 15 3000", "Inspiron 14 5000",
+        "Latitude 5540", "Latitude 7440",
+      ],
+    },
+    {
+      name: "HP",
+      models: [
+        "EliteBook 840 G11", "EliteBook 860 G11",
+        "ProBook 445 G11", "ProBook 450 G9",
+        "Spectre x360 14", "Envy x360 15",
+        "Pavilion 15", "Laptop 15s",
+      ],
+    },
+    {
+      name: "ASUS",
+      models: [
+        "ZenBook 14 OLED", "ZenBook Pro 16X",
+        "VivoBook S 15", "VivoBook 15",
+        "ROG Zephyrus G14", "ROG Strix G16",
+        "ExpertBook B9",
+      ],
+    },
+    {
+      name: "Microsoft",
+      models: [
+        "Surface Laptop 7", "Surface Laptop 6", "Surface Laptop 5",
+        "Surface Laptop Studio 2", "Surface Laptop Go 3",
+      ],
+    },
+    {
+      name: "Acer",
+      models: [
+        "Swift Go 14", "Swift 3", "Aspire 5",
+        "Predator Helios 16", "Nitro 5",
+        "ConceptD 5 Pro",
+      ],
+    },
+    {
+      name: "LG",
+      models: ["LG gram 17", "LG gram 16", "LG gram 14", "LG gram 13"],
+    },
+  ],
+  Smartwatch: [
+    {
+      name: "Apple",
+      models: [
+        "Apple Watch Ultra 2", "Apple Watch Series 10",
+        "Apple Watch Series 9", "Apple Watch Series 8",
+        "Apple Watch SE (2. gen)", "Apple Watch Series 7",
+        "Apple Watch SE (1. gen)", "Apple Watch Series 6",
+      ],
+    },
+    {
+      name: "Samsung",
+      models: [
+        "Galaxy Watch 7", "Galaxy Watch Ultra",
+        "Galaxy Watch 6", "Galaxy Watch 6 Classic",
+        "Galaxy Watch 5 Pro", "Galaxy Watch 5",
+        "Galaxy Watch 4 Classic", "Galaxy Watch 4",
+      ],
+    },
+    {
+      name: "Google",
+      models: ["Pixel Watch 3 XL", "Pixel Watch 3", "Pixel Watch 2", "Pixel Watch"],
+    },
+    {
+      name: "Garmin",
+      models: ["Fenix 8", "Fenix 7 Pro", "Forerunner 965", "Venu 3"],
+    },
+    {
+      name: "Fitbit",
+      models: ["Fitbit Sense 2", "Fitbit Versa 4"],
+    },
+    {
+      name: "Fossil",
+      models: ["Fossil Gen 6", "Fossil Gen 5"],
+    },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /*  Progress Bar                                                       */
@@ -267,13 +525,11 @@ function ConditionCardGrid({
   options,
   value,
   onChange,
-  emojiFor,
 }: {
   label: string;
   options: string[];
   value: string;
   onChange: (value: string) => void;
-  emojiFor: (opt: string) => string;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -288,15 +544,164 @@ function ConditionCardGrid({
               onClick={() => onChange(opt)}
               className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-all ${
                 isSelected
-                  ? "border-green-eco bg-green-eco/5 shadow-sm"
-                  : "border-soft-grey hover:border-green-eco/30"
+                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5 shadow-sm"
+                  : "border-[#E5E5EA] hover:border-[#1A3D2E]/30"
               }`}
             >
-              <span className="text-2xl">{emojiFor(opt)}</span>
-              <span className="text-sm font-bold text-charcoal">{opt}</span>
+              <span className={isSelected ? "text-[#1A3D2E]" : conditionIconColor(opt)}>
+                {conditionIcon(opt)}
+              </span>
+              <span className="text-sm font-bold text-[#111111]">{opt}</span>
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Searchable Select                                                   */
+/* ------------------------------------------------------------------ */
+
+function SearchableSelect({
+  id,
+  label,
+  placeholder,
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return options;
+    return options.filter((o) => o.toLowerCase().includes(q));
+  }, [options, query]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function select(opt: string) {
+    onChange(opt);
+    setOpen(false);
+    setQuery("");
+  }
+
+  const displayValue = value || "";
+  const inputStyles =
+    "w-full rounded-xl border-2 border-[#E5E5EA] bg-white px-5 py-4 text-base text-[#111111] placeholder:text-[#6E6E73]/50 focus:border-[#1A3D2E] focus:outline-none focus:ring-4 focus:ring-[#1A3D2E]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+
+  return (
+    <div className="flex flex-col gap-2" ref={containerRef}>
+      <label htmlFor={id} className="text-sm font-bold text-[#111111]">{label}</label>
+      <div className="relative">
+        {/* Trigger button */}
+        <button
+          id={id}
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return;
+            setOpen((o) => !o);
+            if (!open) {
+              setTimeout(() => inputRef.current?.focus(), 50);
+            }
+          }}
+          className={`flex w-full items-center justify-between rounded-xl border-2 bg-white px-5 py-4 text-base transition-all ${
+            disabled
+              ? "cursor-not-allowed border-[#E5E5EA] opacity-50"
+              : open
+                ? "border-[#1A3D2E] ring-4 ring-[#1A3D2E]/10"
+                : "border-[#E5E5EA] hover:border-[#1A3D2E]/30"
+          }`}
+        >
+          <span className={displayValue ? "text-[#111111]" : "text-[#6E6E73]/50"}>
+            {displayValue || placeholder}
+          </span>
+          <svg
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className={`h-4 w-4 shrink-0 text-[#6E6E73] transition-transform ${open ? "rotate-180" : ""}`}
+          >
+            <path fillRule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+          </svg>
+        </button>
+
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-[#E5E5EA] bg-white shadow-xl">
+            {/* Search input */}
+            <div className="border-b border-[#E5E5EA] p-2">
+              <div className="flex items-center gap-2 rounded-lg border border-[#E5E5EA] bg-[#F7F7F8] px-3 py-2">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-[#6E6E73]">
+                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clipRule="evenodd" />
+                </svg>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Søg..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-sm text-[#111111] placeholder:text-[#6E6E73]/50 focus:outline-none"
+                />
+                {query && (
+                  <button type="button" onClick={() => setQuery("")} className="text-[#6E6E73] hover:text-[#111111]">
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+                      <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* Options list */}
+            <ul className="max-h-60 overflow-y-auto py-1">
+              {filtered.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-[#6E6E73]">Ingen resultater</li>
+              ) : (
+                filtered.map((opt) => (
+                  <li key={opt}>
+                    <button
+                      type="button"
+                      onClick={() => select(opt)}
+                      className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-[#F7F7F8] ${
+                        opt === value ? "font-bold text-[#1A3D2E]" : "text-[#111111]"
+                      }`}
+                    >
+                      {opt === value && (
+                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#1A3D2E]">
+                          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <span className={opt === value ? "" : "ml-[1.375rem]"}>{opt}</span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -361,8 +766,13 @@ export function SellDeviceWizard() {
   const canGoNext = useMemo(() => {
     switch (step) {
       case 0:
-        // Every device must have deviceType, brand, model
-        return devices.every((entry) => entry.device.deviceType && entry.device.brand && entry.device.model);
+        // Every device must have deviceType, and either (brand+model) or (brandCustom+modelCustom)
+        return devices.every((entry) => {
+          const d = entry.device;
+          if (!d.deviceType) return false;
+          if (d.useCustom) return !!(d.brandCustom.trim() && d.modelCustom.trim());
+          return !!(d.brand && d.model);
+        });
       case 1: {
         // Every device must have screen, back, battery, allWorking (+ cloudLocked if applicable)
         return devices.every((entry) => {
@@ -389,8 +799,8 @@ export function SellDeviceWizard() {
       const lines = [
         devices.length > 1 ? `\n--- Enhed ${i + 1} ---` : null,
         `Enhedstype: ${d.deviceType}`,
-        `Mærke: ${d.brand}`,
-        `Model: ${d.model}`,
+        `Mærke: ${d.useCustom ? d.brandCustom : d.brand}`,
+        `Model: ${d.useCustom ? d.modelCustom : d.model}`,
         d.storage ? `Lagerplads: ${d.storage}` : null,
         d.ram ? `RAM: ${d.ram}` : null,
         `Skærm: ${c.screen}`,
@@ -526,11 +936,12 @@ export function SellDeviceWizard() {
           </div>
 
           {/* Already added devices summary */}
-          {devices.some((d) => d.device.model) && (
+          {devices.some((d) => d.device.model || (d.device.useCustom && d.device.modelCustom)) && (
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-wide text-gray">Dine enheder</p>
-              {devices.map((entry, i) =>
-                entry.device.model ? (
+              {devices.map((entry, i) => {
+                const hasModel = entry.device.model || (entry.device.useCustom && entry.device.modelCustom);
+                return hasModel ? (
                   <div
                     key={entry.id}
                     className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all ${
@@ -543,7 +954,9 @@ export function SellDeviceWizard() {
                       </span>
                       <div>
                         <p className="text-sm font-bold text-charcoal">
-                          {entry.device.brand} {entry.device.model}
+                          {entry.device.useCustom
+                            ? `${entry.device.brandCustom} ${entry.device.modelCustom}`
+                            : `${entry.device.brand} ${entry.device.model}`}
                         </p>
                         <p className="text-xs text-gray">
                           {entry.device.deviceType} · {entry.device.storage || "Ikke valgt"}
@@ -574,8 +987,8 @@ export function SellDeviceWizard() {
                       )}
                     </div>
                   </div>
-                ) : null,
-              )}
+                ) : null;
+              })}
             </div>
           )}
 
@@ -621,44 +1034,105 @@ export function SellDeviceWizard() {
           {/* Brand & Model */}
           {activeDevice.device.deviceType && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="brand" className={labelStyles}>Mærke</label>
-                  <input
-                    id="brand"
-                    type="text"
-                    placeholder={
-                      activeDevice.device.deviceType === "Telefon"
-                        ? "f.eks. Apple, Samsung"
-                        : activeDevice.device.deviceType === "Laptop"
-                          ? "f.eks. Lenovo, Apple"
-                          : "f.eks. Apple, Samsung"
+              {!activeDevice.device.useCustom ? (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <SearchableSelect
+                      id={`brand-${activeDeviceIndex}`}
+                      label="Mærke"
+                      placeholder="Vælg mærke"
+                      options={(BRANDS_BY_TYPE[activeDevice.device.deviceType] ?? []).map((b) => b.name)}
+                      value={activeDevice.device.brand}
+                      onChange={(val) => updateDevice(activeDeviceIndex, { brand: val, model: "" })}
+                    />
+                    <SearchableSelect
+                      id={`model-${activeDeviceIndex}`}
+                      label="Model"
+                      placeholder={activeDevice.device.brand ? "Vælg model" : "Vælg mærke først"}
+                      options={
+                        activeDevice.device.brand
+                          ? (BRANDS_BY_TYPE[activeDevice.device.deviceType] ?? []).find(
+                              (b) => b.name === activeDevice.device.brand,
+                            )?.models ?? []
+                          : []
+                      }
+                      value={activeDevice.device.model}
+                      onChange={(val) => updateDevice(activeDeviceIndex, { model: val })}
+                      disabled={!activeDevice.device.brand}
+                    />
+                  </div>
+
+                  {/* "Not in list" escape hatch */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateDevice(activeDeviceIndex, {
+                        useCustom: true,
+                        brand: "",
+                        model: "",
+                        brandCustom: "",
+                        modelCustom: "",
+                      })
                     }
-                    value={activeDevice.device.brand}
-                    onChange={(e) => updateDevice(activeDeviceIndex, { brand: e.target.value })}
-                    className={inputStyles}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="model" className={labelStyles}>Model</label>
-                  <input
-                    id="model"
-                    type="text"
-                    placeholder={
-                      activeDevice.device.deviceType === "Telefon"
-                        ? "f.eks. iPhone 14 Pro"
-                        : activeDevice.device.deviceType === "Tablet"
-                          ? "f.eks. iPad Air 5"
-                          : activeDevice.device.deviceType === "Laptop"
-                            ? 'f.eks. MacBook Pro 14"'
-                            : "f.eks. Apple Watch SE"
-                    }
-                    value={activeDevice.device.model}
-                    onChange={(e) => updateDevice(activeDeviceIndex, { model: e.target.value })}
-                    className={inputStyles}
-                  />
-                </div>
-              </div>
+                    className="flex items-center gap-1.5 text-sm font-medium text-[#6E6E73] hover:text-[#1A3D2E] transition-colors"
+                  >
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
+                      <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                    </svg>
+                    Min enhed findes ikke på listen
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] p-4">
+                    <p className="mb-3 text-sm font-bold text-[#111111]">Beskriv din enhed</p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor={`brand-custom-${activeDeviceIndex}`} className="text-sm font-bold text-[#111111]">
+                          Mærke
+                        </label>
+                        <input
+                          id={`brand-custom-${activeDeviceIndex}`}
+                          type="text"
+                          placeholder="f.eks. Fairphone"
+                          value={activeDevice.device.brandCustom}
+                          onChange={(e) => updateDevice(activeDeviceIndex, { brandCustom: e.target.value })}
+                          className="w-full rounded-xl border-2 border-[#E5E5EA] bg-white px-5 py-4 text-base text-[#111111] placeholder:text-[#6E6E73]/50 focus:border-[#1A3D2E] focus:outline-none focus:ring-4 focus:ring-[#1A3D2E]/10 transition-all"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor={`model-custom-${activeDeviceIndex}`} className="text-sm font-bold text-[#111111]">
+                          Model
+                        </label>
+                        <input
+                          id={`model-custom-${activeDeviceIndex}`}
+                          type="text"
+                          placeholder="f.eks. Fairphone 5"
+                          value={activeDevice.device.modelCustom}
+                          onChange={(e) => updateDevice(activeDeviceIndex, { modelCustom: e.target.value })}
+                          className="w-full rounded-xl border-2 border-[#E5E5EA] bg-white px-5 py-4 text-base text-[#111111] placeholder:text-[#6E6E73]/50 focus:border-[#1A3D2E] focus:outline-none focus:ring-4 focus:ring-[#1A3D2E]/10 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateDevice(activeDeviceIndex, {
+                          useCustom: false,
+                          brandCustom: "",
+                          modelCustom: "",
+                        })
+                      }
+                      className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[#6E6E73] hover:text-[#1A3D2E] transition-colors"
+                    >
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
+                        <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                      </svg>
+                      Tilbage til listen
+                    </button>
+                  </div>
+                </>
+              )}
 
               {/* Storage */}
               {STORAGE_OPTIONS[activeDevice.device.deviceType] && (
@@ -709,7 +1183,7 @@ export function SellDeviceWizard() {
           )}
 
           {/* Add another device button */}
-          {activeDevice.device.model && (
+          {(activeDevice.device.model || (activeDevice.device.useCustom && activeDevice.device.modelCustom)) && (
             <button
               type="button"
               onClick={() => {
@@ -753,7 +1227,9 @@ export function SellDeviceWizard() {
                   }`}
                 >
                   <span>{i + 1}.</span>
-                  {entry.device.brand} {entry.device.model}
+                  {entry.device.useCustom
+                    ? `${entry.device.brandCustom} ${entry.device.modelCustom}`
+                    : `${entry.device.brand} ${entry.device.model}`}
                 </button>
               ))}
             </div>
@@ -761,11 +1237,10 @@ export function SellDeviceWizard() {
 
           {/* Condition for active device */}
           <ConditionCardGrid
-            label={isLaptop ? "Skærm" : "Skærm"}
+            label="Skærm"
             options={SCREEN_OPTIONS[activeDevice.device.deviceType] ?? SCREEN_OPTIONS.Telefon}
             value={activeCondition.screen}
             onChange={(v) => updateCondition(activeDeviceIndex, { screen: v })}
-            emojiFor={screenEmoji}
           />
 
           <ConditionCardGrid
@@ -773,7 +1248,6 @@ export function SellDeviceWizard() {
             options={BACK_OPTIONS[activeDevice.device.deviceType] ?? BACK_OPTIONS.Telefon}
             value={activeCondition.back}
             onChange={(v) => updateCondition(activeDeviceIndex, { back: v })}
-            emojiFor={backEmoji}
           />
 
           <RadioGroup
@@ -852,7 +1326,10 @@ export function SellDeviceWizard() {
                   return (
                     <div key={entry.id} className="flex items-center justify-between text-sm">
                       <span className="text-charcoal">
-                        {i + 1}. {entry.device.brand} {entry.device.model}
+                        {i + 1}.{" "}
+                        {entry.device.useCustom
+                          ? `${entry.device.brandCustom} ${entry.device.modelCustom}`
+                          : `${entry.device.brand} ${entry.device.model}`}
                       </span>
                       {filled ? (
                         <span className="flex items-center gap-1 text-green-eco">
@@ -1025,7 +1502,9 @@ export function SellDeviceWizard() {
                     <div className="flex justify-between">
                       <dt className="text-gray">Enhed</dt>
                       <dd className="font-medium text-charcoal">
-                        {entry.device.brand} {entry.device.model}
+                        {entry.device.useCustom
+                          ? `${entry.device.brandCustom} ${entry.device.modelCustom}`
+                          : `${entry.device.brand} ${entry.device.model}`}
                       </dd>
                     </div>
                     {entry.device.storage && (

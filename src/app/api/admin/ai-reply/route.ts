@@ -27,9 +27,9 @@ Regler:
 
 PhoneSpot info:
 - Adresse: VestsjællandsCentret 10A, 103, 4200 Slagelse
-- Telefon: +45 71 99 71 49
+- Telefon: +45 61 10 00 48
 - Email: info@phonespot.dk
-- Åbningstider: Man-Fre 10-17:30, Lør 10-14
+- Åbningstider: Man-Fre 10-19, Lør-Søn 10-17
 - Ny butik i Vejle åbner april 2026
 - Reparationer: skærmskift, batteriskift, vandskade, kamera, ladestik mm. — livstidsgaranti, faste priser, 90% klar på 30 min
 - Sælg din enhed: vi opkøber brugte telefoner, tablets, laptops — tilbud inden 24 timer

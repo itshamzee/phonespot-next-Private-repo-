@@ -32,12 +32,12 @@ export function TilbehoerCategoryHero({
         <div className="mb-4 h-1 w-10 bg-green-eco" />
 
         {/* Category label */}
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[4px] text-green-eco">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-eco">
           {category.label}
         </p>
 
         {/* Heading */}
-        <h1 className="font-display text-4xl font-extrabold italic text-white md:text-5xl">
+        <h1 className="font-display text-4xl font-bold text-white md:text-5xl">
           {category.label}
         </h1>
 
@@ -60,7 +60,7 @@ export function TilbehoerCategoryHero({
         {/* DevicePicker — only for device-specific categories */}
         {category.deviceSpecific && (
           <div className="mt-8">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/40">
               Filtrer efter din model
             </p>
             <DevicePicker

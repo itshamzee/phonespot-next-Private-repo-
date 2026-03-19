@@ -5,7 +5,7 @@ import { LAPTOP_TIERS } from "@/lib/laptop-tiers";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { CategoryHero } from "@/components/product/category-hero";
+import { FilteredGrid } from "@/components/product/filtered-grid";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -220,22 +220,70 @@ export default async function BaerbarePage() {
         }}
       />
 
-      {/* -- Hero -- */}
-      <div className="px-4 pt-8 max-w-7xl mx-auto">
-        <CategoryHero
-          title="Bærbare du kan stole på"
-          description="Kvalitetstestede laptops med 36 måneders garanti. Hver eneste computer er testet med 30+ kontroller, rengjort og klar til brug fra dag et."
-          productCount={templates.length}
-        />
-      </div>
+      {/* ── Hero ── */}
+      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+          {/* Breadcrumb */}
+          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[#111111] font-medium">Refurbished Bærbare</span>
+          </nav>
 
-      {/* -- Price tier showcase -- */}
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              {/* Category badge */}
+              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E]" />
+                Laptops &amp; Computere
+              </span>
+
+              <h1 className="font-display text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
+                Bærbare du kan stole på
+              </h1>
+
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-[#86868B] md:text-lg">
+                Kvalitetstestede laptops med 36 måneders garanti. Hver eneste computer er testet med 30+ kontroller, rengjort og klar til brug fra dag et.
+              </p>
+
+              {/* Quick stats */}
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">Fra 1.359 DKK</strong>
+                </span>
+                <span className="text-[#E5E5EA]">|</span>
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">{templates.length} modeller</strong>
+                </span>
+                <span className="text-[#E5E5EA]">|</span>
+                <span className="flex items-center gap-2 text-[#111111]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
+                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                  </svg>
+                  <strong className="font-semibold">36 mdr. garanti</strong>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── Price tier showcase ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
             Vælg dit prisniveau
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Find den rigtige bærbar til dit budget. Alle er testet efter samme
             grundige standard — uanset pris.
           </p>
@@ -245,31 +293,39 @@ export default async function BaerbarePage() {
           {LAPTOP_TIERS.map((tier, tierIndex) => {
             const tierTemplates = tierGroups.get(tier.slug) ?? [];
 
+            // Clean Nordic tier card styles
+            const cardStyles = [
+              { cardBg: "bg-white", cardBorder: "border border-[#E5E5EA]", badgeBg: "bg-[#E5E5EA]", badgeText: "text-[#111111]", taglineColor: "text-[#86868B]", countColor: "text-[#1A3D2E]", arrowColor: "text-[#1A3D2E]" },
+              { cardBg: "bg-[#F7F7F8]", cardBorder: "border-2 border-[#1A3D2E]/20", badgeBg: "bg-[#1A3D2E]", badgeText: "text-white", taglineColor: "text-[#1A3D2E]", countColor: "text-[#1A3D2E]", arrowColor: "text-[#1A3D2E]" },
+              { cardBg: "bg-white", cardBorder: "border-2 border-[#111111]", badgeBg: "bg-[#111111]", badgeText: "text-white", taglineColor: "text-[#86868B]", countColor: "text-[#1A3D2E]", arrowColor: "text-[#111111]" },
+            ];
+            const s = cardStyles[tierIndex] ?? cardStyles[0];
+
             return (
               <Link
                 key={tier.slug}
                 href={`/baerbare/${tier.slug}`}
-                className={`group block rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 transition-shadow hover:shadow-md md:p-8`}
+                className={`group block rounded-3xl ${s.cardBg} ${s.cardBorder} p-5 transition-shadow hover:shadow-md md:p-8`}
               >
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${tier.badgeBg} ${tier.badgeText}`}>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${s.badgeBg} ${s.badgeText}`}>
                     <TierIcon tier={tier.slug} />
                   </div>
                   <div>
-                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-[2px]`}>
+                    <span className={`inline-block rounded-full ${s.badgeBg} ${s.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-wide`}>
                       {tier.title}
                     </span>
-                    <p className={`mt-1 text-sm ${tier.taglineColor}`}>
+                    <p className={`mt-1 text-sm ${s.taglineColor}`}>
                       {tier.tagline}
                     </p>
                   </div>
                   <div className="ml-auto flex items-center gap-3">
                     {tierTemplates.length > 0 && (
-                      <span className={`text-sm font-semibold ${tier.countColor}`}>
+                      <span className={`text-sm font-semibold ${s.countColor}`}>
                         {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
                       </span>
                     )}
-                    <span className={`text-sm font-semibold ${tierIndex === 2 ? "text-white/80 group-hover:text-white" : "text-green-eco"} transition-transform group-hover:translate-x-1`}>
+                    <span className={`text-sm font-semibold ${s.arrowColor} transition-transform group-hover:translate-x-1`}>
                       Se alle &rarr;
                     </span>
                   </div>
@@ -297,7 +353,7 @@ export default async function BaerbarePage() {
                 )}
 
                 {tierTemplates.length === 0 && (
-                  <p className={`text-sm ${tierIndex === 2 ? "text-white/40" : "text-gray"}`}>
+                  <p className={`text-sm ${s.taglineColor}`}>
                     Se vores {tier.title.toLowerCase()} bærbare &rarr;
                   </p>
                 )}
@@ -307,13 +363,13 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* -- Use cases -- */}
+      {/* ── Use cases ── */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
             Hvad skal du bruge din bærbare til?
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             Find den rigtige computer til dit behov — uanset om det er studie,
             kontor eller krævende arbejde.
           </p>
@@ -322,20 +378,20 @@ export default async function BaerbarePage() {
           {USE_CASES.map((uc) => (
             <div
               key={uc.title}
-              className="rounded-3xl bg-white p-6 shadow-sm"
+              className="rounded-3xl bg-white border border-[#E5E5EA] p-6 shadow-sm"
             >
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco/10 text-green-eco">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1A3D2E]/10 text-[#1A3D2E]">
                 {uc.icon}
               </div>
-              <h3 className="font-display text-lg font-bold text-charcoal">
+              <h3 className="font-display text-lg font-bold text-[#111111]">
                 {uc.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray">
+              <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
                 {uc.description}
               </p>
               <Link
                 href={uc.href}
-                className="mt-4 inline-block text-sm font-semibold text-green-eco hover:underline"
+                className="mt-4 inline-block text-sm font-semibold text-[#1A3D2E] hover:underline"
               >
                 {uc.cta} &rarr;
               </Link>
@@ -344,48 +400,50 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* -- Budget highlight -- */}
-      <SectionWrapper background="green" className="text-center text-white">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-white/60">
-          Bedste pris
-        </p>
-        <Heading as="h2" size="lg" className="text-white">
-          Bærbare fra 1.359 kr
-        </Heading>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
-          Du behøver ikke bruge en formue på en god computer. Vores
-          budget-bærbare er håndplukket — med minimum 8 GB RAM,
-          SSD og 4+ timers batteri. Alle testet og klar med 36 måneders garanti.
-        </p>
-        <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-4 text-sm text-white/70">
-          <span className="flex items-center gap-1.5">
-            <span className="text-white">&#10003;</span> Min. 8 GB RAM
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-white">&#10003;</span> SSD-disk
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-white">&#10003;</span> 4+ timers batteri
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-white">&#10003;</span> Windows installeret
-          </span>
+      {/* ── Budget highlight ── */}
+      <section className="bg-[#1A3D2E] py-20 text-center text-white md:py-28">
+        <div className="mx-auto max-w-7xl px-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/60">
+            Bedste pris
+          </p>
+          <h2 className="font-display text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+            Bærbare fra 1.359 kr
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
+            Du behøver ikke bruge en formue på en god computer. Vores
+            budget-bærbare er håndplukket — med minimum 8 GB RAM,
+            SSD og 4+ timers batteri. Alle testet og klar med 36 måneders garanti.
+          </p>
+          <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-4 text-sm text-white/70">
+            <span className="flex items-center gap-1.5">
+              <span className="text-white">&#10003;</span> Min. 8 GB RAM
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-white">&#10003;</span> SSD-disk
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-white">&#10003;</span> 4+ timers batteri
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-white">&#10003;</span> Windows installeret
+            </span>
+          </div>
+          <Link
+            href="/baerbare/budget"
+            className="mt-8 inline-block rounded-full bg-white px-8 py-3 font-semibold text-[#1A3D2E] transition-opacity hover:opacity-90"
+          >
+            Se budget bærbare &rarr;
+          </Link>
         </div>
-        <Link
-          href="/baerbare/budget"
-          className="mt-8 inline-block rounded-full bg-white px-8 py-3 font-semibold text-green-eco transition-opacity hover:opacity-90"
-        >
-          Se budget bærbare &rarr;
-        </Link>
-      </SectionWrapper>
+      </section>
 
-      {/* -- Testproces -- */}
+      {/* ── Test process ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="lg">
             Sådan tester vi hver eneste laptop
           </Heading>
-          <p className="mt-4 text-lg text-gray">
+          <p className="mt-4 text-lg text-[#86868B]">
             8 trin der sikrer at din bærbare er 100% klar. Ingen genveje —
             alle computere testes individuelt af vores teknikere.
           </p>
@@ -395,16 +453,16 @@ export default async function BaerbarePage() {
             {LAPTOP_TEST_STEPS.map((step) => (
               <div
                 key={step.step}
-                className="flex gap-4 rounded-2xl bg-sand/40 p-5"
+                className="flex gap-4 rounded-2xl bg-[#F7F7F8] border border-[#E5E5EA] p-5"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-eco text-sm font-bold text-white">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1A3D2E] text-sm font-bold text-white">
                   {step.step}
                 </span>
                 <div>
-                  <h3 className="font-display text-sm font-bold uppercase tracking-[1px] text-charcoal">
+                  <h3 className="font-display text-sm font-bold tracking-tight text-[#111111]">
                     {step.title}
                   </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-gray">
+                  <p className="mt-1 text-sm leading-relaxed text-[#86868B]">
                     {step.description}
                   </p>
                 </div>
@@ -414,22 +472,22 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* -- Hvorfor refurbished? -- */}
+      {/* ── Hvorfor refurbished? ── */}
       <SectionWrapper background="cream">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Bæredygtigt valg
             </p>
             <Heading as="h2" size="md">
               Hvorfor købe en refurbished laptop?
             </Heading>
-            <p className="mt-4 text-gray leading-relaxed">
+            <p className="mt-4 text-[#86868B] leading-relaxed">
               En ny laptop kræver råstoffer, energi og transport. Ved at
               vælge refurbished forlænger du enhedens levetid og reducerer
               e-affald med op til 80%.
             </p>
-            <p className="mt-3 text-gray leading-relaxed">
+            <p className="mt-3 text-[#86868B] leading-relaxed">
               Hos PhoneSpot er en refurbished laptop ikke bare billigere — den
               er også grundigere testet end en ny. Vi kører 30+ individuelle
               tests på hver computer, så du får en enhed der virker perfekt fra
@@ -442,12 +500,12 @@ export default async function BaerbarePage() {
                 "Grundigere testet end en fabriksny enhed",
                 "36 måneders garanti og 14 dages returret",
               ].map((point) => (
-                <li key={point} className="flex items-start gap-2 text-sm text-charcoal">
+                <li key={point} className="flex items-start gap-2 text-sm text-[#111111]">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="mt-0.5 h-4 w-4 shrink-0 text-green-eco"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]"
                     aria-hidden="true"
                   >
                     <path
@@ -461,18 +519,18 @@ export default async function BaerbarePage() {
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl bg-white p-8 shadow-sm">
-            <h3 className="mb-6 font-display text-lg font-bold text-charcoal">
+          <div className="rounded-3xl bg-white p-8 shadow-sm border border-[#E5E5EA]">
+            <h3 className="mb-6 font-display text-lg font-bold text-[#111111]">
               Ny vs. PhoneSpot Refurbished
             </h3>
-            <div className="divide-y divide-sand/60">
+            <div className="divide-y divide-[#E5E5EA]">
               {COMPARISON.map((row) => (
                 <div key={row.feature} className="flex items-start gap-4 py-3">
-                  <span className="w-28 shrink-0 text-sm font-semibold text-charcoal">
+                  <span className="w-28 shrink-0 text-sm font-semibold text-[#111111]">
                     {row.feature}
                   </span>
-                  <span className="flex-1 text-sm text-gray">{row.new}</span>
-                  <span className="flex-1 text-sm font-medium text-green-eco">
+                  <span className="flex-1 text-sm text-[#86868B]">{row.new}</span>
+                  <span className="flex-1 text-sm font-medium text-[#1A3D2E]">
                     {row.refurbished}
                   </span>
                 </div>
@@ -482,42 +540,49 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* -- Stats -- */}
-      <SectionWrapper background="charcoal" className="text-white">
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 lg:grid-cols-4">
-          {[
-            { value: "30+", label: "Tests per computer" },
-            { value: "4+", label: "Timers min. batteri" },
-            { value: "36", label: "Måneders garanti" },
-            { value: "1-2", label: "Dages levering" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-4xl font-bold text-green-eco md:text-5xl">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-white/60">{stat.label}</p>
-            </div>
-          ))}
+      {/* ── Stats ── */}
+      <section className="bg-[#F7F7F8] border-y border-[#E5E5EA] py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 lg:grid-cols-4">
+            {[
+              { value: "30+", label: "Tests per computer" },
+              { value: "4+", label: "Timers min. batteri" },
+              { value: "36", label: "Måneders garanti" },
+              { value: "1-2", label: "Dages levering" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl bg-white border border-[#E5E5EA] p-6 text-center shadow-sm">
+                <p className="font-display text-4xl font-bold text-[#1A3D2E] md:text-5xl">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[#86868B]">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* ── All laptops grid with filters ── */}
+      <SectionWrapper>
+        <FilteredGrid templates={templates} heading="Alle bærbare" />
       </SectionWrapper>
 
-      {/* -- FAQ -- */}
+      {/* ── FAQ ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <Heading as="h2" size="md">
             Ofte stillede spørgsmål om bærbare
           </Heading>
         </div>
-        <div className="mx-auto mt-10 max-w-3xl divide-y divide-sand">
+        <div className="mx-auto mt-10 max-w-3xl divide-y divide-[#E5E5EA]">
           {LAPTOP_FAQ.map((item) => (
             <details key={item.question} className="group py-5">
-              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-charcoal">
+              <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-[#111111]">
                 {item.question}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="h-5 w-5 shrink-0 text-gray transition-transform group-open:rotate-180"
+                  className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180"
                   aria-hidden="true"
                 >
                   <path
@@ -527,7 +592,7 @@ export default async function BaerbarePage() {
                   />
                 </svg>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-gray">
+              <p className="mt-3 text-sm leading-relaxed text-[#86868B]">
                 {item.answer}
               </p>
             </details>
@@ -535,37 +600,37 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
-      {/* -- Trust -- */}
+      {/* ── Trust ── */}
       <SectionWrapper background="sand">
         <TrustBar />
       </SectionWrapper>
 
-      {/* -- CTA -- */}
+      {/* ── CTA ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" size="md">
             Find din næste bærbare
           </Heading>
-          <p className="mt-4 text-gray">
+          <p className="mt-4 text-[#86868B]">
             Alle computere er testet, rengjort og klar med 36 måneders garanti
             og 14 dages fortrydelsesret.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/baerbare/budget"
-              className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
               Se budget &rarr;
             </Link>
             <Link
               href="/baerbare/mellem"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
             >
               Se mellem &rarr;
             </Link>
             <Link
               href="/baerbare/premium"
-              className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
             >
               Se premium &rarr;
             </Link>

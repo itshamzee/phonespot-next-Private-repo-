@@ -75,7 +75,7 @@ export function NewsletterPopup() {
             />
           </svg>
         </button>
-        <h2 className="font-display text-2xl font-bold uppercase text-charcoal">
+        <h2 className="font-display text-2xl font-bold text-charcoal">
           Få eksklusive tilbud
         </h2>
         <p className="mt-2 text-sm text-charcoal/70">

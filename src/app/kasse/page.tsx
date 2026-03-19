@@ -15,7 +15,7 @@ export default function KassePage() {
             </svg>
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal md:text-4xl">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
               Sikker betaling
             </h1>
             <p className="text-sm text-gray">Dine data er krypteret og beskyttet</p>
@@ -52,7 +52,7 @@ export default function KassePage() {
 
             {/* Payment methods */}
             <div className="rounded-2xl border border-sand bg-cream p-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray">
                 Vi accepterer
               </p>
               <div className="flex flex-wrap items-center gap-3">

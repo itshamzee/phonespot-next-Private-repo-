@@ -222,7 +222,7 @@ function ImageSlider({
         <button
           type="button"
           onClick={() => setView("frame")}
-          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[1px] transition-colors ${
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             view === "frame"
               ? "bg-white text-charcoal"
               : "text-white/70 hover:text-white"
@@ -233,7 +233,7 @@ function ImageSlider({
         <button
           type="button"
           onClick={() => setView("display")}
-          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[1px] transition-colors ${
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
             view === "display"
               ? "bg-white text-charcoal"
               : "text-white/70 hover:text-white"

@@ -166,7 +166,7 @@ export function ReservationForm({
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 {/* Name */}
                 <div>
-                  <label htmlFor="res-name" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
+                  <label htmlFor="res-name" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">
                     Navn <span className="text-rose-400">*</span>
                   </label>
                   <input
@@ -182,7 +182,7 @@ export function ReservationForm({
 
                 {/* Phone */}
                 <div>
-                  <label htmlFor="res-phone" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
+                  <label htmlFor="res-phone" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">
                     Telefon <span className="text-rose-400">*</span>
                   </label>
                   <input
@@ -198,7 +198,7 @@ export function ReservationForm({
 
                 {/* Email (optional) */}
                 <div>
-                  <label htmlFor="res-email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
+                  <label htmlFor="res-email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">
                     Email <span className="text-charcoal/25">(valgfri)</span>
                   </label>
                   <input

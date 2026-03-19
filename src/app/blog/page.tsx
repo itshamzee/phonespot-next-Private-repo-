@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 const CATEGORY_STYLES: Record<string, { label: string; className: string }> = {
   guide: {
     label: "Guide",
-    className: "bg-[#5A8C6F]/15 text-[#5A8C6F]",
+    className: "bg-[#1A3D2E]/15 text-[#1A3D2E]",
   },
   sammenligning: {
     label: "Sammenligning",
@@ -90,7 +90,7 @@ export default function BlogIndexPage() {
       {/* Hero */}
       <SectionWrapper background="charcoal" className="!py-16 md:!py-20">
         <div className="text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[4px] text-green-eco">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-green-eco">
             PhoneSpot Blog
           </p>
           <Heading as="h1" size="lg" className="!text-white">
@@ -208,7 +208,7 @@ export default function BlogIndexPage() {
                     </time>
                   </div>
 
-                  <h2 className="font-display text-xl font-bold text-charcoal transition-colors group-hover:text-[#5A8C6F]">
+                  <h2 className="font-display text-xl font-bold text-charcoal transition-colors group-hover:text-[#1A3D2E]">
                     {post.frontmatter.title}
                   </h2>
 
@@ -216,7 +216,7 @@ export default function BlogIndexPage() {
                     {post.frontmatter.description}
                   </p>
 
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#5A8C6F]">
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E]">
                     Laes mere
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

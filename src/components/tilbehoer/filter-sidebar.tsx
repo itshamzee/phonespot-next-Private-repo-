@@ -52,7 +52,7 @@ export function FilterSidebar({ brands }: FilterSidebarProps) {
     <aside className="hidden lg:block w-60 shrink-0">
       <div className="sticky top-8 space-y-6">
         <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-wide text-charcoal">
+          <h3 className="font-display text-sm font-bold tracking-tight text-charcoal">
             Pris
           </h3>
           <div className="mt-3 space-y-2">
@@ -75,7 +75,7 @@ export function FilterSidebar({ brands }: FilterSidebarProps) {
 
         {brands.length > 0 && (
           <div>
-            <h3 className="font-display text-sm font-bold uppercase tracking-wide text-charcoal">
+            <h3 className="font-display text-sm font-bold tracking-tight text-charcoal">
               Mærke
             </h3>
             <div className="mt-3 space-y-2">

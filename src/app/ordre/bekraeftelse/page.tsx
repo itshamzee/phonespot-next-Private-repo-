@@ -251,7 +251,7 @@ function ConfirmationContent() {
             />
           </svg>
         </div>
-        <h1 className="font-display text-2xl font-bold uppercase tracking-tight text-charcoal">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-charcoal">
           Noget gik galt
         </h1>
         <p className="mt-4 text-sm text-gray-600">{error ?? "Ukendt fejl."}</p>
@@ -295,7 +295,7 @@ function ConfirmationContent() {
           </svg>
         </div>
 
-        <h1 className="font-display text-3xl font-bold uppercase tracking-tight text-charcoal md:text-4xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
           Tak for din ordre!
         </h1>
 
@@ -314,7 +314,7 @@ function ConfirmationContent() {
 
       {/* Order items */}
       <div className="mt-10 rounded-2xl border border-sand bg-cream p-6">
-        <h2 className="mb-4 font-display text-base font-bold uppercase tracking-wide text-charcoal">
+        <h2 className="mb-4 font-display text-base font-bold tracking-tight text-charcoal">
           Hvad du har bestilt
         </h2>
 
@@ -410,7 +410,7 @@ function ConfirmationContent() {
 
       {/* What happens next */}
       <div className="mt-6 rounded-2xl border border-sand bg-warm-white p-6">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-charcoal">
+        <h3 className="font-display text-sm font-semibold tracking-tight text-charcoal">
           Hvad sker der nu?
         </h3>
         <div className="mt-4 space-y-3">

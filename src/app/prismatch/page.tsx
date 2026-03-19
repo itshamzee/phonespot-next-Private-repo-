@@ -62,16 +62,16 @@ export default function PrismatchPage() {
   return (
     <>
       {/* -- Hero -- */}
-      <SectionWrapper background="charcoal">
+      <SectionWrapper background="cream">
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Prismatch
             </p>
-            <Heading size="xl" className="text-white">
+            <Heading size="xl" className="text-[#111111]">
               Prismatch-garanti
             </Heading>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
               Hos PhoneSpot er vi overbeviste om, at vi tilbyder Danmarks bedste
               priser på kvalitetstestet refurbished elektronik. Men finder du
               alligevel en billigere pris hos en dansk konkurrent? Så matcher vi
@@ -86,13 +86,13 @@ export default function PrismatchPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               3 nemme trin
             </p>
             <Heading as="h2" size="lg">
               Sådan fungerer det
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Prismatch hos PhoneSpot er enkelt og gennemsigtigt. Følg disse tre
               trin, og du er sikret den laveste pris.
             </p>
@@ -102,13 +102,13 @@ export default function PrismatchPage() {
           {STEPS.map((step, i) => (
             <FadeIn key={step.number} delay={i * 0.1}>
               <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-eco font-display text-2xl font-bold text-white">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E] font-display text-2xl font-bold text-white">
                   {step.number}
                 </div>
-                <h3 className="mt-4 font-display text-lg font-bold text-charcoal">
+                <h3 className="mt-4 font-display text-lg font-bold text-[#111111]">
                   {step.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray">
+                <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
                   {step.description}
                 </p>
               </div>
@@ -122,13 +122,13 @@ export default function PrismatchPage() {
         <div className="mx-auto max-w-3xl">
           <FadeIn>
             <div className="text-center">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Vilkår
               </p>
               <Heading as="h2" size="lg">
                 Betingelser
               </Heading>
-              <p className="mt-4 text-lg text-gray">
+              <p className="mt-4 text-lg text-[#86868B]">
                 For at sikre en fair sammenligning gælder følgende betingelser
                 for vores prismatch-garanti.
               </p>
@@ -137,13 +137,13 @@ export default function PrismatchPage() {
               {CONDITIONS.map((condition) => (
                 <li
                   key={condition}
-                  className="flex items-start gap-3 text-charcoal"
+                  className="flex items-start gap-3 text-[#111111]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="mt-0.5 h-5 w-5 shrink-0 text-green-eco"
+                    className="mt-0.5 h-5 w-5 shrink-0 text-[#1A3D2E]"
                     aria-hidden="true"
                   >
                     <path
@@ -164,28 +164,28 @@ export default function PrismatchPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl">
           <FadeIn>
-            <div className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-8 md:p-10">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <div className="rounded-2xl border border-[#1A3D2E]/20 bg-[#F7F7F8] p-8 md:p-10">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Vores fordel
               </p>
-              <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-charcoal md:text-3xl">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] md:text-3xl">
                 Hvorfor vi tør give prismatch
               </h2>
-              <p className="mt-4 leading-relaxed text-gray">
+              <p className="mt-4 leading-relaxed text-[#86868B]">
                 Vi køber ind direkte fra certificerede europæiske leverandører og
                 holder vores omkostninger lave. Det betyder, at vi næsten altid
                 har de bedste priser i Danmark på refurbished elektronik. Vi er
                 så sikre på vores priser, at vi tør tilbyde prismatch-garanti
                 &mdash; noget ingen af vores danske konkurrenter gør.
               </p>
-              <p className="mt-4 leading-relaxed text-gray">
+              <p className="mt-4 leading-relaxed text-[#86868B]">
                 Og i de sjældne tilfælde hvor en konkurrent har en lavere pris,
                 matcher vi den gerne. For hos PhoneSpot får du ikke bare den
                 bedste pris &mdash; du får også 36 måneders garanti, over 30
                 individuelle kvalitetstests og 14 dages fuld returret. Det er
                 tryghed du ikke finder andre steder.
               </p>
-              <div className="mt-6 flex flex-wrap gap-4 text-sm font-medium text-green-eco">
+              <div className="mt-6 flex flex-wrap gap-4 text-sm font-medium text-[#1A3D2E]">
                 <span className="flex items-center gap-1.5">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -258,7 +258,7 @@ export default function PrismatchPage() {
             <Heading as="h2" size="md">
               Fundet en lavere pris? Kontakt os
             </Heading>
-            <p className="mt-4 text-gray">
+            <p className="mt-4 text-[#86868B]">
               Send os et link til den billigere pris, og vi matcher den. Du kan
               også kontakte os, hvis du har spørgsmål til vores
               prismatch-garanti.
@@ -266,13 +266,13 @@ export default function PrismatchPage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/kontakt"
-                className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Kontakt os &rarr;
               </Link>
               <Link
                 href="/iphones"
-                className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+                className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
               >
                 Se vores udvalg &rarr;
               </Link>

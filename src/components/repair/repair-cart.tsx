@@ -431,7 +431,7 @@ export function RepairCart({
         <div>
           {/* Color selector */}
           <div className="mb-6">
-            <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[2px] text-charcoal/50">
+            <h3 className="mb-3 font-display text-sm font-bold tracking-tight text-charcoal/50">
               Vælg farve
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -466,7 +466,7 @@ export function RepairCart({
 
           {/* Section header with moms toggle */}
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-sm font-bold uppercase tracking-[2px] text-charcoal/50">
+            <h3 className="font-display text-sm font-bold tracking-tight text-charcoal/50">
               Vælg reparation
             </h3>
             <button

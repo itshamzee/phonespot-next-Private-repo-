@@ -110,11 +110,11 @@ export default function GarantiPage() {
           {/* ── Hero ── */}
           <FadeIn>
             <div className="text-center">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Din tryghed
               </p>
               <Heading size="lg">36 måneders garanti</Heading>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-gray">
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
                 Alle refurbished enheder fra PhoneSpot leveres med 36 måneders
                 fuld garanti. Det er længere end de fleste konkurrenter og
                 matcher de bedste i branchen. Vi stoler på kvaliteten af det vi
@@ -129,15 +129,15 @@ export default function GarantiPage() {
               {STATS.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-5 text-center"
+                  className="rounded-2xl border border-[#1A3D2E]/20 bg-[#1A3D2E]/5 p-5 text-center"
                 >
-                  <p className="font-display text-3xl font-bold text-green-eco">
+                  <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                     {stat.value}
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-charcoal">
+                  <p className="mt-1 text-sm font-semibold text-[#111111]">
                     {stat.label}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray">{stat.sub}</p>
+                  <p className="mt-0.5 text-xs text-[#86868B]">{stat.sub}</p>
                 </div>
               ))}
             </div>
@@ -153,13 +153,13 @@ export default function GarantiPage() {
                 {COVERED_ITEMS.map((item) => (
                   <div
                     key={item}
-                    className="flex items-center gap-3 rounded-xl bg-cream px-4 py-3"
+                    className="flex items-center gap-3 rounded-xl bg-[#F7F7F8] px-4 py-3"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                       fill="currentColor"
-                      className="h-5 w-5 shrink-0 text-green-eco"
+                      className="h-5 w-5 shrink-0 text-[#1A3D2E]"
                       aria-hidden="true"
                     >
                       <path
@@ -168,7 +168,7 @@ export default function GarantiPage() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-charcoal">
+                    <span className="text-sm font-medium text-[#111111]">
                       {item}
                     </span>
                   </div>
@@ -183,14 +183,14 @@ export default function GarantiPage() {
               <Heading as="h2" size="md">
                 Sammenligning med konkurrenterne
               </Heading>
-              <div className="mt-8 overflow-hidden rounded-2xl border border-sand">
+              <div className="mt-8 overflow-hidden rounded-2xl border border-[#E5E5EA]">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-sand">
-                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
+                    <tr className="border-b border-[#E5E5EA]">
+                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
                         Forhandler
                       </th>
-                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-[2px] text-charcoal">
+                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
                         Garanti
                       </th>
                     </tr>
@@ -201,15 +201,15 @@ export default function GarantiPage() {
                         key={row.name}
                         className={`${
                           i < COMPETITORS.length - 1
-                            ? "border-b border-sand/50"
+                            ? "border-b border-[#E5E5EA]/50"
                             : ""
-                        } ${row.highlighted ? "bg-green-eco/5" : ""}`}
+                        } ${row.highlighted ? "bg-[#1A3D2E]/5" : ""}`}
                       >
                         <td
                           className={`px-5 py-3 ${
                             row.highlighted
-                              ? "font-bold text-green-eco"
-                              : "text-charcoal"
+                              ? "font-bold text-[#1A3D2E]"
+                              : "text-[#111111]"
                           }`}
                         >
                           {row.name}
@@ -217,8 +217,8 @@ export default function GarantiPage() {
                         <td
                           className={`px-5 py-3 ${
                             row.highlighted
-                              ? "font-bold text-green-eco"
-                              : "text-gray"
+                              ? "font-bold text-[#1A3D2E]"
+                              : "text-[#86868B]"
                           }`}
                         >
                           {row.warranty}
@@ -237,16 +237,16 @@ export default function GarantiPage() {
               <Heading as="h2" size="md">
                 Ofte stillede spørgsmål om garanti
               </Heading>
-              <div className="mt-8 divide-y divide-sand">
+              <div className="mt-8 divide-y divide-[#E5E5EA]">
                 {WARRANTY_FAQ.map((item) => (
                   <details key={item.question} className="group py-5">
-                    <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-charcoal">
+                    <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-[#111111]">
                       {item.question}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
-                        className="h-5 w-5 shrink-0 text-gray transition-transform group-open:rotate-180"
+                        className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180"
                         aria-hidden="true"
                       >
                         <path
@@ -256,7 +256,7 @@ export default function GarantiPage() {
                         />
                       </svg>
                     </summary>
-                    <p className="mt-3 text-sm leading-relaxed text-gray">
+                    <p className="mt-3 text-sm leading-relaxed text-[#86868B]">
                       {item.answer}
                     </p>
                   </details>
@@ -267,11 +267,11 @@ export default function GarantiPage() {
 
           {/* ── CTA section ── */}
           <FadeIn delay={0.3}>
-            <div className="mt-16 rounded-2xl bg-charcoal p-8 text-center md:p-10">
-              <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-white md:text-3xl">
+            <div className="mt-16 rounded-2xl bg-[#F7F7F8] border border-[#E5E5EA] p-8 text-center md:p-10">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] md:text-3xl">
                 Har du en garantisag?
               </h2>
-              <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/70">
+              <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-[#86868B]">
                 Vi gør det nemt at bruge din garanti. Indmeld din reklamation
                 online, eller kontakt os direkte &mdash; vi svarer inden for 1-2
                 hverdage.
@@ -279,13 +279,13 @@ export default function GarantiPage() {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/reklamation"
-                  className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                  className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
                 >
                   Indmeld reklamation
                 </Link>
                 <Link
                   href="/kontakt"
-                  className="inline-block rounded-full border-2 border-white px-8 py-3 font-semibold text-white transition-colors hover:bg-white hover:text-charcoal"
+                  className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
                 >
                   Kontakt os
                 </Link>

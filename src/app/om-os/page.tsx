@@ -245,39 +245,41 @@ export default function OmOsPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <SectionWrapper background="charcoal">
-        <div className="mx-auto max-w-4xl text-center">
-          <FadeIn>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-              Om PhoneSpot
-            </p>
-            <Heading size="xl" className="text-white">
-              Vi giver premium tech nyt liv
-            </Heading>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-              PhoneSpot er Danmarks specialist i refurbished elektronik. Vi
-              tror på, at kvalitetsteknologi ikke behøver at koste en formue —
-              og at det smarteste køb også er det mest bæredygtige. Hver enhed
-              vi sælger, er testet, verificeret og dækket af 36 måneders
-              garanti.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
-              <span className="flex items-center gap-2">
-                <span className="text-green-eco">✓</span> Dansk virksomhed
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-green-eco">✓</span> e-mærket godkendt
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-green-eco">✓</span> 36 mdr. garanti
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="text-green-eco">✓</span> 1.000+ enheder solgt
-              </span>
-            </div>
-          </FadeIn>
+      <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-4xl text-center">
+            <FadeIn>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+                Om PhoneSpot
+              </p>
+              <Heading size="xl" className="text-[#111111]">
+                Vi giver premium tech nyt liv
+              </Heading>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
+                PhoneSpot er Danmarks specialist i refurbished elektronik. Vi
+                tror på, at kvalitetsteknologi ikke behøver at koste en formue —
+                og at det smarteste køb også er det mest bæredygtige. Hver enhed
+                vi sælger, er testet, verificeret og dækket af 36 måneders
+                garanti.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-[#86868B]">
+                <span className="flex items-center gap-2">
+                  <span className="text-[#1A3D2E]">✓</span> Dansk virksomhed
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[#1A3D2E]">✓</span> e-mærket godkendt
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[#1A3D2E]">✓</span> 36 mdr. garanti
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[#1A3D2E]">✓</span> 1.000+ enheder solgt
+                </span>
+              </div>
+            </FadeIn>
+          </div>
         </div>
-      </SectionWrapper>
+      </div>
 
       {/* ── Stats Bar ── */}
       <SectionWrapper background="sand">
@@ -285,13 +287,13 @@ export default function OmOsPage() {
           {STATS.map((stat, i) => (
             <FadeIn key={stat.label} delay={i * 0.1}>
               <div className="text-center">
-                <p className="font-display text-4xl font-bold text-green-eco md:text-5xl">
+                <p className="font-display text-4xl font-bold text-[#1A3D2E] md:text-5xl">
                   {stat.value}
                 </p>
-                <p className="mt-1 font-display text-sm font-semibold uppercase tracking-[1px] text-charcoal">
+                <p className="mt-1 font-display text-sm font-semibold uppercase tracking-wide text-[#111111]">
                   {stat.label}
                 </p>
-                <p className="mt-1 text-xs text-gray">{stat.description}</p>
+                <p className="mt-1 text-xs text-[#86868B]">{stat.description}</p>
               </div>
             </FadeIn>
           ))}
@@ -302,20 +304,20 @@ export default function OmOsPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Vores historie
             </p>
             <Heading as="h2" size="lg">
               Fra frustration til forretning
             </Heading>
-            <p className="mt-6 text-lg leading-relaxed text-gray">
+            <p className="mt-6 text-lg leading-relaxed text-[#86868B]">
               PhoneSpot blev skabt af en simpel frustration: det var næsten
               umuligt at finde pålidelig refurbished elektronik i Danmark.
               Markedet var fyldt med usikre køb, misvisende standbeskrivelser
               og manglende garanti. Vi vidste, at det kunne gøres bedre — og
               det satte vi os for at bevise.
             </p>
-            <p className="mt-4 text-lg leading-relaxed text-gray">
+            <p className="mt-4 text-lg leading-relaxed text-[#86868B]">
               I dag er PhoneSpot Danmarks dedikerede specialist i
               kvalitetstestet refurbished tech. Vi har solgt over 1.000
               enheder, og hver eneste én har bestået vores grundige 30-punkts
@@ -327,21 +329,21 @@ export default function OmOsPage() {
 
         {/* Timeline */}
         <div className="mx-auto mt-16 max-w-3xl">
-          <div className="relative space-y-12 border-l-2 border-sand pl-8">
+          <div className="relative space-y-12 border-l-2 border-[#E5E5EA] pl-8">
             {TIMELINE.map((item, i) => (
               <FadeIn key={item.year} delay={i * 0.15}>
                 <div className="relative">
                   {/* Dot */}
-                  <div className="absolute -left-[41px] flex h-5 w-5 items-center justify-center rounded-full border-2 border-green-eco bg-white">
-                    <div className="h-2 w-2 rounded-full bg-green-eco" />
+                  <div className="absolute -left-[41px] flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#1A3D2E] bg-white">
+                    <div className="h-2 w-2 rounded-full bg-[#1A3D2E]" />
                   </div>
-                  <p className="font-display text-xs font-bold uppercase tracking-[2px] text-green-eco">
+                  <p className="font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
                     {item.year}
                   </p>
-                  <h3 className="mt-1 font-display text-xl font-bold text-charcoal">
+                  <h3 className="mt-1 font-display text-xl font-bold text-[#111111]">
                     {item.title}
                   </h3>
-                  <p className="mt-2 leading-relaxed text-gray">
+                  <p className="mt-2 leading-relaxed text-[#86868B]">
                     {item.description}
                   </p>
                 </div>
@@ -355,13 +357,13 @@ export default function OmOsPage() {
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Vores løfter
             </p>
             <Heading as="h2" size="lg">
               Det vi står for — hver dag
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Hos PhoneSpot er vores værdier ikke bare ord på en side. De
               styrer alle beslutninger vi træffer — fra hvordan vi tester
               enheder, til hvordan vi håndterer garanti og support.
@@ -372,13 +374,13 @@ export default function OmOsPage() {
           {COMMITMENTS.map((c, i) => (
             <FadeIn key={c.title} delay={i * 0.08}>
               <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                   {ICON_MAP[c.icon]}
                 </div>
-                <h3 className="font-display text-lg font-bold text-charcoal">
+                <h3 className="font-display text-lg font-bold text-[#111111]">
                   {c.title}
                 </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-[#86868B]">
                   {c.description}
                 </p>
               </div>
@@ -392,25 +394,25 @@ export default function OmOsPage() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <FadeIn>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
                 Bæredygtighed
               </p>
               <Heading as="h2" size="md">
                 Refurbished er fremtiden — og vi er her for at bevise det
               </Heading>
-              <p className="mt-4 text-gray leading-relaxed">
+              <p className="mt-4 text-[#86868B] leading-relaxed">
                 Produktion af ny elektronik er en af verdens mest
                 ressourcekrævende industrier. Sjældne mineraler skal udvindes,
                 fabrikker kører for fuld kraft, og CO&#8322;-udledningen er
                 enorm. Men det behøver ikke være sådan.
               </p>
-              <p className="mt-3 text-gray leading-relaxed">
+              <p className="mt-3 text-[#86868B] leading-relaxed">
                 Ved at vælge refurbished fra PhoneSpot forlænger du enhedens
                 levetid med flere år, sparer op til 80% CO&#8322; og reducerer
                 behovet for ny produktion. Du får den samme funktionalitet, den
                 samme garanti — men med en brøkdel af miljøbelastningen.
               </p>
-              <p className="mt-3 text-gray leading-relaxed">
+              <p className="mt-3 text-[#86868B] leading-relaxed">
                 Det er et valg der giver mening for din pung, din samvittighed
                 og vores planet. Og med PhoneSpots 36 måneders garanti risikerer
                 du intet.
@@ -419,43 +421,43 @@ export default function OmOsPage() {
           </FadeIn>
           <FadeIn delay={0.15}>
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-                <p className="font-display text-3xl font-bold text-green-eco">
+              <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+                <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                   80%
                 </p>
-                <p className="mt-1 text-xs font-medium text-charcoal">
+                <p className="mt-1 text-xs font-medium text-[#111111]">
                   Mindre CO&#8322;-udledning
                 </p>
-                <p className="mt-1 text-xs text-gray">vs. ny produktion</p>
+                <p className="mt-1 text-xs text-[#86868B]">vs. ny produktion</p>
               </div>
-              <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-                <p className="font-display text-3xl font-bold text-green-eco">
+              <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+                <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                   40%
                 </p>
-                <p className="mt-1 text-xs font-medium text-charcoal">
+                <p className="mt-1 text-xs font-medium text-[#111111]">
                   Lavere pris
                 </p>
-                <p className="mt-1 text-xs text-gray">
+                <p className="mt-1 text-xs text-[#86868B]">
                   vs. at købe fabriksny
                 </p>
               </div>
-              <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-                <p className="font-display text-3xl font-bold text-green-eco">
+              <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+                <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                   2+ år
                 </p>
-                <p className="mt-1 text-xs font-medium text-charcoal">
+                <p className="mt-1 text-xs font-medium text-[#111111]">
                   Ekstra levetid
                 </p>
-                <p className="mt-1 text-xs text-gray">per refurbished enhed</p>
+                <p className="mt-1 text-xs text-[#86868B]">per refurbished enhed</p>
               </div>
-              <div className="rounded-2xl bg-green-eco/5 p-6 text-center">
-                <p className="font-display text-3xl font-bold text-green-eco">
+              <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
+                <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                   100%
                 </p>
-                <p className="mt-1 text-xs font-medium text-charcoal">
+                <p className="mt-1 text-xs font-medium text-[#111111]">
                   Funktionalitet
                 </p>
-                <p className="mt-1 text-xs text-gray">
+                <p className="mt-1 text-xs text-[#86868B]">
                   Alt virker som det skal
                 </p>
               </div>
@@ -465,84 +467,86 @@ export default function OmOsPage() {
       </SectionWrapper>
 
       {/* ── Sådan arbejder vi ── */}
-      <SectionWrapper background="charcoal" className="text-white">
-        <div className="mx-auto max-w-3xl text-center">
-          <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
-              Vores proces
-            </p>
-            <Heading as="h2" size="md" className="text-white">
-              Fra indkøb til din dør — sådan arbejder vi
-            </Heading>
-            <p className="mt-4 text-white/60">
-              Bag hvert produkt på PhoneSpot ligger en grundig proces der
-              sikrer, at du får præcis det du forventer.
-            </p>
-          </FadeIn>
-        </div>
-        <div className="mx-auto mt-12 grid max-w-4xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            {
-              step: "01",
-              title: "Indkøb",
-              description:
-                "Vi indkøber enheder fra certificerede, europæiske leverandører med fuld sporbarhed og dokumentation.",
-            },
-            {
-              step: "02",
-              title: "Test",
-              description:
-                "Hver enhed gennemgår vores 30-punkts testproces. Skærm, batteri, kamera, sensorer — alt verificeres.",
-            },
-            {
-              step: "03",
-              title: "Gradering",
-              description:
-                "Enheden graderes ærligt som A, B eller C baseret på kosmetisk stand. Vi pynter aldrig på sandheden.",
-            },
-            {
-              step: "04",
-              title: "Levering",
-              description:
-                "Enheden rengøres, pakkes omhyggeligt og sendes til dig med 1-2 hverdages levering og 36 mdr. garanti.",
-            },
-          ].map((item, i) => (
-            <FadeIn key={item.step} delay={i * 0.1}>
-              <div className="text-center">
-                <p className="font-display text-4xl font-bold text-green-eco">
-                  {item.step}
-                </p>
-                <h3 className="mt-2 font-display text-lg font-bold text-white">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/60">
-                  {item.description}
-                </p>
-              </div>
+      <div className="bg-[#F7F7F8] border-y border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <FadeIn>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+                Vores proces
+              </p>
+              <Heading as="h2" size="md" className="text-[#111111]">
+                Fra indkøb til din dør — sådan arbejder vi
+              </Heading>
+              <p className="mt-4 text-[#86868B]">
+                Bag hvert produkt på PhoneSpot ligger en grundig proces der
+                sikrer, at du får præcis det du forventer.
+              </p>
             </FadeIn>
-          ))}
+          </div>
+          <div className="mx-auto mt-12 grid max-w-4xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "01",
+                title: "Indkøb",
+                description:
+                  "Vi indkøber enheder fra certificerede, europæiske leverandører med fuld sporbarhed og dokumentation.",
+              },
+              {
+                step: "02",
+                title: "Test",
+                description:
+                  "Hver enhed gennemgår vores 30-punkts testproces. Skærm, batteri, kamera, sensorer — alt verificeres.",
+              },
+              {
+                step: "03",
+                title: "Gradering",
+                description:
+                  "Enheden graderes ærligt som A, B eller C baseret på kosmetisk stand. Vi pynter aldrig på sandheden.",
+              },
+              {
+                step: "04",
+                title: "Levering",
+                description:
+                  "Enheden rengøres, pakkes omhyggeligt og sendes til dig med 1-2 hverdages levering og 36 mdr. garanti.",
+              },
+            ].map((item, i) => (
+              <FadeIn key={item.step} delay={i * 0.1}>
+                <div className="text-center">
+                  <p className="font-display text-4xl font-bold text-[#1A3D2E]">
+                    {item.step}
+                  </p>
+                  <h3 className="mt-2 font-display text-lg font-bold text-[#111111]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
+                    {item.description}
+                  </p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <div className="mt-12 text-center">
+            <Link
+              href="/kvalitet"
+              className="inline-block text-sm font-semibold text-[#1A3D2E] hover:underline"
+            >
+              Læs mere om vores kvalitetsproces &rarr;
+            </Link>
+          </div>
         </div>
-        <div className="mt-12 text-center">
-          <Link
-            href="/kvalitet"
-            className="inline-block text-sm font-semibold text-green-eco hover:underline"
-          >
-            Læs mere om vores kvalitetsproces &rarr;
-          </Link>
-        </div>
-      </SectionWrapper>
+      </div>
 
       {/* ── Tryghed & tillid ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Tryghed
             </p>
             <Heading as="h2" size="md">
               Derfor kan du handle trygt hos PhoneSpot
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Vi er ikke en anonym markedsplads. Vi er en dansk virksomhed der
               står bag hvert eneste produkt vi sælger. Her er hvad det betyder
               for dig.
@@ -583,8 +587,8 @@ export default function OmOsPage() {
             },
           ].map((item, i) => (
             <FadeIn key={item.title} delay={i * 0.08}>
-              <div className="rounded-2xl border border-sand bg-white p-6">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-eco text-white">
+              <div className="rounded-2xl border border-[#E5E5EA] bg-white p-6">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E] text-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
@@ -599,10 +603,10 @@ export default function OmOsPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="font-display text-base font-bold text-charcoal">
+                <h3 className="font-display text-base font-bold text-[#111111]">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray">
+                <p className="mt-2 text-sm leading-relaxed text-[#86868B]">
                   {item.description}
                 </p>
               </div>
@@ -615,13 +619,13 @@ export default function OmOsPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Fysisk butik
             </p>
             <Heading as="h2" size="md">
               Besøg os
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Vi har også en fysisk butik, hvor du kan se og prøve vores
               produkter. Kig forbi og få personlig rådgivning.
             </p>
@@ -641,13 +645,13 @@ export default function OmOsPage() {
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
           <FadeIn>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[3px] text-green-eco">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Kontakt
             </p>
             <Heading as="h2" size="md">
               Har du spørgsmål? Vi er klar
             </Heading>
-            <p className="mt-4 text-lg text-gray">
+            <p className="mt-4 text-lg text-[#86868B]">
               Uanset om du har spørgsmål til et produkt, brug for hjælp med
               en ordre eller bare vil vide mere om PhoneSpot — vi hører gerne
               fra dig.
@@ -655,13 +659,13 @@ export default function OmOsPage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/kontakt"
-                className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Skriv til os &rarr;
               </Link>
               <Link
                 href="/faq"
-                className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+                className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
               >
                 Se FAQ &rarr;
               </Link>
@@ -671,40 +675,42 @@ export default function OmOsPage() {
       </SectionWrapper>
 
       {/* ── CTA ── */}
-      <SectionWrapper background="charcoal" className="text-white">
-        <div className="mx-auto max-w-2xl text-center">
-          <FadeIn>
-            <Heading as="h2" size="md" className="text-white">
-              Klar til at finde din næste enhed?
-            </Heading>
-            <p className="mt-4 text-white/60">
-              Udforsk vores udvalg af kvalitetstestede refurbished iPhones,
-              iPads og bærbare. 36 måneders garanti og 14 dages fortrydelsesret
-              på alt.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/iphones"
-                className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                Se iPhones &rarr;
-              </Link>
-              <Link
-                href="/ipads"
-                className="inline-block rounded-full border-2 border-white/30 px-8 py-3 font-semibold text-white transition-colors hover:border-white hover:bg-white hover:text-charcoal"
-              >
-                Se iPads &rarr;
-              </Link>
-              <Link
-                href="/baerbare"
-                className="inline-block rounded-full border-2 border-white/30 px-8 py-3 font-semibold text-white transition-colors hover:border-white hover:bg-white hover:text-charcoal"
-              >
-                Se bærbare &rarr;
-              </Link>
-            </div>
-          </FadeIn>
+      <div className="bg-[#F7F7F8] border-t border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <FadeIn>
+              <Heading as="h2" size="md" className="text-[#111111]">
+                Klar til at finde din næste enhed?
+              </Heading>
+              <p className="mt-4 text-[#86868B]">
+                Udforsk vores udvalg af kvalitetstestede refurbished iPhones,
+                iPads og bærbare. 36 måneders garanti og 14 dages fortrydelsesret
+                på alt.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/iphones"
+                  className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  Se iPhones &rarr;
+                </Link>
+                <Link
+                  href="/ipads"
+                  className="inline-block rounded-full border-2 border-[#E5E5EA] px-8 py-3 font-semibold text-[#111111] transition-colors hover:border-[#111111] hover:bg-[#111111] hover:text-white"
+                >
+                  Se iPads &rarr;
+                </Link>
+                <Link
+                  href="/baerbare"
+                  className="inline-block rounded-full border-2 border-[#E5E5EA] px-8 py-3 font-semibold text-[#111111] transition-colors hover:border-[#111111] hover:bg-[#111111] hover:text-white"
+                >
+                  Se bærbare &rarr;
+                </Link>
+              </div>
+            </FadeIn>
+          </div>
         </div>
-      </SectionWrapper>
+      </div>
     </>
   );
 }
