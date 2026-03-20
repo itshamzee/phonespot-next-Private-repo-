@@ -291,13 +291,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   /* ---------------------------------------------------------------- */
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f1115]">
+      <div className="flex min-h-screen items-center justify-center bg-cream">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-12 w-12">
-            <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-400" />
-            <div className="absolute inset-1.5 animate-spin rounded-full border-2 border-transparent border-b-emerald-400/30" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+            <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-green-eco" />
+            <div className="absolute inset-1.5 animate-spin rounded-full border-2 border-transparent border-b-green-eco/30" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
           </div>
-          <p className="text-sm tracking-wide text-white/40">Indlæser...</p>
+          <p className="text-sm tracking-wide text-charcoal/40">Indlaeser...</p>
         </div>
       </div>
     );
@@ -308,26 +308,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   /* ---------------------------------------------------------------- */
   if (!user) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0f1115] px-4">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/[0.04] blur-[120px]" />
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-green-eco px-4">
+        {/* Subtle pattern overlay */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
 
         <div className="relative z-10 w-full max-w-[380px]">
-          <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] shadow-2xl shadow-black/40 backdrop-blur-xl">
-            {/* Top accent */}
-            <div className="h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-60" />
-
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl shadow-black/20">
             <div className="p-8">
               {/* Logo */}
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/20">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco shadow-lg shadow-green-eco/30">
                   <span className="font-display text-lg font-black text-white">PS</span>
                 </div>
-                <h1 className="font-display text-2xl font-bold tracking-tight text-white">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-charcoal">
                   PhoneSpot
                 </h1>
-                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/30">
+                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray">
                   Admin Panel
                 </p>
               </div>
@@ -335,7 +331,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {/* Form */}
               <form onSubmit={handleLogin} className="flex flex-col gap-4">
                 <div>
-                  <label htmlFor="admin-email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30">
+                  <label htmlFor="admin-email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-gray">
                     Email
                   </label>
                   <input
@@ -344,12 +340,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/20 transition-all focus:border-emerald-500/40 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+                    className="w-full rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-charcoal placeholder:text-gray/50 transition-all focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
                     placeholder="admin@phonespot.dk"
                   />
                 </div>
                 <div>
-                  <label htmlFor="admin-password" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30">
+                  <label htmlFor="admin-password" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-gray">
                     Adgangskode
                   </label>
                   <input
@@ -358,13 +354,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/20 transition-all focus:border-emerald-500/40 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+                    className="w-full rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-charcoal placeholder:text-gray/50 transition-all focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
                     placeholder="Din adgangskode"
                   />
                 </div>
 
                 {loginError && (
-                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+                  <div className="rounded-xl border border-red-500/20 bg-red-50 px-4 py-2.5 text-sm text-red-600">
                     {loginError}
                   </div>
                 )}
@@ -372,7 +368,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="mt-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+                  className="mt-2 rounded-full bg-green-eco px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-lg shadow-green-eco/20 transition-all hover:bg-green-light hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
                 >
                   {loggingIn ? "Logger ind..." : "Log ind"}
                 </button>
@@ -380,7 +376,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-[10px] tracking-[0.2em] text-white/15">
+          <p className="mt-6 text-center text-[10px] tracking-[0.2em] text-white/40">
             PHONESPOT ADMIN v2.0
           </p>
         </div>
@@ -392,32 +388,29 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   /*  Authenticated Layout                                             */
   /* ---------------------------------------------------------------- */
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#f4f3f0]">
+    <div className="flex h-dvh overflow-hidden bg-cream">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* ---- Sidebar ---- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-[#13161b] transition-transform duration-300 ease-out lg:static lg:shrink-0 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-green-eco transition-transform duration-300 ease-out lg:static lg:shrink-0 lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Ambient glow along left edge */}
-        <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-[1px] bg-gradient-to-b from-emerald-400/40 via-emerald-400/10 to-transparent" />
-
         {/* Logo */}
         <div className="flex h-[64px] items-center gap-3 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-emerald-500/15">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 shadow-sm">
             <span className="font-display text-[13px] font-black text-white">PS</span>
           </div>
           <div>
             <p className="font-display text-[15px] font-bold leading-tight text-white">PhoneSpot</p>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">Admin</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin</p>
           </div>
         </div>
 
@@ -425,7 +418,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-2">
           {NAV_SECTIONS.map((section) => (
             <div key={section.title} className="mb-1">
-              <p className="mb-1.5 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 first:mt-0">
+              <p className="mb-1.5 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-white/30 first:mt-0">
                 {section.title}
               </p>
               <div className="flex flex-col gap-px">
@@ -437,15 +430,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       href={item.href}
                       className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ${
                         active
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : "text-white/45 hover:bg-white/[0.04] hover:text-white/70"
+                          ? "bg-white/15 text-white"
+                          : "text-white/55 hover:bg-white/[0.08] hover:text-white/80"
                       }`}
                     >
                       {/* Active indicator */}
                       {active && (
-                        <div className="absolute -left-3 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                        <div className="absolute -left-3 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-white" />
                       )}
-                      <span className={`transition-colors ${active ? "text-emerald-400" : "text-white/25 group-hover:text-white/40"}`}>
+                      <span className={`transition-colors ${active ? "text-white" : "text-white/35 group-hover:text-white/55"}`}>
                         {item.icon}
                       </span>
                       {item.label}
@@ -458,19 +451,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* User section */}
-        <div className="border-t border-white/[0.06] px-4 py-4">
+        <div className="border-t border-white/10 px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[11px] font-bold text-emerald-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] font-bold text-white">
               {user.email?.charAt(0).toUpperCase()}
             </div>
-            <p className="min-w-0 flex-1 truncate text-xs font-medium text-white/40">
+            <p className="min-w-0 flex-1 truncate text-xs font-medium text-white/50">
               {user.email}
             </p>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.06] px-4 py-2 text-[11px] font-semibold tracking-wide text-white/30 transition-all hover:border-white/10 hover:bg-white/[0.03] hover:text-white/50"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-[11px] font-semibold tracking-wide text-white/40 transition-all hover:border-white/20 hover:bg-white/[0.06] hover:text-white/60"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
@@ -483,13 +476,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* ---- Main ---- */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-black/[0.04] bg-[#f4f3f0]/80 px-4 backdrop-blur-xl lg:px-6">
+        <header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-sand bg-white/80 px-4 backdrop-blur-xl lg:px-6">
           {/* Left: hamburger (mobile) + page title */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="rounded-lg p-1.5 text-charcoal/40 transition-colors hover:bg-black/[0.04] hover:text-charcoal lg:hidden"
+              className="rounded-lg p-1.5 text-charcoal/40 transition-colors hover:bg-cream hover:text-charcoal lg:hidden"
               aria-label="Abn menu"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -504,7 +497,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
           {/* Right: date + user */}
           <div className="flex items-center gap-4">
-            <span className="hidden text-xs font-medium text-charcoal/35 sm:block" suppressHydrationWarning>
+            <span className="hidden text-xs font-medium text-gray sm:block" suppressHydrationWarning>
               {new Date().toLocaleDateString("da-DK", {
                 weekday: "short",
                 day: "numeric",
@@ -512,7 +505,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 year: "numeric",
               })}
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-[11px] font-bold text-emerald-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-pale text-[11px] font-bold text-green-eco">
               {user.email?.charAt(0).toUpperCase()}
             </div>
           </div>
