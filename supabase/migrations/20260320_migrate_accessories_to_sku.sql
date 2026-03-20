@@ -13,7 +13,7 @@ SELECT
   a.category,     -- the legacy category becomes subcategory (cover, charger, etc.)
   CASE WHEN a.image_url IS NOT NULL THEN ARRAY[a.image_url] ELSE ARRAY[]::TEXT[] END,
   a.slug,
-  COALESCE(a.status, 'published'),
+  CASE WHEN a.status = 'archived' THEN 'draft' ELSE COALESCE(a.status, 'published') END,
   a.sku,
   a.created_at,
   a.updated_at
@@ -32,12 +32,8 @@ JOIN sku_products sp ON sp.slug = a.slug
 WHERE fsl.accessory_id = a.id
   AND fsl.sku_product_id IS NULL;
 
--- Create sku_stock entries ONLY for accessories with valid location references
-INSERT INTO sku_stock (product_id, location_id, quantity)
-SELECT sp.id, a.store_id::uuid, GREATEST(a.online_stock, 0) + GREATEST(a.store_stock, 0)
-FROM accessories a
-JOIN sku_products sp ON sp.slug = a.slug
-WHERE EXISTS (SELECT 1 FROM locations l WHERE l.id = a.store_id::uuid)
-ON CONFLICT (product_id, location_id) DO NOTHING;
+-- NOTE: sku_stock migration skipped — accessories.store_id is a text string (e.g. "slagelse"),
+-- not a UUID, so it cannot be directly mapped to locations.id.
+-- Stock for migrated products should be set manually in the admin UI.
 
 -- DO NOT drop the accessories table yet
