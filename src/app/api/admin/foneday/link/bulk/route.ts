@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createAccessory, slugify } from "@/lib/supabase/accessories";
-import { mapCategory, parseCompatibleModels, cleanTitle } from "@/lib/foneday/mapper";
+import { mapCategory, cleanTitle } from "@/lib/foneday/mapper";
+import { autoLinkTemplates } from "@/lib/foneday/sync";
 
 /**
  * POST /api/admin/foneday/link/bulk
  * Bulk link unlinked Foneday products matching a filter.
+ * Creates sku_products rows (not legacy accessories).
  */
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -44,49 +45,64 @@ export async function POST(req: NextRequest) {
   let linked = 0;
   const errors: string[] = [];
 
-  for (const product of unlinked) {
+  for (const catalog of unlinked) {
     try {
-      let accessoryId: string | null = null;
+      // Map Foneday category to sku_products category/subcategory
+      const rawCategory = await mapCategory(catalog.category);
+      const isRepairPart = rawCategory === null;
+      const skuCategory = "accessory";
+      const skuSubcategory = isRepairPart
+        ? "spare-part"
+        : (use_type === "repair_part" ? "spare-part" : rawCategory);
 
-      if (use_type === "retail") {
-        const mappedCategory = await mapCategory(product.category);
-        if (!mappedCategory) continue;
+      const costDkk = catalog.price_dkk ?? 0;
+      const markup = Number(markup_percentage) || 0;
+      const sellingPrice = Math.round(costDkk * (1 + markup / 100));
+      const title = cleanTitle(catalog.title);
+      const brand = catalog.product_brand ?? null;
 
-        const compatibleModels = parseCompatibleModels(product.suitable_for);
-        const costDkk = product.price_dkk ?? 0;
-        const markup = Number(markup_percentage) || 0;
-        const sellingPrice = Math.round(costDkk * (1 + markup / 100));
-        const name = cleanTitle(product.title);
-
-        const accessory = await createAccessory({
-          name,
-          slug: slugify(name),
-          category: mappedCategory as any,
-          brand: product.product_brand ?? "NovaNL",
-          compatible_models: compatibleModels,
-          price: sellingPrice,
+      const { data: skuProduct, error: skuErr } = await supabase
+        .from("sku_products")
+        .insert({
+          title,
+          brand,
+          category: skuCategory,
+          subcategory: skuSubcategory,
+          selling_price: sellingPrice,
           cost_price: costDkk,
-          sku: product.foneday_sku,
-          ean: product.ean,
-          image_url: null,
-          description: null,
-          online_stock: product.in_stock ? 99 : 0,
-          store_stock: 0,
-          store_id,
+          ean: catalog.ean ?? null,
+          product_number: catalog.foneday_sku,
+          images: catalog.image_url ? [catalog.image_url] : [],
           status: "published",
-        });
-        accessoryId = accessory.id;
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (skuErr) {
+        errors.push(`${catalog.foneday_sku}: ${skuErr.message}`);
+        continue;
       }
 
-      await supabase.from("foneday_sku_link").insert({
-        foneday_catalog_id: product.id,
-        accessory_id: accessoryId,
+      const { error: linkErr } = await supabase.from("foneday_sku_link").insert({
+        foneday_catalog_id: catalog.id,
+        sku_product_id: skuProduct.id,
         use_type,
-        markup_percentage: Number(markup_percentage) || 0,
+        markup_percentage: markup,
+        auto_sync_price: true,
       });
+
+      if (linkErr) {
+        errors.push(`${catalog.foneday_sku}: link error: ${linkErr.message}`);
+        continue;
+      }
+
+      // Auto-populate sku_product_templates from Foneday model compatibility data
+      await autoLinkTemplates(supabase, skuProduct.id, catalog.id);
+
       linked++;
     } catch (err) {
-      errors.push(`${product.foneday_sku}: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`${catalog.foneday_sku}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
