@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
@@ -28,7 +28,7 @@ const CATEGORY_LABELS: Record<keyof SearchResults, string> = {
   orders: "Ordrer",
 };
 
-const CATEGORY_ICONS: Record<keyof SearchResults, JSX.Element> = {
+const CATEGORY_ICONS: Record<keyof SearchResults, React.ReactNode> = {
   templates: (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
@@ -65,7 +65,7 @@ export default function GlobalSearch() {
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const router = useRouter();
 
   // Build flat list of results for keyboard navigation
