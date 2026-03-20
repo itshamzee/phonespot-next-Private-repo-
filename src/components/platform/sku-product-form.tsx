@@ -4,21 +4,48 @@ import { useState, useEffect } from "react";
 import type { SkuProduct, ProductTemplate } from "@/lib/supabase/platform-types";
 import { ProductImageUploader } from "./product-image-uploader";
 
-const CATEGORIES = [
-  { value: "iphone", label: "iPhone" },
-  { value: "ipad", label: "iPad" },
-  { value: "smartphone", label: "Smartphone" },
-  { value: "laptop", label: "Laptop" },
-  { value: "smartwatch", label: "Smartwatch" },
-  { value: "accessory", label: "Tilbehør" },
-  { value: "skaermbeskyttelse", label: "Skærmbeskyttelse" },
-  { value: "other", label: "Andet" },
+const ACCESSORY_TYPES = [
+  { value: "cover", label: "Cases & Covers", icon: "\u{1F4F1}" },
+  { value: "screen_protector", label: "Sk\u00E6rmbeskyttelse", icon: "\u{1F6E1}\uFE0F" },
+  { value: "charger", label: "Opladere", icon: "\u{1F50C}" },
+  { value: "cable", label: "Kabler", icon: "\u{1F517}" },
+  { value: "powerbank", label: "Powerbanks", icon: "\u{1F50B}" },
+  { value: "audio", label: "Lyd & H\u00F8retelefoner", icon: "\u{1F3A7}" },
+  { value: "other", label: "Andet tilbeh\u00F8r", icon: "\u{1F4E6}" },
+  { value: "spare-part", label: "Reservedel", icon: "\u{1F527}" },
 ] as const;
+
+const TYPE_ATTRIBUTES: Record<string, { key: string; label: string; type: "select" | "text"; options?: string[] }[]> = {
+  cover: [
+    { key: "case_type", label: "Case type", type: "select", options: ["Wallet", "Slim", "Rugged", "Clear", "Flip", "Bumper", "Book"] },
+  ],
+  screen_protector: [
+    { key: "protector_type", label: "Type", type: "select", options: ["H\u00E6rdet glas", "Film", "Privacy", "Edge to Edge"] },
+  ],
+  cable: [
+    { key: "connector_type", label: "Stik-type", type: "select", options: ["USB-C", "Lightning", "Micro-USB", "USB-A", "USB-C til Lightning", "USB-C til USB-C"] },
+    { key: "length", label: "L\u00E6ngde", type: "select", options: ["0.5m", "1m", "1.5m", "2m", "3m"] },
+  ],
+  charger: [
+    { key: "charger_type", label: "Type", type: "select", options: ["V\u00E6goplader", "Biloplader", "Tr\u00E5dl\u00F8s", "MagSafe"] },
+    { key: "watt", label: "Watt", type: "text" },
+  ],
+  powerbank: [
+    { key: "capacity", label: "Kapacitet (mAh)", type: "text" },
+    { key: "watt", label: "Watt", type: "text" },
+  ],
+  audio: [
+    { key: "audio_type", label: "Type", type: "select", options: ["In-ear", "Over-ear", "On-ear", "H\u00F8jttaler", "AUX-kabel"] },
+    { key: "wireless", label: "Tr\u00E5dl\u00F8s", type: "select", options: ["Ja", "Nej"] },
+  ],
+};
 
 interface Props {
   product?: SkuProduct | null;
   onSave: () => void;
   onCancel: () => void;
+  lockedCategory?: string;
+  lockedSubcategory?: string;
 }
 
 type VariantOption = {
@@ -44,7 +71,7 @@ function variantsFromProduct(product: SkuProduct | null | undefined): VariantGro
   }));
 }
 
-export function SkuProductForm({ product, onSave, onCancel }: Props) {
+export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lockedSubcategory }: Props) {
   const isEdit = !!product;
 
   const [form, setForm] = useState({
@@ -57,13 +84,14 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
     ean: product?.ean ?? "",
     barcode: product?.barcode ?? "",
     brand: product?.brand ?? "",
-    category: product?.category ?? "",
-    subcategory: product?.subcategory ?? "",
+    category: product?.category ?? lockedCategory ?? "accessory",
+    subcategory: product?.subcategory ?? lockedSubcategory ?? "",
     images: product?.images ?? [],
     slug: product?.slug ?? "",
     meta_title: product?.meta_title ?? "",
     meta_description: product?.meta_description ?? "",
     status: product?.status ?? "draft",
+    attributes: (product?.attributes ?? {}) as Record<string, string>,
   });
 
   const [variants, setVariants] = useState<VariantGroup[]>(() => variantsFromProduct(product));
@@ -114,10 +142,14 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function setAttribute(key: string, value: string) {
+    setForm((prev) => ({ ...prev, attributes: { ...prev.attributes, [key]: value } }));
+  }
+
   function generateSlug() {
     const slug = form.title
       .toLowerCase()
-      .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+      .replace(/\u00E6/g, "ae").replace(/\u00F8/g, "oe").replace(/\u00E5/g, "aa")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     set("slug", slug);
@@ -201,8 +233,9 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
       selling_price: form.selling_price ? Math.round(parseFloat(form.selling_price) * 100) : 0,
       cost_price: form.cost_price ? Math.round(parseFloat(form.cost_price) * 100) : null,
       sale_price: form.sale_price ? Math.round(parseFloat(form.sale_price) * 100) : null,
-      category: form.category || null,
+      category: "accessory",
       subcategory: form.subcategory || null,
+      attributes: form.attributes,
       variants: variants.map((g) => ({
         name: g.name,
         options: g.options.map((o) => ({
@@ -231,15 +264,18 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         onSave();
       }
     } catch {
-      setError("Netværksfejl — prøv igen");
+      setError("Netv\u00E6rksfejl \u2014 pr\u00F8v igen");
     } finally {
       setSaving(false);
     }
   }
 
+  const currentTypeAttrs = TYPE_ATTRIBUTES[form.subcategory] ?? [];
+  const showTypeSelector = !lockedSubcategory;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Section: Basic info */}
+      {/* Section 1: Grundoplysninger */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Grundoplysninger
@@ -264,35 +300,6 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-stone-500">Kategori</label>
-            <select
-              value={form.category}
-              onChange={(e) => set("category", e.target.value)}
-              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
-            >
-              <option value="">Vælg kategori…</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-          {form.category === "accessory" && (
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-stone-500">Underkategori</label>
-              <select
-                value={form.subcategory}
-                onChange={(e) => set("subcategory", e.target.value)}
-                className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
-              >
-                <option value="">Ingen</option>
-                <option value="cable">Kabel</option>
-                <option value="powerbank">Powerbank</option>
-                <option value="audio">Audio / Høretelefoner</option>
-                <option value="spare-part">Reservedel</option>
-              </select>
-            </div>
-          )}
-          <div>
             <label className="mb-1 block text-xs font-semibold text-stone-500">EAN</label>
             <input
               value={form.ean}
@@ -311,7 +318,137 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         </div>
       </section>
 
-      {/* Section: Pricing */}
+      {/* Section 2: Produkttype — pill selector */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
+          Produkttype
+        </h3>
+        {showTypeSelector ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {ACCESSORY_TYPES.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => set("subcategory", t.value)}
+                className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${
+                  form.subcategory === t.value
+                    ? "border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500"
+                    : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300 hover:bg-stone-100"
+                }`}
+              >
+                <span className="text-lg">{t.icon}</span>
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+            <span className="text-lg">
+              {ACCESSORY_TYPES.find((t) => t.value === form.subcategory)?.icon ?? "\u{1F4E6}"}
+            </span>
+            <span>
+              {ACCESSORY_TYPES.find((t) => t.value === form.subcategory)?.label ?? form.subcategory}
+            </span>
+          </div>
+        )}
+      </section>
+
+      {/* Section 3: Type-attributter — dynamic fields */}
+      {currentTypeAttrs.length > 0 && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
+            Type-attributter
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {currentTypeAttrs.map((attr) => (
+              <div key={attr.key}>
+                <label className="mb-1 block text-xs font-semibold text-stone-500">{attr.label}</label>
+                {attr.type === "select" && attr.options ? (
+                  <select
+                    value={form.attributes[attr.key] ?? ""}
+                    onChange={(e) => setAttribute(attr.key, e.target.value)}
+                    className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
+                  >
+                    <option value="">V\u00E6lg...</option>
+                    {attr.options.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={form.attributes[attr.key] ?? ""}
+                    onChange={(e) => setAttribute(attr.key, e.target.value)}
+                    className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Section 4: Kompatible enheder — moved up */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
+          Kompatible enheder
+        </h3>
+        <p className="mb-3 text-xs text-stone-500">Passer til disse enheder:</p>
+        {linkedTemplates.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {linkedTemplates.map((t) => (
+              <span
+                key={t.id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
+              >
+                {t.display_name}
+                <button
+                  type="button"
+                  onClick={() => unlinkTemplate(t.id)}
+                  className="ml-0.5 rounded-full p-0.5 text-blue-400 hover:bg-blue-100 hover:text-red-500"
+                  title="Fjern"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="relative">
+          <input
+            value={templateSearch}
+            onChange={(e) => setTemplateSearch(e.target.value)}
+            placeholder="S\u00F8g efter enhed at tilknytte\u2026"
+            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
+          />
+          {templateSearching && (
+            <div className="absolute right-3 top-2.5">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
+            </div>
+          )}
+          {templateResults.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-lg">
+              {templateResults.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => linkTemplate(t)}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-stone-50"
+                >
+                  {t.images?.[0] && (
+                    <img src={t.images[0]} alt={t.display_name} className="h-7 w-7 rounded object-cover" />
+                  )}
+                  <span className="font-medium text-stone-700">{t.display_name}</span>
+                  <span className="ml-auto text-xs text-stone-400">{t.brand}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Section 5: Priser */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Priser (DKK)
@@ -357,7 +494,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         </div>
       </section>
 
-      {/* Section: Description */}
+      {/* Section 6: Beskrivelse */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Beskrivelse
@@ -384,7 +521,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         </div>
       </section>
 
-      {/* Section: Images */}
+      {/* Section 7: Billeder */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Billeder
@@ -397,7 +534,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         />
       </section>
 
-      {/* Section: Variants */}
+      {/* Section 8: Varianter */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Varianter
@@ -426,7 +563,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
                     <input
                       value={opt.value}
                       onChange={(e) => updateVariantOption(gi, oi, "value", e.target.value)}
-                      placeholder="Værdi (f.eks. Sort)"
+                      placeholder="V\u00E6rdi (f.eks. Sort)"
                       className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                     />
                     <input
@@ -435,7 +572,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
                       min="0"
                       value={opt.price_override}
                       onChange={(e) => updateVariantOption(gi, oi, "price_override", e.target.value)}
-                      placeholder="Pristillæg"
+                      placeholder="Pristill\u00E6g"
                       className="w-28 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                     />
                     <input
@@ -460,7 +597,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
                 onClick={() => addVariantOption(gi)}
                 className="mt-2 text-xs font-medium text-green-600 hover:underline"
               >
-                + Tilføj mulighed
+                + Tilf\u00F8j mulighed
               </button>
             </div>
           ))}
@@ -469,7 +606,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addVariantGroup())}
-              placeholder="Ny variantgruppe (f.eks. Størrelse)"
+              placeholder="Ny variantgruppe (f.eks. St\u00F8rrelse)"
               className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
             />
             <button
@@ -477,67 +614,13 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
               onClick={addVariantGroup}
               className="rounded-xl bg-stone-200 px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-300"
             >
-              Tilføj gruppe
+              Tilf\u00F8j gruppe
             </button>
           </div>
         </div>
       </section>
 
-      {/* Section: Compatible devices */}
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
-          Kompatible enheder
-        </h3>
-        {linkedTemplates.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {linkedTemplates.map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-lg border border-stone-100 bg-stone-50 px-3 py-2">
-                <span className="text-sm font-medium text-stone-700">{t.display_name}</span>
-                <button
-                  type="button"
-                  onClick={() => unlinkTemplate(t.id)}
-                  className="text-xs text-red-500 hover:underline"
-                >
-                  Fjern
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="relative">
-          <input
-            value={templateSearch}
-            onChange={(e) => setTemplateSearch(e.target.value)}
-            placeholder="Søg efter enhed at tilknytte…"
-            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
-          />
-          {templateSearching && (
-            <div className="absolute right-3 top-2.5">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
-            </div>
-          )}
-          {templateResults.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-lg">
-              {templateResults.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => linkTemplate(t)}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-stone-50"
-                >
-                  {t.images?.[0] && (
-                    <img src={t.images[0]} alt={t.display_name} className="h-7 w-7 rounded object-cover" />
-                  )}
-                  <span className="font-medium text-stone-700">{t.display_name}</span>
-                  <span className="ml-auto text-xs text-stone-400">{t.brand}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Section: SEO */}
+      {/* Section 9: SEO */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           SEO
@@ -582,7 +665,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
         </div>
       </section>
 
-      {/* Status + actions */}
+      {/* Section 10: Status + actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-3">
           <input
@@ -606,7 +689,7 @@ export function SkuProductForm({ product, onSave, onCancel }: Props) {
             disabled={saving}
             className="flex-1 sm:flex-none rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-green-600/20 hover:brightness-110 disabled:opacity-50"
           >
-            {saving ? "Gemmer..." : isEdit ? "Gem ændringer" : "Opret produkt"}
+            {saving ? "Gemmer..." : isEdit ? "Gem \u00E6ndringer" : "Opret produkt"}
           </button>
         </div>
       </div>
