@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
+import EcommerceDashboard from "@/components/admin/dashboard/ecommerce-dashboard";
+
+type DashboardTab = "butik" | "reparation";
 
 /* ------------------------------------------------------------------ */
 /*  Status config                                                      */
@@ -192,6 +195,7 @@ interface DashboardStats {
 /* ------------------------------------------------------------------ */
 
 export default function AdminDashboardPage() {
+  const [activeTab, setActiveTab] = useState<DashboardTab>("butik");
   const [stats, setStats] = useState<DashboardStats>({
     activeCases: 0,
     pendingQuotes: 0,
@@ -276,25 +280,23 @@ export default function AdminDashboardPage() {
     }).format(amount);
   }
 
-  /* ---- Loading ---- */
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative h-10 w-10">
-            <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
-            <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-b-emerald-500/20" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
-          </div>
-          <p className="text-sm text-charcoal/30">Indlæser dashboard...</p>
+  /* ---- Repair loading spinner (used inside repair tab) ---- */
+  const repairLoading = loading ? (
+    <div className="flex items-center justify-center py-32">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative h-10 w-10">
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
+          <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-b-emerald-500/20" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
         </div>
+        <p className="text-sm text-charcoal/30">Indlæser dashboard...</p>
       </div>
-    );
-  }
+    </div>
+  ) : null;
 
   return (
     <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
           Dashboard
         </h2>
@@ -303,6 +305,36 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
+      {/* Tab navigation */}
+      <div className="mb-8 flex gap-1 border-b border-black/[0.06]">
+        {([
+          { key: "butik" as DashboardTab, label: "Butik" },
+          { key: "reparation" as DashboardTab, label: "Reparation" },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`relative px-4 py-2.5 text-sm font-semibold transition-colors ${
+              activeTab === tab.key
+                ? "text-charcoal"
+                : "text-charcoal/35 hover:text-charcoal/60"
+            }`}
+          >
+            {tab.label}
+            {activeTab === tab.key && (
+              <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-emerald-500" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "butik" ? (
+        <EcommerceDashboard />
+      ) : repairLoading ? (
+        repairLoading
+      ) : (
+        <>
       {/* Stat cards */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         {STAT_CARDS.map((card, i) => {
@@ -424,6 +456,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
