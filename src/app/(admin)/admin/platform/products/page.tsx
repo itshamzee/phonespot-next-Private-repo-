@@ -6,30 +6,39 @@ import { ProductTemplateList } from "@/components/platform/product-template-list
 import { ProductTemplateForm } from "@/components/platform/product-template-form";
 import { SkuProductList } from "@/components/platform/sku-product-list";
 import { SkuProductForm } from "@/components/platform/sku-product-form";
+import { UnifiedProductForm } from "@/components/platform/unified-product-form";
 
 type Tab = "templates" | "sku" | "spare-parts";
-type View = "list" | "form";
+type View = "list" | "create" | "edit";
+
+const TAB_TO_TYPE: Record<Tab, "device" | "accessory" | "spare-part"> = {
+  templates: "device",
+  sku: "accessory",
+  "spare-parts": "spare-part",
+};
 
 export default function ProductsPage() {
   const [tab, setTab] = useState<Tab>("templates");
   const [view, setView] = useState<View>("list");
   const [editTemplate, setEditTemplate] = useState<ProductTemplate | null>(null);
   const [editSku, setEditSku] = useState<SkuProduct | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   function handleEditTemplate(t: ProductTemplate) {
     setEditTemplate(t);
-    setView("form");
+    setView("edit");
   }
 
   function handleEditSku(s: SkuProduct) {
     setEditSku(s);
-    setView("form");
+    setView("edit");
   }
 
   function handleBack() {
     setView("list");
     setEditTemplate(null);
     setEditSku(null);
+    setRefreshKey((k) => k + 1);
   }
 
   return (
@@ -46,22 +55,18 @@ export default function ProductsPage() {
         </div>
         {view === "list" && (
           <button
-            onClick={() => {
-              setEditTemplate(null);
-              setEditSku(null);
-              setView("form");
-            }}
+            onClick={() => setView("create")}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/15 transition-all hover:shadow-lg hover:brightness-110 active:scale-[0.98]"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            {tab === "templates" ? "Opret skabelon" : "Opret produkt"}
+            Opret produkt
           </button>
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — only show in list view */}
       {view === "list" && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
@@ -109,12 +114,18 @@ export default function ProductsPage() {
       {/* Content */}
       {view === "list" ? (
         tab === "templates" ? (
-          <ProductTemplateList onEdit={handleEditTemplate} />
+          <ProductTemplateList key={refreshKey} onEdit={handleEditTemplate} />
         ) : tab === "sku" ? (
-          <SkuProductList onEdit={handleEditSku} lockedCategory="accessory" excludeSubcategory="spare-part" />
+          <SkuProductList key={refreshKey} onEdit={handleEditSku} lockedCategory="accessory" excludeSubcategory="spare-part" />
         ) : (
-          <SkuProductList onEdit={handleEditSku} lockedCategory="accessory" lockedSubcategory="spare-part" />
+          <SkuProductList key={refreshKey} onEdit={handleEditSku} lockedCategory="accessory" lockedSubcategory="spare-part" />
         )
+      ) : view === "create" ? (
+        <UnifiedProductForm
+          defaultType={TAB_TO_TYPE[tab]}
+          onSave={handleBack}
+          onCancel={handleBack}
+        />
       ) : tab === "templates" ? (
         <ProductTemplateForm
           template={editTemplate}
