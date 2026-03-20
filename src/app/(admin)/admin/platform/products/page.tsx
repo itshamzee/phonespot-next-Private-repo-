@@ -56,7 +56,7 @@ export default function ProductsPage() {
         {view === "list" && (
           <button
             onClick={() => setView("create")}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/15 transition-all hover:shadow-lg hover:brightness-110 active:scale-[0.98]"
+            className="flex items-center gap-2 rounded-xl bg-green-eco px-5 py-3 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:bg-green-light hover:shadow-lg active:scale-[0.98]"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -121,11 +121,18 @@ export default function ProductsPage() {
           <SkuProductList key={refreshKey} onEdit={handleEditSku} lockedCategory="accessory" lockedSubcategory="spare-part" />
         )
       ) : view === "create" ? (
-        <UnifiedProductForm
-          defaultType={TAB_TO_TYPE[tab]}
-          onSave={handleBack}
-          onCancel={handleBack}
-        />
+        tab === "templates" ? (
+          <ProductTemplateForm
+            onSave={handleBack}
+            onCancel={handleBack}
+          />
+        ) : (
+          <UnifiedProductForm
+            defaultType={TAB_TO_TYPE[tab]}
+            onSave={handleBack}
+            onCancel={handleBack}
+          />
+        )
       ) : tab === "templates" ? (
         <ProductTemplateForm
           template={editTemplate}

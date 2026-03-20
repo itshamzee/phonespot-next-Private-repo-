@@ -22,7 +22,32 @@ const CATEGORIES = [
   { value: "other", label: "Andet" },
 ];
 
-const STORAGE_OPTIONS = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
+const STORAGE_BY_CATEGORY: Record<string, string[]> = {
+  iphone: ["64GB", "128GB", "256GB", "512GB", "1TB"],
+  smartphone: ["64GB", "128GB", "256GB", "512GB", "1TB"],
+  ipad: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB"],
+  tablet: ["32GB", "64GB", "128GB", "256GB", "512GB"],
+  laptop: ["128GB", "256GB", "512GB", "1TB", "2TB"],
+  smartwatch: ["8GB", "16GB", "32GB"],
+  console: ["256GB", "512GB", "825GB", "1TB", "2TB"],
+};
+
+interface SpecField {
+  key: string;
+  label: string;
+  type: "chips" | "select" | "text";
+  options?: string[];
+  categories: string[];
+}
+
+const DEVICE_SPEC_FIELDS: SpecField[] = [
+  { key: "størrelse", label: "Størrelse", type: "chips", options: ["38mm", "40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "47mm", "49mm"], categories: ["smartwatch"] },
+  { key: "connectivity", label: "Forbindelse", type: "select", options: ["Wi-Fi", "Wi-Fi + Cellular", "LTE", "5G"], categories: ["smartwatch", "ipad", "tablet"] },
+  { key: "skærm", label: "Skærmstørrelse", type: "text", categories: ["iphone", "smartphone", "ipad", "tablet", "laptop"] },
+  { key: "ram", label: "RAM", type: "chips", options: ["4GB", "8GB", "16GB", "32GB", "64GB"], categories: ["laptop"] },
+  { key: "processor", label: "Processor", type: "text", categories: ["laptop"] },
+  { key: "chip", label: "Chip", type: "select", options: ["M1", "M2", "M3", "M4", "M1 Pro", "M1 Max", "M2 Pro", "M2 Max", "M3 Pro", "M3 Max", "M4 Pro", "M4 Max"], categories: ["laptop"] },
+];
 
 export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
   const isEdit = !!template;
@@ -204,12 +229,13 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
       </section>
 
       {/* Section: Storage options */}
+      {(STORAGE_BY_CATEGORY[form.category] ?? []).length > 0 && (
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Lagerkapacitet
         </h3>
         <div className="flex flex-wrap gap-2">
-          {STORAGE_OPTIONS.map((opt) => (
+          {(STORAGE_BY_CATEGORY[form.category] ?? []).map((opt) => (
             <button
               key={opt}
               type="button"
@@ -225,6 +251,73 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
           ))}
         </div>
       </section>
+      )}
+
+      {/* Section: Device-specific specs */}
+      {DEVICE_SPEC_FIELDS.some((f) => f.categories.includes(form.category)) && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
+            Specifikationer for {CATEGORIES.find((c) => c.value === form.category)?.label ?? form.category}
+          </h3>
+          <div className="space-y-5">
+            {DEVICE_SPEC_FIELDS.filter((f) => f.categories.includes(form.category)).map((field) => (
+              <div key={field.key}>
+                <label className="mb-2 block text-xs font-semibold text-stone-500">{field.label}</label>
+                {field.type === "chips" && field.options ? (
+                  <div className="flex flex-wrap gap-2">
+                    {field.options.map((opt) => {
+                      const current = (form.specifications[field.key] as string) ?? "";
+                      const selected = current.split(",").filter(Boolean);
+                      const isSelected = selected.includes(opt);
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => {
+                            const next = isSelected
+                              ? selected.filter((s) => s !== opt)
+                              : [...selected, opt];
+                            set("specifications", { ...form.specifications, [field.key]: next.join(",") });
+                          }}
+                          className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                            isSelected
+                              ? "border-green-500 bg-green-50 text-green-700"
+                              : "border-stone-200 bg-stone-50 text-stone-500 hover:border-stone-300"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : field.type === "select" && field.options ? (
+                  <select
+                    value={(form.specifications[field.key] as string) ?? ""}
+                    onChange={(e) =>
+                      set("specifications", { ...form.specifications, [field.key]: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
+                  >
+                    <option value="">Vælg {field.label.toLowerCase()}...</option>
+                    {field.options.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={(form.specifications[field.key] as string) ?? ""}
+                    onChange={(e) =>
+                      set("specifications", { ...form.specifications, [field.key]: e.target.value })
+                    }
+                    placeholder={field.key === "skærm" ? "f.eks. 6.1 tommer" : field.key === "processor" ? "f.eks. M2, i7-1365U" : ""}
+                    className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Section: Colors */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
@@ -376,10 +469,10 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
         />
       </section>
 
-      {/* Section: Specifications */}
+      {/* Section: Custom Specifications */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
-          Specifikationer
+          Ekstra specifikationer
         </h3>
         {Object.entries(form.specifications).length > 0 && (
           <div className="mb-4 space-y-2">
