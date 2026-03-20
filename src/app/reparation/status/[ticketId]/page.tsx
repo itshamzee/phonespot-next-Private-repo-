@@ -111,7 +111,7 @@ export default async function RepairStatusPage({
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-center px-4">
             <Link href="/">
               <img
-                src="/brand/logos/phonespot-wordmark-dark.svg"
+                src="/brand/logos/phonespot-wordmark-dark.png"
                 alt="PhoneSpot"
                 width={140}
                 height={32}
@@ -171,7 +171,7 @@ export default async function RepairStatusPage({
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-center px-4">
           <Link href="/">
             <img
-              src="/brand/logos/phonespot-wordmark-dark.svg"
+              src="/brand/logos/phonespot-wordmark-dark.png"
               alt="PhoneSpot"
               width={140}
               height={32}

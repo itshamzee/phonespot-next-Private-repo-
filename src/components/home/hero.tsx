@@ -41,7 +41,7 @@ export function Hero() {
         {/* Logo */}
         <FadeIn delay={0.15}>
           <img
-            src="/brand/logos/phonespot-wordmark-white.svg"
+            src="/brand/logos/phonespot-wordmark-white.png"
             alt="PhoneSpot"
             className="w-80 md:w-96"
           />

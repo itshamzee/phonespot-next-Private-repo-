@@ -209,7 +209,7 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
     "@context": "https://schema.org",
     "@type": "ElectronicsRepair",
     name: store.name,
-    image: "https://phonespot.dk/brand/logo.svg",
+    image: "https://phonespot.dk/brand/logo.png",
     url: `https://phonespot.dk/butik/${store.slug}`,
     telephone: store.phone,
     email: store.email,

@@ -24,8 +24,8 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
   "@type": ["Organization", "LocalBusiness"],
   name: "PhoneSpot",
   url: "https://phonespot.dk",
-  logo: "https://phonespot.dk/brand/logo.svg",
-  image: "https://phonespot.dk/brand/logo.svg",
+  logo: "https://phonespot.dk/brand/logo.png",
+  image: "https://phonespot.dk/brand/logo.png",
   description:
     "Danmarks specialist i kvalitetstestet refurbished elektronik. iPhones, iPads, MacBooks, Samsung og Apple Watch med 36 måneders garanti, prismatch-garanti og 30+ kvalitetstests.",
   address: {

@@ -23,8 +23,8 @@ export const BRAND = {
   trustpilot: "https://dk.trustpilot.com/review/phonespot.dk",
 
   // Logo
-  logoWhite: "https://phonespot.dk/brand/logos/phonespot-wordmark-white.svg",
-  logoDark:  "https://phonespot.dk/brand/logos/phonespot-wordmark-dark.svg",
+  logoWhite: "https://phonespot.dk/brand/logos/phonespot-wordmark-white.png",
+  logoDark:  "https://phonespot.dk/brand/logos/phonespot-wordmark-dark.png",
 
   // Store
   store: {

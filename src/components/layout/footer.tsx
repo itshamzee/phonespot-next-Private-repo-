@@ -177,7 +177,7 @@ export function Footer() {
             {/* Brand / store column */}
             <div className="col-span-2 md:col-span-3 lg:col-span-2">
               <Image
-                src="/brand/logos/phonespot-wordmark-white.svg"
+                src="/brand/logos/phonespot-wordmark-white.png"
                 alt="PhoneSpot"
                 width={148}
                 height={28}

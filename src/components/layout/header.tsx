@@ -457,7 +457,7 @@ export function Header() {
 
               <Link href="/" className="flex-shrink-0">
                 <img
-                  src="/brand/logos/phonespot-wordmark-dark.svg"
+                  src="/brand/logos/phonespot-wordmark-dark.png"
                   alt="PhoneSpot"
                   width={130}
                   height={30}

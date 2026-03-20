@@ -137,7 +137,7 @@ const ORGANIZATION_JSONLD: Record<string, unknown> = {
   "@type": "Organization",
   name: "PhoneSpot",
   url: "https://phonespot.dk",
-  logo: "https://phonespot.dk/brand/logo.svg",
+  logo: "https://phonespot.dk/brand/logo.png",
   subOrganization: storeList.map((store) => ({
     "@type": "LocalBusiness",
     name: store.name,

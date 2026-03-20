@@ -115,7 +115,7 @@ export function UpsellModal() {
 
         {/* Center logo */}
         <Image
-          src="/brand/logos/phonespot-wordmark-dark.svg"
+          src="/brand/logos/phonespot-wordmark-dark.png"
           alt="PhoneSpot"
           width={146}
           height={28}

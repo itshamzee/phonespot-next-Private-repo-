@@ -293,10 +293,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-cream">
         <div className="flex flex-col items-center gap-4">
-          <div className="relative h-12 w-12">
-            <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-green-eco" />
-            <div className="absolute inset-1.5 animate-spin rounded-full border-2 border-transparent border-b-green-eco/30" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
-          </div>
+          <img src="/brand/logos/phonespot-wordmark-dark.png" alt="PhoneSpot" className="h-8 w-auto animate-pulse" />
           <p className="text-sm tracking-wide text-charcoal/40">Indlaeser...</p>
         </div>
       </div>
@@ -317,12 +314,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className="p-8">
               {/* Logo */}
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco shadow-lg shadow-green-eco/30">
-                  <span className="font-display text-lg font-black text-white">PS</span>
+                <div className="mx-auto mb-4 flex h-14 items-center justify-center rounded-2xl bg-green-eco px-4 shadow-lg shadow-green-eco/30">
+                  <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-8 w-auto" />
                 </div>
-                <h1 className="font-display text-2xl font-bold tracking-tight text-charcoal">
-                  PhoneSpot
-                </h1>
                 <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray">
                   Admin Panel
                 </p>
@@ -404,14 +398,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         }`}
       >
         {/* Logo */}
-        <div className="flex h-[64px] items-center gap-3 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 shadow-sm">
-            <span className="font-display text-[13px] font-black text-white">PS</span>
-          </div>
-          <div>
-            <p className="font-display text-[15px] font-bold leading-tight text-white">PhoneSpot</p>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin</p>
-          </div>
+        <div className="flex h-[64px] flex-col justify-center px-5">
+          <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-6 w-auto" />
+          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin</p>
         </div>
 
         {/* Navigation */}
