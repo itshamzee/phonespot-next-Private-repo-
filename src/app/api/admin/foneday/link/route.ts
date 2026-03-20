@@ -145,12 +145,6 @@ export async function DELETE(req: NextRequest) {
       .from("sku_products")
       .update({ status: "draft", is_active: false })
       .eq("id", link.sku_product_id);
-  } else if (link.accessory_id) {
-    // Legacy: old products that were created in the accessories table
-    await supabase
-      .from("accessories")
-      .update({ status: "archived", online_stock: 0, updated_at: new Date().toISOString() })
-      .eq("id", link.accessory_id);
   }
 
   await supabase.from("foneday_sku_link").delete().eq("id", link.id);

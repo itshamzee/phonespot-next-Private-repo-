@@ -159,47 +159,7 @@ export async function syncCatalog(): Promise<SyncStats> {
     stats.missing = missingRows.length;
   }
 
-  // 4a. Update linked retail accessories (legacy accessories table)
-  const { data: legacyLinks } = await supabase
-    .from("foneday_sku_link")
-    .select("*, foneday_catalog:foneday_catalog_id(*)")
-    .eq("use_type", "retail")
-    .not("accessory_id", "is", null);
-
-  for (const link of legacyLinks ?? []) {
-    const catalog = link.foneday_catalog as any;
-    if (!catalog || !link.accessory_id) continue;
-
-    const updates: Record<string, unknown> = { updated_at: now };
-
-    if (link.auto_sync_price) {
-      const costDkk = eurToOere(catalog.price_eur, settings.eur_dkk_rate);
-      const markup = Number(link.markup_percentage) || 0;
-      const sellingPrice = Math.round(costDkk * (1 + markup / 100));
-      updates.cost_price = costDkk;
-      updates.price = sellingPrice;
-    }
-
-    if (link.auto_sync_stock) {
-      updates.online_stock = catalog.in_stock ? settings.in_stock_qty : 0;
-    }
-
-    const { error } = await supabase
-      .from("accessories")
-      .update(updates)
-      .eq("id", link.accessory_id);
-
-    if (error) {
-      stats.errors.push(`Update accessory ${link.accessory_id}: ${error.message}`);
-    } else {
-      stats.linked_updated++;
-    }
-
-    // Keep sku_product_templates in sync with Foneday compatibility data.
-    await autoLinkTemplates(supabase, link.accessory_id, link.foneday_catalog_id);
-  }
-
-  // 4b. Update linked retail sku_products (new Foneday-linked products)
+  // 4. Update linked retail sku_products
   const { data: skuLinks } = await supabase
     .from("foneday_sku_link")
     .select("*, foneday_catalog:foneday_catalog_id(*)")
@@ -243,28 +203,8 @@ export async function syncCatalog(): Promise<SyncStats> {
     await autoLinkTemplates(supabase, link.sku_product_id, link.foneday_catalog_id);
   }
 
-  // 5. Archive stale products (missing > 7 days with retail link)
+  // 5. Archive stale sku_products (missing > 7 days with retail link)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-  // 5a. Archive stale legacy accessories
-  const { data: staleLinks } = await supabase
-    .from("foneday_sku_link")
-    .select("accessory_id, foneday_catalog:foneday_catalog_id(missing_since)")
-    .eq("use_type", "retail")
-    .not("accessory_id", "is", null);
-
-  for (const link of staleLinks ?? []) {
-    const catalog = link.foneday_catalog as any;
-    if (!catalog?.missing_since || !link.accessory_id) continue;
-    if (catalog.missing_since < sevenDaysAgo) {
-      await supabase
-        .from("accessories")
-        .update({ status: "archived", online_stock: 0, updated_at: now })
-        .eq("id", link.accessory_id);
-    }
-  }
-
-  // 5b. Archive stale sku_products
   const { data: staleSkuLinks } = await supabase
     .from("foneday_sku_link")
     .select("sku_product_id, foneday_catalog:foneday_catalog_id(missing_since)")

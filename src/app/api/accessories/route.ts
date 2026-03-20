@@ -15,72 +15,40 @@ export async function GET(req: NextRequest) {
   // Map tilbehoer URL slugs (e.g. "covers") to DB category values (e.g. "cover")
   const dbCategories = category ? SLUG_TO_ACCESSORY_CATEGORIES[category] ?? [category] : null;
 
-  // ── 1. Query the legacy accessories table ──
-  let legacyQuery = supabase
-    .from("accessories")
-    .select("*")
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
-
-  if (dbCategories) legacyQuery = legacyQuery.in("category", dbCategories);
-  if (brand) legacyQuery = legacyQuery.ilike("brand", `%${brand}%`);
-  if (model) legacyQuery = legacyQuery.contains("compatible_models", [model]);
-  if (search) legacyQuery = legacyQuery.ilike("name", `%${search}%`);
-  if (inStore) legacyQuery = legacyQuery.or("store_stock.gt.0,always_in_stock.eq.true");
-
-  // ── 2. Query sku_products with category='accessory' (Foneday-linked products) ──
-  let skuQuery = supabase
+  // Query sku_products with category='accessory'
+  let query = supabase
     .from("sku_products")
     .select("*")
     .eq("status", "published")
     .eq("category", "accessory")
     .order("created_at", { ascending: false });
 
-  if (brand) skuQuery = skuQuery.ilike("brand", `%${brand}%`);
-  if (search) skuQuery = skuQuery.ilike("title", `%${search}%`);
-  // Note: subcategory filtering for sku_products if category slug provided
   if (dbCategories && category !== "outlet") {
-    // Keep subcategory IS NULL fallback so legacy untagged products still show until backfill migration runs
-    skuQuery = skuQuery.or(`subcategory.in.(${dbCategories.join(",")}),subcategory.is.null`);
+    query = query.in("subcategory", dbCategories);
+  }
+  if (brand) query = query.ilike("brand", `%${brand}%`);
+  if (search) query = query.ilike("title", `%${search}%`);
+
+  // In-store filter: only show products that have sku_stock > 0
+  // (dropshipped products without physical stock are excluded)
+  if (inStore) {
+    // For in-store, we need products with actual stock entries
+    const { data: stockEntries } = await supabase
+      .from("sku_stock")
+      .select("product_id")
+      .gt("quantity", 0);
+
+    const inStockIds = (stockEntries ?? []).map((s) => s.product_id);
+    if (inStockIds.length > 0) {
+      query = query.in("id", inStockIds);
+    } else {
+      // No products in stock
+      return NextResponse.json([]);
+    }
   }
 
-  const [legacyResult, skuResult] = await Promise.all([
-    legacyQuery.limit(100),
-    skuQuery.limit(100),
-  ]);
-
-  if (legacyResult.error) {
-    return NextResponse.json({ error: legacyResult.error.message }, { status: 500 });
-  }
-
-  // ── 3. Normalize sku_products into the Accessory shape ──
-  const skuProducts = (skuResult.data ?? []).map((sp) => ({
-    id: sp.id,
-    name: sp.title,
-    slug: sp.slug ?? sp.id,
-    category: sp.subcategory ?? "other",
-    brand: sp.brand,
-    compatible_models: [] as string[],
-    price: sp.sale_price ?? sp.selling_price,
-    cost_price: sp.cost_price ?? 0,
-    sku: sp.product_number,
-    ean: sp.ean,
-    image_url: sp.images?.[0] ?? null,
-    description: sp.description,
-    online_stock: 99, // Foneday products are dropshipped, always available
-    store_stock: 0,
-    store_id: "",
-    status: sp.status,
-    created_at: sp.created_at,
-    updated_at: sp.updated_at,
-    always_in_stock: true,
-    _source: "sku_product" as const,
-  }));
-
-  // ── 4. If model filter is set, also check sku_product_templates for matches ──
-  let skuFilteredByModel = skuProducts;
-  if (model && skuProducts.length > 0) {
-    // Find templates matching the model name
+  // If model filter is set, check sku_product_templates for matches
+  if (model) {
     const { data: templates } = await supabase
       .from("product_templates")
       .select("id")
@@ -92,17 +60,22 @@ export async function GET(req: NextRequest) {
         .select("sku_product_id")
         .in("template_id", templates.map((t) => t.id));
 
-      const linkedIds = new Set((links ?? []).map((l) => l.sku_product_id));
-      skuFilteredByModel = skuProducts.filter((sp) => linkedIds.has(sp.id));
+      const linkedIds = (links ?? []).map((l) => l.sku_product_id);
+      if (linkedIds.length > 0) {
+        query = query.in("id", linkedIds);
+      } else {
+        return NextResponse.json([]);
+      }
     } else {
-      skuFilteredByModel = [];
+      return NextResponse.json([]);
     }
   }
 
-  // ── 5. Merge results ──
-  // When "in store" filter is active, exclude dropshipped sku_products
-  const skuToInclude = inStore ? [] : skuFilteredByModel;
-  const merged = [...(legacyResult.data || []), ...skuToInclude];
+  const { data, error } = await query.limit(200);
 
-  return NextResponse.json(merged);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data ?? []);
 }
