@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import GlobalSearch from "@/components/admin/global-search";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation                                                         */
@@ -497,6 +498,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </button>
             <h1 className="font-display text-[15px] font-bold text-charcoal">{currentPage}</h1>
           </div>
+
+          {/* Center: global search */}
+          <GlobalSearch />
 
           {/* Right: date + user */}
           <div className="flex items-center gap-4">
