@@ -6,6 +6,7 @@ import { ValuationSummary } from "@/components/platform/valuation-summary";
 import { LowStockBanner } from "@/components/platform/low-stock-banner";
 import { StockFilters, type StockFilters as StockFiltersType } from "@/components/platform/stock-filters";
 import { StockTable } from "@/components/platform/stock-table";
+import { StockSummaryTable } from "@/components/platform/stock-summary-table";
 
 const CATEGORY_TABS = [
   { value: "", label: "Alle", icon: (
@@ -40,8 +41,11 @@ const CATEGORY_TABS = [
   ) },
 ];
 
+type ViewMode = "devices" | "summary";
+
 export default function StockPage() {
   const [filters, setFilters] = useState<StockFiltersType>({});
+  const [view, setView] = useState<ViewMode>("devices");
 
   function setCategory(category: string) {
     setFilters((prev) => ({ ...prev, category: category || undefined }));
@@ -88,33 +92,69 @@ export default function StockPage() {
 
       <LowStockBanner />
 
-      {/* Category tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {CATEGORY_TABS.map((tab) => {
-          const isActive = (filters.category ?? "") === tab.value;
-          return (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setCategory(tab.value)}
-              className={[
-                "flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all",
-                isActive
-                  ? "bg-charcoal text-white shadow-sm"
-                  : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 hover:border-charcoal/10 shadow-sm",
-              ].join(" ")}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          );
-        })}
+      {/* View toggle + Category tabs */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {CATEGORY_TABS.map((tab) => {
+            const isActive = (filters.category ?? "") === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setCategory(tab.value)}
+                className={[
+                  "flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all",
+                  isActive
+                    ? "bg-charcoal text-white shadow-sm"
+                    : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 hover:border-charcoal/10 shadow-sm",
+                ].join(" ")}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* View mode toggle */}
+        <div className="flex shrink-0 items-center rounded-xl border border-stone-200 bg-white p-0.5 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setView("devices")}
+            className={[
+              "rounded-[10px] px-3 py-2 text-xs font-semibold transition-all",
+              view === "devices"
+                ? "bg-charcoal text-white shadow-sm"
+                : "text-stone-400 hover:text-stone-600",
+            ].join(" ")}
+          >
+            Enheder
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("summary")}
+            className={[
+              "rounded-[10px] px-3 py-2 text-xs font-semibold transition-all",
+              view === "summary"
+                ? "bg-charcoal text-white shadow-sm"
+                : "text-stone-400 hover:text-stone-600",
+            ].join(" ")}
+          >
+            Overblik
+          </button>
+        </div>
       </div>
 
-      <section aria-label="Enhedsoversigt" className="space-y-3">
-        <StockFilters filters={filters} onChange={setFilters} />
-        <StockTable filters={filters} />
-      </section>
+      {view === "devices" ? (
+        <section aria-label="Enhedsoversigt" className="space-y-3">
+          <StockFilters filters={filters} onChange={setFilters} />
+          <StockTable filters={filters} />
+        </section>
+      ) : (
+        <section aria-label="Lageroverblik">
+          <StockSummaryTable category={filters.category} />
+        </section>
+      )}
     </div>
   );
 }
