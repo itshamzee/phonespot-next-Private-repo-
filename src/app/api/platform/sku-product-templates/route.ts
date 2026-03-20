@@ -3,12 +3,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
   const skuProductId = request.nextUrl.searchParams.get("sku_product_id");
+  const skuProductIds = request.nextUrl.searchParams.get("sku_product_ids");
   const templateId = request.nextUrl.searchParams.get("template_id");
   const supabase = createAdminClient();
 
   let query = supabase.from("sku_product_templates").select("*, template:product_templates(id, display_name, brand)");
 
-  if (skuProductId) query = query.eq("sku_product_id", skuProductId);
+  if (skuProductIds) {
+    const ids = skuProductIds.split(",").filter(Boolean);
+    if (ids.length > 0) query = query.in("sku_product_id", ids);
+  } else if (skuProductId) {
+    query = query.eq("sku_product_id", skuProductId);
+  }
   if (templateId) query = query.eq("template_id", templateId);
 
   const { data, error } = await query;

@@ -24,6 +24,11 @@ interface StockRow {
   location: { id: string; name: string } | null;
 }
 
+interface TemplateLink {
+  sku_product_id: string;
+  template: { id: string; display_name: string; brand?: string } | null;
+}
+
 type ProductWithStock = SkuProduct & { stock?: StockRow[] };
 
 const SKU_CATEGORIES = [
@@ -48,10 +53,69 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Andet",
 };
 
+const SUBCATEGORY_LABELS: Record<string, { label: string; color: string }> = {
+  cover: { label: "Case", color: "bg-blue-100 text-blue-700" },
+  screen_protector: { label: "Skærm", color: "bg-purple-100 text-purple-700" },
+  charger: { label: "Oplader", color: "bg-yellow-100 text-yellow-700" },
+  cable: { label: "Kabel", color: "bg-green-100 text-green-700" },
+  powerbank: { label: "Powerbank", color: "bg-orange-100 text-orange-700" },
+  audio: { label: "Lyd", color: "bg-pink-100 text-pink-700" },
+  "spare-part": { label: "Reservedel", color: "bg-red-100 text-red-700" },
+  other: { label: "Andet", color: "bg-gray-100 text-gray-700" },
+};
+
+// Attributes we want to show as inline tags
+const DISPLAY_ATTRIBUTES = ["connector_type", "length", "wattage", "color", "material", "compatibility"];
+
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) return <span className="text-stone-300">0</span>;
   if (qty <= 2) return <span className="font-semibold text-amber-600">{qty}</span>;
   return <span className="font-semibold text-green-700">{qty}</span>;
+}
+
+function AttributeTags({ attributes }: { attributes?: Record<string, string | number | boolean | null> }) {
+  if (!attributes) return null;
+  const tags: string[] = [];
+  for (const key of DISPLAY_ATTRIBUTES) {
+    const val = attributes[key];
+    if (val != null && val !== "" && val !== false) {
+      tags.push(String(val));
+    }
+  }
+  if (tags.length === 0) return null;
+  return (
+    <div className="mt-0.5 flex flex-wrap gap-1">
+      {tags.map((tag, i) => (
+        <span key={i} className="text-[10px] text-stone-400">
+          {i > 0 && <span className="mr-1">·</span>}
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function CompatBadges({ templates }: { templates: string[] }) {
+  if (templates.length === 0) return <span className="text-stone-300">—</span>;
+  if (templates.length <= 2) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {templates.map((name, i) => (
+          <span key={i} className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-600">
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <span
+      className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-600 cursor-default"
+      title={templates.join(", ")}
+    >
+      {templates[0]} +{templates.length - 1}
+    </span>
+  );
 }
 
 export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excludeSubcategory }: Props) {
@@ -59,6 +123,7 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [templateFilter, setTemplateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -67,6 +132,7 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
   const [templates, setTemplates] = useState<{ id: string; display_name: string }[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [compatMap, setCompatMap] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     fetch("/api/platform/sku/brands").then(r => r.ok ? r.json() : []).then(setBrands);
@@ -99,6 +165,28 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
       }
       setProducts(data);
       setSelected(new Set());
+
+      // Fetch compatibility data for all products on this page
+      const ids = data.map(p => p.id);
+      if (ids.length > 0) {
+        try {
+          const compatRes = await fetch(`/api/platform/sku-product-templates?sku_product_ids=${ids.join(",")}`);
+          if (compatRes.ok) {
+            const links: TemplateLink[] = await compatRes.json();
+            const map: Record<string, string[]> = {};
+            for (const link of links) {
+              if (!link.template) continue;
+              if (!map[link.sku_product_id]) map[link.sku_product_id] = [];
+              map[link.sku_product_id].push(link.template.display_name);
+            }
+            setCompatMap(map);
+          }
+        } catch {
+          // Compatibility data is non-critical
+        }
+      } else {
+        setCompatMap({});
+      }
     }
     setLoading(false);
   }, [search, categoryFilter, brandFilter, templateFilter, statusFilter, locationFilter, lockedCategory, lockedSubcategory, excludeSubcategory]);
@@ -123,11 +211,16 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
     load();
   }, [load]);
 
-  const filtered = statusFilter
+  // Apply client-side filters
+  let filtered = statusFilter
     ? products.filter((p) => p.status === statusFilter)
     : products;
 
-  const hasFilters = search || categoryFilter || brandFilter || templateFilter || statusFilter || locationFilter;
+  if (subcategoryFilter) {
+    filtered = filtered.filter((p) => p.subcategory === subcategoryFilter);
+  }
+
+  const hasFilters = search || categoryFilter || subcategoryFilter || brandFilter || templateFilter || statusFilter || locationFilter;
 
   // Get stock qty for a product at a specific location
   function getStock(p: ProductWithStock, locationId: string): number {
@@ -160,6 +253,16 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
             ))}
           </select>
         )}
+        <select
+          value={subcategoryFilter}
+          onChange={(e) => setSubcategoryFilter(e.target.value)}
+          className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
+        >
+          <option value="">Alle typer</option>
+          {Object.entries(SUBCATEGORY_LABELS).map(([value, { label }]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
         {brands.length > 0 && (
           <select
             value={brandFilter}
@@ -208,7 +311,7 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
         {hasFilters && (
           <button
             type="button"
-            onClick={() => { setSearch(""); setCategoryFilter(""); setBrandFilter(""); setTemplateFilter(""); setStatusFilter(""); setLocationFilter(""); }}
+            onClick={() => { setSearch(""); setCategoryFilter(""); setSubcategoryFilter(""); setBrandFilter(""); setTemplateFilter(""); setStatusFilter(""); setLocationFilter(""); }}
             className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs font-medium text-stone-500 hover:text-stone-700"
           >
             Nulstil
@@ -247,7 +350,8 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                 </th>
                 <th className="hidden sm:table-cell px-4 py-3">Billede</th>
                 <th className="px-4 py-3">Titel</th>
-                <th className="hidden md:table-cell px-4 py-3">Kategori</th>
+                <th className="hidden md:table-cell px-4 py-3">Type</th>
+                <th className="hidden lg:table-cell px-4 py-3">Passer til</th>
                 <th className="px-4 py-3">Salgspris</th>
                 {stockLocationIds.map(l => (
                   <th key={l.id} className="hidden lg:table-cell px-4 py-3 text-center">{l.name}</th>
@@ -282,17 +386,25 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-medium text-stone-800">
-                    {p.title}
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-stone-800">{p.title}</div>
+                    <AttributeTags attributes={p.attributes} />
                   </td>
                   <td className="hidden md:table-cell px-4 py-3">
-                    {p.category ? (
+                    {p.subcategory && SUBCATEGORY_LABELS[p.subcategory] ? (
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${SUBCATEGORY_LABELS[p.subcategory].color}`}>
+                        {SUBCATEGORY_LABELS[p.subcategory].label}
+                      </span>
+                    ) : p.category ? (
                       <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
                         {CATEGORY_LABELS[p.category] ?? p.category}
                       </span>
                     ) : (
                       <span className="text-stone-400">—</span>
                     )}
+                  </td>
+                  <td className="hidden lg:table-cell px-4 py-3">
+                    <CompatBadges templates={compatMap[p.id] ?? []} />
                   </td>
                   <td className="px-4 py-3 text-stone-600">
                     {formatDKK(p.selling_price)}
