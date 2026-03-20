@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { formatDKK } from "@/lib/platform/format";
+import { BulkEditor } from "@/components/platform/bulk-editor";
 
 interface Props {
   onEdit: (product: SkuProduct) => void;
@@ -66,7 +67,6 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
   const [templates, setTemplates] = useState<{ id: string; display_name: string }[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetch("/api/platform/sku/brands").then(r => r.ok ? r.json() : []).then(setBrands);
@@ -102,18 +102,6 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
     }
     setLoading(false);
   }, [search, categoryFilter, brandFilter, templateFilter, statusFilter, locationFilter, lockedCategory, lockedSubcategory, excludeSubcategory]);
-
-  async function handleBulkDelete() {
-    if (selected.size === 0) return;
-    setDeleting(true);
-    await fetch("/api/platform/sku", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [...selected] }),
-    });
-    setDeleting(false);
-    load();
-  }
 
   function toggleAll() {
     if (selected.size === filtered.length) {
@@ -228,27 +216,12 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
         )}
       </div>
 
-      {/* Bulk action bar */}
-      {selected.size > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5">
-          <span className="text-sm font-medium text-red-700">{selected.size} valgt</span>
-          <button
-            type="button"
-            onClick={handleBulkDelete}
-            disabled={deleting}
-            className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-          >
-            {deleting ? "Sletter…" : `Slet ${selected.size} produkter`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelected(new Set())}
-            className="ml-auto text-xs text-red-500 hover:text-red-700"
-          >
-            Fravælg alle
-          </button>
-        </div>
-      )}
+      {/* Bulk editor floating bar */}
+      <BulkEditor
+        selectedIds={Array.from(selected)}
+        onComplete={() => { setSelected(new Set()); load(); }}
+        onClear={() => setSelected(new Set())}
+      />
 
       {/* Table */}
       {loading ? (

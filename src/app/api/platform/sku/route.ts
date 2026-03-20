@@ -131,6 +131,53 @@ export async function POST(request: Request) {
   return NextResponse.json(data, { status: 201 });
 }
 
+export async function PATCH(request: Request) {
+  const body = await request.json();
+  const { items } = body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return NextResponse.json({ error: "items array required" }, { status: 400 });
+  }
+
+  const supabase = createServerClient();
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const item of items) {
+    const { id, ...fields } = item;
+    if (!id) {
+      errors.push("Item missing id");
+      continue;
+    }
+
+    // Only allow specific fields to be bulk-updated
+    const allowed: Record<string, unknown> = {};
+    if (fields.selling_price !== undefined) allowed.selling_price = fields.selling_price;
+    if (fields.category !== undefined) allowed.category = fields.category;
+    if (fields.subcategory !== undefined) allowed.subcategory = fields.subcategory;
+    if (fields.status !== undefined) allowed.status = fields.status;
+    if (fields.is_active !== undefined) allowed.is_active = fields.is_active;
+
+    if (Object.keys(allowed).length === 0) {
+      errors.push(`No valid fields for item ${id}`);
+      continue;
+    }
+
+    const { error } = await supabase
+      .from("sku_products")
+      .update(allowed)
+      .eq("id", id);
+
+    if (error) {
+      errors.push(`${id}: ${error.message}`);
+    } else {
+      updated++;
+    }
+  }
+
+  return NextResponse.json({ updated, errors });
+}
+
 export async function DELETE(request: Request) {
   const { ids } = await request.json();
   if (!Array.isArray(ids) || ids.length === 0) {
