@@ -293,7 +293,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-cream">
         <div className="flex flex-col items-center gap-4">
-          <img src="/brand/logos/phonespot-wordmark-dark.png" alt="PhoneSpot" className="h-8 w-auto animate-pulse" />
+          <img src="/brand/logos/phonespot-wordmark-dark.png" alt="PhoneSpot" className="h-auto w-[180px] max-h-10 animate-pulse" />
           <p className="text-sm tracking-wide text-charcoal/40">Indlaeser...</p>
         </div>
       </div>
@@ -314,8 +314,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className="p-8">
               {/* Logo */}
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-14 items-center justify-center rounded-2xl bg-green-eco px-4 shadow-lg shadow-green-eco/30">
-                  <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-8 w-auto" />
+                <div className="mx-auto mb-4 flex h-14 items-center justify-center rounded-2xl bg-green-eco px-6 shadow-lg shadow-green-eco/30">
+                  <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-auto w-[160px] max-h-8" />
                 </div>
                 <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray">
                   Admin Panel
@@ -399,8 +399,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       >
         {/* Logo */}
         <div className="flex h-[64px] flex-col justify-center px-5">
-          <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-6 w-auto" />
-          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin</p>
+          <img src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" className="h-auto w-[140px] max-h-7" />
+          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin Panel</p>
         </div>
 
         {/* Navigation */}
