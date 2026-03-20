@@ -69,6 +69,33 @@ export async function POST(request: Request) {
 
   const supabase = createServerClient();
 
+  // Check for duplicates by EAN or product_number
+  const duplicateChecks = [];
+  if (body.ean) {
+    duplicateChecks.push(
+      supabase.from("sku_products").select("id, title").eq("ean", body.ean).maybeSingle()
+    );
+  } else {
+    duplicateChecks.push(Promise.resolve({ data: null }));
+  }
+  if (body.product_number) {
+    duplicateChecks.push(
+      supabase.from("sku_products").select("id, title").eq("product_number", body.product_number).maybeSingle()
+    );
+  } else {
+    duplicateChecks.push(Promise.resolve({ data: null }));
+  }
+
+  const [eanResult, pnResult] = await Promise.all(duplicateChecks);
+
+  const duplicate = eanResult.data || pnResult.data;
+  if (duplicate) {
+    return NextResponse.json(
+      { error: `Produkt findes allerede: "${duplicate.title}" (ID: ${duplicate.id})` },
+      { status: 409 }
+    );
+  }
+
   const { data, error } = await supabase
     .from("sku_products")
     .insert({
