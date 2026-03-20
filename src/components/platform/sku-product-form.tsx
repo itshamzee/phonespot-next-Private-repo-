@@ -104,6 +104,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
   const [templateSearching, setTemplateSearching] = useState(false);
 
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load linked templates on edit
@@ -267,6 +268,30 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
       setError("Netv\u00E6rksfejl \u2014 pr\u00F8v igen");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!product?.id) return;
+    if (!confirm("Er du sikker på du vil slette dette produkt? Dette kan ikke fortrydes.")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/platform/sku", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [product.id] }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error ?? "Kunne ikke slette produktet");
+      } else {
+        onCancel();
+      }
+    } catch {
+      alert("Netværksfejl — prøv igen");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -667,15 +692,27 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
 
       {/* Section 10: Status + actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={form.status === "published"}
-            onChange={(e) => set("status", e.target.checked ? "published" : "draft")}
-            className="h-4 w-4 rounded border-stone-300 text-green-600 focus:ring-green-500"
-          />
-          <span className="text-sm font-medium text-stone-700">Publiceret</span>
-        </label>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={form.status === "published"}
+              onChange={(e) => set("status", e.target.checked ? "published" : "draft")}
+              className="h-4 w-4 rounded border-stone-300 text-green-600 focus:ring-green-500"
+            />
+            <span className="text-sm font-medium text-stone-700">Publiceret</span>
+          </label>
+          {isEdit && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-red-500 hover:text-red-700 text-sm disabled:opacity-50"
+            >
+              {deleting ? "Sletter..." : "Slet produkt"}
+            </button>
+          )}
+        </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <button
             type="button"

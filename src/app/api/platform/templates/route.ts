@@ -90,3 +90,23 @@ export async function POST(request: Request) {
 
   return NextResponse.json(data, { status: 201 });
 }
+
+export async function DELETE(request: Request) {
+  const { id } = await request.json();
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("product_templates")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
