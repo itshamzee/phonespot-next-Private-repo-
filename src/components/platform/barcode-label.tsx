@@ -111,6 +111,9 @@ function labelHTML(props: BarcodeLabelProps): string {
 /*  Exported dialog component                                          */
 /* ------------------------------------------------------------------ */
 
+export { labelHTML, PRINT_STYLES };
+export type { BarcodeLabelProps };
+
 export function BarcodeLabelDialog({
   open,
   onClose,

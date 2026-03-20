@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { formatDKK, formatDate, parseDKKToOere } from "@/lib/platform/format";
 import { DeviceTransferDialog } from "@/components/platform/device-transfer-dialog";
-import { BarcodeLabelDialog } from "@/components/platform/barcode-label";
+import { BarcodeLabelDialog, labelHTML, PRINT_STYLES } from "@/components/platform/barcode-label";
 
 interface StockFilters {
   location_id?: string;
@@ -100,6 +100,9 @@ export function StockTable({ filters }: StockTableProps) {
 
   // Label print dialog
   const [labelDevice, setLabelDevice] = useState<Device | null>(null);
+
+  // Bulk label print
+  const bulkPrintIframeRef = useRef<HTMLIFrameElement>(null);
 
   const fetchDevices = useCallback(async (currentOffset: number) => {
     setLoading(true);
@@ -232,6 +235,99 @@ export function StockTable({ filters }: StockTableProps) {
     setTransferOpen(true);
   }
 
+  function bulkPrintLabels() {
+    if (selected.size === 0) return;
+    const iframe = bulkPrintIframeRef.current;
+    if (!iframe) return;
+
+    const selectedDevices = devices.filter((d) => selected.has(d.id));
+
+    const BULK_PRINT_STYLES = `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      @page { size: 62mm 29mm; margin: 0; }
+      .label {
+        width: 62mm;
+        height: 29mm;
+        font-family: 'DM Sans', 'Barlow Condensed', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.5mm 2.5mm;
+        overflow: hidden;
+        page-break-after: always;
+      }
+      .label:last-child { page-break-after: auto; }
+      .barcode {
+        font-family: 'Barlow Condensed', 'Courier New', monospace;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-align: center;
+        line-height: 1.1;
+      }
+      .model {
+        font-size: 9px;
+        font-weight: 600;
+        text-align: center;
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .meta {
+        font-size: 8px;
+        text-align: center;
+        margin-top: 1px;
+        color: #444;
+      }
+      .grade {
+        display: inline-block;
+        font-size: 8px;
+        font-weight: 700;
+        border: 0.5px solid #999;
+        border-radius: 2px;
+        padding: 0 2px;
+      }
+      .price {
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        margin-top: 1px;
+      }
+    `;
+
+    const labelsMarkup = selectedDevices
+      .map(
+        (d) =>
+          `<div class="label">${labelHTML({
+            barcode: d.barcode,
+            modelName: d.template?.display_name ?? "Ukendt",
+            grade: d.grade ?? "B",
+            sellingPrice: d.selling_price,
+            storage: d.storage,
+            color: d.color,
+          })}</div>`,
+      )
+      .join("");
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head><style>${BULK_PRINT_STYLES}</style></head>
+        <body>${labelsMarkup}</body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+    }, 200);
+  }
+
   const totalPages = Math.ceil(count / LIMIT);
   const currentPage = Math.floor(offset / LIMIT) + 1;
   const hasListable = devices.some((d) => ["intake", "graded", "returned"].includes(d.status));
@@ -251,6 +347,18 @@ export function StockTable({ filters }: StockTableProps) {
             className="rounded-lg bg-green-eco/10 px-3 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-eco/20 disabled:opacity-40"
           >
             {bulkUpdating ? "Opdaterer..." : "Sæt alle til salg"}
+          </button>
+          <button
+            type="button"
+            onClick={bulkPrintLabels}
+            className="rounded-lg bg-stone-800/10 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-800/20"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+              </svg>
+              Print labels ({selected.size})
+            </span>
           </button>
           <button
             type="button"
@@ -548,6 +656,13 @@ export function StockTable({ filters }: StockTableProps) {
           color={labelDevice.color}
         />
       )}
+
+      {/* Hidden iframe for bulk label printing */}
+      <iframe
+        ref={bulkPrintIframeRef}
+        className="fixed left-[-9999px] top-[-9999px] h-0 w-0"
+        title="bulk-barcode-label-print"
+      />
     </div>
   );
 }
