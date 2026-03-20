@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      // Search in the details JSONB — cast to text for ilike
-      query = query.or(`details::text.ilike.%${search}%,entity_type.ilike.%${search}%,action.ilike.%${search}%`);
+      // Search on text columns — JSONB search would require an RPC function
+      query = query.or(`entity_type.ilike.%${search}%,action.ilike.%${search}%`);
     }
 
     const { data, count, error } = await query;
