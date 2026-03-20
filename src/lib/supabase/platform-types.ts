@@ -129,6 +129,7 @@ export interface SkuProduct {
       image: string | null;
     }>;
   }>;
+  attributes?: Record<string, string | number | boolean | null>;
   barcode: string | null;
   status: "draft" | "published";
   created_at: string;
