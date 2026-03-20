@@ -46,7 +46,10 @@ export async function POST(req: NextRequest) {
   const rawCategory = category_override ?? await mapCategory(catalogProduct.category);
   const isRepairPart = rawCategory === null;
   const skuCategory = "accessory";
-  const skuSubcategory = isRepairPart ? "spare-part" : (use_type === "repair_part" ? "spare-part" : null);
+  const skuSubcategory = isRepairPart
+    ? "spare-part"
+    : (use_type === "repair_part" ? "spare-part" : rawCategory);
+  // rawCategory will be e.g. "cover", "charger", "cable", "audio", "screen_protector", "other"
 
   const costDkk = catalogProduct.price_dkk ?? 0;
   const markup = Number(markup_percentage) || 0;

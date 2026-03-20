@@ -40,10 +40,8 @@ export async function GET(req: NextRequest) {
   if (search) skuQuery = skuQuery.ilike("title", `%${search}%`);
   // Note: subcategory filtering for sku_products if category slug provided
   if (dbCategories && category !== "outlet") {
-    // Map DB accessory categories to sku_products subcategory values
-    // For now sku_products from Foneday use subcategory = null (retail) or "spare-part"
-    // We include all non-spare-part sku_products unless a specific category is chosen
-    skuQuery = skuQuery.is("subcategory", null);
+    // Keep subcategory IS NULL fallback so legacy untagged products still show until backfill migration runs
+    skuQuery = skuQuery.or(`subcategory.in.(${dbCategories.join(",")}),subcategory.is.null`);
   }
 
   const [legacyResult, skuResult] = await Promise.all([
