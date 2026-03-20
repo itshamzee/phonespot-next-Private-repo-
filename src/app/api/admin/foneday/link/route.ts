@@ -9,7 +9,7 @@ import { autoLinkTemplates } from "@/lib/foneday/sync";
  */
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { foneday_sku, use_type, markup_percentage, category_override, store_id } = body;
+  const { foneday_sku, use_type, markup_percentage, custom_price_oere, auto_sync_price, category_override, store_id } = body;
 
   if (!foneday_sku || !use_type || !store_id) {
     return NextResponse.json(
@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
 
   const costDkk = catalogProduct.price_dkk ?? 0;
   const markup = Number(markup_percentage) || 0;
-  const sellingPrice = Math.round(costDkk * (1 + markup / 100));
+  const sellingPrice = custom_price_oere != null
+    ? Number(custom_price_oere)
+    : Math.round(costDkk * (1 + markup / 100));
   const title = cleanTitle(catalogProduct.title);
   const brand = catalogProduct.product_brand ?? null;
 
@@ -85,6 +87,7 @@ export async function POST(req: NextRequest) {
       sku_product_id: skuProductId,
       use_type,
       markup_percentage: Number(markup_percentage) || 0,
+      auto_sync_price: auto_sync_price !== false,
     })
     .select()
     .single();

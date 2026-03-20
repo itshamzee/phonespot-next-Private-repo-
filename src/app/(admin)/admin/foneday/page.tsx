@@ -100,6 +100,8 @@ function LinkModal({
         foneday_sku: product.foneday_sku,
         use_type: "retail",
         markup_percentage: customPriceKr != null ? 0 : markupPct,
+        custom_price_oere: customPriceKr != null ? customPriceKr * 100 : null,
+        auto_sync_price: customPriceKr == null,
         store_id: "00000000-0000-0000-0000-000000000000",
       }),
     });
