@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
@@ -153,40 +154,60 @@ export default async function ReparationPage() {
       }} />
 
       {/* ================================================================= */}
-      {/*  SECTION 1: HERO — Compact headline + subtitle                    */}
+      {/*  SECTION 1: HERO — Workshop background + USP cards                */}
       {/* ================================================================= */}
-      <section className="bg-green-eco">
-        <div className="mx-auto max-w-7xl px-4 py-10 text-center md:py-14">
-          <div className="mb-3 inline-flex">
-            <Suspense fallback={<div className="text-sm text-white/60">Indlæser anmeldelser...</div>}>
-              <TrustpilotStars />
-            </Suspense>
-          </div>
+      <section className="px-4 pt-4 pb-0 md:px-6 md:pt-6">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl md:rounded-3xl">
+          <Image
+            src="/images/lifestyle/workshop.jpg"
+            alt=""
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-eco/90 via-green-eco/80 to-green-eco/50" />
 
-          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
-            Reparation i Slagelse
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-base text-white/70 md:text-lg">
-            Hurtig &amp; professionel reparation med livstidsgaranti.
-            Faste priser, 90% klar på 30 minutter.
-          </p>
+          <div className="relative z-10 mx-auto max-w-4xl px-8 py-10 text-center md:py-14">
+            <div className="mb-4 inline-flex">
+              <Suspense fallback={<div className="text-white/60 text-sm">Indlæser anmeldelser...</div>}>
+                <TrustpilotStars />
+              </Suspense>
+            </div>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <a
-              href="#find-din-pris"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 font-display text-sm font-bold tracking-wide text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
-            >
-              Find din pris
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                <path fillRule="evenodd" d="M8 1.5a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 7.793V2a.5.5 0 0 1 .5-.5Z" clipRule="evenodd" />
-              </svg>
-            </a>
-            <Link
-              href="/reparation/booking"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-3.5 font-display text-sm font-bold tracking-wide text-white backdrop-blur-sm transition-all hover:bg-white/20"
-            >
-              Book reparation
-            </Link>
+            <h1 className="font-display text-3xl font-bold leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
+              Reparation i Slagelse
+              <br />
+              <span className="text-white/80">— hurtigt og professionelt</span>
+            </h1>
+
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
+              Professionel reparation af iPhones, iPads, Samsung, MacBooks og mere i VestsjællandsCentret. Livstidsgaranti, faste priser og 90% klar på 30 minutter.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <a href="#find-din-pris" className="rounded-full border-2 border-white bg-white px-8 py-3.5 text-sm font-bold text-green-eco transition-all hover:bg-white/90">
+                Find din pris ↓
+              </a>
+              <Link href="/reparation/booking" className="rounded-full border-2 border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20">
+                Book reparation
+              </Link>
+            </div>
+
+            <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { title: "Livstidsgaranti", desc: "På arbejde & dele" },
+                { title: "30 minutter", desc: "90% klar samme dag" },
+                { title: "Faste priser", desc: "Inkl. moms & dele" },
+                { title: "Walk-in", desc: "Ingen tidsbestilling" },
+              ].map(({ title, desc }) => (
+                <div key={title} className="rounded-xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur-sm">
+                  <p className="text-sm font-bold text-white">{title}</p>
+                  <p className="mt-0.5 text-xs text-white/60">{desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -321,71 +342,91 @@ export default async function ReparationPage() {
       </section>
 
       {/* ================================================================= */}
-      {/*  SECTION 5: LOCATION — Compact store info                        */}
+      {/*  SECTION 5: LOCATION — Store info with photos                    */}
       {/* ================================================================= */}
-      <section className="border-t border-[#E5E5EA] bg-[#F7F7F8]">
-        <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="mb-6 text-center">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
-              Find os
-            </p>
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-              PhoneSpot Slagelse
-            </h2>
-          </div>
+      <section className="bg-cream">
+        <div className="mx-auto max-w-7xl px-4 py-16">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-green-eco">
+                Find os
+              </p>
+              <h2 className="font-display text-3xl font-bold tracking-tight text-charcoal">
+                PhoneSpot Slagelse
+              </h2>
+              <p className="mt-4 text-base text-gray">
+                Vi holder til i VestsjællandsCentret i Slagelse, hvor vi tilbyder walk-in reparation
+                uden tidsbestilling. De fleste reparationer tager kun 30 minutter.
+              </p>
 
-          <div className="mx-auto max-w-3xl">
-            <div className="rounded-2xl border border-[#E5E5EA] bg-white p-6 md:p-8">
-              <div className="grid gap-6 sm:grid-cols-3">
-                {/* Address */}
+              <div className="mt-6 space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <circle cx="12" cy="11" r="3" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-[#111111]">{STORE.mall}</p>
-                    <p className="text-sm text-[#86868B]">{STORE.street}</p>
-                    <p className="text-sm text-[#86868B]">{STORE.zip} {STORE.city}</p>
+                    <p className="font-bold text-charcoal">{STORE.mall}</p>
+                    <p className="text-sm text-gray">{STORE.street}, {STORE.zip} {STORE.city}</p>
                   </div>
                 </div>
 
-                {/* Hours */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-[#111111]">Åbningstider</p>
-                    <p className="text-sm text-[#86868B]">Hverdage: {STORE.hours.weekdays}</p>
-                    <p className="text-sm text-[#86868B]">Lørdag: {STORE.hours.saturday}</p>
-                    <p className="text-sm text-[#86868B]">Søndag: {STORE.hours.sunday}</p>
+                    <p className="font-bold text-charcoal">Åbningstider</p>
+                    <p className="text-sm text-gray">Hverdage: {STORE.hours.weekdays}</p>
+                    <p className="text-sm text-gray">Lørdag: {STORE.hours.saturday}</p>
+                    <p className="text-sm text-gray">Søndag: {STORE.hours.sunday}</p>
                   </div>
                 </div>
 
-                {/* Contact */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-[#111111]">Kontakt</p>
-                    <p className="text-sm text-[#86868B]">{STORE.phone}</p>
-                    <p className="text-sm text-[#86868B]">{STORE.email}</p>
+                    <p className="font-bold text-charcoal">Kontakt</p>
+                    <p className="text-sm text-gray">{STORE.phone}</p>
+                    <p className="text-sm text-gray">{STORE.email}</p>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Walk-in note */}
-              <div className="mt-6 rounded-xl bg-green-eco/5 px-5 py-3 text-center text-sm text-[#1A3D2E]">
-                Walk-in service — kom forbi uden tidsbestilling. De fleste reparationer tager kun 30 minutter.
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/vestsjællandscentret.jpg"
+                  alt="VestsjællandsCentret i Slagelse — her finder du PhoneSpot"
+                  className="h-48 w-full object-cover sm:h-56"
+                  loading="lazy"
+                />
+              </div>
+              <div className="overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/butik-indvendig.jpg"
+                  alt="PhoneSpot butik indvendig"
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="overflow-hidden rounded-2xl">
+                <img
+                  src="/images/store/butik-produkter.jpg"
+                  alt="Refurbished telefoner i PhoneSpot butikken"
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>
