@@ -253,7 +253,7 @@ export function AccessoryCard({
       title: name,
       price: displayPrice,
       quantity: 1,
-      image: image_url ?? "",
+      image: image_url ?? null,
     });
     openCart();
   }
@@ -321,7 +321,7 @@ export function AccessoryCard({
             {online_stock > 0 && (
               <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-                Pa lager
+                På lager
               </p>
             )}
           </div>

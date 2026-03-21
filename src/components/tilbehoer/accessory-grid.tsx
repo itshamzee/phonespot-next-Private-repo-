@@ -303,7 +303,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
             type="search"
             value={filters.search}
             onChange={(e) => setFilter("search", e.target.value)}
-            placeholder="Sog efter tilbehor..."
+            placeholder="Søg efter tilbehør..."
             className="w-full rounded-full border border-sand bg-white py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
           />
         </div>

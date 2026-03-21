@@ -96,13 +96,13 @@ const REPAIR_SERVICE_JSONLD = {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       opens: "10:00",
-      closes: "18:00",
+      closes: "19:00",
     },
     {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: "Saturday",
       opens: "10:00",
-      closes: "16:00",
+      closes: "17:00",
     },
   ],
   priceRange: "$$",
@@ -142,11 +142,20 @@ export default async function ReparationPage() {
   return (
     <>
       <JsonLd data={REPAIR_SERVICE_JSONLD} />
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: REPAIR_FAQ.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
+      }} />
 
       {/* ================================================================= */}
       {/*  SECTION 1: HERO — Compact headline + subtitle                    */}
       {/* ================================================================= */}
-      <section className="bg-[#1A3D2E]">
+      <section className="bg-green-eco">
         <div className="mx-auto max-w-7xl px-4 py-10 text-center md:py-14">
           <div className="mb-3 inline-flex">
             <Suspense fallback={<div className="text-sm text-white/60">Indlæser anmeldelser...</div>}>
@@ -293,7 +302,7 @@ export default async function ReparationPage() {
               },
             ].map(({ step, title, desc, icon }) => (
               <div key={step} className="text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1A3D2E]/10 text-[#1A3D2E]">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco/10 text-[#1A3D2E]">
                   {icon}
                 </div>
                 <div className="mb-1 font-display text-xs font-bold uppercase tracking-wider text-[#1A3D2E]">
@@ -330,7 +339,7 @@ export default async function ReparationPage() {
               <div className="grid gap-6 sm:grid-cols-3">
                 {/* Address */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <circle cx="12" cy="11" r="3" />
@@ -345,7 +354,7 @@ export default async function ReparationPage() {
 
                 {/* Hours */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
@@ -361,7 +370,7 @@ export default async function ReparationPage() {
 
                 {/* Contact */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-[#1A3D2E]">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
                       <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
@@ -375,7 +384,7 @@ export default async function ReparationPage() {
               </div>
 
               {/* Walk-in note */}
-              <div className="mt-6 rounded-xl bg-[#1A3D2E]/5 px-5 py-3 text-center text-sm text-[#1A3D2E]">
+              <div className="mt-6 rounded-xl bg-green-eco/5 px-5 py-3 text-center text-sm text-[#1A3D2E]">
                 Walk-in service — kom forbi uden tidsbestilling. De fleste reparationer tager kun 30 minutter.
               </div>
             </div>
@@ -452,7 +461,7 @@ export default async function ReparationPage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#find-din-pris"
-              className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3.5 font-display text-sm font-bold tracking-wide text-white transition-all hover:bg-[#1A3D2E]/90 hover:shadow-lg hover:shadow-[#1A3D2E]/20"
+              className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-3.5 font-display text-sm font-bold tracking-wide text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-[#1A3D2E]/20"
             >
               Find din pris
             </a>

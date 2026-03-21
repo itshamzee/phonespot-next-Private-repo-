@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
     .from("sku_products")
     .select("id, title, slug, subcategory, brand, selling_price, cost_price, sale_price, images, barcode, ean, description, status, created_at, updated_at, is_active")
     .eq("status", "published")
+    .eq("is_active", true)
     .eq("category", "accessory")
     .order("created_at", { ascending: false });
 

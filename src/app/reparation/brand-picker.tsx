@@ -152,6 +152,7 @@ export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; mo
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
+            aria-label="Søg efter model"
             placeholder="Søg efter model, f.eks. &quot;iPhone 15 Pro&quot; eller &quot;Galaxy S24&quot;"
             className="w-full bg-transparent px-4 py-4 text-sm text-charcoal outline-none placeholder:text-charcoal/30"
           />
