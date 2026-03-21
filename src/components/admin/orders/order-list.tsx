@@ -12,7 +12,7 @@ interface Order {
   payment_status?: string | null;
   fulfillment_status?: string | null;
   type: string;
-  total_amount: number;
+  total: number;
   created_at: string;
   location_id: string | null;
   customer: { name: string | null; email: string | null; phone: string | null } | null;
@@ -108,7 +108,7 @@ function exportCSV(orders: Order[]) {
     o.status,
     o.payment_status ?? "",
     o.fulfillment_status ?? "",
-    (o.total_amount / 100).toFixed(2),
+    (o.total / 100).toFixed(2),
     formatDate(o.created_at),
   ]);
   const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -496,7 +496,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
                       className="cursor-pointer whitespace-nowrap px-4 py-3 text-right font-semibold text-stone-700"
                       onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
                     >
-                      {formatOere(order.total_amount)}
+                      {formatOere(order.total)}
                     </td>
 
                     {/* Date */}

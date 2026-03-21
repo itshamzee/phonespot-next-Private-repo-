@@ -95,6 +95,7 @@ export async function handleCheckoutCompleted(
     .from("orders")
     .update({
       status: "confirmed",
+      payment_status: "paid",
       confirmed_at: new Date().toISOString(),
       brugtmoms_total: brugtmomsTotal,
       stripe_payment_id: session.payment_intent as string | null,

@@ -73,12 +73,12 @@ export default function FakturaPage() {
       if (item.item_type === "device" && item.device_id) {
         const { data: dev } = await supabase
           .from("devices")
-          .select("template:product_templates(brand, model, storage), color, condition_grade")
+          .select("template:product_templates(brand, model, storage), color, grade")
           .eq("id", item.device_id)
           .single();
         const t = (dev as any)?.template;
         const name = t
-          ? `${t.brand} ${t.model}${t.storage ? ` ${t.storage}` : ""}${dev?.color ? ` (${dev.color})` : ""}${dev?.condition_grade ? ` — ${dev.condition_grade}` : ""}`
+          ? `${t.brand} ${t.model}${t.storage ? ` ${t.storage}` : ""}${dev?.color ? ` (${dev.color})` : ""}${dev?.grade ? ` — ${dev.grade}` : ""}`
           : "Enhed";
         resolvedItems.push({
           name,

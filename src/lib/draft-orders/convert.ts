@@ -78,11 +78,14 @@ export async function convertDraftToOrder(draftOrderId: string): Promise<Order> 
     throw new Error(`Draft order ${draftOrderId} is already being processed by another request`);
   }
 
+  // Save original status before the optimistic lock overwrites it
+  const originalStatus = draftOrder.status;
+
   // ── Helper: rollback on error ────────────────────────────────────────────
   const rollback = async () => {
     await supabase
       .from("draft_orders")
-      .update({ status: "sent", updated_at: new Date().toISOString() })
+      .update({ status: originalStatus, updated_at: new Date().toISOString() })
       .eq("id", draftOrderId);
   };
 

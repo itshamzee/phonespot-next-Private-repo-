@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: false })
     .range((page - 1) * perPage, page * perPage - 1);
 
+  const search = searchParams.get("search");
+  if (search) query = query.ilike("order_number", `%${search}%`);
   if (status) query = query.eq("status", status);
   if (type) query = query.eq("type", type);
   if (locationId) query = query.eq("location_id", locationId);
