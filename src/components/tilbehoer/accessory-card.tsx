@@ -12,6 +12,7 @@ interface AccessoryCardProps {
   category: string;
   brand: string | null;
   price: number; // øre
+  sale_price: number | null; // øre — if set, price is the original
   image_url: string | null;
   store_stock: number;
   online_stock: number;
@@ -223,6 +224,7 @@ export function AccessoryCard({
   slug,
   category,
   price,
+  sale_price,
   image_url,
   store_stock,
   online_stock,
@@ -231,9 +233,15 @@ export function AccessoryCard({
   const [showReservation, setShowReservation] = useState(false);
   const { addSku, openCart } = useCart();
 
-  const priceFormatted = (price / 100).toLocaleString("da-DK", {
+  const isOnSale = sale_price != null && sale_price < price;
+  const displayPrice = isOnSale ? sale_price : price;
+
+  const priceFormatted = (displayPrice / 100).toLocaleString("da-DK", {
     minimumFractionDigits: 0,
   });
+  const originalPriceFormatted = isOnSale
+    ? (price / 100).toLocaleString("da-DK", { minimumFractionDigits: 0 })
+    : null;
 
   const href = `/tilbehoer/${category}/${slug}`;
 
@@ -243,7 +251,7 @@ export function AccessoryCard({
       type: "sku_product",
       skuProductId: id,
       title: name,
-      price,
+      price: displayPrice,
       quantity: 1,
       image: image_url ?? "",
     });
@@ -252,7 +260,7 @@ export function AccessoryCard({
 
   return (
     <>
-      <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-shadow hover:shadow-md">
+      <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
         {/* Image — clickable */}
         <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
           {image_url ? (
@@ -280,27 +288,40 @@ export function AccessoryCard({
           <div className="absolute top-3 left-3">
             <StoreBadge storeStock={store_stock} />
           </div>
+          {brand && (
+            <span className="absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-charcoal/70 shadow-sm backdrop-blur-sm">
+              {brand}
+            </span>
+          )}
+          {isOnSale && (
+            <span className="absolute bottom-2 left-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+              Tilbud
+            </span>
+          )}
         </Link>
 
         {/* Info */}
         <div className="flex flex-1 flex-col p-4">
-          {brand && (
-            <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
-              {brand}
-            </p>
-          )}
           <Link href={href}>
-            <h3 className="mt-1 line-clamp-2 font-semibold text-charcoal hover:text-green-eco transition-colors">
+            <h3 className="line-clamp-2 text-sm font-semibold text-charcoal transition-colors hover:text-green-eco">
               {name}
             </h3>
           </Link>
           <div className="mt-auto pt-3">
-            <p className="text-lg font-bold text-green-eco">
-              {priceFormatted} kr.
-            </p>
+            <div className="flex items-baseline gap-2">
+              <p className={`text-lg font-bold ${isOnSale ? "text-red-600" : "text-green-eco"}`}>
+                {priceFormatted} kr.
+              </p>
+              {originalPriceFormatted && (
+                <p className="text-sm text-charcoal/40 line-through">
+                  {originalPriceFormatted} kr.
+                </p>
+              )}
+            </div>
             {online_stock > 0 && (
-              <p className="mt-0.5 text-xs text-charcoal/50">
-                {online_stock} stk. online
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+                Pa lager
               </p>
             )}
           </div>

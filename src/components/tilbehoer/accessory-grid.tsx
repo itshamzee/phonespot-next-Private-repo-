@@ -433,6 +433,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
               category={product.category}
               brand={product.brand}
               price={product.price}
+              sale_price={product.sale_price}
               image_url={product.image_url}
               store_stock={product.store_stock}
               online_stock={product.online_stock}

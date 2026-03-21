@@ -474,6 +474,7 @@ export interface Accessory {
   ean: string | null;
   image_url: string | null;
   description: string | null;
+  sale_price: number | null;
   online_stock: number;
   store_stock: number;
   store_id: string;
