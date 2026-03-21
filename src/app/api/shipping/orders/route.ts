@@ -23,7 +23,28 @@ export async function GET(request: NextRequest) {
     .range((page - 1) * perPage, page * perPage - 1);
 
   const search = searchParams.get("search");
-  if (search) query = query.ilike("order_number", `%${search}%`);
+  if (search) {
+    // Search by order_number first; if search looks like it could be a name/email,
+    // also find matching customer IDs and include those orders
+    const searchPattern = `%${search}%`;
+
+    // Find customer IDs matching the search term
+    const { data: matchingCustomers } = await supabase
+      .from("customers")
+      .select("id")
+      .or(`name.ilike.${searchPattern},email.ilike.${searchPattern}`);
+
+    const customerIds = matchingCustomers?.map((c) => c.id) ?? [];
+
+    if (customerIds.length > 0) {
+      // Search across order_number OR matching customer IDs
+      query = query.or(
+        `order_number.ilike.${searchPattern},customer_id.in.(${customerIds.join(",")})`
+      );
+    } else {
+      query = query.ilike("order_number", searchPattern);
+    }
+  }
   if (status) query = query.eq("status", status);
   if (type) query = query.eq("type", type);
   if (locationId) query = query.eq("location_id", locationId);
@@ -37,11 +58,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 
+  // Fetch counts per status for tabs
+  const countStatuses = ["pending", "confirmed", "shipped", "delivered", "refunded"];
+  const countPromises = countStatuses.map((s) =>
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", s)
+  );
+  const countResults = await Promise.all(countPromises);
+  const counts: Record<string, number> = {};
+  countStatuses.forEach((s, i) => {
+    counts[s] = countResults[i].count ?? 0;
+  });
+
   return NextResponse.json({
     orders: data,
     total: count,
     page,
     per_page: perPage,
     total_pages: Math.ceil((count ?? 0) / perPage),
+    counts,
   });
 }

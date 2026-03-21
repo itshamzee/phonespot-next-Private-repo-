@@ -48,7 +48,7 @@ function PaymentStatusBadge({ status }: { status?: string | null }) {
     refunded:           { label: "Refunderet", cls: "bg-red-100 text-red-700" },
     partially_refunded: { label: "Delvis ref.",cls: "bg-orange-100 text-orange-700" },
   };
-  const cfg = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-stone-100 text-stone-600" };
+  const cfg = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-cream text-charcoal-light" };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.cls}`}>
       {cfg.label}
@@ -63,9 +63,9 @@ function FulfillmentStatusBadge({ status }: { status?: string | null }) {
     processing:  { label: "Behandles",  cls: "bg-amber-100 text-amber-800" },
     shipped:     { label: "Afsendt",    cls: "bg-blue-100 text-blue-800" },
     delivered:   { label: "Leveret",    cls: "bg-green-100 text-green-800" },
-    returned:    { label: "Returneret", cls: "bg-stone-100 text-stone-600" },
+    returned:    { label: "Returneret", cls: "bg-cream text-charcoal-light" },
   };
-  const cfg = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-stone-100 text-stone-600" };
+  const cfg = map[status ?? ""] ?? { label: status ?? "—", cls: "bg-cream text-charcoal-light" };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.cls}`}>
       {cfg.label}
@@ -78,7 +78,7 @@ function TypeBadge({ type }: { type: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     online:  { label: "Online",  cls: "bg-indigo-100 text-indigo-700" },
     pos:     { label: "POS",     cls: "bg-purple-100 text-purple-700" },
-    draft:   { label: "Kladde",  cls: "bg-stone-100 text-stone-500" },
+    draft:   { label: "Kladde",  cls: "bg-cream text-gray" },
     shopify: { label: "Shopify", cls: "bg-green-100 text-green-700" },
   };
   const cfg = map[type] ?? { label: type, cls: "bg-stone-100 text-stone-600" };
@@ -122,7 +122,7 @@ function exportCSV(orders: Order[]) {
 }
 
 const inputCls =
-  "rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 focus:border-green-500/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/10";
+  "rounded-xl border border-sand bg-cream px-3 py-2 text-sm text-charcoal focus:border-green-eco/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10";
 
 /* ════════════════════════════════════════════════════════════════════ */
 export function OrderList({ initialOrders, initialTotal, initialPage }: OrderListProps) {
@@ -238,7 +238,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
     <div className="space-y-4">
 
       {/* ── Status tabs ──────────────────────────────────────────── */}
-      <div className="flex gap-1 overflow-x-auto rounded-xl border border-stone-200 bg-white p-1 shadow-sm">
+      <div className="flex gap-1 overflow-x-auto rounded-xl border border-sand bg-white p-1 shadow-sm">
         {STATUS_TABS.map((tab) => {
           const count = tab.key === "" ? total : (tabCounts[tab.key] ?? null);
           const isActive = activeTab === tab.key;
@@ -248,15 +248,15 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
               onClick={() => setActiveTab(tab.key)}
               className={`flex shrink-0 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-stone-800 text-white shadow-sm"
-                  : "text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                  ? "bg-green-eco text-white shadow-sm"
+                  : "text-gray hover:bg-cream hover:text-charcoal-light"
               }`}
             >
               {tab.label}
               {count !== null && (
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
-                    isActive ? "bg-white/20 text-white" : "bg-stone-100 text-stone-500"
+                    isActive ? "bg-white/20 text-white" : "bg-cream text-gray"
                   }`}
                 >
                   {count}
@@ -268,11 +268,11 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
       </div>
 
       {/* ── Filter bar ───────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-sand bg-white px-5 py-4 shadow-sm">
 
         {/* Search */}
         <div className="flex flex-col gap-1 min-w-[220px]">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
             Søg
           </label>
           <input
@@ -286,7 +286,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
 
         {/* Type */}
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
             Kanal
           </label>
           <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
@@ -300,7 +300,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
 
         {/* Date from */}
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
             Fra
           </label>
           <input
@@ -313,7 +313,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
 
         {/* Date to */}
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
             Til
           </label>
           <input
@@ -327,7 +327,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
         {/* Location */}
         {locations.length > 0 && (
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
               Lokation
             </label>
             <select
@@ -346,7 +346,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
         )}
 
         {/* Result count */}
-        <div className="ml-auto self-end pb-0.5 text-xs text-stone-400">
+        <div className="ml-auto self-end pb-0.5 text-xs text-gray">
           {total} {total === 1 ? "ordre" : "ordrer"}
         </div>
       </div>
@@ -366,13 +366,13 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
             </button>
             <button
               onClick={() => exportCSV(orders.filter((o) => selected.has(o.id)))}
-              className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+              className="rounded-xl border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream"
             >
               Eksporter CSV
             </button>
             <button
               onClick={() => setSelected(new Set())}
-              className="rounded-xl px-3 py-2 text-sm text-stone-400 transition hover:text-stone-600"
+              className="rounded-xl px-3 py-2 text-sm text-gray transition hover:text-charcoal-light"
             >
               ✕
             </button>
@@ -381,156 +381,178 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
       )}
 
       {/* ── Table ────────────────────────────────────────────────── */}
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-sand bg-white shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-sand border-t-green-eco" />
           </div>
         ) : orders.length === 0 ? (
-          <div className="py-20 text-center text-sm text-stone-400">
+          <div className="py-20 text-center text-sm text-gray">
             Ingen ordrer matcher de valgte filtre
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-stone-100 bg-stone-50/60 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-                  {/* Checkbox */}
-                  <th className="w-10 pl-4 pr-2 py-3">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      className="h-4 w-4 cursor-pointer rounded border-stone-300 accent-green-600"
-                      aria-label="Vælg alle"
-                    />
-                  </th>
-                  <th className="px-4 py-3">Ordrenr.</th>
-                  <th className="px-4 py-3">Kunde</th>
-                  <th className="px-4 py-3">Kanal</th>
-                  <th className="px-4 py-3">Ordrestatus</th>
-                  <th className="px-4 py-3">Betaling</th>
-                  <th className="px-4 py-3">Afsendelse</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3">Dato</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {orders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className={`transition-colors hover:bg-green-50/40 ${selected.has(order.id) ? "bg-green-50/60" : ""}`}
-                  >
-                    {/* Checkbox cell — stop click propagation so row click still works */}
-                    <td className="w-10 pl-4 pr-2 py-3" onClick={(e) => e.stopPropagation()}>
+          <>
+            {/* Mobile card view */}
+            <div className="space-y-3 p-3 md:hidden">
+              {orders.map((order) => (
+                <div key={order.id} onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                  className="cursor-pointer rounded-xl border border-sand bg-white p-4 transition-all hover:shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="font-display font-bold text-charcoal">{order.order_number ?? order.id.slice(0, 8).toUpperCase()}</span>
+                    <span className="font-bold text-charcoal">{formatOere(order.total)} kr</span>
+                  </div>
+                  <p className="mt-1 text-sm text-gray">{order.customer?.name ?? "Ukendt kunde"}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <OrderStatusBadge status={order.status} />
+                    <PaymentStatusBadge status={order.payment_status} />
+                    <FulfillmentStatusBadge status={order.fulfillment_status} />
+                  </div>
+                  <p className="mt-2 text-xs text-gray">{formatDate(order.created_at)}</p>
+                </div>
+              ))}
+            </div>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-sand/50 bg-cream/60 text-left text-[11px] font-semibold uppercase tracking-wider text-gray">
+                    {/* Checkbox */}
+                    <th className="w-10 pl-4 pr-2 py-3">
                       <input
                         type="checkbox"
-                        checked={selected.has(order.id)}
-                        onChange={() => toggleOne(order.id)}
-                        className="h-4 w-4 cursor-pointer rounded border-stone-300 accent-green-600"
-                        aria-label={`Vælg ordre ${order.order_number ?? order.id}`}
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        className="h-4 w-4 cursor-pointer rounded border-sand accent-green-eco"
+                        aria-label="Vælg alle"
                       />
-                    </td>
-
-                    {/* Order number */}
-                    <td
-                      className="cursor-pointer whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-stone-700"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      {order.order_number ?? order.id.slice(0, 8).toUpperCase()}
-                    </td>
-
-                    {/* Customer */}
-                    <td
-                      className="cursor-pointer px-4 py-3"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      {order.customer ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium text-stone-800">
-                            {order.customer.name ?? "—"}
-                          </span>
-                          <span className="text-xs text-stone-400">
-                            {order.customer.email ?? order.customer.phone ?? ""}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-stone-400">—</span>
-                      )}
-                    </td>
-
-                    {/* Channel / type */}
-                    <td
-                      className="cursor-pointer px-4 py-3"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      <TypeBadge type={order.type} />
-                    </td>
-
-                    {/* Order status */}
-                    <td
-                      className="cursor-pointer px-4 py-3"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      <OrderStatusBadge status={order.status} />
-                    </td>
-
-                    {/* Payment status */}
-                    <td
-                      className="cursor-pointer px-4 py-3"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      <PaymentStatusBadge status={order.payment_status} />
-                    </td>
-
-                    {/* Fulfillment status */}
-                    <td
-                      className="cursor-pointer px-4 py-3"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      <FulfillmentStatusBadge status={order.fulfillment_status} />
-                    </td>
-
-                    {/* Total */}
-                    <td
-                      className="cursor-pointer whitespace-nowrap px-4 py-3 text-right font-semibold text-stone-700"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      {formatOere(order.total)}
-                    </td>
-
-                    {/* Date */}
-                    <td
-                      className="cursor-pointer whitespace-nowrap px-4 py-3 text-stone-500"
-                      onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
-                    >
-                      {formatDate(order.created_at)}
-                    </td>
+                    </th>
+                    <th className="px-4 py-3">Ordrenr.</th>
+                    <th className="px-4 py-3">Kunde</th>
+                    <th className="px-4 py-3">Kanal</th>
+                    <th className="px-4 py-3">Ordrestatus</th>
+                    <th className="px-4 py-3">Betaling</th>
+                    <th className="px-4 py-3">Afsendelse</th>
+                    <th className="px-4 py-3 text-right">Total</th>
+                    <th className="px-4 py-3">Dato</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-sand/50">
+                  {orders.map((order) => (
+                    <tr
+                      key={order.id}
+                      className={`transition-colors hover:bg-green-50/40 ${selected.has(order.id) ? "bg-green-50/60" : ""}`}
+                    >
+                      {/* Checkbox cell — stop click propagation so row click still works */}
+                      <td className="w-10 pl-4 pr-2 py-3" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(order.id)}
+                          onChange={() => toggleOne(order.id)}
+                          className="h-4 w-4 cursor-pointer rounded border-sand accent-green-eco"
+                          aria-label={`Vælg ordre ${order.order_number ?? order.id}`}
+                        />
+                      </td>
+
+                      {/* Order number */}
+                      <td
+                        className="cursor-pointer whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-charcoal-light"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        {order.order_number ?? order.id.slice(0, 8).toUpperCase()}
+                      </td>
+
+                      {/* Customer */}
+                      <td
+                        className="cursor-pointer px-4 py-3"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        {order.customer ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-charcoal">
+                              {order.customer.name ?? "—"}
+                            </span>
+                            <span className="text-xs text-gray">
+                              {order.customer.email ?? order.customer.phone ?? ""}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray">—</span>
+                        )}
+                      </td>
+
+                      {/* Channel / type */}
+                      <td
+                        className="cursor-pointer px-4 py-3"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        <TypeBadge type={order.type} />
+                      </td>
+
+                      {/* Order status */}
+                      <td
+                        className="cursor-pointer px-4 py-3"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        <OrderStatusBadge status={order.status} />
+                      </td>
+
+                      {/* Payment status */}
+                      <td
+                        className="cursor-pointer px-4 py-3"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        <PaymentStatusBadge status={order.payment_status} />
+                      </td>
+
+                      {/* Fulfillment status */}
+                      <td
+                        className="cursor-pointer px-4 py-3"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        <FulfillmentStatusBadge status={order.fulfillment_status} />
+                      </td>
+
+                      {/* Total */}
+                      <td
+                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-right font-semibold text-charcoal-light"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        {formatOere(order.total)}
+                      </td>
+
+                      {/* Date */}
+                      <td
+                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-gray"
+                        onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
+                      >
+                        {formatDate(order.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* ── Pagination ───────────────────────────────────────────── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-5 py-3 shadow-sm">
+        <div className="flex items-center justify-between rounded-xl border border-sand bg-white px-5 py-3 shadow-sm">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1 || loading}
-            className="rounded-xl border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border border-sand px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-40"
           >
             ← Forrige
           </button>
-          <span className="text-sm text-stone-500">
+          <span className="text-sm text-gray">
             Side {page} af {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages || loading}
-            className="rounded-xl border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl border border-sand px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-40"
           >
             Næste →
           </button>
