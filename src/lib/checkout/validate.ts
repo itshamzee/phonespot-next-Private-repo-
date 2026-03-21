@@ -57,13 +57,17 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       .from("sku_products")
       .select("id, selling_price, sale_price, is_active, always_in_stock")
       .in("id", skuIds);
+    // Sum stock across ALL locations (store + online + warehouse)
+    // A product is orderable if it exists anywhere
     const { data: stocks } = await supabase
       .from("sku_stock")
-      .select("product_id, quantity, location:locations!inner(type)")
-      .in("product_id", skuIds)
-      .eq("locations.type", "online");
+      .select("product_id, quantity")
+      .in("product_id", skuIds);
     const skuMap = new Map((dbSkus ?? []).map((s) => [s.id, s]));
-    const stockMap = new Map((stocks ?? []).map((s) => [s.product_id, s.quantity as number]));
+    const stockMap = new Map<string, number>();
+    for (const s of stocks ?? []) {
+      stockMap.set(s.product_id, (stockMap.get(s.product_id) ?? 0) + (s.quantity as number));
+    }
 
     for (const item of skus) {
       const db = skuMap.get(item.skuProductId);
