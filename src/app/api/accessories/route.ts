@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   // Query sku_products with category='accessory'
   let query = supabase
     .from("sku_products")
-    .select("*")
+    .select("id, title, slug, subcategory, brand, selling_price, cost_price, sale_price, images, barcode, ean, description, status, created_at, updated_at, is_active")
     .eq("status", "published")
     .eq("category", "accessory")
     .order("created_at", { ascending: false });
@@ -77,5 +77,51 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data ?? []);
+  // Map sku_products rows to the Accessory shape the frontend expects
+  const mapped = (data ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.title,
+    slug: p.slug ?? p.id,
+    category: p.subcategory ?? "other",
+    brand: p.brand,
+    compatible_models: [],
+    price: p.selling_price ?? 0,
+    cost_price: p.cost_price ?? 0,
+    sale_price: p.sale_price ?? null,
+    sku: p.barcode,
+    ean: p.ean,
+    image_url: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null,
+    description: p.description,
+    online_stock: 99,
+    store_stock: 0,
+    store_id: null,
+    status: p.status,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    _source: "sku_product",
+  }));
+
+  // Enrich with actual stock data from sku_stock
+  const productIds = mapped.map((p: any) => p.id);
+  if (productIds.length > 0) {
+    const { data: stockData } = await supabase
+      .from("sku_stock")
+      .select("product_id, quantity")
+      .in("product_id", productIds)
+      .gt("quantity", 0);
+
+    if (stockData) {
+      const stockMap = new Map<string, number>();
+      for (const s of stockData) {
+        stockMap.set(s.product_id, (stockMap.get(s.product_id) ?? 0) + s.quantity);
+      }
+      for (const p of mapped) {
+        const qty = stockMap.get(p.id) ?? 0;
+        p.online_stock = qty > 0 ? qty : 99;
+        p.store_stock = qty;
+      }
+    }
+  }
+
+  return NextResponse.json(mapped);
 }

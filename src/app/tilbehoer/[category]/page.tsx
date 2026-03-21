@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCategoryConfig, getAllCategoryParams } from "@/lib/tilbehoer-config";
+import { getCategoryConfig, getAllCategoryParams, SLUG_TO_ACCESSORY_CATEGORIES } from "@/lib/tilbehoer-config";
 import { TilbehoerCategoryClient } from "@/components/tilbehoer/tilbehoer-category-client";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { Breadcrumb } from "@/components/tilbehoer/breadcrumb";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
@@ -39,14 +40,18 @@ export async function generateMetadata({
 
 async function getAccessoryCount(categorySlug: string): Promise<number> {
   try {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    const res = await fetch(
-      `${siteUrl}/api/accessories?category=${categorySlug}`,
-      { cache: "no-store" },
-    );
-    if (!res.ok) return 0;
-    const data = (await res.json()) as unknown[];
-    return Array.isArray(data) ? data.length : 0;
+    const supabase = createAdminClient();
+    const dbCategories = SLUG_TO_ACCESSORY_CATEGORIES[categorySlug] ?? [categorySlug];
+
+    const { count, error } = await supabase
+      .from("sku_products")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published")
+      .eq("category", "accessory")
+      .in("subcategory", dbCategories);
+
+    if (error) return 0;
+    return count ?? 0;
   } catch {
     return 0;
   }
