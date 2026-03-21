@@ -1244,14 +1244,14 @@ export function BookingWizard() {
 
         {/* Right column: sticky Oversigt sidebar (desktop only) */}
         <div className="hidden md:block">
-          <div className="sticky top-4 overflow-hidden rounded-2xl border border-charcoal/10 bg-charcoal text-white shadow-lg">
+          <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-sm">
             {/* Header */}
-            <div className="bg-green-eco px-5 py-3">
+            <div className="border-b border-soft-grey px-5 py-3">
               <div className="flex items-center gap-2">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-white">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
                   <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm font-bold text-white">Du booker her</span>
+                <span className="text-sm font-bold text-charcoal">Du booker her</span>
               </div>
             </div>
 
@@ -1271,30 +1271,30 @@ export function BookingWizard() {
                     <div className="flex items-center gap-2">
                       {colorDot && (
                         <span
-                          className="h-3 w-3 shrink-0 rounded-full border border-white/20"
+                          className="h-3 w-3 shrink-0 rounded-full border border-charcoal/20"
                           style={{ background: colorDot.hex }}
                         />
                       )}
-                      <p className="text-xs font-bold text-white/80 uppercase tracking-wide">
+                      <p className="text-xs font-bold text-charcoal/70 uppercase tracking-wide">
                         {brand?.name ?? "—"} {model?.name ?? ""}
                         {booking.color ? ` · ${booking.color}` : ""}
                       </p>
                     </div>
                     {/* Services */}
                     {deviceServices.length === 0 && !booking.includesTemperedGlass ? (
-                      <p className="text-xs text-white/40 italic">Ingen valgt endnu</p>
+                      <p className="text-xs text-gray italic">Ingen valgt endnu</p>
                     ) : (
                       <div className="space-y-1">
                         {deviceServices.map((s) => (
                           <div key={s.id} className="flex justify-between text-sm">
-                            <span className="text-white/80">{s.name}</span>
-                            <span className="font-bold text-white">{s.price_dkk} kr</span>
+                            <span className="text-charcoal/70">{s.name}</span>
+                            <span className="font-bold text-charcoal">{s.price_dkk} kr</span>
                           </div>
                         ))}
                         {booking.includesTemperedGlass && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-white/80">Panserglas</span>
-                            <span className="font-bold text-white">99 kr</span>
+                            <span className="text-charcoal/70">Panserglas</span>
+                            <span className="font-bold text-charcoal">99 kr</span>
                           </div>
                         )}
                       </div>
@@ -1304,7 +1304,7 @@ export function BookingWizard() {
               })}
 
               {/* Divider */}
-              <div className="border-t border-white/10" />
+              <div className="border-t border-soft-grey" />
 
               {/* Discount */}
               {discountPercent > 0 && (
@@ -1312,19 +1312,19 @@ export function BookingWizard() {
                   <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
                     -{discountPercent}% rabat
                   </span>
-                  <span className="text-white/50 line-through">{subtotal} kr</span>
+                  <span className="text-gray line-through">{subtotal} kr</span>
                 </div>
               )}
 
               {/* Total */}
               <div className="flex items-baseline justify-between">
-                <span className="text-sm font-bold text-white/60">Total</span>
-                <span className="font-display text-2xl font-bold text-white">
+                <span className="text-sm font-bold text-gray">Total</span>
+                <span className="font-display text-2xl font-bold text-charcoal">
                   {totalPrice > 0 ? `${totalPrice} kr` : "—"}
                 </span>
               </div>
               {totalPrice > 0 && (
-                <p className="text-[11px] text-white/40">Inkl. moms & livstidsgaranti</p>
+                <p className="text-[11px] text-gray">Inkl. moms & livstidsgaranti</p>
               )}
 
               {/* CTA */}
@@ -1345,7 +1345,7 @@ export function BookingWizard() {
                 <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-green-eco">
                   <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
                 </svg>
-                <span className="text-[11px] text-white/50">Livstidsgaranti på alle reparationer</span>
+                <span className="text-[11px] text-gray">Livstidsgaranti på alle reparationer</span>
               </div>
             </div>
           </div>
