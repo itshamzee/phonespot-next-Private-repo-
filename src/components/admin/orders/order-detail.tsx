@@ -7,6 +7,7 @@ import { OrderStatusActions } from "./order-status-actions";
 import { FulfillmentCard } from "./fulfillment-card";
 import { PaymentCard } from "./payment-card";
 import { OrderTimeline } from "./order-timeline";
+import Link from "next/link";
 import { formatDKK, formatDate } from "@/lib/platform/format";
 import type { Order } from "@/lib/supabase/platform-types";
 
@@ -79,7 +80,7 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-stone-800">
+        <h2 className="mb-4 text-base font-semibold text-charcoal">
           {isMarkDelivered ? "Marker som leveret" : "Afsend ordre"}
         </h2>
 
@@ -87,27 +88,27 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
           {!isMarkDelivered && (
             <>
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
-                  Trackingnummer <span className="text-stone-400">(valgfri)</span>
+                <label className="mb-1 block text-sm font-medium text-charcoal-light">
+                  Trackingnummer <span className="text-gray">(valgfri)</span>
                 </label>
                 <input
                   type="text"
                   value={tracking}
                   onChange={(e) => setTracking(e.target.value)}
                   placeholder="f.eks. 00370726200099123456"
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-eco"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
-                  Tracking URL <span className="text-stone-400">(valgfri)</span>
+                <label className="mb-1 block text-sm font-medium text-charcoal-light">
+                  Tracking URL <span className="text-gray">(valgfri)</span>
                 </label>
                 <input
                   type="url"
                   value={trackingUrl}
                   onChange={(e) => setTrackingUrl(e.target.value)}
                   placeholder="https://tracking.postnord.com/..."
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-eco"
                 />
               </div>
             </>
@@ -121,14 +122,14 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
             >
               {loading ? "Behandler…" : isMarkDelivered ? "Marker som leveret" : "Bekræft afsendelse"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+              className="rounded-lg border border-sand px-4 py-2 text-sm font-medium text-charcoal-light hover:bg-cream"
             >
               Annuller
             </button>
@@ -213,7 +214,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
         {/* Back link */}
         <a
           href="/admin/platform/orders"
-          className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700"
+          className="inline-flex items-center gap-1 text-sm text-gray hover:text-charcoal"
         >
           ← Alle ordrer
         </a>
@@ -221,10 +222,10 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
         {/* Page header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-stone-800">
+            <h1 className="font-display text-2xl font-bold text-charcoal">
               Ordre {order.order_number ?? order.id.slice(0, 8)}
             </h1>
-            <p className="mt-1 text-sm text-stone-400">
+            <p className="mt-1 text-sm text-gray">
               Oprettet {formatDate(order.created_at)}
             </p>
           </div>
@@ -236,13 +237,13 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
           {/* ── Left column (~2/3) ──────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order items table */}
-            <div className="rounded-xl border border-stone-200 bg-white">
-              <h2 className="border-b border-stone-100 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-sand bg-white">
+              <h2 className="border-b border-sand/50 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-gray">
                 Produkter
               </h2>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-stone-100 text-left text-xs text-stone-400">
+                  <tr className="border-b border-sand/50 text-left text-xs text-gray">
                     <th className="px-5 py-2 font-medium">Produkt</th>
                     <th className="px-5 py-2 font-medium text-right">Antal</th>
                     <th className="px-5 py-2 font-medium text-right">Stykpris</th>
@@ -264,14 +265,14 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                     return (
                       <tr
                         key={item.id ?? idx}
-                        className="border-b border-stone-100 last:border-0"
+                        className="border-b border-sand/50 last:border-0"
                       >
-                        <td className="px-5 py-3 text-stone-800">{name}</td>
-                        <td className="px-5 py-3 text-right text-stone-600">{qty}</td>
-                        <td className="px-5 py-3 text-right text-stone-600">
+                        <td className="px-5 py-3 text-charcoal">{name}</td>
+                        <td className="px-5 py-3 text-right text-charcoal-light">{qty}</td>
+                        <td className="px-5 py-3 text-right text-charcoal-light">
                           {formatDKK(unitPrice)}
                         </td>
-                        <td className="px-5 py-3 text-right font-medium text-stone-800">
+                        <td className="px-5 py-3 text-right font-medium text-charcoal">
                           {formatDKK(lineAmt)}
                         </td>
                       </tr>
@@ -281,12 +282,12 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
               </table>
 
               {/* Totals */}
-              <div className="border-t border-stone-100 px-5 py-3 space-y-1 text-sm">
-                <div className="flex justify-between text-stone-600">
+              <div className="border-t border-sand/50 px-5 py-3 space-y-1 text-sm">
+                <div className="flex justify-between text-charcoal-light">
                   <span>Subtotal</span>
                   <span>{formatDKK(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-stone-600">
+                <div className="flex justify-between text-charcoal-light">
                   <span>Fragt</span>
                   <span>{formatDKK(shippingCost)}</span>
                 </div>
@@ -296,7 +297,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                     <span>−{formatDKK(discountAmount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between border-t border-stone-100 pt-2 font-bold text-stone-800">
+                <div className="flex justify-between border-t border-sand/50 pt-2 font-bold text-charcoal">
                   <span>Total</span>
                   <span>{formatDKK(total)}</span>
                 </div>
@@ -319,52 +320,57 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
           {/* ── Right column (~1/3) ─────────────────────────────────── */}
           <div className="space-y-6">
             {/* Customer info card */}
-            <div className="rounded-xl border border-stone-200 bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-sand bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray">
                 Kunde
               </h2>
               {customer ? (
                 <dl className="space-y-1 text-sm">
                   {customer.name && (
                     <div className="flex gap-2">
-                      <dt className="w-20 shrink-0 text-stone-500">Navn</dt>
-                      <dd className="font-medium text-stone-800">{customer.name}</dd>
+                      <dt className="w-20 shrink-0 text-gray">Navn</dt>
+                      <dd>
+                        <Link href={`/admin/kunder?search=${encodeURIComponent(customer.email || "")}`}
+                          className="font-bold text-charcoal hover:text-green-eco hover:underline">
+                          {customer.name}
+                        </Link>
+                      </dd>
                     </div>
                   )}
                   {customer.email && (
                     <div className="flex gap-2">
-                      <dt className="w-20 shrink-0 text-stone-500">Email</dt>
-                      <dd className="font-medium text-stone-800 break-all">{customer.email}</dd>
+                      <dt className="w-20 shrink-0 text-gray">Email</dt>
+                      <dd className="font-medium text-charcoal break-all">{customer.email}</dd>
                     </div>
                   )}
                   {customer.phone && (
                     <div className="flex gap-2">
-                      <dt className="w-20 shrink-0 text-stone-500">Telefon</dt>
-                      <dd className="font-medium text-stone-800">{customer.phone}</dd>
+                      <dt className="w-20 shrink-0 text-gray">Telefon</dt>
+                      <dd className="font-medium text-charcoal">{customer.phone}</dd>
                     </div>
                   )}
                 </dl>
               ) : (
-                <p className="text-sm text-stone-400">Ingen kundeoplysninger</p>
+                <p className="text-sm text-gray">Ingen kundeoplysninger</p>
               )}
             </div>
 
             {/* Shipping address card */}
-            <div className="rounded-xl border border-stone-200 bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-sand bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray">
                 Leveringsadresse
               </h2>
               <dl className="space-y-1 text-sm">
                 <div className="flex gap-2">
-                  <dt className="w-20 shrink-0 text-stone-500">Metode</dt>
-                  <dd className="font-medium text-stone-800">
+                  <dt className="w-20 shrink-0 text-gray">Metode</dt>
+                  <dd className="font-medium text-charcoal">
                     {shippingLabel(order.shipping_method ?? "")}
                   </dd>
                 </div>
                 {addr.line1 && (
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-stone-500">Adresse</dt>
-                    <dd className="font-medium text-stone-800">
+                    <dt className="w-20 shrink-0 text-gray">Adresse</dt>
+                    <dd className="font-medium text-charcoal">
                       {addr.line1}
                       {addr.line2 ? `, ${addr.line2}` : ""},{" "}
                       {addr.postal_code} {addr.city}
@@ -373,16 +379,16 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                 )}
                 {pickupPoint && (
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-stone-500">Udlevering</dt>
-                    <dd className="font-medium text-stone-800">
+                    <dt className="w-20 shrink-0 text-gray">Udlevering</dt>
+                    <dd className="font-medium text-charcoal">
                       {pickupPoint.name ?? ""} – {pickupPoint.address ?? ""}
                     </dd>
                   </div>
                 )}
                 {order.tracking_number && (
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-stone-500">Tracking</dt>
-                    <dd className="font-mono font-medium text-stone-800">
+                    <dt className="w-20 shrink-0 text-gray">Tracking</dt>
+                    <dd className="font-mono font-medium text-charcoal">
                       {order.tracking_number}
                     </dd>
                   </div>
@@ -391,16 +397,16 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
             </div>
 
             {/* Internal notes — auto-saves on blur */}
-            <div className="rounded-xl border border-stone-200 bg-white p-5">
+            <div className="rounded-xl border border-sand bg-white p-5">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray">
                   Interne noter
                 </h2>
                 {notesSaving && (
-                  <span className="text-xs text-stone-400">Gemmer…</span>
+                  <span className="text-xs text-gray">Gemmer…</span>
                 )}
                 {notesSaved && !notesSaving && (
-                  <span className="text-xs text-green-600">Gemt</span>
+                  <span className="text-xs text-green-eco">Gemt</span>
                 )}
               </div>
               <textarea
@@ -409,48 +415,48 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                 onBlur={handleNotesBlur}
                 rows={4}
                 placeholder="Interne noter, kun synlige for admin…"
-                className="w-full resize-none rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full resize-none rounded-lg border border-sand bg-cream px-3 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:bg-white focus:outline-none focus:ring-1 focus:ring-green-eco"
               />
             </div>
 
             {/* Order metadata */}
-            <div className="rounded-xl border border-stone-200 bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-sand bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray">
                 Ordreinfo
               </h2>
               <dl className="space-y-1 text-sm">
                 <div className="flex justify-between gap-2">
-                  <dt className="text-stone-500">Ordrenummer</dt>
-                  <dd className="font-mono font-medium text-stone-800">{order.order_number}</dd>
+                  <dt className="text-gray">Ordrenummer</dt>
+                  <dd className="font-mono font-medium text-charcoal">{order.order_number}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-stone-500">Type</dt>
-                  <dd className="font-medium text-stone-800">
+                  <dt className="text-gray">Type</dt>
+                  <dd className="font-medium text-charcoal">
                     {ORDER_TYPE_LABELS[order.type] ?? order.type}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-stone-500">Oprettet</dt>
-                  <dd className="font-medium text-stone-800">{formatDate(order.created_at)}</dd>
+                  <dt className="text-gray">Oprettet</dt>
+                  <dd className="font-medium text-charcoal">{formatDate(order.created_at)}</dd>
                 </div>
                 {order.confirmed_at && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-stone-500">Bekræftet</dt>
-                    <dd className="font-medium text-stone-800">{formatDate(order.confirmed_at)}</dd>
+                    <dt className="text-gray">Bekræftet</dt>
+                    <dd className="font-medium text-charcoal">{formatDate(order.confirmed_at)}</dd>
                   </div>
                 )}
                 {order.is_b2b && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-stone-500">Erhverv</dt>
-                    <dd className="font-medium text-stone-800">Ja</dd>
+                    <dt className="text-gray">Erhverv</dt>
+                    <dd className="font-medium text-charcoal">Ja</dd>
                   </div>
                 )}
               </dl>
             </div>
 
             {/* Actions dropdown */}
-            <div className="rounded-xl border border-stone-200 bg-white p-5">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-sand bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray">
                 Handlinger
               </h2>
               <div className="space-y-2">
@@ -458,7 +464,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                   href={`/admin/platform/orders/${order.id}/faktura`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light hover:bg-cream"
                 >
                   Print faktura
                 </a>
@@ -466,7 +472,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                   href={`/api/pos/packing-slip?order_id=${order.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light hover:bg-cream"
                 >
                   Print packing slip
                 </a>
@@ -483,8 +489,8 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
 
             {/* Warranties */}
             {warranties.length > 0 && (
-              <div className="rounded-xl border border-stone-200 bg-white p-5">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
+              <div className="rounded-xl border border-sand bg-white p-5">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray">
                   Garantibeviser
                 </h2>
                 <div className="space-y-2">
@@ -501,18 +507,18 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                       ? "text-red-600"
                       : w.status === "claimed"
                         ? "text-amber-600"
-                        : "text-green-600";
+                        : "text-green-eco";
 
                     return (
                       <div
                         key={w.id}
-                        className="flex items-center justify-between rounded-lg border border-stone-100 p-3"
+                        className="flex items-center justify-between rounded-lg border border-sand/50 p-3"
                       >
                         <div>
-                          <p className="text-sm font-medium text-stone-800">
+                          <p className="text-sm font-medium text-charcoal">
                             {w.guarantee_number}
                           </p>
-                          <p className="text-xs text-stone-500">{deviceName}</p>
+                          <p className="text-xs text-gray">{deviceName}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-medium ${statusColor}`}>
@@ -523,7 +529,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                               href={w.pdf_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+                              className="rounded-lg border border-sand px-3 py-1.5 text-xs font-medium text-charcoal-light hover:bg-cream"
                             >
                               PDF
                             </a>

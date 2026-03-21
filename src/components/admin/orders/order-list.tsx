@@ -81,7 +81,7 @@ function TypeBadge({ type }: { type: string }) {
     draft:   { label: "Kladde",  cls: "bg-cream text-gray" },
     shopify: { label: "Shopify", cls: "bg-green-100 text-green-700" },
   };
-  const cfg = map[type] ?? { label: type, cls: "bg-stone-100 text-stone-600" };
+  const cfg = map[type] ?? { label: type, cls: "bg-cream text-charcoal-light" };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${cfg.cls}`}>
       {cfg.label}

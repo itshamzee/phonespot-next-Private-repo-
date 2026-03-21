@@ -86,7 +86,7 @@ export function OrderStatusActions({
         <button
           onClick={() => patchStatus("confirmed")}
           disabled={loading !== null}
-          className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
         >
           {loading === "confirmed" ? "Behandler…" : "Bekræft ordre"}
         </button>
@@ -96,7 +96,7 @@ export function OrderStatusActions({
         <button
           onClick={createShipment}
           disabled={loading !== null}
-          className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
         >
           {loading === "shipment" ? "Opretter forsendelse…" : "Opret forsendelse"}
         </button>
@@ -106,7 +106,7 @@ export function OrderStatusActions({
         <button
           onClick={() => patchStatus("picked_up")}
           disabled={loading !== null}
-          className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
         >
           {loading === "picked_up" ? "Behandler…" : "Marker som afhentet"}
         </button>
@@ -116,7 +116,7 @@ export function OrderStatusActions({
         <button
           onClick={() => patchStatus("delivered")}
           disabled={loading !== null}
-          className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
         >
           {loading === "delivered" ? "Behandler…" : "Marker som leveret"}
         </button>
@@ -137,7 +137,7 @@ export function OrderStatusActions({
         <button
           onClick={() => patchStatus("cancelled")}
           disabled={loading !== null}
-          className="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+          className="w-full rounded-lg border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light hover:bg-cream disabled:opacity-50"
         >
           {loading === "cancelled" ? "Annullerer…" : "Annuller"}
         </button>
@@ -145,9 +145,9 @@ export function OrderStatusActions({
 
       {/* Tracking number display */}
       {trackingNumber && (
-        <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm">
-          <p className="text-xs text-stone-500">Trackingnummer</p>
-          <p className="mt-0.5 font-mono font-medium text-stone-800">{trackingNumber}</p>
+        <div className="rounded-lg border border-sand bg-cream px-3 py-2 text-sm">
+          <p className="text-xs text-gray">Trackingnummer</p>
+          <p className="mt-0.5 font-mono font-medium text-charcoal">{trackingNumber}</p>
         </div>
       )}
 
