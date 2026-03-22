@@ -1,6 +1,35 @@
 import { NextResponse } from "next/server";
-import { bulkCreateAccessories } from "@/lib/supabase/accessories";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Accessory } from "@/lib/supabase/platform-types";
+
+// Maps display-value category labels (from opret form) to DB subcategory values
+const CATEGORY_DISPLAY_TO_DB: Record<string, string> = {
+  Cover: "cover",
+  Skaermbeskyttelse: "screen_protector",
+  Oplader: "charger",
+  Kabel: "cable",
+  Lyd: "audio",
+  Andet: "other",
+  // Also accept already-correct DB values (lowercase)
+  cover: "cover",
+  screen_protector: "screen_protector",
+  charger: "charger",
+  cable: "cable",
+  audio: "audio",
+  other: "other",
+};
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[æ]/g, "ae")
+    .replace(/[ø]/g, "oe")
+    .replace(/[å]/g, "aa")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -14,46 +43,95 @@ export async function POST(request: Request) {
     name_pattern,
     category,
     brand,
+    // New opret form sends "devices" and "price_oere" / "cost_price_oere" / "image_urls"
+    // Old bulk form sends "models" and "price" / "cost_price" / "image_url"
     models,
+    devices,
     price,
+    price_oere,
     cost_price,
+    cost_price_oere,
     image_url,
+    image_urls,
     description,
-    online_stock,
-    store_stock,
-    store_id,
+    ean,
   } = body;
 
-  if (!name_pattern || !category || !Array.isArray(models) || models.length === 0) {
+  if (!name_pattern || !category) {
     return NextResponse.json(
-      { error: "name_pattern, category og models (array) er påkrævet" },
+      { error: "name_pattern og category er påkrævet" },
       { status: 400 }
     );
   }
 
-  if (price === undefined || cost_price === undefined || !store_id) {
+  // Resolve field aliases between old and new form formats
+  const resolvedModels: string[] = Array.isArray(models)
+    ? (models as string[])
+    : Array.isArray(devices)
+    ? (devices as string[])
+    : [];
+  const resolvedPrice = price_oere !== undefined
+    ? Number(price_oere)
+    : price !== undefined
+    ? Number(price)
+    : 0;
+  const resolvedCostPrice = cost_price_oere !== undefined
+    ? Number(cost_price_oere)
+    : cost_price !== undefined
+    ? Number(cost_price)
+    : 0;
+  const resolvedImageUrl = Array.isArray(image_urls) && (image_urls as string[]).length > 0
+    ? String((image_urls as string[])[0])
+    : image_url
+    ? String(image_url)
+    : null;
+
+  // Map display category label to DB subcategory value
+  const dbCategory = CATEGORY_DISPLAY_TO_DB[String(category)];
+  if (!dbCategory) {
     return NextResponse.json(
-      { error: "price, cost_price og store_id er påkrævet" },
+      {
+        error: `Ukendt kategori: ${category}. Gyldige: ${Object.keys(CATEGORY_DISPLAY_TO_DB).filter(k => k === k.toLowerCase() || k[0] === k[0].toUpperCase()).join(", ")}`,
+      },
       { status: 400 }
     );
   }
+
+  const supabase = createAdminClient();
 
   try {
-    const accessories = await bulkCreateAccessories({
-      name_pattern: String(name_pattern),
-      category: category as Accessory["category"],
-      brand: brand ? String(brand) : null,
-      models: models as string[],
-      price: Number(price),
-      cost_price: Number(cost_price),
-      image_url: image_url ? String(image_url) : null,
-      description: description ? String(description) : null,
-      online_stock: online_stock !== undefined ? Number(online_stock) : 0,
-      store_stock: store_stock !== undefined ? Number(store_stock) : 0,
-      store_id: String(store_id),
+    // Build one sku_product row per device/model (or one generic row if none specified)
+    const targets = resolvedModels.length > 0 ? resolvedModels : [null];
+
+    const rows = targets.map((model) => {
+      const name = model
+        ? String(name_pattern).replace(/\{model\}/gi, model)
+        : String(name_pattern);
+      return {
+        title: name,
+        slug: slugify(name),
+        category: "accessory" as const,
+        subcategory: dbCategory as Accessory["category"],
+        brand: brand ? String(brand) : null,
+        selling_price: resolvedPrice,
+        cost_price: resolvedCostPrice,
+        ean: ean ? String(ean) : null,
+        images: resolvedImageUrl ? [resolvedImageUrl] : [],
+        description: description ? String(description) : null,
+        status: "published" as const,
+        is_active: true,
+      };
     });
+
+    const { data, error } = await supabase
+      .from("sku_products")
+      .insert(rows)
+      .select("id, title, slug");
+
+    if (error) throw error;
+
     return NextResponse.json(
-      { created: accessories.length, accessories },
+      { count: data?.length ?? 0, created: data?.length ?? 0, accessories: data ?? [] },
       { status: 201 }
     );
   } catch (err) {
