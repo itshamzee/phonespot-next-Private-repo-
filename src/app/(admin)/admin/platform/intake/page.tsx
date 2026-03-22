@@ -291,7 +291,7 @@ export default function QuickAddPage() {
             </svg>
           </div>
 
-          <h2 className="font-display text-xl font-bold text-stone-800">Tilføjet til salg!</h2>
+          <h2 className="font-display text-xl font-bold text-stone-800">{directToSale ? "Tilføjet til salg!" : "Tilføjet til intake!"}</h2>
           <p className="mt-2 text-sm text-stone-600">{success.name}</p>
           <p className="mt-1 font-mono text-xs text-stone-400">{success.barcode}</p>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SLUG_TO_ACCESSORY_CATEGORIES } from "@/lib/tilbehoer-config";
+import { SLUG_TO_ACCESSORY_CATEGORIES, ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
     id: p.id,
     name: p.title,
     slug: p.slug ?? p.id,
-    category: p.subcategory ?? "other",
+    category: ACCESSORY_CATEGORY_TO_SLUG[p.subcategory] ?? p.subcategory ?? "other",
     brand: p.brand,
     compatible_models: [],
     price: p.selling_price ?? 0,

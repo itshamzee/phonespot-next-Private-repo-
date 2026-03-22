@@ -145,6 +145,7 @@ export default function ProductsPage() {
           product={editSku}
           onSave={handleBack}
           onCancel={handleBack}
+          lockedCategory="accessory"
         />
       )}
     </div>

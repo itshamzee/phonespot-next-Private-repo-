@@ -47,6 +47,7 @@ async function getAccessoryCount(categorySlug: string): Promise<number> {
       .from("sku_products")
       .select("id", { count: "exact", head: true })
       .eq("status", "published")
+      .eq("is_active", true)
       .eq("category", "accessory")
       .in("subcategory", dbCategories);
 

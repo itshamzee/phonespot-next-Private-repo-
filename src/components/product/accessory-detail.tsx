@@ -18,6 +18,7 @@ export interface CrossSellProduct {
   sale_price: number | null;
   images: string[];
   category: string | null;
+  subcategory?: string | null;
 }
 
 type AccessoryDetailProps = {
@@ -44,16 +45,16 @@ function formatDKK(oere: number): string {
 const ATTRIBUTE_LABELS: Record<string, string> = {
   connector_type: "Stik-type",
   case_type: "Type",
-  length: "Laengde",
+  length: "Længde",
   width: "Bredde",
   material: "Materiale",
   color: "Farve",
   wattage: "Watt",
   compatibility: "Kompatibel med",
-  weight: "Vaegt",
-  dimensions: "Maal",
-  cable_length: "Kabellengde",
-  screen_size: "Skaermstorrelse",
+  weight: "Vægt",
+  dimensions: "Mål",
+  cable_length: "Kabellængde",
+  screen_size: "Skærmstørrelse",
   protection_level: "Beskyttelsesniveau",
 };
 
@@ -87,7 +88,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
     return (
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="text-sm font-medium text-green-700">Pa lager</span>
+        <span className="text-sm font-medium text-green-700">På lager</span>
       </div>
     );
   }
@@ -104,7 +105,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-amber-400" />
         <span className="text-sm font-medium text-amber-700">
-          Kun {quantity} pa lager
+          Kun {quantity} på lager
         </span>
       </div>
     );
@@ -112,7 +113,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="h-2 w-2 rounded-full bg-green-500" />
-      <span className="text-sm font-medium text-green-700">Pa lager</span>
+      <span className="text-sm font-medium text-green-700">På lager</span>
     </div>
   );
 }
@@ -224,7 +225,7 @@ function AddToCartButton({
   effectivePrice,
   disabled = false,
   fullWidth = true,
-  label = "Tilfoj til kurv",
+  label = "Tilføj til kurv",
 }: {
   product: SkuProduct;
   effectivePrice: number;
@@ -338,7 +339,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
         onClick={handleAdd}
         className="mt-3 w-full rounded-full border-2 border-green-eco bg-white px-4 py-2 text-sm font-bold text-green-eco transition-colors hover:bg-green-eco hover:text-white"
       >
-        Tilfoj
+        Tilføj
       </button>
     </div>
   );
@@ -392,7 +393,7 @@ function StickyMobileCta({
           product={product}
           effectivePrice={effectivePrice}
           fullWidth={false}
-          label="Tilfoj til kurv"
+          label="Tilføj til kurv"
         />
       </div>
     </div>
@@ -681,8 +682,8 @@ export function AccessoryDetail({
         <section className="rounded-2xl bg-green-eco/5 border border-green-eco/20 p-6">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { icon: "🛡️", title: "36 mdr. garanti", sub: "Pa alle produkter" },
-              { icon: "↩️", title: "14 dages returret", sub: "Ingen sporgsmal" },
+              { icon: "🛡️", title: "36 mdr. garanti", sub: "På alle produkter" },
+              { icon: "↩️", title: "14 dages returret", sub: "Ingen spørgsmål" },
               { icon: "🚚", title: "1-2 dages levering", sub: "Fri fragt over 499 kr." },
               { icon: "✅", title: "30+ kvalitetstests", sub: "Kun topkvalitet" },
             ].map((usp) => (

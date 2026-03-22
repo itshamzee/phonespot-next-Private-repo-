@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/platform/activity-log";
 
 export async function GET(request: NextRequest) {
@@ -61,15 +62,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { title, description, ean, product_number, cost_price, selling_price, sale_price, brand, category, subcategory, supplier_id, images, _actorId } = body;
+  const {
+    title, description, ean, product_number, cost_price, selling_price, sale_price,
+    brand, category, subcategory, supplier_id, images, _actorId,
+    slug, short_description, meta_title, meta_description,
+    status, always_in_stock, attributes, variants, barcode,
+  } = body;
 
   if (!title || !selling_price) {
     return NextResponse.json({ error: "title and selling_price are required" }, { status: 400 });
   }
 
-  const supabase = createServerClient();
+  const supabase = createAdminClient();
 
-  // Check for duplicates by EAN or product_number
+  // Check for duplicates by EAN or barcode
   const duplicateChecks = [];
   if (body.ean) {
     duplicateChecks.push(
@@ -78,17 +84,17 @@ export async function POST(request: Request) {
   } else {
     duplicateChecks.push(Promise.resolve({ data: null }));
   }
-  if (body.product_number) {
+  if (body.barcode) {
     duplicateChecks.push(
-      supabase.from("sku_products").select("id, title").eq("product_number", body.product_number).maybeSingle()
+      supabase.from("sku_products").select("id, title").eq("barcode", body.barcode).maybeSingle()
     );
   } else {
     duplicateChecks.push(Promise.resolve({ data: null }));
   }
 
-  const [eanResult, pnResult] = await Promise.all(duplicateChecks);
+  const [eanResult, barcodeResult] = await Promise.all(duplicateChecks);
 
-  const duplicate = eanResult.data || pnResult.data;
+  const duplicate = eanResult.data || barcodeResult.data;
   if (duplicate) {
     return NextResponse.json(
       { error: `Produkt findes allerede: "${duplicate.title}" (ID: ${duplicate.id})` },
@@ -111,6 +117,15 @@ export async function POST(request: Request) {
       subcategory: subcategory ?? null,
       supplier_id: supplier_id ?? null,
       images: images ?? [],
+      slug: slug ?? null,
+      short_description: short_description ?? null,
+      meta_title: meta_title ?? null,
+      meta_description: meta_description ?? null,
+      status: status ?? "draft",
+      always_in_stock: always_in_stock ?? false,
+      attributes: attributes ?? {},
+      variants: variants ?? [],
+      barcode: barcode ?? null,
     })
     .select()
     .single();

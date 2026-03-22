@@ -18,6 +18,7 @@ const quickAddSchema = z.object({
   battery_health: z.number().int().min(0).max(100).optional(),
   condition_notes: z.string().optional(),
   vat_scheme: z.enum(["brugtmoms", "regular"]).default("brugtmoms"),
+  status: z.enum(["listed", "intake"]).default("listed"),
 });
 
 export async function POST(request: Request) {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
       condition_notes: data.condition_notes || null,
       vat_scheme: data.vat_scheme,
       barcode,
-      status: "listed",
+      status: data.status,
       purchased_at: now.toISOString(),
       listed_at: now.toISOString(),
     })

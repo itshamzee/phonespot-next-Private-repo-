@@ -815,24 +815,26 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                   {Array.from(stockMap.values()).reduce((a, b) => a + b, 0)} stk
                 </span>
               </div>
-
-              {/* Always in stock toggle */}
-              <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-stone-100 bg-stone-50 px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={form.always_in_stock}
-                  onChange={(e) => set("always_in_stock", e.target.checked)}
-                  className="h-4 w-4 rounded border-stone-300 accent-green-600"
-                />
-                <div>
-                  <p className="text-sm font-medium text-stone-700">Altid på lager (drop-ship)</p>
-                  <p className="text-xs text-stone-400">Lagertjek springes over ved checkout — bruges til drop-ship og print-on-demand</p>
-                </div>
-              </label>
             </>
           )}
         </section>
       )}
+
+      {/* Always in stock toggle — visible in both create and edit mode */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <label className="flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            checked={form.always_in_stock}
+            onChange={(e) => set("always_in_stock", e.target.checked)}
+            className="h-4 w-4 rounded border-stone-300 accent-green-600"
+          />
+          <div>
+            <p className="text-sm font-medium text-stone-700">Altid på lager (drop-ship)</p>
+            <p className="text-xs text-stone-400">Lagertjek springes over ved checkout — bruges til drop-ship og print-on-demand</p>
+          </div>
+        </label>
+      </section>
 
       {/* Section 7: Beskrivelse */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">

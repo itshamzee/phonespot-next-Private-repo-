@@ -180,7 +180,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
       if (siblingProducts) {
         // Prefer opposite category, then any sibling
         const filtered = (siblingProducts as CrossSellProduct[]).filter(
-          (p) => p.category === crossSellCategory,
+          (p) => p.subcategory === crossSellCategory,
         );
         crossSellProducts = (filtered.length > 0 ? filtered : siblingProducts as CrossSellProduct[]).slice(0, 3);
       }
@@ -195,7 +195,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
-      { "@type": "ListItem", position: 2, name: "Tilbehoer", item: "https://phonespot.dk/tilbehoer" },
+      { "@type": "ListItem", position: 2, name: "Tilbehør", item: "https://phonespot.dk/tilbehoer" },
       {
         "@type": "ListItem",
         position: 3,
@@ -234,13 +234,6 @@ export default async function AccessoryDetailPage({ params }: Props) {
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
       warranty: "36 maneders garanti",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.4",
-      reviewCount: "127",
-      bestRating: "5",
-      worstRating: "1",
-    },
   };
 
   return (
@@ -256,7 +249,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           </Link>
           <span aria-hidden="true">/</span>
           <Link href="/tilbehoer" className="hover:text-charcoal transition-colors">
-            Tilbehoer
+            Tilbehør
           </Link>
           <span aria-hidden="true">/</span>
           <Link href={`/tilbehoer/${category}`} className="hover:text-charcoal transition-colors">
