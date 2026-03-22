@@ -125,6 +125,9 @@ export default function DeviceDetailPage() {
   const [sellingPriceInput, setSellingPriceInput] = useState<string>("");
   const [status, setStatus] = useState<string>("");
 
+  const [locationId, setLocationId] = useState<string>("");
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -161,6 +164,12 @@ export default function DeviceDetailPage() {
           : ""
       );
       setStatus(dev.status);
+      setLocationId(dev.location?.id ?? "");
+
+      // Fetch locations for dropdown
+      fetch("/api/platform/locations").then(r => r.json()).then(data => {
+        if (Array.isArray(data)) setLocations(data);
+      }).catch(() => {});
 
       if (transferRes.ok) {
         const tList: Transfer[] = await transferRes.json();
@@ -189,6 +198,7 @@ export default function DeviceDetailPage() {
       if (batteryHealth !== "") body.battery_health = parseInt(batteryHealth, 10);
       if (conditionNotes !== "") body.condition_notes = conditionNotes;
       if (status) body.status = status;
+      if (locationId) body.location_id = locationId;
       const parsedPrice = parseDKKToOere(sellingPriceInput);
       if (parsedPrice !== null) body.selling_price = parsedPrice;
 
@@ -431,6 +441,33 @@ export default function DeviceDetailPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  Lokation
+                </label>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                >
+                  <option value="">Vælg lokation…</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* IMEI / Serial */}
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  IMEI / Serienummer
+                </label>
+                <p className="mt-0.5 text-sm text-stone-600 font-mono">
+                  {device.imei || device.serial_number || <span className="text-stone-300">Ikke registreret</span>}
+                </p>
               </div>
 
               {/* Condition notes (full width) */}
