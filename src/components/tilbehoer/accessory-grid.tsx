@@ -12,12 +12,48 @@ import { AccessoryCard } from "./accessory-card";
 interface Filters {
   search: string;
   category: string;
-  brand: string;
   model: string;
   inStore: boolean;
 }
 
+interface PriceRange {
+  label: string;
+  min: number;
+  max: number;
+}
+
 type SortOption = "recommended" | "price-asc" | "price-desc" | "newest";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const PRICE_RANGES: PriceRange[] = [
+  { label: "Under 100 kr", min: 0, max: 9999 },
+  { label: "100–299 kr", min: 10000, max: 29999 },
+  { label: "300–499 kr", min: 30000, max: 49999 },
+  { label: "500+ kr", min: 50000, max: Infinity },
+];
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "recommended", label: "Anbefalet" },
+  { value: "price-asc", label: "Pris: Lav → Høj" },
+  { value: "price-desc", label: "Pris: Høj → Lav" },
+  { value: "newest", label: "Nyeste" },
+];
+
+const POPULAR_MODELS = [
+  "iPhone 16",
+  "iPhone 15",
+  "iPhone 14",
+  "iPhone 13",
+  "Samsung S25",
+  "Samsung S24",
+  "Samsung A55",
+  "Samsung A35",
+];
+
+const LS_DEVICE_KEY = "phonespot_device";
 
 // ---------------------------------------------------------------------------
 // Helper — debounce hook
@@ -33,7 +69,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // ---------------------------------------------------------------------------
-// Filter chips for categories
+// Category chips
 // ---------------------------------------------------------------------------
 
 function CategoryChips({
@@ -73,88 +109,29 @@ function CategoryChips({
 }
 
 // ---------------------------------------------------------------------------
-// Brand select
+// Removable active filter chip
 // ---------------------------------------------------------------------------
 
-function BrandSelect({
-  brands,
-  value,
-  onChange,
+function ActiveChip({
+  label,
+  onRemove,
 }: {
-  brands: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  if (brands.length === 0) return null;
-
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="appearance-none rounded-full border border-sand bg-white py-2 pl-4 pr-10 text-sm font-semibold text-charcoal focus:border-green-eco focus:outline-none"
-      >
-        <option value="">Alle brands</option>
-        {brands.map((b) => (
-          <option key={b} value={b}>
-            {b}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 text-charcoal/40"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Sort select
-// ---------------------------------------------------------------------------
-
-function SortSelect({
-  value,
-  onChange,
-}: {
-  value: SortOption;
-  onChange: (v: SortOption) => void;
+  label: string;
+  onRemove: () => void;
 }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as SortOption)}
-        className="appearance-none rounded-full border border-sand bg-white py-2 pl-4 pr-10 text-sm font-semibold text-charcoal focus:border-green-eco focus:outline-none"
+    <span className="flex items-center gap-1.5 rounded-full bg-green-eco/10 px-3 py-1.5 text-sm font-medium text-green-eco">
+      {label}
+      <button
+        onClick={onRemove}
+        aria-label={`Fjern filter: ${label}`}
+        className="flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-green-eco/20"
       >
-        <option value="recommended">Anbefalet</option>
-        <option value="price-asc">Pris: Lav til Høj</option>
-        <option value="price-desc">Pris: Høj til Lav</option>
-        <option value="newest">Nyeste</option>
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-        <svg
-          viewBox="0 0 16 16"
-          fill="currentColor"
-          className="h-4 w-4 text-charcoal/40"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-            clipRule="evenodd"
-          />
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+          <path d="M4.22 4.22a.75.75 0 0 1 1.06 0L8 6.94l2.72-2.72a.75.75 0 1 1 1.06 1.06L9.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L8 9.06l-2.72 2.72a.75.75 0 0 1-1.06-1.06L6.94 8 4.22 5.28a.75.75 0 0 1 0-1.06Z" />
         </svg>
-      </div>
-    </div>
+      </button>
+    </span>
   );
 }
 
@@ -166,7 +143,7 @@ function SkeletonCard() {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-sand bg-white">
       <div className="aspect-square animate-pulse bg-cream" />
-      <div className="p-4 space-y-2">
+      <div className="space-y-2 p-4">
         <div className="h-3 w-16 animate-pulse rounded-full bg-sand" />
         <div className="h-4 w-full animate-pulse rounded-full bg-sand" />
         <div className="h-4 w-2/3 animate-pulse rounded-full bg-sand" />
@@ -185,17 +162,27 @@ interface AccessoryGridProps {
   initialCategory?: string;
 }
 
-const LS_DEVICE_KEY = "phonespot_device";
-
-export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridProps = {}) {
+export function AccessoryGrid({
+  externalModel,
+  initialCategory,
+}: AccessoryGridProps = {}) {
+  // API-level filters — changes trigger a re-fetch
   const [filters, setFilters] = useState<Filters>({
     search: "",
     category: initialCategory ?? "",
-    brand: "",
     model: externalModel ?? "",
     inStore: false,
   });
+
+  // Client-side filters — applied after fetch, no re-fetch
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedPriceRange, setSelectedPriceRange] =
+    useState<PriceRange | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
+
+  // Mobile filter drawer
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
   const [products, setProducts] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,9 +199,9 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
         setFilters((prev) => ({ ...prev, model: saved }));
       }
     } catch {
-      // localStorage unavailable (SSR or private mode)
+      // localStorage unavailable (SSR / private mode)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync external model prop changes
@@ -226,7 +213,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
 
   // Persist selected model to localStorage
   useEffect(() => {
-    if (externalModel !== undefined) return; // managed externally
+    if (externalModel !== undefined) return;
     try {
       if (filters.model) {
         localStorage.setItem(LS_DEVICE_KEY, filters.model);
@@ -238,7 +225,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
     }
   }, [filters.model, externalModel]);
 
-  // Derive available brand list from currently loaded products before brand filter
+  // Derive available brand list from currently loaded products
   const availableBrands = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => {
@@ -247,8 +234,8 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
     return Array.from(set).sort((a, b) => a.localeCompare(b, "da"));
   }, [products]);
 
+  // Fetch from API when API-level filters change
   useEffect(() => {
-    // Abort any in-flight request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -258,7 +245,6 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
 
     const params = new URLSearchParams();
     if (filters.category) params.set("category", filters.category);
-    if (filters.brand) params.set("brand", filters.brand);
     if (filters.model) params.set("model", filters.model);
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (filters.inStore) params.set("inStore", "true");
@@ -276,61 +262,180 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
       })
       .catch((err: unknown) => {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError(
-          err instanceof Error ? err.message : "Noget gik galt"
-        );
+        setError(err instanceof Error ? err.message : "Noget gik galt");
         setLoading(false);
       });
 
     return () => controller.abort();
-  }, [filters.category, filters.brand, filters.model, debouncedSearch, filters.inStore]);
+  }, [filters.category, filters.model, debouncedSearch, filters.inStore]);
+
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    document.body.style.overflow = filterDrawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [filterDrawerOpen]);
 
   function setFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Client-side sorting
-  const sortedProducts = useMemo(() => {
-    const sorted = [...products];
+  function clearAll() {
+    setFilters({ search: "", category: "", model: "", inStore: false });
+    setSelectedBrand("");
+    setSelectedPriceRange(null);
+    setSortBy("recommended");
+  }
+
+  // Client-side: brand + price filter + sort
+  const displayedProducts = useMemo(() => {
+    let result = products;
+
+    if (selectedBrand) {
+      result = result.filter(
+        (p) => p.brand?.toLowerCase() === selectedBrand.toLowerCase()
+      );
+    }
+
+    if (selectedPriceRange) {
+      const { min, max } = selectedPriceRange;
+      result = result.filter((p) => {
+        const price =
+          p.sale_price != null && p.sale_price < p.price
+            ? p.sale_price
+            : p.price;
+        return price >= min && price <= max;
+      });
+    }
+
+    const copy = [...result];
     switch (sortBy) {
       case "price-asc":
-        return sorted.sort((a, b) => {
-          const aPrice = a.sale_price != null && a.sale_price < a.price ? a.sale_price : a.price;
-          const bPrice = b.sale_price != null && b.sale_price < b.price ? b.sale_price : b.price;
-          return aPrice - bPrice;
+        return copy.sort((a, b) => {
+          const ap =
+            a.sale_price != null && a.sale_price < a.price
+              ? a.sale_price
+              : a.price;
+          const bp =
+            b.sale_price != null && b.sale_price < b.price
+              ? b.sale_price
+              : b.price;
+          return ap - bp;
         });
       case "price-desc":
-        return sorted.sort((a, b) => {
-          const aPrice = a.sale_price != null && a.sale_price < a.price ? a.sale_price : a.price;
-          const bPrice = b.sale_price != null && b.sale_price < b.price ? b.sale_price : b.price;
-          return bPrice - aPrice;
+        return copy.sort((a, b) => {
+          const ap =
+            a.sale_price != null && a.sale_price < a.price
+              ? a.sale_price
+              : a.price;
+          const bp =
+            b.sale_price != null && b.sale_price < b.price
+              ? b.sale_price
+              : b.price;
+          return bp - ap;
         });
       case "newest":
-        return sorted.sort(
+        return copy.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
       default:
-        return sorted; // "recommended" — keep API order
+        return copy; // "recommended" — keep API order
     }
-  }, [products, sortBy]);
+  }, [products, selectedBrand, selectedPriceRange, sortBy]);
+
+  const filteredCount = displayedProducts.length;
 
   const activeFilterCount = [
     filters.category !== "",
-    filters.brand !== "",
     filters.model !== "",
     filters.inStore,
     debouncedSearch !== "",
+    selectedBrand !== "",
+    selectedPriceRange !== null,
   ].filter(Boolean).length;
 
-  const POPULAR_MODELS = [
-    "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13",
-    "Samsung S25", "Samsung S24", "Samsung A55", "Samsung A35",
-  ];
+  // ---------------------------------------------------------------------------
+  // Shared UI fragments (used in both desktop bar and mobile drawer)
+  // ---------------------------------------------------------------------------
+
+  const brandChips = (
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => setSelectedBrand("")}
+        className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+          selectedBrand === ""
+            ? "bg-charcoal text-white"
+            : "border border-sand text-charcoal hover:border-charcoal/40"
+        }`}
+      >
+        Alle
+      </button>
+      {availableBrands.slice(0, 8).map((brand) => (
+        <button
+          key={brand}
+          onClick={() =>
+            setSelectedBrand((prev) => (prev === brand ? "" : brand))
+          }
+          className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+            selectedBrand === brand
+              ? "bg-charcoal text-white"
+              : "border border-sand text-charcoal hover:border-charcoal/40"
+          }`}
+        >
+          {brand}
+        </button>
+      ))}
+    </div>
+  );
+
+  const priceChips = (
+    <div className="flex flex-wrap gap-2">
+      {PRICE_RANGES.map((range) => {
+        const isActive = selectedPriceRange?.label === range.label;
+        return (
+          <button
+            key={range.label}
+            onClick={() =>
+              setSelectedPriceRange((prev) =>
+                prev?.label === range.label ? null : range
+              )
+            }
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+              isActive
+                ? "bg-charcoal text-white"
+                : "border border-sand text-charcoal hover:border-charcoal/40"
+            }`}
+          >
+            {range.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const sortSelect = (
+    <select
+      value={sortBy}
+      onChange={(e) => setSortBy(e.target.value as SortOption)}
+      className="rounded-lg border border-sand bg-white px-3 py-1.5 text-sm text-charcoal focus:border-green-eco focus:outline-none"
+    >
+      {SORT_OPTIONS.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="space-y-6">
-      {/* Model filter — only shown when no external picker */}
+      {/* Model finder — only shown when no external picker */}
       {externalModel === undefined && (
         <div className="rounded-2xl border border-sand bg-cream p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-charcoal/50">
@@ -338,7 +443,13 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
           </p>
           <div className="relative mb-3">
             <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4 text-charcoal/40">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-4 w-4 text-charcoal/40"
+              >
                 <rect x="7" y="2" width="10" height="20" rx="2" />
                 <circle cx="12" cy="18" r="1" />
               </svg>
@@ -355,8 +466,18 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
                 onClick={() => setFilter("model", "")}
                 className="absolute inset-y-0 right-3 flex items-center px-1 text-charcoal/30 hover:text-charcoal"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="h-4 w-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             )}
@@ -369,7 +490,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                   filters.model === m
                     ? "bg-charcoal text-white"
-                    : "bg-white border border-sand text-charcoal hover:border-charcoal/30"
+                    : "border border-sand bg-white text-charcoal hover:border-charcoal/30"
                 }`}
               >
                 {m}
@@ -379,52 +500,128 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
         </div>
       )}
 
-      {/* Top bar: search + filters + sort */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              className="h-4 w-4 text-charcoal/40"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
-          </div>
-          <input
-            type="search"
-            value={filters.search}
-            onChange={(e) => setFilter("search", e.target.value)}
-            placeholder="Søg efter tilbehør..."
-            className="w-full rounded-full border border-sand bg-white py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
-          />
+      {/* Search */}
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            className="h-4 w-4 text-charcoal/40"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
+          </svg>
         </div>
-
-        {/* Brand select */}
-        <BrandSelect
-          brands={availableBrands}
-          value={filters.brand}
-          onChange={(v) => setFilter("brand", v)}
+        <input
+          type="search"
+          value={filters.search}
+          onChange={(e) => setFilter("search", e.target.value)}
+          placeholder="Søg efter tilbehør..."
+          className="w-full rounded-full border border-sand bg-white py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
         />
+      </div>
 
-        {/* Sort select */}
-        <SortSelect value={sortBy} onChange={setSortBy} />
+      {/* ------------------------------------------------------------------- */}
+      {/* Desktop filter bar                                                   */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="hidden md:block">
+        <div className="rounded-xl border border-sand bg-white p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* In-store toggle */}
+            <button
+              onClick={() => setFilter("inStore", !filters.inStore)}
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+                filters.inStore
+                  ? "bg-green-eco text-white"
+                  : "border border-sand text-charcoal hover:border-green-eco/40"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-4 w-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016 2.993 2.993 0 0 0 2.25-1.016 3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"
+                />
+              </svg>
+              Kun i butik
+            </button>
 
-        {/* In-store toggle */}
+            {availableBrands.length > 0 && (
+              <div className="h-5 w-px bg-sand" aria-hidden />
+            )}
+
+            {/* Brand chips — top 8 */}
+            {availableBrands.slice(0, 8).map((brand) => (
+              <button
+                key={brand}
+                onClick={() =>
+                  setSelectedBrand((prev) => (prev === brand ? "" : brand))
+                }
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  selectedBrand === brand
+                    ? "bg-charcoal text-white"
+                    : "border border-sand text-charcoal hover:border-charcoal/40"
+                }`}
+              >
+                {brand}
+              </button>
+            ))}
+
+            <div className="h-5 w-px bg-sand" aria-hidden />
+
+            {/* Price range chips */}
+            {PRICE_RANGES.map((range) => {
+              const isActive = selectedPriceRange?.label === range.label;
+              return (
+                <button
+                  key={range.label}
+                  onClick={() =>
+                    setSelectedPriceRange((prev) =>
+                      prev?.label === range.label ? null : range
+                    )
+                  }
+                  className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    isActive
+                      ? "bg-charcoal text-white"
+                      : "border border-sand text-charcoal hover:border-charcoal/40"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              );
+            })}
+
+            {/* Sort + count — right-aligned */}
+            <div className="ml-auto flex items-center gap-3">
+              {sortSelect}
+              {!loading && !error && (
+                <span className="whitespace-nowrap text-sm text-charcoal/50">
+                  {filteredCount} produkt{filteredCount !== 1 ? "er" : ""}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------- */}
+      {/* Mobile filter button row                                             */}
+      {/* ------------------------------------------------------------------- */}
+      <div className="flex items-center gap-2 md:hidden">
         <button
-          onClick={() => setFilter("inStore", !filters.inStore)}
-          className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
-            filters.inStore
-              ? "bg-green-eco text-white"
-              : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
-          }`}
+          onClick={() => setFilterDrawerOpen(true)}
+          className="flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-2.5 text-sm font-semibold text-charcoal"
         >
           <svg
             viewBox="0 0 24 24"
@@ -436,24 +633,145 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016 2.993 2.993 0 0 0 2.25-1.016 3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"
+              d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
             />
           </svg>
-          Kun i butik
+          Filtre
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-green-eco px-1.5 py-0.5 text-[10px] font-bold text-white">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
 
-        {/* Clear all */}
-        {activeFilterCount > 0 && (
-          <button
-            onClick={() =>
-              setFilters({ search: "", category: "", brand: "", model: "", inStore: false })
-            }
-            className="rounded-full border border-sand bg-white px-4 py-2.5 text-sm font-semibold text-charcoal/60 hover:text-charcoal"
-          >
-            Ryd filtre ({activeFilterCount})
-          </button>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortOption)}
+          className="rounded-full border border-sand bg-white px-3 py-2.5 text-sm text-charcoal focus:border-green-eco focus:outline-none"
+        >
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+
+        {!loading && !error && (
+          <span className="ml-auto text-sm text-charcoal/50">
+            {filteredCount} stk
+          </span>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------- */}
+      {/* Mobile filter drawer                                                 */}
+      {/* ------------------------------------------------------------------- */}
+      {filterDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setFilterDrawerOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 max-h-[75vh] overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="font-display text-lg font-bold text-charcoal">
+                Filtre
+              </h3>
+              <button
+                onClick={() => setFilterDrawerOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-charcoal/60 hover:text-charcoal"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="h-4 w-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* In-store */}
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-charcoal/50">
+                  Tilgængelighed
+                </p>
+                <button
+                  onClick={() => setFilter("inStore", !filters.inStore)}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    filters.inStore
+                      ? "bg-green-eco text-white"
+                      : "border border-sand text-charcoal hover:border-green-eco/40"
+                  }`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="h-4 w-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016 2.993 2.993 0 0 0 2.25-1.016 3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"
+                    />
+                  </svg>
+                  Kun i butik
+                </button>
+              </div>
+
+              {/* Brand */}
+              {availableBrands.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-charcoal/50">
+                    Mærke
+                  </p>
+                  {brandChips}
+                </div>
+              )}
+
+              {/* Price */}
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-charcoal/50">
+                  Pris
+                </p>
+                {priceChips}
+              </div>
+            </div>
+
+            {/* Apply */}
+            <button
+              onClick={() => setFilterDrawerOpen(false)}
+              className="mt-8 w-full rounded-full bg-green-eco py-3.5 text-sm font-bold text-white"
+            >
+              Vis {filteredCount} produkt{filteredCount !== 1 ? "er" : ""}
+            </button>
+
+            {/* Clear all */}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  clearAll();
+                  setFilterDrawerOpen(false);
+                }}
+                className="mt-3 w-full rounded-full border border-sand py-3 text-sm font-semibold text-charcoal/60 hover:text-charcoal"
+              >
+                Nulstil alle filtre
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Category chips */}
       <CategoryChips
@@ -461,15 +779,48 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
         onChange={(v) => setFilter("category", v)}
       />
 
-      {/* Results count */}
-      {!loading && !error && (
-        <p className="text-sm text-charcoal/50">
-          {sortedProducts.length === 0
-            ? "Ingen produkter"
-            : externalModel
-              ? `${sortedProducts.length} produkt${sortedProducts.length !== 1 ? "er" : ""} til ${externalModel}`
-              : `${sortedProducts.length} produkt${sortedProducts.length !== 1 ? "er" : ""}`}
-        </p>
+      {/* ------------------------------------------------------------------- */}
+      {/* Active filter chips                                                  */}
+      {/* ------------------------------------------------------------------- */}
+      {(filters.model ||
+        selectedBrand ||
+        selectedPriceRange ||
+        filters.inStore) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wide text-charcoal/40">
+            Aktive filtre:
+          </span>
+          {filters.model && (
+            <ActiveChip
+              label={filters.model}
+              onRemove={() => setFilter("model", "")}
+            />
+          )}
+          {selectedBrand && (
+            <ActiveChip
+              label={selectedBrand}
+              onRemove={() => setSelectedBrand("")}
+            />
+          )}
+          {selectedPriceRange && (
+            <ActiveChip
+              label={selectedPriceRange.label}
+              onRemove={() => setSelectedPriceRange(null)}
+            />
+          )}
+          {filters.inStore && (
+            <ActiveChip
+              label="Kun i butik"
+              onRemove={() => setFilter("inStore", false)}
+            />
+          )}
+          <button
+            onClick={clearAll}
+            className="text-xs font-semibold text-green-eco hover:underline"
+          >
+            Ryd alle
+          </button>
+        </div>
       )}
 
       {/* Error */}
@@ -486,47 +837,24 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
             <SkeletonCard key={i} />
           ))}
         </div>
-      ) : sortedProducts.length === 0 && !error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sand text-charcoal/30">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              className="h-8 w-8"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
-          </div>
-          <p className="font-semibold text-charcoal">Ingen produkter fundet</p>
-          <p className="mt-1 text-sm text-charcoal/50">
-            Prøv at justere dine filtre eller søg efter noget andet.
+      ) : filteredCount === 0 && !error ? (
+        <div className="rounded-2xl border-2 border-dashed border-sand bg-cream p-12 text-center">
+          <p className="text-lg font-bold text-charcoal">
+            Ingen produkter fundet
           </p>
-          {activeFilterCount > 0 && (
-            <button
-              onClick={() =>
-                setFilters({
-                  search: "",
-                  category: "",
-                  brand: "",
-                  model: "",
-                  inStore: false,
-                })
-              }
-              className="mt-4 rounded-full border border-sand bg-white px-5 py-2.5 text-sm font-semibold text-charcoal hover:border-green-eco hover:text-green-eco"
-            >
-              Ryd alle filtre
-            </button>
-          )}
+          <p className="mt-2 text-sm text-charcoal/50">
+            Prøv at ændre dine filtre eller søg efter noget andet
+          </p>
+          <button
+            onClick={clearAll}
+            className="mt-4 rounded-full bg-green-eco px-6 py-2.5 text-sm font-bold text-white"
+          >
+            Nulstil filtre
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
-          {sortedProducts.map((product) => (
+          {displayedProducts.map((product) => (
             <AccessoryCard
               key={product.id}
               id={product.id}
