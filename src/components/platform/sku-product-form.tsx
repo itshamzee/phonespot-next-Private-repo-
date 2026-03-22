@@ -103,6 +103,11 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
   const [templateResults, setTemplateResults] = useState<ProductTemplate[]>([]);
   const [templateSearching, setTemplateSearching] = useState(false);
 
+  // Inline create template state
+  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
+  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "Smartphone" });
+
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!product?.slug);
 
   const [saving, setSaving] = useState(false);
@@ -239,6 +244,50 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
       );
     }
     setLinkedTemplates((prev) => prev.filter((t) => t.id !== templateId));
+  }
+
+  const KNOWN_BRANDS = ["Apple", "Samsung", "Google", "OnePlus", "Huawei", "Lenovo", "HP", "Sony", "Xiaomi", "Motorola", "Nokia", "Asus", "LG"];
+
+  function detectBrandFromSearch(q: string): { brand: string; model: string } {
+    const firstWord = q.split(" ")[0];
+    const matched = KNOWN_BRANDS.find((b) => b.toLowerCase() === firstWord.toLowerCase());
+    if (matched) {
+      return { brand: matched, model: q.slice(firstWord.length).trim() };
+    }
+    return { brand: "", model: q };
+  }
+
+  function openCreateTemplate() {
+    const { brand, model } = detectBrandFromSearch(templateSearch);
+    setCreateTemplateForm({ brand, model: model || templateSearch, category: "Smartphone" });
+    setShowCreateTemplate(true);
+  }
+
+  async function handleCreateTemplate() {
+    const { brand, model, category } = createTemplateForm;
+    if (!brand.trim() || !model.trim()) return;
+    const display_name = `${brand.trim()} ${model.trim()}`;
+    const slug = display_name
+      .toLowerCase()
+      .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    setCreateTemplateSaving(true);
+    try {
+      const res = await fetch("/api/platform/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [] }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        await linkTemplate(created);
+        setShowCreateTemplate(false);
+        setCreateTemplateForm({ brand: "", model: "", category: "Smartphone" });
+      }
+    } finally {
+      setCreateTemplateSaving(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -456,37 +505,107 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
             ))}
           </div>
         )}
-        <div className="relative">
-          <input
-            value={templateSearch}
-            onChange={(e) => setTemplateSearch(e.target.value)}
-            placeholder="S\u00F8g efter enhed at tilknytte\u2026"
-            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
-          />
-          {templateSearching && (
-            <div className="absolute right-3 top-2.5">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
-            </div>
-          )}
-          {templateResults.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-lg">
-              {templateResults.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => linkTemplate(t)}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-stone-50"
+        {showCreateTemplate ? (
+          <div className="rounded-xl border border-green-200 bg-green-50/50 p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-green-700">Opret ny enhedsmodel</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-stone-500">Mærke</label>
+                <input
+                  value={createTemplateForm.brand}
+                  onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, brand: e.target.value }))}
+                  placeholder="f.eks. Samsung"
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:border-green-500/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-stone-500">Model</label>
+                <input
+                  value={createTemplateForm.model}
+                  onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, model: e.target.value }))}
+                  placeholder="f.eks. Galaxy Watch 4"
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:border-green-500/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-stone-500">Kategori</label>
+                <select
+                  value={createTemplateForm.category}
+                  onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                 >
-                  {t.images?.[0] && (
-                    <img src={t.images[0]} alt={t.display_name} className="h-7 w-7 rounded object-cover" />
-                  )}
-                  <span className="font-medium text-stone-700">{t.display_name}</span>
-                  <span className="ml-auto text-xs text-stone-400">{t.brand}</span>
-                </button>
-              ))}
+                  {["iPhone", "Smartphone", "iPad", "Tablet", "Smartwatch", "Laptop", "Konsol", "Andet"].map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
-        </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCreateTemplate(false)}
+                className="rounded-lg border border-stone-200 bg-white px-4 py-2 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              >
+                Annuller
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateTemplate}
+                disabled={createTemplateSaving || !createTemplateForm.brand.trim() || !createTemplateForm.model.trim()}
+                className="rounded-lg bg-green-600 px-4 py-2 text-xs font-bold text-white hover:brightness-110 disabled:opacity-50"
+              >
+                {createTemplateSaving ? "Opretter..." : "Opret og tilf\u00F8j"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="relative">
+            <input
+              value={templateSearch}
+              onChange={(e) => setTemplateSearch(e.target.value)}
+              placeholder="S\u00F8g efter enhed at tilknytte\u2026"
+              className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
+            />
+            {templateSearching && (
+              <div className="absolute right-3 top-2.5">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-200 border-t-green-600" />
+              </div>
+            )}
+            {(templateResults.length > 0 || (templateSearch.length >= 2 && !templateSearching)) && (
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-lg">
+                {templateResults.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => linkTemplate(t)}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-stone-50"
+                  >
+                    {t.images?.[0] && (
+                      <img src={t.images[0]} alt={t.display_name} className="h-7 w-7 rounded object-cover" />
+                    )}
+                    <span className="font-medium text-stone-700">{t.display_name}</span>
+                    <span className="ml-auto text-xs text-stone-400">{t.brand}</span>
+                  </button>
+                ))}
+                {templateResults.length === 0 && templateSearch.length >= 2 && !templateSearching && (
+                  <p className="px-4 py-2.5 text-xs text-stone-400">Ingen resultater for &ldquo;{templateSearch}&rdquo;</p>
+                )}
+                {templateSearch.length >= 2 && !templateSearching && (
+                  <button
+                    type="button"
+                    onClick={openCreateTemplate}
+                    className="flex w-full items-center gap-2 rounded-b-xl border-t border-stone-100 px-3 py-2.5 text-sm text-green-700 hover:bg-green-50"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Opret &ldquo;{templateSearch}&rdquo; som ny model
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Section 5: Priser */}

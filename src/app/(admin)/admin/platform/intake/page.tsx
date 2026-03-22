@@ -59,6 +59,11 @@ export default function QuickAddPage() {
   const [addedCount, setAddedCount] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
+  // Inline create template state
+  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
+  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "Smartphone" });
+
   // Load locations on mount
   useEffect(() => {
     fetch("/api/platform/locations")
@@ -146,7 +151,52 @@ export default function QuickAddPage() {
     setError(null);
     setSuccess(null);
     setShowImei(false);
+    setShowCreateTemplate(false);
     setTimeout(() => searchRef.current?.focus(), 100);
+  }
+
+  const KNOWN_BRANDS = ["Apple", "Samsung", "Google", "OnePlus", "Huawei", "Lenovo", "HP", "Sony", "Xiaomi", "Motorola", "Nokia", "Asus", "LG"];
+
+  function detectBrandFromSearch(q: string): { brand: string; model: string } {
+    const firstWord = q.split(" ")[0];
+    const matched = KNOWN_BRANDS.find((b) => b.toLowerCase() === firstWord.toLowerCase());
+    if (matched) {
+      return { brand: matched, model: q.slice(firstWord.length).trim() };
+    }
+    return { brand: "", model: q };
+  }
+
+  function openCreateTemplate() {
+    const { brand, model } = detectBrandFromSearch(search);
+    setCreateTemplateForm({ brand, model: model || search, category: "Smartphone" });
+    setShowCreateTemplate(true);
+  }
+
+  async function handleCreateTemplate() {
+    const { brand, model, category } = createTemplateForm;
+    if (!brand.trim() || !model.trim()) return;
+    const display_name = `${brand.trim()} ${model.trim()}`;
+    const slug = display_name
+      .toLowerCase()
+      .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    setCreateTemplateSaving(true);
+    try {
+      const res = await fetch("/api/platform/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [] }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setShowCreateTemplate(false);
+        setCreateTemplateForm({ brand: "", model: "", category: "Smartphone" });
+        await selectTemplate(created);
+      }
+    } finally {
+      setCreateTemplateSaving(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -332,54 +382,142 @@ export default function QuickAddPage() {
             </div>
           ) : (
             <div>
-              <div className="relative">
-                <svg
-                  className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
-                </svg>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Søg model... f.eks. iPhone 13 Pro"
-                  autoFocus
-                  className="w-full rounded-2xl border-2 border-stone-200 bg-white py-4 pl-12 pr-4 text-base text-stone-800 placeholder:text-stone-400 transition focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/10"
-                />
-              </div>
+              {showCreateTemplate ? (
+                <div className="rounded-2xl border-2 border-green-200 bg-green-50/50 p-5 space-y-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-green-700">Opret ny enhedsmodel</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-stone-500">Mærke</label>
+                      <input
+                        value={createTemplateForm.brand}
+                        onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, brand: e.target.value }))}
+                        placeholder="f.eks. Samsung"
+                        className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm focus:border-green-eco/50 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-stone-500">Model</label>
+                      <input
+                        value={createTemplateForm.model}
+                        onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, model: e.target.value }))}
+                        placeholder="f.eks. Galaxy Watch 4"
+                        className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm focus:border-green-eco/50 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-stone-500">Kategori</label>
+                      <select
+                        value={createTemplateForm.category}
+                        onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
+                        className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+                      >
+                        {["iPhone", "Smartphone", "iPad", "Tablet", "Smartwatch", "Laptop", "Konsol", "Andet"].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateTemplate(false)}
+                      className="rounded-xl border border-stone-200 bg-white px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
+                    >
+                      Annuller
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreateTemplate}
+                      disabled={createTemplateSaving || !createTemplateForm.brand.trim() || !createTemplateForm.model.trim()}
+                      className="rounded-xl bg-green-eco px-5 py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-50"
+                    >
+                      {createTemplateSaving ? "Opretter..." : "Opret og v\u00E6lg"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <svg
+                      className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                    </svg>
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={search}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="S\u00F8g model... f.eks. iPhone 13 Pro"
+                      autoFocus
+                      className="w-full rounded-2xl border-2 border-stone-200 bg-white py-4 pl-12 pr-4 text-base text-stone-800 placeholder:text-stone-400 transition focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/10"
+                    />
+                  </div>
 
-              {/* Search results */}
-              {templates.length > 0 && (
-                <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-xl">
-                  <ul className="max-h-72 overflow-y-auto divide-y divide-stone-100">
-                    {templates.map((t) => (
-                      <li key={t.id}>
+                  {/* Search results */}
+                  {templates.length > 0 && (
+                    <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-xl">
+                      <ul className="max-h-72 overflow-y-auto divide-y divide-stone-100">
+                        {templates.map((t) => (
+                          <li key={t.id}>
+                            <button
+                              type="button"
+                              onClick={() => selectTemplate(t)}
+                              className="flex w-full items-center gap-4 px-5 py-3.5 text-left transition hover:bg-stone-50 active:bg-stone-100"
+                            >
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-100">
+                                <svg className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-stone-800">{t.display_name}</p>
+                                <p className="text-xs text-stone-400">{t.brand} \u00B7 {t.category}</p>
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      {search.length >= 2 && !searching && (
+                        <div className="border-t border-stone-100">
+                          <button
+                            type="button"
+                            onClick={openCreateTemplate}
+                            className="flex w-full items-center gap-2 px-5 py-3.5 text-sm font-medium text-green-700 transition hover:bg-green-50"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Opret &ldquo;{search}&rdquo; som ny model
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {templates.length === 0 && search.length >= 2 && !searching && (
+                    <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-xl">
+                      <p className="px-5 py-3.5 text-sm text-stone-400">Ingen resultater for &ldquo;{search}&rdquo;</p>
+                      <div className="border-t border-stone-100">
                         <button
                           type="button"
-                          onClick={() => selectTemplate(t)}
-                          className="flex w-full items-center gap-4 px-5 py-3.5 text-left transition hover:bg-stone-50 active:bg-stone-100"
+                          onClick={openCreateTemplate}
+                          className="flex w-full items-center gap-2 px-5 py-3.5 text-sm font-medium text-green-700 transition hover:bg-green-50"
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-100">
-                            <svg className="h-5 w-5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-stone-800">{t.display_name}</p>
-                            <p className="text-xs text-stone-400">{t.brand} · {t.category}</p>
-                          </div>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                          Opret &ldquo;{search}&rdquo; som ny model
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {searching && (
-                <div className="absolute z-50 mt-2 w-full rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-xl">
-                  <p className="text-sm text-stone-400">Søger...</p>
-                </div>
+                      </div>
+                    </div>
+                  )}
+                  {searching && (
+                    <div className="absolute z-50 mt-2 w-full rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-xl">
+                      <p className="text-sm text-stone-400">S\u00F8ger...</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
