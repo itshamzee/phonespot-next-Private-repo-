@@ -71,6 +71,17 @@ function variantsFromProduct(product: SkuProduct | null | undefined): VariantGro
   }));
 }
 
+interface StockEntry {
+  location_id: string;
+  quantity: number;
+}
+
+interface LocationItem {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lockedSubcategory }: Props) {
   const isEdit = !!product;
 
@@ -92,7 +103,13 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
     meta_description: product?.meta_description ?? "",
     status: product?.status ?? "draft",
     attributes: (product?.attributes ?? {}) as Record<string, string>,
+    always_in_stock: product?.always_in_stock ?? false,
   });
+
+  // Stock management state
+  const [locations, setLocations] = useState<LocationItem[]>([]);
+  const [stockMap, setStockMap] = useState<Map<string, number>>(new Map());
+  const [stockSaving, setStockSaving] = useState<Set<string>>(new Set());
 
   const [variants, setVariants] = useState<VariantGroup[]>(() => variantsFromProduct(product));
   const [newGroupName, setNewGroupName] = useState("");
@@ -128,6 +145,29 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
     }, 300);
     return () => clearTimeout(timer);
   }, [form.title, slugManuallyEdited]);
+
+  // Load locations and stock on edit
+  useEffect(() => {
+    if (!product?.id) return;
+
+    fetch("/api/platform/locations")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setLocations(data);
+      })
+      .catch(() => {});
+
+    fetch(`/api/platform/sku-stock?product_id=${product.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const map = new Map<string, number>();
+          data.forEach((s: StockEntry) => map.set(s.location_id, s.quantity));
+          setStockMap(map);
+        }
+      })
+      .catch(() => {});
+  }, [product?.id]);
 
   // Load linked templates on edit
   useEffect(() => {
@@ -246,6 +286,41 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
     setLinkedTemplates((prev) => prev.filter((t) => t.id !== templateId));
   }
 
+  async function saveStock(locationId: string, quantity: number) {
+    if (!product?.id) return;
+    setStockSaving((prev) => new Set(prev).add(locationId));
+    try {
+      await fetch("/api/platform/sku-stock", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: product.id, location_id: locationId, quantity }),
+      });
+    } finally {
+      setStockSaving((prev) => {
+        const next = new Set(prev);
+        next.delete(locationId);
+        return next;
+      });
+    }
+  }
+
+  function adjustStock(locationId: string, delta: number) {
+    const current = stockMap.get(locationId) ?? 0;
+    const next = Math.max(0, current + delta);
+    setStockMap((prev) => new Map(prev).set(locationId, next));
+    saveStock(locationId, next);
+  }
+
+  function setStockQuantity(locationId: string, value: string) {
+    const qty = Math.max(0, parseInt(value, 10) || 0);
+    setStockMap((prev) => new Map(prev).set(locationId, qty));
+  }
+
+  function commitStockQuantity(locationId: string) {
+    const qty = stockMap.get(locationId) ?? 0;
+    saveStock(locationId, qty);
+  }
+
   const KNOWN_BRANDS = ["Apple", "Samsung", "Google", "OnePlus", "Huawei", "Lenovo", "HP", "Sony", "Xiaomi", "Motorola", "Nokia", "Asus", "LG"];
 
   function detectBrandFromSearch(q: string): { brand: string; model: string } {
@@ -303,6 +378,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
       category: "accessory",
       subcategory: form.subcategory || null,
       attributes: form.attributes,
+      always_in_stock: form.always_in_stock,
       variants: variants.map((g) => ({
         name: g.name,
         options: g.options.map((o) => ({
@@ -654,7 +730,102 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
         </div>
       </section>
 
-      {/* Section 6: Beskrivelse */}
+      {/* Section 6: Lagerstyring — only in edit mode */}
+      {isEdit && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
+            Lagerstyring
+          </h3>
+          {locations.length === 0 ? (
+            <p className="text-sm text-stone-400">Henter lokationer...</p>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-stone-100">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-stone-100 bg-stone-50">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-stone-400">Lokation</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-stone-400">Antal</th>
+                      <th className="px-4 py-2.5 text-center text-xs font-semibold text-stone-400">Justér</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {locations.map((loc) => {
+                      const qty = stockMap.get(loc.id) ?? 0;
+                      const isSaving = stockSaving.has(loc.id);
+                      return (
+                        <tr key={loc.id} className="hover:bg-stone-50/50">
+                          <td className="px-4 py-3">
+                            <span className="font-medium text-stone-700">{loc.name}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <input
+                              type="number"
+                              min={0}
+                              value={qty}
+                              onChange={(e) => setStockQuantity(loc.id, e.target.value)}
+                              onBlur={() => commitStockQuantity(loc.id)}
+                              className={`w-20 rounded-lg border px-3 py-2 text-center text-sm font-mono font-bold transition ${
+                                isSaving
+                                  ? "border-green-300 bg-green-50 text-green-700"
+                                  : "border-stone-200 bg-white text-stone-800 focus:border-green-500/50 focus:outline-none"
+                              }`}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => adjustStock(loc.id, -1)}
+                                disabled={qty <= 0 || isSaving}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-sm font-bold text-stone-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                              >
+                                −
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => adjustStock(loc.id, 1)}
+                                disabled={isSaving}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-sm font-bold text-stone-500 transition hover:border-green-400 hover:bg-green-50 hover:text-green-600"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total */}
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="text-stone-500">Total:</span>
+                <span className="font-bold text-stone-700">
+                  {Array.from(stockMap.values()).reduce((a, b) => a + b, 0)} stk
+                </span>
+              </div>
+
+              {/* Always in stock toggle */}
+              <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-stone-100 bg-stone-50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={form.always_in_stock}
+                  onChange={(e) => set("always_in_stock", e.target.checked)}
+                  className="h-4 w-4 rounded border-stone-300 accent-green-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-stone-700">Altid på lager (drop-ship)</p>
+                  <p className="text-xs text-stone-400">Lagertjek springes over ved checkout — bruges til drop-ship og print-on-demand</p>
+                </div>
+              </label>
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Section 7: Beskrivelse */}
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-stone-400">
           Beskrivelse

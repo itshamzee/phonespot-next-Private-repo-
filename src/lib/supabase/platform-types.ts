@@ -132,6 +132,7 @@ export interface SkuProduct {
   attributes?: Record<string, string | number | boolean | null>;
   barcode: string | null;
   status: "draft" | "published";
+  always_in_stock: boolean;
   created_at: string;
   updated_at: string;
 }

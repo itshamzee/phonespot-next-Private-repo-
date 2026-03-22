@@ -49,6 +49,7 @@ async function resolveProduct(slug: string): Promise<SkuProduct | null> {
     variants: [],
     barcode: null,
     status: acc.status === "archived" ? "draft" : acc.status,
+    always_in_stock: false,
     created_at: acc.created_at,
     updated_at: acc.updated_at,
   };

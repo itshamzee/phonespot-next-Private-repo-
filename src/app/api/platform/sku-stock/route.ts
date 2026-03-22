@@ -9,6 +9,18 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const lowStockOnly = request.nextUrl.searchParams.get("low_stock") === "true";
   const locationId = request.nextUrl.searchParams.get("location_id");
+  const productId = request.nextUrl.searchParams.get("product_id");
+
+  // When fetching stock for a specific product, use a simpler query without join-based filters
+  if (productId) {
+    const { data, error } = await supabase
+      .from("sku_stock")
+      .select("*, location:locations(id, name)")
+      .eq("product_id", productId);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data ?? []);
+  }
 
   let query = supabase
     .from("sku_stock")

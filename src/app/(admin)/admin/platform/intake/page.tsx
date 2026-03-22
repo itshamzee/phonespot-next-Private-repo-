@@ -58,6 +58,7 @@ export default function QuickAddPage() {
   const [showImei, setShowImei] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [directToSale, setDirectToSale] = useState(false);
 
   // Inline create template state
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
@@ -152,6 +153,7 @@ export default function QuickAddPage() {
     setSuccess(null);
     setShowImei(false);
     setShowCreateTemplate(false);
+    setDirectToSale(false);
     setTimeout(() => searchRef.current?.focus(), 100);
   }
 
@@ -226,6 +228,7 @@ export default function QuickAddPage() {
         selling_price: sellingOere,
         location_id: locationId,
         vat_scheme: "brugtmoms",
+        status: directToSale ? "listed" : "intake",
       };
       if (storage) baseBody.storage = storage;
       if (color) baseBody.color = color;
@@ -733,6 +736,20 @@ export default function QuickAddPage() {
               )}
             </div>
 
+            {/* Direct to sale toggle */}
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 px-4 py-3">
+              <input
+                type="checkbox"
+                checked={directToSale}
+                onChange={(e) => setDirectToSale(e.target.checked)}
+                className="h-4 w-4 rounded border-stone-300 accent-green-600"
+              />
+              <div>
+                <p className="text-sm font-medium text-stone-700">Sæt direkte til salg</p>
+                <p className="text-xs text-stone-400">Enheden oprettes med status &ldquo;Til salg&rdquo; i stedet for &ldquo;Intake&rdquo;</p>
+              </div>
+            </label>
+
             {/* Error */}
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -756,7 +773,9 @@ export default function QuickAddPage() {
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
-                  {quantity > 1 ? `Tilføj ${quantity} til salg` : "Tilføj til salg"}
+                  {directToSale
+                    ? (quantity > 1 ? `Tilføj ${quantity} direkte til salg` : "Tilføj direkte til salg")
+                    : (quantity > 1 ? `Tilføj ${quantity} til intake` : "Tilføj til salg")}
                 </>
               )}
             </button>
