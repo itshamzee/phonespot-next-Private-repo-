@@ -72,7 +72,7 @@ export function TilbehoerCategoryHero({
         )}
 
         {/* Trust row */}
-        <div className="mt-8 flex flex-wrap gap-4 text-xs font-semibold text-white/50">
+        <div className="mt-8 flex flex-wrap gap-4 text-xs font-semibold text-white/80">
           <span>✓ 36 mdr. garanti</span>
           <span>✓ 14 dages returret</span>
           <span>✓ Fri fragt over 499 kr.</span>

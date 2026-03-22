@@ -17,6 +17,8 @@ interface Filters {
   inStore: boolean;
 }
 
+type SortOption = "recommended" | "price-asc" | "price-desc" | "newest";
+
 // ---------------------------------------------------------------------------
 // Helper — debounce hook
 // ---------------------------------------------------------------------------
@@ -117,6 +119,46 @@ function BrandSelect({
 }
 
 // ---------------------------------------------------------------------------
+// Sort select
+// ---------------------------------------------------------------------------
+
+function SortSelect({
+  value,
+  onChange,
+}: {
+  value: SortOption;
+  onChange: (v: SortOption) => void;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as SortOption)}
+        className="appearance-none rounded-full border border-sand bg-white py-2 pl-4 pr-10 text-sm font-semibold text-charcoal focus:border-green-eco focus:outline-none"
+      >
+        <option value="recommended">Anbefalet</option>
+        <option value="price-asc">Pris: Lav til Høj</option>
+        <option value="price-desc">Pris: Høj til Lav</option>
+        <option value="newest">Nyeste</option>
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <svg
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          className="h-4 w-4 text-charcoal/40"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
@@ -143,6 +185,8 @@ interface AccessoryGridProps {
   initialCategory?: string;
 }
 
+const LS_DEVICE_KEY = "phonespot_device";
+
 export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridProps = {}) {
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -151,6 +195,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
     model: externalModel ?? "",
     inStore: false,
   });
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [products, setProducts] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,12 +203,40 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
   const debouncedSearch = useDebounce(filters.search, 350);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Restore saved device from localStorage on mount (only when no external model)
+  useEffect(() => {
+    if (externalModel !== undefined) return;
+    try {
+      const saved = localStorage.getItem(LS_DEVICE_KEY);
+      if (saved) {
+        setFilters((prev) => ({ ...prev, model: saved }));
+      }
+    } catch {
+      // localStorage unavailable (SSR or private mode)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Sync external model prop changes
   useEffect(() => {
     if (externalModel !== undefined) {
       setFilter("model", externalModel);
     }
   }, [externalModel]);
+
+  // Persist selected model to localStorage
+  useEffect(() => {
+    if (externalModel !== undefined) return; // managed externally
+    try {
+      if (filters.model) {
+        localStorage.setItem(LS_DEVICE_KEY, filters.model);
+      } else {
+        localStorage.removeItem(LS_DEVICE_KEY);
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, [filters.model, externalModel]);
 
   // Derive available brand list from currently loaded products before brand filter
   const availableBrands = useMemo(() => {
@@ -215,6 +288,32 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
   function setFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }
+
+  // Client-side sorting
+  const sortedProducts = useMemo(() => {
+    const sorted = [...products];
+    switch (sortBy) {
+      case "price-asc":
+        return sorted.sort((a, b) => {
+          const aPrice = a.sale_price != null && a.sale_price < a.price ? a.sale_price : a.price;
+          const bPrice = b.sale_price != null && b.sale_price < b.price ? b.sale_price : b.price;
+          return aPrice - bPrice;
+        });
+      case "price-desc":
+        return sorted.sort((a, b) => {
+          const aPrice = a.sale_price != null && a.sale_price < a.price ? a.sale_price : a.price;
+          const bPrice = b.sale_price != null && b.sale_price < b.price ? b.sale_price : b.price;
+          return bPrice - aPrice;
+        });
+      case "newest":
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      default:
+        return sorted; // "recommended" — keep API order
+    }
+  }, [products, sortBy]);
 
   const activeFilterCount = [
     filters.category !== "",
@@ -280,10 +379,10 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
         </div>
       )}
 
-      {/* Top bar: search + store toggle */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      {/* Top bar: search + filters + sort */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[200px]">
           <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
             <svg
               viewBox="0 0 24 24"
@@ -314,6 +413,9 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
           value={filters.brand}
           onChange={(v) => setFilter("brand", v)}
         />
+
+        {/* Sort select */}
+        <SortSelect value={sortBy} onChange={setSortBy} />
 
         {/* In-store toggle */}
         <button
@@ -362,11 +464,11 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
       {/* Results count */}
       {!loading && !error && (
         <p className="text-sm text-charcoal/50">
-          {products.length === 0
+          {sortedProducts.length === 0
             ? "Ingen produkter"
             : externalModel
-              ? `${products.length} produkt${products.length !== 1 ? "er" : ""} til ${externalModel}`
-              : `${products.length} produkt${products.length !== 1 ? "er" : ""}`}
+              ? `${sortedProducts.length} produkt${sortedProducts.length !== 1 ? "er" : ""} til ${externalModel}`
+              : `${sortedProducts.length} produkt${sortedProducts.length !== 1 ? "er" : ""}`}
         </p>
       )}
 
@@ -384,7 +486,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
             <SkeletonCard key={i} />
           ))}
         </div>
-      ) : products.length === 0 && !error ? (
+      ) : sortedProducts.length === 0 && !error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sand text-charcoal/30">
             <svg
@@ -424,7 +526,7 @@ export function AccessoryGrid({ externalModel, initialCategory }: AccessoryGridP
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
-          {products.map((product) => (
+          {sortedProducts.map((product) => (
             <AccessoryCard
               key={product.id}
               id={product.id}

@@ -18,206 +18,6 @@ interface AccessoryCardProps {
   online_stock: number;
 }
 
-interface ReservationState {
-  name: string;
-  phone: string;
-  email: string;
-  submitting: boolean;
-  done: boolean;
-  error: string | null;
-}
-
-function ReservationModal({
-  productId,
-  productName,
-  onClose,
-}: {
-  productId: string;
-  productName: string;
-  onClose: () => void;
-}) {
-  const [state, setState] = useState<ReservationState>({
-    name: "",
-    phone: "",
-    email: "",
-    submitting: false,
-    done: false,
-    error: null,
-  });
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setState((s) => ({ ...s, submitting: true, error: null }));
-
-    try {
-      const res = await fetch("/api/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product_type: "accessory",
-          product_id: productId,
-          product_name: productName,
-          customer_name: state.name,
-          customer_phone: state.phone,
-          customer_email: state.email || null,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Reservation mislykkedes");
-      }
-
-      setState((s) => ({ ...s, done: true, submitting: false }));
-    } catch (err) {
-      setState((s) => ({
-        ...s,
-        submitting: false,
-        error: err instanceof Error ? err.message : "Noget gik galt",
-      }));
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm sm:items-center"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        {state.done ? (
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                className="h-7 w-7 text-green-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-charcoal">
-              Reservation oprettet
-            </h3>
-            <p className="mt-2 text-sm text-charcoal/60">
-              Vi holder produktet til dig. Du hores fra os hurtigst muligt.
-            </p>
-            <button
-              onClick={onClose}
-              className="mt-6 w-full rounded-full bg-green-eco py-3 text-sm font-bold text-white"
-            >
-              Luk
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="mb-5 flex items-start justify-between">
-              <div>
-                <h3 className="font-display text-lg font-bold text-charcoal">
-                  Reserver til afhentning
-                </h3>
-                <p className="mt-0.5 text-sm text-charcoal/60 line-clamp-1">
-                  {productName}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="ml-4 shrink-0 rounded-full p-1.5 text-charcoal/40 hover:bg-sand hover:text-charcoal"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  className="h-5 w-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-charcoal/60">
-                  Navn *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={state.name}
-                  onChange={(e) =>
-                    setState((s) => ({ ...s, name: e.target.value }))
-                  }
-                  placeholder="Dit fulde navn"
-                  className="w-full rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-charcoal/60">
-                  Telefon *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={state.phone}
-                  onChange={(e) =>
-                    setState((s) => ({ ...s, phone: e.target.value }))
-                  }
-                  placeholder="+45 12 34 56 78"
-                  className="w-full rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-charcoal/60">
-                  E-mail (valgfrit)
-                </label>
-                <input
-                  type="email"
-                  value={state.email}
-                  onChange={(e) =>
-                    setState((s) => ({ ...s, email: e.target.value }))
-                  }
-                  placeholder="din@email.dk"
-                  className="w-full rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco focus:outline-none"
-                />
-              </div>
-
-              {state.error && (
-                <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600">
-                  {state.error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={state.submitting}
-                className="mt-1 w-full rounded-full bg-green-eco py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                {state.submitting ? "Reserverer..." : "Reserver til afhentning"}
-              </button>
-            </form>
-
-            <p className="mt-3 text-center text-xs text-charcoal/40">
-              Afhentning i VestsjællandsCentret, Slagelse
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function AccessoryCard({
   id,
   name,
@@ -230,7 +30,7 @@ export function AccessoryCard({
   online_stock,
   brand,
 }: AccessoryCardProps) {
-  const [showReservation, setShowReservation] = useState(false);
+  const [added, setAdded] = useState(false);
   const { addSku, openCart } = useCart();
 
   const isOnSale = sale_price != null && sale_price < price;
@@ -256,101 +56,99 @@ export function AccessoryCard({
       image: image_url ?? null,
     });
     openCart();
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
   }
 
   return (
-    <>
-      <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-        {/* Image — clickable */}
-        <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
-          {image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image_url}
-              alt={name}
-              className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-sand">
-              <svg
-                viewBox="0 0 64 64"
-                className="h-16 w-16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <rect x="16" y="8" width="32" height="48" rx="4" />
-                <circle cx="32" cy="52" r="2" />
-              </svg>
-            </div>
-          )}
-          <div className="absolute top-3 left-3">
-            <StoreBadge storeStock={store_stock} />
-          </div>
-          {brand && (
-            <span className="absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-charcoal/70 shadow-sm backdrop-blur-sm">
-              {brand}
-            </span>
-          )}
-          {isOnSale && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-              Tilbud
-            </span>
-          )}
-        </Link>
-
-        {/* Info */}
-        <div className="flex flex-1 flex-col p-4">
-          <Link href={href}>
-            <h3 className="line-clamp-2 text-sm font-semibold text-charcoal transition-colors hover:text-green-eco">
-              {name}
-            </h3>
-          </Link>
-          <div className="mt-auto pt-3">
-            <div className="flex items-baseline gap-2">
-              <p className={`text-lg font-bold ${isOnSale ? "text-red-600" : "text-green-eco"}`}>
-                {priceFormatted} kr.
-              </p>
-              {originalPriceFormatted && (
-                <p className="text-sm text-charcoal/40 line-through">
-                  {originalPriceFormatted} kr.
-                </p>
-              )}
-            </div>
-            {online_stock > 0 && (
-              <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-                På lager
-              </p>
-            )}
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleAddToCart}
-              className="flex-1 rounded-full bg-green-eco py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+      {/* Image — clickable */}
+      <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
+        {image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image_url}
+            alt={name}
+            className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sand">
+            <svg
+              viewBox="0 0 64 64"
+              className="h-16 w-16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
             >
-              Tilføj til kurv
-            </button>
-            {store_stock > 0 && (
-              <button
-                onClick={() => setShowReservation(true)}
-                className="rounded-full border border-green-eco px-4 py-2.5 text-sm font-bold text-green-eco transition-colors hover:bg-green-eco/5"
-              >
-                Afhent
-              </button>
+              <rect x="16" y="8" width="32" height="48" rx="4" />
+              <circle cx="32" cy="52" r="2" />
+            </svg>
+          </div>
+        )}
+        <div className="absolute top-3 left-3">
+          <StoreBadge storeStock={store_stock} />
+        </div>
+        {brand && (
+          <span className="absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-charcoal/70 shadow-sm backdrop-blur-sm">
+            {brand}
+          </span>
+        )}
+        {isOnSale && (
+          <span className="absolute bottom-2 left-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+            Tilbud
+          </span>
+        )}
+      </Link>
+
+      {/* Info */}
+      <div className="flex flex-1 flex-col p-4">
+        <Link href={href}>
+          <h3 className="line-clamp-2 text-sm font-semibold text-charcoal transition-colors hover:text-green-eco">
+            {name}
+          </h3>
+        </Link>
+        <div className="mt-auto pt-3">
+          <div className="flex items-baseline gap-2">
+            <p className={`text-lg font-bold ${isOnSale ? "text-red-600" : "text-green-eco"}`}>
+              {priceFormatted} kr.
+            </p>
+            {originalPriceFormatted && (
+              <p className="text-sm text-charcoal/40 line-through">
+                {originalPriceFormatted} kr.
+              </p>
             )}
           </div>
+
+          {/* Stock indicator */}
+          {online_stock > 0 && online_stock <= 5 && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Kun {online_stock} på lager
+            </p>
+          )}
+          {online_stock > 5 && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+              På lager
+            </p>
+          )}
+        </div>
+
+        {/* Single CTA — no "Afhent" on card */}
+        <div className="mt-3">
+          <button
+            onClick={handleAddToCart}
+            className={`w-full rounded-full py-3 text-sm font-bold transition-all ${
+              added
+                ? "bg-green-600 text-white"
+                : "bg-green-eco text-white hover:opacity-90"
+            }`}
+          >
+            {added ? "Tilføjet!" : "Tilføj til kurv"}
+          </button>
         </div>
       </div>
-
-      {showReservation && (
-        <ReservationModal
-          productId={id}
-          productName={name}
-          onClose={() => setShowReservation(false)}
-        />
-      )}
-    </>
+    </div>
   );
 }

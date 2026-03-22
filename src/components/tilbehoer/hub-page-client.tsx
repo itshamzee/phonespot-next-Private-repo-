@@ -59,29 +59,45 @@ export function HubPageClient() {
           Shop efter kategori
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {TILBEHOER_CATEGORIES.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/tilbehoer/${cat.slug}`}
-              className="group relative flex flex-col items-center rounded-2xl border border-[#E5E5EA] bg-white p-5 text-center transition-all hover:border-[#1A3D2E]/30 hover:shadow-md"
-            >
-              {cat.slug === "outlet" && (
-                <span className="absolute -right-2 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                  SALE
+          {TILBEHOER_CATEGORIES.map((cat, i) => {
+            const gradients = [
+              "from-emerald-50 to-teal-100",
+              "from-blue-50 to-indigo-100",
+              "from-amber-50 to-orange-100",
+              "from-purple-50 to-violet-100",
+              "from-rose-50 to-pink-100",
+              "from-red-50 to-red-100",
+            ];
+            const gradient = gradients[i % gradients.length];
+            return (
+              <Link
+                key={cat.slug}
+                href={`/tilbehoer/${cat.slug}`}
+                className={`group relative flex flex-col items-center rounded-2xl bg-gradient-to-br ${gradient} p-6 text-center transition-all duration-200 hover:shadow-lg hover:-translate-y-1`}
+              >
+                {cat.slug === "outlet" && (
+                  <span className="absolute -right-2 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    SALE
+                  </span>
+                )}
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  <span className="text-3xl">{cat.icon}</span>
+                </div>
+                <h3 className="mt-4 font-display text-sm font-bold text-[#111111] leading-tight">
+                  {cat.label}
+                </h3>
+                <p className="mt-1.5 hidden text-xs text-[#86868B] md:block line-clamp-2 leading-relaxed">
+                  {cat.description}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-bold text-white opacity-0 transition-all group-hover:opacity-100">
+                  Se alle
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                    <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
                 </span>
-              )}
-              <span className="text-3xl">{cat.icon}</span>
-              <h3 className="mt-3 font-display text-sm font-bold text-[#111111]">
-                {cat.label}
-              </h3>
-              <p className="mt-1 hidden text-xs text-[#86868B] md:block line-clamp-2">
-                {cat.description}
-              </p>
-              <span className="mt-2 text-xs font-semibold text-[#1A3D2E] opacity-0 transition-opacity group-hover:opacity-100">
-                Se alle →
-              </span>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

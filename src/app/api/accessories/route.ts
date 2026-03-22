@@ -15,13 +15,14 @@ export async function GET(req: NextRequest) {
   // Map tilbehoer URL slugs (e.g. "covers") to DB category values (e.g. "cover")
   const dbCategories = category ? SLUG_TO_ACCESSORY_CATEGORIES[category] ?? [category] : null;
 
-  // Query sku_products with category='accessory'
+  // Query sku_products with category='accessory', excluding spare-parts
   let query = supabase
     .from("sku_products")
     .select("id, title, slug, subcategory, brand, selling_price, cost_price, sale_price, images, barcode, ean, description, status, created_at, updated_at, is_active")
     .eq("status", "published")
     .eq("is_active", true)
     .eq("category", "accessory")
+    .neq("subcategory", "spare-part")
     .order("created_at", { ascending: false });
 
   if (dbCategories && category !== "outlet") {
