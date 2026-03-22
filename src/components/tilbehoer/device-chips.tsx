@@ -50,7 +50,7 @@ export function DeviceChips({ category, devices, activeDevice }: DeviceChipsProp
           href={`/tilbehoer/${category}`}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             !activeDevice
-              ? "bg-charcoal text-white"
+              ? "bg-green-eco text-white"
               : "bg-cream text-charcoal hover:bg-sand"
           }`}
         >

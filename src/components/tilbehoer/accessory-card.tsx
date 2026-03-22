@@ -61,7 +61,7 @@ export function AccessoryCard({
   }
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-sand bg-white transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+    <div className="group flex flex-col overflow-hidden rounded-[16px] border border-sand bg-white transition-all duration-200 hover:shadow-md">
       {/* Image — clickable */}
       <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
         {image_url ? (
@@ -135,14 +135,14 @@ export function AccessoryCard({
           )}
         </div>
 
-        {/* Single CTA — no "Afhent" on card */}
+        {/* Add to cart — subtle style */}
         <div className="mt-3">
           <button
             onClick={handleAddToCart}
             className={`w-full rounded-full py-3 text-sm font-bold transition-all ${
               added
-                ? "bg-green-600 text-white"
-                : "bg-green-eco text-white hover:opacity-90"
+                ? "bg-green-eco text-white"
+                : "bg-green-eco/10 text-green-eco hover:bg-green-eco hover:text-white"
             }`}
           >
             {added ? "Tilføjet!" : "Tilføj til kurv"}

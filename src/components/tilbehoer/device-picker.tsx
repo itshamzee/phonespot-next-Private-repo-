@@ -58,8 +58,8 @@ export function DevicePicker({
             onClick={() => handleBrandClick(b.slug)}
             className={`${chipBase} ${
               selectedBrand === b.slug
-                ? "bg-charcoal text-white"
-                : "border border-white/20 bg-white/10 text-white hover:bg-white/20"
+                ? "bg-green-eco text-white"
+                : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
             }`}
           >
             {b.label}
@@ -68,9 +68,9 @@ export function DevicePicker({
         {selectedModel && (
           <button
             onClick={handleClear}
-            className={`${chipBase} border border-white/20 text-white/60 hover:text-white`}
+            className={`${chipBase} border border-sand bg-white text-charcoal/60 hover:text-charcoal`}
           >
-            ✕ Ryd
+            Ryd
           </button>
         )}
       </div>
@@ -85,7 +85,7 @@ export function DevicePicker({
               className={`${chipBase} ${
                 selectedModel === d.label
                   ? "bg-green-eco text-white"
-                  : "border border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
               }`}
             >
               {d.label}
@@ -96,7 +96,7 @@ export function DevicePicker({
 
       {/* Hint when no brand selected */}
       {!selectedBrand && (
-        <p className={`${compact ? "text-xs" : "text-sm"} text-white/40`}>
+        <p className={`${compact ? "text-xs" : "text-sm"} text-charcoal/40`}>
           Vælg et mærke for at se modeller
         </p>
       )}

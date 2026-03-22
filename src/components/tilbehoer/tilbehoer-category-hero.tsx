@@ -17,50 +17,34 @@ export function TilbehoerCategoryHero({
   onModelChange,
 }: TilbehoerCategoryHeroProps) {
   return (
-    <section className="relative overflow-hidden bg-charcoal">
-      {/* Dot pattern */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, transparent, transparent 30px, currentColor 30px, currentColor 31px)",
-        }}
-      />
+    <section className="bg-cream">
+      <div className="mx-auto max-w-7xl px-4 py-16 text-center md:py-20">
+        {/* Category badge */}
+        <span className="inline-flex rounded-full bg-green-eco/10 px-4 py-1 text-sm font-medium text-green-eco">
+          Tilbehør
+        </span>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-12 md:py-16">
-        {/* Green accent line */}
-        <div className="mb-4 h-1 w-10 bg-green-eco" />
-
-        {/* Category label */}
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-eco">
-          {category.label}
-        </p>
-
-        {/* Heading */}
-        <h1 className="font-display text-4xl font-bold text-white md:text-5xl">
+        {/* Title */}
+        <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-charcoal md:text-5xl">
           {category.label}
         </h1>
 
         {/* Description */}
-        <p className="mt-3 max-w-xl text-base text-white/60">
-          {category.heroDescription}
-        </p>
+        {category.heroDescription && (
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-charcoal/70">
+            {category.heroDescription}
+          </p>
+        )}
 
-        {/* Product count badge */}
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-eco opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-eco" />
-          </span>
-          <span className="text-xs font-semibold text-white/80">
-            {productCount} produkter
-          </span>
-        </div>
+        {/* Product count */}
+        {productCount > 0 && (
+          <p className="mt-3 text-sm text-charcoal/50">{productCount} produkter</p>
+        )}
 
         {/* DevicePicker — only for device-specific categories */}
         {category.deviceSpecific && (
-          <div className="mt-8">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/40">
+          <div className="mx-auto mt-8 max-w-2xl text-left">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-charcoal/40">
               Filtrer efter din model
             </p>
             <DevicePicker
@@ -72,10 +56,10 @@ export function TilbehoerCategoryHero({
         )}
 
         {/* Trust row */}
-        <div className="mt-8 flex flex-wrap gap-4 text-xs font-semibold text-white/80">
-          <span>✓ 36 mdr. garanti</span>
-          <span>✓ 14 dages returret</span>
-          <span>✓ Fri fragt over 499 kr.</span>
+        <div className="mt-8 flex flex-wrap justify-center gap-6 text-xs font-semibold text-charcoal/50">
+          <span>36 mdr. garanti</span>
+          <span>14 dages returret</span>
+          <span>Fri fragt over 499 kr.</span>
         </div>
       </div>
     </section>

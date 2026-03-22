@@ -85,8 +85,8 @@ function CategoryChips({
         onClick={() => onChange("")}
         className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
           value === ""
-            ? "bg-charcoal text-white"
-            : "border border-sand bg-white text-charcoal hover:border-charcoal/30"
+            ? "bg-green-eco text-white"
+            : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
         }`}
       >
         Alle kategorier
@@ -97,8 +97,8 @@ function CategoryChips({
           onClick={() => onChange(cat.slug)}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
             value === cat.slug
-              ? "bg-charcoal text-white"
-              : "border border-sand bg-white text-charcoal hover:border-charcoal/30"
+              ? "bg-green-eco text-white"
+              : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
           }`}
         >
           {cat.label}
@@ -366,8 +366,8 @@ export function AccessoryGrid({
         onClick={() => setSelectedBrand("")}
         className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
           selectedBrand === ""
-            ? "bg-charcoal text-white"
-            : "border border-sand text-charcoal hover:border-charcoal/40"
+            ? "bg-green-eco text-white"
+            : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
         }`}
       >
         Alle
@@ -380,8 +380,8 @@ export function AccessoryGrid({
           }
           className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
             selectedBrand === brand
-              ? "bg-charcoal text-white"
-              : "border border-sand text-charcoal hover:border-charcoal/40"
+              ? "bg-green-eco text-white"
+              : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
           }`}
         >
           {brand}
@@ -404,8 +404,8 @@ export function AccessoryGrid({
             }
             className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
               isActive
-                ? "bg-charcoal text-white"
-                : "border border-sand text-charcoal hover:border-charcoal/40"
+                ? "bg-green-eco text-white"
+                : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
             }`}
           >
             {range.label}
@@ -489,8 +489,8 @@ export function AccessoryGrid({
                 onClick={() => setFilter("model", filters.model === m ? "" : m)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                   filters.model === m
-                    ? "bg-charcoal text-white"
-                    : "border border-sand bg-white text-charcoal hover:border-charcoal/30"
+                    ? "bg-green-eco text-white"
+                    : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
                 }`}
               >
                 {m}
@@ -570,8 +570,8 @@ export function AccessoryGrid({
                 }
                 className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                   selectedBrand === brand
-                    ? "bg-charcoal text-white"
-                    : "border border-sand text-charcoal hover:border-charcoal/40"
+                    ? "bg-green-eco text-white"
+                    : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
                 }`}
               >
                 {brand}
@@ -593,8 +593,8 @@ export function AccessoryGrid({
                   }
                   className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                     isActive
-                      ? "bg-charcoal text-white"
-                      : "border border-sand text-charcoal hover:border-charcoal/40"
+                      ? "bg-green-eco text-white"
+                      : "border border-sand bg-white text-charcoal hover:border-green-eco/40"
                   }`}
                 >
                   {range.label}
