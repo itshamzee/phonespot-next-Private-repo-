@@ -63,7 +63,7 @@ export default function QuickAddPage() {
   // Inline create template state
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
-  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "Smartphone" });
+  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "smartphone" });
 
   // Load locations on mount
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function QuickAddPage() {
 
   function openCreateTemplate() {
     const { brand, model } = detectBrandFromSearch(search);
-    setCreateTemplateForm({ brand, model: model || search, category: "Smartphone" });
+    setCreateTemplateForm({ brand, model: model || search, category: "smartphone" });
     setShowCreateTemplate(true);
   }
 
@@ -193,7 +193,7 @@ export default function QuickAddPage() {
       if (res.ok) {
         const created = await res.json();
         setShowCreateTemplate(false);
-        setCreateTemplateForm({ brand: "", model: "", category: "Smartphone" });
+        setCreateTemplateForm({ brand: "", model: "", category: "smartphone" });
         await selectTemplate(created);
       }
     } finally {
@@ -414,8 +414,17 @@ export default function QuickAddPage() {
                         onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
                         className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
                       >
-                        {["iPhone", "Smartphone", "iPad", "Tablet", "Smartwatch", "Laptop", "Konsol", "Andet"].map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                        {[
+                          { value: "iphone", label: "iPhone" },
+                          { value: "smartphone", label: "Smartphone" },
+                          { value: "ipad", label: "iPad" },
+                          { value: "tablet", label: "Tablet" },
+                          { value: "smartwatch", label: "Smartwatch" },
+                          { value: "laptop", label: "Laptop" },
+                          { value: "console", label: "Konsol" },
+                          { value: "other", label: "Andet" },
+                        ].map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
                         ))}
                       </select>
                     </div>

@@ -34,8 +34,11 @@ export async function logActivity({
   entityId,
   details,
 }: LogActivityParams): Promise<void> {
+  // actor_id is a UUID column — "system" is not a valid UUID, use null instead
+  const safeActorId = actorId && actorId !== "system" && actorId.length === 36 ? actorId : null;
+
   const { error } = await supabase.from("activity_log").insert({
-    actor_id: actorId,
+    actor_id: safeActorId,
     action,
     entity_type: entityType,
     entity_id: entityId,

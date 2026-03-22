@@ -123,7 +123,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
   // Inline create template state
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
-  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "Smartphone" });
+  const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "smartphone" });
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!product?.slug);
 
@@ -334,7 +334,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
 
   function openCreateTemplate() {
     const { brand, model } = detectBrandFromSearch(templateSearch);
-    setCreateTemplateForm({ brand, model: model || templateSearch, category: "Smartphone" });
+    setCreateTemplateForm({ brand, model: model || templateSearch, category: "smartphone" });
     setShowCreateTemplate(true);
   }
 
@@ -358,7 +358,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
         const created = await res.json();
         await linkTemplate(created);
         setShowCreateTemplate(false);
-        setCreateTemplateForm({ brand: "", model: "", category: "Smartphone" });
+        setCreateTemplateForm({ brand: "", model: "", category: "smartphone" });
       }
     } finally {
       setCreateTemplateSaving(false);
@@ -610,8 +610,17 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                   onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
                   className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                 >
-                  {["iPhone", "Smartphone", "iPad", "Tablet", "Smartwatch", "Laptop", "Konsol", "Andet"].map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  {[
+                    { value: "iphone", label: "iPhone" },
+                    { value: "smartphone", label: "Smartphone" },
+                    { value: "ipad", label: "iPad" },
+                    { value: "tablet", label: "Tablet" },
+                    { value: "smartwatch", label: "Smartwatch" },
+                    { value: "laptop", label: "Laptop" },
+                    { value: "console", label: "Konsol" },
+                    { value: "other", label: "Andet" },
+                  ].map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
               </div>
