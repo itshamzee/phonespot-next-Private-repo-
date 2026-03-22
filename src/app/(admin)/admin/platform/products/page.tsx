@@ -127,10 +127,11 @@ export default function ProductsPage() {
             onCancel={handleBack}
           />
         ) : (
-          <UnifiedProductForm
-            defaultType={TAB_TO_TYPE[tab]}
+          <SkuProductForm
             onSave={handleBack}
             onCancel={handleBack}
+            lockedCategory="accessory"
+            lockedSubcategory={tab === "spare-parts" ? "spare-part" : undefined}
           />
         )
       ) : tab === "templates" ? (

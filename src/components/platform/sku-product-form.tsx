@@ -103,9 +103,26 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
   const [templateResults, setTemplateResults] = useState<ProductTemplate[]>([]);
   const [templateSearching, setTemplateSearching] = useState(false);
 
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!product?.slug);
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-generate slug from title unless user has manually edited it
+  useEffect(() => {
+    if (slugManuallyEdited) return;
+    if (!form.title.trim()) return;
+    const timer = setTimeout(() => {
+      const slug = form.title
+        .toLowerCase()
+        .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      setForm((prev) => ({ ...prev, slug }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [form.title, slugManuallyEdited]);
 
   // Load linked templates on edit
   useEffect(() => {
@@ -311,7 +328,6 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
             <input
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              onBlur={() => !form.slug && generateSlug()}
               className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
               required
             />
@@ -656,12 +672,12 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
             <div className="flex gap-2">
               <input
                 value={form.slug}
-                onChange={(e) => set("slug", e.target.value)}
+                onChange={(e) => { setSlugManuallyEdited(true); set("slug", e.target.value); }}
                 className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
               />
               <button
                 type="button"
-                onClick={generateSlug}
+                onClick={() => { setSlugManuallyEdited(false); generateSlug(); }}
                 className="rounded-xl bg-stone-200 px-3 py-2 text-xs font-medium text-stone-600 hover:bg-stone-300"
               >
                 Generer

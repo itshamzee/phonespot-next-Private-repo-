@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
 import { getAccessoryBySlug } from "@/lib/supabase/accessories";
+import { createServerClient } from "@/lib/supabase/client";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { getCategoryConfig } from "@/lib/tilbehoer-config";
 import { AccessoryDetail } from "@/components/product/accessory-detail";
@@ -83,8 +84,16 @@ export default async function AccessoryDetailPage({ params }: Props) {
 
   const catConfig = getCategoryConfig(category);
 
-  // No compatible_devices field on SkuProduct yet — use empty list for now
-  const compatibleDevices: string[] = [];
+  // Query real compatible devices via sku_product_templates join
+  const supabase = createServerClient();
+  const { data: templateLinks } = await supabase
+    .from("sku_product_templates")
+    .select("template_id, product_templates(display_name, slug, category)")
+    .eq("sku_product_id", product.id);
+  const compatibleDevices: string[] = (templateLinks ?? [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((l: any) => l.product_templates?.display_name)
+    .filter(Boolean);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
