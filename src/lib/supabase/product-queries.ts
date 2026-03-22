@@ -97,6 +97,8 @@ export async function getAvailableDevices(templateId: string) {
     .select("*, location:locations(id, name, type)")
     .eq("template_id", templateId)
     .eq("status", "listed")
+    .not("selling_price", "is", null)
+    .gt("selling_price", 0)
     .order("selling_price", { ascending: true });
   return data || [];
 }

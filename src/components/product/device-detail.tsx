@@ -176,9 +176,11 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       const gradeMatch = selectedGrade === "N"
         ? ((d.grade as string) === "N" || (d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")))
         : d.grade === selectedGrade && !(selectedGrade !== "N" && d.condition_notes?.toLowerCase().includes("fabriksny") && d.grade === "A");
-      return gradeMatch &&
-        (selectedStorage === "" || d.storage === selectedStorage) &&
-        (selectedColor === "" || d.color === selectedColor);
+      // A device with null storage/color matches any selection (it has no variant dimension).
+      // Only filter by storage/color when BOTH the selection and the device value are non-empty.
+      const storageMatch = selectedStorage === "" || d.storage == null || d.storage === selectedStorage;
+      const colorMatch = selectedColor === "" || d.color == null || d.color === selectedColor;
+      return gradeMatch && storageMatch && colorMatch;
     }
   );
   const price =
