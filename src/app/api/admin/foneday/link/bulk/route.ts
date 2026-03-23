@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mapCategory, cleanTitle } from "@/lib/foneday/mapper";
+import { mapCategory, cleanTitle, inferAttributes } from "@/lib/foneday/mapper";
 import { autoLinkTemplates } from "@/lib/foneday/sync";
 
 /**
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       const sellingPrice = Math.round(costDkk * (1 + markup / 100));
       const title = cleanTitle(catalog.title);
       const brand = catalog.product_brand ?? null;
+      const attributes = inferAttributes(catalog.category, catalog.title);
 
       const { data: skuProduct, error: skuErr } = await supabase
         .from("sku_products")
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
           images: catalog.image_url ? [catalog.image_url] : [],
           status: "published",
           is_active: true,
+          attributes,
         })
         .select()
         .single();

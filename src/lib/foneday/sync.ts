@@ -3,7 +3,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProducts } from "./client";
-import { clearMapCache } from "./mapper";
+import { clearMapCache, inferAttributes } from "./mapper";
 import type { FonedayProduct, FonedaySettings, SyncStats } from "./types";
 
 /**
@@ -186,6 +186,24 @@ export async function syncCatalog(): Promise<SyncStats> {
       if (!catalog.in_stock) {
         updates.status = "draft";
       }
+    }
+
+    // Backfill attributes from Foneday category/title if not already set
+    const inferred = inferAttributes(catalog.category, catalog.title);
+    if (Object.keys(inferred).length > 0) {
+      // Fetch current attributes to merge (don't overwrite manually-set values)
+      const { data: currentProduct } = await supabase
+        .from("sku_products")
+        .select("attributes")
+        .eq("id", link.sku_product_id)
+        .single();
+      const currentAttrs = (currentProduct?.attributes as Record<string, string>) ?? {};
+      const merged: Record<string, string> = { ...inferred };
+      // Keep existing manually-set values (don't overwrite)
+      for (const [k, v] of Object.entries(currentAttrs)) {
+        if (v) merged[k] = v;
+      }
+      updates.attributes = merged;
     }
 
     const { error } = await supabase

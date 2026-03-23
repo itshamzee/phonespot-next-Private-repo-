@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mapCategory, cleanTitle } from "@/lib/foneday/mapper";
+import { mapCategory, cleanTitle, inferAttributes } from "@/lib/foneday/mapper";
 import { autoLinkTemplates } from "@/lib/foneday/sync";
 
 /**
@@ -59,6 +59,9 @@ export async function POST(req: NextRequest) {
   const title = cleanTitle(catalogProduct.title);
   const brand = catalogProduct.product_brand ?? null;
 
+  // Auto-detect attributes (case_type, protector_type, connector_type, etc.) from Foneday data
+  const attributes = inferAttributes(catalogProduct.category, catalogProduct.title);
+
   const { data: skuProduct, error: skuErr } = await supabase
     .from("sku_products")
     .insert({
@@ -73,6 +76,7 @@ export async function POST(req: NextRequest) {
       images: catalogProduct.image_url ? [catalogProduct.image_url] : [],
       status: "published",
       is_active: true,
+      attributes,
     })
     .select()
     .single();

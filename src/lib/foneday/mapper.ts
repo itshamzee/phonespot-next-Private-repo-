@@ -101,6 +101,97 @@ export function parseCompatibleModels(suitableFor: string | null): string[] {
 }
 
 /**
+ * Infer product attributes from Foneday category and title.
+ * Returns JSONB-compatible attributes object with case_type, protector_type,
+ * connector_type, charger_type, audio_type when detectable.
+ */
+export function inferAttributes(
+  fonedayCategory: string | null,
+  title: string,
+): Record<string, string> {
+  const attrs: Record<string, string> = {};
+
+  if (!fonedayCategory) return attrs;
+
+  const cat = fonedayCategory.toLowerCase();
+  const titleLower = title.toLowerCase();
+
+  // Case type detection from Foneday category
+  if (cat === "booktypes case" || cat.includes("book")) {
+    attrs.case_type = "Book";
+  } else if (cat === "softcase" || cat.includes("soft")) {
+    attrs.case_type = "Slim";
+  } else if (cat === "hardcase" || cat.includes("hard")) {
+    attrs.case_type = "Rugged";
+  } else if (cat === "bumper") {
+    attrs.case_type = "Bumper";
+  } else if (cat === "flipcase" || cat.includes("flip")) {
+    attrs.case_type = "Flip";
+  } else if (cat === "back cover") {
+    attrs.case_type = "Slim";
+  } else if (cat === "case") {
+    // Generic "Case" — try to detect from title
+    if (titleLower.includes("wallet")) attrs.case_type = "Wallet";
+    else if (titleLower.includes("book")) attrs.case_type = "Book";
+    else if (titleLower.includes("clear") || titleLower.includes("transparent")) attrs.case_type = "Clear";
+    else if (titleLower.includes("rugged") || titleLower.includes("armor") || titleLower.includes("tough")) attrs.case_type = "Rugged";
+    else if (titleLower.includes("flip")) attrs.case_type = "Flip";
+    else if (titleLower.includes("bumper")) attrs.case_type = "Bumper";
+    else if (titleLower.includes("slim") || titleLower.includes("thin") || titleLower.includes("ultra")) attrs.case_type = "Slim";
+  }
+
+  // Screen protector type detection
+  if (cat === "tempered glass" || cat.includes("tempered")) {
+    attrs.protector_type = "H\u00E6rdet glas";
+  } else if (cat === "screen protector") {
+    if (titleLower.includes("privacy")) attrs.protector_type = "Privacy";
+    else if (titleLower.includes("edge to edge") || titleLower.includes("edge-to-edge")) attrs.protector_type = "Edge to Edge";
+    else if (titleLower.includes("film") || titleLower.includes("folie")) attrs.protector_type = "Film";
+    else attrs.protector_type = "H\u00E6rdet glas";
+  } else if (cat === "edge to edge") {
+    attrs.protector_type = "Edge to Edge";
+  }
+
+  // Cable connector type detection
+  if (cat === "cables" || cat === "cable") {
+    if (titleLower.includes("usb-c") || titleLower.includes("usb c")) {
+      if (titleLower.includes("lightning")) attrs.connector_type = "USB-C til Lightning";
+      else attrs.connector_type = "USB-C";
+    } else if (titleLower.includes("lightning")) {
+      attrs.connector_type = "Lightning";
+    } else if (titleLower.includes("micro")) {
+      attrs.connector_type = "Micro-USB";
+    }
+  }
+
+  // Charger type detection
+  if (cat.includes("charger") || cat === "wireless charger") {
+    if (cat.includes("wireless") || cat.includes("tr\u00E5dl\u00F8s") || titleLower.includes("wireless") || titleLower.includes("qi")) {
+      attrs.charger_type = "Tr\u00E5dl\u00F8s";
+    } else if (cat.includes("car") || titleLower.includes("car") || titleLower.includes("bil")) {
+      attrs.charger_type = "Biloplader";
+    } else if (cat.includes("magsafe") || titleLower.includes("magsafe")) {
+      attrs.charger_type = "MagSafe";
+    } else {
+      attrs.charger_type = "V\u00E6goplader";
+    }
+  }
+
+  // Audio type detection
+  if (cat === "audio" || cat === "headset" || cat === "speaker" || cat === "earbuds") {
+    if (cat === "earbuds" || titleLower.includes("earbuds") || titleLower.includes("in-ear")) {
+      attrs.audio_type = "In-ear";
+    } else if (cat === "headset" || titleLower.includes("headset") || titleLower.includes("over-ear")) {
+      attrs.audio_type = "Over-ear";
+    } else if (cat === "speaker" || titleLower.includes("speaker") || titleLower.includes("h\u00F8jttaler")) {
+      attrs.audio_type = "H\u00F8jttaler";
+    }
+  }
+
+  return attrs;
+}
+
+/**
  * Clean up a Foneday product title for display on PhoneSpot.
  * Removes "Compatible For" prefix and other boilerplate.
  */
