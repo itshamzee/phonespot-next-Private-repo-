@@ -204,35 +204,41 @@ export default async function AccessoryDetailPage({ params }: Props) {
 
   if (colorInfo) {
     // Search for products with similar base title (same product, different color)
+    // Use exact base title match — siblings must have baseTitle + " " + colorWord pattern
+    // to avoid "iPhone 17 Pro" matching "iPhone 17 Pro Max"
     const { data: siblingRows } = await supabase
       .from("sku_products")
       .select("id, title, slug, images")
       .eq("status", "published")
       .eq("is_active", true)
       .eq("category", "accessory")
-      .ilike("title", `${colorInfo.baseTitle}%`)
+      .ilike("title", `${colorInfo.baseTitle} %`)
       .neq("id", product.id)
       .limit(10);
 
     if (siblingRows && siblingRows.length > 0) {
-      // Current product as first swatch
-      colorSiblings.push({
-        id: product.id,
-        title: product.title,
-        slug: slug,
-        color: colorInfo.color,
-        colorLabel: getColorLabel(colorInfo.color),
-        colorCss: getColorCss(colorInfo.color),
-        image: product.images[0] ?? null,
-        isCurrent: true,
+      // Filter: only keep siblings whose baseTitle matches EXACTLY (not a substring)
+      const validSiblings = siblingRows.filter((sib) => {
+        const sibColor = extractColor(sib.title);
+        return sibColor && sibColor.baseTitle.toLowerCase() === colorInfo.baseTitle.toLowerCase();
       });
 
-      // Add siblings that also have a detectable color
-      for (const sib of siblingRows) {
-        const sibColor = extractColor(sib.title);
-        if (sibColor) {
-          // Find the correct category slug for the sibling's URL
-          const sibCatSlug = category; // same category since we're matching within accessories
+      if (validSiblings.length > 0) {
+        // Current product as first swatch
+        colorSiblings.push({
+          id: product.id,
+          title: product.title,
+          slug: slug,
+          color: colorInfo.color,
+          colorLabel: getColorLabel(colorInfo.color),
+          colorCss: getColorCss(colorInfo.color),
+          image: product.images[0] ?? null,
+          isCurrent: true,
+        });
+
+        // Add validated siblings
+        for (const sib of validSiblings) {
+          const sibColor = extractColor(sib.title)!;
           colorSiblings.push({
             id: sib.id,
             title: sib.title,
