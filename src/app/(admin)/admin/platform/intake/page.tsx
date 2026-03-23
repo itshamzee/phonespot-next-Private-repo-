@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { parseDKKToOere, formatDKK } from "@/lib/platform/format";
+import { DEVICE_SPEC_FIELDS } from "@/lib/platform/device-spec-fields";
 
 interface Template {
   id: string;
@@ -64,6 +65,7 @@ export default function QuickAddPage() {
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
   const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "smartphone" });
+  const [createTemplateSpecs, setCreateTemplateSpecs] = useState<Record<string, string>>({});
 
   // Image upload state for new model creation
   const [uploadedImages, setUploadedImages] = useState<{ url: string; path: string }[]>([]);
@@ -241,6 +243,7 @@ export default function QuickAddPage() {
     setUploadedImages([]);
     setUploadingImages([]);
     setImageUploadError(null);
+    setCreateTemplateSpecs({});
   }
 
   function openCreateTemplate() {
@@ -263,7 +266,7 @@ export default function QuickAddPage() {
       const res = await fetch("/api/platform/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [], images: uploadedImages.map((i) => i.url) }),
+        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [], images: uploadedImages.map((i) => i.url), specifications: createTemplateSpecs }),
       });
       if (res.ok) {
         const created = await res.json();
@@ -487,7 +490,17 @@ export default function QuickAddPage() {
                       <label className="mb-1 block text-xs font-semibold text-stone-500">Kategori</label>
                       <select
                         value={createTemplateForm.category}
-                        onChange={(e) => setCreateTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
+                        onChange={(e) => {
+                          const newCat = e.target.value;
+                          setCreateTemplateForm((prev) => ({ ...prev, category: newCat }));
+                          // Clear specs that don't apply to the new category
+                          const validKeys = DEVICE_SPEC_FIELDS.filter((f) => f.categories.includes(newCat)).map((f) => f.key);
+                          setCreateTemplateSpecs((prev) => {
+                            const next: Record<string, string> = {};
+                            for (const k of validKeys) { if (prev[k]) next[k] = prev[k]; }
+                            return next;
+                          });
+                        }}
                         className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
                       >
                         {[
@@ -505,6 +518,54 @@ export default function QuickAddPage() {
                       </select>
                     </div>
                   </div>
+                  {/* Category-specific spec fields */}
+                  {DEVICE_SPEC_FIELDS.filter((f) => f.categories.includes(createTemplateForm.category)).length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-green-700">Specifikationer</p>
+                      {DEVICE_SPEC_FIELDS.filter((f) => f.categories.includes(createTemplateForm.category)).map((field) => (
+                        <div key={field.key}>
+                          <label className="mb-1 block text-xs font-semibold text-stone-500">{field.label}</label>
+                          {field.type === "chips" && field.options ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {field.options.map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => setCreateTemplateSpecs((prev) => ({ ...prev, [field.key]: prev[field.key] === opt ? "" : opt }))}
+                                  className={[
+                                    "rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+                                    createTemplateSpecs[field.key] === opt
+                                      ? "border-green-500 bg-green-50 text-green-800"
+                                      : "border-stone-200 bg-white text-stone-500 hover:border-stone-300",
+                                  ].join(" ")}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          ) : field.type === "select" && field.options ? (
+                            <select
+                              value={createTemplateSpecs[field.key] ?? ""}
+                              onChange={(e) => setCreateTemplateSpecs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm focus:border-green-eco/50 focus:outline-none"
+                            >
+                              <option value="">Vælg...</option>
+                              {field.options.map((opt) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              value={createTemplateSpecs[field.key] ?? ""}
+                              onChange={(e) => setCreateTemplateSpecs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                              placeholder={field.key === "skærm" ? "f.eks. 15.6 tommer" : field.key === "processor" ? "f.eks. i7-1365U, Ryzen 5" : ""}
+                              className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm focus:border-green-eco/50 focus:outline-none"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {/* Image upload zone */}
                   <div>
                     <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone-500">
