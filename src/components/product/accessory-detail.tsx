@@ -21,9 +21,14 @@ export interface CrossSellProduct {
   subcategory?: string | null;
 }
 
+export interface CompatibleDevice {
+  name: string;
+  brand: string;
+}
+
 type AccessoryDetailProps = {
   product: SkuProduct;
-  compatibleDevices?: string[];
+  compatibleDevices?: CompatibleDevice[];
   crossSellProducts?: CrossSellProduct[];
   stockQuantity?: number | null;
   category?: string;
@@ -58,8 +63,14 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
   protection_level: "Beskyttelsesniveau",
 };
 
+const HIDDEN_ATTRS = new Set(["_source", "source", "id"]);
+
 function attributeLabel(key: string): string {
   return ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " ");
+}
+
+function isColorVariant(name: string): boolean {
+  return /farve|color|colour/i.test(name);
 }
 
 // ---------------------------------------------------------------------------
@@ -88,7 +99,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
     return (
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="text-sm font-medium text-green-700">På lager</span>
+        <span className="text-sm font-medium text-green-700">Pa lager</span>
       </div>
     );
   }
@@ -105,7 +116,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-amber-400" />
         <span className="text-sm font-medium text-amber-700">
-          Kun {quantity} på lager
+          Kun {quantity} pa lager
         </span>
       </div>
     );
@@ -113,21 +124,25 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="h-2 w-2 rounded-full bg-green-500" />
-      <span className="text-sm font-medium text-green-700">På lager</span>
+      <span className="text-sm font-medium text-green-700">Pa lager</span>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Image gallery with zoom
+// Image gallery with zoom and override support
 // ---------------------------------------------------------------------------
 
 function ImageGallery({
   images,
   title,
+  overrideImage,
+  onThumbnailClick,
 }: {
   images: string[];
   title: string;
+  overrideImage?: string | null;
+  onThumbnailClick?: () => void;
 }) {
   const [mainIndex, setMainIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
@@ -142,7 +157,13 @@ function ImageGallery({
     setMousePos({ x, y });
   }, []);
 
-  const mainImage = images[mainIndex] ?? null;
+  function handleThumbnailClick(i: number) {
+    setMainIndex(i);
+    // Clicking a thumbnail clears the variant override
+    onThumbnailClick?.();
+  }
+
+  const displayedImage = overrideImage ?? images[mainIndex] ?? null;
 
   return (
     <div className="flex gap-3">
@@ -153,9 +174,9 @@ function ImageGallery({
             <button
               key={i}
               type="button"
-              onClick={() => setMainIndex(i)}
+              onClick={() => handleThumbnailClick(i)}
               className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
-                i === mainIndex
+                !overrideImage && i === mainIndex
                   ? "border-green-eco shadow-sm"
                   : "border-sand hover:border-charcoal/30"
               }`}
@@ -180,9 +201,9 @@ function ImageGallery({
         onMouseLeave={() => setZoom(false)}
         onMouseMove={handleMouseMove}
       >
-        {mainImage ? (
+        {displayedImage ? (
           <Image
-            src={mainImage}
+            src={displayedImage}
             alt={title}
             fill
             className="object-contain p-8 transition-transform duration-200 ease-out"
@@ -225,7 +246,7 @@ function AddToCartButton({
   effectivePrice,
   disabled = false,
   fullWidth = true,
-  label = "Tilføj til kurv",
+  label = "Tilfoj til kurv",
 }: {
   product: SkuProduct;
   effectivePrice: number;
@@ -339,7 +360,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
         onClick={handleAdd}
         className="mt-3 w-full rounded-full border-2 border-green-eco bg-white px-4 py-2 text-sm font-bold text-green-eco transition-colors hover:bg-green-eco hover:text-white"
       >
-        Tilføj
+        Tilfoj
       </button>
     </div>
   );
@@ -365,7 +386,6 @@ function StickyMobileCta({
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Show sticky bar when main CTA is NOT visible
         setVisible(!entry.isIntersecting);
       },
       { threshold: 0.1 },
@@ -393,10 +413,57 @@ function StickyMobileCta({
           product={product}
           effectivePrice={effectivePrice}
           fullWidth={false}
-          label="Tilføj til kurv"
+          label="Tilfoj til kurv"
         />
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Compatibility section — grouped by brand
+// ---------------------------------------------------------------------------
+
+function CompatibilitySection({ devices }: { devices: CompatibleDevice[] }) {
+  if (devices.length === 0) return null;
+
+  // Group by brand
+  const grouped: Record<string, string[]> = {};
+  for (const device of devices) {
+    const brand = device.brand || "Andre";
+    if (!grouped[brand]) grouped[brand] = [];
+    grouped[brand].push(device.name);
+  }
+
+  const brandOrder = Object.keys(grouped).sort((a, b) => {
+    // Apple and Samsung first
+    if (a === "Apple") return -1;
+    if (b === "Apple") return 1;
+    if (a === "Samsung") return -1;
+    if (b === "Samsung") return 1;
+    return a.localeCompare(b);
+  });
+
+  return (
+    <section id="compatibility">
+      <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
+        Kompatibel med
+      </h2>
+      <div className="rounded-[16px] border border-sand bg-white overflow-hidden">
+        <div className="divide-y divide-sand">
+          {brandOrder.map((brand) => (
+            <div key={brand} className="px-6 py-4">
+              <p className="font-display text-xs font-bold uppercase tracking-wider text-charcoal/40 mb-1.5">
+                {brand}
+              </p>
+              <p className="text-sm text-charcoal/70">
+                {grouped[brand].join(", ")}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -412,6 +479,7 @@ export function AccessoryDetail({
   category,
 }: AccessoryDetailProps) {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
   // Compute effective price from selected variant options
@@ -430,7 +498,6 @@ export function AccessoryDetail({
   }
 
   // Attributes to display (excluding internal ones)
-  const HIDDEN_ATTRS = new Set(["_source", "source"]);
   const attributeEntries = product.attributes
     ? Object.entries(product.attributes).filter(
         ([k, v]) => !HIDDEN_ATTRS.has(k) && v !== null && v !== undefined && v !== "",
@@ -443,8 +510,19 @@ export function AccessoryDetail({
     product.category === "cover" ||
     product.subcategory === "cover";
   const crossSellHeading = isCover
-    ? "Komplet beskyttelsen — Skærmbeskyttelse"
+    ? "Komplet beskyttelsen — Skaermbeskyttelse"
     : "Komplet beskyttelsen — Cover";
+
+  // Above-fold compatibility summary
+  const compatibilityLine = (() => {
+    if (compatibleDevices.length === 0) return null;
+    const first = compatibleDevices[0].name;
+    if (compatibleDevices.length === 1) return { text: `Passer til ${first}`, showLink: false };
+    const second = compatibleDevices[1].name;
+    const remaining = compatibleDevices.length - 2;
+    if (remaining <= 0) return { text: `Passer til ${first} og ${second}`, showLink: false };
+    return { text: `Passer til ${first}, ${second} og ${remaining} flere`, showLink: true };
+  })();
 
   return (
     <>
@@ -453,7 +531,12 @@ export function AccessoryDetail({
       ================================================================ */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[55%_45%]">
         {/* Left — image gallery */}
-        <ImageGallery images={product.images} title={product.title} />
+        <ImageGallery
+          images={product.images}
+          title={product.title}
+          overrideImage={variantImageOverride}
+          onThumbnailClick={() => setVariantImageOverride(null)}
+        />
 
         {/* Right — product info */}
         <div className="flex flex-col gap-5">
@@ -468,7 +551,7 @@ export function AccessoryDetail({
               {product.title}
             </h1>
             {product.short_description && (
-              <p className="mt-2 text-sm text-charcoal/60 leading-relaxed">
+              <p className="mt-2 text-base text-charcoal/70 leading-relaxed">
                 {product.short_description}
               </p>
             )}
@@ -493,68 +576,106 @@ export function AccessoryDetail({
             <p className="mt-1 text-xs text-charcoal/50">Inkl. moms</p>
           </div>
 
-          {/* Compatible devices */}
-          {compatibleDevices.length > 0 && (
-            <div>
-              <p className="mb-2 text-sm font-semibold text-charcoal">
-                Passer til:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {compatibleDevices.map((device) => (
-                  <span
-                    key={device}
-                    className="rounded-full border border-green-eco/30 bg-green-eco/8 px-3 py-1 text-xs font-medium text-green-eco"
-                    style={{ backgroundColor: "rgba(26,61,46,0.06)" }}
+          {/* Above-fold compatibility line */}
+          {compatibilityLine && (
+            <p className="text-sm text-charcoal/60">
+              {compatibilityLine.text}
+              {compatibilityLine.showLink && (
+                <>
+                  {" "}
+                  <a
+                    href="#compatibility"
+                    className="font-medium text-green-eco underline underline-offset-2 hover:text-green-eco/80 transition-colors"
                   >
-                    {device}
-                  </span>
-                ))}
-              </div>
-            </div>
+                    Se alle
+                  </a>
+                </>
+              )}
+            </p>
           )}
 
           {/* Variant selectors */}
-          {product.variants.map((variant) => (
-            <div key={variant.name}>
-              <p className="mb-2 text-sm font-bold text-charcoal">
-                {variant.name}
-                {selectedVariants[variant.name] && (
-                  <span className="ml-2 font-normal text-charcoal/50">
-                    — {selectedVariants[variant.name]}
-                  </span>
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {variant.options.map((opt) => {
-                  const isSelected = selectedVariants[variant.name] === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() =>
-                        setSelectedVariants((prev) => ({
-                          ...prev,
-                          [variant.name]: isSelected ? "" : opt.value,
-                        }))
-                      }
-                      className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
-                        isSelected
-                          ? "border-green-eco bg-green-eco text-white"
-                          : "border-sand bg-white text-charcoal hover:border-green-eco/50"
-                      }`}
-                    >
-                      {opt.value}
-                      {opt.price_override != null && (
-                        <span className="ml-1.5 text-xs opacity-70">
-                          ({formatDKK(opt.price_override)})
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+          {product.variants.map((variant) => {
+            const isColor = isColorVariant(variant.name);
+            return (
+              <div key={variant.name}>
+                <p className="mb-2 text-sm font-bold text-charcoal">
+                  {variant.name}
+                  {selectedVariants[variant.name] && (
+                    <span className="ml-2 font-normal text-charcoal/50">
+                      — {selectedVariants[variant.name]}
+                    </span>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {variant.options.map((opt) => {
+                    const isSelected = selectedVariants[variant.name] === opt.value;
+
+                    // Color variant with image — render as image swatch
+                    if (isColor && opt.image) {
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          title={opt.value}
+                          onClick={() => {
+                            const newValue = isSelected ? "" : opt.value;
+                            setSelectedVariants((prev) => ({
+                              ...prev,
+                              [variant.name]: newValue,
+                            }));
+                            setVariantImageOverride(newValue ? opt.image : null);
+                          }}
+                          className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 object-cover transition-all ${
+                            isSelected
+                              ? "border-green-eco shadow-sm ring-2 ring-green-eco/20"
+                              : "border-sand hover:border-charcoal/30"
+                          }`}
+                        >
+                          <Image
+                            src={opt.image}
+                            alt={opt.value}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        </button>
+                      );
+                    }
+
+                    // All other variants (color without image, size, length, etc.) — text button
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          const newValue = isSelected ? "" : opt.value;
+                          setSelectedVariants((prev) => ({
+                            ...prev,
+                            [variant.name]: newValue,
+                          }));
+                          // Clear image override when selecting non-image variant
+                          if (isColor) setVariantImageOverride(null);
+                        }}
+                        className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                          isSelected
+                            ? "border-green-eco bg-green-eco text-white"
+                            : "border-sand bg-white text-charcoal hover:border-green-eco/50"
+                        }`}
+                      >
+                        {opt.value}
+                        {opt.price_override != null && (
+                          <span className="ml-1.5 text-xs opacity-70">
+                            ({formatDKK(opt.price_override)})
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* CTA block */}
           <div ref={ctaRef} className="rounded-2xl border border-sand bg-white p-5">
@@ -584,23 +705,6 @@ export function AccessoryDetail({
               ))}
             </div>
           </div>
-
-          {/* Attributes / specs — inline on right panel if few */}
-          {attributeEntries.length > 0 && attributeEntries.length <= 4 && (
-            <div className="rounded-2xl border border-sand bg-white p-5">
-              <h2 className="mb-3 text-sm font-bold text-charcoal">
-                Specifikationer
-              </h2>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
-                {attributeEntries.map(([key, val]) => (
-                  <div key={key} className="contents">
-                    <dt className="text-sm text-charcoal/50">{attributeLabel(key)}</dt>
-                    <dd className="text-sm font-medium text-charcoal">{String(val)}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
         </div>
       </div>
 
@@ -608,27 +712,13 @@ export function AccessoryDetail({
           Below-fold content
       ================================================================ */}
       <div className="mt-12 flex flex-col gap-10">
-        {/* Description */}
-        {product.description && (
+        {/* 1. Produktdetaljer — attributes grid */}
+        {attributeEntries.length > 0 && (
           <section>
             <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
-              Beskrivelse
+              Produktdetaljer
             </h2>
-            <div className="rounded-2xl border border-sand bg-white p-6">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-charcoal/70">
-                {product.description}
-              </p>
-            </div>
-          </section>
-        )}
-
-        {/* Full spec table — only if more than 4 attributes */}
-        {attributeEntries.length > 4 && (
-          <section>
-            <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
-              Specifikationer
-            </h2>
-            <div className="rounded-2xl border border-sand bg-white overflow-hidden">
+            <div className="rounded-[16px] border border-sand bg-white overflow-hidden">
               <dl>
                 {attributeEntries.map(([key, val], idx) => (
                   <div
@@ -650,7 +740,22 @@ export function AccessoryDetail({
           </section>
         )}
 
-        {/* Cross-sell */}
+        {/* 2. Beskrivelse */}
+        {product.description && (
+          <section>
+            <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
+              Beskrivelse
+            </h2>
+            <p className="whitespace-pre-line text-base leading-relaxed text-charcoal/70 max-w-prose">
+              {product.description}
+            </p>
+          </section>
+        )}
+
+        {/* 3. Kompatibel med */}
+        <CompatibilitySection devices={compatibleDevices} />
+
+        {/* 4. Cross-sell */}
         {crossSellProducts.length > 0 && (
           <section>
             <div className="mb-4 flex items-center justify-between">
@@ -668,33 +773,6 @@ export function AccessoryDetail({
             </div>
           </section>
         )}
-
-        {/* Trustpilot Reviews — loaded async by parent via Suspense */}
-        <section>
-          <h2 className="mb-6 font-display text-xl font-bold text-charcoal">
-            Anmeldelser fra vores kunder
-          </h2>
-          {/* Wrapper div — parent page renders TrustpilotReviews inside a Suspense here */}
-          <div id="trustpilot-reviews-slot" />
-        </section>
-
-        {/* USP bar */}
-        <section className="rounded-2xl bg-green-eco/5 border border-green-eco/20 p-6">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {[
-              { icon: "🛡️", title: "36 mdr. garanti", sub: "På alle produkter" },
-              { icon: "↩️", title: "14 dages returret", sub: "Ingen spørgsmål" },
-              { icon: "🚚", title: "1-2 dages levering", sub: "Fri fragt over 499 kr." },
-              { icon: "✅", title: "30+ kvalitetstests", sub: "Kun topkvalitet" },
-            ].map((usp) => (
-              <div key={usp.title} className="flex flex-col items-center text-center gap-1">
-                <span className="text-2xl">{usp.icon}</span>
-                <span className="text-sm font-bold text-charcoal">{usp.title}</span>
-                <span className="text-xs text-charcoal/50">{usp.sub}</span>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
 
       {/* Sticky mobile CTA */}

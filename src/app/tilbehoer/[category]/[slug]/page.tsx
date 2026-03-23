@@ -7,7 +7,7 @@ import { getAccessoryBySlug } from "@/lib/supabase/accessories";
 import { createServerClient } from "@/lib/supabase/client";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { getCategoryConfig } from "@/lib/tilbehoer-config";
-import { AccessoryDetail, type CrossSellProduct } from "@/components/product/accessory-detail";
+import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@/components/product/accessory-detail";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
@@ -66,26 +66,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createServerClient();
   const { data: templateLinks } = await supabase
     .from("sku_product_templates")
-    .select("template_id, product_templates(display_name)")
+    .select("template_id, product_templates(display_name, brand)")
     .eq("sku_product_id", product.id)
     .limit(3);
-  const compatibleDevices: string[] = (templateLinks ?? [])
+
+  const compatibleDeviceNames: string[] = (templateLinks ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((l: any) => l.product_templates?.display_name)
     .filter(Boolean);
 
   const title = product.meta_title ?? `${product.title} | PhoneSpot`;
-  const deviceSuffix =
-    compatibleDevices.length > 0
-      ? ` Passer til: ${compatibleDevices.slice(0, 3).join(", ")}.`
-      : "";
 
-  const description =
-    product.meta_description ??
-    product.short_description ??
-    `Koeb ${product.title} hos PhoneSpot.${deviceSuffix} ${
-      catConfig?.description ?? "Hurtig levering og skarpe priser."
-    } 36 mdr. garanti og 14 dages returret.`;
+  let description: string;
+  if (product.meta_description) {
+    description = product.meta_description;
+  } else {
+    const brandSegment = product.brand ? ` fra ${product.brand}` : "";
+    const deviceSegment =
+      compatibleDeviceNames.length > 0
+        ? ` til ${compatibleDeviceNames.slice(0, 2).join(" og ")}`
+        : "";
+    const bodyText =
+      product.short_description ??
+      catConfig?.description ??
+      "Hurtig levering og skarpe priser.";
+    description = `Koeb ${product.title}${brandSegment}${deviceSegment} hos PhoneSpot. ${bodyText} Fri fragt over 499 kr. 36 mdr. garanti.`;
+  }
 
   return {
     title,
@@ -115,13 +121,16 @@ export default async function AccessoryDetailPage({ params }: Props) {
   // ----------------------------------------------------------------
   const { data: templateLinks } = await supabase
     .from("sku_product_templates")
-    .select("template_id, product_templates(display_name, slug, category)")
+    .select("template_id, product_templates(display_name, slug, category, brand)")
     .eq("sku_product_id", product.id);
 
-  const compatibleDevices: string[] = (templateLinks ?? [])
+  const compatibleDevices: CompatibleDevice[] = (templateLinks ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((l: any) => l.product_templates?.display_name)
-    .filter(Boolean);
+    .map((l: any) => ({
+      name: l.product_templates?.display_name as string,
+      brand: (l.product_templates?.brand as string) ?? "",
+    }))
+    .filter((d: CompatibleDevice) => Boolean(d.name));
 
   // Template IDs this product is linked to
   const templateIds: string[] = (templateLinks ?? [])
@@ -174,7 +183,6 @@ export default async function AccessoryDetailPage({ params }: Props) {
         .select("id, title, slug, selling_price, sale_price, images, category, subcategory, status")
         .in("id", siblingIds)
         .eq("status", "published")
-        // Try to match the opposite category, but fall through if none found
         .limit(6);
 
       if (siblingProducts) {
@@ -195,7 +203,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
-      { "@type": "ListItem", position: 2, name: "Tilbehør", item: "https://phonespot.dk/tilbehoer" },
+      { "@type": "ListItem", position: 2, name: "Tilbehoer", item: "https://phonespot.dk/tilbehoer" },
       {
         "@type": "ListItem",
         position: 3,
@@ -212,6 +220,15 @@ export default async function AccessoryDetailPage({ params }: Props) {
   };
 
   const price = product.sale_price ?? product.selling_price;
+  const compatibleDeviceNames = compatibleDevices.map((d) => d.name);
+
+  // Build SKU from barcode or ean
+  const skuValue = product.barcode ?? product.ean ?? undefined;
+
+  // gtin13: ean if exactly 13 digits
+  const gtin13Value =
+    product.ean && /^\d{13}$/.test(product.ean) ? product.ean : undefined;
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -219,20 +236,50 @@ export default async function AccessoryDetailPage({ params }: Props) {
     description: product.description ?? product.short_description ?? undefined,
     image: product.images,
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
-    ...(compatibleDevices.length > 0 && {
-      isCompatibleWith: compatibleDevices,
+    ...(skuValue && { sku: skuValue }),
+    ...(gtin13Value && { gtin13: gtin13Value }),
+    ...(compatibleDeviceNames.length > 0 && {
+      isCompatibleWith: compatibleDeviceNames,
     }),
     offers: {
       "@type": "Offer",
       priceCurrency: "DKK",
-      price: (price / 100).toFixed(0),
+      price: (price / 100).toFixed(2),
       availability:
         stockQuantity === null || stockQuantity > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
       warranty: "36 maneders garanti",
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "0",
+          currency: "DKK",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "DK",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 0,
+            maxValue: 1,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 2,
+            unitCode: "DAY",
+          },
+        },
+      },
     },
   };
 
@@ -249,7 +296,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           </Link>
           <span aria-hidden="true">/</span>
           <Link href="/tilbehoer" className="hover:text-charcoal transition-colors">
-            Tilbehør
+            Tilbehoer
           </Link>
           <span aria-hidden="true">/</span>
           <Link href={`/tilbehoer/${category}`} className="hover:text-charcoal transition-colors">
