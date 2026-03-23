@@ -88,6 +88,7 @@ function TilbehoerLayoutInner({
   const type = searchParams.get("type") ?? "";
   const caseType = searchParams.get("case_type") ?? "";
   const protectorType = searchParams.get("protector_type") ?? "";
+  const search = searchParams.get("search") ?? "";
   const sort = searchParams.get("sort") ?? "";
   const priceRanges =
     searchParams
@@ -97,7 +98,7 @@ function TilbehoerLayoutInner({
   const inStore = searchParams.get("inStore") === "true";
 
   const hasActiveFilters =
-    !!brand || !!model || !!type || !!caseType || !!protectorType || priceRanges.length > 0 || inStore;
+    !!brand || !!model || !!type || !!caseType || !!protectorType || !!search || priceRanges.length > 0 || inStore;
 
   // ---------------------------------------------------------------------------
   // URL helper functions
@@ -159,6 +160,9 @@ function TilbehoerLayoutInner({
           brand: null,
           model: null,
           type: null,
+          case_type: null,
+          protector_type: null,
+          search: null,
           pris: null,
           inStore: null,
           sort: null,
@@ -240,6 +244,12 @@ function TilbehoerLayoutInner({
                   onRemove={() => removeParam("inStore")}
                 />
               )}
+              {search && (
+                <FilterPill
+                  label={`"${search}"`}
+                  onRemove={() => removeParam("search")}
+                />
+              )}
               {hasActiveFilters && (
                 <button
                   type="button"
@@ -256,7 +266,7 @@ function TilbehoerLayoutInner({
                 <select
                   value={sort}
                   onChange={(e) => updateParam("sort", e.target.value)}
-                  className="rounded-lg border border-sand bg-white px-3 py-2 text-sm text-charcoal"
+                  className="rounded-xl border border-sand bg-white px-3 py-2 text-sm text-charcoal shadow-sm focus:border-green-eco/40 focus:outline-none focus:ring-2 focus:ring-green-eco/15 transition-all"
                 >
                   {SORT_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -296,6 +306,7 @@ function TilbehoerLayoutInner({
               type={type || undefined}
               case_type={caseType || undefined}
               protector_type={protectorType || undefined}
+              search={search || undefined}
               sort={sort || undefined}
               priceRanges={priceRanges.length > 0 ? priceRanges : undefined}
               inStore={inStore}

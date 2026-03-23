@@ -2,7 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { TILBEHOER_CATEGORIES, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import {
+  TILBEHOER_CATEGORIES,
+  TILBEHOER_DEVICES,
+  DEVICE_BRANDS,
+  type DeviceBrand,
+} from "@/lib/tilbehoer-config";
 import { getCategoryFilters, PRICE_RANGES } from "@/lib/tilbehoer-filter-config";
 
 interface TilbehoerMobileFiltersProps {
@@ -83,6 +88,8 @@ function AccordionSection({ heading, children, defaultOpen = false }: AccordionS
   );
 }
 
+const DEVICES_VISIBLE_DEFAULT = 5;
+
 export function TilbehoerMobileFilters({
   open,
   onClose,
@@ -94,10 +101,12 @@ export function TilbehoerMobileFilters({
   const searchParams = useSearchParams();
 
   const activePrices = searchParams.get("pris")?.split(",").filter(Boolean) ?? [];
-  const activeInStore = searchParams.get("butik") === "1";
-  const activeBrand = searchParams.get("brand") ?? "";
   const activeModel = searchParams.get("model") ?? "";
   const activeType = searchParams.get("type") ?? "";
+  const activeCaseType = searchParams.get("case_type") ?? "";
+  const activeProtectorType = searchParams.get("protector_type") ?? "";
+
+  const [expandedBrands, setExpandedBrands] = useState<Set<DeviceBrand>>(new Set());
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -134,32 +143,32 @@ export function TilbehoerMobileFilters({
     onClose();
   };
 
-  const handleLinkFilterClick = (key: string, value: string) => {
-    const currentValue = key === "brand" ? activeBrand : key === "model" ? activeModel : activeType;
-    if (currentValue === value) {
-      // deselect
-      if (key === "brand") {
-        updateParam({ brand: null, model: null });
+  const handleFilterClick = (key: string, value: string) => {
+    const currentValues: Record<string, string> = {
+      model: activeModel,
+      type: activeType,
+      case_type: activeCaseType,
+      protector_type: activeProtectorType,
+    };
+    const current = currentValues[key] ?? "";
+    updateParam({ [key]: current === value ? null : value });
+  };
+
+  const toggleExpandBrand = (brand: DeviceBrand) => {
+    setExpandedBrands((prev) => {
+      const next = new Set(prev);
+      if (next.has(brand)) {
+        next.delete(brand);
       } else {
-        updateParam({ [key]: null });
+        next.add(brand);
       }
-    } else {
-      if (key === "brand") {
-        // switching brand clears model
-        updateParam({ brand: value, model: null });
-      } else {
-        updateParam({ [key]: value });
-      }
-    }
+      return next;
+    });
   };
 
   const categoryFiltersConfig = getCategoryFilters(activeCategory);
-
-  // Devices filtered by currently selected brand for the model sub-filter
-  const filteredDevices =
-    activeBrand
-      ? TILBEHOER_DEVICES.filter((d) => d.brand === activeBrand)
-      : [];
+  const isDeviceSpecific =
+    activeCategory === "covers" || activeCategory === "skaermbeskyttelse";
 
   if (!open) return null;
 
@@ -177,7 +186,7 @@ export function TilbehoerMobileFilters({
         role="dialog"
         aria-modal="true"
         aria-label="Filter"
-        className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[75vh] flex-col rounded-t-2xl bg-white shadow-2xl"
+        className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[80vh] flex-col rounded-t-2xl bg-white shadow-2xl"
       >
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
@@ -199,7 +208,6 @@ export function TilbehoerMobileFilters({
             <div className="py-4 border-b border-sand/60">
               <p className="mb-2.5 font-display text-sm font-bold text-charcoal">Kategori</p>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                {/* "Alle" pill */}
                 <button
                   type="button"
                   onClick={() => handleCategoryPill("alle")}
@@ -211,7 +219,6 @@ export function TilbehoerMobileFilters({
                 >
                   Alle
                 </button>
-
                 {TILBEHOER_CATEGORIES.map((cat) => (
                   <button
                     key={cat.slug}
@@ -229,27 +236,36 @@ export function TilbehoerMobileFilters({
               </div>
             </div>
 
-            {/* Context-aware filters */}
-            {categoryFiltersConfig && (
-              <div className="space-y-0">
-                {categoryFiltersConfig.filters.map((filter) => {
-                  // Model filter with dependsOn "brand" — only shown when brand is active
-                  if (filter.key === "model" && filter.dependsOn === "brand") {
-                    if (!activeBrand) return null;
+            {/* Device model section — only for covers & skaermbeskyttelse */}
+            {isDeviceSpecific && (
+              <AccordionSection heading="Enhed" defaultOpen={!!activeModel}>
+                <div className="space-y-4">
+                  {DEVICE_BRANDS.map(({ slug: brandSlug, label: brandLabel }) => {
+                    const brandDevices = TILBEHOER_DEVICES.filter(
+                      (d) => d.brand === brandSlug,
+                    );
+                    if (brandDevices.length === 0) return null;
 
-                    const currentValue = activeModel;
+                    const isExpanded = expandedBrands.has(brandSlug);
+                    const visibleDevices = isExpanded
+                      ? brandDevices
+                      : brandDevices.slice(0, DEVICES_VISIBLE_DEFAULT);
+                    const hasMore = brandDevices.length > DEVICES_VISIBLE_DEFAULT;
 
                     return (
-                      <AccordionSection key={filter.key} heading={filter.label} defaultOpen>
+                      <div key={brandSlug}>
+                        <p className="mb-1 px-2 text-[11px] font-bold uppercase tracking-wider text-charcoal/50">
+                          {brandLabel}
+                        </p>
                         <ul className="space-y-0.5">
-                          {filteredDevices.map((device) => {
-                            const isActive = currentValue === device.slug;
+                          {visibleDevices.map((device) => {
+                            const isActive = activeModel === device.label;
                             return (
                               <li key={device.slug}>
                                 <button
                                   type="button"
-                                  onClick={() => handleLinkFilterClick("model", device.slug)}
-                                  className={`flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
+                                  onClick={() => handleFilterClick("model", device.label)}
+                                  className={`flex min-h-10 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
                                     isActive
                                       ? "font-medium text-green-eco"
                                       : "text-charcoal/70"
@@ -264,20 +280,72 @@ export function TilbehoerMobileFilters({
                             );
                           })}
                         </ul>
+                        {hasMore && (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandBrand(brandSlug)}
+                            className="mt-1 flex items-center gap-1 px-2 text-xs font-medium text-charcoal/40 hover:text-charcoal transition-colors"
+                          >
+                            {isExpanded
+                              ? "Vis færre"
+                              : `Vis alle ${brandDevices.length}`}
+                            <ChevronDownIcon
+                              className={`h-3 w-3 transition-transform duration-200 ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </AccordionSection>
+            )}
+
+            {/* Context-aware category filters */}
+            {categoryFiltersConfig && (
+              <div className="space-y-0">
+                {categoryFiltersConfig.filters.map((filter) => {
+                  const currentValue =
+                    filter.key === "case_type"
+                      ? activeCaseType
+                      : filter.key === "protector_type"
+                      ? activeProtectorType
+                      : activeType;
+
+                  // case_type: pill chips
+                  if (filter.key === "case_type") {
+                    return (
+                      <AccordionSection key={filter.key} heading={filter.label} defaultOpen>
+                        <div className="flex flex-wrap gap-2 px-2">
+                          {filter.options.map((option) => {
+                            const isActive = currentValue === option.value;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() =>
+                                  handleFilterClick(filter.key, option.value)
+                                }
+                                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
+                                  isActive
+                                    ? "border-green-eco/40 bg-green-eco/10 text-green-eco"
+                                    : "border-sand bg-white text-charcoal/70"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </AccordionSection>
                     );
                   }
 
-                  // Regular filter (brand, type, etc.)
-                  const currentValue =
-                    filter.key === "brand" ? activeBrand : activeType;
-
+                  // Standard links filter
                   return (
-                    <AccordionSection
-                      key={filter.key}
-                      heading={filter.label}
-                      defaultOpen
-                    >
+                    <AccordionSection key={filter.key} heading={filter.label} defaultOpen>
                       <ul className="space-y-0.5">
                         {filter.options.map((option) => {
                           const isActive = currentValue === option.value;
@@ -286,9 +354,9 @@ export function TilbehoerMobileFilters({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  handleLinkFilterClick(filter.key, option.value)
+                                  handleFilterClick(filter.key, option.value)
                                 }
-                                className={`flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
+                                className={`flex min-h-10 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
                                   isActive
                                     ? "font-medium text-green-eco"
                                     : "text-charcoal/70"
@@ -319,7 +387,7 @@ export function TilbehoerMobileFilters({
                       <button
                         type="button"
                         onClick={() => togglePrice(range.value)}
-                        className={`flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
+                        className={`flex min-h-10 w-full items-center justify-between rounded-lg px-2 text-sm transition-colors hover:bg-sand/30 ${
                           isActive ? "font-medium text-green-eco" : "text-charcoal/70"
                         }`}
                       >
@@ -332,23 +400,6 @@ export function TilbehoerMobileFilters({
                   );
                 })}
               </ul>
-            </AccordionSection>
-
-            {/* Kun i butik toggle */}
-            <AccordionSection heading="Tilgjengelighed">
-              <label className="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-2 text-sm text-charcoal/70 hover:bg-sand/30 transition-colors">
-                <span className={activeInStore ? "font-medium text-green-eco" : ""}>
-                  Kun i butik
-                </span>
-                <input
-                  type="checkbox"
-                  checked={activeInStore}
-                  onChange={(e) =>
-                    updateParam({ butik: e.target.checked ? "1" : null })
-                  }
-                  className="h-5 w-5 rounded border-sand text-green-eco focus:ring-green-eco"
-                />
-              </label>
             </AccordionSection>
           </div>
         </div>

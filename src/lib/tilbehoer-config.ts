@@ -167,6 +167,12 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
 ];
 
 export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
+  // Apple - iPhone 17 series
+  { slug: "iphone-17-pro-max", label: "iPhone 17 Pro Max", brand: "apple" },
+  { slug: "iphone-17-pro", label: "iPhone 17 Pro", brand: "apple" },
+  { slug: "iphone-17-air", label: "iPhone 17 Air", brand: "apple" },
+  { slug: "iphone-17", label: "iPhone 17", brand: "apple" },
+  { slug: "iphone-17e", label: "iPhone 17e/16e", brand: "apple" },
   // Apple - iPhones
   { slug: "iphone-16-pro-max", label: "iPhone 16 Pro Max", brand: "apple" },
   { slug: "iphone-16-pro", label: "iPhone 16 Pro", brand: "apple" },

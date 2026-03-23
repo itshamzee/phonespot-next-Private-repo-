@@ -64,6 +64,7 @@ interface AccessoryGridProps {
   type?: string;
   case_type?: string;
   protector_type?: string;
+  search?: string;
   sort?: string;
   priceRanges?: string[]; // e.g. ["0-9999", "10000-29999"]
   inStore?: boolean;
@@ -77,6 +78,7 @@ export function AccessoryGrid({
   type,
   case_type,
   protector_type,
+  search,
   sort = "recommended",
   priceRanges = [],
   inStore = false,
@@ -104,6 +106,7 @@ export function AccessoryGrid({
     if (type) params.set("type", type);
     if (case_type) params.set("case_type", case_type);
     if (protector_type) params.set("protector_type", protector_type);
+    if (search) params.set("search", search);
     if (inStore) params.set("inStore", "true");
 
     fetch(`/api/accessories?${params.toString()}`, {
@@ -124,7 +127,7 @@ export function AccessoryGrid({
       });
 
     return () => controller.abort();
-  }, [category, brand, model, type, case_type, protector_type, inStore]);
+  }, [category, brand, model, type, case_type, protector_type, search, inStore]);
 
   // Client-side: price filter + sort
   const displayedProducts = useMemo(() => {
