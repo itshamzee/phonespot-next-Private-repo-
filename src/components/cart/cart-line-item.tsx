@@ -143,6 +143,9 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
       <div className="flex flex-1 flex-col justify-between">
         <div>
           <h4 className="text-sm font-medium text-charcoal leading-tight">{item.title}</h4>
+          {item.variantLabel && (
+            <p className="mt-0.5 text-xs text-charcoal/50">{item.variantLabel}</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between mt-2">

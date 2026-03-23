@@ -24,12 +24,16 @@ export interface CartSkuItem {
   image: string | null;
   price: number;
   quantity: number;
+  variantLabel?: string; // e.g. "Farve: Sort" — shown in cart line item
 }
 
 export type CartItem = CartDeviceItem | CartSkuItem;
 
 export function cartItemKey(item: CartItem): string {
-  return item.type === "device" ? `device:${item.deviceId}` : `sku:${item.skuProductId}`;
+  if (item.type === "device") return `device:${item.deviceId}`;
+  // Include variant label in key so different variants of same product are separate cart items
+  const variantSuffix = item.variantLabel ? `:${item.variantLabel}` : "";
+  return `sku:${item.skuProductId}${variantSuffix}`;
 }
 
 export interface DiscountApplication {

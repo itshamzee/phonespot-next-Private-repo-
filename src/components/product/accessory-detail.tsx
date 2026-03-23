@@ -244,12 +244,16 @@ function ImageGallery({
 function AddToCartButton({
   product,
   effectivePrice,
+  selectedVariants,
+  variantImage,
   disabled = false,
   fullWidth = true,
-  label = "Tilfoj til kurv",
+  label = "Tilf\u00F8j til kurv",
 }: {
   product: SkuProduct;
   effectivePrice: number;
+  selectedVariants?: Record<string, string>;
+  variantImage?: string | null;
   disabled?: boolean;
   fullWidth?: boolean;
   label?: string;
@@ -259,13 +263,19 @@ function AddToCartButton({
 
   function handleAddToCart() {
     if (disabled) return;
+    // Build variant label for cart display (e.g. "Farve: Sort, Størrelse: L")
+    const variantParts = Object.entries(selectedVariants ?? {}).filter(([, v]) => v);
+    const variantLabel = variantParts.length > 0
+      ? variantParts.map(([k, v]) => `${k}: ${v}`).join(", ")
+      : undefined;
     addSku({
       type: "sku_product",
       skuProductId: product.id,
       title: product.title,
-      image: product.images[0] ?? null,
+      image: variantImage ?? product.images[0] ?? null,
       price: effectivePrice,
       quantity: 1,
+      variantLabel,
     });
     setAdded(true);
     openCart();
@@ -360,7 +370,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
         onClick={handleAdd}
         className="mt-3 w-full rounded-full border-2 border-green-eco bg-white px-4 py-2 text-sm font-bold text-green-eco transition-colors hover:bg-green-eco hover:text-white"
       >
-        Tilfoj
+        Tilf\u00F8j
       </button>
     </div>
   );
@@ -373,10 +383,14 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
 function StickyMobileCta({
   product,
   effectivePrice,
+  selectedVariants,
+  variantImageOverride,
   ctaRef,
 }: {
   product: SkuProduct;
   effectivePrice: number;
+  selectedVariants: Record<string, string>;
+  variantImageOverride: string | null;
   ctaRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [visible, setVisible] = useState(false);
@@ -412,8 +426,10 @@ function StickyMobileCta({
         <AddToCartButton
           product={product}
           effectivePrice={effectivePrice}
+          selectedVariants={selectedVariants}
+          variantImage={variantImageOverride}
           fullWidth={false}
-          label="Tilfoj til kurv"
+          label="Tilf\u00F8j til kurv"
         />
       </div>
     </div>
@@ -688,6 +704,8 @@ export function AccessoryDetail({
             <AddToCartButton
               product={product}
               effectivePrice={effectivePrice}
+              selectedVariants={selectedVariants}
+              variantImage={variantImageOverride}
               disabled={stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 0}
             />
 
@@ -779,6 +797,8 @@ export function AccessoryDetail({
       <StickyMobileCta
         product={product}
         effectivePrice={effectivePrice}
+        selectedVariants={selectedVariants}
+        variantImageOverride={variantImageOverride}
         ctaRef={ctaRef}
       />
     </>
