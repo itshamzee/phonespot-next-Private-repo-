@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const brand = url.searchParams.get("brand");
   const model = url.searchParams.get("model");
   const search = url.searchParams.get("search");
+  const type = url.searchParams.get("type");
   const inStore = url.searchParams.get("inStore") === "true";
 
   const supabase = createAdminClient();
@@ -30,6 +31,14 @@ export async function GET(req: NextRequest) {
   }
   if (brand) query = query.ilike("brand", `%${brand}%`);
   if (search) query = query.ilike("title", `%${search}%`);
+
+  if (type) {
+    const { TYPE_KEYWORDS } = await import("@/lib/tilbehoer-filter-config");
+    const keywords = TYPE_KEYWORDS[type];
+    if (keywords) {
+      query = query.or(keywords.map((k) => `title.ilike.%${k}%`).join(","));
+    }
+  }
 
   // In-store filter: only show products that have sku_stock > 0
   // (dropshipped products without physical stock are excluded)

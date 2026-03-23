@@ -9,7 +9,6 @@ export interface TilbehoerCategory {
   label: string;
   description: string;
   deviceSpecific: boolean;
-  icon: string;           // emoji for category card
   heroDescription: string; // 1-2 sentence hero subtext
   faq: { q: string; a: string }[]; // 3 FAQ items
 }
@@ -44,7 +43,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Covers & Cases",
     description: "Beskyt din enhed med stilfulde covers og cases.",
     deviceSpecific: true,
-    icon: "📱",
     heroDescription: "Find det perfekte cover til din model — TPU, hardcase og MagSafe-kompatible varianter til alle populære telefoner.",
     faq: [
       {
@@ -66,7 +64,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Skærmbeskyttelse",
     description: "Panserglas og screen protectors til alle enheder.",
     deviceSpecific: true,
-    icon: "🛡️",
     heroDescription: "Hærdet panserglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
     faq: [
       {
@@ -88,7 +85,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Kabler & Opladere",
     description: "Lightning, USB-C, trådløs opladning og kabler.",
     deviceSpecific: false,
-    icon: "⚡",
     heroDescription: "Hurtigopladere, USB-C kabler og trådløse opladere til iPhone, Samsung og alle Android-modeller.",
     faq: [
       {
@@ -110,7 +106,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Lyd & Høretelefoner",
     description: "Earbuds, headsets og højttalere til alle enheder.",
     deviceSpecific: false,
-    icon: "🎧",
     heroDescription: "Trådløse earbuds, over-ear headphones og Bluetooth højttalere — til hjemmet, kontoret og på farten.",
     faq: [
       {
@@ -132,7 +127,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Holdere & Mounts",
     description: "Bilholdere, stander og mounts til din enhed.",
     deviceSpecific: false,
-    icon: "🚗",
     heroDescription: "Bilholdere, skrivebords-standere og MagSafe mounts — hold din telefon stabilt og tilgængeligt.",
     faq: [
       {
@@ -154,7 +148,6 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Outlet",
     description: "Ekstra skarpe priser på udvalgte tilbehør. Begrænset antal.",
     deviceSpecific: false,
-    icon: "🏷️",
     heroDescription: "Overskydende lager og kampagnevarer til ekstra skarpe priser. Begrænset antal — køb mens lager haves.",
     faq: [
       {
