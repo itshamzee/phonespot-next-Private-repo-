@@ -1,3 +1,4 @@
+// @deprecated — replaced by tilbehoer-sidebar/tilbehoer-layout
 "use client";
 
 import { useState } from "react";
