@@ -65,6 +65,12 @@ export default function QuickAddPage() {
   const [createTemplateSaving, setCreateTemplateSaving] = useState(false);
   const [createTemplateForm, setCreateTemplateForm] = useState({ brand: "", model: "", category: "smartphone" });
 
+  // Image upload state for new model creation
+  const [uploadedImages, setUploadedImages] = useState<{ url: string; path: string }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState<string[]>([]);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Load locations on mount
   useEffect(() => {
     fetch("/api/platform/locations")
@@ -154,6 +160,7 @@ export default function QuickAddPage() {
     setShowImei(false);
     setShowCreateTemplate(false);
     setDirectToSale(false);
+    clearImageState();
     setTimeout(() => searchRef.current?.focus(), 100);
   }
 
@@ -166,6 +173,74 @@ export default function QuickAddPage() {
       return { brand: matched, model: q.slice(firstWord.length).trim() };
     }
     return { brand: "", model: q };
+  }
+
+  function generateSlugFromForm(): string {
+    const { brand, model } = createTemplateForm;
+    if (brand.trim() && model.trim()) {
+      return `${brand.trim()} ${model.trim()}`
+        .toLowerCase()
+        .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+    return `upload-${Date.now()}`;
+  }
+
+  async function handleImageUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setImageUploadError(null);
+
+    const remaining = 5 - uploadedImages.length - uploadingImages.length;
+    if (remaining <= 0) {
+      setImageUploadError("Maks 5 billeder per model");
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remaining);
+    if (filesToUpload.length < files.length) {
+      setImageUploadError(`Kun ${remaining} billede${remaining === 1 ? "" : "r"} mere tilladt (maks 5)`);
+    }
+
+    const folder = generateSlugFromForm();
+
+    for (const file of filesToUpload) {
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      setUploadingImages((prev) => [...prev, tempId]);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+
+      try {
+        const res = await fetch("/api/platform/images/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUploadedImages((prev) => [...prev, { url: data.url, path: data.path }]);
+        } else {
+          const data = await res.json().catch(() => ({ error: "Upload fejlede" }));
+          setImageUploadError(data.error ?? "Upload fejlede");
+        }
+      } catch {
+        setImageUploadError("Netværksfejl ved upload");
+      } finally {
+        setUploadingImages((prev) => prev.filter((id) => id !== tempId));
+      }
+    }
+  }
+
+  function handleImageRemove(index: number) {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+    setImageUploadError(null);
+  }
+
+  function clearImageState() {
+    setUploadedImages([]);
+    setUploadingImages([]);
+    setImageUploadError(null);
   }
 
   function openCreateTemplate() {
@@ -188,12 +263,13 @@ export default function QuickAddPage() {
       const res = await fetch("/api/platform/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [] }),
+        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), display_name, category, slug, status: "published", storage_options: [], colors: [], images: uploadedImages.map((i) => i.url) }),
       });
       if (res.ok) {
         const created = await res.json();
         setShowCreateTemplate(false);
         setCreateTemplateForm({ brand: "", model: "", category: "smartphone" });
+        clearImageState();
         await selectTemplate(created);
       }
     } finally {
@@ -429,10 +505,73 @@ export default function QuickAddPage() {
                       </select>
                     </div>
                   </div>
+                  {/* Image upload zone */}
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone-500">
+                      Billeder (valgfrit)
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        handleImageUpload(e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                    {/* Thumbnails row */}
+                    {(uploadedImages.length > 0 || uploadingImages.length > 0) && (
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        {uploadedImages.map((img, idx) => (
+                          <div key={img.path} className="group relative h-16 w-16 shrink-0">
+                            <img
+                              src={img.url}
+                              alt={`Billede ${idx + 1}`}
+                              className="h-16 w-16 rounded-xl object-cover border border-stone-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleImageRemove(idx)}
+                              className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition group-hover:opacity-100 shadow-sm"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                        {uploadingImages.map((tempId) => (
+                          <div key={tempId} className="flex h-16 w-16 items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
+                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-stone-300 border-t-green-600" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Upload button / drop zone */}
+                    {uploadedImages.length + uploadingImages.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-stone-200 bg-white py-3 text-sm text-stone-400 transition hover:border-green-eco/40 hover:text-green-700 hover:bg-green-50/30"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                        </svg>
+                        Tilføj billeder
+                      </button>
+                    )}
+                    {imageUploadError && (
+                      <p className="mt-1.5 text-xs text-red-500">{imageUploadError}</p>
+                    )}
+                  </div>
+
                   <div className="flex gap-2 justify-end">
                     <button
                       type="button"
-                      onClick={() => setShowCreateTemplate(false)}
+                      onClick={() => { setShowCreateTemplate(false); clearImageState(); }}
                       className="rounded-xl border border-stone-200 bg-white px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
                     >
                       Annuller
