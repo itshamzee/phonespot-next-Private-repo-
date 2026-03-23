@@ -300,7 +300,7 @@ export function CsvImportDialog({ open, onClose, onImported }: CsvImportDialogPr
               {preview.length > 0 && (
                 <div className="mb-5">
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
-                    Forhaandsvisning (foerste {preview.length} raekker)
+                    Forhåndsvisning (første {preview.length} rækker)
                   </h3>
                   <div className="overflow-x-auto rounded-xl border border-stone-200">
                     <table className="w-full text-xs">
@@ -350,7 +350,7 @@ export function CsvImportDialog({ open, onClose, onImported }: CsvImportDialogPr
                       {validation.ready.length}
                     </span>
                     <span className="text-sm text-stone-700">
-                      raekker klar til import
+                      rækker klar til import
                     </span>
                     {validation.errors.length > 0 && (
                       <>

@@ -25,12 +25,12 @@ type SortKey =
   | "positionChange";
 
 const HEADERS: { key: SortKey; label: string }[] = [
-  { key: "query", label: "Sogeord" },
+  { key: "query", label: "Søgeord" },
   { key: "clicks", label: "Klik" },
   { key: "impressions", label: "Visninger" },
   { key: "ctr", label: "CTR" },
   { key: "position", label: "Position" },
-  { key: "positionChange", label: "Aendring" },
+  { key: "positionChange", label: "Ændring" },
 ];
 
 export function KeywordTable({ rows, loading }: KeywordTableProps) {
@@ -60,7 +60,7 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200/60 bg-white">
       <div className="border-b border-stone-200 px-5 py-3.5">
-        <h3 className="text-sm font-semibold text-charcoal">Sogeord</h3>
+        <h3 className="text-sm font-semibold text-charcoal">Søgeord</h3>
       </div>
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -71,8 +71,8 @@ export function KeywordTable({ rows, loading }: KeywordTableProps) {
         </div>
       ) : rows.length === 0 ? (
         <p className="px-5 py-12 text-center text-sm text-stone-400">
-          Ingen sogeordsdata endnu. Synkroniser med Google Search Console
-          foerst.
+          Ingen søgeordsdata endnu. Synkroniser med Google Search Console
+          først.
         </p>
       ) : (
         <div className="overflow-x-auto">

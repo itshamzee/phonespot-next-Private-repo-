@@ -197,7 +197,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
             </legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label htmlFor="pdf-brand" className="text-xs text-gray">Maerke</label>
+                <label htmlFor="pdf-brand" className="text-xs text-gray">Mærke</label>
                 <input
                   id="pdf-brand"
                   type="text"
@@ -279,7 +279,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
                 onClick={addService}
                 className="text-sm font-medium text-green-eco hover:underline"
               >
-                + Tilfoej ydelse
+                + Tilføj ydelse
               </button>
             </div>
             <div className="flex items-center justify-between border-t border-soft-grey pt-2">

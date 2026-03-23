@@ -341,7 +341,7 @@ function SalePriceInline({
       type="button"
       onClick={() => setOpen(true)}
       className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[11px] font-bold text-charcoal/30 hover:bg-amber-500/10 hover:text-amber-600 transition-colors"
-      title="Tilfoej tilbudspris"
+      title="Tilføj tilbudspris"
     >
       %
     </button>
@@ -700,7 +700,7 @@ export default function TilbehoerListPage() {
           </svg>
           <input
             type="text"
-            placeholder="Soeg paa navn, EAN..."
+            placeholder="Søg på navn, EAN..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-2 pl-9 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 sm:w-56"

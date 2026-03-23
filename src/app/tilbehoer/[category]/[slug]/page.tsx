@@ -91,7 +91,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product.short_description ??
       catConfig?.description ??
       "Hurtig levering og skarpe priser.";
-    description = `Koeb ${product.title}${brandSegment}${deviceSegment} hos PhoneSpot. ${bodyText} Fri fragt over 499 kr. 36 mdr. garanti.`;
+    description = `Køb ${product.title}${brandSegment}${deviceSegment} hos PhoneSpot. ${bodyText} Fri fragt over 499 kr. 36 mdr. garanti.`;
   }
 
   return {
@@ -310,7 +310,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
-      warranty: "36 maneders garanti",
+      warranty: "36 måneders garanti",
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: {

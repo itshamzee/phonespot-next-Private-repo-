@@ -38,7 +38,7 @@ export default function AdminModelListPage({
       if (!brandsRes.ok) throw new Error(brandsData.error);
 
       const foundBrand = brandsData.find((b: RepairBrand) => b.slug === brandSlug);
-      if (!foundBrand) throw new Error("Maerke ikke fundet");
+      if (!foundBrand) throw new Error("Mærke ikke fundet");
       setBrand(foundBrand);
 
       // Fetch models for this brand
@@ -129,7 +129,7 @@ export default function AdminModelListPage({
   }
 
   if (!brand) {
-    return <p className="text-red-600">Maerke ikke fundet.</p>;
+    return <p className="text-red-600">Mærke ikke fundet.</p>;
   }
 
   return (
@@ -154,7 +154,7 @@ export default function AdminModelListPage({
           onClick={() => setShowForm(!showForm)}
           className="rounded-full bg-green-eco px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
-          {showForm ? "Annuller" : "Tilfoej model"}
+          {showForm ? "Annuller" : "Tilføj model"}
         </button>
       </div>
 
@@ -216,7 +216,7 @@ export default function AdminModelListPage({
 
       {/* Model grid */}
       {models.length === 0 ? (
-        <p className="text-gray">Ingen modeller fundet. Tilfoej den foerste ovenfor.</p>
+        <p className="text-gray">Ingen modeller fundet. Tilføj den første ovenfor.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {models.map((model) => (

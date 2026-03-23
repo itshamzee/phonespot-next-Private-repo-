@@ -235,7 +235,7 @@ export default function AktivitetslogPage() {
         {/* Search */}
         <div className="flex min-w-[200px] flex-1 flex-col gap-1">
           <label className="text-[11px] font-semibold uppercase tracking-wider text-charcoal/40">
-            Soeg
+            Søg
           </label>
           <div className="relative">
             <svg
@@ -255,7 +255,7 @@ export default function AktivitetslogPage() {
               type="text"
               value={search}
               onChange={(e) => updateFilter(setSearch, e.target.value)}
-              placeholder="Soeg i detaljer..."
+              placeholder="Søg i detaljer..."
               className="w-full rounded-xl border border-black/[0.06] bg-white py-2.5 pl-9 pr-3 text-sm text-charcoal shadow-sm placeholder:text-charcoal/25 focus:border-charcoal/20 focus:outline-none focus:ring-2 focus:ring-charcoal/5"
             />
           </div>

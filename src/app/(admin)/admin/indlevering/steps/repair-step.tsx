@@ -138,10 +138,10 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
         </h3>
 
         {loading ? (
-          <p className="text-sm text-gray">Soeger reparationer...</p>
+          <p className="text-sm text-gray">Søger reparationer...</p>
         ) : availableServices.length === 0 ? (
           <p className="text-sm text-gray">
-            Ingen matchende reparationer fundet i prislisten. Tilfoej en fritekst-reparation nedenfor.
+            Ingen matchende reparationer fundet i prislisten. Tilføj en fritekst-reparation nedenfor.
           </p>
         ) : (
           <div className="grid gap-2">
@@ -237,7 +237,7 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
             disabled={!customName.trim() || !customPrice}
             className="rounded-lg bg-charcoal px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            Tilfoej
+            Tilføj
           </button>
         </div>
       </div>

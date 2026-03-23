@@ -372,10 +372,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       <SectionWrapper background="green" className="!py-16">
         <div className="text-center">
           <Heading as="h2" size="md" className="!text-white">
-            Klar til at finde din naeste enhed?
+            Klar til at finde din næste enhed?
           </Heading>
           <p className="mx-auto mt-3 max-w-xl font-body text-white/70">
-            Udforsk vores udvalg af kvalitetstestede refurbished iPhones med 36 maaneders garanti.
+            Udforsk vores udvalg af kvalitetstestede refurbished iPhones med 36 måneders garanti.
           </p>
           <Link
             href="/iphones"
@@ -431,7 +431,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                     {related.frontmatter.description}
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E]">
-                    Laes mere
+                    Læs mere
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 transition-transform group-hover:translate-x-1">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                     </svg>

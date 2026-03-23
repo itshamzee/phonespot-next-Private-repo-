@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Din ansoegning er modtaget. Vi vender tilbage inden for 1-2 hverdage.",
+      message: "Din ansøgning er modtaget. Vi vender tilbage inden for 1-2 hverdage.",
     }, { status: 201 });
   } catch (err) {
     console.error("B2B registration error:", err);

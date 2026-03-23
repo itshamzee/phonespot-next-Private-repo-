@@ -168,7 +168,7 @@ export function RepairForm() {
           name="issue_description"
           type="textarea"
           required
-          placeholder="Beskriv problemet med din enhed — hvad er der sket, og hvornaar startede det?"
+          placeholder="Beskriv problemet med din enhed — hvad er der sket, og hvornår startede det?"
           value={formData.issue_description}
           onChange={handleChange}
         />

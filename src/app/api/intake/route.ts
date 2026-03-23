@@ -215,7 +215,7 @@ export async function POST(request: Request) {
             "",
             `Foelg din reparation her: https://phonespot.dk/reparation/status/${ticket.id}`,
             "",
-            "Vi kontakter dig, naar din enhed er klar til afhentning.",
+            "Vi kontakter dig, når din enhed er klar til afhentning.",
             "",
             "Med venlig hilsen,",
             "PhoneSpot",

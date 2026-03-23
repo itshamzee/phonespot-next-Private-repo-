@@ -519,7 +519,7 @@ export default function KategorierPage() {
             </svg>
             <p className="text-sm font-medium text-charcoal/40">Ingen kategorier fundet</p>
             <p className="mt-1 text-xs text-charcoal/30">
-              Klik &quot;Opret kategori&quot; for at tilfoeje den foerste
+              Klik &quot;Opret kategori&quot; for at tilføje den første
             </p>
           </div>
         ) : (

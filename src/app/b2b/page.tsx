@@ -125,7 +125,7 @@ export default function B2BRegistrationPage() {
           {submitting ? "Sender..." : "Ansog om erhvervskonto"}
         </button>
         <p className="text-xs text-[#86868B] text-center">
-          Ansoegninger behandles inden for 1-2 hverdage.
+          Ansøgninger behandles inden for 1-2 hverdage.
           Alle priser er ekskl. moms for godkendte erhvervskunder.
         </p>
       </form>

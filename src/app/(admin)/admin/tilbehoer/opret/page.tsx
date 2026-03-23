@@ -588,7 +588,7 @@ export default function TilbehoerOpretPage() {
           </Section>
 
           {/* Brand */}
-          <Section title="Maerke">
+          <Section title="Mærke">
             <div className="relative">
               <input
                 type="text"

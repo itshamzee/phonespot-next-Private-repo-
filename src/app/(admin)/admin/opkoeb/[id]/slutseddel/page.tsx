@@ -599,7 +599,7 @@ export default function AdminSlutseddelPage() {
         {/* ---- Right: Buyer info ---- */}
         <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
-            Koeber (PhoneSpot)
+            Køber (PhoneSpot)
           </h3>
           <div className="space-y-3">
             <div>
@@ -666,7 +666,7 @@ export default function AdminSlutseddelPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <FormField
-                  label="Maerke"
+                  label="Mærke"
                   value={item.brand}
                   onChange={(v) => updateItem(idx, "brand", v)}
                   disabled={isPaid}

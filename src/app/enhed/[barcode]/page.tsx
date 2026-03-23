@@ -94,7 +94,7 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
           <dl className="space-y-3">
             {template?.brand && (
               <div className="flex justify-between">
-                <dt className="text-sm text-stone-500">Maerke</dt>
+                <dt className="text-sm text-stone-500">Mærke</dt>
                 <dd className="text-sm font-medium text-stone-800">{template.brand}</dd>
               </div>
             )}
@@ -180,11 +180,11 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
         {/* Warranty info */}
         <div className="rounded-xl border border-green-200 bg-green-50 p-5">
           <h2 className="mb-2 text-sm font-semibold text-green-800">
-            36 maneders garanti
+            36 måneders garanti
           </h2>
           <p className="text-sm text-green-700">
-            Alle enheder fra PhoneSpot leveres med 36 maneders garanti.
-            Hertil kommer 24 maneders lovmaessig reklamationsret.
+            Alle enheder fra PhoneSpot leveres med 36 måneders garanti.
+            Hertil kommer 24 måneders lovmæssig reklamationsret.
           </p>
         </div>
 

@@ -751,7 +751,7 @@ export default function AdminTicketDetailPage({
                 type="text"
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                placeholder="Tilfoej note..."
+                placeholder="Tilføj note..."
                 className="min-w-0 flex-1 rounded-lg border border-soft-grey bg-white px-4 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none"
               />
               <button
@@ -760,7 +760,7 @@ export default function AdminTicketDetailPage({
                 disabled={noteSaving || !noteText.trim()}
                 className="rounded-lg bg-charcoal px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                {noteSaving ? "..." : "Tilfoej"}
+                {noteSaving ? "..." : "Tilføj"}
               </button>
             </div>
           </div>
@@ -856,7 +856,7 @@ export default function AdminTicketDetailPage({
                   disabled={commentSending || !newComment.trim()}
                   className="rounded-lg bg-charcoal px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
-                  {commentSending ? "..." : "Tilfoej"}
+                  {commentSending ? "..." : "Tilføj"}
                 </button>
               </div>
             </div>

@@ -157,7 +157,7 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
           {/* Search */}
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-charcoal">
-              Soeg eksisterende kunde
+              Søg eksisterende kunde
             </label>
             <input
               type="text"
@@ -166,7 +166,7 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
               placeholder="Telefon, email eller navn..."
               className="w-full rounded-lg border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             />
-            {searching && <p className="mt-1 text-xs text-gray">Soeger...</p>}
+            {searching && <p className="mt-1 text-xs text-gray">Søger...</p>}
 
             {results.length > 0 && (
               <div className="mt-2 rounded-xl border border-soft-grey bg-white shadow-lg">

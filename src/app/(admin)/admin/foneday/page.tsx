@@ -231,7 +231,7 @@ function LinkModal({
             disabled={linking}
             className="flex-1 rounded-lg bg-green-eco px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-eco/90 disabled:opacity-50"
           >
-            {linking ? "Linker..." : "Tilfoj til webshop"}
+            {linking ? "Linker..." : "Tilføj til webshop"}
           </button>
         </div>
       </div>
@@ -322,7 +322,7 @@ function CatalogTab() {
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="search"
-          placeholder="Soeg titel, SKU eller enhed..."
+          placeholder="Søg titel, SKU eller enhed..."
           defaultValue={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="min-w-[250px] rounded-lg border border-sand bg-white px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
@@ -549,7 +549,7 @@ function LinkedTab() {
       <div className="flex items-center gap-3">
         <input
           type="search"
-          placeholder="Soeg SKU, titel eller enhed..."
+          placeholder="Søg SKU, titel eller enhed..."
           defaultValue={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="min-w-[300px] rounded-lg border border-sand bg-white px-3 py-2 text-sm focus:border-green-eco focus:outline-none"
@@ -557,13 +557,13 @@ function LinkedTab() {
         <span className="ml-auto text-sm text-charcoal/50">{products.length} linkede produkter</span>
       </div>
 
-      <p className="text-xs text-charcoal/40">Klik paa et tal for at redigere. Brug soegning til at finde produkter via SKU naar du taeller op.</p>
+      <p className="text-xs text-charcoal/40">Klik på et tal for at redigere. Brug søgning til at finde produkter via SKU når du tæller op.</p>
 
       {loading ? (
         <div className="py-12 text-center text-charcoal/40">Indlaeser...</div>
       ) : products.length === 0 ? (
         <div className="py-12 text-center text-charcoal/40">
-          {search ? "Ingen produkter matcher din soegning" : "Ingen linkede produkter endnu. Gaa til Katalog og link produkter."}
+          {search ? "Ingen produkter matcher din søgning" : "Ingen linkede produkter endnu. Gå til Katalog og link produkter."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-sand">
@@ -707,7 +707,7 @@ function SettingsTab() {
       </div>
       <div>
         <label className="block text-sm font-semibold text-charcoal">Standard lagerantal</label>
-        <p className="text-xs text-charcoal/50 mb-1">Antal der saettes naar Foneday siger &quot;paa lager&quot;</p>
+        <p className="text-xs text-charcoal/50 mb-1">Antal der sættes når Foneday siger &quot;på lager&quot;</p>
         <input type="number" value={settings.in_stock_qty} onChange={(e) => setSettings({ ...settings, in_stock_qty: Number(e.target.value) })} className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:border-green-eco focus:outline-none" />
       </div>
       <button onClick={save} disabled={saving} className="rounded-lg bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:bg-charcoal/90 disabled:opacity-50">{saving ? "Gemmer..." : "Gem indstillinger"}</button>

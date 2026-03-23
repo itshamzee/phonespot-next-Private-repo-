@@ -317,7 +317,7 @@ export default function AdminOpkoebDetailPage() {
             </h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <InfoRow label="Enhedstype" value={device.deviceType as string} />
-              <InfoRow label="Maerke" value={device.brand as string} />
+              <InfoRow label="Mærke" value={device.brand as string} />
               <InfoRow label="Model" value={device.model as string} />
               <InfoRow label="Lagerplads" value={device.storage as string} />
               <InfoRow label="RAM" value={device.ram as string} />

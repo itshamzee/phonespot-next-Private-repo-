@@ -132,7 +132,7 @@ export default function AdminServiceEditorPage({
       if (!brandsRes.ok) throw new Error(brandsData.error);
 
       const foundBrand = brandsData.find((b: RepairBrand) => b.slug === brandSlug);
-      if (!foundBrand) throw new Error("Maerke ikke fundet");
+      if (!foundBrand) throw new Error("Mærke ikke fundet");
       setBrand(foundBrand);
 
       // Fetch models for this brand
@@ -311,7 +311,7 @@ export default function AdminServiceEditorPage({
 
       {/* Services table */}
       {services.length === 0 ? (
-        <p className="mb-6 text-gray">Ingen reparationer endnu. Tilfoej den foerste nedenfor.</p>
+        <p className="mb-6 text-gray">Ingen reparationer endnu. Tilføj den første nedenfor.</p>
       ) : (
         <div className="mb-6 overflow-x-auto rounded-2xl border border-soft-grey bg-white">
           <table className="w-full text-left text-sm">
@@ -479,7 +479,7 @@ export default function AdminServiceEditorPage({
         className="rounded-2xl border border-soft-grey bg-white p-5"
       >
         <h3 className="mb-4 font-display text-lg font-semibold text-charcoal">
-          Tilfoej reparation
+          Tilføj reparation
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="flex flex-col gap-1.5">
@@ -612,7 +612,7 @@ export default function AdminServiceEditorPage({
             disabled={submitting}
             className="rounded-full bg-green-eco px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? "Opretter..." : "Tilfoej reparation"}
+            {submitting ? "Opretter..." : "Tilføj reparation"}
           </button>
         </div>
       </form>

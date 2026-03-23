@@ -133,7 +133,7 @@ export function SummaryStep({
               href={`/admin/reparationer/${submittedTicketId}`}
               className="text-sm font-medium text-green-eco hover:underline"
             >
-              Gaa til sag
+              Gå til sag
             </Link>
             <button
               type="button"

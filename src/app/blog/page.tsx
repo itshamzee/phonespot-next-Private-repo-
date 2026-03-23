@@ -14,7 +14,7 @@ import { getAllPosts } from "@/lib/blog";
 export const metadata: Metadata = {
   title: "Guides & Nyheder om Refurbished Elektronik | PhoneSpot Blog",
   description:
-    "Laes guides, sammenligninger og nyheder om refurbished iPhones, iPads, MacBooks og mere. Bliv klogere paa refurbished tech hos PhoneSpot.",
+    "Læs guides, sammenligninger og nyheder om refurbished iPhones, iPads, MacBooks og mere. Bliv klogere på refurbished tech hos PhoneSpot.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -97,7 +97,7 @@ export default function BlogIndexPage() {
             Guides & Nyheder
           </Heading>
           <p className="mx-auto mt-4 max-w-2xl font-body text-lg text-white/70">
-            Bliv klogere paa refurbished elektronik. Koebsguides,
+            Bliv klogere på refurbished elektronik. Købsguides,
             sammenligninger og tips fra vores eksperter.
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function BlogIndexPage() {
               </p>
 
               <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-green-eco">
-                Laes guiden
+                Læs guiden
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -217,7 +217,7 @@ export default function BlogIndexPage() {
                   </p>
 
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E]">
-                    Laes mere
+                    Læs mere
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -248,7 +248,7 @@ export default function BlogIndexPage() {
               Kommer snart
             </p>
             <p className="mt-2 font-body text-charcoal/60">
-              Vi arbejder paa spaaendende guides og artikler. Kom tilbage snart!
+              Vi arbejder på spændende guides og artikler. Kom tilbage snart!
             </p>
           </div>
         </SectionWrapper>
