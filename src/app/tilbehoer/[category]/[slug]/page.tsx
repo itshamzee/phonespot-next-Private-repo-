@@ -11,6 +11,7 @@ import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
+import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
 
 export const dynamic = "force-dynamic";
 
@@ -196,7 +197,64 @@ export default async function AccessoryDetailPage({ params }: Props) {
   }
 
   // ----------------------------------------------------------------
-  // 4. JSON-LD structured data
+  // 4. Color siblings — auto-detect related products by title matching
+  // ----------------------------------------------------------------
+  let colorSiblings: ColorSibling[] = [];
+  const colorInfo = extractColor(product.title);
+
+  if (colorInfo) {
+    // Search for products with similar base title (same product, different color)
+    const { data: siblingRows } = await supabase
+      .from("sku_products")
+      .select("id, title, slug, images")
+      .eq("status", "published")
+      .eq("is_active", true)
+      .eq("category", "accessory")
+      .ilike("title", `${colorInfo.baseTitle}%`)
+      .neq("id", product.id)
+      .limit(10);
+
+    if (siblingRows && siblingRows.length > 0) {
+      // Current product as first swatch
+      colorSiblings.push({
+        id: product.id,
+        title: product.title,
+        slug: slug,
+        color: colorInfo.color,
+        colorLabel: getColorLabel(colorInfo.color),
+        colorCss: getColorCss(colorInfo.color),
+        image: product.images[0] ?? null,
+        isCurrent: true,
+      });
+
+      // Add siblings that also have a detectable color
+      for (const sib of siblingRows) {
+        const sibColor = extractColor(sib.title);
+        if (sibColor) {
+          // Find the correct category slug for the sibling's URL
+          const sibCatSlug = category; // same category since we're matching within accessories
+          colorSiblings.push({
+            id: sib.id,
+            title: sib.title,
+            slug: sib.slug,
+            color: sibColor.color,
+            colorLabel: getColorLabel(sibColor.color),
+            colorCss: getColorCss(sibColor.color),
+            image: Array.isArray(sib.images) && sib.images.length > 0 ? sib.images[0] : null,
+            isCurrent: false,
+          });
+        }
+      }
+
+      // If only the current product was found (no real siblings), clear the array
+      if (colorSiblings.length <= 1) {
+        colorSiblings = [];
+      }
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // 5. JSON-LD structured data
   // ----------------------------------------------------------------
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -315,6 +373,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           crossSellProducts={crossSellProducts}
           stockQuantity={stockQuantity}
           category={category}
+          colorSiblings={colorSiblings}
         />
 
         {/* Trustpilot reviews — async server component via Suspense */}

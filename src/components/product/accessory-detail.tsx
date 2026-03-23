@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { useCart } from "@/components/cart/cart-context";
+import type { ColorSibling } from "@/lib/product-color-siblings";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,6 +33,7 @@ type AccessoryDetailProps = {
   crossSellProducts?: CrossSellProduct[];
   stockQuantity?: number | null;
   category?: string;
+  colorSiblings?: ColorSibling[];
 };
 
 // ---------------------------------------------------------------------------
@@ -493,6 +495,7 @@ export function AccessoryDetail({
   crossSellProducts = [],
   stockQuantity,
   category,
+  colorSiblings = [],
 }: AccessoryDetailProps) {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
@@ -608,6 +611,47 @@ export function AccessoryDetail({
                 </>
               )}
             </p>
+          )}
+
+          {/* Color siblings — linked products in different colors */}
+          {colorSiblings.length > 1 && (
+            <div>
+              <p className="mb-2 text-sm font-bold text-charcoal">
+                Farve
+                <span className="ml-2 font-normal text-charcoal/50">
+                  {"\u2014 "}
+                  {colorSiblings.find((s) => s.isCurrent)?.colorLabel ?? ""}
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {colorSiblings.map((sib) => (
+                  <Link
+                    key={sib.id}
+                    href={`/tilbehoer/${category}/${sib.slug}`}
+                    title={sib.colorLabel}
+                    className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${
+                      sib.isCurrent
+                        ? "border-green-eco bg-green-eco/5 text-charcoal"
+                        : "border-sand bg-white text-charcoal/70 hover:border-charcoal/30"
+                    }`}
+                  >
+                    {sib.image ? (
+                      <img
+                        src={sib.image}
+                        alt={sib.colorLabel}
+                        className="h-8 w-8 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="h-5 w-5 rounded-full border border-sand"
+                        style={{ backgroundColor: sib.colorCss === "transparent" ? undefined : sib.colorCss }}
+                      />
+                    )}
+                    {sib.colorLabel}
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Variant selectors */}
