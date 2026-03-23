@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("product_templates")
-    .select("id, brand, model, category, display_name, storage_options, colors")
+    .select("*")
     .order("brand")
     .order("model");
 
