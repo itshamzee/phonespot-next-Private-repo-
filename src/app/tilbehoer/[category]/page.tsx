@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getCategoryConfig, getAllCategoryParams, SLUG_TO_ACCESSORY_CATEGORIES } from "@/lib/tilbehoer-config";
 import { TilbehoerCategoryClient } from "@/components/tilbehoer/tilbehoer-category-client";
 import { JsonLd } from "@/components/seo/json-ld";
-import { TrustBar } from "@/components/ui/trust-bar";
 import { Breadcrumb } from "@/components/tilbehoer/breadcrumb";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -98,10 +97,6 @@ export default async function TilbehoerCategoryPage({
       </div>
 
       <TilbehoerCategoryClient category={config} initialCount={initialCount} />
-
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <TrustBar />
-      </div>
     </>
   );
 }
