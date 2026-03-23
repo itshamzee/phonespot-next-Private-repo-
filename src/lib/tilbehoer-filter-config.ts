@@ -38,8 +38,22 @@ export const CATEGORY_FILTERS: CategoryFilterConfig[] = [
     slug: "covers",
     filters: [
       {
+        key: "case_type",
+        label: "Cover type",
+        type: "links",
+        options: [
+          { value: "Wallet", label: "Wallet Cases" },
+          { value: "Book", label: "Book Cases" },
+          { value: "Slim", label: "Slim Cases" },
+          { value: "Clear", label: "Clear Cases" },
+          { value: "Rugged", label: "Rugged Cases" },
+          { value: "Flip", label: "Flip Cases" },
+          { value: "Bumper", label: "Bumper Cases" },
+        ],
+      },
+      {
         key: "brand",
-        label: "Mærke",
+        label: "M\u00E6rke",
         type: "links",
         options: [
           { value: "apple", label: "Apple" },
@@ -62,8 +76,19 @@ export const CATEGORY_FILTERS: CategoryFilterConfig[] = [
     slug: "skaermbeskyttelse",
     filters: [
       {
+        key: "protector_type",
+        label: "Type",
+        type: "links",
+        options: [
+          { value: "H\u00E6rdet glas", label: "Panserglas" },
+          { value: "Film", label: "Beskyttelsesfilm" },
+          { value: "Privacy", label: "Privacy glas" },
+          { value: "Edge to Edge", label: "Edge to Edge" },
+        ],
+      },
+      {
         key: "brand",
-        label: "Mærke",
+        label: "M\u00E6rke",
         type: "links",
         options: [
           { value: "apple", label: "Apple" },

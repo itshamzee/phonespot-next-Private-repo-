@@ -86,6 +86,8 @@ function TilbehoerLayoutInner({
   const brand = searchParams.get("brand") ?? "";
   const model = searchParams.get("model") ?? "";
   const type = searchParams.get("type") ?? "";
+  const caseType = searchParams.get("case_type") ?? "";
+  const protectorType = searchParams.get("protector_type") ?? "";
   const sort = searchParams.get("sort") ?? "";
   const priceRanges =
     searchParams
@@ -95,7 +97,7 @@ function TilbehoerLayoutInner({
   const inStore = searchParams.get("inStore") === "true";
 
   const hasActiveFilters =
-    !!brand || !!model || !!type || priceRanges.length > 0 || inStore;
+    !!brand || !!model || !!type || !!caseType || !!protectorType || priceRanges.length > 0 || inStore;
 
   // ---------------------------------------------------------------------------
   // URL helper functions
@@ -209,6 +211,18 @@ function TilbehoerLayoutInner({
                   onRemove={() => removeParam("type")}
                 />
               )}
+              {caseType && (
+                <FilterPill
+                  label={caseType + " Cases"}
+                  onRemove={() => removeParam("case_type")}
+                />
+              )}
+              {protectorType && (
+                <FilterPill
+                  label={protectorType}
+                  onRemove={() => removeParam("protector_type")}
+                />
+              )}
               {priceRanges.map((p) => {
                 const rangeConfig = PRICE_RANGES.find((r) => r.value === p);
                 const priceLabel = rangeConfig?.label ?? p;
@@ -280,6 +294,8 @@ function TilbehoerLayoutInner({
               brand={brand || undefined}
               model={model || undefined}
               type={type || undefined}
+              case_type={caseType || undefined}
+              protector_type={protectorType || undefined}
               sort={sort || undefined}
               priceRanges={priceRanges.length > 0 ? priceRanges : undefined}
               inStore={inStore}

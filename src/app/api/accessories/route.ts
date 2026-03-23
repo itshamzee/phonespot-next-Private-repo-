@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
   const model = url.searchParams.get("model");
   const search = url.searchParams.get("search");
   const type = url.searchParams.get("type");
+  const caseType = url.searchParams.get("case_type");
+  const protectorType = url.searchParams.get("protector_type");
   const inStore = url.searchParams.get("inStore") === "true";
 
   const supabase = createAdminClient();
@@ -39,6 +41,10 @@ export async function GET(req: NextRequest) {
       query = query.or(keywords.map((k) => `title.ilike.%${k}%`).join(","));
     }
   }
+
+  // Attribute-based filters (JSONB attributes column)
+  if (caseType) query = query.eq("attributes->>case_type", caseType);
+  if (protectorType) query = query.eq("attributes->>protector_type", protectorType);
 
   // In-store filter: only show products that have sku_stock > 0
   // (dropshipped products without physical stock are excluded)
