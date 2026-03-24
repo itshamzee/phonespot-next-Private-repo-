@@ -101,7 +101,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
     return (
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="text-sm font-medium text-green-700">Pa lager</span>
+        <span className="text-sm font-medium text-green-700">P\u00E5 lager</span>
       </div>
     );
   }
@@ -118,7 +118,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-amber-400" />
         <span className="text-sm font-medium text-amber-700">
-          Kun {quantity} pa lager
+          Kun {quantity} p\u00E5 lager
         </span>
       </div>
     );
@@ -126,7 +126,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="h-2 w-2 rounded-full bg-green-500" />
-      <span className="text-sm font-medium text-green-700">Pa lager</span>
+      <span className="text-sm font-medium text-green-700">P\u00E5 lager</span>
     </div>
   );
 }
