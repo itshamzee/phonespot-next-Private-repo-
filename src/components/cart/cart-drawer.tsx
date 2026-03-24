@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { CartLineItem } from "@/components/cart/cart-line-item";
 import { CartUpsell } from "@/components/cart/cart-upsell";
+import { CartEmailCapture } from "@/components/cart/cart-email-capture";
 import { formatOere } from "@/lib/cart/utils";
 import { cartItemKey } from "@/lib/cart/types";
 import type { CartDeviceItem } from "@/lib/cart/types";
@@ -153,6 +154,9 @@ export function CartDrawer() {
 
           {/* Upsell */}
           {items.length > 0 && <CartUpsell />}
+
+          {/* Email capture for abandoned cart recovery */}
+          <CartEmailCapture />
 
           {/* Footer */}
           {items.length > 0 && (

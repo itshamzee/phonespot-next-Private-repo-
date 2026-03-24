@@ -394,6 +394,35 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               </Link>
             </Text>
 
+            <Hr style={{ borderTop: `1px solid ${sand}`, margin: "20px 0" }} />
+
+            {/* ── Trustpilot review invitation ── */}
+            <Section style={{ textAlign: "center" as const, padding: "16px 0" }}>
+              <Text style={{
+                fontSize:   "15px",
+                color:      "#555",
+                lineHeight: "1.6",
+                margin:     "0 0 12px",
+                fontFamily: font,
+              }}>
+                Glad for din oplevelse? Vi vil elske at h&oslash;re fra dig!
+              </Text>
+              <Button
+                href="https://dk.trustpilot.com/evaluate/phonespot.dk"
+                style={{
+                  backgroundColor: "#00b67a",
+                  color:           "#ffffff",
+                  padding:         "12px 28px",
+                  borderRadius:    "8px",
+                  fontSize:        "14px",
+                  fontWeight:      "bold",
+                  textDecoration:  "none",
+                }}
+              >
+                Skriv en anmeldelse p&aring; Trustpilot
+              </Button>
+            </Section>
+
           </Section>
 
           {/* ── USP bar ── */}
