@@ -8,6 +8,7 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { UpsellModal } from "@/components/cart/upsell-modal";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { NewsletterPopup } from "@/components/ui/newsletter-popup";
+import { MessengerChat } from "@/components/ui/messenger-chat";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +26,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <UpsellModal />
       <CookieConsent />
       <NewsletterPopup />
+      <MessengerChat />
     </CartProvider>
   );
 }

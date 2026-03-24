@@ -120,7 +120,7 @@ export function AccessoryCard({
             )}
           </div>
 
-          {/* Stock indicator */}
+          {/* Online stock indicator */}
           {online_stock > 0 && online_stock <= 5 && (
             <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -131,6 +131,20 @@ export function AccessoryCard({
             <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
               På lager
+            </p>
+          )}
+
+          {/* Store stock urgency badge */}
+          {store_stock > 0 && store_stock <= 5 && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+              Få tilbage i butik
+            </p>
+          )}
+          {store_stock > 5 && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
+              På lager i butik
             </p>
           )}
         </div>

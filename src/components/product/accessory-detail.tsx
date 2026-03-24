@@ -755,16 +755,55 @@ export function AccessoryDetail({
 
             {/* Trust strip */}
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              {[
-                "36 mdr. garanti",
-                "14 dages returret",
-                "Fri fragt over 499 kr.",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-1.5">
-                  <CheckIcon className="h-3.5 w-3.5 flex-shrink-0 text-green-eco" />
-                  <span className="text-xs text-charcoal/60">{item}</span>
-                </div>
-              ))}
+              {/* Fri fragt */}
+              <div className="flex items-center gap-1.5">
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v3" />
+                  <rect x="9" y="11" width="14" height="10" rx="1" />
+                  <circle cx="12" cy="21" r="1" />
+                  <circle cx="20" cy="21" r="1" />
+                </svg>
+                <span className="text-xs text-charcoal/50">Fri fragt over 499 kr.</span>
+              </div>
+              {/* Garanti */}
+              <div className="flex items-center gap-1.5">
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span className="text-xs text-charcoal/50">36 måneders garanti</span>
+              </div>
+              {/* Returret */}
+              <div className="flex items-center gap-1.5">
+                <svg
+                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                <span className="text-xs text-charcoal/50">14 dages returret</span>
+              </div>
             </div>
           </div>
         </div>
