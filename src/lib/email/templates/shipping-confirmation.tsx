@@ -108,8 +108,28 @@ export default function ShippingConfirmationEmail({
 
             <Hr style={hrStyle} />
 
+            {/* Trustpilot review invitation */}
+            <Section style={{ textAlign: "center" as const, padding: "16px 0" }}>
+              <Text style={{ ...paragraphStyle, marginBottom: "12px" }}>
+                Glad for din oplevelse? Vi vil elske at h\u00F8re fra dig!
+              </Text>
+              <Button
+                href="https://dk.trustpilot.com/evaluate/phonespot.dk"
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: "#00b67a",
+                  fontSize: "14px",
+                  padding: "12px 28px",
+                }}
+              >
+                Skriv en anmeldelse p\u00E5 Trustpilot
+              </Button>
+            </Section>
+
+            <Hr style={hrStyle} />
+
             <Text style={paragraphStyle}>
-              Har du spørgsmål? Kontakt os gerne på{" "}
+              Har du sp\u00F8rgsm\u00E5l? Kontakt os gerne p\u00E5{" "}
               <Link href={`mailto:${BRAND.email}`} style={linkStyle}>
                 {BRAND.email}
               </Link>{" "}
