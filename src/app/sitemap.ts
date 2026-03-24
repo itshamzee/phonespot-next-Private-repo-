@@ -302,5 +302,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages];
+  // ---- Feed URLs (for discoverability — not crawled by search engines) ------
+
+  const feedPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/feeds/google-shopping`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.1,
+    },
+  ];
+
+  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...feedPages];
 }
