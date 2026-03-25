@@ -26,7 +26,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
     const deviceIds = devices.map((d) => d.deviceId);
     const { data: dbDevices } = await supabase
       .from("devices")
-      .select("id, status, selling_price, reservation_expires_at")
+      .select("id, status, selling_price, reservation_expires_at, source, source_stock")
       .in("id", deviceIds);
     const deviceMap = new Map((dbDevices ?? []).map((d) => [d.id, d]));
 
@@ -35,6 +35,16 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       if (!db) {
         validated.push({ item, serverPrice: 0, available: false, error: "Enhed ikke fundet" });
         errors.push(`${item.title} er ikke tilgængelig`);
+        continue;
+      }
+      if (db.source === "foxway") {
+        // Foxway devices: validate stock instead of reservation
+        if ((db.source_stock ?? 0) <= 0) {
+          validated.push({ item, serverPrice: 0, available: false, error: "Udsolgt" });
+          errors.push(`${item.title} er udsolgt`);
+          continue;
+        }
+        validated.push({ item, serverPrice: db.selling_price, available: true });
         continue;
       }
       if (db.status !== "reserved") {

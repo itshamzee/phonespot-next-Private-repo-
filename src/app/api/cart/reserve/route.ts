@@ -9,6 +9,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "deviceId required" }, { status: 400 });
   }
   const supabase = createServerClient();
+
+  // Check if device is Foxway dropship — no reservation needed
+  const { data: deviceCheck } = await supabase
+    .from("devices")
+    .select("source, source_stock")
+    .eq("id", deviceId)
+    .single();
+
+  if (deviceCheck?.source === "foxway") {
+    if ((deviceCheck.source_stock ?? 0) <= 0) {
+      return NextResponse.json({ error: "Udsolgt" }, { status: 409 });
+    }
+    // Return a fake reservation — stock is checked at checkout instead
+    return NextResponse.json({
+      deviceId,
+      reservedUntil: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    });
+  }
+
   const expiresAt = new Date(Date.now() + RESERVATION_TTL_MINUTES * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from("devices")

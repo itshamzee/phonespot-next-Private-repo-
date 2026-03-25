@@ -4,7 +4,7 @@ import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
 import { calcDiscount, calcSubtotal } from "@/lib/cart/utils";
-import type { CartItem, DiscountApplication } from "@/lib/cart/types";
+import type { CartItem, CartDeviceItem, DiscountApplication } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
 import { createServerClient } from "@/lib/supabase/client";
 
@@ -98,6 +98,32 @@ export async function POST(req: NextRequest) {
     }
 
     const total = Math.max(0, subtotal - discountAmount + shippingCost);
+
+    // 4b. Decrement stock for Foxway devices
+    {
+      const supabase = createServerClient();
+      for (const vi of validation.items) {
+        if (vi.item.type !== "device") continue;
+        const deviceItem = vi.item as CartDeviceItem;
+        const { data: device } = await supabase
+          .from("devices")
+          .select("source")
+          .eq("id", deviceItem.deviceId)
+          .single();
+
+        if (device?.source === "foxway") {
+          const { error } = await supabase.rpc("decrement_foxway_stock", {
+            p_device_id: deviceItem.deviceId,
+          });
+          if (error) {
+            return NextResponse.json(
+              { error: "En vare er desværre udsolgt" },
+              { status: 409 },
+            );
+          }
+        }
+      }
+    }
 
     // 5. Create order with placeholder Stripe session ID
     const createdOrder = await createOrder({
