@@ -25,6 +25,15 @@ const GRADE_META: Record<
     bg: "bg-blue-500/10",
     badge: "NY",
   },
+  P: {
+    label: "Premium",
+    description: "Næsten perfekt stand",
+    tooltip:
+      "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Batteri min. 90%.",
+    color: "text-indigo-600",
+    bg: "bg-indigo-500/10",
+    badge: "P",
+  },
   A: {
     label: "Perfekt",
     description: "Ingen synlige brugsspor",

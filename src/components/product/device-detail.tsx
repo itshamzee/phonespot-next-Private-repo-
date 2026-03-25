@@ -32,6 +32,7 @@ function formatDKK(oere: number): string {
 
 const GRADE_DETAILS: Record<string, { label: string; battery: string; cosmetic: string }> = {
   N: { label: "Fabriksny", battery: "100% batterikapacitet", cosmetic: "Helt ny — uåbnet originalemballage" },
+  P: { label: "Premium stand", battery: "Min. 90% batterikapacitet", cosmetic: "Næsten perfekt — minimale eller ingen brugsspor" },
   A: { label: "Som ny", battery: "Min. 85% batterikapacitet", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
   B: { label: "God stand", battery: "Min. 80% batterikapacitet", cosmetic: "Lette brugsspor — små ridser eller mærker" },
   C: { label: "Brugt stand", battery: "Min. 75% batterikapacitet", cosmetic: "Synlige brugsspor — ridser og mærker" },
@@ -144,7 +145,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const hasNewGrade = listedDevices.some((d) => d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")) ||
     listedDevices.some((d) => (d.grade as string) === "N");
 
-  const allGradeKeys = hasNewGrade ? (["N", "A", "B", "C"] as const) : (["A", "B", "C"] as const);
+  const allGradeKeys = hasNewGrade ? (["N", "P", "A", "B", "C"] as const) : (["P", "A", "B", "C"] as const);
 
   const availableGrades = allGradeKeys
     .map((grade) => {
@@ -152,7 +153,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
         ? listedDevices.filter((d) => (d.grade as string) === "N" || (d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")))
         : listedDevices.filter((d) => d.grade === grade && !(grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")));
       const prices = matching.map((d) => d.selling_price).filter((p): p is number => p != null);
-      const templatePrice = grade === "N" ? template.base_price_a : grade === "A" ? template.base_price_a : grade === "B" ? template.base_price_b : template.base_price_c;
+      const templatePrice = grade === "N" ? template.base_price_a : grade === "P" ? template.base_price_a : grade === "A" ? template.base_price_a : grade === "B" ? template.base_price_b : template.base_price_c;
       return {
         grade: grade as string,
         price: prices.length > 0 ? Math.min(...prices) : templatePrice ?? null,
@@ -187,6 +188,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     matchingDevices.length > 0
       ? Math.min(...matchingDevices.map((d) => d.selling_price ?? 0))
       : selectedGrade === "N" ? template.base_price_a
+      : selectedGrade === "P" ? template.base_price_a
       : selectedGrade === "A" ? template.base_price_a
       : selectedGrade === "B" ? template.base_price_b
       : template.base_price_c;
@@ -486,7 +488,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             {/* Pickup / delivery info */}
             {inStock && (
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                {pickupLocations.map((loc) => (
+                {bestMatch?.source !== "foxway" && pickupLocations.map((loc) => (
                   <span
                     key={loc.name}
                     className="inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E]/8 px-3 py-1.5 text-xs font-semibold text-[#1A3D2E]"
@@ -504,6 +506,14 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                   </svg>
                   Kan sendes
                 </span>
+                {bestMatch?.source === "foxway" && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Levering 1-3 hverdage
+                  </span>
+                )}
               </div>
             )}
 
