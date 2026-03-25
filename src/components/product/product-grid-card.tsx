@@ -12,6 +12,7 @@ type ProductGridCardProps = {
   category: string;
   locations?: { name: string; type: string; count: number }[];
   showCategoryBadge?: boolean;
+  specifications?: Record<string, string>;
 };
 
 function formatFromPrice(oere: number): string {
@@ -163,8 +164,24 @@ export function ProductGridCard({
   category,
   locations,
   showCategoryBadge = false,
+  specifications,
 }: ProductGridCardProps) {
   const storeLocations = locations?.filter((l) => l.type === "store") ?? [];
+
+  // Build compact spec line for laptops
+  const isLaptop = category?.toLowerCase() === "laptop" || category?.toLowerCase() === "macbook";
+  const specParts: string[] = [];
+  if (isLaptop && specifications?.processor) {
+    // Extract short processor name (e.g. "i5-1135G7" from "Intel Core i5-1135G7")
+    const procMatch = specifications.processor.match(/([iI][3579]-\w+|Ryzen\s*\d\s*\w+|M[1234]\s*\w*)/);
+    if (procMatch) specParts.push(procMatch[1].trim());
+    if (specifications.ram) specParts.push(specifications.ram.replace(/\s+/g, ""));
+    if (specifications.storage) specParts.push(specifications.storage.replace(/\s+/g, ""));
+    if (specifications.screen_size) {
+      const screen = specifications.screen_size.replace(/["\u201D\u2033]/g, "").replace(/\.0$/, "");
+      specParts.push(screen + '"');
+    }
+  }
 
   return (
     <Link
@@ -224,6 +241,11 @@ export function ProductGridCard({
         <h3 className="mt-1 line-clamp-2 font-semibold text-[#111111] group-hover:text-[#1A3D2E]">
           {title}
         </h3>
+        {specParts.length > 0 && (
+          <p className="mt-1 text-xs text-[#86868B] truncate">
+            {specParts.join(" \u00B7 ")}
+          </p>
+        )}
         <div className="mt-auto pt-3">
           {minPrice != null ? (
             <div>

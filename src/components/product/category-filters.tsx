@@ -23,6 +23,11 @@ interface FilterState {
   onlyInStock: boolean;
   onlyPickup: boolean;
   sort: SortOption;
+  // Laptop-specific filters
+  brands: Set<string>;
+  screenSizes: Set<string>;
+  ramOptions: Set<string>;
+  processorTypes: Set<string>;
 }
 
 interface CategoryFiltersProps {
@@ -89,7 +94,30 @@ function buildDefaultState(): FilterState {
     onlyInStock: false,
     onlyPickup: false,
     sort: "price_asc",
+    brands: new Set(),
+    screenSizes: new Set(),
+    ramOptions: new Set(),
+    processorTypes: new Set(),
   };
+}
+
+/** Normalise RAM string: "16 GB" -> "16GB" */
+function normaliseRam(s: string): string {
+  return s.replace(/\s+/g, "").toUpperCase();
+}
+
+/** Normalise screen size: "14.0" -> "14\"", "15.6" -> "15.6\"" */
+function normaliseScreenSize(s: string): string {
+  return s.replace(/["\u201D\u2033]/g, "").replace(/\s+/g, "").replace(/\.0$/, "") + '"';
+}
+
+/** Detect processor type from a processor string */
+function detectProcessorType(proc: string): string | null {
+  const lower = proc.toLowerCase();
+  if (lower.includes("intel") || lower.includes("core i") || /i[3579]-/.test(lower)) return "Intel";
+  if (lower.includes("amd") || lower.includes("ryzen")) return "AMD";
+  if (lower.includes("apple") || lower.includes("m1") || lower.includes("m2") || lower.includes("m3") || lower.includes("m4")) return "Apple";
+  return null;
 }
 
 function countActiveFilters(state: FilterState): number {
@@ -99,6 +127,10 @@ function countActiveFilters(state: FilterState): number {
   count += state.storageOptions.size;
   if (state.onlyInStock) count++;
   if (state.onlyPickup) count++;
+  count += state.brands.size;
+  count += state.screenSizes.size;
+  count += state.ramOptions.size;
+  count += state.processorTypes.size;
   return count;
 }
 
@@ -143,6 +175,34 @@ function applyFilters(
     if (state.onlyPickup) {
       const hasStore = t.locations.some((l) => l.type === "store");
       if (!hasStore) return false;
+    }
+
+    // Brand (laptop filter)
+    if (state.brands.size > 0) {
+      if (!state.brands.has(t.brand)) return false;
+    }
+
+    // Screen size (laptop filter)
+    if (state.screenSizes.size > 0) {
+      const screenSize = t.specifications?.screen_size;
+      if (!screenSize) return false;
+      const normalised = normaliseScreenSize(screenSize);
+      if (![...state.screenSizes].some((s) => normalised.includes(s.replace('"', "")))) return false;
+    }
+
+    // RAM (laptop filter)
+    if (state.ramOptions.size > 0) {
+      const ram = t.specifications?.ram;
+      if (!ram) return false;
+      if (!state.ramOptions.has(normaliseRam(ram))) return false;
+    }
+
+    // Processor type (laptop filter)
+    if (state.processorTypes.size > 0) {
+      const proc = t.specifications?.processor;
+      if (!proc) return false;
+      const procType = detectProcessorType(proc);
+      if (!procType || !state.processorTypes.has(procType)) return false;
     }
 
     return true;
@@ -220,6 +280,11 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
   const [filters, setFilters] = useState<FilterState>(buildDefaultState);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Detect if templates are laptops
+  const isLaptopCategory = templates.some(
+    (t) => t.category?.toLowerCase() === "laptop" || t.category?.toLowerCase() === "macbook"
+  );
+
   // Which sections are collapsed
   const [openSections, setOpenSections] = useState({
     price: true,
@@ -227,6 +292,10 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
     storage: true,
     availability: true,
     sort: true,
+    brand: true,
+    screenSize: true,
+    ram: true,
+    processor: true,
   });
 
   // Derive available storage options from the full template list (memoised by
@@ -241,6 +310,62 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
     }
     allStorageOptions.current = sortStorageOptions([...seen]);
   }, [templates]);
+
+  // Derive laptop-specific filter options
+  const allBrands = useRef<{ brand: string; count: number }[]>([]);
+  const allScreenSizes = useRef<string[]>([]);
+  const allRamOptions = useRef<string[]>([]);
+  const allProcessorTypes = useRef<{ type: string; count: number }[]>([]);
+
+  useEffect(() => {
+    if (!isLaptopCategory) return;
+    // Brands
+    const brandMap = new Map<string, number>();
+    for (const t of templates) {
+      brandMap.set(t.brand, (brandMap.get(t.brand) ?? 0) + 1);
+    }
+    allBrands.current = [...brandMap.entries()]
+      .map(([brand, count]) => ({ brand, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Screen sizes
+    const screenSet = new Set<string>();
+    for (const t of templates) {
+      if (t.specifications?.screen_size) {
+        screenSet.add(normaliseScreenSize(t.specifications.screen_size));
+      }
+    }
+    allScreenSizes.current = [...screenSet].sort((a, b) => {
+      const numA = parseFloat(a);
+      const numB = parseFloat(b);
+      return numA - numB;
+    });
+
+    // RAM
+    const ramSet = new Set<string>();
+    for (const t of templates) {
+      if (t.specifications?.ram) {
+        ramSet.add(normaliseRam(t.specifications.ram));
+      }
+    }
+    allRamOptions.current = [...ramSet].sort((a, b) => {
+      const numA = parseInt(a, 10);
+      const numB = parseInt(b, 10);
+      return numA - numB;
+    });
+
+    // Processor types
+    const procMap = new Map<string, number>();
+    for (const t of templates) {
+      if (t.specifications?.processor) {
+        const type = detectProcessorType(t.specifications.processor);
+        if (type) procMap.set(type, (procMap.get(type) ?? 0) + 1);
+      }
+    }
+    allProcessorTypes.current = [...procMap.entries()]
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [templates, isLaptopCategory]);
 
   // Run filter + notify parent on every state change
   useEffect(() => {
@@ -271,6 +396,34 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
 
   const applyQuickPrice = (min: string, max: string) =>
     setFilters((prev) => ({ ...prev, priceMin: min, priceMax: max }));
+
+  const setBrand = (brand: string, checked: boolean) =>
+    setFilters((prev) => {
+      const next = new Set(prev.brands);
+      checked ? next.add(brand) : next.delete(brand);
+      return { ...prev, brands: next };
+    });
+
+  const setScreenSize = (size: string, checked: boolean) =>
+    setFilters((prev) => {
+      const next = new Set(prev.screenSizes);
+      checked ? next.add(size) : next.delete(size);
+      return { ...prev, screenSizes: next };
+    });
+
+  const setRam = (ram: string, checked: boolean) =>
+    setFilters((prev) => {
+      const next = new Set(prev.ramOptions);
+      checked ? next.add(ram) : next.delete(ram);
+      return { ...prev, ramOptions: next };
+    });
+
+  const setProcessorType = (type: string, checked: boolean) =>
+    setFilters((prev) => {
+      const next = new Set(prev.processorTypes);
+      checked ? next.add(type) : next.delete(type);
+      return { ...prev, processorTypes: next };
+    });
 
   const activeCount = countActiveFilters(filters);
   const storageOpts = allStorageOptions.current;
@@ -305,6 +458,142 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
           </div>
         )}
       </div>
+
+      {/* Brand — laptop only */}
+      {isLaptopCategory && allBrands.current.length > 0 && (
+        <div className="border-b border-[#E5E5EA]">
+          <FilterSectionHeader
+            label="Mærke"
+            open={openSections.brand}
+            onToggle={() => toggleSection("brand")}
+          />
+          {openSections.brand && (
+            <div className="pb-4 space-y-2">
+              {allBrands.current.map(({ brand, count }) => (
+                <label
+                  key={brand}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
+                    filters.brands.has(brand)
+                      ? "bg-[#1A3D2E]/8"
+                      : "hover:bg-[#F7F7F8]"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.brands.has(brand)}
+                    onChange={(e) => setBrand(brand, e.target.checked)}
+                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
+                  />
+                  <span className="flex-1 text-sm font-medium text-[#111111]">{brand}</span>
+                  <span className="text-xs text-[#6E6E73]">{count}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Screen size — laptop only */}
+      {isLaptopCategory && allScreenSizes.current.length > 0 && (
+        <div className="border-b border-[#E5E5EA]">
+          <FilterSectionHeader
+            label="Skærmstørrelse"
+            open={openSections.screenSize}
+            onToggle={() => toggleSection("screenSize")}
+          />
+          {openSections.screenSize && (
+            <div className="pb-4">
+              <div className="flex flex-wrap gap-1.5">
+                {allScreenSizes.current.map((size) => {
+                  const isActive = filters.screenSizes.has(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setScreenSize(size, !isActive)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        isActive
+                          ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
+                          : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* RAM — laptop only */}
+      {isLaptopCategory && allRamOptions.current.length > 0 && (
+        <div className="border-b border-[#E5E5EA]">
+          <FilterSectionHeader
+            label="RAM"
+            open={openSections.ram}
+            onToggle={() => toggleSection("ram")}
+          />
+          {openSections.ram && (
+            <div className="pb-4">
+              <div className="flex flex-wrap gap-1.5">
+                {allRamOptions.current.map((ram) => {
+                  const isActive = filters.ramOptions.has(ram);
+                  return (
+                    <button
+                      key={ram}
+                      type="button"
+                      onClick={() => setRam(ram, !isActive)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        isActive
+                          ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
+                          : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
+                      }`}
+                    >
+                      {ram}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Processor — laptop only */}
+      {isLaptopCategory && allProcessorTypes.current.length > 0 && (
+        <div className="border-b border-[#E5E5EA]">
+          <FilterSectionHeader
+            label="Processor"
+            open={openSections.processor}
+            onToggle={() => toggleSection("processor")}
+          />
+          {openSections.processor && (
+            <div className="pb-4 space-y-2">
+              {allProcessorTypes.current.map(({ type, count }) => (
+                <label
+                  key={type}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
+                    filters.processorTypes.has(type)
+                      ? "bg-[#1A3D2E]/8"
+                      : "hover:bg-[#F7F7F8]"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.processorTypes.has(type)}
+                    onChange={(e) => setProcessorType(type, e.target.checked)}
+                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
+                  />
+                  <span className="flex-1 text-sm font-medium text-[#111111]">{type}</span>
+                  <span className="text-xs text-[#6E6E73]">{count}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Price range */}
       <div className="border-b border-[#E5E5EA]">

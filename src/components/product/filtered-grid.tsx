@@ -95,6 +95,7 @@ export function FilteredGrid({ templates, heading }: FilteredGridProps) {
                   locations={t.locations}
                   brand={t.brand}
                   category={t.category}
+                  specifications={t.specifications}
                 />
               ))}
             </div>
