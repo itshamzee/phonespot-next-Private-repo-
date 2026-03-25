@@ -369,7 +369,7 @@ export async function syncFoxwayItems(
           imei: null,
           battery_health: null,
           condition_notes: null,
-          purchased_at: null,
+          purchased_at: new Date().toISOString(),
           listed_at: new Date().toISOString(),
           sold_at: null,
           reservation_expires_at: null,
@@ -437,12 +437,10 @@ export async function syncFoxwayItems(
 
   // 9. Log to foxway_import_log
   await supabase.from("foxway_import_log").insert({
-    items_count: items.length,
-    created: result.created,
-    updated: result.updated,
-    delisted: result.delisted,
-    templates_created: result.templatesCreated,
-    errors: result.errors,
+    total_rows: items.length,
+    imported_rows: result.created + result.updated,
+    skipped_rows: result.delisted,
+    errors: result.errors.length > 0 ? result.errors : null,
     imported_at: new Date().toISOString(),
   });
 
