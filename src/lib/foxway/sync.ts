@@ -43,10 +43,105 @@ const BRAND_MAP: Record<string, string> = {
   LENOVO: "Lenovo",
   HP: "HP",
   DELL: "Dell",
-  TEQCYCLE: "Lenovo",
   APPLE: "Apple",
   MICROSOFT: "Microsoft",
 };
+
+/** Detect actual brand from description for TEQCYCLE (resells both HP and Lenovo) */
+function detectBrand(prod: string, description: string): string {
+  const upper = prod.toUpperCase().trim();
+  if (upper !== "TEQCYCLE") return BRAND_MAP[upper] ?? titleCase(prod);
+
+  const desc = description.toUpperCase();
+  // Check description for known HP model prefixes
+  if (/\bELITEBOOK\b|\bPROBOOK\b|\bZBOOK\b|\bFIREFLY\b/.test(desc)) return "HP";
+  // Check for Dell
+  if (/\bLATITUDE\b|\bINSPIRON\b|\bXPS\b/.test(desc)) return "Dell";
+  // Default to Lenovo (most TEQCYCLE items are ThinkPads)
+  return "Lenovo";
+}
+
+/** Extract model name from description when CATAGORY is n/a or a part number */
+function extractModelFromDescription(description: string): string | null {
+  const desc = description.trim();
+  // Known patterns at start of description:
+  // "T14s G2 i5-1135G7/16GB/..."
+  // "840 G8 i5-1145G7/16GB/..."
+  // "X1 Carbon G9 i7-1185G7/..."
+  // "X360 1030 G8 i7-1165G7/..."
+  // "Latitude 7420 i5-1135G7/..."
+  // "5520 i5-1135G7/..."
+
+  // Match everything before the first CPU-like pattern or slash
+  const match = desc.match(/^(.+?)(?:\s+(?:i[3579]-|R[3579][ -]|U[357]-|Ryzen|Snapdragon|Celeron|Kompanio|N\d{4}|Pentium)|\s*\/)/i);
+  if (match) {
+    let model = match[1].trim();
+    // If it's just a number like "840", "5520", look for a generation suffix
+    // Check for known EliteBook/ProBook/ZBook/Latitude patterns
+    if (/^(X360\s+)?\d{3,4}(\s+G\d+)?$/i.test(model)) {
+      // This is like "840 G8" - need to infer the product line from the brand
+      return model;
+    }
+    // Check for ThinkPad-style: "T14s G2", "X1 Carbon G9", "L14 G2"
+    if (/^[TXLEP]\d|^X1\s|^X13|^L\d|^P\d/i.test(model)) {
+      return model;
+    }
+    return model;
+  }
+  return null;
+}
+
+/** Check if a model string looks like a part number rather than a model name */
+function isPartNumber(model: string): boolean {
+  if (!model || model.toLowerCase() === "n/a") return true;
+  // Part numbers: "20T0", "21F6", "1G1X7AV", "358N2EA", "358N6EA#UUW"
+  // Model names: "THINKPAD T14S G2", "ELITEBOOK 840 G7"
+  // If it's short and mostly alphanumeric with no spaces, it's likely a part number
+  if (model.length < 8 && /^[A-Z0-9#-]+$/i.test(model)) return true;
+  // If it contains # it's a part number
+  if (model.includes("#")) return true;
+  // If first part is all digits or a short code without known prefixes
+  const first = model.split(/\s+/)[0].toUpperCase();
+  const knownPrefixes = ["THINKPAD", "ELITEBOOK", "PROBOOK", "ZBOOK", "LATITUDE", "IDEAPAD", "YOGA", "LOQ", "CHROMEBOOK", "FIREFLY"];
+  if (knownPrefixes.some(p => model.toUpperCase().startsWith(p))) return false;
+  // Short alphanumeric codes are part numbers
+  if (/^\d{2}[A-Z]{2}/.test(model) || /^[A-Z]\d[A-Z]\d/.test(model)) return true;
+  return false;
+}
+
+/** Resolve the best model name for an item */
+function resolveModel(item: FoxwayParsedItem): string {
+  // If CATAGORY has a proper model name, use it
+  if (item.model && !isPartNumber(item.model)) {
+    return item.model;
+  }
+  // Try to extract from description
+  const extracted = extractModelFromDescription(item.description);
+  if (extracted) return extracted;
+  // Fallback to whatever we have
+  return item.model || "Unknown";
+}
+
+/** Resolve the best brand for an item */
+function resolveBrand(item: FoxwayParsedItem): string {
+  return detectBrand(item.brand, item.description);
+}
+
+/** Infer full model line from a bare number model + brand */
+function inferFullModelName(model: string, brand: string): string {
+  const m = model.trim();
+  const b = brand.toUpperCase();
+  // "840 G8" with HP → "ELITEBOOK 840 G8"
+  // "850 G7" with HP → "ELITEBOOK 850 G7"
+  if (b === "HP" && /^\d{3}\s+G\d+/.test(m)) return `ELITEBOOK ${m}`;
+  if (b === "HP" && /^X360\s+\d{3,4}\s+G\d+/.test(m)) return `ELITEBOOK X360 ${m.replace(/^X360\s+/, "")}`;
+  // "5520" or "5410" with Dell → "LATITUDE 5520"
+  if (b === "DELL" && /^\d{4}$/.test(m)) return `LATITUDE ${m}`;
+  if (b === "DELL" && /^Lat\d{4}/.test(m)) return `LATITUDE ${m.replace(/^Lat/i, "")}`;
+  // "7410" or "7420" alone → could be Latitude
+  if (/^\d{4}$/.test(m)) return `LATITUDE ${m}`;
+  return m;
+}
 
 /** Known model-name prefixes with their canonical casing */
 const MODEL_PREFIX_MAP: Record<string, string> = {
@@ -60,9 +155,8 @@ const MODEL_PREFIX_MAP: Record<string, string> = {
   LOQ: "LOQ",
 };
 
-export function formatBrand(brand: string): string {
-  const upper = brand.toUpperCase().trim();
-  return BRAND_MAP[upper] ?? titleCase(brand);
+export function formatBrand(brand: string, description = ""): string {
+  return detectBrand(brand, description);
 }
 
 export function formatModelName(model: string): string {
@@ -313,14 +407,17 @@ async function findOrCreateTemplate(
   templatesByKey: Map<string, ExistingTemplate>,
   result: SyncResult
 ): Promise<string> {
-  const brand = formatBrand(item.brand);
-  const key = templateKey(brand, item.model);
+  const resolvedBrand = resolveBrand(item);
+  const resolvedModel = resolveModel(item);
+  const fullModel = inferFullModelName(resolvedModel, resolvedBrand);
+  const brand = resolvedBrand;
+  const key = templateKey(brand, fullModel);
 
   const existing = templatesByKey.get(key);
   if (existing) return existing.id;
 
-  const model = formatModelName(item.model);
-  const slug = generateSlug(item.brand, item.model);
+  const model = formatModelName(fullModel);
+  const slug = generateSlug(brand, fullModel);
 
   const { data, error } = await supabase
     .from("product_templates")
@@ -461,19 +558,21 @@ export async function previewSync(
   for (const item of items) {
     incomingSkus.add(item.sourceSku);
 
-    const brand = formatBrand(item.brand);
-    const model = formatModelName(item.model);
-    const key = templateKey(brand, item.model);
+    const resolvedBrand = resolveBrand(item);
+    const resolvedModel = resolveModel(item);
+    const fullModel = inferFullModelName(resolvedModel, resolvedBrand);
+    const brand = resolvedBrand;
+    const model = formatModelName(fullModel);
+    const key = templateKey(brand, fullModel);
     const templateExists = templatesByKey.has(key);
 
     if (!templateExists) {
       newTemplates++;
-      // Cache so subsequent items with same key don't count as new
       templatesByKey.set(key, {
         id: `preview-${key}`,
-        model: item.model,
+        model: fullModel,
         brand,
-        slug: generateSlug(item.brand, item.model),
+        slug: generateSlug(brand, fullModel),
       });
     }
 
