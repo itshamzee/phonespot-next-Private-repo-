@@ -4,8 +4,8 @@
 // ============================================
 // Enums (union types matching CHECK constraints)
 // ============================================
-export type DeviceGrade = 'N' | 'A' | 'B' | 'C';
-export type DeviceStatus = 'intake' | 'graded' | 'listed' | 'reserved' | 'sold' | 'shipped' | 'picked_up' | 'returned';
+export type DeviceGrade = 'N' | 'P' | 'A' | 'B' | 'C';
+export type DeviceStatus = 'intake' | 'graded' | 'listed' | 'reserved' | 'sold' | 'shipped' | 'picked_up' | 'returned' | 'delisted';
 export type VatScheme = 'brugtmoms' | 'regular';
 export type OrderType = 'online' | 'pos' | 'draft' | 'shopify';
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'picked_up' | 'delivered' | 'cancelled' | 'refunded' | 'abandoned';
@@ -68,6 +68,8 @@ export interface ProductTemplate {
   base_price_a: number | null;
   base_price_b: number | null;
   base_price_c: number | null;
+  base_price_n: number | null;
+  base_price_p: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,7 +79,7 @@ export interface Device {
   serial_number: string | null;
   imei: string | null;
   template_id: string;
-  barcode: string;
+  barcode: string | null;
   grade: DeviceGrade;
   battery_health: number | null;
   storage: string | null;
@@ -97,6 +99,9 @@ export interface Device {
   listed_at: string | null;
   sold_at: string | null;
   reservation_expires_at: string | null;
+  source: string;
+  source_sku: string | null;
+  source_stock: number;
   created_at: string;
   updated_at: string;
 }

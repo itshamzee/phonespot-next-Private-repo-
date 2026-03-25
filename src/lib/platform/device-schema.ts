@@ -7,7 +7,7 @@ export const deviceIntakeSchema = z.object({
   serial_number: z.string().optional(),
   imei: z.string().optional(),
   template_id: z.string().uuid("Vælg en produktskabelon"),
-  grade: z.enum(["A", "B", "C"], { message: "Vælg en stand (A/B/C)" }),
+  grade: z.enum(["N", "P", "A", "B", "C"], { message: "Vælg en stand (N/P/A/B/C)" }),
   battery_health: z.number().int().min(0).max(100).optional(),
   storage: z.string().optional(),
   color: z.string().optional(),
@@ -23,7 +23,7 @@ export const deviceIntakeSchema = z.object({
 });
 
 export const deviceUpdateSchema = z.object({
-  grade: z.enum(["A", "B", "C"]).optional(),
+  grade: z.enum(["N", "P", "A", "B", "C"]).optional(),
   battery_health: z.number().int().min(0).max(100).optional(),
   condition_notes: z.string().optional(),
   selling_price: z.number().int().positive().optional(),
@@ -35,7 +35,7 @@ export const deviceImportRowSchema = z.object({
   serial_number: z.string().optional(),
   imei: z.string().optional(),
   template_id: z.string().uuid(),
-  grade: z.enum(["A", "B", "C"]),
+  grade: z.enum(["N", "P", "A", "B", "C"]),
   battery_health: z.coerce.number().int().min(0).max(100).optional(),
   storage: z.string().optional(),
   color: z.string().optional(),
