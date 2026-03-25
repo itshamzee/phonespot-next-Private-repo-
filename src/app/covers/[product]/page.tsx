@@ -11,7 +11,7 @@ import { CoverProductHero } from "@/components/cover/cover-product-hero";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 
 export const dynamicParams = true;
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 // ---------------------------------------------------------------------------
 // Helpers

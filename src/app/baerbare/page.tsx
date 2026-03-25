@@ -9,7 +9,7 @@ import { FilteredGrid } from "@/components/product/filtered-grid";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Refurbished Bærbare - Fra 1.359 kr med 36 mdr. garanti | PhoneSpot",

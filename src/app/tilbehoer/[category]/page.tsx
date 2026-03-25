@@ -7,7 +7,7 @@ import { Breadcrumb } from "@/components/tilbehoer/breadcrumb";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamicParams = true;
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return getAllCategoryParams();

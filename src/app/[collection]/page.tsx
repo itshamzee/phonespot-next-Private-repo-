@@ -5,7 +5,7 @@ import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
 import { getPublishedSkuProducts, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";

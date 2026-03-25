@@ -12,7 +12,7 @@ import {
 } from "@/lib/supabase/product-queries";
 import { skuProductToProduct } from "@/lib/supabase/product-adapter";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 import type { Product } from "@/lib/shopify/types";
 import { DeviceDetail } from "@/components/product/device-detail";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";

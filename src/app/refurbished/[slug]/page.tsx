@@ -17,7 +17,7 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -69,14 +69,10 @@ export default async function RefurbishedProductPage({ params }: Props) {
   const template = await getTemplateBySlug(slug);
   if (!template) notFound();
 
-  const [availableDevices, accessories, relatedTemplates] = await Promise.all([
+  const [availableDevices, accessories] = await Promise.all([
     getAvailableDevices(template.id),
     getPublishedSkuProducts(undefined, template.id),
-    getPublishedTemplates(template.category),
   ]);
-
-  // Filter out current template from related
-  const related = relatedTemplates.filter((t) => t.id !== template.id).slice(0, 5);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -261,29 +257,10 @@ export default async function RefurbishedProductPage({ params }: Props) {
         </div>
       </SectionWrapper>
 
-      {/* ── 5. Relaterede produkter ── */}
-      {related.length > 0 && (
-        <SectionWrapper background="sand">
-          <Heading as="h2" size="md" className="mb-10 text-center">
-            Andre kunder kiggede også på
-          </Heading>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {related.map((t) => (
-              <ProductGridCard
-                key={t.id}
-                slug={t.slug}
-                image={t.images[0]}
-                title={t.display_name}
-                minPrice={t.min_price}
-                deviceCount={t.device_count}
-                locations={t.locations}
-                brand={t.brand}
-                category={t.category}
-              />
-            ))}
-          </div>
-        </SectionWrapper>
-      )}
+      {/* ── 5. Relaterede produkter (loaded async, non-blocking) ── */}
+      <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
+        <RelatedProducts category={template.category} excludeId={template.id} />
+      </Suspense>
 
       {/* ── 6. Produktspecifik FAQ ── */}
       <SectionWrapper background="default">
@@ -327,5 +304,47 @@ export default async function RefurbishedProductPage({ params }: Props) {
         <TrustBar />
       </SectionWrapper>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Async server component — loads related products without blocking   */
+/* ------------------------------------------------------------------ */
+
+async function RelatedProducts({
+  category,
+  excludeId,
+}: {
+  category: string;
+  excludeId: string;
+}) {
+  const relatedTemplates = await getPublishedTemplates(category);
+  const related = relatedTemplates
+    .filter((t) => t.id !== excludeId)
+    .slice(0, 5);
+
+  if (related.length === 0) return null;
+
+  return (
+    <SectionWrapper background="sand">
+      <Heading as="h2" size="md" className="mb-10 text-center">
+        Andre kunder kiggede også på
+      </Heading>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {related.map((t) => (
+          <ProductGridCard
+            key={t.id}
+            slug={t.slug}
+            image={t.images[0]}
+            title={t.display_name}
+            minPrice={t.min_price}
+            deviceCount={t.device_count}
+            locations={t.locations}
+            brand={t.brand}
+            category={t.category}
+          />
+        ))}
+      </div>
+    </SectionWrapper>
   );
 }

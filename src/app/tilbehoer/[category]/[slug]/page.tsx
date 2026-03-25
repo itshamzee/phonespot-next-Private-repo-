@@ -13,7 +13,7 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type Props = {
   params: Promise<{ category: string; slug: string }>;

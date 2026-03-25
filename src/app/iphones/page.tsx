@@ -11,7 +11,7 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Refurbished iPhones - Spar op til 40% | PhoneSpot",

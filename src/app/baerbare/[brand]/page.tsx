@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getPublishedSkuProducts, getSkuProductBySlug, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-adapter";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 export const dynamicParams = true;
 
 import type { Product } from "@/lib/shopify/types";
