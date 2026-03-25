@@ -5,7 +5,7 @@ import { LAPTOP_TIERS } from "@/lib/laptop-tiers";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { FilteredGrid } from "@/components/product/filtered-grid";
+import { LaptopFilteredGrid } from "@/components/product/laptop-filtered-grid";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -563,7 +563,7 @@ export default async function BaerbarePage() {
 
       {/* ── All laptops grid with filters ── */}
       <SectionWrapper>
-        <FilteredGrid templates={templates} heading="Alle bærbare" />
+        <LaptopFilteredGrid templates={templates} heading="Alle baerbare" />
       </SectionWrapper>
 
       {/* ── FAQ ── */}
