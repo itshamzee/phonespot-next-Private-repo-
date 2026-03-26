@@ -193,14 +193,14 @@ export function ProductGridCard({
         {/* Stock badge — top left */}
         {deviceCount > 3 && (
           <div className="absolute top-3 left-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#1A3D2E] px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+            <span className="inline-flex items-center rounded-full bg-[#1A3D2E] px-2.5 py-1 text-[10px] sm:text-xs font-semibold text-white shadow-sm">
               {deviceCount} på lager
             </span>
           </div>
         )}
         {deviceCount > 0 && deviceCount <= 3 && (
           <div className="absolute top-3 right-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[10px] font-semibold text-[#6E6E73] shadow-sm">
+            <span className="inline-flex items-center rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-[#6E6E73] shadow-sm">
               Kun {deviceCount} tilbage
             </span>
           </div>
@@ -234,7 +234,7 @@ export function ProductGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
         <p className="text-xs font-medium uppercase tracking-wide text-[#86868B]">
           {brand} · {categoryLabel(category)}
         </p>
@@ -242,7 +242,7 @@ export function ProductGridCard({
           {title}
         </h3>
         {specParts.length > 0 && (
-          <p className="mt-1 text-xs text-[#86868B] truncate">
+          <p className="mt-1 text-[11px] sm:text-xs text-[#86868B] truncate line-clamp-1">
             {specParts.join(" \u00B7 ")}
           </p>
         )}
@@ -257,7 +257,7 @@ export function ProductGridCard({
               <p className="text-xs font-semibold text-[#6E6E73]">
                 fra
               </p>
-              <p className="font-bold text-2xl text-[#1A3D2E] leading-tight">
+              <p className="font-bold text-lg sm:text-2xl text-[#1A3D2E] leading-tight">
                 {formatFromPrice(minPrice)} kr.
               </p>
               <p className="text-[10px] text-[#6E6E73]">inkl. moms</p>
@@ -272,7 +272,7 @@ export function ProductGridCard({
                   {storeLocations.map((loc) => (
                     <span
                       key={loc.name}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E] px-2 py-0.5 text-[10px] font-semibold text-white"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E] px-2 py-0.5 text-[11px] font-semibold text-white"
                     >
                       <svg
                         className="h-2.5 w-2.5"
@@ -295,7 +295,7 @@ export function ProductGridCard({
                       Hentes i {loc.name}
                     </span>
                   ))}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[10px] font-semibold text-[#86868B]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[11px] font-semibold text-[#86868B]">
                     <svg
                       className="h-2.5 w-2.5"
                       fill="none"

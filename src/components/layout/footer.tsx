@@ -158,7 +158,7 @@ export function Footer() {
     <>
       {/* USP bar — sits above the dark footer */}
       <div className="bg-[#F7F7F8]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-4 py-5 md:justify-between lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 md:gap-x-10 gap-y-3 px-4 py-5 md:justify-between lg:px-8">
           {USP_ITEMS.map((item) => (
             <div key={item.text} className="flex items-center gap-2">
               <span className="text-[#1A3D2E]">{item.icon}</span>
@@ -172,7 +172,7 @@ export function Footer() {
       <footer className="bg-[#111111] text-white">
         {/* Primary content */}
         <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 lg:px-8">
-          <div className="grid grid-cols-2 gap-10 md:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 md:grid-cols-3 lg:grid-cols-6 lg:gap-10">
 
             {/* Brand / store column */}
             <div className="col-span-2 md:col-span-3 lg:col-span-2">
@@ -317,7 +317,7 @@ export function Footer() {
             <form
               action="/api/newsletter"
               method="POST"
-              className="flex gap-2 sm:shrink-0"
+              className="flex flex-col sm:flex-row gap-2 sm:shrink-0"
             >
               <input
                 name="email"

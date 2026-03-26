@@ -90,7 +90,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               title={meta.tooltip}
               disabled={isUnavailable}
               onClick={() => onChange(grade)}
-              className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
+              className={`flex items-center gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 text-left transition-all ${
                 isSelected
                   ? "border-green-eco bg-white shadow-sm ring-2 ring-green-eco/20"
                   : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
@@ -98,7 +98,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
             >
               {/* Radio dot */}
               <div
-                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                   isSelected ? "border-green-eco bg-green-eco" : "border-charcoal/25"
                 }`}
               >
@@ -117,7 +117,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
                 <span className="font-display text-sm font-bold text-charcoal">
                   {meta.label}
                 </span>
-                <span className="ml-2 text-xs text-charcoal/45">
+                <span className="ml-2 hidden sm:inline text-xs text-charcoal/45">
                   {meta.description}
                 </span>
               </div>
@@ -127,14 +127,14 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
                 {isUnavailable ? (
                   <div className="flex flex-col items-end">
                     {price != null && (
-                      <span className="font-display text-sm font-bold text-charcoal/30">
+                      <span className="font-display text-sm sm:text-base font-bold text-charcoal/30">
                         {formatPrice(price)} kr.
                       </span>
                     )}
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-charcoal/30">Udsolgt</span>
                   </div>
                 ) : price != null ? (
-                  <span className="font-display text-sm font-bold text-charcoal">
+                  <span className="font-display text-sm sm:text-base font-bold text-charcoal">
                     {formatPrice(price)} kr.
                   </span>
                 ) : null}

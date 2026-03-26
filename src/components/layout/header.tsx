@@ -67,7 +67,7 @@ function ChevronIcon({ className }: { className?: string }) {
 function AnnouncementBar() {
   return (
     <div className="bg-[#1A3D2E]">
-      <div className="flex h-8 items-center justify-center px-4 text-xs font-medium tracking-wide text-white/80">
+      <div className="flex h-8 items-center justify-center px-2 sm:px-4 text-[11px] sm:text-xs font-medium tracking-wide text-white/80">
         <span>
           Fri fragt over 500,- &nbsp;·&nbsp; 36 mdr. garanti &nbsp;·&nbsp;{" "}
           <a
@@ -440,7 +440,7 @@ export function Header() {
               {/* Hamburger — mobile only */}
               <button
                 type="button"
-                className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream mr-2"
+                className="lg:hidden flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream mr-2"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
               >
@@ -529,7 +529,7 @@ export function Header() {
             className="absolute inset-x-0 top-[5.5rem] bottom-0 overflow-y-auto bg-white"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
-            <nav className="mx-auto max-w-lg px-5 pb-10 pt-2">
+            <nav className="mx-auto max-w-full sm:max-w-lg px-5 pb-10 pt-2">
 
               {/* Primary action tiles */}
               <div className="mb-5 grid grid-cols-2 gap-3 pt-2">
