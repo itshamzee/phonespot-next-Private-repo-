@@ -99,7 +99,7 @@ const trustItems = [
 export function TrustBar({ className = "" }: { className?: string }) {
   return (
     <div className={`bg-[#F7F7F8] border-y border-[#E5E5EA] py-4 ${className}`.trim()}>
-      <div className="flex flex-wrap items-center justify-center gap-5 md:gap-8">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8">
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <span className="text-[#1A3D2E]">{item.icon}</span>

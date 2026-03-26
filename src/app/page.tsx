@@ -148,12 +148,12 @@ export default function HomePage() {
           {/* Dark overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#1A3D2E]/90 via-[#1A3D2E]/80 to-[#1A3D2E]/50" />
 
-          <div className="relative z-10 px-8 py-14 md:px-12 md:py-16 lg:max-w-[55%] lg:px-16 lg:py-20">
+          <div className="relative z-10 px-4 py-8 sm:px-8 sm:py-14 md:px-12 md:py-16 lg:max-w-[55%] lg:px-16 lg:py-20">
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-[11px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
               36 MDR. GARANTI P&Aring; ALT
             </span>
 
-            <h1 className="font-display text-4xl font-extrabold leading-[1.1] text-white md:text-5xl lg:text-6xl">
+            <h1 className="font-display text-2xl sm:text-4xl font-extrabold leading-[1.1] text-white md:text-5xl lg:text-6xl">
               Refurbished tech<br />
               du kan stole p&aring;
             </h1>
@@ -191,7 +191,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:grid-cols-4 xl:grid-cols-7">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
@@ -268,7 +268,7 @@ export default function HomePage() {
       {/* ── 3. USP bar ── */}
       <div className="bg-[#1A3D2E]">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 md:gap-x-16">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-8 gap-y-4 md:gap-x-16">
             {USP_BAR.map((item) => (
               <div key={item.label} className="flex items-center gap-2.5 text-white">
                 <span className="text-white/70">{item.icon}</span>
@@ -293,7 +293,7 @@ export default function HomePage() {
       {/* ── 5. Sell your device CTA ── */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white shadow-sm">
-          <div className="grid items-center gap-8 p-8 md:grid-cols-2 md:p-12 lg:p-16">
+          <div className="grid items-center gap-8 p-4 sm:p-8 md:grid-cols-2 md:p-12 lg:p-16">
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-green-eco">
                 Byttehandel

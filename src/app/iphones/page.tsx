@@ -181,7 +181,7 @@ export default async function IphonesPage() {
 
       {/* ── Hero ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 md:py-16">
           {/* Breadcrumb */}
           <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
@@ -191,7 +191,7 @@ export default async function IphonesPage() {
             <span className="text-[#111111] font-medium">Refurbished iPhones</span>
           </nav>
 
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 sm:gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
               {/* Category badge */}
               <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
@@ -199,7 +199,7 @@ export default async function IphonesPage() {
                 Apple iPhone
               </span>
 
-              <h1 className="font-display text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
+              <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
                 Refurbished iPhones
               </h1>
 
@@ -290,7 +290,7 @@ export default async function IphonesPage() {
                 <div className="-mx-5 px-5 md:-mx-8 md:px-8">
                   <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
                     {tierTemplates.slice(0, 10).map((t) => (
-                      <div key={t.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
+                      <div key={t.id} className="w-[42%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
                         <ProductGridCard
                           slug={t.slug}
                           image={t.images[0]}
@@ -342,7 +342,7 @@ export default async function IphonesPage() {
 
       {/* ── Hvorfor refurbished iPhone ── */}
       <SectionWrapper background="cream">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="grid items-center gap-6 sm:gap-12 lg:grid-cols-2">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Smart valg
@@ -396,7 +396,7 @@ export default async function IphonesPage() {
       {/* ── Stats ── */}
       <section className="bg-[#F7F7F8] border-y border-[#E5E5EA] py-20 md:py-28">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {[
               { value: "30+", label: "Tests per enhed" },
               { value: "999 kr", label: "Billigste iPhone" },

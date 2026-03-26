@@ -99,7 +99,7 @@ export default async function BaerbarePage() {
 
       {/* ── Compact hero ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-10 md:py-12">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10 md:py-12">
           {/* Breadcrumb */}
           <nav className="mb-4 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
@@ -109,7 +109,7 @@ export default async function BaerbarePage() {
             <span className="text-[#111111] font-medium">Refurbished Bærbare</span>
           </nav>
 
-          <h1 className="font-display text-3xl font-bold tracking-tight text-[#111111] md:text-4xl lg:text-5xl">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#111111] md:text-4xl lg:text-5xl">
             Refurbished Bærbare
           </h1>
 
@@ -193,7 +193,7 @@ export default async function BaerbarePage() {
               </div>
 
               {/* Featured grid: large card + small cards */}
-              <div className="grid gap-6 lg:grid-cols-5">
+              <div className="grid gap-4 sm:gap-6 lg:grid-cols-5">
                 {/* Large featured card */}
                 <Link
                   href={`/refurbished/${featured.slug}`}
@@ -222,7 +222,7 @@ export default async function BaerbarePage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-col flex-1 p-6">
+                    <div className="flex flex-col flex-1 p-4 sm:p-6">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#86868B]">
                         {featured.brand}
                       </p>
@@ -255,7 +255,7 @@ export default async function BaerbarePage() {
                 </Link>
 
                 {/* Small highlighted cards — 2x2 grid */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
                   {highlighted.slice(0, 4).map((t) => (
                     <Link
                       key={t.id}
@@ -306,7 +306,7 @@ export default async function BaerbarePage() {
       {/* ── Trust strip ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 md:gap-6">
             {[
               {
                 label: "36 mdr. garanti",
@@ -384,7 +384,7 @@ export default async function BaerbarePage() {
 
       {/* ── Hvorfor refurbished laptop? ── */}
       <SectionWrapper background="cream">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="grid items-center gap-6 sm:gap-12 lg:grid-cols-2">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               Bæredygtigt valg
@@ -447,7 +447,7 @@ export default async function BaerbarePage() {
       {/* ── Stats ── */}
       <section className="bg-[#F7F7F8] border-y border-[#E5E5EA] py-20 md:py-28">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {[
               { value: "30+", label: "Tests per computer" },
               { value: "4+", label: "Timers min. batteri" },
