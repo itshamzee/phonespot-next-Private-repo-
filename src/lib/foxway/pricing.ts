@@ -1,12 +1,20 @@
 import type { DeviceGrade } from "@/lib/supabase/platform-types";
 
-/** Markup percentages per grade — lower grades get higher markup */
+/**
+ * Markup percentages per grade — calculated to guarantee minimum margins:
+ * Target: N ≥ 35%, P ≥ 38%, A ≥ 40%, B ≥ 42%, C ≥ 45%
+ *
+ * Margin formula: margin% = markup / (1 + markup)
+ * So to get 35% margin: markup = 0.35 / 0.65 = 0.538
+ *    to get 40% margin: markup = 0.40 / 0.60 = 0.667
+ *    to get 45% margin: markup = 0.45 / 0.55 = 0.818
+ */
 const GRADE_MARKUP: Record<DeviceGrade, number> = {
-  N: 0.30,  // Fabriksny: +30%
-  P: 0.45,  // Premium: +45%
-  A: 0.55,  // Som ny: +55%
-  B: 0.60,  // God stand: +60%
-  C: 0.65,  // Brugt: +65%
+  N: 0.55,  // Fabriksny: +55% → ~35% margin
+  P: 0.62,  // Premium: +62% → ~38% margin
+  A: 0.70,  // Som ny: +70% → ~41% margin
+  B: 0.75,  // God stand: +75% → ~43% margin
+  C: 0.85,  // Brugt: +85% → ~46% margin
 };
 
 /** Standard price points in DKK that look clean on the site */
@@ -57,8 +65,8 @@ export function calculateMarginPercent(buyOere: number, sellOere: number): numbe
 }
 
 /**
- * Check if margin is below the 25% threshold.
+ * Check if margin is below the 35% threshold.
  */
 export function isLowMargin(buyOere: number, sellOere: number): boolean {
-  return calculateMarginPercent(buyOere, sellOere) < 25;
+  return calculateMarginPercent(buyOere, sellOere) < 35;
 }
