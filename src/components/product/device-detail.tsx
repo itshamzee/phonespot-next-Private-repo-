@@ -259,7 +259,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* ============================================================ */}
       {/* HERO: Image + Buy Box                                        */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+      <div className="grid grid-cols-1 gap-4 sm:gap-8 lg:grid-cols-12 lg:gap-12">
         {/* ── Image gallery (7 cols) ── */}
         <div className="lg:col-span-7">
           <div className="flex gap-3">
@@ -285,7 +285,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             {/* Main image */}
             <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F7F7F8] aspect-square">
               {mainImage ? (
-                <Image src={mainImage} alt={template.display_name} fill className="object-contain p-8" sizes="(min-width: 1024px) 58vw, 100vw" priority />
+                <Image src={mainImage} alt={template.display_name} fill className="object-contain p-4 sm:p-8" sizes="(min-width: 1024px) 58vw, 100vw" priority />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <svg viewBox="0 0 64 64" className="h-20 w-20 text-[#E5E5EA]" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -352,7 +352,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             <p className="text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
               {template.brand} · {selectedGrade === "N" ? "Fabriksny" : "Refurbished"} {categoryName}
             </p>
-            <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
+            <h1 className="mt-2 font-display text-2xl sm:text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
               {template.display_name}
             </h1>
             {template.short_description && (
@@ -381,11 +381,11 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
           )}
 
           {/* ── Price card + CTA ── */}
-          <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-[#E5E5EA] bg-white p-4 sm:p-5 shadow-sm space-y-4">
             {/* Price */}
             <div>
               <div className="flex items-end gap-3">
-                <span className="font-display text-4xl font-bold text-[#1A3D2E]">
+                <span className="font-display text-3xl sm:text-4xl font-bold text-[#1A3D2E]">
                   {price != null ? formatDKK(price) : "—"}
                 </span>
                 {compareAtPrice && (
@@ -462,7 +462,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3D2E] px-6 py-4 text-base font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3D2E] px-5 py-3.5 sm:px-6 sm:py-4 text-sm sm:text-base font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAddingToCart ? (
                   <>
@@ -487,7 +487,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
 
             {/* Pickup / delivery info */}
             {inStock && (
-              <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
                 {bestMatch?.source !== "foxway" && pickupLocations.map((loc) => (
                   <span
                     key={loc.name}
@@ -518,7 +518,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             )}
 
             {/* Quick trust signals */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 border-t border-[#E5E5EA]">
+            <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-4 gap-y-1 pt-1 border-t border-[#E5E5EA]">
               {["36 mdr. garanti", "14 dages returret", "Sendt samme dag"].map((text) => (
                 <span key={text} className="flex items-center gap-1.5 text-xs text-[#86868B]">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#1A3D2E]">
@@ -530,8 +530,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             </div>
 
             {/* 4. Share buttons */}
-            <div className="flex items-center gap-3 pt-2 border-t border-[#E5E5EA]">
-              <span className="text-xs text-[#6E6E73]">Del:</span>
+            <div className="flex items-center gap-2 sm:gap-3 pt-2 border-t border-[#E5E5EA]">
+              <span className="hidden sm:inline text-xs text-[#6E6E73]">Del:</span>
               <button
                 type="button"
                 onClick={() => {
@@ -622,11 +622,11 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
       {/* ============================================================ */}
       {/* TRUST POINTS STRIP                                           */}
       {/* ============================================================ */}
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-8 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TRUST_POINTS.map((point) => (
           <div
             key={point.label}
-            className="flex flex-col items-center rounded-2xl border border-[#E5E5EA] bg-white p-4 text-center transition-shadow hover:shadow-sm"
+            className="flex flex-col items-center rounded-2xl border border-[#E5E5EA] bg-white p-3 sm:p-4 text-center transition-shadow hover:shadow-sm"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3D2E]/8 text-[#1A3D2E]">
               <TrustIcon type={point.icon} />
@@ -659,7 +659,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-5 py-3.5 text-sm font-semibold transition-colors ${
+                className={`px-3 sm:px-5 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold transition-colors ${
                   activeTab === tab
                     ? "border-b-2 border-[#1A3D2E] text-[#1A3D2E]"
                     : "text-[#86868B] hover:text-[#111111]"
@@ -831,13 +831,13 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             },
           ].map((faq) => (
             <details key={faq.q} className="group">
-              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-semibold text-[#111111] hover:bg-[#F7F7F8] transition-colors select-none">
+              <summary className="flex cursor-pointer items-center justify-between px-4 sm:px-5 py-3 sm:py-4 text-sm font-semibold text-[#111111] hover:bg-[#F7F7F8] transition-colors select-none">
                 {faq.q}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180">
                   <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
                 </svg>
               </summary>
-              <p className="px-5 pb-4 text-sm text-[#86868B] leading-relaxed">{faq.a}</p>
+              <p className="px-4 sm:px-5 pb-4 text-sm text-[#86868B] leading-relaxed">{faq.a}</p>
             </details>
           ))}
         </div>
@@ -856,7 +856,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
               Se alt tilbehør &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {accessories.slice(0, 4).map((acc) => (
               <Link
                 key={acc.id}

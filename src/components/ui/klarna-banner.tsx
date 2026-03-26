@@ -31,7 +31,7 @@ export function KlarnaBanner({
     >
       <div className="flex items-center gap-4 px-5 py-4">
         {/* Klarna logo */}
-        <KlarnaIcon className="h-9 w-auto shrink-0 rounded" />
+        <KlarnaIcon className="h-7 sm:h-9 w-auto shrink-0 rounded" />
 
         {/* Content */}
         <div className="flex-1">
