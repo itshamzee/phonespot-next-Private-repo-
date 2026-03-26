@@ -21,7 +21,7 @@ const GRADE_STYLES: Record<"A" | "B" | "C", string> = {
 
 function ItemThumbnail({ src, alt }: { src: string | null; alt: string }) {
   return (
-    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-cream">
+    <div className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded-lg bg-cream">
       {src ? (
         <img src={src} alt={alt} className="h-full w-full object-cover" />
       ) : (
@@ -54,7 +54,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      className="flex-shrink-0 self-start text-gray transition-colors hover:text-charcoal"
+      className="flex-shrink-0 self-start p-2 -m-2 text-gray transition-colors hover:text-charcoal"
       onClick={onClick}
       aria-label="Fjern fra kurv"
     >
@@ -85,7 +85,7 @@ function DeviceLineItem({ item }: { item: CartDeviceItem }) {
   const key = cartItemKey(item);
 
   return (
-    <div className="flex gap-4 py-4">
+    <div className="flex gap-3 sm:gap-4 py-4">
       <ItemThumbnail src={item.image} alt={item.title} />
 
       <div className="flex flex-1 flex-col justify-between">
@@ -137,7 +137,7 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
   }
 
   return (
-    <div className="flex gap-4 py-4">
+    <div className="flex gap-3 sm:gap-4 py-4">
       <ItemThumbnail src={item.image} alt={item.title} />
 
       <div className="flex flex-1 flex-col justify-between">

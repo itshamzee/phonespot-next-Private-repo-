@@ -511,7 +511,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
                       key={size}
                       type="button"
                       onClick={() => setScreenSize(size, !isActive)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
                         isActive
                           ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
                           : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
@@ -545,7 +545,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
                       key={ram}
                       type="button"
                       onClick={() => setRam(ram, !isActive)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
                         isActive
                           ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
                           : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
@@ -618,7 +618,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
                         ? applyQuickPrice("", "")
                         : applyQuickPrice(btn.min, btn.max)
                     }
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
                       isActive
                         ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
                         : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
@@ -743,7 +743,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
                       key={s}
                       type="button"
                       onClick={() => setStorage(s, !isActive)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
                         isActive
                           ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
                           : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
@@ -917,7 +917,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="rounded-full p-1.5 text-[#6E6E73] transition-colors hover:bg-[#F7F7F8] hover:text-[#111111]"
+              className="rounded-full p-2 sm:p-1.5 text-[#6E6E73] transition-colors hover:bg-[#F7F7F8] hover:text-[#111111]"
               aria-label="Luk filtre"
             >
               <svg

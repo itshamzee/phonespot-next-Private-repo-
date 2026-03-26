@@ -103,7 +103,7 @@ export function CartDrawer() {
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">
+          <div className="flex items-center justify-between border-b border-[#E5E5EA] px-4 sm:px-5 py-4">
             <h2 className="font-display text-lg font-semibold tracking-tight text-[#111111]">
               Kurv ({totalItems})
             </h2>
@@ -131,7 +131,7 @@ export function CartDrawer() {
           </div>
 
           {/* Items */}
-          <div className="flex-1 overflow-y-auto px-5">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-5">
             {items.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <p className="text-sm text-[#86868B]">Din kurv er tom</p>
@@ -160,7 +160,7 @@ export function CartDrawer() {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-[#E5E5EA] px-5 py-5">
+            <div className="border-t border-[#E5E5EA] px-4 sm:px-5 py-5">
               {/* Discount badge */}
               {cartState.discount && (
                 <div className="mb-3 flex items-center justify-between rounded-lg bg-[#F7F7F8] px-3 py-2">
@@ -211,7 +211,7 @@ export function CartDrawer() {
               <Link
                 href="/kasse"
                 onClick={closeCart}
-                className="flex w-full items-center justify-center rounded-full bg-[#1A3D2E] px-6 py-3 font-display text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="flex w-full items-center justify-center rounded-full bg-[#1A3D2E] px-6 py-3 min-h-[44px] font-display text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Gå til kassen
               </Link>

@@ -15,7 +15,7 @@ export default function KassePage() {
             </svg>
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
               Sikker betaling
             </h1>
             <p className="text-sm text-gray">Dine data er krypteret og beskyttet</p>
@@ -23,7 +23,7 @@ export default function KassePage() {
         </div>
 
         {/* Two-column layout: form left, summary right */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_400px]">
+        <div className="grid grid-cols-1 gap-6 sm:gap-10 lg:grid-cols-[1fr_400px]">
           {/* Left: Customer form */}
           <div>
             <CheckoutForm />

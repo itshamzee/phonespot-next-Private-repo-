@@ -90,7 +90,7 @@ export function UpsellModal() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-warm-white">
       {/* Header with logo */}
-      <div className="flex items-center justify-between border-b border-sand px-5 py-4">
+      <div className="flex items-center justify-between border-b border-sand px-4 sm:px-5 py-4">
         <button
           type="button"
           onClick={handleSkip}
@@ -119,7 +119,7 @@ export function UpsellModal() {
           alt="PhoneSpot"
           width={146}
           height={28}
-          className="h-7 w-auto"
+          className="h-7 w-[120px] sm:w-[146px]"
         />
 
         {/* Spacer to balance the back button */}
@@ -127,7 +127,7 @@ export function UpsellModal() {
       </div>
 
       {/* Content — centered vertically */}
-      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-5 py-6">
+      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 sm:px-5 py-6">
         <h2 className="mb-6 font-display text-xl font-bold text-charcoal md:text-2xl">
           Beskyt din skærm
         </h2>
@@ -182,7 +182,7 @@ export function UpsellModal() {
                 </div>
 
                 {/* Product image */}
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-sand/30 md:h-48 md:w-48 md:rounded-2xl">
+                <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-sand/30 md:h-48 md:w-48 md:rounded-2xl">
                   <Image
                     src={product.image}
                     alt={product.title}
@@ -217,7 +217,7 @@ export function UpsellModal() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-sand px-5 py-4">
+      <div className="border-t border-sand px-4 sm:px-5 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-3">
           {selected ? (
             <button
