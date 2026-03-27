@@ -135,8 +135,8 @@ export function CheckoutForm() {
         return;
       }
 
-      // Redirect to Stripe Checkout
-      router.push(data.url);
+      // Redirect to Stripe Checkout (external URL — must use window.location, not router.push)
+      window.location.href = data.url;
     } catch {
       setSubmitError("Netværksfejl. Tjek din forbindelse og prøv igen.");
       setIsSubmitting(false);

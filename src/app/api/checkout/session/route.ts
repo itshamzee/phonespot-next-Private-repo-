@@ -12,6 +12,8 @@ const SHIPPING_METHODS: Record<string, number> = {
   dao: 4900,       // 49 kr — DAO Pakke
   postnord: 5900,  // 59 kr — PostNord Pakke
   free: 0,
+  pickup_slagelse: 0,  // Gratis afhentning i Slagelse
+  pickup_vejle: 0,     // Gratis afhentning i Vejle
 };
 
 const FREE_SHIPPING_THRESHOLD = 50000; // 500 kr in øre
