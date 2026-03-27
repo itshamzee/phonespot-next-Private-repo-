@@ -185,7 +185,7 @@ function buildDeviceItem(device: DeviceWithTemplate): string | null {
     `${rawTitle} — Refurbished hos PhoneSpot.dk`;
   const description = escapeXml(rawDescription);
 
-  const productUrl = `${BASE_URL}/${urlBase}/${template.slug}`;
+  const productUrl = `${BASE_URL}/refurbished/${template.slug}`;
   const imageUrl = images[0];
 
   const lines: string[] = [

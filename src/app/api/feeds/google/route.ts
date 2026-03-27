@@ -25,7 +25,7 @@ export async function GET() {
     // Fetch active SKU products
     const { data: skuProducts } = await supabase
       .from("sku_products")
-      .select("id, title, description, ean, selling_price, sale_price, brand, category, images")
+      .select("id, title, description, ean, selling_price, sale_price, brand, category, slug, images")
       .eq("status", "published");
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -48,7 +48,7 @@ export async function GET() {
       } | null;
 
       const title = `${template?.display_name ?? "Enhed"} - Grade ${dev.grade}${dev.storage ? ` ${dev.storage}` : ""}`;
-      const link = `${SITE_URL}/produkt/${template?.slug ?? dev.id}`;
+      const link = `${SITE_URL}/refurbished/${template?.slug ?? dev.id}`;
       const image = dev.photos?.[0] ?? template?.images?.[0] ?? "";
       const price = ((dev.selling_price ?? 0) / 100).toFixed(2);
 
@@ -79,7 +79,7 @@ export async function GET() {
 <item>
   <g:id>sku-${sku.id}</g:id>
   <g:title><![CDATA[${sku.title}]]></g:title>
-  <g:link>${SITE_URL}/tilbehoer/${sku.id}</g:link>
+  <g:link>${SITE_URL}/tilbehoer/${sku.category ?? "accessory"}/${sku.slug ?? sku.id}</g:link>
   <g:image_link>${image}</g:image_link>
   <g:price>${price} DKK</g:price>
   ${sku.sale_price && sku.sale_price < sku.selling_price ? `<g:sale_price>${(sku.sale_price / 100).toFixed(2)} DKK</g:sale_price>` : ""}
