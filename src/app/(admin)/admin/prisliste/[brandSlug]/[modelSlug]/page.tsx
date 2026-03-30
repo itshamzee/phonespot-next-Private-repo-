@@ -81,6 +81,150 @@ function InlinePrice({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Full edit row                                                       */
+/* ------------------------------------------------------------------ */
+
+function EditServiceRow({
+  service,
+  onSave,
+  onCancel,
+}: {
+  service: RepairService;
+  onSave: (updates: Partial<RepairService>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(service.name);
+  const [priceDkk, setPriceDkk] = useState(String(service.price_dkk));
+  const [estimatedMinutes, setEstimatedMinutes] = useState(
+    service.estimated_minutes ? String(service.estimated_minutes) : ""
+  );
+  const [sortOrder, setSortOrder] = useState(String(service.sort_order ?? 0));
+  const [qualityTier, setQualityTier] = useState(service.quality_tier ?? "");
+  const [serviceCategory, setServiceCategory] = useState(service.service_category ?? "");
+  const [infoNote, setInfoNote] = useState(service.info_note ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSave({
+      name: name.trim(),
+      slug: name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      price_dkk: Number(priceDkk),
+      estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : null,
+      sort_order: Number(sortOrder),
+      quality_tier: qualityTier || null,
+      service_category: serviceCategory || null,
+      info_note: infoNote.trim() || null,
+    } as Partial<RepairService>);
+    setSaving(false);
+  }
+
+  return (
+    <tr className="border-b border-soft-grey/50 bg-green-eco/5">
+      <td colSpan={7} className="px-5 py-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Navn</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Pris (DKK)</label>
+            <input
+              type="number"
+              min={0}
+              value={priceDkk}
+              onChange={(e) => setPriceDkk(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Kvalitet</label>
+            <select
+              value={qualityTier}
+              onChange={(e) => setQualityTier(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            >
+              <option value="">Ingen</option>
+              <option value="standard">Standard</option>
+              <option value="premium">Premium</option>
+              <option value="original">Original</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Kategori</label>
+            <select
+              value={serviceCategory}
+              onChange={(e) => setServiceCategory(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            >
+              <option value="">Ingen</option>
+              <option value="Skaerm">Skaerm</option>
+              <option value="Batteri">Batteri</option>
+              <option value="Opladning">Opladning</option>
+              <option value="Kamera">Kamera</option>
+              <option value="Hoejtaler">Hoejtaler</option>
+              <option value="Andet">Andet</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Tid (min)</label>
+            <input
+              type="number"
+              min={0}
+              value={estimatedMinutes}
+              onChange={(e) => setEstimatedMinutes(e.target.value)}
+              placeholder="30"
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray">Sortering</label>
+            <input
+              type="number"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <label className="text-xs font-medium text-gray">Bemærkning til kunden</label>
+            <input
+              type="text"
+              value={infoNote}
+              onChange={(e) => setInfoNote(e.target.value)}
+              placeholder="Vises som tooltip..."
+              className="rounded-lg border border-soft-grey bg-white px-3 py-2 text-sm text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !name.trim() || !priceDkk}
+            className="rounded-full bg-green-eco px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Gemmer..." : "Gem ændringer"}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-full border border-soft-grey px-5 py-2 text-sm font-medium text-charcoal hover:bg-sand"
+          >
+            Annuller
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page component                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -113,6 +257,9 @@ export default function AdminServiceEditorPage({
 
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Full row editing
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
   // Edit info modal
   const [editingInfo, setEditingInfo] = useState<string | null>(null);
@@ -215,6 +362,24 @@ export default function AdminServiceEditorPage({
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kunne ikke opdatere pris");
+    }
+  }
+
+  async function updateService(serviceId: string, updates: Partial<RepairService>) {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
+      }
+      setEditingRowId(null);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kunne ikke opdatere reparation");
     }
   }
 
@@ -341,6 +506,13 @@ export default function AdminServiceEditorPage({
             <tbody>
               {services.map((service) => (
                 <React.Fragment key={service.id}>
+                {editingRowId === service.id ? (
+                  <EditServiceRow
+                    service={service}
+                    onSave={(updates) => updateService(service.id, updates)}
+                    onCancel={() => setEditingRowId(null)}
+                  />
+                ) : (
                 <tr
                   className="border-b border-soft-grey/50 last:border-0 hover:bg-sand/30 transition-colors"
                 >
@@ -414,19 +586,11 @@ export default function AdminServiceEditorPage({
                     <div className="flex items-center justify-center gap-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditingInfo(service.id);
-                          setInfoForm({
-                            description: service.description ?? "",
-                            warranty_info: service.warranty_info ?? "",
-                            includes: service.includes ?? "",
-                            estimated_time_label: service.estimated_time_label ?? "",
-                          });
-                        }}
-                        className="rounded px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
-                        title="Rediger ydelsesinfo"
+                        onClick={() => setEditingRowId(service.id)}
+                        className="rounded px-2 py-1 text-xs font-semibold text-green-eco hover:bg-green-eco/10 transition-colors"
+                        title="Rediger alle felter"
                       >
-                        i
+                        Rediger
                       </button>
                       {deletingId === service.id ? (
                         <>
@@ -457,7 +621,8 @@ export default function AdminServiceEditorPage({
                     </div>
                   </td>
                 </tr>
-                {expandedInfoId === service.id && service.info_note && (
+                )}
+                {expandedInfoId === service.id && service.info_note && editingRowId !== service.id && (
                   <tr className="bg-blue-50/30">
                     <td colSpan={7} className="px-5 py-3">
                       <p className="text-sm text-charcoal">
