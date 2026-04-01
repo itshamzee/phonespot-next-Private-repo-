@@ -4,9 +4,6 @@ import Link from "next/link";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
-import { FeaturedProducts } from "@/components/home/featured-products";
-import { HeroCarousel } from "@/components/home/hero-carousel";
-import { FadeIn } from "@/components/ui/fade-in";
 import { ShopTabs } from "@/components/home/shop-tabs";
 import { Bestsellers } from "@/components/home/bestsellers";
 
@@ -287,18 +284,7 @@ export default function HomePage() {
       {/* ── 5. Bestsellers ── */}
       <Bestsellers />
 
-      {/* ── 6. Featured products ── */}
-      <Suspense
-        fallback={
-          <div className="px-4 py-16 text-center text-gray">
-            Indl&aelig;ser produkter...
-          </div>
-        }
-      >
-        <FeaturedProducts />
-      </Suspense>
-
-      {/* ── 7. Sell your device CTA ── */}
+      {/* ── 6. Sell your device CTA ── */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white shadow-sm">
           <div className="grid items-center gap-8 p-4 sm:p-8 md:grid-cols-2 md:p-12 lg:p-16">
@@ -341,7 +327,7 @@ export default function HomePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── 8. Customer reviews ── */}
+      {/* ── 7. Customer reviews ── */}
       <SectionWrapper background="default">
         <div className="mx-auto mb-10 max-w-3xl text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-green-eco">
@@ -356,7 +342,7 @@ export default function HomePage() {
         </Suspense>
       </SectionWrapper>
 
-      {/* ── 9. FAQ + final CTA ── */}
+      {/* ── 8. FAQ + final CTA ── */}
       <SectionWrapper background="cream">
         <div className="mx-auto max-w-3xl">
           <div className="mb-10 text-center">

@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
     existing.count++;
     if (d.price < existing.minPrice) existing.minPrice = d.price;
 
-    const loc = (d as { locations?: { name: string; type: string } | null }).locations;
+    const loc = (d as any).locations as { name: string; type: string } | null;
     if (loc) {
       const locKey = loc.name;
       const locEntry = existing.locations.get(locKey) ?? {
