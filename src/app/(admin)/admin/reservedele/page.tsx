@@ -46,6 +46,101 @@ interface SparePart {
 
 const LOCATION_NAMES = ["Slagelse", "Vejle", "Online"] as const;
 
+const LOCATION_TO_API_FIELD: Record<string, string> = {
+  Slagelse: "stock_slagelse",
+  Vejle: "stock_vejle",
+  Online: "stock_online",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Inline-editable stock cell                                         */
+/* ------------------------------------------------------------------ */
+
+function InlineStock({
+  productId,
+  locationName,
+  currentQty,
+  onUpdated,
+}: {
+  productId: string;
+  locationName: string;
+  currentQty: number;
+  onUpdated: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(currentQty));
+  const [saving, setSaving] = useState(false);
+
+  async function commit() {
+    const parsed = parseInt(draft, 10);
+    if (isNaN(parsed) || parsed < 0) {
+      setDraft(String(currentQty));
+      setEditing(false);
+      return;
+    }
+    if (parsed === currentQty) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const field = LOCATION_TO_API_FIELD[locationName];
+      if (!field) throw new Error("Unknown location");
+      const res = await fetch(`/api/admin/spare-parts/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: parsed }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      onUpdated();
+    } catch {
+      setDraft(String(currentQty));
+    }
+    setSaving(false);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <input
+        type="number"
+        min={0}
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            setDraft(String(currentQty));
+            setEditing(false);
+          }
+        }}
+        disabled={saving}
+        className="w-16 rounded-lg border border-emerald-400 bg-white px-2 py-1 text-center text-xs tabular-nums text-charcoal focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        setDraft(String(currentQty));
+        setEditing(true);
+      }}
+      title="Klik for at ændre antal"
+      className={`cursor-pointer rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-all hover:ring-2 hover:ring-emerald-400/30 ${
+        currentQty > 0
+          ? "bg-emerald-500/10 text-emerald-700"
+          : "bg-stone-100 text-charcoal/30"
+      }`}
+    >
+      {currentQty}
+    </button>
+  );
+}
+
 function getStockAtLocation(product: SparePart, locationName: string): number {
   const entry = product.stock.find(
     (s) => s.locations?.name?.toLowerCase() === locationName.toLowerCase(),
@@ -732,11 +827,9 @@ export default function ReservedelePage() {
                       </span>
                     </td>
 
-                    {/* Per-location stock columns */}
+                    {/* Per-location stock columns — inline editable */}
                     {LOCATION_NAMES.map((locName) => {
-                      const qty = product.always_in_stock
-                        ? null
-                        : getStockAtLocation(product, locName);
+                      const qty = getStockAtLocation(product, locName);
                       const isHighlighted = locationFilter === locName;
                       return (
                         <td
@@ -751,14 +844,13 @@ export default function ReservedelePage() {
                             ) : (
                               <span className="text-charcoal/20">—</span>
                             )
-                          ) : qty !== null && qty > 0 ? (
-                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-700">
-                              {qty}
-                            </span>
                           ) : (
-                            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-charcoal/30">
-                              0
-                            </span>
+                            <InlineStock
+                              productId={product.id}
+                              locationName={locName}
+                              currentQty={qty}
+                              onUpdated={() => fetchProducts()}
+                            />
                           )}
                         </td>
                       );
