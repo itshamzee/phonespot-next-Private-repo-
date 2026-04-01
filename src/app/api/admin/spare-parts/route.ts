@@ -40,7 +40,41 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ products: data, total: count ?? 0, page, limit });
+  const productIds = (data ?? []).map((p: any) => p.id);
+
+  // Fetch stock for all products in one query
+  const { data: stockData } = await supabase
+    .from("sku_stock")
+    .select("product_id, quantity, locations(id, name, type)")
+    .in("product_id", productIds);
+
+  // Group stock by product_id
+  const stockByProduct = new Map<string, any[]>();
+  for (const s of stockData ?? []) {
+    const arr = stockByProduct.get(s.product_id) ?? [];
+    arr.push(s);
+    stockByProduct.set(s.product_id, arr);
+  }
+
+  // Enrich products with stock
+  let enriched = (data ?? []).map((p: any) => ({
+    ...p,
+    stock: stockByProduct.get(p.id) ?? [],
+  }));
+
+  // Location filter: only return products with stock > 0 at the given location name
+  const location = url.searchParams.get("location");
+  if (location) {
+    enriched = enriched.filter((p: any) =>
+      p.stock.some(
+        (s: any) =>
+          s.locations?.name?.toLowerCase() === location.toLowerCase() &&
+          s.quantity > 0,
+      ),
+    );
+  }
+
+  return NextResponse.json({ products: enriched, total: count ?? 0, page, limit });
 }
 
 export async function POST(req: NextRequest) {

@@ -8,6 +8,16 @@ import Image from "next/image";
 /*  Types                                                               */
 /* ------------------------------------------------------------------ */
 
+interface StockEntry {
+  product_id: string;
+  quantity: number;
+  locations: {
+    id: string;
+    name: string;
+    type: string;
+  } | null;
+}
+
 interface SparePart {
   id: string;
   title: string;
@@ -18,8 +28,7 @@ interface SparePart {
   selling_price: number; // oere
   status: "published" | "draft";
   always_in_stock: boolean;
-  stock_online?: number | null;
-  stock_store?: number | null;
+  stock: StockEntry[];
   spare_part_categories: {
     id: string;
     name: string;
@@ -33,6 +42,19 @@ interface SparePart {
     badge_text_color: string;
   } | null;
   created_at: string;
+}
+
+const LOCATION_NAMES = ["Slagelse", "Vejle", "Online"] as const;
+
+function getStockAtLocation(product: SparePart, locationName: string): number {
+  const entry = product.stock.find(
+    (s) => s.locations?.name?.toLowerCase() === locationName.toLowerCase(),
+  );
+  return entry?.quantity ?? 0;
+}
+
+function getTotalStock(product: SparePart): number {
+  return product.stock.reduce((sum, s) => sum + (s.quantity ?? 0), 0);
 }
 
 interface Category {
@@ -77,6 +99,7 @@ export default function ReservedelePage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [qualityFilter, setQualityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
@@ -145,6 +168,7 @@ export default function ReservedelePage() {
     if (categoryFilter) params.set("category", categoryFilter);
     if (qualityFilter) params.set("quality", qualityFilter);
     if (statusFilter) params.set("status", statusFilter);
+    if (locationFilter) params.set("location", locationFilter);
     if (searchDebounced) params.set("search", searchDebounced);
     params.set("page", String(page));
 
@@ -159,7 +183,7 @@ export default function ReservedelePage() {
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, qualityFilter, statusFilter, searchDebounced, page]);
+  }, [categoryFilter, qualityFilter, statusFilter, locationFilter, searchDebounced, page]);
 
   useEffect(() => {
     fetchProducts();
@@ -214,6 +238,7 @@ export default function ReservedelePage() {
     setCategoryFilter("");
     setQualityFilter("");
     setStatusFilter("");
+    setLocationFilter("");
     setSearch("");
     setBrandFilter("alle");
     setPage(1);
@@ -223,6 +248,7 @@ export default function ReservedelePage() {
     categoryFilter !== "" ||
     qualityFilter !== "" ||
     statusFilter !== "" ||
+    locationFilter !== "" ||
     search !== "" ||
     brandFilter !== "alle";
 
@@ -234,6 +260,31 @@ export default function ReservedelePage() {
 
   const publishedCount = products.filter((p) => p.status === "published").length;
   const draftCount = products.filter((p) => p.status === "draft").length;
+
+  /* ---- Inventory value ---- */
+
+  const inventoryStats = useMemo(() => {
+    const byLocation: Record<string, { qty: number; value: number }> = {};
+    for (const locName of LOCATION_NAMES) {
+      byLocation[locName] = { qty: 0, value: 0 };
+    }
+    let totalQty = 0;
+    let totalValue = 0;
+    for (const p of products) {
+      for (const s of p.stock) {
+        const name = s.locations?.name;
+        const qty = s.quantity ?? 0;
+        const val = qty * p.selling_price;
+        totalQty += qty;
+        totalValue += val;
+        if (name && name in byLocation) {
+          byLocation[name].qty += qty;
+          byLocation[name].value += val;
+        }
+      }
+    }
+    return { totalQty, totalValue, byLocation };
+  }, [products]);
 
   /* ---- Render ---- */
 
@@ -319,14 +370,47 @@ export default function ReservedelePage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
               {s.label}
             </p>
-            <p
-              className={`mt-0.5 font-display text-2xl font-bold tabular-nums ${s.color}`}
-            >
+            <p className={`mt-0.5 font-display text-2xl font-bold tabular-nums ${s.color}`}>
               {s.value}
             </p>
           </div>
         ))}
       </div>
+
+      {/* Inventory value summary */}
+      {!loading && products.length > 0 && (
+        <div className="rounded-xl border border-black/[0.04] bg-white px-5 py-4 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
+            Lagervaerdi (denne side)
+          </p>
+          <p className="mt-1 font-display text-xl font-bold tabular-nums text-charcoal">
+            {(inventoryStats.totalValue / 100).toLocaleString("da-DK", {
+              style: "currency",
+              currency: "DKK",
+              maximumFractionDigits: 0,
+            })}
+            <span className="ml-2 text-sm font-normal text-charcoal/40">
+              ({inventoryStats.totalQty} stk i alt)
+            </span>
+          </p>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+            {LOCATION_NAMES.map((locName) => {
+              const loc = inventoryStats.byLocation[locName];
+              return (
+                <span key={locName} className="text-[12px] text-charcoal/60">
+                  <span className="font-semibold text-charcoal/80">{locName}:</span>{" "}
+                  {loc.qty} stk &mdash;{" "}
+                  {(loc.value / 100).toLocaleString("da-DK", {
+                    style: "currency",
+                    currency: "DKK",
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Filter bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -416,6 +500,23 @@ export default function ReservedelePage() {
           <option value="draft">Kladder</option>
         </select>
 
+        {/* Location dropdown */}
+        <select
+          value={locationFilter}
+          onChange={(e) => {
+            setLocationFilter(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-xl border border-black/[0.06] bg-white px-3 py-2 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+        >
+          <option value="">Alle lokationer</option>
+          {LOCATION_NAMES.map((loc) => (
+            <option key={loc} value={loc}>
+              {loc}
+            </option>
+          ))}
+        </select>
+
         {/* Reset filters */}
         {hasActiveFilters && (
           <button
@@ -488,7 +589,7 @@ export default function ReservedelePage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[1100px] text-sm">
               <thead>
                 <tr className="border-b border-black/[0.04] bg-stone-50/60">
                   <th className="w-14 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
@@ -509,8 +610,20 @@ export default function ReservedelePage() {
                   <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
                     Pris
                   </th>
-                  <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
-                    Lager
+                  {LOCATION_NAMES.map((locName) => (
+                    <th
+                      key={locName}
+                      className={`px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] ${
+                        locationFilter === locName
+                          ? "text-emerald-600"
+                          : "text-charcoal/35"
+                      }`}
+                    >
+                      {locName}
+                    </th>
+                  ))}
+                  <th className="px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
+                    Total
                   </th>
                   <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/35">
                     Status
@@ -616,18 +729,54 @@ export default function ReservedelePage() {
                       </span>
                     </td>
 
-                    {/* Stock */}
-                    <td className="px-4 py-3 text-center">
+                    {/* Per-location stock columns */}
+                    {LOCATION_NAMES.map((locName) => {
+                      const qty = product.always_in_stock
+                        ? null
+                        : getStockAtLocation(product, locName);
+                      const isHighlighted = locationFilter === locName;
+                      return (
+                        <td
+                          key={locName}
+                          className={`px-3 py-3 text-center ${isHighlighted ? "bg-emerald-500/5" : ""}`}
+                        >
+                          {product.always_in_stock ? (
+                            locName === "Online" ? (
+                              <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
+                                Altid
+                              </span>
+                            ) : (
+                              <span className="text-charcoal/20">—</span>
+                            )
+                          ) : qty !== null && qty > 0 ? (
+                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-700">
+                              {qty}
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-charcoal/30">
+                              0
+                            </span>
+                          )}
+                        </td>
+                      );
+                    })}
+
+                    {/* Total stock */}
+                    <td className="px-3 py-3 text-center">
                       {product.always_in_stock ? (
-                        <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold text-sky-600">
-                          Altid
-                        </span>
-                      ) : (
-                        <StockDisplay
-                          stockOnline={product.stock_online}
-                          stockStore={product.stock_store}
-                        />
-                      )}
+                        <span className="text-charcoal/20">—</span>
+                      ) : (() => {
+                        const total = getTotalStock(product);
+                        return total > 0 ? (
+                          <span className="tabular-nums font-semibold text-charcoal/70">
+                            {total}
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-500">
+                            Udsolgt
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Status toggle */}
@@ -729,32 +878,3 @@ export default function ReservedelePage() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  StockDisplay sub-component                                          */
-/* ------------------------------------------------------------------ */
-
-function StockDisplay({
-  stockOnline,
-  stockStore,
-}: {
-  stockOnline?: number | null;
-  stockStore?: number | null;
-}) {
-  const online = stockOnline ?? 0;
-  const store = stockStore ?? 0;
-  const total = online + store;
-
-  if (total === 0) {
-    return (
-      <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-500">
-        Udsolgt
-      </span>
-    );
-  }
-
-  return (
-    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 tabular-nums">
-      {total}
-    </span>
-  );
-}
