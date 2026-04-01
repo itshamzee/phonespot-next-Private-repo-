@@ -64,6 +64,7 @@ export async function getQualityTierBySlug(slug: string): Promise<SparePartQuali
 export interface SparePartFilters {
   categorySlug?: string;
   brand?: string;
+  series?: string;
   model?: string;
   qualityTierSlug?: string;
   color?: string;
@@ -100,6 +101,10 @@ export async function getSparePartProducts(
 
   if (filters.brand) {
     query = query.ilike("device_brand", filters.brand);
+  }
+
+  if (filters.series) {
+    query = query.ilike("device_series", filters.series);
   }
 
   if (filters.model) {
@@ -195,7 +200,8 @@ export async function getQualityAlternatives(
 
 export async function getSparePartFilterOptions(): Promise<{
   brands: string[];
-  models: Array<{ brand: string; model: string }>;
+  series: Array<{ brand: string; series: string[] }>;
+  models: Array<{ brand: string; series: string | null; model: string }>;
   colors: string[];
 }> {
   const supabase = createServerClient();
@@ -210,25 +216,52 @@ export async function getSparePartFilterOptions(): Promise<{
 
   const brands = [
     ...new Set((brandData ?? []).map((r: any) => r.device_brand).filter(Boolean)),
-  ].sort();
+  ].sort() as string[];
+
+  const { data: seriesData } = await supabase
+    .from("sku_products")
+    .select("device_brand, device_series")
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .not("device_series", "is", null);
+
+  const seriesMap = new Map<string, Set<string>>();
+  for (const row of seriesData ?? []) {
+    const brand = (row as any).device_brand as string;
+    const s = (row as any).device_series as string;
+    if (!brand || !s) continue;
+    if (!seriesMap.has(brand)) seriesMap.set(brand, new Set());
+    seriesMap.get(brand)!.add(s);
+  }
+  const series = [...seriesMap.entries()].map(([brand, seriesSet]) => ({
+    brand,
+    series: [...seriesSet].sort(),
+  }));
 
   const { data: modelData } = await supabase
     .from("sku_products")
-    .select("device_brand, device_model")
+    .select("device_brand, device_series, device_model")
     .eq("subcategory", "spare-part")
     .eq("status", "published")
     .eq("is_active", true)
     .not("device_model", "is", null);
 
-  const modelMap = new Map<string, { brand: string; model: string }>();
+  const modelMap = new Map<string, { brand: string; series: string | null; model: string }>();
   for (const row of modelData ?? []) {
-    const key = `${row.device_brand}|${row.device_model}`;
+    const brand = (row as any).device_brand as string;
+    const s = ((row as any).device_series as string | null) ?? null;
+    const model = (row as any).device_model as string;
+    const key = `${brand}|${s ?? ""}|${model}`;
     if (!modelMap.has(key)) {
-      modelMap.set(key, { brand: row.device_brand, model: row.device_model });
+      modelMap.set(key, { brand, series: s, model });
     }
   }
   const models = [...modelMap.values()].sort(
-    (a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model)
+    (a, b) =>
+      a.brand.localeCompare(b.brand) ||
+      (a.series ?? "").localeCompare(b.series ?? "") ||
+      a.model.localeCompare(b.model)
   );
 
   const { data: colorData } = await supabase
@@ -240,13 +273,13 @@ export async function getSparePartFilterOptions(): Promise<{
 
   const colorSet = new Set<string>();
   for (const row of colorData ?? []) {
-    for (const cv of (row.color_variants as any[]) ?? []) {
-      if (cv.color_name) colorSet.add(cv.color_name);
+    for (const cv of ((row as any).color_variants as any[]) ?? []) {
+      if (cv.color_name) colorSet.add(cv.color_name as string);
     }
   }
   const colors = [...colorSet].sort();
 
-  return { brands, models, colors };
+  return { brands, series, models, colors };
 }
 
 export function getEffectiveWarranty(product: SparePartProduct): number {

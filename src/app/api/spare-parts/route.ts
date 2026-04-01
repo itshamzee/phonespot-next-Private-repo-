@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
   const brand = url.searchParams.get("brand");
   if (brand) filters.brand = brand;
 
+  const series = url.searchParams.get("series");
+  if (series) filters.series = series;
+
   const model = url.searchParams.get("model");
   if (model) filters.model = model;
 

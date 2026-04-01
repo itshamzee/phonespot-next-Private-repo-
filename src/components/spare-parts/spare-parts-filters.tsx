@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import {
+  DEVICE_BRANDS,
+  DEVICE_MODELS,
+  getSeriesForBrand,
+  getModelsForSeries,
+} from "@/lib/spare-parts-config";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,7 +29,13 @@ interface QualityTier {
 
 interface FilterModel {
   brand: string;
+  series: string | null;
   model: string;
+}
+
+interface FilterSeriesEntry {
+  brand: string;
+  series: string[];
 }
 
 interface ActiveFilter {
@@ -31,6 +43,71 @@ interface ActiveFilter {
   label: string;
   param: string;
   value: string;
+}
+
+// ---------------------------------------------------------------------------
+// Merge helpers — combine API data with static config as fallback
+// ---------------------------------------------------------------------------
+
+function getMergedBrands(apiBrands: string[]): string[] {
+  const merged = new Set<string>([...apiBrands, ...DEVICE_BRANDS]);
+  return [...merged].sort();
+}
+
+function getMergedSeries(
+  brand: string,
+  apiSeriesEntries: FilterSeriesEntry[],
+): string[] {
+  const apiEntry = apiSeriesEntries.find(
+    (e) => e.brand.toLowerCase() === brand.toLowerCase(),
+  );
+  const apiSeries = apiEntry?.series ?? [];
+  const configSeries = getSeriesForBrand(brand);
+  const merged = new Set<string>([...apiSeries, ...configSeries]);
+  return [...merged].sort();
+}
+
+function getMergedModels(
+  brand: string,
+  series: string,
+  apiModels: FilterModel[],
+): FilterModel[] {
+  const apiFiltered = apiModels.filter(
+    (m) =>
+      m.brand.toLowerCase() === brand.toLowerCase() &&
+      (m.series ?? "").toLowerCase() === series.toLowerCase(),
+  );
+  const apiModelNames = new Set(apiFiltered.map((m) => m.model));
+
+  // Add models from config that aren't in the API result yet
+  const configModels = getModelsForSeries(brand, series).map((cm) => ({
+    brand: cm.brand,
+    series: cm.series,
+    model: cm.model,
+    model_codes: cm.model_codes,
+  }));
+
+  const extras: FilterModel[] = configModels
+    .filter((cm) => !apiModelNames.has(cm.model))
+    .map((cm) => ({ brand: cm.brand, series: cm.series, model: cm.model }));
+
+  return [...apiFiltered, ...extras].sort((a, b) =>
+    a.model.localeCompare(b.model),
+  );
+}
+
+function getModelCodesFromConfig(
+  brand: string,
+  series: string,
+  model: string,
+): string[] | undefined {
+  const entry = DEVICE_MODELS.find(
+    (m) =>
+      m.brand.toLowerCase() === brand.toLowerCase() &&
+      m.series.toLowerCase() === series.toLowerCase() &&
+      m.model.toLowerCase() === model.toLowerCase(),
+  );
+  return entry?.model_codes;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,6 +135,16 @@ function buildActiveFilters(
   const brand = params.get("brand");
   if (brand) {
     filters.push({ key: "brand", label: brand, param: "brand", value: brand });
+  }
+
+  const series = params.get("series");
+  if (series) {
+    filters.push({
+      key: "series",
+      label: series,
+      param: "series",
+      value: series,
+    });
   }
 
   const models = params.getAll("model");
@@ -143,7 +230,9 @@ export function SparePartsFilters() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [qualityTiers, setQualityTiers] = useState<QualityTier[]>([]);
-  const [allModels, setAllModels] = useState<FilterModel[]>([]);
+  const [apiModels, setApiModels] = useState<FilterModel[]>([]);
+  const [apiSeriesEntries, setApiSeriesEntries] = useState<FilterSeriesEntry[]>([]);
+  const [apiBrands, setApiBrands] = useState<string[]>([]);
 
   // Local price state (committed on blur)
   const [minPriceInput, setMinPriceInput] = useState(
@@ -169,11 +258,18 @@ export function SparePartsFilters() {
         fetch("/api/admin/spare-parts/quality-tiers"),
         fetch("/api/spare-parts?filters=true"),
       ]);
-      if (catRes.ok) setCategories(await catRes.json() as Category[]);
-      if (tierRes.ok) setQualityTiers(await tierRes.json() as QualityTier[]);
+      if (catRes.ok) setCategories((await catRes.json()) as Category[]);
+      if (tierRes.ok) setQualityTiers((await tierRes.json()) as QualityTier[]);
       if (filterRes.ok) {
-        const data = await filterRes.json() as { brands: string[]; models: FilterModel[]; colors: string[] };
-        setAllModels(data.models ?? []);
+        const data = (await filterRes.json()) as {
+          brands: string[];
+          series: FilterSeriesEntry[];
+          models: FilterModel[];
+          colors: string[];
+        };
+        setApiBrands(data.brands ?? []);
+        setApiSeriesEntries(data.series ?? []);
+        setApiModels(data.models ?? []);
       }
     }
     void load();
@@ -195,7 +291,9 @@ export function SparePartsFilters() {
   // Lock body scroll when drawer open
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [drawerOpen]);
 
   // ---------------------------------------------------------------------------
@@ -205,7 +303,7 @@ export function SparePartsFilters() {
   const updateParam = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams.toString());
-      params.delete("page"); // reset pagination on filter change
+      params.delete("page");
       if (value === null || value === "") {
         params.delete(key);
       } else {
@@ -221,7 +319,6 @@ export function SparePartsFilters() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
       const existing = params.getAll(key);
-      // Remove all existing values for key, then add back without toggled value
       params.delete(key);
       if (existing.includes(value)) {
         for (const v of existing.filter((x) => x !== value)) params.append(key, v);
@@ -239,7 +336,6 @@ export function SparePartsFilters() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
       if (filter.param === "model" || filter.param === "quality") {
-        // multi-value — remove specific entry
         const existing = params.getAll(filter.param);
         params.delete(filter.param);
         for (const v of existing.filter((x) => x !== filter.value)) {
@@ -250,6 +346,15 @@ export function SparePartsFilters() {
         params.delete("maxPrice");
         setMinPriceInput("");
         setMaxPriceInput("");
+      } else if (filter.param === "series") {
+        // Clearing series also clears dependent model selection
+        params.delete("series");
+        params.delete("model");
+      } else if (filter.param === "brand") {
+        // Clearing brand also clears series and model
+        params.delete("brand");
+        params.delete("series");
+        params.delete("model");
       } else {
         params.delete(filter.param);
       }
@@ -288,15 +393,65 @@ export function SparePartsFilters() {
 
   const selectedCategory = searchParams.get("category") ?? "";
   const selectedBrand = searchParams.get("brand") ?? "";
+  const selectedSeries = searchParams.get("series") ?? "";
   const selectedModels = searchParams.getAll("model");
   const selectedQualities = searchParams.getAll("quality");
 
-  const filteredModels = selectedBrand
-    ? allModels.filter((m) => m.brand.toLowerCase() === selectedBrand.toLowerCase())
-    : allModels;
+  // Merged brand list (API + config)
+  const allBrands = getMergedBrands(apiBrands);
+
+  // Series list for currently selected brand (API + config merged)
+  const seriesForBrand = selectedBrand
+    ? getMergedSeries(selectedBrand, apiSeriesEntries)
+    : [];
+
+  // Models for brand + series combo (API + config merged)
+  const modelsForSeries =
+    selectedBrand && selectedSeries
+      ? getMergedModels(selectedBrand, selectedSeries, apiModels)
+      : [];
 
   const activeFilters = buildActiveFilters(searchParams, categories, qualityTiers);
   const hasActiveFilters = activeFilters.length > 0;
+
+  // ---------------------------------------------------------------------------
+  // Brand change handler — clears series + model
+  // ---------------------------------------------------------------------------
+
+  const handleBrandChange = useCallback(
+    (brand: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
+      params.delete("series");
+      params.delete("model");
+      if (brand) {
+        params.set("brand", brand);
+      } else {
+        params.delete("brand");
+      }
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Series change handler — clears model
+  // ---------------------------------------------------------------------------
+
+  const handleSeriesChange = useCallback(
+    (series: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
+      params.delete("model");
+      if (series) {
+        params.set("series", series);
+      } else {
+        params.delete("series");
+      }
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
 
   // ---------------------------------------------------------------------------
   // Filter panel content
@@ -354,26 +509,15 @@ export function SparePartsFilters() {
         </select>
       </FilterSection>
 
-      {/* Enhedsmærke */}
+      {/* Level 1: Enhedsmærke */}
       <FilterSection title="Enhedsmærke">
         <select
           value={selectedBrand}
-          onChange={(e) => {
-            // Clear model selection when brand changes
-            const params = new URLSearchParams(searchParams.toString());
-            params.delete("page");
-            params.delete("model");
-            if (e.target.value) {
-              params.set("brand", e.target.value);
-            } else {
-              params.delete("brand");
-            }
-            router.push(`${pathname}?${params.toString()}`, { scroll: false });
-          }}
+          onChange={(e) => handleBrandChange(e.target.value)}
           className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
         >
           <option value="">Alle mærker</option>
-          {[...new Set(allModels.map((m) => m.brand))].sort().map((brand) => (
+          {allBrands.map((brand) => (
             <option key={brand} value={brand}>
               {brand}
             </option>
@@ -381,27 +525,54 @@ export function SparePartsFilters() {
         </select>
       </FilterSection>
 
-      {/* Enhedsmodel */}
-      {filteredModels.length > 0 && (
-        <FilterSection title="Enhedsmodel" defaultOpen={selectedModels.length > 0}>
-          <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-            {filteredModels.map((m) => {
+      {/* Level 2: Enhedstype — only shown when a brand is selected */}
+      {selectedBrand && seriesForBrand.length > 0 && (
+        <FilterSection title="Enhedstype" defaultOpen={true}>
+          <select
+            value={selectedSeries}
+            onChange={(e) => handleSeriesChange(e.target.value)}
+            className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+          >
+            <option value="">Alle typer</option>
+            {seriesForBrand.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </FilterSection>
+      )}
+
+      {/* Level 3: Model — only shown when a series is selected */}
+      {selectedBrand && selectedSeries && modelsForSeries.length > 0 && (
+        <FilterSection title="Model" defaultOpen={selectedModels.length > 0}>
+          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+            {modelsForSeries.map((m) => {
               const checked = selectedModels.includes(m.model);
+              const codes = getModelCodesFromConfig(
+                m.brand,
+                selectedSeries,
+                m.model,
+              );
               return (
                 <label
-                  key={`${m.brand}-${m.model}`}
-                  className="flex cursor-pointer items-center gap-2.5"
+                  key={`${m.brand}-${m.series ?? ""}-${m.model}`}
+                  className="flex cursor-pointer items-start gap-2.5"
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleMultiParam("model", m.model)}
-                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#E5E5EA] accent-[#1A3D2E]"
                   />
-                  <span className="text-sm text-[#111111]">{m.model}</span>
-                  {!selectedBrand && (
-                    <span className="ml-auto text-xs text-[#86868B]">{m.brand}</span>
-                  )}
+                  <span className="flex flex-col">
+                    <span className="text-sm text-[#111111]">{m.model}</span>
+                    {codes && codes.length > 0 && (
+                      <span className="text-xs text-[#86868B]">
+                        {codes.slice(0, 3).join(", ")}
+                      </span>
+                    )}
+                  </span>
                 </label>
               );
             })}
@@ -416,10 +587,7 @@ export function SparePartsFilters() {
             {qualityTiers.map((tier) => {
               const checked = selectedQualities.includes(tier.slug);
               return (
-                <label
-                  key={tier.id}
-                  className="flex cursor-pointer items-center gap-2.5"
-                >
+                <label key={tier.id} className="flex cursor-pointer items-center gap-2.5">
                   <input
                     type="checkbox"
                     checked={checked}
@@ -449,7 +617,9 @@ export function SparePartsFilters() {
             value={minPriceInput}
             onChange={(e) => setMinPriceInput(e.target.value)}
             onBlur={commitPrice}
-            onKeyDown={(e) => { if (e.key === "Enter") commitPrice(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitPrice();
+            }}
             className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
           />
           <span className="shrink-0 text-xs text-[#86868B]">&ndash;</span>
@@ -460,7 +630,9 @@ export function SparePartsFilters() {
             value={maxPriceInput}
             onChange={(e) => setMaxPriceInput(e.target.value)}
             onBlur={commitPrice}
-            onKeyDown={(e) => { if (e.key === "Enter") commitPrice(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitPrice();
+            }}
             className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
           />
         </div>
@@ -474,7 +646,7 @@ export function SparePartsFilters() {
 
   return (
     <>
-      {/* ── Mobile: "Filtre" trigger button ─────────────────────────────── */}
+      {/* Mobile: "Filtre" trigger button */}
       <div className="lg:hidden">
         <button
           type="button"
@@ -505,9 +677,14 @@ export function SparePartsFilters() {
         </button>
       </div>
 
-      {/* ── Mobile drawer ────────────────────────────────────────────────── */}
+      {/* Mobile drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filtre">
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filtre"
+        >
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
@@ -560,7 +737,7 @@ export function SparePartsFilters() {
         </div>
       )}
 
-      {/* ── Desktop sidebar ──────────────────────────────────────────────── */}
+      {/* Desktop sidebar */}
       <aside className="hidden w-72 shrink-0 lg:block">
         <div className="sticky top-6">
           <div className="flex items-center justify-between border-b border-[#E5E5EA] pb-3">
