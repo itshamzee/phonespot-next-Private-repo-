@@ -1,0 +1,259 @@
+import { createServerClient } from "./client";
+import type {
+  SparePartCategory,
+  SparePartQualityTier,
+  SparePartProduct,
+} from "./platform-types";
+
+// ============================================================
+// Categories
+// ============================================================
+
+export async function getSparePartCategories(activeOnly = true): Promise<SparePartCategory[]> {
+  const supabase = createServerClient();
+  let query = supabase
+    .from("spare_part_categories")
+    .select("*")
+    .order("sort_order");
+  if (activeOnly) query = query.eq("active", true);
+  const { data } = await query;
+  return (data as SparePartCategory[]) ?? [];
+}
+
+export async function getSparePartCategoryBySlug(slug: string): Promise<SparePartCategory | null> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("spare_part_categories")
+    .select("*")
+    .eq("slug", slug)
+    .eq("active", true)
+    .single();
+  return (data as SparePartCategory | null) ?? null;
+}
+
+// ============================================================
+// Quality Tiers
+// ============================================================
+
+export async function getQualityTiers(activeOnly = true): Promise<SparePartQualityTier[]> {
+  const supabase = createServerClient();
+  let query = supabase
+    .from("spare_part_quality_tiers")
+    .select("*")
+    .order("sort_order");
+  if (activeOnly) query = query.eq("active", true);
+  const { data } = await query;
+  return (data as SparePartQualityTier[]) ?? [];
+}
+
+export async function getQualityTierBySlug(slug: string): Promise<SparePartQualityTier | null> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("spare_part_quality_tiers")
+    .select("*")
+    .eq("slug", slug)
+    .eq("active", true)
+    .single();
+  return (data as SparePartQualityTier | null) ?? null;
+}
+
+// ============================================================
+// Spare Part Products
+// ============================================================
+
+export interface SparePartFilters {
+  categorySlug?: string;
+  brand?: string;
+  model?: string;
+  qualityTierSlug?: string;
+  color?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStockOnly?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export async function getSparePartProducts(
+  filters: SparePartFilters = {}
+): Promise<{ products: SparePartProduct[]; total: number }> {
+  const supabase = createServerClient();
+
+  let query = supabase
+    .from("sku_products")
+    .select(
+      "*, spare_part_categories!part_category_id(id, name, slug, default_warranty_months), spare_part_quality_tiers!quality_tier_id(id, name, slug, badge_color, badge_text_color, description, short_description, default_warranty_months, specifications)",
+      { count: "exact" }
+    )
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (filters.categorySlug) {
+    const category = await getSparePartCategoryBySlug(filters.categorySlug);
+    if (category) {
+      query = query.eq("part_category_id", category.id);
+    }
+  }
+
+  if (filters.brand) {
+    query = query.ilike("device_brand", filters.brand);
+  }
+
+  if (filters.model) {
+    query = query.ilike("device_model", `%${filters.model}%`);
+  }
+
+  if (filters.qualityTierSlug) {
+    const tier = await getQualityTierBySlug(filters.qualityTierSlug);
+    if (tier) {
+      query = query.eq("quality_tier_id", tier.id);
+    }
+  }
+
+  if (filters.minPrice != null) {
+    query = query.gte("selling_price", filters.minPrice);
+  }
+  if (filters.maxPrice != null) {
+    query = query.lte("selling_price", filters.maxPrice);
+  }
+
+  if (filters.search) {
+    query = query.or(
+      `title.ilike.%${filters.search}%,device_model.ilike.%${filters.search}%,device_brand.ilike.%${filters.search}%`
+    );
+  }
+
+  const limit = filters.limit ?? 24;
+  const offset = filters.offset ?? 0;
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, count } = await query;
+
+  const products = (data ?? []).map((row: any) => ({
+    ...row,
+    part_category: row.spare_part_categories ?? undefined,
+    quality_tier: row.spare_part_quality_tiers ?? undefined,
+    spare_part_categories: undefined,
+    spare_part_quality_tiers: undefined,
+  })) as SparePartProduct[];
+
+  return { products, total: count ?? 0 };
+}
+
+export async function getSparePartBySlug(slug: string): Promise<SparePartProduct | null> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("sku_products")
+    .select(
+      "*, spare_part_categories!part_category_id(*), spare_part_quality_tiers!quality_tier_id(*)"
+    )
+    .eq("slug", slug)
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .single();
+
+  if (!data) return null;
+
+  return {
+    ...data,
+    part_category: (data as any).spare_part_categories ?? undefined,
+    quality_tier: (data as any).spare_part_quality_tiers ?? undefined,
+    spare_part_categories: undefined,
+    spare_part_quality_tiers: undefined,
+  } as SparePartProduct;
+}
+
+export async function getQualityAlternatives(
+  partCategoryId: string,
+  deviceModel: string,
+  excludeProductId: string
+): Promise<SparePartProduct[]> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("sku_products")
+    .select(
+      "*, spare_part_quality_tiers!quality_tier_id(id, name, slug, badge_color, badge_text_color, short_description, default_warranty_months)"
+    )
+    .eq("part_category_id", partCategoryId)
+    .ilike("device_model", deviceModel)
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .neq("id", excludeProductId)
+    .order("selling_price", { ascending: true });
+
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    quality_tier: row.spare_part_quality_tiers ?? undefined,
+    spare_part_quality_tiers: undefined,
+  })) as SparePartProduct[];
+}
+
+export async function getSparePartFilterOptions(): Promise<{
+  brands: string[];
+  models: Array<{ brand: string; model: string }>;
+  colors: string[];
+}> {
+  const supabase = createServerClient();
+
+  const { data: brandData } = await supabase
+    .from("sku_products")
+    .select("device_brand")
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .not("device_brand", "is", null);
+
+  const brands = [
+    ...new Set((brandData ?? []).map((r: any) => r.device_brand).filter(Boolean)),
+  ].sort();
+
+  const { data: modelData } = await supabase
+    .from("sku_products")
+    .select("device_brand, device_model")
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true)
+    .not("device_model", "is", null);
+
+  const modelMap = new Map<string, { brand: string; model: string }>();
+  for (const row of modelData ?? []) {
+    const key = `${row.device_brand}|${row.device_model}`;
+    if (!modelMap.has(key)) {
+      modelMap.set(key, { brand: row.device_brand, model: row.device_model });
+    }
+  }
+  const models = [...modelMap.values()].sort(
+    (a, b) => a.brand.localeCompare(b.brand) || a.model.localeCompare(b.model)
+  );
+
+  const { data: colorData } = await supabase
+    .from("sku_products")
+    .select("color_variants")
+    .eq("subcategory", "spare-part")
+    .eq("status", "published")
+    .eq("is_active", true);
+
+  const colorSet = new Set<string>();
+  for (const row of colorData ?? []) {
+    for (const cv of (row.color_variants as any[]) ?? []) {
+      if (cv.color_name) colorSet.add(cv.color_name);
+    }
+  }
+  const colors = [...colorSet].sort();
+
+  return { brands, models, colors };
+}
+
+export function getEffectiveWarranty(product: SparePartProduct): number {
+  if (product.warranty_months != null) return product.warranty_months;
+  if (product.part_category?.default_warranty_months != null)
+    return product.part_category.default_warranty_months;
+  if (product.quality_tier?.default_warranty_months != null)
+    return product.quality_tier.default_warranty_months;
+  return 12;
+}
