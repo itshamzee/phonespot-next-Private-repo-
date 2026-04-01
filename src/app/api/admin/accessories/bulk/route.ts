@@ -55,6 +55,8 @@ export async function POST(request: Request) {
     image_urls,
     description,
     ean,
+    online_stock,
+    store_stock,
   } = body;
 
   if (!name_pattern || !category) {
@@ -129,6 +131,26 @@ export async function POST(request: Request) {
       .select("id, title, slug");
 
     if (error) throw error;
+
+    // Create stock records if stock values provided
+    if (data && (online_stock != null || store_stock != null)) {
+      const { data: locations } = await supabase.from("locations").select("id, type");
+      const onlineLoc = locations?.find((l: { id: string; type: string }) => l.type === "online");
+      const storeLoc = locations?.find((l: { id: string; type: string }) => l.type === "store");
+
+      const stockRows = [];
+      for (const product of data) {
+        if (onlineLoc && online_stock != null) {
+          stockRows.push({ product_id: product.id, location_id: onlineLoc.id, quantity: Number(online_stock) });
+        }
+        if (storeLoc && store_stock != null) {
+          stockRows.push({ product_id: product.id, location_id: storeLoc.id, quantity: Number(store_stock) });
+        }
+      }
+      if (stockRows.length > 0) {
+        await supabase.from("sku_stock").upsert(stockRows, { onConflict: "product_id,location_id" });
+      }
+    }
 
     return NextResponse.json(
       { count: data?.length ?? 0, created: data?.length ?? 0, accessories: data ?? [] },
