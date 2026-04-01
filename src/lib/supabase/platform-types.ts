@@ -521,3 +521,76 @@ export type AccessoryUpdate = Partial<Omit<Accessory, 'id' | 'created_at'>> & { 
 export type AccessoryTemplateInsert = Omit<AccessoryTemplate, 'id' | 'created_at'> & { id?: string };
 export type ReservationInsert = Omit<Reservation, 'id' | 'created_at'> & { id?: string };
 export type ReservationUpdate = Partial<Omit<Reservation, 'id' | 'created_at'>> & { id: string };
+
+// ============================================================
+// Spare Parts Types
+// ============================================================
+
+export interface SparePartCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_text: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  quality_guide: string | null;
+  faq: Array<{ question: string; answer: string }>;
+  featured_models: Array<{ brand: string; model: string; slug: string; image_url: string | null }>;
+  default_warranty_months: number | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SparePartQualityTier {
+  id: string;
+  name: string;
+  slug: string;
+  badge_color: string;
+  badge_text_color: string;
+  description: string;
+  short_description: string | null;
+  specifications: Record<string, string>;
+  default_warranty_months: number;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ColorVariant {
+  color_name: string;
+  color_hex: string;
+  sku: string | null;
+  price_dkk: number | null;
+  stock: number;
+  image_url: string | null;
+}
+
+export interface CompatibleModel {
+  brand: string;
+  series: string;
+  model: string;
+  model_code: string | null;
+}
+
+export interface SparePartProduct extends SkuProduct {
+  quality_tier_id: string | null;
+  warranty_months: number | null;
+  part_category_id: string | null;
+  device_brand: string | null;
+  device_series: string | null;
+  device_model: string | null;
+  device_model_codes: string[];
+  is_inquiry_only: boolean;
+  color_variants: ColorVariant[];
+  compatible_models: CompatibleModel[];
+  specifications: Record<string, string>;
+  quality_tier?: SparePartQualityTier;
+  part_category?: SparePartCategory;
+}
