@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    const products = (data ?? []).map((p) => ({
+    const products = (data ?? []).map((p: any) => ({
       id: p.id,
       slug: p.slug,
       title: p.title,
@@ -52,7 +52,6 @@ export async function GET(req: NextRequest) {
       break;
     case "laptops":
       categoryFilter = "laptop";
-      // Exclude Apple (those go to macbooks tab)
       break;
     case "iphones":
       categoryFilter = "iphone";
@@ -64,16 +63,16 @@ export async function GET(req: NextRequest) {
       categoryFilter = "smartwatch";
       break;
     case "bestsellers":
-      categoryFilter = ""; // all categories
+      categoryFilter = "";
       break;
     default:
       categoryFilter = "laptop";
   }
 
-  // Fetch templates
+  // Fetch templates — use correct column names
   let query = supabase
     .from("product_templates")
-    .select("id, slug, title, brand, category, image, specifications, compare_at_price, status")
+    .select("id, slug, display_name, brand, category, images, specifications, base_price_a, status")
     .eq("status", "published");
 
   if (categoryFilter) {
@@ -82,7 +81,6 @@ export async function GET(req: NextRequest) {
   if (brandFilter) {
     query = query.ilike("brand", brandFilter);
   }
-  // For laptops tab (non-Apple), exclude Apple
   if (tab === "laptops") {
     query = query.not("brand", "ilike", "Apple");
   }
@@ -95,12 +93,12 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Fetch device stats for all templates
-  const templateIds = templates.map((t) => t.id);
+  // Fetch device stats — use selling_price not price
+  const templateIds = templates.map((t: any) => t.id);
 
   const { data: deviceStats } = await supabase
     .from("devices")
-    .select("template_id, price, status, location_id, locations(name, type)")
+    .select("template_id, selling_price, status, location_id, locations(name, type)")
     .in("template_id", templateIds)
     .eq("status", "listed");
 
@@ -114,16 +112,16 @@ export async function GET(req: NextRequest) {
     }
   >();
 
-  for (const d of deviceStats ?? []) {
+  for (const d of (deviceStats ?? []) as any[]) {
     const existing = statsByTemplate.get(d.template_id) ?? {
       count: 0,
       minPrice: Infinity,
       locations: new Map(),
     };
     existing.count++;
-    if (d.price < existing.minPrice) existing.minPrice = d.price;
+    if (d.selling_price < existing.minPrice) existing.minPrice = d.selling_price;
 
-    const loc = (d as any).locations as { name: string; type: string } | null;
+    const loc = d.locations as { name: string; type: string } | null;
     if (loc) {
       const locKey = loc.name;
       const locEntry = existing.locations.get(locKey) ?? {
@@ -138,17 +136,18 @@ export async function GET(req: NextRequest) {
     statsByTemplate.set(d.template_id, existing);
   }
 
-  // Build response, sorted by stock then price
+  // Build response
   const products = templates
-    .map((t) => {
+    .map((t: any) => {
       const stats = statsByTemplate.get(t.id);
+      const minPrice = stats?.minPrice !== Infinity ? stats?.minPrice ?? null : null;
       return {
         id: t.id,
         slug: t.slug,
-        title: t.title,
-        image: t.image ?? null,
-        minPrice: stats?.minPrice ?? null,
-        compareAtPrice: t.compare_at_price ?? null,
+        title: t.display_name,
+        image: t.images?.[0] ?? null,
+        minPrice,
+        compareAtPrice: t.base_price_a ?? null,
         deviceCount: stats?.count ?? 0,
         brand: t.brand ?? "",
         category: t.category ?? "",
@@ -158,9 +157,8 @@ export async function GET(req: NextRequest) {
         locations: [...(stats?.locations?.values() ?? [])],
       };
     })
-    .filter((p) => p.inStock) // Only show in-stock products
-    .sort((a, b) => {
-      // Sort by device count desc, then price asc
+    .filter((p: any) => p.inStock)
+    .sort((a: any, b: any) => {
       if (b.deviceCount !== a.deviceCount) return b.deviceCount - a.deviceCount;
       return (a.minPrice ?? Infinity) - (b.minPrice ?? Infinity);
     })
