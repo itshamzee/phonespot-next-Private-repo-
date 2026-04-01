@@ -34,6 +34,7 @@ interface ColorVariant {
   color_hex: string;
   price_override_dkk: string;
   stock: string;
+  image_url: string;
 }
 
 interface Toast {
@@ -147,6 +148,12 @@ export default function ReservedelOpretPage() {
 
   /* ---- Section 7: Billeder ---- */
   const [imageUrls, setImageUrls] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [cameraError, setCameraError] = useState("");
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
 
   /* ---- Section 8: SEO ---- */
   const [metaTitle, setMetaTitle] = useState("");
@@ -257,7 +264,7 @@ export default function ReservedelOpretPage() {
   function addColorVariant() {
     setColorVariants((prev) => [
       ...prev,
-      { color_name: "", color_hex: "#000000", price_override_dkk: "", stock: "0" },
+      { color_name: "", color_hex: "#000000", price_override_dkk: "", stock: "0", image_url: "" },
     ]);
   }
 
@@ -271,6 +278,118 @@ export default function ReservedelOpretPage() {
     setColorVariants((prev) => prev.filter((_, i) => i !== idx));
   }
 
+  /* ---- Image file handling ---- */
+
+  const addImageFiles = useCallback((files: File[]) => {
+    const imgs = files.filter((f) => f.type.startsWith("image/"));
+    if (!imgs.length) return;
+    setImageFiles((prev) => [...prev, ...imgs]);
+    setImagePreviews((prev) => [...prev, ...imgs.map((f) => URL.createObjectURL(f))]);
+  }, []);
+
+  const handleImageFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) addImageFiles(Array.from(e.target.files));
+    if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+  };
+
+  const handleImageDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      addImageFiles(Array.from(e.dataTransfer.files));
+    },
+    [addImageFiles],
+  );
+
+  function removeImageFile(idx: number) {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[idx]);
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
+
+  function moveImageUp(idx: number) {
+    if (idx === 0) return;
+    setImageFiles((prev) => {
+      const a = [...prev];
+      [a[idx - 1], a[idx]] = [a[idx], a[idx - 1]];
+      return a;
+    });
+    setImagePreviews((prev) => {
+      const a = [...prev];
+      [a[idx - 1], a[idx]] = [a[idx], a[idx - 1]];
+      return a;
+    });
+  }
+
+  function moveImageDown(idx: number) {
+    setImageFiles((prev) => {
+      if (idx >= prev.length - 1) return prev;
+      const a = [...prev];
+      [a[idx], a[idx + 1]] = [a[idx + 1], a[idx]];
+      return a;
+    });
+    setImagePreviews((prev) => {
+      if (idx >= prev.length - 1) return prev;
+      const a = [...prev];
+      [a[idx], a[idx + 1]] = [a[idx + 1], a[idx]];
+      return a;
+    });
+  }
+
+  async function startCamera() {
+    setCameraError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      cameraStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch {
+      setCameraError("Kamera ikke tilgaengeligt. Kontroller tilladelser.");
+    }
+  }
+
+  function capturePhoto() {
+    if (!videoRef.current) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `foto-${Date.now()}.jpg`, { type: "image/jpeg" });
+      addImageFiles([file]);
+    }, "image/jpeg", 0.9);
+  }
+
+  function stopCamera() {
+    cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+  }
+
+  async function uploadImages(): Promise<string[]> {
+    if (!imageFiles.length) return [];
+    const urls: string[] = [];
+    for (const file of imageFiles) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "reservedele");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        urls.push(data.url ?? data.path ?? "");
+      }
+    }
+    return urls.filter(Boolean);
+  }
+
   /* ---- Submit ---- */
 
   async function handleSubmit(e: React.FormEvent) {
@@ -282,6 +401,13 @@ export default function ReservedelOpretPage() {
     }
 
     setSubmitting(true);
+
+    const uploadedImageUrls = await uploadImages();
+    const manualImageUrls = imageUrls
+      .split("\n")
+      .map((u) => u.trim())
+      .filter(Boolean);
+    const allImages = [...uploadedImageUrls, ...manualImageUrls];
 
     const payload = {
       title: title.trim(),
@@ -312,11 +438,9 @@ export default function ReservedelOpretPage() {
           color_hex: v.color_hex,
           price_override: dkkToOere(v.price_override_dkk),
           stock: parseInt(v.stock, 10) || 0,
+          image_url: v.image_url.trim() || null,
         })),
-      images: imageUrls
-        .split("\n")
-        .map((u) => u.trim())
-        .filter(Boolean),
+      images: allImages,
       meta_title: metaTitle.trim() || null,
       meta_description: metaDescription.trim() || null,
       status,
@@ -725,66 +849,91 @@ export default function ReservedelOpretPage() {
             {colorVariants.map((variant, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-[1fr_auto_1fr_1fr_auto] items-end gap-3 rounded-xl border border-black/[0.05] bg-stone-50/50 p-4"
+                className="space-y-3 rounded-xl border border-black/[0.05] bg-stone-50/50 p-4"
               >
-                <Field label="Farvenavn">
-                  <input
-                    type="text"
-                    value={variant.color_name}
-                    onChange={(e) => updateVariant(idx, "color_name", e.target.value)}
-                    placeholder="f.eks. Sort"
-                    className={inputCls}
-                  />
-                </Field>
+                <div className="grid grid-cols-[1fr_auto_1fr_1fr_auto] items-end gap-3">
+                  <Field label="Farvenavn">
+                    <input
+                      type="text"
+                      value={variant.color_name}
+                      onChange={(e) => updateVariant(idx, "color_name", e.target.value)}
+                      placeholder="f.eks. Sort"
+                      className={inputCls}
+                    />
+                  </Field>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-charcoal/70">Farve</label>
-                  <input
-                    type="color"
-                    value={variant.color_hex}
-                    onChange={(e) => updateVariant(idx, "color_hex", e.target.value)}
-                    className="h-[42px] w-12 cursor-pointer rounded-xl border border-black/[0.08] bg-white p-1"
-                  />
-                </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-charcoal/70">Farve</label>
+                    <input
+                      type="color"
+                      value={variant.color_hex}
+                      onChange={(e) => updateVariant(idx, "color_hex", e.target.value)}
+                      className="h-[42px] w-12 cursor-pointer rounded-xl border border-black/[0.08] bg-white p-1"
+                    />
+                  </div>
 
-                <Field label="Pristillæg (DKK)" hint="Valgfri">
-                  <div className="relative">
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-charcoal/40">
-                      kr.
-                    </span>
+                  <Field label="Pristillæg (DKK)" hint="Valgfri">
+                    <div className="relative">
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-charcoal/40">
+                        kr.
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={variant.price_override_dkk}
+                        onChange={(e) => updateVariant(idx, "price_override_dkk", e.target.value)}
+                        placeholder="—"
+                        className={inputCls + " pr-10"}
+                      />
+                    </div>
+                  </Field>
+
+                  <Field label="Lager">
                     <input
                       type="number"
                       min={0}
-                      step="0.01"
-                      value={variant.price_override_dkk}
-                      onChange={(e) => updateVariant(idx, "price_override_dkk", e.target.value)}
-                      placeholder="—"
-                      className={inputCls + " pr-10"}
+                      value={variant.stock}
+                      onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                      className={inputCls}
                     />
+                  </Field>
+
+                  <div className="pb-0.5">
+                    <button
+                      type="button"
+                      onClick={() => removeVariant(idx)}
+                      className="flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition-colors hover:bg-red-100"
+                      title="Fjern farvevariant"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
-                </Field>
+                </div>
 
-                <Field label="Lager">
-                  <input
-                    type="number"
-                    min={0}
-                    value={variant.stock}
-                    onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                    className={inputCls}
-                  />
-                </Field>
-
-                <div className="pb-0.5">
-                  <button
-                    type="button"
-                    onClick={() => removeVariant(idx)}
-                    className="flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition-colors hover:bg-red-100"
-                    title="Fjern farvevariant"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                {/* Color variant image URL + preview */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Field label="Billed-URL (valgfri)" hint="Vises for denne farve">
+                      <input
+                        type="url"
+                        value={variant.image_url}
+                        onChange={(e) => updateVariant(idx, "image_url", e.target.value)}
+                        placeholder="https://example.com/sort.jpg"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                  {variant.image_url && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={variant.image_url}
+                      alt={variant.color_name}
+                      className="mt-5 h-12 w-12 shrink-0 rounded-lg border border-[#E5E5EA] object-cover"
+                    />
+                  )}
                 </div>
               </div>
             ))}
@@ -804,15 +953,149 @@ export default function ReservedelOpretPage() {
 
         {/* ── 7. Billeder ── */}
         <Section title="Billeder">
-          <Field label="Billed-URLs" hint="En URL per linje">
-            <textarea
-              value={imageUrls}
-              onChange={(e) => setImageUrls(e.target.value)}
-              rows={4}
-              placeholder={"https://example.com/billede1.jpg\nhttps://example.com/billede2.jpg"}
-              className={inputCls + " resize-none font-mono text-xs"}
-            />
-          </Field>
+          <p className="mb-3 text-xs text-charcoal/40">
+            Hvert produkt (kvalitetstier) har sine egne billeder. Det første billede bruges som
+            hovedbillede i butikken.
+          </p>
+
+          {/* Drop zone */}
+          <div
+            onDrop={handleImageDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => imageFileInputRef.current?.click()}
+            className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-black/[0.08] bg-stone-50/50 px-4 py-6 transition-colors hover:border-emerald-500/30 hover:bg-emerald-500/5"
+          >
+            <svg className="h-8 w-8 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            <p className="text-sm text-charcoal/50">
+              <span className="font-semibold text-emerald-600">Upload billeder</span> eller traek hertil
+            </p>
+            <p className="text-[11px] text-charcoal/30">PNG, JPG, WebP</p>
+          </div>
+          <input
+            ref={imageFileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleImageFileInput}
+          />
+
+          {/* Camera */}
+          <div className="mt-3">
+            {!cameraStreamRef.current ? (
+              <button
+                type="button"
+                onClick={startCamera}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.06] bg-stone-50 px-4 py-2.5 text-sm font-semibold text-charcoal/50 transition-all hover:bg-emerald-500/5 hover:text-emerald-600"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                </svg>
+                Tag foto med kamera
+              </button>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-black/[0.06]">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full" />
+                <div className="flex gap-2 border-t border-black/[0.04] bg-stone-50 p-2">
+                  <button
+                    type="button"
+                    onClick={capturePhoto}
+                    className="flex-1 rounded-lg bg-emerald-500 px-3 py-2 text-sm font-bold text-white hover:brightness-110"
+                  >
+                    Tag billede
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="rounded-lg border border-black/[0.06] bg-white px-3 py-2 text-sm font-semibold text-charcoal/50 hover:bg-stone-100"
+                  >
+                    Annuller
+                  </button>
+                </div>
+              </div>
+            )}
+            {cameraError && (
+              <p className="mt-1.5 text-[11px] text-red-500">{cameraError}</p>
+            )}
+          </div>
+
+          {/* Uploaded file previews */}
+          {imagePreviews.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal/30">
+                Uploadede filer
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="group relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt=""
+                      className="h-20 w-20 rounded-xl border border-black/[0.06] object-cover"
+                    />
+                    {i === 0 && (
+                      <span className="absolute bottom-1 left-1 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        Hoved
+                      </span>
+                    )}
+                    <div className="absolute right-1 top-1 flex flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => removeImageFile(i)}
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                        title="Fjern"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      {i > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => moveImageUp(i)}
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-black/40 text-white"
+                          title="Flyt op"
+                        >
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                          </svg>
+                        </button>
+                      )}
+                      {i < imagePreviews.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => moveImageDown(i)}
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-black/40 text-white"
+                          title="Flyt ned"
+                        >
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Manual URL input */}
+          <div className="mt-4">
+            <Field label="Eller indsaet billed-URLs" hint="En URL per linje — tilfoejes efter uploadede filer">
+              <textarea
+                value={imageUrls}
+                onChange={(e) => setImageUrls(e.target.value)}
+                rows={3}
+                placeholder={"https://example.com/billede1.jpg\nhttps://example.com/billede2.jpg"}
+                className={inputCls + " resize-none font-mono text-xs"}
+              />
+            </Field>
+          </div>
         </Section>
 
         {/* ── 8. SEO ── */}

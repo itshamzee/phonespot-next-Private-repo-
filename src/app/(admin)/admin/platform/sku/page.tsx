@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { SkuProductForm } from "@/components/platform/sku-product-form";
 import { SkuStockTable } from "@/components/platform/sku-stock-table";
 
@@ -77,6 +78,18 @@ export default function SkuPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      {/* Redirect tip for spare parts */}
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <p className="text-sm text-blue-800">
+          <strong>Tip:</strong> Opret reservedele via den nye{" "}
+          <Link href="/admin/reservedele/opret" className="font-medium underline">
+            Reservedele-sektion
+          </Link>{" "}
+          for bedre kvalitetsstyring, farvevarianter og SEO. Denne side haandterer aeldre
+          SKU-produkter og tilbehoer.
+        </p>
+      </div>
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
