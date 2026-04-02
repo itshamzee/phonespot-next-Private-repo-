@@ -476,7 +476,7 @@ export default function ReservedelePage() {
       {!loading && products.length > 0 && (
         <div className="rounded-xl border border-black/[0.04] bg-white px-5 py-4 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
-            Lagervaerdi (denne side)
+            Lagerværdi (denne side)
           </p>
           <p className="mt-1 font-display text-xl font-bold tabular-nums text-charcoal">
             {(inventoryStats.totalValue / 100).toLocaleString("da-DK", {

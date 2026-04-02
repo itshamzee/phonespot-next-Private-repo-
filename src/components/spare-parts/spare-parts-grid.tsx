@@ -154,7 +154,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
               aria-hidden="true"
             />
             <span className="text-xs text-[#86868B]">
-              {product.always_in_stock ? "P\u00E5 lager" : "Bestilles hjem"}
+              {product.always_in_stock ? "På lager" : "Bestilles hjem"}
             </span>
           </div>
 
@@ -164,7 +164,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
               type="button"
               className="w-full rounded-lg border border-[#1A3D2E] px-4 py-2 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
             >
-              Foresp\u00F8rg
+              Forespørg
             </button>
           ) : (
             <button
@@ -176,7 +176,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
                   : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
               }`}
             >
-              {isAdded ? "Lagt i kurv" : "L\u00E6g i kurv"}
+              {isAdded ? "Lagt i kurv" : "Læg i kurv"}
             </button>
           )}
         </div>
@@ -250,7 +250,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
             aria-hidden="true"
           />
           <span className="text-xs text-[#86868B]">
-            {product.always_in_stock ? "P\u00E5 lager" : "Bestilles hjem"}
+            {product.always_in_stock ? "På lager" : "Bestilles hjem"}
           </span>
         </div>
       </div>
@@ -272,7 +272,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
             type="button"
             className="rounded-lg border border-[#1A3D2E] px-4 py-1.5 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
           >
-            Foresp\u00F8rg
+            Forespørg
           </button>
         ) : (
           <button
@@ -284,7 +284,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
                 : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
             }`}
           >
-            {isAdded ? "Lagt i kurv" : "L\u00E6g i kurv"}
+            {isAdded ? "Lagt i kurv" : "Læg i kurv"}
           </button>
         )}
       </div>
@@ -372,7 +372,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
         className="rounded-lg border border-[#E5E5EA] px-3 py-2 text-sm font-medium text-[#111111] transition-colors hover:border-[#1A3D2E] disabled:cursor-not-allowed disabled:opacity-40"
-        aria-label="N\u00E6ste side"
+        aria-label="Næste side"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -395,8 +395,8 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 // ---------------------------------------------------------------------------
 
 const SORT_LABELS: Record<SortOption, string> = {
-  price_asc: "Pris lav-h\u00F8j",
-  price_desc: "Pris h\u00F8j-lav",
+  price_asc: "Pris lav-høj",
+  price_desc: "Pris høj-lav",
   newest: "Nyeste",
 };
 
@@ -556,7 +556,7 @@ export function SparePartsGrid() {
           </svg>
           <input
             type="search"
-            placeholder="S\u00F8g i resultater..."
+            placeholder="Søg i resultater..."
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-48 rounded-lg border border-[#E5E5EA] bg-white py-2 pl-9 pr-3 text-xs text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10 sm:w-56"
@@ -665,7 +665,7 @@ export function SparePartsGrid() {
           </svg>
           <p className="text-base font-semibold text-[#111111]">Ingen resultater</p>
           <p className="mt-1 text-sm text-[#86868B]">
-            Pr\u00F8v at justere dine filtre eller s\u00F8g efter noget andet.
+            Prøv at justere dine filtre eller søg efter noget andet.
           </p>
         </div>
       ) : viewMode === "grid" ? (
