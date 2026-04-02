@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   DEVICE_BRANDS,
+  DEVICE_MODELS,
   getSeriesForBrand,
   getModelsForSeries,
   slugify,
@@ -142,6 +143,13 @@ export default function ReservedelEditPage() {
   const [model, setModel] = useState("");
   const [modelCodes, setModelCodes] = useState("");
 
+  /* ---- Kompatible enheder ---- */
+  const [compatibleModels, setCompatibleModels] = useState<
+    Array<{ brand: string; series: string; model: string; model_code: string | null }>
+  >([]);
+  const [compatSearch, setCompatSearch] = useState("");
+  const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
+
   /* ---- Section 3: Kvalitet & Garanti ---- */
   const [qualityTierId, setQualityTierId] = useState("");
   const [warrantyMonths, setWarrantyMonths] = useState("");
@@ -274,6 +282,16 @@ export default function ReservedelEditPage() {
         setStatus(product.status === "published" ? "published" : "draft");
         setIsInquiryOnly(product.is_inquiry_only ?? false);
         setAlwaysInStock(product.always_in_stock ?? false);
+
+        if (Array.isArray(product.compatible_models)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setCompatibleModels(product.compatible_models.map((cm: any) => ({
+            brand: cm.brand ?? "",
+            series: cm.series ?? "",
+            model: cm.model ?? "",
+            model_code: cm.model_code ?? null,
+          })));
+        }
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : "Ukendt fejl");
       } finally {
@@ -427,7 +445,7 @@ export default function ReservedelEditPage() {
         await videoRef.current.play();
       }
     } catch {
-      setCameraError("Kamera ikke tilgaengeligt. Kontroller tilladelser.");
+      setCameraError("Kamera ikke tilgængeligt. Kontroller tilladelser.");
     }
   }
 
@@ -524,6 +542,7 @@ export default function ReservedelEditPage() {
       status,
       is_inquiry_only: isInquiryOnly,
       always_in_stock: alwaysInStock,
+      compatible_models: compatibleModels,
     };
 
     try {
@@ -838,6 +857,192 @@ export default function ReservedelEditPage() {
               />
             </Field>
           </div>
+
+          {/* ── Kompatible enheder ── */}
+          <div className="mt-6 border-t border-black/[0.05] pt-5">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-charcoal/40">
+              Kompatible enheder
+            </p>
+            <p className="mb-4 text-xs text-charcoal/50">
+              Tilføj alle enheder dette reservedel passer til. Bruges til at vise kompatibilitet i butikken.
+            </p>
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <svg className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-charcoal/30" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <input
+                type="text"
+                value={compatSearch}
+                onChange={(e) => setCompatSearch(e.target.value)}
+                placeholder="Filtrer enheder..."
+                className="w-full rounded-xl border border-black/[0.08] bg-stone-50 py-2 pl-9 pr-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            {/* Selected chips */}
+            {compatibleModels.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {compatibleModels.map((cm) => (
+                  <span
+                    key={`${cm.brand}-${cm.model}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"
+                  >
+                    {cm.model}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCompatibleModels((prev) =>
+                          prev.filter((x) => !(x.brand === cm.brand && x.model === cm.model)),
+                        )
+                      }
+                      className="ml-0.5 text-emerald-500 hover:text-emerald-700"
+                      aria-label={`Fjern ${cm.model}`}
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCompatibleModels([])}
+                  className="text-xs text-charcoal/40 hover:text-red-500"
+                >
+                  Ryd alle
+                </button>
+              </div>
+            )}
+
+            {/* Brand groups */}
+            <div className="space-y-2 rounded-xl border border-black/[0.06] bg-stone-50/50 p-3">
+              {(() => {
+                const brands = [...new Set(DEVICE_MODELS.map((m) => m.brand))];
+                return brands.map((b) => {
+                  const seriesMap = new Map<string, typeof DEVICE_MODELS>();
+                  for (const m of DEVICE_MODELS) {
+                    if (m.brand !== b) continue;
+                    const q = compatSearch.toLowerCase();
+                    if (q && !m.model.toLowerCase().includes(q) && !m.series.toLowerCase().includes(q)) continue;
+                    if (!seriesMap.has(m.series)) seriesMap.set(m.series, []);
+                    seriesMap.get(m.series)!.push(m);
+                  }
+                  if (seriesMap.size === 0) return null;
+                  const isExpanded = expandedBrands.has(b) || compatSearch.length > 0;
+                  return (
+                    <div key={b} className="overflow-hidden rounded-lg border border-black/[0.05] bg-white">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedBrands((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(b)) next.delete(b);
+                            else next.add(b);
+                            return next;
+                          })
+                        }
+                        className="flex w-full items-center justify-between px-3 py-2.5 text-left transition-colors hover:bg-stone-50"
+                      >
+                        <span className="text-sm font-semibold text-charcoal">{b}</span>
+                        <svg
+                          className={`h-3.5 w-3.5 text-charcoal/40 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="border-t border-black/[0.04] px-3 pb-3 pt-2">
+                          {[...seriesMap.entries()].map(([ser, models]) => {
+                            const seriesSlugs = models.map((m) => m.model);
+                            const allSelected = seriesSlugs.every((slug) =>
+                              compatibleModels.some((cm) => cm.brand === b && cm.model === slug),
+                            );
+                            return (
+                              <div key={ser} className="mb-3">
+                                <div className="mb-2 flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-charcoal/50">{ser}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (allSelected) {
+                                        setCompatibleModels((prev) =>
+                                          prev.filter(
+                                            (cm) => !(cm.brand === b && seriesSlugs.includes(cm.model)),
+                                          ),
+                                        );
+                                      } else {
+                                        const toAdd = models
+                                          .filter(
+                                            (m) => !compatibleModels.some((cm) => cm.brand === b && cm.model === m.model),
+                                          )
+                                          .map((m) => ({
+                                            brand: m.brand,
+                                            series: m.series,
+                                            model: m.model,
+                                            model_code: m.model_codes?.[0] ?? null,
+                                          }));
+                                        setCompatibleModels((prev) => [...prev, ...toAdd]);
+                                      }
+                                    }}
+                                    className="text-[11px] font-semibold text-emerald-600 hover:underline"
+                                  >
+                                    {allSelected ? "Fravælg alle" : "Vælg alle"}
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {models.map((m) => {
+                                    const isSelected = compatibleModels.some(
+                                      (cm) => cm.brand === b && cm.model === m.model,
+                                    );
+                                    return (
+                                      <button
+                                        key={m.model}
+                                        type="button"
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            setCompatibleModels((prev) =>
+                                              prev.filter(
+                                                (cm) => !(cm.brand === b && cm.model === m.model),
+                                              ),
+                                            );
+                                          } else {
+                                            setCompatibleModels((prev) => [
+                                              ...prev,
+                                              {
+                                                brand: m.brand,
+                                                series: m.series,
+                                                model: m.model,
+                                                model_code: m.model_codes?.[0] ?? null,
+                                              },
+                                            ]);
+                                          }
+                                        }}
+                                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                                          isSelected
+                                            ? "border-emerald-400 bg-emerald-500 text-white"
+                                            : "border-black/[0.08] bg-white text-charcoal/70 hover:border-emerald-300 hover:bg-emerald-50"
+                                        }`}
+                                      >
+                                        {m.model}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
         </Section>
 
         {/* ── 3. Kvalitet & Garanti ── */}
@@ -1102,7 +1307,7 @@ export default function ReservedelEditPage() {
         <Section title="Billeder">
           <p className="mb-3 text-xs text-charcoal/40">
             Hvert produkt (kvalitetstier) har sine egne billeder. Eksisterende URLs vises nedenfor
-            — upload nye for at tilfoje dem.
+            — upload nye for at tilføje dem.
           </p>
 
           {/* Drop zone */}
@@ -1116,7 +1321,7 @@ export default function ReservedelEditPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
             <p className="text-sm text-charcoal/50">
-              <span className="font-semibold text-emerald-600">Upload nye billeder</span> eller traek hertil
+              <span className="font-semibold text-emerald-600">Upload nye billeder</span> eller træk hertil
             </p>
             <p className="text-[11px] text-charcoal/30">PNG, JPG, WebP</p>
           </div>
@@ -1228,7 +1433,7 @@ export default function ReservedelEditPage() {
 
           {/* Existing URLs / manual URL input */}
           <div className="mt-4">
-            <Field label="Eksisterende / manuelle billed-URLs" hint="En URL per linje — nye uploadede billeder tilfoejes efter disse">
+            <Field label="Eksisterende / manuelle billed-URLs" hint="En URL per linje — nye uploadede billeder tilføjes efter disse">
               <textarea
                 value={imageUrls}
                 onChange={(e) => setImageUrls(e.target.value)}
