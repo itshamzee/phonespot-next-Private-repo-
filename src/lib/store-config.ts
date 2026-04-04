@@ -51,23 +51,24 @@ export const STORES: Record<string, StoreLocationConfig> = {
     name: "PhoneSpot Vejle",
     company: "PhoneSpot ApS",
     mall: null,
-    street: "TBD",
+    street: "Løversysselvej 3A",
     city: "Vejle",
     zip: "7100",
     country: "Danmark",
     countryCode: "DK",
-    phone: "+45 XX XX XX XX",
+    phone: "+45 61 10 00 48",
     email: "vejle@phonespot.dk",
     shopifyLocationId: null,
     hours: {
-      weekdays: "10:00 – 18:00",
-      saturday: "10:00 – 16:00",
-      sunday: "Lukket",
+      weekdays: "10:00 – 17:30",
+      saturday: "10:00 – 15:00",
+      sunday: "10:00 – 15:00",
     },
-    googleMapsUrl: "https://maps.google.com/?q=Vejle",
+    googleMapsUrl:
+      "https://maps.google.com/?q=Løversysselvej+3A,+7100+Vejle",
     googleMapsEmbed:
-      "https://www.google.com/maps/embed?pb=TBD",
-    coordinates: { lat: 55.7113, lng: 9.5357 },
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2240!2d9.5554!3d55.7076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x464c94f2a3b5c5a1%3A0x0!2sL%C3%B8versysselvej+3A!5e0!3m2!1sda!2sdk!4v1",
+    coordinates: { lat: 55.7076, lng: 9.5554 },
   },
 };
 
