@@ -11,7 +11,7 @@ const bgStyles: Record<NonNullable<SectionWrapperProps["background"]>, string> =
   default: "bg-white",
   sand: "bg-[#F2F2F5]",
   cream: "bg-[#F7F7F8]",
-  charcoal: "bg-[#F7F7F8]",
+  charcoal: "bg-[#1A3D2E] text-white",
   green: "bg-[#EFF5F1]", // subtle green tint for eco/sustainability sections
 };
 
