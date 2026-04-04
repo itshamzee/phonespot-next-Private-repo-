@@ -219,18 +219,18 @@ export default function ButikPage() {
                     <div className="flex items-start gap-3">
                       <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" />
                       <div className="text-sm text-[#86868B]">
-                        <p>Man-Fre: 10–19</p>
-                        <p>Lør: 10–17</p>
-                        <p>Søn: 10–17</p>
+                        <p>Man-Fre: {store.hours.weekdays}</p>
+                        <p>Lør: {store.hours.saturday}</p>
+                        <p>Søn: {store.hours.sunday}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <PhoneIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" />
                       <a
-                        href="tel:+4561100048"
+                        href={`tel:${store.phone.replace(/\s/g, "")}`}
                         className="text-sm text-[#1A3D2E] hover:underline"
                       >
-                        61 10 00 48
+                        {store.phone}
                       </a>
                     </div>
                   </div>
