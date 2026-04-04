@@ -88,7 +88,7 @@ export default function BlogIndexPage() {
       />
 
       {/* Hero */}
-      <SectionWrapper background="charcoal" className="!py-16 md:!py-20">
+      <SectionWrapper className="!py-16 md:!py-20 !bg-[#1A3D2E]">
         <div className="text-center">
           <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-green-eco">
             PhoneSpot Blog
