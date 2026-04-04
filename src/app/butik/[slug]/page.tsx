@@ -34,18 +34,18 @@ export async function generateMetadata({
   const store = STORES[slug];
   if (!store) return {};
 
-  if (slug === "vejle" || store.street === "TBD") {
+  if (slug === "vejle") {
     return {
-      title: "PhoneSpot Vejle — Åbner april 2026",
+      title: "PhoneSpot Vejle — Brugt Elektronik & iPhone Reparation | Løversysselvej",
       description:
-        "PhoneSpot åbner snart en ny butik i Vejle. Tilmeld dig og få besked, når vi åbner.",
+        "Besøg PhoneSpot Vejle på Løversysselvej 3A. iPhone reparation på 30 min, brugt elektronik med 36 mnd garanti, sælg din enhed. Åbent man-fre 10-17:30, weekend 10-15.",
       alternates: {
         canonical: "https://phonespot.dk/butik/vejle",
       },
       openGraph: {
-        title: "PhoneSpot Vejle — Åbner april 2026",
+        title: "PhoneSpot Vejle — Brugt Elektronik & iPhone Reparation",
         description:
-          "PhoneSpot åbner snart en ny butik i Vejle. Tilmeld dig og få besked, når vi åbner.",
+          "Professionel iPhone reparation og brugt elektronik i Vejle. 36 mnd garanti, Klarna delbetaling. Løversysselvej 3A.",
         url: "https://phonespot.dk/butik/vejle",
         type: "website",
       },
@@ -179,6 +179,35 @@ function getSlagelseFAQs(): Array<{ question: string; answer: string }> {
       question: "Hvad sker der med min data, når jeg sælger min telefon?",
       answer:
         "Inden vi overtager enheden, sørger vi for at guide dig igennem en fuld fabriksgennemstilling, så alle dine personlige data er slettet. Du kan også gøre det selv hjemmefra via iCloud eller Google-konto.",
+    },
+  ];
+}
+
+function getVejleFAQs(): Array<{ question: string; answer: string }> {
+  return [
+    {
+      question: "Hvad koster iPhone reparation i Vejle?",
+      answer: "Prisen afhænger af model og type reparation. Se aktuelle priser på vores reparationsside — alle priser er faste og inkl. moms, reservedele og livstidsgaranti.",
+    },
+    {
+      question: "Hvor hurtigt kan I skifte skærm i Vejle?",
+      answer: "90% af alle skærmskift udføres på kun 30 minutter. Du kan vente i butikken eller komme igen når reparationen er klar.",
+    },
+    {
+      question: "Er der parkering ved butikken i Vejle?",
+      answer: "Ja, der er gratis parkering lige ved butikken på Løversysselvej 3A. Du kan parkere direkte foran døren.",
+    },
+    {
+      question: "Kan jeg sælge min brugte telefon hos jer i Vejle?",
+      answer: "Ja! Vi køber brugte telefoner, tablets og laptops — uanset stand. Du får en vurdering med det samme og kontant betaling på stedet.",
+    },
+    {
+      question: "Hvad er jeres garanti på reparationer?",
+      answer: "Alle reparationer dækkes af vores livstidsgaranti. Hvis den samme fejl opstår igen, reparerer vi uden beregning. På brugt elektronik giver vi 36 måneders garanti.",
+    },
+    {
+      question: "Hvilke mærker reparerer I i Vejle?",
+      answer: "Vi reparerer alle større mærker: Apple (iPhone, iPad, MacBook), Samsung, Huawei, OnePlus, Google Pixel og flere. Se alle mærker og priser på vores reparationsside.",
     },
   ];
 }
@@ -333,6 +362,42 @@ const SLAGELSE_ACTIVITIES = [
     icon: PackageIcon,
     title: "Click & Collect",
     description: "Bestil online, hent gratis i butikken. Klar samme dag ved bestilling f\u00f8r kl. 16.",
+    href: "/iphones",
+    cta: "Bestil nu",
+    badge: "GRATIS",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Vejle store cards data                                             */
+/* ------------------------------------------------------------------ */
+
+const VEJLE_ACTIVITIES = [
+  {
+    icon: ShoppingBagIcon,
+    title: "Køb refurbished",
+    description: "Se og test enheder før du køber. iPhones, iPads, bærbare og mere med 36 mnd garanti.",
+    href: "/iphones",
+    cta: "Se udvalg",
+  },
+  {
+    icon: WrenchIcon,
+    title: "Reparation",
+    description: "iPhone, iPad, Samsung, MacBook. Walk-in, 90% klar på 30 min. Livstidsgaranti.",
+    href: "/reparation",
+    cta: "Se priser",
+  },
+  {
+    icon: CashIcon,
+    title: "Sælg din enhed",
+    description: "Få kontant betaling for din brugte elektronik. Alle mærker, uanset stand.",
+    href: "/saelg-din-enhed",
+    cta: "Få et tilbud",
+  },
+  {
+    icon: PackageIcon,
+    title: "Click & Collect",
+    description: "Bestil online, hent gratis i butikken. Klar samme dag ved bestilling før kl. 14.",
     href: "/iphones",
     cta: "Bestil nu",
     badge: "GRATIS",
@@ -700,6 +765,417 @@ function SlagelsePage({ store }: { store: StoreLocationConfig }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Vejle full store page                                              */
+/* ------------------------------------------------------------------ */
+
+function VejlePage({ store }: { store: StoreLocationConfig }) {
+  const faqs = getVejleFAQs();
+
+  const vejleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ElectronicsRepair",
+    name: store.name,
+    image: "https://phonespot.dk/brand/logo.png",
+    url: `https://phonespot.dk/butik/${store.slug}`,
+    telephone: store.phone,
+    email: store.email,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: store.street,
+      addressLocality: store.city,
+      postalCode: store.zip,
+      addressCountry: store.countryCode,
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: store.coordinates.lat,
+      longitude: store.coordinates.lng,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "10:00",
+        closes: "17:30",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Saturday", "Sunday"],
+        opens: "10:00",
+        closes: "15:00",
+      },
+    ],
+    priceRange: "$$",
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
+  return (
+    <>
+      <JsonLd data={vejleJsonLd} />
+      <JsonLd data={faqJsonLd} />
+
+      {/* Hero — green background (no workshop image) */}
+      <section className="relative overflow-hidden rounded-none">
+        <div className="relative flex h-[480px] items-center justify-center bg-[#1A3D2E] md:h-[540px]">
+          <div className="relative flex h-full flex-col items-center justify-center px-4 text-center">
+            <FadeIn>
+              <p className="mb-3 text-sm font-semibold tracking-wide text-white/60">
+                Fysisk butik · Løversysselvej
+              </p>
+              <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+                PhoneSpot Vejle
+              </h1>
+              <p className="mt-3 text-base text-white/80 md:text-lg">
+                Løversysselvej 3A, 7100 Vejle
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href={store.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+                >
+                  <MapPinIcon className="h-4 w-4" />
+                  Se rute
+                </a>
+                <a
+                  href={`tel:${store.phone.replace(/\s/g, "")}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                >
+                  <PhoneCallIcon className="h-4 w-4" />
+                  Ring til os
+                </a>
+              </div>
+            </FadeIn>
+          </div>
+        </div>
+      </section>
+
+      {/* Store info: Google Maps + Hours + Contact */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-5xl">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Google Maps embed */}
+            <FadeIn className="lg:col-span-2">
+              <div className="overflow-hidden rounded-2xl border border-[#E5E5EA]">
+                <iframe
+                  src={store.googleMapsEmbed}
+                  width="100%"
+                  height="320"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={`Google Maps — ${store.name}`}
+                  className="w-full"
+                />
+              </div>
+            </FadeIn>
+
+            {/* Address + Hours + Contact */}
+            <div className="flex flex-col gap-4">
+              {/* Address */}
+              <FadeIn delay={0.05}>
+                <div className="flex gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1A3D2E]/10">
+                    <MapPinIcon className="h-5 w-5 text-[#1A3D2E]" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-bold text-[#111111]">Adresse</p>
+                    <p className="mt-1 text-sm text-[#6E6E73]">{store.street}</p>
+                    <p className="text-sm text-[#6E6E73]">{store.zip} {store.city}</p>
+                    <a
+                      href={store.googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#1A3D2E] hover:underline"
+                    >
+                      Se på Google Maps
+                      <ChevronRightIcon className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </FadeIn>
+
+              {/* Hours */}
+              <FadeIn delay={0.1}>
+                <div className="flex gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1A3D2E]/10">
+                    <ClockIcon className="h-5 w-5 text-[#1A3D2E]" />
+                  </div>
+                  <div className="w-full">
+                    <p className="font-display text-sm font-bold text-[#111111]">Åbningstider</p>
+                    <div className="mt-2 space-y-1 text-xs">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-[#6E6E73]">Man–Fre</span>
+                        <span className="font-medium text-[#111111]">10–17:30</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-[#6E6E73]">Lør–Søn</span>
+                        <span className="font-medium text-[#111111]">10–15</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+
+              {/* Contact */}
+              <FadeIn delay={0.15}>
+                <div className="flex gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1A3D2E]/10">
+                    <PhoneCallIcon className="h-5 w-5 text-[#1A3D2E]" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-bold text-[#111111]">Kontakt</p>
+                    <a
+                      href={`tel:${store.phone.replace(/\s/g, "")}`}
+                      className="mt-1 block text-sm text-[#1A3D2E] hover:underline"
+                    >
+                      {store.phone}
+                    </a>
+                    <a
+                      href={`mailto:${store.email}`}
+                      className="block text-sm text-[#1A3D2E] hover:underline"
+                    >
+                      {store.email}
+                    </a>
+                  </div>
+                </div>
+              </FadeIn>
+            </div>
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* "Hvad kan du i butikken?" */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-4xl">
+          <FadeIn>
+            <div className="mb-10 text-center">
+              <Heading as="h2" size="md">
+                Hvad kan du i butikken?
+              </Heading>
+              <p className="mx-auto mt-3 max-w-xl text-base text-[#6E6E73]">
+                Fra salg og reparation til opkøb og afhentning — alt samlet ét sted.
+              </p>
+            </div>
+          </FadeIn>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {VEJLE_ACTIVITIES.map((item, i) => (
+              <FadeIn key={item.title} delay={i * 0.07}>
+                <Link href={item.href} className="group flex flex-col items-start rounded-2xl border border-[#E5E5EA] bg-white p-6 transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1A3D2E]/10">
+                      <item.icon className="h-5 w-5 text-[#1A3D2E]" />
+                    </div>
+                    {"badge" in item && item.badge && (
+                      <span className="rounded-full bg-[#1A3D2E] px-2.5 py-0.5 text-[10px] font-bold text-white">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-4 font-display text-base font-bold text-[#111111]">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-[#6E6E73]">
+                    {item.description}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E] transition-transform group-hover:translate-x-0.5">
+                    {item.cta} &rarr;
+                  </span>
+                </Link>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* Click & Collect banner */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border-2 border-[#1A3D2E]/20 bg-[#EFF5F1]">
+          <div className="p-8 md:p-10">
+            <div className="mb-6 text-center">
+              <Heading as="h2" size="md">
+                Click &amp; Collect — bestil online, hent i butikken
+              </Heading>
+              <p className="mt-2 text-base text-[#6E6E73]">
+                Gratis afhentning i Vejle. Klar samme dag ved bestilling f&oslash;r kl. 14.
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-3">
+              {[
+                { step: "1", title: "Bestil online", desc: "V\u00e6lg din enhed og l\u00e6g i kurven" },
+                { step: "2", title: "Modtag bekr\u00e6ftelse", desc: "Vi pakker din ordre klar" },
+                { step: "3", title: "Hent i butikken", desc: "Test enheden f\u00f8r du tager den med" },
+              ].map((s) => (
+                <div key={s.step} className="flex flex-col items-center text-center">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E] text-sm font-bold text-white">{s.step}</span>
+                  <p className="mt-3 font-display text-sm font-bold text-[#111111]">{s.title}</p>
+                  <p className="mt-1 text-xs text-[#6E6E73]">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link href="/iphones" className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg">
+                Bestil nu og hent i butikken &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* Reparation i butikken */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8 text-center">
+            <Heading as="h2" size="md">
+              Reparation i butikken
+            </Heading>
+            <p className="mt-2 text-base text-[#6E6E73]">
+              Walk-in service — ingen tidsbestilling n&oslash;dvendig
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { brand: "iPhone", models: "7, 8, X, XR, XS, 11, 12, 13, 14, 15, SE", popular: "Sk\u00e6rmskift, batteriskift" },
+              { brand: "Samsung", models: "Galaxy S21-S25, A-serie, Fold, Flip", popular: "Sk\u00e6rmskift, batteriskift" },
+              { brand: "iPad", models: "Air, Pro, Mini, 6-10. gen", popular: "Sk\u00e6rmskift, batteriskift" },
+              { brand: "MacBook", models: "Air, Pro (alle \u00e5rgange)", popular: "Batteri, tastatur, sk\u00e6rm" },
+              { brand: "Huawei", models: "P-serie, Mate-serie", popular: "Sk\u00e6rmskift" },
+              { brand: "Andre m\u00e6rker", models: "OnePlus, Xiaomi, Google Pixel", popular: "Kontakt os for pris" },
+            ].map((item) => (
+              <div key={item.brand} className="rounded-xl border border-[#E5E5EA] bg-white p-5">
+                <p className="font-display text-base font-bold text-[#111111]">{item.brand}</p>
+                <p className="mt-1 text-xs text-[#6E6E73]">{item.models}</p>
+                <p className="mt-2 text-xs font-semibold text-[#1A3D2E]">{item.popular}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/reparation" className="rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45]">
+              Se alle priser &rarr;
+            </Link>
+            <Link href="/reparation/booking" className="rounded-full border-2 border-[#111111] px-7 py-3.5 text-sm font-bold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">
+              Book tid nu
+            </Link>
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* SEO content */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-3xl space-y-10">
+          <FadeIn>
+            <div>
+              <Heading as="h2" size="sm" className="mb-3">
+                Hvorfor vælge PhoneSpot Vejle?
+              </Heading>
+              <p className="text-base leading-relaxed text-[#6E6E73]">
+                PhoneSpot Vejle ligger centralt på Løversysselvej 3A med gratis parkering direkte foran butikken. Vi er tæt på Bredballe og nemt tilgængelige fra hele Vejle-området. Hos os får du professionel reparation, refurbished elektronik med 36 måneders garanti og mulighed for at sælge din brugte enhed med kontant betaling.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.05}>
+            <div>
+              <Heading as="h2" size="sm" className="mb-3">
+                iPhone reparation i Vejle
+              </Heading>
+              <p className="text-base leading-relaxed text-[#6E6E73]">
+                Hos PhoneSpot Vejle tilbyder vi professionel iPhone reparation uden forudgående tidsbestilling. Vi skifter skærme, batterier, opladesporte og meget mere — og 90% af reparationerne er klar inden for 30 minutter. Alle reparationer udføres med kvalitetsdele og er dækket af vores livstidsgaranti.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.1}>
+            <div>
+              <Heading as="h2" size="sm" className="mb-3">
+                Køb brugte iPhones i Vejle
+              </Heading>
+              <p className="text-base leading-relaxed text-[#6E6E73]">
+                Vi fører et bredt udvalg af refurbished iPhones i grade A og B — alle grundigt testet, renset og klar til brug. Når du køber hos PhoneSpot Vejle, medfølger 36 måneders garanti og fuld returret. Du kan se og teste enhederne fysisk i butikken på Løversysselvej, inden du beslutter dig.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.15}>
+            <div>
+              <Heading as="h2" size="sm" className="mb-3">
+                Sælg din brugte telefon i Vejle
+              </Heading>
+              <p className="text-base leading-relaxed text-[#6E6E73]">
+                Har du en gammel iPhone, Samsung eller iPad liggende? Kig forbi vores butik på Løversysselvej 3A for en gratis og uforpligtende vurdering. Vi køber brugte enheder op og betaler kontant med det samme — ingen ventetid, ingen besvær. Brug vores online prisberegner for et øjeblikkeligt estimat inden dit besøg.
+              </p>
+            </div>
+          </FadeIn>
+        </div>
+      </SectionWrapper>
+
+      {/* FAQ */}
+      <SectionWrapper background="cream">
+        <div className="mx-auto max-w-3xl">
+          <FadeIn>
+            <div className="mb-8 text-center">
+              <Heading as="h2" size="md">
+                Ofte stillede spørgsmål
+              </Heading>
+            </div>
+          </FadeIn>
+          <div className="space-y-4">
+            {faqs.map((faq, i) => (
+              <FadeIn key={i} delay={i * 0.07}>
+                <div className="rounded-2xl border border-[#E5E5EA] bg-white p-6">
+                  <h3 className="font-display text-base font-bold text-[#111111]">
+                    {faq.question}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#6E6E73]">
+                    {faq.answer}
+                  </p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </SectionWrapper>
+
+      {/* Trustpilot reviews */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-4xl">
+          <FadeIn>
+            <div className="mb-8 text-center">
+              <Heading as="h2" size="md">
+                Hvad siger vores kunder?
+              </Heading>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.08}>
+            <TrustpilotReviews />
+          </FadeIn>
+        </div>
+      </SectionWrapper>
+
+      {/* Trust bar */}
+      <SectionWrapper background="sand">
+        <TrustBar />
+      </SectionWrapper>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Generic store page (fallback for future stores)                   */
 /* ------------------------------------------------------------------ */
 
@@ -865,9 +1341,9 @@ export default async function StoreDetailPage({
     notFound();
   }
 
-  // Vejle: coming soon page
-  if (slug === "vejle" || store.street === "TBD") {
-    return <VejleComingSoonPage />;
+  // Vejle: full store page
+  if (slug === "vejle") {
+    return <VejlePage store={store} />;
   }
 
   // Slagelse: full redesigned page
