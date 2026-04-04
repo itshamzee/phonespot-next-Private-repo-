@@ -33,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const city = store.city;
   return {
     title: `Reparation af iPhone, iPad, Samsung & Mere i ${city} | PhoneSpot`,
-    description: `Professionel reparation i ${city}. Skærmskift, batteriskift og mere på 30 min med livstidsgaranti. Besøg os på ${store.street}, ${store.zip} ${city}.`,
-    keywords: `iphone reparation ${city.toLowerCase()}, skærmskift ${city.toLowerCase()}, samsung reparation ${city.toLowerCase()}, telefon reparation ${city.toLowerCase()}`,
+    description: `Professionel reparation af iPhones, iPads, MacBooks og Samsung i ${city}. Skærmskift, batteriskift og mere på 30 min med livstidsgaranti. Besøg os på ${store.street}, ${store.zip} ${city}.`,
+    keywords: `iphone reparation ${city.toLowerCase()}, skærmskift ${city.toLowerCase()}, samsung reparation ${city.toLowerCase()}, telefon reparation ${city.toLowerCase()}, macbook reparation ${city.toLowerCase()}, bærbar reparation ${city.toLowerCase()}, mac reparation ${city.toLowerCase()}, ipad reparation ${city.toLowerCase()}`,
     alternates: { canonical: `https://phonespot.dk/reparation/${location}` },
     openGraph: {
       title: `Reparation af iPhone, iPad & Samsung i ${city} | PhoneSpot`,
@@ -84,6 +84,18 @@ function getRepairFaq(location: string) {
       question: "Mister jeg mine data?",
       answer:
         "Ved de fleste reparationer bevares dine data. Vi anbefaler altid backup inden indsendelse, men data-tab er sjældent ved standard reparationer.",
+    },
+    {
+      question: `Reparerer I MacBooks i ${city}?`,
+      answer: `Ja! Vi reparerer alle MacBook modeller — MacBook Air og MacBook Pro. Vi tilbyder skærmskift, batteriskift, tastatur-reparation, logic board reparation og mere. De fleste reparationer udføres samme dag.`,
+    },
+    {
+      question: `Hvad koster MacBook reparation i ${city}?`,
+      answer: `Prisen afhænger af model og type reparation. Vi er typisk 30-50% billigere end Apples autoriserede service, og de fleste reparationer er klar samme dag — uden tidsbestilling. Se priser på vores MacBook reparationsside.`,
+    },
+    {
+      question: `Sælger I reservedele til MacBooks?`,
+      answer: `Ja, vi sælger reservedele til MacBook Air og MacBook Pro. Batterier, skærme, tastaturer, trackpads og mere. Du kan købe dele og installere selv, eller vi monterer dem for dig i butikken.`,
     },
   ];
 }

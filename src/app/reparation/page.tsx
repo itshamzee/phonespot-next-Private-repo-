@@ -15,9 +15,9 @@ export const metadata: Metadata = {
   title:
     "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot",
   description:
-    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
+    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, MacBook service og mere. Faste priser, hurtig service og livstidsgaranti.",
   keywords:
-    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle",
+    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle, macbook service, mac reparation, macbook batteriskift, macbook skærmskift, reservedele macbook",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
@@ -64,6 +64,14 @@ const REPAIR_FAQ = [
     question: "Mister jeg mine data?",
     answer:
       "Ved de fleste reparationer bevares dine data. Vi anbefaler altid backup inden indsendelse, men data-tab er sjældent ved standard reparationer.",
+  },
+  {
+    question: "Reparerer I MacBooks?",
+    answer: "Ja — vi reparerer alle MacBook Air og MacBook Pro modeller. Skærmskift, batteriskift, tastatur, logic board og mere. De fleste reparationer udføres samme dag, og vi er typisk 30-50% billigere end Apples autoriserede service.",
+  },
+  {
+    question: "Sælger I reservedele til MacBooks og iPhones?",
+    answer: "Ja! Vi sælger reservedele til MacBooks, iPhones, iPads og Samsung. Batterier, skærme, tastaturer og mere. Køb delene og monter selv, eller lad os gøre det i butikken.",
   },
 ];
 
