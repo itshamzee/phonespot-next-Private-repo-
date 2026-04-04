@@ -175,7 +175,7 @@ const mdxComponents = {
   h2: createHeading(2),
   h3: createHeading(3),
   table: ({ children, ...props }: React.ComponentPropsWithoutRef<"table">) => (
-    <div className="not-prose my-8 overflow-x-auto rounded-xl border border-sand/40">
+    <div className="not-prose my-8 overflow-x-auto rounded-xl border border-[#ddd]">
       <table className="w-full text-sm" {...props}>{children}</table>
     </div>
   ),
@@ -186,10 +186,10 @@ const mdxComponents = {
     <th className="px-4 py-3 text-left font-display text-xs font-bold uppercase tracking-wide" {...props}>{children}</th>
   ),
   td: ({ children, ...props }: React.ComponentPropsWithoutRef<"td">) => (
-    <td className="border-t border-sand/30 px-4 py-3 font-body text-charcoal/80" {...props}>{children}</td>
+    <td className="border-t border-[#e8e8e8] px-4 py-3 font-body text-charcoal/80" {...props}>{children}</td>
   ),
   tr: ({ children, ...props }: React.ComponentPropsWithoutRef<"tr">) => (
-    <tr className="even:bg-cream/50" {...props}>{children}</tr>
+    <tr className="even:bg-[#f8f6f1]" {...props}>{children}</tr>
   ),
   blockquote: ({ children, ...props }: React.ComponentPropsWithoutRef<"blockquote">) => (
     <blockquote
@@ -257,9 +257,13 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-charcoal">
-        <div className="mx-auto grid max-w-7xl md:grid-cols-2">
-          <div className="flex flex-col justify-center px-4 py-16 md:py-20 md:pr-12 lg:py-24 lg:pr-16">
-            <nav className="mb-6 flex items-center gap-2 text-sm text-white/50">
+        {/* Subtle pattern for no-image hero */}
+        {!frontmatter.coverImage && (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1A3D2E]/20 to-transparent" />
+        )}
+        <div className={`mx-auto max-w-7xl ${frontmatter.coverImage ? "grid md:grid-cols-2" : ""}`}>
+          <div className={`flex flex-col justify-center px-4 py-16 md:py-20 lg:py-24 ${frontmatter.coverImage ? "md:pr-12 lg:pr-16" : "mx-auto max-w-3xl text-center"}`}>
+            <nav className={`mb-6 flex items-center gap-2 text-sm text-white/50 ${!frontmatter.coverImage ? "justify-center" : ""}`}>
               <Link href="/" className="transition-colors hover:text-white">Forside</Link>
               <span>/</span>
               <Link href="/blog" className="transition-colors hover:text-white">Blog</Link>
@@ -267,7 +271,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <span className="line-clamp-1 text-white/70">{frontmatter.title}</span>
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-3 ${!frontmatter.coverImage ? "justify-center" : ""}`}>
               <CategoryBadge category={frontmatter.category} />
               <time dateTime={frontmatter.date} className="text-sm text-white/40">
                 {formatDate(frontmatter.date)}
@@ -279,7 +283,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               {frontmatter.title}
             </h1>
 
-            <p className="mt-4 max-w-lg font-body text-base leading-relaxed text-white/60">
+            <p className={`mt-4 font-body text-base leading-relaxed text-white/60 ${frontmatter.coverImage ? "max-w-lg" : "mx-auto max-w-2xl"}`}>
               {frontmatter.description}
             </p>
           </div>
@@ -336,7 +340,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                     <a
                       key={h.id}
                       href={`#${h.id}`}
-                      className={`block border-l-2 border-transparent py-1.5 font-body text-[13px] leading-snug text-charcoal/50 transition-colors hover:border-[#1A3D2E] hover:text-charcoal ${
+                      className={`block border-l-2 border-transparent py-1.5 font-body text-[13px] leading-snug text-[#555] transition-colors hover:border-[#1A3D2E] hover:text-[#1A3D2E] ${
                         h.level === 2 ? "pl-4 font-medium" : "pl-7"
                       }`}
                     >
