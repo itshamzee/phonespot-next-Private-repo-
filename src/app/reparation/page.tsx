@@ -13,11 +13,11 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title:
-    "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse",
+    "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot",
   description:
-    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
+    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, vandskade og mere. Faste priser, hurtig service og garanti på alle reparationer.",
   keywords:
-    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret",
+    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
@@ -58,7 +58,7 @@ const REPAIR_FAQ = [
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
     answer:
-      `Ja! Vi tilbyder walk-in service i ${STORE.mall}, ${STORE.city}. Du kan også booke tid online for at sikre dig en plads.`,
+      "Ja! Vi tilbyder walk-in service i begge vores butikker — VestsjællandsCentret i Slagelse og Løversysselvej 3A i Vejle. Du kan også booke tid online.",
   },
   {
     question: "Mister jeg mine data?",
