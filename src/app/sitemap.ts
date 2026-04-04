@@ -7,6 +7,7 @@ import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
+import { STORES } from "@/lib/store-config";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -273,6 +274,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // ---- Location-specific repair pages -----------------------------------------
+
+  const locations = Object.keys(STORES);
+  const locationRepairPages: MetadataRoute.Sitemap = locations.flatMap(
+    (location) => [
+      {
+        url: `${BASE_URL}/reparation/${location}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.9,
+      },
+      ...repairBrands.map((brand) => ({
+        url: `${BASE_URL}/reparation/${location}/${brand.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })),
+      ...repairModelSlugs.map(({ brand, model }) => ({
+        url: `${BASE_URL}/reparation/${location}/${brand}/${model}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+    ]
+  );
+
   // ---- Service pages ----------------------------------------------------------
 
   const servicePages: MetadataRoute.Sitemap = [
@@ -291,8 +318,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${BASE_URL}/butik`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.6,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/butik/slagelse`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/butik/vejle`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/delbetaling`,
@@ -313,5 +352,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...feedPages];
+  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages];
 }
