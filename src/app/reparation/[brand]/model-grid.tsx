@@ -33,10 +33,11 @@ function groupBySeries(models: ModelCardData[]): SeriesGroup[] {
   }));
 }
 
-function ModelCard({ model }: { model: ModelCardData }) {
+function ModelCard({ model, linkPrefix }: { model: ModelCardData; linkPrefix?: string }) {
+  const basePath = linkPrefix ?? `/reparation/${model.brandSlug}`;
   return (
     <Link
-      href={`/reparation/${model.brandSlug}/${model.slug}`}
+      href={`${basePath}/${model.slug}`}
       className="group relative flex flex-col items-center rounded-2xl border border-soft-grey bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10"
     >
       {/* Device image */}
@@ -81,7 +82,7 @@ function ModelCard({ model }: { model: ModelCardData }) {
   );
 }
 
-export function ModelGrid({ models, brandName }: { models: ModelCardData[]; brandName: string }) {
+export function ModelGrid({ models, brandName, linkPrefix }: { models: ModelCardData[]; brandName: string; linkPrefix?: string }) {
   const [search, setSearch] = useState("");
 
   const filtered = models.filter((m) =>
@@ -158,7 +159,7 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
               )}
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {group.models.map((model) => (
-                  <ModelCard key={model.slug} model={model} />
+                  <ModelCard key={model.slug} model={model} linkPrefix={linkPrefix} />
                 ))}
               </div>
             </div>
@@ -168,7 +169,7 @@ export function ModelGrid({ models, brandName }: { models: ModelCardData[]; bran
         /* Flat grid (no series or active search) */
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((model) => (
-            <ModelCard key={model.slug} model={model} />
+            <ModelCard key={model.slug} model={model} linkPrefix={linkPrefix} />
           ))}
         </div>
       )}
