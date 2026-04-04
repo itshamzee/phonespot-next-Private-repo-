@@ -287,6 +287,52 @@ export default async function LocationBrandPage({ params }: Props) {
             </p>
           </div>
 
+          {brand.slug === "macbook" && (
+            <div className="mt-8 space-y-4 text-sm leading-relaxed text-[#111111]/70">
+              <h3 className="!mt-0 font-display text-lg font-bold text-[#111111]">
+                MacBook reparation i {store.city} — hurtigere og billigere end Apple
+              </h3>
+              <p>
+                Hos PhoneSpot i {store.city} tilbyder vi professionel MacBook reparation til priser
+                der typisk er 30-50% lavere end Apples autoriserede service. Og hvor Apple ofte
+                tager 5-7 hverdage, udfører vi de fleste reparationer samme dag — uden tidsbestilling.
+                {store.mall ? ` Find os i ${store.mall}.` : ` Find os på ${store.street}.`}
+              </p>
+
+              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
+                Hvad kan vi reparere på din MacBook?
+              </h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Skærmskift — sprukken eller defekt Retina-skærm</li>
+                <li>Batteriskift — MacBook holder ikke strøm eller lader ikke op</li>
+                <li>Tastatur-reparation — tasterne sidder fast eller virker ikke</li>
+                <li>Logic board reparation — komponent-niveau reparation</li>
+                <li>SSD opgradering — mere plads og hurtigere hastighed</li>
+                <li>Termisk pasta og blæser-service — MacBook overopheder</li>
+                <li>Trackpad og højtaler-udskiftning</li>
+                <li>Ladestik (MagSafe/USB-C) reparation</li>
+              </ul>
+
+              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
+                Reservedele til MacBook i {store.city}
+              </h3>
+              <p>
+                Vi sælger også reservedele til MacBook Air og MacBook Pro. Batterier, skærme,
+                tastaturer, trackpads og mere — alle dele er kvalitetstestet og leveres med garanti.
+                Kom forbi butikken eller bestil online.
+              </p>
+
+              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
+                MacBook går langsomt?
+              </h3>
+              <p>
+                En langsom MacBook skyldes ofte fuldt lager, gammel termisk pasta eller et slidt
+                batteri. Vi tilbyder en komplet MacBook service i {store.city} hvor vi renser, opdaterer
+                og optimerer din Mac — så den kører som ny igen. Ingen tidsbestilling nødvendig.
+              </p>
+            </div>
+          )}
+
           {/* CTA */}
           <div className="mt-12 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-8 text-center">
             <h3 className="font-display text-xl font-bold text-[#111111]">
