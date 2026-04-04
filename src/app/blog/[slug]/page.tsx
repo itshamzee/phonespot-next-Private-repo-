@@ -102,9 +102,9 @@ function extractHeadings(content: string): { id: string; text: string; level: nu
 
 function Callout({ children, type = "info" }: { children: React.ReactNode; type?: "info" | "tip" | "warning" }) {
   const styles = {
-    info: "border-[#1A3D2E] bg-[#1A3D2E]/5",
-    tip: "border-amber-400 bg-amber-50",
-    warning: "border-red-400 bg-red-50",
+    info: "border-[#1A3D2E] bg-[#1A3D2E]/10 shadow-sm",
+    tip: "border-amber-500 bg-amber-50 shadow-sm",
+    warning: "border-red-500 bg-red-50 shadow-sm",
   };
   const icons = {
     info: (
@@ -126,14 +126,14 @@ function Callout({ children, type = "info" }: { children: React.ReactNode; type?
   return (
     <div className={`not-prose my-8 flex gap-4 rounded-xl border-l-4 p-5 ${styles[type]}`}>
       {icons[type]}
-      <div className="font-body text-sm leading-relaxed text-charcoal/80 [&>p]:m-0">{children}</div>
+      <div className="font-body text-sm leading-relaxed text-[#2a2d28] [&>p]:m-0">{children}</div>
     </div>
   );
 }
 
 function KeyTakeaway({ children }: { children: React.ReactNode }) {
   return (
-    <div className="not-prose my-10 rounded-2xl bg-charcoal p-8 text-white">
+    <div className="not-prose my-10 rounded-2xl bg-[#1A3D2E] p-8 text-white ring-1 ring-white/10">
       <div className="mb-3 flex items-center gap-2">
         <svg className="h-5 w-5 text-green-eco" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -149,7 +149,7 @@ function KeyTakeaway({ children }: { children: React.ReactNode }) {
 
 function ComparisonBox({ children }: { children: React.ReactNode }) {
   return (
-    <div className="not-prose my-8 overflow-hidden rounded-2xl border border-sand/30 bg-gradient-to-br from-cream to-warm-white">
+    <div className="not-prose my-8 overflow-hidden rounded-2xl border border-[#1A3D2E]/15 bg-[#f8f6f1] shadow-sm">
       <div className="p-6 font-body text-sm leading-relaxed text-charcoal/80 [&>p]:m-0 [&>ul]:mt-2 [&>ul]:space-y-1 [&>ul]:pl-4 [&>li]:list-disc">{children}</div>
     </div>
   );
@@ -307,13 +307,13 @@ export default async function BlogPostPage({ params }: PageProps) {
           <article
             className="prose prose-lg mx-auto max-w-3xl lg:mx-0
               prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-charcoal
-              prose-h2:mt-14 prose-h2:mb-6 prose-h2:border-b prose-h2:border-sand/40 prose-h2:pb-3 prose-h2:text-2xl
+              prose-h2:mt-14 prose-h2:mb-6 prose-h2:border-b prose-h2:border-[#ddd] prose-h2:pb-3 prose-h2:text-2xl
               prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-xl
               prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
               prose-li:marker:text-[#1A3D2E]
               prose-strong:text-charcoal prose-strong:font-semibold
-              prose-p:text-charcoal/75 prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
-              prose-li:text-charcoal/75 prose-li:font-body prose-li:leading-[1.8]
+              prose-p:text-[#2a2d28] prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
+              prose-li:text-[#2a2d28] prose-li:font-body prose-li:leading-[1.8]
               prose-ul:my-6 prose-ol:my-6
               prose-img:rounded-xl prose-img:shadow-md"
           >
@@ -328,7 +328,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           {headings.length > 3 && (
             <aside className="hidden lg:block">
               <div className="sticky top-24">
-                <p className="mb-4 font-display text-xs font-bold uppercase tracking-wide text-charcoal/40">
+                <p className="mb-4 font-display text-xs font-bold uppercase tracking-wide text-[#888]">
                   Indhold
                 </p>
                 <nav className="space-y-1 border-l border-sand/40">
@@ -412,8 +412,8 @@ export default async function BlogPostPage({ params }: PageProps) {
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="h-12 w-12 rounded-full bg-green-eco/10" />
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
+                      <div className="font-display text-4xl font-bold text-white/10">PS</div>
                     </div>
                   )}
                 </div>

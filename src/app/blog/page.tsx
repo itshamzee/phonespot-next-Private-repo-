@@ -121,8 +121,11 @@ export default function BlogIndexPage() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center">
-                  <div className="h-24 w-24 rounded-full bg-green-eco/20" />
+                <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
+                  <div className="text-center">
+                    <div className="font-display text-6xl font-bold text-white/10">PS</div>
+                    <div className="mt-2 font-display text-sm font-bold uppercase tracking-widest text-white/20">PhoneSpot</div>
+                  </div>
                 </div>
               )}
             </div>
@@ -180,7 +183,7 @@ export default function BlogIndexPage() {
                 className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
               >
                 {/* Card image */}
-                <div className="relative aspect-[16/10] bg-cream">
+                <div className="relative aspect-[16/10] bg-[#f0ede7]">
                   {post.frontmatter.coverImage ? (
                     <Image
                       src={post.frontmatter.coverImage}
@@ -190,8 +193,8 @@ export default function BlogIndexPage() {
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="h-16 w-16 rounded-full bg-green-eco/10" />
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
+                      <div className="font-display text-4xl font-bold text-white/10">PS</div>
                     </div>
                   )}
                 </div>
