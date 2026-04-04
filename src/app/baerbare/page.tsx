@@ -499,6 +499,28 @@ export default async function BaerbarePage() {
         </div>
       </SectionWrapper>
 
+      {/* MacBook Reparation Cross-Link */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-8 text-center">
+            <h3 className="font-display text-xl font-bold text-[#111111]">
+              Har du brug for MacBook reparation?
+            </h3>
+            <p className="mt-2 text-sm text-[#86868B]">
+              Vi reparerer alle MacBook Air og MacBook Pro modeller. Skærmskift, batteriskift og mere — samme dag, uden tidsbestilling.
+            </p>
+            <div className="mt-4">
+              <Link
+                href="/reparation/macbook"
+                className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Se MacBook reparation &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+      </SectionWrapper>
+
       {/* ── Trust ── */}
       <SectionWrapper background="sand">
         <TrustBar />
