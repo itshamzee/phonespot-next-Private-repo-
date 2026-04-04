@@ -94,7 +94,7 @@ const DEVICE_TYPE_ICONS: Record<DeviceType, React.ReactNode> = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; models?: ModelWithBrand[] }) {
+export function BrandPicker({ brands, models = [], basePath = "/reparation" }: { brands: RepairBrand[]; models?: ModelWithBrand[]; basePath?: string }) {
   const [selectedParent, setSelectedParent] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -203,7 +203,7 @@ export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; mo
                   {searchResults.map((model) => (
                     <Link
                       key={model.id}
-                      href={`/reparation/${model.brand_slug}/${model.slug}`}
+                      href={`${basePath}/${model.brand_slug}/${model.slug}`}
                       onClick={() => { setQuery(""); setIsFocused(false); }}
                       className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-green-eco/[0.04]"
                     >
@@ -247,7 +247,7 @@ export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; mo
             return (
               <Link
                 key={parentKey}
-                href={`/reparation/${collections[0].slug}`}
+                href={`${basePath}/${collections[0].slug}`}
                 className="group relative flex flex-col items-center gap-4 rounded-2xl border border-soft-grey bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10"
               >
                 {meta?.logo ? (
@@ -357,7 +357,7 @@ export function BrandPicker({ brands, models = [] }: { brands: RepairBrand[]; mo
                     transition={{ duration: 0.25, delay: i * 0.06 }}
                   >
                     <Link
-                      href={`/reparation/${brand.slug}`}
+                      href={`${basePath}/${brand.slug}`}
                       className="group flex items-center gap-4 rounded-xl border border-soft-grey bg-warm-white p-5 transition-all duration-200 hover:border-green-eco hover:bg-green-eco/[0.04] hover:shadow-md hover:shadow-green-eco/10"
                     >
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-charcoal/[0.05] text-charcoal/40 transition-colors group-hover:bg-green-eco/15 group-hover:text-green-eco">
