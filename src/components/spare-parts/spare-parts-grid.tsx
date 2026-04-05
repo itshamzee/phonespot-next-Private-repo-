@@ -3,8 +3,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { QualityBadge } from "@/components/spare-parts/quality-badge";
 import { useCart } from "@/components/cart/cart-context";
+import { slugify } from "@/lib/spare-parts-config";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +33,15 @@ interface SparePartProduct {
   device_brand: string | null;
   device_model: string | null;
   quality_tier?: QualityTier;
+  part_category?: { id: string; name: string; slug: string } | null;
+}
+
+function buildProductUrl(product: SparePartProduct): string {
+  const catSlug = product.part_category?.slug ?? "andet";
+  const brandSlug = product.device_brand ? slugify(product.device_brand) : "alle";
+  const modelSlug = product.device_model ? slugify(product.device_model) : "alle";
+  const prodSlug = product.slug ?? product.id;
+  return `/reservedele/${catSlug}/${brandSlug}/${modelSlug}/${prodSlug}`;
 }
 
 interface ApiResponse {
@@ -75,8 +86,10 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
   const priceDisplay = (product.sale_price ?? product.selling_price);
   const isAdded = addedId === product.id;
 
+  const productUrl = buildProductUrl(product);
+
   return (
-    <div className="group flex flex-col rounded-xl border border-[#E5E5EA] bg-white transition-colors hover:border-[#1A3D2E]/30">
+    <Link href={productUrl} className="group flex flex-col rounded-xl border border-[#E5E5EA] bg-white transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
       {/* Image */}
       <div className="relative aspect-square w-full overflow-hidden rounded-t-xl bg-[#F7F7F8]">
         {product.images[0] ? (
@@ -154,7 +167,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
               aria-hidden="true"
             />
             <span className="text-xs text-[#86868B]">
-              {product.always_in_stock ? "På lager" : "Bestilles hjem"}
+              {product.always_in_stock ? "På lager" : "Kan bestilles"}
             </span>
           </div>
 
@@ -181,7 +194,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -192,9 +205,10 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
 function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
   const priceDisplay = product.sale_price ?? product.selling_price;
   const isAdded = addedId === product.id;
+  const productUrl = buildProductUrl(product);
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 transition-colors hover:border-[#1A3D2E]/30">
+    <Link href={productUrl} className="flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
       {/* Image */}
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">
         {product.images[0] ? (
@@ -250,7 +264,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
             aria-hidden="true"
           />
           <span className="text-xs text-[#86868B]">
-            {product.always_in_stock ? "På lager" : "Bestilles hjem"}
+            {product.always_in_stock ? "På lager" : "Kan bestilles"}
           </span>
         </div>
       </div>
@@ -288,7 +302,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
           </button>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
 

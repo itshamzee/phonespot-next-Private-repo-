@@ -1,4 +1,7 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { type ReactNode, useState, useCallback, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface SparePartsHeroProps {
   title: string;
@@ -8,6 +11,43 @@ interface SparePartsHeroProps {
 }
 
 export function SparePartsHero({ title, subtitle, showSearch, breadcrumb }: SparePartsHeroProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("search") ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pushSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value.trim()) {
+        params.set("search", value.trim());
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      router.push(`/reservedele?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  function handleChange(value: string) {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => pushSearch(value), 400);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      pushSearch(query);
+    }
+  }
+
+  // Sync with external search param changes (e.g. from filters)
+  useEffect(() => {
+    setQuery(searchParams.get("search") ?? "");
+  }, [searchParams]);
+
   return (
     <div className="border-b border-[#E5E5EA] bg-[#F7F7F8]">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
@@ -41,8 +81,10 @@ export function SparePartsHero({ title, subtitle, showSearch, breadcrumb }: Spar
                 type="search"
                 name="search"
                 placeholder="Søg i reservedele..."
-                defaultValue=""
-                className="w-full rounded-lg border border-[#E5E5EA] bg-white py-3 pl-11 pr-4 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+                value={query}
+                onChange={(e) => handleChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full rounded-xl border border-[#E5E5EA] bg-white py-3.5 pl-11 pr-4 text-base text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
               />
             </div>
           </div>
