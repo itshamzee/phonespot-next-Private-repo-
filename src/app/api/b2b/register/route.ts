@@ -18,17 +18,17 @@ export async function POST(req: NextRequest) {
   };
 
   if (!companyName || !cvrNummer || !contactName || !email || !password) {
-    return NextResponse.json({ error: "Alle felter er pakraevede" }, { status: 400 });
+    return NextResponse.json({ error: "Alle felter er påkrævede" }, { status: 400 });
   }
 
   // Validate CVR format (8 digits)
   if (!/^\d{8}$/.test(cvrNummer)) {
-    return NextResponse.json({ error: "CVR-nummer skal vaere 8 cifre" }, { status: 400 });
+    return NextResponse.json({ error: "CVR-nummer skal være 8 cifre" }, { status: 400 });
   }
 
   // Basic password length check
   if (password.length < 8) {
-    return NextResponse.json({ error: "Adgangskode skal vaere mindst 8 tegn" }, { status: 400 });
+    return NextResponse.json({ error: "Adgangskode skal være mindst 8 tegn" }, { status: 400 });
   }
 
   const supabase = createServerClient();
@@ -79,28 +79,50 @@ export async function POST(req: NextRequest) {
 
   const authId = authData.user.id;
 
-  // Upsert customer row (handles edge-case where customer row exists without auth_id)
-  const { data: customer, error: customerError } = await supabase
-    .from("customers")
-    .upsert(
-      { email, name: contactName, phone: phone ?? null, auth_id: authId },
-      { onConflict: "email" }
-    )
-    .select("id")
-    .single();
+  // Find or create customer row
+  // Note: customers.email has no UNIQUE constraint, so we can't use upsert on email.
+  // Instead: try to find existing customer by email, update auth_id. If not found, insert new.
+  let customerId: string;
 
-  if (customerError || !customer) {
-    console.error("B2B customer upsert error:", customerError?.message);
-    // Roll back auth user so we don't leave orphaned accounts
-    await supabase.auth.admin.deleteUser(authId).catch(() => {});
-    return NextResponse.json({ error: "Kunne ikke oprette kundeprofil" }, { status: 500 });
+  const { data: existingCustomer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("email", email)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingCustomer) {
+    // Update existing customer with auth_id
+    const { error: updateErr } = await supabase
+      .from("customers")
+      .update({ auth_id: authId, name: contactName, phone: phone ?? null })
+      .eq("id", existingCustomer.id);
+    if (updateErr) {
+      console.error("B2B customer update error:", updateErr.message);
+      await supabase.auth.admin.deleteUser(authId).catch(() => {});
+      return NextResponse.json({ error: "Kunne ikke oprette kundeprofil" }, { status: 500 });
+    }
+    customerId = existingCustomer.id;
+  } else {
+    // Insert new customer
+    const { data: newCustomer, error: insertErr } = await supabase
+      .from("customers")
+      .insert({ email, name: contactName, phone: phone ?? null, auth_id: authId })
+      .select("id")
+      .single();
+    if (insertErr || !newCustomer) {
+      console.error("B2B customer insert error:", insertErr?.message);
+      await supabase.auth.admin.deleteUser(authId).catch(() => {});
+      return NextResponse.json({ error: "Kunne ikke oprette kundeprofil" }, { status: 500 });
+    }
+    customerId = newCustomer.id;
   }
 
   // Create b2b_customer record
   const { data: b2bCustomer, error: b2bError } = await supabase
     .from("b2b_customers")
     .insert({
-      customer_id: customer.id,
+      customer_id: customerId,
       company_name: companyName,
       cvr_nummer: cvrNummer,
       contact_name: contactName,
