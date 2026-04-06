@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QualityBadge } from "@/components/spare-parts/quality-badge";
 import { useCart } from "@/components/cart/cart-context";
+import { useB2B } from "@/components/b2b/b2b-context";
 import { slugify } from "@/lib/spare-parts-config";
 
 // ---------------------------------------------------------------------------
@@ -85,6 +86,8 @@ interface ProductCardProps {
 function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
   const priceDisplay = (product.sale_price ?? product.selling_price);
   const isAdded = addedId === product.id;
+  const { isLoggedIn, isApproved } = useB2B();
+  const showPrices = isLoggedIn && isApproved;
 
   const productUrl = buildProductUrl(product);
 
@@ -149,16 +152,28 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
 
         {/* Price */}
         <div className="mt-auto">
-          <div className="mb-1 flex items-baseline gap-2">
-            <span className="text-base font-bold text-[#111111]">
-              {(priceDisplay / 100).toLocaleString("da-DK")} kr
-            </span>
-            {product.sale_price !== null && (
-              <span className="text-xs text-[#86868B] line-through">
-                {(product.selling_price / 100).toLocaleString("da-DK")} kr
+          {showPrices ? (
+            <div className="mb-1 flex items-baseline gap-2">
+              <span className="text-base font-bold text-[#111111]">
+                {(priceDisplay / 100).toLocaleString("da-DK")} kr
               </span>
-            )}
-          </div>
+              {product.sale_price !== null && (
+                <span className="text-xs text-[#86868B] line-through">
+                  {(product.selling_price / 100).toLocaleString("da-DK")} kr
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="mb-1">
+              <Link
+                href="/b2b/login"
+                className="text-sm font-semibold text-[#1A3D2E] hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Log ind for priser
+              </Link>
+            </div>
+          )}
 
           {/* Stock */}
           <div className="mb-3 flex items-center gap-1.5">
@@ -172,25 +187,35 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
           </div>
 
           {/* CTA */}
-          {product.is_inquiry_only ? (
-            <button
-              type="button"
-              className="w-full rounded-lg border border-[#1A3D2E] px-4 py-2 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
-            >
-              Forespørg
-            </button>
+          {showPrices ? (
+            product.is_inquiry_only ? (
+              <button
+                type="button"
+                className="w-full rounded-lg border border-[#1A3D2E] px-4 py-2 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
+              >
+                Forespørg
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onAddToCart(product)}
+                className={`w-full rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
+                  isAdded
+                    ? "bg-green-600 text-white"
+                    : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
+                }`}
+              >
+                {isAdded ? "Lagt i kurv" : "Læg i kurv"}
+              </button>
+            )
           ) : (
-            <button
-              type="button"
-              onClick={() => onAddToCart(product)}
-              className={`w-full rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
-                isAdded
-                  ? "bg-green-600 text-white"
-                  : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
-              }`}
+            <Link
+              href="/b2b/registrer"
+              className="block w-full rounded-lg border border-[#1A3D2E] px-4 py-2 text-center text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
+              onClick={(e) => e.stopPropagation()}
             >
-              {isAdded ? "Lagt i kurv" : "Læg i kurv"}
-            </button>
+              Bliv forhandler
+            </Link>
           )}
         </div>
       </div>
@@ -205,6 +230,8 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
 function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
   const priceDisplay = product.sale_price ?? product.selling_price;
   const isAdded = addedId === product.id;
+  const { isLoggedIn, isApproved } = useB2B();
+  const showPrices = isLoggedIn && isApproved;
   const productUrl = buildProductUrl(product);
 
   return (
@@ -271,35 +298,55 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
 
       {/* Price + CTA */}
       <div className="flex shrink-0 flex-col items-end gap-2">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-bold text-[#111111]">
-            {(priceDisplay / 100).toLocaleString("da-DK")} kr
-          </span>
-          {product.sale_price !== null && (
-            <span className="text-xs text-[#86868B] line-through">
-              {(product.selling_price / 100).toLocaleString("da-DK")} kr
+        {showPrices ? (
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-[#111111]">
+              {(priceDisplay / 100).toLocaleString("da-DK")} kr
             </span>
-          )}
-        </div>
-        {product.is_inquiry_only ? (
-          <button
-            type="button"
-            className="rounded-lg border border-[#1A3D2E] px-4 py-1.5 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
-          >
-            Forespørg
-          </button>
+            {product.sale_price !== null && (
+              <span className="text-xs text-[#86868B] line-through">
+                {(product.selling_price / 100).toLocaleString("da-DK")} kr
+              </span>
+            )}
+          </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => onAddToCart(product)}
-            className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-colors ${
-              isAdded
-                ? "bg-green-600 text-white"
-                : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
-            }`}
+          <Link
+            href="/b2b/login"
+            className="text-sm font-semibold text-[#1A3D2E] hover:underline"
+            onClick={(e) => e.stopPropagation()}
           >
-            {isAdded ? "Lagt i kurv" : "Læg i kurv"}
-          </button>
+            Log ind for priser
+          </Link>
+        )}
+        {showPrices ? (
+          product.is_inquiry_only ? (
+            <button
+              type="button"
+              className="rounded-lg border border-[#1A3D2E] px-4 py-1.5 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
+            >
+              Forespørg
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onAddToCart(product)}
+              className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-colors ${
+                isAdded
+                  ? "bg-green-600 text-white"
+                  : "bg-[#1A3D2E] text-white hover:bg-[#1A3D2E]/90"
+              }`}
+            >
+              {isAdded ? "Lagt i kurv" : "Læg i kurv"}
+            </button>
+          )
+        ) : (
+          <Link
+            href="/b2b/registrer"
+            className="rounded-lg border border-[#1A3D2E] px-4 py-1.5 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Bliv forhandler
+          </Link>
         )}
       </div>
     </Link>

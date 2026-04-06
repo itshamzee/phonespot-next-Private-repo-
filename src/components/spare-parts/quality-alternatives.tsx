@@ -24,6 +24,7 @@ interface QualityAlternativesProps {
   categorySlug: string;
   brandSlug: string;
   modelSlug: string;
+  showPrices?: boolean;
 }
 
 export function QualityAlternatives({
@@ -32,6 +33,7 @@ export function QualityAlternatives({
   categorySlug,
   brandSlug,
   modelSlug,
+  showPrices = true,
 }: QualityAlternativesProps) {
   if (alternatives.length === 0) return null;
 
@@ -82,9 +84,18 @@ export function QualityAlternatives({
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold text-[#111111]">
-                  {(price / 100).toLocaleString("da-DK")} kr
-                </span>
+                {showPrices ? (
+                  <span className="text-lg font-bold text-[#111111]">
+                    {(price / 100).toLocaleString("da-DK")} kr
+                  </span>
+                ) : (
+                  <Link
+                    href="/b2b/login"
+                    className="text-sm font-semibold text-[#1A3D2E] hover:underline"
+                  >
+                    Log ind for pris
+                  </Link>
+                )}
                 {!isCurrent && !alt.is_inquiry_only && (
                   <Link
                     href={href}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
+import { useB2B } from "@/components/b2b/b2b-context";
 import { ColorVariantPicker } from "@/components/spare-parts/color-variant-picker";
 
 interface ColorVariant {
@@ -35,6 +37,9 @@ export function AddToCartSection({
   withColorPicker,
 }: AddToCartSectionProps) {
   const { addSku, openCart } = useCart();
+  const { isLoggedIn, isApproved, loading: b2bLoading } = useB2B();
+  const showPrices = isLoggedIn && isApproved;
+
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ColorVariant | null>(
@@ -63,6 +68,69 @@ export function AddToCartSection({
     setTimeout(() => setAdded(false), 2000);
   }
 
+  // Show loading skeleton while B2B session is being resolved
+  if (b2bLoading) {
+    return (
+      <div className="flex flex-col gap-5">
+        <div className="h-10 w-40 animate-pulse rounded-lg bg-[#F7F7F8]" />
+        <div className="h-14 w-full animate-pulse rounded-xl bg-[#F7F7F8]" />
+      </div>
+    );
+  }
+
+  // Not logged in — prompt to log in
+  if (!isLoggedIn) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] p-5">
+          <p className="mb-1 text-sm font-semibold text-[#111111]">
+            Log ind for at se priser og bestille
+          </p>
+          <p className="mb-4 text-xs text-[#86868B]">
+            PhoneSpot&apos;s reservedele er forbeholdt godkendte forhandlere og reparationsvirksomheder.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/b2b/login"
+              className="flex flex-1 items-center justify-center rounded-xl bg-[#1A3D2E] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1A3D2E]/90"
+            >
+              Log ind
+            </Link>
+            <Link
+              href="/b2b/registrer"
+              className="flex flex-1 items-center justify-center rounded-xl border border-[#1A3D2E] px-6 py-3 text-sm font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
+            >
+              Bliv forhandler
+            </Link>
+          </div>
+        </div>
+        <p className="text-xs text-[#86868B]">
+          Inkl. {warrantyMonths} {warrantyMonths === 1 ? "måneds" : "måneders"} garanti &middot; Gratis fragt over 500 kr &middot; 14 dages returret
+        </p>
+      </div>
+    );
+  }
+
+  // Logged in but pending approval
+  if (!isApproved) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <p className="mb-1 text-sm font-semibold text-amber-800">
+            Din konto afventer godkendelse
+          </p>
+          <p className="text-xs text-amber-700">
+            Vi gennemgår din ansogning og giver dig besked via e-mail inden for 1-2 hverdage.
+          </p>
+        </div>
+        <p className="text-xs text-[#86868B]">
+          Inkl. {warrantyMonths} {warrantyMonths === 1 ? "måneds" : "måneders"} garanti &middot; Gratis fragt over 500 kr &middot; 14 dages returret
+        </p>
+      </div>
+    );
+  }
+
+  // Logged in + approved — show full purchase flow
   return (
     <div className="flex flex-col gap-5">
       {/* Color variant picker */}
@@ -75,16 +143,18 @@ export function AddToCartSection({
       )}
 
       {/* Price display */}
-      <div className="flex items-baseline gap-3">
-        <span className="font-display text-3xl font-bold text-[#111111]">
-          {(effectivePrice / 100).toLocaleString("da-DK")} kr
-        </span>
-        {product.sale_price !== null && selectedVariant?.price_dkk == null && (
-          <span className="text-base text-[#86868B] line-through">
-            {(product.selling_price / 100).toLocaleString("da-DK")} kr
+      {showPrices && (
+        <div className="flex items-baseline gap-3">
+          <span className="font-display text-3xl font-bold text-[#111111]">
+            {(effectivePrice / 100).toLocaleString("da-DK")} kr
           </span>
-        )}
-      </div>
+          {product.sale_price !== null && selectedVariant?.price_dkk == null && (
+            <span className="text-base text-[#86868B] line-through">
+              {(product.selling_price / 100).toLocaleString("da-DK")} kr
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Inquiry only path */}
       {product.is_inquiry_only ? (

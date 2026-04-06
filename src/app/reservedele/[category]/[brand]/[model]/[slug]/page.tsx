@@ -9,7 +9,7 @@ import {
   getEffectiveWarranty,
 } from "@/lib/supabase/spare-parts";
 import { QualityBadge } from "@/components/spare-parts/quality-badge";
-import { QualityAlternatives } from "@/components/spare-parts/quality-alternatives";
+import { QualityAlternativesWrapper } from "./quality-alternatives-wrapper";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
 import { ImageGalleryClient } from "./image-gallery-client";
@@ -317,7 +317,7 @@ export default async function SparePartDetailPage({
       {alternatives.length > 0 && (
         <section className="border-t border-[#E5E5EA] bg-[#F7F7F8]">
           <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <QualityAlternatives
+            <QualityAlternativesWrapper
               alternatives={alternatives}
               currentProductId={product.id}
               categorySlug={categorySlug}
