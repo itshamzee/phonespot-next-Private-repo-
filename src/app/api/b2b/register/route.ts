@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { sendB2BWelcomeEmail } from "@/lib/email/b2b-welcome";
 
 /**
  * POST /api/b2b/register
@@ -153,6 +154,14 @@ export async function POST(req: NextRequest) {
       entity_id: b2bCustomer.id,
       details: { company_name: companyName, cvr_nummer: cvrNummer, contact_email: email },
     });
+
+  // Send welcome email (non-blocking)
+  void sendB2BWelcomeEmail({
+    companyName,
+    contactName,
+    contactEmail: email,
+    cvrNummer,
+  });
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
