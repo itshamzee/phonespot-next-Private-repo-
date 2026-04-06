@@ -44,8 +44,9 @@ export default async function ReservedelePage() {
 
       <SparePartsHero
         title="Reservedele til alle enheder"
-        subtitle="Originale og premium reservedele med op til 2 års garanti. Levering i hele Danmark."
+        subtitle="Engros-priser på skærme, batterier og reservedele til alle enheder. Op til 2 års garanti. Levering i hele Danmark."
         showSearch
+        backgroundImage="/images/b2b/spare-parts-hero.jpg"
       />
 
       {/* Category grid */}
