@@ -234,7 +234,7 @@ export default function ReservedelEditPage() {
         /* Pre-fill form */
         setTitle(product.title ?? "");
         setProductTitleDisplay(product.title ?? "Rediger");
-        setCategoryId(product.category_id ?? "");
+        setCategoryId(product.part_category_id ?? "");
         setDescription(product.description ?? "");
         setShortDescription(product.short_description ?? "");
 
@@ -242,7 +242,7 @@ export default function ReservedelEditPage() {
         setSeries(product.device_series ?? "");
         setModel(product.device_model ?? "");
         setModelCodes(
-          Array.isArray(product.model_codes) ? product.model_codes.join(", ") : "",
+          Array.isArray(product.device_model_codes) ? product.device_model_codes.join(", ") : "",
         );
 
         setQualityTierId(product.quality_tier_id ?? "");
@@ -255,8 +255,11 @@ export default function ReservedelEditPage() {
         setSalePrice(oereToDkk(product.sale_price));
         if (product.b2b_price) setB2bPriceDkk(String(product.b2b_price / 100));
 
-        setStockOnline(String(product.stock_online ?? 0));
-        setStockStore(String(product.stock_store ?? 0));
+        // Extract stock from stock[] array by location type
+        const onlineStock = product.stock?.find((s: any) => s.locations?.type === "online");
+        const storeStock = product.stock?.find((s: any) => s.locations?.type === "store");
+        setStockOnline(String(onlineStock?.quantity ?? 0));
+        setStockStore(String(storeStock?.quantity ?? 0));
 
         if (Array.isArray(product.color_variants)) {
           setColorVariants(
@@ -510,13 +513,13 @@ export default function ReservedelEditPage() {
     const payload = {
       title: title.trim(),
       slug: slug || slugify(title),
-      category_id: categoryId || null,
+      part_category_id: categoryId || null,
       description: description.trim() || null,
       short_description: shortDescription.trim() || null,
       device_brand: brand.trim() || null,
       device_series: series.trim() || null,
       device_model: model.trim() || null,
-      model_codes: modelCodes
+      device_model_codes: modelCodes
         ? modelCodes
             .split(",")
             .map((c) => c.trim())
@@ -786,15 +789,19 @@ export default function ReservedelEditPage() {
         {/* ── 2. Enhed ── */}
         <Section title="Enhed">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Brand">
+            <Field label="Brand" hint="Vælg fra listen eller skriv en ny">
               <input
                 type="text"
                 list="brands-list"
                 value={brand}
                 onChange={(e) => {
-                  setBrand(e.target.value);
-                  setSeries("");
-                  setModel("");
+                  const newBrand = e.target.value;
+                  if (newBrand !== brand) {
+                    setBrand(newBrand);
+                    setSeries("");
+                    setModel("");
+                    setModelCodes("");
+                  }
                 }}
                 placeholder="f.eks. Apple"
                 className={inputCls}
@@ -806,18 +813,21 @@ export default function ReservedelEditPage() {
               </datalist>
             </Field>
 
-            <Field label="Serie">
+            <Field label="Serie" hint="Vælg fra listen eller skriv en ny">
               <input
                 type="text"
                 list="series-list"
                 value={series}
                 onChange={(e) => {
-                  setSeries(e.target.value);
-                  setModel("");
+                  const newSeries = e.target.value;
+                  if (newSeries !== series) {
+                    setSeries(newSeries);
+                    setModel("");
+                    setModelCodes("");
+                  }
                 }}
                 placeholder="f.eks. iPhone 15"
                 className={inputCls}
-                disabled={!brand}
               />
               <datalist id="series-list">
                 {seriesOptions.map((s) => (
@@ -826,7 +836,7 @@ export default function ReservedelEditPage() {
               </datalist>
             </Field>
 
-            <Field label="Model">
+            <Field label="Model" hint="Vælg fra listen eller skriv en ny">
               <input
                 type="text"
                 list="models-list"
@@ -841,7 +851,6 @@ export default function ReservedelEditPage() {
                 }}
                 placeholder="f.eks. iPhone 15 Pro"
                 className={inputCls}
-                disabled={!series}
               />
               <datalist id="models-list">
                 {modelOptions.map((m) => (

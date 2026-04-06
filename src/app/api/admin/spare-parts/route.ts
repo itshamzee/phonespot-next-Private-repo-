@@ -77,13 +77,13 @@ export async function GET(req: NextRequest) {
   // Calculate total inventory value across ALL spare parts (not just this page)
   const { data: allProducts } = await supabase
     .from("sku_products")
-    .select("id, selling_price")
+    .select("id, cost_price")
     .eq("subcategory", "spare-part");
 
   const allProductIds = (allProducts ?? []).map((p: any) => p.id);
   const priceMap = new Map<string, number>();
   for (const p of allProducts ?? []) {
-    priceMap.set(p.id, p.selling_price ?? 0);
+    priceMap.set(p.id, p.cost_price ?? 0);
   }
 
   const { data: allStock } = await supabase
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     color_variants, compatible_models, specifications,
     is_inquiry_only, always_in_stock, images, slug,
     meta_title, meta_description,
-    stock_online, stock_store,
+    stock_online, stock_store, status, b2b_price,
   } = body;
 
   if (!title || selling_price == null) {
@@ -168,7 +168,8 @@ export async function POST(req: NextRequest) {
       slug: slug || null,
       meta_title: meta_title || null,
       meta_description: meta_description || null,
-      status: "published",
+      b2b_price: b2b_price != null ? Number(b2b_price) : null,
+      status: status || "published",
       is_active: true,
     })
     .select()
@@ -177,16 +178,17 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (product && (stock_online != null || stock_store != null)) {
-    const { data: locations } = await supabase.from("locations").select("id, type");
-    const onlineLoc = locations?.find((l: { id: string; type: string }) => l.type === "online");
-    const storeLoc = locations?.find((l: { id: string; type: string }) => l.type === "store");
+    const { data: locations } = await supabase.from("locations").select("id, name, type");
 
-    const stockRows = [];
-    if (onlineLoc && stock_online != null) {
-      stockRows.push({ product_id: product.id, location_id: onlineLoc.id, quantity: Number(stock_online) });
+    const stockRows: { product_id: string; location_id: string; quantity: number }[] = [];
+
+    if (stock_online != null) {
+      const loc = locations?.find((l: any) => l.name?.toLowerCase() === "online");
+      if (loc) stockRows.push({ product_id: product.id, location_id: loc.id, quantity: Number(stock_online) });
     }
-    if (storeLoc && stock_store != null) {
-      stockRows.push({ product_id: product.id, location_id: storeLoc.id, quantity: Number(stock_store) });
+    if (stock_store != null) {
+      const loc = locations?.find((l: any) => l.type === "store");
+      if (loc) stockRows.push({ product_id: product.id, location_id: loc.id, quantity: Number(stock_store) });
     }
     if (stockRows.length > 0) {
       await supabase.from("sku_stock").upsert(stockRows, { onConflict: "product_id,location_id" });

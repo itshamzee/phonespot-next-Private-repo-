@@ -26,6 +26,7 @@ interface SparePart {
   device_brand: string | null;
   device_model: string | null;
   selling_price: number; // oere
+  cost_price: number | null; // oere
   status: "published" | "draft";
   always_in_stock: boolean;
   stock: StockEntry[];
@@ -375,7 +376,7 @@ export default function ReservedelePage() {
       for (const s of p.stock) {
         const name = s.locations?.name;
         const qty = s.quantity ?? 0;
-        const val = qty * p.selling_price;
+        const val = qty * (p.cost_price ?? 0);
         totalQty += qty;
         totalValue += val;
         if (name && name in byLocation) {
