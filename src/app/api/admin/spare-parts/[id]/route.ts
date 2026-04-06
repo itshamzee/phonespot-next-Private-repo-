@@ -41,13 +41,13 @@ export async function PATCH(
     "device_model", "device_model_codes", "selling_price", "cost_price",
     "sale_price", "color_variants", "compatible_models", "specifications",
     "is_inquiry_only", "always_in_stock", "images", "slug", "meta_title",
-    "meta_description", "status", "is_active",
+    "meta_description", "status", "is_active", "b2b_price",
   ];
 
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in body) {
-      if (["selling_price", "cost_price", "sale_price"].includes(key)) {
+      if (["selling_price", "cost_price", "sale_price", "b2b_price"].includes(key)) {
         updates[key] = body[key] != null ? Number(body[key]) : null;
       } else {
         updates[key] = body[key];
@@ -61,18 +61,44 @@ export async function PATCH(
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  if ("stock_online" in body || "stock_store" in body) {
-    const { data: locations } = await supabase.from("locations").select("id, type");
-    const onlineLoc = locations?.find((l: { id: string; type: string }) => l.type === "online");
-    const storeLoc = locations?.find((l: { id: string; type: string }) => l.type === "store");
+  // Stock update: accept stock_online, stock_slagelse, stock_vejle (by location name)
+  // Also keep legacy stock_store (maps to first store location) for backwards compat
+  const stockFields: Record<string, string> = {
+    stock_online: "Online",
+    stock_slagelse: "Slagelse",
+    stock_vejle: "Vejle",
+  };
+  const hasStockUpdate = Object.keys(stockFields).some((k) => k in body) || "stock_store" in body;
 
-    const stockRows = [];
-    if (onlineLoc && "stock_online" in body) {
-      stockRows.push({ product_id: id, location_id: onlineLoc.id, quantity: Number(body.stock_online) });
+  if (hasStockUpdate) {
+    const { data: locations } = await supabase.from("locations").select("id, name, type");
+
+    const stockRows: { product_id: string; location_id: string; quantity: number }[] = [];
+
+    for (const [field, locName] of Object.entries(stockFields)) {
+      if (field in body) {
+        const loc = locations?.find(
+          (l: { id: string; name: string; type: string }) =>
+            l.name.toLowerCase() === locName.toLowerCase(),
+        );
+        if (loc) {
+          stockRows.push({ product_id: id, location_id: loc.id, quantity: Number(body[field]) });
+        }
+      }
     }
-    if (storeLoc && "stock_store" in body) {
-      stockRows.push({ product_id: id, location_id: storeLoc.id, quantity: Number(body.stock_store) });
+
+    // Legacy: stock_store → first store location not already covered
+    if ("stock_store" in body) {
+      const alreadyUpdatedIds = new Set(stockRows.map((r) => r.location_id));
+      const storeLoc = locations?.find(
+        (l: { id: string; name: string; type: string }) =>
+          l.type === "store" && !alreadyUpdatedIds.has(l.id),
+      );
+      if (storeLoc) {
+        stockRows.push({ product_id: id, location_id: storeLoc.id, quantity: Number(body.stock_store) });
+      }
     }
+
     if (stockRows.length > 0) {
       await supabase.from("sku_stock").upsert(stockRows, { onConflict: "product_id,location_id" });
     }

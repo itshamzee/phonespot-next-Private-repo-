@@ -146,6 +146,7 @@ export default function ReservedelOpretPage() {
   const [costPrice, setCostPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
+  const [b2bPriceDkk, setB2bPriceDkk] = useState("");
 
   /* ---- Section 5: Lager ---- */
   const [stockOnline, setStockOnline] = useState("0");
@@ -437,6 +438,7 @@ export default function ReservedelOpretPage() {
       cost_price: dkkToOere(costPrice),
       selling_price: dkkToOere(sellingPrice)!,
       sale_price: dkkToOere(salePrice),
+      b2b_price: b2bPriceDkk ? Math.round(parseFloat(b2bPriceDkk) * 100) : null,
       stock_online: parseInt(stockOnline, 10) || 0,
       stock_store: parseInt(stockStore, 10) || 0,
       color_variants: colorVariants
@@ -999,6 +1001,23 @@ export default function ReservedelOpretPage() {
                   step="0.01"
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
+                  placeholder="—"
+                  className={inputCls + " pr-10"}
+                />
+              </div>
+            </Field>
+
+            <Field label="B2B-pris (DKK)" hint="Engros-pris for godkendte forhandlere. Blank = bruger salgspris.">
+              <div className="relative">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-charcoal/40">
+                  kr.
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={b2bPriceDkk}
+                  onChange={(e) => setB2bPriceDkk(e.target.value)}
                   placeholder="—"
                   className={inputCls + " pr-10"}
                 />
