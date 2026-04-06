@@ -482,6 +482,12 @@ export function Header() {
                 Sælg din enhed
               </Link>
               <NavDropdown label="Om os" items={OM_PHONESPOT_ITEMS} />
+              <Link
+                href="/b2b"
+                className="text-[13px] font-medium text-[#86868B] hover:text-green-eco transition-colors font-display"
+              >
+                Forhandler
+              </Link>
             </nav>
 
             {/* RIGHT: Search + Cart */}
@@ -567,6 +573,7 @@ export function Header() {
                   { label: "FAQ", href: "/faq" },
                   { label: "Garanti", href: "/garanti" },
                   { label: "Butik", href: "/butik" },
+                  { label: "Forhandler", href: "/b2b" },
                 ].map((link) => (
                   <Link
                     key={link.href}
