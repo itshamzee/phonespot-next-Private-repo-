@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>PhoneSpot Meta Ad — Sustainability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1A3D2E;
+    --green-bright: #22C55E;
+    --charcoal: #111111;
+    --warm-white: #FAFAF8;
+  }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--charcoal);
+    position: relative;
+  }
+
+  /* Gradient accent */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 90%, rgba(34, 197, 94, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 10%, rgba(26, 61, 46, 0.3) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 64px;
+  }
+
+  /* Top */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 38px;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .eco-badge {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--green-bright);
+    letter-spacing: 0.5px;
+  }
+
+  /* Big stat */
+  .stat-section {
+    margin-top: 64px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+
+  .big-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 180px;
+    line-height: 0.85;
+    color: var(--green-bright);
+    letter-spacing: -4px;
+  }
+
+  .big-unit {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 64px;
+    color: white;
+    line-height: 0.85;
+  }
+
+  .stat-label {
+    margin-top: 16px;
+    font-size: 24px;
+    color: rgba(255,255,255,0.5);
+    max-width: 500px;
+    line-height: 1.5;
+  }
+
+  .stat-label strong {
+    color: white;
+    font-weight: 600;
+  }
+
+  /* Product row */
+  .product-row {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .mini-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .mini-card img {
+    width: 80px;
+    height: 60px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+
+  .mini-info {
+    flex: 1;
+  }
+
+  .mini-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    margin-bottom: 2px;
+  }
+
+  .mini-spec {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+  }
+
+  .mini-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--green-bright);
+  }
+
+  .mini-price small {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+
+  /* Bottom */
+  .bottom-bar {
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bottom-text {
+    font-size: 17px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .bottom-text strong {
+    color: white;
+  }
+
+  .cta-button {
+    background: var(--green-bright);
+    color: var(--charcoal);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 14px 36px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="content">
+  <!-- Top -->
+  <div class="top-bar">
+    <div class="logo">PhoneSpot</div>
+    <div class="eco-badge">Bæredygtigt valg</div>
+  </div>
+
+  <!-- Big stat -->
+  <div class="stat-section">
+    <div class="big-number">80%</div>
+    <div class="big-unit">mindre<br>CO2</div>
+  </div>
+  <p class="stat-label">
+    En refurbished bærbar har <strong>80% lavere CO2-aftryk</strong> end en ny. Samme ydeevne, langt mindre belastning.
+  </p>
+
+  <!-- Product row -->
+  <div class="product-row">
+    <div class="mini-card">
+      <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/56/85/56857da9-c453-4d99-b2c5-7e6cf924d2ee.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="ThinkPad">
+      <div class="mini-info">
+        <div class="mini-name">ThinkPad T14s G2</div>
+        <div class="mini-spec">i5 . 16GB . 256GB . 14"</div>
+        <div class="mini-price"><small>fra </small>3.499 kr.</div>
+      </div>
+    </div>
+    <div class="mini-card">
+      <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/38/bd/38bd5eaf-b74e-420c-a1c7-370db150042a.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="EliteBook">
+      <div class="mini-info">
+        <div class="mini-name">EliteBook 840 G8</div>
+        <div class="mini-spec">i5 . 16GB . 256GB . 14"</div>
+        <div class="mini-price"><small>fra </small>3.499 kr.</div>
+      </div>
+    </div>
+    <div class="mini-card">
+      <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mba13-midnight-select-202402?wid=600&hei=600&fmt=png-alpha" alt="MacBook Air">
+      <div class="mini-info">
+        <div class="mini-name">MacBook Air M3</div>
+        <div class="mini-spec">8GB . 256GB . 13"</div>
+        <div class="mini-price"><small>fra </small>7.999 kr.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom -->
+  <div class="bottom-bar">
+    <div class="bottom-text">
+      <strong>105 bærbare</strong> med 36 mdr. garanti fra 1.999 kr.
+    </div>
+    <div class="cta-button">Se alle bærbare</div>
+  </div>
+</div>
+</body>
+</html>

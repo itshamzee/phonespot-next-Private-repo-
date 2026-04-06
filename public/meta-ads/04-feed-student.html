@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>PhoneSpot Meta Ad — Student</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1A3D2E;
+    --charcoal: #111111;
+    --sand: #F5F5F0;
+    --warm-white: #FAFAF8;
+  }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    position: relative;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* Full-width top bar */
+  .top-bar {
+    grid-column: 1 / -1;
+    background: var(--green);
+    padding: 28px 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 38px;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .warranty-tag {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* Left — text */
+  .text-side {
+    padding: 56px 48px 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .target-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 20px;
+    border-radius: 100px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1.05;
+    color: var(--charcoal);
+    margin-bottom: 20px;
+  }
+
+  .description {
+    font-size: 20px;
+    line-height: 1.6;
+    color: #666;
+    margin-bottom: 32px;
+  }
+
+  .price-highlight {
+    background: white;
+    border-radius: 20px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    border: 1px solid #E8E8E4;
+  }
+
+  .price-from {
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .price-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 48px;
+    color: var(--green);
+  }
+
+  .price-value small {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .price-details {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.5;
+  }
+
+  /* Right — product */
+  .product-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    position: relative;
+  }
+
+  .product-side::before {
+    content: '';
+    position: absolute;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: rgba(26, 61, 46, 0.06);
+    z-index: 0;
+  }
+
+  .product-side img {
+    position: relative;
+    z-index: 1;
+    width: 400px;
+    height: 300px;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 48px rgba(0,0,0,0.12));
+    margin-bottom: 24px;
+  }
+
+  .product-name {
+    position: relative;
+    z-index: 1;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--charcoal);
+    text-align: center;
+  }
+
+  .product-spec {
+    position: relative;
+    z-index: 1;
+    font-size: 15px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  /* Full-width bottom trust */
+  .bottom-trust {
+    grid-column: 1 / -1;
+    background: white;
+    border-top: 1px solid #E8E8E4;
+    padding: 24px 64px;
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  .trust-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+</style>
+</head>
+<body>
+<div class="content">
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo">PhoneSpot</div>
+    <div class="warranty-tag">Altid 36 mdr. garanti</div>
+  </div>
+
+  <!-- Left text -->
+  <div class="text-side">
+    <div class="target-label">Til studiet</div>
+    <h1>Din næste studie-<br>computer</h1>
+    <p class="description">
+      Word, PowerPoint og Zoom. En refurbished bærbar med alt hvad du har brug for.
+    </p>
+    <div class="price-highlight">
+      <div>
+        <div class="price-from">Fra</div>
+        <div class="price-value">1.999<small> kr.</small></div>
+      </div>
+      <div class="price-details">
+        Inkl. 36 mdr. garanti<br>
+        Testet med 30+ kontroller<br>
+        Levering 1-3 hverdage
+      </div>
+    </div>
+  </div>
+
+  <!-- Right product -->
+  <div class="product-side">
+    <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/56/85/56857da9-c453-4d99-b2c5-7e6cf924d2ee.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="ThinkPad T14s">
+    <div class="product-name">Lenovo ThinkPad T14s</div>
+    <div class="product-spec">i5 . 16GB . 256GB SSD . 14"</div>
+  </div>
+
+  <!-- Bottom trust -->
+  <div class="bottom-trust">
+    <div class="trust-item"><div class="trust-dot"></div>36 mdr. garanti</div>
+    <div class="trust-item"><div class="trust-dot"></div>30+ kvalitetstests</div>
+    <div class="trust-item"><div class="trust-dot"></div>1-3 dages levering</div>
+    <div class="trust-item"><div class="trust-dot"></div>14 dages returret</div>
+    <div class="trust-item"><div class="trust-dot"></div>Trustpilot 4.4</div>
+  </div>
+</div>
+</body>
+</html>

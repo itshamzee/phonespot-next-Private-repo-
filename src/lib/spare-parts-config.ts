@@ -31,6 +31,7 @@ export const DEVICE_BRANDS = [
 export const DEVICE_MODELS: DeviceModel[] = [
   // ── Apple — iPhone ──
   { brand: "Apple", series: "iPhone 16", model: "iPhone 16 Pro Max", model_codes: ["A3295", "A2894"] },
+  { brand: "Apple", series: "iPhone 16", model: "iPhone 16e", model_codes: ["A3006", "A3212"] },
   { brand: "Apple", series: "iPhone 16", model: "iPhone 16 Pro", model_codes: ["A3293", "A2892"] },
   { brand: "Apple", series: "iPhone 16", model: "iPhone 16 Plus", model_codes: ["A3294", "A2893"] },
   { brand: "Apple", series: "iPhone 16", model: "iPhone 16", model_codes: ["A3292", "A2891"] },
@@ -66,6 +67,8 @@ export const DEVICE_MODELS: DeviceModel[] = [
   { brand: "Apple", series: "iPhone 7", model: "iPhone 7", model_codes: ["A1660", "A1778"] },
   { brand: "Apple", series: "iPhone 6s", model: "iPhone 6s Plus", model_codes: ["A1634", "A1687"] },
   { brand: "Apple", series: "iPhone 6s", model: "iPhone 6s", model_codes: ["A1633", "A1688"] },
+  { brand: "Apple", series: "iPhone 6", model: "iPhone 6 Plus", model_codes: ["A1522", "A1524"] },
+  { brand: "Apple", series: "iPhone 6", model: "iPhone 6", model_codes: ["A1549", "A1586"] },
 
   // ── Apple — iPad ──
   { brand: "Apple", series: "iPad Pro", model: "iPad Pro 13\" (M4)" },

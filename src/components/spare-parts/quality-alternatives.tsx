@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { QualityBadge } from "./quality-badge";
+import Image from "next/image";
 
 interface QualityAlternative {
   id: string;
@@ -7,6 +7,7 @@ interface QualityAlternative {
   slug: string | null;
   selling_price: number;
   sale_price: number | null;
+  images: string[];
   is_inquiry_only: boolean;
   quality_tier?: {
     name: string;
@@ -35,85 +36,118 @@ export function QualityAlternatives({
   modelSlug,
   showPrices = true,
 }: QualityAlternativesProps) {
-  if (alternatives.length === 0) return null;
+  if (alternatives.length <= 1) return null;
 
   return (
-    <div className="mt-8">
-      <h2 className="font-display text-lg font-bold text-[#111111]">
-        Andre kvalitetsmuligheder
-      </h2>
-      <div className="mt-4 space-y-3">
+    <div>
+      <p className="mb-2 text-sm font-medium text-[#86868B]">Andre varianter</p>
+      <div className="flex flex-wrap gap-2">
         {alternatives.map((alt) => {
           const isCurrent = alt.id === currentProductId;
           const price = alt.sale_price ?? alt.selling_price;
           const href = alt.slug
             ? `/reservedele/${categorySlug}/${brandSlug}/${modelSlug}/${alt.slug}`
             : "#";
+          const qualityName = alt.quality_tier?.name ?? "Standard";
+          const thumbnail = alt.images?.[0];
 
-          return (
-            <div
-              key={alt.id}
-              className={`flex items-center justify-between rounded-xl border p-4 transition-all ${
-                isCurrent
-                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5"
-                  : "border-[#E5E5EA] bg-white hover:border-[#86868B]"
-              }`}
-            >
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  {alt.quality_tier && (
-                    <QualityBadge
-                      name={alt.quality_tier.name}
-                      badgeColor={alt.quality_tier.badge_color}
-                      badgeTextColor={alt.quality_tier.badge_text_color}
-                      size="sm"
+          if (isCurrent) {
+            return (
+              <div
+                key={alt.id}
+                className="flex items-center gap-2.5 rounded-xl border-2 border-[#1A3D2E] bg-[#1A3D2E]/5 px-3 py-2"
+              >
+                {/* Thumbnail */}
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">
+                  {thumbnail ? (
+                    <Image
+                      src={thumbnail}
+                      alt={qualityName}
+                      fill
+                      sizes="48px"
+                      className="object-contain p-0.5"
                     />
-                  )}
-                  {isCurrent && (
-                    <span className="text-xs font-medium text-[#1A3D2E]">Valgt</span>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1}
+                        stroke="currentColor"
+                        className="h-5 w-5 text-[#E5E5EA]"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z"
+                        />
+                      </svg>
+                    </div>
                   )}
                 </div>
-                {alt.quality_tier?.short_description && (
-                  <p className="text-xs text-[#86868B]">
-                    {alt.quality_tier.short_description}
-                  </p>
-                )}
-                <p className="text-xs text-[#86868B]">
-                  {alt.quality_tier?.default_warranty_months} mdr garanti
-                </p>
+                {/* Info */}
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[#1A3D2E]">{qualityName}</p>
+                  {showPrices && (
+                    <p className="text-xs font-bold text-[#111111]">
+                      {(price / 100).toLocaleString("da-DK")} kr
+                    </p>
+                  )}
+                </div>
               </div>
+            );
+          }
 
-              <div className="flex items-center gap-3">
-                {showPrices ? (
-                  <span className="text-lg font-bold text-[#111111]">
-                    {(price / 100).toLocaleString("da-DK")} kr
-                  </span>
+          return (
+            <Link
+              key={alt.id}
+              href={href}
+              className="flex items-center gap-2.5 rounded-xl border border-[#E5E5EA] bg-white px-3 py-2 transition-all hover:border-[#1A3D2E]/40 hover:shadow-sm"
+            >
+              {/* Thumbnail */}
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">
+                {thumbnail ? (
+                  <Image
+                    src={thumbnail}
+                    alt={qualityName}
+                    fill
+                    sizes="48px"
+                    className="object-contain p-0.5"
+                  />
                 ) : (
-                  <Link
-                    href="/b2b/login"
-                    className="text-sm font-semibold text-[#1A3D2E] hover:underline"
-                  >
-                    Log ind for pris
-                  </Link>
-                )}
-                {!isCurrent && !alt.is_inquiry_only && (
-                  <Link
-                    href={href}
-                    className="rounded-full bg-[#1A3D2E] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                  >
-                    Vælg
-                  </Link>
-                )}
-                {!isCurrent && alt.is_inquiry_only && (
-                  <Link
-                    href="/kontakt"
-                    className="rounded-full border border-[#E5E5EA] px-4 py-2 text-xs font-semibold text-[#111111] transition-colors hover:bg-[#F7F7F8]"
-                  >
-                    Forespørg
-                  </Link>
+                  <div className="flex h-full w-full items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1}
+                      stroke="currentColor"
+                      className="h-5 w-5 text-[#E5E5EA]"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z"
+                      />
+                    </svg>
+                  </div>
                 )}
               </div>
-            </div>
+              {/* Info */}
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-[#111111]">{qualityName}</p>
+                {showPrices ? (
+                  <p className="text-xs font-bold text-[#111111]">
+                    {(price / 100).toLocaleString("da-DK")} kr
+                  </p>
+                ) : (
+                  <p className="text-xs text-[#1A3D2E]">Log ind</p>
+                )}
+              </div>
+            </Link>
           );
         })}
       </div>

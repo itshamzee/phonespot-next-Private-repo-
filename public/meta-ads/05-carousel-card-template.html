@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>PhoneSpot Carousel Card — Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1A3D2E;
+    --charcoal: #111111;
+    --sand: #F5F5F0;
+    --warm-white: #FAFAF8;
+    --gold: #C4A35A;
+  }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--warm-white);
+    position: relative;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Green header strip */
+  .header-strip {
+    background: var(--green);
+    padding: 32px 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .grade-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Product area */
+  .product-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 56px;
+    position: relative;
+  }
+
+  /* Subtle circle backdrop */
+  .product-area::before {
+    content: '';
+    position: absolute;
+    width: 460px;
+    height: 460px;
+    border-radius: 50%;
+    border: 1px solid rgba(26, 61, 46, 0.08);
+    z-index: 0;
+  }
+
+  .product-area::after {
+    content: '';
+    position: absolute;
+    width: 560px;
+    height: 560px;
+    border-radius: 50%;
+    border: 1px solid rgba(26, 61, 46, 0.04);
+    z-index: 0;
+  }
+
+  .product-area img {
+    position: relative;
+    z-index: 1;
+    width: 520px;
+    height: 380px;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 48px rgba(0,0,0,0.1));
+  }
+
+  /* Info area */
+  .info-area {
+    padding: 0 56px 48px;
+    text-align: center;
+  }
+
+  .brand-line {
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .model-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 44px;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+  }
+
+  .specs-line {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 24px;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .price-from {
+    font-size: 16px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .price-main {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 56px;
+    color: var(--green);
+  }
+
+  .price-main small {
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  /* Bottom strip */
+  .bottom-strip {
+    background: var(--sand);
+    border-top: 1px solid #E8E8E4;
+    padding: 24px 56px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  .checkmark {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .checkmark svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: white;
+    stroke-width: 3;
+  }
+</style>
+</head>
+<body>
+<div class="content">
+  <!-- Header -->
+  <div class="header-strip">
+    <div class="logo">PhoneSpot</div>
+    <div class="grade-badge">Grade A . Som ny</div>
+  </div>
+
+  <!-- Product -->
+  <div class="product-area">
+    <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/56/85/56857da9-c453-4d99-b2c5-7e6cf924d2ee.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="ThinkPad T14s G2">
+  </div>
+
+  <!-- Info -->
+  <div class="info-area">
+    <div class="brand-line">Lenovo ThinkPad</div>
+    <div class="model-name">T14s G2</div>
+    <div class="specs-line">i5-1135G7 . 16GB RAM . 256GB SSD . 14"</div>
+    <div class="price-row">
+      <div class="price-from">fra</div>
+      <div class="price-main">3.499<small> kr.</small></div>
+    </div>
+  </div>
+
+  <!-- Bottom trust -->
+  <div class="bottom-strip">
+    <div class="trust-item">
+      <div class="checkmark"><svg viewBox="0 0 12 12"><path d="M2.5 6L5 8.5L9.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      36 mdr. garanti
+    </div>
+    <div class="trust-item">
+      <div class="checkmark"><svg viewBox="0 0 12 12"><path d="M2.5 6L5 8.5L9.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      30+ tests
+    </div>
+    <div class="trust-item">
+      <div class="checkmark"><svg viewBox="0 0 12 12"><path d="M2.5 6L5 8.5L9.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      1-3 dages levering
+    </div>
+    <div class="trust-item">
+      <div class="checkmark"><svg viewBox="0 0 12 12"><path d="M2.5 6L5 8.5L9.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      Trustpilot 4.4
+    </div>
+  </div>
+</div>
+</body>
+</html>

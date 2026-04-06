@@ -9,6 +9,7 @@ interface QualityAlternative {
   slug: string | null;
   selling_price: number;
   sale_price: number | null;
+  images: string[];
   is_inquiry_only: boolean;
   quality_tier?: {
     name: string;

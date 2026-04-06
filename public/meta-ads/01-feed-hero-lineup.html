@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>PhoneSpot Meta Ad — Laptop Lineup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1A3D2E;
+    --green-light: #2D6B45;
+    --charcoal: #111111;
+    --sand: #F5F5F0;
+    --warm-white: #FAFAF8;
+    --gold: #C4A35A;
+  }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--green);
+    position: relative;
+  }
+
+  /* Subtle texture overlay */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 80%, rgba(45, 107, 69, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(26, 61, 46, 0.8) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  /* Grain texture */
+  body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    z-index: 1;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 64px;
+  }
+
+  /* Top bar */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 42px;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.5px;
+  }
+
+  /* Headline */
+  .headline-area {
+    margin-top: 48px;
+  }
+
+  .overline {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 72px;
+    line-height: 1.05;
+    color: white;
+    max-width: 600px;
+  }
+
+  .subtitle {
+    margin-top: 20px;
+    font-size: 22px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+    max-width: 500px;
+  }
+
+  /* Product lineup */
+  .products {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 24px;
+    padding-bottom: 0;
+    margin-top: 20px;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 28px 20px 24px;
+    width: 220px;
+    backdrop-filter: blur(10px);
+  }
+
+  .product-card.featured {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    transform: translateY(-20px);
+    width: 240px;
+  }
+
+  .product-card img {
+    width: 160px;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  }
+
+  .product-card.featured img {
+    width: 180px;
+    height: 140px;
+  }
+
+  .product-brand {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  .product-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: white;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .product-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: white;
+  }
+
+  .product-price span {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Bottom trust bar */
+  .trust-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .trust-icon {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2;
+  }
+</style>
+</head>
+<body>
+<div class="content">
+  <!-- Top -->
+  <div class="top-bar">
+    <div class="logo">PhoneSpot</div>
+    <div class="badge">Nyt: Bærbare</div>
+  </div>
+
+  <!-- Headline -->
+  <div class="headline-area">
+    <div class="overline">Kvalitetstestet & klar til brug</div>
+    <h1>Bærbare fra 1.999 kr.</h1>
+    <p class="subtitle">Refurbished laptops med 36 måneders garanti. Testet med 30+ kontroller.</p>
+  </div>
+
+  <!-- Products -->
+  <div class="products">
+    <div class="product-card">
+      <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/56/85/56857da9-c453-4d99-b2c5-7e6cf924d2ee.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="ThinkPad T14s">
+      <div class="product-brand">Lenovo</div>
+      <div class="product-name">ThinkPad T14s G1</div>
+      <div class="product-price"><span>fra </span>2.999<span> kr.</span></div>
+    </div>
+
+    <div class="product-card featured">
+      <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/38/bd/38bd5eaf-b74e-420c-a1c7-370db150042a.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="EliteBook 840">
+      <div class="product-brand">HP</div>
+      <div class="product-name">EliteBook 840 G8</div>
+      <div class="product-price"><span>fra </span>3.499<span> kr.</span></div>
+    </div>
+
+    <div class="product-card">
+      <img src="https://en.foxway.dk/admin/public/getimage.ashx?Image=/Files/images/products/71/fa/71fa9319-a51a-4b57-b73c-917613e14d75.jpg&Width=600&Height=600&Format=jpg&Quality=90&Crop=0" alt="X1 Carbon">
+      <div class="product-brand">Lenovo</div>
+      <div class="product-name">ThinkPad X1 Carbon G9</div>
+      <div class="product-price"><span>fra </span>5.499<span> kr.</span></div>
+    </div>
+
+    <div class="product-card">
+      <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mba13-midnight-select-202402?wid=600&hei=600&fmt=png-alpha" alt="MacBook Air">
+      <div class="product-brand">Apple</div>
+      <div class="product-name">MacBook Air M3</div>
+      <div class="product-price"><span>fra </span>7.999<span> kr.</span></div>
+    </div>
+  </div>
+
+  <!-- Trust bar -->
+  <div class="trust-bar">
+    <div class="trust-item">
+      <svg class="trust-icon" viewBox="0 0 24 24"><path d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      36 mdr. garanti
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" viewBox="0 0 24 24"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      30+ kvalitetstests
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" viewBox="0 0 24 24"><path d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      1-3 dages levering
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" viewBox="0 0 24 24"><path d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      14 dages returret
+    </div>
+  </div>
+</div>
+</body>
+</html>

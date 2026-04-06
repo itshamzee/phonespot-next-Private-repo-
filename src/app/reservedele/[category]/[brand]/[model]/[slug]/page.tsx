@@ -119,9 +119,10 @@ export default async function SparePartDetailPage({
 
   if (!product || !category) notFound();
 
-  const alternatives =
+  // Fetch ALL quality variants (including current product) for the variant picker
+  const allVariants =
     product.part_category_id && product.device_model
-      ? await getQualityAlternatives(product.part_category_id, product.device_model, product.id)
+      ? await getQualityAlternatives(product.part_category_id, product.device_model)
       : [];
 
   const warrantyMonths = getEffectiveWarranty(product);
@@ -229,6 +230,26 @@ export default async function SparePartDetailPage({
                 {product.title}
               </h1>
 
+              {/* Quality variants — phone-parts.dk style */}
+              {allVariants.length > 1 && (
+                <QualityAlternativesWrapper
+                  alternatives={allVariants.map((v: any) => ({
+                    id: v.id,
+                    title: v.title,
+                    slug: v.slug,
+                    selling_price: v.selling_price,
+                    sale_price: v.sale_price,
+                    images: v.images ?? [],
+                    is_inquiry_only: v.is_inquiry_only,
+                    quality_tier: v.quality_tier,
+                  }))}
+                  currentProductId={product.id}
+                  categorySlug={categorySlug}
+                  brandSlug={brandSlug}
+                  modelSlug={modelSlug}
+                />
+              )}
+
               {/* Device compatibility */}
               {product.device_model && (
                 <p className="text-sm text-[#86868B]">
@@ -313,20 +334,7 @@ export default async function SparePartDetailPage({
         </div>
       </section>
 
-      {/* ── Quality alternatives ─────────────────────────────────────────────── */}
-      {alternatives.length > 0 && (
-        <section className="border-t border-[#E5E5EA] bg-[#F7F7F8]">
-          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <QualityAlternativesWrapper
-              alternatives={alternatives}
-              currentProductId={product.id}
-              categorySlug={categorySlug}
-              brandSlug={brandSlug}
-              modelSlug={modelSlug}
-            />
-          </div>
-        </section>
-      )}
+      {/* Quality alternatives moved up to product info section */}
 
       {/* ── Product specifications ───────────────────────────────────────────── */}
       {product.specifications && Object.keys(product.specifications).length > 0 && (

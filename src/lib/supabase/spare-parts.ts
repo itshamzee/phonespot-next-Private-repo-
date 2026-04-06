@@ -175,10 +175,10 @@ export async function getSparePartBySlug(slug: string): Promise<SparePartProduct
 export async function getQualityAlternatives(
   partCategoryId: string,
   deviceModel: string,
-  excludeProductId: string
+  excludeProductId?: string
 ): Promise<SparePartProduct[]> {
   const supabase = createServerClient();
-  const { data } = await supabase
+  let query = supabase
     .from("sku_products")
     .select(
       "*, spare_part_quality_tiers!quality_tier_id(id, name, slug, badge_color, badge_text_color, short_description, default_warranty_months)"
@@ -188,8 +188,13 @@ export async function getQualityAlternatives(
     .eq("subcategory", "spare-part")
     .eq("status", "published")
     .eq("is_active", true)
-    .neq("id", excludeProductId)
     .order("selling_price", { ascending: true });
+
+  if (excludeProductId) {
+    query = query.neq("id", excludeProductId);
+  }
+
+  const { data } = await query;
 
   return (data ?? []).map((row: any) => ({
     ...row,
