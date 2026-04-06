@@ -63,7 +63,7 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
               Hej ${customerName},
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6;">
-              Tak for din henvendelse om indbytte af din ${deviceType.toLowerCase()}. Vi har gennemg&aring;et
+              Tak for din henvendelse om indbytte af din ${deviceType.toLowerCase()}. Vi har gennemgået
               din enhed og er klar med et tilbud til dig.
             </p>
 
@@ -132,9 +132,9 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
               <tr>
                 <td style="padding:12px 16px;">
                   <p style="margin:0;font-size:13px;color:#555;line-height:1.5;">
-                    N&aring;r vi modtager din enhed, foretager vi en fysisk kontrol. Tilbuddet kan justeres
+                    Når vi modtager din enhed, foretager vi en fysisk kontrol. Tilbuddet kan justeres
                     hvis standbeskrivelsen afviger fra det modtagne. Du godkender altid den endelige pris
-                    f&oslash;r udbetaling.
+                    før udbetaling.
                   </p>
                 </td>
               </tr>

@@ -31,7 +31,7 @@ const CATEGORIES = [
     image: "/images/products/ipad-air-new.png",
   },
   {
-    name: "B\u00e6rbare",
+    name: "Bærbare",
     href: "/baerbare",
     tagline: "Fra 1.999 kr",
     image: "/images/products/thinkpad-clean.webp",
@@ -43,7 +43,7 @@ const CATEGORIES = [
     image: "/images/products/iphone-repair.png",
   },
   {
-    name: "Tilbeh\u00f8r",
+    name: "Tilbehør",
     href: "/tilbehoer",
     tagline: "Fra 99 kr",
     image: "/images/products/tilbehoer-case.webp",
@@ -100,27 +100,27 @@ const HOME_FAQ = [
   {
     question: "Hvad betyder refurbished?",
     answer:
-      "Refurbished betyder, at enheden er professionelt inspiceret, testet og istandsat. Hos PhoneSpot gennemg\u00e5r alle enheder 30+ individuelle tests og leveres med 36 m\u00e5neders garanti. Det er ikke det samme som \u201ebrugt\u201c \u2014 det er kvalitetssikret teknologi.",
+      "Refurbished betyder, at enheden er professionelt inspiceret, testet og istandsat. Hos PhoneSpot gennemgår alle enheder 30+ individuelle tests og leveres med 36 måneders garanti. Det er ikke det samme som \u201ebrugt\u201c \u2014 det er kvalitetssikret teknologi.",
   },
   {
-    question: "Hvad er forskellen p\u00e5 Grade A, B og C?",
+    question: "Hvad er forskellen på Grade A, B og C?",
     answer:
       "Alle grader er 100% funktionelle \u2014 forskellen er udelukkende kosmetisk. Grade A ser ud som ny, Grade B kan have lette brugsridser, og Grade C har synlige brugsspor men er det mest budgetvenlige valg.",
   },
   {
     question: "Kan jeg returnere min enhed?",
     answer:
-      "Ja, du har 14 dages fuld returret. Er du ikke tilfreds, sender du enheden retur og f\u00e5r dine penge tilbage \u2014 ingen sp\u00f8rgsm\u00e5l stillet.",
+      "Ja, du har 14 dages fuld returret. Er du ikke tilfreds, sender du enheden retur og får dine penge tilbage \u2014 ingen spørgsmål stillet.",
   },
   {
     question: "Hvor hurtigt leverer I?",
     answer:
-      "Bestil f\u00f8r kl. 16 p\u00e5 hverdage, og vi sender samme dag. De fleste ordrer leveres inden for 1-2 hverdage med GLS eller PostNord.",
+      "Bestil før kl. 16 på hverdage, og vi sender samme dag. De fleste ordrer leveres inden for 1-2 hverdage med GLS eller PostNord.",
   },
   {
-    question: "Er jeres iPhones ul\u00e5ste?",
+    question: "Er jeres iPhones ulåste?",
     answer:
-      "Ja, alle vores iPhones er factory unlocked og virker med alle danske operat\u00f8rer \u2014 TDC, Telenor, Telia, 3, Lebara og andre.",
+      "Ja, alle vores iPhones er factory unlocked og virker med alle danske operatører \u2014 TDC, Telenor, Telia, 3, Lebara og andre.",
   },
 ];
 
@@ -149,16 +149,16 @@ export default function HomePage() {
 
           <div className="relative z-10 px-4 py-8 sm:px-8 sm:py-14 md:px-12 md:py-16 lg:max-w-[55%] lg:px-16 lg:py-20">
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-[11px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
-              36 MDR. GARANTI P&Aring; ALT
+              36 MDR. GARANTI PÅ ALT
             </span>
 
             <h1 className="font-display text-2xl sm:text-4xl font-extrabold leading-[1.1] text-white md:text-5xl lg:text-6xl">
               Refurbished tech<br />
-              du kan stole p&aring;
+              du kan stole på
             </h1>
 
             <p className="mt-5 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
-              Testet, renset og klar til brug — med 36 m&aring;neders garanti og hurtig levering.
+              Testet, renset og klar til brug — med 36 måneders garanti og hurtig levering.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">
@@ -172,7 +172,7 @@ export default function HomePage() {
                 href="/saelg-din-enhed"
                 className="rounded-full border-2 border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
               >
-                S&aelig;lg din elektronik
+                Sælg din elektronik
               </Link>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function HomePage() {
             Udforsk vores udvalg
           </Heading>
           <p className="mt-4 text-lg text-gray">
-            Alt er kvalitetstestet, rengjort og klar med 36 m&aring;neders garanti.
+            Alt er kvalitetstestet, rengjort og klar med 36 måneders garanti.
           </p>
         </div>
 
@@ -293,11 +293,11 @@ export default function HomePage() {
                 Byttehandel
               </p>
               <h2 className="font-display text-3xl font-bold leading-tight text-charcoal md:text-4xl">
-                S&aelig;lg din<br />brugte enhed
+                Sælg din<br />brugte enhed
               </h2>
               <p className="mt-4 max-w-sm text-base leading-relaxed text-gray">
-                F&aring; et hurtigt og fair tilbud p&aring; din gamle iPhone, iPad eller Android.
-                Vi h&aring;ndterer afhentning &mdash; du f&aring;r penge inden for 24 timer.
+                Få et hurtigt og fair tilbud på din gamle iPhone, iPad eller Android.
+                Vi håndterer afhentning &mdash; du får penge inden for 24 timer.
               </p>
               <ul className="mt-6 space-y-2">
                 {[
@@ -317,7 +317,7 @@ export default function HomePage() {
                 href="/salg"
                 className="mt-8 inline-block rounded-full bg-green-eco px-8 py-3.5 font-semibold text-white transition-opacity hover:opacity-90"
               >
-                F&aring; et tilbud &rarr;
+                Få et tilbud &rarr;
               </Link>
             </div>
             <div className="flex items-center justify-center">
@@ -337,7 +337,7 @@ export default function HomePage() {
             Det siger vores kunder
           </Heading>
         </div>
-        <Suspense fallback={<div className="py-8 text-center text-gray">Indl&aelig;ser anmeldelser...</div>}>
+        <Suspense fallback={<div className="py-8 text-center text-gray">Indlæser anmeldelser...</div>}>
           <TrustpilotReviews />
         </Suspense>
       </SectionWrapper>
@@ -347,7 +347,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl">
           <div className="mb-10 text-center">
             <Heading as="h2" size="md">
-              Ofte stillede sp&oslash;rgsm&aring;l
+              Ofte stillede spørgsmål
             </Heading>
             <p className="mt-3 text-gray">
               Alt du skal vide om refurbished tech fra PhoneSpot.
@@ -370,7 +370,7 @@ export default function HomePage() {
 
           <div className="mt-6 text-center">
             <Link href="/faq" className="text-sm font-semibold text-green-eco hover:underline">
-              Se alle sp&oslash;rgsm&aring;l &rarr;
+              Se alle spørgsmål &rarr;
             </Link>
           </div>
         </div>
@@ -378,10 +378,10 @@ export default function HomePage() {
         {/* Final CTA */}
         <div className="mx-auto mt-20 max-w-2xl text-center">
           <Heading as="h2" size="md">
-            Klar til at finde din n&aelig;ste enhed?
+            Klar til at finde din næste enhed?
           </Heading>
           <p className="mt-4 text-gray">
-            Udforsk vores udvalg af kvalitetstestede enheder med 36 m&aring;neders
+            Udforsk vores udvalg af kvalitetstestede enheder med 36 måneders
             garanti og 14 dages fortrydelsesret.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -395,7 +395,7 @@ export default function HomePage() {
               href="/tilbehoer"
               className="inline-block rounded-full border border-charcoal/20 px-8 py-3.5 font-semibold text-charcoal transition-colors hover:border-charcoal/50 hover:bg-charcoal/[0.04]"
             >
-              Se tilbeh&oslash;r &rarr;
+              Se tilbehør &rarr;
             </Link>
           </div>
         </div>

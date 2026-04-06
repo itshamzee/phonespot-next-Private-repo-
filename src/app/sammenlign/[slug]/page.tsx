@@ -291,7 +291,7 @@ export default async function ComparisonPage({ params }: PageProps) {
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl">
           <Heading as="h2" size="md" className="mb-10 text-center">
-            Ofte stillede sp&oslash;rgsm&aring;l
+            Ofte stillede spørgsmål
           </Heading>
           <FaqAccordion items={faq} />
         </div>
@@ -305,7 +305,7 @@ export default async function ComparisonPage({ params }: PageProps) {
           </Heading>
           <p className="mx-auto mt-3 max-w-xl font-body text-white/70">
             Udforsk vores udvalg af kvalitetstestede refurbished produkter med
-            36 m&aring;neders garanti og prismatch.
+            36 måneders garanti og prismatch.
           </p>
           <Link
             href="/iphones"

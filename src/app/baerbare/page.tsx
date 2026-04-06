@@ -185,10 +185,10 @@ export default async function BaerbarePage() {
               {/* Section header */}
               <div className="mb-8">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] md:text-3xl">
-                  B&aelig;rbare du kan stole p&aring;
+                  Bærbare du kan stole på
                 </h2>
                 <p className="mt-2 text-sm text-[#86868B]">
-                  Altid 36 m&aring;neders garanti
+                  Altid 36 måneders garanti
                 </p>
               </div>
 
@@ -218,7 +218,7 @@ export default async function BaerbarePage() {
                       )}
                       {featured.device_count > 0 && (
                         <span className="absolute top-4 left-4 rounded-full bg-[#1A3D2E] px-3 py-1 text-xs font-semibold text-white">
-                          {featured.device_count} p&aring; lager
+                          {featured.device_count} på lager
                         </span>
                       )}
                     </div>

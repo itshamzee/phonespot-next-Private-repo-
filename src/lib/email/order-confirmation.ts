@@ -204,7 +204,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
             </h1>
             <p style="margin:0;font-size:15px;color:#555;line-height:1.6;">
               Vi har modtaget din betaling og er allerede i gang med at klargøre din ordre.
-              Du modtager en e-mail med trackingnummer, n&aring;r pakken er p&aring; vej.
+              Du modtager en e-mail med trackingnummer, når pakken er på vej.
             </p>
           </td>
         </tr>
@@ -284,9 +284,9 @@ function buildHtml(params: SendOrderConfirmationParams): string {
                 <td style="padding:18px 20px;">
                   <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${BRAND.charcoal};">Hvad sker der nu?</p>
                   <p style="margin:0;font-size:13px;color:#555;line-height:1.65;">
-                    Din ordre behandles inden for 1&ndash;2 hverdage. Har du spørgsm&aring;l?
+                    Din ordre behandles inden for 1&ndash;2 hverdage. Har du spørgsmål?
                     Skriv til <a href="mailto:${BRAND.orderEmail}" style="color:${BRAND.greenLight};text-decoration:none;font-weight:600;">${BRAND.orderEmail}</a>
-                    eller ring p&aring; <a href="tel:+4561100048" style="color:${BRAND.greenLight};text-decoration:none;font-weight:600;">${BRAND.phone}</a>.
+                    eller ring på <a href="tel:+4561100048" style="color:${BRAND.greenLight};text-decoration:none;font-weight:600;">${BRAND.phone}</a>.
                   </p>
                 </td>
               </tr>
@@ -310,7 +310,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
                   <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${BRAND.charcoal};">Fortrydelsesret &mdash; 14 dage</p>
                   <p style="margin:0 0 12px;font-size:13px;color:#666;line-height:1.65;">
                     Du har 14 dages fortrydelsesret fra den dag du modtager varen, jf. forbrugeraftaleloven.
-                    &Oslash;nsker du at fortryde dit køb, kan du bruge vores online fortrydelsesformular.
+                    Ønsker du at fortryde dit køb, kan du bruge vores online fortrydelsesformular.
                   </p>
                   <table cellpadding="0" cellspacing="0">
                     <tr>
@@ -349,7 +349,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
               <p style="margin:0 0 4px;">Bestilt den / modtaget den:</p>
               <p style="margin:0 0 4px;">Forbrugerens navn:</p>
               <p style="margin:0 0 4px;">Forbrugerens adresse:</p>
-              <p style="margin:0;">Forbrugerens underskrift (kun hvis formularens indhold meddeles p&aring; papir):</p>
+              <p style="margin:0;">Forbrugerens underskrift (kun hvis formularens indhold meddeles på papir):</p>
               <p style="margin:8px 0 0;">Dato:</p>
             </div>
           </td>

@@ -81,7 +81,7 @@ export default function RefundConfirmationEmail({
                 letterSpacing: "0.5px",
               }}
             >
-              Refusion bekr&aelig;ftet
+              Refusion bekræftet
             </Text>
           </Section>
 
@@ -96,7 +96,7 @@ export default function RefundConfirmationEmail({
                 lineHeight: "1.3",
               }}
             >
-              Vi har refunderet dit bel&oslash;b
+              Vi har refunderet dit beløb
             </Text>
             <Text
               style={{
@@ -108,7 +108,7 @@ export default function RefundConfirmationEmail({
             >
               Hej {customerName}, din refusion for ordre{" "}
               <strong style={{ color: BRAND.charcoal }}>{orderNumber}</strong>{" "}
-              er behandlet og p&aring; vej tilbage til dig.
+              er behandlet og på vej tilbage til dig.
             </Text>
 
             {/* ── Refund amount box ── */}
@@ -132,7 +132,7 @@ export default function RefundConfirmationEmail({
                   color: BRAND.green,
                 }}
               >
-                Refunderet bel&oslash;b
+                Refunderet beløb
               </Text>
               <Text
                 style={{
@@ -153,9 +153,9 @@ export default function RefundConfirmationEmail({
                   lineHeight: "1.5",
                 }}
               >
-                Bel&oslash;bet forventes p&aring; din konto inden for{" "}
+                Beløbet forventes på din konto inden for{" "}
                 <strong style={{ color: BRAND.charcoal }}>3&#8209;5 hverdage</strong>,
-                afh&aelig;ngigt af din bank eller kortudsteder.
+                afhængigt af din bank eller kortudsteder.
               </Text>
             </Section>
 
@@ -172,7 +172,7 @@ export default function RefundConfirmationEmail({
                 margin: "0 0 10px",
               }}
             >
-              &Aring;rsag til refusion
+              Årsag til refusion
             </Text>
             <Text
               style={{
@@ -270,7 +270,7 @@ export default function RefundConfirmationEmail({
                 <Text
                   style={{ margin: 0, fontSize: "14px", color: BRAND.charcoal }}
                 >
-                  Betalingsudbyder sender bel&oslash;bet videre (1&#8209;2 hverdage)
+                  Betalingsudbyder sender beløbet videre (1&#8209;2 hverdage)
                 </Text>
               </Column>
             </Row>
@@ -305,7 +305,7 @@ export default function RefundConfirmationEmail({
                 <Text
                   style={{ margin: 0, fontSize: "14px", color: "#888" }}
                 >
-                  Pengene er p&aring; din konto (op til 5 hverdage i alt)
+                  Pengene er på din konto (op til 5 hverdage i alt)
                 </Text>
               </Column>
             </Row>
@@ -327,7 +327,7 @@ export default function RefundConfirmationEmail({
                   color: BRAND.charcoal,
                 }}
               >
-                Har du sp&oslash;rgsm&aring;l?
+                Har du spørgsmål?
               </Text>
               <Text
                 style={{
@@ -337,21 +337,21 @@ export default function RefundConfirmationEmail({
                   lineHeight: "1.6",
                 }}
               >
-                Kontakt os p&aring;{" "}
+                Kontakt os på{" "}
                 <Link
                   href={`mailto:${BRAND.email}`}
                   style={{ color: BRAND.greenLight, textDecoration: "none", fontWeight: "600" }}
                 >
                   {BRAND.email}
                 </Link>{" "}
-                eller ring p&aring;{" "}
+                eller ring på{" "}
                 <Link
                   href="tel:+4561100048"
                   style={{ color: BRAND.charcoal, textDecoration: "none", fontWeight: "700" }}
                 >
                   {BRAND.phone}
                 </Link>
-                . Vi er klar til at hj&aelig;lpe dig.
+                . Vi er klar til at hjælpe dig.
               </Text>
             </Section>
           </Section>
@@ -468,7 +468,7 @@ export default function RefundConfirmationEmail({
             </Text>
             <Text style={{ margin: 0, fontSize: "11px", color: "#bbb", lineHeight: "1.5" }}>
               Denne e-mail er sendt i forbindelse med din handel hos PhoneSpot.
-              Kontakt os p&aring;{" "}
+              Kontakt os på{" "}
               <Link
                 href={`mailto:${BRAND.email}`}
                 style={{ color: "#bbb", textDecoration: "underline" }}

@@ -35,8 +35,8 @@ export function CartUpsell() {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-[#111111]">Smadret sk&aelig;rm?</p>
-          <p className="text-xs text-[#6E6E73]">Vi fikser det p&aring; 30 min.</p>
+          <p className="text-sm font-semibold text-[#111111]">Smadret skærm?</p>
+          <p className="text-xs text-[#6E6E73]">Vi fikser det på 30 min.</p>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-[#6E6E73]">
           <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
@@ -46,7 +46,7 @@ export function CartUpsell() {
       {/* Free shipping nudge */}
       <div className="rounded-xl bg-[#EFF5F1] p-3 text-center">
         <p className="text-xs font-semibold text-[#1A3D2E]">
-          Fri fragt ved k&oslash;b over 500 kr.
+          Fri fragt ved køb over 500 kr.
         </p>
       </div>
     </div>

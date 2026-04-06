@@ -22,7 +22,7 @@ export function OutletTeaser() {
           Outlet
         </p>
         <h2 className="mt-4 font-display text-3xl font-bold italic text-white md:text-4xl">
-          Spar ekstra p&aring; udvalgte produkter
+          Spar ekstra på udvalgte produkter
         </h2>
         <p className="mx-auto mt-4 max-w-lg text-white/60">
           Udvalgte produkter til ekstra skarpe priser. Samme kvalitet, samme

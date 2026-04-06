@@ -383,10 +383,10 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
                   lineHeight: "1.6",
                 }}
               >
-                <strong>Bem&aelig;rk:</strong> Garantien d&aelig;kker ikke fysisk
-                besk&aelig;digelse, vandskade eller uautoriserede reparationer. Du har
-                desuden altid 24 m&aring;neders reklamationsret efter k&oslash;beloven,
-                uafh&aelig;ngigt af denne garanti.
+                <strong>Bemærk:</strong> Garantien dækker ikke fysisk
+                beskadigelse, vandskade eller uautoriserede reparationer. Du har
+                desuden altid 24 måneders reklamationsret efter købeloven,
+                uafhængigt af denne garanti.
               </Text>
             </Section>
 
@@ -402,7 +402,7 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
                   margin: "0 0 12px",
                 }}
               >
-                Glad for din oplevelse? Vi vil elske at h&oslash;re fra dig!
+                Glad for din oplevelse? Vi vil elske at høre fra dig!
               </Text>
               <Button
                 href="https://dk.trustpilot.com/evaluate/phonespot.dk"
@@ -416,7 +416,7 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
                   textDecoration: "none",
                 }}
               >
-                Skriv en anmeldelse p&aring; Trustpilot
+                Skriv en anmeldelse på Trustpilot
               </Button>
             </Section>
           </Section>

@@ -339,29 +339,29 @@ function VejleComingSoonPage() {
 const SLAGELSE_ACTIVITIES = [
   {
     icon: ShoppingBagIcon,
-    title: "K\u00f8b refurbished",
-    description: "Se og test enheder f\u00f8r du k\u00f8ber. iPhones, iPads, b\u00e6rbare og mere.",
+    title: "Køb refurbished",
+    description: "Se og test enheder før du køber. iPhones, iPads, bærbare og mere.",
     href: "/iphones",
     cta: "Se udvalg",
   },
   {
     icon: WrenchIcon,
     title: "Reparation",
-    description: "iPhone, iPad, Samsung, MacBook. Walk-in, 90% klar p\u00e5 30 min. Livstidsgaranti.",
+    description: "iPhone, iPad, Samsung, MacBook. Walk-in, 90% klar på 30 min. Livstidsgaranti.",
     href: "/reparation/booking",
     cta: "Book tid nu",
   },
   {
     icon: CashIcon,
-    title: "S\u00e6lg din enhed",
-    description: "F\u00e5 straksoverf\u00f8rsel for din brugte elektronik. Alle m\u00e6rker, uanset stand.",
+    title: "Sælg din enhed",
+    description: "Få straksoverførsel for din brugte elektronik. Alle mærker, uanset stand.",
     href: "/saelg-din-enhed",
-    cta: "F\u00e5 et tilbud",
+    cta: "Få et tilbud",
   },
   {
     icon: PackageIcon,
     title: "Click & Collect",
-    description: "Bestil online, hent gratis i butikken. Klar samme dag ved bestilling f\u00f8r kl. 16.",
+    description: "Bestil online, hent gratis i butikken. Klar samme dag ved bestilling før kl. 16.",
     href: "/iphones",
     cta: "Bestil nu",
     badge: "GRATIS",
@@ -612,14 +612,14 @@ function SlagelsePage({ store }: { store: StoreLocationConfig }) {
                 Click &amp; Collect — bestil online, hent i butikken
               </Heading>
               <p className="mt-2 text-base text-[#6E6E73]">
-                Gratis afhentning i Slagelse. Klar samme dag ved bestilling f&oslash;r kl. 16.
+                Gratis afhentning i Slagelse. Klar samme dag ved bestilling før kl. 16.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-3">
               {[
-                { step: "1", title: "Bestil online", desc: "V\u00e6lg din enhed og l\u00e6g i kurven" },
-                { step: "2", title: "Modtag bekr\u00e6ftelse", desc: "Vi pakker din ordre klar" },
-                { step: "3", title: "Hent i butikken", desc: "Test enheden f\u00f8r du tager den med" },
+                { step: "1", title: "Bestil online", desc: "Vælg din enhed og læg i kurven" },
+                { step: "2", title: "Modtag bekræftelse", desc: "Vi pakker din ordre klar" },
+                { step: "3", title: "Hent i butikken", desc: "Test enheden før du tager den med" },
               ].map((s) => (
                 <div key={s.step} className="flex flex-col items-center text-center">
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E] text-sm font-bold text-white">{s.step}</span>
@@ -645,17 +645,17 @@ function SlagelsePage({ store }: { store: StoreLocationConfig }) {
               Reparation i butikken
             </Heading>
             <p className="mt-2 text-base text-[#6E6E73]">
-              Walk-in service — ingen tidsbestilling n&oslash;dvendig
+              Walk-in service — ingen tidsbestilling nødvendig
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { brand: "iPhone", models: "7, 8, X, XR, XS, 11, 12, 13, 14, 15, SE", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "Samsung", models: "Galaxy S21-S25, A-serie, Fold, Flip", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "iPad", models: "Air, Pro, Mini, 6-10. gen", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "MacBook", models: "Air, Pro (alle \u00e5rgange)", popular: "Batteri, tastatur, sk\u00e6rm" },
-              { brand: "Huawei", models: "P-serie, Mate-serie", popular: "Sk\u00e6rmskift" },
-              { brand: "Andre m\u00e6rker", models: "OnePlus, Xiaomi, Google Pixel", popular: "Kontakt os for pris" },
+              { brand: "iPhone", models: "7, 8, X, XR, XS, 11, 12, 13, 14, 15, SE", popular: "Skærmskift, batteriskift" },
+              { brand: "Samsung", models: "Galaxy S21-S25, A-serie, Fold, Flip", popular: "Skærmskift, batteriskift" },
+              { brand: "iPad", models: "Air, Pro, Mini, 6-10. gen", popular: "Skærmskift, batteriskift" },
+              { brand: "MacBook", models: "Air, Pro (alle årgange)", popular: "Batteri, tastatur, skærm" },
+              { brand: "Huawei", models: "P-serie, Mate-serie", popular: "Skærmskift" },
+              { brand: "Andre mærker", models: "OnePlus, Xiaomi, Google Pixel", popular: "Kontakt os for pris" },
             ].map((item) => (
               <div key={item.brand} className="rounded-xl border border-[#E5E5EA] bg-white p-5">
                 <p className="font-display text-base font-bold text-[#111111]">{item.brand}</p>
@@ -1012,14 +1012,14 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
                 Click &amp; Collect — bestil online, hent i butikken
               </Heading>
               <p className="mt-2 text-base text-[#6E6E73]">
-                Gratis afhentning i Vejle. Klar samme dag ved bestilling f&oslash;r kl. 14.
+                Gratis afhentning i Vejle. Klar samme dag ved bestilling før kl. 14.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-3">
               {[
-                { step: "1", title: "Bestil online", desc: "V\u00e6lg din enhed og l\u00e6g i kurven" },
-                { step: "2", title: "Modtag bekr\u00e6ftelse", desc: "Vi pakker din ordre klar" },
-                { step: "3", title: "Hent i butikken", desc: "Test enheden f\u00f8r du tager den med" },
+                { step: "1", title: "Bestil online", desc: "Vælg din enhed og læg i kurven" },
+                { step: "2", title: "Modtag bekræftelse", desc: "Vi pakker din ordre klar" },
+                { step: "3", title: "Hent i butikken", desc: "Test enheden før du tager den med" },
               ].map((s) => (
                 <div key={s.step} className="flex flex-col items-center text-center">
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E] text-sm font-bold text-white">{s.step}</span>
@@ -1045,17 +1045,17 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
               Reparation i butikken
             </Heading>
             <p className="mt-2 text-base text-[#6E6E73]">
-              Walk-in service — ingen tidsbestilling n&oslash;dvendig
+              Walk-in service — ingen tidsbestilling nødvendig
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { brand: "iPhone", models: "7, 8, X, XR, XS, 11, 12, 13, 14, 15, SE", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "Samsung", models: "Galaxy S21-S25, A-serie, Fold, Flip", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "iPad", models: "Air, Pro, Mini, 6-10. gen", popular: "Sk\u00e6rmskift, batteriskift" },
-              { brand: "MacBook", models: "Air, Pro (alle \u00e5rgange)", popular: "Batteri, tastatur, sk\u00e6rm" },
-              { brand: "Huawei", models: "P-serie, Mate-serie", popular: "Sk\u00e6rmskift" },
-              { brand: "Andre m\u00e6rker", models: "OnePlus, Xiaomi, Google Pixel", popular: "Kontakt os for pris" },
+              { brand: "iPhone", models: "7, 8, X, XR, XS, 11, 12, 13, 14, 15, SE", popular: "Skærmskift, batteriskift" },
+              { brand: "Samsung", models: "Galaxy S21-S25, A-serie, Fold, Flip", popular: "Skærmskift, batteriskift" },
+              { brand: "iPad", models: "Air, Pro, Mini, 6-10. gen", popular: "Skærmskift, batteriskift" },
+              { brand: "MacBook", models: "Air, Pro (alle årgange)", popular: "Batteri, tastatur, skærm" },
+              { brand: "Huawei", models: "P-serie, Mate-serie", popular: "Skærmskift" },
+              { brand: "Andre mærker", models: "OnePlus, Xiaomi, Google Pixel", popular: "Kontakt os for pris" },
             ].map((item) => (
               <div key={item.brand} className="rounded-xl border border-[#E5E5EA] bg-white p-5">
                 <p className="font-display text-base font-bold text-[#111111]">{item.brand}</p>

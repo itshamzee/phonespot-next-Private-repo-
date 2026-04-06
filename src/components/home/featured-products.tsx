@@ -102,7 +102,7 @@ export async function FeaturedProducts() {
     <section className="mx-auto max-w-7xl px-4 py-16 md:py-20">
       <div className="mb-8 flex items-baseline justify-between">
         <h2 className="font-display text-3xl font-bold text-charcoal">
-          Popul&aelig;re produkter
+          Populære produkter
         </h2>
         <Link
           href="/refurbished"

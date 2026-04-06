@@ -72,7 +72,7 @@ export function TrustSection() {
     <section id="trust" className="bg-green-pale py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4">
         <h2 className="mb-12 text-center font-display text-3xl font-bold italic text-charcoal">
-          Hvorfor v&aelig;lge PhoneSpot?
+          Hvorfor vælge PhoneSpot?
         </h2>
         <div className="grid gap-8 md:grid-cols-3 md:gap-12">
           {features.map((feature, index) => (

@@ -122,7 +122,7 @@ export default function ReadyForPickupEmail({
             >
               Hej {customerName}, din ordre{" "}
               <strong style={{ color: BRAND.charcoal }}>{orderNumber}</strong>{" "}
-              ligger og venter p&aring; dig i butikken. Vi gl&aelig;der os til
+              ligger og venter på dig i butikken. Vi glæder os til
               at se dig!
             </Text>
 
@@ -305,7 +305,7 @@ export default function ReadyForPickupEmail({
                 }}
               >
                 <strong>Husk:</strong> Medbring gyldig billedlegitimation
-                (k&oslash;rekort, pas eller sundhedskort).
+                (kørekort, pas eller sundhedskort).
               </Text>
             </Section>
 
@@ -341,7 +341,7 @@ export default function ReadyForPickupEmail({
                   margin: "0 0 12px",
                 }}
               >
-                Glad for din oplevelse? Vi vil elske at h&oslash;re fra dig!
+                Glad for din oplevelse? Vi vil elske at høre fra dig!
               </Text>
               <Button
                 href="https://dk.trustpilot.com/evaluate/phonespot.dk"
@@ -355,7 +355,7 @@ export default function ReadyForPickupEmail({
                   textDecoration: "none",
                 }}
               >
-                Skriv en anmeldelse p&aring; Trustpilot
+                Skriv en anmeldelse på Trustpilot
               </Button>
             </Section>
           </Section>
@@ -472,7 +472,7 @@ export default function ReadyForPickupEmail({
             </Text>
             <Text style={{ margin: 0, fontSize: "11px", color: "#bbb", lineHeight: "1.5" }}>
               Denne e-mail er sendt i forbindelse med din handel hos PhoneSpot.
-              Kontakt os p&aring;{" "}
+              Kontakt os på{" "}
               <Link
                 href={`mailto:${BRAND.email}`}
                 style={{ color: "#bbb", textDecoration: "underline" }}

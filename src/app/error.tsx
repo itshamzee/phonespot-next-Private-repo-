@@ -36,25 +36,25 @@ export default function Error({
           Noget gik galt
         </h1>
         <p className="mt-4 text-lg text-[#6E6E73]">
-          Vi beklager ulejligheden. Pr&oslash;v at genindl&aelig;se siden eller kontakt os
-          hvis problemet forts&aelig;tter.
+          Vi beklager ulejligheden. Prøv at genindlæse siden eller kontakt os
+          hvis problemet fortsætter.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={reset}
             className="rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
           >
-            Pr&oslash;v igen
+            Prøv igen
           </button>
           <a
             href="/"
             className="rounded-full border-2 border-[#E5E5EA] px-8 py-3.5 text-sm font-bold text-[#111111] transition-colors hover:border-[#111111]"
           >
-            G&aring; til forsiden
+            Gå til forsiden
           </a>
         </div>
         <p className="mt-8 text-xs text-[#6E6E73]">
-          Kontakt os p&aring;{" "}
+          Kontakt os på{" "}
           <a href="mailto:info@phonespot.dk" className="font-semibold text-[#1A3D2E] hover:underline">
             info@phonespot.dk
           </a>{" "}

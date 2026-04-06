@@ -11,7 +11,7 @@ export default function NotFound() {
           Siden blev ikke fundet
         </h1>
         <p className="mt-4 text-lg text-[#6E6E73]">
-          Vi kunne desv&aelig;rre ikke finde den side du leder efter. M&aring;ske er den blevet
+          Vi kunne desværre ikke finde den side du leder efter. Måske er den blevet
           flyttet eller fjernet.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -19,7 +19,7 @@ export default function NotFound() {
             href="/"
             className="rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
           >
-            G&aring; til forsiden
+            Gå til forsiden
           </Link>
           <Link
             href="/iphones"
@@ -33,7 +33,7 @@ export default function NotFound() {
             Reparation
           </Link>
           <Link href="/saelg-din-enhed" className="hover:text-[#1A3D2E] hover:underline">
-            S&aelig;lg din enhed
+            Sælg din enhed
           </Link>
           <Link href="/kontakt" className="hover:text-[#1A3D2E] hover:underline">
             Kontakt os

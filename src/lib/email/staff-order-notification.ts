@@ -9,7 +9,7 @@ const SHIPPING_LABELS: Record<string, string> = {
   gls_parcelshop:       "GLS PakkeShop",
   gls_home:             "GLS Hjem-levering",
   dao_parcelshop:       "DAO Pakkeshop",
-  click_collect_cph:    "Afhentning \u2014 K\u00f8benhavn",
+  click_collect_cph:    "Afhentning \u2014 København",
   click_collect_aarhus: "Afhentning \u2014 Aarhus",
   click_collect_vejle:  "Afhentning \u2014 Vejle",
   click_collect_slagelse: "Afhentning \u2014 Slagelse",

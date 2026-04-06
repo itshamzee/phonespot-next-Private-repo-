@@ -91,7 +91,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
       }}>
         {/* Hidden preview text */}
         <Text style={{ display: "none", maxHeight: "0", overflow: "hidden", fontSize: "1px", color: warmWhite } as unknown as React.CSSProperties}>
-          {`Dit tilbud p\u00e5 ${deviceName} er accepteret \u2014 her er n\u00e6ste skridt`}
+          {`Dit tilbud på ${deviceName} er accepteret \u2014 her er næste skridt`}
         </Text>
 
         <Container style={{
@@ -153,7 +153,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               fontFamily: font,
             }}>
               Tak for at du har accepteret vores tilbud. Nedenfor finder du en
-              opsummering samt vejledning til de n&aelig;ste skridt.
+              opsummering samt vejledning til de næste skridt.
             </Text>
 
             {/* Device + price box */}
@@ -209,7 +209,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
             {/* ── Shipping label ── */}
             {labelDownloadUrl ? (
               <>
-                <Text style={sectionTitle}>Forsendelsesm&aelig;rkat</Text>
+                <Text style={sectionTitle}>Forsendelsesmærkat</Text>
                 <Text style={{
                   fontSize:   "14px",
                   color:      "#555",
@@ -217,8 +217,8 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                   lineHeight: "1.6",
                   fontFamily: font,
                 }}>
-                  Din forsendelsesm&aelig;rkat er klar. Print den og s&aelig;t
-                  den p&aring; ydersiden af pakken.
+                  Din forsendelsesmærkat er klar. Print den og sæt
+                  den på ydersiden af pakken.
                 </Text>
                 <Button
                   href={labelDownloadUrl}
@@ -235,7 +235,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                     fontFamily:      font,
                   }}
                 >
-                  Download forsendelsesm&aelig;rkat (PDF)
+                  Download forsendelsesmærkat (PDF)
                 </Button>
                 {trackingNumber && (
                   <Text style={{
@@ -257,7 +257,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               </>
             ) : (
               <>
-                <Text style={sectionTitle}>Forsendelsesm&aelig;rkat</Text>
+                <Text style={sectionTitle}>Forsendelsesmærkat</Text>
                 <Text style={{
                   fontSize:   "14px",
                   color:      "#555",
@@ -265,8 +265,8 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                   lineHeight: "1.6",
                   fontFamily: font,
                 }}>
-                  Vi sender dig en forsendelsesm&aelig;rkat snarest muligt &mdash;
-                  du modtager den p&aring; e-mail.
+                  Vi sender dig en forsendelsesmærkat snarest muligt &mdash;
+                  du modtager den på e-mail.
                 </Text>
               </>
             )}
@@ -282,8 +282,8 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               lineHeight: "1.6",
               fontFamily: font,
             }}>
-              F&oslash;r du sender enheden skal den nulstilles til fabriksindstillinger
-              og alle konti skal frakobles. F&oslash;lg trinene nedenfor:
+              Før du sender enheden skal den nulstilles til fabriksindstillinger
+              og alle konti skal frakobles. Følg trinene nedenfor:
             </Text>
 
             {(deviceGuide === "apple" || deviceGuide === "generic") && (
@@ -303,9 +303,9 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                 }}>
                   Apple &mdash; iPhone / iPad / Mac
                 </Text>
-                <Text style={stepStyle}>1. Indstillinger &rarr; dit navn &rarr; Find My &rarr; Sl&aring; Find My fra</Text>
+                <Text style={stepStyle}>1. Indstillinger &rarr; dit navn &rarr; Find My &rarr; Slå Find My fra</Text>
                 <Text style={stepStyle}>2. Indstillinger &rarr; dit navn &rarr; Log ud (af iCloud)</Text>
-                <Text style={{ ...stepStyle, margin: "0" }}>3. Indstillinger &rarr; Generelt &rarr; Overf&oslash;r eller Nulstil &rarr; Slet alt indhold og indstillinger</Text>
+                <Text style={{ ...stepStyle, margin: "0" }}>3. Indstillinger &rarr; Generelt &rarr; Overfør eller Nulstil &rarr; Slet alt indhold og indstillinger</Text>
               </Section>
             )}
 
@@ -356,13 +356,13 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
             <Hr style={{ borderTop: `1px solid ${sand}`, margin: "20px 0" }} />
 
             {/* ── Packing guide ── */}
-            <Text style={sectionTitle}>S&aring;dan pakker du enheden</Text>
+            <Text style={sectionTitle}>Sådan pakker du enheden</Text>
             <Text style={stepStyle}>1. Sluk enheden</Text>
             <Text style={stepStyle}>2. Fjern SIM-kort og evt. hukommelseskort</Text>
             <Text style={stepStyle}>3. Pak enheden i bobleplast eller avisspapir</Text>
-            <Text style={stepStyle}>4. Brug den originale &aelig;ske hvis du har den</Text>
+            <Text style={stepStyle}>4. Brug den originale æske hvis du har den</Text>
             <Text style={stepStyle}>5. Inkludér kun tilbehør hvis det er aftalt</Text>
-            <Text style={{ ...stepStyle, margin: "0 0 20px 0" }}>6. S&aelig;t forsendelsesm&aelig;rkaten p&aring; ydersiden af pakken</Text>
+            <Text style={{ ...stepStyle, margin: "0 0 20px 0" }}>6. Sæt forsendelsesmærkaten på ydersiden af pakken</Text>
 
             <Hr style={{ borderTop: `1px solid ${sand}`, margin: "20px 0" }} />
 
@@ -375,7 +375,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               lineHeight: "1.6",
               fontFamily: font,
             }}>
-              Aflever pakken i n&aelig;rmeste PostNord pakkeshop eller direkte i
+              Aflever pakken i nærmeste PostNord pakkeshop eller direkte i
               vores butik i VestsjællandsCentret, Slagelse.
             </Text>
             <Text style={{
@@ -385,7 +385,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               lineHeight: "1.6",
               fontFamily: font,
             }}>
-              Find n&aelig;rmeste pakkeshop:{" "}
+              Find nærmeste pakkeshop:{" "}
               <Link
                 href="https://www.postnord.dk/find-lokationer"
                 style={{ color: green, textDecoration: "underline" }}
@@ -405,7 +405,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                 margin:     "0 0 12px",
                 fontFamily: font,
               }}>
-                Glad for din oplevelse? Vi vil elske at h&oslash;re fra dig!
+                Glad for din oplevelse? Vi vil elske at høre fra dig!
               </Text>
               <Button
                 href="https://dk.trustpilot.com/evaluate/phonespot.dk"
@@ -419,7 +419,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                   textDecoration:  "none",
                 }}
               >
-                Skriv en anmeldelse p&aring; Trustpilot
+                Skriv en anmeldelse på Trustpilot
               </Button>
             </Section>
 

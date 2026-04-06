@@ -14,14 +14,14 @@ export async function generateMetadata({
 
   if (!query) {
     return {
-      title: "S\u00f8g - PhoneSpot",
-      description: "S\u00f8g efter brugte iPhones, iPads og tilbeh\u00f8r hos PhoneSpot.",
+      title: "Søg - PhoneSpot",
+      description: "Søg efter brugte iPhones, iPads og tilbehør hos PhoneSpot.",
     };
   }
 
   return {
-    title: `S\u00f8g efter ${query} - PhoneSpot`,
-    description: `S\u00f8geresultater for "${query}" hos PhoneSpot.`,
+    title: `Søg efter ${query} - PhoneSpot`,
+    description: `Søgeresultater for "${query}" hos PhoneSpot.`,
   };
 }
 
@@ -30,7 +30,7 @@ const POPULAR_SEARCHES = [
   { label: "iPhone 14", href: "/iphones" },
   { label: "iPad Air", href: "/ipads" },
   { label: "MacBook", href: "/baerbare" },
-  { label: "Sk\u00e6rmskift", href: "/reparation" },
+  { label: "Skærmskift", href: "/reparation" },
   { label: "Panserglas", href: "/tilbehoer" },
 ];
 
@@ -61,7 +61,7 @@ export default async function SearchPage({
       <div className="mx-auto mb-10 max-w-2xl">
         <form action="/soeg" method="get">
           <label htmlFor="search-input" className="sr-only">
-            S&oslash;g
+            Søg
           </label>
           <div className="relative">
             <svg
@@ -80,7 +80,7 @@ export default async function SearchPage({
               type="search"
               name="q"
               defaultValue={query}
-              placeholder="S&oslash;g efter produkter, reparationer..."
+              placeholder="Søg efter produkter, reparationer..."
               autoFocus
               className="w-full rounded-2xl border-2 border-[#E5E5EA] bg-white py-4 pl-14 pr-6 text-lg text-[#111111] placeholder:text-[#6E6E73]/50 transition-colors focus:border-[#1A3D2E] focus:outline-none"
             />
@@ -94,7 +94,7 @@ export default async function SearchPage({
           <div className="mb-8 flex items-end justify-between">
             <div>
               <h1 className="font-display text-3xl font-bold text-[#111111] md:text-4xl">
-                S&oslash;geresultater
+                Søgeresultater
               </h1>
               <p className="mt-1 text-[#6E6E73]">
                 {products.length} {products.length === 1 ? "resultat" : "resultater"} for &ldquo;{query}&rdquo;
@@ -115,7 +115,7 @@ export default async function SearchPage({
                 Ingen resultater for &ldquo;{query}&rdquo;
               </p>
               <p className="mt-2 text-[#6E6E73]">
-                Pr&oslash;v at s&oslash;ge efter noget andet, eller udforsk vores kategorier.
+                Prøv at søge efter noget andet, eller udforsk vores kategorier.
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <Link href="/iphones" className="rounded-full bg-[#1A3D2E] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2D6B45]">
@@ -125,7 +125,7 @@ export default async function SearchPage({
                   iPads
                 </Link>
                 <Link href="/baerbare" className="rounded-full border border-[#E5E5EA] px-5 py-2 text-sm font-semibold text-[#111111] hover:border-[#111111]">
-                  B&aelig;rbare
+                  Bærbare
                 </Link>
                 <Link href="/reparation" className="rounded-full border border-[#E5E5EA] px-5 py-2 text-sm font-semibold text-[#111111] hover:border-[#111111]">
                   Reparation
@@ -140,13 +140,13 @@ export default async function SearchPage({
             Hvad leder du efter?
           </h1>
           <p className="text-lg text-[#6E6E73]">
-            S&oslash;g efter produkter, kategorier eller reparationer.
+            Søg efter produkter, kategorier eller reparationer.
           </p>
 
           {/* Popular searches */}
           <div className="mx-auto mt-8 max-w-md">
             <p className="mb-3 text-xs font-bold uppercase tracking-wide text-[#6E6E73]">
-              Popul&aelig;re s&oslash;gninger
+              Populære søgninger
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               {POPULAR_SEARCHES.map((s) => (
@@ -166,8 +166,8 @@ export default async function SearchPage({
             {[
               { name: "iPhones", href: "/iphones", count: "25+ modeller" },
               { name: "iPads", href: "/ipads", count: "5+ modeller" },
-              { name: "B\u00e6rbare", href: "/baerbare", count: "9+ modeller" },
-              { name: "Reparation", href: "/reparation", count: "Alle m\u00e6rker" },
+              { name: "Bærbare", href: "/baerbare", count: "9+ modeller" },
+              { name: "Reparation", href: "/reparation", count: "Alle mærker" },
             ].map((cat) => (
               <Link
                 key={cat.name}

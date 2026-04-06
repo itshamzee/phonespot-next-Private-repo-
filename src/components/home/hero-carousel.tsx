@@ -20,7 +20,7 @@ const SLIDES: HeroSlide[] = [
   {
     image: "/images/products/thinkpad-x1-carbon.png",
     label: "ThinkPad X1 Carbon",
-    category: "B\u00e6rbare",
+    category: "Bærbare",
     href: "/baerbare",
   },
   {

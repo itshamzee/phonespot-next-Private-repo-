@@ -273,7 +273,7 @@ export default function AbandonedCartEmail({
                   letterSpacing:   "0.1px",
                 }}
               >
-                G&aring; til din kurv
+                Gå til din kurv
               </Button>
             </Section>
 
@@ -284,7 +284,7 @@ export default function AbandonedCartEmail({
               margin:     "0 0 28px",
               fontFamily: font,
             }}>
-              Reserveret i 24 timer &mdash; f&oslash;rst til m&oslash;lle
+              Reserveret i 24 timer &mdash; først til mølle
             </Text>
 
             <Hr style={{ borderTop: `1px solid ${sand}`, margin: "0 0 24px" }} />
@@ -297,7 +297,7 @@ export default function AbandonedCartEmail({
               lineHeight: "1.6",
               fontFamily: font,
             }}>
-              Hos PhoneSpot f&aring;r du:
+              Hos PhoneSpot får du:
             </Text>
             {BRAND.usps.map((usp, i) => (
               <Text key={i} style={{
@@ -320,7 +320,7 @@ export default function AbandonedCartEmail({
               lineHeight: "1.6",
               fontFamily: font,
             }}>
-              Har du sp&oslash;rgsm&aring;l? Ring til os p&aring;{" "}
+              Har du spørgsmål? Ring til os på{" "}
               <Link href="tel:+4561100048" style={{ color: charcoal, fontWeight: "700" as const, textDecoration: "none" }}>
                 {BRAND.phone}
               </Link>
@@ -429,7 +429,7 @@ export default function AbandonedCartEmail({
               color:      "#bbb",
               fontFamily: font,
             }}>
-              PhoneSpot &middot; CVR: {BRAND.cvr} &middot; Denne e-mail er sendt fordi du lagde varer i kurven p&aring; phonespot.dk.
+              PhoneSpot &middot; CVR: {BRAND.cvr} &middot; Denne e-mail er sendt fordi du lagde varer i kurven på phonespot.dk.
             </Text>
           </Section>
 

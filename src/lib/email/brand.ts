@@ -171,7 +171,7 @@ export function emailFooter(): string {
       <td style="padding:4px 40px 32px;text-align:center;">
         <p style="margin:0;font-size:11px;color:#bbb;">
           Denne e-mail er sendt i forbindelse med din handel hos PhoneSpot.
-          Du kan til enhver tid kontakte os p&aring;
+          Du kan til enhver tid kontakte os på
           <a href="mailto:${BRAND.email}" style="color:#bbb;text-decoration:underline;">${BRAND.email}</a>
           for at afmelde transaktionsmails.
         </p>
