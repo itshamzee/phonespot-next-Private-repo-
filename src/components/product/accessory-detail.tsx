@@ -32,6 +32,7 @@ type AccessoryDetailProps = {
   compatibleDevices?: CompatibleDevice[];
   crossSellProducts?: CrossSellProduct[];
   stockQuantity?: number | null;
+  storeStockLocations?: string[];
   category?: string;
   colorSiblings?: ColorSibling[];
 };
@@ -494,6 +495,7 @@ export function AccessoryDetail({
   compatibleDevices = [],
   crossSellProducts = [],
   stockQuantity,
+  storeStockLocations = [],
   category,
   colorSiblings = [],
 }: AccessoryDetailProps) {
@@ -742,6 +744,22 @@ export function AccessoryDetail({
             {/* Stock */}
             <div className="mb-4">
               <StockIndicator quantity={stockQuantity} />
+              {(stockQuantity === null || stockQuantity === undefined || stockQuantity > 0) && storeStockLocations.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {storeStockLocations.map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E]/8 px-2.5 py-1 text-xs font-medium text-[#1A3D2E]"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      På lager i {name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Add to cart */}

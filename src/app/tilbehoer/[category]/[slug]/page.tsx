@@ -140,17 +140,21 @@ export default async function AccessoryDetailPage({ params }: Props) {
     .filter(Boolean);
 
   // ----------------------------------------------------------------
-  // 2. Stock quantity
+  // 2. Stock quantity (with per-location data)
   // ----------------------------------------------------------------
   const { data: stockRows } = await supabase
     .from("sku_stock")
-    .select("quantity")
+    .select("quantity, location:locations(id, name, type)")
     .eq("product_id", product.id);
 
   const stockQuantity: number | null =
     stockRows && stockRows.length > 0
-      ? stockRows.reduce((sum: number, row: { quantity: number }) => sum + (row.quantity ?? 0), 0)
+      ? stockRows.reduce((sum: number, row: any) => sum + (row.quantity ?? 0), 0)
       : null;
+
+  const storeStockLocations: string[] = (stockRows ?? [])
+    .filter((r: any) => r.location?.type === "store" && (r.quantity ?? 0) > 0)
+    .map((r: any) => r.location.name as string);
 
   // ----------------------------------------------------------------
   // 3. Cross-sell products — share at least one template, different category
@@ -378,6 +382,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           compatibleDevices={compatibleDevices}
           crossSellProducts={crossSellProducts}
           stockQuantity={stockQuantity}
+          storeStockLocations={storeStockLocations}
           category={category}
           colorSiblings={colorSiblings}
         />

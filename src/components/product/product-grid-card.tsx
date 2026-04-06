@@ -266,56 +266,10 @@ export function ProductGridCard({
                   Spar op til {Math.round((1 - minPrice / compareAtPrice) * 100)}%
                 </p>
               )}
-              {/* Location availability */}
-              {storeLocations.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {storeLocations.map((loc) => (
-                    <span
-                      key={loc.name}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E] px-2 py-0.5 text-[11px] font-semibold text-white"
-                    >
-                      <svg
-                        className="h-2.5 w-2.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                        />
-                      </svg>
-                      Hentes i {loc.name}
-                    </span>
-                  ))}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[11px] font-semibold text-[#86868B]">
-                    <svg
-                      className="h-2.5 w-2.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25h-.375a3 3 0 013-3V7.5h9.75"
-                      />
-                    </svg>
-                    Kan sendes
-                  </span>
-                </div>
-              )}
-              {deviceCount > 0 && storeLocations.length === 0 && (
+              {/* Shipping info */}
+              {deviceCount > 0 && (
                 <p className="mt-1 text-[10px] font-semibold text-[#86868B]">
-                  Kan sendes
+                  Kan sendes eller afhentes i butik
                 </p>
               )}
             </div>

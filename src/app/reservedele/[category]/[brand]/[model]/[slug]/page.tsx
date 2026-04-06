@@ -8,6 +8,7 @@ import {
   getQualityAlternatives,
   getEffectiveWarranty,
 } from "@/lib/supabase/spare-parts";
+import { createServerClient } from "@/lib/supabase/client";
 import { QualityBadge } from "@/components/spare-parts/quality-badge";
 import { QualityAlternativesWrapper } from "./quality-alternatives-wrapper";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -125,12 +126,31 @@ export default async function SparePartDetailPage({
       ? await getQualityAlternatives(product.part_category_id, product.device_model)
       : [];
 
+  // Fetch per-location stock
+  const supabase = createServerClient();
+  const { data: stockRows } = await supabase
+    .from("sku_stock")
+    .select("quantity, location:locations(id, name, type)")
+    .eq("product_id", product.id)
+    .gt("quantity", 0);
+
+  const storeStockLocations = (stockRows ?? [])
+    .filter((r: any) => r.location?.type === "store" && r.quantity > 0)
+    .map((r: any) => r.location.name as string);
+
+  const totalStock = (stockRows ?? []).reduce(
+    (sum: number, r: any) => sum + (r.quantity ?? 0),
+    0,
+  );
+
   const warrantyMonths = getEffectiveWarranty(product);
   const displayPrice = product.sale_price ?? product.selling_price;
   const brandName = capitalise(brandSlug);
   const modelName = modelFromSlug(modelSlug);
 
-  const availability = product.always_in_stock
+  const isInStock = product.always_in_stock || totalStock > 0;
+
+  const availability = isInStock
     ? "https://schema.org/InStock"
     : "https://schema.org/PreOrder";
 
@@ -298,18 +318,36 @@ export default async function SparePartDetailPage({
               </div>
 
               {/* Stock status */}
-              <div className="flex items-center gap-2">
-                <span
-                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                    product.always_in_stock ? "bg-green-500" : "bg-amber-400"
-                  }`}
-                  aria-hidden="true"
-                />
-                <span className="text-sm text-[#86868B]">
-                  {product.always_in_stock
-                    ? "På lager — sendes inden for 1-2 hverdage"
-                    : "Bestillingsvare — leveringstid 3-7 hverdage"}
-                </span>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                      isInStock ? "bg-green-500" : "bg-amber-400"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm text-[#86868B]">
+                    {isInStock
+                      ? "På lager — sendes inden for 1-2 hverdage"
+                      : "Bestillingsvare — leveringstid 3-7 hverdage"}
+                  </span>
+                </div>
+                {isInStock && storeStockLocations.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pl-[18px]">
+                    {storeStockLocations.map((name) => (
+                      <span
+                        key={name}
+                        className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E]/8 px-2.5 py-1 text-xs font-medium text-[#1A3D2E]"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                        </svg>
+                        På lager i {name}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Divider */}

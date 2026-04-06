@@ -1,17 +1,19 @@
 "use client";
 
-export function StoreBadge({ storeStock }: { storeStock: number }) {
-  if (storeStock <= 0) {
+export function StoreBadge({ storeStock, onlineStock = 0 }: { storeStock: number; onlineStock?: number }) {
+  const totalStock = storeStock + onlineStock;
+
+  if (totalStock <= 0) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-        Kun online
+        Ikke på lager
       </span>
     );
   }
-  if (storeStock <= 3) {
+  if (totalStock <= 3) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
-        Sidste {storeStock} stk i butikken
+        Kun {totalStock} på lager
       </span>
     );
   }
@@ -20,7 +22,7 @@ export function StoreBadge({ storeStock }: { storeStock: number }) {
       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
         <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
       </svg>
-      På lager i Slagelse
+      På lager
     </span>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { formatOere } from "@/lib/cart/utils";
-import type { CartItem, CartDeviceItem } from "@/lib/cart/types";
+import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 
 export interface ShippingMethod {
   id: string;
@@ -17,8 +18,12 @@ const STORE_LOCATIONS: { id: string; name: string; address: string }[] = [
   { id: "vejle", name: "Vejle", address: "Vejle, Denmark" },
 ];
 
-function getPickupMethods(items: CartItem[]): ShippingMethod[] {
+function getPickupMethods(
+  items: CartItem[],
+  skuStockByLocation: Record<string, string[]>,
+): ShippingMethod[] {
   const deviceItems = items.filter((i): i is CartDeviceItem => i.type === "device");
+  const skuItems = items.filter((i): i is CartSkuItem => i.type === "sku_product");
 
   return STORE_LOCATIONS.map((store) => {
     // Check if ALL device items are available at this store
@@ -29,21 +34,25 @@ function getPickupMethods(items: CartItem[]): ShippingMethod[] {
           d.locationName?.toLowerCase() === store.name.toLowerCase(),
       );
 
-    // For SKU items we always allow pickup (they can be picked from any store)
-    // Only block if device items are not at this location
-    const canPickup = allDevicesAtStore;
+    // Check if ALL SKU items are available at this store
+    const storeProductIds = skuStockByLocation[store.name] ?? [];
+    const allSkusAtStore =
+      skuItems.length === 0 ||
+      skuItems.every((s) => storeProductIds.includes(s.skuProductId));
+
+    const canPickup = allDevicesAtStore && allSkusAtStore;
 
     return {
       id: `pickup_${store.id}`,
       label: `Hent i ${store.name} (gratis)`,
       description: canPickup
         ? `${store.address} — klar til afhentning`
-        : `Ikke tilgængelig — varen er ikke på lager i ${store.name}`,
+        : `Ikke tilgængelig — ikke alle varer er på lager i ${store.name}`,
       cost: 0,
       disabled: !canPickup,
       disabledReason: canPickup
         ? undefined
-        : `Varen er ikke på lager i ${store.name}`,
+        : `Ikke alle varer er på lager i ${store.name}`,
     };
   });
 }
@@ -70,7 +79,29 @@ interface ShippingSelectorProps {
 }
 
 export function ShippingSelector({ onSelect, selected, items = [] }: ShippingSelectorProps) {
-  const pickupMethods = getPickupMethods(items);
+  const [skuStockByLocation, setSkuStockByLocation] = useState<Record<string, string[]>>({});
+
+  // Fetch per-location stock for SKU items to validate pickup availability
+  const skuItems = items.filter((i): i is CartSkuItem => i.type === "sku_product");
+  const skuProductIds = skuItems.map((s) => s.skuProductId);
+
+  useEffect(() => {
+    if (skuProductIds.length === 0) {
+      setSkuStockByLocation({});
+      return;
+    }
+    fetch("/api/checkout/sku-stock-locations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds: skuProductIds }),
+    })
+      .then((r) => r.json())
+      .then((data) => setSkuStockByLocation(data.locations ?? {}))
+      .catch(() => setSkuStockByLocation({}));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(skuProductIds)]);
+
+  const pickupMethods = getPickupMethods(items, skuStockByLocation);
   const allMethods = [...pickupMethods, ...DELIVERY_METHODS];
 
   return (

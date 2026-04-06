@@ -87,7 +87,7 @@ export function AccessoryCard({
           </div>
         )}
         <div className="absolute top-3 left-3">
-          <StoreBadge storeStock={store_stock} />
+          <StoreBadge storeStock={store_stock} onlineStock={online_stock} />
         </div>
         {brand && (
           <span className="absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-charcoal/70 shadow-sm backdrop-blur-sm">
@@ -120,33 +120,27 @@ export function AccessoryCard({
             )}
           </div>
 
-          {/* Online stock indicator */}
-          {online_stock > 0 && online_stock <= 5 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Kun {online_stock} på lager
-            </p>
-          )}
-          {online_stock > 5 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-              På lager
-            </p>
-          )}
-
-          {/* Store stock urgency badge */}
-          {store_stock > 0 && store_stock <= 5 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
-              Få tilbage i butik
-            </p>
-          )}
-          {store_stock > 5 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
-              På lager i butik
-            </p>
-          )}
+          {/* Stock indicator — combined across all locations */}
+          {(() => {
+            const total = store_stock + online_stock;
+            if (total > 0 && total <= 5) {
+              return (
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  Kun {total} på lager
+                </p>
+              );
+            }
+            if (total > 5) {
+              return (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+                  På lager
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {/* Add to cart — subtle style */}
