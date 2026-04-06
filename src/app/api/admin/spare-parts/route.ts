@@ -74,7 +74,52 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ products: enriched, total: count ?? 0, page, limit });
+  // Calculate total inventory value across ALL spare parts (not just this page)
+  const { data: allProducts } = await supabase
+    .from("sku_products")
+    .select("id, selling_price")
+    .eq("subcategory", "spare-part");
+
+  const allProductIds = (allProducts ?? []).map((p: any) => p.id);
+  const priceMap = new Map<string, number>();
+  for (const p of allProducts ?? []) {
+    priceMap.set(p.id, p.selling_price ?? 0);
+  }
+
+  const { data: allStock } = await supabase
+    .from("sku_stock")
+    .select("product_id, quantity, locations(name)")
+    .in("product_id", allProductIds.length > 0 ? allProductIds : ["__none__"]);
+
+  let globalTotalQty = 0;
+  let globalTotalValue = 0;
+  const globalByLocation: Record<string, { qty: number; value: number }> = {};
+
+  for (const s of allStock ?? []) {
+    const qty = s.quantity ?? 0;
+    const price = priceMap.get(s.product_id) ?? 0;
+    const val = qty * price;
+    globalTotalQty += qty;
+    globalTotalValue += val;
+    const locName = (s as any).locations?.name;
+    if (locName) {
+      if (!globalByLocation[locName]) globalByLocation[locName] = { qty: 0, value: 0 };
+      globalByLocation[locName].qty += qty;
+      globalByLocation[locName].value += val;
+    }
+  }
+
+  return NextResponse.json({
+    products: enriched,
+    total: count ?? 0,
+    page,
+    limit,
+    inventory: {
+      totalQty: globalTotalQty,
+      totalValue: globalTotalValue,
+      byLocation: globalByLocation,
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {

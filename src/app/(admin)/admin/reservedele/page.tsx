@@ -188,6 +188,11 @@ export default function ReservedelePage() {
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [globalInventory, setGlobalInventory] = useState<{
+    totalQty: number;
+    totalValue: number;
+    byLocation: Record<string, { qty: number; value: number }>;
+  } | null>(null);
   const LIMIT = 50;
 
   // Filters — server-side
@@ -273,6 +278,7 @@ export default function ReservedelePage() {
       const data = await res.json();
       setProducts(data.products ?? []);
       setTotal(data.total ?? 0);
+      if (data.inventory) setGlobalInventory(data.inventory);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ukendt fejl");
     } finally {
@@ -473,24 +479,24 @@ export default function ReservedelePage() {
       </div>
 
       {/* Inventory value summary */}
-      {!loading && products.length > 0 && (
+      {!loading && globalInventory && (
         <div className="rounded-xl border border-black/[0.04] bg-white px-5 py-4 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-charcoal/40">
-            Lagerværdi (denne side)
+            Samlet lagerværdi
           </p>
           <p className="mt-1 font-display text-xl font-bold tabular-nums text-charcoal">
-            {(inventoryStats.totalValue / 100).toLocaleString("da-DK", {
+            {(globalInventory.totalValue / 100).toLocaleString("da-DK", {
               style: "currency",
               currency: "DKK",
               maximumFractionDigits: 0,
             })}
             <span className="ml-2 text-sm font-normal text-charcoal/40">
-              ({inventoryStats.totalQty} stk i alt)
+              ({globalInventory.totalQty} stk i alt)
             </span>
           </p>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {LOCATION_NAMES.map((locName) => {
-              const loc = inventoryStats.byLocation[locName];
+              const loc = globalInventory.byLocation[locName] ?? { qty: 0, value: 0 };
               return (
                 <span key={locName} className="text-[12px] text-charcoal/60">
                   <span className="font-semibold text-charcoal/80">{locName}:</span>{" "}
