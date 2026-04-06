@@ -30,6 +30,8 @@ interface SparePartProduct {
   sale_price: number | null;
   images: string[];
   always_in_stock: boolean;
+  in_stock?: boolean;
+  total_stock?: number;
   is_inquiry_only: boolean;
   device_brand: string | null;
   device_model: string | null;
@@ -53,7 +55,7 @@ interface ApiResponse {
   totalPages: number;
 }
 
-type SortOption = "price_asc" | "price_desc" | "newest";
+type SortOption = "stock" | "price_asc" | "price_desc" | "newest";
 type ViewMode = "grid" | "list";
 
 // ---------------------------------------------------------------------------
@@ -178,11 +180,11 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
           {/* Stock */}
           <div className="mb-3 flex items-center gap-1.5">
             <span
-              className={`h-2 w-2 shrink-0 rounded-full ${product.always_in_stock ? "bg-green-500" : "bg-red-400"}`}
+              className={`h-2 w-2 shrink-0 rounded-full ${(product.in_stock ?? product.always_in_stock) ? "bg-green-500" : "bg-red-400"}`}
               aria-hidden="true"
             />
             <span className="text-xs text-[#86868B]">
-              {product.always_in_stock ? "På lager" : "Kan bestilles"}
+              {(product.in_stock ?? product.always_in_stock) ? "På lager" : "Kan bestilles"}
             </span>
           </div>
 
@@ -191,6 +193,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
             product.is_inquiry_only ? (
               <button
                 type="button"
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                 className="w-full rounded-lg border border-[#1A3D2E] px-4 py-2 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
               >
                 Forespørg
@@ -198,7 +201,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
             ) : (
               <button
                 type="button"
-                onClick={() => onAddToCart(product)}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAddToCart(product); }}
                 className={`w-full rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
                   isAdded
                     ? "bg-green-600 text-white"
@@ -322,6 +325,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
           product.is_inquiry_only ? (
             <button
               type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
               className="rounded-lg border border-[#1A3D2E] px-4 py-1.5 text-xs font-semibold text-[#1A3D2E] transition-colors hover:bg-[#1A3D2E] hover:text-white"
             >
               Forespørg
@@ -329,7 +333,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
           ) : (
             <button
               type="button"
-              onClick={() => onAddToCart(product)}
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onAddToCart(product); }}
               className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition-colors ${
                 isAdded
                   ? "bg-green-600 text-white"
@@ -456,6 +460,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 // ---------------------------------------------------------------------------
 
 const SORT_LABELS: Record<SortOption, string> = {
+  stock: "På lager først",
   price_asc: "Pris lav-høj",
   price_desc: "Pris høj-lav",
   newest: "Nyeste",
@@ -470,7 +475,7 @@ export function SparePartsGrid() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [sort, setSort] = useState<SortOption>("newest");
+  const [sort, setSort] = useState<SortOption>("stock");
   const [searchInput, setSearchInput] = useState(searchParams.get("search") ?? "");
   const [addedId, setAddedId] = useState<string | null>(null);
 
@@ -498,11 +503,7 @@ export function SparePartsGrid() {
         }
       }
       // Apply sort
-      if (sortOption === "price_asc") {
-        url.searchParams.set("sort", "price_asc");
-      } else if (sortOption === "price_desc") {
-        url.searchParams.set("sort", "price_desc");
-      }
+      url.searchParams.set("sort", sortOption);
 
       const res = await fetch(url.toString(), { signal: controller.signal });
       if (!res.ok) throw new Error("Fetch failed");

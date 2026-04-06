@@ -18,6 +18,14 @@ export async function GET(req: NextRequest) {
   const category = url.searchParams.get("category");
   if (category) filters.categorySlug = category;
 
+  const partCategory = url.searchParams.get("partCategory");
+  if (partCategory) filters.partCategorySlug = partCategory;
+
+  const sort = url.searchParams.get("sort") as any;
+  if (sort && ["stock", "price_asc", "price_desc", "newest"].includes(sort)) {
+    filters.sort = sort;
+  }
+
   const brand = url.searchParams.get("brand");
   if (brand) filters.brand = brand;
 

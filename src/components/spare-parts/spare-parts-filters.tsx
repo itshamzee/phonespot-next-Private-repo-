@@ -493,20 +493,62 @@ export function SparePartsFilters() {
         </div>
       )}
 
-      {/* Kategori */}
-      <FilterSection title="Kategori">
-        <select
-          value={selectedCategory}
-          onChange={(e) => updateParam("category", e.target.value || null)}
-          className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
-        >
-          <option value="">Alle kategorier</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.slug}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
+      {/* Deltype — prominent pills for common categories, dropdown for rest */}
+      <FilterSection title="Deltype">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <button
+            type="button"
+            onClick={() => updateParam("category", selectedCategory ? null : null)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              !selectedCategory
+                ? "bg-[#1A3D2E] text-white"
+                : "border border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E]"
+            }`}
+          >
+            Alle
+          </button>
+          {categories
+            .filter((c) => [
+              "skaerme", "batterier", "kameralinser", "kameraer",
+              "opladningsstik", "hojttalere", "bagcovers",
+            ].includes(c.slug))
+            .map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => updateParam("category", selectedCategory === cat.slug ? null : cat.slug)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedCategory === cat.slug
+                    ? "bg-[#1A3D2E] text-white"
+                    : "border border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E]"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+        </div>
+        {categories.filter((c) => ![
+          "skaerme", "batterier", "kameralinser", "kameraer",
+          "opladningsstik", "hojttalere", "bagcovers",
+        ].includes(c.slug)).length > 0 && (
+          <select
+            value={selectedCategory}
+            onChange={(e) => updateParam("category", e.target.value || null)}
+            className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-xs text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+          >
+            <option value="">Flere kategorier...</option>
+            {categories
+              .filter((c) => ![
+                "skaerme", "batterier", "kameralinser", "kameraer",
+                "opladningsstik", "hojttalere", "bagcovers",
+              ].includes(c.slug))
+              .map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
+          </select>
+        )}
       </FilterSection>
 
       {/* Level 1: Enhedsmærke */}

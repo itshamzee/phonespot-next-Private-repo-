@@ -63,6 +63,7 @@ export async function getQualityTierBySlug(slug: string): Promise<SparePartQuali
 
 export interface SparePartFilters {
   categorySlug?: string;
+  partCategorySlug?: string;
   brand?: string;
   series?: string;
   model?: string;
@@ -72,6 +73,7 @@ export interface SparePartFilters {
   minPrice?: number;
   maxPrice?: number;
   inStockOnly?: boolean;
+  sort?: "stock" | "price_asc" | "price_desc" | "newest";
   limit?: number;
   offset?: number;
 }
@@ -80,6 +82,18 @@ export async function getSparePartProducts(
   filters: SparePartFilters = {}
 ): Promise<{ products: SparePartProduct[]; total: number }> {
   const supabase = createServerClient();
+
+  // Determine sort order for the DB query
+  const sortOption = filters.sort ?? "stock";
+  let orderColumn = "created_at";
+  let orderAscending = false;
+  if (sortOption === "price_asc") {
+    orderColumn = "selling_price";
+    orderAscending = true;
+  } else if (sortOption === "price_desc") {
+    orderColumn = "selling_price";
+    orderAscending = false;
+  }
 
   let query = supabase
     .from("sku_products")
@@ -90,10 +104,17 @@ export async function getSparePartProducts(
     .eq("subcategory", "spare-part")
     .eq("status", "published")
     .eq("is_active", true)
-    .order("created_at", { ascending: false });
+    .order(orderColumn, { ascending: orderAscending });
 
   if (filters.categorySlug) {
     const category = await getSparePartCategoryBySlug(filters.categorySlug);
+    if (category) {
+      query = query.eq("part_category_id", category.id);
+    }
+  }
+
+  if (filters.partCategorySlug) {
+    const category = await getSparePartCategoryBySlug(filters.partCategorySlug);
     if (category) {
       query = query.eq("part_category_id", category.id);
     }
@@ -131,19 +152,63 @@ export async function getSparePartProducts(
     );
   }
 
+  // For stock-based sorting, fetch more to allow client-side re-sorting
   const limit = filters.limit ?? 24;
   const offset = filters.offset ?? 0;
-  query = query.range(offset, offset + limit - 1);
+
+  if (sortOption === "stock") {
+    // Fetch a larger window so we can sort by stock and then paginate
+    query = query.range(0, Math.max(offset + limit * 3 - 1, 499));
+  } else {
+    query = query.range(offset, offset + limit - 1);
+  }
 
   const { data, count } = await query;
 
-  const products = (data ?? []).map((row: any) => ({
-    ...row,
-    part_category: row.spare_part_categories ?? undefined,
-    quality_tier: row.spare_part_quality_tiers ?? undefined,
-    spare_part_categories: undefined,
-    spare_part_quality_tiers: undefined,
-  })) as SparePartProduct[];
+  const productIds = (data ?? []).map((r: any) => r.id as string);
+
+  // Enrich with stock totals
+  let stockMap = new Map<string, number>();
+  if (productIds.length > 0) {
+    const { data: stockRows } = await supabase
+      .from("sku_stock")
+      .select("product_id, quantity")
+      .in("product_id", productIds)
+      .gt("quantity", 0);
+
+    for (const s of stockRows ?? []) {
+      stockMap.set(
+        s.product_id,
+        (stockMap.get(s.product_id) ?? 0) + (s.quantity ?? 0),
+      );
+    }
+  }
+
+  let products = (data ?? []).map((row: any) => {
+    const totalStock = stockMap.get(row.id) ?? 0;
+    const inStock = row.always_in_stock || totalStock > 0;
+    return {
+      ...row,
+      part_category: row.spare_part_categories ?? undefined,
+      quality_tier: row.spare_part_quality_tiers ?? undefined,
+      spare_part_categories: undefined,
+      spare_part_quality_tiers: undefined,
+      total_stock: totalStock,
+      in_stock: inStock,
+    };
+  }) as SparePartProduct[];
+
+  // If sorting by stock: in-stock first, then by created_at desc within each group
+  if (sortOption === "stock") {
+    products.sort((a: any, b: any) => {
+      if (a.in_stock && !b.in_stock) return -1;
+      if (!a.in_stock && b.in_stock) return 1;
+      // Within same stock group, sort by created_at desc
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    // Apply pagination after sorting
+    products = products.slice(offset, offset + limit);
+  }
 
   return { products, total: count ?? 0 };
 }
