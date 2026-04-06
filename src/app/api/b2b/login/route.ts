@@ -17,10 +17,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = createServerClient();
+  // Use separate clients: signInWithPassword changes the client's auth context
+  // which causes subsequent queries to run as the user (with RLS) instead of service role.
+  const authClient = createServerClient();
+  const dbClient = createServerClient();
 
   // Authenticate with Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+  const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
     email,
     password,
   });
@@ -32,8 +35,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fetch B2B profile
-  const { data: b2b, error: b2bError } = await supabase
+  // Fetch B2B profile (use fresh client to keep service role context)
+  const { data: b2b, error: b2bError } = await dbClient
     .from("b2b_customers")
     .select(
       "id, company_name, cvr_nummer, approved, rejected, rejected_reason, contact_name, contact_email, price_group, discount_percentage"
