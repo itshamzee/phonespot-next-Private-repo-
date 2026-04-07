@@ -150,6 +150,11 @@ export default function ReservedelEditPage() {
   const [compatSearch, setCompatSearch] = useState("");
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
 
+  /* ---- Section 2b: Identifikation ---- */
+  const [skuCode, setSkuCode] = useState("");
+  const [mpn, setMpn] = useState("");
+  const [ean, setEan] = useState("");
+
   /* ---- Section 3: Kvalitet & Garanti ---- */
   const [qualityTierId, setQualityTierId] = useState("");
   const [warrantyMonths, setWarrantyMonths] = useState("");
@@ -244,6 +249,10 @@ export default function ReservedelEditPage() {
         setModelCodes(
           Array.isArray(product.device_model_codes) ? product.device_model_codes.join(", ") : "",
         );
+
+        setSkuCode(product.product_number ?? "");
+        setMpn(product.barcode ?? "");
+        setEan(product.ean ?? "");
 
         setQualityTierId(product.quality_tier_id ?? "");
         setWarrantyMonths(
@@ -525,6 +534,9 @@ export default function ReservedelEditPage() {
             .map((c) => c.trim())
             .filter(Boolean)
         : [],
+      product_number: skuCode.trim() || null,
+      barcode: mpn.trim() || null,
+      ean: ean.trim() || null,
       quality_tier_id: qualityTierId || null,
       warranty_months: warrantyMonths ? parseInt(warrantyMonths, 10) : null,
       cost_price: dkkToOere(costPrice),
@@ -1054,6 +1066,39 @@ export default function ReservedelEditPage() {
                 });
               })()}
             </div>
+          </div>
+        </Section>
+
+        {/* ── 2b. Identifikation ── */}
+        <Section title="Identifikation">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="SKU" hint="Intern varenummer">
+              <input
+                type="text"
+                value={skuCode}
+                onChange={(e) => setSkuCode(e.target.value)}
+                placeholder="f.eks. PS-SCR-15PM-ORI"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Fabrikantkode (MPN)" hint="Producentens delnummer">
+              <input
+                type="text"
+                value={mpn}
+                onChange={(e) => setMpn(e.target.value)}
+                placeholder="f.eks. 661-18409"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="EAN / Stregkode" hint="13-cifret EAN-kode">
+              <input
+                type="text"
+                value={ean}
+                onChange={(e) => setEan(e.target.value)}
+                placeholder="f.eks. 5714839000123"
+                className={inputCls}
+              />
+            </Field>
           </div>
         </Section>
 

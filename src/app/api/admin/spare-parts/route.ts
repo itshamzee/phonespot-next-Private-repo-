@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
     is_inquiry_only, always_in_stock, images, slug,
     meta_title, meta_description,
     stock_online, stock_store, status, b2b_price,
+    product_number, barcode, ean,
   } = body;
 
   if (!title || selling_price == null) {
@@ -168,6 +169,9 @@ export async function POST(req: NextRequest) {
       slug: slug || null,
       meta_title: meta_title || null,
       meta_description: meta_description || null,
+      product_number: product_number || null,
+      barcode: barcode || null,
+      ean: ean || null,
       b2b_price: b2b_price != null ? Number(b2b_price) : null,
       status: status || "published",
       is_active: true,

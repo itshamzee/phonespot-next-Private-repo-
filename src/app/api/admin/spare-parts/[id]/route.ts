@@ -42,6 +42,7 @@ export async function PATCH(
     "sale_price", "color_variants", "compatible_models", "specifications",
     "is_inquiry_only", "always_in_stock", "images", "slug", "meta_title",
     "meta_description", "status", "is_active", "b2b_price",
+    "product_number", "barcode", "ean",
   ];
 
   const updates: Record<string, unknown> = {};

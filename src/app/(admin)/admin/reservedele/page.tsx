@@ -27,6 +27,9 @@ interface SparePart {
   device_model: string | null;
   selling_price: number; // oere
   cost_price: number | null; // oere
+  product_number: string | null;
+  barcode: string | null;
+  ean: string | null;
   status: "published" | "draft";
   always_in_stock: boolean;
   stock: StockEntry[];
@@ -441,21 +444,38 @@ export default function ReservedelePage() {
             Administrer reservedele, kvalitet og priser
           </p>
         </div>
-        <Link
-          href="/admin/reservedele/opret"
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98]"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/reservedele/bulk-edit"
+            className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-4 py-2.5 text-sm font-semibold text-charcoal shadow-sm transition-all hover:bg-stone-50 hover:shadow active:scale-[0.98]"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Opret ny
-        </Link>
+            <svg
+              className="h-4 w-4 text-charcoal/60"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+            </svg>
+            Bulk redigering
+          </Link>
+          <Link
+            href="/admin/reservedele/opret"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98]"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Opret ny
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
