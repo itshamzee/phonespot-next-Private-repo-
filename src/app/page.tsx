@@ -11,50 +11,65 @@ import { Bestsellers } from "@/components/home/bestsellers";
 // Data
 // ---------------------------------------------------------------------------
 
-const CATEGORIES = [
+// Featured categories — big cards (top row)
+const FEATURED_CATEGORIES = [
+  {
+    name: "Bærbare",
+    subtitle: "MacBook, ThinkPad, EliteBook",
+    href: "/baerbare",
+    tagline: "Fra 1.999 kr",
+    image: "/images/products/thinkpad-clean.webp",
+    badge: "Populær",
+  },
+  {
+    name: "Tilbehør & Lyd",
+    subtitle: "Covers, kabler, høretelefoner",
+    href: "/tilbehoer",
+    tagline: "Fra 49 kr",
+    image: "/images/products/tilbehoer-case.webp",
+    badge: null,
+  },
+  {
+    name: "Smartwatches",
+    subtitle: "Apple Watch & Galaxy Watch",
+    href: "/smartwatches",
+    tagline: "Fra 999 kr",
+    image: "/images/products/apple-watch.png",
+    badge: null,
+  },
+] as const;
+
+// Secondary categories — smaller cards (bottom row)
+const SECONDARY_CATEGORIES = [
   {
     name: "iPhones",
     href: "/iphones",
-    tagline: "Fra 999 kr",
+    tagline: "Fra 1.499 kr",
     image: "/images/products/iphone-lineup.jpg",
-  },
-  {
-    name: "Smartphones",
-    href: "/smartphones",
-    tagline: "Fra 999 kr",
-    image: "/images/products/samsung-galaxy.webp",
+    taglineClass: "text-green-eco",
   },
   {
     name: "iPads",
     href: "/ipads",
-    tagline: "Fra 899 kr",
+    tagline: "Fra 1.499 kr",
     image: "/images/products/ipad-air-new.png",
-  },
-  {
-    name: "Bærbare",
-    href: "/baerbare",
-    tagline: "Fra 1.999 kr",
-    image: "/images/products/thinkpad-clean.webp",
+    taglineClass: "text-green-eco",
   },
   {
     name: "Reparation",
     href: "/reparation",
-    tagline: "Fra 299 kr",
+    tagline: "Book tid",
     image: "/images/products/iphone-repair.png",
+    taglineClass: "text-green-eco",
   },
   {
-    name: "Tilbehør",
-    href: "/tilbehoer",
-    tagline: "Fra 99 kr",
-    image: "/images/products/tilbehoer-case.webp",
+    name: "Restsalg",
+    href: "/restsalg",
+    tagline: "Ekstra tilbud",
+    image: "/images/products/iphone-hero.jpg",
+    taglineClass: "text-red-500",
   },
-  {
-    name: "Smartwatches",
-    href: "/smartwatches",
-    tagline: "Fra 1.099 kr",
-    image: "/images/products/apple-watch.png",
-  },
-];
+] as const;
 
 const USP_BAR = [
   {
@@ -131,10 +146,10 @@ const HOME_FAQ = [
 export default function HomePage() {
   return (
     <>
-      {/* ── 1. Hero ── */}
+      {/* ── 1. Hero — compact lifestyle ── */}
       <section className="px-4 pt-4 pb-0 md:px-6 md:pt-6">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl md:rounded-3xl">
-          {/* Background image */}
+          {/* Background image — lifestyle/workshop */}
           <Image
             src="/images/lifestyle/workshop.jpg"
             alt=""
@@ -144,44 +159,44 @@ export default function HomePage() {
             sizes="100vw"
             aria-hidden="true"
           />
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1A3D2E]/90 via-[#1A3D2E]/80 to-[#1A3D2E]/50" />
+          {/* Darker gradient overlay — stronger for readability on compact hero */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A3D2E]/95 via-[#1A3D2E]/85 to-[#1A3D2E]/55" />
 
-          <div className="relative z-10 px-4 py-8 sm:px-8 sm:py-14 md:px-12 md:py-16 lg:max-w-[55%] lg:px-16 lg:py-20">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-[11px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
-              36 MDR. GARANTI PÅ ALT
+          <div className="relative z-10 px-5 py-8 sm:px-8 sm:py-10 md:px-12 md:py-12 lg:max-w-[60%] lg:px-16 lg:py-14">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/12 px-3.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-white/90 backdrop-blur-sm">
+              TESTET · RENSET · KLAR TIL BRUG
             </span>
 
-            <h1 className="font-display text-2xl sm:text-4xl font-extrabold leading-[1.1] text-white md:text-5xl lg:text-6xl">
+            <h1 className="font-display text-3xl sm:text-4xl font-extrabold leading-[1.1] text-white md:text-5xl lg:text-[3.25rem]">
               Refurbished tech<br />
               du kan stole på
             </h1>
 
-            <p className="mt-5 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
-              Testet, renset og klar til brug — med 36 måneders garanti og hurtig levering.
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80 md:text-lg">
+              Bærbare, tilbehør, telefoner og mere — med op til 40% rabat og 36 måneders garanti.
             </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/iphones"
-                className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+                href="/baerbare"
+                className="rounded-full bg-white px-7 py-3 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
               >
-                Se vores udvalg
+                Se udvalget
               </Link>
               <Link
                 href="/saelg-din-enhed"
-                className="rounded-full border-2 border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                className="rounded-full border-2 border-white/30 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
               >
-                Sælg din elektronik
+                Sælg din enhed
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 2. Categories ── */}
+      {/* ── 2. Categories — 3 big + 4 small ── */}
       <SectionWrapper background="cream">
-        <div className="mx-auto mb-12 max-w-2xl text-center">
+        <div className="mx-auto mb-10 max-w-2xl text-center">
           <Heading as="h2" size="lg">
             Udforsk vores udvalg
           </Heading>
@@ -190,74 +205,78 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:grid-cols-4 xl:grid-cols-7">
-          {CATEGORIES.map((cat) => (
+        {/* Top row: 3 featured (big) cards */}
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURED_CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
               href={cat.href}
-              className="group relative flex shrink-0 w-[140px] flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:shadow-lg sm:w-auto"
+              className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
-              {/* Image area */}
-              <div className="relative flex h-44 items-center justify-center bg-white p-4">
-                {cat.image ? (
-                  <Image
-                    src={cat.image}
-                    alt={cat.name}
-                    width={200}
-                    height={200}
-                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#1A3D2E]/[0.07]">
-                    {cat.name === "Smartphones" && (
-                      /* Phone icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#1A3D2E]" aria-hidden="true">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                        <line x1="12" y1="18" x2="12.01" y2="18" />
-                      </svg>
-                    )}
-                    {cat.name === "Bærbare" && (
-                      /* Laptop icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#1A3D2E]" aria-hidden="true">
-                        <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16" />
-                      </svg>
-                    )}
-                    {cat.name === "Reparation" && (
-                      /* Wrench icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#1A3D2E]" aria-hidden="true">
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                      </svg>
-                    )}
-                    {cat.name === "Tilbehør" && (
-                      /* Headphones icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#1A3D2E]" aria-hidden="true">
-                        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-                        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-                      </svg>
-                    )}
-                    {cat.name === "Smartwatches" && (
-                      /* Watch icon */
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#1A3D2E]" aria-hidden="true">
-                        <circle cx="12" cy="12" r="7" />
-                        <polyline points="12 9 12 12 13.5 13.5" />
-                        <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83" />
-                      </svg>
-                    )}
-                  </div>
+              {/* Image area — tall */}
+              <div className="relative flex h-44 items-center justify-center bg-gradient-to-br from-[#f3efe8] to-[#e8e2d5] p-6 sm:h-48">
+                <Image
+                  src={cat.image}
+                  alt={cat.name}
+                  width={260}
+                  height={180}
+                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  unoptimized
+                />
+                {cat.badge && (
+                  <span className="absolute top-3 right-3 rounded-full bg-green-eco px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                    {cat.badge}
+                  </span>
                 )}
               </div>
-              {/* Label */}
-              <div className="border-t border-sand px-4 py-3">
-                <p className="text-xs font-bold text-[#1A3D2E]">
-                  {cat.tagline}
-                </p>
-                <h3 className="mt-0.5 font-display text-base font-bold text-charcoal">
+              {/* Body */}
+              <div className="flex flex-1 flex-col justify-between px-5 py-4">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-charcoal">
+                    {cat.name}
+                  </h3>
+                  <p className="mt-0.5 text-sm text-gray">{cat.subtitle}</p>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-sm font-bold text-green-eco">
+                    {cat.tagline}
+                  </span>
+                  <span className="text-xs font-semibold text-green-eco transition-transform duration-150 group-hover:translate-x-0.5">
+                    Se udvalg &rarr;
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Bottom row: 4 secondary (smaller) cards */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {SECONDARY_CATEGORIES.map((cat) => (
+            <Link
+              key={cat.href}
+              href={cat.href}
+              className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              {/* Image area — shorter */}
+              <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-[#f1ede6] to-[#e6e0d2] p-4 sm:h-32">
+                <Image
+                  src={cat.image}
+                  alt={cat.name}
+                  width={160}
+                  height={120}
+                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  unoptimized
+                />
+              </div>
+              {/* Body */}
+              <div className="px-4 py-3">
+                <h3 className="font-display text-sm font-bold text-charcoal sm:text-base">
                   {cat.name}
                 </h3>
-                <span className="mt-1 inline-block text-xs font-semibold text-green-eco transition-transform duration-150 group-hover:translate-x-0.5">
-                  Se udvalg &rarr;
-                </span>
+                <p className={`mt-0.5 text-xs font-semibold ${cat.taglineClass}`}>
+                  {cat.tagline}
+                </p>
               </div>
             </Link>
           ))}
