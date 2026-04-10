@@ -206,7 +206,7 @@ export default function HomePage() {
         </div>
 
         {/* Top row: 3 featured (big) cards */}
-        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           {FEATURED_CATEGORIES.map((cat) => (
             <Link
               key={cat.href}
