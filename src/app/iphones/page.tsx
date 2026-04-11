@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
@@ -8,7 +7,6 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 60;
@@ -24,68 +22,6 @@ export const metadata: Metadata = {
     url: "https://phonespot.dk/iphones",
   },
 };
-
-// ---------------------------------------------------------------------------
-// Model tiers
-// ---------------------------------------------------------------------------
-
-const MODEL_TIERS = [
-  {
-    tier: "Budget",
-    tagline: "Perfekt til basale behov",
-    cardBg: "bg-white",
-    cardBorder: "border border-[#E5E5EA]",
-    badgeBg: "bg-[#E5E5EA]",
-    badgeText: "text-[#111111]",
-    taglineColor: "text-[#86868B]",
-    iconColor: "text-[#86868B]",
-    patterns: ["iphone se", "iphone 11", "iphone xr", "iphone 8"],
-  },
-  {
-    tier: "Populær",
-    tagline: "Bedste værdi for pengene",
-    cardBg: "bg-[#F7F7F8]",
-    cardBorder: "border-2 border-[#1A3D2E]/20",
-    badgeBg: "bg-[#1A3D2E]",
-    badgeText: "text-white",
-    taglineColor: "text-[#1A3D2E]",
-    iconColor: "text-[#1A3D2E]",
-    patterns: ["iphone 12", "iphone 13"],
-  },
-  {
-    tier: "Premium",
-    tagline: "Det bedste Apple tilbyder",
-    cardBg: "bg-white",
-    cardBorder: "border-2 border-[#111111]",
-    badgeBg: "bg-[#111111]",
-    badgeText: "text-white",
-    taglineColor: "text-[#86868B]",
-    iconColor: "text-[#111111]",
-    patterns: ["iphone 14", "iphone 13 pro", "iphone 12 pro", "iphone 11 pro", "iphone 15"],
-  },
-];
-
-function TierIcon({ tier, className }: { tier: string; className?: string }) {
-  if (tier === "Budget") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    );
-  }
-  if (tier === "Populær") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
-      </svg>
-    );
-  }
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12l4.5 6-10.5 12L1.5 9 6 3Zm0 0 3 6m6-6-3 6m-6 0h12" />
-    </svg>
-  );
-}
 
 const IPHONE_FAQ = [
   {
@@ -134,26 +70,8 @@ const COMPARISON = [
 // ---------------------------------------------------------------------------
 
 export default async function IphonesPage() {
-  const templates = await getPublishedTemplates("iphone");
-
-  // Group by tier
-  const tierGroups = new Map<number, typeof templates>();
-  for (const t of templates) {
-    const name = t.display_name.toLowerCase();
-    let matched = false;
-    for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
-      if (MODEL_TIERS[i].patterns.some((p) => name.includes(p))) {
-        if (!tierGroups.has(i)) tierGroups.set(i, []);
-        tierGroups.get(i)!.push(t);
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      if (!tierGroups.has(0)) tierGroups.set(0, []);
-      tierGroups.get(0)!.push(t);
-    }
-  }
+  // Only show templates that actually have devices in stock right now.
+  const templates = await getPublishedTemplates("iphone", { inStock: true });
 
   return (
     <>
@@ -250,65 +168,9 @@ export default async function IphonesPage() {
         </div>
       </section>
 
-      {/* ── Model tiers ── */}
+      {/* ── All iPhones grid with sidebar filters (primary browsing area) ── */}
       <SectionWrapper>
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="lg">
-            Find den rigtige iPhone til dig
-          </Heading>
-          <p className="mt-4 text-lg text-[#86868B]">
-            Vi har delt vores udvalg op i tre prisgrupper, så det er nemt at
-            finde den iPhone der passer til dit budget og behov.
-          </p>
-        </div>
-
-        <div className="mt-12 space-y-8">
-          {MODEL_TIERS.map((tier, tierIndex) => {
-            const tierTemplates = tierGroups.get(tierIndex) ?? [];
-            if (tierTemplates.length === 0) return null;
-
-            return (
-              <div
-                key={tier.tier}
-                className={`rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 md:p-8`}
-              >
-                <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <TierIcon tier={tier.tier} className={`h-6 w-6 ${tier.iconColor}`} />
-                  <div>
-                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-wide`}>
-                      {tier.tier}
-                    </span>
-                    <p className={`mt-1 text-sm ${tier.taglineColor}`}>
-                      {tier.tagline}
-                    </p>
-                  </div>
-                  <span className="ml-auto text-sm font-semibold text-[#1A3D2E]">
-                    {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
-                  </span>
-                </div>
-
-                <div className="-mx-5 px-5 md:-mx-8 md:px-8">
-                  <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
-                    {tierTemplates.slice(0, 10).map((t) => (
-                      <div key={t.id} className="w-[42%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
-                        <ProductGridCard
-                          slug={t.slug}
-                          image={t.images[0]}
-                          title={t.display_name}
-                          minPrice={t.min_price}
-                          deviceCount={t.device_count}
-                          locations={t.locations}
-                          brand={t.brand}
-                          category={t.category}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <FilteredGrid templates={templates} heading="Alle iPhones på lager" />
       </SectionWrapper>
 
       {/* ── Condition walkthrough ── */}
@@ -333,11 +195,6 @@ export default async function IphonesPage() {
             Læs mere om vores graderingssystem &rarr;
           </Link>
         </div>
-      </SectionWrapper>
-
-      {/* ── All iPhones grid with filters ── */}
-      <SectionWrapper>
-        <FilteredGrid templates={templates} heading="Alle iPhones" />
       </SectionWrapper>
 
       {/* ── Hvorfor refurbished iPhone ── */}
