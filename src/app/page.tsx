@@ -6,6 +6,7 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { ShopTabs } from "@/components/home/shop-tabs";
 import { Bestsellers } from "@/components/home/bestsellers";
+import { RestsalgCard } from "@/components/home/restsalg-preview";
 
 // ---------------------------------------------------------------------------
 // Data
@@ -46,28 +47,21 @@ const SECONDARY_CATEGORIES = [
     href: "/iphones",
     tagline: "Fra 1.499 kr",
     image: "/images/products/iphone-lineup.jpg",
-    taglineClass: "text-green-eco",
+    taglineClass: "text-[#1A3D2E]",
   },
   {
     name: "iPads",
     href: "/ipads",
     tagline: "Fra 1.499 kr",
     image: "/images/products/ipad-air-new.png",
-    taglineClass: "text-green-eco",
+    taglineClass: "text-[#1A3D2E]",
   },
   {
     name: "Reparation",
     href: "/reparation",
     tagline: "Book tid",
     image: "/images/products/iphone-repair.png",
-    taglineClass: "text-green-eco",
-  },
-  {
-    name: "Restsalg",
-    href: "/restsalg",
-    tagline: "Ekstra tilbud",
-    image: "/images/products/iphone-hero.jpg",
-    taglineClass: "text-red-500",
+    taglineClass: "text-[#1A3D2E]",
   },
 ] as const;
 
@@ -237,8 +231,8 @@ export default function HomePage() {
                   </h3>
                   <p className="mt-0.5 text-sm text-gray">{cat.subtitle}</p>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#1A3D2E]">
+                <div className="mt-3 flex items-end justify-between">
+                  <span className="font-display text-xl font-extrabold text-[#1A3D2E] sm:text-2xl">
                     {cat.tagline}
                   </span>
                   <span className="text-xs font-semibold text-green-eco transition-transform duration-150 group-hover:translate-x-0.5">
@@ -250,7 +244,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Bottom row: 4 secondary (smaller) cards */}
+        {/* Bottom row: 3 secondary (smaller) cards + Restsalg with live products */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {SECONDARY_CATEGORIES.map((cat) => (
             <Link
@@ -274,12 +268,13 @@ export default function HomePage() {
                 <h3 className="font-display text-sm font-bold text-[#1A3D2E] sm:text-base">
                   {cat.name}
                 </h3>
-                <p className={`mt-0.5 text-xs font-semibold ${cat.taglineClass}`}>
+                <p className={`mt-1 font-display text-base font-extrabold sm:text-lg ${cat.taglineClass}`}>
                   {cat.tagline}
                 </p>
               </div>
             </Link>
           ))}
+          <RestsalgCard />
         </div>
       </SectionWrapper>
 
