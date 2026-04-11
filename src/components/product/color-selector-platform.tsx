@@ -66,12 +66,15 @@ type ColorSelectorPlatformProps = {
   colors: string[];
   selected: string;
   onChange: (color: string) => void;
+  /** Color names that currently have at least one device in stock. */
+  availableColors?: Set<string>;
 };
 
 export function ColorSelectorPlatform({
   colors,
   selected,
   onChange,
+  availableColors,
 }: ColorSelectorPlatformProps) {
   if (colors.length === 0) return null;
 
@@ -84,18 +87,23 @@ export function ColorSelectorPlatform({
       <div className="flex flex-wrap gap-2">
         {colors.map((color) => {
           const isSelected = color === selected;
+          const isAvailable = availableColors ? availableColors.has(color) : true;
           const hex = getSwatchColor(color);
 
           return (
             <button
               key={color}
               type="button"
-              onClick={() => onChange(color)}
-              title={color}
+              onClick={() => isAvailable && onChange(color)}
+              disabled={!isAvailable}
+              aria-disabled={!isAvailable}
+              title={isAvailable ? color : `${color} — udsolgt`}
               className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
                 isSelected
                   ? "border-green-eco ring-2 ring-green-eco/20"
-                  : "border-sand hover:border-charcoal/30"
+                  : isAvailable
+                    ? "border-sand hover:border-charcoal/30"
+                    : "cursor-not-allowed border-sand opacity-40"
               }`}
             >
               <span
@@ -117,6 +125,12 @@ export function ColorSelectorPlatform({
                     />
                   </svg>
                 </span>
+              )}
+              {!isAvailable && !isSelected && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-[2px] w-[110%] -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-charcoal/60"
+                />
               )}
             </button>
           );

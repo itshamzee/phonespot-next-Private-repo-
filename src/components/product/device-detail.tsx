@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductTemplate, Device, SkuProduct } from "@/lib/supabase/platform-types";
@@ -171,19 +171,81 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
 
-  // Find matching devices
-  const matchingDevices = listedDevices.filter(
-    (d) => {
-      const gradeMatch = selectedGrade === "N"
-        ? ((d.grade as string) === "N" || (d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")))
-        : d.grade === selectedGrade && !(selectedGrade !== "N" && d.condition_notes?.toLowerCase().includes("fabriksny") && d.grade === "A");
-      // A device with null storage/color matches any selection (it has no variant dimension).
-      // Only filter by storage/color when BOTH the selection and the device value are non-empty.
-      const storageMatch = selectedStorage === "" || d.storage == null || d.storage === selectedStorage;
-      const colorMatch = selectedColor === "" || d.color == null || d.color === selectedColor;
-      return gradeMatch && storageMatch && colorMatch;
+  // Grade filter is reused for availability calculations and final match
+  const matchesGrade = (d: Device): boolean => {
+    if (selectedGrade === "N") {
+      return (
+        (d.grade as string) === "N" ||
+        (d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")) === true
+      );
     }
+    return (
+      d.grade === selectedGrade &&
+      !(selectedGrade !== "N" && d.condition_notes?.toLowerCase().includes("fabriksny") && d.grade === "A")
+    );
+  };
+
+  // Devices that match the currently selected grade — used to determine
+  // which storage and color values are actually in stock.
+  const gradeMatchedDevices = useMemo(
+    () => listedDevices.filter(matchesGrade),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [listedDevices, selectedGrade],
   );
+
+  const availableStorages = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of gradeMatchedDevices) {
+      if (d.storage) set.add(d.storage);
+    }
+    return set;
+  }, [gradeMatchedDevices]);
+
+  const availableColors = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of gradeMatchedDevices) {
+      // When filtering by storage, a color is "available" only if a device
+      // with that color AND the selected storage exists. Falls back to all
+      // colors for the grade if storage is unselected.
+      if (!d.color) continue;
+      if (selectedStorage && d.storage && d.storage !== selectedStorage) continue;
+      set.add(d.color);
+    }
+    return set;
+  }, [gradeMatchedDevices, selectedStorage]);
+
+  // If the current storage/color selection becomes unavailable after a
+  // grade change, auto-jump to the first available option.
+  useEffect(() => {
+    if (
+      template.storage_options.length > 0 &&
+      availableStorages.size > 0 &&
+      selectedStorage &&
+      !availableStorages.has(selectedStorage)
+    ) {
+      const firstAvailable = template.storage_options.find((s) => availableStorages.has(s));
+      if (firstAvailable) setSelectedStorage(firstAvailable);
+    }
+  }, [availableStorages, selectedStorage, template.storage_options]);
+
+  useEffect(() => {
+    if (
+      template.colors.length > 0 &&
+      availableColors.size > 0 &&
+      selectedColor &&
+      !availableColors.has(selectedColor)
+    ) {
+      const firstAvailable = template.colors.find((c) => availableColors.has(c));
+      if (firstAvailable) setSelectedColor(firstAvailable);
+    }
+  }, [availableColors, selectedColor, template.colors]);
+
+  // Find matching devices (grade + storage + color)
+  const matchingDevices = gradeMatchedDevices.filter((d) => {
+    const storageMatch = selectedStorage === "" || d.storage == null || d.storage === selectedStorage;
+    const colorMatch = selectedColor === "" || d.color == null || d.color === selectedColor;
+    return storageMatch && colorMatch;
+  });
   const price =
     matchingDevices.length > 0
       ? Math.min(...matchingDevices.map((d) => d.selling_price ?? 0))
@@ -372,12 +434,22 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
 
           {/* Storage selector */}
           {template.storage_options.length > 0 && (
-            <StorageSelector options={template.storage_options} selected={selectedStorage} onChange={setSelectedStorage} />
+            <StorageSelector
+              options={template.storage_options}
+              selected={selectedStorage}
+              onChange={setSelectedStorage}
+              availableOptions={availableStorages}
+            />
           )}
 
           {/* Color selector */}
           {template.colors.length > 0 && (
-            <ColorSelectorPlatform colors={template.colors} selected={selectedColor} onChange={setSelectedColor} />
+            <ColorSelectorPlatform
+              colors={template.colors}
+              selected={selectedColor}
+              onChange={setSelectedColor}
+              availableColors={availableColors}
+            />
           )}
 
           {/* ── Price card + CTA ── */}
