@@ -27,23 +27,27 @@ export function RestsalgCard() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("/api/homepage-products?tab=bestsellers&limit=4")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProducts(
-            data
-              .filter((p: any) => p.image)
-              .slice(0, 4)
-              .map((p: any) => ({
-                id: p.id,
-                image: p.image,
-                minPrice: p.minPrice,
-              }))
-          );
-        }
-      })
-      .catch(() => setProducts([]));
+    // Fetch one product from each device category — guarantees variety and
+    // never includes spare parts (which live in their own tables/categories).
+    const tabs = ["laptops", "iphones", "ipads", "smartwatches"];
+    Promise.all(
+      tabs.map((tab) =>
+        fetch(`/api/homepage-products?tab=${tab}&limit=1`)
+          .then((res) => res.json())
+          .catch(() => [])
+      )
+    ).then((results) => {
+      const picked: Product[] = results
+        .flatMap((arr: any) => (Array.isArray(arr) ? arr : []))
+        .filter((p: any) => p.image)
+        .slice(0, 4)
+        .map((p: any) => ({
+          id: p.id,
+          image: p.image,
+          minPrice: p.minPrice,
+        }));
+      setProducts(picked);
+    });
   }, []);
 
   const cheapest =
