@@ -159,8 +159,8 @@ export default function HomePage() {
             sizes="100vw"
             aria-hidden="true"
           />
-          {/* Darker gradient overlay — stronger for readability on compact hero */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1A3D2E]/95 via-[#1A3D2E]/85 to-[#1A3D2E]/55" />
+          {/* Gradient overlay — strong on left, lets workshop image show on right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A3D2E]/95 via-[#1A3D2E]/70 to-[#1A3D2E]/15" />
 
           <div className="relative z-10 px-5 py-8 sm:px-8 sm:py-10 md:px-12 md:py-12 lg:max-w-[60%] lg:px-16 lg:py-14">
             <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/12 px-3.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-white/90 backdrop-blur-sm">
@@ -211,34 +211,34 @@ export default function HomePage() {
             <Link
               key={cat.href}
               href={cat.href}
-              className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#1A3D2E]/8 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#1A3D2E]/15 hover:shadow-[0_12px_32px_-12px_rgba(26,61,46,0.18)]"
             >
-              {/* Image area — tall */}
-              <div className="relative flex h-44 items-center justify-center bg-gradient-to-br from-[#f3efe8] to-[#e8e2d5] p-6 sm:h-48">
+              {/* Image area — clean white */}
+              <div className="relative flex h-52 items-center justify-center bg-white p-6 sm:h-56">
                 <Image
                   src={cat.image}
                   alt={cat.name}
-                  width={260}
-                  height={180}
-                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  width={320}
+                  height={240}
+                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                   unoptimized
                 />
                 {cat.badge && (
-                  <span className="absolute top-3 right-3 rounded-full bg-green-eco px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute top-3 right-3 rounded-full bg-[#1A3D2E] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                     {cat.badge}
                   </span>
                 )}
               </div>
               {/* Body */}
-              <div className="flex flex-1 flex-col justify-between px-5 py-4">
+              <div className="flex flex-1 flex-col justify-between border-t border-[#1A3D2E]/8 px-5 py-4">
                 <div>
-                  <h3 className="font-display text-lg font-bold text-charcoal">
+                  <h3 className="font-display text-lg font-bold text-[#1A3D2E]">
                     {cat.name}
                   </h3>
                   <p className="mt-0.5 text-sm text-gray">{cat.subtitle}</p>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-sm font-bold text-green-eco">
+                  <span className="text-sm font-bold text-[#1A3D2E]">
                     {cat.tagline}
                   </span>
                   <span className="text-xs font-semibold text-green-eco transition-transform duration-150 group-hover:translate-x-0.5">
@@ -256,22 +256,22 @@ export default function HomePage() {
             <Link
               key={cat.href}
               href={cat.href}
-              className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#1A3D2E]/8 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#1A3D2E]/15 hover:shadow-[0_12px_32px_-12px_rgba(26,61,46,0.18)]"
             >
-              {/* Image area — shorter */}
-              <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-[#f1ede6] to-[#e6e0d2] p-4 sm:h-32">
+              {/* Image area — clean white, image dominates */}
+              <div className="relative flex h-36 items-center justify-center bg-white p-3 sm:h-40">
                 <Image
                   src={cat.image}
                   alt={cat.name}
-                  width={160}
-                  height={120}
-                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  width={220}
+                  height={180}
+                  className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                   unoptimized
                 />
               </div>
               {/* Body */}
-              <div className="px-4 py-3">
-                <h3 className="font-display text-sm font-bold text-charcoal sm:text-base">
+              <div className="border-t border-[#1A3D2E]/8 px-4 py-3">
+                <h3 className="font-display text-sm font-bold text-[#1A3D2E] sm:text-base">
                   {cat.name}
                 </h3>
                 <p className={`mt-0.5 text-xs font-semibold ${cat.taglineClass}`}>
