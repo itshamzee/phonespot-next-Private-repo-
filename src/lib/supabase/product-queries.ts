@@ -157,6 +157,7 @@ export async function getPublishedSkuProducts(
 
   let query = supabase.from("sku_products").select("*").eq("status", "published");
   if (category) query = query.eq("category", category);
+  query = query.neq("subcategory", "spare-part");
 
   const { data } = await query.order("title");
   return data || [];
