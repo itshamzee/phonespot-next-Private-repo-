@@ -11,6 +11,7 @@ import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
+import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 
 type DeviceDetailProps = {
   template: ProductTemplate;
@@ -279,6 +280,22 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const categoryName = getCategoryName(template.category);
   const deviceType = getDeviceType(template.category);
 
+  // Fire Meta Pixel ViewContent once on mount
+  useEffect(() => {
+    const p = listedDevices.length > 0
+      ? Math.min(...listedDevices.map((d) => d.selling_price ?? 0).filter(Boolean))
+      : template.base_price_a;
+    if (p) {
+      trackViewContent({
+        name: template.display_name,
+        id: template.id,
+        price: p / 100,
+        category: template.category,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Compare-at price (use grade A as "original" reference)
   const compareAtPrice = template.base_price_a && price && template.base_price_a > price ? template.base_price_a : null;
   const savingsPercent = compareAtPrice && price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : null;
@@ -287,6 +304,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     if (!bestMatch || !price) return;
     setIsAddingToCart(true);
     setCartError(null);
+    trackAddToCart({ id: template.id, name: template.display_name, price: price / 100 });
     try {
       const loc = (bestMatch as unknown as Record<string, unknown>).location as { id: string; name: string } | null;
       await addDevice({

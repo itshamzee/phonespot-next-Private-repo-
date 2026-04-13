@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
 import { PrePurchaseInfo } from "@/components/checkout/pre-purchase-info";
+import { trackInitiateCheckout } from "@/lib/tracking/fbq";
 
 interface CustomerInfo {
   name: string;
@@ -107,6 +108,10 @@ export function CheckoutForm() {
     }
 
     setIsSubmitting(true);
+
+    // Meta Pixel: InitiateCheckout
+    const checkoutValue = cartState.items.reduce((s, i) => s + (i.price ?? 0), 0);
+    trackInitiateCheckout({ value: checkoutValue / 100, numItems: cartState.items.length });
 
     try {
       const res = await fetch("/api/checkout/session", {

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { formatOere } from "@/lib/cart/utils";
+import { trackPurchase } from "@/lib/tracking/fbq";
 
 // -----------------------------------------------------------------------
 // Types for the order data fetched from Supabase
@@ -191,6 +192,14 @@ function ConfirmationContent() {
       // Clear the cart once — only do it once even on React strict-mode double-invoke
       if (!cleared) {
         cleared = true;
+
+        // Meta Pixel: Purchase
+        trackPurchase({
+          orderId: transformedOrder.id,
+          value: transformedOrder.total / 100,
+          contentIds: transformedOrder.order_items.map((i) => i.id),
+        });
+
         await clearCart();
       }
     }
