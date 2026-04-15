@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import { LayoutShell } from "@/components/layout/public-shell";
 import { CookiebotProvider } from "@/components/consent/cookiebot-provider";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
 import "./globals.css";
+
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -69,6 +72,21 @@ export default function RootLayout({
   return (
     <html lang="da" className={`${barlowCondensed.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-warm-white font-body text-charcoal antialiased">
+        {/* Google Consent Mode v2 defaults — must load before gtag */}
+        <Script id="consent-mode-defaults" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              wait_for_update: 500
+            });
+          `}
+        </Script>
+        {GA4_ID && <GoogleAnalytics gaId={GA4_ID} />}
         <CookiebotProvider />
         <JsonLd data={ORGANIZATION_JSONLD} />
         <LayoutShell>{children}</LayoutShell>

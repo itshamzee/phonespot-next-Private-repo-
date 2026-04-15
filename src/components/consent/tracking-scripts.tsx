@@ -2,7 +2,6 @@
 
 import Script from "next/script";
 
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? "";
 const TIKTOK_PIXEL_ID = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID ?? "";
 const KLAVIYO_PUBLIC_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY ?? "";
@@ -10,33 +9,26 @@ const KLAVIYO_PUBLIC_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY ?? "";
 export function TrackingScripts() {
   return (
     <>
-      {/* Google Analytics 4 — statistics category */}
-      {GA4_ID && (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
-            type="text/plain"
-            data-cookieconsent="statistics"
-            strategy="afterInteractive"
-          />
-          <Script
-            id="ga4-init"
-            type="text/plain"
-            data-cookieconsent="statistics"
-            strategy="afterInteractive"
-          >
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${GA4_ID}', {
-                anonymize_ip: true,
-                cookie_flags: 'SameSite=None;Secure'
+      {/* GA4 is now loaded via @next/third-parties/google in layout.tsx
+          with Consent Mode v2 defaults (denied). Cookiebot updates consent
+          on accept via the CookiebotCallback_OnAccept hook. */}
+
+      {/* Consent Mode update — grant analytics when Cookiebot statistics accepted */}
+      <Script id="consent-mode-cookiebot-bridge" strategy="afterInteractive">
+        {`
+          window.addEventListener('CookiebotOnAccept', function() {
+            if (window.Cookiebot && window.Cookiebot.consent) {
+              function gtag(){window.dataLayer=window.dataLayer||[];window.dataLayer.push(arguments);}
+              gtag('consent', 'update', {
+                analytics_storage: window.Cookiebot.consent.statistics ? 'granted' : 'denied',
+                ad_storage: window.Cookiebot.consent.marketing ? 'granted' : 'denied',
+                ad_user_data: window.Cookiebot.consent.marketing ? 'granted' : 'denied',
+                ad_personalization: window.Cookiebot.consent.marketing ? 'granted' : 'denied'
               });
-            `}
-          </Script>
-        </>
-      )}
+            }
+          });
+        `}
+      </Script>
 
       {/* Facebook Pixel — marketing category */}
       {FB_PIXEL_ID && (
