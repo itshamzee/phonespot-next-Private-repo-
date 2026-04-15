@@ -97,14 +97,14 @@ function TrustpilotBadge() {
             <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
               <defs>
                 <linearGradient id="footer-half-star">
-                  <stop offset="40%" stopColor="#00b67a" />
-                  <stop offset="40%" stopColor="#4a4d48" />
+                  <stop offset="70%" stopColor="#00b67a" />
+                  <stop offset="70%" stopColor="#4a4d48" />
                 </linearGradient>
               </defs>
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#footer-half-star)" />
             </svg>
           </div>
-          <span className="text-[11px] font-semibold text-white/70">4.4</span>
+          <span className="text-[11px] font-semibold text-white/70">4.7</span>
         </div>
       </div>
     </a>
