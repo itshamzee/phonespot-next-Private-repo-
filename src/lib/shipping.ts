@@ -2,6 +2,26 @@ import type { ShippingOption, ShippingMethod } from "./shipmondo/types";
 import { CLICK_COLLECT_OPTIONS } from "./shipmondo/carriers";
 
 const SHIPPING_PRICES: Record<string, ShippingOption> = {
+  // Checkout uses these simplified IDs
+  postnord: {
+    method: "postnord",
+    label: "PostNord Levering",
+    price: 5900,
+    delivery_estimate: "2-4 hverdage",
+    requires_pickup_point: false,
+    carrier_code: "postnord",
+    product_code: "PDK17",
+  },
+  dao: {
+    method: "dao",
+    label: "DAO Pakke",
+    price: 4900,
+    delivery_estimate: "2-4 hverdage",
+    requires_pickup_point: true,
+    carrier_code: "dao",
+    product_code: "DAO_DIRECT",
+  },
+  // Legacy keys (in case older orders reference them)
   gls_home: {
     method: "gls_home",
     label: "GLS - Levering til dør",
@@ -71,5 +91,5 @@ export function getDispatchLocation(
 }
 
 export function isClickCollect(method: ShippingMethod): boolean {
-  return method.startsWith("click_collect_");
+  return method.startsWith("click_collect_") || method.startsWith("pickup_");
 }

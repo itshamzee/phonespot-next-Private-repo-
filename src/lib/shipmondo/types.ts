@@ -72,6 +72,10 @@ export type ShipmondoError = {
 };
 
 export type ShippingMethod =
+  | "postnord"
+  | "dao"
+  | "pickup_slagelse"
+  | "pickup_vejle"
   | "gls_home"
   | "gls_pickup"
   | "postnord_home"

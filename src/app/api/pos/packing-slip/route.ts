@@ -364,15 +364,22 @@ export async function GET(req: NextRequest) {
 
 function getShippingLabel(method: string | null): string {
   const labels: Record<string, string> = {
-    postnord_myparcel: "PostNord MyPack Collect (pakkeshop)",
+    // Current checkout method IDs
+    postnord: "PostNord Levering",
+    dao: "DAO Pakke",
+    pickup_slagelse: "Afhentning — Slagelse",
+    pickup_vejle: "Afhentning — Vejle",
+    // Legacy method IDs
     postnord_home: "PostNord Hjem-levering",
-    gls_parcelshop: "GLS PakkeShop",
+    postnord_pickup: "PostNord Pakkeshop",
+    postnord_myparcel: "PostNord MyPack Collect",
     gls_home: "GLS Hjem-levering",
+    gls_pickup: "GLS PakkeShop",
+    gls_parcelshop: "GLS PakkeShop",
+    dao_pickup: "DAO Pakkeshop",
     dao_parcelshop: "DAO Pakkeshop",
-    click_collect_cph: "Afhentning — København",
-    click_collect_aarhus: "Afhentning — Aarhus",
-    click_collect_vejle: "Afhentning — Vejle",
     click_collect_slagelse: "Afhentning — Slagelse",
+    click_collect_vejle: "Afhentning — Vejle",
   };
   return labels[method || ""] || method || "Ikke angivet";
 }
