@@ -144,7 +144,7 @@ function getCategoryName(category: string): string {
 /* ================================================================== */
 
 export function DeviceDetail({ template, devices, accessories }: DeviceDetailProps) {
-  const { addDevice, openCart, openUpsell } = useCart();
+  const { addDevice, openCart, openUpsell, cartState } = useCart();
 
   const listedDevices = devices.filter((d) => d.status === "listed");
 
@@ -308,21 +308,39 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
 
   async function handleAddToCart() {
     if (!bestMatch || !price) return;
+
+    // Each refurbished device is a unique physical unit. When a customer wants
+    // multiple of the same model, pick the next matching unit not already in cart.
+    const inCartDeviceIds = new Set(
+      cartState.items.flatMap((i) => (i.type === "device" ? [i.deviceId] : [])),
+    );
+    const addable = matchingDevices.filter((d) => !inCartDeviceIds.has(d.id));
+    if (addable.length === 0) {
+      setCartError(
+        "Du har allerede alle tilgængelige enheder af denne model i kurven.",
+      );
+      return;
+    }
+    const unit = addable.reduce((best, d) =>
+      (d.selling_price ?? Infinity) < (best.selling_price ?? Infinity) ? d : best,
+    );
+    const unitPrice = unit.selling_price ?? price;
+
     setIsAddingToCart(true);
     setCartError(null);
-    trackAddToCart({ id: template.id, name: template.display_name, price: price / 100 });
+    trackAddToCart({ id: template.id, name: template.display_name, price: unitPrice / 100 });
     try {
-      const loc = (bestMatch as unknown as Record<string, unknown>).location as { id: string; name: string } | null;
+      const loc = (unit as unknown as Record<string, unknown>).location as { id: string; name: string } | null;
       await addDevice({
         type: "device",
-        deviceId: bestMatch.id,
+        deviceId: unit.id,
         templateId: template.id,
         title: template.display_name,
-        grade: (selectedGrade === "N" ? "A" : bestMatch.grade) as "A" | "B" | "C",
-        color: bestMatch.color ?? selectedColor,
-        storage: bestMatch.storage ?? selectedStorage,
+        grade: (selectedGrade === "N" ? "A" : unit.grade) as "A" | "B" | "C",
+        color: unit.color ?? selectedColor,
+        storage: unit.storage ?? selectedStorage,
         image: template.images[0] ?? null,
-        price: bestMatch.selling_price ?? price,
+        price: unitPrice,
         reservedAt: new Date().toISOString(),
         locationId: loc?.id,
         locationName: loc?.name,
