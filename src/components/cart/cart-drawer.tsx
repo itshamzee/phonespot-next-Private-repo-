@@ -186,6 +186,14 @@ export function CartDrawer() {
                     {formatOere(totals.subtotal)}
                   </span>
                 </div>
+                {totals.bundleDiscountAmount > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#1A3D2E]">Spot bundle rabat</span>
+                    <span className="text-sm font-medium text-[#1A3D2E]">
+                      -{formatOere(totals.bundleDiscountAmount)}
+                    </span>
+                  </div>
+                )}
                 {totals.shippingCost > 0 && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-[#86868B]">Fragt</span>

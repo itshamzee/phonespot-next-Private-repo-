@@ -23,8 +23,12 @@ export interface CartSkuItem {
   title: string;
   image: string | null;
   price: number;
+  /** Full (non-discounted) unit price in øre. Only set for Spot items where price reflects a sale. */
+  unitPrice?: number;
   quantity: number;
   variantLabel?: string; // e.g. "Farve: Sort" — shown in cart line item
+  /** Present on Spot beskyttelsesglas items to enable bundle-pricing rules. */
+  spotKind?: "glass" | "privacy" | "lens" | "plateau";
 }
 
 export type CartItem = CartDeviceItem | CartSkuItem;
@@ -51,6 +55,8 @@ export interface CartState {
 export interface CartTotals {
   subtotal: number;
   discountAmount: number;
+  /** Total saved from Spot bundle pricing (3-for-2 + Lens combo). Display-only at checkout. */
+  bundleDiscountAmount: number;
   shippingCost: number;
   total: number;
   itemCount: number;

@@ -3,7 +3,7 @@
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 import { cartItemKey } from "@/lib/cart/types";
 import { useCart } from "@/components/cart/cart-context";
-import { formatOere, lineTotal } from "@/lib/cart/utils";
+import { formatOere, lineTotal, calcBundleDiscounts } from "@/lib/cart/utils";
 
 // ---------------------------------------------------------------------------
 // Grade badge colours
@@ -125,8 +125,14 @@ function DeviceLineItem({ item }: { item: CartDeviceItem }) {
 // ---------------------------------------------------------------------------
 
 function SkuLineItem({ item }: { item: CartSkuItem }) {
-  const { removeItem, updateSkuQuantity } = useCart();
+  const { removeItem, updateSkuQuantity, cartState } = useCart();
   const key = cartItemKey(item);
+
+  // Compute bundle discount for this specific line
+  const bundleResults = calcBundleDiscounts(cartState.items);
+  const bundleResult = bundleResults.find((r) => r.skuProductId === item.skuProductId);
+  const discountOere = bundleResult?.discount_oere ?? 0;
+  const discountReason = bundleResult?.reason ?? null;
 
   function handleQtyChange(newQty: number) {
     if (newQty <= 0) {
@@ -135,6 +141,9 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
       updateSkuQuantity(item.skuProductId, newQty);
     }
   }
+
+  const rawTotal = lineTotal(item);
+  const discountedTotal = rawTotal - discountOere;
 
   return (
     <div className="flex gap-3 sm:gap-4 py-4">
@@ -145,6 +154,11 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
           <h4 className="text-sm font-medium text-charcoal leading-tight">{item.title}</h4>
           {item.variantLabel && (
             <p className="mt-0.5 text-xs text-charcoal/50">{item.variantLabel}</p>
+          )}
+          {discountOere > 0 && discountReason && (
+            <span className="mt-1 inline-flex items-center rounded bg-[#E8F4ED] px-1.5 py-0.5 text-xs font-semibold text-[#1A3D2E]">
+              {discountReason}
+            </span>
           )}
         </div>
 
@@ -193,10 +207,15 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
             </button>
           </div>
 
-          {/* Line total */}
-          <span className="text-sm font-semibold text-charcoal">
-            {formatOere(lineTotal(item))}
-          </span>
+          {/* Line total — strikethrough original if bundle discount applies */}
+          <div className="flex flex-col items-end gap-0.5">
+            {discountOere > 0 && (
+              <span className="text-xs text-charcoal/40 line-through">{formatOere(rawTotal)}</span>
+            )}
+            <span className="text-sm font-semibold text-charcoal">
+              {formatOere(discountedTotal)}
+            </span>
+          </div>
         </div>
       </div>
 

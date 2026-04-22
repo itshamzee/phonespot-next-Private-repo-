@@ -8,7 +8,7 @@ export function CheckoutSummary() {
   const { cartState, totals } = useCart();
 
   const { items, discount } = cartState;
-  const { subtotal, discountAmount, shippingCost, total } = totals;
+  const { subtotal, discountAmount, bundleDiscountAmount, shippingCost, total } = totals;
 
   return (
     <div className="rounded-2xl border border-sand bg-cream p-6 space-y-5">
@@ -103,6 +103,13 @@ export function CheckoutSummary() {
               </span>
             </span>
             <span>−{formatOere(discountAmount)}</span>
+          </div>
+        )}
+
+        {bundleDiscountAmount > 0 && (
+          <div className="flex items-center justify-between text-green-eco">
+            <span>Spot bundle rabat</span>
+            <span>−{formatOere(bundleDiscountAmount)}</span>
           </div>
         )}
 
