@@ -6,6 +6,7 @@ import { TILBEHOER_DEVICES, SPOT_HUB_TILES } from "@/lib/tilbehoer-config";
 import { fetchActiveSpotSkus, groupByVariantGroup, findVariantGroupForModel } from "@/lib/spot/queries";
 import { JsonLd } from "@/components/seo/json-ld";
 import { VariantToggle } from "./_components/VariantToggle";
+import { ThreeForTwoBanner } from "../../_components/ThreeForTwoBanner";
 
 export async function generateMetadata({ params }: { params: Promise<{ brand: string; model: string }> }): Promise<Metadata> {
   const { brand, model } = await params;
@@ -30,6 +31,11 @@ export default async function ProductPage({ params }: { params: Promise<{ brand:
 
   const variants = groupByVariantGroup(allSkus).get(variantGroup)!;
   const primary = variants[0];
+
+  const lensSku = allSkus.find(s =>
+    s.variant_group?.startsWith("spot-lens") &&
+    s.compatible_models.includes(model)
+  ) ?? null;
   const siblings = primary.compatible_models.filter(m => m !== model);
 
   const lowPrice  = Math.min(...variants.map(v => v.sale_price ?? v.selling_price));
@@ -82,7 +88,8 @@ export default async function ProductPage({ params }: { params: Promise<{ brand:
         <div>
           <h1 className="text-4xl font-semibold">{device.label} beskyttelsesglas</h1>
 
-          <div className="mt-6"><VariantToggle variants={variants} /></div>
+          <div className="mt-6 mb-4"><ThreeForTwoBanner /></div>
+          <VariantToggle variants={variants} lensSku={lensSku} />
 
           <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-900 text-sm">
             Gratis montering ved afhentning i Vejle eller Slagelse
