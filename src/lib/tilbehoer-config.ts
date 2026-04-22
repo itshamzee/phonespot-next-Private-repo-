@@ -326,13 +326,22 @@ export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   outlet: ["cover", "screen_protector", "charger", "cable", "audio", "other"],
 };
 
+export interface SpotHubTile {
+  readonly id: string;
+  readonly label: string;
+  readonly brand: DeviceBrand;
+  readonly modelPrefix: string;
+}
+
 // Tiles shown on /beskyttelsesglas hub (Huawei excluded per product brief).
 // iPad is merchandised separately from iPhone even though both are Apple.
-export const SPOT_HUB_TILES = [
-  { key: "iphone",  label: "iPhone",         brand: "apple"   as DeviceBrand, modelPrefix: "iphone-" },
-  { key: "ipad",    label: "iPad",           brand: "apple"   as DeviceBrand, modelPrefix: "ipad-"   },
-  { key: "samsung", label: "Samsung Galaxy", brand: "samsung" as DeviceBrand, modelPrefix: ""        },
-  { key: "pixel",   label: "Google Pixel",   brand: "google"  as DeviceBrand, modelPrefix: ""        },
-  { key: "xiaomi",  label: "Xiaomi",         brand: "xiaomi"  as DeviceBrand, modelPrefix: ""        },
-  { key: "oneplus", label: "OnePlus",        brand: "oneplus" as DeviceBrand, modelPrefix: ""        },
-] as const;
+// Used to filter TILBEHOER_DEVICES by slug prefix; modelPrefix === "" means
+// match every device for the brand.
+export const SPOT_HUB_TILES: readonly SpotHubTile[] = [
+  { id: "iphone",  label: "iPhone",         brand: "apple",   modelPrefix: "iphone-" },
+  { id: "ipad",    label: "iPad",           brand: "apple",   modelPrefix: "ipad-"   },
+  { id: "samsung", label: "Samsung Galaxy", brand: "samsung", modelPrefix: ""        },
+  { id: "pixel",   label: "Google Pixel",   brand: "google",  modelPrefix: ""        },
+  { id: "xiaomi",  label: "Xiaomi",         brand: "xiaomi",  modelPrefix: ""        },
+  { id: "oneplus", label: "OnePlus",        brand: "oneplus", modelPrefix: ""        },
+];
