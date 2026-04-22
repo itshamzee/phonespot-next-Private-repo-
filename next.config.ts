@@ -57,6 +57,9 @@ const nextConfig: NextConfig = {
       { source: "/usb-c", destination: "/tilbehoer", permanent: true },
       { source: "/str", destination: "/", permanent: true },
       { source: "/services/login_with_shop", destination: "/", permanent: true },
+      // Legacy tempered-glass URLs → new Spot URLs
+      { source: "/tilbehoer/skaermbeskyttelse", destination: "/beskyttelsesglas", permanent: true },
+      { source: "/tilbehoer/skaermbeskyttelse/:model", destination: "/beskyttelsesglas/apple/:model", permanent: true },
     ];
   },
 };
