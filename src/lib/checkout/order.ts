@@ -25,6 +25,8 @@ export interface CreateOrderParams {
   shippingCost: number;
   subtotal: number;
   discountAmount: number;
+  /** Total Spot bundle discount (3-for-2 + Lens combo) in øre. */
+  bundleDiscountAmount: number;
   total: number;
   stripeCheckoutSessionId: string;
 }
@@ -90,6 +92,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     shipping_address: params.customer.address,
     subtotal: params.subtotal,
     discount_amount: params.discountAmount,
+    bundle_discount_amount: params.bundleDiscountAmount,
     shipping_cost: params.shippingCost,
     total: params.total,
     discount_code_id: params.discountCodeId,

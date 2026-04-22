@@ -3,7 +3,7 @@ import { validateCart } from "@/lib/checkout/validate";
 import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
-import { calcDiscount, calcSubtotal } from "@/lib/cart/utils";
+import { calcBundleDiscounts, calcDiscount, calcSubtotal } from "@/lib/cart/utils";
 import type { CartItem, CartDeviceItem, DiscountApplication } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
 import { createServerClient } from "@/lib/supabase/client";
@@ -57,6 +57,13 @@ export async function POST(req: NextRequest) {
     })) as CartItem[];
     const subtotal = calcSubtotal(serverItems);
 
+    // 3b. Compute bundle discounts server-side (never trust client-computed discount amounts)
+    const bundleDiscountAmount = calcBundleDiscounts(serverItems).reduce(
+      (sum, r) => sum + r.discount_oere,
+      0,
+    );
+    console.log("[checkout/session] bundleDiscountAmount:", bundleDiscountAmount, "øre");
+
     // 4. Validate discount code if provided
     let discount: DiscountApplication | null = null;
     let discountCodeId: string | null = null;
@@ -95,11 +102,11 @@ export async function POST(req: NextRequest) {
     let shippingCost = SHIPPING_METHODS[shippingMethod];
     if (discount?.type === "free_shipping") {
       shippingCost = 0;
-    } else if (subtotal - discountAmount >= FREE_SHIPPING_THRESHOLD) {
+    } else if (subtotal - discountAmount - bundleDiscountAmount >= FREE_SHIPPING_THRESHOLD) {
       shippingCost = 0;
     }
 
-    const total = Math.max(0, subtotal - discountAmount + shippingCost);
+    const total = Math.max(0, subtotal - discountAmount - bundleDiscountAmount + shippingCost);
 
     // 4b. Decrement stock for Foxway devices
     {
@@ -137,6 +144,7 @@ export async function POST(req: NextRequest) {
       shippingCost,
       subtotal,
       discountAmount,
+      bundleDiscountAmount,
       total,
       stripeCheckoutSessionId: "pending",
     });
@@ -153,6 +161,7 @@ export async function POST(req: NextRequest) {
       shippingCost,
       subtotal,
       discountAmount,
+      bundleDiscountAmount,
       total,
     });
 
