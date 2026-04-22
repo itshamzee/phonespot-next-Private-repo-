@@ -25,10 +25,15 @@ export async function generateMetadata({
   const title = `${config.label} til iPhone & Samsung | PhoneSpot`;
   const description = config.description;
 
+  const canonical =
+    category === "beskyttelsesglas"
+      ? "https://phonespot.dk/beskyttelsesglas"
+      : `https://phonespot.dk/tilbehoer/${category}`;
+
   return {
     title,
     description,
-    alternates: { canonical: `https://phonespot.dk/tilbehoer/${category}` },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
