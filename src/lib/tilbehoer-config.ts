@@ -13,7 +13,7 @@ export interface TilbehoerCategory {
   faq: { q: string; a: string }[]; // 3 FAQ items
 }
 
-export type DeviceBrand = "apple" | "samsung" | "oneplus" | "huawei" | "google";
+export type DeviceBrand = "apple" | "samsung" | "oneplus" | "huawei" | "google" | "xiaomi";
 
 export interface TilbehoerDevice {
   slug: string;
@@ -25,8 +25,9 @@ export const DEVICE_BRANDS: { slug: DeviceBrand; label: string }[] = [
   { slug: "apple", label: "Apple" },
   { slug: "samsung", label: "Samsung" },
   { slug: "oneplus", label: "OnePlus" },
-  { slug: "huawei", label: "Huawei" },
   { slug: "google", label: "Google" },
+  { slug: "xiaomi", label: "Xiaomi" },
+  { slug: "huawei", label: "Huawei" }, // kept for legacy data; not featured for Spot
 ];
 
 export interface TilbehoerRoute {
@@ -77,6 +78,27 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
       {
         q: "Kan jeg sætte panserglas på med cover på?",
         a: "Ja, de fleste panserglas-modeller er designet til at fungere med tynde covers. Tjek produktets kompatibilitets-noter.",
+      },
+    ],
+  },
+  {
+    slug: "beskyttelsesglas",
+    label: "Beskyttelsesglas",
+    description: "Spot beskyttelsesglas til alle telefoner og tablets.",
+    deviceSpecific: true,
+    heroDescription: "Hærdet 9H glas med perfekt pasform. Gratis professionel montering i Vejle og Slagelse på 60 sekunder.",
+    faq: [
+      {
+        q: "Holder Spot beskyttelsesglas virkelig mod fald?",
+        a: "Ja. Glasset er 9H hærdet — samme hårdhed som safirglas. Det tager stødet så din skærm ikke gør det. Udskift glasset, ikke skærmen.",
+      },
+      {
+        q: "Kan jeg få det monteret gratis?",
+        a: "Kom forbi PhoneSpot i Vejle eller Slagelse — vi monterer glasset gratis på under 60 sekunder, perfekt hver gang.",
+      },
+      {
+        q: "Er det samme glas til alle iPhones?",
+        a: "Nej. Nogle modeller deler samme dimensioner (f.eks. iPhone 13/14/15) og bruger samme glas. Vores produktsider viser altid hvilke modeller et specifikt glas passer til.",
       },
     ],
   },
@@ -297,8 +319,20 @@ export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
 export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   covers: ["cover"],
   skaermbeskyttelse: ["screen_protector"],
+  beskyttelsesglas: ["screen_protector"],
   opladere: ["charger", "cable"],
   lyd: ["audio"],
   holdere: ["other"],
   outlet: ["cover", "screen_protector", "charger", "cable", "audio", "other"],
 };
+
+// Tiles shown on /beskyttelsesglas hub (Huawei excluded per product brief).
+// iPad is merchandised separately from iPhone even though both are Apple.
+export const SPOT_HUB_TILES = [
+  { key: "iphone",  label: "iPhone",         brand: "apple"   as DeviceBrand, modelPrefix: "iphone-" },
+  { key: "ipad",    label: "iPad",           brand: "apple"   as DeviceBrand, modelPrefix: "ipad-"   },
+  { key: "samsung", label: "Samsung Galaxy", brand: "samsung" as DeviceBrand, modelPrefix: ""        },
+  { key: "pixel",   label: "Google Pixel",   brand: "google"  as DeviceBrand, modelPrefix: ""        },
+  { key: "xiaomi",  label: "Xiaomi",         brand: "xiaomi"  as DeviceBrand, modelPrefix: ""        },
+  { key: "oneplus", label: "OnePlus",        brand: "oneplus" as DeviceBrand, modelPrefix: ""        },
+] as const;
