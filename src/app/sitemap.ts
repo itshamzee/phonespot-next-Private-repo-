@@ -8,8 +8,52 @@ import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { STORES } from "@/lib/store-config";
+import { SPOT_HUB_TILES, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import { fetchActiveSpotSkus } from "@/lib/spot/queries";
 
 const BASE_URL = "https://phonespot.dk";
+
+// ---------------------------------------------------------------------------
+// Spot (Beskyttelsesglas) sitemap entries
+// ---------------------------------------------------------------------------
+
+async function spotSitemapEntries(base: string): Promise<MetadataRoute.Sitemap> {
+  const skus = await fetchActiveSpotSkus().catch(() => []);
+  const covered = new Set(skus.flatMap((s) => s.compatible_models));
+
+  const entries: MetadataRoute.Sitemap = [
+    { url: `${base}/beskyttelsesglas`,          lastModified: new Date(), changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${base}/beskyttelsesglas/vejle`,    lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/beskyttelsesglas/slagelse`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+  ];
+
+  for (const tile of SPOT_HUB_TILES) {
+    entries.push({
+      url: `${base}/beskyttelsesglas/${tile.id}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    });
+  }
+
+  for (const device of TILBEHOER_DEVICES) {
+    if (!covered.has(device.slug)) continue;
+    const tile = SPOT_HUB_TILES.find(
+      (t) =>
+        t.brand === device.brand &&
+        (t.modelPrefix ? device.slug.startsWith(t.modelPrefix) : true),
+    );
+    if (!tile) continue;
+    entries.push({
+      url: `${base}/beskyttelsesglas/${tile.id}/${device.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
+  }
+
+  return entries;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---- Static pages --------------------------------------------------------
@@ -370,5 +414,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages];
+  // ---- Spot (Beskyttelsesglas) pages ----------------------------------------
+
+  const spotPages = await spotSitemapEntries(BASE_URL);
+
+  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages, ...spotPages];
 }
