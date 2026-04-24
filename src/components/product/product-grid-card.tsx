@@ -186,10 +186,10 @@ export function ProductGridCard({
   return (
     <Link
       href={`/refurbished/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20"
+      className="group flex flex-row sm:flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20 active:scale-[0.99]"
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF]">
+      <div className="relative aspect-square w-40 shrink-0 overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF] sm:w-auto">
         {/* Stock badge — top left */}
         {deviceCount > 3 && (
           <div className="absolute top-3 left-3 z-10">
@@ -272,6 +272,21 @@ export function ProductGridCard({
                   Kan sendes eller afhentes i butik
                 </p>
               )}
+              {/* CTA pill — visual affordance that the whole card is tappable */}
+              <div
+                aria-hidden="true"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors group-hover:bg-[#14301F]"
+              >
+                Se priser
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                >
+                  <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
+                </svg>
+              </div>
             </div>
           ) : (
             <p className="text-sm font-medium text-[#86868B]">Ikke på lager</p>

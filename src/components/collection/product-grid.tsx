@@ -17,7 +17,7 @@ export function ProductGrid({ products, collectionHandle }: ProductGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
       {products.map((product, index) => (
         <FadeIn key={product.id} delay={index * 0.05}>
           <ProductCard
