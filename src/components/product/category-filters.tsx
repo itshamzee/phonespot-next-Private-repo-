@@ -285,17 +285,19 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
     (t) => t.category?.toLowerCase() === "laptop" || t.category?.toLowerCase() === "macbook"
   );
 
-  // Which sections are collapsed
+  // Which sections are open. Keep the short-and-common sections open so the
+  // mobile drawer doesn't feel overwhelming on first paint; heavier sections
+  // (brand list, storage, RAM, processor) stay collapsed until tapped.
   const [openSections, setOpenSections] = useState({
     price: true,
     grade: true,
-    storage: true,
+    storage: false,
     availability: true,
     sort: true,
-    brand: true,
-    screenSize: true,
-    ram: true,
-    processor: true,
+    brand: false,
+    screenSize: false,
+    ram: false,
+    processor: false,
   });
 
   // Derive available storage options from the full template list (memoised by
@@ -895,7 +897,7 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Filtre"
-          className={`fixed bottom-0 left-0 right-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl transition-transform duration-300 ${
+          className={`fixed bottom-0 left-0 right-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl bg-white shadow-2xl transition-transform duration-300 ${
             drawerOpen ? "translate-y-0" : "translate-y-full"
           }`}
         >
@@ -932,15 +934,23 @@ export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
             </button>
           </div>
 
-          {/* Panel content */}
-          <div className="px-5 pb-8 pt-2">{panelContent}</div>
+          {/* Panel content (scrolls; footer stays put) */}
+          <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">{panelContent}</div>
 
-          {/* Sticky apply button */}
-          <div className="sticky bottom-0 border-t border-[#E5E5EA] bg-white px-5 py-4">
+          {/* Sticky footer: Reset + Apply */}
+          <div className="flex items-center gap-3 border-t border-[#E5E5EA] bg-white px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={resetFilters}
+              disabled={activeCount === 0}
+              className="min-h-[44px] rounded-full border border-[#E5E5EA] px-5 text-sm font-semibold text-[#6E6E73] transition-colors hover:bg-[#F7F7F8] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Nulstil
+            </button>
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="w-full rounded-full bg-[#1A3D2E] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="min-h-[44px] flex-1 rounded-full bg-[#1A3D2E] text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               Se resultater
             </button>
