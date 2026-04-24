@@ -7,7 +7,6 @@ import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
-import { STORES } from "@/lib/store-config";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { fetchActiveSpotSkus } from "@/lib/spot/queries";
 
@@ -319,30 +318,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // ---- Location-specific repair pages -----------------------------------------
+  // Only the static landing pages (/reparation-vejle, /reparation-slagelse) —
+  // the dynamic /reparation/[location]/... routes were removed in 79cc23d,
+  // so any per-model/per-brand location URLs in the sitemap would 404.
 
-  const locations = Object.keys(STORES);
-  const locationRepairPages: MetadataRoute.Sitemap = locations.flatMap(
-    (location) => [
-      {
-        url: `${BASE_URL}/reparation/${location}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.9,
-      },
-      ...repairBrands.map((brand) => ({
-        url: `${BASE_URL}/reparation/${location}/${brand.slug}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      })),
-      ...repairModelSlugs.map(({ brand, model }) => ({
-        url: `${BASE_URL}/reparation/${location}/${brand}/${model}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      })),
-    ]
-  );
+  const locationRepairPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/reparation-vejle`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/reparation-slagelse`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
+  ];
 
   // ---- Service pages ----------------------------------------------------------
 

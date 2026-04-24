@@ -60,6 +60,26 @@ const nextConfig: NextConfig = {
       // Legacy tempered-glass URLs → new Spot URLs
       { source: "/tilbehoer/skaermbeskyttelse", destination: "/beskyttelsesglas", permanent: true },
       { source: "/tilbehoer/skaermbeskyttelse/:model", destination: "/beskyttelsesglas/apple/:model", permanent: true },
+
+      // Location-prefixed repair URLs — the /reparation/[location]/... dynamic
+      // route was disabled (commit 79cc23d). Google has ~400 such URLs indexed
+      // from the earlier sitemap. Redirect them to the static landing pages
+      // or to the brand-level model detail.
+      { source: "/reparation/vejle", destination: "/reparation-vejle", permanent: true },
+      { source: "/reparation/slagelse", destination: "/reparation-slagelse", permanent: true },
+      { source: "/reparation/vejle/:brand", destination: "/reparation/:brand", permanent: true },
+      { source: "/reparation/slagelse/:brand", destination: "/reparation/:brand", permanent: true },
+      { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
+      { source: "/reparation/slagelse/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
+
+      // Legacy Shopify repair URLs (indexed by Google before migration)
+      { source: "/pages/reparation", destination: "/reparation", permanent: true },
+      { source: "/pages/iphone-reparation", destination: "/reparation/iphone", permanent: true },
+      { source: "/pages/samsung-reparation", destination: "/reparation/samsung", permanent: true },
+      { source: "/pages/ipad-reparation", destination: "/reparation/ipad", permanent: true },
+      { source: "/pages/macbook-reparation", destination: "/reparation/macbook", permanent: true },
+      { source: "/pages/skaermskift", destination: "/reparation", permanent: true },
+      { source: "/pages/batteriskift", destination: "/reparation", permanent: true },
     ];
   },
 };
