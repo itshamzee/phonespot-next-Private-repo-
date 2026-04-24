@@ -7,14 +7,9 @@ import { TrustBar } from "@/components/ui/trust-bar";
 export function HubPageClient() {
   return (
     <>
-      <TilbehoerLayout
-        heroTitle="Tilbehør"
-        heroDescription="Covers, opladere, kabler og mere — til alle populære mærker"
-        activeCategory=""
-      />
-
-      {/* Beskyttelsesglas promo banner — Spot line has its own hub */}
-      <section className="mx-auto max-w-7xl px-4 py-10 md:py-12">
+      {/* Beskyttelsesglas promo banner — sits above the tilbehør hero so
+          customers immediately see the Spot hub since it lives at its own URL */}
+      <section className="mx-auto max-w-7xl px-4 pt-4 md:pt-6">
         <Link
           href="/beskyttelsesglas"
           className="group relative block overflow-hidden rounded-2xl bg-[#1A3D2E] md:rounded-3xl"
@@ -79,6 +74,12 @@ export function HubPageClient() {
           </div>
         </Link>
       </section>
+
+      <TilbehoerLayout
+        heroTitle="Tilbehør"
+        heroDescription="Covers, opladere, kabler og mere — til alle populære mærker"
+        activeCategory=""
+      />
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
         <TrustBar />
