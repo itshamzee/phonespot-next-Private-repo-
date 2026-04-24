@@ -26,6 +26,9 @@ export async function GET(req: NextRequest) {
     .eq("is_active", true)
     .eq("category", "accessory")
     .neq("subcategory", "spare-part")
+    // Spot beskyttelsesglas lives on its own hub at /beskyttelsesglas — don't dump
+    // its 70+ model-specific SKUs into the generic /tilbehoer grid.
+    .neq("subcategory", "spot-glass")
     .order("created_at", { ascending: false });
 
   if (dbCategories && category !== "outlet") {

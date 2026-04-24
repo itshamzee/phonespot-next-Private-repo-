@@ -21,7 +21,8 @@ const PRODUKT_ITEMS: NavItem[] = [
   { label: "iPads", href: "/ipads", description: "iPad Air, iPad Pro og mere" },
   { label: "Bærbare", href: "/baerbare", description: "MacBook, ThinkPad, EliteBook" },
   { label: "Smartwatches", href: "/smartwatches", description: "Apple Watch fra 1.099 kr" },
-  { label: "Tilbehør", href: "/tilbehoer", description: "Covers, kabler og panserglas" },
+  { label: "Tilbehør", href: "/tilbehoer", description: "Covers, kabler og opladere" },
+  { label: "Beskyttelsesglas", href: "/beskyttelsesglas", description: "9H hærdet · gratis montering", tag: "Nyt" },
 ];
 
 const OM_PHONESPOT_ITEMS: NavItem[] = [
