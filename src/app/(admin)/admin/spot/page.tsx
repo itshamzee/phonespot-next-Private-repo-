@@ -11,10 +11,13 @@ export default async function SpotOverviewPage() {
 
   return (
     <div className="p-8 space-y-6">
+      <Link href="/admin/tilbehoer" className="text-sm text-gray-500 hover:text-gray-700">
+        ← Tilbage til Tilbehør
+      </Link>
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">Spot — oversigt</h1>
-          <p className="text-gray-500">Tempered glass og tilbehør fra Spot-linjen.</p>
+          <h1 className="text-3xl font-semibold">Beskyttelsesglas (Spot)</h1>
+          <p className="text-gray-500">Tempered glass, privacy, linse- og plateaubeskyttere med 3-for-2 og Lens-combo bundles.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/admin/spot/opret" className="px-4 py-2 rounded-lg bg-black text-white">
