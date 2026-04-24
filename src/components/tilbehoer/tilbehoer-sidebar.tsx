@@ -188,6 +188,36 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
         </div>
 
         {/* ------------------------------------------------------------------ */}
+        {/* SPOT BESKYTTELSESGLAS PROMO — compact card                           */}
+        {/* ------------------------------------------------------------------ */}
+        <Link
+          href="/beskyttelsesglas"
+          className="group relative block overflow-hidden rounded-xl bg-[#1A3D2E] p-4 transition-all hover:bg-[#2a5c47]"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-3 -bottom-5 select-none font-display text-[5rem] font-black leading-none text-white/[0.08]"
+          >
+            9H
+          </div>
+          <div className="relative">
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/60">9H hærdet</p>
+            <p className="mt-1 font-display text-sm font-bold leading-tight text-white">
+              Beskyttelsesglas
+              <br />
+              til din enhed
+            </p>
+            <p className="mt-2 text-[11px] text-white/70">Fra 199 kr · gratis montering</p>
+            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white">
+              Se alle
+              <svg aria-hidden className="h-3 w-3 transition-transform group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+        </Link>
+
+        {/* ------------------------------------------------------------------ */}
         {/* KATEGORIER                                                           */}
         {/* ------------------------------------------------------------------ */}
         <div>
