@@ -234,15 +234,15 @@ export function ProductGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[#86868B]">
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-[#86868B]">
           {brand} · {categoryLabel(category)}
         </p>
-        <h3 className="mt-1 line-clamp-2 font-semibold text-[#111111] group-hover:text-[#1A3D2E]">
+        <h3 className="mt-1 line-clamp-2 text-sm sm:text-base font-semibold text-[#111111] group-hover:text-[#1A3D2E]">
           {title}
         </h3>
         {specParts.length > 0 && (
-          <p className="mt-1 text-[11px] sm:text-xs text-[#86868B] truncate line-clamp-1">
+          <p className="mt-1 text-xs text-[#86868B] truncate line-clamp-1">
             {specParts.join(" \u00B7 ")}
           </p>
         )}
@@ -257,10 +257,10 @@ export function ProductGridCard({
               <p className="text-xs font-semibold text-[#6E6E73]">
                 fra
               </p>
-              <p className="font-bold text-lg sm:text-2xl text-[#1A3D2E] leading-tight">
+              <p className="font-bold text-xl sm:text-2xl text-[#1A3D2E] leading-tight">
                 {formatFromPrice(minPrice)} kr.
               </p>
-              <p className="text-[10px] text-[#6E6E73]">inkl. moms</p>
+              <p className="text-[11px] sm:text-xs text-[#6E6E73]">inkl. moms</p>
               {compareAtPrice != null && compareAtPrice > minPrice && (
                 <p className="mt-0.5 text-xs font-semibold text-[#1A3D2E]">
                   Spar op til {Math.round((1 - minPrice / compareAtPrice) * 100)}%
@@ -268,7 +268,7 @@ export function ProductGridCard({
               )}
               {/* Shipping info */}
               {deviceCount > 0 && (
-                <p className="mt-1 text-[10px] font-semibold text-[#86868B]">
+                <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[#86868B]">
                   Kan sendes eller afhentes i butik
                 </p>
               )}

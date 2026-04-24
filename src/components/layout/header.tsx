@@ -67,7 +67,7 @@ function ChevronIcon({ className }: { className?: string }) {
 function AnnouncementBar() {
   return (
     <div className="bg-[#1A3D2E]">
-      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-3 sm:px-4 text-[11px] sm:text-xs font-medium text-white/85">
+      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-3 sm:px-4 text-xs font-medium text-white/85">
         {/* Left: stores + phone */}
         <div className="flex items-center gap-3 sm:gap-5">
           <span className="inline-flex items-center gap-1.5">
@@ -549,21 +549,21 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream hover:text-green-eco"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream hover:text-green-eco"
                 aria-label="Søg"
               >
-                <SearchIcon className="h-[18px] w-[18px]" />
+                <SearchIcon className="h-5 w-5" />
               </button>
 
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream hover:text-green-eco"
+                className="relative flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream hover:text-green-eco"
                 onClick={openCart}
                 aria-label="Åbn kurv"
               >
-                <CartIcon className="h-[18px] w-[18px]" />
+                <CartIcon className="h-5 w-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-green-eco px-1 text-[10px] font-bold text-white">
+                  <span className="absolute top-0.5 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-green-eco px-1 text-[10px] font-bold text-white">
                     {totalItems}
                   </span>
                 )}
