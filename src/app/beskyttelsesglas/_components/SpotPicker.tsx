@@ -404,14 +404,16 @@ function ModelConfigurator({
             </div>
           )}
 
-          {/* Cover upsell link */}
+          {/* All-accessories link — filtered to the chosen model */}
           <Link
-            href={`/tilbehoer?device=${encodeURIComponent(modelSlug)}&category=covers`}
+            href={`/tilbehoer?model=${encodeURIComponent(labelFor(modelSlug))}`}
             className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-black/[0.12] bg-[#FAF7F1]/60 p-4 transition-colors hover:border-[#1A3D2E]/30 hover:bg-[#FAF7F1]"
           >
             <div>
-              <div className="text-sm font-semibold text-[#1A3D2E]">Mangler du cover?</div>
-              <div className="mt-0.5 text-xs text-black/50">Se covers til {labelFor(modelSlug)} →</div>
+              <div className="text-sm font-semibold text-[#1A3D2E]">
+                Se alt tilbehør til {labelFor(modelSlug)}
+              </div>
+              <div className="mt-0.5 text-xs text-black/50">Covers, opladere, kabler og mere — kun til din model</div>
             </div>
             <svg aria-hidden className="h-4 w-4 text-black/40" viewBox="0 0 16 16" fill="none">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
