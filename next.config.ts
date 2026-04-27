@@ -72,6 +72,10 @@ const nextConfig: NextConfig = {
       { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
       { source: "/reparation/slagelse/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
 
+      // Trusmi short links (used in social/Meta ads)
+      { source: "/trusmi", destination: "/trusmi-briller", permanent: false },
+      { source: "/oversaetterbriller", destination: "/trusmi-briller", permanent: false },
+
       // Legacy Shopify repair URLs (indexed by Google before migration)
       { source: "/pages/reparation", destination: "/reparation", permanent: true },
       { source: "/pages/iphone-reparation", destination: "/reparation/iphone", permanent: true },
