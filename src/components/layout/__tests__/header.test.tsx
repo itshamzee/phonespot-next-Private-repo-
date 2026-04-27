@@ -23,28 +23,50 @@ describe("Header", () => {
     expect(screen.getAllByText("Butikker").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("does not show mega menu items by default", () => {
+  it("renders the always-visible mobile/tablet category strip", () => {
     render(<Header />);
-    expect(screen.queryByText("Trending nu")).toBeNull();
+    const strip = screen.getByRole("navigation", { name: "Kategorier" });
+    expect(strip).toBeDefined();
+    const links = strip.querySelectorAll("a");
+    expect(links.length).toBeGreaterThanOrEqual(7);
+  });
+
+  it("does not show mega menu sections by default", () => {
+    render(<Header />);
     expect(screen.queryByText("Populære mærker")).toBeNull();
+    expect(screen.queryByText("Hjælp mig med")).toBeNull();
   });
 
   it("shows mega menu when Produkter is clicked", () => {
     render(<Header />);
     fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
-    expect(screen.getByText("Kategorier")).toBeDefined();
     expect(screen.getByText("Populære mærker")).toBeDefined();
-    expect(screen.getByText("Trending nu")).toBeDefined();
-    expect(screen.getByText("Spar på Foxway-laptops")).toBeDefined();
+    expect(screen.getByText("Hjælp mig med")).toBeDefined();
+    expect(screen.getByText("Find butik")).toBeDefined();
+  });
+
+  it("does not advertise B2B as a header pill", () => {
+    render(<Header />);
+    expect(screen.queryByText("B2B Portal")).toBeNull();
+  });
+
+  it("does not show Foxway anywhere in the header", () => {
+    render(<Header />);
+    fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
+    expect(screen.queryByText(/Foxway/i)).toBeNull();
+  });
+
+  it("shows the actual Trustpilot rating of 4.7", () => {
+    render(<Header />);
+    expect(screen.getByText("★ 4.7")).toBeDefined();
   });
 
   it("shows mobile drawer with categories when hamburger is clicked", () => {
     render(<Header />);
     const hamburger = screen.getByLabelText("Åbn menu");
     fireEvent.click(hamburger);
-    expect(screen.getByText("Kategorier")).toBeDefined();
-    expect(screen.getByText("Mærker")).toBeDefined();
     expect(screen.getByText("Min konto")).toBeDefined();
+    expect(screen.getByText("Mærker")).toBeDefined();
   });
 
   it("renders the account link to /konto", () => {

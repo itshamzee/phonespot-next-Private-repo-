@@ -11,8 +11,7 @@ import { useCart } from "@/components/cart/cart-context";
 
 type CategoryItem = { label: string; href: string; tag?: string };
 type BrandItem = { label: string; href: string };
-type TrendingItem = { label: string; meta: string; price: string; href: string; iconKind: "phone" | "laptop" | "watch" };
-type ActionItem = { label: string; description: string; href: string; iconKind: "sell" | "repair" | "b2b" };
+type ActionItem = { label: string; description: string; href: string; iconKind: "sell" | "repair" | "store" };
 
 const CATEGORY_ITEMS: CategoryItem[] = [
   { label: "iPhones", href: "/iphones" },
@@ -33,24 +32,15 @@ const BRAND_ITEMS: BrandItem[] = [
   { label: "Huawei", href: "/smartphones" },
 ];
 
-const TRENDING_ITEMS: TrendingItem[] = [
-  { label: "iPhone 15 Pro Max", meta: "256 GB · Grade A", price: "Fra 8.999 kr", href: "/iphones", iconKind: "phone" },
-  { label: "MacBook Air M2", meta: '13" · 8/256 GB', price: "Fra 6.499 kr", href: "/baerbare", iconKind: "laptop" },
-  { label: "Samsung S24", meta: "128 GB · Grade A", price: "Fra 4.499 kr", href: "/smartphones", iconKind: "phone" },
-];
-
 const ACTION_ITEMS: ActionItem[] = [
   { label: "Sælg min enhed", description: "Få et hurtigt tilbud", href: "/saelg-din-enhed", iconKind: "sell" },
   { label: "Reparér nu", description: "Skærm, batteri, m.m.", href: "/reparation", iconKind: "repair" },
-  { label: "B2B-priser", description: "Op til 30 % rabat", href: "/b2b", iconKind: "b2b" },
+  { label: "Find butik", description: "Slagelse & Vejle", href: "/butik", iconKind: "store" },
 ];
 
-/* Mobile-only secondary links (footer pills in drawer) */
 const MOBILE_FOOTER_LINKS = [
-  { label: "Butikker", href: "/butik" },
   { label: "FAQ", href: "/faq" },
   { label: "Garanti", href: "/garanti" },
-  { label: "B2B", href: "/b2b" },
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Kontakt", href: "/kontakt" },
 ];
@@ -110,31 +100,6 @@ function CheckIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 
-function TrendingThumbIcon({ kind }: { kind: TrendingItem["iconKind"] }) {
-  if (kind === "phone") {
-    return (
-      <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.5}>
-        <rect x="6" y="2" width="12" height="20" rx="2.5" />
-        <path d="M10 18h4" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (kind === "laptop") {
-    return (
-      <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.5}>
-        <rect x="2" y="5" width="20" height="14" rx="1.5" />
-        <path d="M2 19h20M10 22h4" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <rect x="7" y="3" width="10" height="18" rx="2.5" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
 function ActionIcon({ kind }: { kind: ActionItem["iconKind"] }) {
   if (kind === "sell") {
     return (
@@ -152,8 +117,8 @@ function ActionIcon({ kind }: { kind: ActionItem["iconKind"] }) {
   }
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
-      <path d="M3 21V9l9-6 9 6v12" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 22V12h6v10" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="10" r="3" />
     </svg>
   );
 }
@@ -165,7 +130,7 @@ function ActionIcon({ kind }: { kind: ActionItem["iconKind"] }) {
 function AnnouncementBar() {
   return (
     <div className="bg-green-eco">
-      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-3 text-xs font-medium text-white/85 sm:px-4">
+      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-3 text-[12px] font-medium text-white/85 sm:px-4">
         <div className="flex items-center gap-3 sm:gap-5">
           <span className="inline-flex items-center gap-1.5">
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -192,7 +157,7 @@ function AnnouncementBar() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[#00B67A] hover:underline"
           >
-            Trustpilot <span className="font-semibold">★ 4.4</span>
+            Trustpilot <span className="font-semibold">★ 4.7</span>
           </a>
           <span aria-hidden="true" className="text-white/30">·</span>
           <span>36 mdr. garanti</span>
@@ -212,18 +177,18 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
       className="absolute inset-x-0 top-full z-50 border-b border-sand bg-white shadow-[0_30px_60px_-20px_rgba(0,0,0,0.18)]"
       onMouseLeave={onClose}
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-8 px-6 py-10 lg:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-3 gap-12 px-6 py-10 lg:px-8">
 
         {/* Col 1: Kategorier */}
-        <div className="col-span-3">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Kategorier</p>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Kategorier</p>
           <ul className="mt-5 space-y-1">
             {CATEGORY_ITEMS.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   onClick={onClose}
-                  className="group flex items-center justify-between rounded-lg py-2 pr-2 font-display text-[17px] font-semibold tracking-tight text-charcoal transition-colors hover:text-green-eco"
+                  className="group flex items-center justify-between rounded-lg py-2 pr-2 text-[15px] font-semibold tracking-tight text-charcoal transition-colors hover:text-green-eco"
                 >
                   <span className="flex items-center gap-2">
                     {item.label}
@@ -241,9 +206,9 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Col 2: Mærker */}
-        <div className="col-span-4">
+        <div>
           <div className="flex items-baseline justify-between">
-            <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Populære mærker</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Populære mærker</p>
             <Link href="/smartphones" onClick={onClose} className="text-[11px] font-semibold text-green-eco hover:underline">
               Alle mærker →
             </Link>
@@ -260,64 +225,27 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
               </Link>
             ))}
           </div>
-          <div className="mt-6 rounded-xl bg-green-pale p-5">
-            <p className="font-display text-xs font-semibold uppercase tracking-wider text-green-eco">Spar på Foxway-laptops</p>
-            <p className="mt-1.5 text-[13px] leading-snug text-charcoal">
-              Erhvervs-bærbare med 12 mdr. garanti — direkte fra Foxway, fra <strong>1.799 kr</strong>.
-            </p>
-            <Link
-              href="/baerbare"
-              onClick={onClose}
-              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-green-eco hover:underline"
-            >
-              Se udvalget <ArrowIcon className="h-3.5 w-3.5" />
-            </Link>
-          </div>
         </div>
 
-        {/* Col 3: Trending */}
-        <div className="col-span-3">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Trending nu</p>
-          <div className="mt-4 space-y-1">
-            {TRENDING_ITEMS.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={onClose}
-                className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-cream"
-              >
-                <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br from-green-pale to-cream text-green-eco">
-                  <TrendingThumbIcon kind={item.iconKind} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-[14px] font-semibold leading-tight text-charcoal">{item.label}</p>
-                  <p className="text-[12px] text-gray">{item.meta}</p>
-                  <p className="mt-0.5 text-[13px] font-bold text-green-eco">{item.price}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Col 4: Hjælp mig med */}
-        <div className="col-span-2">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Hjælp mig med</p>
-          <div className="mt-4 space-y-2">
+        {/* Col 3: Hjælp mig med */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray">Hjælp mig med</p>
+          <div className="mt-5 space-y-2.5">
             {ACTION_ITEMS.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
                 onClick={onClose}
-                className="group flex items-start gap-3 rounded-xl border border-sand p-3 transition-all hover:border-green-eco hover:bg-cream"
+                className="group flex items-start gap-3 rounded-xl border border-sand p-4 transition-all hover:border-green-eco hover:bg-cream"
               >
-                <div className="mt-0.5 grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg bg-green-pale text-green-eco">
+                <div className="mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg bg-green-pale text-green-eco">
                   <ActionIcon kind={action.iconKind} />
                 </div>
                 <div>
-                  <p className="font-display text-[13px] font-semibold leading-tight text-charcoal group-hover:text-green-eco">
+                  <p className="text-[14px] font-semibold leading-tight tracking-tight text-charcoal group-hover:text-green-eco">
                     {action.label}
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-gray">{action.description}</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-gray">{action.description}</p>
                 </div>
               </Link>
             ))}
@@ -345,7 +273,7 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
           <Link
             href="/refurbished"
             onClick={onClose}
-            className="font-display text-[13px] font-semibold uppercase tracking-wide text-green-eco hover:underline"
+            className="text-[13px] font-semibold tracking-tight text-green-eco hover:underline"
           >
             Se alle produkter →
           </Link>
@@ -571,13 +499,13 @@ export function Header() {
 
         {/* Main bar */}
         <div className="relative border-b border-sand">
-          <div className="mx-auto flex h-14 max-w-7xl items-center px-4 lg:h-[68px] lg:px-8">
+          <div className="mx-auto flex h-14 max-w-7xl items-center px-4 xl:h-[68px] xl:px-8">
 
             {/* Left: hamburger + logo */}
             <div className="flex items-center">
               <button
                 type="button"
-                className="mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream lg:hidden"
+                className="mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-charcoal transition-colors hover:bg-cream xl:hidden"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label={mobileOpen ? "Luk menu" : "Åbn menu"}
               >
@@ -598,14 +526,14 @@ export function Header() {
                   alt="PhoneSpot"
                   width={130}
                   height={30}
-                  className="h-7 w-auto lg:h-8"
+                  className="h-7 w-auto xl:h-8"
                 />
               </Link>
             </div>
 
-            {/* Center: desktop nav */}
+            {/* Center: desktop nav (xl+) */}
             <nav
-              className="ml-10 hidden flex-1 items-center gap-8 lg:flex"
+              className="ml-10 hidden flex-1 items-center gap-8 xl:flex"
               aria-label="Primær navigation"
               onMouseLeave={closeMegaSoon}
             >
@@ -614,7 +542,7 @@ export function Header() {
                 onMouseEnter={openMega}
                 onFocus={openMega}
                 onClick={() => setMegaOpen((v) => !v)}
-                className={`group flex items-center gap-1 py-2 font-display text-[14px] font-semibold uppercase tracking-wide transition-colors ${
+                className={`group flex items-center gap-1 py-2 text-[15px] font-medium tracking-tight transition-colors ${
                   megaOpen ? "text-green-eco" : "text-charcoal hover:text-green-eco"
                 }`}
                 aria-expanded={megaOpen}
@@ -622,31 +550,22 @@ export function Header() {
                 Produkter
                 <ChevronIcon className={`h-3 w-3 transition-transform duration-200 ${megaOpen ? "rotate-180" : ""}`} />
               </button>
-              <Link href="/reparation" className="font-display text-[14px] font-semibold uppercase tracking-wide text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/reparation" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Reparation
               </Link>
-              <Link href="/saelg-din-enhed" className="font-display text-[14px] font-semibold uppercase tracking-wide text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/saelg-din-enhed" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Sælg din enhed
               </Link>
-              <Link href="/tilbehoer" className="font-display text-[14px] font-semibold uppercase tracking-wide text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/tilbehoer" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Tilbehør
               </Link>
-              <Link href="/butik" className="font-display text-[14px] font-semibold uppercase tracking-wide text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/butik" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Butikker
               </Link>
             </nav>
 
-            {/* Right: B2B + Search + Account + Cart */}
+            {/* Right: Search + Account + Cart */}
             <div className="ml-auto flex items-center gap-1">
-              <Link
-                href="/b2b"
-                className="mr-1 hidden items-center gap-1.5 rounded-full border border-green-eco px-3.5 py-1.5 font-display text-[12px] font-semibold uppercase tracking-wide text-green-eco transition-colors hover:bg-green-eco hover:text-white sm:inline-flex"
-              >
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                  <path d="M3 21V9l9-6 9 6v12M9 22V12h6v10" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                B2B Portal
-              </Link>
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
@@ -678,12 +597,38 @@ export function Header() {
             </div>
           </div>
 
-          {/* Mega menu panel — hover bridge */}
+          {/* Mega menu panel */}
           {megaOpen && (
-            <div className="hidden lg:block" onMouseEnter={openMega}>
+            <div className="hidden xl:block" onMouseEnter={openMega}>
               <MegaMenuPanel onClose={() => setMegaOpen(false)} />
             </div>
           )}
+        </div>
+
+        {/* Mobile / tablet category strip */}
+        <div className="border-b border-sand xl:hidden">
+          <div className="mx-auto max-w-7xl">
+            <div
+              className="flex gap-1.5 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              role="navigation"
+              aria-label="Kategorier"
+            >
+              {CATEGORY_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex flex-none items-center gap-1.5 rounded-full border border-sand bg-white px-3.5 py-1.5 text-[12.5px] font-medium tracking-tight text-charcoal transition-colors hover:border-green-eco hover:text-green-eco"
+                >
+                  {item.label}
+                  {item.tag && (
+                    <span className="rounded-full bg-green-eco px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
+                      {item.tag}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
 
         {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
@@ -691,7 +636,7 @@ export function Header() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className="fixed inset-0 z-[60] xl:hidden">
           <div className="absolute inset-0 bg-black/20" onClick={() => setMobileOpen(false)} />
           <div
             className="absolute inset-x-0 top-[5.5rem] bottom-0 overflow-y-auto bg-white"
@@ -717,8 +662,8 @@ export function Header() {
                   className="flex flex-col items-start gap-1 rounded-xl bg-green-pale p-3.5 transition-colors hover:bg-green-pale/80"
                 >
                   <ActionIcon kind="repair" />
-                  <span className="mt-1 font-display text-[12px] font-semibold uppercase tracking-wide text-charcoal">Reparation</span>
-                  <span className="text-[10px] leading-tight text-gray">Book tid eller walk-in</span>
+                  <span className="mt-1 text-[13px] font-semibold tracking-tight text-charcoal">Reparation</span>
+                  <span className="text-[11px] leading-tight text-gray">Book tid eller walk-in</span>
                 </Link>
                 <Link
                   href="/saelg-din-enhed"
@@ -726,13 +671,13 @@ export function Header() {
                   className="flex flex-col items-start gap-1 rounded-xl bg-green-pale p-3.5 transition-colors hover:bg-green-pale/80"
                 >
                   <ActionIcon kind="sell" />
-                  <span className="mt-1 font-display text-[12px] font-semibold uppercase tracking-wide text-charcoal">Sælg din enhed</span>
-                  <span className="text-[10px] leading-tight text-gray">Få et tilbud</span>
+                  <span className="mt-1 text-[13px] font-semibold tracking-tight text-charcoal">Sælg din enhed</span>
+                  <span className="text-[11px] leading-tight text-gray">Få et tilbud</span>
                 </Link>
               </div>
 
               {/* Categories grid */}
-              <p className="mt-6 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-gray">Kategorier</p>
+              <p className="mt-6 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-gray">Kategorier</p>
               <div className="mt-3 grid grid-cols-2 gap-2.5">
                 {CATEGORY_ITEMS.map((item) => (
                   <Link
@@ -741,7 +686,7 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-between rounded-xl border border-sand p-3 transition-colors hover:border-green-eco"
                   >
-                    <span className="font-display text-[13px] font-semibold tracking-tight text-charcoal">{item.label}</span>
+                    <span className="text-[14px] font-semibold tracking-tight text-charcoal">{item.label}</span>
                     {item.tag ? (
                       <span className="rounded-full bg-green-eco px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">
                         {item.tag}
@@ -757,8 +702,8 @@ export function Header() {
 
               {/* Brands strip */}
               <div className="mt-6 flex items-baseline justify-between">
-                <p className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-gray">Mærker</p>
-                <Link href="/smartphones" onClick={() => setMobileOpen(false)} className="text-[10px] font-semibold text-green-eco">
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-gray">Mærker</p>
+                <Link href="/smartphones" onClick={() => setMobileOpen(false)} className="text-[11px] font-semibold text-green-eco">
                   Alle →
                 </Link>
               </div>
@@ -768,31 +713,9 @@ export function Header() {
                     key={brand.label}
                     href={brand.href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex-none rounded-full border border-sand px-3.5 py-1.5 text-[12px] font-semibold text-charcoal transition-colors hover:border-green-eco"
+                    className="flex-none rounded-full border border-sand px-3.5 py-1.5 text-[12.5px] font-medium tracking-tight text-charcoal transition-colors hover:border-green-eco"
                   >
                     {brand.label}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Trending */}
-              <p className="mt-6 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-gray">Trending nu</p>
-              <div className="mt-3 space-y-1.5">
-                {TRENDING_ITEMS.slice(0, 2).map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-cream"
-                  >
-                    <div className="grid h-12 w-12 flex-none place-items-center rounded-lg bg-gradient-to-br from-green-pale to-cream text-green-eco">
-                      <TrendingThumbIcon kind={item.iconKind} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-display text-[13px] font-semibold text-charcoal">{item.label}</p>
-                      <p className="text-[11px] text-gray">{item.meta}</p>
-                    </div>
-                    <p className="font-display text-[12px] font-bold text-green-eco">{item.price.replace("Fra ", "")}</p>
                   </Link>
                 ))}
               </div>
@@ -805,7 +728,7 @@ export function Header() {
               >
                 <span className="flex items-center gap-3">
                   <AccountIcon className="h-5 w-5 text-green-eco" />
-                  <span className="font-display text-[13px] font-semibold uppercase tracking-wide text-charcoal">Min konto</span>
+                  <span className="text-[14px] font-semibold tracking-tight text-charcoal">Min konto</span>
                 </span>
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-gray" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -819,7 +742,7 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-full border border-sand px-3 py-1.5 text-[11px] font-medium text-charcoal transition-colors hover:bg-cream"
+                    className="rounded-full border border-sand px-3 py-1.5 text-[11.5px] font-medium tracking-tight text-charcoal transition-colors hover:bg-cream"
                   >
                     {link.label}
                   </Link>
