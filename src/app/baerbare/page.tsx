@@ -174,7 +174,7 @@ export default async function BaerbarePage() {
           if (!specs) return "";
           return [specs.processor, specs.ram, specs.storage, specs.screen_size]
             .filter(Boolean)
-            .join(" \u00B7 ");
+            .join(" · ");
         };
 
         if (!featured) return null;

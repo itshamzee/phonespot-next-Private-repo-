@@ -142,12 +142,12 @@ export function inferAttributes(
 
   // Screen protector type detection
   if (cat === "tempered glass" || cat.includes("tempered")) {
-    attrs.protector_type = "H\u00E6rdet glas";
+    attrs.protector_type = "Hærdet glas";
   } else if (cat === "screen protector") {
     if (titleLower.includes("privacy")) attrs.protector_type = "Privacy";
     else if (titleLower.includes("edge to edge") || titleLower.includes("edge-to-edge")) attrs.protector_type = "Edge to Edge";
     else if (titleLower.includes("film") || titleLower.includes("folie")) attrs.protector_type = "Film";
-    else attrs.protector_type = "H\u00E6rdet glas";
+    else attrs.protector_type = "Hærdet glas";
   } else if (cat === "edge to edge") {
     attrs.protector_type = "Edge to Edge";
   }
@@ -166,14 +166,14 @@ export function inferAttributes(
 
   // Charger type detection
   if (cat.includes("charger") || cat === "wireless charger") {
-    if (cat.includes("wireless") || cat.includes("tr\u00E5dl\u00F8s") || titleLower.includes("wireless") || titleLower.includes("qi")) {
-      attrs.charger_type = "Tr\u00E5dl\u00F8s";
+    if (cat.includes("wireless") || cat.includes("trådløs") || titleLower.includes("wireless") || titleLower.includes("qi")) {
+      attrs.charger_type = "Trådløs";
     } else if (cat.includes("car") || titleLower.includes("car") || titleLower.includes("bil")) {
       attrs.charger_type = "Biloplader";
     } else if (cat.includes("magsafe") || titleLower.includes("magsafe")) {
       attrs.charger_type = "MagSafe";
     } else {
-      attrs.charger_type = "V\u00E6goplader";
+      attrs.charger_type = "Vægoplader";
     }
   }
 
@@ -183,8 +183,8 @@ export function inferAttributes(
       attrs.audio_type = "In-ear";
     } else if (cat === "headset" || titleLower.includes("headset") || titleLower.includes("over-ear")) {
       attrs.audio_type = "Over-ear";
-    } else if (cat === "speaker" || titleLower.includes("speaker") || titleLower.includes("h\u00F8jttaler")) {
-      attrs.audio_type = "H\u00F8jttaler";
+    } else if (cat === "speaker" || titleLower.includes("speaker") || titleLower.includes("højttaler")) {
+      attrs.audio_type = "Højttaler";
     }
   }
 

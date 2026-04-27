@@ -87,12 +87,12 @@ function buildSpecLine(
     parts.push(specifications.storage.replace(/\s+/g, ""));
   if (specifications.screen_size) {
     const screen = specifications.screen_size
-      .replace(/["\u201D\u2033]/g, "")
+      .replace(/["”″]/g, "")
       .replace(/\.0$/, "");
     parts.push(screen + '"');
   }
 
-  return parts.join(" \u00B7 ");
+  return parts.join(" · ");
 }
 
 // ---------------------------------------------------------------------------

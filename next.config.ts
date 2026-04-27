@@ -75,9 +75,12 @@ const nextConfig: NextConfig = {
       { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
       { source: "/reparation/slagelse/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
 
-      // Trusmi short links (used in social/Meta ads)
+      // Trusmi short links (used in social/Meta ads) + auto-generated
+      // tilbehoer URL → dedicated landing page so customers always see the
+      // rich product page rather than the generic accessory layout.
       { source: "/trusmi", destination: "/trusmi-briller", permanent: false },
       { source: "/oversaetterbriller", destination: "/trusmi-briller", permanent: false },
+      { source: "/tilbehoer/:cat/trusmi-ai-oversaetterbriller-sort", destination: "/trusmi-briller", permanent: false },
 
       // Legacy Shopify repair URLs (indexed by Google before migration)
       { source: "/pages/reparation", destination: "/reparation", permanent: true },

@@ -61,7 +61,7 @@ export const CATEGORY_FILTERS: CategoryFilterConfig[] = [
         label: "Type",
         type: "links",
         options: [
-          { value: "H\u00E6rdet glas", label: "Panserglas" },
+          { value: "Hærdet glas", label: "Panserglas" },
           { value: "Film", label: "Beskyttelsesfilm" },
           { value: "Privacy", label: "Privacy glas" },
           { value: "Edge to Edge", label: "Edge to Edge" },

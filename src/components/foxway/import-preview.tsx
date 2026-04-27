@@ -26,7 +26,7 @@ function formatDKK(oere: number): string {
 
 function formatSpecs(item: PreviewItem): string {
   const parts = [item.processor, item.ram, item.storage, item.screenSize].filter(Boolean);
-  return parts.join(" \u00B7 ");
+  return parts.join(" · ");
 }
 
 const GRADE_STYLES: Record<string, string> = {

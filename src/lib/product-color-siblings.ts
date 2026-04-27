@@ -21,17 +21,17 @@ const COLOR_WORDS = new Set([
 const COLOR_LABELS: Record<string, string> = {
   black: "Sort",
   white: "Hvid",
-  red: "R\u00F8d",
-  blue: "Bl\u00E5",
-  green: "Gr\u00F8n",
+  red: "Rød",
+  blue: "Blå",
+  green: "Grøn",
   yellow: "Gul",
   pink: "Pink",
   purple: "Lilla",
   orange: "Orange",
   brown: "Brun",
-  grey: "Gr\u00E5",
-  gray: "Gr\u00E5",
-  silver: "S\u00F8lv",
+  grey: "Grå",
+  gray: "Grå",
+  silver: "Sølv",
   gold: "Guld",
   rose: "Rose",
   navy: "Navy",
@@ -46,14 +46,14 @@ const COLOR_LABELS: Record<string, string> = {
   sort: "Sort",
   hvid: "Hvid",
   brun: "Brun",
-  graa: "Gr\u00E5",
-  soelv: "S\u00F8lv",
+  graa: "Grå",
+  soelv: "Sølv",
   guld: "Guld",
   rosa: "Rosa",
   lilla: "Lilla",
-  roed: "R\u00F8d",
-  blaa: "Bl\u00E5",
-  groen: "Gr\u00F8n",
+  roed: "Rød",
+  blaa: "Blå",
+  groen: "Grøn",
   gul: "Gul",
 };
 
@@ -122,7 +122,7 @@ export function extractColor(title: string): { color: string; baseTitle: string 
   if (words.length < 3) return null;
 
   // Check last word
-  const lastWord = words[words.length - 1].toLowerCase().replace(/[^a-z\u00E6\u00F8\u00E5-]/g, "");
+  const lastWord = words[words.length - 1].toLowerCase().replace(/[^a-zæøå-]/g, "");
   if (COLOR_WORDS.has(lastWord)) {
     return {
       color: lastWord,
@@ -132,7 +132,7 @@ export function extractColor(title: string): { color: string; baseTitle: string 
 
   // Check second-to-last word (e.g. "Clear Case" → color is "Clear")
   if (words.length >= 4) {
-    const secondLast = words[words.length - 2].toLowerCase().replace(/[^a-z\u00E6\u00F8\u00E5-]/g, "");
+    const secondLast = words[words.length - 2].toLowerCase().replace(/[^a-zæøå-]/g, "");
     if (COLOR_WORDS.has(secondLast)) {
       const remaining = [...words.slice(0, -2), words[words.length - 1]];
       return {

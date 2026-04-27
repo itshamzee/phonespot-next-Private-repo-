@@ -187,7 +187,7 @@ export default function EcommerceDashboard() {
     {
       label: "Ordrer",
       value: kpis.totalOrders.toString(),
-      sub: `${kpis.onlineOrders} online \u00B7 ${kpis.posOrders} POS`,
+      sub: `${kpis.onlineOrders} online · ${kpis.posOrders} POS`,
       gradient: "from-blue-500/10 to-blue-500/[0.02]",
       iconColor: "text-blue-500",
       icon: (

@@ -102,7 +102,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
     return (
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="text-sm font-medium text-green-700">P\u00E5 lager</span>
+        <span className="text-sm font-medium text-green-700">På lager</span>
       </div>
     );
   }
@@ -119,7 +119,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-amber-400" />
         <span className="text-sm font-medium text-amber-700">
-          Kun {quantity} p\u00E5 lager
+          Kun {quantity} på lager
         </span>
       </div>
     );
@@ -127,7 +127,7 @@ function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className="h-2 w-2 rounded-full bg-green-500" />
-      <span className="text-sm font-medium text-green-700">P\u00E5 lager</span>
+      <span className="text-sm font-medium text-green-700">På lager</span>
     </div>
   );
 }
@@ -251,7 +251,7 @@ function AddToCartButton({
   variantImage,
   disabled = false,
   fullWidth = true,
-  label = "Tilf\u00F8j til kurv",
+  label = "Tilføj til kurv",
 }: {
   product: SkuProduct;
   effectivePrice: number;
@@ -373,7 +373,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
         onClick={handleAdd}
         className="mt-3 w-full rounded-full border-2 border-green-eco bg-white px-4 py-2 text-sm font-bold text-green-eco transition-colors hover:bg-green-eco hover:text-white"
       >
-        Tilf\u00F8j
+        Tilføj
       </button>
     </div>
   );
@@ -432,7 +432,7 @@ function StickyMobileCta({
           selectedVariants={selectedVariants}
           variantImage={variantImageOverride}
           fullWidth={false}
-          label="Tilf\u00F8j til kurv"
+          label="Tilføj til kurv"
         />
       </div>
     </div>
@@ -621,7 +621,7 @@ export function AccessoryDetail({
               <p className="mb-2 text-sm font-bold text-charcoal">
                 Farve
                 <span className="ml-2 font-normal text-charcoal/50">
-                  {"\u2014 "}
+                  {"— "}
                   {colorSiblings.find((s) => s.isCurrent)?.colorLabel ?? ""}
                 </span>
               </p>

@@ -6,12 +6,12 @@ import { ProductImageUploader } from "./product-image-uploader";
 
 const ACCESSORY_TYPES = [
   { value: "cover", label: "Cases & Covers", icon: "\u{1F4F1}" },
-  { value: "screen_protector", label: "Sk\u00E6rmbeskyttelse", icon: "\u{1F6E1}\uFE0F" },
+  { value: "screen_protector", label: "Skærmbeskyttelse", icon: "\u{1F6E1}\uFE0F" },
   { value: "charger", label: "Opladere", icon: "\u{1F50C}" },
   { value: "cable", label: "Kabler", icon: "\u{1F517}" },
   { value: "powerbank", label: "Powerbanks", icon: "\u{1F50B}" },
-  { value: "audio", label: "Lyd & H\u00F8retelefoner", icon: "\u{1F3A7}" },
-  { value: "other", label: "Andet tilbeh\u00F8r", icon: "\u{1F4E6}" },
+  { value: "audio", label: "Lyd & Høretelefoner", icon: "\u{1F3A7}" },
+  { value: "other", label: "Andet tilbehør", icon: "\u{1F4E6}" },
   { value: "spare-part", label: "Reservedel", icon: "\u{1F527}" },
 ] as const;
 
@@ -20,14 +20,14 @@ const TYPE_ATTRIBUTES: Record<string, { key: string; label: string; type: "selec
     { key: "case_type", label: "Case type", type: "select", options: ["Wallet", "Slim", "Rugged", "Clear", "Flip", "Bumper", "Book"] },
   ],
   screen_protector: [
-    { key: "protector_type", label: "Type", type: "select", options: ["H\u00E6rdet glas", "Film", "Privacy", "Edge to Edge"] },
+    { key: "protector_type", label: "Type", type: "select", options: ["Hærdet glas", "Film", "Privacy", "Edge to Edge"] },
   ],
   cable: [
     { key: "connector_type", label: "Stik-type", type: "select", options: ["USB-C", "Lightning", "Micro-USB", "USB-A", "USB-C til Lightning", "USB-C til USB-C"] },
-    { key: "length", label: "L\u00E6ngde", type: "select", options: ["0.5m", "1m", "1.5m", "2m", "3m"] },
+    { key: "length", label: "Længde", type: "select", options: ["0.5m", "1m", "1.5m", "2m", "3m"] },
   ],
   charger: [
-    { key: "charger_type", label: "Type", type: "select", options: ["V\u00E6goplader", "Biloplader", "Tr\u00E5dl\u00F8s", "MagSafe"] },
+    { key: "charger_type", label: "Type", type: "select", options: ["Vægoplader", "Biloplader", "Trådløs", "MagSafe"] },
     { key: "watt", label: "Watt", type: "text" },
   ],
   powerbank: [
@@ -35,8 +35,8 @@ const TYPE_ATTRIBUTES: Record<string, { key: string; label: string; type: "selec
     { key: "watt", label: "Watt", type: "text" },
   ],
   audio: [
-    { key: "audio_type", label: "Type", type: "select", options: ["In-ear", "Over-ear", "On-ear", "H\u00F8jttaler", "AUX-kabel"] },
-    { key: "wireless", label: "Tr\u00E5dl\u00F8s", type: "select", options: ["Ja", "Nej"] },
+    { key: "audio_type", label: "Type", type: "select", options: ["In-ear", "Over-ear", "On-ear", "Højttaler", "AUX-kabel"] },
+    { key: "wireless", label: "Trådløs", type: "select", options: ["Ja", "Nej"] },
   ],
 };
 
@@ -212,7 +212,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
   function generateSlug() {
     const slug = form.title
       .toLowerCase()
-      .replace(/\u00E6/g, "ae").replace(/\u00F8/g, "oe").replace(/\u00E5/g, "aa")
+      .replace(/æ/g, "ae").replace(/ø/g, "oe").replace(/å/g, "aa")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     set("slug", slug);
@@ -407,7 +407,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
         onSave();
       }
     } catch {
-      setError("Netv\u00E6rksfejl \u2014 pr\u00F8v igen");
+      setError("Netværksfejl — prøv igen");
     } finally {
       setSaving(false);
     }
@@ -535,7 +535,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                     onChange={(e) => setAttribute(attr.key, e.target.value)}
                     className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
                   >
-                    <option value="">V\u00E6lg...</option>
+                    <option value="">Vælg...</option>
                     {attr.options.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
@@ -639,7 +639,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                 disabled={createTemplateSaving || !createTemplateForm.brand.trim() || !createTemplateForm.model.trim()}
                 className="rounded-lg bg-green-600 px-4 py-2 text-xs font-bold text-white hover:brightness-110 disabled:opacity-50"
               >
-                {createTemplateSaving ? "Opretter..." : "Opret og tilf\u00F8j"}
+                {createTemplateSaving ? "Opretter..." : "Opret og tilføj"}
               </button>
             </div>
           </div>
@@ -648,7 +648,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
             <input
               value={templateSearch}
               onChange={(e) => setTemplateSearch(e.target.value)}
-              placeholder="S\u00F8g efter enhed at tilknytte\u2026"
+              placeholder="Søg efter enhed at tilknytte…"
               className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
             />
             {templateSearching && (
@@ -905,7 +905,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                     <input
                       value={opt.value}
                       onChange={(e) => updateVariantOption(gi, oi, "value", e.target.value)}
-                      placeholder="V\u00E6rdi (f.eks. Sort)"
+                      placeholder="Værdi (f.eks. Sort)"
                       className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                     />
                     <input
@@ -914,7 +914,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                       min="0"
                       value={opt.price_override}
                       onChange={(e) => updateVariantOption(gi, oi, "price_override", e.target.value)}
-                      placeholder="Pristill\u00E6g"
+                      placeholder="Pristillæg"
                       className="w-28 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
                     />
                     <input
@@ -939,7 +939,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
                 onClick={() => addVariantOption(gi)}
                 className="mt-2 text-xs font-medium text-green-600 hover:underline"
               >
-                + Tilf\u00F8j mulighed
+                + Tilføj mulighed
               </button>
             </div>
           ))}
@@ -948,7 +948,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addVariantGroup())}
-              placeholder="Ny variantgruppe (f.eks. St\u00F8rrelse)"
+              placeholder="Ny variantgruppe (f.eks. Størrelse)"
               className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
             />
             <button
@@ -956,7 +956,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
               onClick={addVariantGroup}
               className="rounded-xl bg-stone-200 px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-300"
             >
-              Tilf\u00F8j gruppe
+              Tilføj gruppe
             </button>
           </div>
         </div>
@@ -1043,7 +1043,7 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
             disabled={saving}
             className="flex-1 sm:flex-none rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-green-600/20 hover:brightness-110 disabled:opacity-50"
           >
-            {saving ? "Gemmer..." : isEdit ? "Gem \u00E6ndringer" : "Opret produkt"}
+            {saving ? "Gemmer..." : isEdit ? "Gem ændringer" : "Opret produkt"}
           </button>
         </div>
       </div>

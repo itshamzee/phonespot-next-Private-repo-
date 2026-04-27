@@ -643,7 +643,7 @@ export default function QuickAddPage() {
                       disabled={createTemplateSaving || !createTemplateForm.brand.trim() || !createTemplateForm.model.trim()}
                       className="rounded-xl bg-green-eco px-5 py-2.5 text-sm font-bold text-white hover:brightness-110 disabled:opacity-50"
                     >
-                      {createTemplateSaving ? "Opretter..." : "Opret og v\u00E6lg"}
+                      {createTemplateSaving ? "Opretter..." : "Opret og vælg"}
                     </button>
                   </div>
                 </div>
@@ -661,7 +661,7 @@ export default function QuickAddPage() {
                       type="text"
                       value={search}
                       onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="S\u00F8g model... f.eks. iPhone 13 Pro"
+                      placeholder="Søg model... f.eks. iPhone 13 Pro"
                       autoFocus
                       className="w-full rounded-2xl border-2 border-stone-200 bg-white py-4 pl-12 pr-4 text-base text-stone-800 placeholder:text-stone-400 transition focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/10"
                     />
@@ -685,7 +685,7 @@ export default function QuickAddPage() {
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-stone-800">{t.display_name}</p>
-                                <p className="text-xs text-stone-400">{t.brand} \u00B7 {t.category}</p>
+                                <p className="text-xs text-stone-400">{t.brand} · {t.category}</p>
                               </div>
                             </button>
                           </li>
@@ -726,7 +726,7 @@ export default function QuickAddPage() {
                   )}
                   {searching && (
                     <div className="absolute z-50 mt-2 w-full rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-xl">
-                      <p className="text-sm text-stone-400">S\u00F8ger...</p>
+                      <p className="text-sm text-stone-400">Søger...</p>
                     </div>
                   )}
                 </>

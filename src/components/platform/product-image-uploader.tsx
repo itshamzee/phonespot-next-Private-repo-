@@ -114,9 +114,9 @@ function ImageLibraryModal({
           <div>
             <h2 className="font-display text-lg font-bold text-stone-800">Billedbibliotek</h2>
             <p className="text-xs text-stone-400">
-              {total} billeder tilg\u00E6ngelige
-              {selected.size > 0 && ` \u00B7 ${selected.size} valgt`}
-              {remaining < max && ` \u00B7 Plads til ${remaining} mere`}
+              {total} billeder tilgængelige
+              {selected.size > 0 && ` · ${selected.size} valgt`}
+              {remaining < max && ` · Plads til ${remaining} mere`}
             </p>
           </div>
           <button
@@ -136,7 +136,7 @@ function ImageLibraryModal({
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="S\u00F8g i billeder..."
+            placeholder="Søg i billeder..."
             className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm focus:border-green-500/50 focus:outline-none"
           />
         </div>
@@ -205,7 +205,7 @@ function ImageLibraryModal({
                     disabled={loading}
                     className="rounded-xl border border-stone-200 bg-white px-5 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-50"
                   >
-                    {loading ? "Indl\u00E6ser..." : `Vis flere (${total - offset - limit} tilbage)`}
+                    {loading ? "Indlæser..." : `Vis flere (${total - offset - limit} tilbage)`}
                   </button>
                 </div>
               )}
@@ -232,7 +232,7 @@ function ImageLibraryModal({
               disabled={selected.size === 0}
               className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
             >
-              Tilf\u00F8j {selected.size > 0 ? `${selected.size} billede${selected.size !== 1 ? "r" : ""}` : ""}
+              Tilføj {selected.size > 0 ? `${selected.size} billede${selected.size !== 1 ? "r" : ""}` : ""}
             </button>
           </div>
         </div>
@@ -360,7 +360,7 @@ export function ProductImageUploader({
                     type="button"
                     onClick={() => handleReorder(i, i + 1)}
                     className="rounded-lg bg-white/90 p-1.5 text-stone-700 hover:bg-white"
-                    title="Flyt til h\u00F8jre"
+                    title="Flyt til højre"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -404,10 +404,10 @@ export function ProductImageUploader({
               />
             </svg>
             <p className="text-sm font-medium text-stone-600">
-              {uploading ? "Uploader\u2026" : "Tr\u00E6k billeder hertil eller klik for at v\u00E6lge"}
+              {uploading ? "Uploader…" : "Træk billeder hertil eller klik for at vælge"}
             </p>
             <p className="mt-1 text-xs text-stone-400">
-              JPEG, PNG eller WebP \u00B7 Max 10MB \u00B7 {images.length}/{max} billeder
+              JPEG, PNG eller WebP · Max 10MB · {images.length}/{max} billeder
             </p>
             <input
               ref={inputRef}

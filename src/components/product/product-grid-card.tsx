@@ -178,7 +178,7 @@ export function ProductGridCard({
     if (specifications.ram) specParts.push(specifications.ram.replace(/\s+/g, ""));
     if (specifications.storage) specParts.push(specifications.storage.replace(/\s+/g, ""));
     if (specifications.screen_size) {
-      const screen = specifications.screen_size.replace(/["\u201D\u2033]/g, "").replace(/\.0$/, "");
+      const screen = specifications.screen_size.replace(/["”″]/g, "").replace(/\.0$/, "");
       specParts.push(screen + '"');
     }
   }
@@ -243,7 +243,7 @@ export function ProductGridCard({
         </h3>
         {specParts.length > 0 && (
           <p className="mt-1 text-xs text-[#86868B] truncate line-clamp-1">
-            {specParts.join(" \u00B7 ")}
+            {specParts.join(" · ")}
           </p>
         )}
         <div className="mt-auto pt-3">
