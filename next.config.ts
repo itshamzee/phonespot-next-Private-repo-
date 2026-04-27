@@ -81,6 +81,10 @@ const nextConfig: NextConfig = {
       { source: "/trusmi", destination: "/trusmi-briller", permanent: false },
       { source: "/oversaetterbriller", destination: "/trusmi-briller", permanent: false },
       { source: "/tilbehoer/:cat/trusmi-ai-oversaetterbriller-sort", destination: "/trusmi-briller", permanent: false },
+      // Trusmi Smart Pencil
+      { source: "/blyant", destination: "/trusmi-blyant", permanent: false },
+      { source: "/ipad-blyant", destination: "/trusmi-blyant", permanent: false },
+      { source: "/tilbehoer/:cat/trusmi-smart-pencil-ipad-hvid", destination: "/trusmi-blyant", permanent: false },
 
       // Legacy Shopify repair URLs (indexed by Google before migration)
       { source: "/pages/reparation", destination: "/reparation", permanent: true },
