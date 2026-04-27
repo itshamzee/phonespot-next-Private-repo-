@@ -37,7 +37,10 @@ const nextConfig: NextConfig = {
       { source: "/pages/contact", destination: "/kontakt", permanent: true },
       { source: "/pages/hvorfor-vaelge-phonespot", destination: "/hvorfor-phonespot", permanent: true },
       { source: "/products", destination: "/iphones", permanent: true },
-      { source: "/products/:path*", destination: "/iphones", permanent: true },
+      // Only match single-segment Shopify product URLs (e.g. /products/iphone-12).
+      // Nested paths like /products/trusmi-glasses/02.webp are real public assets
+      // and must NOT be redirected.
+      { source: "/products/:slug", destination: "/iphones", permanent: true },
       { source: "/blogs/:path*", destination: "/blog", permanent: true },
       { source: "/search", destination: "/soeg", permanent: true },
       // Old reservedele URLs
