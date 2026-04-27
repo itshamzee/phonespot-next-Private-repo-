@@ -14,29 +14,42 @@ describe("Header", () => {
     expect(logo).toBeDefined();
   });
 
-  it("renders dropdown triggers on desktop", () => {
+  it("renders top-level desktop nav items", () => {
     render(<Header />);
-    expect(screen.getByText("Produkter")).toBeDefined();
-    expect(screen.getByText("Om PhoneSpot")).toBeDefined();
+    expect(screen.getByRole("button", { name: /Produkter/i })).toBeDefined();
+    expect(screen.getAllByText("Reparation").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Sælg din enhed").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Tilbehør").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Butikker").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("does not show dropdown items by default", () => {
+  it("does not show mega menu items by default", () => {
     render(<Header />);
-    expect(screen.queryByText("Fra iPhone SE til 16 Pro Max")).toBeNull();
+    expect(screen.queryByText("Trending nu")).toBeNull();
+    expect(screen.queryByText("Populære mærker")).toBeNull();
   });
 
-  it("shows dropdown items when trigger is clicked", () => {
+  it("shows mega menu when Produkter is clicked", () => {
     render(<Header />);
-    fireEvent.click(screen.getByText("Produkter"));
-    expect(screen.getByText("iPhones")).toBeDefined();
-    expect(screen.getByText("Fra iPhone SE til 16 Pro Max")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
+    expect(screen.getByText("Kategorier")).toBeDefined();
+    expect(screen.getByText("Populære mærker")).toBeDefined();
+    expect(screen.getByText("Trending nu")).toBeDefined();
+    expect(screen.getByText("Spar på Foxway-laptops")).toBeDefined();
   });
 
-  it("shows mobile menu when hamburger is clicked", () => {
+  it("shows mobile drawer with categories when hamburger is clicked", () => {
     render(<Header />);
     const hamburger = screen.getByLabelText("Åbn menu");
     fireEvent.click(hamburger);
-    const produkterButtons = screen.getAllByText("Produkter");
-    expect(produkterButtons.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Kategorier")).toBeDefined();
+    expect(screen.getByText("Mærker")).toBeDefined();
+    expect(screen.getByText("Min konto")).toBeDefined();
+  });
+
+  it("renders the account link to /konto", () => {
+    render(<Header />);
+    const accountLink = screen.getByLabelText("Min konto");
+    expect(accountLink.getAttribute("href")).toBe("/konto");
   });
 });
