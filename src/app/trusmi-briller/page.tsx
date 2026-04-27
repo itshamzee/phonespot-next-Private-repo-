@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description: "Real-time AI-oversættelse via Bluetooth 5.3 — kun 799 kr.",
     url: URL,
     type: "website",
-    images: [{ url: "/products/trusmi-glasses/02.webp", width: 550, height: 550 }],
+    images: [{ url: "/trusmi/02.webp", width: 550, height: 550 }],
   },
 };
 
@@ -104,7 +104,7 @@ export default async function TrusmiBrillerPage() {
 
   if (!data) notFound();
 
-  const heroImage = data.images?.[0] ?? "/products/trusmi-glasses/02.webp";
+  const heroImage = data.images?.[0] ?? "/trusmi/02.webp";
   const gallery = data.images ?? [];
   const finalPriceOere = data.sale_price ?? data.selling_price;
   const compareAtOere = data.sale_price ? data.selling_price : null;
@@ -141,7 +141,7 @@ export default async function TrusmiBrillerPage() {
           {/* Left: video */}
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-black/30 shadow-2xl ring-1 ring-white/10">
             <video
-              src="/products/trusmi-glasses/hero.mp4"
+              src="/trusmi/hero.mp4"
               autoPlay
               muted
               loop
