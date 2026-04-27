@@ -25,9 +25,32 @@ export interface CheckoutSessionResult {
   url: string;
 }
 
+/**
+ * Stripe rejects product_data.images entries that are not absolute URLs
+ * with the error "Not a valid URL". Cart items can carry relative paths
+ * (e.g. "/trusmi/02.webp") because they were added from a Next.js public
+ * asset, so we must rewrite them to absolute https URLs before sending
+ * to the Stripe API. Anything that doesn't look like a valid http(s)
+ * URL is dropped to keep checkout from breaking on a single bad image.
+ */
+function toStripeImageUrls(image: string | null | undefined, baseUrl: string): string[] {
+  if (!image) return [];
+  const trimmed = image.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return [trimmed];
+  }
+  if (trimmed.startsWith("/")) {
+    return [`${baseUrl}${trimmed}`];
+  }
+  // Bare filename or unrecognised prefix — Stripe will reject; skip it.
+  return [];
+}
+
 function buildLineItems(
   items: ValidatedItem[],
   shippingCost: number,
+  baseUrl: string,
 ): Stripe.Checkout.SessionCreateParams.LineItem[] {
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items
     .filter((vi) => vi.available)
@@ -43,7 +66,7 @@ function buildLineItems(
           currency: "dkk",
           product_data: {
             name,
-            images: item.image ? [item.image] : [],
+            images: toStripeImageUrls(item.image, baseUrl),
             metadata: item.type === "device"
                 ? { device_id: item.deviceId, item_type: "device", sku_product_id: "" }
                 : { sku_product_id: item.skuProductId, item_type: "sku_product", device_id: "" },
@@ -117,7 +140,7 @@ export async function createCheckoutSession(
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
-  const lineItems = buildLineItems(params.items, params.shippingCost);
+  const lineItems = buildLineItems(params.items, params.shippingCost, baseUrl);
   const discountIds = await buildDiscountCoupons(params.discount, params.bundleDiscountAmount);
 
   const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60; // 30 minutes
