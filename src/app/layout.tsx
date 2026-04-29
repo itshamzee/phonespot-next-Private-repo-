@@ -87,6 +87,22 @@ export default function RootLayout({
           `}
         </Script>
         {GA4_ID && <GoogleAnalytics gaId={GA4_ID} />}
+        {/* Google Ads conversion tracking. gtag.js is already loaded via
+            <GoogleAnalytics> above so we just register the AW config. Gated
+            behind marketing consent via Cookiebot — Consent Mode v2 also
+            holds it back until ad_storage is granted. */}
+        <Script
+          id="google-ads-aw-config"
+          strategy="afterInteractive"
+          type="text/plain"
+          data-cookieconsent="marketing"
+        >
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('config', 'AW-17754730649');
+          `}
+        </Script>
         <CookiebotProvider />
         <JsonLd data={ORGANIZATION_JSONLD} />
         <LayoutShell>{children}</LayoutShell>
