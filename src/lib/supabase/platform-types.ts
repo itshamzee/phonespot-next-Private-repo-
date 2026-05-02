@@ -72,7 +72,9 @@ export interface ProductTemplate {
   base_price_p: number | null;
   /** Lowest non-null integer wins (1 = topmost). NULL means not featured. */
   featured_priority: number | null;
+  /** Featured product becomes active at this timestamp. NULL = no lower bound. */
   featured_starts_at: string | null;
+  /** Featured product expires at this timestamp. NULL = no upper bound. */
   featured_ends_at: string | null;
   created_at: string;
   updated_at: string;
@@ -611,5 +613,11 @@ export interface StoreStatus {
   data_updated_at: string;
 }
 
+/**
+ * Insert shape for store_status. `data_updated_at` is optional; the Postgres
+ * `DEFAULT now()` populates it when omitted.
+ */
 export type StoreStatusInsert = Omit<StoreStatus, 'data_updated_at'> & { data_updated_at?: string };
+
+/** Update shape for store_status. `slug` is the lookup key and cannot change. */
 export type StoreStatusUpdate = Partial<Omit<StoreStatus, 'slug'>> & { slug: string };

@@ -11,6 +11,12 @@ CREATE INDEX idx_product_templates_featured
 COMMENT ON COLUMN product_templates.featured_priority IS
   'Lowest non-null integer wins (1 = topmost). NULL means not featured.';
 
+COMMENT ON COLUMN product_templates.featured_starts_at IS
+  'Featured product becomes active at this timestamp. NULL = no lower bound.';
+
+COMMENT ON COLUMN product_templates.featured_ends_at IS
+  'Featured product expires at this timestamp. NULL = no upper bound.';
+
 CREATE TABLE store_status (
   slug text PRIMARY KEY,
   current_wait_minutes integer,
