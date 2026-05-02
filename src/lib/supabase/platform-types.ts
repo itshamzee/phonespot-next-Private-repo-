@@ -70,6 +70,10 @@ export interface ProductTemplate {
   base_price_c: number | null;
   base_price_n: number | null;
   base_price_p: number | null;
+  /** Lowest non-null integer wins (1 = topmost). NULL means not featured. */
+  featured_priority: number | null;
+  featured_starts_at: string | null;
+  featured_ends_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -594,3 +598,18 @@ export interface SparePartProduct extends SkuProduct {
   quality_tier?: SparePartQualityTier;
   part_category?: SparePartCategory;
 }
+
+// ============================================================
+// Store Status Types
+// ============================================================
+
+/** Live store data updated by staff. data_updated_at drives staleness check (4-hour threshold). */
+export interface StoreStatus {
+  slug: string;
+  current_wait_minutes: number | null;
+  current_technician_count: number | null;
+  data_updated_at: string;
+}
+
+export type StoreStatusInsert = Omit<StoreStatus, 'data_updated_at'> & { data_updated_at?: string };
+export type StoreStatusUpdate = Partial<Omit<StoreStatus, 'slug'>> & { slug: string };
