@@ -3,7 +3,7 @@ import Link from 'next/link';
 export function ComputerCell() {
   return (
     <Link
-      href="/computere"
+      href="/baerbare"
       className="col-span-2 row-span-1 max-md:col-span-1 relative bg-cream rounded-2xl overflow-hidden p-6 flex flex-col justify-end hover:-translate-y-0.5 transition-transform"
     >
       <div className="absolute right-[-8%] top-[16%] w-[70%] h-[56%] bg-gradient-to-b from-white to-sand rounded-t-[4px] rounded-b-[14px] shadow-[0_18px_32px_rgba(0,0,0,0.14)] -rotate-[7deg] opacity-85 before:content-[''] before:absolute before:inset-[6px_6px_30%_6px] before:bg-charcoal before:rounded-[2px]" />

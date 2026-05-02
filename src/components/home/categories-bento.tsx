@@ -14,10 +14,10 @@ type Category = {
 
 const CATEGORIES: Category[] = [
   { slug: 'iphones',     label: 'iphones',     emphasis: 'phones', priceFrom: '1.499', meta: '240+ modeller',          size: 'tall',  color: 'dark'  },
-  { slug: 'mac',         label: 'macbooks',    emphasis: 'mac',    priceFrom: '4.499', meta: null,                      size: 'small', color: 'cream' },
+  { slug: 'baerbare?brand=apple', label: 'macbooks', emphasis: 'mac', priceFrom: '4.499', meta: null,                size: 'small', color: 'cream' },
   { slug: 'ipads',       label: 'ipads',       emphasis: null,     priceFrom: '1.999', meta: null,                      size: 'small', color: 'dark'  },
   { slug: 'baerbare',    label: 'bærbare',     emphasis: 'bare',   priceFrom: null,    meta: 'windows · thinkpad',     size: 'small', color: 'mint'  },
-  { slug: 'apple-watch', label: 'apple watch', emphasis: null,     priceFrom: '999',   meta: null,                      size: 'small', color: 'rust'  },
+  { slug: 'smartwatches', label: 'apple watch', emphasis: null,    priceFrom: '999',   meta: null,                      size: 'small', color: 'rust'  },
   { slug: 'tilbehoer',   label: 'tilbehør',    emphasis: 'behør',  priceFrom: null,    meta: 'covers · ladere',        size: 'small', color: 'cream' },
 ];
 
