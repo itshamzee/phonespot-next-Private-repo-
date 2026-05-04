@@ -247,6 +247,12 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     }
   }, [availableColors, selectedColor, template.colors]);
 
+  // Reset gallery index when the customer picks a new color, so they see
+  // the first image of that color rather than the carry-over from the previous one.
+  useEffect(() => {
+    setMainImageIndex(0);
+  }, [selectedColor]);
+
   // Find matching devices (grade + storage + color)
   const matchingDevices = gradeMatchedDevices.filter((d) => {
     const storageMatch = selectedStorage === "" || d.storage == null || d.storage === selectedStorage;
@@ -266,7 +272,16 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     ? matchingDevices.reduce((best, d) => (d.selling_price ?? Infinity) < (best.selling_price ?? Infinity) ? d : best)
     : null;
 
-  const images = template.images.length > 0 ? template.images : [];
+  // Color-specific images via default_attributes.images_by_color
+  // Falls back to flat template.images when no per-color entry exists.
+  const imagesByColor = (template.default_attributes?.images_by_color ?? null) as
+    | Record<string, string[]>
+    | null;
+  const colorImages =
+    selectedColor && imagesByColor?.[selectedColor]?.length
+      ? imagesByColor[selectedColor]
+      : null;
+  const images = colorImages ?? (template.images.length > 0 ? template.images : []);
   const mainImage = images[mainImageIndex] ?? null;
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
