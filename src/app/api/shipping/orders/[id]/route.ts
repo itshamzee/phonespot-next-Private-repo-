@@ -118,7 +118,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const { default: ReadyForPickupEmail } = await import("@/lib/email/templates/ready-for-pickup");
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: "PhoneSpot <ordre@phonespot.dk>",
+          from: "PhoneSpot <info@phonespot.dk>",
           to: fullOrder.customer.email,
           subject: `Din ordre ${fullOrder.order_number} er klar til afhentning`,
           react: ReadyForPickupEmail({

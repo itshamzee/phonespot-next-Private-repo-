@@ -38,7 +38,7 @@ function formatDKK(øre: number): string {
 export const subject = (draftNumber: string) =>
   `Faktura ${draftNumber} fra PhoneSpot`;
 
-export const from = "ordre@phonespot.dk";
+export const from = "info@phonespot.dk";
 
 export default function InvoiceEmail({
   draftNumber,

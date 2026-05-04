@@ -31,7 +31,7 @@ function formatDKK(oere: number): string {
 }
 
 export const subject = "Du glemte noget i din kurv";
-export const from = "ordre@phonespot.dk";
+export const from = "info@phonespot.dk";
 
 const font    = "'Helvetica Neue',Helvetica,Arial,sans-serif";
 const green   = BRAND.green;

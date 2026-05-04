@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await resend.emails.send({
-      from: "PhoneSpot <ordre@phonespot.dk>",
+      from: "PhoneSpot <info@phonespot.dk>",
       to: customerEmail,
       subject: `Din ordre ${order.order_number} er afsendt`,
       react: ShippingConfirmationEmail({
