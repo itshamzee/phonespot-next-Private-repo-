@@ -57,13 +57,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(order);
   }
 
-  // Mark as shipped
+  // Mark as shipped — require tracking number so customer always gets a tracking email
+  if (!tracking_number || typeof tracking_number !== "string" || !tracking_number.trim()) {
+    return NextResponse.json(
+      { error: "Tracking-nummer er påkrævet for at markere som afsendt" },
+      { status: 400 },
+    );
+  }
+
   const { data: order, error } = await supabase
     .from("orders")
     .update({
       fulfillment_status: "shipped",
       status: "shipped",
-      tracking_number: tracking_number || null,
+      tracking_number: tracking_number.trim(),
       tracking_url: tracking_url || null,
       shipped_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

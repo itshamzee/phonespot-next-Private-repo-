@@ -51,13 +51,19 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!isMarkDelivered && !tracking.trim()) {
+      setError("Tracking-nummer er påkrævet");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const body: Record<string, string> = {};
+      const body: Record<string, unknown> = {};
       if (!isMarkDelivered) {
-        if (tracking) body.tracking_number = tracking;
+        body.tracking_number = tracking.trim();
         if (trackingUrl) body.tracking_url = trackingUrl;
+      } else {
+        body.mark_delivered = true;
       }
 
       const res = await fetch(`/api/shipping/orders/${orderId}/fulfill`, {
@@ -89,15 +95,20 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
             <>
               <div>
                 <label className="mb-1 block text-sm font-medium text-charcoal-light">
-                  Trackingnummer <span className="text-gray">(valgfri)</span>
+                  Trackingnummer <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
                   value={tracking}
                   onChange={(e) => setTracking(e.target.value)}
                   placeholder="f.eks. 00370726200099123456"
+                  required
+                  autoFocus
                   className="w-full rounded-lg border border-sand px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-eco"
                 />
+                <p className="mt-1 text-xs text-gray">
+                  Påkrævet — kunden får automatisk en mail med tracking-nummeret.
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-charcoal-light">
@@ -121,8 +132,8 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
           <div className="flex gap-3 pt-1">
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:opacity-50"
+              disabled={loading || (!isMarkDelivered && !tracking.trim())}
+              className="flex-1 rounded-lg bg-green-eco px-4 py-2 text-sm font-medium text-white hover:bg-green-eco/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Behandler…" : isMarkDelivered ? "Marker som leveret" : "Bekræft afsendelse"}
             </button>

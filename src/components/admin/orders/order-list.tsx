@@ -221,18 +221,6 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
     });
   }
 
-  /* ── Bulk: mark as shipped ────────────────────────────────────── */
-  async function bulkMarkShipped() {
-    const ids = Array.from(selected);
-    await Promise.all(
-      ids.map((id) =>
-        fetch(`/api/shipping/orders/${id}/fulfill`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ carrier: "", tracking_number: "" }) }),
-      ),
-    );
-    setSelected(new Set());
-    fetchOrders(page);
-  }
-
   /* ── Render ───────────────────────────────────────────────────── */
   return (
     <div className="space-y-4">
@@ -358,12 +346,6 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
             {selected.size} {selected.size === 1 ? "ordre valgt" : "ordrer valgt"}
           </span>
           <div className="ml-auto flex gap-2">
-            <button
-              onClick={bulkMarkShipped}
-              className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-800 transition hover:bg-green-100"
-            >
-              Marker som afsendt
-            </button>
             <button
               onClick={() => exportCSV(orders.filter((o) => selected.has(o.id)))}
               className="rounded-xl border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream"
