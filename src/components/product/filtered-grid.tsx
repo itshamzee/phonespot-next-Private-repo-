@@ -55,11 +55,12 @@ export function FilteredGrid({ templates, heading, promos }: FilteredGridProps) 
 
   return (
     <div>
-      {/* Mobile filter bar — sits above the grid */}
-      <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+      {/* Mobile filter bar — sticky so it remains reachable while
+          scrolling through products. Sits above the grid. */}
+      <div className="sticky top-0 z-30 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-[#E5E5EA] bg-white/95 px-4 py-3 backdrop-blur lg:static lg:m-0 lg:hidden lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         {heading && (
-          <p className="text-sm text-[#6E6E73]">
-            {visible.length} af {templates.length} modeller
+          <p className="text-sm font-medium text-[#111111]">
+            {visible.length} {visible.length === 1 ? "model" : "modeller"}
           </p>
         )}
         <CategoryFilters templates={templates} onFilter={setVisible} />
@@ -108,7 +109,7 @@ export function FilteredGrid({ templates, heading, promos }: FilteredGridProps) 
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {gridItems.map((item, idx) =>
                 item.kind === "product" ? (
                   <ProductGridCard
