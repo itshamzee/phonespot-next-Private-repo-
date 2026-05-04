@@ -38,22 +38,22 @@ interface VariantConfig {
 // dark-green keeps the contrast premium without shouting.
 function TrustStats() {
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
+    <div className="flex flex-col items-center justify-center gap-1.5 sm:gap-3">
       <div className="text-center">
-        <div className="font-display text-5xl sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
+        <div className="font-display text-[44px] sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
           36
         </div>
-        <div className="mt-1.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
+        <div className="mt-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
           Mdr. garanti
         </div>
       </div>
-      <div className="h-px w-10 bg-[#F5F2EC]/30" aria-hidden="true" />
+      <div className="h-px w-8 sm:w-10 bg-[#F5F2EC]/30" aria-hidden="true" />
       <div className="text-center">
-        <div className="font-display text-5xl sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
+        <div className="font-display text-[44px] sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
           30
-          <span className="text-3xl sm:text-4xl align-top">+</span>
+          <span className="text-2xl sm:text-4xl align-top">+</span>
         </div>
-        <div className="mt-1.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
+        <div className="mt-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
           Tests pr. enhed
         </div>
       </div>
@@ -150,7 +150,7 @@ export function PromoCard({ variant, href }: PromoCardProps) {
       )}
 
       {/* Icon area — same proportion as product image area for visual rhythm */}
-      <div className="relative aspect-square w-40 shrink-0 sm:w-auto flex flex-col items-center justify-center gap-3 p-6">
+      <div className="relative aspect-square w-36 shrink-0 sm:w-auto flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
         <span
           className={`absolute top-3 left-3 inline-flex items-center rounded-full ${v.badgeClass} px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide`}
         >
@@ -176,7 +176,7 @@ export function PromoCard({ variant, href }: PromoCardProps) {
         </p>
         <div className="mt-auto pt-3">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full ${v.ctaClass} px-3.5 py-1.5 text-xs font-semibold transition-colors`}
+            className={`inline-flex items-center gap-1.5 rounded-full ${v.ctaClass} px-4 py-2 text-sm sm:px-3.5 sm:py-1.5 sm:text-xs font-semibold transition-colors`}
           >
             {v.cta}
             <svg
