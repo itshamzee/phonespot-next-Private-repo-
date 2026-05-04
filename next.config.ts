@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.apple.com" },
       { protocol: "https", hostname: "store.storeimages.cdn-apple.com" },
       { protocol: "https", hostname: "cdsassets.apple.com" },
+      // Refurbed product photos (files.refurbed.com) — used for iPhone 15-17,
+      // Pixel 10 Pro, Galaxy A56 templates that lack our own studio shots
+      { protocol: "https", hostname: "files.refurbed.com" },
     ],
   },
   async redirects() {
