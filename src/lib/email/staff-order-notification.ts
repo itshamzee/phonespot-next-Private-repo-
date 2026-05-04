@@ -1,7 +1,7 @@
 import { resend, EMAIL_FROM } from "./resend";
 import { BRAND } from "@/lib/email/brand";
 
-const STAFF_EMAIL = "ordre@phonespot.dk";
+const STAFF_EMAIL = "info@phonespot.dk";
 
 const SHIPPING_LABELS: Record<string, string> = {
   postnord_myparcel:    "PostNord MyPack Collect (pakkeshop)",
@@ -114,7 +114,7 @@ function buildStaffNotificationHtml(params: StaffOrderNotificationParams): strin
                 </td>
                 <td align="right">
                   <p style="margin:0;font-size:12px;color:#aaa;font-family:${font};">
-                    ordre@phonespot.dk
+                    info@phonespot.dk
                   </p>
                 </td>
               </tr>

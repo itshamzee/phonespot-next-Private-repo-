@@ -86,7 +86,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (order.customer?.email) {
       try {
         await resend.emails.send({
-          from: "PhoneSpot <ordre@phonespot.dk>",
+          from: "PhoneSpot <info@phonespot.dk>",
           to: order.customer.email,
           subject: `Refusion for ordre ${order.order_number}`,
           react: RefundConfirmationEmail({

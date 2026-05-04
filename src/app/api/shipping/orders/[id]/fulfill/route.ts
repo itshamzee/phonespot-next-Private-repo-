@@ -90,7 +90,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const trackingLink = tracking_url || buildTrackingUrl(order.shipping_method, tracking_number);
 
       await resend.emails.send({
-        from: "PhoneSpot <ordre@phonespot.dk>",
+        from: "PhoneSpot <info@phonespot.dk>",
         to: order.customer.email,
         subject: `Din ordre ${order.order_number} er afsendt`,
         react: ShippingConfirmationEmail({

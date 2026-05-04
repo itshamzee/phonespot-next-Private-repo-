@@ -175,7 +175,6 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
 function buildHtml(params: SendOrderConfirmationParams): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
   const withdrawalUrl = `${baseUrl}/fortrydelse?token=${params.withdrawalToken}`;
-  const orderUrl = `${baseUrl}/konto/ordrer/${params.orderId}`;
 
   const firstName = params.customer.name.split(" ")[0] ?? params.customer.name;
 
@@ -220,13 +219,6 @@ function buildHtml(params: SendOrderConfirmationParams): string {
                 </td>
               </tr>
             </table>
-          </td>
-        </tr>
-
-        <!-- CTA button -->
-        <tr>
-          <td style="padding:20px 40px 0;text-align:center;">
-            ${emailButton("Se din ordre", orderUrl)}
           </td>
         </tr>
 

@@ -14,7 +14,7 @@ export const BRAND = {
   // Contact
   phone: "61 10 00 48",
   email: "info@phonespot.dk",
-  orderEmail: "ordre@phonespot.dk",
+  orderEmail: "info@phonespot.dk",
   website: "https://phonespot.dk",
   cvr: "38688766",
 
@@ -26,7 +26,21 @@ export const BRAND = {
   logoWhite: "https://phonespot.dk/brand/logos/phonespot-wordmark-white.png",
   logoDark:  "https://phonespot.dk/brand/logos/phonespot-wordmark-dark.png",
 
-  // Store
+  // Stores — render both in email footers
+  stores: [
+    {
+      name:    "PhoneSpot Slagelse",
+      address: "VestsjællandsCentret 10, 4200 Slagelse",
+      hours:   "Man-Fre 10-19 · Lør-Søn 10-17",
+    },
+    {
+      name:    "PhoneSpot Vejle",
+      address: "Løversysselvej 3A, 7100 Vejle",
+      hours:   "Man-Fre 10-17:30 · Lør-Søn 10-15",
+    },
+  ],
+
+  // Backwards-compat single-store reference (used by older templates)
   store: {
     name:    "PhoneSpot Slagelse",
     address: "VestsjællandsCentret 10, 4200 Slagelse",
@@ -100,15 +114,29 @@ export function emailFooter(): string {
       </td>
     </tr>
 
-    <!-- Store info + hours -->
+    <!-- Store info + hours — both locations -->
     <tr>
-      <td style="padding:20px 40px 4px;text-align:center;">
-        <p style="margin:0 0 4px;font-size:13px;color:${BRAND.charcoal};font-weight:600;">
-          ${BRAND.store.name} &middot; ${BRAND.store.address}
-        </p>
-        <p style="margin:0;font-size:12px;color:#888;">
-          ${BRAND.store.hours}
-        </p>
+      <td style="padding:20px 40px 4px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            ${BRAND.stores
+              .map(
+                (s, i) => `
+              <td style="width:50%;padding:0 ${i === 0 ? "8px 0 0" : "0 0 8px"};vertical-align:top;text-align:center;">
+                <p style="margin:0 0 4px;font-size:13px;color:${BRAND.charcoal};font-weight:600;">
+                  ${s.name}
+                </p>
+                <p style="margin:0 0 2px;font-size:12px;color:#888;line-height:1.5;">
+                  ${s.address}
+                </p>
+                <p style="margin:0;font-size:12px;color:#888;line-height:1.5;">
+                  ${s.hours}
+                </p>
+              </td>`
+              )
+              .join("\n")}
+          </tr>
+        </table>
       </td>
     </tr>
 
