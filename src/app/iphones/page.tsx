@@ -251,6 +251,69 @@ export default async function IphonesPage() {
         </div>
       </section>
 
+      {/* ── "Vi er her for dig" — contact strip a la Refurbed sidebar card.
+            Places phone + chat right below the grid so a hesitant customer
+            doesn't have to scroll all the way to the footer. */}
+      <section className="bg-[#F7F7F8] border-t border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-[#E5E5EA] bg-white p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-7 w-7 text-[#1A3D2E]"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold tracking-tight text-[#111111]">
+                  Vi er her for dig
+                </h3>
+                <p className="mt-1.5 text-sm text-[#6E6E73] leading-relaxed">
+                  Spørgsmål om en model, batteri-kapacitet eller levering?
+                  Ring eller skriv — vi svarer typisk inden for 1 time i åbningstiden.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <a
+                  href="tel:+4561100048"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14301F]"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  61 10 00 48
+                </a>
+                <a
+                  href="mailto:info@phonespot.dk"
+                  className="text-xs text-[#6E6E73] hover:text-[#1A3D2E] transition-colors sm:text-right"
+                >
+                  info@phonespot.dk
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Condition walkthrough ── */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">

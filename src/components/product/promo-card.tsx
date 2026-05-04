@@ -138,7 +138,7 @@ export function PromoCard({ variant, href }: PromoCardProps) {
   return (
     <Link
       href={href}
-      className={`group relative flex flex-row sm:flex-col overflow-hidden rounded-2xl border-2 ${v.border} ${v.bg} transition-all hover:shadow-xl active:scale-[0.99]`}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 ${v.border} ${v.bg} transition-all hover:shadow-xl active:scale-[0.99]`}
     >
       {/* Subtle radial-gradient overlay for the trust variant — adds depth
           without reading as a "designy" effect. Skipped on light variants. */}
@@ -150,7 +150,7 @@ export function PromoCard({ variant, href }: PromoCardProps) {
       )}
 
       {/* Icon area — same proportion as product image area for visual rhythm */}
-      <div className="relative aspect-square w-36 shrink-0 sm:w-auto flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
+      <div className="relative aspect-square w-full flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
         <span
           className={`absolute top-3 left-3 inline-flex items-center rounded-full ${v.badgeClass} px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide`}
         >

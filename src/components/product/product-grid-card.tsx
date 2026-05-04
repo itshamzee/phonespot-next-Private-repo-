@@ -186,10 +186,10 @@ export function ProductGridCard({
   return (
     <Link
       href={`/refurbished/${slug}`}
-      className="group flex flex-row sm:flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20 active:scale-[0.99]"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20 active:scale-[0.99]"
     >
       {/* Image */}
-      <div className="relative aspect-square w-36 shrink-0 overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF] sm:w-auto">
+      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF]">
         {/* Stock badge — top left */}
         {deviceCount > 3 && (
           <div className="absolute top-3 left-3 z-10">
