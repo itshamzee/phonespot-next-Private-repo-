@@ -189,7 +189,7 @@ export function ProductGridCard({
       className="group flex flex-row sm:flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20 active:scale-[0.99]"
     >
       {/* Image */}
-      <div className="relative aspect-square w-40 shrink-0 overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF] sm:w-auto">
+      <div className="relative aspect-square w-36 shrink-0 overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF] sm:w-auto">
         {/* Stock badge — top left */}
         {deviceCount > 3 && (
           <div className="absolute top-3 left-3 z-10">
@@ -272,10 +272,11 @@ export function ProductGridCard({
                   Kan sendes eller afhentes i butik
                 </p>
               )}
-              {/* CTA pill — visual affordance that the whole card is tappable */}
+              {/* CTA pill — visual affordance that the whole card is tappable.
+                  Sized larger on mobile so the touch target is comfortable. */}
               <div
                 aria-hidden="true"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors group-hover:bg-[#14301F]"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-4 py-2 text-sm sm:px-3.5 sm:py-1.5 sm:text-xs font-semibold text-white transition-colors group-hover:bg-[#14301F]"
               >
                 Se priser
                 <svg

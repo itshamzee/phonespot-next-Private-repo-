@@ -122,9 +122,9 @@ export default async function IphonesPage() {
 
       {/* ── Compact hero — breadcrumb + heading on a single tight strip ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 pt-4 pb-5 sm:pt-6 sm:pb-7">
+        <div className="mx-auto max-w-7xl px-4 pt-3 pb-4 sm:pt-6 sm:pb-7">
           <nav
-            className="mb-3 flex items-center gap-2 text-xs text-[#86868B]"
+            className="mb-2 flex items-center gap-2 text-xs text-[#86868B]"
             aria-label="Breadcrumb"
           >
             <Link href="/" className="hover:text-[#111111] transition-colors">
@@ -146,23 +146,19 @@ export default async function IphonesPage() {
             <span className="text-[#111111] font-medium">Refurbished iPhones</span>
           </nav>
 
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#111111]">
-                Refurbished iPhones
-              </h1>
-              <p className="mt-1 text-sm text-[#6E6E73]">
-                {templates.length} modeller · Apple-original · 36 mdr. garanti
-              </p>
-            </div>
-          </div>
+          <h1 className="font-display text-[26px] sm:text-3xl font-bold tracking-tight text-[#111111] leading-tight">
+            Refurbished iPhones
+          </h1>
+          <p className="mt-1 text-[13px] sm:text-sm text-[#6E6E73]">
+            {templates.length} modeller · Apple-original · 36 mdr. garanti
+          </p>
         </div>
       </section>
 
       {/* ── Trust strip — answers "is this real, is it tested, what's the warranty" before the customer scrolls ── */}
       <section className="bg-white border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:py-4">
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:py-4">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3 text-sm">
             {[
               {
                 label: "100% Apple-original",
@@ -209,23 +205,23 @@ export default async function IphonesPage() {
                 ),
               },
             ].map((item) => (
-              <li key={item.label} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+              <li key={item.label} className="flex items-start gap-2 sm:gap-2.5">
+                <span className="mt-0.5 flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="h-4 w-4 text-[#1A3D2E]"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#1A3D2E]"
                     aria-hidden="true"
                   >
                     {item.icon}
                   </svg>
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-semibold text-[#111111] leading-tight">
+                  <span className="block text-[13px] sm:text-sm font-semibold text-[#111111] leading-tight">
                     {item.label}
                   </span>
-                  <span className="block text-xs text-[#86868B] leading-tight mt-0.5">
+                  <span className="hidden sm:block text-xs text-[#86868B] leading-tight mt-0.5">
                     {item.sub}
                   </span>
                 </span>
@@ -235,20 +231,25 @@ export default async function IphonesPage() {
         </div>
       </section>
 
-      {/* ── All iPhones grid with sidebar filters (primary browsing area) ── */}
-      <SectionWrapper>
-        <FilteredGrid
-          templates={templates}
-          heading="Alle iPhones på lager"
-          promos={[
-            // Trust card sits between the iPhone 17 series and the older
-            // generations — natural editorial break for the customer.
-            { position: 4, variant: "trust", href: "/kvalitet" },
-            // Screen-protector cross-sell further down in the grid.
-            { position: 8, variant: "screen-protector", href: "/beskyttelsesglas" },
-          ]}
-        />
-      </SectionWrapper>
+      {/* ── All iPhones grid with sidebar filters (primary browsing area).
+            Custom section instead of SectionWrapper to keep mobile padding
+            tight — products should be visible right below the trust strip
+            without 80px of dead space. */}
+      <section className="bg-white py-4 sm:py-10 md:py-14">
+        <div className="mx-auto max-w-7xl px-4">
+          <FilteredGrid
+            templates={templates}
+            heading="Alle iPhones på lager"
+            promos={[
+              // Trust card sits between the iPhone 17 series and the older
+              // generations — natural editorial break for the customer.
+              { position: 4, variant: "trust", href: "/kvalitet" },
+              // Screen-protector cross-sell further down in the grid.
+              { position: 8, variant: "screen-protector", href: "/beskyttelsesglas" },
+            ]}
+          />
+        </div>
+      </section>
 
       {/* ── Condition walkthrough ── */}
       <SectionWrapper background="sand">
