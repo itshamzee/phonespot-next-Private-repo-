@@ -18,7 +18,7 @@ export interface TemplateWithStock extends ProductTemplate {
 
 interface PromoSlot {
   position: number; // zero-indexed insertion point in the visible array
-  variant: "screen-protector" | "weekly-deal";
+  variant: "screen-protector" | "weekly-deal" | "trust";
   href: string;
 }
 

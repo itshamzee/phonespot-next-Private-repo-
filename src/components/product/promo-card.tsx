@@ -4,35 +4,74 @@ import Link from "next/link";
  * Grid-tile-sized promo that slots into the product grid alongside
  * ProductGridCard. Used for cross-sells like "Husk skærmbeskyttelse"
  * inside /iphones, /ipads, etc.
+ *
+ * Variants:
+ *  - screen-protector: warm yellow upsell, "remember a screen protector"
+ *  - weekly-deal:      red urgency, "save 10% this week"
+ *  - trust:            dark-green editorial, the PhoneSpot quality promise
  */
 
-type PromoVariant = "screen-protector" | "weekly-deal";
+type PromoVariant = "screen-protector" | "weekly-deal" | "trust";
 
 interface PromoCardProps {
   variant: PromoVariant;
   href: string;
 }
 
-const VARIANTS: Record<PromoVariant, {
+interface VariantConfig {
   badge: string;
-  badgeBg: string;
+  badgeClass: string;
   bg: string;
   border: string;
+  theme: "light" | "dark";
   title: string;
   body: string;
   cta: string;
-  ctaBg: string;
+  ctaClass: string;
   icon: React.ReactNode;
-}> = {
+}
+
+// ── Trust icon: stacked editorial stats ───────────────────────────────────
+//
+// Two big display numbers separated by a hairline rule. The "+" on 30 is
+// scaled down so the digits read as a single typographic unit. Cream on
+// dark-green keeps the contrast premium without shouting.
+function TrustStats() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3">
+      <div className="text-center">
+        <div className="font-display text-5xl sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
+          36
+        </div>
+        <div className="mt-1.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
+          Mdr. garanti
+        </div>
+      </div>
+      <div className="h-px w-10 bg-[#F5F2EC]/30" aria-hidden="true" />
+      <div className="text-center">
+        <div className="font-display text-5xl sm:text-6xl font-bold leading-[0.85] tracking-tight text-[#F5F2EC]">
+          30
+          <span className="text-3xl sm:text-4xl align-top">+</span>
+        </div>
+        <div className="mt-1.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-[#F5F2EC]/70">
+          Tests pr. enhed
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const VARIANTS: Record<PromoVariant, VariantConfig> = {
   "screen-protector": {
     badge: "Husk",
-    badgeBg: "bg-[#1A3D2E] text-white",
+    badgeClass: "bg-[#1A3D2E] text-white",
     bg: "bg-[#FFF8E6]",
     border: "border-[#F1C84B]",
+    theme: "light",
     title: "Skærmbeskyttelse fra 159 kr.",
     body: "Beskyt din nye iPhone med et 9H tempered glass eller privacy-filter. Gratis montering i butik.",
     cta: "Se beskyttelsesglas",
-    ctaBg: "bg-[#1A3D2E] hover:bg-[#14301F]",
+    ctaClass: "bg-[#1A3D2E] hover:bg-[#14301F] text-white",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -52,13 +91,14 @@ const VARIANTS: Record<PromoVariant, {
   },
   "weekly-deal": {
     badge: "Ugens tilbud",
-    badgeBg: "bg-[#BF0013] text-white",
+    badgeClass: "bg-[#BF0013] text-white",
     bg: "bg-[#FEF2F2]",
     border: "border-[#FCA5A5]",
+    theme: "light",
     title: "Spar 10% på cover + glas",
     body: "Køb cover og skærmbeskyttelse sammen og få 10% rabat — gælder hele ugen.",
     cta: "Se tilbud",
-    ctaBg: "bg-[#BF0013] hover:bg-[#A0000F]",
+    ctaClass: "bg-[#BF0013] hover:bg-[#A0000F] text-white",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -76,36 +116,67 @@ const VARIANTS: Record<PromoVariant, {
       </svg>
     ),
   },
+  trust: {
+    badge: "Kvalitetsgaranti",
+    badgeClass:
+      "border border-[#F5F2EC]/30 bg-[#F5F2EC]/10 text-[#F5F2EC] backdrop-blur-sm",
+    bg: "bg-[#1A3D2E]",
+    border: "border-[#143025]",
+    theme: "dark",
+    title: "Vi tester hver iPhone individuelt",
+    body: "Renoveret af vores certificerede teknikere før den sendes — alt fra batteri til knapper og kamera bliver kontrolleret.",
+    cta: "Vores kvalitet",
+    ctaClass: "bg-[#F5F2EC] hover:bg-white text-[#1A3D2E]",
+    icon: <TrustStats />,
+  },
 };
 
 export function PromoCard({ variant, href }: PromoCardProps) {
   const v = VARIANTS[variant];
+  const isDark = v.theme === "dark";
 
   return (
     <Link
       href={href}
-      className={`group flex flex-row sm:flex-col overflow-hidden rounded-2xl border-2 ${v.border} ${v.bg} transition-all hover:shadow-lg active:scale-[0.99]`}
+      className={`group relative flex flex-row sm:flex-col overflow-hidden rounded-2xl border-2 ${v.border} ${v.bg} transition-all hover:shadow-xl active:scale-[0.99]`}
     >
+      {/* Subtle radial-gradient overlay for the trust variant — adds depth
+          without reading as a "designy" effect. Skipped on light variants. */}
+      {isDark && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(245,242,236,0.08),transparent_60%)]"
+        />
+      )}
+
       {/* Icon area — same proportion as product image area for visual rhythm */}
       <div className="relative aspect-square w-40 shrink-0 sm:w-auto flex flex-col items-center justify-center gap-3 p-6">
         <span
-          className={`absolute top-3 left-3 inline-flex items-center rounded-full ${v.badgeBg} px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide`}
+          className={`absolute top-3 left-3 inline-flex items-center rounded-full ${v.badgeClass} px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wide`}
         >
           {v.badge}
         </span>
         {v.icon}
       </div>
 
-      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <h3 className="line-clamp-2 text-sm sm:text-base font-semibold text-[#111111]">
+      <div className="relative flex flex-1 flex-col p-3.5 sm:p-4">
+        <h3
+          className={`line-clamp-2 text-sm sm:text-base font-semibold ${
+            isDark ? "text-[#F5F2EC]" : "text-[#111111]"
+          }`}
+        >
           {v.title}
         </h3>
-        <p className="mt-2 text-xs sm:text-sm text-[#6E6E73] line-clamp-3">
+        <p
+          className={`mt-2 text-xs sm:text-sm line-clamp-3 ${
+            isDark ? "text-[#F5F2EC]/75" : "text-[#6E6E73]"
+          }`}
+        >
           {v.body}
         </p>
         <div className="mt-auto pt-3">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full ${v.ctaBg} px-3.5 py-1.5 text-xs font-semibold text-white transition-colors`}
+            className={`inline-flex items-center gap-1.5 rounded-full ${v.ctaClass} px-3.5 py-1.5 text-xs font-semibold transition-colors`}
           >
             {v.cta}
             <svg
