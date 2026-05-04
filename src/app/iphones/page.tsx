@@ -68,9 +68,33 @@ const COMPARISON = [
 // Page
 // ---------------------------------------------------------------------------
 
+// Higher number = newer/flagship-tier model. Used to sort the listing
+// newest-first within each generation.
+const TIER_RANK: Record<string, number> = {
+  "pro max": 5,
+  pro: 4,
+  air: 3,
+  plus: 3,
+  "": 2, // standard
+  e: 1,
+};
+
+function newestFirst<T extends { model: string }>(a: T, b: T): number {
+  const ma = a.model.match(/iPhone\s*(\d+)\s*(.*)?/i);
+  const mb = b.model.match(/iPhone\s*(\d+)\s*(.*)?/i);
+  if (!ma || !mb) return 0;
+  const genA = parseInt(ma[1], 10);
+  const genB = parseInt(mb[1], 10);
+  if (genA !== genB) return genB - genA;
+  const tierA = TIER_RANK[(ma[2] || "").trim().toLowerCase()] ?? 2;
+  const tierB = TIER_RANK[(mb[2] || "").trim().toLowerCase()] ?? 2;
+  return tierB - tierA;
+}
+
 export default async function IphonesPage() {
   // Only show templates that actually have devices in stock right now.
-  const templates = await getPublishedTemplates("iphone", { inStock: true });
+  const rawTemplates = await getPublishedTemplates("iphone", { inStock: true });
+  const templates = [...rawTemplates].sort(newestFirst);
 
   return (
     <>
@@ -217,7 +241,11 @@ export default async function IphonesPage() {
           templates={templates}
           heading="Alle iPhones på lager"
           promos={[
-            { position: 4, variant: "screen-protector", href: "/beskyttelsesglas" },
+            // Trust card sits between the iPhone 17 series and the older
+            // generations — natural editorial break for the customer.
+            { position: 4, variant: "trust", href: "/kvalitet" },
+            // Screen-protector cross-sell further down in the grid.
+            { position: 8, variant: "screen-protector", href: "/beskyttelsesglas" },
           ]}
         />
       </SectionWrapper>
