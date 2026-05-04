@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.medusa-cloud.com" },
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "*.amazonaws.com" },
+      // Apple CDNs — used for iPhone product images (apple.com/v/iphone-X)
+      { protocol: "https", hostname: "www.apple.com" },
+      { protocol: "https", hostname: "store.storeimages.cdn-apple.com" },
+      { protocol: "https", hostname: "cdsassets.apple.com" },
     ],
   },
   async redirects() {
