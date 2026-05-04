@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { FilteredGrid } from "@/components/product/filtered-grid";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
-import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
+import { TrustBar } from "@/components/ui/trust-bar";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 60;
@@ -97,80 +96,130 @@ export default async function IphonesPage() {
         }}
       />
 
-      {/* ── Hero ── */}
+      {/* ── Compact hero — breadcrumb + heading on a single tight strip ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 md:py-16">
-          {/* Breadcrumb */}
-          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+        <div className="mx-auto max-w-7xl px-4 pt-4 pb-5 sm:pt-6 sm:pb-7">
+          <nav
+            className="mb-3 flex items-center gap-2 text-xs text-[#86868B]"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/" className="hover:text-[#111111] transition-colors">
+              Forside
+            </Link>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
             </svg>
             <span className="text-[#111111] font-medium">Refurbished iPhones</span>
           </nav>
 
-          <div className="flex flex-col gap-4 sm:gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              {/* Category badge */}
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E]" />
-                Apple iPhone
-              </span>
-
-              <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#111111]">
                 Refurbished iPhones
               </h1>
-
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-[#86868B] md:text-lg">
-                Kvalitetstestede iPhones fra 999 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag et.
+              <p className="mt-1 text-sm text-[#6E6E73]">
+                {templates.length} modeller · Apple-original · 36 mdr. garanti
               </p>
-
-              {/* Quick stats */}
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">Fra 999 DKK</strong>
-                </span>
-                <span className="text-[#E5E5EA]">|</span>
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path d="M10.75 10.818v2.614A3.13 3.13 0 0 0 11.888 13c.482-.315.612-.648.612-.875 0-.227-.13-.56-.612-.875a3.13 3.13 0 0 0-1.138-.432ZM8.33 8.62c.053.055.108.11.162.165.1.1.295.1.395 0l3.038-3.04a.75.75 0 0 0-1.06-1.06L8.99 6.549l-.663-.664a.75.75 0 0 0-1.06 1.06l1.063 1.063Z" />
-                    <path fillRule="evenodd" d="M9.018 2.198a1.5 1.5 0 0 1 1.964 0l3.75 3.336A1.5 1.5 0 0 1 15.25 6.67V16.5a1.5 1.5 0 0 1-1.5 1.5h-7.5a1.5 1.5 0 0 1-1.5-1.5V6.67a1.5 1.5 0 0 1 .518-1.136l3.75-3.336ZM10 11.25c-2.032 0-3.5 1.026-3.5 2.25S7.968 15.75 10 15.75s3.5-1.026 3.5-2.25-1.468-2.25-3.5-2.25Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">{templates.length} modeller</strong>
-                </span>
-                <span className="text-[#E5E5EA]">|</span>
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">36 mdr. garanti</strong>
-                </span>
-              </div>
-            </div>
-
-            {/* Product image */}
-            <div className="hidden lg:flex lg:shrink-0 lg:items-center lg:justify-center">
-              <div className="relative">
-                <div className="absolute -inset-8 rounded-full bg-[#1A3D2E]/5" />
-                <Image
-                  src="/images/products/iphone-lineup.jpg"
-                  alt="iPhone lineup"
-                  width={320}
-                  height={400}
-                  className="relative h-64 w-auto object-contain drop-shadow-xl"
-                />
-              </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── Trust strip — answers "is this real, is it tested, what's the warranty" before the customer scrolls ── */}
+      <section className="bg-white border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:py-4">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 text-sm">
+            {[
+              {
+                label: "100% Apple-original",
+                sub: "Aldrig kopier eller B-ware",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
+                label: "Professionelt refurbished",
+                sub: "Renoveret af certificerede teknikere",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 0 1-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 0 1 .947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 0 1 2.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 0 1 2.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 0 1 .947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 0 1-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 0 1-2.287-.947ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
+                label: "30+ tests pr enhed",
+                sub: "Batteri, skærm, kamera, knapper, mv.",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
+                label: "36 mdr. garanti",
+                sub: "+ 14 dages fortrydelsesret",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 1.998-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+            ].map((item) => (
+              <li key={item.label} className="flex items-start gap-2.5">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4 text-[#1A3D2E]"
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-semibold text-[#111111] leading-tight">
+                    {item.label}
+                  </span>
+                  <span className="block text-xs text-[#86868B] leading-tight mt-0.5">
+                    {item.sub}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* ── All iPhones grid with sidebar filters (primary browsing area) ── */}
       <SectionWrapper>
-        <FilteredGrid templates={templates} heading="Alle iPhones på lager" />
+        <FilteredGrid
+          templates={templates}
+          heading="Alle iPhones på lager"
+          promos={[
+            { position: 4, variant: "screen-protector", href: "/beskyttelsesglas" },
+          ]}
+        />
       </SectionWrapper>
 
       {/* ── Condition walkthrough ── */}
