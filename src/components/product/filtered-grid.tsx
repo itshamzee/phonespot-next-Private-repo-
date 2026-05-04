@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CategoryFilters } from "@/components/product/category-filters";
 import { ProductGridCard } from "@/components/product/product-grid-card";
+import { PromoCard } from "@/components/product/promo-card";
 import type { ProductTemplate } from "@/lib/supabase/platform-types";
 
 // ---------------------------------------------------------------------------
@@ -15,18 +16,42 @@ export interface TemplateWithStock extends ProductTemplate {
   locations: { name: string; type: string; count: number }[];
 }
 
+interface PromoSlot {
+  position: number; // zero-indexed insertion point in the visible array
+  variant: "screen-protector" | "weekly-deal";
+  href: string;
+}
+
 interface FilteredGridProps {
   templates: TemplateWithStock[];
   /** Optional heading rendered above the grid. */
   heading?: string;
+  /** Promo cards to interleave between products at fixed positions. */
+  promos?: PromoSlot[];
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function FilteredGrid({ templates, heading }: FilteredGridProps) {
+export function FilteredGrid({ templates, heading, promos }: FilteredGridProps) {
   const [visible, setVisible] = useState<TemplateWithStock[]>(templates);
+
+  // Build the render-list with promo cards spliced in at the configured slots.
+  // Sorted descending so earlier insertions don't shift later positions.
+  type GridItem =
+    | { kind: "product"; template: TemplateWithStock }
+    | { kind: "promo"; slot: PromoSlot };
+  const gridItems: GridItem[] = visible.map((t) => ({ kind: "product", template: t }));
+  if (promos && promos.length > 0) {
+    const sorted = [...promos].sort((a, b) => a.position - b.position);
+    let inserted = 0;
+    for (const p of sorted) {
+      const at = Math.min(p.position + inserted, gridItems.length);
+      gridItems.splice(at, 0, { kind: "promo", slot: p });
+      inserted++;
+    }
+  }
 
   return (
     <div>
@@ -84,20 +109,28 @@ export function FilteredGrid({ templates, heading }: FilteredGridProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {visible.map((t) => (
-                <ProductGridCard
-                  key={t.id}
-                  slug={t.slug}
-                  image={t.images[0]}
-                  title={t.display_name}
-                  minPrice={t.min_price}
-                  deviceCount={t.device_count}
-                  locations={t.locations}
-                  brand={t.brand}
-                  category={t.category}
-                  specifications={t.specifications}
-                />
-              ))}
+              {gridItems.map((item, idx) =>
+                item.kind === "product" ? (
+                  <ProductGridCard
+                    key={item.template.id}
+                    slug={item.template.slug}
+                    image={item.template.images[0]}
+                    title={item.template.display_name}
+                    minPrice={item.template.min_price}
+                    deviceCount={item.template.device_count}
+                    locations={item.template.locations}
+                    brand={item.template.brand}
+                    category={item.template.category}
+                    specifications={item.template.specifications}
+                  />
+                ) : (
+                  <PromoCard
+                    key={`promo-${idx}`}
+                    variant={item.slot.variant}
+                    href={item.slot.href}
+                  />
+                ),
+              )}
             </div>
           )}
         </div>
