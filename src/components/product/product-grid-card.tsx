@@ -209,15 +209,23 @@ export function ProductGridCard({
   const ssdVal = getSpec("ssd", "storage", "lager", "lagerplads");
   const screenVal = getSpec("skærm", "screen", "display", "screen_size");
 
+  // Pull out just the size (e.g. "15,3"" from "15,3" 2.8K OLED 120 Hz") so
+  // the card doesn't drown in resolution + refresh-rate text.
+  function extractScreenSize(s: string): string | null {
+    const m = s.match(/^([\d,.]+)\s*["”″]?/);
+    if (!m || !m[1]) return null;
+    const size = m[1].replace(/\.0$/, "");
+    return size + '"';
+  }
+
   const specParts: string[] = [];
   if (isLaptop) {
     if (cpuFull) specParts.push(shortProcessor(cpuFull));
-    if (ramVal) specParts.push(ramVal.replace(/\s+/g, ""));
-    if (ssdVal) specParts.push(ssdVal.replace(/\s+/g, ""));
+    if (ramVal) specParts.push(ramVal.replace(/\s+/g, " ").trim());
+    if (ssdVal) specParts.push(ssdVal.replace(/\s+/g, " ").trim());
     if (screenVal) {
-      const cleaned = screenVal.replace(/["”″]/g, "").replace(/\.0\b/, "").trim();
-      // If the value is just a number, append a quote mark
-      specParts.push(/^\d/.test(cleaned) && !cleaned.includes('"') ? cleaned + '"' : cleaned);
+      const size = extractScreenSize(screenVal);
+      if (size) specParts.push(size);
     }
   }
 
