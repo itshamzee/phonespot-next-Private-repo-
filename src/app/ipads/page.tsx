@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
+import { FilteredGrid } from "@/components/product/filtered-grid";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { ProductGridCard } from "@/components/product/product-grid-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 60;
@@ -18,68 +17,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://phonespot.dk/ipads" },
   openGraph: {
     title: "Refurbished iPads - Spar op til 40% | PhoneSpot",
-    description: "Køb kvalitetstestede refurbished iPads med 36 måneders garanti. Fra iPad Air 2 til iPad Pro — alle testet med 30+ kontroller og klar til brug.",
+    description:
+      "Køb kvalitetstestede refurbished iPads med 36 måneders garanti. Fra iPad Air 2 til iPad Pro — alle testet med 30+ kontroller og klar til brug.",
     url: "https://phonespot.dk/ipads",
   },
 };
-
-const MODEL_TIERS = [
-  {
-    tier: "Budget",
-    tagline: "Perfekt til basale behov",
-    cardBg: "bg-white",
-    cardBorder: "border border-[#E5E5EA]",
-    badgeBg: "bg-[#E5E5EA]",
-    badgeText: "text-[#111111]",
-    taglineColor: "text-[#86868B]",
-    iconColor: "text-[#86868B]",
-    patterns: ["ipad air 2", "ipad 5", "ipad 6"],
-  },
-  {
-    tier: "Populær",
-    tagline: "Bedste værdi for pengene",
-    cardBg: "bg-[#F7F7F8]",
-    cardBorder: "border-2 border-[#1A3D2E]/20",
-    badgeBg: "bg-[#1A3D2E]",
-    badgeText: "text-white",
-    taglineColor: "text-[#1A3D2E]",
-    iconColor: "text-[#1A3D2E]",
-    patterns: ["ipad 7", "ipad 8", "ipad 9", "ipad air"],
-  },
-  {
-    tier: "Premium",
-    tagline: "Det bedste Apple tilbyder",
-    cardBg: "bg-white",
-    cardBorder: "border-2 border-[#111111]",
-    badgeBg: "bg-[#111111]",
-    badgeText: "text-white",
-    taglineColor: "text-[#86868B]",
-    iconColor: "text-[#111111]",
-    patterns: ["ipad pro", "ipad mini"],
-  },
-];
-
-function TierIcon({ tier, className }: { tier: string; className?: string }) {
-  if (tier === "Budget") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    );
-  }
-  if (tier === "Populær") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
-      </svg>
-    );
-  }
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12l4.5 6-10.5 12L1.5 9 6 3Zm0 0 3 6m6-6-3 6m-6 0h12" />
-    </svg>
-  );
-}
 
 const IPAD_FAQ = [
   {
@@ -105,7 +47,7 @@ const IPAD_FAQ = [
   {
     question: "Kan jeg bruge Apple Pencil med en refurbished iPad?",
     answer:
-      "Det afhænger af modellen. iPad 6., 7. og 8. generation understøtter Apple Pencil 1. generation. iPad Pro 10,5\" understøtter også Apple Pencil 1. generation. iPad Air 2 understøtter desværre ikke Apple Pencil.",
+      "Det afhænger af modellen. iPad 6., 7., 8. og 9. generation understøtter Apple Pencil 1. generation. iPad Pro 10,5\" understøtter også Apple Pencil 1. generation. iPad Air 2 understøtter desværre ikke Apple Pencil.",
   },
   {
     question: "Kommer der tilbehør med?",
@@ -123,26 +65,12 @@ const COMPARISON = [
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO₂" },
 ];
 
-export default async function IpadsPage() {
-  const templates = await getPublishedTemplates("ipad");
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
-  const tierGroups = new Map<number, typeof templates>();
-  for (const t of templates) {
-    const name = t.display_name.toLowerCase();
-    let matched = false;
-    for (let i = MODEL_TIERS.length - 1; i >= 0; i--) {
-      if (MODEL_TIERS[i].patterns.some((p) => name.includes(p))) {
-        if (!tierGroups.has(i)) tierGroups.set(i, []);
-        tierGroups.get(i)!.push(t);
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      if (!tierGroups.has(0)) tierGroups.set(0, []);
-      tierGroups.get(0)!.push(t);
-    }
-  }
+export default async function IpadsPage() {
+  const templates = await getPublishedTemplates("ipad", { inStock: true });
 
   return (
     <>
@@ -168,203 +96,141 @@ export default async function IpadsPage() {
         }}
       />
 
-      {/* ── Hero ── */}
+      {/* ── Compact hero ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
-          {/* Breadcrumb */}
-          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
+        <div className="mx-auto max-w-7xl px-4 pt-3 pb-4 sm:pt-6 sm:pb-7">
+          <nav
+            className="mb-2 flex items-center gap-2 text-xs text-[#86868B]"
+            aria-label="Breadcrumb"
+          >
             <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
               <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
             </svg>
             <span className="text-[#111111] font-medium">Refurbished iPads</span>
           </nav>
 
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              {/* Category badge */}
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E]" />
-                Apple iPad
+          <h1 className="font-display text-[26px] sm:text-3xl font-bold tracking-tight text-[#111111] leading-tight">
+            Refurbished iPads
+          </h1>
+          <p className="mt-1 text-[13px] sm:text-sm text-[#6E6E73]">
+            {templates.length} {templates.length === 1 ? "model" : "modeller"} · Apple-original · 36 mdr. garanti
+          </p>
+        </div>
+      </section>
+
+      {/* ── Trust strip ── */}
+      <section className="bg-white border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:py-4">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3 text-sm">
+            {[
+              {
+                label: "100% Apple-original",
+                sub: "Aldrig kopier eller B-ware",
+                icon: <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />,
+              },
+              {
+                label: "Professionelt refurbished",
+                sub: "Renset og opdateret af certificerede teknikere",
+                icon: <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 0 1-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 0 1 .947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 0 1 2.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 0 1 2.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 0 1 .947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 0 1-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 0 1-2.287-.947ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />,
+              },
+              {
+                label: "30+ tests pr enhed",
+                sub: "Skærm, batteri, kamera, knapper mv.",
+                icon: <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />,
+              },
+              {
+                label: "36 mdr. garanti",
+                sub: "+ 14 dages fortrydelsesret",
+                icon: <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 1.998-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />,
+              },
+            ].map((item) => (
+              <li key={item.label} className="flex items-start gap-2 sm:gap-2.5">
+                <span className="mt-0.5 flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#1A3D2E]" aria-hidden="true">
+                    {item.icon}
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] sm:text-sm font-semibold text-[#111111] leading-tight">{item.label}</span>
+                  <span className="hidden sm:block text-xs text-[#86868B] leading-tight mt-0.5">{item.sub}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── All iPads grid with sidebar filters ── */}
+      <section className="bg-white py-4 sm:py-10 md:py-14">
+        <div className="mx-auto max-w-7xl px-4">
+          <FilteredGrid
+            templates={templates}
+            heading="Alle iPads på lager"
+            promos={[{ position: 4, variant: "trust", href: "/kvalitet" }]}
+          />
+        </div>
+      </section>
+
+      {/* ── "Vi er her for dig" — contact strip ── */}
+      <section className="bg-[#F7F7F8] border-t border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-[#E5E5EA] bg-white p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-[#1A3D2E]" aria-hidden="true">
+                  <path fillRule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clipRule="evenodd" />
+                </svg>
               </span>
-
-              <h1 className="font-display text-4xl font-bold tracking-tight text-[#111111] md:text-5xl lg:text-6xl">
-                Refurbished iPads
-              </h1>
-
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-[#86868B] md:text-lg">
-                Kvalitetstestede iPads fra 899 kr. Alle enheder gennemgår 30+ kontroller, leveres med 36 måneders garanti og er klar til brug fra dag ét.
-              </p>
-
-              {/* Quick stats */}
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">Fra 899 DKK</strong>
-                </span>
-                <span className="text-[#E5E5EA]">|</span>
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18h11a1.5 1.5 0 0 0 1.5-1.5V7.621a1.5 1.5 0 0 0-.44-1.06l-4.12-4.122A1.5 1.5 0 0 0 11.378 2H4.5Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">{templates.length} modeller</strong>
-                </span>
-                <span className="text-[#E5E5EA]">|</span>
-                <span className="flex items-center gap-2 text-[#111111]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                  </svg>
-                  <strong className="font-semibold">36 mdr. garanti</strong>
-                </span>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold tracking-tight text-[#111111]">Vi er her for dig</h3>
+                <p className="mt-1.5 text-sm text-[#6E6E73] leading-relaxed">
+                  Spørgsmål om en bestemt model, lager-størrelse eller Apple Pencil-kompatibilitet?
+                  Ring eller skriv — vi svarer typisk inden for 1 time i åbningstiden.
+                </p>
               </div>
-            </div>
-
-            {/* Product image */}
-            <div className="hidden lg:flex lg:shrink-0 lg:items-center lg:justify-center">
-              <div className="relative">
-                <div className="absolute -inset-8 rounded-full bg-[#1A3D2E]/5" />
-                <Image
-                  src="/images/products/ipad-category.jpg"
-                  alt="iPad lineup"
-                  width={320}
-                  height={280}
-                  className="relative h-56 w-auto object-contain drop-shadow-xl"
-                />
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <a href="tel:+4561100048" className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14301F]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                    <path fillRule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clipRule="evenodd" />
+                  </svg>
+                  61 10 00 48
+                </a>
+                <a href="mailto:info@phonespot.dk" className="text-xs text-[#6E6E73] hover:text-[#1A3D2E] transition-colors sm:text-right">info@phonespot.dk</a>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Model tiers ── */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="lg">
-            Find den rigtige iPad til dig
-          </Heading>
-          <p className="mt-4 text-lg text-[#86868B]">
-            Vi har delt vores udvalg op i tre prisgrupper, så det er nemt at
-            finde den iPad der passer til dit budget og behov.
-          </p>
-        </div>
-
-        <div className="mt-12 space-y-8">
-          {MODEL_TIERS.map((tier, tierIndex) => {
-            const tierTemplates = tierGroups.get(tierIndex) ?? [];
-            if (tierTemplates.length === 0) return null;
-
-            return (
-              <div
-                key={tier.tier}
-                className={`rounded-3xl ${tier.cardBg} ${tier.cardBorder} p-5 md:p-8`}
-              >
-                <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <TierIcon tier={tier.tier} className={`h-6 w-6 ${tier.iconColor}`} />
-                  <div>
-                    <span className={`inline-block rounded-full ${tier.badgeBg} ${tier.badgeText} px-4 py-1 text-xs font-bold uppercase tracking-wide`}>
-                      {tier.tier}
-                    </span>
-                    <p className={`mt-1 text-sm ${tier.taglineColor}`}>
-                      {tier.tagline}
-                    </p>
-                  </div>
-                  <span className="ml-auto text-sm font-semibold text-[#1A3D2E]">
-                    {tierTemplates.length} {tierTemplates.length === 1 ? "model" : "modeller"}
-                  </span>
-                </div>
-
-                <div className="-mx-5 px-5 md:-mx-8 md:px-8">
-                  <div className="flex gap-4 overflow-x-auto overscroll-x-contain pb-4 scrollbar-hide md:gap-5">
-                    {tierTemplates.slice(0, 10).map((t) => (
-                      <div key={t.id} className="w-[45%] shrink-0 sm:w-[32%] md:w-[24%] lg:w-[20%]">
-                        <ProductGridCard
-                          slug={t.slug}
-                          image={t.images[0]}
-                          title={t.display_name}
-                          minPrice={t.min_price}
-                          deviceCount={t.device_count}
-                          locations={t.locations}
-                          brand={t.brand}
-                          category={t.category}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </SectionWrapper>
-
       {/* ── Condition walkthrough ── */}
       <SectionWrapper background="sand">
         <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="md">
-            Hvad betyder standen?
-          </Heading>
+          <Heading as="h2" size="md">Hvad betyder standen?</Heading>
           <p className="mt-4 text-[#86868B]">
             Alle iPads er 100% funktionelle. Forskellen mellem graderne er
             udelukkende kosmetisk. Swipe mellem forside og bagside.
           </p>
         </div>
         <div className="mt-10">
-          <ConditionExplainer deviceType="ipad" />
+          <ConditionExplainer />
         </div>
         <div className="mt-6 text-center">
-          <Link
-            href="/kvalitet"
-            className="text-sm font-semibold text-[#1A3D2E] hover:underline"
-          >
+          <Link href="/kvalitet" className="text-sm font-semibold text-[#1A3D2E] hover:underline">
             Læs mere om vores graderingssystem &rarr;
           </Link>
         </div>
       </SectionWrapper>
 
-      {/* ── All iPads grid ── */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="lg">
-            Alle iPads
-          </Heading>
-          <p className="mt-4 text-[#86868B]">
-            {templates.length} iPads på lager lige nu. Alle testet og klar
-            med 36 måneders garanti.
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {templates.map((t) => (
-            <ProductGridCard
-              key={t.id}
-              slug={t.slug}
-              image={t.images[0]}
-              title={t.display_name}
-              minPrice={t.min_price}
-              deviceCount={t.device_count}
-              locations={t.locations}
-              brand={t.brand}
-              category={t.category}
-            />
-          ))}
-        </div>
-      </SectionWrapper>
-
       {/* ── Hvorfor refurbished iPad ── */}
       <SectionWrapper background="cream">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="grid items-center gap-6 sm:gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-              Smart valg
-            </p>
-            <Heading as="h2" size="md">
-              Hvorfor købe en refurbished iPad?
-            </Heading>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">Smart valg</p>
+            <Heading as="h2" size="md">Hvorfor købe en refurbished iPad?</Heading>
             <p className="mt-4 text-[#86868B] leading-relaxed">
-              En ny iPad koster fra 3.000 kr og op. Den samme model koster fra
-              899 kr hos PhoneSpot — testet med 30+ kontroller og med 36
+              En ny iPad Pro koster over 8.000 kr. Den samme model fås fra
+              langt mindre hos PhoneSpot — testet med 30+ kontroller og med 36
               måneders garanti. Du får præcis samme oplevelse.
             </p>
             <ul className="mt-6 space-y-3">
@@ -373,7 +239,7 @@ export default async function IpadsPage() {
                 "Samme iPadOS, samme apps, samme hastighed",
                 "80% mindre CO₂ end ny produktion",
                 "36 måneders garanti og 14 dages returret",
-                "Perfekt til studie, streaming og kreativt arbejde",
+                "Touch ID / Face ID virker som det skal",
               ].map((point) => (
                 <li key={point} className="flex items-start gap-2 text-sm text-[#111111]">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#1A3D2E]" aria-hidden="true">
@@ -385,19 +251,13 @@ export default async function IpadsPage() {
             </ul>
           </div>
           <div className="rounded-3xl bg-white p-8 shadow-sm border border-[#E5E5EA]">
-            <h3 className="mb-6 font-display text-lg font-bold text-[#111111]">
-              Ny vs. PhoneSpot
-            </h3>
+            <h3 className="mb-6 font-display text-lg font-bold text-[#111111]">Ny vs. PhoneSpot</h3>
             <div className="divide-y divide-[#E5E5EA]">
               {COMPARISON.map((row) => (
                 <div key={row.feature} className="flex items-start gap-4 py-3">
-                  <span className="w-24 shrink-0 text-sm font-semibold text-[#111111]">
-                    {row.feature}
-                  </span>
+                  <span className="w-24 shrink-0 text-sm font-semibold text-[#111111]">{row.feature}</span>
                   <span className="flex-1 text-sm text-[#86868B]">{row.new}</span>
-                  <span className="flex-1 text-sm font-medium text-[#1A3D2E]">
-                    {row.refurbished}
-                  </span>
+                  <span className="flex-1 text-sm font-medium text-[#1A3D2E]">{row.refurbished}</span>
                 </div>
               ))}
             </div>
@@ -408,7 +268,7 @@ export default async function IpadsPage() {
       {/* ── Stats ── */}
       <section className="bg-[#F7F7F8] border-y border-[#E5E5EA] py-20 md:py-28">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {[
               { value: "30+", label: "Tests per enhed" },
               { value: "899 kr", label: "Billigste iPad" },
@@ -416,9 +276,7 @@ export default async function IpadsPage() {
               { value: "1-2", label: "Dages levering" },
             ].map((stat) => (
               <div key={stat.label} className="rounded-2xl bg-white border border-[#E5E5EA] p-6 text-center shadow-sm">
-                <p className="font-display text-3xl font-bold text-[#1A3D2E] md:text-4xl">
-                  {stat.value}
-                </p>
+                <p className="font-display text-3xl font-bold text-[#1A3D2E] md:text-4xl">{stat.value}</p>
                 <p className="mt-2 text-sm text-[#86868B]">{stat.label}</p>
               </div>
             ))}
@@ -429,9 +287,7 @@ export default async function IpadsPage() {
       {/* ── FAQ ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-3xl text-center">
-          <Heading as="h2" size="md">
-            Spørgsmål om refurbished iPads
-          </Heading>
+          <Heading as="h2" size="md">Spørgsmål om refurbished iPads</Heading>
         </div>
         <div className="mx-auto mt-10 max-w-3xl divide-y divide-[#E5E5EA]">
           {IPAD_FAQ.map((item) => (
@@ -456,24 +312,16 @@ export default async function IpadsPage() {
       {/* ── CTA ── */}
       <SectionWrapper>
         <div className="mx-auto max-w-2xl text-center">
-          <Heading as="h2" size="md">
-            Klar til at finde din iPad?
-          </Heading>
+          <Heading as="h2" size="md">Klar til at finde din iPad?</Heading>
           <p className="mt-4 text-[#86868B]">
             Scroll op og udforsk vores udvalg — eller se vores tilbehør for at
             beskytte din nye enhed.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/tilbehoer"
-              className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              Se tilbehør &rarr;
+            <Link href="/tilbehoer" className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90">
+              Se tilbehør &amp; covers &rarr;
             </Link>
-            <Link
-              href="/kvalitet"
-              className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
-            >
+            <Link href="/kvalitet" className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">
               Læs om vores kvalitet &rarr;
             </Link>
           </div>
