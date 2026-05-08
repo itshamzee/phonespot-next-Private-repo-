@@ -124,6 +124,106 @@ function exportCSV(orders: Order[]) {
 const inputCls =
   "rounded-xl border border-sand bg-cream px-3 py-2 text-sm text-charcoal focus:border-green-eco/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10";
 
+/* ── Bulk action bar ─────────────────────────────────────────────── */
+const DELETABLE_STATUSES = new Set(["pending", "cancelled", "abandoned", "checkout", "draft"]);
+
+function BulkActionBar({
+  selectedOrders,
+  onClear,
+  onDeleted,
+}: {
+  selectedOrders: Order[];
+  onClear: () => void;
+  onDeleted: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Only orders that are unpaid AND in a deletable status can be removed.
+  const deletable = selectedOrders.filter(
+    (o) => o.payment_status !== "paid" && DELETABLE_STATUSES.has(o.status),
+  );
+  const blocked = selectedOrders.length - deletable.length;
+
+  async function handleDelete() {
+    if (deletable.length === 0) return;
+    const confirmed = window.confirm(
+      `Slet ${deletable.length} ordre(r) permanent?\n\n` +
+        `Eventuelle reserverede enheder bliver frigivet og lagt tilbage på lager.\n\n` +
+        (blocked > 0
+          ? `${blocked} af de valgte ordrer er betalt eller i en status der ikke kan slettes — de bliver sprunget over.\n\n`
+          : "") +
+        `Denne handling kan ikke fortrydes.`,
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError(null);
+    let failed = 0;
+    for (const order of deletable) {
+      try {
+        const res = await fetch(`/api/shipping/orders/${order.id}`, { method: "DELETE" });
+        if (!res.ok) failed++;
+      } catch {
+        failed++;
+      }
+    }
+    setBusy(false);
+    if (failed > 0) {
+      setError(`${failed} ordre(r) kunne ikke slettes. Prøv igen, eller kig i loggen.`);
+    } else {
+      onDeleted();
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-3 shadow-sm">
+        <span className="text-sm font-semibold text-green-800">
+          {selectedOrders.length} {selectedOrders.length === 1 ? "ordre valgt" : "ordrer valgt"}
+        </span>
+        {blocked > 0 && deletable.length > 0 && (
+          <span className="text-xs text-green-700/70">
+            ({blocked} kan ikke slettes — betalt eller forkert status)
+          </span>
+        )}
+        <div className="ml-auto flex flex-wrap gap-2">
+          <button
+            onClick={() => exportCSV(selectedOrders)}
+            disabled={busy}
+            className="rounded-xl border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream disabled:opacity-50"
+          >
+            Eksporter CSV
+          </button>
+          {deletable.length > 0 && (
+            <button
+              onClick={handleDelete}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+              </svg>
+              {busy ? "Sletter…" : `Slet ${deletable.length} markerede`}
+            </button>
+          )}
+          <button
+            onClick={onClear}
+            disabled={busy}
+            className="rounded-xl px-3 py-2 text-sm text-gray transition hover:text-charcoal-light disabled:opacity-50"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════════════ */
 export function OrderList({ initialOrders, initialTotal, initialPage }: OrderListProps) {
   const router = useRouter();
@@ -341,25 +441,14 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
 
       {/* ── Bulk action bar ──────────────────────────────────────── */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-3 shadow-sm">
-          <span className="text-sm font-semibold text-green-800">
-            {selected.size} {selected.size === 1 ? "ordre valgt" : "ordrer valgt"}
-          </span>
-          <div className="ml-auto flex gap-2">
-            <button
-              onClick={() => exportCSV(orders.filter((o) => selected.has(o.id)))}
-              className="rounded-xl border border-sand bg-white px-4 py-2 text-sm font-medium text-charcoal-light transition hover:bg-cream"
-            >
-              Eksporter CSV
-            </button>
-            <button
-              onClick={() => setSelected(new Set())}
-              className="rounded-xl px-3 py-2 text-sm text-gray transition hover:text-charcoal-light"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <BulkActionBar
+          selectedOrders={orders.filter((o) => selected.has(o.id))}
+          onClear={() => setSelected(new Set())}
+          onDeleted={() => {
+            setSelected(new Set());
+            fetchOrders(page);
+          }}
+        />
       )}
 
       {/* ── Table ────────────────────────────────────────────────── */}

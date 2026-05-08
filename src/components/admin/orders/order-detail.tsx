@@ -172,6 +172,37 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
   const [notesSaved, setNotesSaved] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Delete state — only enabled for unpaid pending/cancelled/abandoned orders.
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const canDelete =
+    order.payment_status !== "paid" &&
+    ["pending", "cancelled", "abandoned", "checkout", "draft"].includes(order.status);
+
+  async function handleDelete() {
+    const orderLabel = order.order_number ?? order.id.slice(0, 8);
+    const confirmed = window.confirm(
+      `Slet ordre ${orderLabel} permanent?\n\n` +
+        `Eventuelle reserverede enheder bliver frigivet og lagt tilbage på lager.\n\n` +
+        `Denne handling kan ikke fortrydes.`,
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/shipping/orders/${order.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Sletning mislykkedes");
+      }
+      router.push("/admin/platform/orders");
+      router.refresh();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Sletning mislykkedes");
+      setDeleting(false);
+    }
+  }
+
   function refresh() {
     router.refresh();
   }
@@ -240,8 +271,28 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
               Oprettet {formatDate(order.created_at)}
             </p>
           </div>
-          <OrderStatusBadge status={order.status} />
+          <div className="flex items-center gap-2">
+            <OrderStatusBadge status={order.status} />
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                title="Slet denne ordre permanent. Reserverede enheder frigives."
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+                </svg>
+                {deleting ? "Sletter…" : "Slet ordre"}
+              </button>
+            )}
+          </div>
         </div>
+        {deleteError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {deleteError}
+          </div>
+        )}
 
         {/* 2-column layout */}
         <div className="grid gap-6 lg:grid-cols-3">

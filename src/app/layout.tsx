@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import { LayoutShell } from "@/components/layout/public-shell";
@@ -125,6 +126,8 @@ export default function RootLayout({
           data-cookieconsent="marketing"
         >{`if(window.tp){window.tp("register","samJZr5LOOVwoRYo")}`}</Script>
         <TrackingScripts />
+        {/* Vercel Analytics — first-party traffic dashboard at vercel.com/<project>/analytics */}
+        <VercelAnalytics />
       </body>
     </html>
   );
