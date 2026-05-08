@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { FilteredGrid } from "@/components/product/filtered-grid";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
@@ -71,7 +70,8 @@ const COMPARISON = [
 // ---------------------------------------------------------------------------
 
 export default async function BaerbarePage() {
-  const templates = await getPublishedTemplates("laptop");
+  // Only show templates that actually have devices in stock right now.
+  const templates = await getPublishedTemplates("laptop", { inStock: true });
 
   return (
     <>
@@ -97,266 +97,191 @@ export default async function BaerbarePage() {
         }}
       />
 
-      {/* ── Compact hero ── */}
+      {/* ── Compact hero — breadcrumb + heading on a single tight strip ── */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10 md:py-12">
-          {/* Breadcrumb */}
-          <nav className="mb-4 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-              <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+        <div className="mx-auto max-w-7xl px-4 pt-3 pb-4 sm:pt-6 sm:pb-7">
+          <nav
+            className="mb-2 flex items-center gap-2 text-xs text-[#86868B]"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/" className="hover:text-[#111111] transition-colors">
+              Forside
+            </Link>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
             </svg>
             <span className="text-[#111111] font-medium">Refurbished Bærbare</span>
           </nav>
 
-          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#111111] md:text-4xl lg:text-5xl">
+          <h1 className="font-display text-[26px] sm:text-3xl font-bold tracking-tight text-[#111111] leading-tight">
             Refurbished Bærbare
           </h1>
-
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-[#86868B]">
-            Kvalitetstestede laptops med 36 måneders garanti. Testet med 30+ kontroller og klar til brug.
+          <p className="mt-1 text-[13px] sm:text-sm text-[#6E6E73]">
+            {templates.length} {templates.length === 1 ? "model" : "modeller"} · Testet · 36 mdr. garanti
           </p>
-
-          {/* Quick stats */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <span className="flex items-center gap-2 text-[#111111]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-              </svg>
-              <strong className="font-semibold">Fra 1.359 DKK</strong>
-            </span>
-            <span className="text-[#E5E5EA]">|</span>
-            <span className="flex items-center gap-2 text-[#111111]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                <path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
-              </svg>
-              <strong className="font-semibold">{templates.length} modeller</strong>
-            </span>
-            <span className="text-[#E5E5EA]">|</span>
-            <span className="flex items-center gap-2 text-[#111111]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#1A3D2E]" aria-hidden="true">
-                <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-              </svg>
-              <strong className="font-semibold">36 mdr. garanti</strong>
-            </span>
-          </div>
         </div>
       </section>
 
-      {/* ── Featured products (Green.dk-inspired) ── */}
-      {(() => {
-        const sorted = [...templates].sort((a, b) => b.device_count - a.device_count);
-        const featured = sorted[0];
-        // Pick highlighted from different brands when possible
-        const highlighted: typeof sorted = [];
-        const usedBrands = new Set<string>();
-        if (featured) usedBrands.add(featured.brand);
-        for (const t of sorted.slice(1)) {
-          if (highlighted.length >= 4) break;
-          if (!usedBrands.has(t.brand) || sorted.filter(s => !usedBrands.has(s.brand) && s !== featured).length === 0) {
-            highlighted.push(t);
-            usedBrands.add(t.brand);
-          }
-        }
-        // Fill remaining slots if we didn't get 4 unique brands
-        if (highlighted.length < 4) {
-          for (const t of sorted.slice(1)) {
-            if (highlighted.length >= 4) break;
-            if (!highlighted.includes(t)) highlighted.push(t);
-          }
-        }
-
-        const formatPrice = (price: number) =>
-          new Intl.NumberFormat("da-DK").format(price / 100);
-
-        const getSpecLine = (t: typeof featured) => {
-          const specs = t.specifications as Record<string, string> | null;
-          if (!specs) return "";
-          return [specs.processor, specs.ram, specs.storage, specs.screen_size]
-            .filter(Boolean)
-            .join(" · ");
-        };
-
-        if (!featured) return null;
-
-        return (
-          <section className="bg-white border-b border-[#E5E5EA]">
-            <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
-              {/* Section header */}
-              <div className="mb-8">
-                <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] md:text-3xl">
-                  Bærbare du kan stole på
-                </h2>
-                <p className="mt-2 text-sm text-[#86868B]">
-                  Altid 36 måneders garanti
-                </p>
-              </div>
-
-              {/* Featured grid: large card + small cards */}
-              <div className="grid gap-4 sm:gap-6 lg:grid-cols-5">
-                {/* Large featured card */}
-                <Link
-                  href={`/refurbished/${featured.slug}`}
-                  className="group lg:col-span-3 rounded-2xl bg-white border border-[#E5E5EA] shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-                >
-                  <div className="flex flex-col h-full">
-                    <div className="relative aspect-[4/3] bg-[#F7F7F8] flex items-center justify-center overflow-hidden">
-                      {featured.images?.[0] ? (
-                        <Image
-                          src={featured.images[0]}
-                          alt={featured.display_name}
-                          fill
-                          className="object-contain p-6 group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 1024px) 100vw, 60vw"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full w-full text-[#86868B]">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="h-16 w-16">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-                          </svg>
-                        </div>
-                      )}
-                      {featured.device_count > 0 && (
-                        <span className="absolute top-4 left-4 rounded-full bg-[#1A3D2E] px-3 py-1 text-xs font-semibold text-white">
-                          {featured.device_count} på lager
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col flex-1 p-4 sm:p-6">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[#86868B]">
-                        {featured.brand}
-                      </p>
-                      <h3 className="mt-1 font-display text-xl font-bold text-[#111111] md:text-2xl">
-                        {featured.display_name}
-                      </h3>
-                      {getSpecLine(featured) && (
-                        <p className="mt-2 text-sm text-[#86868B]">
-                          {getSpecLine(featured)}
-                        </p>
-                      )}
-                      <div className="mt-auto pt-4 flex items-end justify-between">
-                        <div>
-                          <p className="text-xs text-[#86868B]">fra</p>
-                          <p className="font-display text-2xl font-bold text-[#111111]">
-                            {featured.min_price
-                              ? `${formatPrice(featured.min_price)} kr.`
-                              : "Se pris"}
-                          </p>
-                        </div>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#1A3D2E] px-5 py-2.5 text-sm font-semibold text-white group-hover:opacity-90 transition-opacity">
-                          Se mere
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                            <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
-                          </svg>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Small highlighted cards — 2x2 grid */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
-                  {highlighted.slice(0, 4).map((t) => (
-                    <Link
-                      key={t.id}
-                      href={`/refurbished/${t.slug}`}
-                      className="group flex flex-col rounded-xl bg-white border border-[#E5E5EA] hover:shadow-md transition-shadow overflow-hidden"
-                    >
-                      <div className="relative aspect-square bg-[#F7F7F8] flex items-center justify-center overflow-hidden">
-                        {t.images?.[0] ? (
-                          <Image
-                            src={t.images[0]}
-                            alt={t.display_name}
-                            fill
-                            className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 1024px) 50vw, 20vw"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full w-full text-[#86868B]">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="h-8 w-8">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col flex-1 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
-                          {t.brand}
-                        </p>
-                        <h3 className="mt-0.5 text-sm font-semibold text-[#111111] line-clamp-2 leading-tight">
-                          {t.display_name}
-                        </h3>
-                        <div className="mt-auto pt-2">
-                          <p className="font-display text-base font-bold text-[#111111]">
-                            {t.min_price
-                              ? `fra ${formatPrice(t.min_price)} kr.`
-                              : "Se pris"}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      })()}
-
       {/* ── Trust strip ── */}
-      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 md:gap-6">
+      <section className="bg-white border-b border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-2.5 sm:py-4">
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3 text-sm">
             {[
               {
+                label: "30+ tests pr enhed",
+                sub: "Skærm, batteri, tastatur, porte mv.",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
+                label: "Professionelt klargjort",
+                sub: "Renset og opdateret af certificerede teknikere",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 0 1-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 0 1 .947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 0 1 2.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 0 1 2.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 0 1 .947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 0 1-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 0 1-2.287-.947ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
+                label: "4+ timers batteri",
+                sub: "Garanteret minimum batterilevetid",
+                icon: (
+                  <path
+                    fillRule="evenodd"
+                    d="M4.5 9.75A2.25 2.25 0 0 1 6.75 7.5h6.75a2.25 2.25 0 0 1 2.25 2.25v4.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 14.25v-4.5Zm12 .75h.75a.75.75 0 0 1 .75.75v2a.75.75 0 0 1-.75.75h-.75v-3.5Z"
+                    clipRule="evenodd"
+                  />
+                ),
+              },
+              {
                 label: "36 mdr. garanti",
+                sub: "+ 14 dages fortrydelsesret",
                 icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                  </svg>
-                ),
-              },
-              {
-                label: "30+ kvalitetstests",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                  </svg>
-                ),
-              },
-              {
-                label: "1-3 dages levering",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                  </svg>
-                ),
-              },
-              {
-                label: "14 dages returret",
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-                  </svg>
+                  <path
+                    fillRule="evenodd"
+                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 1.998-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                    clipRule="evenodd"
+                  />
                 ),
               },
             ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 rounded-xl bg-white border border-[#E5E5EA] px-4 py-3"
-              >
-                <span className="shrink-0 text-[#1A3D2E]">{item.icon}</span>
-                <span className="text-sm font-medium text-[#111111]">{item.label}</span>
-              </div>
+              <li key={item.label} className="flex items-start gap-2 sm:gap-2.5">
+                <span className="mt-0.5 flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#1A3D2E]"
+                    aria-hidden="true"
+                  >
+                    {item.icon}
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] sm:text-sm font-semibold text-[#111111] leading-tight">
+                    {item.label}
+                  </span>
+                  <span className="hidden sm:block text-xs text-[#86868B] leading-tight mt-0.5">
+                    {item.sub}
+                  </span>
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* ── All laptops grid with filters — immediately visible ── */}
-      <SectionWrapper>
-        <FilteredGrid templates={templates} heading="Alle bærbare" />
-      </SectionWrapper>
+      {/* ── All laptops grid with sidebar filters (primary browsing area) ── */}
+      <section className="bg-white py-4 sm:py-10 md:py-14">
+        <div className="mx-auto max-w-7xl px-4">
+          <FilteredGrid
+            templates={templates}
+            heading="Alle bærbare på lager"
+            promos={[
+              // Trust card sits a few rows in — natural editorial break.
+              { position: 4, variant: "trust", href: "/kvalitet" },
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ── "Vi er her for dig" — contact strip ── */}
+      <section className="bg-[#F7F7F8] border-t border-[#E5E5EA]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-[#E5E5EA] bg-white p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E]/10">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-7 w-7 text-[#1A3D2E]"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <h3 className="font-display text-xl font-bold tracking-tight text-[#111111]">
+                  Vi er her for dig
+                </h3>
+                <p className="mt-1.5 text-sm text-[#6E6E73] leading-relaxed">
+                  Spørgsmål om en bestemt model, RAM, SSD eller batterihelse?
+                  Ring eller skriv — vi svarer typisk inden for 1 time i åbningstiden.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                <a
+                  href="tel:+4561100048"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14301F]"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  61 10 00 48
+                </a>
+                <a
+                  href="mailto:info@phonespot.dk"
+                  className="text-xs text-[#6E6E73] hover:text-[#1A3D2E] transition-colors sm:text-right"
+                >
+                  info@phonespot.dk
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── Condition walkthrough ── */}
       <SectionWrapper background="sand">
@@ -538,10 +463,10 @@ export default async function BaerbarePage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/baerbare"
+              href="/reservedele"
               className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
             >
-              Se alle bærbare &rarr;
+              Se reservedele &amp; tilbehør &rarr;
             </Link>
             <Link
               href="/kvalitet"
