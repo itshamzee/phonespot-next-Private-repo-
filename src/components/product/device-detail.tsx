@@ -105,7 +105,7 @@ function TrustpilotBadge() {
           </svg>
         </div>
         <span className="text-[10px] font-medium text-[#111111]/50">
-          4.4/5 — Trustpilot
+          4.7/5 — Trustpilot
         </span>
       </div>
     </a>

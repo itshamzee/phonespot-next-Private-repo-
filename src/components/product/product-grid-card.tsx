@@ -168,18 +168,56 @@ export function ProductGridCard({
 }: ProductGridCardProps) {
   const storeLocations = locations?.filter((l) => l.type === "store") ?? [];
 
-  // Build compact spec line for laptops
-  const isLaptop = category?.toLowerCase() === "laptop" || category?.toLowerCase() === "macbook";
+  // ----- Spec extraction (laptops) -----
+  // The DB stores spec keys with mixed casing and Danish labels
+  // (e.g. "Processor", "RAM", "SSD", "Skærm"). Look them up
+  // case-insensitively and accept a few aliases.
+  const isLaptop =
+    category?.toLowerCase() === "laptop" || category?.toLowerCase() === "macbook";
+
+  function getSpec(...aliases: string[]): string | undefined {
+    if (!specifications) return undefined;
+    for (const [k, v] of Object.entries(specifications)) {
+      const lk = k.toLowerCase();
+      if (aliases.some((a) => a.toLowerCase() === lk) && v) return v;
+    }
+    return undefined;
+  }
+
+  function shortProcessor(full: string): string {
+    // Customer-facing short label. Try modern names first, then fall back
+    // to legacy patterns, then to the original string capped to 28 chars.
+    const patterns: { re: RegExp; format: (m: RegExpMatchArray) => string }[] = [
+      { re: /Snapdragon\s+X\s+(Elite|Plus|\w+)/i, format: (m) => `Snapdragon X ${m[1]}` },
+      { re: /Core\s+Ultra\s+([579])\s+\d{3}\w?/i, format: (m) => `Core Ultra ${m[1]} ${m[0].split(/\s+/).slice(-1)[0]}` },
+      { re: /Core\s+Ultra\s+([579])(?:\s*\([^)]+\))?/i, format: (m) => `Core Ultra ${m[1]}` },
+      { re: /\b(?:Intel\s+)?Core\s+([iI][3579]-\w+)\b/i, format: (m) => m[1] },
+      { re: /\b([iI][3579]-\w+)\b/, format: (m) => m[1] },
+      { re: /\bRyzen\s*([3579]\s+\w+)\b/i, format: (m) => `Ryzen ${m[1]}` },
+      { re: /\bRyzen\s*([3579])\b/i, format: (m) => `Ryzen ${m[1]}` },
+      { re: /\bM([1234])(?:\s+(Pro|Max|Ultra))?\b/i, format: (m) => `M${m[1]}${m[2] ? " " + m[2] : ""}` },
+    ];
+    for (const { re, format } of patterns) {
+      const m = full.match(re);
+      if (m) return format(m);
+    }
+    return full.length <= 28 ? full : full.slice(0, 26) + "…";
+  }
+
+  const cpuFull = getSpec("processor", "cpu");
+  const ramVal = getSpec("ram", "memory", "hukommelse");
+  const ssdVal = getSpec("ssd", "storage", "lager", "lagerplads");
+  const screenVal = getSpec("skærm", "screen", "display", "screen_size");
+
   const specParts: string[] = [];
-  if (isLaptop && specifications?.processor) {
-    // Extract short processor name (e.g. "i5-1135G7" from "Intel Core i5-1135G7")
-    const procMatch = specifications.processor.match(/([iI][3579]-\w+|Ryzen\s*\d\s*\w+|M[1234]\s*\w*)/);
-    if (procMatch) specParts.push(procMatch[1].trim());
-    if (specifications.ram) specParts.push(specifications.ram.replace(/\s+/g, ""));
-    if (specifications.storage) specParts.push(specifications.storage.replace(/\s+/g, ""));
-    if (specifications.screen_size) {
-      const screen = specifications.screen_size.replace(/["”″]/g, "").replace(/\.0$/, "");
-      specParts.push(screen + '"');
+  if (isLaptop) {
+    if (cpuFull) specParts.push(shortProcessor(cpuFull));
+    if (ramVal) specParts.push(ramVal.replace(/\s+/g, ""));
+    if (ssdVal) specParts.push(ssdVal.replace(/\s+/g, ""));
+    if (screenVal) {
+      const cleaned = screenVal.replace(/["”″]/g, "").replace(/\.0\b/, "").trim();
+      // If the value is just a number, append a quote mark
+      specParts.push(/^\d/.test(cleaned) && !cleaned.includes('"') ? cleaned + '"' : cleaned);
     }
   }
 
@@ -242,7 +280,7 @@ export function ProductGridCard({
           {title}
         </h3>
         {specParts.length > 0 && (
-          <p className="mt-1 text-xs text-[#86868B] truncate line-clamp-1">
+          <p className="mt-1.5 text-[13px] sm:text-sm font-semibold text-[#111111] line-clamp-2 leading-snug">
             {specParts.join(" · ")}
           </p>
         )}
