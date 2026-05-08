@@ -35,15 +35,21 @@ function categoryPath(category: string): string {
 /**
  * GET /api/feeds/pricerunner
  *
- * Pricerunner product feed. One item per (template, grade) group so the
- * feed has stable SKUs, no duplicates, and links always land on a valid
- * /refurbished/{slug} page.
+ * Pricerunner product feed.
  *
- * Previous bugs fixed:
- *  - Old link was /produkt/{slug} (route does not exist → 404).
- *  - Old feed emitted one item per physical device (duplicates with same URL).
- *  - Used Foxway internal barcode as EAN (not a real EAN → rejected).
- *  - Fell back to /produkt/{dev.id} (UUID) when template join returned null.
+ * Granularity: one item per (template × color × storage × grade) variant of
+ * in-stock devices. This matches how Pricerunner users search ("iPhone 15
+ * Pro 256GB Sort") so price-comparison works correctly.
+ *
+ * Image priority for devices:
+ *  1. template.default_attributes.images_by_color[color][0] (color-specific)
+ *  2. template.images[0] (fallback)
+ *
+ * Identifier strategy: refurbished devices have no per-unit GTIN, so we use
+ * a stable MPN built from slug-storage-color-grade. Accessories include EAN
+ * when available.
+ *
+ * Shipping: 0.00 DKK (gratis fragt).
  */
 export async function GET() {
   try {
@@ -55,7 +61,8 @@ export async function GET() {
         `
         id, grade, storage, color, selling_price,
         template:product_templates!template_id (
-          id, display_name, brand, category, slug, description, short_description, images
+          id, display_name, brand, category, slug,
+          description, short_description, images, default_attributes
         )
         `,
       )
@@ -78,31 +85,43 @@ export async function GET() {
       description: string | null;
       short_description: string | null;
       images: string[];
+      default_attributes: Record<string, unknown> | null;
     };
-    type Group = {
+
+    type Variant = {
       template: Template;
+      color: string;
+      storage: string;
       grade: string;
       minPrice: number;
       count: number;
     };
 
-    const groups = new Map<string, Group>();
+    // Group devices by (template, color, storage, grade) so each variant gets
+    // its own Pricerunner entry with correct image and identifiers.
+    const variants = new Map<string, Variant>();
     for (const dev of devices ?? []) {
       const template = dev.template as unknown as Template | null;
       if (!template || !template.slug) continue;
-      if (!template.images?.length) continue;
       if (dev.selling_price == null) continue;
 
-      const key = `${template.id}:${dev.grade}`;
-      const existing = groups.get(key);
+      const color = dev.color ?? "";
+      const storage = dev.storage ?? "";
+      const grade = dev.grade as string;
+      const price = dev.selling_price as number;
+
+      const key = `${template.id}|${color}|${storage}|${grade}`;
+      const existing = variants.get(key);
       if (existing) {
         existing.count += 1;
-        if (dev.selling_price < existing.minPrice) existing.minPrice = dev.selling_price;
+        if (price < existing.minPrice) existing.minPrice = price;
       } else {
-        groups.set(key, {
+        variants.set(key, {
           template,
-          grade: dev.grade as string,
-          minPrice: dev.selling_price,
+          color,
+          storage,
+          grade,
+          minPrice: price,
           count: 1,
         });
       }
@@ -110,18 +129,38 @@ export async function GET() {
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<products>\n`;
 
-    // Refurbished devices — grouped by (template, grade)
-    for (const group of groups.values()) {
-      const { template, grade, minPrice, count } = group;
-      const title = `${template.display_name} - Grade ${grade} Refurbished`;
+    // Refurbished devices — one entry per variant
+    for (const v of variants.values()) {
+      const { template, color, storage, grade, minPrice } = v;
+
+      // Resolve image: prefer color-specific from images_by_color
+      const ibc = (template.default_attributes?.images_by_color ?? null) as
+        | Record<string, string[]>
+        | null;
+      const colorImages = color && ibc?.[color]?.length ? ibc[color] : null;
+      const imageUrl = colorImages?.[0] ?? template.images?.[0] ?? "";
+      if (!imageUrl) continue; // skip items without any image
+
+      const storageSlug = (storage || "default").toLowerCase().replace(/\s+/g, "");
+      const colorSlug = slugify(color || "default");
+      const sku = `${template.slug}-${storageSlug}-${colorSlug}-${grade.toLowerCase()}`;
+
+      const titleParts = [template.display_name];
+      if (storage) titleParts.push(storage);
+      if (color) titleParts.push(color);
+      titleParts.push(`Grade ${grade}`);
+      titleParts.push("Refurbished");
+      const title = titleParts.join(" ");
+
       const productUrl = `${SITE_URL}/refurbished/${template.slug}`;
-      const imageUrl = template.images[0] ?? "";
       const price = (minPrice / 100).toFixed(2);
+
+      const shortDesc = template.short_description?.trim() || null;
+      const longDesc = template.description?.trim() || null;
       const description =
-        template.description ??
-        template.short_description ??
-        `${template.display_name} refurbished i Grade ${grade}. 36 måneders garanti, 30+ kontroller, 14 dages returret.`;
-      const sku = `${template.slug}-${grade.toLowerCase()}`;
+        shortDesc ??
+        longDesc ??
+        `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`;
 
       xml += `  <product>\n`;
       xml += `    <SKU>${escapeXml(sku)}</SKU>\n`;
@@ -134,14 +173,16 @@ export async function GET() {
       xml += `    <Category>${escapeXml(categoryPath(template.category))}</Category>\n`;
       xml += `    <Manufacturer>${escapeXml(template.brand)}</Manufacturer>\n`;
       xml += `    <MPN>${escapeXml(sku)}</MPN>\n`;
-      xml += `    <ShippingCost>49.00</ShippingCost>\n`;
+      if (color) xml += `    <Color>${escapeXml(color)}</Color>\n`;
+      if (storage) xml += `    <Capacity>${escapeXml(storage)}</Capacity>\n`;
+      xml += `    <ShippingCost>0.00</ShippingCost>\n`;
       xml += `    <DeliveryTime>1-2 dage</DeliveryTime>\n`;
-      xml += `    <StockStatus>${count > 0 ? "in stock" : "out of stock"}</StockStatus>\n`;
+      xml += `    <StockStatus>in stock</StockStatus>\n`;
       xml += `    <Condition>Refurbished</Condition>\n`;
       xml += `  </product>\n`;
     }
 
-    // Accessories
+    // Accessories — one item per SKU
     for (const sku of skuProducts ?? []) {
       if (!sku.slug) continue;
       if (!sku.images?.length) continue;
@@ -152,8 +193,9 @@ export async function GET() {
           : sku.selling_price;
       const price = (effectivePrice / 100).toFixed(2);
       const url = `${SITE_URL}/tilbehoer/${sku.category ?? "accessory"}/${sku.slug}`;
-      const description =
-        sku.description ?? sku.short_description ?? sku.title;
+      const shortDesc = sku.short_description?.trim() || null;
+      const longDesc = sku.description?.trim() || null;
+      const description = shortDesc ?? longDesc ?? sku.title;
       const hasEan = sku.ean && /^\d{8,14}$/.test(sku.ean);
 
       xml += `  <product>\n`;
@@ -164,11 +206,11 @@ export async function GET() {
       xml += `    <Currency>DKK</Currency>\n`;
       xml += `    <ProductUrl>${escapeXml(url)}</ProductUrl>\n`;
       xml += `    <ImageUrl>${escapeXml(sku.images[0])}</ImageUrl>\n`;
-      xml += `    <Category>Mobiltilbehør > ${escapeXml(sku.category ?? "Andet")}</Category>\n`;
+      xml += `    <Category>Mobiltilbehør &gt; ${escapeXml(sku.category ?? "Andet")}</Category>\n`;
       xml += `    <Manufacturer>${escapeXml(sku.brand ?? "PhoneSpot")}</Manufacturer>\n`;
       if (hasEan) xml += `    <Ean>${escapeXml(sku.ean)}</Ean>\n`;
       if (sku.product_number) xml += `    <MPN>${escapeXml(sku.product_number)}</MPN>\n`;
-      xml += `    <ShippingCost>49.00</ShippingCost>\n`;
+      xml += `    <ShippingCost>0.00</ShippingCost>\n`;
       xml += `    <DeliveryTime>1-2 dage</DeliveryTime>\n`;
       xml += `    <StockStatus>in stock</StockStatus>\n`;
       xml += `    <Condition>New</Condition>\n`;
@@ -187,4 +229,16 @@ export async function GET() {
     console.error("PriceRunner feed error:", err);
     return NextResponse.json({ error: "Feed error" }, { status: 500 });
   }
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/ø/g, "o")
+    .replace(/å/g, "a")
+    .replace(/æ/g, "ae")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
