@@ -1,22 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { formatOere } from "@/lib/cart/utils";
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+type KpiSet = {
+  totalRevenue: number;
+  totalOrders: number;
+  onlineOrders: number;
+  posOrders: number;
+  devicesSold: number;
+  skusSold: number;
+  totalMargin: number;
+  brugtmomsTotal: number;
+  avgOrderValue: number;
+};
+
 type DashboardData = {
   period: string;
-  kpis: {
-    totalRevenue: number;
-    totalOrders: number;
-    onlineOrders: number;
-    posOrders: number;
-    devicesSold: number;
-    skusSold: number;
-    totalMargin: number;
-    brugtmomsTotal: number;
-    avgOrderValue: number;
-  };
+  kpis: KpiSet;
+  previous: KpiSet;
+  timeSeries: Array<{ date: string; revenue: number; orders: number }>;
+  topProducts: Array<{ name: string; units: number; revenue: number; slug?: string }>;
+  lowStock: Array<{
+    template_id: string;
+    name: string;
+    slug: string;
+    category: string;
+    device_count: number;
+  }>;
+  abandoned: { count: number; totalValue: number };
   inventory: {
     listedCount: number;
     retailValue: number;
@@ -39,28 +57,9 @@ const PERIOD_LABELS: Record<string, string> = {
   quarter: "Sidste kvartal",
 };
 
-const KPI_ICONS: Record<string, React.ReactNode> = {
-  revenue: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-    </svg>
-  ),
-  orders: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-    </svg>
-  ),
-  devices: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-    </svg>
-  ),
-  accessories: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-    </svg>
-  ),
-};
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
 
 export default function PlatformDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -71,22 +70,25 @@ export default function PlatformDashboardPage() {
   const supabase = createBrowserClient();
 
   useEffect(() => {
-    supabase.from("locations").select("id, name").then(({ data }) => {
-      if (data) setLocations(data);
-    });
+    supabase
+      .from("locations")
+      .select("id, name")
+      .then(({ data }) => {
+        if (data) setLocations(data);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const res = await fetch(`/api/dashboard?period=${period}`, {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
-      if (res.ok) {
-        setData(await res.json());
-      }
+      if (res.ok) setData(await res.json());
       setLoading(false);
     }
     load();
@@ -107,7 +109,7 @@ export default function PlatformDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -115,7 +117,7 @@ export default function PlatformDashboardPage() {
             Platform Dashboard
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35" suppressHydrationWarning>
-            {PERIOD_LABELS[period]}
+            {PERIOD_LABELS[period]} · sammenlignet med forrige periode
           </p>
         </div>
         <div className="flex gap-1 rounded-xl border border-black/[0.04] bg-white p-1 shadow-sm">
@@ -144,24 +146,75 @@ export default function PlatformDashboardPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* KPI cards — row 1 */}
+          {/* KPI cards — row 1 with deltas */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <KpiCard icon={KPI_ICONS.revenue} label="Omsætning" value={formatOere(data.kpis.totalRevenue)} accent="emerald" />
-            <KpiCard icon={KPI_ICONS.orders} label="Ordrer" value={String(data.kpis.totalOrders)} sub={`${data.kpis.onlineOrders} online \· ${data.kpis.posOrders} POS`} accent="blue" />
-            <KpiCard icon={KPI_ICONS.devices} label="Enheder solgt" value={String(data.kpis.devicesSold)} accent="violet" />
-            <KpiCard icon={KPI_ICONS.accessories} label="Tilbehør solgt" value={String(data.kpis.skusSold)} accent="amber" />
+            <KpiCard
+              label="Omsætning"
+              value={formatOere(data.kpis.totalRevenue)}
+              delta={pctDelta(data.kpis.totalRevenue, data.previous.totalRevenue)}
+              accent="emerald"
+            />
+            <KpiCard
+              label="Ordrer"
+              value={String(data.kpis.totalOrders)}
+              sub={`${data.kpis.onlineOrders} online · ${data.kpis.posOrders} POS`}
+              delta={pctDelta(data.kpis.totalOrders, data.previous.totalOrders)}
+              accent="blue"
+            />
+            <KpiCard
+              label="Enheder solgt"
+              value={String(data.kpis.devicesSold)}
+              delta={pctDelta(data.kpis.devicesSold, data.previous.devicesSold)}
+              accent="violet"
+            />
+            <KpiCard
+              label="Tilbehør solgt"
+              value={String(data.kpis.skusSold)}
+              delta={pctDelta(data.kpis.skusSold, data.previous.skusSold)}
+              accent="amber"
+            />
           </div>
 
           {/* KPI cards — row 2 */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <KpiCard label="Bruttomargin" value={formatOere(data.kpis.totalMargin)} accent="emerald" />
-            <KpiCard label="Gns. ordreværdi" value={formatOere(data.kpis.avgOrderValue)} accent="violet" />
-            <KpiCard label="Brugtmoms (skyldig)" value={formatOere(data.kpis.brugtmomsTotal)} accent="rose" />
-            <KpiCard label="Lager (enheder)" value={String(data.inventory.listedCount)} sub={`Værdi: ${formatOere(data.inventory.retailValue)}`} accent="blue" />
+            <KpiCard
+              label="Bruttomargin"
+              value={formatOere(data.kpis.totalMargin)}
+              delta={pctDelta(data.kpis.totalMargin, data.previous.totalMargin)}
+              accent="emerald"
+            />
+            <KpiCard
+              label="Gns. ordreværdi"
+              value={formatOere(data.kpis.avgOrderValue)}
+              delta={pctDelta(data.kpis.avgOrderValue, data.previous.avgOrderValue)}
+              accent="violet"
+            />
+            <KpiCard
+              label="Brugtmoms (skyldig)"
+              value={formatOere(data.kpis.brugtmomsTotal)}
+              accent="rose"
+            />
+            <KpiCard
+              label="Lager (enheder)"
+              value={String(data.inventory.listedCount)}
+              sub={`Værdi: ${formatOere(data.inventory.retailValue)}`}
+              accent="blue"
+            />
           </div>
 
+          {/* Sparkline chart — revenue + orders, last 30 days */}
+          <Sparkline data={data.timeSeries} />
+
+          {/* Action row — abandoned + low stock alerts */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <AbandonedTile abandoned={data.abandoned} />
+            <LowStockTile lowStock={data.lowStock} />
+          </div>
+
+          {/* Top products + inventory by location + activity */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Inventory by location */}
+            <TopProductsTile products={data.topProducts} />
+
             <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">
               <h3 className="mb-4 text-[13px] font-bold uppercase tracking-wide text-charcoal/35">
                 Lager per lokation
@@ -169,7 +222,9 @@ export default function PlatformDashboardPage() {
               <div className="space-y-3">
                 {Object.entries(data.inventory.byLocation).map(([locId, count]) => (
                   <div key={locId} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-charcoal/70">{locationName(locId)}</span>
+                    <span className="text-sm font-medium text-charcoal/70">
+                      {locationName(locId)}
+                    </span>
                     <span className="rounded-full bg-charcoal/[0.04] px-2.5 py-1 text-[10px] font-bold text-charcoal/35">
                       {count} enheder
                     </span>
@@ -181,8 +236,7 @@ export default function PlatformDashboardPage() {
               </div>
             </div>
 
-            {/* Activity feed */}
-            <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm lg:col-span-2">
+            <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">
               <h3 className="mb-4 text-[13px] font-bold uppercase tracking-wide text-charcoal/35">
                 Seneste aktivitet
               </h3>
@@ -195,8 +249,7 @@ export default function PlatformDashboardPage() {
                       <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-emerald-500/40" />
                       <div className="flex-1">
                         <p className="text-sm text-charcoal/70">
-                          <span className="font-semibold text-charcoal">{entry.action}</span>
-                          {" "}
+                          <span className="font-semibold text-charcoal">{entry.action}</span>{" "}
                           <span className="text-charcoal/35">({entry.entity_type})</span>
                         </p>
                         <p className="text-xs text-charcoal/25">{formatDate(entry.created_at)}</p>
@@ -213,7 +266,31 @@ export default function PlatformDashboardPage() {
   );
 }
 
-function KpiCard({ icon, label, value, sub, accent }: { icon?: React.ReactNode; label: string; value: string; sub?: string; accent: string }) {
+/* ------------------------------------------------------------------ */
+/*  Helpers + Components                                               */
+/* ------------------------------------------------------------------ */
+
+function pctDelta(current: number, previous: number): number | null {
+  if (previous === 0) {
+    if (current === 0) return 0;
+    return null; // can't compute % from zero base — let card show "—"
+  }
+  return ((current - previous) / previous) * 100;
+}
+
+function KpiCard({
+  label,
+  value,
+  sub,
+  delta,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: number | null;
+  accent: string;
+}) {
   const accentMap: Record<string, { bg: string; text: string }> = {
     emerald: { bg: "bg-emerald-500/10", text: "text-emerald-600" },
     blue: { bg: "bg-blue-500/10", text: "text-blue-600" },
@@ -225,14 +302,281 @@ function KpiCard({ icon, label, value, sub, accent }: { icon?: React.ReactNode; 
 
   return (
     <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm transition-all hover:shadow-md">
-      {icon && (
-        <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${a.bg} ${a.text}`}>
-          {icon}
-        </div>
-      )}
       <p className="text-[13px] font-semibold text-charcoal/35">{label}</p>
       <p className={`mt-0.5 text-2xl font-bold ${a.text}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-charcoal/30">{sub}</p>}
+      <div className="mt-1 flex items-center gap-2 text-xs">
+        {delta != null ? <DeltaBadge value={delta} /> : <span className="text-charcoal/20">—</span>}
+        {sub && <span className="text-charcoal/30">· {sub}</span>}
+      </div>
+    </div>
+  );
+}
+
+function DeltaBadge({ value }: { value: number }) {
+  if (Math.abs(value) < 0.1) {
+    return <span className="text-charcoal/30">±0,0%</span>;
+  }
+  const positive = value > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 font-semibold ${
+        positive ? "text-emerald-600" : "text-rose-600"
+      }`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className={`h-3 w-3 ${positive ? "" : "rotate-180"}`}
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04L10.75 5.612V16.25A.75.75 0 0 1 10 17Z"
+          clipRule="evenodd"
+        />
+      </svg>
+      {value > 0 ? "+" : ""}
+      {value.toFixed(1)}%
+    </span>
+  );
+}
+
+/* ── Sparkline (revenue + orders) ───────────────────────────────── */
+
+function Sparkline({ data }: { data: Array<{ date: string; revenue: number; orders: number }> }) {
+  if (data.length === 0) return null;
+
+  const W = 800;
+  const H = 160;
+  const PAD_X = 16;
+  const PAD_TOP = 12;
+  const PAD_BOTTOM = 22;
+  const innerW = W - PAD_X * 2;
+  const innerH = H - PAD_TOP - PAD_BOTTOM;
+
+  const maxRevenue = Math.max(1, ...data.map((d) => d.revenue));
+  const maxOrders = Math.max(1, ...data.map((d) => d.orders));
+
+  const xStep = innerW / Math.max(1, data.length - 1);
+
+  const revenuePath = data
+    .map((d, i) => {
+      const x = PAD_X + i * xStep;
+      const y = PAD_TOP + innerH - (d.revenue / maxRevenue) * innerH;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
+  const totalOrders = data.reduce((s, d) => s + d.orders, 0);
+
+  return (
+    <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
+        <h3 className="text-[13px] font-bold uppercase tracking-wide text-charcoal/35">
+          Omsætning sidste 30 dage
+        </h3>
+        <div className="flex items-center gap-4 text-xs">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-charcoal/40">Omsætning:</span>
+            <span className="font-bold text-charcoal">{formatOere(totalRevenue)}</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-blue-500/50" />
+            <span className="text-charcoal/40">Ordrer:</span>
+            <span className="font-bold text-charcoal">{totalOrders}</span>
+          </span>
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-40 w-full" preserveAspectRatio="none">
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map((p) => (
+          <line
+            key={p}
+            x1={PAD_X}
+            x2={W - PAD_X}
+            y1={PAD_TOP + innerH * p}
+            y2={PAD_TOP + innerH * p}
+            stroke="rgb(0 0 0 / 0.04)"
+            strokeWidth={1}
+          />
+        ))}
+        {/* Order count bars */}
+        {data.map((d, i) => {
+          const barW = Math.max(2, xStep - 2);
+          const x = PAD_X + i * xStep - barW / 2;
+          const h = (d.orders / maxOrders) * innerH;
+          const y = PAD_TOP + innerH - h;
+          return (
+            <rect
+              key={d.date}
+              x={x}
+              y={y}
+              width={barW}
+              height={h}
+              rx={1}
+              fill="rgb(59 130 246 / 0.18)"
+            />
+          );
+        })}
+        {/* Revenue area + line */}
+        <path
+          d={`${revenuePath} L${(PAD_X + (data.length - 1) * xStep).toFixed(1)},${PAD_TOP + innerH} L${PAD_X},${PAD_TOP + innerH} Z`}
+          fill="rgb(16 185 129 / 0.08)"
+        />
+        <path d={revenuePath} fill="none" stroke="rgb(16 185 129)" strokeWidth={2} />
+        {/* Last point dot */}
+        {(() => {
+          const last = data[data.length - 1];
+          const x = PAD_X + (data.length - 1) * xStep;
+          const y = PAD_TOP + innerH - (last.revenue / maxRevenue) * innerH;
+          return <circle cx={x} cy={y} r={3.5} fill="white" stroke="rgb(16 185 129)" strokeWidth={2} />;
+        })()}
+        {/* X-axis day labels — first, mid, last */}
+        {[0, Math.floor(data.length / 2), data.length - 1].map((i) => {
+          const x = PAD_X + i * xStep;
+          return (
+            <text
+              key={i}
+              x={x}
+              y={H - 4}
+              textAnchor={i === 0 ? "start" : i === data.length - 1 ? "end" : "middle"}
+              fontSize="10"
+              fill="rgb(0 0 0 / 0.35)"
+            >
+              {new Date(data[i].date).toLocaleDateString("da-DK", { day: "numeric", month: "short" })}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* ── Abandoned tile ─────────────────────────────────────────────── */
+
+function AbandonedTile({ abandoned }: { abandoned: { count: number; totalValue: number } }) {
+  return (
+    <Link
+      href="/admin/platform/abandoned-checkouts"
+      className="group rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm transition-all hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-semibold text-charcoal/35">Forladte kurve</p>
+          <p className="mt-0.5 text-2xl font-bold text-amber-600">
+            {abandoned.count} {abandoned.count === 1 ? "kurv" : "kurve"}
+          </p>
+          <p className="mt-1 text-xs text-charcoal/40">
+            Værdi: {formatOere(abandoned.totalValue)} · Klik for recovery
+          </p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+            <path
+              fillRule="evenodd"
+              d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+/* ── Low stock alert ────────────────────────────────────────────── */
+
+function LowStockTile({
+  lowStock,
+}: {
+  lowStock: Array<{ template_id: string; name: string; slug: string; category: string; device_count: number }>;
+}) {
+  const outOfStock = lowStock.filter((t) => t.device_count === 0);
+  const oneLeft = lowStock.filter((t) => t.device_count === 1);
+  return (
+    <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h3 className="text-[13px] font-bold uppercase tracking-wide text-charcoal/35">Lavt lager</h3>
+        <span className="text-xs text-charcoal/35">
+          {outOfStock.length} udsolgte · {oneLeft.length} med kun 1 tilbage
+        </span>
+      </div>
+      {lowStock.length === 0 ? (
+        <p className="text-sm text-charcoal/30">Alt på lager — ingen alarmer 🎉</p>
+      ) : (
+        <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
+          {lowStock.map((t) => (
+            <li key={t.template_id}>
+              <Link
+                href={`/refurbished/${t.slug}`}
+                target="_blank"
+                rel="noopener"
+                className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition hover:bg-charcoal/[0.03]"
+              >
+                <span className="truncate text-sm text-charcoal/70 group-hover:text-charcoal">{t.name}</span>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    t.device_count === 0
+                      ? "bg-rose-500/10 text-rose-600"
+                      : "bg-amber-500/10 text-amber-700"
+                  }`}
+                >
+                  {t.device_count === 0 ? "UDSOLGT" : "KUN 1"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ── Top products ───────────────────────────────────────────────── */
+
+function TopProductsTile({
+  products,
+}: {
+  products: Array<{ name: string; units: number; revenue: number; slug?: string }>;
+}) {
+  return (
+    <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">
+      <h3 className="mb-4 text-[13px] font-bold uppercase tracking-wide text-charcoal/35">
+        Top 5 sælgere
+      </h3>
+      {products.length === 0 ? (
+        <p className="text-sm text-charcoal/30">Ingen salg endnu i denne periode</p>
+      ) : (
+        <ol className="space-y-2.5">
+          {products.map((p, i) => (
+            <li key={`${p.name}-${i}`} className="flex items-center gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-charcoal/[0.04] text-xs font-bold text-charcoal/50">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                {p.slug ? (
+                  <Link
+                    href={`/refurbished/${p.slug}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="truncate text-sm font-medium text-charcoal hover:text-emerald-600"
+                  >
+                    {p.name}
+                  </Link>
+                ) : (
+                  <span className="truncate text-sm font-medium text-charcoal">{p.name}</span>
+                )}
+                <p className="text-xs text-charcoal/35">
+                  {p.units} {p.units === 1 ? "stk" : "stk"} · {formatOere(p.revenue)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
