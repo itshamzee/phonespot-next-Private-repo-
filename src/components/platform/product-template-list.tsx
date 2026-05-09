@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ProductTemplate } from "@/lib/supabase/platform-types";
 import { formatDKK } from "@/lib/platform/format";
+import { TemplateBulkEditor } from "@/components/platform/template-bulk-editor";
 
 interface Props {
   onEdit: (template: ProductTemplate) => void;
@@ -17,6 +18,7 @@ export function ProductTemplateList({ onEdit }: Props) {
   const [statusFilter, setStatusFilter] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/platform/templates")
@@ -74,6 +76,43 @@ export function ProductTemplateList({ onEdit }: Props) {
     : templates;
 
   const hasFilters = search || brandFilter || categoryFilter || statusFilter;
+
+  const allSelected = filtered.length > 0 && filtered.every((t) => selected.has(t.id));
+
+  function toggleAll() {
+    if (allSelected) {
+      // Drop only the currently filtered ids; preserve out-of-view selections
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const t of filtered) next.delete(t.id);
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const t of filtered) next.add(t.id);
+        return next;
+      });
+    }
+  }
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function handleBulkComplete() {
+    clearSelection();
+    load();
+  }
 
   return (
     <div className="space-y-4">
@@ -146,6 +185,15 @@ export function ProductTemplateList({ onEdit }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-stone-100 bg-stone-50/60 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                <th className="px-3 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="h-4 w-4 cursor-pointer rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                    aria-label="Vælg alle"
+                  />
+                </th>
                 <th className="hidden sm:table-cell px-4 py-3">Billede</th>
                 <th className="px-4 py-3">Model</th>
                 <th className="hidden md:table-cell px-4 py-3">Brand</th>
@@ -158,7 +206,21 @@ export function ProductTemplateList({ onEdit }: Props) {
             </thead>
             <tbody className="divide-y divide-stone-100">
               {filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-stone-50/50">
+                <tr
+                  key={t.id}
+                  className={`hover:bg-stone-50/50 ${
+                    selected.has(t.id) ? "bg-emerald-50/40" : ""
+                  }`}
+                >
+                  <td className="px-3 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(t.id)}
+                      onChange={() => toggleOne(t.id)}
+                      className="h-4 w-4 cursor-pointer rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                      aria-label={`Vælg ${t.display_name}`}
+                    />
+                  </td>
                   <td className="hidden sm:table-cell px-4 py-3">
                     {t.images?.[0] ? (
                       <img
@@ -220,6 +282,12 @@ export function ProductTemplateList({ onEdit }: Props) {
           </table>
         </div>
       )}
+
+      <TemplateBulkEditor
+        selectedIds={Array.from(selected)}
+        onComplete={handleBulkComplete}
+        onClear={clearSelection}
+      />
     </div>
   );
 }

@@ -91,10 +91,64 @@ export async function POST(request: Request) {
   return NextResponse.json(data, { status: 201 });
 }
 
+export async function PATCH(request: Request) {
+  const body = await request.json();
+  const { items } = body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return NextResponse.json({ error: "items array required" }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const item of items) {
+    const { id, ...fields } = item;
+    if (!id) {
+      errors.push("Item missing id");
+      continue;
+    }
+
+    // Allowlist for bulk updates
+    const allowed: Record<string, unknown> = {};
+    if (fields.status !== undefined) allowed.status = fields.status;
+    if (fields.base_price_a !== undefined) allowed.base_price_a = fields.base_price_a;
+    if (fields.base_price_b !== undefined) allowed.base_price_b = fields.base_price_b;
+    if (fields.base_price_c !== undefined) allowed.base_price_c = fields.base_price_c;
+    if (fields.brand !== undefined) allowed.brand = fields.brand;
+    if (fields.category !== undefined) allowed.category = fields.category;
+
+    if (Object.keys(allowed).length === 0) {
+      errors.push(`No valid fields for item ${id}`);
+      continue;
+    }
+
+    allowed.updated_at = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("product_templates")
+      .update(allowed)
+      .eq("id", id);
+
+    if (error) {
+      errors.push(`${id}: ${error.message}`);
+    } else {
+      updated++;
+    }
+  }
+
+  return NextResponse.json({ updated, errors });
+}
+
 export async function DELETE(request: Request) {
-  const { id } = await request.json();
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const body = await request.json();
+  const { id, ids } = body;
+
+  // Accept either a single id (legacy) or an ids array (bulk)
+  const targetIds: string[] = Array.isArray(ids) ? ids : id ? [id] : [];
+  if (targetIds.length === 0) {
+    return NextResponse.json({ error: "id or ids array required" }, { status: 400 });
   }
 
   const supabase = createAdminClient();
@@ -102,11 +156,11 @@ export async function DELETE(request: Request) {
   const { error } = await supabase
     .from("product_templates")
     .delete()
-    .eq("id", id);
+    .in("id", targetIds);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ deleted: targetIds.length });
 }
