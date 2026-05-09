@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import GlobalSearch from "@/components/admin/global-search";
+import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation                                                         */
@@ -570,6 +571,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Real-time new-order toast watcher */}
+      <NewOrdersWatcher />
     </div>
   );
 }
