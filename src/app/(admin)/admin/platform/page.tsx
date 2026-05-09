@@ -12,6 +12,7 @@ import {
   pctDelta,
   type DashboardData,
 } from "@/components/admin/dashboard/tiles";
+import { Ga4Tile } from "@/components/admin/dashboard/ga4-tile";
 
 const PERIOD_LABELS: Record<string, string> = {
   today: "I dag",
@@ -163,6 +164,9 @@ export default function PlatformDashboardPage() {
 
           {/* Sparkline chart — revenue + orders, last 30 days */}
           <Sparkline data={data.timeSeries} />
+
+          {/* GA4 traffic snapshot */}
+          <Ga4Tile />
 
           {/* Action row — abandoned + low stock alerts */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

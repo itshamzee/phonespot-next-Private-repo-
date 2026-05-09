@@ -11,6 +11,7 @@ import {
   pctDelta,
   type DashboardData,
 } from "./tiles";
+import { Ga4Tile } from "./ga4-tile";
 
 /* ------------------------------------------------------------------ */
 /*  Period config                                                      */
@@ -199,6 +200,9 @@ export default function EcommerceDashboard() {
 
       {/* Sparkline chart — revenue + orders, last 30 days */}
       <Sparkline data={timeSeries} />
+
+      {/* GA4 traffic snapshot */}
+      <Ga4Tile />
 
       {/* Action row — abandoned + low stock alerts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
