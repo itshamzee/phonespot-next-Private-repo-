@@ -330,6 +330,10 @@ export async function syncFoxwayItems(
   const incomingSkus = new Set<string>();
   // Track templates that need base-price updates
   const affectedTemplateIds = new Set<string>();
+  // Collect EAN data per template so we can persist it onto
+  // template.default_attributes.gtins_by_variant at the end of the run.
+  // Map<templateId, Map<"<storage>|<color>", ean>>
+  const eansByTemplate = new Map<string, Map<string, string>>();
 
   // 6. Process each item
   for (const item of items) {
@@ -345,6 +349,21 @@ export async function syncFoxwayItems(
       );
 
       affectedTemplateIds.add(templateId);
+
+      // Capture EAN per (storage, color) so we can write it back onto the
+      // template's default_attributes after the device loop completes.
+      // Only accept GTIN-13 / GTIN-14 numerics — drop "N/A" and dashes.
+      const cleanedEan = (item.ean ?? "").replace(/\D/g, "");
+      if (cleanedEan.length >= 8 && cleanedEan.length <= 14) {
+        const variantKey = `${item.storage}|${item.color || "Sort"}`;
+        let bucket = eansByTemplate.get(templateId);
+        if (!bucket) {
+          bucket = new Map();
+          eansByTemplate.set(templateId, bucket);
+        }
+        bucket.set(variantKey, cleanedEan);
+      }
+
       const existing = existingBySourceSku.get(item.sourceSku);
 
       if (!existing) {
@@ -431,6 +450,10 @@ export async function syncFoxwayItems(
       result.delisted = toDelistIds.length;
     }
   }
+
+  // 7b. Persist collected EANs onto each affected template's default_attributes.
+  // One read + one write per template (cheap compared to the device loop).
+  await mergeEansIntoTemplates(eansByTemplate, supabase, result);
 
   // 8. Update template base prices for affected templates
   await updateTemplateBasePrices(affectedTemplateIds, supabase);
@@ -527,6 +550,62 @@ const GRADE_PRICE_COLUMNS: Record<DeviceGrade, string> = {
   B: "base_price_b",
   C: "base_price_c",
 };
+
+/**
+ * For each template, merge collected EAN data into
+ * default_attributes.gtins_by_variant. Existing keys are preserved unless
+ * the new sync provides a different value for the same (storage|color)
+ * combo, in which case the latest CSV wins (Foxway is the source of truth).
+ * Other default_attributes keys (e.g. images_by_color) are left untouched.
+ */
+async function mergeEansIntoTemplates(
+  eansByTemplate: Map<string, Map<string, string>>,
+  supabase: SupabaseAdmin,
+  result: SyncResult,
+): Promise<void> {
+  if (eansByTemplate.size === 0) return;
+
+  const ids = Array.from(eansByTemplate.keys());
+  const { data: templates, error } = await supabase
+    .from("product_templates")
+    .select("id, default_attributes")
+    .in("id", ids);
+
+  if (error || !templates) {
+    result.errors.push({
+      sku: "_ean_merge_fetch",
+      error: error?.message ?? "could not fetch templates",
+    });
+    return;
+  }
+
+  for (const t of templates as Array<{ id: string; default_attributes: Record<string, unknown> | null }>) {
+    const collected = eansByTemplate.get(t.id);
+    if (!collected || collected.size === 0) continue;
+
+    const existing = (t.default_attributes ?? {}) as Record<string, unknown>;
+    const existingVariants =
+      (existing.gtins_by_variant as Record<string, string> | undefined) ?? {};
+    const merged: Record<string, string> = { ...existingVariants };
+    for (const [variantKey, ean] of collected) {
+      merged[variantKey] = ean;
+    }
+
+    const nextAttrs: Record<string, unknown> = {
+      ...existing,
+      gtins_by_variant: merged,
+    };
+
+    const { error: upErr } = await supabase
+      .from("product_templates")
+      .update({ default_attributes: nextAttrs })
+      .eq("id", t.id);
+
+    if (upErr) {
+      result.errors.push({ sku: `_ean_merge_${t.id}`, error: upErr.message });
+    }
+  }
+}
 
 async function updateTemplateBasePrices(
   templateIds: Set<string>,
