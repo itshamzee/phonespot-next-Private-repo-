@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "sourced_at": "2026-05-11",
+    "source": "upcindex.com, upcitemdb.com, eandata.com, movertix.com (EU), icecat.us, samfirms.com — Apple GS1 prefix verified per model line",
+    "note": "Template-level default GTIN. Pricerunner matches on EAN + color/storage attributes — the default represents one of the in-stock variants of that model."
+  },
+
+  "apple-iphone-12": {
+    "default": "0194252027844",
+    "_provenance": "iPhone 12 128GB Black Unlocked (upcindex.com)"
+  },
+  "apple-iphone-12-pro": {
+    "default": "0194252036921",
+    "_provenance": "iPhone 12 Pro 128GB Pacific Blue Unlocked (eandata.com)"
+  },
+  "apple-iphone-13": {
+    "default": "0194252780862",
+    "_provenance": "iPhone 13 Chalk Pink, Apple GS1 family (upcitemdb.com)"
+  },
+  "apple-iphone-13-pro": {
+    "default": "0194252781135",
+    "_provenance": "iPhone 13 Pro Abyss Blue (upcitemdb.com)"
+  },
+  "apple-iphone-13-pro-max": {
+    "default": "0194252697979",
+    "_provenance": "iPhone 13 Pro Max 128GB Graphite Unlocked (upcindex.com)"
+  },
+  "apple-iphone-14": {
+    "default": "0194253416920",
+    "_provenance": "iPhone 14 generic Apple GS1 (upcitemdb.com)"
+  },
+  "apple-iphone-14-pro": {
+    "default": "0194253400905",
+    "_provenance": "iPhone 14 Pro A2650 128GB Space Black Unlocked (ebay.com)"
+  },
+  "apple-iphone-14-pro-max": {
+    "default": "0194253378785",
+    "_provenance": "iPhone 14 Pro Max 128GB Silver (upcitemdb.com)"
+  },
+  "apple-iphone-15": {
+    "default": "0195949035005",
+    "_provenance": "iPhone 15 128GB Black (barcodespider.com)"
+  },
+  "apple-iphone-15-pro": {
+    "default": "0195949018862",
+    "_provenance": "iPhone 15 Pro 128GB Natural Titanium (upcindex.com)"
+  },
+  "apple-iphone-16-pro": {
+    "default": "0195949771705",
+    "_provenance": "iPhone 16 Pro 128GB Natural Titanium (movertix.com, EU)"
+  },
+  "apple-iphone-17": {
+    "default": "0195950642803",
+    "_provenance": "iPhone 17 256GB Black MG464LL/A (refurb.me, eBay)"
+  },
+  "apple-iphone-17-pro": {
+    "default": "0195950626179",
+    "_provenance": "iPhone 17 Pro 256GB Cosmic Orange Unlocked (ebay.com)"
+  },
+  "apple-iphone-17-pro-max": {
+    "default": "0195950640618",
+    "_provenance": "iPhone 17 Pro Max 2TB Silver (upcindex.com)"
+  },
+
+  "apple-ipad-10-2-2021": {
+    "default": "0194252515655",
+    "_provenance": "iPad 9th gen 64GB Wi-Fi Space Gray (upcitemdb.com)"
+  },
+
+  "samsung-galaxy-a54-5g": {
+    "default": "8806094885699",
+    "_provenance": "Galaxy A54 5G SM-A546B/DS 128GB Black EU (movertix.com)"
+  },
+  "samsung-galaxy-a54": {
+    "default": "8806094885699",
+    "_provenance": "Galaxy A54 5G SM-A546B/DS 128GB Black EU (movertix.com)"
+  },
+  "samsung-a54-5g": {
+    "default": "8806094885699",
+    "_provenance": "Galaxy A54 5G SM-A546B/DS 128GB Black EU (movertix.com)"
+  },
+  "samsung-galaxy-a56-5g": {
+    "default": "8806095982847",
+    "_provenance": "Galaxy A56 5G SM-A566B/DS 256GB Graphite EU (movertix.com)"
+  },
+  "samsung-galaxy-s22-5g-128gb": {
+    "default": "0887276611914",
+    "_provenance": "Galaxy S22 5G 256GB Green Unlocked (upcitemdb.com)"
+  },
+  "samsung-galaxy-z-fold-3": {
+    "default": "0887276552644",
+    "_provenance": "Galaxy Z Fold 3 5G SM-F926U 256GB Black Unlocked (ebay.com)"
+  },
+
+  "samsung-galaxy-tab-a9-plus-5g-64gb": {
+    "default": "8806095488899",
+    "_provenance": "Galaxy Tab A9+ 128GB Graphite UK (upcindex.com)"
+  },
+
+  "samsung-galaxy-watch-4": {
+    "default": "0887276550886",
+    "_provenance": "Galaxy Watch 4 44mm SM-R870NZK Black (ebay.com)"
+  },
+  "samsung-galaxy-watch-ultra": {
+    "default": "0887276876153",
+    "_provenance": "Galaxy Watch Ultra 47mm Titanium Gray SM-L705 (samsung.com)"
+  },
+
+  "apple-watch-se-40-mm-2022": {
+    "default": "0194252614068",
+    "_provenance": "Apple Watch SE GPS+Cell 40mm Silver Abyss Blue 2022 (upcitemdb.com)"
+  },
+  "apple-watch-se-44-mm-2022": {
+    "default": "0194252585450",
+    "_provenance": "Apple Watch SE GPS 44mm Silver Abyss Blue 2022 (barcodeindex.com)"
+  }
+}
