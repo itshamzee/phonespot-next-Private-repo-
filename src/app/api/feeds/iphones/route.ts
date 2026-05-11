@@ -174,13 +174,30 @@ export async function GET() {
   <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`;
       }
 
+      // Resolve GTIN: per-variant > template-wide fallback > omit (and signal
+      // identifier_exists=no so Meta accepts the item without one).
+      const gtinsByVariant = (template.default_attributes?.gtins_by_variant ?? null) as
+        | Record<string, string>
+        | null;
+      const fallbackGtin = (template.default_attributes?.gtin ?? null) as string | null;
+      const variantKey = `${storage}|${color}`;
+      const rawGtin = gtinsByVariant?.[variantKey] ?? fallbackGtin ?? null;
+      const hasGtin = !!rawGtin && /^\d{8,14}$/.test(rawGtin);
+
       xml += `
   <g:price>${priceStr} DKK</g:price>
   <g:condition>refurbished</g:condition>
   <g:availability>in_stock</g:availability>
   <g:brand>Apple</g:brand>
-  <g:item_group_id>${escapeXml(template.slug)}</g:item_group_id>
-  <g:identifier_exists>no</g:identifier_exists>
+  <g:item_group_id>${escapeXml(template.slug)}</g:item_group_id>`;
+      if (hasGtin) {
+        xml += `
+  <g:gtin>${escapeXml(rawGtin!)}</g:gtin>`;
+      } else {
+        xml += `
+  <g:identifier_exists>no</g:identifier_exists>`;
+      }
+      xml += `
   <g:mpn>${escapeXml(itemId)}</g:mpn>
   <g:google_product_category>267</g:google_product_category>
   <g:product_type>Refurbished &gt; Apple &gt; iPhone</g:product_type>`;

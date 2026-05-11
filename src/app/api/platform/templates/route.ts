@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     images,
     specifications,
     status,
+    default_attributes,
   } = body;
 
   if (!brand || !model || !display_name || !category || !slug) {
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
       images: images ?? [],
       specifications: specifications ?? {},
       status: status ?? "draft",
+      default_attributes: default_attributes ?? {},
     })
     .select()
     .single();

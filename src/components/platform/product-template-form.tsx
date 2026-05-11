@@ -36,6 +36,12 @@ const STORAGE_BY_CATEGORY: Record<string, string[]> = {
 export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
   const isEdit = !!template;
 
+  const initialDefaultAttrs =
+    (template?.default_attributes as Record<string, unknown> | undefined) ?? {};
+  const initialGtin = (initialDefaultAttrs.gtin as string | undefined) ?? "";
+  const initialGtinsByVariant =
+    (initialDefaultAttrs.gtins_by_variant as Record<string, string> | undefined) ?? {};
+
   const [form, setForm] = useState({
     brand: template?.brand ?? "",
     model: template?.model ?? "",
@@ -54,6 +60,8 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
     images: template?.images ?? [],
     specifications: template?.specifications ?? {},
     status: template?.status ?? "draft",
+    gtin: initialGtin,
+    gtins_by_variant: initialGtinsByVariant,
   });
 
   const [newColor, setNewColor] = useState("");
@@ -129,11 +137,33 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
     setSaving(true);
     setError(null);
 
+    // Merge GTIN data into default_attributes — preserves existing keys like
+    // images_by_color that the form doesn't manage.
+    const trimmedGtin = form.gtin.trim();
+    const cleanedVariantGtins: Record<string, string> = {};
+    for (const [key, value] of Object.entries(form.gtins_by_variant)) {
+      const v = String(value).trim();
+      if (v.length > 0) cleanedVariantGtins[key] = v;
+    }
+    const nextDefaultAttrs: Record<string, unknown> = { ...initialDefaultAttrs };
+    if (trimmedGtin) nextDefaultAttrs.gtin = trimmedGtin;
+    else delete nextDefaultAttrs.gtin;
+    if (Object.keys(cleanedVariantGtins).length > 0) {
+      nextDefaultAttrs.gtins_by_variant = cleanedVariantGtins;
+    } else {
+      delete nextDefaultAttrs.gtins_by_variant;
+    }
+
+    const { gtin: _gtin, gtins_by_variant: _gtinsByVariant, ...formRest } = form;
+    void _gtin;
+    void _gtinsByVariant;
+
     const payload = {
-      ...form,
+      ...formRest,
       base_price_a: form.base_price_a ? Math.round(parseFloat(form.base_price_a) * 100) : null,
       base_price_b: form.base_price_b ? Math.round(parseFloat(form.base_price_b) * 100) : null,
       base_price_c: form.base_price_c ? Math.round(parseFloat(form.base_price_c) * 100) : null,
+      default_attributes: nextDefaultAttrs,
     };
 
     try {
@@ -340,6 +370,71 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
           >
             Tilføj
           </button>
+        </div>
+      </section>
+
+      {/* Section: EAN / GTIN */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h3 className="mb-1 text-sm font-semibold uppercase tracking-wider text-stone-400">
+          EAN / GTIN
+        </h3>
+        <p className="mb-4 text-xs text-stone-500">
+          Producentens GTIN-13 (8–14 cifre). Bruges af Pricerunner og Meta til at matche
+          produktet med konkurrenter. Lad være tom hvis ukendt.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-stone-500">
+              Standard-EAN (bruges hvis ingen variant-specifik er sat)
+            </label>
+            <input
+              value={form.gtin}
+              onChange={(e) => set("gtin", e.target.value.replace(/\D/g, "").slice(0, 14))}
+              placeholder="0194253430612"
+              inputMode="numeric"
+              className="w-full max-w-xs rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm font-mono focus:border-green-500/50 focus:outline-none"
+            />
+            {form.gtin && !/^\d{8,14}$/.test(form.gtin) && (
+              <p className="mt-1 text-xs text-red-600">EAN skal være 8–14 cifre.</p>
+            )}
+          </div>
+
+          {form.storage_options.length > 0 && form.colors.length > 0 && (
+            <details className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+              <summary className="cursor-pointer text-xs font-semibold text-stone-600">
+                Variant-specifikke EANs ({form.storage_options.length * form.colors.length} kombinationer)
+              </summary>
+              <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                {form.storage_options.flatMap((storage) =>
+                  form.colors.map((color) => {
+                    const key = `${storage}|${color}`;
+                    const value = form.gtins_by_variant[key] ?? "";
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <span className="w-40 shrink-0 text-xs font-medium text-stone-600">
+                          {storage} · {color}
+                        </span>
+                        <input
+                          value={value}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 14);
+                            set("gtins_by_variant", {
+                              ...form.gtins_by_variant,
+                              [key]: v,
+                            });
+                          }}
+                          placeholder="EAN — tom = brug standard"
+                          inputMode="numeric"
+                          className="flex-1 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-mono focus:border-green-500/50 focus:outline-none"
+                        />
+                      </div>
+                    );
+                  }),
+                )}
+              </div>
+            </details>
+          )}
         </div>
       </section>
 

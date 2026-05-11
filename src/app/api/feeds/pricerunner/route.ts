@@ -45,9 +45,17 @@ function categoryPath(category: string): string {
  *  1. template.default_attributes.images_by_color[color][0] (color-specific)
  *  2. template.images[0] (fallback)
  *
- * Identifier strategy: refurbished devices have no per-unit GTIN, so we use
- * a stable MPN built from slug-storage-color-grade. Accessories include EAN
- * when available.
+ * EAN/GTIN resolution for devices (highest specificity first):
+ *  1. template.default_attributes.gtins_by_variant["<storage>|<color>"]
+ *     — per-variant GTIN, e.g. "256GB|Sort": "0194253430797"
+ *  2. template.default_attributes.gtin
+ *     — single GTIN that applies to all variants of the template
+ *  3. (omitted — feed still emits the row with MPN as the only identifier)
+ *
+ * Refurbished iPhones share the manufacturer's GTIN — Pricerunner matches
+ * on this for catalog grouping. Per-unit serial numbers are not GTINs.
+ *
+ * Accessories: pull EAN from sku_products.ean directly.
  *
  * Shipping: 0.00 DKK (gratis fragt).
  */
@@ -162,6 +170,19 @@ export async function GET() {
         longDesc ??
         `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`;
 
+      // Resolve EAN: per-variant first, then template-wide fallback.
+      const gtinsByVariant = (template.default_attributes?.gtins_by_variant ?? null) as
+        | Record<string, string>
+        | null;
+      const fallbackGtin = (template.default_attributes?.gtin ?? null) as string | null;
+      const variantKey = `${storage}|${color}`;
+      const rawGtin =
+        gtinsByVariant?.[variantKey] ??
+        (color && storage ? gtinsByVariant?.[`${storage}|${color}`] : null) ??
+        fallbackGtin ??
+        null;
+      const hasGtin = rawGtin && /^\d{8,14}$/.test(rawGtin);
+
       xml += `  <product>\n`;
       xml += `    <SKU>${escapeXml(sku)}</SKU>\n`;
       xml += `    <ProductName>${escapeXml(title)}</ProductName>\n`;
@@ -172,6 +193,7 @@ export async function GET() {
       xml += `    <ImageUrl>${escapeXml(imageUrl)}</ImageUrl>\n`;
       xml += `    <Category>${escapeXml(categoryPath(template.category))}</Category>\n`;
       xml += `    <Manufacturer>${escapeXml(template.brand)}</Manufacturer>\n`;
+      if (hasGtin) xml += `    <Ean>${escapeXml(rawGtin)}</Ean>\n`;
       xml += `    <MPN>${escapeXml(sku)}</MPN>\n`;
       if (color) xml += `    <Color>${escapeXml(color)}</Color>\n`;
       if (storage) xml += `    <Capacity>${escapeXml(storage)}</Capacity>\n`;
