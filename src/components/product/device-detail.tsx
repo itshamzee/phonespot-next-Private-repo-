@@ -221,6 +221,45 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
     return set;
   }, [gradeMatchedDevices, selectedStorage]);
 
+  // Colors that have stock in *any* grade (not just the currently selected
+  // one). Used to decide which color swatches are clickable: a color the
+  // shop has on the shelf in another grade is reachable — clicking it just
+  // auto-switches the grade.
+  const stockedColors = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of listedDevices) {
+      if (d.color) set.add(d.color);
+    }
+    return set;
+  }, [listedDevices]);
+
+  // Find the cheapest grade that has stock for a given color, so we can
+  // jump the customer there when they pick a color the current grade
+  // doesn't carry.
+  const findGradeForColor = (color: string): string | null => {
+    let best: { grade: string; price: number } | null = null;
+    for (const d of listedDevices) {
+      if (d.color !== color) continue;
+      const isNewByNote =
+        d.grade === "A" &&
+        d.condition_notes?.toLowerCase().includes("fabriksny") === true;
+      const effectiveGrade = isNewByNote ? "N" : (d.grade as string);
+      const price = d.selling_price ?? Number.MAX_SAFE_INTEGER;
+      if (!best || price < best.price) {
+        best = { grade: effectiveGrade, price };
+      }
+    }
+    return best?.grade ?? null;
+  };
+
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    if (!availableColors.has(color)) {
+      const newGrade = findGradeForColor(color);
+      if (newGrade) setSelectedGrade(newGrade);
+    }
+  };
+
   // If the current storage/color selection becomes unavailable after a
   // grade change, auto-jump to the first available option.
   useEffect(() => {
@@ -504,8 +543,8 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             <ColorSelectorPlatform
               colors={template.colors}
               selected={selectedColor}
-              onChange={setSelectedColor}
-              availableColors={availableColors}
+              onChange={handleColorChange}
+              availableColors={stockedColors}
             />
           )}
 
