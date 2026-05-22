@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveStaff } from "@/lib/auth/resolve-staff";
 
 /**
  * GET /api/dashboard?period=<today|week|month|quarter>&location_id=<optional>
@@ -30,17 +31,13 @@ export async function GET(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { data: staff } = await supabase
-      .from("staff")
-      .select("id, role")
-      .eq("auth_id", user.id)
-      .single();
-    if (!staff) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
     // Use admin client for DB reads — auth has already been verified above.
     const admin = createAdminClient();
+
+    const staff = await resolveStaff(admin, { id: user.id, email: user.email });
+    if (!staff) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") ?? "month";
