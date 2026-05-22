@@ -69,6 +69,7 @@ describe("resolveStaff", () => {
 
   it("auto-provisions an owner for a whitelisted email", async () => {
     const whitelisted = OWNER_EMAIL_WHITELIST[0];
+    if (!whitelisted) throw new Error("OWNER_EMAIL_WHITELIST is empty — test is invalid");
     const { client } = makeSupabase({
       staffByAuthId: {},
       insertResult: { id: "s-3", auth_id: "auth-3", role: "owner" },

@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type StaffRole = "employee" | "manager" | "owner";
+
 export type StaffRow = {
   id: string;
   auth_id: string;
-  role: string;
+  role: StaffRole;
 };
 
 export type AuthUserInfo = {
@@ -42,12 +44,13 @@ export async function resolveStaff(
   admin: SupabaseClient,
   user: AuthUserInfo,
 ): Promise<StaffRow | null> {
-  const { data: existing } = await admin
+  const { data: existing, error: lookupError } = await admin
     .from("staff")
     .select("id, auth_id, role")
     .eq("auth_id", user.id)
     .maybeSingle();
 
+  if (lookupError) throw new Error(`staff lookup failed: ${lookupError.message}`);
   if (existing) return existing as StaffRow;
 
   if (!user.email) return null;
@@ -67,6 +70,17 @@ export async function resolveStaff(
     .select("id, auth_id, role")
     .single();
 
-  if (error || !inserted) return null;
+  if (error) {
+    if ((error as { code?: string }).code === "23505") {
+      // Concurrent request already provisioned this row — re-read it.
+      const { data: retry } = await admin
+        .from("staff")
+        .select("id, auth_id, role")
+        .eq("auth_id", user.id)
+        .single();
+      return (retry as StaffRow | null) ?? null;
+    }
+    throw new Error(`staff insert failed: ${error.message}`);
+  }
   return inserted as StaffRow;
 }
