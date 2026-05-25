@@ -319,23 +319,32 @@ export async function handleCheckoutExpired(
   const orderId = session.metadata?.order_id;
   if (!orderId) return;
 
-  // Cancel order
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status, order_items(id, item_type, device_id)")
+    .select("id, status, recovery_token, order_items(id, item_type, device_id)")
     .eq("id", orderId)
     .single();
 
   if (!order || order.status !== "pending") return;
 
+  // Move the order into the abandoned-cart recovery pipeline.
+  const abandonedAt = new Date().toISOString();
+  const recoveryToken =
+    (order as { recovery_token: string | null }).recovery_token ?? crypto.randomUUID();
+
   await supabase
     .from("orders")
-    .update({ status: "cancelled" })
+    .update({
+      status: "abandoned",
+      abandoned_at: abandonedAt,
+      recovery_token: recoveryToken,
+    })
     .eq("id", orderId);
 
-  // Release device reservations
+  // Release device reservations so the inventory becomes purchasable again.
   const orderItems: Array<{ id: string; item_type: string; device_id: string | null }> =
-    (order as any).order_items ?? [];
+    (order as { order_items?: Array<{ id: string; item_type: string; device_id: string | null }> })
+      .order_items ?? [];
   const deviceIds = orderItems
     .filter((i) => i.item_type === "device" && i.device_id)
     .map((i) => i.device_id as string);
@@ -347,5 +356,5 @@ export async function handleCheckoutExpired(
       .in("id", deviceIds);
   }
 
-  console.log("[webhook] order cancelled (session expired):", orderId);
+  console.log("[webhook] order abandoned (session expired):", orderId);
 }
