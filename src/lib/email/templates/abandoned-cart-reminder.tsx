@@ -22,7 +22,9 @@ export interface AbandonedCartReminderProps {
   discountValidDays: number;
 }
 
-export const subject = "Vi har 5% rabat klar til dig — fuldfør dit køb";
+export function getSubject(discountPercent: number): string {
+  return `Vi har ${discountPercent}% rabat klar til dig — fuldfør dit køb`;
+}
 export const from = "info@phonespot.dk";
 
 const FONT = "'Helvetica Neue',Helvetica,Arial,sans-serif";
@@ -292,6 +294,11 @@ export default function AbandonedCartReminderEmail({
                 {BRAND.phone}
               </Link>
               .
+            </Text>
+            <Text style={{ margin: "8px 0 0", fontSize: 11, color: "#aaa", lineHeight: 1.5 }}>
+              Denne e-mail er sendt fordi du har en påbegyndt ordre hos PhoneSpot. Skriv til{" "}
+              <Link href={`mailto:${BRAND.email}`} style={{ color: "#aaa", textDecoration: "underline" }}>{BRAND.email}</Link>{" "}
+              hvis du ønsker at afmelde recovery-mails.
             </Text>
           </Section>
         </Container>
