@@ -54,6 +54,7 @@ export function templateToProduct(t: ProductTemplate & { min_price?: number | nu
 
   return {
     id: t.id,
+    templateId: t.id,
     handle: t.slug,
     title: t.display_name,
     description: t.description ?? "",

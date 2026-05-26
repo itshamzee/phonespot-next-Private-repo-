@@ -40,6 +40,8 @@ export interface ProductVariant {
 /** Full product representation used throughout the storefront. */
 export interface Product {
   id: string;
+  /** The product_templates.id this product was built from. Populated by the Supabase adapter; may be absent for Shopify-sourced products. */
+  templateId?: string;
   handle: string;
   title: string;
   description: string;
