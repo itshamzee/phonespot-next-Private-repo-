@@ -294,6 +294,24 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
           </div>
         )}
 
+        {/* Battery-upgrade banner */}
+        {items.some((it: any) => it.battery_upgrade) && (
+          <div className="mb-6 rounded-2xl border-2 border-orange-400 bg-orange-50 p-5">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xl font-bold text-white">!</span>
+              <div>
+                <h2 className="font-display text-lg font-bold text-orange-900">
+                  BATTERI-OPGRADERING — udskift batteri før forsendelse
+                </h2>
+                <p className="text-sm text-orange-800/80">
+                  Kunden har betalt for et nyt 100% batteri på {items.filter((it: any) => it.battery_upgrade).length} enhed(er).
+                  Installer batteriet inden enheden pakkes.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 2-column layout */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* ── Left column (~2/3) ──────────────────────────────────── */}
@@ -329,7 +347,14 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                         key={item.id ?? idx}
                         className="border-b border-sand/50 last:border-0"
                       >
-                        <td className="px-5 py-3 text-charcoal">{name}</td>
+                        <td className="px-5 py-3 text-charcoal">
+                          <span>{name}</span>
+                          {item.battery_upgrade && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-orange-700">
+                              Nyt batteri
+                            </span>
+                          )}
+                        </td>
                         <td className="px-5 py-3 text-right text-charcoal-light">{qty}</td>
                         <td className="px-5 py-3 text-right text-charcoal-light">
                           {formatDKK(unitPrice)}
