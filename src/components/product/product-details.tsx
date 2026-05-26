@@ -76,7 +76,7 @@ function getIPhoneCamera(title: string): string {
 /*  Generate specs per product type                                    */
 /* ------------------------------------------------------------------ */
 
-function getProductData(product: Product): ProductSpecs {
+function getProductData(product: Product, batteryHealth?: number): ProductSpecs {
   const title = product.title;
   const t = title.toLowerCase();
 
@@ -153,7 +153,15 @@ function getProductData(product: Product): ProductSpecs {
         { label: "Kamera (bag)", value: camera },
         { label: "Kamera (front)", value: isPro ? "12 MP TrueDepth, Face ID" : "12 MP TrueDepth, Face ID" },
         { label: "Lagerplads", value: "Se variantvælger" },
-        { label: "Batteri", value: "Li-Ion, hurtigopladning (50% på 30 min.), MagSafe" },
+        {
+          label: "Batteri",
+          value:
+            batteryHealth === 100
+              ? "100% (testet og verificeret)"
+              : typeof batteryHealth === "number"
+                ? `${batteryHealth}% (testet og verificeret)`
+                : "Li-Ion, hurtigopladning (50% på 30 min.), MagSafe"
+        },
         { label: "Forbindelse", value: "5G, Wi-Fi 6/6E, Bluetooth 5.3, NFC, UWB" },
         { label: "Vandtæthed", value: isPro ? "IP68 (6 meter, 30 min.)" : "IP68 (6 meter, 30 min.)" },
         { label: "Materiale", value: isPro ? "Titan, Ceramic Shield" : "Aluminium, Ceramic Shield" },
@@ -421,8 +429,8 @@ function HighlightIcon({ type }: { type: string }) {
 /*  Exported component                                                 */
 /* ------------------------------------------------------------------ */
 
-export function ProductDetails({ product }: { product: Product }) {
-  const data = getProductData(product);
+export function ProductDetails({ product, batteryHealth }: { product: Product; batteryHealth?: number }) {
+  const data = getProductData(product, batteryHealth);
 
   return (
     <div className="mx-auto max-w-4xl">
