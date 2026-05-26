@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { createServerClient } from "@/lib/supabase/client";
+import { stripe } from "@/lib/stripe/client";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
@@ -150,7 +151,59 @@ export async function handleCheckoutCompleted(
     }
   }
 
-  // 6. Increment discount code usage
+  // 6. Persist battery_upgrade flag on order_items
+  // For each line item with kind=battery-upgrade, set the parent device/SKU order_item row to TRUE.
+  // Wrapped in try/catch: if the migration hasn't been applied yet, this is non-fatal.
+  try {
+    const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+      expand: ["data.price.product"],
+    });
+
+    for (const li of lineItems.data) {
+      const product = li.price?.product;
+      if (typeof product === "string" || !product || product.deleted) continue;
+      const meta = (product as Stripe.Product).metadata ?? {};
+      if (meta.kind !== "battery-upgrade") continue;
+      if (!meta.parent_item_key) continue;
+
+      // parent_item_key shape: "sku:<id>:<label>" or "device:<id>"
+      const parts = meta.parent_item_key.split(":");
+      const kind = parts[0];
+      const parentId = parts[1];
+
+      if (!parentId) continue;
+
+      if (kind === "sku") {
+        const { error: buErr } = await supabase
+          .from("order_items")
+          .update({ battery_upgrade: true })
+          .eq("order_id", orderId)
+          .eq("sku_product_id", parentId)
+          .eq("battery_upgrade", false); // idempotency guard
+        if (buErr) {
+          console.error("[webhook] failed to set battery_upgrade on sku order_item:", buErr);
+        }
+      } else if (kind === "device") {
+        const { error: buErr } = await supabase
+          .from("order_items")
+          .update({ battery_upgrade: true })
+          .eq("order_id", orderId)
+          .eq("device_id", parentId)
+          .eq("battery_upgrade", false); // idempotency guard
+        if (buErr) {
+          console.error("[webhook] failed to set battery_upgrade on device order_item:", buErr);
+        }
+      }
+    }
+  } catch (err) {
+    console.error(
+      "[webhook] failed to set order_items.battery_upgrade — migration not applied?",
+      err,
+    );
+    // Non-fatal: order completion must not be blocked by this
+  }
+
+  // 7. Increment discount code usage
   if (order.discount_code_id) {
     const { error: discountError } = await supabase.rpc(
       "increment_discount_usage",
@@ -161,7 +214,7 @@ export async function handleCheckoutCompleted(
     }
   }
 
-  // 7. Generate warranty certificates for device items
+  // 8. Generate warranty certificates for device items
   if (deviceIds.length > 0) {
     try {
       await generateWarrantiesForOrder(orderId);
@@ -171,14 +224,14 @@ export async function handleCheckoutCompleted(
     }
   }
 
-  // 8. Fetch customer details for confirmation email
+  // 9. Fetch customer details for confirmation email
   const { data: customer } = await supabase
     .from("customers")
     .select("email, name, phone")
     .eq("id", order.customer_id)
     .single();
 
-  // 9. Resolve product names and images for email (shared by all notifications)
+  // 10. Resolve product names and images for email (shared by all notifications)
   const fmtKr = (ore: number) =>
     new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
 
@@ -240,7 +293,7 @@ export async function handleCheckoutCompleted(
     });
   }
 
-  // 10. Send order confirmation email with product names + images
+  // 11. Send order confirmation email with product names + images
   if (customer) {
     try {
       await sendOrderConfirmation({
@@ -266,7 +319,7 @@ export async function handleCheckoutCompleted(
     }
   }
 
-  // 11. Send push notification to staff (Pushover — cashregister sound)
+  // 12. Send push notification to staff (Pushover — cashregister sound)
   try {
     await notifyNewOrder({
       orderNumber: order.order_number,
@@ -282,7 +335,7 @@ export async function handleCheckoutCompleted(
     console.error("[webhook] pushover notification failed:", notifyErr);
   }
 
-  // 12. Send staff email notification (non-fatal)
+  // 13. Send staff email notification (non-fatal)
   try {
     await sendStaffOrderNotification({
       orderNumber: order.order_number,
