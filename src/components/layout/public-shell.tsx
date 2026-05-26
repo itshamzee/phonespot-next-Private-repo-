@@ -9,6 +9,7 @@ import { CartUpsellRouter } from "@/components/cart/cart-upsell-router";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { NewsletterPopup } from "@/components/ui/newsletter-popup";
 import { MessengerChat } from "@/components/ui/messenger-chat";
+import { SommerBundleBar } from "@/components/layout/sommer-bundle-bar";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <CartProvider>
+      <SommerBundleBar />
       <Header />
       <main className="overflow-x-hidden">{children}</main>
       <Footer />
