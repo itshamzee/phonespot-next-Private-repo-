@@ -9,9 +9,9 @@ export const SOMMER_BUNDLE_2026 = {
   /** Existing Tempered Glass SKU id (one-size-fits-all). */
   glassSkuId: "0a718861-eae0-4c83-8cea-70d114a89fea",
   /** Retail price of the Tempered Glass in øre, used for strikethrough display. */
-  glassRetailPriceOere: 15900,
+  glass_retail_price_oere: 15900,
   /** Retail price of the TPU cover in øre, used for strikethrough display. */
-  tpuRetailPriceOere: 9900,
+  tpu_retail_price_oere: 9900,
 } as const;
 
 /**
@@ -33,7 +33,7 @@ export const TPU_CASE_BY_TEMPLATE_ID: Record<string, string> = {
   "ba80845e-1af0-40d5-9c00-439f1130219b": "d726a97d-c599-469d-b357-52113b753ac2", // Apple iPhone 14
   "7f437667-98ab-45ef-9d60-a1cadd9764ea": "8a0996dd-85e2-456b-b5d1-997cfec302cb", // Apple iPhone 14 Pro
   "2ac97ca1-0613-49c8-872c-25aab0402c46": "889f24e2-2f82-4474-8273-66b2ce14a78b", // Apple iPhone 14 Pro Max
-  "9762d334-4481-4eea-8dc4-019997aca75e": "889f24e2-2f82-4474-8273-66b2ce14a78b", // Apple iPhone 14 Pro Max (eSIM Only)
+  "9762d334-4481-4eea-8dc4-019997aca75e": "889f24e2-2f82-4474-8273-66b2ce14a78b", // Apple iPhone 14 Pro Max (eSIM Only — same SKU as iPhone 14 Pro Max; eSIM is a software variant only)
   "736e3693-0496-4aa0-99f9-439810613221": "e9183739-49ad-41c2-9567-f9d019bda8bb", // Apple iPhone 15
   "8d07ae6f-3e21-495c-ad2a-b5105d7083ef": "c4bff159-a327-4e8a-b750-2c51a3103ee7", // Apple iPhone 15 Plus
   "8c6a8157-f6fa-4495-a52e-e98d87f552a1": "77bfd4bf-44a5-42a2-94fb-e4c2c32af3c8", // Apple iPhone 15 Pro
@@ -61,7 +61,7 @@ export function getTpuCaseSkuId(templateId: string): string | null {
 export const BATTERY_UPGRADE = {
   /** SKU-style identifier for the battery upgrade line item in Stripe. Not a real DB SKU; constructed at line-item build time. */
   kind: "battery-upgrade" as const,
-  priceOere: 30000,
+  price_oere: 30000,
   /** Days the upgrade adds to shipping SLA. */
   shippingDelayLabel: "Forlænger levering til 2-4 dage",
 } as const;

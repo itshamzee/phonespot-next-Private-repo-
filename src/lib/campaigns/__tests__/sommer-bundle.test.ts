@@ -31,4 +31,16 @@ describe("Sommer Bundle 2026 campaign config", () => {
   it("has at least one TPU mapping populated", () => {
     expect(Object.keys(TPU_CASE_BY_TEMPLATE_ID).length).toBeGreaterThan(0);
   });
+
+  it("is active at exact start moment (00:00 +02:00 on 2026-05-26)", () => {
+    expect(isCampaignActive(new Date("2026-05-26T00:00:00+02:00"))).toBe(true);
+  });
+
+  it("is active at exact end moment (23:59:59 +02:00 on 2026-06-30)", () => {
+    expect(isCampaignActive(new Date("2026-06-30T23:59:59+02:00"))).toBe(true);
+  });
+
+  it("is not active 1 ms past end", () => {
+    expect(isCampaignActive(new Date("2026-06-30T23:59:59.001+02:00"))).toBe(false);
+  });
 });
