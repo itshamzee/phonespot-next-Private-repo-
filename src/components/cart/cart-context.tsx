@@ -11,7 +11,6 @@ import {
 } from "react";
 import type {
   CartState,
-  CartAction,
   CartTotals,
   CartDeviceItem,
   CartSkuItem,
@@ -20,72 +19,7 @@ import type {
 import { cartItemKey } from "@/lib/cart/types";
 import { loadCart, saveCart, clearCartStorage } from "@/lib/cart/storage";
 import { calcTotals } from "@/lib/cart/utils";
-
-// ---------------------------------------------------------------------------
-// Reducer
-// ---------------------------------------------------------------------------
-
-function cartReducer(state: CartState, action: CartAction): CartState {
-  switch (action.type) {
-    case "ADD_DEVICE": {
-      // Prevent duplicate device entries
-      const exists = state.items.some(
-        (i) => i.type === "device" && i.deviceId === action.item.deviceId,
-      );
-      if (exists) return state;
-      return { ...state, items: [...state.items, action.item] };
-    }
-    case "ADD_SKU": {
-      const existingIndex = state.items.findIndex(
-        (i) => i.type === "sku_product" && i.skuProductId === action.item.skuProductId,
-      );
-      if (existingIndex !== -1) {
-        const updated = state.items.map((item, idx) => {
-          if (idx !== existingIndex) return item;
-          const sku = item as CartSkuItem;
-          return { ...sku, quantity: sku.quantity + action.item.quantity };
-        });
-        return { ...state, items: updated };
-      }
-      return { ...state, items: [...state.items, action.item] };
-    }
-    case "REMOVE_ITEM": {
-      return {
-        ...state,
-        items: state.items.filter((i) => cartItemKey(i) !== action.key),
-      };
-    }
-    case "UPDATE_SKU_QUANTITY": {
-      if (action.quantity <= 0) {
-        return {
-          ...state,
-          items: state.items.filter(
-            (i) => !(i.type === "sku_product" && i.skuProductId === action.skuProductId),
-          ),
-        };
-      }
-      return {
-        ...state,
-        items: state.items.map((item) => {
-          if (item.type !== "sku_product" || item.skuProductId !== action.skuProductId)
-            return item;
-          return { ...item, quantity: action.quantity };
-        }),
-      };
-    }
-    case "APPLY_DISCOUNT": {
-      return { ...state, discount: action.discount };
-    }
-    case "REMOVE_DISCOUNT": {
-      return { ...state, discount: null };
-    }
-    case "CLEAR": {
-      return { items: [], discount: null };
-    }
-    default:
-      return state;
-  }
-}
+import { cartReducer } from "@/lib/cart/reducer";
 
 // ---------------------------------------------------------------------------
 // Shipping cost (flat rate, free above threshold)
