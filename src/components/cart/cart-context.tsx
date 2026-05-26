@@ -47,6 +47,13 @@ interface CartContextValue {
   closeUpsell: () => void;
   addDevice: (item: CartDeviceItem) => Promise<void>;
   addSku: (item: CartSkuItem) => void;
+  /** Atomically add an iPhone + glass + TPU (+ optional battery upgrade). */
+  addIPhoneWithBundle: (args: {
+    iphone: CartSkuItem;
+    glass: CartSkuItem;
+    tpu: CartSkuItem;
+    batteryUpgrade?: CartSkuItem;
+  }) => void;
   removeItem: (key: string) => Promise<void>;
   updateSkuQuantity: (skuProductId: string, quantity: number) => void;
   applyDiscount: (code: string) => Promise<{ error: string | null }>;
@@ -129,6 +136,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "ADD_SKU", item });
   }, []);
 
+  const addIPhoneWithBundle = useCallback(
+    (args: { iphone: CartSkuItem; glass: CartSkuItem; tpu: CartSkuItem; batteryUpgrade?: CartSkuItem }) => {
+      dispatch({ type: "ADD_IPHONE_WITH_BUNDLE", ...args });
+    },
+    [],
+  );
+
   const removeItem = useCallback(
     async (key: string) => {
       const target = cartState.items.find((i) => cartItemKey(i) === key);
@@ -206,6 +220,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeUpsell,
       addDevice,
       addSku,
+      addIPhoneWithBundle,
       removeItem,
       updateSkuQuantity,
       applyDiscount,
@@ -223,6 +238,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeUpsell,
       addDevice,
       addSku,
+      addIPhoneWithBundle,
       removeItem,
       updateSkuQuantity,
       applyDiscount,
