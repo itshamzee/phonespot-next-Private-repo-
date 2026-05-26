@@ -33,7 +33,7 @@ export async function handleCheckoutCompleted(
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
        subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token,
-       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)`,
+       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade)`,
     )
     .eq("id", orderId)
     .single();
@@ -55,6 +55,7 @@ export async function handleCheckoutCompleted(
     sku_product_id: string | null;
     quantity: number;
     unit_price: number;
+    battery_upgrade?: boolean;
   }> = (order as any).order_items ?? [];
 
   // 2. Collect device IDs to fetch purchase_price and vat_scheme
@@ -246,6 +247,7 @@ export async function handleCheckoutCompleted(
     totalPrice: number;
     title: string;
     image?: string;
+    batteryUpgrade?: boolean;
   }> = [];
 
   for (const item of orderItems) {
@@ -290,12 +292,18 @@ export async function handleCheckoutCompleted(
       totalPrice: item.unit_price * item.quantity,
       title: title || (item.item_type === "device" ? "Brugt enhed" : "Produkt"),
       image,
+      batteryUpgrade: item.battery_upgrade ?? false,
     });
   }
 
   // 11. Send order confirmation email with product names + images
   if (customer) {
     try {
+      // bundle_savings_oere is stored in Stripe session metadata (set at checkout creation).
+      // Fall back to 0 if absent — the email template will also compute it from items as a
+      // secondary fallback.
+      const bundleSavingsOere = Number(session.metadata?.bundle_savings_oere ?? 0) || 0;
+
       await sendOrderConfirmation({
         orderId,
         orderNumber: order.order_number,
@@ -313,6 +321,7 @@ export async function handleCheckoutCompleted(
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
         shippingMethod: (order as any).shipping_method ?? undefined,
+        bundleSavingsOere: bundleSavingsOere > 0 ? bundleSavingsOere : undefined,
       });
     } catch (emailErr) {
       console.error("[webhook] failed to send confirmation email:", emailErr);

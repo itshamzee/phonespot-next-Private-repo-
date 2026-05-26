@@ -7,6 +7,16 @@ import {
   emailButton,
   emailItemRow,
 } from "@/lib/email/brand";
+import {
+  SOMMER_BUNDLE_2026,
+  TPU_CASE_BY_TEMPLATE_ID,
+} from "@/lib/campaigns/sommer-bundle";
+
+// Pre-compute the set of all bundle freebie SKU IDs for O(1) lookup.
+const BUNDLE_FREEBIE_SKU_IDS: ReadonlySet<string> = new Set([
+  SOMMER_BUNDLE_2026.glassSkuId,
+  ...Object.values(TPU_CASE_BY_TEMPLATE_ID),
+]);
 
 export interface OrderConfirmationItem {
   id: string;
@@ -18,6 +28,8 @@ export interface OrderConfirmationItem {
   totalPrice: number;
   title?: string;
   image?: string;
+  /** Set to true when this order_item had the battery upgrade. */
+  batteryUpgrade?: boolean;
 }
 
 export interface SendOrderConfirmationParams {
@@ -36,6 +48,8 @@ export interface SendOrderConfirmationParams {
   discountCode?: string;
   shippingMethod?: string;
   shippingAddress?: string;
+  /** Total Sommer Bundle savings in øre, shown as a separate line in the totals block. */
+  bundleSavingsOere?: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,6 +104,84 @@ function buildStatusBar(): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Sommer Bundle pill + battery upgrade pill helpers (inline-style, email-safe)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Returns true when the item is a Sommer Bundle freebie (unit_price = 0 bundle SKU). */
+function isBundleFreebie(item: OrderConfirmationItem): boolean {
+  if (item.itemType !== "sku_product") return false;
+  if (item.unitPrice !== 0) return false;
+  if (!item.skuProductId) return false;
+  return BUNDLE_FREEBIE_SKU_IDS.has(item.skuProductId);
+}
+
+/** Returns the retail strikethrough price for a bundle freebie item in øre. */
+function bundleRetailPrice(item: OrderConfirmationItem): number {
+  if (item.skuProductId === SOMMER_BUNDLE_2026.glassSkuId) {
+    return SOMMER_BUNDLE_2026.glass_retail_price_oere;
+  }
+  // All other freebies are TPU covers.
+  return SOMMER_BUNDLE_2026.tpu_retail_price_oere;
+}
+
+function bundleItemRow(item: OrderConfirmationItem, hasImages: boolean): string {
+  const title =
+    item.title ?? (item.itemType === "device" ? "Brugt enhed" : "Produkt");
+  const qtyLabel = item.quantity > 1 ? ` &times;${item.quantity}` : "";
+  const retailStr = formatOere(bundleRetailPrice(item));
+
+  const thumbnailCell = item.image
+    ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;">
+         <img src="${item.image}" alt="${title}" width="56" height="56"
+              style="width:56px;height:56px;object-fit:cover;border-radius:6px;display:block;border:1px solid ${BRAND.sand};" />
+       </td>`
+    : hasImages
+      ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;"></td>`
+      : "";
+
+  return `
+    <tr>
+      ${thumbnailCell}
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};">
+        ${title}${qtyLabel}
+        <span style="display:inline-block;margin-left:6px;background:#EBF4EF;color:#3A6B4E;font-size:10px;font-weight:700;letter-spacing:0.3px;padding:2px 7px;border-radius:20px;vertical-align:middle;line-height:16px;">Sommer Bundle</span>
+      </td>
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;text-align:right;white-space:nowrap;">
+        <span style="color:#AAAAAA;text-decoration:line-through;margin-right:4px;font-size:13px;">${retailStr}</span>
+        <span style="color:#3A6B4E;font-weight:700;">Inkluderet gratis</span>
+      </td>
+    </tr>`;
+}
+
+function batteryUpgradeItemRow(item: OrderConfirmationItem, hasImages: boolean): string {
+  const title =
+    item.title ?? (item.itemType === "device" ? "Brugt enhed" : "Produkt");
+  const qtyLabel = item.quantity > 1 ? ` &times;${item.quantity}` : "";
+  const priceStr = formatOere(item.totalPrice);
+
+  const thumbnailCell = item.image
+    ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;">
+         <img src="${item.image}" alt="${title}" width="56" height="56"
+              style="width:56px;height:56px;object-fit:cover;border-radius:6px;display:block;border:1px solid ${BRAND.sand};" />
+       </td>`
+    : hasImages
+      ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;"></td>`
+      : "";
+
+  return `
+    <tr>
+      ${thumbnailCell}
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};">
+        ${title}${qtyLabel}
+        <span style="display:inline-block;margin-left:6px;background:#FEF3E2;color:#B45309;font-size:10px;font-weight:700;letter-spacing:0.3px;padding:2px 7px;border-radius:20px;vertical-align:middle;line-height:16px;">Batteri-opgradering</span>
+      </td>
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};text-align:right;white-space:nowrap;">
+        +${priceStr}
+      </td>
+    </tr>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Items table using brand emailItemRow helper
 // ─────────────────────────────────────────────────────────────────────────────
 function buildItemsTable(items: OrderConfirmationItem[]): string {
@@ -99,6 +191,15 @@ function buildItemsTable(items: OrderConfirmationItem[]): string {
     .map((item) => {
       const title =
         item.title ?? (item.itemType === "device" ? "Brugt enhed" : "Produkt");
+
+      if (isBundleFreebie(item)) {
+        return bundleItemRow(item, hasImages);
+      }
+
+      if (item.batteryUpgrade) {
+        return batteryUpgradeItemRow(item, hasImages);
+      }
+
       return emailItemRow({
         title,
         quantity: item.quantity,
@@ -141,6 +242,26 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
          </tr>`
       : "";
 
+  // Compute bundle savings from items if not explicitly provided.
+  const bundleSavings =
+    params.bundleSavingsOere ??
+    params.items.reduce((sum, item) => {
+      if (!isBundleFreebie(item)) return sum;
+      return sum + bundleRetailPrice(item) * item.quantity;
+    }, 0);
+
+  const bundleSavingsRow =
+    bundleSavings > 0
+      ? `<tr>
+           <td style="padding:6px 0;font-size:14px;color:#3A6B4E;font-weight:600;">
+             Sommer Bundle besparelse
+           </td>
+           <td style="padding:6px 0;font-size:14px;color:#3A6B4E;font-weight:600;text-align:right;white-space:nowrap;">
+             &minus;${formatOere(bundleSavings)}
+           </td>
+         </tr>`
+      : "";
+
   return `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
       <tr>
@@ -150,6 +271,7 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
         </td>
       </tr>
       ${discountRow}
+      ${bundleSavingsRow}
       <tr>
         <td style="padding:6px 0;font-size:14px;color:#666;">
           Fragt${params.shippingMethod ? ` <span style="color:#AAAAAA;">(${params.shippingMethod})</span>` : ""}
