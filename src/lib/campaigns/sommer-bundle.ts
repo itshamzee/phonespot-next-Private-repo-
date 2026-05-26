@@ -59,9 +59,9 @@ export function getTpuCaseSkuId(templateId: string): string | null {
 
 /** Battery upgrade pricing (separate concept from bundle, but lives in the same campaign module for cohesion). */
 export const BATTERY_UPGRADE = {
-  /** SKU-style identifier for the battery upgrade line item in Stripe. Not a real DB SKU; constructed at line-item build time. */
   kind: "battery-upgrade" as const,
+  /** Stable sku_products id created by 20260526_battery_upgrade_sku.sql migration. */
+  sku_id: "00000000-0000-4000-8000-000000000bb1",
   price_oere: 30000,
-  /** Days the upgrade adds to shipping SLA. */
   shippingDelayLabel: "Forlænger levering til 2-4 dage",
 } as const;

@@ -83,12 +83,13 @@ export function AddToCartButton({
           const batteryUpgrade: CartSkuItem | undefined = batteryUpgradeSelected
             ? {
                 type: "sku_product",
-                skuProductId: `battery-upgrade:${skuProductId}`,
+                skuProductId: BATTERY_UPGRADE.sku_id, // real UUID, FK-safe
                 title: `Nyt 100% batteri — ${title ?? "iPhone"}`,
                 price: BATTERY_UPGRADE.price_oere,
                 quantity: 1,
                 image: null,
                 kind: "battery-upgrade",
+                upgradeParentItemKey: undefined, // set inside reducer
               }
             : undefined;
 
