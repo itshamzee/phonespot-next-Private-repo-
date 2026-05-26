@@ -7,11 +7,11 @@
     },
     {
       "path": "/api/cron/release-reservations",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/recovery",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/foneday-sync",
