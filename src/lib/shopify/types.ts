@@ -35,6 +35,8 @@ export interface ProductVariant {
   price: Money;
   compareAtPrice: Money | null;
   storeAvailability?: StoreAvailability[];
+  /** Per-device battery health (0-100). Populated for refurbished phones. */
+  batteryHealth?: number;
 }
 
 /** Full product representation used throughout the storefront. */

@@ -83,7 +83,7 @@ export default async function BrandPage({
     let relatedProducts: Product[] = [];
     try {
       const templates = await getPublishedTemplates("laptop");
-      relatedProducts = templates.slice(0, 4).map(templateToProduct);
+      relatedProducts = templates.slice(0, 4).map((t) => templateToProduct(t));
     } catch { /* */ }
 
     return (
@@ -137,7 +137,7 @@ export default async function BrandPage({
     const templates = await getPublishedTemplates("laptop");
     const skuProducts = await getPublishedSkuProducts("laptop");
     allProducts = [
-      ...templates.map(templateToProduct),
+      ...templates.map((t) => templateToProduct(t)),
       ...skuProducts.map(skuProductToProduct),
     ];
   } catch {

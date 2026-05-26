@@ -83,7 +83,7 @@ export default async function CollectionPage({
     // Device categories: use product templates
     if (["iphone", "ipad", "smartphone", "laptop", "smartwatch"].includes(category ?? "")) {
       const templates = await getPublishedTemplates(category);
-      products = templates.map(templateToProduct);
+      products = templates.map((t) => templateToProduct(t));
     } else {
       // Accessory categories: use SKU products
       const skuProducts = await getPublishedSkuProducts(category);

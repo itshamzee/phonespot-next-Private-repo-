@@ -10,7 +10,7 @@ import {
   getAvailableDevices,
   getPublishedTemplates,
 } from "@/lib/supabase/product-queries";
-import { skuProductToProduct } from "@/lib/supabase/product-adapter";
+import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-adapter";
 
 export const revalidate = 60;
 import type { Product } from "@/lib/shopify/types";
@@ -202,6 +202,20 @@ export default async function ProductPage({
       ? Math.min(...availableDevices.map((d) => d.selling_price ?? 0).filter(Boolean))
       : template.base_price_a;
 
+    // Derive battery health: use the most conservative (lowest) value across listed devices.
+    const batteryHealthValues = availableDevices
+      .map((d) => (d as { battery_health?: number | null }).battery_health)
+      .filter((v): v is number => v != null);
+    const templateBatteryHealth = batteryHealthValues.length > 0
+      ? Math.min(...batteryHealthValues)
+      : undefined;
+
+    // Build a typed Product for spec-table + ProductDetails, passing devices for variant enrichment.
+    const templateProduct = templateToProduct(
+      { ...template, min_price: minPrice, device_count: availableDevices.length },
+      availableDevices as { battery_health: number | null; storage?: string | null; grade?: string | null }[],
+    );
+
     const breadcrumbJsonLd = {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
@@ -343,7 +357,15 @@ export default async function ProductPage({
           </div>
         </SectionWrapper>
 
-        {/* ── 4. Trustpilot anmeldelser ── */}
+        {/* ── 4. Om dette produkt ── */}
+        <SectionWrapper background="cream">
+          <Heading as="h2" size="md" className="mb-8 text-center">
+            Om dette produkt
+          </Heading>
+          <ProductDetails product={templateProduct} batteryHealth={templateBatteryHealth} />
+        </SectionWrapper>
+
+        {/* ── 5. Trustpilot anmeldelser ── */}
         <SectionWrapper>
           <Heading as="h2" size="lg">
             Trustpilot Anmeldelser

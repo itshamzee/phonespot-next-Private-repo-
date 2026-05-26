@@ -4,7 +4,17 @@
 import type { Product, ShopifyImage, ProductVariant } from "@/lib/shopify/types";
 import type { ProductTemplate, SkuProduct } from "./platform-types";
 
-export function templateToProduct(t: ProductTemplate & { min_price?: number | null; device_count?: number }): Product {
+/** Minimal device shape needed for battery health aggregation. */
+interface DeviceWithBatteryHealth {
+  battery_health: number | null;
+  storage?: string | null;
+  grade?: string | null;
+}
+
+export function templateToProduct(
+  t: ProductTemplate & { min_price?: number | null; device_count?: number },
+  devices?: DeviceWithBatteryHealth[],
+): Product {
   const price = t.min_price ?? t.base_price_a ?? t.base_price_c ?? 0;
   const priceStr = (price / 100).toFixed(2);
 
@@ -26,6 +36,24 @@ export function templateToProduct(t: ProductTemplate & { min_price?: number | nu
 
   for (const storage of storages) {
     for (const grade of grades) {
+      // Collect battery_health values from devices matching this storage+grade bucket.
+      // Use Math.min for the most conservative claim (worst battery in the batch).
+      let batteryHealth: number | undefined = undefined;
+      if (devices && devices.length > 0) {
+        const gradeKey = grade.label === "Som ny Stand" ? "A" : grade.label === "God Stand" ? "B" : "C";
+        const values = devices
+          .filter(
+            (d) =>
+              d.battery_health != null &&
+              (storage === "Standard" || d.storage == null || d.storage === storage) &&
+              (d.grade == null || d.grade === gradeKey),
+          )
+          .map((d) => d.battery_health as number);
+        if (values.length > 0) {
+          batteryHealth = Math.min(...values);
+        }
+      }
+
       variants.push({
         id: `${t.id}-${storage}-${grade.label}`,
         title: `${storage} / ${grade.label}`,
@@ -36,6 +64,7 @@ export function templateToProduct(t: ProductTemplate & { min_price?: number | nu
         ],
         price: { amount: ((grade.price ?? 0) / 100).toFixed(2), currencyCode: "DKK" },
         compareAtPrice: null,
+        ...(batteryHealth !== undefined && { batteryHealth }),
       });
     }
   }

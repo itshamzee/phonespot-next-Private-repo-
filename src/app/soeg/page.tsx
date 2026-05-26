@@ -47,7 +47,7 @@ export default async function SearchPage({
     if (query) {
       const { templates, skuProducts } = await searchProducts(query);
       products = [
-        ...templates.map(templateToProduct),
+        ...templates.map((t) => templateToProduct(t)),
         ...skuProducts.map(skuProductToProduct),
       ];
     }
