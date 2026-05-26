@@ -24,7 +24,7 @@ const PHONE_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batteriet er testet til min. 85% kapacitet",
+      "Batteriet er testet og verificeret — mange Grade A-enheder har 100% batteri",
     ],
     displayImage: "/quality/grade-a-display.png",
     frameImage: "/quality/grade-a-frame.png",
