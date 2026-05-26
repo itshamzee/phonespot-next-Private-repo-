@@ -8,6 +8,7 @@ import {
   emailItemRow,
 } from "@/lib/email/brand";
 import {
+  BATTERY_UPGRADE,
   SOMMER_BUNDLE_2026,
   TPU_CASE_BY_TEMPLATE_ID,
 } from "@/lib/campaigns/sommer-bundle";
@@ -196,7 +197,10 @@ function buildItemsTable(items: OrderConfirmationItem[]): string {
         return bundleItemRow(item, hasImages);
       }
 
-      if (item.batteryUpgrade) {
+      const isBatteryUpgrade =
+        item.batteryUpgrade ||
+        item.skuProductId === BATTERY_UPGRADE.sku_id;
+      if (isBatteryUpgrade) {
         return batteryUpgradeItemRow(item, hasImages);
       }
 

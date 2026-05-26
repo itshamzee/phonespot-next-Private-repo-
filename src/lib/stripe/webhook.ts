@@ -167,10 +167,16 @@ export async function handleCheckoutCompleted(
       if (meta.kind !== "battery-upgrade") continue;
       if (!meta.parent_item_key) continue;
 
-      // parent_item_key shape: "sku:<id>:<label>" or "device:<id>"
-      const parts = meta.parent_item_key.split(":");
-      const kind = parts[0];
-      const parentId = parts[1];
+      // parent_item_key shape: "sku:<id>[:<variantLabel>]" or "device:<id>"
+      // Split on the first colon only so variantLabels containing colons
+      // (e.g. "Farve: Sort") don't corrupt the UUID extraction.
+      const firstColon = meta.parent_item_key.indexOf(":");
+      if (firstColon < 0) continue;
+      const kind = meta.parent_item_key.slice(0, firstColon);
+      // The rest is "<id>[:<variantLabel>]" — the id ends at the next colon (or end).
+      const rest = meta.parent_item_key.slice(firstColon + 1);
+      const secondColon = rest.indexOf(":");
+      const parentId = secondColon < 0 ? rest : rest.slice(0, secondColon);
 
       if (!parentId) continue;
 

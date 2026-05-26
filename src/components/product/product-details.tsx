@@ -160,7 +160,7 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
               ? "100% (testet og verificeret)"
               : typeof batteryHealth === "number"
                 ? `${batteryHealth}% (testet og verificeret)`
-                : "Li-Ion, hurtigopladning (50% på 30 min.), MagSafe"
+                : "Testet til min. 85% kapacitet"
         },
         { label: "Forbindelse", value: "5G, Wi-Fi 6/6E, Bluetooth 5.3, NFC, UWB" },
         { label: "Vandtæthed", value: isPro ? "IP68 (6 meter, 30 min.)" : "IP68 (6 meter, 30 min.)" },
