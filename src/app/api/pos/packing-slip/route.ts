@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       shipping_method, shipping_address, tracking_number, tracking_url,
       notes, created_at, confirmed_at,
       customer:customers(name, email, phone),
-      order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price)
+      order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price, battery_upgrade)
     `)
     .eq("id", orderId)
     .single();
@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
     quantity: number;
     unitPrice: number;
     totalPrice: number;
+    batteryUpgrade: boolean;
   }
 
   const resolvedItems: ResolvedItem[] = [];
@@ -80,6 +81,7 @@ export async function GET(req: NextRequest) {
         quantity: 1,
         unitPrice: item.unit_price,
         totalPrice: item.total_price || item.unit_price,
+        batteryUpgrade: !!item.battery_upgrade,
       });
     } else if (item.item_type === "sku_product" && item.sku_product_id) {
       const { data: sku } = await supabase
@@ -95,6 +97,7 @@ export async function GET(req: NextRequest) {
         quantity: item.quantity,
         unitPrice: item.unit_price,
         totalPrice: item.total_price || item.unit_price * item.quantity,
+        batteryUpgrade: !!item.battery_upgrade,
       });
     }
   }
@@ -126,6 +129,10 @@ export async function GET(req: NextRequest) {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
            </div>`;
 
+      const batteryStamp = item.batteryUpgrade
+        ? `<div style="margin-top:8px;display:inline-block;border:2px solid #dc2626;padding:4px 12px;font-family:monospace;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em;color:#b91c1c;">&#9889; Skift batteri til 100% f&oslash;r forsendelse</div>`
+        : "";
+
       return `
         <tr style="background:${bgColor};">
           <td style="padding:12px 16px;vertical-align:middle;width:64px;">
@@ -134,6 +141,7 @@ export async function GET(req: NextRequest) {
           <td style="padding:12px 8px;vertical-align:middle;">
             <div style="font-weight:600;color:#111;font-size:14px;">${item.name}</div>
             ${item.details ? `<div style="color:#6b7280;font-size:12px;margin-top:2px;">${item.details}</div>` : ""}
+            ${batteryStamp}
           </td>
           <td style="padding:12px 8px;text-align:center;vertical-align:middle;color:#374151;font-size:14px;">
             ${item.quantity}

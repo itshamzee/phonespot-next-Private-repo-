@@ -21,6 +21,7 @@ interface OrderData {
     device_id: string | null;
     sku_product_id: string | null;
     quantity: number;
+    battery_upgrade: boolean | null;
   }>;
 }
 
@@ -28,6 +29,7 @@ interface PackingItem {
   name: string;
   qty: number;
   barcode: string | null;
+  batteryUpgrade: boolean;
 }
 
 export default function PakkelistePage() {
@@ -48,7 +50,7 @@ export default function PakkelistePage() {
         id, order_number, status, total, created_at, confirmed_at,
         shipping_address, shipping_method, notes,
         customer:customers(name, email, phone),
-        order_items(id, item_type, device_id, sku_product_id, quantity)
+        order_items(id, item_type, device_id, sku_product_id, quantity, battery_upgrade)
       `)
       .eq("id", id)
       .single();
@@ -80,6 +82,7 @@ export default function PakkelistePage() {
           name,
           qty: item.quantity,
           barcode: dev?.barcode || null,
+          batteryUpgrade: !!item.battery_upgrade,
         });
       } else if (item.sku_product_id) {
         const { data: sku } = await supabase
@@ -91,6 +94,7 @@ export default function PakkelistePage() {
           name: sku?.title || "Tilbehoer",
           qty: item.quantity,
           barcode: sku?.sku || null,
+          batteryUpgrade: !!item.battery_upgrade,
         });
       }
     }
@@ -198,7 +202,14 @@ export default function PakkelistePage() {
                   }} />
                 </td>
                 <td style={{ textAlign: "center", padding: "12px 0", fontWeight: "bold", fontSize: 15 }}>{item.qty}</td>
-                <td style={{ padding: "12px 0" }}>{item.name}</td>
+                <td style={{ padding: "12px 0" }}>
+                  {item.name}
+                  {item.batteryUpgrade && (
+                    <div className="mt-2 inline-block border-2 border-red-600 px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider text-red-700">
+                      &#9889; Skift batteri til 100% f&oslash;r forsendelse
+                    </div>
+                  )}
+                </td>
                 <td style={{ padding: "12px 0", fontSize: 12, color: "#666", fontFamily: "monospace" }}>{item.barcode || "—"}</td>
               </tr>
             ))}
