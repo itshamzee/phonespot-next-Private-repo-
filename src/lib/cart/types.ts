@@ -75,8 +75,10 @@ export interface CartState {
 export interface CartTotals {
   subtotal: number;
   discountAmount: number;
-  /** Total saved from Spot bundle pricing (3-for-2 + Lens combo). Display-only at checkout. */
+  /** Spot 3-for-2 + Lens combo savings (already existed). */
   bundleDiscountAmount: number;
+  /** NEW: Sommer Bundle savings — sum of retailPrice across bundleAttached items. */
+  bundleSavingsAmount: number;
   shippingCost: number;
   total: number;
   itemCount: number;
