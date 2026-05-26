@@ -17,6 +17,8 @@ export interface CreateCheckoutSessionParams {
   discountAmount: number;
   /** Total Spot bundle discount (3-for-2 + Lens combo) in øre. */
   bundleDiscountAmount: number;
+  /** Total Sommer Bundle savings (retail value of 0-priced bundle freebies) in øre. */
+  bundleSavingsAmount?: number;
   total: number;
 }
 
@@ -56,22 +58,41 @@ function buildLineItems(
     .filter((vi) => vi.available)
     .map((vi) => {
       const item: CartItem = vi.item;
-      const name =
-        item.type === "device"
-          ? `${item.title} — Grade ${item.grade} (${item.storage}, ${item.color})`
-          : item.title;
+      const isFreebie = item.type === "sku_product" && !!item.bundleAttached;
+      const isBatteryUpgrade = item.type === "sku_product" && item.kind === "battery-upgrade";
+
+      let name: string;
+      if (item.type === "device") {
+        name = `${item.title} — Grade ${item.grade} (${item.storage}, ${item.color})`;
+      } else if (isFreebie) {
+        name = `${item.title} — Sommer Bundle (gratis)`;
+      } else {
+        name = item.title;
+      }
+
       const quantity = item.type === "device" ? 1 : item.quantity;
+      const metadata: Record<string, string> = item.type === "device"
+        ? { device_id: item.deviceId, item_type: "device", sku_product_id: "" }
+        : { sku_product_id: item.skuProductId, item_type: "sku_product", device_id: "" };
+
+      if (isFreebie && item.type === "sku_product" && item.bundleAttached) {
+        metadata.bundle_campaign_id = item.bundleAttached.campaignId;
+        metadata.parent_item_key = item.bundleAttached.parentItemKey;
+      }
+      if (isBatteryUpgrade && item.type === "sku_product") {
+        metadata.kind = "battery-upgrade";
+        if (item.upgradeParentItemKey) metadata.parent_item_key = item.upgradeParentItemKey;
+      }
+
       return {
         price_data: {
           currency: "dkk",
           product_data: {
             name,
             images: toStripeImageUrls(item.image, baseUrl),
-            metadata: item.type === "device"
-                ? { device_id: item.deviceId, item_type: "device", sku_product_id: "" }
-                : { sku_product_id: item.skuProductId, item_type: "sku_product", device_id: "" },
+            metadata,
           },
-          unit_amount: vi.serverPrice,
+          unit_amount: vi.serverPrice, // freebies arrive with serverPrice = 0
         },
         quantity,
       };
@@ -79,11 +100,7 @@ function buildLineItems(
 
   if (shippingCost > 0) {
     lineItems.push({
-      price_data: {
-        currency: "dkk",
-        product_data: { name: "Fragt" },
-        unit_amount: shippingCost,
-      },
+      price_data: { currency: "dkk", product_data: { name: "Fragt" }, unit_amount: shippingCost },
       quantity: 1,
     });
   }
@@ -161,6 +178,7 @@ export async function createCheckoutSession(
     metadata: {
       order_id: params.orderId,
       order_number: params.orderNumber,
+      bundle_savings_oere: String(params.bundleSavingsAmount ?? 0),
     },
     payment_intent_data: {
       metadata: {
