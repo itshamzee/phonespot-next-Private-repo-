@@ -189,6 +189,24 @@ export default async function ProductPage({
 
     const related = relatedTemplates.filter((t) => t.id !== template.id).slice(0, 5);
 
+    // Similar in-stock models for the sold-out recovery strip (nearest price).
+    const relatedInStock = relatedTemplates
+      .filter((t) => t.id !== template.id && t.device_count > 0)
+      .sort(
+        (a, b) =>
+          Math.abs((a.min_price ?? 0) - (template.base_price_a ?? 0)) -
+          Math.abs((b.min_price ?? 0) - (template.base_price_a ?? 0)),
+      )
+      .slice(0, 4)
+      .map((t) => ({
+        id: t.id,
+        slug: t.slug,
+        display_name: t.display_name,
+        image: t.images[0] ?? null,
+        min_price: t.min_price,
+        brand: t.brand,
+      }));
+
     const categoryLabel =
       template.category === "iphone" ? "iPhones"
       : template.category === "ipad" ? "iPads"
@@ -276,6 +294,7 @@ export default async function ProductPage({
             template={template}
             devices={availableDevices}
             accessories={accessories}
+            relatedInStock={relatedInStock}
           />
         </section>
 

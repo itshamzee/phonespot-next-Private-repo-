@@ -2,13 +2,27 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { isCampaignActive } from "@/lib/campaigns/sommer-bundle";
+import { isCampaignActive, SOMMER_BUNDLE_2026 } from "@/lib/campaigns/sommer-bundle";
 
 const DISMISS_KEY = "sommer-bundle-dismissed";
+
+/** Build a "Nd HH:MM:SS" countdown string from ms remaining, or null if ended. */
+function formatRemaining(ms: number): string | null {
+  if (ms <= 0) return null;
+  const totalSec = Math.floor(ms / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const clock = `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+  return days > 0 ? `${days}d ${clock}` : clock;
+}
 
 export function SommerBundleBar() {
   const [active, setActive] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [countdown, setCountdown] = useState<string | null>(null);
 
   useEffect(() => {
     setActive(isCampaignActive());
@@ -17,6 +31,20 @@ export function SommerBundleBar() {
     } catch {
       // sessionStorage unavailable — keep dismissed=false
     }
+  }, []);
+
+  // Tick the countdown once per second. Runs client-side only, so no hydration
+  // mismatch; deactivates the bar when the deadline passes.
+  useEffect(() => {
+    const end = SOMMER_BUNDLE_2026.endsAt.getTime();
+    const tick = () => {
+      const remaining = formatRemaining(end - Date.now());
+      setCountdown(remaining);
+      if (remaining === null) setActive(false);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
   function handleDismiss() {
@@ -38,7 +66,11 @@ export function SommerBundleBar() {
         <span>
           <span className="font-semibold">Sommer Bundle:</span>{" "}
           Gratis Tempered Glass + TPU cover med alle iPhones
-          <span className="hidden sm:inline text-green-light"> · Kun til 30. juni</span>
+          {countdown && (
+            <span className="hidden sm:inline text-green-light">
+              {" "}· Slutter om <span className="font-semibold tabular-nums">{countdown}</span>
+            </span>
+          )}
         </span>
         <span className="hidden sm:inline underline underline-offset-4 font-medium">Se iPhones →</span>
       </Link>

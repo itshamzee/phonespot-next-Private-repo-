@@ -74,6 +74,29 @@ export default async function RefurbishedProductPage({ params }: Props) {
     getPublishedSkuProducts(undefined, template.id),
   ]);
 
+  // When this model is fully sold out, fetch similar in-stock models (same
+  // category, nearest price) so the buy box isn't a dead end. Skipped for
+  // in-stock pages to avoid the extra query.
+  const relatedInStock =
+    availableDevices.length === 0
+      ? (await getPublishedTemplates(template.category, { inStock: true }))
+          .filter((t) => t.id !== template.id)
+          .sort(
+            (a, b) =>
+              Math.abs((a.min_price ?? 0) - (template.base_price_a ?? 0)) -
+              Math.abs((b.min_price ?? 0) - (template.base_price_a ?? 0)),
+          )
+          .slice(0, 4)
+          .map((t) => ({
+            id: t.id,
+            slug: t.slug,
+            display_name: t.display_name,
+            image: t.images[0] ?? null,
+            min_price: t.min_price,
+            brand: t.brand,
+          }))
+      : [];
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -164,6 +187,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
           template={template}
           devices={availableDevices}
           accessories={accessories}
+          relatedInStock={relatedInStock}
         />
       </section>
 

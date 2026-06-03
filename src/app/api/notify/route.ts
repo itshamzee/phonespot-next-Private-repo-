@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Du far besked nar produktet er pa lager!",
+      message: "Du får besked når produktet er på lager!",
     });
   } catch (err) {
     console.error("Notify subscribe error:", err);

@@ -6,12 +6,21 @@ const BASE = "https://api.trustpilot.com/v1/business-units";
 
 async function trustpilotFetch<T>(path: string): Promise<T | null> {
   if (!BUSINESS_UNIT_ID || !API_KEY) return null;
-  const res = await fetch(`${BASE}/${BUSINESS_UNIT_ID}${path}`, {
-    headers: { apikey: API_KEY },
-    next: { revalidate: 3600 }, // 1 hour ISR cache
-  });
-  if (!res.ok) return null;
-  return res.json() as Promise<T>;
+  // Bound the request so a slow/unreachable Trustpilot API can never keep the
+  // page's Suspense boundary stuck on "Indlæser anmeldelser...". On any timeout,
+  // network error, or non-OK response we return null and the caller renders its
+  // built-in fallback reviews instead.
+  try {
+    const res = await fetch(`${BASE}/${BUSINESS_UNIT_ID}${path}`, {
+      headers: { apikey: API_KEY },
+      next: { revalidate: 3600 }, // 1 hour ISR cache
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
 }
 
 export async function getTrustpilotSummary(): Promise<TrustpilotSummary | null> {

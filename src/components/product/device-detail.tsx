@@ -21,10 +21,21 @@ import {
   getTpuCaseSkuId,
 } from "@/lib/campaigns/sommer-bundle";
 
+export type RelatedInStockProduct = {
+  id: string;
+  slug: string;
+  display_name: string;
+  image: string | null;
+  min_price: number | null;
+  brand: string;
+};
+
 type DeviceDetailProps = {
   template: ProductTemplate;
   devices: Device[];
   accessories: SkuProduct[];
+  /** In-stock same-category models, shown when this model is fully sold out. */
+  relatedInStock?: RelatedInStockProduct[];
 };
 
 function formatDKK(oere: number): string {
@@ -151,10 +162,13 @@ function getCategoryName(category: string): string {
 /*  Main component                                                     */
 /* ================================================================== */
 
-export function DeviceDetail({ template, devices, accessories }: DeviceDetailProps) {
+export function DeviceDetail({ template, devices, accessories, relatedInStock = [] }: DeviceDetailProps) {
   const { addDevice, addSku, openCart, openUpsell, cartState } = useCart();
 
   const listedDevices = devices.filter((d) => d.status === "listed");
+  // Whole model has no stock in any grade — the page is a dead end unless we
+  // route the buyer to similar in-stock models.
+  const fullySoldOut = listedDevices.length === 0;
 
   // Check if any device has grade "N" (factory new)
   const hasNewGrade = listedDevices.some((d) => d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny")) ||
@@ -186,6 +200,38 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const [batteryUpgradeSelected, setBatteryUpgradeSelected] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
+  const [notifyMessage, setNotifyMessage] = useState<string | null>(null);
+
+  async function handleNotifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (notifyStatus === "submitting") return;
+    setNotifyStatus("submitting");
+    setNotifyMessage(null);
+    try {
+      const res = await fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: notifyEmail,
+          templateId: template.id,
+          gradePreference: selectedGrade === "N" ? "A" : selectedGrade,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotifyStatus("error");
+        setNotifyMessage(data?.error ?? "Noget gik galt. Prøv igen.");
+        return;
+      }
+      setNotifyStatus("done");
+      setNotifyMessage(data?.message ?? "Du får besked når produktet er på lager!");
+    } catch {
+      setNotifyStatus("error");
+      setNotifyMessage("Kunne ikke sende. Tjek din forbindelse og prøv igen.");
+    }
+  }
 
   // Grade filter is reused for availability calculations and final match
   const matchesGrade = (d: Device): boolean => {
@@ -334,6 +380,22 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
 
+  // When the selected grade is sold out, surface other grades of the SAME model
+  // that DO have stock so the customer has a one-click path forward instead of a
+  // dead end. (Storage/color auto-correct via effects once the grade switches.)
+  const otherInStockGrades = availableGrades.filter(
+    (g) => g.grade !== selectedGrade && g.available > 0,
+  );
+
+  // Inline grade clarity: descriptor + savings vs the next grade up, so the
+  // A-vs-B tradeoff is resolved at the selector instead of below the fold.
+  const selectedGradeIdx = availableGrades.findIndex((g) => g.grade === selectedGrade);
+  const betterGrade = selectedGradeIdx > 0 ? availableGrades[selectedGradeIdx - 1] : null;
+  const gradeSavingsVsBetter =
+    betterGrade && betterGrade.price != null && price != null && betterGrade.price > price
+      ? betterGrade.price - price
+      : null;
+
   // Compute store availability from matching devices
   const storeLocations = new Map<string, { name: string; count: number }>();
   for (const d of matchingDevices) {
@@ -348,6 +410,12 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
 
   const categoryName = getCategoryName(template.category);
   const deviceType = getDeviceType(template.category);
+  const categoryListingHref =
+    template.category === "iphone" ? "/iphones"
+    : template.category === "ipad" ? "/ipads"
+    : template.category === "laptop" ? "/baerbare"
+    : template.category === "smartwatch" ? "/smartwatches"
+    : "/smartphones";
 
   // Fire Meta Pixel ViewContent once on mount
   useEffect(() => {
@@ -589,6 +657,22 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
             <GradeSelector grades={availableGrades} selected={selectedGrade} onChange={setSelectedGrade} />
           )}
 
+          {/* Inline grade clarity — descriptor + savings vs the grade one step up */}
+          {gradeDetail && (
+            <div className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#86868B]">
+              <span className="font-semibold text-[#111111]">
+                {gradeDetail.battery}
+              </span>
+              <span>· {gradeDetail.cosmetic}</span>
+              {gradeSavingsVsBetter && betterGrade && (
+                <span className="font-semibold text-[#1A3D2E]">
+                  · spar {formatDKK(gradeSavingsVsBetter)} vs.{" "}
+                  {betterGrade.grade === "N" ? "Apple Certified" : `Grade ${betterGrade.grade}`}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Storage selector */}
           {template.storage_options.length > 0 && (
             <StorageSelector
@@ -672,32 +756,85 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                 <button disabled className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#6E6E73] px-6 py-4 text-base font-bold text-white cursor-not-allowed opacity-70">
                   Udsolgt
                 </button>
-                {/* 3. Notify me when back in stock */}
+
+                {/* In-stock alternatives — one-click path to an available grade */}
+                {otherInStockGrades.length > 0 && (
+                  <div className="rounded-xl border border-[#1A3D2E]/20 bg-[#EFF5F1] p-4">
+                    <p className="text-sm font-semibold text-[#1A3D2E]">
+                      Findes på lager i anden stand
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      {otherInStockGrades.map((g) => (
+                        <button
+                          key={g.grade}
+                          type="button"
+                          onClick={() => setSelectedGrade(g.grade)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#1A3D2E]/25 bg-white px-3 py-2 text-sm font-semibold text-[#1A3D2E] transition-colors hover:border-[#1A3D2E] hover:bg-[#1A3D2E]/[0.04]"
+                        >
+                          {g.grade === "N" ? "Apple Certified" : `Grade ${g.grade}`}
+                          {g.price != null && (
+                            <span className="text-[#111111]">fra {formatDKK(g.price)}</span>
+                          )}
+                          <span className="text-xs font-normal text-[#86868B]">
+                            · {g.available} på lager
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notify me when back in stock — saves to notify_requests */}
                 <div className="rounded-xl border border-[#E5E5EA] p-4">
-                  <p className="text-sm font-semibold text-[#111111]">Få besked når den er på lager</p>
-                  <form
-                    className="mt-2 flex gap-2"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      /* TODO: save email to waitlist */
-                    }}
-                  >
-                    <input
-                      type="email"
-                      placeholder="Din email"
-                      required
-                      className="flex-1 rounded-lg border border-[#E5E5EA] px-3 py-2 text-sm outline-none focus:border-[#1A3D2E] focus:ring-1 focus:ring-[#1A3D2E]/20"
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-[#1A3D2E] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#2D6B45]"
-                    >
-                      Giv besked
-                    </button>
-                  </form>
+                  {notifyStatus === "done" ? (
+                    <div className="flex items-start gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-5 w-5 shrink-0 text-[#1A3D2E]">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-sm font-medium text-[#111111]">{notifyMessage}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-[#111111]">Få besked når den er på lager</p>
+                      <form className="mt-2 flex gap-2" onSubmit={handleNotifySubmit}>
+                        <input
+                          type="email"
+                          placeholder="Din email"
+                          required
+                          value={notifyEmail}
+                          onChange={(e) => setNotifyEmail(e.target.value)}
+                          disabled={notifyStatus === "submitting"}
+                          className="flex-1 rounded-lg border border-[#E5E5EA] px-3 py-2 text-sm outline-none focus:border-[#1A3D2E] focus:ring-1 focus:ring-[#1A3D2E]/20 disabled:opacity-60"
+                        />
+                        <button
+                          type="submit"
+                          disabled={notifyStatus === "submitting"}
+                          className="rounded-lg bg-[#1A3D2E] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#2D6B45] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {notifyStatus === "submitting" ? "Sender..." : "Giv besked"}
+                        </button>
+                      </form>
+                      {notifyStatus === "error" && notifyMessage && (
+                        <p className="mt-2 text-sm text-red-600">{notifyMessage}</p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
+              <>
+              {/* Low-stock scarcity — reinforced right at the decision point */}
+              {matchingDevices.length <= 3 && (
+                <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#1A3D2E]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1A3D2E] opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1A3D2E]" />
+                  </span>
+                  {matchingDevices.length === 1
+                    ? "Kun 1 tilbage — sidste eksemplar"
+                    : `Kun ${matchingDevices.length} tilbage`}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleAddToCart}
@@ -721,6 +858,7 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
                   </>
                 )}
               </button>
+              </>
             )}
 
             {cartError && <p className="text-sm text-red-600">{cartError}</p>}
@@ -806,6 +944,53 @@ export function DeviceDetail({ template, devices, accessories }: DeviceDetailPro
           )}
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/* SOLD-OUT RECOVERY — similar in-stock models                   */}
+      {/* ============================================================ */}
+      {fullySoldOut && relatedInStock.length > 0 && (
+        <div className="mt-10 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-5 sm:p-6">
+          <div className="mb-4 flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-[#111111]">
+                Lignende modeller på lager
+              </h2>
+              <p className="mt-0.5 text-sm text-[#86868B]">
+                {template.display_name} er udsolgt — disse er klar til levering nu.
+              </p>
+            </div>
+            <Link href={categoryListingHref} className="hidden sm:inline text-sm font-semibold text-[#1A3D2E] hover:underline">
+              Se alle &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-4">
+            {relatedInStock.slice(0, 4).map((p) => (
+              <Link
+                key={p.id}
+                href={`/refurbished/${p.slug}`}
+                className="group flex flex-col overflow-hidden rounded-xl border border-[#E5E5EA] bg-white transition-shadow hover:shadow-md"
+              >
+                <div className="relative aspect-square overflow-hidden bg-[#F7F7F8]">
+                  {p.image ? (
+                    <Image src={p.image} alt={p.display_name} fill className="object-contain p-4 transition-transform group-hover:scale-105" sizes="(min-width: 640px) 25vw, 50vw" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[#E5E5EA]">
+                      <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="6" y="3" width="12" height="18" rx="2" /></svg>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  {p.brand && <p className="text-xs text-[#86868B]">{p.brand}</p>}
+                  <p className="text-sm font-semibold text-[#111111] line-clamp-2">{p.display_name}</p>
+                  {p.min_price != null && (
+                    <p className="mt-1 text-sm font-bold text-[#1A3D2E]">fra {formatDKK(p.min_price)}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* GRADE EXPLANATION — "Hvad betyder standen?"                   */}
