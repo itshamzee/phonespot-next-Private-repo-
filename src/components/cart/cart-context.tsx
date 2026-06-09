@@ -47,13 +47,6 @@ interface CartContextValue {
   closeUpsell: () => void;
   addDevice: (item: CartDeviceItem) => Promise<void>;
   addSku: (item: CartSkuItem) => void;
-  /** Atomically add an iPhone + glass + TPU (+ optional battery upgrade). */
-  addIPhoneWithBundle: (args: {
-    iphone: CartSkuItem;
-    glass: CartSkuItem;
-    tpu: CartSkuItem;
-    batteryUpgrade?: CartSkuItem;
-  }) => void;
   removeItem: (key: string) => Promise<void>;
   updateSkuQuantity: (skuProductId: string, quantity: number) => void;
   applyDiscount: (code: string) => Promise<{ error: string | null }>;
@@ -88,6 +81,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       })
       .map(cartItemKey);
     for (const key of expiredKeys) {
+      dispatch({ type: "REMOVE_ITEM", key });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // On mount: strip retired Sommer-Bundle freebies and web battery-upgrade lines
+  // from any cart persisted before those features were removed, so nobody checks
+  // out with a stale freebie or a phantom upgrade line.
+  useEffect(() => {
+    const staleKeys = cartState.items
+      .filter((item) => {
+        const legacy = item as unknown as Record<string, unknown>;
+        return legacy.bundleAttached != null || legacy.kind === "battery-upgrade";
+      })
+      .map(cartItemKey);
+    for (const key of staleKeys) {
       dispatch({ type: "REMOVE_ITEM", key });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -135,13 +143,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addSku = useCallback((item: CartSkuItem) => {
     dispatch({ type: "ADD_SKU", item });
   }, []);
-
-  const addIPhoneWithBundle = useCallback(
-    (args: { iphone: CartSkuItem; glass: CartSkuItem; tpu: CartSkuItem; batteryUpgrade?: CartSkuItem }) => {
-      dispatch({ type: "ADD_IPHONE_WITH_BUNDLE", ...args });
-    },
-    [],
-  );
 
   const removeItem = useCallback(
     async (key: string) => {
@@ -220,7 +221,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeUpsell,
       addDevice,
       addSku,
-      addIPhoneWithBundle,
       removeItem,
       updateSkuQuantity,
       applyDiscount,
@@ -238,7 +238,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeUpsell,
       addDevice,
       addSku,
-      addIPhoneWithBundle,
       removeItem,
       updateSkuQuantity,
       applyDiscount,

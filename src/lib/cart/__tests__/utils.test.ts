@@ -11,44 +11,36 @@ const iphone: CartSkuItem = {
   quantity: 1,
 };
 
-const freeGlass: CartSkuItem = {
+const glass: CartSkuItem = {
   type: "sku_product",
   skuProductId: "glass",
   title: "Tempered Glass",
   image: null,
-  price: 0,
-  quantity: 1,
-  retailPrice: 15900,
-  bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey: "sku:iphone-15-pro" },
+  price: 15900,
+  quantity: 2,
 };
 
-const freeTpu: CartSkuItem = {
-  type: "sku_product",
-  skuProductId: "tpu",
-  title: "TPU cover",
-  image: null,
-  price: 0,
-  quantity: 1,
-  retailPrice: 9900,
-  bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey: "sku:iphone-15-pro" },
-};
-
-describe("calcTotals — Sommer Bundle savings", () => {
-  it("sums retailPrice across bundleAttached items into bundleSavingsAmount", () => {
-    const state: CartState = { items: [iphone, freeGlass, freeTpu], discount: null };
-    const t = calcTotals(state, 0);
-    expect(t.bundleSavingsAmount).toBe(25800);
+describe("calcTotals", () => {
+  it("sums line totals into subtotal and adds shipping into total", () => {
+    const state: CartState = { items: [iphone, glass], discount: null };
+    const t = calcTotals(state, 4900);
+    expect(t.subtotal).toBe(599900 + 15900 * 2);
+    expect(t.total).toBe(599900 + 15900 * 2 + 4900);
   });
 
-  it("does not deduct bundleSavings from total (already 0 kr in the cart)", () => {
-    const state: CartState = { items: [iphone, freeGlass, freeTpu], discount: null };
+  it("counts quantities across SKU lines", () => {
+    const state: CartState = { items: [iphone, glass], discount: null };
     const t = calcTotals(state, 0);
-    expect(t.total).toBe(599900);
+    expect(t.itemCount).toBe(3);
   });
 
-  it("returns 0 bundleSavings when no bundleAttached items", () => {
-    const state: CartState = { items: [iphone], discount: null };
-    const t = calcTotals(state, 0);
-    expect(t.bundleSavingsAmount).toBe(0);
+  it("waives shipping when a free_shipping discount is applied", () => {
+    const state: CartState = {
+      items: [glass],
+      discount: { code: "FRIFRAGT", type: "free_shipping", value: 0, discountAmount: 0 },
+    };
+    const t = calcTotals(state, 4900);
+    expect(t.shippingCost).toBe(0);
+    expect(t.total).toBe(15900 * 2);
   });
 });

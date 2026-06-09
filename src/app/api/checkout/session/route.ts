@@ -64,16 +64,6 @@ export async function POST(req: NextRequest) {
     );
     console.log("[checkout/session] bundleDiscountAmount:", bundleDiscountAmount, "øre");
 
-    // 3c. Compute Sommer Bundle savings server-side — sum of retailPrice on bundleAttached items.
-    // Note: serverItems carries serverPrice (0 for freebies), but retailPrice is preserved from the
-    // original cart item and is the retail value used for display and reporting.
-    const bundleSavingsAmount = validation.items.reduce((sum, vi) => {
-      if (vi.item.type !== "sku_product") return sum;
-      if (!vi.item.bundleAttached) return sum;
-      return sum + (vi.item.retailPrice ?? 0);
-    }, 0);
-    console.log("[checkout/session] bundleSavingsAmount:", bundleSavingsAmount, "øre");
-
     // 4. Validate discount code if provided
     let discount: DiscountApplication | null = null;
     let discountCodeId: string | null = null;
@@ -172,7 +162,6 @@ export async function POST(req: NextRequest) {
       subtotal,
       discountAmount,
       bundleDiscountAmount,
-      bundleSavingsAmount,
       total,
     });
 

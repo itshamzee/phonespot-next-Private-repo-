@@ -24,29 +24,12 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       }
       return { ...state, items: [...state.items, action.item] };
     }
-    case "ADD_IPHONE_WITH_BUNDLE": {
-      // iPhone parent is keyed normally; freebies + upgrade are locked to its cartItemKey.
-      const parentKey = cartItemKey(action.iphone);
-      const glass: CartSkuItem = { ...action.glass, bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey: parentKey } };
-      const tpu: CartSkuItem = { ...action.tpu, bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey: parentKey } };
-      const newItems: CartSkuItem[] = [action.iphone, glass, tpu];
-      if (action.batteryUpgrade) {
-        newItems.push({ ...action.batteryUpgrade, upgradeParentItemKey: parentKey });
-      }
-      return { ...state, items: [...state.items, ...newItems] };
-    }
     case "REMOVE_ITEM": {
       const target = state.items.find((i) => cartItemKey(i) === action.key);
       if (!target) return state;
-      // Cascade: when removing a parent, also remove anything attached to it.
       return {
         ...state,
-        items: state.items.filter((item) => {
-          if (cartItemKey(item) === action.key) return false;
-          if (item.type === "sku_product" && item.bundleAttached?.parentItemKey === action.key) return false;
-          if (item.type === "sku_product" && item.upgradeParentItemKey === action.key) return false;
-          return true;
-        }),
+        items: state.items.filter((item) => cartItemKey(item) !== action.key),
       };
     }
     case "UPDATE_SKU_QUANTITY": {

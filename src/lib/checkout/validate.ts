@@ -1,10 +1,5 @@
 import { createServerClient } from "@/lib/supabase/client";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
-import {
-  SOMMER_BUNDLE_2026,
-  TPU_CASE_BY_TEMPLATE_ID,
-  BATTERY_UPGRADE,
-} from "@/lib/campaigns/sommer-bundle";
 
 export interface ValidatedItem {
   item: CartItem;
@@ -17,16 +12,6 @@ export interface ValidationResult {
   valid: boolean;
   items: ValidatedItem[];
   errors: string[];
-}
-
-/**
- * Returns true when a sku_product is a trusted Sommer Bundle freebie.
- * Freebies are server-priced at 0 øre regardless of their DB selling price.
- */
-function isTrustedFreebie(item: CartSkuItem): boolean {
-  if (!item.bundleAttached || item.bundleAttached.campaignId !== "sommer-bundle-2026") return false;
-  if (item.skuProductId === SOMMER_BUNDLE_2026.glassSkuId) return true;
-  return Object.values(TPU_CASE_BY_TEMPLATE_ID).includes(item.skuProductId);
 }
 
 export async function validateCart(items: CartItem[]): Promise<ValidationResult> {
@@ -77,22 +62,8 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
   }
 
   if (skus.length > 0) {
-    // Separate synthetic battery-upgrade lines from real DB-backed SKUs.
-    // Battery-upgrade items use a synthetic skuProductId ("battery-upgrade:<uuid>")
-    // and are not stored in sku_products — they are validated by kind alone.
-    const batteryUpgradeItems = skus.filter((s) => s.kind === "battery-upgrade");
-    const realSkus = skus.filter((s) => s.kind !== "battery-upgrade");
-
-    // Validate battery-upgrade lines server-side without DB lookup.
-    for (const item of batteryUpgradeItems) {
-      validated.push({
-        item,
-        serverPrice: BATTERY_UPGRADE.price_oere,
-        available: true,
-      });
-    }
-
-    if (realSkus.length > 0) {
+    const realSkus = skus;
+    {
       const skuIds = realSkus.map((s) => s.skuProductId);
       const { data: dbSkus } = await supabase
         .from("sku_products")
@@ -126,10 +97,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
             continue;
           }
         }
-        // Trusted Sommer Bundle freebies are priced at 0 øre server-side.
-        // The DB price is non-zero; we override it here so the Stripe line item
-        // reflects the promotional 0-price rather than the retail price.
-        const serverPrice = isTrustedFreebie(item) ? 0 : (db.sale_price ?? db.selling_price);
+        const serverPrice = db.sale_price ?? db.selling_price;
         validated.push({ item, serverPrice, available: true });
       }
     }

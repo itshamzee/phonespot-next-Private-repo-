@@ -305,11 +305,6 @@ export async function handleCheckoutCompleted(
   // 11. Send order confirmation email with product names + images
   if (customer) {
     try {
-      // bundle_savings_oere is stored in Stripe session metadata (set at checkout creation).
-      // Fall back to 0 if absent — the email template will also compute it from items as a
-      // secondary fallback.
-      const bundleSavingsOere = Number(session.metadata?.bundle_savings_oere ?? 0) || 0;
-
       await sendOrderConfirmation({
         orderId,
         orderNumber: order.order_number,
@@ -327,7 +322,6 @@ export async function handleCheckoutCompleted(
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
         shippingMethod: (order as any).shipping_method ?? undefined,
-        bundleSavingsOere: bundleSavingsOere > 0 ? bundleSavingsOere : undefined,
       });
     } catch (emailErr) {
       console.error("[webhook] failed to send confirmation email:", emailErr);

@@ -33,22 +33,10 @@ export interface CartSkuItem {
   variantLabel?: string; // e.g. "Farve: Sort" — shown in cart line item
   /** Present on Spot beskyttelsesglas items to enable bundle-pricing rules. */
   spotKind?: "glass" | "privacy" | "lens" | "plateau";
-  /** When set, item was auto-added by a campaign and must not be removable independently. */
-  bundleAttached?: {
-    campaignId: "sommer-bundle-2026";
-    /** cartItemKey of the parent SKU/device the bundle is locked to. */
-    parentItemKey: string;
-  };
-  /** Original retail price in øre — for strikethrough display when price is 0 or discounted. */
+  /** Original retail price in øre — for strikethrough display when price is discounted. */
   retailPrice?: number;
-  /** If true, this SKU represents the iPhone parent in the web flow and carries a battery upgrade. */
-  batteryUpgrade?: { priceOere: number };
   /** Cached at add-to-cart for display (iPhone web flow). */
   batteryHealth?: number;
-  /** Set to "battery-upgrade" when this SKU line IS the battery upgrade fee itself. */
-  kind?: "battery-upgrade";
-  /** When kind = "battery-upgrade", the cartItemKey of the parent iPhone SKU/device. */
-  upgradeParentItemKey?: string;
 }
 
 export type CartItem = CartDeviceItem | CartSkuItem;
@@ -75,10 +63,8 @@ export interface CartState {
 export interface CartTotals {
   subtotal: number;
   discountAmount: number;
-  /** Spot 3-for-2 + Lens combo savings (already existed). */
+  /** Spot 3-for-2 + Lens combo savings. */
   bundleDiscountAmount: number;
-  /** NEW: Sommer Bundle savings — sum of retailPrice across bundleAttached items. */
-  bundleSavingsAmount: number;
   shippingCost: number;
   total: number;
   itemCount: number;
@@ -87,7 +73,6 @@ export interface CartTotals {
 export type CartAction =
   | { type: "ADD_DEVICE"; item: CartDeviceItem }
   | { type: "ADD_SKU"; item: CartSkuItem }
-  | { type: "ADD_IPHONE_WITH_BUNDLE"; iphone: CartSkuItem; glass: CartSkuItem; tpu: CartSkuItem; batteryUpgrade?: CartSkuItem }
   | { type: "REMOVE_ITEM"; key: string }
   | { type: "UPDATE_SKU_QUANTITY"; skuProductId: string; quantity: number }
   | { type: "APPLY_DISCOUNT"; discount: DiscountApplication }

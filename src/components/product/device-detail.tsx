@@ -10,16 +10,8 @@ import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { ConditionExplainer } from "./condition-explainer";
-import { SommerBundleCard } from "./sommer-bundle-card";
-import { BatteryUpgradeCard } from "./battery-upgrade-card";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
-import {
-  SOMMER_BUNDLE_2026,
-  BATTERY_UPGRADE,
-  isCampaignActive,
-  getTpuCaseSkuId,
-} from "@/lib/campaigns/sommer-bundle";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -163,7 +155,7 @@ function getCategoryName(category: string): string {
 /* ================================================================== */
 
 export function DeviceDetail({ template, devices, accessories, relatedInStock = [] }: DeviceDetailProps) {
-  const { addDevice, addSku, openCart, openUpsell, cartState } = useCart();
+  const { addDevice, openCart, openUpsell, cartState } = useCart();
 
   const listedDevices = devices.filter((d) => d.status === "listed");
   // Whole model has no stock in any grade — the page is a dead end unless we
@@ -199,7 +191,6 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
-  const [batteryUpgradeSelected, setBatteryUpgradeSelected] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [notifyMessage, setNotifyMessage] = useState<string | null>(null);
@@ -437,16 +428,6 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
   const compareAtPrice = template.base_price_a && price && template.base_price_a > price ? template.base_price_a : null;
   const savingsPercent = compareAtPrice && price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : null;
 
-  // Sommer Bundle gating — iPhone only, campaign active, TPU SKU mapped for this template
-  const showBundle =
-    template.brand === "Apple" &&
-    template.category === "iphone" &&
-    isCampaignActive() &&
-    !!getTpuCaseSkuId(template.id);
-  // Battery upgrade: shown when bundle is shown AND the cheapest matching device isn't already at 100%
-  const bestMatchBatteryHealth = (bestMatch as unknown as { battery_health?: number | null } | null)?.battery_health ?? null;
-  const showBatteryUpgrade = showBundle && bestMatchBatteryHealth !== 100;
-
   async function handleAddToCart() {
     if (!bestMatch || !price) return;
 
@@ -487,48 +468,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         locationName: loc?.name,
       });
 
-      // Sommer Bundle attachment — auto-add free glass + TPU (+ optional battery upgrade)
-      // locked to the device's cartItemKey so the reducer cascade removes them together.
-      if (showBundle) {
-        const tpuSkuId = getTpuCaseSkuId(template.id);
-        if (tpuSkuId) {
-          const parentItemKey = `device:${unit.id}`;
-          addSku({
-            type: "sku_product",
-            skuProductId: SOMMER_BUNDLE_2026.glassSkuId,
-            title: "Tempered Glass",
-            image: "/images/panserglas.png",
-            price: 0,
-            quantity: 1,
-            retailPrice: SOMMER_BUNDLE_2026.glass_retail_price_oere,
-            bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey },
-          });
-          addSku({
-            type: "sku_product",
-            skuProductId: tpuSkuId,
-            title: `TPU cover (klar) — ${template.display_name}`,
-            image: "/images/tpu-cover-clear.png",
-            price: 0,
-            quantity: 1,
-            retailPrice: SOMMER_BUNDLE_2026.tpu_retail_price_oere,
-            bundleAttached: { campaignId: "sommer-bundle-2026", parentItemKey },
-          });
-          if (batteryUpgradeSelected) {
-            addSku({
-              type: "sku_product",
-              skuProductId: BATTERY_UPGRADE.sku_id,
-              title: `Nyt 100% batteri — ${template.display_name}`,
-              image: null,
-              price: BATTERY_UPGRADE.price_oere,
-              quantity: 1,
-              kind: "battery-upgrade",
-              upgradeParentItemKey: parentItemKey,
-            });
-          }
-        }
-      }
-
-      // Only show screen protector upsell for phones/smartphones (router picks BundleConfirmationModal when bundle present)
+      // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
         openUpsell();
       } else {
@@ -690,17 +630,6 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
               selected={selectedColor}
               onChange={handleColorChange}
               availableColors={stockedColors}
-            />
-          )}
-
-          {/* Sommer Bundle hero (iPhones only, campaign active) */}
-          {showBundle && <SommerBundleCard />}
-
-          {/* Battery upgrade toggle — hidden when device is already 100% */}
-          {showBatteryUpgrade && (
-            <BatteryUpgradeCard
-              selected={batteryUpgradeSelected}
-              onToggle={setBatteryUpgradeSelected}
             />
           )}
 

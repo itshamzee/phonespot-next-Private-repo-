@@ -71,20 +71,13 @@ export function calcTotals(state: CartState, shippingCost: number): CartTotals {
   const bundleResults = calcBundleDiscounts(state.items);
   const bundleDiscountAmount = bundleResults.reduce((n, r) => n + r.discount_oere, 0);
 
-  // Sommer Bundle savings — sum retailPrice on items with bundleAttached
-  const bundleSavingsAmount = state.items.reduce((sum, item) => {
-    if (item.type !== "sku_product") return sum;
-    if (!item.bundleAttached) return sum;
-    return sum + (item.retailPrice ?? 0);
-  }, 0);
-
   const effectiveShipping = state.discount?.type === "free_shipping" ? 0 : shippingCost;
   const total = Math.max(0, subtotal - discountAmount - bundleDiscountAmount + effectiveShipping);
   const itemCount = state.items.reduce(
     (n, item) => n + (item.type === "device" ? 1 : item.quantity),
     0,
   );
-  return { subtotal, discountAmount, bundleDiscountAmount, bundleSavingsAmount, shippingCost: effectiveShipping, total, itemCount };
+  return { subtotal, discountAmount, bundleDiscountAmount, shippingCost: effectiveShipping, total, itemCount };
 }
 
 export function formatOere(oere: number): string {

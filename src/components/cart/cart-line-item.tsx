@@ -128,12 +128,8 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
   const { removeItem, updateSkuQuantity, cartState } = useCart();
   const key = cartItemKey(item);
 
-  const isBundleAttached = !!item.bundleAttached;
-  const isBatteryUpgrade = item.kind === "battery-upgrade";
-  const isLocked = isBundleAttached || isBatteryUpgrade;
-
-  // Bundle discount (Spot 3-for-2 etc.) — existing logic, only computed when not a freebie
-  const bundleResults = isLocked ? [] : calcBundleDiscounts(cartState.items);
+  // Spot bundle discount (3-for-2 / lens combo)
+  const bundleResults = calcBundleDiscounts(cartState.items);
   const bundleResult = bundleResults.find((r) => r.skuProductId === item.skuProductId);
   const discountOere = bundleResult?.discount_oere ?? 0;
   const discountReason = bundleResult?.reason ?? null;
@@ -156,20 +152,10 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
       <div className="flex flex-1 flex-col justify-between">
         <div>
           <h4 className="text-sm font-medium text-charcoal leading-tight">{item.title}</h4>
-          {item.variantLabel && !isLocked && (
+          {item.variantLabel && (
             <p className="mt-0.5 text-xs text-charcoal/50">{item.variantLabel}</p>
           )}
 
-          {isBundleAttached && (
-            <span className="mt-1 inline-flex items-center rounded-full bg-green-eco/10 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-green-eco">
-              Sommer Bundle
-            </span>
-          )}
-          {isBatteryUpgrade && (
-            <span className="mt-1 inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-orange-700">
-              Batteri-opgradering
-            </span>
-          )}
           {discountOere > 0 && discountReason && (
             <span className="mt-1 inline-flex items-center rounded bg-[#E8F4ED] px-1.5 py-0.5 text-xs font-semibold text-[#1A3D2E]">
               {discountReason}
@@ -178,53 +164,43 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
         </div>
 
         <div className="flex items-center justify-between mt-2">
-          {isLocked ? (
-            <span className="text-xs text-charcoal/60">
-              {isBundleAttached ? "Inkluderet gratis" : "Inkluderet i ordren"}
-            </span>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream"
-                onClick={() => handleQtyChange(item.quantity - 1)}
-                aria-label="Fjern en"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
-                  <path fillRule="evenodd" d="M4 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H4.75A.75.75 0 0 1 4 10Z" clipRule="evenodd" />
-                </svg>
-              </button>
-              <span className="w-6 text-center text-sm font-medium text-charcoal">{item.quantity}</span>
-              <button
-                type="button"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream disabled:opacity-40"
-                onClick={() => handleQtyChange(Math.min(10, item.quantity + 1))}
-                aria-label="Tilføj en"
-                disabled={item.quantity >= 10}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
-                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                </svg>
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream"
+              onClick={() => handleQtyChange(item.quantity - 1)}
+              aria-label="Fjern en"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                <path fillRule="evenodd" d="M4 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H4.75A.75.75 0 0 1 4 10Z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <span className="w-6 text-center text-sm font-medium text-charcoal">{item.quantity}</span>
+            <button
+              type="button"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream disabled:opacity-40"
+              onClick={() => handleQtyChange(Math.min(10, item.quantity + 1))}
+              aria-label="Tilføj en"
+              disabled={item.quantity >= 10}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+              </svg>
+            </button>
+          </div>
 
           <div className="flex flex-col items-end gap-0.5">
-            {isBundleAttached && item.retailPrice && (
-              <span className="text-xs text-charcoal/40 line-through">{formatOere(item.retailPrice)}</span>
-            )}
-            {discountOere > 0 && !isLocked && (
+            {discountOere > 0 && (
               <span className="text-xs text-charcoal/40 line-through">{formatOere(rawTotal)}</span>
             )}
             <span className="text-sm font-semibold text-charcoal">
-              {isBundleAttached ? "0 kr" : formatOere(discountedTotal)}
+              {formatOere(discountedTotal)}
             </span>
           </div>
         </div>
       </div>
 
-      {!isLocked && <RemoveButton onClick={() => removeItem(key)} />}
-      {isLocked && <span className="w-4 flex-shrink-0" aria-hidden />}
+      <RemoveButton onClick={() => removeItem(key)} />
     </div>
   );
 }

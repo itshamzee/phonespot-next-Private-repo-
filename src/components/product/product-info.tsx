@@ -11,9 +11,6 @@ import { SizeSelector } from "@/components/product/size-selector";
 import { ColorSelector } from "@/components/product/color-selector";
 import { StoreAvailabilityBadge } from "@/components/product/store-availability-badge";
 import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
-import { isCampaignActive, getTpuCaseSkuId } from "@/lib/campaigns/sommer-bundle";
-import { SommerBundleCard } from "@/components/product/sommer-bundle-card";
-import { BatteryUpgradeCard } from "@/components/product/battery-upgrade-card";
 
 /* ------------------------------------------------------------------ */
 /*  Option name recognition                                           */
@@ -95,7 +92,6 @@ function updateUrlParam(pathname: string, currentParams: Record<string, string>)
 /* ------------------------------------------------------------------ */
 
 const UPSELL_COLLECTIONS = ["iphones", "ipads", "smartphones"];
-const IPHONE_COLLECTIONS = ["iphones"];
 
 function ProductInfoInner({ product, collectionSlug }: { product: Product; collectionSlug?: string }) {
   const searchParams = useSearchParams();
@@ -139,8 +135,6 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
     }
     return sel;
   });
-
-  const [batteryUpgradeSelected, setBatteryUpgradeSelected] = useState(false);
 
   // Determine the default grade: prefer "Ny" if a variant has it, else "A"
   const defaultGrade: "Ny" | "A" | "B" | "C" = (() => {
@@ -249,17 +243,6 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
   const savingsPercent = getSavingsPercent(price.amount, compareAt?.amount ?? null);
   const showUpsellOnAdd = UPSELL_COLLECTIONS.includes(collectionSlug ?? "");
 
-  const showBundleCard =
-    IPHONE_COLLECTIONS.includes(collectionSlug ?? "") &&
-    isCampaignActive() &&
-    !!getTpuCaseSkuId(product.templateId ?? product.id);
-
-  // If the variant adapter has surfaced battery health, hide upgrade card for 100% devices.
-  const variantBatteryHealth = (selectedVariant as { batteryHealth?: number } | undefined)?.batteryHealth;
-  const showBatteryCard =
-    IPHONE_COLLECTIONS.includes(collectionSlug ?? "") &&
-    variantBatteryHealth !== 100;
-
   return (
     <div className="flex flex-col gap-4">
       {/* ---- Title ---- */}
@@ -303,12 +286,6 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
         <VariantSelector variants={product.variants} options={options} onOptionChange={handleOptionChange} selectedOptions={genericSelections} />
       )}
 
-      {showBundleCard && <SommerBundleCard />}
-
-      {showBatteryCard && (
-        <BatteryUpgradeCard selected={batteryUpgradeSelected} onToggle={setBatteryUpgradeSelected} />
-      )}
-
       {/* ---- Add to cart ---- */}
       <AddToCartButton
         variantId={selectedVariant?.id ?? ""}
@@ -320,8 +297,6 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
         price={Math.round(parseFloat(price.amount) * 100)}
         image={product.images[0]?.url}
         variantLabel={[selectedSize, selectedColor, selectedStand].filter(Boolean).join(" · ")}
-        isCampaignIPhone={showBundleCard}
-        batteryUpgradeSelected={batteryUpgradeSelected}
       />
 
       {/* ---- Store availability ---- */}
