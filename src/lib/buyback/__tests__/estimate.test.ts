@@ -12,7 +12,7 @@ function device(o: Partial<BuybackDevice> = {}): BuybackDevice {
 }
 function condition(o: Partial<BuybackCondition> = {}): BuybackCondition {
   return {
-    screen: "Perfekt", back: "Perfekt", battery: "God",
+    screen: "Perfekt", back: "Perfekt", battery: "God (80%+)",
     allWorking: "Ja", brokenParts: [], cloudLocked: "Nej", ...o,
   };
 }

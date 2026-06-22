@@ -15,13 +15,20 @@ export const faultCategoryKeywords: Record<FaultType, string[]> = {
   charging: ["charging", "charge connector", "dock", "laad"],
 };
 
-const GOOD_SCREEN = new Set(["perfekt", "god", "let brugt", "fin"]);
-const GOOD_BACK = new Set(["perfekt", "god", "let brugt", "fin"]);
-const GOOD_BATTERY = new Set(["god", "perfekt", "ny", "fin"]);
+// Condition values that do NOT warrant a parts deduction (cosmetic / acceptable).
+// Matched case-insensitively against the real wizard option strings in
+// sell-device-wizard.tsx. Anything not listed here is treated as a fault.
+const GOOD_SCREEN = new Set(["perfekt", "små ridser", "ridser"]);
+const GOOD_BACK = new Set(["perfekt", "små ridser", "ridser", "buler/ridser"]);
+// Only an 80%+ battery is acceptable for refurbished resale; "Okay (60-80%)",
+// "Dårligt (<60%)" and "Ved ikke" all warrant a battery deduction.
+const GOOD_BATTERY = new Set(["god (80%+)"]);
 
 const BROKEN_PART_TO_FAULT: { match: string; fault: FaultType }[] = [
+  { match: "opladning", fault: "charging" }, // real wizard label
   { match: "ladestik", fault: "charging" },
   { match: "charging", fault: "charging" },
+  { match: "skærm-touch", fault: "screen" }, // real wizard label (smartwatch)
   { match: "skærm", fault: "screen" },
   { match: "display", fault: "screen" },
   { match: "bagglas", fault: "back_glass" },
