@@ -87,6 +87,7 @@ describe("computeBuybackPrice", () => {
       settings,
     );
     expect(r.status).toBe("manual"); // floor offer would be ≤ 0
+    expect(r.manualReason).toMatch(/rentabelt|værd/i);
   });
 
   it("carries competitor ceiling through untouched (Plan 3 consumes it)", () => {

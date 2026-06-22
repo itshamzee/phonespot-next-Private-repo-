@@ -23,7 +23,7 @@ export type FaultType = "screen" | "back_glass" | "battery" | "charging";
 
 export interface ResolvedFault {
   type: FaultType;
-  partPriceOre: number | null; // null = no original part price found
+  partPriceOre: number; // resolved faults always have a concrete part price (øre)
   cleaningProbability: number; // 0..1, internal upside only
 }
 

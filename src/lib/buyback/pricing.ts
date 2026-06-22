@@ -38,9 +38,9 @@ export function computeBuybackPrice(
     });
   }
 
-  const totalDeductionOre = resolved.reduce((s, f) => s + (f.partPriceOre ?? 0), 0);
+  const totalDeductionOre = resolved.reduce((s, f) => s + f.partPriceOre, 0);
   const expectedMarginUpsideOre = resolved.reduce(
-    (s, f) => s + Math.round((f.partPriceOre ?? 0) * f.cleaningProbability),
+    (s, f) => s + Math.round(f.partPriceOre * f.cleaningProbability),
     0,
   );
 
