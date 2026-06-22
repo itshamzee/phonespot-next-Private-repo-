@@ -18,6 +18,10 @@ export async function estimateBuyback(
   const cloudLocked = (condition.cloudLocked ?? "").trim().toLowerCase() === "ja";
 
   // Short-circuit cases that don't need DB lookups.
+  // NOTE: `knownModel` only means a non-empty model string was supplied — NOT that
+  // the model exists in our catalog. A non-empty but unknown model (e.g. "iPhone 99")
+  // passes this guard and is caught downstream when lookupBaseValueOre returns null
+  // (computeBuybackPrice then flags manual via its saleValueOre == null branch).
   const earlyInputs: PricingInputs = {
     saleValueOre: null,
     faults: [],

@@ -60,4 +60,16 @@ describe("estimateBuyback", () => {
     const r = await estimateBuyback(client, device({ model: "iPhone 99" }), condition(), DEFAULT_BUYBACK_SETTINGS);
     expect(r.status).toBe("manual");
   });
+
+  it("flags manual when a fault has no matching part in catalog", async () => {
+    const { client } = makeFakeClient({ ...baseTables, foneday_catalog: [] });
+    const r = await estimateBuyback(
+      client,
+      device(),
+      condition({ screen: "Knust" }),
+      DEFAULT_BUYBACK_SETTINGS,
+    );
+    expect(r.status).toBe("manual");
+    expect(r.manualReason).toMatch(/reservedel|screen/i);
+  });
 });
