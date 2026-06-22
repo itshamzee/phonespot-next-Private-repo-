@@ -1,0 +1,46 @@
+import type { createAdminClient } from "@/lib/supabase/admin";
+import type { BuybackCondition, BuybackDevice, BuybackSettings, PricingInputs, PricingResult } from "./types";
+import { normalizeModel } from "./model-normalize";
+import { conditionToFaults } from "./fault-mapping";
+import { lookupBaseValueOre } from "./base-value";
+import { lookupPartPriceOre } from "./parts-lookup";
+import { computeBuybackPrice } from "./pricing";
+
+type SupabaseAdmin = ReturnType<typeof createAdminClient>;
+
+export async function estimateBuyback(
+  client: SupabaseAdmin,
+  device: BuybackDevice,
+  condition: BuybackCondition,
+  settings: BuybackSettings,
+): Promise<PricingResult> {
+  const { templateModel, isApple, knownModel } = normalizeModel(device.brand, device.model);
+  const cloudLocked = (condition.cloudLocked ?? "").trim().toLowerCase() === "ja";
+
+  // Short-circuit cases that don't need DB lookups.
+  const earlyInputs: PricingInputs = {
+    saleValueOre: null,
+    faults: [],
+    isApple,
+    knownModel,
+    cloudLocked,
+  };
+  if (cloudLocked || !isApple || !knownModel) {
+    return computeBuybackPrice(earlyInputs, settings);
+  }
+
+  const saleValueOre = await lookupBaseValueOre(client, templateModel, device.storage);
+
+  const faultTypes = conditionToFaults(condition);
+  const faults = await Promise.all(
+    faultTypes.map(async (type) => ({
+      type,
+      partPriceOre: await lookupPartPriceOre(client, templateModel, type),
+    })),
+  );
+
+  return computeBuybackPrice(
+    { saleValueOre, faults, isApple, knownModel, cloudLocked },
+    settings,
+  );
+}
