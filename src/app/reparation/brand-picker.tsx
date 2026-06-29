@@ -245,7 +245,8 @@ export function BrandPicker({ brands, models = [], basePath = "/reparation" }: {
         </AnimatePresence>
       </div>
 
-      {/* Step 1: Parent brands */}
+      {/* Step 1: Parent brands — shown until one is picked */}
+      {!selectedParent && (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {orderedParents.map((parentKey) => {
           const meta = PARENT_BRAND_META[parentKey];
@@ -340,26 +341,34 @@ export function BrandPicker({ brands, models = [], basePath = "/reparation" }: {
           );
         })}
       </div>
+      )}
 
-      {/* Step 2: Collections for selected brand */}
+      {/* Step 2: Device types for the selected brand — replaces the grid */}
       <AnimatePresence mode="wait">
         {selectedParent && selectedCollections.length > 0 && (
           <motion.div
             key={selectedParent}
             ref={collectionsRef}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="scroll-mt-24 overflow-hidden"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            className="scroll-mt-24"
           >
             <div className="mt-6 rounded-2xl border border-green-eco/20 bg-white p-6">
-              <p className="mb-5 flex items-center gap-2 font-display text-sm font-bold tracking-tight text-charcoal/40">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                  <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+              <button
+                type="button"
+                onClick={() => setSelectedParent(null)}
+                className="mb-4 inline-flex items-center gap-1.5 text-sm font-bold text-charcoal/50 transition-colors hover:text-green-eco"
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
                 </svg>
-                Vælg kollektion
-              </p>
+                Alle mærker
+              </button>
+              <h3 className="mb-5 font-display text-lg font-bold tracking-tight text-charcoal">
+                Vælg din {PARENT_BRAND_META[selectedParent]?.name ?? "enhed"}
+              </h3>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {selectedCollections.map((brand, i) => (
                   <motion.div
