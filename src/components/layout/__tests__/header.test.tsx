@@ -56,9 +56,9 @@ describe("Header", () => {
     expect(screen.queryByText(/Foxway/i)).toBeNull();
   });
 
-  it("shows the actual Trustpilot rating of 4.7", () => {
+  it("shows the actual Trustpilot rating of 4.8", () => {
     render(<Header />);
-    expect(screen.getByText("★ 4.7")).toBeDefined();
+    expect(screen.getByText("★ 4.8")).toBeDefined();
   });
 
   it("shows mobile drawer with categories when hamburger is clicked", () => {

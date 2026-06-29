@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORE } from "@/lib/store-config";
+import { STORE, STORES } from "@/lib/store-config";
 import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
 import { BrandPicker } from "./brand-picker";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
@@ -186,13 +186,13 @@ export default async function ReparationPage() {
             </div>
 
             <h1 className="font-display text-3xl font-bold leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
-              Reparation i Slagelse
+              Reparation i Slagelse &amp; Vejle
               <br />
               <span className="text-white/80">— hurtigt og professionelt</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-              Professionel reparation af iPhones, iPads, Samsung, MacBooks og mere i VestsjællandsCentret. Livstidsgaranti, faste priser og 90% klar på 30 minutter.
+              Professionel reparation af iPhones, iPads, Samsung, MacBooks og mere i vores butikker i Slagelse og Vejle. Livstidsgaranti, faste priser og 90% klar på 30 minutter.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -355,88 +355,109 @@ export default async function ReparationPage() {
       {/* ================================================================= */}
       <section className="bg-cream">
         <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div>
-              <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-green-eco">
-                Find os
-              </p>
-              <h2 className="font-display text-3xl font-bold tracking-tight text-charcoal">
-                PhoneSpot Slagelse
-              </h2>
-              <p className="mt-4 text-base text-gray">
-                Vi holder til i VestsjællandsCentret i Slagelse, hvor vi tilbyder walk-in reparation
-                uden tidsbestilling. De fleste reparationer tager kun 30 minutter.
-              </p>
+          <div className="mb-10 max-w-2xl">
+            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-green-eco">
+              Find os
+            </p>
+            <h2 className="font-display text-3xl font-bold tracking-tight text-charcoal">
+              Reparation i Slagelse &amp; Vejle
+            </h2>
+            <p className="mt-4 text-base text-gray">
+              Vi tilbyder walk-in reparation uden tidsbestilling i begge vores butikker. De
+              fleste reparationer tager kun 30 minutter — vent i butikken og få din enhed med
+              hjem samme dag.
+            </p>
+          </div>
 
-              <div className="mt-6 space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                      <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <circle cx="12" cy="11" r="3" />
-                    </svg>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {[STORES.slagelse, STORES.vejle].map((store) => (
+              <div
+                key={store.slug}
+                className="flex flex-col rounded-2xl border border-soft-grey bg-white p-6 md:p-8"
+              >
+                <h3 className="font-display text-2xl font-bold tracking-tight text-charcoal">
+                  {store.name}
+                </h3>
+
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <circle cx="12" cy="11" r="3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-charcoal">{store.mall ?? store.street}</p>
+                      <p className="text-sm text-gray">{store.street}, {store.zip} {store.city}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-charcoal">{STORE.mall}</p>
-                    <p className="text-sm text-gray">{STORE.street}, {STORE.zip} {STORE.city}</p>
+
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-charcoal">Åbningstider</p>
+                      <p className="text-sm text-gray">Hverdage: {store.hours.weekdays}</p>
+                      <p className="text-sm text-gray">Lørdag: {store.hours.saturday}</p>
+                      <p className="text-sm text-gray">Søndag: {store.hours.sunday}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+                        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-charcoal">Kontakt</p>
+                      <p className="text-sm text-gray">{store.phone}</p>
+                      <p className="text-sm text-gray">{store.email}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-charcoal">Åbningstider</p>
-                    <p className="text-sm text-gray">Hverdage: {STORE.hours.weekdays}</p>
-                    <p className="text-sm text-gray">Lørdag: {STORE.hours.saturday}</p>
-                    <p className="text-sm text-gray">Søndag: {STORE.hours.sunday}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                      <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-bold text-charcoal">Kontakt</p>
-                    <p className="text-sm text-gray">{STORE.phone}</p>
-                    <p className="text-sm text-gray">{STORE.email}</p>
-                  </div>
-                </div>
+                <a
+                  href={store.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-green-eco hover:underline"
+                >
+                  Se på kort &rarr;
+                </a>
               </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="col-span-2 overflow-hidden rounded-2xl">
+              <img
+                src="/images/store/vestsjællandscentret.jpg"
+                alt="VestsjællandsCentret i Slagelse — her finder du PhoneSpot"
+                className="h-40 w-full object-cover sm:h-48"
+                loading="lazy"
+              />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 overflow-hidden rounded-2xl">
-                <img
-                  src="/images/store/vestsjællandscentret.jpg"
-                  alt="VestsjællandsCentret i Slagelse — her finder du PhoneSpot"
-                  className="h-48 w-full object-cover sm:h-56"
-                  loading="lazy"
-                />
-              </div>
-              <div className="overflow-hidden rounded-2xl">
-                <img
-                  src="/images/store/butik-indvendig.jpg"
-                  alt="PhoneSpot butik indvendig"
-                  className="h-40 w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div className="overflow-hidden rounded-2xl">
-                <img
-                  src="/images/store/butik-produkter.jpg"
-                  alt="Refurbished telefoner i PhoneSpot butikken"
-                  className="h-40 w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
+            <div className="overflow-hidden rounded-2xl">
+              <img
+                src="/images/store/butik-indvendig.jpg"
+                alt="PhoneSpot butik indvendig"
+                className="h-40 w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="overflow-hidden rounded-2xl">
+              <img
+                src="/images/store/butik-produkter.jpg"
+                alt="Refurbished telefoner i PhoneSpot butikken"
+                className="h-40 w-full object-cover"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
@@ -515,7 +536,7 @@ export default async function ReparationPage() {
             Klar til at få din enhed fikset?
           </h2>
           <p className="mt-3 text-[#86868B]">
-            Walk-in eller book online — vi er klar til at hjælpe dig i {STORE.mall}, {STORE.city}.
+            Walk-in eller book online — vi er klar til at hjælpe dig i vores butikker i Slagelse og Vejle.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             <a

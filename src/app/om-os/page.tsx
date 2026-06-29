@@ -43,7 +43,7 @@ const STATS = [
     description: "Samme garanti som ved køb af nyt",
   },
   {
-    value: "4.5/5",
+    value: "4.8/5",
     label: "Trustpilot score",
     description: "Baseret på ægte kundeanmeldelser",
   },

@@ -3,9 +3,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORE } from "@/lib/store-config";
+import { STORE, STORES } from "@/lib/store-config";
 import { DeviceImage } from "@/components/repair/device-image";
 import { RepairCart } from "@/components/repair/repair-cart";
+import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
 // ServiceInfoTooltip moved into RepairCart client component
 import {
   getBrandBySlug,
@@ -175,6 +176,15 @@ export default async function ModelPricePage({ params }: Props) {
       </section>
 
       {/* ================================================================= */}
+      {/*  INSURANCE TEASER — Storstrøm Forsikring                          */}
+      {/* ================================================================= */}
+      <section className="bg-[#F7F7F8] pb-12">
+        <div className="mx-auto max-w-7xl px-4">
+          <StorstromInsuranceTeaser variant="repair" />
+        </div>
+      </section>
+
+      {/* ================================================================= */}
       {/*  RICH SEO CONTENT                                                  */}
       {/* ================================================================= */}
       <section className="border-t border-[#E5E5EA] bg-white">
@@ -185,7 +195,7 @@ export default async function ModelPricePage({ params }: Props) {
 
           <div className="mt-6 space-y-4 text-sm leading-relaxed text-[#111111]/70">
             <p>
-              Har din {model.name} brug for en reparation? Hos PhoneSpot i {STORE.mall}, {STORE.city},
+              Har din {model.name} brug for en reparation? Hos PhoneSpot i Slagelse og Vejle
               tilbyder vi professionel reparation af din {model.name} til faste priser.
               Alle reparationer udføres af erfarne teknikere med kvalitetsdele, og du får
               livstidsgaranti på både arbejde og reservedele.
@@ -223,7 +233,8 @@ export default async function ModelPricePage({ params }: Props) {
               Walk-in service eller book online
             </h3>
             <p>
-              Du finder os i {STORE.mall}, {STORE.street}, {STORE.zip} {STORE.city}.
+              Du finder os i {STORES.slagelse.mall}, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+              og på {STORES.vejle.street}, {STORES.vejle.zip} {STORES.vejle.city}.
               90% af alle {model.name} reparationer tager kun 30 minutter.
               Du kan komme forbi som walk-in eller booke tid online.
             </p>

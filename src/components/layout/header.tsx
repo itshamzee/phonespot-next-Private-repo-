@@ -166,7 +166,7 @@ function AnnouncementBar() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[#00B67A] hover:underline"
           >
-            Trustpilot <span className="font-semibold">★ 4.7</span>
+            Trustpilot <span className="font-semibold">★ 4.8</span>
           </a>
           <span aria-hidden="true" className="text-white/30">·</span>
           <span>36 mdr. garanti</span>

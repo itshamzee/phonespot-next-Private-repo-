@@ -976,7 +976,7 @@ export default function KvalitetPage() {
               { value: "1.000+", label: "Enheder solgt" },
               { value: "30+", label: "Kvalitetstests per enhed" },
               { value: "36", label: "Måneders garanti" },
-              { value: "4.5/5", label: "På Trustpilot" },
+              { value: "4.8/5", label: "På Trustpilot" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="font-display text-4xl font-bold text-[#1A3D2E] md:text-5xl">

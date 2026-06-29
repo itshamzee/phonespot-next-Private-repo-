@@ -99,6 +99,7 @@ export function BrandPicker({ brands, models = [], basePath = "/reparation" }: {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const collectionsRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -110,6 +111,16 @@ export function BrandPicker({ brands, models = [], basePath = "/reparation" }: {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  // When a brand with multiple device types is picked (e.g. Apple), bring the
+  // device-type panel straight into view so the types show immediately.
+  useEffect(() => {
+    if (!selectedParent) return;
+    const t = setTimeout(() => {
+      collectionsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [selectedParent]);
 
   const searchResults = useMemo(() => {
     if (query.length < 2) return [];
@@ -335,11 +346,12 @@ export function BrandPicker({ brands, models = [], basePath = "/reparation" }: {
         {selectedParent && selectedCollections.length > 0 && (
           <motion.div
             key={selectedParent}
+            ref={collectionsRef}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="overflow-hidden"
+            className="scroll-mt-24 overflow-hidden"
           >
             <div className="mt-6 rounded-2xl border border-green-eco/20 bg-white p-6">
               <p className="mb-5 flex items-center gap-2 font-display text-sm font-bold tracking-tight text-charcoal/40">

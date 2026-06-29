@@ -32,7 +32,7 @@ export async function TrustpilotReviews() {
   ];
 
   const displayReviews = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
-  const displaySummary = summary || { stars: 5, score: 4.7, numberOfReviews: 127 };
+  const displaySummary = summary || { stars: 5, score: 4.8, numberOfReviews: 127 };
 
   return (
     <div>
