@@ -11,7 +11,7 @@ import { useCart } from "@/components/cart/cart-context";
 
 type CategoryItem = { label: string; href: string; tag?: string };
 type BrandItem = { label: string; href: string };
-type ActionItem = { label: string; description: string; href: string; iconKind: "sell" | "repair" | "store" };
+type ActionItem = { label: string; description: string; href: string; iconKind: "sell" | "repair" | "store" | "insurance" };
 
 const CATEGORY_ITEMS: CategoryItem[] = [
   { label: "iPhones", href: "/iphones" },
@@ -35,12 +35,14 @@ const BRAND_ITEMS: BrandItem[] = [
 const ACTION_ITEMS: ActionItem[] = [
   { label: "Sælg min enhed", description: "Få et hurtigt tilbud", href: "/saelg-din-enhed", iconKind: "sell" },
   { label: "Reparér nu", description: "Skærm, batteri, m.m.", href: "/reparation", iconKind: "repair" },
+  { label: "Forsikr min enhed", description: "Dæk mod uheld", href: "/forsikring", iconKind: "insurance" },
   { label: "Find butik", description: "Slagelse & Vejle", href: "/butik", iconKind: "store" },
 ];
 
 const MOBILE_FOOTER_LINKS = [
   { label: "FAQ", href: "/faq" },
   { label: "Garanti", href: "/garanti" },
+  { label: "Forsikring", href: "/forsikring" },
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Kontakt", href: "/kontakt" },
 ];
@@ -112,6 +114,13 @@ function ActionIcon({ kind }: { kind: ActionItem["iconKind"] }) {
     return (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <path d="M14 2l-3 9h6l-3 11M9 12H3l3-10" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (kind === "insurance") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
@@ -558,6 +567,9 @@ export function Header() {
               </Link>
               <Link href="/tilbehoer" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Tilbehør
+              </Link>
+              <Link href="/forsikring" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+                Forsikring
               </Link>
               <Link href="/butik" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Butikker

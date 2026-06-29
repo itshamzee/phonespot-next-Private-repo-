@@ -8,6 +8,7 @@ import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
 import { BrandPicker } from "./brand-picker";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
+import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
 
 export const revalidate = 3600;
 
@@ -493,6 +494,15 @@ export default async function ReparationPage() {
               </details>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ================================================================= */}
+      {/*  INSURANCE TEASER — Storstrøm Forsikring                          */}
+      {/* ================================================================= */}
+      <section className="border-t border-[#E5E5EA] bg-white">
+        <div className="mx-auto max-w-5xl px-4 py-12 md:py-16">
+          <StorstromInsuranceTeaser variant="repair" />
         </div>
       </section>
 

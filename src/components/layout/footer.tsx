@@ -17,6 +17,7 @@ const PRODUCT_LINKS = [
 const SERVICE_LINKS = [
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Garanti", href: "/garanti" },
+  { label: "Forsikring", href: "/forsikring" },
   { label: "Delbetaling", href: "/delbetaling" },
   { label: "Reparation", href: "/reparation" },
   { label: "Butik", href: "/butik" },
@@ -269,6 +270,26 @@ export function Footer() {
                     className="h-9 w-9 rounded-md opacity-90 transition-opacity hover:opacity-100"
                   />
                 </a>
+              </div>
+
+              {/* Partner — Storstrøm Forsikring */}
+              <div className="mt-6">
+                <p className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  I samarbejde med
+                </p>
+                <Link
+                  href="/forsikring"
+                  className="mt-2 inline-block"
+                  aria-label="Elektronikforsikring i samarbejde med Storstrøm Forsikring"
+                >
+                  <Image
+                    src="/brand/partners/storstrom-forsikring-white.svg"
+                    alt="Storstrøm Forsikring"
+                    width={862}
+                    height={249}
+                    className="h-6 w-auto opacity-75 transition-opacity hover:opacity-100"
+                  />
+                </Link>
               </div>
             </div>
 

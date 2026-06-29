@@ -1118,6 +1118,27 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                   </p>
                 </div>
               </div>
+              <Link
+                href="/forsikring"
+                className="flex items-center justify-between gap-4 rounded-2xl border border-[#1A3D2E]/20 bg-[#1A3D2E]/5 p-5 transition-colors hover:bg-[#1A3D2E]/10"
+              >
+                <div className="flex items-start gap-3">
+                  <TrustIcon type="shield" className="mt-0.5 h-5 w-5 shrink-0 text-[#1A3D2E]" />
+                  <div>
+                    <h4 className="font-display text-base font-bold text-[#111111]">
+                      Kan forsikres mod uheld
+                    </h4>
+                    <p className="mt-1 text-sm text-[#86868B] leading-relaxed">
+                      Garantien dækker fejl — tilføj elektronikforsikring i samarbejde med
+                      Storstrøm Forsikring og vær også dækket mod uheld som fald og skærmskader.
+                      Spørg i butikken i Slagelse.
+                    </p>
+                  </div>
+                </div>
+                <span className="hidden shrink-0 text-sm font-semibold text-[#1A3D2E] sm:inline">
+                  Læs mere &rarr;
+                </span>
+              </Link>
               <div className="rounded-2xl border border-[#E5E5EA] bg-white p-5">
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
                   <TrustIcon type="truck" className="h-5 w-5 text-amber-600" />

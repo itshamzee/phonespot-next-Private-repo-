@@ -5,6 +5,7 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
+import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
 
 export const metadata: Metadata = {
   title: "36 Måneders Garanti på Refurbished Elektronik | PhoneSpot",
@@ -262,6 +263,13 @@ export default function GarantiPage() {
                   </details>
                 ))}
               </div>
+            </div>
+          </FadeIn>
+
+          {/* ── Insurance cross-link ── */}
+          <FadeIn delay={0.28}>
+            <div className="mt-16">
+              <StorstromInsuranceTeaser variant="warranty" />
             </div>
           </FadeIn>
 
