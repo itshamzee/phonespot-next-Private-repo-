@@ -166,15 +166,15 @@ export default function CookiesPage() {
             <ul className="mt-3 space-y-1 text-muted-foreground">
               <li>
                 <strong>E-mail:</strong>{" "}
-                <a href="mailto:kontakt@phonespot.dk" className="underline hover:text-foreground">
-                  kontakt@phonespot.dk
+                <a href="mailto:info@phonespot.dk" className="underline hover:text-foreground">
+                  info@phonespot.dk
                 </a>
               </li>
               <li>
-                <strong>Telefon:</strong> +45 71 74 38 74
+                <strong>Telefon:</strong> +45 61 10 00 48
               </li>
               <li>
-                <strong>Adresse:</strong> PhoneSpot ApS, Søndergade 4, 8600 Silkeborg
+                <strong>Adresse:</strong> PhoneSpot ApS, VestsjællandsCentret 10, 4200 Slagelse
               </li>
             </ul>
           </section>
