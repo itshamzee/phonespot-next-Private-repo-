@@ -167,7 +167,7 @@ export interface RepairComment {
 }
 
 // --- Inquiry types ---
-export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel";
+export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring";
 export type InquiryChannel = "email" | "sms" | "form";
 export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 

@@ -39,9 +39,10 @@ const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   "saelg-enhed": "Sælg enhed",
   "reparation-booking": "Booking",
   manuel: "Manuel",
+  elektronikforsikring: "Forsikring",
 };
 
-const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "saelg-enhed", "reparation-booking", "manuel"];
+const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring"];
 
 const CHANNEL_LABELS: Record<string, string> = {
   email: "Email",
