@@ -11,6 +11,7 @@ import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
+import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 
 export type RelatedInStockProduct = {
@@ -996,6 +997,13 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
       {/* ============================================================ */}
       <div className="mt-10">
         <ConditionExplainer variant="compact" deviceType={deviceType} />
+      </div>
+
+      {/* ============================================================ */}
+      {/* ELEKTRONIKFORSIKRING — lead capture                          */}
+      {/* ============================================================ */}
+      <div className="mt-10">
+        <InsuranceLead source="product" variant="product" />
       </div>
 
       {/* ============================================================ */}

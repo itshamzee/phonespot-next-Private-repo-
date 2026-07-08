@@ -7,6 +7,14 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
+import {
+  DOC_TERMS_URL,
+  DOC_IPID_URL,
+  STORSTROM_PRODUCT_URL,
+  INSURANCE_HIGHLIGHTS as HIGHLIGHTS,
+  INSURANCE_COVERED as COVERED,
+  INSURANCE_NOT_COVERED as NOT_COVERED,
+} from "@/lib/insurance-config";
 
 export const metadata: Metadata = {
   title:
@@ -29,67 +37,11 @@ export const metadata: Metadata = {
 };
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DOC_TERMS_URL =
-  "https://storstrom.dk/media/betingelser-7201-elektronikforsikring-maj-2026.pdf";
-const DOC_IPID_URL =
-  "https://storstrom.dk/media/produktinfo-7201-elektronikforsikring-maj-2026.pdf";
-const STORSTROM_PRODUCT_URL =
-  "https://storstrom.dk/forsikringer/enkeltstaaende-elektronikforsikring/";
-
-// ---------------------------------------------------------------------------
 // Data
+// Shared product facts (highlights, coverage, docs) live in the single source
+// of truth at @/lib/insurance-config so the cart / product add-on stays in
+// sync. Page-only content (steps, FAQ) stays here.
 // ---------------------------------------------------------------------------
-
-const HIGHLIGHTS = [
-  { value: "1 kr.", label: "Første måned", sub: "Derefter lav månedlig rate" },
-  { value: "Uheld", label: "+ funktionsfejl", sub: "Pludselig skade dækkes" },
-  { value: "60 mdr.", label: "Dækning", sub: "36 mdr. for smartphones" },
-];
-
-const COVERED = [
-  {
-    title: "Pludselig skade",
-    description:
-      "Uheld med øjeblikkelig virkning — fald, slag og andre udefrakommende skader på enheden.",
-  },
-  {
-    title: "Funktionsfejl",
-    description:
-      "Mekaniske og elektriske svigt, så enheden ikke længere kan bruges til sit formål.",
-  },
-  {
-    title: "Batteri under 70 %",
-    description:
-      "Skade på mobiltelefonbatteriet, hvis kapaciteten falder til under 70 % af det oprindelige.",
-  },
-  {
-    title: "Pixelfejl",
-    description:
-      "Pixelfejl på fladskærme ud over producentens accepterede grænse.",
-  },
-  {
-    title: "Dækning i og uden for Danmark",
-    description:
-      "Gælder i Danmark og i hele verden i op til 60 dage for hver 12-måneders periode.",
-  },
-  {
-    title: "Reparation eller erstatning",
-    description:
-      "Vi reparerer enheden eller erstatter den med et tilsvarende nyt eller istandsat produkt.",
-  },
-];
-
-const NOT_COVERED = [
-  "Almindelig slid, ælde og gradvis forringelse",
-  "Skader der alene er kosmetiske og ikke påvirker funktionen",
-  "Skader dækket af garanti eller reklamationsret",
-  "Skader forårsaget af dyr",
-  "Fejl i data, software, virus og hacking",
-  "Skader fra oversvømmelse og naturkatastrofer",
-];
 
 const STEPS = [
   {

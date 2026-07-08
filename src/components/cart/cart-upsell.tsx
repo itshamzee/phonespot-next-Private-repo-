@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InsuranceLead } from "@/components/insurance/insurance-lead";
 
 export function CartUpsell() {
   return (
@@ -6,6 +7,8 @@ export function CartUpsell() {
       <p className="font-display text-xs font-bold tracking-tight text-[#6E6E73]">
         Populære tilvalg
       </p>
+
+      <InsuranceLead source="cart" variant="cart" />
 
       <Link
         href="/tilbehoer"
