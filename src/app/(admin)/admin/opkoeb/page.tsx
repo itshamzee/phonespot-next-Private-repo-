@@ -8,6 +8,8 @@ import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in
 import { deriveTradeInStatus, formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import BuybackFeed from "@/components/admin/BuybackFeed";
+import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
+import BuybackStatusBar from "@/components/admin/BuybackStatusBar";
 
 const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string; dot: string }> = {
   ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600", dot: "bg-blue-500" },
@@ -137,6 +139,12 @@ export default function OpkoebPage() {
           </Link>
         )}
       </div>
+
+      {/* Does buyback need you today? */}
+      <BuybackStatusBar needsYou={statusCounts.ny ?? 0} />
+
+      {/* Offers still inside their hold window — yours to stop */}
+      <BuybackHoldWindow onChange={loadData} />
 
       {/* What the automation has been doing */}
       <BuybackFeed limit={12} />
