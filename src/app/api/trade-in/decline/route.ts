@@ -5,11 +5,24 @@ import { isDeclineReasonCode, declineReason } from "@/lib/buyback/decline-reason
 import { buildDeclineEmailHtml, buildDeclineEmailSubject } from "@/lib/email/decline-email";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { logBuybackEvent } from "@/lib/buyback/events";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* POST /api/trade-in/decline — admin declines a buyback lead and tells the customer */
 export async function POST(req: Request) {
+  // Staff only. This route emails a customer that we will not buy their device
+  // and closes the lead — not something an unauthenticated caller may trigger by
+  // guessing an inquiry id. Server-side automation passes the internal secret.
+  const internalSecret = process.env.BUYBACK_INTERNAL_SECRET;
+  const isInternal =
+    !!internalSecret && req.headers.get("x-buyback-internal") === internalSecret;
+
+  if (!isInternal) {
+    const staff = await requireStaff(req);
+    if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { inquiry_id, reason_code, declined_by, auto } = body;
 

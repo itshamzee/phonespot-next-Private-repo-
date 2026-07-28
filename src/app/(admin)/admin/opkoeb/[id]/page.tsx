@@ -8,6 +8,7 @@ import type { ContactInquiry, InquiryMessage } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt } from "@/lib/supabase/trade-in-types";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
+import { staffFetch } from "@/lib/buyback/admin-fetch";
 
 /** What GET /api/trade-in/suggest answers with. */
 interface LeadSuggestionResponse {
@@ -137,7 +138,7 @@ export default function AdminOpkoebDetailPage() {
 
   async function loadSuggestion() {
     try {
-      const res = await fetch(`/api/trade-in/suggest?inquiry_id=${inquiryId}`);
+      const res = await staffFetch(`/api/trade-in/suggest?inquiry_id=${inquiryId}`);
       if (res.ok) setSuggestion(await res.json());
     } catch {
       // A missing suggestion just means admin prices it by hand, as before.
@@ -211,7 +212,7 @@ export default function AdminOpkoebDetailPage() {
     setDeclining(true);
     setDeclineError("");
     try {
-      const res = await fetch("/api/trade-in/decline", {
+      const res = await staffFetch("/api/trade-in/decline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ inquiry_id: inquiryId, reason_code: reasonCode, declined_by: "Admin" }),

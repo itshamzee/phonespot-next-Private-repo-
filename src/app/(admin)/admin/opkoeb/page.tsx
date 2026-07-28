@@ -82,7 +82,11 @@ export default function OpkoebPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  // Deferred so the first fetch does not set state during the effect body.
+  useEffect(() => {
+    const timer = setTimeout(loadData, 0);
+    return () => clearTimeout(timer);
+  }, [loadData]);
 
   const filtered = rows.filter((row) => {
     if (filter !== "alle" && row.derivedStatus !== filter) return false;
@@ -124,6 +128,14 @@ export default function OpkoebPage() {
             {rows.length} henvendelser totalt
           </p>
         </div>
+        {(statusCounts.ny ?? 0) > 0 && (
+          <Link
+            href="/admin/opkoeb/ko"
+            className="shrink-0 rounded-lg bg-charcoal px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+          >
+            Behandl kø ({statusCounts.ny})
+          </Link>
+        )}
       </div>
 
       {/* What the automation has been doing */}

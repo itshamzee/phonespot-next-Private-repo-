@@ -3,9 +3,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { loadBuybackSettings } from "@/lib/buyback/settings";
 import { suggestForLead } from "@/lib/buyback/suggest";
 import { explainPricing } from "@/lib/buyback/breakdown";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 /* GET /api/trade-in/suggest?inquiry_id=xxx — what the engine would offer */
 export async function GET(req: Request) {
+  // Staff only: the response contains our margin, our negotiation floor and the
+  // parts cost behind it. That is buying strategy, not customer-facing data.
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(req.url);
   const inquiryId = searchParams.get("inquiry_id");
   if (!inquiryId) {
