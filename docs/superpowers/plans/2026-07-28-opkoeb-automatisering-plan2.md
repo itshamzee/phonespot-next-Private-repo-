@@ -79,8 +79,10 @@ const good = { screen: "Perfekt", back: "Perfekt", battery: "God (80%+)", allWor
 const tables = {
   product_templates: [{ id: "t1", model: "iPhone 12", base_price_a: 250000 }],
   devices: [{ selling_price: 300000, status: "listed", storage: "128GB" }],
+  // Real catalog shape: the marketing name lives in suitable_for (comma-separated),
+  // model_codes hold manufacturer part numbers.
   foneday_catalog: [
-    { category: "Display", quality: "Refurbished", price_dkk: 33000, in_stock: true, model_codes: ["iPhone 12"], suitable_for: "Apple iPhone 12", title: "Display Refurbished iPhone 12" },
+    { category: "Display", quality: "Refurbished", price_dkk: 33000, in_stock: true, model_codes: ["A2172"], suitable_for: "iPhone 12", title: "Display Refurbished" },
   ],
   buyback_prices: [],
 };

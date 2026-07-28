@@ -44,10 +44,20 @@ To krav styrer hele designet:
 opgave — alle fire fører til for høje bud, og et for højt bud der sendes
 automatisk er den dyreste fejl systemet kan lave:
 
-1. **Verificér Foneday `category`-strenge.** `faultCategoryKeywords` for
-   `back_glass` og `charging` er gættet. Køres mod `SELECT DISTINCT category,
-   quality FROM foneday_catalog` og rettes, ellers resolver de fejl aldrig og
-   leadet prissættes som fejlfrit.
+1. **Verificér Foneday `category`-strenge.** ~~Gættet~~ — **udført 2026-07-28**
+   mod 15.874 rigtige rækker. To fejl, begge værre end forventet:
+   - `model_codes` indeholder **producentens varenumre** (`A2412`, `A2643`,
+     `SM-A125`), ikke modelnavne. `contains(model_codes, ["iPhone 12"])` ramte
+     nul rækker, så hver eneste fejl var uprissat og alt ville være endt manuelt.
+     Modelnavnet ligger i `suitable_for` som kommasepareret liste. Opslaget
+     matcher nu det, eksakt per segment — "iPhone 13" må ikke hente en
+     "iPhone 13 Pro Max"-del til næsten dobbelt pris.
+   - Substring-matchning mod `category + title` var alt for løs: `back_glass`
+     ramte 4.714 rækker inkl. Display, Softcase, Camera Lens og tape. Da
+     opslaget tager den billigste, blev et knust bagglas prissat til få kroner.
+     Kategorier matches nu eksakt: Display, Back Cover, Battery, Charging Connector.
+   - Kvalitetstrin strammet til Service Pack / Pulled A / Refurbished. Pulled B
+     og C er billigere og ville have undervurderet fradraget.
 2. **Uprissættelige defekte dele → `manual`.** Wizardens `brokenParts` rummer
    Kamera, Højtaler, Mikrofon, WiFi, Bluetooth, Knapper, Face ID, Tastatur,
    Trackpad, USB-porte — ingen af dem har en `FaultType`. I dag ignoreres de, så

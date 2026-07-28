@@ -1,5 +1,12 @@
 # Opkøb-automatisering — Plan 1 af 3: motoren i drift + hændelseslog
 
+> **Status: gennemført 2026-07-28.** Task 1 afdækkede to fejl der var større end
+> planen forudsatte — `model_codes` indeholder producentens varenumre, ikke
+> modelnavne, og kategori-matchningen var så løs at tape kunne blive prisen på et
+> bagglas. Begge er rettet; se commit `5bbbd3c` og specens afsnit 1.
+> Migrationerne er **ikke** kørt: samlet i
+> `supabase/migrations/KØR-DENNE-2026-07-28-opkoeb.sql` til Supabase SQL-editoren.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Få prismotoren fra `feat/buyback-pricing-engine` i drift på `main` med de fire kendte overbuds-fejl lukket, en fallback-pristabel, afrundede beløb, og en fælles hændelseslog med live-feed i admin — så systemet begynder at *fortælle* før det begynder at *handle*.
