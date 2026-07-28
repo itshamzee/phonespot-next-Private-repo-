@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { Resend } from "resend";
 import { buildOfferEmailHtml, buildOfferEmailSubject } from "@/lib/email/offer-email";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
+import { readLeadDevices } from "@/lib/buyback/lead-devices";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
@@ -70,15 +71,16 @@ export async function POST(req: Request) {
   }
 
   // 4. Build email
-  const metadata = (inquiry.metadata || {}) as Record<string, any>;
-  const device = metadata.device || {};
-  const condition = metadata.condition || {};
+  const leadDevices = readLeadDevices(inquiry.metadata);
+  const device = leadDevices[0]?.device;
+  const condition = leadDevices[0]?.condition;
+  const extraDevices = Math.max(0, leadDevices.length - 1);
   const amountKr = formatDKK(offer_amount);
 
   const conditionParts = [
-    condition.screen ? `Skærm: ${condition.screen}` : null,
-    condition.back ? `Bagside: ${condition.back}` : null,
-    condition.battery ? `Batteri: ${condition.battery}` : null,
+    condition?.screen ? `Skærm: ${condition.screen}` : null,
+    condition?.back ? `Bagside: ${condition.back}` : null,
+    condition?.battery ? `Batteri: ${condition.battery}` : null,
   ].filter(Boolean).join(", ");
 
   const acceptUrl = `${BASE_URL}/saelg-din-enhed/accepter?token=${offer.token}`;
@@ -86,10 +88,12 @@ export async function POST(req: Request) {
 
   const emailHtml = buildOfferEmailHtml({
     customerName: inquiry.name,
-    deviceType: device.deviceType || "enhed",
-    brand: device.brand || "",
-    model: device.model || "",
-    storage: device.storage || null,
+    deviceType: device?.deviceType || "enhed",
+    brand: device?.brand || "",
+    model: extraDevices > 0
+      ? `${device?.model ?? ""} (+${extraDevices} enhed${extraDevices > 1 ? "er" : ""})`
+      : (device?.model || ""),
+    storage: device?.storage || null,
     conditionSummary: conditionParts || "Ikke angivet",
     offerAmountKr: amountKr,
     acceptUrl,
@@ -97,7 +101,7 @@ export async function POST(req: Request) {
   });
 
   const subject = buildOfferEmailSubject(
-    device.model || "enhed",
+    device?.model || "enhed",
     amountKr,
   );
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { ContactInquiry } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import { deriveTradeInStatus, formatDKK } from "@/lib/supabase/trade-in-types";
+import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 
 const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string; dot: string }> = {
   ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600", dot: "bg-blue-500" },
@@ -80,9 +81,12 @@ export default function OpkoebPage() {
     if (filter !== "alle" && row.derivedStatus !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
-      const meta = (row.inquiry.metadata || {}) as Record<string, any>;
-      const device = meta.device || {};
-      const haystack = [row.inquiry.name, row.inquiry.email, device.brand, device.model].join(" ").toLowerCase();
+      const leadDevices = readLeadDevices(row.inquiry.metadata);
+      const haystack = [
+        row.inquiry.name,
+        row.inquiry.email,
+        ...leadDevices.flatMap((e) => [e.device.brand, e.device.model]),
+      ].join(" ").toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
@@ -183,8 +187,10 @@ export default function OpkoebPage() {
         <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
           <div className="divide-y divide-black/[0.03]">
             {filtered.map((row) => {
-              const meta = (row.inquiry.metadata || {}) as Record<string, any>;
-              const device = meta.device || {};
+              const meta = (row.inquiry.metadata || {}) as Record<string, unknown>;
+              const leadDevices = readLeadDevices(meta);
+              const first = leadDevices[0]?.device;
+              const extraCount = Math.max(0, leadDevices.length - 1);
               const latestOffer = row.offers.find((o) => o.status === "pending" || o.status === "accepted")
                 || row.offers[0];
               const statusCfg = STATUS_CONFIG[row.derivedStatus];
@@ -206,8 +212,8 @@ export default function OpkoebPage() {
                       </p>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-charcoal/35">
-                      {device.brand} {device.model}
-                      {device.storage && ` \· ${device.storage}`}
+                      {deviceLabel(first)}
+                      {extraCount > 0 && ` \· +${extraCount} enhed${extraCount > 1 ? "er" : ""}`}
                       {` \· ${meta.deliveryMethod === "Aflever i butik" ? "Butik" : "Forsendelse"}`}
                     </p>
                   </div>
