@@ -29,6 +29,30 @@ const baseTables = {
 };
 
 describe("estimateBuyback", () => {
+  it("flags manual when a reported broken part cannot be priced", async () => {
+    const { client } = makeFakeClient(baseTables);
+    const r = await estimateBuyback(
+      client,
+      device(),
+      condition({ allWorking: "Nej", brokenParts: ["Kamera"] }),
+      DEFAULT_BUYBACK_SETTINGS,
+    );
+    expect(r.status).toBe("manual");
+    expect(r.manualReason).toMatch(/kamera/i);
+  });
+
+  it("still prices a device whose only broken part is chargeable", async () => {
+    const { client } = makeFakeClient(baseTables);
+    const r = await estimateBuyback(
+      client,
+      device(),
+      condition({ allWorking: "Nej", brokenParts: ["Opladning"] }),
+      DEFAULT_BUYBACK_SETTINGS,
+    );
+    expect(r.status).toBe("ok");
+    expect(r.totalDeductionOre).toBe(6000);
+  });
+
   it("prices a perfect known Apple device end to end", async () => {
     const { client } = makeFakeClient(baseTables);
     const r = await estimateBuyback(client, device(), condition(), DEFAULT_BUYBACK_SETTINGS);

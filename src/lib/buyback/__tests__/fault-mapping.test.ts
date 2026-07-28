@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { conditionToFaults, faultCategories, originalQualities } from "../fault-mapping";
+import { conditionToFaults, unpriceableBrokenParts, faultCategories, originalQualities } from "../fault-mapping";
 import type { BuybackCondition } from "../types";
 
 // Defaults use the REAL wizard option strings (sell-device-wizard.tsx).
@@ -55,6 +55,30 @@ describe("conditionToFaults", () => {
   it("does not duplicate a fault present in both fields", () => {
     const faults = conditionToFaults(cond({ screen: "Revnet", brokenParts: ["Skærm-touch"] }));
     expect(faults.filter((f) => f === "screen")).toHaveLength(1);
+  });
+});
+
+describe("unpriceableBrokenParts", () => {
+  it("returns nothing when no parts are reported", () => {
+    expect(unpriceableBrokenParts(cond())).toEqual([]);
+  });
+
+  it("returns nothing for parts we can price", () => {
+    expect(unpriceableBrokenParts(cond({ brokenParts: ["Opladning"] }))).toEqual([]);
+    expect(unpriceableBrokenParts(cond({ brokenParts: ["Skærm-touch"] }))).toEqual([]);
+  });
+
+  it("flags every unpriceable part the wizard offers", () => {
+    const parts = ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Knapper", "Face ID", "Tastatur", "Trackpad", "USB-porte"];
+    expect(unpriceableBrokenParts(cond({ brokenParts: parts }))).toEqual(parts);
+  });
+
+  it("separates priceable from unpriceable in a mixed list", () => {
+    expect(unpriceableBrokenParts(cond({ brokenParts: ["Opladning", "Kamera"] }))).toEqual(["Kamera"]);
+  });
+
+  it("treats an unrecognised part as unpriceable", () => {
+    expect(unpriceableBrokenParts(cond({ brokenParts: ["Vandskade"] }))).toEqual(["Vandskade"]);
   });
 });
 

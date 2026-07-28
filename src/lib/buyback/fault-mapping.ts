@@ -50,6 +50,19 @@ const BROKEN_PART_TO_FAULT: { match: string; fault: FaultType }[] = [
   { match: "batteri", fault: "battery" },
 ];
 
+// Broken-part labels the wizard offers that we cannot put a price on: Kamera,
+// Højtaler, Mikrofon, WiFi, Bluetooth, Knapper, Face ID, Tastatur, Trackpad,
+// USB-porte. Only "Opladning" and "Skærm-touch" map to a FaultType. A device
+// reporting anything else must never be auto-priced — it would be valued as if
+// the fault did not exist, which is the most expensive mistake this system can
+// make.
+export function unpriceableBrokenParts(condition: BuybackCondition): string[] {
+  return (condition.brokenParts ?? []).filter((part) => {
+    const lower = part.toLowerCase();
+    return !BROKEN_PART_TO_FAULT.some((m) => lower.includes(m.match));
+  });
+}
+
 export function conditionToFaults(condition: BuybackCondition): FaultType[] {
   const faults = new Set<FaultType>();
 

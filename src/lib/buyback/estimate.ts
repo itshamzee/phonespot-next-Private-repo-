@@ -1,7 +1,7 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { BuybackCondition, BuybackDevice, BuybackSettings, PricingInputs, PricingResult } from "./types";
 import { normalizeModel } from "./model-normalize";
-import { conditionToFaults } from "./fault-mapping";
+import { conditionToFaults, unpriceableBrokenParts } from "./fault-mapping";
 import { lookupBaseValueOre } from "./base-value";
 import { lookupPartPriceOre } from "./parts-lookup";
 import { computeBuybackPrice } from "./pricing";
@@ -31,6 +31,17 @@ export async function estimateBuyback(
   };
   if (cloudLocked || !isApple || !knownModel) {
     return computeBuybackPrice(earlyInputs, settings);
+  }
+
+  // Reported faults we have no part price for must never be auto-priced: the
+  // device would be valued as if the fault did not exist.
+  const unpriceable = unpriceableBrokenParts(condition);
+  if (unpriceable.length > 0) {
+    return {
+      ...computeBuybackPrice(earlyInputs, settings),
+      status: "manual",
+      manualReason: `Defekte dele kan ikke prissættes: ${unpriceable.join(", ")}`,
+    };
   }
 
   const saleValueOre = await lookupBaseValueOre(client, templateModel, device.storage);
