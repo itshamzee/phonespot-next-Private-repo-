@@ -1,18 +1,32 @@
-// Foneday raw categories observed: e.g. "Display", "Battery",
-// "Charging Connector"/"Charger", "Back Cover"/"Rear Housing".
-// Qualities: "Service Pack", "Pulled", "Refurbished", "OEM-Equivalent", "FDX *".
-// Keyword matching is case-insensitive substring — adjust to the real strings
-// if they differ.
+// Verified against the live foneday_catalog on 2026-07-28 (15.874 rows).
+//
+// category  — Display (2526), Back Cover (2354), Charging Connector (1177),
+//             Battery (1127), Sim reader/holder, Camera, Power/volume,
+//             Integrated Circuit (IC), Speakers/loud, Camera Lens, Softcase,
+//             Adhesive tapes, Hardcase, ... (~100 distinct values)
+// quality   — OEM-Equivalent (9591), Service Pack (2038), Pulled A (1113),
+//             Refurbished (186), Pulled B (103), Pulled C (98), In-Cell,
+//             FDX ELITE/ULTRA/PRO/LITE/PRIME, Aftermarket, Soft, null
 import type { BuybackCondition, FaultType } from "./types";
 
-// "Original" tiers only (genuine parts), per the design decision.
-export const faultQualityKeywords: string[] = ["service", "pulled", "refurbished"];
+// Only the tiers we would actually fit to a device we resell with 36 months of
+// warranty. Pulled B and Pulled C are cheaper, and deducting their price would
+// mean over-paying the customer for a part we then have to buy at a better grade.
+// OEM-Equivalent, In-Cell, Aftermarket and every FDX tier are aftermarket.
+export const originalQualities: string[] = ["service pack", "pulled a", "refurbished"];
 
-export const faultCategoryKeywords: Record<FaultType, string[]> = {
-  screen: ["display", "lcd", "scherm", "screen"],
-  back_glass: ["back", "rear", "housing", "achterkant"],
-  battery: ["battery", "batterij", "accu"],
-  charging: ["charging", "charge connector", "dock", "laad"],
+// Categories are matched EXACTLY, never as a substring of category + title.
+// A loose substring match put adhesive tape, phone cases and camera lenses in the
+// same bucket as back covers (4.714 rows matched "back"), and since the lookup
+// takes the CHEAPEST hit, a broken back glass was priced at a few kroner — which
+// is exactly how an automatic offer ends up far too high.
+// Written with the exact casing the catalog uses, because the server-side
+// filter in parts-lookup is case-sensitive. Comparisons in JS lowercase both sides.
+export const faultCategories: Record<FaultType, string[]> = {
+  screen: ["Display"],
+  back_glass: ["Back Cover"],
+  battery: ["Battery"],
+  charging: ["Charging Connector"],
 };
 
 // Condition values that do NOT warrant a parts deduction (cosmetic / acceptable).

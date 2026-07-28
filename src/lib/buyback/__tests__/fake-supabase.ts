@@ -25,10 +25,16 @@ export function makeFakeClient(rowsByTable: Rows = {}) {
     const resolveFirst = () => ({ data: rows[0] ?? null, error: null });
     const chain = {
       select: (...a: unknown[]) => record("select", ...a),
+      insert: (...a: unknown[]) => record("insert", ...a),
+      update: (...a: unknown[]) => record("update", ...a),
+      upsert: (...a: unknown[]) => record("upsert", ...a),
       eq: (...a: unknown[]) => record("eq", ...a),
       neq: (...a: unknown[]) => record("neq", ...a),
       gt: (...a: unknown[]) => record("gt", ...a),
+      gte: (...a: unknown[]) => record("gte", ...a),
       not: (...a: unknown[]) => record("not", ...a),
+      in: (...a: unknown[]) => record("in", ...a),
+      ilike: (...a: unknown[]) => record("ilike", ...a),
       contains: (...a: unknown[]) => record("contains", ...a),
       order: (...a: unknown[]) => record("order", ...a),
       limit: (...a: unknown[]) => record("limit", ...a),

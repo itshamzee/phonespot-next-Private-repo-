@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { conditionToFaults, faultCategoryKeywords, faultQualityKeywords } from "../fault-mapping";
+import { conditionToFaults, faultCategories, originalQualities } from "../fault-mapping";
 import type { BuybackCondition } from "../types";
 
 // Defaults use the REAL wizard option strings (sell-device-wizard.tsx).
@@ -58,15 +58,27 @@ describe("conditionToFaults", () => {
   });
 });
 
-describe("keyword maps", () => {
-  it("has category keywords for every fault type", () => {
-    expect(faultCategoryKeywords.screen.length).toBeGreaterThan(0);
-    expect(faultCategoryKeywords.charging.length).toBeGreaterThan(0);
+describe("catalog maps", () => {
+  it("maps every fault type to at least one real catalog category", () => {
+    for (const fault of ["screen", "back_glass", "battery", "charging"] as const) {
+      expect(faultCategories[fault].length).toBeGreaterThan(0);
+    }
   });
 
-  it("original quality keywords include genuine tiers", () => {
-    expect(faultQualityKeywords).toContain("pulled");
-    expect(faultQualityKeywords).toContain("refurbished");
-    expect(faultQualityKeywords).toContain("service");
+  it("uses the exact category names the catalog stores", () => {
+    expect(faultCategories.screen).toEqual(["Display"]);
+    expect(faultCategories.back_glass).toEqual(["Back Cover"]);
+    expect(faultCategories.battery).toEqual(["Battery"]);
+    expect(faultCategories.charging).toEqual(["Charging Connector"]);
+  });
+
+  it("accepts only the genuine quality tiers we would actually fit", () => {
+    expect(originalQualities).toEqual(["service pack", "pulled a", "refurbished"]);
+  });
+
+  it("excludes aftermarket and low-grade pulled tiers", () => {
+    for (const tier of ["oem-equivalent", "in-cell", "aftermarket", "fdx pro", "pulled b", "pulled c"]) {
+      expect(originalQualities).not.toContain(tier);
+    }
   });
 });

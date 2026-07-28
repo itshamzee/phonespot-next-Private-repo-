@@ -20,9 +20,11 @@ function condition(o: Partial<BuybackCondition> = {}): BuybackCondition {
 const baseTables = {
   product_templates: [{ id: "t1", model: "iPhone 12", base_price_a: 250000 }],
   devices: [{ selling_price: 300000, status: "listed", storage: "128GB" }],
+  // Shaped like the real catalog: the marketing name lives in suitable_for,
+  // model_codes hold manufacturer part numbers.
   foneday_catalog: [
-    { category: "Display", quality: "Refurbished", price_dkk: 33000, in_stock: true, model_codes: ["iPhone 12"], suitable_for: "Apple iPhone 12", title: "Display Refurbished iPhone 12" },
-    { category: "Charging Connector", quality: "Pulled", price_dkk: 6000, in_stock: true, model_codes: ["iPhone 12"], suitable_for: "Apple iPhone 12", title: "Charging Connector iPhone 12" },
+    { category: "Display", quality: "Refurbished", price_dkk: 33000, in_stock: true, model_codes: ["A2172"], suitable_for: "iPhone 12", title: "Display Refurbished" },
+    { category: "Charging Connector", quality: "Pulled A", price_dkk: 6000, in_stock: true, model_codes: ["A2172"], suitable_for: "iPhone 12", title: "Charging Connector Pulled A" },
   ],
 };
 
