@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { computeBuybackPrice } from "../pricing";
+import { DEFAULT_BUYBACK_SETTINGS } from "../settings";
 import type { BuybackSettings, PricingInputs } from "../types";
 
 const settings: BuybackSettings = {
+  ...DEFAULT_BUYBACK_SETTINGS,
   targetMarginPct: 0.4,
   floorMarginPct: 0.3,
   floorMarginMinOre: 40000, // 400 kr

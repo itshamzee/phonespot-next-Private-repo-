@@ -22,6 +22,13 @@ export interface TradeInOffer {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+
+  // Automation (nullable on rows created before the migration ran)
+  auto_sent?: boolean;
+  pricing_breakdown?: unknown | null;
+  scheduled_send_at?: string | null;
+  resend_email_id?: string | null;
+  send_state?: "scheduled" | "sent" | "cancelled" | "failed";
 }
 
 export type TradeInReceiptStatus = "draft" | "confirmed" | "paid" | "completed";

@@ -25,3 +25,31 @@ describe("buyback settings", () => {
     expect(s.floorMarginPct).toBe(0.3); // default preserved
   });
 });
+
+describe("automation settings", () => {
+  it("ships with automation off and safe defaults", () => {
+    expect(DEFAULT_BUYBACK_SETTINGS.autoSendEnabled).toBe(false);
+    expect(DEFAULT_BUYBACK_SETTINGS.autoSendMaxOre).toBe(400000);
+    expect(DEFAULT_BUYBACK_SETTINGS.holdMinutes).toBe(15);
+    expect(DEFAULT_BUYBACK_SETTINGS.smsAcceptThresholdOre).toBe(300000);
+    expect(DEFAULT_BUYBACK_SETTINGS.pausedReason).toBeNull();
+  });
+
+  it("lets app_settings turn automation on without disturbing the rest", async () => {
+    const { client } = makeFakeClient({
+      app_settings: [{ key: "buyback", value: { autoSendEnabled: true } }],
+    });
+    const s = await loadBuybackSettings(client);
+    expect(s.autoSendEnabled).toBe(true);
+    expect(s.autoSendMaxOre).toBe(400000);
+    expect(s.holdMinutes).toBe(15);
+    expect(s.targetMarginPct).toBe(0.4);
+  });
+
+  it("carries a pause reason through", async () => {
+    const { client } = makeFakeClient({
+      app_settings: [{ key: "buyback", value: { pausedReason: "Katalog forældet" } }],
+    });
+    expect((await loadBuybackSettings(client)).pausedReason).toBe("Katalog forældet");
+  });
+});

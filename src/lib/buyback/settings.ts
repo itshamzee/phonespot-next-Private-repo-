@@ -13,6 +13,16 @@ export const DEFAULT_BUYBACK_SETTINGS: BuybackSettings = {
     battery: 0,
     charging: 0.9,
   },
+
+  autoSendEnabled: false,
+  autoSendMaxOre: 400000, // 4.000 kr
+  holdMinutes: 15,
+  smsAcceptThresholdOre: 300000, // 3.000 kr
+  smsRecipient: "",
+  digestRecipient: "",
+  fromAddress: "PhoneSpot <info@phonespot.dk>",
+  pausedReason: null,
+  feedLastSeenAt: null,
 };
 
 export async function loadBuybackSettings(client: SupabaseAdmin): Promise<BuybackSettings> {

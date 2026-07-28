@@ -32,6 +32,18 @@ export interface BuybackSettings {
   floorMarginPct: number; // e.g. 0.30 — minimum margin during negotiation
   floorMarginMinOre: number; // e.g. 40000 (400 kr) — absolute floor on cheap models
   cleaningProbability: Record<FaultType, number>;
+
+  // Automation. autoSendEnabled ships false on purpose: automation is turned on
+  // by a person in admin after the sender preflight, never by a deploy.
+  autoSendEnabled: boolean;
+  autoSendMaxOre: number; // offers above this are always reviewed by a human
+  holdMinutes: number; // window before a scheduled offer email actually goes
+  smsAcceptThresholdOre: number; // SMS when a customer accepts above this
+  smsRecipient: string; // Danish mobile, +45…
+  digestRecipient: string; // where the daily operations email goes
+  fromAddress: string; // sender for buyback mail; changeable without a deploy
+  pausedReason: string | null; // non-null means automation has stopped itself
+  feedLastSeenAt: string | null; // ISO timestamp for the admin unread badge
 }
 
 export interface PricingInputs {
