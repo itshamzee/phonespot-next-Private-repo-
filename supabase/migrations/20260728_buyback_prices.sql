@@ -27,3 +27,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_buyback_prices_variant
 CREATE INDEX IF NOT EXISTS idx_buyback_prices_lookup
   ON buyback_prices (lower(trim(brand)), lower(trim(model)))
   WHERE active;
+
+-- Admin maintains this table from the browser; the engine reads it with the
+-- service role, which bypasses RLS.
+ALTER TABLE public.buyback_prices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_prices;
+CREATE POLICY "Allow all for authenticated users" ON public.buyback_prices
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);

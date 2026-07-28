@@ -23,5 +23,10 @@ CREATE INDEX IF NOT EXISTS idx_buyback_events_severity
   ON buyback_events (severity, created_at DESC)
   WHERE severity <> 'info';
 
--- The admin live feed subscribes to inserts.
-ALTER PUBLICATION supabase_realtime ADD TABLE buyback_events;
+-- Admin reads the feed with the browser client, same policy shape as the other
+-- admin tables. Writes come from the service role, which bypasses RLS.
+ALTER TABLE public.buyback_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_events;
+CREATE POLICY "Allow all for authenticated users" ON public.buyback_events
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);

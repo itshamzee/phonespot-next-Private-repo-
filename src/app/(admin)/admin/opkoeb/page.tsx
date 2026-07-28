@@ -7,6 +7,7 @@ import type { ContactInquiry } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import { deriveTradeInStatus, formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
+import BuybackFeed from "@/components/admin/BuybackFeed";
 
 const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string; dot: string }> = {
   ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600", dot: "bg-blue-500" },
@@ -118,6 +119,9 @@ export default function OpkoebPage() {
           </p>
         </div>
       </div>
+
+      {/* What the automation has been doing */}
+      <BuybackFeed limit={12} />
 
       {/* Search */}
       <div className="mb-5">
