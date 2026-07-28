@@ -4,14 +4,18 @@ import { useState } from "react";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { FormField } from "@/components/ui/form-field";
+import { normalizeStoreId } from "@/lib/stores";
 
 type Status = "idle" | "submitting" | "success" | "error";
+
+const STORE_OPTIONS = ["Generel henvendelse", "Slagelse", "Vejle"];
 
 export default function KontaktPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "Support",
+    store: "Generel henvendelse",
     message: "",
   });
   const [status, setStatus] = useState<Status>("idle");
@@ -34,7 +38,13 @@ export default function KontaktPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          store_id: normalizeStoreId(formData.store),
+        }),
       });
 
       if (!res.ok) {
@@ -43,7 +53,13 @@ export default function KontaktPage() {
       }
 
       setStatus("success");
-      setFormData({ name: "", email: "", subject: "Support", message: "" });
+      setFormData({
+        name: "",
+        email: "",
+        subject: "Support",
+        store: "Generel henvendelse",
+        message: "",
+      });
     } catch (err) {
       setStatus("error");
       setErrorMessage(
@@ -119,7 +135,7 @@ export default function KontaktPage() {
                   />
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-6 grid gap-6 sm:grid-cols-2">
                   <FormField
                     label="Emne"
                     name="subject"
@@ -127,6 +143,15 @@ export default function KontaktPage() {
                     options={["Support", "Salg", "Andet"]}
                     placeholder="Vælg emne..."
                     value={formData.subject}
+                    onChange={handleChange}
+                  />
+                  <FormField
+                    label="Butik"
+                    name="store"
+                    type="select"
+                    options={STORE_OPTIONS}
+                    placeholder="Vælg butik..."
+                    value={formData.store}
                     onChange={handleChange}
                   />
                 </div>

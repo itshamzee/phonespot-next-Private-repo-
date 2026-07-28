@@ -9,6 +9,19 @@ import type {
   InquirySource,
   ReplyTemplate,
 } from "@/lib/supabase/types";
+import { normalizeStoreId } from "@/lib/stores";
+import StoreBadge from "@/components/admin/StoreBadge";
+import StoreFilter, {
+  matchesStoreFilter,
+  type StoreFilterValue,
+} from "@/components/admin/StoreFilter";
+
+// `store_id` tilføjes af en parallel migration — typen kender den muligvis ikke endnu,
+// og kolonnen kan mangle i databasen (select("*") giver da bare undefined).
+function inquiryStoreRaw(inq: ContactInquiry): string | null {
+  const value = (inq as ContactInquiry & { store_id?: string | null }).store_id;
+  return typeof value === "string" && value ? value : null;
+}
 
 const STATUS_LABELS: Record<InquiryStatus, string> = {
   ny: "Ny",
@@ -61,6 +74,7 @@ export default function AdminHenvendelserPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InquiryStatus | "alle">("alle");
   const [sourceFilter, setSourceFilter] = useState<InquirySource | "alle">("alle");
+  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
@@ -118,13 +132,19 @@ export default function AdminHenvendelserPage() {
     }
   }
 
+  // Udskudt så det første fetch ikke kalder setState synkront i effect-kroppen.
   useEffect(() => {
-    loadInquiries();
-    loadTemplates();
+    const timer = setTimeout(() => {
+      loadInquiries();
+      loadTemplates();
+    }, 0);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = inquiries.filter((inq) => {
+  // Status-, kilde- og søgefiltre anvendes først, så butiksfanernes tal
+  // afspejler det aktuelle udsnit — butiksfilteret lægges ovenpå til sidst.
+  const preFiltered = inquiries.filter((inq) => {
     if (filter !== "alle" && inq.status !== filter) return false;
     if (sourceFilter !== "alle" && inq.source !== sourceFilter) return false;
     if (search.trim()) {
@@ -137,6 +157,22 @@ export default function AdminHenvendelserPage() {
     }
     return true;
   });
+
+  const storeCounts: Record<StoreFilterValue, number> = {
+    alle: preFiltered.length,
+    slagelse: 0,
+    vejle: 0,
+    generel: 0,
+  };
+  for (const inq of preFiltered) {
+    const store = normalizeStoreId(inquiryStoreRaw(inq));
+    if (store) storeCounts[store] += 1;
+    else storeCounts.generel += 1;
+  }
+
+  const filtered = preFiltered.filter((inq) =>
+    matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(inq))),
+  );
 
   async function updateStatus(id: string, status: InquiryStatus) {
     setSaving(true);
@@ -321,7 +357,7 @@ export default function AdminHenvendelserPage() {
       </div>
 
       {/* Source filter */}
-      <div className="mb-6 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex flex-wrap gap-1.5">
         {ALL_SOURCES.map((s) => (
           <button
             key={s}
@@ -337,6 +373,14 @@ export default function AdminHenvendelserPage() {
           </button>
         ))}
       </div>
+
+      {/* Store filter */}
+      <StoreFilter
+        value={storeFilter}
+        onChange={setStoreFilter}
+        counts={storeCounts}
+        className="mb-6"
+      />
 
       {/* List */}
       {loading ? (
@@ -388,6 +432,7 @@ export default function AdminHenvendelserPage() {
 
                   {/* Right side */}
                   <div className="flex shrink-0 items-center gap-2">
+                    <StoreBadge store={inquiryStoreRaw(inq)} />
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${STATUS_BADGE[inq.status]}`}>
                       {STATUS_LABELS[inq.status]}
                     </span>
@@ -415,6 +460,7 @@ export default function AdminHenvendelserPage() {
                       <span className="rounded-md bg-charcoal/[0.04] px-2 py-0.5 text-[10px] font-semibold">
                         {SOURCE_LABELS[inq.source]}
                       </span>
+                      <StoreBadge store={inquiryStoreRaw(inq)} />
                     </div>
 
                     {/* Conversation */}

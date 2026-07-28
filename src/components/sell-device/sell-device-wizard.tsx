@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
+import { normalizeStoreId } from "@/lib/stores";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -842,6 +843,10 @@ export function SellDeviceWizard() {
           subject: devices.length > 1 ? `Sælg enheder (${devices.length})` : "Sælg enhed",
           message: buildMessage(),
           source: "saelg-enhed",
+          store_id:
+            contact.deliveryMethod === "Aflever i butik"
+              ? normalizeStoreId(contact.preferredStore)
+              : null,
           metadata: {
             devices: devices.map((e) => ({ device: e.device, condition: e.condition })),
             deliveryMethod: contact.deliveryMethod,

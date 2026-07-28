@@ -4,6 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
+import { normalizeStoreId } from "@/lib/stores";
+import StoreBadge from "@/components/admin/StoreBadge";
+import StoreFilter, {
+  matchesStoreFilter,
+  type StoreFilterValue,
+} from "@/components/admin/StoreFilter";
+
+// `store_id` tilføjes af en parallel migration — typen kender den muligvis ikke endnu,
+// og kolonnen kan mangle i databasen (select("*") giver da bare undefined).
+function ticketStoreRaw(ticket: RepairTicket): string | null {
+  const value = (ticket as RepairTicket & { store_id?: string | null }).store_id;
+  return typeof value === "string" && value ? value : null;
+}
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
@@ -62,6 +75,7 @@ export default function AdminReparationerPage() {
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<RepairStatus | "alle">("alle");
+  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
 
   const supabase = createBrowserClient();
@@ -84,7 +98,9 @@ export default function AdminReparationerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredTickets = tickets.filter((ticket) => {
+  // Status- og søgefiltre anvendes først, så butiksfanernes tal afspejler
+  // det aktuelle udsnit — butiksfilteret lægges ovenpå til sidst.
+  const preFiltered = tickets.filter((ticket) => {
     if (filter !== "alle" && ticket.status !== filter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -96,6 +112,22 @@ export default function AdminReparationerPage() {
     }
     return true;
   });
+
+  const storeCounts: Record<StoreFilterValue, number> = {
+    alle: preFiltered.length,
+    slagelse: 0,
+    vejle: 0,
+    generel: 0,
+  };
+  for (const ticket of preFiltered) {
+    const store = normalizeStoreId(ticketStoreRaw(ticket));
+    if (store) storeCounts[store] += 1;
+    else storeCounts.generel += 1;
+  }
+
+  const filteredTickets = preFiltered.filter((ticket) =>
+    matchesStoreFilter(storeFilter, normalizeStoreId(ticketStoreRaw(ticket))),
+  );
 
   // Count per status for filter badges
   const statusCounts = tickets.reduce(
@@ -157,7 +189,7 @@ export default function AdminReparationerPage() {
       </div>
 
       {/* Status filter tabs */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {ALL_STATUSES.map((s) => {
           const count = s === "alle" ? tickets.length : (statusCounts[s] ?? 0);
           return (
@@ -184,6 +216,14 @@ export default function AdminReparationerPage() {
           );
         })}
       </div>
+
+      {/* Store filter */}
+      <StoreFilter
+        value={storeFilter}
+        onChange={setStoreFilter}
+        counts={storeCounts}
+        className="mb-6"
+      />
 
       {/* Ticket list */}
       {loading ? (
@@ -224,8 +264,9 @@ export default function AdminReparationerPage() {
                   </p>
                 </div>
 
-                {/* Right: status + payment + date */}
+                {/* Right: store + status + payment + date */}
                 <div className="flex shrink-0 items-center gap-3">
+                  <StoreBadge store={ticketStoreRaw(ticket)} />
                   <span className={`hidden rounded-full px-2.5 py-1 text-[10px] font-bold sm:inline-block ${
                     ticket.paid ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
                   }`}>

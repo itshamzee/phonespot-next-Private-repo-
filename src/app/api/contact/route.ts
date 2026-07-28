@@ -3,12 +3,13 @@ import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dispatchAutoOffer } from "@/lib/buyback/dispatch";
+import { normalizeStoreId } from "@/lib/stores";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, phone, subject, message, source, metadata } = body;
+  const { name, email, phone, subject, message, source, metadata, store_id } = body;
 
   if (!name || !email || !message) {
     return NextResponse.json({ error: "Udfyld alle felter" }, { status: 400 });
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
       message: message.trim(),
       source: normalizedSource,
       metadata: metadata || null,
+      store_id: normalizeStoreId(store_id),
     })
     .select("id, name, email, metadata")
     .maybeSingle();

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
 import { STORE } from "@/lib/store-config";
+import { normalizeStoreId } from "@/lib/stores";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
         device_model: body.device_model.trim(),
         issue_description: body.issue_description.trim(),
         service_type: body.service_type.trim(),
+        store_id: normalizeStoreId(body.store_id),
         ...(bookingDetails ? { booking_details: bookingDetails } : {}),
       })
       .select()

@@ -7,6 +7,12 @@ import type { ContactInquiry } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import { deriveTradeInStatus, formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
+import { normalizeStoreId } from "@/lib/stores";
+import StoreBadge from "@/components/admin/StoreBadge";
+import StoreFilter, {
+  matchesStoreFilter,
+  type StoreFilterValue,
+} from "@/components/admin/StoreFilter";
 import BuybackFeed from "@/components/admin/BuybackFeed";
 import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
 import BuybackStatusBar from "@/components/admin/BuybackStatusBar";
@@ -32,10 +38,24 @@ interface TradeInRow {
   derivedStatus: TradeInDerivedStatus;
 }
 
+// Primær kilde er `store_id` (tilføjes af parallel migration — kolonnen kan mangle,
+// select("*") giver da bare undefined). Gamle rækker har kun `metadata.preferredStore`,
+// som kun er meningsfuld når kunden valgte at aflevere i butik (feltet har en
+// default-værdi og gemmes også på forsendelses-rækker).
+function inquiryStoreRaw(inquiry: ContactInquiry): string | null {
+  const direct = (inquiry as ContactInquiry & { store_id?: string | null }).store_id;
+  if (typeof direct === "string" && direct) return direct;
+  const meta = (inquiry.metadata || {}) as Record<string, unknown>;
+  if (meta.deliveryMethod !== "Aflever i butik") return null;
+  const preferred = meta.preferredStore ?? meta.preferred_store;
+  return typeof preferred === "string" ? preferred : null;
+}
+
 export default function OpkoebPage() {
   const [rows, setRows] = useState<TradeInRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">("alle");
+  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
 
   const loadData = useCallback(async () => {
@@ -90,7 +110,9 @@ export default function OpkoebPage() {
     return () => clearTimeout(timer);
   }, [loadData]);
 
-  const filtered = rows.filter((row) => {
+  // Status- og søgefiltre anvendes først, så butiksfanernes tal afspejler
+  // det aktuelle udsnit — butiksfilteret lægges ovenpå til sidst.
+  const preFiltered = rows.filter((row) => {
     if (filter !== "alle" && row.derivedStatus !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -104,6 +126,22 @@ export default function OpkoebPage() {
     }
     return true;
   });
+
+  const storeCounts: Record<StoreFilterValue, number> = {
+    alle: preFiltered.length,
+    slagelse: 0,
+    vejle: 0,
+    generel: 0,
+  };
+  for (const row of preFiltered) {
+    const store = normalizeStoreId(inquiryStoreRaw(row.inquiry));
+    if (store) storeCounts[store] += 1;
+    else storeCounts.generel += 1;
+  }
+
+  const filtered = preFiltered.filter((row) =>
+    matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(row.inquiry))),
+  );
 
   const statusCounts = rows.reduce((acc, r) => {
     acc[r.derivedStatus] = (acc[r.derivedStatus] ?? 0) + 1;
@@ -176,7 +214,7 @@ export default function OpkoebPage() {
       </div>
 
       {/* Status filter tabs */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {ALL_STATUSES.map((s) => {
           const count = s === "alle" ? rows.length : (statusCounts[s] ?? 0);
           return (
@@ -203,6 +241,14 @@ export default function OpkoebPage() {
           );
         })}
       </div>
+
+      {/* Store filter */}
+      <StoreFilter
+        value={storeFilter}
+        onChange={setStoreFilter}
+        counts={storeCounts}
+        className="mb-6"
+      />
 
       {/* List */}
       {loading ? (
@@ -263,6 +309,7 @@ export default function OpkoebPage() {
                         {formatDKK(latestOffer.offer_amount)}
                       </span>
                     )}
+                    <StoreBadge store={inquiryStoreRaw(row.inquiry)} />
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${statusCfg.badge}`}>
                       {statusCfg.label}
                     </span>

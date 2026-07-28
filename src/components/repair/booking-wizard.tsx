@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { RepairBrand, RepairModel, RepairService } from "@/lib/supabase/types";
+import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
+import { STORES } from "@/lib/store-config";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -13,7 +15,7 @@ const STEPS = [
   { label: "Enhed", icon: "device" },
   { label: "Reparation", icon: "wrench" },
   { label: "Detaljer", icon: "user" },
-  { label: "Dato", icon: "calendar" },
+  { label: "Aflevering", icon: "calendar" },
   { label: "Betal", icon: "check" },
 ] as const;
 
@@ -56,6 +58,20 @@ function formatDateDanish(dateStr: string): string {
     day: "numeric",
     month: "long",
   });
+}
+
+/** "10:00 – 19:00" -> "10–19", "10:00 – 17:30" -> "10–17:30" */
+function compactHours(range: string): string {
+  return range.replace(/:00/g, "").replace(/\s+–\s+/g, "–");
+}
+
+/** Kompakt åbningstidslinje for en butik, fx "Man–Fre 10–19 · Lør–Søn 10–17" */
+function storeHoursLine(hours: { weekdays: string; saturday: string; sunday: string }): string {
+  const weekend =
+    hours.saturday === hours.sunday
+      ? `Lør–Søn ${compactHours(hours.saturday)}`
+      : `Lør ${compactHours(hours.saturday)} · Søn ${compactHours(hours.sunday)}`;
+  return `Man–Fre ${compactHours(hours.weekdays)} · ${weekend}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -383,8 +399,15 @@ export function BookingWizard() {
     description: "",
   });
 
-  /* ---- step 4: date ---- */
+  /* ---- step 4: store + date ---- */
+  // Prefill via ?store=vejle|slagelse — læses ved mount, så butikssiderne
+  // kan linke direkte ind i et forudvalgt flow.
+  const [storeId, setStoreId] = useState<StoreId | null>(() =>
+    normalizeStoreId(searchParams.get("store")),
+  );
   const [preferredDate, setPreferredDate] = useState("");
+
+  const selectedStore = storeId ? STORES[storeId] : null;
 
   /* ---- active device shorthand ---- */
   const activeDevice = deviceBookings[activeDeviceIndex];
@@ -494,46 +517,6 @@ export function BookingWizard() {
     [supabase],
   );
 
-  /* ---- pre-fill first device from URL params ---- */
-  useEffect(() => {
-    if (brands.length === 0) return;
-    const brandSlug = searchParams.get("brand");
-    if (!brandSlug) return;
-    const matchedBrand = brands.find((b) => b.slug === brandSlug);
-    if (matchedBrand && deviceBookings[0]?.brandId === "") {
-      updateDeviceBrand(deviceBookings[0].id, matchedBrand.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brands, searchParams]);
-
-  useEffect(() => {
-    if (activeModels.length === 0) return;
-    const modelSlug = searchParams.get("model");
-    if (!modelSlug) return;
-    const matchedModel = activeModels.find((m) => m.slug === modelSlug);
-    if (matchedModel && activeDevice?.modelId === "") {
-      updateDeviceModel(activeDevice.id, matchedModel.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeModels, searchParams]);
-
-  useEffect(() => {
-    if (activeServices.length === 0) return;
-    const serviceSlug = searchParams.get("service");
-    if (!serviceSlug) return;
-    const matchedService = activeServices.find((s) => s.slug === serviceSlug);
-    if (matchedService && activeDevice?.serviceIds.size === 0) {
-      setDeviceBookings((prev) =>
-        prev.map((b) =>
-          b.id === activeDevice.id
-            ? { ...b, serviceIds: new Set([matchedService.id]) }
-            : b,
-        ),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeServices, searchParams]);
-
   /* ---------------------------------------------------------------- */
   /*  Device mutation helpers                                          */
   /* ---------------------------------------------------------------- */
@@ -633,6 +616,51 @@ export function BookingWizard() {
     setActiveDeviceIndex((prev) => Math.max(0, prev - 1));
   }, [activeDeviceIndex]);
 
+  /* ---- pre-fill first device from URL params ---- */
+  useEffect(() => {
+    if (brands.length === 0) return;
+    const brandSlug = searchParams.get("brand");
+    if (!brandSlug) return;
+    const matchedBrand = brands.find((b) => b.slug === brandSlug);
+    if (matchedBrand && deviceBookings[0]?.brandId === "") {
+      const deviceId = deviceBookings[0].id;
+      setTimeout(() => updateDeviceBrand(deviceId, matchedBrand.id), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brands, searchParams]);
+
+  useEffect(() => {
+    if (activeModels.length === 0) return;
+    const modelSlug = searchParams.get("model");
+    if (!modelSlug) return;
+    const matchedModel = activeModels.find((m) => m.slug === modelSlug);
+    if (matchedModel && activeDevice?.modelId === "") {
+      const deviceId = activeDevice.id;
+      setTimeout(() => updateDeviceModel(deviceId, matchedModel.id), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeModels, searchParams]);
+
+  useEffect(() => {
+    if (activeServices.length === 0) return;
+    const serviceSlug = searchParams.get("service");
+    if (!serviceSlug) return;
+    const matchedService = activeServices.find((s) => s.slug === serviceSlug);
+    if (matchedService && activeDevice?.serviceIds.size === 0) {
+      const deviceId = activeDevice.id;
+      setTimeout(() => {
+        setDeviceBookings((prev) =>
+          prev.map((b) =>
+            b.id === deviceId
+              ? { ...b, serviceIds: new Set([matchedService.id]) }
+              : b,
+          ),
+        );
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeServices, searchParams]);
+
   /* ---------------------------------------------------------------- */
   /*  Other handlers                                                   */
   /* ---------------------------------------------------------------- */
@@ -660,13 +688,14 @@ export function BookingWizard() {
           customer.description.trim()
         );
       case 3:
-        return !!preferredDate;
+        // Butik er påkrævet — en reparation uden butik kan ikke håndteres
+        return storeId !== null && !!preferredDate;
       case 4:
         return true;
       default:
         return false;
     }
-  }, [step, deviceBookings, customer, preferredDate]);
+  }, [step, deviceBookings, customer, preferredDate, storeId]);
 
   const buildPayload = () => {
     const firstBooking = deviceBookings[0];
@@ -685,6 +714,7 @@ export function BookingWizard() {
       customer_phone: customer.phone.trim(),
       issue_description: customer.description.trim(),
       preferred_date: preferredDate,
+      store_id: storeId,
       // Backward-compatible top-level fields from first device
       device_type: firstBrand?.name ?? "",
       device_model: firstModel?.name ?? "",
@@ -796,7 +826,12 @@ export function BookingWizard() {
         {preferredDate && (
           <p className="mt-2 text-sm text-gray">
             Ønsket aflevering:{" "}
-            <span className="font-medium text-charcoal">{formatDateDanish(preferredDate)}</span>
+            <span className="font-medium text-charcoal">
+              {formatDateDanish(preferredDate)}
+              {selectedStore
+                ? ` i PhoneSpot ${selectedStore.city}, ${selectedStore.street}`
+                : ""}
+            </span>
           </p>
         )}
         <div className="mt-6 flex items-center justify-center gap-2">
@@ -1431,19 +1466,76 @@ export function BookingWizard() {
         </div>
       )}
 
-      {/* ---- Step 4: Dato ---- */}
+      {/* ---- Step 4: Butik & dato ---- */}
       {step === 3 && (
         <div className="space-y-6">
           <div>
             <h2 className="font-display text-xl font-bold text-charcoal">
-              Hvornår vil du aflevere dine enheder?
+              Hvor og hvornår vil du aflevere dine enheder?
             </h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg en dato hvor du kan aflevere dine enheder i butikken.
+              Vælg den butik du vil aflevere i, og en dato der passer dig.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {/* Store selection */}
+          <div className="flex flex-col gap-2">
+            <label className={labelStyles}>Vælg butik</label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {STORE_IDS.map((id) => {
+                const store = STORES[id];
+                const isSelected = storeId === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setStoreId(id)}
+                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                      isSelected
+                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        : "border-soft-grey hover:border-green-eco/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p
+                        className={`font-display text-base font-bold ${
+                          isSelected ? "text-green-eco" : "text-charcoal"
+                        }`}
+                      >
+                        {store.city}
+                      </p>
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                          isSelected
+                            ? "border-green-eco bg-green-eco text-white"
+                            : "border-soft-grey"
+                        }`}
+                      >
+                        {isSelected && (
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                            <path
+                              fillRule="evenodd"
+                              d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs text-gray">
+                      {store.street}, {store.zip} {store.city}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray">{storeHoursLine(store.hours)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Date selection */}
+          <div className="flex flex-col gap-2">
+            <label className={labelStyles}>Vælg dato</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {availableDates.map((date) => {
               const isSelected = preferredDate === date;
               return (
@@ -1473,6 +1565,7 @@ export function BookingWizard() {
                 </button>
               );
             })}
+            </div>
           </div>
 
           {/* Parts availability note */}
@@ -1566,12 +1659,27 @@ export function BookingWizard() {
             </div>
           </div>
 
-          {/* Afleveringsdato */}
-          <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray">Afleveringsdato</p>
-            <p className="mt-1 font-display text-lg font-bold text-charcoal">
-              {preferredDate ? formatDateDanish(preferredDate) : "Ikke valgt"}
-            </p>
+          {/* Aflevering — butik og dato */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl bg-charcoal/[0.03] p-5">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray">Butik</p>
+              <p className="mt-1 font-display text-lg font-bold text-charcoal">
+                {selectedStore ? `PhoneSpot ${selectedStore.city}` : "Ikke valgt"}
+              </p>
+              {selectedStore && (
+                <p className="mt-0.5 text-xs text-gray">
+                  {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl bg-charcoal/[0.03] p-5">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray">
+                Afleveringsdato
+              </p>
+              <p className="mt-1 font-display text-lg font-bold text-charcoal">
+                {preferredDate ? formatDateDanish(preferredDate) : "Ikke valgt"}
+              </p>
+            </div>
           </div>
 
           {/* Customer */}
@@ -1670,16 +1778,24 @@ export function BookingWizard() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-sm font-bold text-charcoal">Aflever i butikken</p>
-                  <p className="mt-0.5 text-xs text-gray">VestsjællandsCentret 10, 4200 Slagelse</p>
+                  <p className="font-display text-sm font-bold text-charcoal">
+                    Aflever i butikken{selectedStore ? ` — ${selectedStore.city}` : ""}
+                  </p>
+                  {selectedStore && (
+                    <p className="mt-0.5 text-xs text-gray">
+                      {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                    </p>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray">
-                    <span className="flex items-center gap-1">
-                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z" clipRule="evenodd" /></svg>
-                      Man-Fre 10-19 · Lør-Søn 10-17
-                    </span>
+                    {selectedStore && (
+                      <span className="flex items-center gap-1">
+                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z" clipRule="evenodd" /></svg>
+                        {storeHoursLine(selectedStore.hours)}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" /></svg>
-                      61 10 00 48
+                      {selectedStore ? selectedStore.phone.replace("+45 ", "") : "61 10 00 48"}
                     </span>
                   </div>
                 </div>
