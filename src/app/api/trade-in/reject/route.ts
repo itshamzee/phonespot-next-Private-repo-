@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { logBuybackEvent } from "@/lib/buyback/events";
+import { pauseAutomation } from "@/lib/buyback/pause";
+import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { createServerClient } from "@/lib/supabase/client";
 import { Resend } from "resend";
 
@@ -38,6 +41,33 @@ export async function POST(req: Request) {
       customer_response_note: customer_response_note || null,
     })
     .eq("id", offer.id);
+
+  // A rejected auto-offer is a negotiation opening, not a dead end: surface the
+  // floor so admin knows how far they can go. Three in a row means a pricing
+  // assumption has slipped, not that three customers were difficult.
+  const floorOre = (offer.pricing_breakdown as { floorOfferOre?: number } | null)?.floorOfferOre;
+  await logBuybackEvent(supabase, {
+    type: "rejected",
+    severity: "info",
+    summary: floorOre
+      ? `Kunde afviste ${formatDKK(offer.offer_amount)} — gulv er ${formatDKK(floorOre)}`
+      : `Kunde afviste ${formatDKK(offer.offer_amount)}`,
+    inquiryId: offer.inquiry_id,
+    offerId: offer.id,
+  });
+
+  const { data: recentAnswers } = await supabase
+    .from("buyback_events")
+    .select("type")
+    .in("type", ["rejected", "accepted"])
+    .gte("created_at", new Date(Date.now() - 86_400_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(3);
+
+  const answers = (recentAnswers ?? []) as { type: string }[];
+  if (answers.length === 3 && answers.every((e) => e.type === "rejected")) {
+    await pauseAutomation(supabase, "Tre auto-bud afvist i træk");
+  }
 
   // Fetch inquiry and notify admin
   const { data: inquiry } = await supabase

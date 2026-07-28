@@ -4,6 +4,9 @@ import { resend } from "@/lib/email/resend";
 import { createShipment, getShipmentLabel } from "@/lib/shipmondo/client";
 import { render } from "@react-email/render";
 import OfferAcceptanceEmail from "@/lib/email/templates/offer-acceptance";
+import { logBuybackEvent } from "@/lib/buyback/events";
+import { sendCriticalAlert } from "@/lib/buyback/alerts";
+import { loadBuybackSettings } from "@/lib/buyback/settings";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { detectDeviceGuide } from "@/lib/supabase/email-types";
 
@@ -52,6 +55,20 @@ export async function POST(req: Request) {
 
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  }
+
+  // The acceptance is the moment money starts moving, so it goes in the event
+  // log, and above the threshold it also reaches a phone.
+  const buybackSettings = await loadBuybackSettings(supabase);
+  await logBuybackEvent(supabase, {
+    type: "accepted",
+    severity: "info",
+    summary: `Kunde accepterede ${formatDKK(offer.offer_amount)}`,
+    inquiryId: offer.inquiry_id,
+    offerId: offer.id,
+  });
+  if (offer.offer_amount >= buybackSettings.smsAcceptThresholdOre) {
+    await sendCriticalAlert(supabase, `kunde accepterede ${formatDKK(offer.offer_amount)}`);
   }
 
   // 3. Fetch inquiry for context
