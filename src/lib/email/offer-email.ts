@@ -3,6 +3,7 @@
 /* ------------------------------------------------------------------ */
 
 import { BRAND, emailHeader, emailFooter } from "@/lib/email/brand";
+import { escapeHtml } from "@/lib/email/escape";
 
 interface OfferEmailParams {
   customerName: string;
@@ -17,17 +18,14 @@ interface OfferEmailParams {
 }
 
 export function buildOfferEmailHtml(params: OfferEmailParams): string {
-  const {
-    customerName,
-    deviceType,
-    brand,
-    model,
-    storage,
-    conditionSummary,
-    offerAmountKr,
-    acceptUrl,
-    rejectUrl,
-  } = params;
+  const { offerAmountKr, acceptUrl, rejectUrl } = params;
+  // Everything below is typed by the customer in the sell-device wizard.
+  const customerName = escapeHtml(params.customerName);
+  const deviceType = escapeHtml(params.deviceType);
+  const brand = escapeHtml(params.brand);
+  const model = escapeHtml(params.model);
+  const storage = params.storage ? escapeHtml(params.storage) : null;
+  const conditionSummary = escapeHtml(params.conditionSummary);
 
   const deviceLine = [brand, model, storage].filter(Boolean).join(" \u2014 ");
 

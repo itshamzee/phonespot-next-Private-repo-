@@ -3,6 +3,7 @@
 /* ------------------------------------------------------------------ */
 
 import { BRAND, emailHeader, emailFooter } from "@/lib/email/brand";
+import { escapeHtml } from "@/lib/email/escape";
 
 /**
  * Not a summary — a work list, in the order the work gets done:
@@ -82,11 +83,11 @@ export function buildDigestHtml(data: DigestData): string {
           ${data.toPay
             .map((p) =>
               row([
-                p.sellerName,
-                p.bankReg || "—",
-                p.bankAccount || "—",
+                escapeHtml(p.sellerName),
+                escapeHtml(p.bankReg) || "—",
+                escapeHtml(p.bankAccount) || "—",
                 `${money(p.amountKr)} kr`,
-                p.receiptNumber,
+                escapeHtml(p.receiptNumber),
               ]),
             )
             .join("")}
@@ -105,8 +106,8 @@ export function buildDigestHtml(data: DigestData): string {
           ${data.toReceive
             .map((r) =>
               row([
-                r.customerName,
-                r.deviceLabel,
+                escapeHtml(r.customerName),
+                escapeHtml(r.deviceLabel),
                 `${r.daysInTransit} ${r.daysInTransit === 1 ? "dag" : "dage"}`,
               ]),
             )
@@ -127,7 +128,7 @@ export function buildDigestHtml(data: DigestData): string {
         ${
           data.waiting.biggest.length > 0
             ? `<ul style="margin:0;padding-left:18px;font-size:13px;color:#555;line-height:1.7;">
-                ${data.waiting.biggest.map((b) => `<li>${b.label} — ${b.reason}</li>`).join("")}
+                ${data.waiting.biggest.map((b) => `<li>${escapeHtml(b.label)} — ${escapeHtml(b.reason)}</li>`).join("")}
               </ul>`
             : ""
         }`,
@@ -154,7 +155,7 @@ export function buildDigestHtml(data: DigestData): string {
       section(
         "Problemer",
         `<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:#a11;">
-          ${data.problems.map((p) => `<li>${p.summary}</li>`).join("")}
+          ${data.problems.map((p) => `<li>${escapeHtml(p.summary)}</li>`).join("")}
         </ul>`,
       ),
     );

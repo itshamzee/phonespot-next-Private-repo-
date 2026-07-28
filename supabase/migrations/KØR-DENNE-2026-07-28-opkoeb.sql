@@ -1,11 +1,12 @@
 -- =====================================================================
---  OPKØB-AUTOMATISERING — PLAN 1
+--  OPKØB-AUTOMATISERING — HELE OPSÆTNINGEN
 --  Kør hele denne fil i Supabase SQL-editoren.
 --  Alt er idempotent: den kan køres igen uden skade.
 --
 --  Indtil den er kørt, opfører systemet sig præcis som før:
---  fallback-priser og hændelsesloggen er der bare ikke, og
---  aktivitets-panelet i /admin/opkoeb skjuler sig selv.
+--  de nye tabeller findes ikke, panelerne skjuler sig selv, og
+--  automatikken kan alligevel ikke tændes (den er slået fra som
+--  udgangspunkt og kræver en godkendt test af afsenderen).
 -- =====================================================================
 
 
@@ -106,10 +107,61 @@ CREATE INDEX IF NOT EXISTS idx_foneday_catalog_category
 
 
 -- ---------------------------------------------------------------------
--- 4. Kontrol — kør denne til sidst. Alle fire linjer skal give rækker.
+-- 4. Afvisninger
+--    Giver afvisninger deres eget hjem i stedet for at fylde
+--    contact_inquiries med opkøbs-kolonner.
 -- ---------------------------------------------------------------------
 
--- select count(*) as buyback_prices_ok from buyback_prices;
--- select count(*) as buyback_events_ok from buyback_events;
--- select indexname from pg_indexes where tablename = 'foneday_catalog';
--- select tablename, policyname from pg_policies where tablename in ('buyback_prices','buyback_events');
+CREATE TABLE IF NOT EXISTS buyback_declines (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  inquiry_id  uuid NOT NULL REFERENCES contact_inquiries(id) ON DELETE CASCADE,
+  reason_code text NOT NULL,
+  note        text,
+  email_sent  boolean NOT NULL DEFAULT false,
+  declined_at timestamptz NOT NULL DEFAULT now(),
+  declined_by text
+);
+
+-- En lead afvises én gang. Det unikke indeks er det, der gør routen idempotent.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_buyback_declines_inquiry
+  ON buyback_declines (inquiry_id);
+
+ALTER TABLE public.buyback_declines ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Staff can read buyback declines" ON public.buyback_declines;
+CREATE POLICY "Staff can read buyback declines" ON public.buyback_declines
+  FOR SELECT TO authenticated USING (is_staff());
+
+
+-- ---------------------------------------------------------------------
+-- 5. Automatik-kolonner på tilbud
+--    Hold-vinduet lever her: scheduled_send_at og resend_email_id er
+--    det, der gør det muligt at aflyse et bud inden det sendes.
+-- ---------------------------------------------------------------------
+
+ALTER TABLE trade_in_offers
+  ADD COLUMN IF NOT EXISTS auto_sent         boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pricing_breakdown jsonb,
+  ADD COLUMN IF NOT EXISTS scheduled_send_at timestamptz,
+  ADD COLUMN IF NOT EXISTS resend_email_id   text,
+  ADD COLUMN IF NOT EXISTS send_state        text NOT NULL DEFAULT 'sent';
+
+UPDATE trade_in_offers SET send_state = 'sent' WHERE send_state IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_trade_in_offers_scheduled
+  ON trade_in_offers (scheduled_send_at)
+  WHERE send_state = 'scheduled';
+
+
+-- ---------------------------------------------------------------------
+-- 6. Kontrol — kør disse til sidst. Alle skal svare uden fejl.
+-- ---------------------------------------------------------------------
+
+-- select count(*) as buyback_prices_ok   from buyback_prices;
+-- select count(*) as buyback_events_ok   from buyback_events;
+-- select count(*) as buyback_declines_ok from buyback_declines;
+-- select column_name from information_schema.columns
+--   where table_name = 'trade_in_offers'
+--     and column_name in ('auto_sent','pricing_breakdown','scheduled_send_at','resend_email_id','send_state');
+-- select tablename, policyname from pg_policies
+--   where tablename in ('buyback_prices','buyback_events','buyback_declines');

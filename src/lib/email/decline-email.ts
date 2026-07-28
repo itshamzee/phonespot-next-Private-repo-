@@ -3,6 +3,7 @@
 /* ------------------------------------------------------------------ */
 
 import { BRAND, emailHeader, emailFooter } from "@/lib/email/brand";
+import { escapeHtml } from "@/lib/email/escape";
 import { declineReason, type DeclineReasonCode } from "@/lib/buyback/decline-reasons";
 
 interface DeclineEmailParams {
@@ -20,7 +21,9 @@ export function buildDeclineEmailSubject(deviceLabel: string): string {
 // as a sibling of offer-email.ts so a decline does not look like it came from a
 // different company.
 export function buildDeclineEmailHtml(params: DeclineEmailParams): string {
-  const { customerName, deviceLabel, reasonCode } = params;
+  const { reasonCode } = params;
+  const customerName = escapeHtml(params.customerName);
+  const deviceLabel = escapeHtml(params.deviceLabel);
   const reason = declineReason(reasonCode);
 
   return `<!DOCTYPE html>
