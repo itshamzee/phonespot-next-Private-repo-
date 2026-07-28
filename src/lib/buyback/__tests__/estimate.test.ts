@@ -99,3 +99,36 @@ describe("estimateBuyback", () => {
     expect(r.manualReason).toMatch(/reservedel|screen/i);
   });
 });
+
+describe("estimateBuyback base value chain", () => {
+  it("falls back to buyback_prices when we have no sale price of our own", async () => {
+    const { client } = makeFakeClient({
+      ...baseTables,
+      product_templates: [],
+      devices: [],
+      buyback_prices: [
+        { device_type: "Telefon", brand: "Apple", model: "iPhone 12", storage: "128GB", ram: null, base_price: 200000, active: true },
+      ],
+    });
+    const r = await estimateBuyback(client, device(), condition(), DEFAULT_BUYBACK_SETTINGS);
+    expect(r.status).toBe("ok");
+    expect(r.saleValueOre).toBe(200000);
+  });
+
+  it("prefers our own sale price over the fallback table", async () => {
+    const { client } = makeFakeClient({
+      ...baseTables,
+      buyback_prices: [
+        { device_type: "Telefon", brand: "Apple", model: "iPhone 12", storage: "128GB", ram: null, base_price: 200000, active: true },
+      ],
+    });
+    const r = await estimateBuyback(client, device(), condition(), DEFAULT_BUYBACK_SETTINGS);
+    expect(r.saleValueOre).toBe(300000);
+  });
+
+  it("stays manual when neither source knows the model", async () => {
+    const { client } = makeFakeClient({ ...baseTables, product_templates: [], devices: [], buyback_prices: [] });
+    const r = await estimateBuyback(client, device({ model: "iPhone 99" }), condition(), DEFAULT_BUYBACK_SETTINGS);
+    expect(r.status).toBe("manual");
+  });
+});

@@ -3,6 +3,7 @@ import type { BuybackCondition, BuybackDevice, BuybackSettings, PricingInputs, P
 import { normalizeModel } from "./model-normalize";
 import { conditionToFaults, unpriceableBrokenParts } from "./fault-mapping";
 import { lookupBaseValueOre } from "./base-value";
+import { lookupFallbackBaseOre } from "./fallback-prices";
 import { lookupPartPriceOre } from "./parts-lookup";
 import { computeBuybackPrice } from "./pricing";
 
@@ -44,7 +45,11 @@ export async function estimateBuyback(
     };
   }
 
-  const saleValueOre = await lookupBaseValueOre(client, templateModel, device.storage);
+  // Our own refurbished sale price is the honest base. The hand-maintained
+  // fallback table only covers models we do not sell ourselves.
+  const saleValueOre =
+    (await lookupBaseValueOre(client, templateModel, device.storage)) ??
+    (await lookupFallbackBaseOre(client, device));
 
   const faultTypes = conditionToFaults(condition);
   const faults = await Promise.all(
