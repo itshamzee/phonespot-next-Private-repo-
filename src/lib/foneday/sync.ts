@@ -102,10 +102,18 @@ export async function syncCatalog(): Promise<SyncStats> {
   const existingSkus = new Set((existingRows ?? []).map((r) => r.foneday_sku));
 
   // 2. Upsert products into foneday_catalog
+  // The feed can list the same SKU twice. Postgres rejects an ON CONFLICT that
+  // touches a row twice in one statement, which silently cost us whole batches —
+  // 1.436 rows were left months out of date before this was caught. Last entry
+  // wins, matching what a sequential upsert would have done.
+  const bySku = new Map<string, (typeof products)[number]>();
+  for (const p of products) bySku.set(p.sku, p);
+  const uniqueProducts = [...bySku.values()];
+
   // Process in batches of 100 to avoid payload limits
   const batchSize = 100;
-  for (let i = 0; i < products.length; i += batchSize) {
-    const batch = products.slice(i, i + batchSize);
+  for (let i = 0; i < uniqueProducts.length; i += batchSize) {
+    const batch = uniqueProducts.slice(i, i + batchSize);
     const rows = batch.map((p) => ({
       foneday_sku: p.sku,
       ean: p.ean,
