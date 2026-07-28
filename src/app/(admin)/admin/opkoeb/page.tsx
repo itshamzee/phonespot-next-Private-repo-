@@ -130,14 +130,22 @@ export default function OpkoebPage() {
             {rows.length} henvendelser totalt
           </p>
         </div>
-        {(statusCounts.ny ?? 0) > 0 && (
+        <div className="flex shrink-0 items-center gap-3">
           <Link
-            href="/admin/opkoeb/ko"
-            className="shrink-0 rounded-lg bg-charcoal px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            href="/admin/opkoeb/indstillinger"
+            className="text-[13px] text-charcoal/40 underline hover:text-charcoal/60"
           >
-            Behandl kø ({statusCounts.ny})
+            Indstillinger
           </Link>
-        )}
+          {(statusCounts.ny ?? 0) > 0 && (
+            <Link
+              href="/admin/opkoeb/ko"
+              className="rounded-lg bg-charcoal px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              Behandl kø ({statusCounts.ny})
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Does buyback need you today? */}
