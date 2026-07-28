@@ -93,10 +93,15 @@ export function deriveTradeInStatus(
   inquiryStatus: string,
   offers: Pick<TradeInOffer, "status">[],
   receipts: Pick<TradeInReceipt, "status">[],
+  declines: { id: string }[] = [],
 ): TradeInDerivedStatus {
+  // Money has moved or the deal is agreed — a later decline cannot undo that.
   if (receipts.some((r) => r.status === "paid" || r.status === "completed")) return "betalt";
   if (receipts.some((r) => r.status === "draft" || r.status === "confirmed")) return "modtaget";
   if (offers.some((o) => o.status === "accepted")) return "accepteret";
+  // An admin decline outranks a pending offer: it is the newer decision, and it
+  // is what makes declining a lead possible before any offer exists.
+  if (declines.length > 0) return "afvist";
   if (offers.some((o) => o.status === "pending")) return "tilbud_sendt";
   if (offers.length > 0 && offers.every((o) => o.status === "rejected" || o.status === "expired")) return "afvist";
   if (inquiryStatus === "lukket") return "lukket";

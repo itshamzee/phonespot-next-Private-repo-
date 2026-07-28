@@ -61,14 +61,20 @@ export default function OpkoebPage() {
       .select("inquiry_id, status")
       .in("inquiry_id", ids);
 
+    const { data: allDeclines } = await supabase
+      .from("buyback_declines")
+      .select("id, inquiry_id")
+      .in("inquiry_id", ids);
+
     const result: TradeInRow[] = inquiries.map((inquiry) => {
       const offers = (allOffers || []).filter((o) => o.inquiry_id === inquiry.id);
       const receipts = (allReceipts || []).filter((r) => r.inquiry_id === inquiry.id);
+      const declines = (allDeclines || []).filter((d) => d.inquiry_id === inquiry.id);
       return {
         inquiry,
         offers,
         receipts,
-        derivedStatus: deriveTradeInStatus(inquiry.status, offers, receipts),
+        derivedStatus: deriveTradeInStatus(inquiry.status, offers, receipts, declines),
       };
     });
 

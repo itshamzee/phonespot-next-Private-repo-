@@ -7,6 +7,17 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry, InquiryMessage } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt } from "@/lib/supabase/trade-in-types";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
+import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
+
+/** What GET /api/trade-in/suggest answers with. */
+interface LeadSuggestionResponse {
+  status: "ok" | "manual";
+  manualReason: string | null;
+  suggestDecline: boolean;
+  totalAimKr: number;
+  totalFloorKr: number;
+  devices: { label: string; explanation: string; manualReason: string | null; aimKr: number }[];
+}
 
 /* ------------------------------------------------------------------ */
 /*  Offer status badges                                                */
@@ -75,6 +86,18 @@ export default function AdminOpkoebDetailPage() {
   const [shippingLabel, setShippingLabel] = useState<Record<string, unknown> | null>(null);
   const [labelLoading, setLabelLoading] = useState(false);
 
+  // Price suggestion from the engine
+  const [suggestion, setSuggestion] = useState<LeadSuggestionResponse | null>(null);
+  // Set once the admin has touched the amount, so a late suggestion never
+  // overwrites something they typed.
+  const [amountTouched, setAmountTouched] = useState(false);
+
+  // Decline
+  const [declines, setDeclines] = useState<{ id: string }[]>([]);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declining, setDeclining] = useState(false);
+  const [declineError, setDeclineError] = useState("");
+
   /* ---- Data fetching ---- */
 
   async function loadInquiry() {
@@ -104,6 +127,23 @@ export default function AdminOpkoebDetailPage() {
     setReceipts((data as TradeInReceipt[]) ?? []);
   }
 
+  async function loadDeclines() {
+    const { data } = await supabase
+      .from("buyback_declines")
+      .select("id")
+      .eq("inquiry_id", inquiryId);
+    setDeclines((data as { id: string }[]) ?? []);
+  }
+
+  async function loadSuggestion() {
+    try {
+      const res = await fetch(`/api/trade-in/suggest?inquiry_id=${inquiryId}`);
+      if (res.ok) setSuggestion(await res.json());
+    } catch {
+      // A missing suggestion just means admin prices it by hand, as before.
+    }
+  }
+
   async function loadMessages() {
     try {
       const res = await fetch(`/api/contact/${inquiryId}/messages`);
@@ -127,7 +167,14 @@ export default function AdminOpkoebDetailPage() {
 
   async function loadAll() {
     setLoading(true);
-    await Promise.all([loadInquiry(), loadOffers(), loadReceipts(), loadMessages()]);
+    await Promise.all([
+      loadInquiry(),
+      loadOffers(),
+      loadReceipts(),
+      loadMessages(),
+      loadDeclines(),
+      loadSuggestion(),
+    ]);
     // Load shipping label for accepted offer if present
     // We load offers first, then check — but since loadOffers sets state async,
     // we need to fetch separately here:
@@ -145,6 +192,42 @@ export default function AdminOpkoebDetailPage() {
     if (inquiryId) loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inquiryId]);
+
+  // Prefill the amount with what the engine suggests, but never over something
+  // the admin has already typed.
+  useEffect(() => {
+    if (!amountTouched && suggestion?.status === "ok" && suggestion.totalAimKr > 0) {
+      setOfferAmount(String(suggestion.totalAimKr));
+    }
+  }, [suggestion, amountTouched]);
+
+  const isDeclined = declines.length > 0;
+  const hasAccepted = offers.some((o) => o.status === "accepted");
+  const canDecline = !isDeclined && !hasAccepted && receipts.length === 0;
+
+  /* ---- Decline ---- */
+
+  async function handleDecline(reasonCode: string) {
+    setDeclining(true);
+    setDeclineError("");
+    try {
+      const res = await fetch("/api/trade-in/decline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inquiry_id: inquiryId, reason_code: reasonCode, declined_by: "Admin" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeclineError(data.error || "Kunne ikke afvise");
+      } else {
+        setDeclineOpen(false);
+        await Promise.all([loadDeclines(), loadInquiry(), loadMessages()]);
+      }
+    } catch {
+      setDeclineError("Kunne ikke afvise — prøv igen");
+    }
+    setDeclining(false);
+  }
 
   /* ---- Send offer ---- */
 
@@ -377,10 +460,32 @@ export default function AdminOpkoebDetailPage() {
                   min="1"
                   step="1"
                   value={offerAmount}
-                  onChange={(e) => setOfferAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAmountTouched(true);
+                    setOfferAmount(e.target.value);
+                  }}
                   placeholder="F.eks. 2500"
                   className="w-full rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm text-charcoal placeholder:text-stone-400 transition-colors focus:border-green-eco/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-eco/10"
                 />
+
+                {/* Why the number is what it is — admin should never have to guess */}
+                {suggestion?.status === "ok" && (
+                  <div className="mt-2 rounded-xl bg-stone-50 px-3 py-2.5">
+                    {suggestion.devices.map((d) => (
+                      <p key={d.label} className="text-[12px] leading-relaxed text-stone-500">
+                        <span className="font-medium text-stone-700">{d.label}:</span> {d.explanation}
+                      </p>
+                    ))}
+                    <p className="mt-1.5 text-[12px] text-stone-400">
+                      Forhandlingsgulv: {suggestion.totalFloorKr.toLocaleString("da-DK")} kr
+                    </p>
+                  </div>
+                )}
+                {suggestion?.status === "manual" && (
+                  <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2.5 text-[12px] leading-relaxed text-amber-700">
+                    Kan ikke prissættes automatisk: {suggestion.manualReason}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-charcoal">
@@ -413,6 +518,72 @@ export default function AdminOpkoebDetailPage() {
               </button>
             </form>
           </div>
+
+          {/* Decline — a real answer costs less than silence */}
+          {(canDecline || isDeclined) && (
+            <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Afvis
+              </h3>
+
+              {isDeclined ? (
+                <p className="text-sm text-stone-500">
+                  Leadet er afvist, og kunden har fået besked.
+                </p>
+              ) : !declineOpen ? (
+                <>
+                  <p className="mb-3 text-sm text-stone-500">
+                    Sender en dansk email med begrundelsen og lukker henvendelsen.
+                  </p>
+                  {suggestion?.suggestDecline && (
+                    <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2.5 text-[12px] text-amber-700">
+                      Enheden er iCloud-låst — den kan vi ikke købe.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setDeclineOpen(true)}
+                    className="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-600 transition-colors hover:border-rose-300 hover:text-rose-600"
+                  >
+                    Afvis lead
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-stone-500">Vælg en årsag — kunden får den at vide:</p>
+                  <div className="space-y-2">
+                    {DECLINE_REASONS.map((reason) => (
+                      <button
+                        key={reason.code}
+                        type="button"
+                        disabled={declining}
+                        onClick={() => handleDecline(reason.code)}
+                        className={`w-full rounded-xl border px-4 py-2.5 text-left text-sm transition-colors disabled:opacity-50 ${
+                          suggestion?.suggestDecline && reason.code === "icloud_laast"
+                            ? "border-amber-300 bg-amber-50 font-semibold text-amber-800"
+                            : "border-stone-200 text-stone-600 hover:border-rose-300 hover:text-rose-600"
+                        }`}
+                      >
+                        {reason.label}
+                      </button>
+                    ))}
+                  </div>
+                  {declineError && (
+                    <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+                      {declineError}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setDeclineOpen(false)}
+                    className="mt-3 text-[13px] text-stone-400 underline"
+                  >
+                    Fortryd
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Offer history */}
           <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
