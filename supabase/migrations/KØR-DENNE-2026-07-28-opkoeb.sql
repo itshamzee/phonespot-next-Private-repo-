@@ -41,11 +41,15 @@ CREATE INDEX IF NOT EXISTS idx_buyback_prices_lookup
   ON buyback_prices (lower(trim(brand)), lower(trim(model)))
   WHERE active;
 
+-- Kun personale. B2B-grossistkunder har rigtige Supabase-konti, og flere af dem
+-- er forhandlere: denne tabel ER vores indkøbsstrategi. Motoren læser den med
+-- service-rollen, som går uden om RLS.
 ALTER TABLE public.buyback_prices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_prices;
-CREATE POLICY "Allow all for authenticated users" ON public.buyback_prices
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Staff can manage buyback prices" ON public.buyback_prices;
+CREATE POLICY "Staff can manage buyback prices" ON public.buyback_prices
+  FOR ALL TO authenticated USING (is_staff()) WITH CHECK (is_staff());
 
 
 -- ---------------------------------------------------------------------
@@ -75,11 +79,13 @@ CREATE INDEX IF NOT EXISTS idx_buyback_events_severity
   ON buyback_events (severity, created_at DESC)
   WHERE severity <> 'info';
 
+-- Kun personale — loggen indeholder kundenavne og hvad vi har budt.
 ALTER TABLE public.buyback_events ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_events;
-CREATE POLICY "Allow all for authenticated users" ON public.buyback_events
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Staff can read buyback events" ON public.buyback_events;
+CREATE POLICY "Staff can read buyback events" ON public.buyback_events
+  FOR SELECT TO authenticated USING (is_staff());
 
 
 -- ---------------------------------------------------------------------

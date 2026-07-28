@@ -23,10 +23,14 @@ CREATE INDEX IF NOT EXISTS idx_buyback_events_severity
   ON buyback_events (severity, created_at DESC)
   WHERE severity <> 'info';
 
--- Admin reads the feed with the browser client, same policy shape as the other
--- admin tables. Writes come from the service role, which bypasses RLS.
+-- Restricted to staff, NOT to `authenticated`. B2B wholesale customers hold real
+-- Supabase accounts (b2b_customers.auth_id + /api/b2b/login), and several of them
+-- are resellers — a `TO authenticated` policy would hand them every offer we have
+-- made, with customer names and amounts. Writes come from the service role, which
+-- bypasses RLS entirely; staff only ever read.
 ALTER TABLE public.buyback_events ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_events;
-CREATE POLICY "Allow all for authenticated users" ON public.buyback_events
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Staff can read buyback events" ON public.buyback_events;
+CREATE POLICY "Staff can read buyback events" ON public.buyback_events
+  FOR SELECT TO authenticated USING (is_staff());

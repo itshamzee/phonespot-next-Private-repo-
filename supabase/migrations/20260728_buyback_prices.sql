@@ -28,10 +28,13 @@ CREATE INDEX IF NOT EXISTS idx_buyback_prices_lookup
   ON buyback_prices (lower(trim(brand)), lower(trim(model)))
   WHERE active;
 
--- Admin maintains this table from the browser; the engine reads it with the
--- service role, which bypasses RLS.
+-- Restricted to staff, NOT to `authenticated`. B2B wholesale customers hold real
+-- Supabase accounts and several are resellers; this table IS our buying strategy,
+-- and a `TO authenticated` policy would also have let them rewrite it. The engine
+-- reads it with the service role, which bypasses RLS.
 ALTER TABLE public.buyback_prices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON public.buyback_prices;
-CREATE POLICY "Allow all for authenticated users" ON public.buyback_prices
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Staff can manage buyback prices" ON public.buyback_prices;
+CREATE POLICY "Staff can manage buyback prices" ON public.buyback_prices
+  FOR ALL TO authenticated USING (is_staff()) WITH CHECK (is_staff());
