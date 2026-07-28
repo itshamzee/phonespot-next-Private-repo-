@@ -35,3 +35,18 @@ describe("lookupBaseValueOre", () => {
     expect(await lookupBaseValueOre(client, "iPhone 12", "128GB")).toBeNull();
   });
 });
+
+describe("lookupBaseValueOre with duplicate templates", () => {
+  it("uses the first template when two share a model name", async () => {
+    const { client, calls } = makeFakeClient({
+      product_templates: [
+        { id: "t1", model: "iPhone 12", base_price_a: 250000 },
+        { id: "t2", model: "iPhone 12", base_price_a: 999000 },
+      ],
+      devices: [],
+    });
+    expect(await lookupBaseValueOre(client, "iPhone 12", "128GB")).toBe(250000);
+    const call = calls.find((c) => c.table === "product_templates");
+    expect(call?.ops).toContainEqual(["limit", 1]);
+  });
+});

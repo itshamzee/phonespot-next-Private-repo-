@@ -22,14 +22,16 @@ export async function lookupBaseValueOre(
   model: string,
   storage: string,
 ): Promise<number | null> {
-  const { data: template } = await client
+  // .limit(1) rather than .maybeSingle(): two templates sharing a model string
+  // make PostgREST answer 406, which would throw in the middle of pricing.
+  const { data: templates } = await client
     .from("product_templates")
     .select("id, model, base_price_a")
     .eq("model", model)
-    .maybeSingle();
+    .limit(1);
 
-  if (!template) return null;
-  const tpl = template as TemplateRow;
+  const tpl = ((templates ?? []) as TemplateRow[])[0];
+  if (!tpl) return null;
 
   const { data: devices } = await client
     .from("devices")
