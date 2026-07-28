@@ -1,4 +1,5 @@
 import type { BuybackSettings, PricingInputs, PricingResult, ResolvedFault } from "./types";
+import { roundOfferDown } from "./rounding";
 
 export function computeBuybackPrice(
   inputs: PricingInputs,
@@ -48,8 +49,10 @@ export function computeBuybackPrice(
   // Aim margin can never be smaller than the floor margin (e.g. on cheap models the kr-floor dominates).
   const aimMarginOre = Math.max(Math.round(sale * settings.targetMarginPct), floorMarginOre);
 
-  const aimOfferOre = sale - aimMarginOre - totalDeductionOre;
-  const floorOfferOre = sale - floorMarginOre - totalDeductionOre;
+  // Round before the profitability check: an offer that only survives on
+  // sub-50-kr precision is not an offer we should send.
+  const aimOfferOre = roundOfferDown(sale - aimMarginOre - totalDeductionOre);
+  const floorOfferOre = roundOfferDown(sale - floorMarginOre - totalDeductionOre);
 
   if (floorOfferOre <= 0 || aimOfferOre <= 0) {
     return manual("Enheden er for lidt værd til et rentabelt opkøb");

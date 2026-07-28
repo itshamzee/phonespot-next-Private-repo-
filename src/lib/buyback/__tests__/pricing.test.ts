@@ -37,8 +37,8 @@ describe("computeBuybackPrice", () => {
       settings,
     );
     expect(r.totalDeductionOre).toBe(33000);
-    expect(r.aimOfferOre).toBe(147000); // 180000 − 33000
-    expect(r.floorOfferOre).toBe(177000); // 210000 − 33000
+    expect(r.aimOfferOre).toBe(145000); // 180000 − 33000 = 147000 -> rounded down to 50 kr
+    expect(r.floorOfferOre).toBe(175000); // 210000 − 33000 = 177000 -> rounded down
   });
 
   it("computes cleaning-margin upside for a charging fault (internal only)", () => {
@@ -47,7 +47,7 @@ describe("computeBuybackPrice", () => {
       settings,
     );
     expect(r.totalDeductionOre).toBe(6000); // customer-facing deduction is full part price
-    expect(r.aimOfferOre).toBe(174000); // 180000 − 6000
+    expect(r.aimOfferOre).toBe(170000); // 180000 − 6000 = 174000 -> rounded down
     expect(r.expectedMarginUpsideOre).toBe(5400); // 6000 × 0.9
   });
 
@@ -93,5 +93,25 @@ describe("computeBuybackPrice", () => {
   it("carries competitor ceiling through untouched (Plan 3 consumes it)", () => {
     const r = computeBuybackPrice(inputs({ competitorCeilingOre: 250000 }), settings);
     expect(r.ceilingOfferOre).toBe(250000);
+  });
+});
+
+describe("offer rounding", () => {
+  it("rounds both offers down to 50 kr steps", () => {
+    const r = computeBuybackPrice(
+      inputs({ saleValueOre: 300000, faults: [{ type: "screen", partPriceOre: 33333 }] }),
+      settings,
+    );
+    expect(r.aimOfferOre % 5000).toBe(0);
+    expect(r.floorOfferOre % 5000).toBe(0);
+    expect(r.aimOfferOre).toBe(145000); // 180000 − 33333 = 146667 -> 145000
+  });
+
+  it("flags manual when rounding leaves nothing to offer", () => {
+    const r = computeBuybackPrice(
+      inputs({ saleValueOre: 100000, faults: [{ type: "screen", partPriceOre: 58000 }] }),
+      settings,
+    );
+    expect(r.status).toBe("manual");
   });
 });

@@ -65,7 +65,7 @@ describe("estimateBuyback", () => {
     const { client } = makeFakeClient(baseTables);
     const r = await estimateBuyback(client, device(), condition({ screen: "Knust" }), DEFAULT_BUYBACK_SETTINGS);
     expect(r.totalDeductionOre).toBe(33000);
-    expect(r.aimOfferOre).toBe(147000);
+    expect(r.aimOfferOre).toBe(145000); // 147000 rounded down to a whole 50 kr
   });
 
   it("flags manual for an iCloud-locked device without hitting pricing", async () => {
