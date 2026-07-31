@@ -15,8 +15,9 @@ import StoreFilter, {
 } from "@/components/admin/StoreFilter";
 import BuybackFeed from "@/components/admin/BuybackFeed";
 import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
-import BuybackStatusBar from "@/components/admin/BuybackStatusBar";
+import BuybackPauseBanner from "@/components/admin/buyback/BuybackPauseBanner";
 import BuybackPipeline from "@/components/admin/buyback/BuybackPipeline";
+import BuybackHeadline, { type HeadlineFacts } from "@/components/admin/buyback/BuybackHeadline";
 
 const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string; dot: string }> = {
   ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600", dot: "bg-blue-500" },
@@ -37,6 +38,22 @@ const ALL_STATUSES: (TradeInDerivedStatus | "alle")[] = [
   "leveret", "modtaget", "vurderet", "betalt", "afvist", "lukket",
 ];
 
+/**
+ * "3 dage" beats "12. jun. 2026" when you are scanning for what has gone stale.
+ *
+ * `now` is passed in rather than read here: calling Date.now() during render is
+ * impure, and the whole page should measure ages against one instant anyway.
+ */
+function relativeAge(iso: string, now: number): string {
+  const days = Math.floor((now - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return "i dag";
+  if (days === 1) return "i går";
+  if (days < 7) return `${days} dage`;
+  if (days < 31) return `${Math.floor(days / 7)} uger`;
+  const months = Math.floor(days / 30);
+  return `${months} ${months === 1 ? "måned" : "mdr"}`;
+}
+
 interface ShipmentInfo {
   tracking_number: string | null;
   in_transit_at: string | null;
@@ -46,7 +63,7 @@ interface ShipmentInfo {
 interface TradeInRow {
   inquiry: ContactInquiry;
   offers: Pick<TradeInOffer, "id" | "status" | "offer_amount" | "created_at" | "received_at">[];
-  receipts: { status: string }[];
+  receipts: { status: string; total_amount?: number }[];
   derivedStatus: TradeInDerivedStatus;
   shipment: ShipmentInfo | null;
   receivedAt: string | null;
@@ -71,6 +88,27 @@ export default function OpkoebPage() {
   const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">("alle");
   const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
+  // 112 rows in one scroll is not a list, it is a wall. Show a screenful.
+  const [visible, setVisible] = useState(30);
+  // Stamped when the data lands, so every age on the page is measured against
+  // the same instant and nothing impure runs during render.
+  const [now, setNow] = useState(0);
+
+  /* Narrowing the list starts it from the top again. */
+  const selectFilter = useCallback((next: TradeInDerivedStatus | "alle") => {
+    setFilter(next);
+    setVisible(30);
+  }, []);
+
+  const selectStore = useCallback((next: StoreFilterValue) => {
+    setStoreFilter(next);
+    setVisible(30);
+  }, []);
+
+  const changeSearch = useCallback((next: string) => {
+    setSearch(next);
+    setVisible(30);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -106,7 +144,7 @@ export default function OpkoebPage() {
 
     const { data: allReceipts } = await supabase
       .from("trade_in_receipts")
-      .select("inquiry_id, status")
+      .select("inquiry_id, status, total_amount")
       .in("inquiry_id", ids);
 
     const { data: allDeclines } = await supabase
@@ -138,6 +176,7 @@ export default function OpkoebPage() {
     });
 
     setRows(result);
+    setNow(Date.now());
     setLoading(false);
   }, []);
 
@@ -179,6 +218,55 @@ export default function OpkoebPage() {
   const filtered = preFiltered.filter((row) =>
     matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(row.inquiry))),
   );
+
+  /**
+   * The position, in numbers, from data already on the page. Everything here is
+   * an obligation — money out, a customer waiting, a parcel unaccounted for —
+   * because that is what the top of the page is for.
+   */
+  const facts: HeadlineFacts = (() => {
+    const f: HeadlineFacts = {
+      boughtOpen: 0,
+      boughtOpenKr: 0,
+      missingLabel: 0,
+      newLeads: 0,
+      staleOffers: 0,
+      deliveredNotReceived: 0,
+      toPay: 0,
+      toPayKr: 0,
+    };
+
+    for (const row of rows) {
+      if (row.derivedStatus === "ny") f.newLeads += 1;
+
+      const accepted = row.offers.find((o) => o.status === "accepted");
+      const hasReceipt = row.receipts.length > 0;
+
+      if (accepted && !hasReceipt) {
+        f.boughtOpen += 1;
+        f.boughtOpenKr += Math.round(accepted.offer_amount / 100);
+        // A customer who said yes and has no label cannot send us anything.
+        if (!row.shipment) f.missingLabel += 1;
+      }
+
+      if (row.derivedStatus === "leveret") f.deliveredNotReceived += 1;
+
+      for (const receipt of row.receipts) {
+        if (receipt.status === "confirmed") {
+          f.toPay += 1;
+          f.toPayKr += Math.round((receipt.total_amount ?? 0) / 100);
+        }
+      }
+
+      // A pending offer past the seven-day token has gone quiet for good.
+      const pending = row.offers.find((o) => o.status === "pending");
+      if (pending && now - new Date(pending.created_at).getTime() > 7 * 86_400_000) {
+        f.staleOffers += 1;
+      }
+    }
+
+    return f;
+  })();
 
   const statusCounts = rows.reduce((acc, r) => {
     acc[r.derivedStatus] = (acc[r.derivedStatus] ?? 0) + 1;
@@ -223,8 +311,11 @@ export default function OpkoebPage() {
         </div>
       </div>
 
-      {/* Does buyback need you today? */}
-      <BuybackStatusBar needsYou={statusCounts.ny ?? 0} />
+      {/* Automation stopped itself — nothing else matters until that is read */}
+      <BuybackPauseBanner />
+
+      {/* What buyback owes and is owed today */}
+      <BuybackHeadline facts={facts} onFilter={selectFilter} />
 
       {/* Where the devices we have bought actually are */}
       <BuybackPipeline
@@ -239,15 +330,12 @@ export default function OpkoebPage() {
         }))}
         labels={STATUS_CONFIG}
         active={filter}
-        onSelect={setFilter}
+        onSelect={selectFilter}
         onChanged={loadData}
       />
 
       {/* Offers still inside their hold window — yours to stop */}
       <BuybackHoldWindow onChange={loadData} />
-
-      {/* What the automation has been doing */}
-      <BuybackFeed limit={12} />
 
       {/* Search */}
       <div className="mb-5">
@@ -261,7 +349,7 @@ export default function OpkoebPage() {
             type="text"
             placeholder="Søg efter kunde eller enhed..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => changeSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
           />
         </div>
@@ -275,7 +363,7 @@ export default function OpkoebPage() {
             <button
               key={s}
               type="button"
-              onClick={() => setFilter(s)}
+              onClick={() => selectFilter(s)}
               className={`flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-all ${
                 filter === s
                   ? "bg-charcoal text-white shadow-sm"
@@ -299,7 +387,7 @@ export default function OpkoebPage() {
       {/* Store filter */}
       <StoreFilter
         value={storeFilter}
-        onChange={setStoreFilter}
+        onChange={selectStore}
         counts={storeCounts}
         className="mb-6"
       />
@@ -324,7 +412,7 @@ export default function OpkoebPage() {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
           <div className="divide-y divide-black/[0.03]">
-            {filtered.map((row) => {
+            {filtered.slice(0, visible).map((row) => {
               const meta = (row.inquiry.metadata || {}) as Record<string, unknown>;
               const leadDevices = readLeadDevices(meta);
               const first = leadDevices[0]?.device;
@@ -367,8 +455,11 @@ export default function OpkoebPage() {
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${statusCfg.badge}`}>
                       {statusCfg.label}
                     </span>
-                    <span className="hidden text-xs text-charcoal/20 sm:block">
-                      {formatDate(row.inquiry.created_at)}
+                    <span
+                      className="w-16 text-right text-xs text-charcoal/35"
+                      title={formatDate(row.inquiry.created_at)}
+                    >
+                      {relativeAge(row.inquiry.created_at, now)}
                     </span>
                     <svg className="h-4 w-4 text-charcoal/15" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -378,8 +469,23 @@ export default function OpkoebPage() {
               );
             })}
           </div>
+
+          {filtered.length > visible && (
+            <button
+              type="button"
+              onClick={() => setVisible((v) => v + 50)}
+              className="w-full border-t border-black/[0.03] px-5 py-3.5 text-[13px] font-medium text-charcoal/50 transition-colors hover:bg-black/[0.015] hover:text-charcoal"
+            >
+              Vis flere — {filtered.length - visible} tilbage
+            </button>
+          )}
         </div>
       )}
+
+      {/* History, not work — so it sits under the list rather than above it */}
+      <div className="mt-6">
+        <BuybackFeed limit={12} />
+      </div>
     </div>
   );
 }
