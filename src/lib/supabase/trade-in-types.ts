@@ -23,6 +23,10 @@ export interface TradeInOffer {
   created_at: string;
   updated_at: string;
 
+  // Per-device breakdown (null on offers created before the column existed).
+  // Read it with readOfferLines from @/lib/buyback/offer-lines.
+  offer_lines?: unknown | null;
+
   // Automation (nullable on rows created before the migration ran)
   auto_sent?: boolean;
   pricing_breakdown?: unknown | null;

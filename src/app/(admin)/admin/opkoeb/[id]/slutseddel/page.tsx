@@ -13,6 +13,8 @@ import type {
   TradeInReceiptStatus,
 } from "@/lib/supabase/trade-in-types";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
+import { readLeadDevices } from "@/lib/buyback/lead-devices";
+import { readOfferLines, includedLines } from "@/lib/buyback/offer-lines";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -124,7 +126,6 @@ export default function AdminSlutseddelPage() {
 
   /* ---- Derived ---- */
   const meta = (inquiry?.metadata ?? {}) as Record<string, unknown>;
-  const device = (meta.device ?? {}) as Record<string, unknown>;
   const deliveryMethod = (meta.deliveryMethod ?? meta.delivery_method ?? null) as string | null;
 
   const totalKr = items.reduce((sum, item) => {
@@ -249,24 +250,45 @@ export default function AdminSlutseddelPage() {
         setSellerEmail(inq.email ?? "");
       }
 
-      // Auto-fill first device item from inquiry metadata
-      const inqMeta = ((inq as ContactInquiry | null)?.metadata ?? {}) as Record<string, unknown>;
-      const dev = (inqMeta.device ?? {}) as Record<string, unknown>;
-      if (dev.brand || dev.model) {
-        setItems([
-          {
-            brand: (dev.brand as string) ?? "",
-            model: (dev.model as string) ?? "",
-            storage: (dev.storage as string) ?? "",
-            ram: (dev.ram as string) ?? "",
+      // Auto-fill the devices from the lead. This used to read metadata.device —
+      // the old flat shape — so it filled in nothing at all for leads written by
+      // the current wizard, which stores `devices: []`.
+      const leadDevices = readLeadDevices((inq as ContactInquiry | null)?.metadata);
+      const offerLines = offer ? readOfferLines(offer.offer_lines) : null;
+      const bought = offerLines ? includedLines(offerLines) : null;
+
+      // With a per-device offer, only the devices we actually bought belong on
+      // the slutseddel, each at the price the customer accepted.
+      const seeded: DeviceItemForm[] = bought
+        ? bought.map((line) => {
+            const dev = leadDevices[line.index]?.device;
+            return {
+              brand: dev?.brand || dev?.brandCustom || "",
+              model: dev?.model || dev?.modelCustom || "",
+              storage: dev?.storage ?? "",
+              ram: dev?.ram ?? "",
+              condition_grade: "",
+              imei_serial: "",
+              color: "",
+              price_kr: (line.amount_ore / 100).toString(),
+              condition_notes: "",
+            };
+          })
+        : leadDevices.map((entry, i) => ({
+            brand: entry.device.brand || entry.device.brandCustom || "",
+            model: entry.device.model || entry.device.modelCustom || "",
+            storage: entry.device.storage ?? "",
+            ram: entry.device.ram ?? "",
             condition_grade: "",
             imei_serial: "",
             color: "",
-            price_kr: offer ? (offer.offer_amount / 100).toString() : "",
+            // Without a breakdown the single amount can only be attributed to a
+            // single device; several devices get their prices filled by hand.
+            price_kr: offer && leadDevices.length === 1 && i === 0 ? (offer.offer_amount / 100).toString() : "",
             condition_notes: "",
-          },
-        ]);
-      }
+          }));
+
+      if (seeded.length > 0) setItems(seeded);
 
       // Auto-fill buyer from default store
       const defaultStore = STORES.slagelse;

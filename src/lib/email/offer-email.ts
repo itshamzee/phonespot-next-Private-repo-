@@ -5,6 +5,16 @@
 import { BRAND, emailHeader, emailFooter } from "@/lib/email/brand";
 import { escapeHtml } from "@/lib/email/escape";
 
+/**
+ * The per-device split, when the lead had more than one device. Without it the
+ * mail is the single-device layout it has always been \u2014 that is what every
+ * offer created before offer_lines existed still renders as.
+ */
+export interface OfferEmailLines {
+  included: { label: string; amountKr: string }[];
+  excluded: { label: string; reasonBody: string }[];
+}
+
 interface OfferEmailParams {
   customerName: string;
   deviceType: string;
@@ -15,6 +25,63 @@ interface OfferEmailParams {
   offerAmountKr: string; // formatted, e.g. "4.500,00 kr."
   acceptUrl: string;
   rejectUrl: string;
+  lines?: OfferEmailLines | null;
+}
+
+/* One row per device we are buying, then the total. */
+function deviceLinesBlock(lines: OfferEmailLines, totalKr: string): string {
+  const rows = lines.included
+    .map(
+      (line, i) => `
+                  <tr>
+                    <td style="padding:${i === 0 ? "0" : "10px"} 0 10px;font-size:15px;color:${BRAND.charcoal};font-weight:600;border-bottom:1px solid ${BRAND.sand};">
+                      ${escapeHtml(line.label)}
+                    </td>
+                    <td style="padding:${i === 0 ? "0" : "10px"} 0 10px;font-size:15px;color:${BRAND.charcoal};font-weight:700;text-align:right;white-space:nowrap;border-bottom:1px solid ${BRAND.sand};">
+                      ${escapeHtml(line.amountKr)}
+                    </td>
+                  </tr>`,
+    )
+    .join("");
+
+  return `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.warmWhite};border:1px solid ${BRAND.sand};border-radius:10px;margin:0 0 28px;">
+              <tr>
+                <td style="padding:20px 24px;">
+                  <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:${BRAND.greenLight};">Dine enheder</p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    ${rows}
+                    <tr>
+                      <td style="padding:14px 0 0;font-size:15px;color:${BRAND.charcoal};font-weight:700;">I alt</td>
+                      <td style="padding:14px 0 0;font-size:15px;color:${BRAND.charcoal};font-weight:800;text-align:right;white-space:nowrap;">${escapeHtml(totalKr)}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>`;
+}
+
+/* The devices we cannot buy, each with the reason the customer reads. */
+function excludedBlock(lines: OfferEmailLines): string {
+  if (lines.excluded.length === 0) return "";
+
+  const items = lines.excluded
+    .map(
+      (line) => `
+                  <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:${BRAND.charcoal};">${escapeHtml(line.label)}</p>
+                  <p style="margin:0 0 16px;font-size:13px;color:#666;line-height:1.6;">${escapeHtml(line.reasonBody)}</p>`,
+    )
+    .join("");
+
+  return `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fdf8f3;border:1px solid ${BRAND.sand};border-radius:10px;margin:0 0 28px;">
+              <tr>
+                <td style="padding:20px 24px 6px;">
+                  <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#b08968;">Disse kan vi ikke k\u00f8be</p>
+                  ${items}
+                </td>
+              </tr>
+            </table>`;
 }
 
 export function buildOfferEmailHtml(params: OfferEmailParams): string {
@@ -28,6 +95,11 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
   const conditionSummary = escapeHtml(params.conditionSummary);
 
   const deviceLine = [brand, model, storage].filter(Boolean).join(" \u2014 ");
+
+  // A single device with nothing excluded reads better as the original layout:
+  // a one-row table over one device is noise.
+  const lines = params.lines ?? null;
+  const useLines = lines !== null && (lines.included.length > 1 || lines.excluded.length > 0);
 
   return `<!DOCTYPE html>
 <html lang="da">
@@ -61,12 +133,19 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
               Hej ${customerName},
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6;">
-              Tak for din henvendelse om indbytte af din ${deviceType.toLowerCase()}. Vi har gennemgået
-              din enhed og er klar med et tilbud til dig.
+              ${
+                useLines
+                  ? "Tak for din henvendelse om indbytte. Vi har gennemgået dine enheder og er klar med et tilbud til dig."
+                  : `Tak for din henvendelse om indbytte af din ${deviceType.toLowerCase()}. Vi har gennemgået
+              din enhed og er klar med et tilbud til dig.`
+              }
             </p>
 
             <!-- Device info box -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.warmWhite};border:1px solid ${BRAND.sand};border-radius:10px;margin:0 0 28px;">
+            ${
+              useLines
+                ? deviceLinesBlock(lines, offerAmountKr) + excludedBlock(lines)
+                : `<table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.warmWhite};border:1px solid ${BRAND.sand};border-radius:10px;margin:0 0 28px;">
               <tr>
                 <td style="padding:20px 24px;">
                   <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:${BRAND.greenLight};">Enhed</p>
@@ -76,14 +155,15 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
                   </p>
                 </td>
               </tr>
-            </table>
+            </table>`
+            }
 
             <!-- Offer amount -->
             <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.green};border-radius:10px;margin:0 0 28px;">
               <tr>
                 <td style="padding:28px 24px;text-align:center;">
                   <p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.75);">
-                    Vores tilbud til dig
+                    ${useLines ? "Samlet tilbud" : "Vores tilbud til dig"}
                   </p>
                   <p style="margin:0;font-size:44px;font-weight:800;color:#ffffff;letter-spacing:-1px;line-height:1.1;">
                     ${offerAmountKr}
@@ -130,9 +210,9 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
               <tr>
                 <td style="padding:12px 16px;">
                   <p style="margin:0;font-size:13px;color:#555;line-height:1.5;">
-                    Når vi modtager din enhed, foretager vi en fysisk kontrol. Tilbuddet kan justeres
-                    hvis standbeskrivelsen afviger fra det modtagne. Du godkender altid den endelige pris
-                    før udbetaling.
+                    Når vi modtager ${useLines ? "dine enheder" : "din enhed"}, foretager vi en fysisk kontrol.
+                    Tilbuddet kan justeres hvis standbeskrivelsen afviger fra det modtagne. Du godkender
+                    altid den endelige pris før udbetaling.
                   </p>
                 </td>
               </tr>
@@ -155,4 +235,13 @@ export function buildOfferEmailHtml(params: OfferEmailParams): string {
 
 export function buildOfferEmailSubject(model: string, amountKr: string): string {
   return `Dit tilbud fra PhoneSpot \u2014 ${amountKr} for din ${model}`;
+}
+
+/**
+ * Several devices have no single model to name in the subject, and stuffing
+ * "(+1 enhed)" into the model name \u2014 which is what this did before \u2014 reads as a
+ * bug to the customer.
+ */
+export function buildMultiDeviceOfferEmailSubject(deviceCount: number, amountKr: string): string {
+  return `Dit tilbud fra PhoneSpot \u2014 ${amountKr} for dine ${deviceCount} enheder`;
 }

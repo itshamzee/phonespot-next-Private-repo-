@@ -47,6 +47,51 @@ describe("customer-supplied values never reach the markup raw", () => {
     expect(html).not.toContain("<script>");
   });
 
+  it("offer email escapes device labels in the per-device line table", () => {
+    const html = buildOfferEmailHtml({
+      customerName: "Mette",
+      deviceType: "Telefon",
+      brand: "Apple",
+      model: "iPhone 12",
+      storage: "128GB",
+      conditionSummary: "God",
+      offerAmountKr: "2.700,00 kr.",
+      acceptUrl: "https://phonespot.dk/a",
+      rejectUrl: "https://phonespot.dk/r",
+      lines: {
+        included: [
+          { label: "Apple iPhone 12 128GB", amountKr: "1.800,00 kr." },
+          // modelCustom is free text from the wizard — it reaches the label raw.
+          { label: nasty, amountKr: "900,00 kr." },
+        ],
+        excluded: [{ label: nasty, reasonBody: nasty }],
+      },
+    });
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("Apple iPhone 12 128GB");
+    expect(html).toContain("1.800,00 kr.");
+  });
+
+  it("offer email keeps the single-device layout when nothing is excluded", () => {
+    const html = buildOfferEmailHtml({
+      customerName: "Mette",
+      deviceType: "Telefon",
+      brand: "Apple",
+      model: "iPhone 12",
+      storage: "128GB",
+      conditionSummary: "God",
+      offerAmountKr: "1.800,00 kr.",
+      acceptUrl: "https://phonespot.dk/a",
+      rejectUrl: "https://phonespot.dk/r",
+      lines: {
+        included: [{ label: "Apple iPhone 12 128GB", amountKr: "1.800,00 kr." }],
+        excluded: [],
+      },
+    });
+    expect(html).toContain("Stand:");
+    expect(html).not.toContain("Dine enheder");
+  });
+
   it("digest escapes seller names and event summaries", () => {
     const data: DigestData = {
       toPay: [

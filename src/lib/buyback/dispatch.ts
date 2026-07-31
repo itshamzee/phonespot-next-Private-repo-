@@ -5,6 +5,7 @@ import { suggestForLead } from "./suggest";
 import { explainPricing } from "./breakdown";
 import { shouldAutoSend } from "./auto-send";
 import { readLeadDevices, deviceLabel } from "./lead-devices";
+import { singleLine } from "./offer-lines";
 import { logBuybackEvent } from "./events";
 import { catalogLastSyncedAt, catalogStaleReason, pauseAutomation } from "./pause";
 import { buildOfferEmailHtml, buildOfferEmailSubject } from "@/lib/email/offer-email";
@@ -88,6 +89,9 @@ export async function dispatchAutoOffer(
         auto_sent: true,
         send_state: "scheduled",
         scheduled_send_at: sendAt.toISOString(),
+        // Same shape the manual queue writes, so the email, the slutseddel and
+        // the admin views never have to special-case an automated offer.
+        offer_lines: singleLine(leadDevices, amountOre),
         pricing_breakdown: {
           explanation: suggestion.perDevice.map((d) => `${d.label}: ${explainPricing(d.result)}`),
           aimOfferOre: suggestion.totalAimOre,

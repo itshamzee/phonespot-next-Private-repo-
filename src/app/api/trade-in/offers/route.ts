@@ -1,9 +1,22 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { Resend } from "resend";
-import { buildOfferEmailHtml, buildOfferEmailSubject } from "@/lib/email/offer-email";
+import {
+  buildOfferEmailHtml,
+  buildOfferEmailSubject,
+  buildMultiDeviceOfferEmailSubject,
+  type OfferEmailLines,
+} from "@/lib/email/offer-email";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices } from "@/lib/buyback/lead-devices";
+import {
+  buildOfferLines,
+  singleLine,
+  includedLines,
+  excludedLines,
+  type OfferLine,
+} from "@/lib/buyback/offer-lines";
+import { declineReason } from "@/lib/buyback/decline-reasons";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
@@ -28,38 +41,17 @@ export async function GET(req: Request) {
 /* POST /api/trade-in/offers — create offer and send email */
 export async function POST(req: Request) {
   const body = await req.json();
-  const { inquiry_id, offer_amount, admin_note, created_by } = body;
+  const { inquiry_id, offer_amount, admin_note, created_by, lines } = body;
 
-  if (!inquiry_id || !offer_amount) {
+  if (!inquiry_id || (!offer_amount && !lines)) {
     return NextResponse.json({ error: "inquiry_id and offer_amount required" }, { status: 400 });
   }
 
   const supabase = createServerClient();
 
-  // 1. Expire any existing pending offers for this inquiry
-  await supabase
-    .from("trade_in_offers")
-    .update({ status: "expired", updated_at: new Date().toISOString() })
-    .eq("inquiry_id", inquiry_id)
-    .eq("status", "pending");
-
-  // 2. Create new offer
-  const { data: offer, error: offerErr } = await supabase
-    .from("trade_in_offers")
-    .insert({
-      inquiry_id,
-      offer_amount,
-      admin_note: admin_note || null,
-      created_by: created_by || null,
-    })
-    .select()
-    .single();
-
-  if (offerErr || !offer) {
-    return NextResponse.json({ error: offerErr?.message || "Failed to create offer" }, { status: 500 });
-  }
-
-  // 3. Fetch the inquiry for customer details + device metadata
+  // 1. Fetch the inquiry first: the devices are needed to validate the lines,
+  //    and a rejected offer must not have expired the previous one on its way
+  //    out. Nothing is written until everything checks out.
   const { data: inquiry } = await supabase
     .from("contact_inquiries")
     .select("*")
@@ -70,12 +62,66 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
   }
 
-  // 4. Build email
   const leadDevices = readLeadDevices(inquiry.metadata);
+
+  // 2. Resolve the amount. With lines, the total is ours to compute — an amount
+  //    from the client could contradict the lines the customer is reading.
+  let offerLines: OfferLine[] | null = null;
+  let amountOre: number;
+
+  if (lines) {
+    const built = buildOfferLines(leadDevices, lines);
+    if (!built.ok) {
+      return NextResponse.json({ error: built.error }, { status: 400 });
+    }
+    offerLines = built.lines;
+    amountOre = built.totalOre;
+  } else {
+    amountOre = offer_amount;
+    offerLines = singleLine(leadDevices, amountOre);
+  }
+
+  // 3. Expire any existing pending offers for this inquiry
+  await supabase
+    .from("trade_in_offers")
+    .update({ status: "expired", updated_at: new Date().toISOString() })
+    .eq("inquiry_id", inquiry_id)
+    .eq("status", "pending");
+
+  // 4. Create new offer
+  const { data: offer, error: offerErr } = await supabase
+    .from("trade_in_offers")
+    .insert({
+      inquiry_id,
+      offer_amount: amountOre,
+      offer_lines: offerLines,
+      admin_note: admin_note || null,
+      created_by: created_by || null,
+    })
+    .select()
+    .single();
+
+  if (offerErr || !offer) {
+    return NextResponse.json({ error: offerErr?.message || "Failed to create offer" }, { status: 500 });
+  }
+
+  // 5. Build email
   const device = leadDevices[0]?.device;
   const condition = leadDevices[0]?.condition;
-  const extraDevices = Math.max(0, leadDevices.length - 1);
-  const amountKr = formatDKK(offer_amount);
+  const amountKr = formatDKK(amountOre);
+
+  const emailLines: OfferEmailLines | null = offerLines
+    ? {
+        included: includedLines(offerLines).map((line) => ({
+          label: line.label,
+          amountKr: formatDKK(line.amount_ore),
+        })),
+        excluded: excludedLines(offerLines).map((line) => ({
+          label: line.label,
+          reasonBody: line.reason_code ? declineReason(line.reason_code).body : "",
+        })),
+      }
+    : null;
 
   const conditionParts = [
     condition?.screen ? `Skærm: ${condition.screen}` : null,
@@ -90,20 +136,24 @@ export async function POST(req: Request) {
     customerName: inquiry.name,
     deviceType: device?.deviceType || "enhed",
     brand: device?.brand || "",
-    model: extraDevices > 0
-      ? `${device?.model ?? ""} (+${extraDevices} enhed${extraDevices > 1 ? "er" : ""})`
-      : (device?.model || ""),
+    model: device?.model || "",
     storage: device?.storage || null,
     conditionSummary: conditionParts || "Ikke angivet",
     offerAmountKr: amountKr,
     acceptUrl,
     rejectUrl,
+    lines: emailLines,
   });
 
-  const subject = buildOfferEmailSubject(
-    device?.model || "enhed",
-    amountKr,
-  );
+  // The line table carries the device names when there are several; the subject
+  // counts them instead of naming the first one.
+  const subject =
+    emailLines && emailLines.included.length + emailLines.excluded.length > 1
+      ? buildMultiDeviceOfferEmailSubject(
+          emailLines.included.length + emailLines.excluded.length,
+          amountKr,
+        )
+      : buildOfferEmailSubject(device?.model || "enhed", amountKr);
 
   // 5. Send email via Resend
   try {
@@ -146,7 +196,21 @@ export async function POST(req: Request) {
     inquiry_id,
     sender: "staff",
     channel: "email",
-    body: `Tilbud sendt: ${amountKr}${admin_note ? ` (note: ${admin_note})` : ""}`,
+    body: [
+      `Tilbud sendt: ${amountKr}`,
+      // The split belongs in the lead history too — otherwise a colleague
+      // reading it later cannot see why one device is missing from the total.
+      ...(offerLines && offerLines.length > 1
+        ? offerLines.map((line) =>
+            line.excluded
+              ? `  ${line.label}: ikke med (${line.reason_code ? declineReason(line.reason_code).label : "ukendt årsag"})`
+              : `  ${line.label}: ${formatDKK(line.amount_ore)}`,
+          )
+        : []),
+      admin_note ? `(note: ${admin_note})` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
     staff_name: created_by || "System",
   });
 
