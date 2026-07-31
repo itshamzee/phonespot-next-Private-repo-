@@ -94,19 +94,47 @@ export async function listWebhooks(): Promise<ShipmondoWebhook[]> {
   return shipmondoFetch<ShipmondoWebhook[]>("/webhooks");
 }
 
+/**
+ * The label PDF, base64-encoded.
+ *
+ * The endpoint answers with JSON — `[{"base64": "JVBERi0...", "file_format":
+ * "pdf"}]` — and ignores an `Accept: application/pdf` header. This used to
+ * base64 the raw response body, so what got stored as label.pdf was the JSON
+ * envelope itself. Every label ever produced was a text file with a .pdf
+ * extension, which is why customers could not open them.
+ */
 export async function getShipmentLabel(shipmentId: number): Promise<string> {
   const res = await fetch(`${BASE_URL}/shipments/${shipmentId}/labels`, {
-    headers: {
-      ...getHeaders(),
-      Accept: "application/pdf",
-    },
+    headers: getHeaders(),
   });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Shipmondo label error ${res.status}: ${body}`);
   }
-  const buffer = await res.arrayBuffer();
-  return Buffer.from(buffer).toString("base64");
+
+  const body = await res.text();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new Error("Shipmondo returnerede en label vi ikke kunne læse");
+  }
+
+  const entry = Array.isArray(parsed) ? parsed[0] : parsed;
+  const base64 = (entry as { base64?: unknown })?.base64;
+
+  if (typeof base64 !== "string" || !base64) {
+    throw new Error("Shipmondo returnerede ingen label-fil");
+  }
+
+  // Cheap sanity check: a PDF always starts with %PDF, which is "JVBERi" once
+  // base64-encoded. Storing anything else produces a file nobody can open.
+  if (!base64.startsWith("JVBERi")) {
+    throw new Error("Shipmondos label var ikke en PDF");
+  }
+
+  return base64;
 }
 
 export interface ShipmondoProduct {
