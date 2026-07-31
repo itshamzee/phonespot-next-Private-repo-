@@ -21,6 +21,7 @@ export const DEFAULT_PARCEL = {
  * two options are gone rather than left to fail at booking time.
  */
 export const CARRIER_PRODUCTS = {
+  gls_home: { carrier_code: "gls", product_code: "GLSDK_HD" },
   gls_pickup: { carrier_code: "gls", product_code: "GLSDK_SD" },
   postnord_home: { carrier_code: "pdk", product_code: "PDK_MH" },
   postnord_pickup: { carrier_code: "pdk", product_code: "PDK_MC" },
@@ -28,23 +29,32 @@ export const CARRIER_PRODUCTS = {
 
 export type CarrierProductKey = keyof typeof CARRIER_PRODUCTS;
 
-/**
- * What a customer sending us a device for buyback drops off with. A service
- * point product, because the customer has to hand the parcel in somewhere.
- */
-export const BUYBACK_RETURN_PRODUCT = CARRIER_PRODUCTS.postnord_pickup;
+/** These reject a booking without a chosen service point id. */
+export const REQUIRES_SERVICE_POINT: string[] = ["PDK_MC", "GLSDK_SD"];
 
 /**
- * Codes removed because the account cannot book them. Named so a test can fail
- * if one is reintroduced — they look plausible and were wrong for months.
+ * The label a customer gets to send us a device for buyback.
+ *
+ * PDK_RDO is PostNord's return product: the customer hands the parcel in
+ * anywhere, with no shop chosen up front. PDK_MC was tried first and rejected
+ * the booking outright — "A service point is required for the product Service
+ * Point" — which would have forced the customer to pick a specific shop before
+ * we could even produce their label.
  */
-export const RETIRED_PRODUCT_CODES = [
-  "PDK17",
-  "PDK19",
-  "PDKEP",
-  "GLSDK_HD",
-  "DAO_DIRECT",
-] as const;
+export const BUYBACK_RETURN_PRODUCT = {
+  carrier_code: "pdk",
+  product_code: "PDK_RDO",
+} as const;
+
+/**
+ * Codes the account cannot book. Named so a test fails if one is reintroduced —
+ * they look plausible and were wrong for months.
+ *
+ * Check codes against `/products?sender_country_code=DK&receiver_country_code=DK`.
+ * Without the country filter the API answers with a mixed international list
+ * that omits DK products, which is how GLSDK_HD was briefly and wrongly retired.
+ */
+export const RETIRED_PRODUCT_CODES = ["PDK17", "PDK19", "PDKEP", "DAO_DIRECT"] as const;
 
 /**
  * Where parcels come from and go back to. Derived from store-config rather than

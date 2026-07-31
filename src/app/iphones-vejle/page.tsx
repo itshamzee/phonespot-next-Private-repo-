@@ -6,12 +6,12 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
   description:
-    "Køb kvalitetstestede refurbished iPhones i Vejle. Fra 999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3A.",
+    "Køb kvalitetstestede refurbished iPhones i Vejle. Fra 999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/iphones-vejle" },
   openGraph: {
     title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
     description:
-      "Kvalitetstestede refurbished iPhones fra 999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3A.",
+      "Kvalitetstestede refurbished iPhones fra 999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
     url: "https://phonespot.dk/iphones-vejle",
     type: "website",
   },
@@ -100,7 +100,7 @@ const faqJsonLd = {
       name: "Kan jeg hente min refurbished iPhone i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3A i Vejle. Gratis afhentning — klar samme dag ved bestilling før kl. 14.",
+        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling før kl. 14.",
       },
     },
     {
@@ -169,7 +169,7 @@ const USP_ITEMS = [
   {
     title: "Afhent i Vejle",
     description:
-      "Bestil online og hent gratis i vores butik på Løversysselvej 3A. Klar samme dag ved bestilling før kl. 14.",
+      "Bestil online og hent gratis i vores butik på Løversysselvej 3B. Klar samme dag ved bestilling før kl. 14.",
   },
   {
     title: "Prismatch-garanti",
@@ -369,7 +369,7 @@ export default function IphonesVejlePage() {
               iPhones i grade A og B — alle grundigt testet, renset og klar til
               brug. Når du køber hos os, medfølger 36 måneders garanti og fuld
               returret. Du kan se og teste enhederne fysisk i vores butik på
-              Løversysselvej 3A, inden du beslutter dig.
+              Løversysselvej 3B, inden du beslutter dig.
             </p>
           </div>
 
@@ -379,7 +379,7 @@ export default function IphonesVejlePage() {
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
               Med vores Click & Collect service kan du bestille online og hente
-              din iPhone gratis i butikken på Løversysselvej 3A. Bestiller du
+              din iPhone gratis i butikken på Løversysselvej 3B. Bestiller du
               inden kl. 14, er ordren klar samme dag. Du har mulighed for at
               teste enheden inden du tager den med.
             </p>
@@ -418,7 +418,7 @@ export default function IphonesVejlePage() {
               {
                 question: "Kan jeg hente min refurbished iPhone i Vejle?",
                 answer:
-                  "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3A i Vejle. Gratis afhentning — klar samme dag ved bestilling inden kl. 14.",
+                  "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling inden kl. 14.",
               },
               {
                 question: "Hvilken garanti får jeg?",
@@ -469,7 +469,7 @@ export default function IphonesVejlePage() {
           </h2>
           <p className="mt-4 text-base text-white/75">
             Se hele udvalget af refurbished iPhones med aktuelle priser og
-            lagerstatus. Afhent gratis i butikken på Løversysselvej 3A, Vejle.
+            lagerstatus. Afhent gratis i butikken på Løversysselvej 3B, Vejle.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -486,7 +486,7 @@ export default function IphonesVejlePage() {
             </Link>
           </div>
           <p className="mt-8 text-sm text-white/50">
-            PhoneSpot Vejle · Løversysselvej 3A · 7100 Vejle ·{" "}
+            PhoneSpot Vejle · Løversysselvej 3B · 7100 Vejle ·{" "}
             <a
               href={`tel:${store.phone.replace(/\s/g, "")}`}
               className="hover:text-white/80"

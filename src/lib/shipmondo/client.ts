@@ -38,7 +38,14 @@ export async function createShipment(
 ): Promise<ShipmondoShipmentResponse> {
   return shipmondoFetch<ShipmondoShipmentResponse>("/shipments", {
     method: "POST",
-    body: JSON.stringify(request),
+    // own_agreement and service_codes are required by the API and were missing
+    // from every booking this app made, so each one failed with a 422 before it
+    // ever reached the carrier. Defaulted here so no caller can forget them.
+    body: JSON.stringify({
+      own_agreement: false,
+      service_codes: "EMAIL_NT",
+      ...request,
+    }),
   });
 }
 

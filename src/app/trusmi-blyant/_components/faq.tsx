@@ -19,7 +19,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Kan jeg afhente den i butikken?",
-    a: "Ja — vi har dem på lager i både Slagelse (VestsjællandsCentret 10) og Vejle (Løversysselvej 3A). Bestil online og hent samme dag, eller kig forbi og prøv den først.",
+    a: "Ja — vi har dem på lager i både Slagelse (VestsjællandsCentret 10) og Vejle (Løversysselvej 3B). Bestil online og hent samme dag, eller kig forbi og prøv den først.",
   },
   {
     q: "Kan spidsen udskiftes?",

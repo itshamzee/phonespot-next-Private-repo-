@@ -7,7 +7,13 @@ import {
   extractTrackingNumber,
   extractStatus,
 } from "../webhook";
-import { CARRIER_PRODUCTS, RETIRED_PRODUCT_CODES, SENDER_ADDRESSES } from "../carriers";
+import {
+  CARRIER_PRODUCTS,
+  RETIRED_PRODUCT_CODES,
+  SENDER_ADDRESSES,
+  BUYBACK_RETURN_PRODUCT,
+  REQUIRES_SERVICE_POINT,
+} from "../carriers";
 import { STORES } from "@/lib/store-config";
 
 const KEY = "test-key-0123456789";
@@ -120,7 +126,9 @@ describe("payload extraction", () => {
 describe("carrier and product codes", () => {
   it("uses only codes the Shipmondo account can book", () => {
     // Verified against GET /carriers and GET /products on 2026-07-31.
-    const valid = new Set(["PDK_MH", "PDK_MC", "PDK_BPE", "GLSDK_SD"]);
+    // From /products?sender_country_code=DK&receiver_country_code=DK — the
+    // country filter matters; without it the API omits the DK products.
+    const valid = new Set(["PDK_MH", "PDK_MC", "PDK_RDO", "GLSDK_SD", "GLSDK_HD"]);
     for (const entry of Object.values(CARRIER_PRODUCTS)) {
       expect(valid.has(entry.product_code)).toBe(true);
       expect(["pdk", "gls"]).toContain(entry.carrier_code);
@@ -133,6 +141,12 @@ describe("carrier and product codes", () => {
     for (const retired of RETIRED_PRODUCT_CODES) {
       expect(inUse).not.toContain(retired);
     }
+  });
+
+  it("uses PostNord's return product for buyback, not one needing a chosen shop", () => {
+    // PDK_MC rejects the booking outright: "A service point is required".
+    expect(BUYBACK_RETURN_PRODUCT.product_code).toBe("PDK_RDO");
+    expect(REQUIRES_SERVICE_POINT).not.toContain(BUYBACK_RETURN_PRODUCT.product_code);
   });
 
   it("never calls PostNord 'postnord' — Shipmondo calls it 'pdk'", () => {

@@ -22,7 +22,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Kan jeg afhente brillerne i butikken?",
-    a: "Ja — vi har dem på lager i både Slagelse (VestsjællandsCentret 10) og Vejle (Løversysselvej 3A). Bestil online og hent samme dag, eller kig forbi og prøv dem først. Du kan også få fri fragt over 500 kr.",
+    a: "Ja — vi har dem på lager i både Slagelse (VestsjællandsCentret 10) og Vejle (Løversysselvej 3B). Bestil online og hent samme dag, eller kig forbi og prøv dem først. Du kan også få fri fragt over 500 kr.",
   },
   {
     q: "Hvad er forskellen mellem 1.199 kr nyprisen og de 799 kr I tager?",

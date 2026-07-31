@@ -6,12 +6,12 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "Refurbished Bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
   description:
-    "Køb kvalitetstestede refurbished bærbare computere i Vejle. Fra 1.999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3A.",
+    "Køb kvalitetstestede refurbished bærbare computere i Vejle. Fra 1.999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/baerbare-vejle" },
   openGraph: {
     title: "Refurbished Bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
     description:
-      "Kvalitetstestede refurbished laptops fra 1.999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3A.",
+      "Kvalitetstestede refurbished laptops fra 1.999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
     url: "https://phonespot.dk/baerbare-vejle",
     type: "website",
   },
@@ -97,7 +97,7 @@ const faqJsonLd = {
       name: "Kan jeg hente en refurbished laptop i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3A i Vejle. Klar samme dag ved bestilling inden kl. 14.",
+        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
       },
     },
     {
@@ -186,7 +186,7 @@ const USP_ITEMS = [
   {
     title: "Afhent i Vejle",
     description:
-      "Bestil online og hent gratis i vores butik på Løversysselvej 3A. Klar samme dag ved bestilling inden kl. 14.",
+      "Bestil online og hent gratis i vores butik på Løversysselvej 3B. Klar samme dag ved bestilling inden kl. 14.",
   },
   {
     title: "Op til 70% billigere",
@@ -379,7 +379,7 @@ export default function BaerbareVejlePage() {
                 {
                   step: "3",
                   title: "Hent i Vejle",
-                  desc: "Afhent på Løversysselvej 3A — test inden du tager den med",
+                  desc: "Afhent på Løversysselvej 3B — test inden du tager den med",
                 },
               ].map((s) => (
                 <div key={s.step} className="flex flex-col items-center text-center">
@@ -444,7 +444,7 @@ export default function BaerbareVejlePage() {
               bærbare computere fra Apple, Lenovo, HP og Dell. Alle enheder er
               grundigt testet, renset og klar til brug. Når du køber hos os,
               medfølger 36 måneders garanti og fuld returret. Du kan se og teste
-              computerne fysisk i vores butik på Løversysselvej 3A, inden du
+              computerne fysisk i vores butik på Løversysselvej 3B, inden du
               beslutter dig.
             </p>
           </div>
@@ -490,7 +490,7 @@ export default function BaerbareVejlePage() {
               {
                 question: "Kan jeg hente en refurbished laptop i Vejle?",
                 answer:
-                  "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3A i Vejle. Klar samme dag ved bestilling inden kl. 14.",
+                  "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
               },
               {
                 question: "Hvilken garanti får jeg på en refurbished laptop?",
@@ -564,7 +564,7 @@ export default function BaerbareVejlePage() {
             </Link>
           </div>
           <p className="mt-8 text-sm text-white/50">
-            PhoneSpot Vejle · Løversysselvej 3A · 7100 Vejle ·{" "}
+            PhoneSpot Vejle · Løversysselvej 3B · 7100 Vejle ·{" "}
             <a
               href={`tel:${store.phone.replace(/\s/g, "")}`}
               className="hover:text-white/80"

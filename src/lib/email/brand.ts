@@ -35,7 +35,7 @@ export const BRAND = {
     },
     {
       name:    "PhoneSpot Vejle",
-      address: "Løversysselvej 3A, 7100 Vejle",
+      address: "Løversysselvej 3B, 7100 Vejle",
       hours:   "Man-Fre 10-17:30 · Lør-Søn 10-15",
     },
   ],

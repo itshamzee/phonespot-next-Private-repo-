@@ -53,7 +53,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
     name: "PhoneSpot Vejle",
     company: "PhoneSpot ApS",
     mall: null,
-    street: "Løversysselvej 3A",
+    street: "Løversysselvej 3B",
     city: "Vejle",
     zip: "7100",
     country: "Danmark",

@@ -6,12 +6,12 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "iPhone & Samsung Reparation i Vejle — Fra 299 kr | PhoneSpot",
   description:
-    "Professionel telefon- og tablet-reparation i Vejle. Skærmskift, batteriskift og mere fra 299 kr. Livstidsgaranti på alle reparationer. PhoneSpot Vejle, Løversysselvej 3A.",
+    "Professionel telefon- og tablet-reparation i Vejle. Skærmskift, batteriskift og mere fra 299 kr. Livstidsgaranti på alle reparationer. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
     title: "iPhone & Samsung Reparation i Vejle — Fra 299 kr | PhoneSpot",
     description:
-      "Professionel telefon- og tablet-reparation i Vejle fra 299 kr. Livstidsgaranti på alle reparationer. Løversysselvej 3A, 7100 Vejle.",
+      "Professionel telefon- og tablet-reparation i Vejle fra 299 kr. Livstidsgaranti på alle reparationer. Løversysselvej 3B, 7100 Vejle.",
     url: "https://phonespot.dk/reparation-vejle",
     type: "website",
   },
@@ -97,7 +97,7 @@ const faqJsonLd = {
       name: "Hvor ligger PhoneSpot Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "PhoneSpot Vejle ligger på Løversysselvej 3A, 7100 Vejle. Der er gratis parkering direkte foran butikken.",
+        text: "PhoneSpot Vejle ligger på Løversysselvej 3B, 7100 Vejle. Der er gratis parkering direkte foran butikken.",
       },
     },
     {
@@ -113,7 +113,7 @@ const faqJsonLd = {
       name: "Er der parkering ved butikken?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja, der er gratis parkering direkte foran butikken på Løversysselvej 3A. Du kan parkere lige ved siden af indgangen.",
+        text: "Ja, der er gratis parkering direkte foran butikken på Løversysselvej 3B. Du kan parkere lige ved siden af indgangen.",
       },
     },
     {
@@ -172,7 +172,7 @@ const FAQS = [
   {
     question: "Hvor ligger PhoneSpot Vejle?",
     answer:
-      "PhoneSpot Vejle ligger på Løversysselvej 3A, 7100 Vejle. Der er gratis parkering direkte foran butikken, og vi er nemt tilgængelige fra hele Vejle-området.",
+      "PhoneSpot Vejle ligger på Løversysselvej 3B, 7100 Vejle. Der er gratis parkering direkte foran butikken, og vi er nemt tilgængelige fra hele Vejle-området.",
   },
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
@@ -182,7 +182,7 @@ const FAQS = [
   {
     question: "Er der parkering ved butikken?",
     answer:
-      "Ja, der er gratis parkering direkte foran butikken på Løversysselvej 3A. Du kan parkere lige ved siden af indgangen — ingen P-afgift.",
+      "Ja, der er gratis parkering direkte foran butikken på Løversysselvej 3B. Du kan parkere lige ved siden af indgangen — ingen P-afgift.",
   },
   {
     question: "Hvad koster reparation i Vejle?",
@@ -443,7 +443,7 @@ export default function ReparationVejlePage() {
               {
                 title: "Walk-in service",
                 description:
-                  "Ingen tidsbestilling nødvendig. Kig forbi på Løversysselvej 3A i åbningstiden — vi er klar til at hjælpe.",
+                  "Ingen tidsbestilling nødvendig. Kig forbi på Løversysselvej 3B i åbningstiden — vi er klar til at hjælpe.",
               },
               {
                 title: "Gratis parkering",
@@ -500,7 +500,7 @@ export default function ReparationVejlePage() {
               Sådan finder du os i Vejle
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
-              PhoneSpot Vejle ligger på Løversysselvej 3A, 7100 Vejle. Vi er
+              PhoneSpot Vejle ligger på Løversysselvej 3B, 7100 Vejle. Vi er
               nemt tilgængelige fra centrum og de omkringliggende bydele, og
               der er gratis parkering direkte foran butikken. Se åbningstider og
               kontaktinformation øverst på siden.
@@ -552,7 +552,7 @@ export default function ReparationVejlePage() {
             Klar til at få repareret din enhed?
           </h2>
           <p className="mt-4 text-base text-white/75">
-            Book en tid online eller kig forbi som walk-in på Løversysselvej 3A,
+            Book en tid online eller kig forbi som walk-in på Løversysselvej 3B,
             7100 Vejle. Vi er klar til at hjælpe — hurtigt og professionelt.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -570,7 +570,7 @@ export default function ReparationVejlePage() {
             </Link>
           </div>
           <p className="mt-8 text-sm text-white/50">
-            PhoneSpot Vejle · Løversysselvej 3A · 7100 Vejle ·{" "}
+            PhoneSpot Vejle · Løversysselvej 3B · 7100 Vejle ·{" "}
             <a
               href={`tel:${store.phone.replace(/\s/g, "")}`}
               className="hover:text-white/80"

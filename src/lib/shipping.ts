@@ -36,6 +36,15 @@ const SHIPPING_PRICES: Record<string, ShippingOption> = {
     ...CARRIER_PRODUCTS.gls_pickup,
   },
 
+  gls_home: {
+    method: "gls_home",
+    label: "GLS - Levering til dør",
+    price: 4900,
+    delivery_estimate: "1-2 hverdage",
+    requires_pickup_point: false,
+    ...CARRIER_PRODUCTS.gls_home,
+  },
+
   // Legacy keys — kept so historical orders still resolve to a name and price.
   // Not offered at checkout; see BOOKABLE below.
   postnord_home: {
@@ -60,17 +69,10 @@ const SHIPPING_PRICES: Record<string, ShippingOption> = {
     delivery_estimate: "2-3 hverdage",
     requires_pickup_point: true,
   },
-  gls_home: {
-    method: "gls_home",
-    label: "GLS - Levering til dør",
-    price: 4900,
-    delivery_estimate: "1-2 hverdage",
-    requires_pickup_point: false,
-  },
 };
 
 /** What a customer can pick today. Everything else is history. */
-const BOOKABLE: ShippingMethod[] = ["postnord", "postnord_pickup", "gls_pickup"];
+const BOOKABLE: ShippingMethod[] = ["postnord", "postnord_pickup", "gls_pickup", "gls_home"];
 
 export function getShippingOptions(): ShippingOption[] {
   const bookable = BOOKABLE.map((m) => SHIPPING_PRICES[m]).filter(Boolean);

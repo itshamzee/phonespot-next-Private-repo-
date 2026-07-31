@@ -38,14 +38,14 @@ export async function generateMetadata({
     return {
       title: "PhoneSpot Vejle — Brugt Elektronik & iPhone Reparation | Løversysselvej",
       description:
-        "Besøg PhoneSpot Vejle på Løversysselvej 3A. iPhone reparation på 30 min, brugt elektronik med 36 mnd garanti, sælg din enhed. Åbent man-fre 10-17:30, weekend 10-15.",
+        "Besøg PhoneSpot Vejle på Løversysselvej 3B. iPhone reparation på 30 min, brugt elektronik med 36 mnd garanti, sælg din enhed. Åbent man-fre 10-17:30, weekend 10-15.",
       alternates: {
         canonical: "https://phonespot.dk/butik/vejle",
       },
       openGraph: {
         title: "PhoneSpot Vejle — Brugt Elektronik & iPhone Reparation",
         description:
-          "Professionel iPhone reparation og brugt elektronik i Vejle. 36 mnd garanti, Klarna delbetaling. Løversysselvej 3A.",
+          "Professionel iPhone reparation og brugt elektronik i Vejle. 36 mnd garanti, Klarna delbetaling. Løversysselvej 3B.",
         url: "https://phonespot.dk/butik/vejle",
         type: "website",
       },
@@ -195,7 +195,7 @@ function getVejleFAQs(): Array<{ question: string; answer: string }> {
     },
     {
       question: "Er der parkering ved butikken i Vejle?",
-      answer: "Ja, der er gratis parkering lige ved butikken på Løversysselvej 3A. Du kan parkere direkte foran døren.",
+      answer: "Ja, der er gratis parkering lige ved butikken på Løversysselvej 3B. Du kan parkere direkte foran døren.",
     },
     {
       question: "Kan jeg sælge min brugte telefon hos jer i Vejle?",
@@ -838,7 +838,7 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
                 PhoneSpot Vejle
               </h1>
               <p className="mt-3 text-base text-white/80 md:text-lg">
-                Løversysselvej 3A, 7100 Vejle
+                Løversysselvej 3B, 7100 Vejle
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -1086,7 +1086,7 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
                 Hvorfor vælge PhoneSpot Vejle?
               </Heading>
               <p className="text-base leading-relaxed text-[#6E6E73]">
-                PhoneSpot Vejle ligger centralt på Løversysselvej 3A med gratis parkering direkte foran butikken. Vi er tæt på Bredballe og nemt tilgængelige fra hele Vejle-området. Hos os får du professionel reparation, refurbished elektronik med 36 måneders garanti og mulighed for at sælge din brugte enhed med kontant betaling.
+                PhoneSpot Vejle ligger centralt på Løversysselvej 3B med gratis parkering direkte foran butikken. Vi er tæt på Bredballe og nemt tilgængelige fra hele Vejle-området. Hos os får du professionel reparation, refurbished elektronik med 36 måneders garanti og mulighed for at sælge din brugte enhed med kontant betaling.
               </p>
             </div>
           </FadeIn>
@@ -1119,7 +1119,7 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
                 Sælg din brugte telefon i Vejle
               </Heading>
               <p className="text-base leading-relaxed text-[#6E6E73]">
-                Har du en gammel iPhone, Samsung eller iPad liggende? Kig forbi vores butik på Løversysselvej 3A for en gratis og uforpligtende vurdering. Vi køber brugte enheder op og betaler kontant med det samme — ingen ventetid, ingen besvær. Brug vores online prisberegner for et øjeblikkeligt estimat inden dit besøg.
+                Har du en gammel iPhone, Samsung eller iPad liggende? Kig forbi vores butik på Løversysselvej 3B for en gratis og uforpligtende vurdering. Vi køber brugte enheder op og betaler kontant med det samme — ingen ventetid, ingen besvær. Brug vores online prisberegner for et øjeblikkeligt estimat inden dit besøg.
               </p>
             </div>
           </FadeIn>

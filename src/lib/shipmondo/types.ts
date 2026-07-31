@@ -1,9 +1,20 @@
-export type ShipmondoCarrier = "gls" | "postnord" | "dao";
+export type ShipmondoCarrier = "gls" | "pdk";
 
 export type ShipmondoShipmentRequest = {
   carrier_code: string;
   product_code: string;
+  /**
+   * Required by POST /shipments. Comma-separated; PostNord rejects a booking
+   * with none of EMAIL_NT / SMS_NT ("At least one of the following services are
+   * required"). The client fills in EMAIL_NT when a caller leaves it out.
+   */
   service_codes?: string;
+  /**
+   * Required by POST /shipments — omitting it fails with "Parameter(s):
+   * own_agreement invalid or missing". False means Shipmondo's own carrier
+   * agreement, which is the one this account ships on.
+   */
+  own_agreement?: boolean;
   sender: ShipmondoAddress;
   receiver: ShipmondoAddress;
   parcels: ShipmondoParcel[];

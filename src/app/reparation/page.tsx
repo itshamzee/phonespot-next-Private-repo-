@@ -59,7 +59,7 @@ const REPAIR_FAQ = [
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
     answer:
-      "Ja! Vi tilbyder walk-in service i begge vores butikker — VestsjællandsCentret i Slagelse og Løversysselvej 3A i Vejle. Du kan også booke tid online.",
+      "Ja! Vi tilbyder walk-in service i begge vores butikker — VestsjællandsCentret i Slagelse og Løversysselvej 3B i Vejle. Du kan også booke tid online.",
   },
   {
     question: "Mister jeg mine data?",
