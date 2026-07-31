@@ -1,6 +1,14 @@
 import type { ShippingOption, ShippingMethod } from "./shipmondo/types";
-import { CLICK_COLLECT_OPTIONS } from "./shipmondo/carriers";
+import { CLICK_COLLECT_OPTIONS, CARRIER_PRODUCTS } from "./shipmondo/carriers";
 
+/**
+ * Every shipping method we have ever sold, so an old order still renders the
+ * name and price it was placed with.
+ *
+ * What a customer can *choose today* is the smaller set in BOOKABLE — the
+ * account has no DAO agreement and no GLS home-delivery product, so offering
+ * them only produces a booking that fails after the customer has paid.
+ */
 const SHIPPING_PRICES: Record<string, ShippingOption> = {
   // Checkout uses these simplified IDs
   postnord: {
@@ -9,45 +17,7 @@ const SHIPPING_PRICES: Record<string, ShippingOption> = {
     price: 5900,
     delivery_estimate: "2-4 hverdage",
     requires_pickup_point: false,
-    carrier_code: "postnord",
-    product_code: "PDK17",
-  },
-  dao: {
-    method: "dao",
-    label: "DAO Pakke",
-    price: 4900,
-    delivery_estimate: "2-4 hverdage",
-    requires_pickup_point: true,
-    carrier_code: "dao",
-    product_code: "DAO_DIRECT",
-  },
-  // Legacy keys (in case older orders reference them)
-  gls_home: {
-    method: "gls_home",
-    label: "GLS - Levering til dør",
-    price: 4900,
-    delivery_estimate: "1-2 hverdage",
-    requires_pickup_point: false,
-    carrier_code: "gls",
-    product_code: "GLSDK_HD",
-  },
-  gls_pickup: {
-    method: "gls_pickup",
-    label: "GLS PakkeShop",
-    price: 3900,
-    delivery_estimate: "1-2 hverdage",
-    requires_pickup_point: true,
-    carrier_code: "gls",
-    product_code: "GLSDK_SD",
-  },
-  postnord_home: {
-    method: "postnord_home",
-    label: "PostNord - Levering til dør",
-    price: 5500,
-    delivery_estimate: "2-3 hverdage",
-    requires_pickup_point: false,
-    carrier_code: "postnord",
-    product_code: "PDK17",
+    ...CARRIER_PRODUCTS.postnord_home,
   },
   postnord_pickup: {
     method: "postnord_pickup",
@@ -55,8 +25,33 @@ const SHIPPING_PRICES: Record<string, ShippingOption> = {
     price: 3900,
     delivery_estimate: "2-3 hverdage",
     requires_pickup_point: true,
-    carrier_code: "postnord",
-    product_code: "PDK19",
+    ...CARRIER_PRODUCTS.postnord_pickup,
+  },
+  gls_pickup: {
+    method: "gls_pickup",
+    label: "GLS PakkeShop",
+    price: 3900,
+    delivery_estimate: "1-2 hverdage",
+    requires_pickup_point: true,
+    ...CARRIER_PRODUCTS.gls_pickup,
+  },
+
+  // Legacy keys — kept so historical orders still resolve to a name and price.
+  // Not offered at checkout; see BOOKABLE below.
+  postnord_home: {
+    method: "postnord_home",
+    label: "PostNord - Levering til dør",
+    price: 5500,
+    delivery_estimate: "2-3 hverdage",
+    requires_pickup_point: false,
+    ...CARRIER_PRODUCTS.postnord_home,
+  },
+  dao: {
+    method: "dao",
+    label: "DAO Pakke",
+    price: 4900,
+    delivery_estimate: "2-4 hverdage",
+    requires_pickup_point: true,
   },
   dao_pickup: {
     method: "dao_pickup",
@@ -64,13 +59,22 @@ const SHIPPING_PRICES: Record<string, ShippingOption> = {
     price: 3500,
     delivery_estimate: "2-3 hverdage",
     requires_pickup_point: true,
-    carrier_code: "dao",
-    product_code: "DAO_DIRECT",
+  },
+  gls_home: {
+    method: "gls_home",
+    label: "GLS - Levering til dør",
+    price: 4900,
+    delivery_estimate: "1-2 hverdage",
+    requires_pickup_point: false,
   },
 };
 
+/** What a customer can pick today. Everything else is history. */
+const BOOKABLE: ShippingMethod[] = ["postnord", "postnord_pickup", "gls_pickup"];
+
 export function getShippingOptions(): ShippingOption[] {
-  return [...Object.values(SHIPPING_PRICES), ...CLICK_COLLECT_OPTIONS];
+  const bookable = BOOKABLE.map((m) => SHIPPING_PRICES[m]).filter(Boolean);
+  return [...bookable, ...CLICK_COLLECT_OPTIONS];
 }
 
 export function getShippingOption(method: ShippingMethod): ShippingOption | undefined {

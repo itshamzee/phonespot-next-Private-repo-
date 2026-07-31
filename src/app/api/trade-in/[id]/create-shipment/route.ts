@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createShipment, getShipmentLabel } from "@/lib/shipmondo/client";
+import { BUYBACK_RETURN_PRODUCT, SENDER_ADDRESSES } from "@/lib/shipmondo/carriers";
+import { normalizeStoreId } from "@/lib/stores";
 
 export async function POST(
   req: Request,
@@ -36,46 +38,49 @@ export async function POST(
     return NextResponse.json({ error: "Label already exists for this offer" }, { status: 409 });
   }
 
-  // Get company settings for sender address
-  const { data: company } = await supabase
-    .from("company_settings")
-    .select("*")
-    .single();
-
   const inquiry = offer.contact_inquiries;
 
-  // Parse postal_city into postal_code + city
+  // Parse the seller's "4200 Slagelse" into its two parts.
   const sellerPostalCity = offer.seller_postal_city || "";
   const postalMatch = sellerPostalCity.match(/^(\d{4})\s+(.+)$/);
-  const receiverPostal = postalMatch ? postalMatch[1] : "2200";
-  const receiverCity = postalMatch ? postalMatch[2] : "København N";
 
-  const companyPostalCity = company?.postal_city || "2200 København N";
-  const companyPostalMatch = companyPostalCity.match(/^(\d{4})\s+(.+)$/);
-  const senderPostal = companyPostalMatch ? companyPostalMatch[1] : "2200";
-  const senderCity = companyPostalMatch ? companyPostalMatch[2] : "København N";
+  if (!postalMatch || !offer.seller_address) {
+    // Without a real sender address the label is worthless, and Shipmondo would
+    // happily bill us for it. Better to say so than to ship into a fallback
+    // address in Copenhagen, which is what this used to do.
+    return NextResponse.json(
+      { error: "Sælgers adresse og postnummer mangler på tilbuddet" },
+      { status: 400 },
+    );
+  }
+
+  // The customer sends the device to us, so they are the sender and the store is
+  // the receiver. This was the other way round, which would have shipped a
+  // parcel from us to the customer.
+  const store = SENDER_ADDRESSES[
+    normalizeStoreId(inquiry?.store_id) === "vejle" ? "vejle" : "slagelse"
+  ];
 
   try {
     const shipment = await createShipment({
-      carrier_code: "postnord",
-      product_code: "PDKEP",
+      ...BUYBACK_RETURN_PRODUCT,
       sender: {
-        name: company?.company_name || "PhoneSpot",
-        address1: company?.address || "Nørrebrogade 42",
-        zipcode: senderPostal,
-        city: senderCity,
-        country_code: "DK",
-        email: company?.email || "info@phonespot.dk",
-        phone: company?.phone || "",
-      },
-      receiver: {
         name: offer.seller_name || inquiry.name,
-        address1: offer.seller_address || "",
-        zipcode: receiverPostal,
-        city: receiverCity,
+        address1: offer.seller_address,
+        zipcode: postalMatch[1],
+        city: postalMatch[2],
         country_code: "DK",
         email: inquiry.email,
         phone: inquiry.phone || "",
+      },
+      receiver: {
+        name: store.name,
+        address1: store.address1,
+        zipcode: store.zipcode,
+        city: store.city,
+        country_code: store.country_code,
+        email: store.email,
+        phone: store.phone,
       },
       parcels: [{ weight: 1000 }],
       reference: `TradeIn-${offerId.slice(0, 8)}`,
@@ -128,7 +133,8 @@ export async function POST(
     }
 
     return NextResponse.json({ label, tracking_number: trackingNumber });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Shipmondo API error" }, { status: 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Shipmondo API error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

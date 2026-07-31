@@ -102,13 +102,20 @@ buyback-hændelse frem for at fejle. Ukendt status ændrer ingenting.
 Ukendt pakkenummer giver `200`, ikke `404` — en webhook der får fejl bliver
 prøvet igen i det uendelige, og vi sender også pakker der ikke er opkøb.
 
-### 1.5 Oprydning i cron
+### 1.5 Fastlåste forsendelser i den daglige rapport
 
-Den daglige `buyback-digest`-cron (kl. 07) får et ekstra trin: enhver label der
-stadig står som `label_created` eller `in_transit` og er mere end to dage gammel
-slås op direkte hos Shipmondo, og statussen rettes. Det fanger tabte webhooks
-uden en ny cron — der ligger fem i forvejen, og det her hører hjemme sammen med
-den rapport der læses hver morgen.
+**Der findes ingen REST-endpoint til fragtstatus.** Verificeret mod
+OpenAPI-specen: der er ingen path med "monitor", "track" eller "status", og
+`delivery_details` på et shipment er *ønsket* leveringstidspunkt, ikke faktisk
+status. Shipment Monitor findes udelukkende som webhook.
+
+Derfor kan en manglende webhook ikke repareres ved at spørge igen. I stedet
+gøres tavsheden synlig: den daglige `buyback-digest` (kl. 07) får et afsnit med
+forsendelser der ikke har haft et event i mere end tre dage, med tracking-nummer,
+så et menneske kan slå den op hos PostNord. Det er ærligere end en oprydning der
+ikke kan lade sig gøre, og det koster ingen ny cron.
+
+Samme mekanik i den anden ende af forløbet: leveret men ikke modtaget (§2.2).
 
 ## Fase 2 — det indgående forløb
 

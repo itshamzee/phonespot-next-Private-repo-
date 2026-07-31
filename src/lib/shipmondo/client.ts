@@ -57,6 +57,36 @@ export async function getPickupPoints(
   return shipmondoFetch<ShipmondoPickupPoint[]>(`/pickup_points?${params}`);
 }
 
+export interface ShipmondoWebhook {
+  id: number;
+  name: string;
+  endpoint: string;
+  action: string;
+  resource_name: string;
+  active: boolean;
+}
+
+/**
+ * Subscribes to carrier progress. `key` is what Shipmondo signs the payload
+ * with, so it must match SHIPMONDO_WEBHOOK_KEY on our side.
+ */
+export async function createWebhook(params: {
+  name: string;
+  endpoint: string;
+  key: string;
+  action: "status_update" | "delivered" | "create" | "cancel";
+  resource_name: "Shipments" | "Orders" | "Shipment Monitor";
+}): Promise<ShipmondoWebhook> {
+  return shipmondoFetch<ShipmondoWebhook>("/webhooks", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function listWebhooks(): Promise<ShipmondoWebhook[]> {
+  return shipmondoFetch<ShipmondoWebhook[]>("/webhooks");
+}
+
 export async function getShipmentLabel(shipmentId: number): Promise<string> {
   const res = await fetch(`${BASE_URL}/shipments/${shipmentId}/labels`, {
     headers: {
@@ -72,8 +102,28 @@ export async function getShipmentLabel(shipmentId: number): Promise<string> {
   return Buffer.from(buffer).toString("base64");
 }
 
-export async function getProducts(senderCountry = "DK", receiverCountry = "DK") {
-  return shipmondoFetch<any[]>(`/products?sender_country=${senderCountry}&receiver_country=${receiverCountry}`);
+export interface ShipmondoProduct {
+  id: number;
+  code: string;
+  name: string;
+  available: boolean;
+  service_point_available: boolean;
+  sender_country_code: string;
+  receiver_country_code: string;
+  expected_transit_time: string | null;
+}
+
+export async function getProducts(
+  senderCountry = "DK",
+  receiverCountry = "DK",
+): Promise<ShipmondoProduct[]> {
+  // The parameters are *_country_code. Sending sender_country makes the API
+  // reject the call outright with "param is missing".
+  const params = new URLSearchParams({
+    sender_country_code: senderCountry,
+    receiver_country_code: receiverCountry,
+  });
+  return shipmondoFetch<ShipmondoProduct[]>(`/products?${params}`);
 }
 
 export async function getShipmentQuotes(
