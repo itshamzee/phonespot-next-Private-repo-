@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
-import { STORE } from "@/lib/store-config";
-import { normalizeStoreId } from "@/lib/stores";
+import { storeForId } from "@/lib/store-config";
+import { normalizeStoreId, storeLabel } from "@/lib/stores";
+import { getStaffRecipients } from "@/lib/email/staff-routing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -42,6 +43,14 @@ export async function POST(request: Request) {
         }
       : null;
 
+    // The chosen store decides which mailbox the staff notification lands in and
+    // which address the customer's confirmation is signed with. A booking made
+    // without one (a direct API call — the wizard requires the field) stays
+    // unattributed rather than being filed as Slagelse, and only the signature
+    // falls back, because the customer must be given some address.
+    const storeId = normalizeStoreId(body.store_id);
+    const store = storeForId(storeId);
+
     // Insert repair ticket
     const { data: ticket, error: insertError } = await supabase
       .from("repair_tickets")
@@ -53,7 +62,7 @@ export async function POST(request: Request) {
         device_model: body.device_model.trim(),
         issue_description: body.issue_description.trim(),
         service_type: body.service_type.trim(),
-        store_id: normalizeStoreId(body.store_id),
+        store_id: storeId,
         ...(bookingDetails ? { booking_details: bookingDetails } : {}),
       })
       .select()
@@ -76,7 +85,7 @@ export async function POST(request: Request) {
         bookingLines.push(`  ${svc.name}: ${svc.price_dkk} DKK`);
       }
       if (bookingDetails.includes_tempered_glass) {
-        bookingLines.push("  Panserglas: 99 DKK");
+        bookingLines.push("  Beskyttelsesglas: 99 DKK");
       }
       if (bookingDetails.discount_percent > 0) {
         bookingLines.push(`  Rabat: ${bookingDetails.discount_percent}%`);
@@ -102,20 +111,21 @@ export async function POST(request: Request) {
         "Du vil modtage en email naar vi har vurderet din enhed og kan give dig en fast pris.",
         "",
         "Med venlig hilsen,",
-        STORE.name,
-        `${STORE.street}, ${STORE.zip} ${STORE.city}`,
-        STORE.email,
+        store.name,
+        `${store.street}, ${store.zip} ${store.city}`,
+        store.email,
       ].join("\n"),
     });
 
     // Send notification email to staff
     await resend.emails.send({
       from: "PhoneSpot System <noreply@phonespot.dk>",
-      to: "info@phonespot.dk",
-      subject: `Ny reparationssag: ${body.device_type} ${body.device_model}`,
+      ...getStaffRecipients(storeId),
+      subject: `Ny reparationssag${storeId ? ` (${storeLabel(storeId)})` : ""}: ${body.device_type} ${body.device_model}`,
       text: [
         "Ny reparationsanmodning modtaget:",
         "",
+        `Butik: ${storeLabel(storeId)}`,
         `Kunde: ${body.customer_name}`,
         `Email: ${body.customer_email}`,
         `Telefon: ${body.customer_phone}`,

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { createReservation } from "@/lib/supabase/accessories";
 import type { Reservation } from "@/lib/supabase/platform-types";
+import { normalizeStoreId, storeLabel } from "@/lib/stores";
+import { getStaffRecipients } from "@/lib/email/staff-routing";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // PUBLIC route — no admin auth required
 export async function POST(request: Request) {
@@ -66,6 +71,34 @@ export async function POST(request: Request) {
       ready_at: null,
       collected_at: null,
     });
+
+    // Tell the store a customer is coming to collect something. The reservation
+    // is already saved, so a mail problem must not turn into a failed request —
+    // log it and hand the customer their reservation anyway.
+    try {
+      const storeId = normalizeStoreId(store_id);
+      await resend.emails.send({
+        from: "PhoneSpot System <noreply@phonespot.dk>",
+        ...getStaffRecipients(storeId),
+        subject: `Ny reservation${storeId ? ` (${storeLabel(storeId)})` : ""}: ${String(product_name)}`,
+        text: [
+          "Ny reservation til afhentning:",
+          "",
+          `Produkt: ${String(product_name)} (${String(product_type)})`,
+          `Butik: ${storeLabel(storeId)}`,
+          "",
+          `Kunde: ${String(customer_name)}`,
+          `Telefon: ${String(customer_phone)}`,
+          ...(customer_email ? [`Email: ${String(customer_email)}`] : []),
+          "",
+          `Reservations-ID: ${reservation.id}`,
+          `Udløber: ${new Date(expiresAt).toLocaleString("da-DK")}`,
+        ].join("\n"),
+      });
+    } catch (mailErr) {
+      console.error("Reservation staff mail failed:", mailErr);
+    }
+
     return NextResponse.json(reservation, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Ukendt fejl";

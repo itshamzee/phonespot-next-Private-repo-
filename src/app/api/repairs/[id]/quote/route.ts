@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
-import { STORE } from "@/lib/store-config";
+import { storeForId } from "@/lib/store-config";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -36,6 +36,10 @@ export async function POST(
         { status: 404 },
       );
     }
+
+    // Sign the quote with the store the ticket belongs to — a Vejle customer
+    // was previously given Slagelse's address to turn up at.
+    const store = storeForId(ticket.store_id);
 
     // Create quote
     const { data: quote, error: quoteError } = await supabase
@@ -96,9 +100,9 @@ export async function POST(
         "Svar venligst paa denne email for at godkende eller afslaae tilbuddet.",
         "",
         "Med venlig hilsen,",
-        STORE.name,
-        `${STORE.street}, ${STORE.zip} ${STORE.city}`,
-        STORE.email,
+        store.name,
+        `${store.street}, ${store.zip} ${store.city}`,
+        store.email,
       ]
         .filter(Boolean)
         .join("\n"),

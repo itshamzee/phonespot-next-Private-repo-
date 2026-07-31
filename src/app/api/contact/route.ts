@@ -3,7 +3,8 @@ import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { dispatchAutoOffer } from "@/lib/buyback/dispatch";
-import { normalizeStoreId } from "@/lib/stores";
+import { normalizeStoreId, storeLabel } from "@/lib/stores";
+import { getStaffRecipients } from "@/lib/email/staff-routing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
 
   const supabase = createServerClient();
   const normalizedSource = source?.trim() || "kontaktformular";
+  // Decides both what we store and which mailbox the staff notification lands in.
+  const storeId = normalizeStoreId(store_id);
 
   // Save to database
   const { data: inserted } = await supabase
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
       message: message.trim(),
       source: normalizedSource,
       metadata: metadata || null,
-      store_id: normalizeStoreId(store_id),
+      store_id: storeId,
     })
     .select("id, name, email, metadata")
     .maybeSingle();
@@ -50,10 +53,10 @@ export async function POST(request: Request) {
   try {
     await resend.emails.send({
       from: "PhoneSpot Kontakt <noreply@phonespot.dk>",
-      to: "info@phonespot.dk",
+      ...getStaffRecipients(storeId),
       replyTo: email,
-      subject: `Kontakt: ${subject || "Generel henvendelse"}`,
-      text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}\n${message}`,
+      subject: `Kontakt${storeLabel(storeId) === "Generel" ? "" : ` (${storeLabel(storeId)})`}: ${subject || "Generel henvendelse"}`,
+      text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}Butik: ${storeLabel(storeId)}\n\n${message}`,
     });
 
     return NextResponse.json({ success: true });

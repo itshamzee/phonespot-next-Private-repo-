@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
-import { STORE } from "@/lib/store-config";
+import { storeForId, type StoreLocationConfig } from "@/lib/store-config";
 import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import type { RepairStatus } from "@/lib/supabase/types";
@@ -29,6 +29,7 @@ function getStatusEmailBody(
   customerName: string,
   deviceType: string,
   deviceModel: string,
+  store: StoreLocationConfig,
 ): string | null {
   switch (status) {
     case "godkendt":
@@ -40,8 +41,8 @@ function getStatusEmailBody(
         "Vi gaar i gang med reparationen hurtigst muligt og holder dig opdateret.",
         "",
         "Med venlig hilsen,",
-        STORE.name,
-        STORE.email,
+        store.name,
+        store.email,
       ].join("\n");
     case "i_gang":
       return [
@@ -52,8 +53,8 @@ function getStatusEmailBody(
         "Vi giver dig besked saa snart reparationen er faerdig.",
         "",
         "Med venlig hilsen,",
-        STORE.name,
-        STORE.email,
+        store.name,
+        store.email,
       ].join("\n");
     case "faerdig":
       return [
@@ -64,9 +65,9 @@ function getStatusEmailBody(
         "Kontakt os for at aftale afhentning eller returnering.",
         "",
         "Med venlig hilsen,",
-        STORE.name,
-        `${STORE.street}, ${STORE.zip} ${STORE.city}`,
-        STORE.email,
+        store.name,
+        `${store.street}, ${store.zip} ${store.city}`,
+        store.email,
       ].join("\n");
     default:
       return null;
@@ -136,6 +137,8 @@ export async function PATCH(
       ticket.customer_name,
       ticket.device_type,
       ticket.device_model,
+      // The ticket's own store, so a Vejle customer is not told to come to Slagelse.
+      storeForId(ticket.store_id),
     );
 
     if (emailSubject && emailBody && ticket.customer_email) {

@@ -1,3 +1,5 @@
+import { normalizeStoreId } from "@/lib/stores";
+
 export interface StoreLocationConfig {
   slug: string;
   name: string;
@@ -33,7 +35,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
     country: "Danmark",
     countryCode: "DK",
     phone: "+45 61 10 00 48",
-    email: "info@phonespot.dk",
+    email: "slagelse@phonespot.dk",
     shopifyLocationId: "90389381464",
     hours: {
       weekdays: "10:00 – 19:00",
@@ -74,4 +76,24 @@ export const STORES: Record<string, StoreLocationConfig> = {
 
 // Backwards compatibility
 export const STORE = STORES.slagelse;
+
+/**
+ * The company-wide inbox, as opposed to a single store's.
+ *
+ * Anything that speaks for PhoneSpot as a whole — the footer, general contact
+ * details — must use this rather than STORE.email, which is Slagelse's own
+ * mailbox and stopped being the shared one when slagelse@ was created.
+ */
+export const COMPANY_EMAIL = "info@phonespot.dk";
+
+/**
+ * The store a record belongs to, for signing customer mail with the right
+ * address. Falls back to Slagelse for records with no store — that is what
+ * every one of these mails was hardcoded to before store attribution existed,
+ * and the customer still has to be given an address to turn up at.
+ */
+export function storeForId(storeId?: string | null): StoreLocationConfig {
+  const slug = normalizeStoreId(storeId);
+  return slug ? STORES[slug] : STORE;
+}
 export type StoreConfig = StoreLocationConfig;

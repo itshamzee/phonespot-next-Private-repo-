@@ -1068,7 +1068,9 @@ function VejlePage({ store }: { store: StoreLocationConfig }) {
             <Link href="/reparation" className="rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45]">
               Se alle priser &rarr;
             </Link>
-            <Link href="/reparation/booking" className="rounded-full border-2 border-[#111111] px-7 py-3.5 text-sm font-bold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">
+            {/* Vejle's own section — prefill the wizard so a Vejle customer is
+                not booked into Slagelse by default. */}
+            <Link href="/reparation/booking?store=vejle" className="rounded-full border-2 border-[#111111] px-7 py-3.5 text-sm font-bold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">
               Book tid nu
             </Link>
           </div>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { STORE } from "@/lib/store-config";
+import { STORE, COMPANY_EMAIL } from "@/lib/store-config";
 import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
 
@@ -215,14 +215,14 @@ export function Footer() {
                 </a>
 
                 <a
-                  href={`mailto:${STORE.email}`}
+                  href={`mailto:${COMPANY_EMAIL}`}
                   className="flex items-center gap-2 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#1A3D2E]" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                   </svg>
                   <span className="text-[12px] text-[#86868B] transition-colors duration-150 group-hover:text-white">
-                    {STORE.email}
+                    {COMPANY_EMAIL}
                   </span>
                 </a>
 
