@@ -56,13 +56,13 @@ export async function POST(request: NextRequest) {
       entity_id: order_id,
       details: {
         reason,
-        tracking_number: shipment.tracking_number,
+        tracking_number: shipment.pkg_no,
       },
     });
 
     return NextResponse.json({
-      tracking_number: shipment.tracking_number,
-      label_url: shipment.label_url,
+      tracking_number: shipment.pkg_no,
+      shipment_id: shipment.id,
     });
   } catch (err) {
     console.error("Return label generation failed:", err);

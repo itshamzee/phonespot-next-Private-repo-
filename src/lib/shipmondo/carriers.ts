@@ -80,6 +80,13 @@ export const SENDER_ADDRESSES = {
   vejle: senderFor("vejle"),
 } as const;
 
+/**
+ * Where buyback devices are sent. Every trade-in parcel goes to Vejle
+ * regardless of which store the enquiry came in through — the assessment
+ * happens in one place, so the label must too.
+ */
+export const BUYBACK_DESTINATION = SENDER_ADDRESSES.vejle;
+
 export const CLICK_COLLECT_OPTIONS: ShippingOption[] = [
   {
     method: "click_collect_slagelse",
@@ -96,3 +103,11 @@ export const CLICK_COLLECT_OPTIONS: ShippingOption[] = [
     requires_pickup_point: false,
   },
 ];
+
+/** PostNord and GLS both take the parcel number straight in the URL. */
+export function trackingUrlFor(carrierCode: string, pkgNo: string): string {
+  if (carrierCode === "gls") {
+    return `https://gls-group.eu/DK/da/find-pakke?match=${encodeURIComponent(pkgNo)}`;
+  }
+  return `https://tracking.postnord.com/dk/?id=${encodeURIComponent(pkgNo)}`;
+}

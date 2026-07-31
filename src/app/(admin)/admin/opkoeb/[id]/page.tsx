@@ -9,6 +9,8 @@ import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt } from "@/lib/sup
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
+import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
+import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 
 /** What GET /api/trade-in/suggest answers with. */
 interface LeadSuggestionResponse {
@@ -87,6 +89,7 @@ export default function AdminOpkoebDetailPage() {
   const [shippingLabel, setShippingLabel] = useState<Record<string, unknown> | null>(null);
   const [labelLoading, setLabelLoading] = useState(false);
   const [receiveLoading, setReceiveLoading] = useState(false);
+  const [labelOpening, setLabelOpening] = useState(false);
 
   // Price suggestion from the engine
   const [suggestion, setSuggestion] = useState<LeadSuggestionResponse | null>(null);
@@ -312,6 +315,23 @@ export default function AdminOpkoebDetailPage() {
     setReceiveLoading(false);
   }
 
+  /**
+   * Signed storage links expire, so the stored one is usually dead. A fresh one
+   * is minted per click.
+   */
+  async function handleOpenLabel(offerId: string) {
+    setLabelOpening(true);
+    try {
+      const res = await staffFetch(`/api/trade-in/${offerId}/label`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.open(data.url, "_blank", "noopener");
+      else alert(data.error || "Kunne ikke hente label");
+    } catch {
+      alert("Kunne ikke hente label");
+    }
+    setLabelOpening(false);
+  }
+
   async function handleCreateShipment(offerId: string) {
     setLabelLoading(true);
     try {
@@ -344,8 +364,10 @@ export default function AdminOpkoebDetailPage() {
   /* ---- Extract metadata ---- */
 
   const meta = (inquiry?.metadata ?? {}) as Record<string, unknown>;
-  const device = (meta.device ?? {}) as Record<string, unknown>;
-  const condition = (meta.condition ?? {}) as Record<string, unknown>;
+  // Through readLeadDevices: metadata.device is the old flat shape, and the
+  // current wizard writes `devices: []`, so reading the old one showed an empty
+  // card on every lead — you could not see which phone the customer was selling.
+  const leadDevices = readLeadDevices(inquiry?.metadata);
   const deliveryMethod = (meta.deliveryMethod ?? meta.delivery_method ?? null) as string | null;
   const preferredStore = (meta.preferredStore ?? meta.preferred_store ?? null) as string | null;
 
@@ -398,6 +420,11 @@ export default function AdminOpkoebDetailPage() {
             <h2 className="font-display text-xl font-bold tracking-tight text-charcoal">
               {inquiry.name}
             </h2>
+            {leadDevices.length > 0 && (
+              <p className="mt-0.5 text-sm font-semibold text-charcoal/70">
+                {leadDevices.map((e) => deviceLabel(e.device)).join(" · ")}
+              </p>
+            )}
             <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-stone-400">
               <span>{inquiry.email}</span>
               {inquiry.phone && <span>Tel: {inquiry.phone}</span>}
@@ -411,40 +438,51 @@ export default function AdminOpkoebDetailPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ---- Left column: Device info ---- */}
         <div className="space-y-6">
-          {/* Device info card */}
-          <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
-              Enhedsoplysninger
-            </h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <InfoRow label="Enhedstype" value={device.deviceType as string} />
-              <InfoRow label="Mærke" value={device.brand as string} />
-              <InfoRow label="Model" value={device.model as string} />
-              <InfoRow label="Lagerplads" value={device.storage as string} />
-              <InfoRow label="RAM" value={device.ram as string} />
+          {leadDevices.length === 0 && (
+            <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+              <p className="text-sm text-stone-400">Ingen enhedsdata på henvendelsen.</p>
             </div>
-          </div>
+          )}
 
-          {/* Condition card */}
-          <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
-              Tilstand
-            </h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <InfoRow label="Skaerm" value={condition.screen as string} />
-              <InfoRow label="Bagside" value={condition.back as string} />
-              <InfoRow label="Batteri" value={condition.battery as string} />
-              <InfoRow
-                label="Alt virker"
-                value={condition.allWorking === true ? "Ja" : condition.allWorking === false ? "Nej" : undefined}
-              />
-              <InfoRow label="Defekte dele" value={condition.brokenParts as string} />
-              <InfoRow
-                label="Cloud-laast"
-                value={condition.cloudLocked === true ? "Ja" : condition.cloudLocked === false ? "Nej" : undefined}
-              />
+          {leadDevices.map((entry, i) => (
+            <div key={i} className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-baseline justify-between gap-3">
+                <h3 className="font-display text-base font-bold text-charcoal">
+                  {deviceLabel(entry.device)}
+                </h3>
+                {leadDevices.length > 1 && (
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+                    Enhed {i + 1} af {leadDevices.length}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <InfoRow label="Enhedstype" value={entry.device.deviceType} />
+                <InfoRow label="Mærke" value={entry.device.brand || entry.device.brandCustom} />
+                <InfoRow label="Model" value={entry.device.model || entry.device.modelCustom} />
+                <InfoRow label="Lagerplads" value={entry.device.storage} />
+                <InfoRow label="RAM" value={entry.device.ram} />
+              </div>
+
+              <div className="mt-4 border-t border-stone-200/60 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                  Tilstand
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <InfoRow label="Skærm" value={entry.condition.screen} />
+                  <InfoRow label="Bagside" value={entry.condition.back} />
+                  <InfoRow label="Batteri" value={entry.condition.battery} />
+                  <InfoRow label="Alt virker" value={entry.condition.allWorking} />
+                  <InfoRow
+                    label="Defekte dele"
+                    value={entry.condition.brokenParts.join(", ")}
+                  />
+                  <InfoRow label="iCloud-låst" value={entry.condition.cloudLocked} />
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
 
           {/* Delivery */}
           <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
@@ -671,7 +709,7 @@ export default function AdminOpkoebDetailPage() {
                         <div className="flex justify-between">
                           <span className="text-stone-400">Tracking</span>
                           <a
-                            href={`https://tracking.postnord.com/tracking/${shippingLabel.tracking_number}`}
+                            href={trackingUrlFor("pdk", String(shippingLabel.tracking_number))}
                             target="_blank"
                             rel="noopener"
                             className="font-medium text-green-eco hover:underline"
@@ -682,16 +720,13 @@ export default function AdminOpkoebDetailPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {Boolean(shippingLabel.label_url) && (
-                        <a
-                          href={String(shippingLabel.label_url)}
-                          target="_blank"
-                          rel="noopener"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                        >
-                          Download label (PDF)
-                        </a>
-                      )}
+                      <button
+                        onClick={() => handleOpenLabel(acceptedOffer.id)}
+                        disabled={labelOpening}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                      >
+                        {labelOpening ? "Henter..." : "Åbn label (PDF)"}
+                      </button>
                       <button
                         onClick={() => handleSendAcceptance(acceptedOffer.id)}
                         className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-stone-50"

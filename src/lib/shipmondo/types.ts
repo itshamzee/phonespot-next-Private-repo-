@@ -44,13 +44,17 @@ export type ShipmondoParcel = {
 export type ShipmondoShipmentResponse = {
   id: number;
   carrier_code: string;
-  tracking_number: string;
-  tracking_url: string;
-  label_url: string;
-  parcels: Array<{
-    tracking_number: string;
-    tracking_url: string;
-  }>;
+  product_code: string;
+  /**
+   * The tracking number. Shipmondo calls it pkg_no — there is no
+   * `tracking_number` field on the response, and reading one gave undefined,
+   * so every label was stored without a tracking number and the status webhook
+   * (which looks a parcel up by exactly that) could never match anything.
+   */
+  pkg_no: string;
+  external_pkg_no?: string | null;
+  price?: number;
+  parcels?: Array<{ pkg_no?: string }>;
 };
 
 export type ShipmondoPickupPoint = {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createShipment } from "@/lib/shipmondo/client";
 import { SENDER_ADDRESSES, DEFAULT_PARCEL } from "@/lib/shipmondo/carriers";
+import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 import { getShippingOption, getDispatchLocation, isClickCollect } from "@/lib/shipping";
 import type { ShippingMethod, ShipmondoShipmentRequest } from "@/lib/shipmondo/types";
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     const { error: updateErr } = await supabase
       .from("orders")
       .update({
-        tracking_number: shipment.tracking_number,
+        tracking_number: shipment.pkg_no,
         status: "shipped",
         shipped_at: new Date().toISOString(),
       })
@@ -110,16 +111,16 @@ export async function POST(request: NextRequest) {
       entity_type: "order",
       entity_id: order_id,
       details: {
-        tracking_number: shipment.tracking_number,
+        tracking_number: shipment.pkg_no,
         carrier: option.carrier_code,
         dispatch_location: dispatchFrom,
       },
     });
 
     return NextResponse.json({
-      tracking_number: shipment.tracking_number,
-      tracking_url: shipment.tracking_url,
-      label_url: shipment.label_url,
+      tracking_number: shipment.pkg_no,
+      tracking_url: trackingUrlFor(option.carrier_code, shipment.pkg_no),
+      shipment_id: shipment.id,
     });
   } catch (error) {
     console.error("Shipmondo label generation failed:", error);
