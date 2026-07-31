@@ -7,28 +7,32 @@ import { calcBundleDiscounts, calcDiscount, calcSubtotal } from "@/lib/cart/util
 import type { CartItem, CartDeviceItem, DiscountApplication } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
 import { createServerClient } from "@/lib/supabase/client";
+import { getShippingPrice, getShippingOption, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 
-const SHIPPING_METHODS: Record<string, number> = {
-  dao: 4900,       // 49 kr — DAO Pakke
-  postnord: 5900,  // 59 kr — PostNord Pakke
-  free: 0,
-  pickup_slagelse: 0,  // Gratis afhentning i Slagelse
-  pickup_vejle: 0,     // Gratis afhentning i Vejle
-};
-
-const FREE_SHIPPING_THRESHOLD = 50000; // 500 kr in øre
+// Prices come from lib/shipping, which is also what the checkout page renders.
+// They were listed here as well, so the price shown and the price charged were
+// two separate facts that had already drifted apart.
 
 interface CheckoutSessionRequest {
   items: CartItem[];
   customer: CustomerInfo;
   discountCode?: string;
   shippingMethod: string;
+  pickupPoint?: {
+    id: string;
+    name: string;
+    address: string;
+    zipcode: string;
+    city: string;
+    carrier_code: string;
+  };
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CheckoutSessionRequest;
-    const { items, customer, discountCode, shippingMethod } = body;
+    const { items, customer, discountCode, shippingMethod, pickupPoint } = body;
 
     // 1. Basic validation
     if (!items?.length) {
@@ -37,8 +41,17 @@ export async function POST(req: NextRequest) {
     if (!customer?.email || !customer?.name) {
       return NextResponse.json({ error: "Kundeoplysninger mangler" }, { status: 400 });
     }
-    if (!shippingMethod || !(shippingMethod in SHIPPING_METHODS)) {
+    const listPrice = shippingMethod ? getShippingPrice(shippingMethod) : undefined;
+    if (listPrice === undefined) {
       return NextResponse.json({ error: "Ugyldig leveringsmetode" }, { status: 400 });
+    }
+
+    // Booking a parcel-shop delivery without a shop fails at the carrier, so it
+    // is refused before the customer is charged.
+    const needsPickupPoint =
+      getShippingOption(shippingMethod as ShippingMethodId)?.requires_pickup_point === true;
+    if (needsPickupPoint && !pickupPoint?.id) {
+      return NextResponse.json({ error: "Vælg en pakkeshop" }, { status: 400 });
     }
 
     // 2. Validate cart items server-side
@@ -99,7 +112,7 @@ export async function POST(req: NextRequest) {
     const discountAmount = discount ? calcDiscount(subtotal, discount) : 0;
 
     // Determine shipping cost (free shipping threshold or free_shipping discount)
-    let shippingCost = SHIPPING_METHODS[shippingMethod];
+    let shippingCost = listPrice;
     if (discount?.type === "free_shipping") {
       shippingCost = 0;
     } else if (subtotal - discountAmount - bundleDiscountAmount >= FREE_SHIPPING_THRESHOLD) {
@@ -141,6 +154,7 @@ export async function POST(req: NextRequest) {
       discount,
       discountCodeId,
       shippingMethod,
+      pickupPoint: pickupPoint ?? null,
       shippingCost,
       subtotal,
       discountAmount,

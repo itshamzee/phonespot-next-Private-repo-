@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
+import type { PickupPoint } from "@/components/checkout/pickup-point-picker";
+import { getShippingOption } from "@/lib/shipping";
+import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 import { PrePurchaseInfo } from "@/components/checkout/pre-purchase-info";
 import { trackInitiateCheckout } from "@/lib/tracking/fbq";
 
@@ -40,6 +43,7 @@ export function CheckoutForm() {
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER);
   const [shippingMethod, setShippingMethod] = useState<string | null>(null);
   const [shippingCost, setShippingCost] = useState<number>(0);
+  const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountApplied, setDiscountApplied] = useState(false);
@@ -93,12 +97,23 @@ export function CheckoutForm() {
   // Submit
   // -----------------------------------------------------------------------
 
+  const requiresPickupPoint =
+    !!shippingMethod &&
+    getShippingOption(shippingMethod as ShippingMethodId)?.requires_pickup_point === true;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
 
     if (!shippingMethod) {
       setSubmitError("Vælg en leveringsmetode for at fortsætte.");
+      return;
+    }
+
+    // A parcel with no shop attached cannot be booked, so it is caught here
+    // rather than after the customer has paid.
+    if (requiresPickupPoint && !pickupPoint) {
+      setSubmitError("Vælg den pakkeshop du vil hente pakken i.");
       return;
     }
 
@@ -122,6 +137,7 @@ export function CheckoutForm() {
           customer,
           discountCode: cartState.discount?.code ?? undefined,
           shippingMethod,
+          pickupPoint: pickupPoint ?? undefined,
         }),
       });
 
@@ -320,9 +336,14 @@ export function CheckoutForm() {
         <ShippingSelector
           selected={shippingMethod}
           items={cartState.items}
+          zipcode={customer.address.postal_code}
+          pickupPoint={pickupPoint}
+          onPickupPoint={setPickupPoint}
           onSelect={(method, cost) => {
             setShippingMethod(method);
             setShippingCost(cost);
+            // A shop chosen for one carrier means nothing for another.
+            setPickupPoint(null);
           }}
         />
       </section>

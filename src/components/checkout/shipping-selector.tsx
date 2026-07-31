@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { formatOere } from "@/lib/cart/utils";
+import { getShippingOptions } from "@/lib/shipping";
+import { STORES } from "@/lib/store-config";
+import { PickupPointPicker, type PickupPoint } from "./pickup-point-picker";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 
 export interface ShippingMethod {
@@ -11,12 +14,14 @@ export interface ShippingMethod {
   cost: number;
   disabled?: boolean;
   disabledReason?: string;
+  requiresPickupPoint?: boolean;
 }
 
-const STORE_LOCATIONS: { id: string; name: string; address: string }[] = [
-  { id: "slagelse", name: "Slagelse", address: "VestsjællandsCentret 10, 4200 Slagelse" },
-  { id: "vejle", name: "Vejle", address: "Vejle, Denmark" },
-];
+const STORE_LOCATIONS = Object.values(STORES).map((store) => ({
+  id: store.slug,
+  name: store.city,
+  address: `${store.street}, ${store.zip} ${store.city}`,
+}));
 
 function getPickupMethods(
   items: CartItem[],
@@ -57,28 +62,41 @@ function getPickupMethods(
   });
 }
 
-const DELIVERY_METHODS: ShippingMethod[] = [
-  {
-    id: "dao",
-    label: "DAO Pakke",
-    description: "Afhentning i nærmeste pakkeshop (2–4 hverdage)",
-    cost: 4900,
-  },
-  {
-    id: "postnord",
-    label: "PostNord Levering",
-    description: "Levering til døren (2–4 hverdage)",
-    cost: 5900,
-  },
-];
+/**
+ * From lib/shipping — the same list the checkout session prices against. These
+ * used to be typed out here as well, which is how DAO stayed on the page after
+ * it was removed everywhere else: this component never read that file.
+ */
+const DELIVERY_METHODS: ShippingMethod[] = getShippingOptions()
+  .filter((o) => !o.method.startsWith("click_collect_"))
+  .map((o) => ({
+    id: o.method,
+    label: o.label,
+    description: o.requires_pickup_point
+      ? `Vælg en pakkeshop nær dig (${o.delivery_estimate})`
+      : `Leveres til din adresse (${o.delivery_estimate})`,
+    cost: o.price,
+    requiresPickupPoint: o.requires_pickup_point,
+  }));
 
 interface ShippingSelectorProps {
   onSelect: (method: string, cost: number) => void;
   selected: string | null;
   items?: CartItem[];
+  /** From the address form, so we can look up shops near the customer. */
+  zipcode?: string;
+  pickupPoint?: PickupPoint | null;
+  onPickupPoint?: (point: PickupPoint) => void;
 }
 
-export function ShippingSelector({ onSelect, selected, items = [] }: ShippingSelectorProps) {
+export function ShippingSelector({
+  onSelect,
+  selected,
+  items = [],
+  zipcode = "",
+  pickupPoint = null,
+  onPickupPoint,
+}: ShippingSelectorProps) {
   const [skuStockByLocation, setSkuStockByLocation] = useState<Record<string, string[]>>({});
 
   // Fetch per-location stock for SKU items to validate pickup availability
@@ -103,6 +121,7 @@ export function ShippingSelector({ onSelect, selected, items = [] }: ShippingSel
 
   const pickupMethods = getPickupMethods(items, skuStockByLocation);
   const allMethods = [...pickupMethods, ...DELIVERY_METHODS];
+  const activeMethod = allMethods.find((m) => m.id === selected);
 
   return (
     <fieldset>
@@ -161,6 +180,17 @@ export function ShippingSelector({ onSelect, selected, items = [] }: ShippingSel
           );
         })}
       </div>
+
+      {activeMethod?.requiresPickupPoint && (
+        <div className="mt-3 rounded-xl border border-sand bg-warm-white p-4">
+          <p className="mb-3 text-sm font-medium text-charcoal">Vælg pakkeshop</p>
+          <PickupPointPicker
+            zipcode={zipcode}
+            selected={pickupPoint}
+            onSelect={(point) => onPickupPoint?.(point)}
+          />
+        </div>
+      )}
     </fieldset>
   );
 }

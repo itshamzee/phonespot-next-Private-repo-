@@ -22,6 +22,8 @@ export interface CreateOrderParams {
   discount: DiscountApplication | null;
   discountCodeId: string | null;
   shippingMethod: string;
+  /** The chosen parcel shop, when the method needs one. */
+  pickupPoint?: Record<string, unknown> | null;
   shippingCost: number;
   subtotal: number;
   discountAmount: number;
@@ -89,6 +91,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     payment_method: "stripe",
     stripe_checkout_session_id: params.stripeCheckoutSessionId,
     shipping_method: params.shippingMethod,
+    pickup_point: params.pickupPoint ?? null,
     shipping_address: params.customer.address,
     subtotal: params.subtotal,
     discount_amount: params.discountAmount,

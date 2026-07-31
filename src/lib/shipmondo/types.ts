@@ -57,17 +57,25 @@ export type ShipmondoShipmentResponse = {
   parcels?: Array<{ pkg_no?: string }>;
 };
 
+/** Matches an actual GET /pickup_points response, checked 2026-07-31. */
 export type ShipmondoPickupPoint = {
   id: string;
-  company_name: string;
-  address: string;
-  zipcode: string;
-  city: string;
-  country_code: string;
-  latitude: number;
-  longitude: number;
-  opening_hours?: string;
-  distance_in_meters?: number;
+  number?: string;
+  company_name?: string;
+  name?: string;
+  address?: string;
+  address2?: string;
+  zipcode?: string;
+  city?: string;
+  country?: string;
+  carrier_code?: string;
+  agent?: string;
+  latitude?: number;
+  longitude?: number;
+  /** One string per weekday: "Monday: 10:00-18:00". */
+  opening_hours?: string[];
+  /** Null on every response seen so far, so nothing sorts by it. */
+  distance?: number | null;
 };
 
 export type ShipmondoRateQuote = {
@@ -87,6 +95,8 @@ export type ShipmondoError = {
 };
 
 export type ShippingMethod =
+  /** One parcel-shop choice; the shop the customer picks decides the carrier. */
+  | "pakkeshop"
   | "postnord"
   | "dao"
   | "pickup_slagelse"

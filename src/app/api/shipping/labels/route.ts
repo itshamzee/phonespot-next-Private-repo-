@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createShipment } from "@/lib/shipmondo/client";
 import { SENDER_ADDRESSES, DEFAULT_PARCEL } from "@/lib/shipmondo/carriers";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
+import { pickupCarrierProduct } from "@/lib/shipping";
 import { getShippingOption, getDispatchLocation, isClickCollect } from "@/lib/shipping";
 import type { ShippingMethod, ShipmondoShipmentRequest } from "@/lib/shipmondo/types";
 
@@ -71,9 +72,23 @@ export async function POST(request: NextRequest) {
   const sender = SENDER_ADDRESSES[dispatchFrom];
   const address = order.shipping_address as any;
 
+  // With "pakkeshop" the carrier follows the shop the customer chose, so the
+  // product cannot be read off the method alone.
+  const pickup = order.pickup_point as { id?: string; carrier_code?: string } | null;
+  const product = pickup?.carrier_code
+    ? pickupCarrierProduct(pickup.carrier_code)
+    : { carrier_code: option.carrier_code, product_code: option.product_code };
+
+  if (option.requires_pickup_point && !pickup?.id) {
+    return NextResponse.json(
+      { error: "Ordren mangler en valgt pakkeshop" },
+      { status: 400 },
+    );
+  }
+
   const shipmentReq: ShipmondoShipmentRequest = {
-    carrier_code: option.carrier_code,
-    product_code: option.product_code,
+    carrier_code: product.carrier_code as string,
+    product_code: product.product_code as string,
     sender,
     receiver: {
       name: address.name || order.customer?.name || "",
@@ -86,7 +101,7 @@ export async function POST(request: NextRequest) {
       phone: order.customer?.phone,
     },
     parcels: [DEFAULT_PARCEL],
-    pickup_point_id: address.pickup_point_id,
+    pickup_point_id: pickup?.id ?? address.pickup_point_id,
     reference: order.order_number,
   };
 
@@ -119,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       tracking_number: shipment.pkg_no,
-      tracking_url: trackingUrlFor(option.carrier_code, shipment.pkg_no),
+      tracking_url: trackingUrlFor(product.carrier_code as string, shipment.pkg_no),
       shipment_id: shipment.id,
     });
   } catch (error) {
