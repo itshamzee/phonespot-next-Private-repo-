@@ -87,8 +87,16 @@ header-hemmelighed.
 
 - Nyt endpoint: `POST /api/webhooks/shipmondo`
 - Ny env: `SHIPMONDO_WEBHOOK_KEY`
-- Abonnement: `resource_name: "Shipment Monitor"`, `action: "status_update"` og
-  `action: "delivered"`, oprettet programmatisk via et script i `scripts/`.
+- Abonnement: `resource_name: "Shipment Monitor"` med `action: "latest"` (hver
+  fragthændelse, som er den der giver "på vej") og `action: "delivered"`,
+  oprettet programmatisk via et script i `scripts/`.
+
+  OpenAPI-enum'et for `action` lister mange flere værdier, men de tilhører de
+  andre ressourcer: `status_update` og `create` svarer begge 422 "Action is
+  missing for webhook" på Shipment Monitor. Kun de to ovenfor virker.
+
+  Webhooks kræver en betalt plan. Registreret på kontoen 2026-07-31 som id 3962
+  (`latest`) og 3961 (`delivered`).
 
 Verifikationen er HS256 med `node:crypto` — ingen ny afhængighed. Signaturen
 sammenlignes med `timingSafeEqual`, samme mønster som Shopify-webhooken
