@@ -27,6 +27,11 @@ export interface TradeInOffer {
   // Read it with readOfferLines from @/lib/buyback/offer-lines.
   offer_lines?: unknown | null;
 
+  // Set when a person has the device in their hands — deliberately not the same
+  // as the carrier reporting the parcel delivered.
+  received_at?: string | null;
+  received_by?: string | null;
+
   // Automation (nullable on rows created before the migration ran)
   auto_sent?: boolean;
   pricing_breakdown?: unknown | null;
@@ -87,10 +92,38 @@ export type TradeInDerivedStatus =
   | "ny"
   | "tilbud_sendt"
   | "accepteret"
+  | "afventer_forsendelse"
+  | "paa_vej"
+  | "leveret"
   | "afvist"
   | "modtaget"
+  | "vurderet"
   | "betalt"
   | "lukket";
+
+/** In the order a device moves through them. Drives the pipeline display. */
+export const TRADE_IN_PIPELINE: TradeInDerivedStatus[] = [
+  "ny",
+  "tilbud_sendt",
+  "accepteret",
+  "afventer_forsendelse",
+  "paa_vej",
+  "leveret",
+  "modtaget",
+  "vurderet",
+  "betalt",
+];
+
+/**
+ * What the carrier and the staff have told us about a device on its way in.
+ * Optional throughout: a caller that only needs to know whether a lead is new
+ * (the queue) can leave it out entirely.
+ */
+export interface TradeInProgress {
+  label?: { in_transit_at?: string | null; delivered_at?: string | null } | null;
+  /** trade_in_offers.received_at — someone has the device in their hands. */
+  receivedAt?: string | null;
+}
 
 export function formatDKK(ore: number): string {
   return new Intl.NumberFormat("da-DK", {
@@ -105,11 +138,24 @@ export function deriveTradeInStatus(
   offers: Pick<TradeInOffer, "status">[],
   receipts: Pick<TradeInReceipt, "status">[],
   declines: { id: string }[] = [],
+  progress: TradeInProgress = {},
 ): TradeInDerivedStatus {
   // Money has moved or the deal is agreed — a later decline cannot undo that.
   if (receipts.some((r) => r.status === "paid" || r.status === "completed")) return "betalt";
-  if (receipts.some((r) => r.status === "draft" || r.status === "confirmed")) return "modtaget";
-  if (offers.some((o) => o.status === "accepted")) return "accepteret";
+  if (receipts.some((r) => r.status === "confirmed")) return "vurderet";
+  // A slutseddel in draft means the device is in front of someone. This also
+  // keeps every row created before received_at existed reading as "modtaget".
+  if (receipts.some((r) => r.status === "draft")) return "modtaget";
+  if (progress.receivedAt) return "modtaget";
+
+  if (offers.some((o) => o.status === "accepted")) {
+    // The carrier's word, which is not the same as ours: a delivered parcel can
+    // still be sitting unopened, and that gap is where devices go missing.
+    if (progress.label?.delivered_at) return "leveret";
+    if (progress.label?.in_transit_at) return "paa_vej";
+    if (progress.label) return "afventer_forsendelse";
+    return "accepteret";
+  }
   // An admin decline outranks a pending offer: it is the newer decision, and it
   // is what makes declining a lead possible before any offer exists.
   if (declines.length > 0) return "afvist";

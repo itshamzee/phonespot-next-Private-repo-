@@ -4,6 +4,7 @@ import { buildDigestHtml, buildDigestSubject, type DigestData } from "@/lib/emai
 const empty: DigestData = {
   toPay: [],
   toReceive: [],
+  stuck: [],
   waiting: { total: 0, oldestDays: 0, biggest: [] },
   yesterday: { sent: 0, accepted: 0, rejected: 0, acceptRatePct: null },
   problems: [],
@@ -93,5 +94,48 @@ describe("buildDigestSubject", () => {
 
   it("says nothing to do on a quiet day", () => {
     expect(buildDigestSubject(empty)).toContain("intet at gøre");
+  });
+});
+
+describe("parcels that stand still", () => {
+  it("names a delivered parcel nobody has opened", () => {
+    const html = buildDigestHtml({
+      ...empty,
+      stuck: [
+        {
+          deviceLabel: "Apple iPhone 12 128GB",
+          customerName: "Mette",
+          trackingNumber: "00370729",
+          days: 4,
+          reason: "leveret_ikke_modtaget",
+        },
+      ],
+    });
+    expect(html).toContain("Pakker der står stille");
+    expect(html).toContain("Apple iPhone 12 128GB");
+    expect(html).toContain("00370729");
+    expect(html).toMatch(/Leveret for 4 dage siden/);
+  });
+
+  it("names a parcel that has gone quiet", () => {
+    const html = buildDigestHtml({
+      ...empty,
+      stuck: [
+        {
+          deviceLabel: "Samsung S21",
+          customerName: "Jens",
+          trackingNumber: null,
+          days: 5,
+          reason: "ingen_bevaegelse",
+        },
+      ],
+    });
+    expect(html).toMatch(/Ingen bevægelse i 5 dage/);
+    // No tracking number must not render "null" at the customer.
+    expect(html).not.toContain("null");
+  });
+
+  it("says nothing when every parcel is accounted for", () => {
+    expect(buildDigestHtml(empty)).not.toContain("Pakker der står stille");
   });
 });

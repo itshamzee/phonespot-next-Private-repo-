@@ -86,6 +86,7 @@ export default function AdminOpkoebDetailPage() {
   // Shipping
   const [shippingLabel, setShippingLabel] = useState<Record<string, unknown> | null>(null);
   const [labelLoading, setLabelLoading] = useState(false);
+  const [receiveLoading, setReceiveLoading] = useState(false);
 
   // Price suggestion from the engine
   const [suggestion, setSuggestion] = useState<LeadSuggestionResponse | null>(null);
@@ -293,6 +294,22 @@ export default function AdminOpkoebDetailPage() {
       // Silently handle
     }
     setReplySending(false);
+  }
+
+  /**
+   * The device is physically in our hands. Kept apart from the carrier's
+   * "delivered": a parcel can be handed over and still sit unopened, and a
+   * device brought into the store never has a tracking status at all.
+   */
+  async function handleMarkReceived() {
+    setReceiveLoading(true);
+    try {
+      const res = await staffFetch(`/api/trade-in/${inquiryId}/receive`, { method: "POST" });
+      if (res.ok) await loadAll();
+    } catch {
+      // The button stays available; nothing is lost by trying again.
+    }
+    setReceiveLoading(false);
   }
 
   async function handleCreateShipment(offerId: string) {
@@ -682,6 +699,11 @@ export default function AdminOpkoebDetailPage() {
                         Send accepterings-email
                       </button>
                     </div>
+                    {Boolean(shippingLabel.delivered_at) && (
+                      <p className="text-[12px] text-stone-400">
+                        Leveret {new Date(String(shippingLabel.delivered_at)).toLocaleString("da-DK")}
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -695,6 +717,34 @@ export default function AdminOpkoebDetailPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Ours, not the carrier's: a delivered parcel can still be
+                    unopened, and a device handed in at the store never has a
+                    label at all. */}
+                <div className="mt-4 border-t border-stone-200/60 pt-4">
+                  {acceptedOffer.received_at ? (
+                    <p className="text-sm text-charcoal">
+                      <span className="font-semibold text-violet-700">Modtaget</span>{" "}
+                      <span className="text-stone-400">
+                        {new Date(acceptedOffer.received_at).toLocaleString("da-DK")}
+                        {acceptedOffer.received_by ? ` af ${acceptedOffer.received_by}` : ""}
+                      </span>
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => handleMarkReceived()}
+                        disabled={receiveLoading}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                      >
+                        {receiveLoading ? "Markerer..." : "Marker som modtaget"}
+                      </button>
+                      <span className="text-[12px] text-stone-400">
+                        Tryk når enheden fysisk er i hånden
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })()}

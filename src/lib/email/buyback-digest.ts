@@ -23,6 +23,18 @@ export interface DigestData {
     deviceLabel: string;
     daysInTransit: number;
   }[];
+  /**
+   * Parcels nobody can account for. Shipment Monitor has no REST endpoint, so a
+   * lost webhook cannot be re-fetched — the only honest thing is to show the
+   * silence and let a person look the tracking number up.
+   */
+  stuck: {
+    deviceLabel: string;
+    customerName: string;
+    trackingNumber: string | null;
+    days: number;
+    reason: "leveret_ikke_modtaget" | "ingen_bevaegelse";
+  }[];
   waiting: {
     total: number;
     oldestDays: number;
@@ -109,6 +121,29 @@ export function buildDigestHtml(data: DigestData): string {
                 escapeHtml(r.customerName),
                 escapeHtml(r.deviceLabel),
                 `${r.daysInTransit} ${r.daysInTransit === 1 ? "dag" : "dage"}`,
+              ]),
+            )
+            .join("")}
+        </table>`,
+      ),
+    );
+  }
+
+  if (data.stuck.length > 0) {
+    blocks.push(
+      section(
+        "Pakker der står stille",
+        `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+          ${row(["Enhed", "Kunde", "Tracking", "Hvad"], true)}
+          ${data.stuck
+            .map((s) =>
+              row([
+                escapeHtml(s.deviceLabel),
+                escapeHtml(s.customerName),
+                escapeHtml(s.trackingNumber ?? "—"),
+                s.reason === "leveret_ikke_modtaget"
+                  ? `Leveret for ${s.days} ${s.days === 1 ? "dag" : "dage"} siden, ikke åbnet`
+                  : `Ingen bevægelse i ${s.days} ${s.days === 1 ? "dag" : "dage"}`,
               ]),
             )
             .join("")}

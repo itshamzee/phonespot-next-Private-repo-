@@ -19,7 +19,9 @@ export async function requireStaff(request: NextRequest | Request) {
 
   const { data: staff } = await supabase
     .from("staff")
-    .select("id, role")
+    // name and email so a route can record who did something without a second
+    // query — "modtaget af hvem" is worth nothing as a bare uuid.
+    .select("id, role, name, email")
     .eq("auth_id", user.id)
     .single();
 

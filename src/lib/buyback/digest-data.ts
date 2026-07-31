@@ -72,14 +72,73 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
     ]),
   );
 
+  // Carrier progress, so "undervejs" reflects the parcel rather than the number
+  // of days since the customer clicked accept.
+  const { data: labelRows } = pendingArrival.length
+    ? await client
+        .from("shipping_labels")
+        .select("offer_id, tracking_number, in_transit_at, delivered_at, last_event_at, created_at")
+        .in("offer_id", pendingArrival.map((o) => o.id))
+    : { data: [] };
+
+  const labelByOffer = new Map(
+    ((labelRows ?? []) as {
+      offer_id: string;
+      tracking_number: string | null;
+      in_transit_at: string | null;
+      delivered_at: string | null;
+      last_event_at: string | null;
+      created_at: string;
+    }[]).map((l) => [l.offer_id, l]),
+  );
+
   const toReceive = pendingArrival.map((offer) => {
     const inquiry = arrivalById.get(offer.inquiry_id);
+    const label = labelByOffer.get(offer.id);
     return {
       customerName: inquiry?.name ?? "Ukendt kunde",
       deviceLabel: deviceLabel(readLeadDevices(inquiry?.metadata)[0]?.device),
-      daysInTransit: daysSince(offer.responded_at ?? offer.created_at, now),
+      daysInTransit: daysSince(
+        label?.in_transit_at ?? offer.responded_at ?? offer.created_at,
+        now,
+      ),
     };
   });
+
+  /* --- Parcels nobody can account for --- */
+  const STUCK_DELIVERED_DAYS = 2;
+  const STUCK_SILENT_DAYS = 3;
+
+  const stuck: DigestData["stuck"] = [];
+  for (const offer of pendingArrival) {
+    const label = labelByOffer.get(offer.id);
+    if (!label) continue;
+
+    const inquiry = arrivalById.get(offer.inquiry_id);
+    const base = {
+      deviceLabel: deviceLabel(readLeadDevices(inquiry?.metadata)[0]?.device),
+      customerName: inquiry?.name ?? "Ukendt kunde",
+      trackingNumber: label.tracking_number,
+    };
+
+    if (label.delivered_at) {
+      // The offer has no receipt yet, so nobody has marked it received.
+      const days = daysSince(label.delivered_at, now);
+      if (days >= STUCK_DELIVERED_DAYS) {
+        stuck.push({ ...base, days, reason: "leveret_ikke_modtaget" });
+      }
+      continue;
+    }
+
+    // Shipment Monitor has no REST endpoint, so a lost webhook cannot be
+    // re-fetched. Silence is reported rather than repaired.
+    const days = daysSince(label.last_event_at ?? label.created_at, now);
+    if (days >= STUCK_SILENT_DAYS) {
+      stuck.push({ ...base, days, reason: "ingen_bevaegelse" });
+    }
+  }
+
+  stuck.sort((a, b) => b.days - a.days);
 
   /* --- The manual queue --- */
   const { data: leads } = await client
@@ -161,6 +220,7 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
   return {
     toPay,
     toReceive,
+    stuck,
     waiting: { total: waitingLeads.length, oldestDays, biggest },
     yesterday: {
       sent,

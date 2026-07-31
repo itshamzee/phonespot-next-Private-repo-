@@ -98,6 +98,7 @@ describe("customer-supplied values never reach the markup raw", () => {
         { sellerName: nasty, bankReg: "1234", bankAccount: "5678", amountKr: 100, receiptNumber: "PS-1" },
       ],
       toReceive: [{ customerName: nasty, deviceLabel: nasty, daysInTransit: 1 }],
+      stuck: [{ deviceLabel: nasty, customerName: nasty, trackingNumber: nasty, days: 3, reason: "leveret_ikke_modtaget" as const }],
       waiting: { total: 1, oldestDays: 1, biggest: [{ label: nasty, reason: nasty }] },
       yesterday: { sent: 1, accepted: 0, rejected: 0, acceptRatePct: null },
       problems: [{ summary: nasty, severity: "critical" }],

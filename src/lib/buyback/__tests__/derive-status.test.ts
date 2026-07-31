@@ -29,3 +29,58 @@ describe("deriveTradeInStatus with declines", () => {
     expect(deriveTradeInStatus("ny", [{ status: "rejected" }], [])).toBe("afvist");
   });
 });
+
+describe("deriveTradeInStatus through the shipment", () => {
+  const accepted = [{ status: "accepted" as const }];
+
+  it("stays accepted while no label exists — an in-store drop-off never gets one", () => {
+    expect(deriveTradeInStatus("ny", accepted, [], [], {})).toBe("accepteret");
+  });
+
+  it("waits for dispatch once a label exists but nothing has moved", () => {
+    expect(
+      deriveTradeInStatus("ny", accepted, [], [], { label: { in_transit_at: null, delivered_at: null } }),
+    ).toBe("afventer_forsendelse");
+  });
+
+  it("reports transit and delivery from the carrier", () => {
+    expect(
+      deriveTradeInStatus("ny", accepted, [], [], { label: { in_transit_at: "2026-07-30T10:00:00Z" } }),
+    ).toBe("paa_vej");
+    expect(
+      deriveTradeInStatus("ny", accepted, [], [], {
+        label: { in_transit_at: "2026-07-30T10:00:00Z", delivered_at: "2026-07-31T09:00:00Z" },
+      }),
+    ).toBe("leveret");
+  });
+
+  it("separates the carrier's 'delivered' from our 'received'", () => {
+    // The whole point: a delivered parcel nobody has opened is not received.
+    const delivered = { label: { delivered_at: "2026-07-31T09:00:00Z" } };
+    expect(deriveTradeInStatus("ny", accepted, [], [], delivered)).toBe("leveret");
+    expect(
+      deriveTradeInStatus("ny", accepted, [], [], { ...delivered, receivedAt: "2026-07-31T11:00:00Z" }),
+    ).toBe("modtaget");
+  });
+
+  it("moves on to assessed and paid via the slutseddel", () => {
+    expect(deriveTradeInStatus("ny", accepted, [{ status: "draft" }], [], {})).toBe("modtaget");
+    expect(deriveTradeInStatus("ny", accepted, [{ status: "confirmed" }], [], {})).toBe("vurderet");
+    expect(deriveTradeInStatus("ny", accepted, [{ status: "paid" }], [], {})).toBe("betalt");
+    expect(deriveTradeInStatus("ny", accepted, [{ status: "completed" }], [], {})).toBe("betalt");
+  });
+
+  it("reads rows from before received_at existed as received", () => {
+    // Backwards compatibility: every historical row has a slutseddel and no
+    // received_at, and must not fall back to a shipping status.
+    expect(
+      deriveTradeInStatus("ny", accepted, [{ status: "draft" }], [], {
+        label: { delivered_at: null, in_transit_at: null },
+      }),
+    ).toBe("modtaget");
+  });
+
+  it("ignores shipment progress when the lead never got an offer", () => {
+    expect(deriveTradeInStatus("ny", [], [], [], { label: { delivered_at: "x" } })).toBe("ny");
+  });
+});

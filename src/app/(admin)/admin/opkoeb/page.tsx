@@ -16,26 +16,40 @@ import StoreFilter, {
 import BuybackFeed from "@/components/admin/BuybackFeed";
 import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
 import BuybackStatusBar from "@/components/admin/BuybackStatusBar";
+import BuybackPipeline from "@/components/admin/buyback/BuybackPipeline";
 
 const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string; dot: string }> = {
   ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600", dot: "bg-blue-500" },
   tilbud_sendt: { label: "Tilbud sendt", badge: "bg-amber-500/10 text-amber-600", dot: "bg-amber-500" },
   accepteret: { label: "Accepteret", badge: "bg-emerald-500/10 text-emerald-600", dot: "bg-emerald-500" },
+  afventer_forsendelse: { label: "Afventer forsendelse", badge: "bg-sky-500/10 text-sky-600", dot: "bg-sky-500" },
+  paa_vej: { label: "På vej", badge: "bg-indigo-500/10 text-indigo-600", dot: "bg-indigo-500" },
+  leveret: { label: "Leveret", badge: "bg-teal-500/10 text-teal-700", dot: "bg-teal-500" },
   afvist: { label: "Afvist", badge: "bg-rose-500/10 text-rose-600", dot: "bg-rose-500" },
   modtaget: { label: "Modtaget", badge: "bg-violet-500/10 text-violet-600", dot: "bg-violet-500" },
+  vurderet: { label: "Vurderet", badge: "bg-fuchsia-500/10 text-fuchsia-600", dot: "bg-fuchsia-500" },
   betalt: { label: "Betalt", badge: "bg-green-500/10 text-green-700", dot: "bg-green-500" },
   lukket: { label: "Lukket", badge: "bg-charcoal/[0.06] text-charcoal/40", dot: "bg-charcoal/20" },
 };
 
 const ALL_STATUSES: (TradeInDerivedStatus | "alle")[] = [
-  "alle", "ny", "tilbud_sendt", "accepteret", "modtaget", "betalt", "afvist", "lukket",
+  "alle", "ny", "tilbud_sendt", "accepteret", "afventer_forsendelse", "paa_vej",
+  "leveret", "modtaget", "vurderet", "betalt", "afvist", "lukket",
 ];
+
+interface ShipmentInfo {
+  tracking_number: string | null;
+  in_transit_at: string | null;
+  delivered_at: string | null;
+}
 
 interface TradeInRow {
   inquiry: ContactInquiry;
-  offers: Pick<TradeInOffer, "status" | "offer_amount" | "created_at">[];
+  offers: Pick<TradeInOffer, "id" | "status" | "offer_amount" | "created_at" | "received_at">[];
   receipts: { status: string }[];
   derivedStatus: TradeInDerivedStatus;
+  shipment: ShipmentInfo | null;
+  receivedAt: string | null;
 }
 
 // Primær kilde er `store_id` (tilføjes af parallel migration — kolonnen kan mangle,
@@ -75,8 +89,20 @@ export default function OpkoebPage() {
 
     const { data: allOffers } = await supabase
       .from("trade_in_offers")
-      .select("inquiry_id, status, offer_amount, created_at")
+      .select("id, inquiry_id, status, offer_amount, created_at, received_at")
       .in("inquiry_id", ids);
+
+    // Carrier progress hangs off the accepted offer, not the inquiry.
+    const acceptedOfferIds = (allOffers || [])
+      .filter((o) => o.status === "accepted")
+      .map((o) => o.id);
+
+    const { data: allLabels } = acceptedOfferIds.length
+      ? await supabase
+          .from("shipping_labels")
+          .select("offer_id, tracking_number, in_transit_at, delivered_at")
+          .in("offer_id", acceptedOfferIds)
+      : { data: [] };
 
     const { data: allReceipts } = await supabase
       .from("trade_in_receipts")
@@ -92,11 +118,22 @@ export default function OpkoebPage() {
       const offers = (allOffers || []).filter((o) => o.inquiry_id === inquiry.id);
       const receipts = (allReceipts || []).filter((r) => r.inquiry_id === inquiry.id);
       const declines = (allDeclines || []).filter((d) => d.inquiry_id === inquiry.id);
+
+      const accepted = offers.find((o) => o.status === "accepted");
+      const shipment =
+        (allLabels || []).find((l) => accepted && l.offer_id === accepted.id) ?? null;
+      const receivedAt = accepted?.received_at ?? null;
+
       return {
         inquiry,
         offers,
         receipts,
-        derivedStatus: deriveTradeInStatus(inquiry.status, offers, receipts, declines),
+        shipment,
+        receivedAt,
+        derivedStatus: deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
+          label: shipment,
+          receivedAt,
+        }),
       };
     });
 
@@ -188,6 +225,23 @@ export default function OpkoebPage() {
 
       {/* Does buyback need you today? */}
       <BuybackStatusBar needsYou={statusCounts.ny ?? 0} />
+
+      {/* Where the devices we have bought actually are */}
+      <BuybackPipeline
+        rows={rows.map((row) => ({
+          inquiryId: row.inquiry.id,
+          customerName: row.inquiry.name,
+          device: deviceLabel(readLeadDevices(row.inquiry.metadata)[0]?.device),
+          status: row.derivedStatus,
+          deliveredAt: row.shipment?.delivered_at ?? null,
+          inTransitAt: row.shipment?.in_transit_at ?? null,
+          trackingNumber: row.shipment?.tracking_number ?? null,
+        }))}
+        labels={STATUS_CONFIG}
+        active={filter}
+        onSelect={setFilter}
+        onChanged={loadData}
+      />
 
       {/* Offers still inside their hold window — yours to stop */}
       <BuybackHoldWindow onChange={loadData} />
