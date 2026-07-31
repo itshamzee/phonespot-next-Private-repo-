@@ -14,6 +14,7 @@ import {
   BUYBACK_RETURN_PRODUCT,
   REQUIRES_SERVICE_POINT,
 } from "../carriers";
+import { customerLabelUrl } from "../buyback-label";
 import { STORES } from "@/lib/store-config";
 
 const KEY = "test-key-0123456789";
@@ -166,5 +167,20 @@ describe("carrier and product codes", () => {
 
   it("strips the country code off the phone number for the label", () => {
     expect(SENDER_ADDRESSES.slagelse.phone).toBe("61100048");
+  });
+});
+
+describe("the label link the customer gets", () => {
+  it("carries the offer token, not the offer id", () => {
+    // The staff route needs a session. A customer clicking it from their inbox
+    // got a 401 and could not print the label they were told to use.
+    const url = customerLabelUrl("11111111-2222-3333-4444-555555555555");
+    expect(url).toContain("/api/trade-in/hent-label?token=");
+    expect(url).toContain("11111111-2222-3333-4444-555555555555");
+    expect(url).not.toContain("/label");
+  });
+
+  it("is absolute, because it is opened from an email", () => {
+    expect(customerLabelUrl("abc")).toMatch(/^https?:\/\//);
   });
 });

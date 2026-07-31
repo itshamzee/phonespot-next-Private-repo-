@@ -6,6 +6,8 @@ import { render } from "@react-email/render";
 import OfferAcceptanceEmail from "@/lib/email/templates/offer-acceptance";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { detectDeviceGuide } from "@/lib/supabase/email-types";
+import { customerLabelUrl } from "@/lib/shipmondo/buyback-label";
+import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 
 export async function POST(
   req: Request,
@@ -77,10 +79,10 @@ export async function POST(
       storage,
       offerAmountKr: formatDKK(offer.offer_amount),
       trackingNumber: label?.tracking_number,
-      trackingUrl: label?.tracking_number
-        ? `https://tracking.postnord.com/tracking/${label.tracking_number}`
-        : null,
-      labelDownloadUrl: label?.label_url || null,
+      trackingUrl: label?.tracking_number ? trackingUrlFor("pdk", label.tracking_number) : null,
+      // Built from the offer token, not the stored label_url: that column held a
+      // signed link that expired after seven days.
+      labelDownloadUrl: label ? customerLabelUrl(offer.token) : null,
       deviceGuide,
       staffProfile,
       companySettings: company,

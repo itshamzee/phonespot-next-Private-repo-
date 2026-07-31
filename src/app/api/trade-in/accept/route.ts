@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { resend } from "@/lib/email/resend";
-import { createBuybackReturnLabel } from "@/lib/shipmondo/buyback-label";
+import { createBuybackReturnLabel, customerLabelUrl } from "@/lib/shipmondo/buyback-label";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { render } from "@react-email/render";
@@ -11,8 +11,6 @@ import { sendCriticalAlert } from "@/lib/buyback/alerts";
 import { loadBuybackSettings } from "@/lib/buyback/settings";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { detectDeviceGuide } from "@/lib/supabase/email-types";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
 
 /* POST /api/trade-in/accept — customer accepts offer via token */
 export async function POST(req: Request) {
@@ -131,7 +129,7 @@ export async function POST(req: Request) {
 
       if (labelResult.ok) {
         trackingNumber = labelResult.trackingNumber;
-        labelUrl = `${SITE_URL}/api/trade-in/${offer.id}/label`;
+        labelUrl = customerLabelUrl(offer.token);
       } else {
         // Not fatal — the acceptance email still goes out — but it must be
         // visible, so someone can press the button by hand.

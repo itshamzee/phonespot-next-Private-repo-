@@ -105,6 +105,18 @@ export async function createBuybackReturnLabel(
   return { ok: true, trackingNumber, labelPath, shipmentId: shipment.id };
 }
 
+/**
+ * The link that goes in the customer's email.
+ *
+ * Not the staff route: that one requires a session, so a customer clicking it
+ * from their inbox got a 401 and could not fetch the label they were told to
+ * print. The offer token is the credential, as it is for accepting the offer.
+ */
+export function customerLabelUrl(offerToken: string): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
+  return `${base}/api/trade-in/hent-label?token=${offerToken}`;
+}
+
 /** A link that works today. Signed URLs expire, so they are made on demand. */
 export async function signedLabelUrl(
   client: SupabaseAdmin,
