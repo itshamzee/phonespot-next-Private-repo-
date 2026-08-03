@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 /* GET /api/trade-in/receipts?inquiry_id=xxx */
 export async function GET(req: Request) {
@@ -20,6 +21,11 @@ export async function GET(req: Request) {
 
 /* POST /api/trade-in/receipts — create draft receipt */
 export async function POST(req: Request) {
+  // Staff only. This route acts on a customer's behalf — it was reachable by
+  // anyone who could guess an id.
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
   const { inquiry_id, offer_id, store_location_id, seller_name, seller_address, seller_postal_city, seller_phone, seller_email, seller_bank_reg, seller_bank_account, buyer_address, buyer_postal_city, buyer_phone, delivery_method, staff_initials, items } = body;
 

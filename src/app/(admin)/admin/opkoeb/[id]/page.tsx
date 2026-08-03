@@ -249,7 +249,7 @@ export default function AdminOpkoebDetailPage() {
 
     setSendingOffer(true);
     try {
-      const res = await fetch("/api/trade-in/offers", {
+      const res = await staffFetch("/api/trade-in/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -335,7 +335,7 @@ export default function AdminOpkoebDetailPage() {
   async function handleCreateShipment(offerId: string) {
     setLabelLoading(true);
     try {
-      const res = await fetch(`/api/trade-in/${offerId}/create-shipment`, { method: "POST" });
+      const res = await staffFetch(`/api/trade-in/${offerId}/create-shipment`, { method: "POST" });
       const data = await res.json();
       if (res.ok) {
         await loadShippingLabel(offerId);
@@ -348,7 +348,7 @@ export default function AdminOpkoebDetailPage() {
   }
 
   async function handleSendAcceptance(offerId: string) {
-    const res = await fetch(`/api/trade-in/${offerId}/send-acceptance`, {
+    const res = await staffFetch(`/api/trade-in/${offerId}/send-acceptance`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),

@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 /* POST /api/trade-in/receipts/[id]/pay — mark receipt as paid */
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Staff only. This route acts on a customer's behalf — it was reachable by
+  // anyone who could guess an id.
+  const staff = await requireStaff(_req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { id } = await params;
   const supabase = createServerClient();
 

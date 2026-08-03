@@ -17,6 +17,7 @@ import {
   type OfferLine,
 } from "@/lib/buyback/offer-lines";
 import { declineReason } from "@/lib/buyback/decline-reasons";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
@@ -40,6 +41,11 @@ export async function GET(req: Request) {
 
 /* POST /api/trade-in/offers — create offer and send email */
 export async function POST(req: Request) {
+  // Staff only. This route acts on a customer's behalf — it was reachable by
+  // anyone who could guess an id.
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
   const { inquiry_id, offer_amount, admin_note, created_by, lines } = body;
 

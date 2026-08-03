@@ -349,7 +349,7 @@ export default function OpkoebQueuePage() {
     setWorking(true);
     setError("");
     try {
-      const res = await fetch("/api/trade-in/offers", {
+      const res = await staffFetch("/api/trade-in/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

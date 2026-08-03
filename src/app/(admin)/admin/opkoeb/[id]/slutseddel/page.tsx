@@ -15,6 +15,7 @@ import type {
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices } from "@/lib/buyback/lead-devices";
 import { readOfferLines, includedLines } from "@/lib/buyback/offer-lines";
+import { staffFetch } from "@/lib/buyback/admin-fetch";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -462,7 +463,7 @@ export default function AdminSlutseddelPage() {
     setPaying(true);
 
     try {
-      const res = await fetch(`/api/trade-in/receipts/${receipt.id}/pay`, {
+      const res = await staffFetch(`/api/trade-in/receipts/${receipt.id}/pay`, {
         method: "POST",
       });
 

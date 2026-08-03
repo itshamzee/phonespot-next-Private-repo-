@@ -8,11 +8,17 @@ import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { detectDeviceGuide } from "@/lib/supabase/email-types";
 import { customerLabelUrl } from "@/lib/shipmondo/buyback-label";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Staff only: this route emails a customer on our behalf. It had no guard at
+  // all, so anyone who guessed an offer id could send acceptance mails.
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { id: offerId } = await params;
   const supabase = createServerClient();
 
