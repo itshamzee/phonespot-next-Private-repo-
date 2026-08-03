@@ -1,6 +1,7 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { createShipment, getShipmentLabel } from "./client";
 import { BUYBACK_RETURN_PRODUCT, BUYBACK_DESTINATION, DEFAULT_PARCEL } from "./carriers";
+import { resolvePostalCity } from "@/lib/buyback/seller-address";
 
 type SupabaseAdmin = ReturnType<typeof createAdminClient>;
 
@@ -38,11 +39,19 @@ export async function createBuybackReturnLabel(
   client: SupabaseAdmin,
   input: BuybackLabelInput,
 ): Promise<BuybackLabelResult> {
-  const postal = (input.sellerPostalCity ?? "").match(/^(\d{4})\s+(.+)$/);
+  // Tolerant of what the acceptance form actually collected: "4000",
+  // "9000 Aalborg " and "DK-4200 Slagelse" all resolve, with the city filled in
+  // from the postcode register when the customer left it out. Only a postcode
+  // that does not exist is refused — no fallback address, because shipping to a
+  // guessed postcode bills us for a parcel nobody is waiting for.
+  const postal = await resolvePostalCity(input.sellerPostalCity);
   if (!postal || !input.sellerAddress) {
-    // No fallback address. Shipping to a guessed postcode bills us for a label
-    // that sends the customer's device somewhere nobody is waiting for it.
-    return { ok: false, error: "Sælgers adresse og postnummer mangler på tilbuddet" };
+    return {
+      ok: false,
+      error: !input.sellerAddress
+        ? "Sælgers adresse mangler på tilbuddet"
+        : `Postnummeret "${input.sellerPostalCity ?? ""}" er ikke gyldigt — ret det på tilbuddet`,
+    };
   }
 
   let shipment;
@@ -53,8 +62,8 @@ export async function createBuybackReturnLabel(
       sender: {
         name: input.sellerName,
         address1: input.sellerAddress,
-        zipcode: postal[1],
-        city: postal[2],
+        zipcode: postal.zipcode,
+        city: postal.city,
         country_code: "DK",
         email: input.customerEmail,
         phone: input.customerPhone ?? "",

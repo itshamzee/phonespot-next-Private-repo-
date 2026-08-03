@@ -40,7 +40,8 @@ function AccepterContent() {
   const [form, setForm] = useState({
     seller_name: "",
     seller_address: "",
-    seller_postal_city: "",
+    seller_zipcode: "",
+    seller_city: "",
     seller_bank_reg: "",
     seller_bank_account: "",
     confirmed: false,
@@ -74,7 +75,13 @@ function AccepterContent() {
       const res = await fetch("/api/trade-in/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, ...form }),
+        body: JSON.stringify({
+          token,
+          ...form,
+          // The column stays one field; the form just stopped asking for it
+          // as one field.
+          seller_postal_city: `${form.seller_zipcode} ${form.seller_city}`.trim(),
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -169,6 +176,7 @@ function AccepterContent() {
           <label className="text-sm font-bold text-charcoal">Adresse</label>
           <input
             type="text"
+            required
             placeholder="Gadenavn og nr."
             value={form.seller_address}
             onChange={(e) => setForm({ ...form, seller_address: e.target.value })}
@@ -176,15 +184,38 @@ function AccepterContent() {
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-charcoal">Postnr. og by</label>
-          <input
-            type="text"
-            placeholder="f.eks. 4200 Slagelse"
-            value={form.seller_postal_city}
-            onChange={(e) => setForm({ ...form, seller_postal_city: e.target.value })}
-            className={inputStyles}
-          />
+        {/* Two fields, both required. One free-text box asking for
+            "4200 Slagelse" came back as "4000", "213123" and worse, and a
+            fragtlabel cannot be produced from that. */}
+        <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-charcoal">Postnr.</label>
+            <input
+              type="text"
+              required
+              inputMode="numeric"
+              pattern="[1-9][0-9]{3}"
+              maxLength={4}
+              placeholder="4200"
+              title="Fire cifre, f.eks. 4200"
+              value={form.seller_zipcode}
+              onChange={(e) =>
+                setForm({ ...form, seller_zipcode: e.target.value.replace(/\D/g, "").slice(0, 4) })
+              }
+              className={inputStyles}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-charcoal">By</label>
+            <input
+              type="text"
+              required
+              placeholder="Slagelse"
+              value={form.seller_city}
+              onChange={(e) => setForm({ ...form, seller_city: e.target.value })}
+              className={inputStyles}
+            />
+          </div>
         </div>
 
         <div className="h-px bg-soft-grey" />

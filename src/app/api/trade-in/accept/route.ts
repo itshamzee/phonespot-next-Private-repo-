@@ -11,6 +11,7 @@ import { sendCriticalAlert } from "@/lib/buyback/alerts";
 import { loadBuybackSettings } from "@/lib/buyback/settings";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { detectDeviceGuide } from "@/lib/supabase/email-types";
+import { parsePostalCity } from "@/lib/buyback/seller-address";
 
 /* POST /api/trade-in/accept — customer accepts offer via token */
 export async function POST(req: Request) {
@@ -20,6 +21,15 @@ export async function POST(req: Request) {
   if (!token) return NextResponse.json({ error: "token required" }, { status: 400 });
   if (!seller_name || !seller_bank_reg || !seller_bank_account) {
     return NextResponse.json({ error: "Navn og bankoplysninger er påkrævet" }, { status: 400 });
+  }
+
+  // Without a usable address there is no return label, and the customer is left
+  // holding a device they have agreed to sell. This used to be optional.
+  if (!seller_address?.trim() || !parsePostalCity(seller_postal_city)) {
+    return NextResponse.json(
+      { error: "Adresse, postnummer og by er påkrævet" },
+      { status: 400 },
+    );
   }
 
   const supabase = createServerClient();

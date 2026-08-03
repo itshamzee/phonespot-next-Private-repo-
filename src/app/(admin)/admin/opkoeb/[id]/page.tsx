@@ -11,6 +11,7 @@ import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
+import SellerAddressEditor from "@/components/admin/buyback/SellerAddressEditor";
 
 /** What GET /api/trade-in/suggest answers with. */
 interface LeadSuggestionResponse {
@@ -751,6 +752,16 @@ export default function AdminOpkoebDetailPage() {
                       {labelLoading ? "Opretter..." : "Generer e-label (Shipmondo)"}
                     </button>
                   </div>
+                )}
+
+                {!shippingLabel && (
+                  <SellerAddressEditor
+                    offerId={acceptedOffer.id}
+                    sellerName={acceptedOffer.seller_name ?? inquiry.name}
+                    sellerAddress={acceptedOffer.seller_address ?? ""}
+                    sellerPostalCity={acceptedOffer.seller_postal_city ?? ""}
+                    onSaved={loadAll}
+                  />
                 )}
 
                 {/* Ours, not the carrier's: a delivered parcel can still be
