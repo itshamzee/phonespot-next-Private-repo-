@@ -9,7 +9,6 @@ import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { STORES, type StoreLocationConfig } from "@/lib/store-config";
-import { VejleEmailSignup } from "./vejle-email-signup";
 
 /* ------------------------------------------------------------------ */
 /*  Static params                                                      */
@@ -271,67 +270,6 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
     priceRange: "$$",
   };
 }
-
-/* ------------------------------------------------------------------ */
-/*  Vejle "coming soon" page                                           */
-/* ------------------------------------------------------------------ */
-
-function VejleComingSoonPage() {
-  return (
-    <>
-      {/* Hero */}
-      <section className="bg-[#1A3D2E] py-20 md:py-28">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <FadeIn>
-            <p className="mb-4 text-sm font-semibold tracking-wide text-white/60">
-              Åbner snart
-            </p>
-            <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-              PhoneSpot Vejle — åbner april 2026
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/75">
-              Vi glæder os til at byde dig velkommen i vores nye butik i Vejle.
-            </p>
-          </FadeIn>
-
-          <FadeIn delay={0.15}>
-            <div className="mt-10">
-              <p className="mb-4 text-sm font-semibold text-white/80">
-                Tilmeld dig og få besked når vi åbner
-              </p>
-              <VejleEmailSignup />
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.25}>
-            <p className="mt-10 text-sm font-medium tracking-wide text-white/50">
-              36 mdr. garanti · Professionel reparation · Opkøb af brugt elektronik
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Link back to Slagelse */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-xl text-center">
-          <FadeIn>
-            <p className="mb-4 text-[#6E6E73]">
-              Mens du venter kan du besøge os i Slagelse.
-            </p>
-            <Link
-              href="/butik/slagelse"
-              className="inline-flex items-center gap-2 text-base font-semibold text-[#1A3D2E] hover:underline"
-            >
-              Besøg os i Slagelse imens
-              <ChevronRightIcon className="h-4 w-4" />
-            </Link>
-          </FadeIn>
-        </div>
-      </SectionWrapper>
-    </>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Slagelse store cards data                                          */
 /* ------------------------------------------------------------------ */
