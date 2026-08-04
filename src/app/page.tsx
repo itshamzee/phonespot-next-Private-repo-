@@ -253,7 +253,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <Link
-                href="/salg"
+                href="/saelg-din-enhed"
                 className="mt-8 inline-block rounded-full bg-green-eco px-8 py-3.5 font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Få et tilbud &rarr;

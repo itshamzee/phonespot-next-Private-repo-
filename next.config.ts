@@ -67,6 +67,9 @@ const nextConfig: NextConfig = {
       { source: "/usb-c", destination: "/tilbehoer", permanent: true },
       { source: "/str", destination: "/", permanent: true },
       { source: "/services/login_with_shop", destination: "/", permanent: true },
+      // Dead internal URLs that were linked from the homepage/mega-menu until 2026-08
+      { source: "/salg", destination: "/saelg-din-enhed", permanent: true },
+      { source: "/refurbished", destination: "/smartphones", permanent: true },
       // Legacy tempered-glass URLs → new Spot URLs
       { source: "/tilbehoer/skaermbeskyttelse", destination: "/beskyttelsesglas", permanent: true },
       { source: "/tilbehoer/skaermbeskyttelse/:model", destination: "/beskyttelsesglas/apple/:model", permanent: true },
@@ -76,7 +79,7 @@ const nextConfig: NextConfig = {
       // from the earlier sitemap. Redirect them to the static landing pages
       // or to the brand-level model detail.
       { source: "/reparation/vejle", destination: "/reparation-vejle", permanent: true },
-      { source: "/reparation/slagelse", destination: "/reparation-slagelse", permanent: true },
+      { source: "/reparation/slagelse", destination: "/reparation", permanent: true },
       { source: "/reparation/vejle/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/slagelse/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },

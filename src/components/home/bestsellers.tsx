@@ -380,7 +380,7 @@ export function Bestsellers() {
           </div>
           {!loading && (
             <Link
-              href="/refurbished"
+              href="/smartphones"
               className="mt-2 self-start text-sm font-semibold text-[#1A3D2E] transition-opacity hover:opacity-70 sm:mt-0 sm:self-auto"
             >
               Se alle &rarr;

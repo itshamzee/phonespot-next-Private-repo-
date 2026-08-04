@@ -105,7 +105,7 @@ export async function FeaturedProducts() {
           Populære produkter
         </h2>
         <Link
-          href="/refurbished"
+          href="/smartphones"
           className="font-semibold text-green-eco transition-opacity hover:opacity-80"
         >
           Se alle &rarr;

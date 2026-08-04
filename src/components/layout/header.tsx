@@ -280,7 +280,7 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
             </span>
           </div>
           <Link
-            href="/refurbished"
+            href="/smartphones"
             onClick={onClose}
             className="text-[13px] font-semibold tracking-tight text-green-eco hover:underline"
           >
