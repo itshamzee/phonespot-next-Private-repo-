@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 const USPS = [
   { label: "Spar op til 40%" },
@@ -72,7 +73,7 @@ export function IntroStrip() {
             </div>
             <div className="border-l border-sand pl-4 md:border-l-0 md:pl-0 md:pt-2">
               <p className="font-display text-3xl font-extrabold leading-none text-charcoal md:text-4xl">
-                4,8
+                {TRUSTPILOT_SCORE_LABEL_DA}
               </p>
               <p className="mt-1.5 text-[12px] font-medium tracking-tight text-gray group-hover:text-green-eco">
                 Bedømmelse på Trustpilot &rarr;
