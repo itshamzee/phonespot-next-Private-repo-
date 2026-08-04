@@ -270,6 +270,7 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
     priceRange: "$$",
   };
 }
+
 /* ------------------------------------------------------------------ */
 /*  Slagelse store cards data                                          */
 /* ------------------------------------------------------------------ */
