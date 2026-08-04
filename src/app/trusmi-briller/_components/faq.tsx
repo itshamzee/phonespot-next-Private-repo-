@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 interface QA {
   q: string;
@@ -30,7 +31,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Følger der garanti med?",
-    a: "Ja — 24 måneders fuld returret + reklamationsret efter dansk købelov. Hvis brillerne fejler, ordner vi det uden ekstra omkostninger. Vi er e-mærket-certificerede og har 4,4 ★ på Trustpilot.",
+    a: `Ja — 24 måneders fuld returret + reklamationsret efter dansk købelov. Hvis brillerne fejler, ordner vi det uden ekstra omkostninger. Vi er e-mærket-certificerede og har ${TRUSTPILOT_SCORE_LABEL_DA} ★ på Trustpilot.`,
   },
   {
     q: "Kan jeg betale i rater?",

@@ -13,6 +13,7 @@ import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -117,7 +118,7 @@ function TrustpilotBadge() {
           </svg>
         </div>
         <span className="text-[10px] font-medium text-[#111111]/50">
-          4.8/5 — Trustpilot
+          {TRUSTPILOT_SCORE_LABEL}/5 — Trustpilot
         </span>
       </div>
     </a>

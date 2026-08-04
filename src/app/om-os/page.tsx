@@ -5,6 +5,7 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 import { StoreLocation } from "@/components/ui/store-location";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 export const metadata: Metadata = {
   title: "Om PhoneSpot | Danmarks Specialist i Refurbished Tech",
@@ -43,7 +44,7 @@ const STATS = [
     description: "Samme garanti som ved køb af nyt",
   },
   {
-    value: "4.8/5",
+    value: `${TRUSTPILOT_SCORE_LABEL}/5`,
     label: "Trustpilot score",
     description: "Baseret på ægte kundeanmeldelser",
   },

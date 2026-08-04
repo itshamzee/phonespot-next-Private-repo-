@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation data                                                    */
@@ -166,7 +167,7 @@ function AnnouncementBar() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[#00B67A] hover:underline"
           >
-            Trustpilot <span className="font-semibold">★ 4.8</span>
+            Trustpilot <span className="font-semibold">{`★ ${TRUSTPILOT_SCORE_LABEL}`}</span>
           </a>
           <span aria-hidden="true" className="text-white/30">·</span>
           <span>36 mdr. garanti</span>

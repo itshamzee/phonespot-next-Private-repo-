@@ -1,4 +1,11 @@
 import { getTrustpilotReviews, getTrustpilotSummary } from "@/lib/trustpilot/client";
+import { TRUSTPILOT_FALLBACK_SCORE } from "@/lib/trustpilot/constants";
+
+type DisplaySummary = {
+  stars: number;
+  score: number;
+  numberOfReviews: number | null;
+};
 
 function StarRow({ count }: { count: number }) {
   return (
@@ -32,7 +39,11 @@ export async function TrustpilotReviews() {
   ];
 
   const displayReviews = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
-  const displaySummary = summary || { stars: 5, score: 4.8, numberOfReviews: 127 };
+  const displaySummary: DisplaySummary = summary ?? {
+    stars: 5,
+    score: TRUSTPILOT_FALLBACK_SCORE,
+    numberOfReviews: null,
+  };
 
   return (
     <div>
@@ -43,7 +54,9 @@ export async function TrustpilotReviews() {
           {displaySummary.score.toFixed(1)}/5
         </span>
         <span className="text-sm text-[#86868B]">
-          baseret på {displaySummary.numberOfReviews.toLocaleString("da-DK")} anmeldelser
+          {displaySummary.numberOfReviews
+            ? `baseret på ${displaySummary.numberOfReviews.toLocaleString("da-DK")} anmeldelser`
+            : "verificerede anmeldelser på Trustpilot"}
         </span>
       </div>
 

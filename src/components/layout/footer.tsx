@@ -3,6 +3,7 @@ import Link from "next/link";
 import { STORE, COMPANY_EMAIL } from "@/lib/store-config";
 import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -81,7 +82,7 @@ function TrustpilotBadge() {
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-80"
-      aria-label="Se PhoneSpot på Trustpilot — 4.8 stjerner"
+      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL} stjerner`}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#00b67a]" fill="currentColor" aria-hidden="true">
         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
@@ -105,7 +106,7 @@ function TrustpilotBadge() {
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#footer-half-star)" />
             </svg>
           </div>
-          <span className="text-[11px] font-semibold text-white/70">4.8</span>
+          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL}</span>
         </div>
       </div>
     </a>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE, STORES } from "@/lib/store-config";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
 import { BrandPicker } from "./brand-picker";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
@@ -230,7 +231,7 @@ export default async function ReparationPage() {
             { icon: "shield", label: "Livstidsgaranti" },
             { icon: "clock", label: "90% klar på 30 min" },
             { icon: "tag", label: "Fast pris" },
-            { icon: "star", label: "Trustpilot 4.4" },
+            { icon: "star", label: `Trustpilot ${TRUSTPILOT_SCORE_LABEL}` },
           ].map(({ icon, label }) => (
             <span key={label} className="inline-flex items-center gap-1.5 text-[#111111]">
               <span className="flex h-5 w-5 items-center justify-center text-[#1A3D2E]">

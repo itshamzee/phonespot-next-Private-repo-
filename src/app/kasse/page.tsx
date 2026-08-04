@@ -2,6 +2,7 @@
 
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
+import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 export default function KassePage() {
   return (
@@ -160,7 +161,7 @@ export default function KassePage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-charcoal">4.4 / 5 på Trustpilot</p>
+                  <p className="text-sm font-semibold text-charcoal">{`${TRUSTPILOT_SCORE_LABEL} / 5 på Trustpilot`}</p>
                   <p className="text-xs text-gray">Baseret på kundeanmeldelser</p>
                 </div>
               </div>
