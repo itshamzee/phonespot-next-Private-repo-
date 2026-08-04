@@ -5,6 +5,7 @@ import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { FormField } from "@/components/ui/form-field";
 import { normalizeStoreId } from "@/lib/stores";
+import { STORES } from "@/lib/store-config";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -273,11 +274,18 @@ export default function KontaktPage() {
                   <div>
                     <p className="text-sm font-semibold text-[#111111]">Adresse</p>
                     <p className="text-sm text-[#86868B]">
-                      PhoneSpot
+                      <span className="font-medium text-[#111111]">{STORES.slagelse.name}</span>
                       <br />
-                      VestsjællandsCentret 10
+                      {STORES.slagelse.street}
                       <br />
-                      4200 Slagelse
+                      {STORES.slagelse.zip} {STORES.slagelse.city}
+                    </p>
+                    <p className="mt-3 text-sm text-[#86868B]">
+                      <span className="font-medium text-[#111111]">{STORES.vejle.name}</span>
+                      <br />
+                      {STORES.vejle.street}
+                      <br />
+                      {STORES.vejle.zip} {STORES.vejle.city}
                     </p>
                   </div>
                 </div>
@@ -305,11 +313,9 @@ export default function KontaktPage() {
                       Åbningstider
                     </p>
                     <p className="text-sm text-[#86868B]">
-                      Man – Fre: 10–19
+                      <span className="font-medium text-[#111111]">Slagelse:</span> Man–Fre {STORES.slagelse.hours.weekdays} &middot; Lør–Søn {STORES.slagelse.hours.saturday}
                       <br />
-                      Lørdag: 10–17
-                      <br />
-                      Søndag: 10–17
+                      <span className="font-medium text-[#111111]">Vejle:</span> Man–Fre {STORES.vejle.hours.weekdays} &middot; Lør–Søn {STORES.vejle.hours.saturday}
                     </p>
                   </div>
                 </div>
