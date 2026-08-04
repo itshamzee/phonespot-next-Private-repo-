@@ -58,9 +58,9 @@ export const RETIRED_PRODUCT_CODES = ["PDK17", "PDK19", "PDKEP", "DAO_DIRECT"] a
 
 /**
  * Where parcels come from and go back to. Derived from store-config rather than
- * repeated: the copies here said Løvegade 12 and Nørregade 22, neither of which
- * is a PhoneSpot address, so buyback return labels were addressed to a street we
- * are not at.
+ * repeated: the addresses used to be hardcoded here with two invented street
+ * names that don't match either PhoneSpot location, so buyback return labels
+ * were addressed to a street we are not at.
  */
 function senderFor(slug: "slagelse" | "vejle") {
   const store = STORES[slug];

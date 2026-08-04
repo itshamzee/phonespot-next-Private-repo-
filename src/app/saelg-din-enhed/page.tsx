@@ -3,6 +3,7 @@ import { SellDeviceWizard } from "@/components/sell-device/sell-device-wizard";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
+import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
   title: "Sælg din brugte telefon, tablet eller laptop | Bedste pris | PhoneSpot",
@@ -501,24 +502,19 @@ export default function SaelgDinEnhedPage() {
                 og modtag betaling på stedet.
               </p>
               <div className="mt-2 space-y-4">
-                <div className="rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6">
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-[#1A3D2E]" />
-                    <span className="text-xs font-bold text-[#1A3D2E]">Åben nu</span>
+                {[STORES.slagelse, STORES.vejle].map((store) => (
+                  <div key={store.slug} className="rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6">
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E]/10 px-3 py-1">
+                      <span className="inline-block h-2 w-2 rounded-full bg-[#1A3D2E]" />
+                      <span className="text-xs font-bold text-[#1A3D2E]">Åben nu</span>
+                    </div>
+                    <p className="font-display text-lg font-bold text-[#111111]">{store.name}</p>
+                    <p className="mt-1 text-sm text-[#86868B]">{store.street}, {store.zip} {store.city}</p>
+                    <p className="mt-0.5 text-sm text-[#86868B]">
+                      Man–Fre {store.hours.weekdays} · Lør–Søn {store.hours.saturday}
+                    </p>
                   </div>
-                  <p className="font-display text-lg font-bold text-[#111111]">PhoneSpot Slagelse</p>
-                  <p className="mt-1 text-sm text-[#86868B]">Vestsjællandscentret 10A, 103, 4200 Slagelse</p>
-                  <p className="mt-0.5 text-sm text-[#86868B]">Man-Fre 10-19 · Lør-Søn 10-17</p>
-                </div>
-                <div className="rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6">
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1">
-                    <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-                    <span className="text-xs font-bold text-blue-600">Åbner snart</span>
-                  </div>
-                  <p className="font-display text-lg font-bold text-[#111111]">PhoneSpot Vejle</p>
-                  <p className="mt-1 text-sm text-[#86868B]">Adresse oplyses snart</p>
-                  <p className="mt-0.5 text-sm text-[#86868B]">Åbner april 2026</p>
-                </div>
+                ))}
               </div>
 
               <a

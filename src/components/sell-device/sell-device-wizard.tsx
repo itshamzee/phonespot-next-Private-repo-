@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { normalizeStoreId } from "@/lib/stores";
+import { STORES } from "@/lib/store-config";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -1416,8 +1417,8 @@ export function SellDeviceWizard() {
                 onChange={(e) => setContact((prev) => ({ ...prev, preferredStore: e.target.value }))}
                 className={inputStyles}
               >
-                <option value="Slagelse">PhoneSpot Slagelse — Vestsjællandscentret 10A, 103</option>
-                <option value="Vejle">PhoneSpot Vejle — Åbner april 2026</option>
+                <option value="Slagelse">PhoneSpot Slagelse — {STORES.slagelse.street}</option>
+                <option value="Vejle">PhoneSpot Vejle — {STORES.vejle.street}</option>
               </select>
             </div>
           )}

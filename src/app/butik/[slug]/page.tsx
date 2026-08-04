@@ -8,7 +8,7 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
-import { STORES, type StoreLocationConfig } from "@/lib/store-config";
+import { STORES, openingHoursJsonLd, type StoreLocationConfig } from "@/lib/store-config";
 
 /* ------------------------------------------------------------------ */
 /*  Static params                                                      */
@@ -253,20 +253,7 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
       latitude: store.coordinates.lat,
       longitude: store.coordinates.lng,
     },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        opens: "10:00",
-        closes: "19:00",
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Saturday", "Sunday"],
-        opens: "10:00",
-        closes: "17:00",
-      },
-    ],
+    openingHoursSpecification: openingHoursJsonLd(store.hours),
     priceRange: "$$",
   };
 }

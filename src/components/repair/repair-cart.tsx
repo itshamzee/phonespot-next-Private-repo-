@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { STORES } from "@/lib/store-config";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -1076,8 +1077,8 @@ function BookingForm({
           <label className="text-sm font-bold text-charcoal">Hvordan vil du levere? *</label>
           <div className="mt-2 flex flex-col gap-2">
             {[
-              { value: "Slagelse", label: "Aflever i Slagelse", desc: "VestsjællandsCentret 10", icon: "pin" },
-              { value: "Vejle", label: "Aflever i Vejle", desc: "Åbner april 2026", icon: "pin" },
+              { value: "Slagelse", label: "Aflever i Slagelse", desc: STORES.slagelse.street, icon: "pin" },
+              { value: "Vejle", label: "Aflever i Vejle", desc: STORES.vejle.street, icon: "pin" },
               { value: "Send ind", label: "Send ind", desc: "Gratis forsendelse", icon: "truck" },
             ].map((opt) => (
               <button

@@ -67,9 +67,9 @@ export const STORES: Record<string, StoreLocationConfig> = {
       sunday: "10:00 – 15:00",
     },
     googleMapsUrl:
-      "https://maps.google.com/?q=Løversysselvej+3A,+7100+Vejle",
+      "https://maps.google.com/?q=Løversysselvej+3B,+7100+Vejle",
     googleMapsEmbed:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2240!2d9.5554!3d55.7076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x464c94f2a3b5c5a1%3A0x0!2sL%C3%B8versysselvej+3A!5e0!3m2!1sda!2sdk!4v1",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2240!2d9.5554!3d55.7076!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x464c94f2a3b5c5a1%3A0x0!2sL%C3%B8versysselvej+3B!5e0!3m2!1sda!2sdk!4v1",
     coordinates: { lat: 55.7076, lng: 9.5554 },
   },
 };
@@ -97,3 +97,16 @@ export function storeForId(storeId?: string | null): StoreLocationConfig {
   return slug ? STORES[slug] : STORE;
 }
 export type StoreConfig = StoreLocationConfig;
+
+/** "10:00 – 19:00" (config format) → JSON-LD OpeningHoursSpecification entries. */
+export function openingHoursJsonLd(hours: StoreLocationConfig["hours"]) {
+  const span = (s: string) => {
+    const [opens, closes] = s.split("–").map((t) => t.trim());
+    return { opens, closes };
+  };
+  return [
+    { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], ...span(hours.weekdays) },
+    { "@type": "OpeningHoursSpecification", dayOfWeek: ["Saturday"], ...span(hours.saturday) },
+    { "@type": "OpeningHoursSpecification", dayOfWeek: ["Sunday"], ...span(hours.sunday) },
+  ];
+}

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY ?? "";
+
+const storeFacts = Object.values(STORES)
+  .map((s) => `- ${s.name}: ${s.street}, ${s.zip} ${s.city} — Man-Fre ${s.hours.weekdays}, Lør-Søn ${s.hours.saturday}`)
+  .join("\n");
 
 export async function POST(req: NextRequest) {
   if (!OPENAI_API_KEY) {
@@ -26,16 +31,14 @@ Regler:
 - Tilpas tonen til henvendelsens type
 
 PhoneSpot info:
-- Adresse: VestsjællandsCentret 10A, 103, 4200 Slagelse
+${storeFacts}
 - Telefon: +45 61 10 00 48
-- Email: info@phonespot.dk
-- Åbningstider: Man-Fre 10-19, Lør-Søn 10-17
-- Ny butik i Vejle åbner april 2026
+- Email: ${COMPANY_EMAIL}
 - Reparationer: skærmskift, batteriskift, vandskade, kamera, ladestik mm. — livstidsgaranti, faste priser, 90% klar på 30 min
 - Sælg din enhed: vi opkøber brugte telefoner, tablets, laptops — tilbud inden 24 timer
 - Refurbished: alle enheder testet med 30+ kontroller, Grade A/B/C system
 - Betaling: Klarna delbetaling, Apple Pay, kort, MobilePay
-- Vi sælger også tilbehør: covers, panserglas, opladere, kabler`;
+- Vi sælger også tilbehør: covers, beskyttelsesglas, opladere, kabler`;
 
   const userPrompt = `Kunde: ${customerName || "Ukendt"}
 Emne: ${subject || "Generel henvendelse"}

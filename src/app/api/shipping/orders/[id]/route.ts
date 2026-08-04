@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { STORES } from "@/lib/store-config";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -109,9 +110,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (fullOrder?.shipping_method?.startsWith("click_collect_") && fullOrder?.customer?.email) {
-      const locationInfo = fullOrder.shipping_method === "click_collect_vejle"
-        ? { name: "PhoneSpot Vejle", address: "Nørregade 22, 7100 Vejle", phone: "61 10 00 48" }
-        : { name: "PhoneSpot Slagelse", address: "Løvegade 12, 4200 Slagelse", phone: "61 10 00 48" };
+      const store = fullOrder.shipping_method === "click_collect_vejle" ? STORES.vejle : STORES.slagelse;
+      const locationInfo = {
+        name: store.name,
+        address: `${store.street}, ${store.zip} ${store.city}`,
+        phone: store.phone,
+      };
 
       try {
         const { Resend } = await import("resend");
