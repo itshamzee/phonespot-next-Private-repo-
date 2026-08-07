@@ -49,6 +49,8 @@ const nextConfig: NextConfig = {
       // and must NOT be redirected.
       { source: "/products/:slug", destination: "/iphones", permanent: true },
       { source: "/blogs/:path*", destination: "/blog", permanent: true },
+      // Renamed post: "panserglas" is a banned trademark term in customer-facing copy
+      { source: "/blog/panserglas-guide", destination: "/blog/beskyttelsesglas-guide", permanent: true },
       { source: "/search", destination: "/soeg", permanent: true },
       // Old reservedele URLs
       { source: "/ipad-6-reservedele", destination: "/reservedele", permanent: true },

@@ -7,7 +7,7 @@ import path from "node:path";
  * Each entry documents WHY it is forbidden. If a test here fails, fix the
  * source file — do not edit this list unless a business fact truly changed.
  */
-const ROOTS = ["src/app", "src/components", "src/lib"];
+const ROOTS = ["src/app", "src/components", "src/lib", "src/content"];
 const SKIP = [/node_modules/, /__tests__/, /\.test\./, /\.recovered$/];
 
 function walk(dir: string): string[] {
