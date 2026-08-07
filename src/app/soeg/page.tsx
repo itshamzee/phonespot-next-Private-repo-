@@ -31,7 +31,7 @@ const POPULAR_SEARCHES = [
   { label: "iPad Air", href: "/ipads" },
   { label: "MacBook", href: "/baerbare" },
   { label: "Skærmskift", href: "/reparation" },
-  { label: "Panserglas", href: "/tilbehoer" },
+  { label: "Beskyttelsesglas", href: "/tilbehoer" },
 ];
 
 export default async function SearchPage({

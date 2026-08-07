@@ -12,7 +12,7 @@ const UPSELL_PRODUCTS = [
     description: "9H hårdheds skærmbeskyttelse der dækker hele skærmen",
     price: 15900, // øre
     displayPrice: 159,
-    image: "/images/panserglas.png",
+    image: "/images/beskyttelsesglas.png",
   },
   {
     id: "979b3baf-96a8-4b80-b284-74941229dd2b",

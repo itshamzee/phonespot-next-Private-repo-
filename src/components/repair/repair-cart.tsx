@@ -403,7 +403,7 @@ export function RepairCart({
           ))}
           {includesTemperedGlass && (
             <div className="mt-1 flex justify-between text-gray">
-              <span>Panserglas</span>
+              <span>Beskyttelsesglas</span>
               <span>99 DKK</span>
             </div>
           )}
@@ -663,7 +663,7 @@ export function RepairCart({
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-bold text-charcoal">Tilføj panserglas for kun 99 DKK</p>
+                <p className="text-sm font-bold text-charcoal">Tilføj beskyttelsesglas for kun 99 DKK</p>
                 <p className="text-xs text-gray">Beskyt din nye skærm — tilføjes ved booking.</p>
               </div>
             </div>
@@ -755,7 +755,7 @@ export function RepairCart({
                 }`}
               >
                 <div>
-                  <p className="text-xs font-bold text-charcoal">Panserglas</p>
+                  <p className="text-xs font-bold text-charcoal">Beskyttelsesglas</p>
                   <p className="text-[11px] text-gray">Beskyt din nye skærm</p>
                 </div>
                 <span className="text-xs font-bold text-green-eco">+99 DKK</span>
@@ -986,7 +986,7 @@ function BookingForm({
         ))}
         {includesTemperedGlass && (
           <div className="flex justify-between text-sm">
-            <span className="text-charcoal">Panserglas</span>
+            <span className="text-charcoal">Beskyttelsesglas</span>
             <span className="font-bold">99 DKK</span>
           </div>
         )}

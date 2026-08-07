@@ -29,7 +29,7 @@ const QUICK_FILTERS = [
   { label: "Cases", categories: "Softcase", icon: "📱" },
   { label: "Book Cases", categories: "Booktypes Case", icon: "📖" },
   { label: "Hard Cases", categories: "Hardcase", icon: "🛡" },
-  { label: "Panserglas", categories: "Edge to Edge", icon: "🔒" },
+  { label: "Beskyttelsesglas", categories: "Edge to Edge", icon: "🔒" },
   { label: "Privacy Glas", categories: "Privacy Glass", icon: "👁" },
   { label: "Kabler", categories: "Cables", icon: "🔌" },
   { label: "Lightning", categories: "Lightning", icon: "⚡" },

@@ -21,7 +21,7 @@ export function CartUpsell() {
         </div>
         <div>
           <p className="text-sm font-semibold text-[#111111]">Beskyt din enhed</p>
-          <p className="text-xs text-[#6E6E73]">Covers og panserglas fra 49 kr.</p>
+          <p className="text-xs text-[#6E6E73]">Covers og beskyttelsesglas fra 49 kr.</p>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="ml-auto h-4 w-4 shrink-0 text-[#6E6E73]">
           <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />

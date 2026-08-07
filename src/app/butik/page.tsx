@@ -120,7 +120,7 @@ const IN_STORE_SERVICES = [
   },
   {
     title: "Tilbehør",
-    description: "Covers, panserglas, opladere og andet tilbehør til din enhed.",
+    description: "Covers, beskyttelsesglas, opladere og andet tilbehør til din enhed.",
     icon: <ShoppingBagIcon className="h-7 w-7" />,
     href: "/tilbehoer",
   },

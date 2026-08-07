@@ -5,12 +5,12 @@ import { HubPageClient } from "@/components/tilbehoer/hub-page-client";
 export const metadata: Metadata = {
   title: "Tilbehør til iPhone, iPad & Samsung | PhoneSpot",
   description:
-    "Covers, panserglas, opladere, kabler og tilbehør til din telefon og tablet. Altid hurtig levering og skarpe priser hos PhoneSpot.",
+    "Covers, beskyttelsesglas, opladere, kabler og tilbehør til din telefon og tablet. Altid hurtig levering og skarpe priser hos PhoneSpot.",
   alternates: { canonical: "https://phonespot.dk/tilbehoer" },
   openGraph: {
     title: "Tilbehør til iPhone, iPad & Samsung | PhoneSpot",
     description:
-      "Covers, panserglas, opladere, kabler og tilbehør til din telefon og tablet.",
+      "Covers, beskyttelsesglas, opladere, kabler og tilbehør til din telefon og tablet.",
     url: "https://phonespot.dk/tilbehoer",
   },
 };

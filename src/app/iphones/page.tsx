@@ -51,7 +51,7 @@ const IPHONE_FAQ = [
   {
     question: "Kommer der tilbehør med?",
     answer:
-      "Alle iPhones leveres med oplader-kabel. Vi anbefaler at tilkøbe et cover og panserglas for at beskytte din nye enhed — se vores tilbehør.",
+      "Alle iPhones leveres med oplader-kabel. Vi anbefaler at tilkøbe et cover og beskyttelsesglas for at beskytte din nye enhed — se vores tilbehør.",
   },
 ];
 

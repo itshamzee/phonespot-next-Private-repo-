@@ -1190,7 +1190,7 @@ export function BookingWizard() {
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-charcoal">Tilføj panserglas</span>
+                      <span className="font-bold text-charcoal">Tilføj beskyttelsesglas</span>
                       <p className="text-xs text-gray">Beskyt din skærm med hærdet glas</p>
                     </div>
                   </div>
@@ -1238,7 +1238,7 @@ export function BookingWizard() {
                     ))}
                     {booking.includesTemperedGlass && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-charcoal">Panserglas</span>
+                        <span className="text-charcoal">Beskyttelsesglas</span>
                         <span className="font-bold text-charcoal">99 DKK</span>
                       </div>
                     )}
@@ -1328,7 +1328,7 @@ export function BookingWizard() {
                         ))}
                         {booking.includesTemperedGlass && (
                           <div className="flex justify-between text-sm">
-                            <span className="text-charcoal/70">Panserglas</span>
+                            <span className="text-charcoal/70">Beskyttelsesglas</span>
                             <span className="font-bold text-charcoal">99 kr</span>
                           </div>
                         )}
@@ -1629,7 +1629,7 @@ export function BookingWizard() {
                     ))}
                     {booking.includesTemperedGlass && (
                       <li className="flex justify-between text-sm">
-                        <span className="text-charcoal">Panserglas</span>
+                        <span className="text-charcoal">Beskyttelsesglas</span>
                         <span className="font-bold text-charcoal">{TEMPERED_GLASS_PRICE} DKK</span>
                       </li>
                     )}

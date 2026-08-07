@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         price_data: {
           currency: "dkk",
           product_data: {
-            name: `${body.device_model} - Panserglas`,
+            name: `${body.device_model} - Beskyttelsesglas`,
           },
           unit_amount: TEMPERED_GLASS_PRICE * 100,
         },
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Foretrukken dato</td><td>${body.preferred_date}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Pris i alt</td><td>${body.total_price_dkk} DKK</td></tr>
             ${body.discount_percent > 0 ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Rabat</td><td>${body.discount_percent}%</td></tr>` : ""}
-            ${body.includes_tempered_glass ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Panserglas</td><td>Ja (${TEMPERED_GLASS_PRICE} DKK)</td></tr>` : ""}
+            ${body.includes_tempered_glass ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Beskyttelsesglas</td><td>Ja (${TEMPERED_GLASS_PRICE} DKK)</td></tr>` : ""}
           </table>
           <h3>Valgte services</h3>
           <ul>${servicesHtml}</ul>

@@ -39,7 +39,7 @@ interface Accessory {
 const CATEGORY_QUICK_FILTERS = [
   { value: "alle", label: "Alle" },
   { value: "cover", label: "Covers" },
-  { value: "screen_protector", label: "Panserglas" },
+  { value: "screen_protector", label: "Beskyttelsesglas" },
   { value: "cable", label: "Kabler" },
   { value: "charger", label: "Opladere" },
   { value: "audio", label: "Lyd" },
@@ -48,7 +48,7 @@ const CATEGORY_QUICK_FILTERS = [
 
 const CATEGORY_DISPLAY: Record<string, string> = {
   cover: "Cover",
-  screen_protector: "Panserglas",
+  screen_protector: "Beskyttelsesglas",
   cable: "Kabel",
   charger: "Oplader",
   audio: "Lyd",

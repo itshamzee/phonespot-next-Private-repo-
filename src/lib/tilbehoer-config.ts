@@ -63,21 +63,21 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   {
     slug: "skaermbeskyttelse",
     label: "Skærmbeskyttelse",
-    description: "Panserglas og screen protectors til alle enheder.",
+    description: "Beskyttelsesglas og screen protectors til alle enheder.",
     deviceSpecific: true,
-    heroDescription: "Hærdet panserglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
+    heroDescription: "Hærdet beskyttelsesglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
     faq: [
       {
         q: "Hvad er forskellen på hærdet glas og plastfolie?",
-        a: "Hærdet glas (panserglas) er hårdere, skraber ikke og giver en skarpere touchfornemmelse. Plastfolie er tyndere og billigere men slides hurtigere.",
+        a: "Hærdet glas (beskyttelsesglas) er hårdere, skraber ikke og giver en skarpere touchfornemmelse. Plastfolie er tyndere og billigere men slides hurtigere.",
       },
       {
         q: "Dækker skærmbeskyttelsen hele skærmen?",
         a: "Edge-to-edge modeller dækker hele skærmen inkl. kanter. Tjek om din model er kompatibel med edge-to-edge eller flat-skærm-variant.",
       },
       {
-        q: "Kan jeg sætte panserglas på med cover på?",
-        a: "Ja, de fleste panserglas-modeller er designet til at fungere med tynde covers. Tjek produktets kompatibilitets-noter.",
+        q: "Kan jeg sætte beskyttelsesglas på med cover på?",
+        a: "Ja, de fleste beskyttelsesglas-modeller er designet til at fungere med tynde covers. Tjek produktets kompatibilitets-noter.",
       },
     ],
   },

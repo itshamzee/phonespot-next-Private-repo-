@@ -160,7 +160,7 @@ export default function HandelsbetingelserPage() {
             <li>Click &amp; Collect — afhentning i vores butik i VestsjællandsCentret, Slagelse</li>
           </ul>
           <p className="mt-3">
-            Fragtpriserne fremgår ved checkout. Levering er gratis ved ordrer over 499 kr.
+            Fragtpriserne fremgår ved checkout. Levering er gratis ved ordrer over 500 kr.
             Risikoen for varens hændelige undergang overgår til dig som køber, når forsendelsen
             er afleveret til transportøren.
           </p>

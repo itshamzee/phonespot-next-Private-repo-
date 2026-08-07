@@ -789,7 +789,7 @@ export function AccessoryDetail({
                   <circle cx="12" cy="21" r="1" />
                   <circle cx="20" cy="21" r="1" />
                 </svg>
-                <span className="text-xs text-charcoal/50">Fri fragt over 499 kr.</span>
+                <span className="text-xs text-charcoal/50">Fri fragt over 500 kr.</span>
               </div>
               {/* Garanti */}
               <div className="flex items-center gap-1.5">

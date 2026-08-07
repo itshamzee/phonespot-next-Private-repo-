@@ -133,7 +133,7 @@ export async function POST(request: Request) {
         customerName: "Test Kunde",
         items: [
           { title: "Apple iPhone 13 Pro 128GB Sort — Grade B", price: 349900 },
-          { title: "iPhone 13 Pro Panserglas", price: 9900 },
+          { title: "iPhone 13 Pro Beskyttelsesglas", price: 9900 },
         ],
         total: 359800,
         recoveryUrl: "https://phonespot.dk/kurv?recover=test123",

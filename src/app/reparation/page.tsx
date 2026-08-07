@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     canonical: "https://phonespot.dk/reparation",
   },
   openGraph: {
-    title: "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse",
+    title: "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse & Vejle",
     description:
-      "Professionel reparation med kvalitetsdele og garanti. Skærmskift, batteriskift, vandskade og mere. Faste priser og hurtig service i Slagelse.",
+      "Professionel reparation med kvalitetsdele og garanti. Skærmskift, batteriskift, vandskade og mere. Faste priser og hurtig service i Slagelse og Vejle.",
     url: "https://phonespot.dk/reparation",
     type: "website",
   },
@@ -86,7 +86,7 @@ const REPAIR_SERVICE_JSONLD = {
   "@type": "LocalBusiness",
   name: STORE.name,
   description:
-    "Professionel reparation af smartphones, tablets og bærbare i Slagelse. Skærmskift, batteriskift, vandskade og mere med faste priser og garanti.",
+    "Professionel reparation af smartphones, tablets og bærbare i Slagelse og Vejle. Skærmskift, batteriskift, vandskade og mere med faste priser og garanti.",
   url: "https://phonespot.dk/reparation",
   telephone: STORE.phone,
   email: STORE.email,

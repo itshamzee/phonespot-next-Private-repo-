@@ -34,7 +34,7 @@ export const COLLECTION_MAP: Record<string, {
   covers: {
     shopifyHandle: "covers-1",
     title: "Covers & Beskyttelse",
-    description: "Beskyt din enhed med kvalitetscovers og panserglas.",
+    description: "Beskyt din enhed med kvalitetscovers og beskyttelsesglas.",
   },
   tilbehor: {
     shopifyHandle: "tilbehor",
