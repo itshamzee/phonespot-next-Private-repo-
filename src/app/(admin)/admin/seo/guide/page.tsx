@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { STORES } from "@/lib/store-config";
 
 const TABS = [
   { id: "gsc", label: "Google Search Console" },
@@ -95,7 +96,7 @@ function GBPGuide() {
           Opret EN profil per lokation:
         </p>
         <ul className="mt-2 list-inside list-disc space-y-1">
-          <li><span className="font-medium">PhoneSpot Slagelse</span> — VestsjællandsCentret 10, 4200 Slagelse</li>
+          <li><span className="font-medium">PhoneSpot Slagelse</span> — {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</li>
           <li><span className="font-medium">PhoneSpot Vejle</span> — [adresse], 7100 Vejle</li>
         </ul>
       </Step>

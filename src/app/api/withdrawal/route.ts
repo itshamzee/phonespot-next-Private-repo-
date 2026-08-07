@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { validateWithdrawalToken } from "@/lib/withdrawal";
+import { STORES } from "@/lib/store-config";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const SLAGELSE_ADDRESS = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
 
 /**
  * POST /api/withdrawal
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
           `Vi har modtaget din fortrydelse af ordre #${order.order_number}.`,
           "",
           "Næste skridt:",
-          "1. Send varen retur til: PhoneSpot ApS, VestsjællandsCentret 10, 4200 Slagelse",
+          `1. Send varen retur til: PhoneSpot ApS, ${SLAGELSE_ADDRESS}`,
           "2. Returomkostninger afholdes af dig som køber",
           "3. Tilbagebetaling sker senest 14 dage efter vi har modtaget din fortrydelsesmeddelelse, dog tidligst når vi har modtaget varen retur",
           "",

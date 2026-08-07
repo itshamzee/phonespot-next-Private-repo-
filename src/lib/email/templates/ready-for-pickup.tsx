@@ -13,6 +13,7 @@ import {
   Hr,
 } from "@react-email/components";
 import { BRAND } from "../brand";
+import { STORES } from "@/lib/store-config";
 
 interface ReadyForPickupEmailProps {
   orderNumber: string;
@@ -28,8 +29,7 @@ interface ReadyForPickupEmailProps {
 
 // Defaults — only used if a caller omits locationMapUrl / locationHours.
 // Every real caller should pass the correct store's values explicitly.
-const DEFAULT_MAP_URL =
-  "https://www.google.com/maps/search/?api=1&query=VestsjællandsCentret+10%2C+4200+Slagelse";
+const DEFAULT_MAP_URL = STORES.slagelse.googleMapsUrl;
 const DEFAULT_HOURS = BRAND.store.hours;
 
 export default function ReadyForPickupEmail({

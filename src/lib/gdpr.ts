@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/client";
+import { STORES } from "@/lib/store-config";
 
 /**
  * Collect all personal data for a customer (data portability — GDPR Art. 20).
@@ -65,7 +66,7 @@ export async function exportCustomerData(customerId: string) {
     dataController: {
       name: "PhoneSpot ApS",
       cvr: "38688766",
-      address: "VestsjællandsCentret 10, 4200 Slagelse",
+      address: `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`,
       email: "info@phonespot.dk",
     },
     personalData: {

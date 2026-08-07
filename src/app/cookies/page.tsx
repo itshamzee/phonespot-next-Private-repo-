@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
+import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
   title: "Cookiepolitik - PhoneSpot",
@@ -174,7 +175,7 @@ export default function CookiesPage() {
                 <strong>Telefon:</strong> +45 61 10 00 48
               </li>
               <li>
-                <strong>Adresse:</strong> PhoneSpot ApS, VestsjællandsCentret 10, 4200 Slagelse
+                <strong>Adresse:</strong> PhoneSpot ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
               </li>
             </ul>
           </section>

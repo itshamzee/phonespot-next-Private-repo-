@@ -3,6 +3,7 @@
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
 import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { STORES } from "@/lib/store-config";
 
 export default function KassePage() {
   return (
@@ -170,7 +171,7 @@ export default function KassePage() {
             {/* Seller info compact */}
             <div className="rounded-2xl border border-sand bg-warm-white px-4 py-3 text-xs text-gray">
               <p>
-                <span className="font-semibold text-charcoal">PhoneSpot ApS</span> · CVR: 38688766 · VestsjællandsCentret 10, 4200 Slagelse
+                <span className="font-semibold text-charcoal">PhoneSpot ApS</span> · CVR: 38688766 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
               </p>
               <p className="mt-1">
                 Solgt under brugtmomsordningen. Køber har ikke fradragsret for moms.

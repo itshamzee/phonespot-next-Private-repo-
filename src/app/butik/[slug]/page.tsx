@@ -364,7 +364,7 @@ function SlagelsePage({ store }: { store: StoreLocationConfig }) {
                 PhoneSpot Slagelse
               </h1>
               <p className="mt-3 text-base text-white/80 md:text-lg">
-                VestsjællandsCentret 10, 4200 Slagelse
+                {store.street}, {store.zip} {store.city}
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

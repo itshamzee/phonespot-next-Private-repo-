@@ -2,6 +2,13 @@ import { describe, it, expect } from "vitest";
 import { STORES, openingHoursJsonLd } from "@/lib/store-config";
 
 describe("store config", () => {
+  it("Slagelse street includes the building + unit number (10A, 103)", () => {
+    expect(STORES.slagelse.street).toBe("VestsjællandsCentret 10A, 103");
+    // The Maps query targets the mall itself, not the specific unit — a
+    // precise-but-unresolvable suite number would risk breaking the pin.
+    expect(STORES.slagelse.googleMapsUrl).toContain("VestsjællandsCentret");
+  });
+
   it("Vejle maps URL matches the street address (3B)", () => {
     expect(STORES.vejle.street).toBe("Løversysselvej 3B");
     expect(STORES.vejle.googleMapsUrl).toContain("3B");

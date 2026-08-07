@@ -10,6 +10,7 @@ import {
   Text,
   StyleSheet,
 } from "@react-pdf/renderer";
+import { STORES } from "@/lib/store-config";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -240,7 +241,7 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
         <View style={styles.headerBar}>
           <Text style={styles.companyName}>PhoneSpot ApS</Text>
           <Text style={styles.companyMeta}>
-            CVR: 38688766{"  "}|{"  "}VestsjællandsCentret 10, 4200 Slagelse
+            CVR: 38688766{"  "}|{"  "}{STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
           </Text>
         </View>
 
@@ -275,8 +276,8 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
               <Text style={styles.partyName}>PhoneSpot ApS</Text>
               <Text style={styles.partyDetail}>
                 CVR: 38688766{"\n"}
-                VestsjællandsCentret 10{"\n"}
-                4200 Slagelse
+                {STORES.slagelse.street}{"\n"}
+                {STORES.slagelse.zip} {STORES.slagelse.city}
               </Text>
             </View>
           </View>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { STORES } from "@/lib/store-config";
 
 export function PrePurchaseInfo() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +42,7 @@ export function PrePurchaseInfo() {
             <p className="text-gray text-xs mt-0.5">
               PhoneSpot ApS · CVR: 38688766
               <br />
-              VestsjællandsCentret 10, 4200 Slagelse
+              {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
             </p>
           </div>
 

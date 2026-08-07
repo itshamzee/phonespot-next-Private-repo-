@@ -7,6 +7,9 @@ import {
   emailButton,
   emailItemRow,
 } from "@/lib/email/brand";
+import { STORES } from "@/lib/store-config";
+
+const SLAGELSE_ADDRESS = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
 
 export interface OrderConfirmationItem {
   id: string;
@@ -482,7 +485,7 @@ export function buildOrderConfirmationEmail(
     "(Denne formular udfyldes og returneres kun, hvis du ønsker at",
     "fortryde aftalen)",
     "",
-    "Til: PhoneSpot ApS, VestsjællandsCentret 10, 4200 Slagelse,",
+    `Til: PhoneSpot ApS, ${SLAGELSE_ADDRESS},`,
     "     info@phonespot.dk",
     "",
     "Jeg/vi (*) meddeler herved, at jeg/vi (*) ønsker at gøre",
@@ -513,7 +516,7 @@ export function buildOrderConfirmationEmail(
     "Med venlig hilsen,",
     "PhoneSpot ApS",
     "CVR: 38688766",
-    "VestsjællandsCentret 10, 4200 Slagelse",
+    SLAGELSE_ADDRESS,
     "info@phonespot.dk | phonespot.dk",
   ]
     .filter((line) => line !== null)

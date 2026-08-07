@@ -30,6 +30,9 @@ const FORBIDDEN: Array<{ name: string; pattern: RegExp }> = [
   { name: "dead /refurbished index link", pattern: /href="\/refurbished"/ },
   // Vejle is Løversysselvej 3B, not 3A (also appears URL-encoded)
   { name: "wrong Vejle street 3A", pattern: /Løversysselvej[+ ]3A|L%C3%B8versysselvej\+3A/ },
+  // Slagelse is VestsjællandsCentret 10A, 103 (real: store-config.ts) — "10"
+  // without the unit/entrance number is the old, imprecise address.
+  { name: "imprecise Slagelse street (missing 10A, 103)", pattern: /VestsjællandsCentret 10(?!A)/ },
   // Copyright: customer-facing copy must say "beskyttelsesglas"
   { name: "banned word panserglas", pattern: /panserglas/i },
   // Actual threshold is 500 kr (src/lib/shipping.ts)

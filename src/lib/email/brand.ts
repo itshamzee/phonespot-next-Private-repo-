@@ -3,6 +3,11 @@
 // All HTML is email-safe: tables, inline styles, no CSS classes.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { STORES } from "@/lib/store-config";
+
+const slagelseAddress = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
+const vejleAddress = `${STORES.vejle.street}, ${STORES.vejle.zip} ${STORES.vejle.city}`;
+
 export const BRAND = {
   // Colors
   green: "#3A6B4E",       // PhoneSpot dark green — header, primary buttons
@@ -30,12 +35,12 @@ export const BRAND = {
   stores: [
     {
       name:    "PhoneSpot Slagelse",
-      address: "VestsjællandsCentret 10, 4200 Slagelse",
+      address: slagelseAddress,
       hours:   "Man-Fre 10-19 · Lør-Søn 10-17",
     },
     {
       name:    "PhoneSpot Vejle",
-      address: "Løversysselvej 3B, 7100 Vejle",
+      address: vejleAddress,
       hours:   "Man-Fre 10-17:30 · Lør-Søn 10-15",
     },
   ],
@@ -43,7 +48,7 @@ export const BRAND = {
   // Backwards-compat single-store reference (used by older templates)
   store: {
     name:    "PhoneSpot Slagelse",
-    address: "VestsjællandsCentret 10, 4200 Slagelse",
+    address: slagelseAddress,
     hours:   "Man-Fre 10-19 · Lør-Søn 10-17",
   },
 

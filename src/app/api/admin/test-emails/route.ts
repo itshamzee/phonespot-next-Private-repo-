@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         orderNumber: "TEST-0001",
         customerName: "Test Kunde",
         locationName: "Slagelse",
-        locationAddress: "VestsjællandsCentret 10, 4200 Slagelse",
+        locationAddress: `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`,
         locationMapUrl: STORES.slagelse.googleMapsUrl,
         locationHours: BRAND.stores.find((s) => s.name === STORES.slagelse.name)?.hours,
       }),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
+import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
   title: "Privatlivspolitik - PhoneSpot",
@@ -39,8 +40,8 @@ export default function PrivatlivspolitikPage() {
               <strong>PhoneSpot ApS</strong>
             </p>
             <p>CVR-nr.: 38688766</p>
-            <p>VestsjællandsCentret 10</p>
-            <p>4200 Slagelse</p>
+            <p>{STORES.slagelse.street}</p>
+            <p>{STORES.slagelse.zip} {STORES.slagelse.city}</p>
             <p>
               E-mail:{" "}
               <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>

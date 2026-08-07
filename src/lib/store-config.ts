@@ -29,7 +29,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
     name: "PhoneSpot Slagelse",
     company: "PhoneSpot ApS",
     mall: "VestsjællandsCentret",
-    street: "VestsjællandsCentret 10",
+    street: "VestsjællandsCentret 10A, 103",
     city: "Slagelse",
     zip: "4200",
     country: "Danmark",

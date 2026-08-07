@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { STORES } from "@/lib/store-config";
 
 interface QA { q: string; a: string }
 
@@ -19,7 +20,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Kan jeg afhente den i butikken?",
-    a: "Ja — vi har dem på lager i både Slagelse (VestsjællandsCentret 10) og Vejle (Løversysselvej 3B). Bestil online og hent samme dag, eller kig forbi og prøv den først.",
+    a: `Ja — vi har dem på lager i både Slagelse (${STORES.slagelse.street}) og Vejle (${STORES.vejle.street}). Bestil online og hent samme dag, eller kig forbi og prøv den først.`,
   },
   {
     q: "Kan spidsen udskiftes?",

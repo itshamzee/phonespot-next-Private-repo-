@@ -3,6 +3,7 @@ import {
   Html, Head, Body, Container, Section, Text, Img, Hr, Row, Column, Link,
 } from "@react-email/components";
 import type { StaffProfile, CompanySettings } from "@/lib/supabase/email-types";
+import { STORES } from "@/lib/store-config";
 
 interface BaseLayoutProps {
   children: React.ReactNode;
@@ -24,8 +25,8 @@ export default function BaseLayout({
 }: BaseLayoutProps) {
   const company = companySettings || {
     company_name: "PhoneSpot",
-    address: "VestsjællandsCentret 10",
-    postal_city: "4200 Slagelse",
+    address: STORES.slagelse.street,
+    postal_city: `${STORES.slagelse.zip} ${STORES.slagelse.city}`,
     phone: "+45 61 10 00 48",
     email: "info@phonespot.dk",
     website: "https://phonespot.dk",
