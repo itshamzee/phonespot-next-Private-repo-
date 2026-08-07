@@ -324,19 +324,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // ---- Location-specific repair pages -----------------------------------------
-  // Only the static landing pages (/reparation-vejle, /reparation-slagelse) —
-  // the dynamic /reparation/[location]/... routes were removed in 79cc23d,
-  // so any per-model/per-brand location URLs in the sitemap would 404.
+  // Only the static landing page that actually exists (/reparation-vejle) —
+  // the dynamic /reparation/[location]/... routes were removed in 79cc23d, and
+  // /reparation-slagelse was never a real route (it 301s to /reparation), so it
+  // must not be advertised here.
 
   const locationRepairPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/reparation-vejle`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/reparation-slagelse`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.9,

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import type { Product } from "@/lib/shopify/types";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+
+const FREE_SHIPPING_THRESHOLD_KR = FREE_SHIPPING_THRESHOLD / 100;
 
 function formatPrice(amount: string, currency: string) {
   return new Intl.NumberFormat("da-DK", {
@@ -120,7 +123,7 @@ export function CoverProductHero({
           </div>
 
           {/* Fri fragt notice */}
-          {parseFloat(price.amount) >= 899 ? (
+          {parseFloat(price.amount) >= FREE_SHIPPING_THRESHOLD_KR ? (
             <p className="mt-2 flex items-center gap-1.5 text-sm text-green-eco">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -129,7 +132,7 @@ export function CoverProductHero({
             </p>
           ) : (
             <p className="mt-2 text-sm text-gray">
-              Fri fragt ved køb over 899 kr
+              Fri fragt ved køb over {FREE_SHIPPING_THRESHOLD_KR} kr
             </p>
           )}
 

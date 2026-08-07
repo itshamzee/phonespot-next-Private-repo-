@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STORES } from "@/lib/store-config";
+import { BRAND } from "@/lib/email/brand";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -111,10 +112,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (fullOrder?.shipping_method?.startsWith("click_collect_") && fullOrder?.customer?.email) {
       const store = fullOrder.shipping_method === "click_collect_vejle" ? STORES.vejle : STORES.slagelse;
+      // BRAND.stores carries the same store's display-formatted hours string
+      // used in the rest of the email templates — match on name, not index.
+      const brandStore = BRAND.stores.find((s) => s.name === store.name) ?? BRAND.stores[0];
       const locationInfo = {
         name: store.name,
         address: `${store.street}, ${store.zip} ${store.city}`,
         phone: store.phone,
+        mapUrl: store.googleMapsUrl,
+        hours: brandStore.hours,
       };
 
       try {
@@ -131,6 +137,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             locationName: locationInfo.name,
             locationAddress: locationInfo.address,
             locationPhone: locationInfo.phone,
+            locationMapUrl: locationInfo.mapUrl,
+            locationHours: locationInfo.hours,
           }),
         });
       } catch {

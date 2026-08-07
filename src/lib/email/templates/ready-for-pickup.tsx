@@ -20,17 +20,28 @@ interface ReadyForPickupEmailProps {
   locationName: string;
   locationAddress: string;
   locationPhone?: string; // deprecated — uses BRAND.phone
+  /** Google Maps URL for the pickup store. Defaults to Slagelse if absent. */
+  locationMapUrl?: string;
+  /** Opening hours display string for the pickup store. Defaults to Slagelse if absent. */
+  locationHours?: string;
 }
 
-const mapUrl =
+// Defaults — only used if a caller omits locationMapUrl / locationHours.
+// Every real caller should pass the correct store's values explicitly.
+const DEFAULT_MAP_URL =
   "https://www.google.com/maps/search/?api=1&query=VestsjællandsCentret+10%2C+4200+Slagelse";
+const DEFAULT_HOURS = BRAND.store.hours;
 
 export default function ReadyForPickupEmail({
   orderNumber,
   customerName,
   locationName,
   locationAddress,
+  locationMapUrl,
+  locationHours,
 }: ReadyForPickupEmailProps) {
+  const mapUrl = locationMapUrl ?? DEFAULT_MAP_URL;
+  const hours = locationHours ?? DEFAULT_HOURS;
   const pickupCode = orderNumber.replace(/\D/g, "").slice(-4).padStart(4, "0");
 
   return (
@@ -279,7 +290,7 @@ export default function ReadyForPickupEmail({
                     color: "#555",
                   }}
                 >
-                  {BRAND.store.hours}
+                  {hours}
                 </Text>
               </Column>
             </Row>

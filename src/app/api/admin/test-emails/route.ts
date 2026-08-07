@@ -11,6 +11,8 @@ import { buildOfferEmailHtml } from "@/lib/email/offer-email";
 import OfferAcceptanceEmail from "@/lib/email/templates/offer-acceptance";
 import { WarrantyCertificateEmail } from "@/lib/email/templates/warranty-certificate";
 import AbandonedCartEmail from "@/lib/email/templates/abandoned-cart-email";
+import { STORES } from "@/lib/store-config";
+import { BRAND } from "@/lib/email/brand";
 
 export async function POST(request: Request) {
   const { to } = await request.json();
@@ -59,6 +61,8 @@ export async function POST(request: Request) {
         customerName: "Test Kunde",
         locationName: "Slagelse",
         locationAddress: "VestsjællandsCentret 10, 4200 Slagelse",
+        locationMapUrl: STORES.slagelse.googleMapsUrl,
+        locationHours: BRAND.stores.find((s) => s.name === STORES.slagelse.name)?.hours,
       }),
     );
     await resend.emails.send({ from: EMAIL_FROM, to, subject: "[TEST] Din ordre er klar til afhentning — TEST-0001", html });

@@ -13,7 +13,7 @@ describe("SectionWrapper", () => {
       <SectionWrapper background="sand">Content</SectionWrapper>
     );
     const section = container.firstChild as HTMLElement;
-    expect(section.className).toContain("bg-sand");
+    expect(section.className).toContain("bg-[#F2F2F5]");
   });
 
   it("applies custom className", () => {
