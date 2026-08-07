@@ -8,6 +8,7 @@ import { QualityBadge } from "@/components/spare-parts/quality-badge";
 import { useCart } from "@/components/cart/cart-context";
 import { useB2B } from "@/components/b2b/b2b-context";
 import { slugify } from "@/lib/spare-parts-config";
+import { LinkPendingBar } from "@/components/ui/link-pending-bar";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +76,29 @@ function ProductCardSkeleton() {
   );
 }
 
+/**
+ * Skeleton results area — same markup GridInner shows while `loading` is
+ * true. Shared with the Suspense fallback below so the pre-hydration paint
+ * and the just-mounted-but-still-fetching paint are pixel-identical (no
+ * shift at the hydration boundary), instead of jumping from a
+ * `fallback={null}` zero-height box.
+ */
+function GridResultsSkeleton({ viewMode }: { viewMode: ViewMode }) {
+  return viewMode === "grid" ? (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  ) : (
+    <div className="space-y-3">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="h-24 animate-pulse rounded-xl border border-[#E5E5EA] bg-white" />
+      ))}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Product card — grid view
 // ---------------------------------------------------------------------------
@@ -94,7 +118,9 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
   const productUrl = buildProductUrl(product);
 
   return (
-    <Link href={productUrl} className="group flex flex-col rounded-xl border border-[#E5E5EA] bg-white transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+    <Link href={productUrl} className="group relative flex flex-col rounded-xl border border-[#E5E5EA] bg-white transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+      <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-xl" />
+
       {/* Image */}
       <div className="relative aspect-square w-full overflow-hidden rounded-t-xl bg-[#F7F7F8]">
         {product.images[0] ? (
@@ -238,7 +264,9 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
   const productUrl = buildProductUrl(product);
 
   return (
-    <Link href={productUrl} className="flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+    <Link href={productUrl} className="relative flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+      <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-xl" />
+
       {/* Image */}
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">
         {product.images[0] ? (
@@ -692,22 +720,7 @@ function SparePartsGridInner() {
 
       {/* ── Products ─────────────────────────────────────────────────────── */}
       {loading ? (
-        viewMode === "grid" ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-24 animate-pulse rounded-xl border border-[#E5E5EA] bg-white"
-              />
-            ))}
-          </div>
-        )
+        <GridResultsSkeleton viewMode={viewMode} />
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <svg
@@ -755,12 +768,116 @@ function SparePartsGridInner() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Suspense fallback — the same top bar + skeleton grid GridInner       */
+/*  shows the instant it mounts (loading=true, default sort/view, no    */
+/*  URL filters applied yet), just with the controls disabled since     */
+/*  there's no JS to handle them pre-hydration. Reserves the real       */
+/*  height up front instead of the zero-height `fallback={null}` that   */
+/*  used to cause the CLS regression here.                              */
+/* ------------------------------------------------------------------ */
+
+function SparePartsGridFallback() {
+  return (
+    <div className="min-w-0 flex-1">
+      {/* ── Top bar ──────────────────────────────────────────────────── */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <p className="mr-auto text-sm text-[#86868B]">
+          <span className="inline-block h-4 w-32 animate-pulse rounded bg-[#F7F7F8]" />
+        </p>
+
+        <div className="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#86868B]"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
+          </svg>
+          <input
+            type="search"
+            disabled
+            readOnly
+            placeholder="Søg i resultater..."
+            value=""
+            aria-hidden="true"
+            tabIndex={-1}
+            className="w-48 rounded-lg border border-[#E5E5EA] bg-white py-2 pl-9 pr-3 text-xs text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10 sm:w-56"
+          />
+        </div>
+
+        <select
+          disabled
+          defaultValue="stock"
+          aria-hidden="true"
+          tabIndex={-1}
+          className="rounded-lg border border-[#E5E5EA] bg-white py-2 pl-3 pr-8 text-xs font-medium text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+        >
+          {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex rounded-lg border border-[#E5E5EA] bg-white">
+          <button type="button" disabled aria-hidden="true" tabIndex={-1} className="rounded-l-lg bg-[#1A3D2E] p-2 text-white">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+              />
+            </svg>
+          </button>
+          <button type="button" disabled aria-hidden="true" tabIndex={-1} className="rounded-r-lg p-2 text-[#86868B]">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Products ─────────────────────────────────────────────────── */}
+      <GridResultsSkeleton viewMode="grid" />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Exported wrapper with Suspense (useSearchParams requires one)     */
 /* ------------------------------------------------------------------ */
 
 export function SparePartsGrid() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<SparePartsGridFallback />}>
       <SparePartsGridInner />
     </Suspense>
   );

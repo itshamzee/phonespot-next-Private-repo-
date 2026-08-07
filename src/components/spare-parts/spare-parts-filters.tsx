@@ -802,12 +802,127 @@ function SparePartsFiltersInner() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Suspense fallback — mirrors what SparePartsFiltersInner looks like */
+/*  on its very first mount, before the categories/quality-tier fetch  */
+/*  resolves and before any URL filters are read (Deltype "Alle" only, */
+/*  no Kvalitet section, brand list from the static config). Same      */
+/*  shell + section chrome as the real thing so the sidebar's height   */
+/*  doesn't jump once useSearchParams becomes available — that jump    */
+/*  is what `fallback={null}` used to cause.                           */
+/* ------------------------------------------------------------------ */
+
+function SparePartsFiltersFallback() {
+  const allBrands = getMergedBrands([]);
+
+  const body = (
+    <div className="flex flex-col">
+      <FilterSection title="Deltype">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <button
+            type="button"
+            disabled
+            className="rounded-full bg-[#1A3D2E] px-3 py-1.5 text-xs font-medium text-white"
+          >
+            Alle
+          </button>
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Enhedsmærke">
+        <select
+          disabled
+          defaultValue=""
+          aria-hidden="true"
+          tabIndex={-1}
+          className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+        >
+          <option value="">Alle mærker</option>
+          {allBrands.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+      </FilterSection>
+
+      <FilterSection title="Pris (DKK)">
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            disabled
+            readOnly
+            placeholder="Fra"
+            value=""
+            aria-hidden="true"
+            tabIndex={-1}
+            className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+          />
+          <span className="shrink-0 text-xs text-[#86868B]">&ndash;</span>
+          <input
+            type="number"
+            disabled
+            readOnly
+            placeholder="Til"
+            value=""
+            aria-hidden="true"
+            tabIndex={-1}
+            className="w-full rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+          />
+        </div>
+      </FilterSection>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile: "Filtre" trigger button */}
+      <div className="lg:hidden">
+        <button
+          type="button"
+          disabled
+          aria-hidden="true"
+          tabIndex={-1}
+          className="inline-flex items-center gap-2 rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm font-medium text-[#111111]"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+            />
+          </svg>
+          Filtre
+        </button>
+      </div>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden w-72 shrink-0 lg:block">
+        <div className="sticky top-6">
+          <div className="flex items-center justify-between border-b border-[#E5E5EA] pb-3">
+            <span className="font-semibold text-[#111111]">Filtre</span>
+          </div>
+          <div className="pt-1">{body}</div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Exported wrapper with Suspense (useSearchParams requires one)     */
 /* ------------------------------------------------------------------ */
 
 export function SparePartsFilters() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<SparePartsFiltersFallback />}>
       <SparePartsFiltersInner />
     </Suspense>
   );

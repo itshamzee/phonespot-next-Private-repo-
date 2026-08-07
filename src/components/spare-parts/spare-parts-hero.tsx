@@ -12,43 +12,24 @@ interface SparePartsHeroProps {
   backgroundImage?: string;
 }
 
-function SparePartsHeroInner({ title, subtitle, showSearch, breadcrumb, backgroundImage }: SparePartsHeroProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("search") ?? "");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+/* ------------------------------------------------------------------ */
+/*  Shared shell — title/subtitle/breadcrumb/image are all known       */
+/*  synchronously (plain props, not gated on useSearchParams), so the  */
+/*  same markup renders in both the real component and the Suspense   */
+/*  fallback below. Only the search box differs (interactive vs a      */
+/*  static, identically-sized look-alike), which keeps the fallback's  */
+/*  height pixel-equal to the hydrated result and avoids the layout    */
+/*  shift a `fallback={null}` used to cause.                           */
+/* ------------------------------------------------------------------ */
 
-  const pushSearch = useCallback(
-    (value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value.trim()) {
-        params.set("search", value.trim());
-      } else {
-        params.delete("search");
-      }
-      params.delete("page");
-      router.push(`/reservedele?${params.toString()}`);
-    },
-    [router, searchParams],
-  );
-
-  function handleChange(value: string) {
-    setQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => pushSearch(value), 400);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      pushSearch(query);
-    }
-  }
-
-  useEffect(() => {
-    setQuery(searchParams.get("search") ?? "");
-  }, [searchParams]);
-
+function HeroShell({
+  title,
+  subtitle,
+  showSearch,
+  breadcrumb,
+  backgroundImage,
+  searchBox,
+}: SparePartsHeroProps & { searchBox: ReactNode }) {
   const hasImage = !!backgroundImage;
 
   return (
@@ -99,7 +80,7 @@ function SparePartsHeroInner({ title, subtitle, showSearch, breadcrumb, backgrou
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className={`absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 ${hasImage ? "text-[#86868B]" : "text-[#86868B]"}`}
+                className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#86868B]"
                 aria-hidden="true"
               >
                 <path
@@ -108,20 +89,101 @@ function SparePartsHeroInner({ title, subtitle, showSearch, breadcrumb, backgrou
                   d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                 />
               </svg>
-              <input
-                type="search"
-                name="search"
-                placeholder="Søg reservedele — skærm, batteri, model..."
-                value={query}
-                onChange={(e) => handleChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full rounded-xl border border-[#E5E5EA] bg-white py-3.5 pl-11 pr-4 text-base text-[#111111] shadow-sm placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
-              />
+              {searchBox}
             </div>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+const SEARCH_INPUT_CLASS =
+  "w-full rounded-xl border border-[#E5E5EA] bg-white py-3.5 pl-11 pr-4 text-base text-[#111111] shadow-sm placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10";
+
+/* ------------------------------------------------------------------ */
+/*  Interactive version — needs useSearchParams, so it must live       */
+/*  behind a Suspense boundary.                                        */
+/* ------------------------------------------------------------------ */
+
+function SparePartsHeroInner(props: SparePartsHeroProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("search") ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pushSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value.trim()) {
+        params.set("search", value.trim());
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+      router.push(`/reservedele?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  function handleChange(value: string) {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => pushSearch(value), 400);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      pushSearch(query);
+    }
+  }
+
+  useEffect(() => {
+    setQuery(searchParams.get("search") ?? "");
+  }, [searchParams]);
+
+  return (
+    <HeroShell
+      {...props}
+      searchBox={
+        <input
+          type="search"
+          name="search"
+          placeholder="Søg reservedele — skærm, batteri, model..."
+          value={query}
+          onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className={SEARCH_INPUT_CLASS}
+        />
+      }
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Suspense fallback — same shell, a static (disabled) twin of the    */
+/*  search input so the SSR/pre-hydration paint is the same height as  */
+/*  the real thing. Eliminates the CLS that `fallback={null}` caused.  */
+/* ------------------------------------------------------------------ */
+
+function SparePartsHeroFallback(props: SparePartsHeroProps) {
+  return (
+    <HeroShell
+      {...props}
+      searchBox={
+        <input
+          type="search"
+          disabled
+          readOnly
+          placeholder="Søg reservedele — skærm, batteri, model..."
+          value=""
+          aria-hidden="true"
+          tabIndex={-1}
+          className={SEARCH_INPUT_CLASS}
+        />
+      }
+    />
   );
 }
 
@@ -131,7 +193,7 @@ function SparePartsHeroInner({ title, subtitle, showSearch, breadcrumb, backgrou
 
 export function SparePartsHero(props: SparePartsHeroProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<SparePartsHeroFallback {...props} />}>
       <SparePartsHeroInner {...props} />
     </Suspense>
   );

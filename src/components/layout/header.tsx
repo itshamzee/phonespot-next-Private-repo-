@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { LinkPendingUnderline } from "@/components/ui/link-pending-bar";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation data                                                    */
@@ -560,20 +561,25 @@ export function Header() {
                 Produkter
                 <ChevronIcon className={`h-3 w-3 transition-transform duration-200 ${megaOpen ? "rotate-180" : ""}`} />
               </button>
-              <Link href="/reparation" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/reparation" className="relative text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Reparation
+                <LinkPendingUnderline />
               </Link>
-              <Link href="/saelg-din-enhed" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/saelg-din-enhed" className="relative text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Sælg din enhed
+                <LinkPendingUnderline />
               </Link>
-              <Link href="/tilbehoer" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/tilbehoer" className="relative text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Tilbehør
+                <LinkPendingUnderline />
               </Link>
-              <Link href="/forsikring" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/forsikring" className="relative text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Forsikring
+                <LinkPendingUnderline />
               </Link>
-              <Link href="/butik" className="text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
+              <Link href="/butik" className="relative text-[15px] font-medium tracking-tight text-charcoal transition-colors hover:text-green-eco">
                 Butikker
+                <LinkPendingUnderline />
               </Link>
             </nav>
 
@@ -630,8 +636,9 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex flex-none items-center gap-1.5 rounded-full border border-sand bg-white px-3.5 py-1.5 text-[12.5px] font-medium tracking-tight text-charcoal transition-colors hover:border-green-eco hover:text-green-eco"
+                  className="relative flex flex-none items-center gap-1.5 rounded-full border border-sand bg-white px-3.5 py-1.5 text-[12.5px] font-medium tracking-tight text-charcoal transition-colors hover:border-green-eco hover:text-green-eco"
                 >
+                  <LinkPendingUnderline className="absolute inset-x-3 -bottom-0.5 h-0.5 overflow-hidden rounded-full" />
                   {item.label}
                   {item.tag && (
                     <span className="rounded-full bg-green-eco px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white">

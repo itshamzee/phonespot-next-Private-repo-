@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Product } from "@/lib/shopify/types";
 import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
+import { LinkPendingBar } from "@/components/ui/link-pending-bar";
 
 function getConditionGrade(tags: string[]): "A" | "B" | "C" | null {
   const lower = tags.map((t) => t.toLowerCase());
@@ -38,8 +39,10 @@ export function ProductCard({
   return (
     <Link
       href={`/${collectionHandle}/${product.handle}`}
-      className="group flex flex-col rounded-[16px] border border-sand bg-white transition-shadow hover:shadow-md"
+      className="group relative flex flex-col rounded-[16px] border border-sand bg-white transition-shadow hover:shadow-md"
     >
+      <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-[16px]" />
+
       {/* Image area */}
       <div className="relative aspect-square overflow-hidden rounded-t-[16px] bg-cream">
         {grade && (

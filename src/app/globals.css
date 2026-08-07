@@ -76,6 +76,18 @@ body {
   animation: marquee 30s linear infinite;
 }
 
+/* Link pending indicator (useLinkStatus) — grows toward, never quite
+   reaching, full width while a navigation is in flight. The bar unmounts
+   the instant `pending` flips back to false, which reads as "arrived". */
+@keyframes link-pending {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(0.8); }
+}
+.animate-link-pending {
+  transform-origin: left;
+  animation: link-pending 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Global minimum font size for readability */
 @layer base {
   body {
