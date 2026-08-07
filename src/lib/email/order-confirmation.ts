@@ -373,7 +373,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
                 (Denne formular udfyldes og returneres kun, hvis fortrydelsesretten gøres gældende.)
               </p>
               <p style="margin:0 0 4px;">
-                Til: PhoneSpot, Vestsjællandscentret 10A, 103, 4200 Slagelse &mdash; ${BRAND.orderEmail}
+                Til: PhoneSpot, ${SLAGELSE_ADDRESS} &mdash; ${BRAND.orderEmail}
               </p>
               <p style="margin:0 0 8px;">
                 Jeg/vi meddeler herved, at jeg/vi ønsker at gøre fortrydelsesretten gældende i forbindelse med

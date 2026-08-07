@@ -7,8 +7,25 @@ import path from "node:path";
  * Each entry documents WHY it is forbidden. If a test here fails, fix the
  * source file — do not edit this list unless a business fact truly changed.
  */
-const ROOTS = ["src/app", "src/components", "src/lib", "src/content"];
-const SKIP = [/node_modules/, /__tests__/, /\.test\./, /\.recovered$/];
+const ROOTS = ["src/app", "src/components", "src/lib", "src/content", "scripts", "supabase"];
+const SKIP = [
+  /node_modules/,
+  /__tests__/,
+  /\.test\./,
+  /\.recovered$/,
+  // Already-applied migration SQL is historical record — rewriting a
+  // migration doesn't change what ran against the database and would
+  // misrepresent what actually shipped. Excluded from every check below,
+  // not just the address one.
+  /[\\/]supabase[\\/]migrations[\\/]/,
+  // One-time, already-run Shopify -> Supabase import script. Its
+  // accessory-exclusion keyword list intentionally mirrors legacy Shopify
+  // product-title vocabulary (incl. "panserglas") for exact-match filtering
+  // against old title strings only — the word is never rendered to a
+  // customer. (The stale address literal elsewhere in this same file was
+  // still corrected, for the record.)
+  /[\\/]scripts[\\/]migrate-shopify-to-supabase\.mjs$/,
+];
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {

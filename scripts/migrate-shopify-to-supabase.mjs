@@ -289,7 +289,7 @@ async function getLocationId() {
     .from('locations')
     .insert({
       name: 'PhoneSpot Slagelse',
-      address: 'VestsjællandsCentret 10, 4200 Slagelse',
+      address: 'VestsjællandsCentret 10A, 103, 4200 Slagelse',
       type: 'store',
       phone: '+45 XX XX XX XX',
       email: 'info@phonespot.dk',

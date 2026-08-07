@@ -4,9 +4,14 @@ import { STORES, openingHoursJsonLd } from "@/lib/store-config";
 describe("store config", () => {
   it("Slagelse street includes the building + unit number (10A, 103)", () => {
     expect(STORES.slagelse.street).toBe("VestsjællandsCentret 10A, 103");
-    // The Maps query targets the mall itself, not the specific unit — a
-    // precise-but-unresolvable suite number would risk breaking the pin.
-    expect(STORES.slagelse.googleMapsUrl).toContain("VestsjællandsCentret");
+    // The Maps query intentionally targets the mall itself, not the specific
+    // unit — geocoding "...10A, 103, 4200 Slagelse" returns zero results,
+    // while the mall-only query resolves reliably. Assert the exact value
+    // (not just a substring) so a future edit can't silently drift back to
+    // an unresolvable, over-precise query.
+    expect(STORES.slagelse.googleMapsUrl).toBe(
+      "https://maps.google.com/?q=VestsjællandsCentret+10,+4200+Slagelse",
+    );
   });
 
   it("Vejle maps URL matches the street address (3B)", () => {

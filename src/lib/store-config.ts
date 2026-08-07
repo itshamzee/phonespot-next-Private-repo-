@@ -42,6 +42,12 @@ export const STORES: Record<string, StoreLocationConfig> = {
       saturday: "10:00 – 17:00",
       sunday: "10:00 – 17:00",
     },
+    // Intentionally NOT "street" (VestsjællandsCentret 10A, 103): Google's
+    // text-search query is fuzzy on the mall name but breaks on the precise
+    // entrance/unit suffix. Verified against a geocoder — "...10A, 103,
+    // 4200 Slagelse" returns zero results, while "...10, 4200 Slagelse"
+    // resolves fine near the mall. Keep this query mall-only so the pin
+    // keeps resolving; the precise unit lives in `street` for copy/labels.
     googleMapsUrl:
       "https://maps.google.com/?q=VestsjællandsCentret+10,+4200+Slagelse",
     googleMapsEmbed:
