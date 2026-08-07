@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -466,7 +466,7 @@ const SORT_LABELS: Record<SortOption, string> = {
   newest: "Nyeste",
 };
 
-export function SparePartsGrid() {
+function SparePartsGridInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -751,5 +751,17 @@ export function SparePartsGrid() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Exported wrapper with Suspense (useSearchParams requires one)     */
+/* ------------------------------------------------------------------ */
+
+export function SparePartsGrid() {
+  return (
+    <Suspense fallback={null}>
+      <SparePartsGridInner />
+    </Suspense>
   );
 }

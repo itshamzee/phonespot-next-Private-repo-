@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { formatOere } from "@/lib/cart/utils";
@@ -29,7 +29,7 @@ const PAYMENT_LABELS: Record<string, string> = {
   mobilepay: "MobilePay",
 };
 
-export default function CashupPage() {
+function CashupPageInner() {
   const searchParams = useSearchParams();
   const locationId = searchParams.get("location_id") ?? "";
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -247,5 +247,13 @@ export default function CashupPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CashupPage() {
+  return (
+    <Suspense fallback={null}>
+      <CashupPageInner />
+    </Suspense>
   );
 }

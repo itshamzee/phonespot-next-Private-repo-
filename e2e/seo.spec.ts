@@ -24,6 +24,43 @@ test.describe("SEO", () => {
     expect(text).toContain("phonespot.dk");
   });
 
+  test("unknown top-level route returns real 404 status", async ({ request }) => {
+    // Regression test: notFound() must produce an actual HTTP 404, not a
+    // "soft 404" (correct not-found HTML served with a 200 status). Google
+    // treats soft-404s as real, indexable pages, which dilutes crawl budget
+    // across unlimited junk URLs. See src/app/[collection]/page.tsx and the
+    // fix commit for the root cause (a root-level loading.tsx implicitly
+    // wrapped every route in Suspense, which locks the HTTP status to 200
+    // once streaming starts, before notFound() can change it).
+    const response = await request.get("/en-side-der-ikke-findes-12345", {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(404);
+    const text = await response.text();
+    expect(text).toContain("Siden blev ikke fundet");
+  });
+
+  test("unknown product under a real collection returns real 404 status", async ({ request }) => {
+    const response = await request.get("/iphones/produkt-findes-ikke-999", {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(404);
+  });
+
+  test("unknown blog slug returns real 404 status", async ({ request }) => {
+    const response = await request.get("/blog/dette-findes-ikke-xyz", {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(404);
+  });
+
+  test("real routes still return 200 after the 404 fix", async ({ request }) => {
+    for (const path of ["/", "/iphones", "/tilbehoer", "/blog", "/reservedele"]) {
+      const response = await request.get(path, { maxRedirects: 0 });
+      expect(response.status(), `expected 200 for ${path}`).toBe(200);
+    }
+  });
+
   test("homepage has proper meta tags", async ({ page }) => {
     await page.goto("/");
 

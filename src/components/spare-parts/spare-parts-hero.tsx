@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState, useCallback, useEffect, useRef } from "react";
+import { type ReactNode, Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -12,7 +12,7 @@ interface SparePartsHeroProps {
   backgroundImage?: string;
 }
 
-export function SparePartsHero({ title, subtitle, showSearch, breadcrumb, backgroundImage }: SparePartsHeroProps) {
+function SparePartsHeroInner({ title, subtitle, showSearch, breadcrumb, backgroundImage }: SparePartsHeroProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("search") ?? "");
@@ -122,5 +122,17 @@ export function SparePartsHero({ title, subtitle, showSearch, breadcrumb, backgr
         )}
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Exported wrapper with Suspense (useSearchParams requires one)     */
+/* ------------------------------------------------------------------ */
+
+export function SparePartsHero(props: SparePartsHeroProps) {
+  return (
+    <Suspense fallback={null}>
+      <SparePartsHeroInner {...props} />
+    </Suspense>
   );
 }

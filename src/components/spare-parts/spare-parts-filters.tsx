@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   DEVICE_BRANDS,
@@ -222,7 +222,7 @@ function FilterSection({
 // Main component
 // ---------------------------------------------------------------------------
 
-export function SparePartsFilters() {
+function SparePartsFiltersInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -798,5 +798,17 @@ export function SparePartsFilters() {
         </div>
       </aside>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Exported wrapper with Suspense (useSearchParams requires one)     */
+/* ------------------------------------------------------------------ */
+
+export function SparePartsFilters() {
+  return (
+    <Suspense fallback={null}>
+      <SparePartsFiltersInner />
+    </Suspense>
   );
 }
