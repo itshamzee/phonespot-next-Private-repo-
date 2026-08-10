@@ -67,34 +67,80 @@ function formatPrice(oere: number): string {
   }).format(oere / 100);
 }
 
+function getMeta(grade: string) {
+  return (
+    GRADE_META[grade] ?? {
+      label: grade,
+      description: "",
+      tooltip: "",
+      color: "text-charcoal",
+      bg: "bg-cream",
+    }
+  );
+}
+
 export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps) {
+  // Only advertise stand we actually have — a sold-out grade greyed out in
+  // the list still tells the buyer "we have this", which we don't.
+  const inStock = grades.filter(({ available }) => available > 0);
+
+  if (inStock.length === 0) {
+    return null;
+  }
+
+  if (inStock.length === 1) {
+    const { grade, price } = inStock[0];
+    const meta = getMeta(grade);
+
+    return (
+      <div>
+        <dl>
+          <div className="flex items-start justify-between gap-3 border-b border-[#E5E5EA] py-2">
+            <dt className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-charcoal/45">
+              Stand
+            </dt>
+            <dd className="flex-1 text-right text-sm font-semibold leading-snug text-charcoal">
+              {meta.label}
+              {price != null && (
+                <span className="ml-2 font-display text-charcoal">{formatPrice(price)} kr.</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-2 text-[11px] text-charcoal/45">
+          {meta.description}
+          {meta.description ? ". " : ""}
+          Alle enheder er 100% funktionelle med 36 mdr. garanti.{" "}
+          <a
+            href="#hvad-betyder-standen"
+            className="font-medium text-green-eco underline-offset-2 hover:underline"
+          >
+            Hvad betyder standen?
+          </a>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <p className="mb-2 text-sm font-bold text-charcoal">Vælg stand</p>
       <div className="flex flex-col gap-2">
-        {grades.map(({ grade, price, available }) => {
-          const meta = GRADE_META[grade] ?? {
-            label: grade,
-            description: "",
-            tooltip: "",
-            color: "text-charcoal",
-            bg: "bg-cream",
-          };
+        {inStock.map(({ grade, price }) => {
+          const meta = getMeta(grade);
           const isSelected = selected === grade;
-          const isUnavailable = available === 0;
 
           return (
             <button
               key={grade}
               type="button"
               title={meta.tooltip}
-              disabled={isUnavailable}
               onClick={() => onChange(grade)}
-              className={`flex items-center gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 text-left transition-all ${
+              className={`flex items-center gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 text-left transition-all cursor-pointer ${
                 isSelected
                   ? "border-green-eco bg-white shadow-sm ring-2 ring-green-eco/20"
                   : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
-              } ${isUnavailable ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
+              }`}
             >
               {/* Radio dot */}
               <div
@@ -122,23 +168,14 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
                 </span>
               </div>
 
-              {/* Price / stock */}
-              <div className="shrink-0 text-right">
-                {isUnavailable ? (
-                  <div className="flex flex-col items-end">
-                    {price != null && (
-                      <span className="font-display text-sm sm:text-base font-bold text-charcoal/30">
-                        {formatPrice(price)} kr.
-                      </span>
-                    )}
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-charcoal/30">Udsolgt</span>
-                  </div>
-                ) : price != null ? (
+              {/* Price */}
+              {price != null && (
+                <div className="shrink-0 text-right">
                   <span className="font-display text-sm sm:text-base font-bold text-charcoal">
                     {formatPrice(price)} kr.
                   </span>
-                ) : null}
-              </div>
+                </div>
+              )}
             </button>
           );
         })}
