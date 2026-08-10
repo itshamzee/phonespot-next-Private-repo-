@@ -17,13 +17,14 @@ export function SpecTable({ specs }: SpecTableProps) {
       {specs.map(({ label, value }) => (
         <div
           key={label}
-          className="flex items-baseline justify-between gap-3 border-b border-[#E5E5EA] py-2"
+          className="flex items-start justify-between gap-3 border-b border-[#E5E5EA] py-2"
         >
-          <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
+          <dt className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#86868B]">
             {label}
           </dt>
           <dd
-            className="truncate text-right text-sm font-semibold text-[#111111]"
+            title={value}
+            className="flex-1 break-words text-right text-sm font-semibold leading-snug text-[#111111]"
             style={{ fontVariantNumeric: "tabular-nums" }}
           >
             {value}
