@@ -10,6 +10,8 @@ import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { SpecTable } from "./spec-table";
+import { PickupLine } from "./pickup-line";
+import { normalizeStoreId } from "@/lib/stores";
 import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
 import { pickBetterInStockGrade } from "@/lib/product/grade-comparison";
 import { ConditionExplainer } from "./condition-explainer";
@@ -405,6 +407,12 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
     }
   }
   const pickupLocations = Array.from(storeLocations.values());
+  // Same store-count data as pickupLocations, keyed by STORES slug for PickupLine
+  // (locations.name is just "Vejle"/"Slagelse", which normalizeStoreId lowercases
+  // straight into the "vejle"/"slagelse" slugs STORES and PickupLine key on).
+  const stockByStore: { slug: string; count: number }[] = pickupLocations
+    .map((loc) => ({ slug: normalizeStoreId(loc.name), count: loc.count }))
+    .filter((s): s is { slug: NonNullable<typeof s.slug>; count: number } => s.slug !== null);
 
   const categoryName = getCategoryName(template.category);
   const deviceType = getDeviceType(template.category);
@@ -812,21 +820,16 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
 
             {cartError && <p className="text-sm text-red-600">{cartError}</p>}
 
+            {/* Local pickup availability — directly under the CTA, the one advantage
+                Back Market/Swappie/green.dk structurally can't match. Never shown for
+                Foxway-sourced units, which never sit in a physical shop. */}
+            {inStock && (
+              <PickupLine stockByStore={bestMatch?.source === "foxway" ? [] : stockByStore} />
+            )}
+
             {/* Pickup / delivery info */}
             {inStock && (
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
-                {bestMatch?.source !== "foxway" && pickupLocations.map((loc) => (
-                  <span
-                    key={loc.name}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E]/8 px-3 py-1.5 text-xs font-semibold text-[#1A3D2E]"
-                  >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                    </svg>
-                    Kan hentes i {loc.name}
-                  </span>
-                ))}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25h-.375a3 3 0 013-3V7.5h9.75" />
