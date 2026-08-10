@@ -10,16 +10,17 @@ import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { SpecTable } from "./spec-table";
+import { DescriptionRenderer } from "./description-renderer";
 import { PickupLine } from "./pickup-line";
 import { TradeInTeaser } from "./trade-in-teaser";
 import { normalizeStoreId } from "@/lib/stores";
 import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
 import { pickBetterInStockGrade } from "@/lib/product/grade-comparison";
-import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
-import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { TRUSTPILOT_SCORE_LABEL, TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
+import { STORES } from "@/lib/store-config";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -59,17 +60,17 @@ const GRADE_DETAILS: Record<string, { label: string; battery: string; cosmetic: 
 };
 
 /* ------------------------------------------------------------------ */
-/*  Trust point data + icon helper                                     */
+/*  Store count, spelled out in Danish — derived from store-config so   */
+/*  it can never drift from the actual number of physical shops.        */
 /* ------------------------------------------------------------------ */
 
-const TRUST_POINTS = [
-  { icon: "shield", label: "36 mdr. garanti", desc: "Dækker fabrikationsfejl" },
-  { icon: "return", label: "14 dages returret", desc: "Fuld refundering" },
-  { icon: "test", label: "30+ tests", desc: "Testet individuelt" },
-  { icon: "truck", label: "1-2 dages levering", desc: "Sendt samme dag" },
-  { icon: "lock", label: "Sikker betaling", desc: "Kort, MobilePay, Klarna" },
-  { icon: "eco", label: "80% mindre CO₂", desc: "Bæredygtigt valg" },
-];
+const DANISH_ORDINAL_COUNT: Record<number, string> = { 1: "én", 2: "to", 3: "tre", 4: "fire" };
+const storeCount = Object.keys(STORES).length;
+const storeCountWord = DANISH_ORDINAL_COUNT[storeCount] ?? String(storeCount);
+
+/* ------------------------------------------------------------------ */
+/*  Trust icon helper (still used by the Garanti & Levering tab)       */
+/* ------------------------------------------------------------------ */
 
 function TrustIcon({ type, className }: { type: string; className?: string }) {
   const c = className ?? "h-5 w-5";
@@ -531,7 +532,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             {/* Main image */}
             <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F7F7F8] aspect-square">
               {mainImage ? (
-                <Image src={mainImage} alt={template.display_name} fill className="object-contain p-4 sm:p-8" sizes="(min-width: 1024px) 58vw, 100vw" priority />
+                <Image src={mainImage} alt={template.display_name} fill className="object-contain p-2 sm:p-5" sizes="(min-width: 1024px) 58vw, 100vw" priority />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <svg viewBox="0 0 64 64" className="h-20 w-20 text-[#E5E5EA]" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -611,11 +612,6 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             {template.short_description && (
               <p className="mt-2 text-sm text-[#86868B] leading-relaxed">{template.short_description}</p>
             )}
-
-            {/* Trustpilot inline */}
-            <div className="mt-3">
-              <TrustpilotBadge />
-            </div>
           </div>
 
           {/* Scannable spec table — above the fold, above the price */}
@@ -642,8 +638,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             </div>
           )}
 
-          {/* Storage selector */}
-          {template.storage_options.length > 0 && (
+          {/* Storage selector — hidden for single-option products; the value
+              already sits in the spec table, so a selector would only add bulk */}
+          {template.storage_options.length > 1 && (
             <StorageSelector
               options={template.storage_options}
               selected={selectedStorage}
@@ -652,8 +649,8 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             />
           )}
 
-          {/* Color selector */}
-          {template.colors.length > 0 && (
+          {/* Color selector — same single-option rule as storage */}
+          {template.colors.length > 1 && (
             <ColorSelectorPlatform
               colors={template.colors}
               selected={selectedColor}
@@ -840,27 +837,46 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                   </svg>
                   Kan sendes
                 </span>
-                {bestMatch?.source === "foxway" && (
+                {bestMatch?.source === "foxway" ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Levering 1-3 hverdage
                   </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Sendt samme dag
+                  </span>
                 )}
               </div>
             )}
 
-            {/* Quick trust signals */}
-            <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-4 gap-y-1 pt-1 border-t border-[#E5E5EA]">
-              {["36 mdr. garanti", "14 dages returret", "Sendt samme dag"].map((text) => (
-                <span key={text} className="flex items-center gap-1.5 text-xs text-[#86868B]">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#1A3D2E]">
-                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                  </svg>
-                  {text}
-                </span>
-              ))}
+            {/* Sikker betaling — unlike the shipping pills above, this isn't
+                tied to whether this specific SKU is in stock, so it renders
+                regardless (matches its old always-on visibility via the
+                removed TRUST_POINTS strip). */}
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F7F7F8] px-3 py-1.5 text-xs font-semibold text-[#86868B]">
+              <TrustIcon type="lock" className="h-3.5 w-3.5" />
+              Sikker betaling — kort, MobilePay og Klarna
+            </span>
+
+            {/* Compact trust strip — three lines: warranty/return, the
+                condition claim for the selected grade, and Trustpilot +
+                store count. Replaces what used to be three separate
+                trust modules further down the page (grade explanation
+                cards, the 6-tile TRUST_POINTS strip and a second "hvad
+                betyder standen" toggle) — see the deeper quality section
+                below for the full grade-by-grade breakdown. */}
+            <div className="flex flex-col gap-1 pt-1 border-t border-[#E5E5EA] text-xs text-[#86868B]">
+              <p>36 måneders garanti — og 14 dages returret</p>
+              {gradeDetail && <p>{gradeDetail.cosmetic}</p>}
+              <p>
+                {TRUSTPILOT_SCORE_LABEL_DA} på Trustpilot — {storeCountWord} fysiske butikker i Danmark
+              </p>
             </div>
 
             {/* 4. Share buttons */}
@@ -894,10 +910,18 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             </div>
           </div>
 
+          {/* Elektronikforsikring — at the decision point instead of buried
+              below the fold; compact cart-variant matches the buy box scale */}
+          <InsuranceLead source="product" variant="cart" />
+
           {/* Klarna banner */}
           {price != null && (
             <KlarnaBanner priceAmount={String(price / 100)} />
           )}
+
+          {/* Trustpilot — social proof anchors the buy box instead of
+              pushing title and specs down from the top */}
+          <TrustpilotBadge />
         </div>
       </div>
 
@@ -949,90 +973,6 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
       )}
 
       {/* ============================================================ */}
-      {/* GRADE EXPLANATION — "Hvad betyder standen?"                   */}
-      {/* ============================================================ */}
-      {gradeDetail && (
-        <div className="mt-10 rounded-2xl border border-[#E5E5EA] bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg font-bold text-[#111111]">
-              {selectedGrade === "N" ? "Fabriksny" : `Grade ${selectedGrade}: ${gradeDetail.label}`}
-            </h3>
-            <Link href="/kvalitet" className="text-xs font-semibold text-[#1A3D2E] hover:underline">
-              Læs mere om grader &rarr;
-            </Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1A3D2E]/10">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-[#1A3D2E]">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[#111111]">100% funktionel</p>
-                <p className="mt-0.5 text-xs text-[#86868B]">Alle funktioner testet og virker</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 18h15A2.25 2.25 0 0 0 21 15.75v-6a2.25 2.25 0 0 0-2.25-2.25h-15A2.25 2.25 0 0 0 1.5 9.75v6A2.25 2.25 0 0 0 3.75 18Z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[#111111]">Batteri</p>
-                <p className="mt-0.5 text-xs text-[#86868B]">{gradeDetail.battery}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl bg-[#F7F7F8] p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-blue-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[#111111]">Kosmetisk</p>
-                <p className="mt-0.5 text-xs text-[#86868B]">{gradeDetail.cosmetic}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* TRUST POINTS STRIP                                           */}
-      {/* ============================================================ */}
-      <div className="mt-8 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {TRUST_POINTS.map((point) => (
-          <div
-            key={point.label}
-            className="flex flex-col items-center rounded-2xl border border-[#E5E5EA] bg-white p-3 sm:p-4 text-center transition-shadow hover:shadow-sm"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3D2E]/8 text-[#1A3D2E]">
-              <TrustIcon type={point.icon} />
-            </div>
-            <p className="mt-2 text-xs font-bold text-[#111111]">{point.label}</p>
-            <p className="mt-0.5 text-[10px] text-[#86868B] leading-tight">{point.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* ============================================================ */}
-      {/* CONDITION VISUAL EXPLAINER — "Hvad betyder standen?"          */}
-      {/* ============================================================ */}
-      <div className="mt-10">
-        <ConditionExplainer variant="compact" deviceType={deviceType} />
-      </div>
-
-      {/* ============================================================ */}
-      {/* ELEKTRONIKFORSIKRING — lead capture                          */}
-      {/* ============================================================ */}
-      <div className="mt-10">
-        <InsuranceLead source="product" variant="product" />
-      </div>
-
-      {/* ============================================================ */}
       {/* TABS: Beskrivelse / Specifikationer / Garanti & Levering      */}
       {/* ============================================================ */}
       <div className="mt-12">
@@ -1063,11 +1003,11 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
           {/* ── Beskrivelse ── */}
           {activeTab === "beskrivelse" && (
             <div className="space-y-8">
-              <div className="prose prose-sm max-w-none text-[#111111]/80">
+              <div className="max-w-3xl">
                 {template.description ? (
-                  <p className="whitespace-pre-line leading-relaxed">{template.description}</p>
+                  <DescriptionRenderer text={template.description} />
                 ) : (
-                  <div className="space-y-3">
+                  <div className="prose prose-sm max-w-none space-y-3 text-[#111111]/80">
                     <p>
                       Denne refurbished {template.display_name} er kvalitetstestet med 30+ individuelle kontroller
                       og leveres med 36 måneders garanti fra PhoneSpot. Enheden er fuldt funktionel og klar til brug fra dag ét.
@@ -1196,6 +1136,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                     { label: "PostNord (59 kr)", desc: "Levering til døren, 2-4 hverdage" },
                     { label: "Fri fragt", desc: "Ved køb over 500 kr" },
                     { label: "Samme dag", desc: "Bestil før kl. 16 — sendt samme dag" },
+                    { label: "Sikker betaling", desc: "Kort, MobilePay og Klarna" },
                   ].map((item) => (
                     <li key={item.label} className="flex items-start gap-2">
                       <span className="mt-0.5 text-[#1A3D2E] font-bold">&#10003;</span>
@@ -1209,48 +1150,10 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/* FAQ                                                           */}
-      {/* ============================================================ */}
-      <div className="mt-12">
-        <h2 className="mb-6 font-display text-xl font-bold text-[#111111]">
-          Ofte stillede spørgsmål om {template.display_name}
-        </h2>
-        <div className="divide-y divide-[#E5E5EA] rounded-2xl border border-[#E5E5EA] bg-white overflow-hidden">
-          {[
-            {
-              q: `Er denne ${template.display_name} fuldt funktionel?`,
-              a: `Ja, 100%. Alle enheder gennemgår 30+ individuelle kvalitetstests. Vi tester skærm, batteri, kamera, højttalere, mikrofon, sensorer, porte og meget mere. Enheden er nulstillet til fabriksindstillinger og opdateret til nyeste software.`,
-            },
-            {
-              q: "Hvad er forskellen mellem Grade A, B og C?",
-              a: "Forskellen er udelukkende kosmetisk — alle grader er 100% funktionelle. Grade A er i perfekt stand uden synlige mærker. Grade B har lette brugsspor. Grade C har synlige brugsspor men er den billigste mulighed. Batterikapaciteten varierer: A min. 85%, B min. 80%, C min. 75%.",
-            },
-            {
-              q: "Hvad dækker de 36 måneders garanti?",
-              a: "Garantien dækker alle fabrikationsfejl og funktionelle mangler i 36 måneder. Det inkluderer problemer med skærm, batteri, kamera, højttalere og interne komponenter. Garantien dækker ikke fysisk skade eller kosmetisk slid.",
-            },
-            {
-              q: "Kan jeg bruge alle danske mobilabonnementer?",
-              a: "Ja. Alle enheder er ulåste (factory unlocked) og virker med alle danske operatører — TDC, Telenor, Telia, 3, Lebara og andre.",
-            },
-            {
-              q: "Hvad hvis jeg ikke er tilfreds?",
-              a: "Du har 14 dages fuld fortrydelsesret. Returner enheden i original stand, og vi refunderer det fulde beløb inkl. fragt. Ingen spørgsmål stillet.",
-            },
-          ].map((faq) => (
-            <details key={faq.q} className="group">
-              <summary className="flex cursor-pointer items-center justify-between px-4 sm:px-5 py-3 sm:py-4 text-sm font-semibold text-[#111111] hover:bg-[#F7F7F8] transition-colors select-none">
-                {faq.q}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180">
-                  <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </summary>
-              <p className="px-4 sm:px-5 pb-4 text-sm text-[#86868B] leading-relaxed">{faq.a}</p>
-            </details>
-          ))}
-        </div>
-      </div>
+      {/* FAQ moved to page level (page.tsx) — see src/lib/product/device-faq.ts
+          for the merged question set. Having it live once, at page level,
+          is what makes "exactly one FAQ per product page" true regardless
+          of which route rendered this component. */}
 
       {/* ============================================================ */}
       {/* COMPATIBLE ACCESSORIES                                        */}
