@@ -6,6 +6,7 @@ import type {
   CustomerDevice,
   ChecklistItem,
 } from "@/lib/supabase/types";
+import { normalizeStoreId, type StoreId } from "@/lib/stores";
 import { CustomerStep } from "./steps/customer-step";
 import { DeviceStep } from "./steps/device-step";
 import { RepairStep } from "./steps/repair-step";
@@ -31,6 +32,7 @@ export interface IntakeFormData {
   customServices: { name: string; price_dkk: number }[];
   internalNotes: string;
   // Step 4
+  storeId: StoreId | null;
   createShopifyPayment: boolean;
   sendSms: boolean;
   sendEmail: boolean;
@@ -61,6 +63,7 @@ const INITIAL_FORM_DATA: IntakeFormData = {
   selectedServices: [],
   customServices: [],
   internalNotes: "",
+  storeId: null,
   createShopifyPayment: true,
   sendSms: true,
   sendEmail: true,
@@ -73,17 +76,29 @@ const STEPS = [
   { num: 4, label: "Opsummering" },
 ];
 
+// Personalet står samme sted hele dagen — husk seneste butiksvalg på maskinen.
+function rememberedStore(): StoreId | null {
+  if (typeof window === "undefined") return null;
+  return normalizeStoreId(window.localStorage.getItem("admin-intake-store"));
+}
+
 export default function IntakePage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<IntakeFormData>(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState<IntakeFormData>(() => ({
+    ...INITIAL_FORM_DATA,
+    storeId: rememberedStore(),
+  }));
   const [submittedTicketId, setSubmittedTicketId] = useState<string | null>(null);
 
   function updateFormData(partial: Partial<IntakeFormData>) {
+    if (partial.storeId && typeof window !== "undefined") {
+      window.localStorage.setItem("admin-intake-store", partial.storeId);
+    }
     setFormData((prev) => ({ ...prev, ...partial }));
   }
 
   function handleReset() {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData({ ...INITIAL_FORM_DATA, storeId: rememberedStore() });
     setCurrentStep(1);
     setSubmittedTicketId(null);
   }

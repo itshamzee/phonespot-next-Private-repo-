@@ -107,7 +107,10 @@ export default function AdminReparationerPage() {
       return (
         ticket.customer_name.toLowerCase().includes(q) ||
         ticket.customer_email.toLowerCase().includes(q) ||
-        ticket.device_model.toLowerCase().includes(q)
+        ticket.device_model.toLowerCase().includes(q) ||
+        ticket.customer_phone.replace(/\s/g, "").includes(q.replace(/\s/g, "")) ||
+        ticket.id.toLowerCase().startsWith(q) ||
+        (ticket.ticket_number ?? "").toLowerCase().includes(q)
       );
     }
     return true;
@@ -180,7 +183,7 @@ export default function AdminReparationerPage() {
           </div>
           <input
             type="text"
-            placeholder="Søg efter navn, email eller model..."
+            placeholder="Søg efter navn, email, telefon, model eller sags-ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"

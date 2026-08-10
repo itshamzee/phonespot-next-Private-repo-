@@ -60,6 +60,9 @@ export interface BookingDetails {
   total_price_dkk: number;
   discount_percent: number;
   includes_tempered_glass: boolean;
+  preferred_date?: string | null;
+  preferred_time?: string | null;
+  delivery_method?: string | null;
 }
 
 export interface RepairTicket {
@@ -89,6 +92,7 @@ export interface RepairTicket {
   parent_ticket_id: string | null;
   ticket_number: string | null;
   store_location_id: string | null;
+  store_id: string | null;
   created_at: string;
   updated_at: string;
 }

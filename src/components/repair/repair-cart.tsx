@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { STORES } from "@/lib/store-config";
+import { normalizeStoreId } from "@/lib/stores";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -311,6 +312,9 @@ export function RepairCart({
     preferred_date: preferredDate,
     preferred_time: preferredTime,
     delivery_method: deliveryMethod,
+    // "Aflever i Slagelse/Vejle" er også butiksvalget; "Send ind" er ikke
+    // stedbundet ved booking og fordeles i admin (store_id = null → Generel).
+    store_id: normalizeStoreId(deliveryMethod),
   });
 
   async function handleSubmitNoPay() {

@@ -7,6 +7,12 @@ import { getStaffRecipients } from "@/lib/email/staff-routing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function formatDanishDate(isoDate: string): string {
+  const d = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return isoDate;
+  return d.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long" });
+}
+
 const REQUIRED_FIELDS = [
   "customer_name",
   "customer_email",
@@ -40,6 +46,9 @@ export async function POST(request: Request) {
           total_price_dkk: body.total_price_dkk,
           discount_percent: body.discount_percent || 0,
           includes_tempered_glass: body.includes_tempered_glass || false,
+          preferred_date: body.preferred_date || null,
+          preferred_time: body.preferred_time || null,
+          delivery_method: body.delivery_method || null,
         }
       : null;
 
@@ -91,6 +100,16 @@ export async function POST(request: Request) {
         bookingLines.push(`  Rabat: ${bookingDetails.discount_percent}%`);
       }
       bookingLines.push(`  Total: ${bookingDetails.total_price_dkk} DKK`);
+      if (bookingDetails.delivery_method) {
+        bookingLines.push(`  Levering: ${bookingDetails.delivery_method}`);
+      }
+      if (bookingDetails.preferred_date) {
+        bookingLines.push(
+          `  Ønsket dato: ${formatDanishDate(bookingDetails.preferred_date)}${
+            bookingDetails.preferred_time ? ` kl. ${bookingDetails.preferred_time}` : ""
+          }`,
+        );
+      }
     }
 
     // Send confirmation email to customer

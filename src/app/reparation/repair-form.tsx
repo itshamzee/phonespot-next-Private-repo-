@@ -6,6 +6,7 @@ import { FormField } from "@/components/ui/form-field";
 type Status = "idle" | "submitting" | "success" | "error";
 
 const DEVICE_TYPES = ["iPhone", "iPad", "Samsung", "MacBook", "OnePlus", "Andet"];
+const STORE_OPTIONS = ["Vejle", "Slagelse"];
 const SERVICE_TYPES = [
   "Skaermudskiftning",
   "Batteriskift",
@@ -24,6 +25,7 @@ export function RepairForm() {
     device_model: "",
     issue_description: "",
     service_type: "",
+    store_id: "",
   });
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -62,6 +64,7 @@ export function RepairForm() {
         device_model: "",
         issue_description: "",
         service_type: "",
+        store_id: "",
       });
     } catch (err) {
       setStatus("error");
@@ -158,6 +161,19 @@ export function RepairForm() {
           options={SERVICE_TYPES}
           placeholder="Vaelg reparationstype..."
           value={formData.service_type}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
+        <FormField
+          label="Butik"
+          name="store_id"
+          type="select"
+          required
+          options={STORE_OPTIONS}
+          placeholder="Vaelg butik..."
+          value={formData.store_id}
           onChange={handleChange}
         />
       </div>

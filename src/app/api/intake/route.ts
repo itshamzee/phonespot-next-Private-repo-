@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { normalizeStoreId } from "@/lib/stores";
 import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { stripe } from "@/lib/stripe/client";
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     selectedServices,
     customServices,
     internalNotes,
+    store_id,
     createShopifyPayment,
     sendSms: shouldSendSms,
     sendEmail,
@@ -101,6 +103,7 @@ export async function POST(request: Request) {
         status: "modtaget",
         customer_id: customer.id,
         device_id: deviceId,
+        store_id: normalizeStoreId(store_id),
         services: allServices,
         internal_notes: notes,
         intake_checklist: checklist,

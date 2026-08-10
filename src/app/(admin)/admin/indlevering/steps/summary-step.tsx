@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { IntakeFormData } from "../page";
 import { PDFPreviewModal } from "@/components/admin/pdf-preview-modal";
+import { STORE_IDS, storeLabel } from "@/lib/stores";
 
 interface Props {
   formData: IntakeFormData;
@@ -56,6 +57,7 @@ export function SummaryStep({
           selectedServices: formData.selectedServices,
           customServices: formData.customServices,
           internalNotes: formData.internalNotes,
+          store_id: formData.storeId,
           createShopifyPayment: formData.createShopifyPayment,
           sendSms: formData.sendSms,
           sendEmail: formData.sendEmail,
@@ -256,6 +258,34 @@ export function SummaryStep({
         </div>
       )}
 
+      {/* Store */}
+      <div className="mb-4 rounded-2xl border border-soft-grey bg-white p-5">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray">
+          Butik *
+        </h3>
+        <div className="flex gap-2">
+          {STORE_IDS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => updateFormData({ storeId: id })}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                formData.storeId === id
+                  ? "bg-green-eco text-white"
+                  : "border border-soft-grey text-charcoal hover:bg-sand"
+              }`}
+            >
+              {storeLabel(id)}
+            </button>
+          ))}
+        </div>
+        {!formData.storeId && (
+          <p className="mt-2 text-xs text-gray">
+            Vælg hvilken butik enheden er indleveret i.
+          </p>
+        )}
+      </div>
+
       {/* Options */}
       <div className="mb-6 rounded-2xl border border-soft-grey bg-white p-5">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray">
@@ -310,7 +340,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitting}
+          disabled={submitting || !formData.storeId}
           className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {submitting ? "Opretter sag..." : "Opret sag"}

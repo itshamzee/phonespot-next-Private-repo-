@@ -14,6 +14,8 @@ import {
   PDFPreviewModal,
   type PDFPreviewData,
 } from "@/components/admin/pdf-preview-modal";
+import StoreBadge from "@/components/admin/StoreBadge";
+import { STORE_IDS, normalizeStoreId, storeLabel } from "@/lib/stores";
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
@@ -101,6 +103,9 @@ export default function AdminTicketDetailPage({
   const [newComment, setNewComment] = useState("");
   const [commentVisibility, setCommentVisibility] = useState<"intern" | "kunde">("intern");
   const [commentSending, setCommentSending] = useState(false);
+
+  // Store attribution state
+  const [storeUpdating, setStoreUpdating] = useState(false);
 
   // Urgent / Bero / Reklamation state
   const [urgentUpdating, setUrgentUpdating] = useState(false);
@@ -206,6 +211,17 @@ export default function AdminTicketDetailPage({
     }
 
     setStatusUpdating(false);
+  }
+
+  async function handleStoreChange(value: string) {
+    if (!ticket) return;
+    setStoreUpdating(true);
+    await supabase
+      .from("repair_tickets")
+      .update({ store_id: normalizeStoreId(value), updated_at: new Date().toISOString() })
+      .eq("id", id);
+    await loadData();
+    setStoreUpdating(false);
   }
 
   function formatDateTime(dateStr: string) {
@@ -365,6 +381,7 @@ export default function AdminTicketDetailPage({
                 Sag: {ticket.id.slice(0, 8)}
               </h2>
               <div className="flex flex-wrap items-center gap-2">
+                <StoreBadge store={ticket.store_id} className="!text-xs px-3 py-1" />
                 <span
                   className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[ticket.status]}`}
                 >
@@ -385,6 +402,19 @@ export default function AdminTicketDetailPage({
 
             {/* Urgent / Bero / Reklamation controls */}
             <div className="mb-6 flex flex-wrap gap-2">
+              <select
+                value={normalizeStoreId(ticket.store_id) ?? ""}
+                onChange={(e) => handleStoreChange(e.target.value)}
+                disabled={storeUpdating}
+                className="rounded-full border border-soft-grey bg-white px-4 py-1.5 text-xs font-semibold text-charcoal focus:border-green-eco focus:outline-none disabled:opacity-60"
+              >
+                <option value="">Butik: Generel</option>
+                {STORE_IDS.map((sid) => (
+                  <option key={sid} value={sid}>
+                    Butik: {storeLabel(sid)}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={handleToggleUrgent}
@@ -495,6 +525,62 @@ export default function AdminTicketDetailPage({
                 {ticket.issue_description}
               </p>
             </div>
+
+            {ticket.booking_details && (
+              <div className="mt-6 rounded-xl bg-charcoal/[0.03] p-4">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[2px] text-gray">
+                  Booking
+                </h3>
+                <div className="space-y-1.5">
+                  {ticket.booking_details.selected_services?.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between text-sm">
+                      <span className="text-charcoal">{s.name}</span>
+                      <span className="font-semibold text-charcoal">{s.price_dkk} DKK</span>
+                    </div>
+                  ))}
+                  {ticket.booking_details.includes_tempered_glass && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-charcoal">Beskyttelsesglas</span>
+                      <span className="font-semibold text-charcoal">99 DKK</span>
+                    </div>
+                  )}
+                  {ticket.booking_details.discount_percent > 0 && (
+                    <div className="flex items-center justify-between text-sm text-green-eco">
+                      <span>Rabat</span>
+                      <span>{ticket.booking_details.discount_percent}%</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between border-t border-black/[0.06] pt-1.5 text-sm font-bold">
+                    <span className="text-charcoal">Total</span>
+                    <span className="text-green-eco">{ticket.booking_details.total_price_dkk} DKK</span>
+                  </div>
+                </div>
+                {(ticket.booking_details.delivery_method ||
+                  ticket.booking_details.preferred_date) && (
+                  <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 border-t border-black/[0.06] pt-3 text-sm text-charcoal">
+                    {ticket.booking_details.delivery_method && (
+                      <span>
+                        <span className="text-gray">Levering:</span>{" "}
+                        {ticket.booking_details.delivery_method}
+                      </span>
+                    )}
+                    {ticket.booking_details.preferred_date && (
+                      <span>
+                        <span className="text-gray">Ønsket tid:</span>{" "}
+                        {new Date(`${ticket.booking_details.preferred_date}T12:00:00`).toLocaleDateString("da-DK", {
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                        })}
+                        {ticket.booking_details.preferred_time
+                          ? ` kl. ${ticket.booking_details.preferred_time}`
+                          : ""}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

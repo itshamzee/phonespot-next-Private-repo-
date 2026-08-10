@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { stripe } from "@/lib/stripe/client";
 import { STORE } from "@/lib/store-config";
+import { normalizeStoreId, storeLabel } from "@/lib/stores";
+import { getStaffRecipients } from "@/lib/email/staff-routing";
 import { Resend } from "resend";
 
 const TEMPERED_GLASS_PRICE = 99; // DKK
@@ -25,6 +27,9 @@ interface CheckoutRequestBody {
   discount_percent: number;
   includes_tempered_glass: boolean;
   preferred_date: string;
+  preferred_time?: string;
+  delivery_method?: string;
+  store_id?: string;
 }
 
 function validateInput(body: CheckoutRequestBody): string | null {
@@ -58,6 +63,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient();
 
+    const storeId = normalizeStoreId(body.store_id);
+
     // 2. Create repair ticket in Supabase
     const { data: ticket, error: ticketError } = await supabase
       .from("repair_tickets")
@@ -69,12 +76,15 @@ export async function POST(request: NextRequest) {
         device_model: body.device_model,
         issue_description: body.issue_description,
         service_type: body.service_type,
+        store_id: storeId,
         booking_details: {
           selected_services: body.selected_services,
           total_price_dkk: body.total_price_dkk,
           discount_percent: body.discount_percent,
           includes_tempered_glass: body.includes_tempered_glass,
           preferred_date: body.preferred_date,
+          preferred_time: body.preferred_time || null,
+          delivery_method: body.delivery_method || null,
         },
         paid: false,
       })
@@ -189,16 +199,18 @@ export async function POST(request: NextRequest) {
 
       await resend.emails.send({
         from: `${STORE.name} <noreply@phonespot.dk>`,
-        to: "info@phonespot.dk",
-        subject: `Ny reparationsbooking: ${body.device_model} — ${body.customer_name}`,
+        ...getStaffRecipients(storeId),
+        subject: `Ny reparationsbooking${storeId ? ` (${storeLabel(storeId)})` : ""}: ${body.device_model} — ${body.customer_name}`,
         html: `
           <h2>Ny reparationsbooking med forudbetaling</h2>
           <table style="border-collapse:collapse;">
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Butik</td><td>${storeLabel(storeId)}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Kunde</td><td>${body.customer_name}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Email</td><td>${body.customer_email}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Telefon</td><td>${body.customer_phone}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Enhed</td><td>${body.device_type} ${body.device_model}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Foretrukken dato</td><td>${body.preferred_date}</td></tr>
+            ${body.delivery_method ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Levering</td><td>${body.delivery_method}</td></tr>` : ""}
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Foretrukken dato</td><td>${body.preferred_date}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Pris i alt</td><td>${body.total_price_dkk} DKK</td></tr>
             ${body.discount_percent > 0 ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Rabat</td><td>${body.discount_percent}%</td></tr>` : ""}
             ${body.includes_tempered_glass ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Beskyttelsesglas</td><td>Ja (${TEMPERED_GLASS_PRICE} DKK)</td></tr>` : ""}
