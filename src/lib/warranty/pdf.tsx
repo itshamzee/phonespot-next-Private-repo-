@@ -134,6 +134,8 @@ function formatDate(isoDate: string): string {
 }
 
 const GRADE_LABELS: Record<string, string> = {
+  N: "N — Fabriksny (forseglet)",
+  P: "P — Premium stand",
   A: "A — Perfekt stand",
   B: "B — Let brugt",
   C: "C — Synlig slitage",

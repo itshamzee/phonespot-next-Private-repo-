@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { isNewGrade } from "@/lib/grades";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
@@ -153,11 +154,16 @@ export async function GET() {
       const colorSlug = slugify(color || "default");
       const sku = `${template.slug}-${storageSlug}-${colorSlug}-${grade.toLowerCase()}`;
 
+      const isNew = isNewGrade(grade);
       const titleParts = [template.display_name];
       if (storage) titleParts.push(storage);
       if (color) titleParts.push(color);
-      titleParts.push(`Grade ${grade}`);
-      titleParts.push("Refurbished");
+      if (isNew) {
+        titleParts.push("Fabriksny");
+      } else {
+        titleParts.push(`Grade ${grade}`);
+        titleParts.push("Refurbished");
+      }
       const title = titleParts.join(" ");
 
       const productUrl = `${SITE_URL}/refurbished/${template.slug}`;
@@ -168,7 +174,9 @@ export async function GET() {
       const description =
         shortDesc ??
         longDesc ??
-        `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`;
+        (isNew
+          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret.`
+          : `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`);
 
       // Resolve EAN: per-variant first, then template-wide fallback.
       const gtinsByVariant = (template.default_attributes?.gtins_by_variant ?? null) as
@@ -200,7 +208,7 @@ export async function GET() {
       xml += `    <ShippingCost>0.00</ShippingCost>\n`;
       xml += `    <DeliveryTime>1-2 dage</DeliveryTime>\n`;
       xml += `    <StockStatus>in stock</StockStatus>\n`;
-      xml += `    <Condition>Refurbished</Condition>\n`;
+      xml += `    <Condition>${isNew ? "New" : "Refurbished"}</Condition>\n`;
       xml += `  </product>\n`;
     }
 

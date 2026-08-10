@@ -54,4 +54,19 @@ describe("ConditionBadge", () => {
     expect(badge).toBeInTheDocument();
     expect(badge.className).toContain("bg-gray");
   });
+
+  it("renders grade N as 'Fabriksny' — never as refurbished", () => {
+    render(<ConditionBadge grade="N" />);
+    const badge = screen.getByText("Fabriksny");
+    expect(badge).toBeInTheDocument();
+    expect(badge.textContent?.toLowerCase()).not.toContain("refurbished");
+    expect(badge.textContent).not.toBe("");
+  });
+
+  it("renders grade P as 'Premium' with a non-empty label", () => {
+    render(<ConditionBadge grade="P" />);
+    const badge = screen.getByText("Premium");
+    expect(badge).toBeInTheDocument();
+    expect(badge.textContent).not.toBe("");
+  });
 });

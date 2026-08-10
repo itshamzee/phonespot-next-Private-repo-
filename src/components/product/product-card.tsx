@@ -5,8 +5,10 @@ import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
 import { LinkPendingBar } from "@/components/ui/link-pending-bar";
 
-function getConditionGrade(tags: string[]): "A" | "B" | "C" | null {
+function getConditionGrade(tags: string[]): "N" | "P" | "A" | "B" | "C" | null {
   const lower = tags.map((t) => t.toLowerCase());
+  if (lower.includes("grade-n")) return "N";
+  if (lower.includes("grade-p")) return "P";
   if (lower.includes("grade-a")) return "A";
   if (lower.includes("grade-b")) return "B";
   if (lower.includes("grade-c")) return "C";

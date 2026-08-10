@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { isNewGrade, merchantCondition } from "@/lib/grades";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
@@ -105,14 +106,19 @@ export async function GET() {
     // Refurbished device items — grouped
     for (const group of groups.values()) {
       const { template, grade, minPrice, count } = group;
-      const title = `${template.display_name} - Grade ${grade} Refurbished`;
+      const isNew = isNewGrade(grade);
+      const title = isNew
+        ? `${template.display_name} - Fabriksny`
+        : `${template.display_name} - Grade ${grade} Refurbished`;
       const link = `${SITE_URL}/refurbished/${template.slug}`;
       const image = template.images[0];
       const price = (minPrice / 100).toFixed(2);
       const description =
         template.description ??
         template.short_description ??
-        `${template.display_name} refurbished i Grade ${grade}. 36 måneders garanti, 30+ kontroller, 14 dages returret.`;
+        (isNew
+          ? `${template.display_name} — fabriksny, forseglet i original emballage. 36 måneders garanti, 14 dages returret.`
+          : `${template.display_name} refurbished i Grade ${grade}. 36 måneders garanti, 30+ kontroller, 14 dages returret.`);
       const googleCategory = getGoogleCategory(template.category);
 
       xml += `
@@ -123,7 +129,7 @@ export async function GET() {
   <g:link>${link}</g:link>
   <g:image_link>${escapeXml(image)}</g:image_link>
   <g:price>${price} DKK</g:price>
-  <g:condition>refurbished</g:condition>
+  <g:condition>${merchantCondition(grade)}</g:condition>
   <g:availability>${count > 0 ? "in_stock" : "out_of_stock"}</g:availability>
   <g:brand>${escapeXml(template.brand)}</g:brand>
   <g:mpn>${escapeXml(template.slug)}-${grade.toLowerCase()}</g:mpn>

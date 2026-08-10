@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SkuProduct, ProductTemplate, Device } from "@/lib/supabase/platform-types";
+import { isNewGrade, merchantCondition } from "@/lib/grades";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -174,7 +175,7 @@ function buildDeviceItem(device: DeviceWithTemplate): string | null {
     }
   }
 
-  const gradeLabel = `Grade ${device.grade}`;
+  const gradeLabel = isNewGrade(device.grade) ? "Fabriksny" : `Grade ${device.grade}`;
   const storagePart = device.storage ? ` ${device.storage}` : "";
   const rawTitle = `${template.display_name}${storagePart} - ${gradeLabel}`;
   const title = escapeXml(rawTitle);
@@ -182,7 +183,9 @@ function buildDeviceItem(device: DeviceWithTemplate): string | null {
   const rawDescription =
     template.short_description ??
     template.description ??
-    `${rawTitle} — Refurbished hos PhoneSpot.dk`;
+    (isNewGrade(device.grade)
+      ? `${rawTitle} — fabriksny, forseglet original emballage, hos PhoneSpot.dk`
+      : `${rawTitle} — Refurbished hos PhoneSpot.dk`);
   const description = escapeXml(rawDescription);
 
   const productUrl = `${BASE_URL}/refurbished/${template.slug}`;
@@ -195,7 +198,7 @@ function buildDeviceItem(device: DeviceWithTemplate): string | null {
     `      <g:description>${description}</g:description>`,
     `      <g:link>${productUrl}</g:link>`,
     `      <g:image_link>${escapeXml(imageUrl)}</g:image_link>`,
-    `      <g:condition>refurbished</g:condition>`,
+    `      <g:condition>${merchantCondition(device.grade)}</g:condition>`,
     `      <g:availability>in_stock</g:availability>`,
     `      <g:price>${formatPrice(device.selling_price)}</g:price>`,
     `      <g:brand>${escapeXml(template.brand)}</g:brand>`,

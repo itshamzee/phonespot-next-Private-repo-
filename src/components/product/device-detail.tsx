@@ -45,7 +45,7 @@ function formatDKK(oere: number): string {
 /* ------------------------------------------------------------------ */
 
 const GRADE_DETAILS: Record<string, { label: string; battery: string; cosmetic: string }> = {
-  N: { label: "Apple Certified Refurbished", battery: "100% batterikapacitet", cosmetic: "Testet og godkendt af Apple — præcis som ny" },
+  N: { label: "Fabriksny", battery: "100% batterikapacitet", cosmetic: "Forseglet i ubrudt originalemballage — aldrig brugt" },
   P: { label: "Premium stand", battery: "Min. 90% batterikapacitet", cosmetic: "Næsten perfekt — minimale eller ingen brugsspor" },
   A: { label: "Som ny", battery: "Min. 85% batterikapacitet", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
   B: { label: "God stand", battery: "Min. 80% batterikapacitet", cosmetic: "Lette brugsspor — små ridser eller mærker" },
@@ -579,7 +579,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
           {/* Title + brand */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-              {template.brand} · {selectedGrade === "N" ? "Apple Certified Refurbished" : "Refurbished"} {categoryName}
+              {template.brand} · {selectedGrade === "N" ? "Fabriksny" : "Refurbished"} {categoryName}
             </p>
             <h1 className="mt-2 font-display text-2xl sm:text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
               {template.display_name}
@@ -609,7 +609,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
               {gradeSavingsVsBetter && betterGrade && (
                 <span className="font-semibold text-[#1A3D2E]">
                   · spar {formatDKK(gradeSavingsVsBetter)} vs.{" "}
-                  {betterGrade.grade === "N" ? "Apple Certified" : `Grade ${betterGrade.grade}`}
+                  {betterGrade.grade === "N" ? "Fabriksny" : `Grade ${betterGrade.grade}`}
                 </span>
               )}
             </div>
@@ -702,7 +702,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                           onClick={() => setSelectedGrade(g.grade)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-[#1A3D2E]/25 bg-white px-3 py-2 text-sm font-semibold text-[#1A3D2E] transition-colors hover:border-[#1A3D2E] hover:bg-[#1A3D2E]/[0.04]"
                         >
-                          {g.grade === "N" ? "Apple Certified" : `Grade ${g.grade}`}
+                          {g.grade === "N" ? "Fabriksny" : `Grade ${g.grade}`}
                           {g.price != null && (
                             <span className="text-[#111111]">fra {formatDKK(g.price)}</span>
                           )}
@@ -930,7 +930,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         <div className="mt-10 rounded-2xl border border-[#E5E5EA] bg-white p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-bold text-[#111111]">
-              {selectedGrade === "N" ? "Apple Certified Refurbished" : `Grade ${selectedGrade}: ${gradeDetail.label}`}
+              {selectedGrade === "N" ? "Fabriksny" : `Grade ${selectedGrade}: ${gradeDetail.label}`}
             </h3>
             <Link href="/kvalitet" className="text-xs font-semibold text-[#1A3D2E] hover:underline">
               Læs mere om grader &rarr;

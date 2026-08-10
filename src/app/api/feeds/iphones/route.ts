@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { isNewGrade, merchantCondition } from "@/lib/grades";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
@@ -141,10 +142,11 @@ export async function GET() {
       const itemId = `${template.slug}-${storageSlug}-${colorSlug}-${grade.toLowerCase()}`;
 
       // Title
+      const isNew = isNewGrade(grade);
       const titleParts = [template.display_name];
       if (storage) titleParts.push(storage);
       if (color) titleParts.push(color);
-      titleParts.push(`Grade ${grade}`);
+      titleParts.push(isNew ? "Fabriksny" : `Grade ${grade}`);
       const title = titleParts.join(" ");
 
       // Description (prefer short, fall back to long, fall back to generated).
@@ -154,7 +156,9 @@ export async function GET() {
       const description =
         shortDesc ??
         longDesc ??
-        `${title} — refurbished iPhone hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`;
+        (isNew
+          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret.`
+          : `${title} — refurbished iPhone hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`);
 
       // Link to template page (color/storage/grade selection happens in UI)
       const link = `${SITE_URL}/refurbished/${template.slug}`;
@@ -186,7 +190,7 @@ export async function GET() {
 
       xml += `
   <g:price>${priceStr} DKK</g:price>
-  <g:condition>refurbished</g:condition>
+  <g:condition>${merchantCondition(grade)}</g:condition>
   <g:availability>in_stock</g:availability>
   <g:brand>Apple</g:brand>
   <g:item_group_id>${escapeXml(template.slug)}</g:item_group_id>`;
