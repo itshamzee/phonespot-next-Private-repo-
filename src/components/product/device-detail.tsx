@@ -11,6 +11,7 @@ import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { SpecTable } from "./spec-table";
 import { PickupLine } from "./pickup-line";
+import { TradeInTeaser } from "./trade-in-teaser";
 import { normalizeStoreId } from "@/lib/stores";
 import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
 import { pickBetterInStockGrade } from "@/lib/product/grade-comparison";
@@ -826,6 +827,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             {inStock && (
               <PickupLine stockByStore={bestMatch?.source === "foxway" ? [] : stockByStore} />
             )}
+
+            {/* Trade-in teaser — link-only, no price claim (see component doc) */}
+            <TradeInTeaser category={template.category} />
 
             {/* Pickup / delivery info */}
             {inStock && (
