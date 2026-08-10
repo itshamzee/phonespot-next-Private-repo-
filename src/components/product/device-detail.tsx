@@ -11,6 +11,7 @@ import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
 import { SpecTable } from "./spec-table";
 import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
+import { pickBetterInStockGrade } from "@/lib/product/grade-comparison";
 import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
@@ -384,8 +385,10 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
 
   // Inline grade clarity: descriptor + savings vs the next grade up, so the
   // A-vs-B tradeoff is resolved at the selector instead of below the fold.
-  const selectedGradeIdx = availableGrades.findIndex((g) => g.grade === selectedGrade);
-  const betterGrade = selectedGradeIdx > 0 ? availableGrades[selectedGradeIdx - 1] : null;
+  // Only ever compares against a grade that's actually in stock — a sold-out
+  // grade doesn't appear in the (now filtered) GradeSelector, so comparing
+  // against it would reference something invisible on the page.
+  const betterGrade = pickBetterInStockGrade(availableGrades, selectedGrade);
   const gradeSavingsVsBetter =
     betterGrade && betterGrade.price != null && price != null && betterGrade.price > price
       ? betterGrade.price - price
