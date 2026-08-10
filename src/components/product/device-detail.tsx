@@ -529,10 +529,16 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
               </div>
             )}
 
-            {/* Main image */}
-            <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F7F7F8] aspect-square">
+            {/* Main image — warm studio stage so the product sits on a floor
+                instead of floating in a flat grey void. Product shots are
+                white-background JPEGs, so the image multiplies onto the stage
+                (white turns transparent) and a soft ellipse draws the floor. */}
+            <div className="relative flex-1 overflow-hidden rounded-2xl aspect-square bg-[radial-gradient(120%_100%_at_50%_0%,#FFFFFF_0%,#F6F2EA_55%,#ECE6D8_100%)]">
               {mainImage ? (
-                <Image src={mainImage} alt={template.display_name} fill className="object-contain p-2 sm:p-5" sizes="(min-width: 1024px) 58vw, 100vw" priority />
+                <>
+                  <div aria-hidden="true" className="absolute bottom-[27%] left-1/2 h-8 w-1/2 -translate-x-1/2 rounded-[50%] bg-[#111111]/20 blur-xl" />
+                  <Image src={mainImage} alt={template.display_name} fill className="object-contain p-2 sm:p-5 mix-blend-multiply" sizes="(min-width: 1024px) 58vw, 100vw" priority />
+                </>
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <svg viewBox="0 0 64 64" className="h-20 w-20 text-[#E5E5EA]" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -596,9 +602,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         <div className="lg:col-span-5 flex flex-col gap-5">
           {/* Title + brand */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
               {template.brand} · {selectedGrade === "N" ? "Fabriksny" : "Refurbished"} {categoryName}
-            </p>
+            </span>
             <h1 className="mt-2 font-display text-2xl sm:text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
               {template.display_name}
             </h1>
@@ -660,7 +666,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
           )}
 
           {/* ── Price card + CTA ── */}
-          <div className="rounded-2xl border border-[#E5E5EA] bg-white p-4 sm:p-5 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-[#1A3D2E]/15 bg-white p-4 sm:p-5 shadow-[0_10px_35px_rgba(26,61,46,0.10)] space-y-4">
             {/* Price */}
             <div>
               <div className="flex items-end gap-3">
