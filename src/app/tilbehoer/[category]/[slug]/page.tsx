@@ -12,6 +12,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
+import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 
 export const revalidate = 60;
 
@@ -317,7 +318,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
         stockQuantity === null || stockQuantity > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
+      itemCondition: ITEM_CONDITION.NEW,
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
       warranty: "36 måneders garanti",

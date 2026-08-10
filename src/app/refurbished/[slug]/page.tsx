@@ -16,6 +16,7 @@ import { Heading } from "@/components/ui/heading";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ProductGridCard } from "@/components/product/product-grid-card";
+import { devicesToItemCondition } from "@/lib/seo/item-condition";
 
 export const revalidate = 60;
 
@@ -131,6 +132,11 @@ export default async function RefurbishedProductPage({ params }: Props) {
     ? Math.min(...availableDevices.map((d) => d.selling_price ?? 0).filter(Boolean))
     : template.base_price_a;
 
+  // itemCondition: NewCondition only if every currently listed device is
+  // grade N (fabriksny), else RefurbishedCondition — see
+  // lib/seo/item-condition.ts for the full mixed-grade rule.
+  const itemCondition = devicesToItemCondition(availableDevices);
+
   const productJsonLd = minPrice
     ? {
         "@context": "https://schema.org",
@@ -144,6 +150,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
           priceCurrency: "DKK",
           price: (minPrice / 100).toFixed(0),
           availability: availableDevices.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          itemCondition,
           seller: { "@type": "Organization", name: "PhoneSpot" },
         },
       }

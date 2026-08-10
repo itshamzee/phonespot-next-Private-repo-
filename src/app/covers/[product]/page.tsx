@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { ProductCard } from "@/components/product/product-card";
 import { CoverProductHero } from "@/components/cover/cover-product-hero";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
+import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -36,7 +37,7 @@ function getProductJsonLd(product: Product, url: string): Record<string, unknown
       availability: product.availableForSale
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
+      itemCondition: ITEM_CONDITION.NEW,
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url,
     },

@@ -29,6 +29,7 @@ import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ConditionIllustrations } from "@/components/product/condition-illustrations";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ITEM_CONDITION, devicesToItemCondition } from "@/lib/seo/item-condition";
 
 // Allow any product handle to be rendered on-demand (not just pre-built ones)
 export const dynamicParams = true;
@@ -57,10 +58,15 @@ function getDeviceTypeFromSlug(slug: string): DeviceType {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Build Product JSON-LD for SEO / PriceRunner. */
+/**
+ * Build Product JSON-LD for SEO / PriceRunner for a SKU product (accessory,
+ * spare part, etc.). These have no `grade` column at all — they are new
+ * goods, so they are always NewCondition. (Previously this hardcoded
+ * RefurbishedCondition, which was wrong for every accessory in the catalog.)
+ */
 function getProductJsonLd(product: Product, url: string): Record<string, unknown> {
   const price = product.priceRange.minVariantPrice;
-  const condition = "https://schema.org/RefurbishedCondition";
+  const condition = ITEM_CONDITION.NEW;
 
   return {
     "@context": "https://schema.org",
@@ -254,6 +260,11 @@ export default async function ProductPage({
       ],
     };
 
+    // itemCondition: NewCondition only if every currently listed device is
+    // grade N (fabriksny), else RefurbishedCondition — see
+    // lib/seo/item-condition.ts for the full mixed-grade rule.
+    const itemCondition = devicesToItemCondition(availableDevices);
+
     const productJsonLd = minPrice
       ? {
           "@context": "https://schema.org",
@@ -267,6 +278,7 @@ export default async function ProductPage({
             priceCurrency: "DKK",
             price: (minPrice / 100).toFixed(0),
             availability: availableDevices.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            itemCondition,
             seller: { "@type": "Organization", name: "PhoneSpot" },
           },
         }
