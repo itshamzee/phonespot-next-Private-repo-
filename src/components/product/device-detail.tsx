@@ -9,6 +9,8 @@ import { GradeSelector } from "./grade-selector";
 import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
+import { SpecTable } from "./spec-table";
+import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
 import { ConditionExplainer } from "./condition-explainer";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
@@ -403,6 +405,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
 
   const categoryName = getCategoryName(template.category);
   const deviceType = getDeviceType(template.category);
+
+  const modelNumber = useMemo(() => findModelNumber(template.specifications), [template.specifications]);
+  const displaySpecs = useMemo(() => selectDisplaySpecs(template.specifications), [template.specifications]);
   const categoryListingHref =
     template.category === "iphone" ? "/iphones"
     : template.category === "ipad" ? "/ipads"
@@ -584,6 +589,13 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             <h1 className="mt-2 font-display text-2xl sm:text-3xl font-bold leading-tight text-[#111111] lg:text-4xl">
               {template.display_name}
             </h1>
+            {(modelNumber || selectedColor) && (
+              <p className="mt-1 text-xs text-[#86868B]">
+                {[modelNumber ? `Model ${modelNumber}` : null, selectedColor || null]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
             {template.short_description && (
               <p className="mt-2 text-sm text-[#86868B] leading-relaxed">{template.short_description}</p>
             )}
@@ -593,6 +605,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
               <TrustpilotBadge />
             </div>
           </div>
+
+          {/* Scannable spec table — above the fold, above the price */}
+          {displaySpecs.length > 0 && <SpecTable specs={displaySpecs} />}
 
           {/* Grade selector */}
           {availableGrades.length > 0 && (
