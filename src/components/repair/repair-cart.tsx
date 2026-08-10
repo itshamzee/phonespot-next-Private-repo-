@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { STORES } from "@/lib/store-config";
-import { normalizeStoreId } from "@/lib/stores";
+import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -232,6 +232,7 @@ export function RepairCart({
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
+  const [mailInStore, setMailInStore] = useState<StoreId | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
@@ -268,6 +269,7 @@ export function RepairCart({
     customer.email.trim() &&
     customer.phone.trim() &&
     deliveryMethod &&
+    (deliveryMethod !== "Send ind" || mailInStore) &&
     preferredDate &&
     preferredTime
   );
@@ -312,9 +314,9 @@ export function RepairCart({
     preferred_date: preferredDate,
     preferred_time: preferredTime,
     delivery_method: deliveryMethod,
-    // "Aflever i Slagelse/Vejle" er også butiksvalget; "Send ind" er ikke
-    // stedbundet ved booking og fordeles i admin (store_id = null → Generel).
-    store_id: normalizeStoreId(deliveryMethod),
+    // "Aflever i Slagelse/Vejle" er også butiksvalget; ved "Send ind" vælger
+    // kunden hvilken butik pakken sendes til.
+    store_id: normalizeStoreId(deliveryMethod) ?? mailInStore,
   });
 
   async function handleSubmitNoPay() {
@@ -833,6 +835,8 @@ export function RepairCart({
               setPreferredTime={setPreferredTime}
               deliveryMethod={deliveryMethod}
               setDeliveryMethod={setDeliveryMethod}
+              mailInStore={mailInStore}
+              setMailInStore={setMailInStore}
               canSubmit={canSubmit}
               isSubmitting={isSubmitting}
               submitResult={submitResult}
@@ -887,6 +891,8 @@ export function RepairCart({
             setPreferredTime={setPreferredTime}
             deliveryMethod={deliveryMethod}
             setDeliveryMethod={setDeliveryMethod}
+            mailInStore={mailInStore}
+            setMailInStore={setMailInStore}
             canSubmit={canSubmit}
             isSubmitting={isSubmitting}
             submitResult={submitResult}
@@ -923,6 +929,8 @@ interface BookingFormProps {
   setPreferredTime: (t: string) => void;
   deliveryMethod: string;
   setDeliveryMethod: (m: string) => void;
+  mailInStore: StoreId | null;
+  setMailInStore: (s: StoreId | null) => void;
   canSubmit: boolean;
   isSubmitting: boolean;
   submitResult: { success: boolean; ticketId?: string; error?: string } | null;
@@ -948,6 +956,8 @@ function BookingForm({
   setPreferredTime,
   deliveryMethod,
   setDeliveryMethod,
+  mailInStore,
+  setMailInStore,
   canSubmit,
   isSubmitting,
   submitResult,
@@ -1111,6 +1121,40 @@ function BookingForm({
               </button>
             ))}
           </div>
+
+          {/* Mail-in: customer picks which store receives the package */}
+          {deliveryMethod === "Send ind" && (
+            <div className="mt-3">
+              <label className="text-sm font-bold text-charcoal">
+                Hvilken butik vil du sende til? *
+              </label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {STORE_IDS.map((id) => {
+                  const store = STORES[id];
+                  const isSelected = mailInStore === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setMailInStore(id)}
+                      className={`rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                        isSelected
+                          ? "border-green-eco bg-green-eco/5"
+                          : "border-soft-grey hover:border-green-eco/30"
+                      }`}
+                    >
+                      <p className={`text-sm font-bold leading-tight ${isSelected ? "text-green-eco" : "text-charcoal"}`}>
+                        {store.city}
+                      </p>
+                      <p className="mt-0.5 text-[11px] leading-tight text-gray">
+                        {store.street}, {store.zip} {store.city}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Add another device link */}

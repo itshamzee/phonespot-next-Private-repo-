@@ -9,14 +9,14 @@ import { STORES } from "@/lib/store-config";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
-const STORE_OPTIONS = ["Generel henvendelse", "Slagelse", "Vejle"];
+const STORE_OPTIONS = ["Vejle", "Slagelse"];
 
 export default function KontaktPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "Support",
-    store: "Generel henvendelse",
+    store: "",
     message: "",
   });
   const [status, setStatus] = useState<Status>("idle");
@@ -58,7 +58,7 @@ export default function KontaktPage() {
         name: "",
         email: "",
         subject: "Support",
-        store: "Generel henvendelse",
+        store: "",
         message: "",
       });
     } catch (err) {
@@ -150,6 +150,7 @@ export default function KontaktPage() {
                     label="Butik"
                     name="store"
                     type="select"
+                    required
                     options={STORE_OPTIONS}
                     placeholder="Vælg butik..."
                     value={formData.store}
