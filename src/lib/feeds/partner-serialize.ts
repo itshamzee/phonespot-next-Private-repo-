@@ -37,14 +37,13 @@ const CSV_COLUMNS: Array<{ key: keyof PartnerFeedRow; header: string }> = [
   { key: "vatScheme", header: "vat_scheme" },
   { key: "quantity", header: "quantity" },
   { key: "batteryHealth", header: "battery_health" },
-  { key: "conditionNotes", header: "condition_notes" },
   { key: "warrantyMonths", header: "warranty_months" },
 ];
 
 /**
- * CSV with a header row. Array-valued fields (`barcodes`, `conditionNotes`)
- * join on "|". Fields are quoted per RFC 4180 when they contain a comma,
- * quote or newline; embedded quotes are doubled.
+ * CSV with a header row. Array-valued fields (`barcodes`) join on "|".
+ * Fields are quoted per RFC 4180 when they contain a comma, quote or
+ * newline; embedded quotes are doubled.
  */
 export function toPartnerFeedCsv(rows: PartnerFeedRow[]): string {
   const header = CSV_COLUMNS.map((c) => c.header).join(",");

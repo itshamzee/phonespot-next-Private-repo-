@@ -29,9 +29,14 @@ function extractToken(headers: Headers): string | null {
   const apiKey = headers.get("x-api-key");
   if (apiKey) return apiKey;
 
+  // RFC 7235 §2.1: the auth-scheme token ("Bearer") is case-insensitive, so
+  // a partner sending "bearer <token>" or "BEARER <token>" must still
+  // authenticate. Only the scheme prefix is case-folded here — the token
+  // itself is extracted verbatim and compared exactly (case-sensitive,
+  // timing-safe) below.
   const authHeader = headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice("Bearer ".length).trim();
+  if (authHeader && authHeader.slice(0, 7).toLowerCase() === "bearer ") {
+    return authHeader.slice(7).trim();
   }
 
   return null;

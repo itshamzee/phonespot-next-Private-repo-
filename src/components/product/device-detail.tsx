@@ -855,7 +855,17 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Sendt samme dag
+                    {/* Qualified with the cutoff rather than evaluated live:
+                        this pill renders in a "use client" tree, so it's
+                        rendered once on the server and again at hydration —
+                        a live Europe/Copenhagen cutoff check here would
+                        reintroduce the exact SSR/hydration mismatch risk
+                        being fixed in pickup-line.tsx just for a claim that
+                        collapses to the same static fact 99% of the day.
+                        Stating the cutoff (already used verbatim in the
+                        Garanti & Levering tab below) is honest and requires
+                        no clock read at all. */}
+                    Bestil før kl. 16 — sendt samme dag
                   </span>
                 )}
               </div>

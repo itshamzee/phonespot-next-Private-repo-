@@ -1,3 +1,5 @@
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+
 export type FaqItem = { q: string; a: string };
 
 /**
@@ -50,6 +52,41 @@ export function getDeviceFaq(displayName: string): FaqItem[] {
     {
       q: "Kan jeg returnere enheden?",
       a: "Ja, du har altid 14 dages fuld returret fra den dag du modtager din ordre. Enheden skal returneres i samme stand som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
+    },
+  ];
+}
+
+/**
+ * FAQ for a SKU/accessory product page (cases, chargers, cables, spare
+ * parts, etc. — the fallback branch in `[collection]/[product]/page.tsx`
+ * for any slug that isn't a device template).
+ *
+ * Deliberately NOT `getDeviceFaq`: an accessory has no battery, no A/B/C
+ * cosmetic grade, and is not covered by the 36-month device warranty (that
+ * warranty is sold with — and priced into — refurbished devices only). Using
+ * the device FAQ here would put false, binding commercial claims on a
+ * leather iPad case. These four questions cover only what's actually true
+ * for every accessory: statutory 2-year reklamationsret, 14-day fortrydelse,
+ * free shipping over the real threshold, and fit/compatibility.
+ */
+export function getAccessoryFaq(displayName: string): FaqItem[] {
+  const freeShippingKr = FREE_SHIPPING_THRESHOLD / 100;
+  return [
+    {
+      q: `Passer ${displayName} til min enhed?`,
+      a: "Kompatibiliteten fremgår af produkttitlen og beskrivelsen ovenfor. Er du i tvivl om modelmatch, så kontakt os før du bestiller, så bekræfter vi det for dig.",
+    },
+    {
+      q: "Hvad hvis varen er defekt eller går i stykker?",
+      a: "Du har 2 års reklamationsret efter købeloven. Opstår der en fabrikationsfejl eller mangel, kontakter du bare vores kundeservice, så finder vi en løsning — reparation, ombytning eller refundering.",
+    },
+    {
+      q: "Kan jeg fortryde mit køb?",
+      a: "Ja, du har 14 dages fuld fortrydelsesret fra den dag du modtager varen. Returner den i den stand du modtog den, og vi refunderer det fulde beløb.",
+    },
+    {
+      q: "Hvor hurtigt leverer I, og er der fri fragt?",
+      a: `Vi sender din ordre inden for 1-2 hverdage. Ved køb over ${freeShippingKr} kr er fragten fri — ellers tilføjes et fragtgebyr ved checkout.`,
     },
   ];
 }

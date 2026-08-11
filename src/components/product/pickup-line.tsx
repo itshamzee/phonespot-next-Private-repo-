@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { STORES } from "@/lib/store-config";
 import { isStoreId, type StoreId } from "@/lib/stores";
 
@@ -61,8 +64,28 @@ function nameClause(list: Store[]): string {
  * only says "i dag" for a store that's currently open, and falls back to
  * plain delivery copy when no shop has stock — never implying a pickup
  * option that can't be honoured.
+ *
+ * `now` defaults to "unknown" (not `new Date()`) on the initial render. This
+ * component lives inside a "use client" tree (`DeviceDetail`), so it renders
+ * once on the server and again during client hydration; if both calls read
+ * the live clock independently, a request that straddles an open/close
+ * boundary between the two reads produces two different open/closed
+ * verdicts and a React hydration mismatch. So when the caller doesn't pass a
+ * fixed `now` (the production case — only tests do, for determinism), the
+ * very first render — server and client alike — renders the same
+ * clock-independent copy (store names, no "i dag"/"ved næste åbningstid"
+ * split). Only after mount does an effect read the real client clock and
+ * re-render with the accurate open/closed wording, which is safe because it
+ * happens after hydration has already reconciled.
  */
 export function PickupLine({ stockByStore, now }: PickupLineProps) {
+  const [liveNow, setLiveNow] = useState<Date | null>(now ?? null);
+
+  useEffect(() => {
+    if (now) return; // caller supplied a fixed instant (tests) — don't override it
+    setLiveNow(new Date());
+  }, [now]);
+
   const stores = stockByStore
     .filter((s) => s.count > 0 && isStoreId(s.slug))
     .map((s) => STORES[s.slug as StoreId]);
@@ -75,8 +98,19 @@ export function PickupLine({ stockByStore, now }: PickupLineProps) {
     );
   }
 
-  const openStores = stores.filter((store) => isOpenNow(store.hours, now));
-  const closedStores = stores.filter((store) => !isOpenNow(store.hours, now));
+  if (!liveNow) {
+    // Pre-hydration (or first server pass) with no fixed `now`: we don't yet
+    // know whether the shop is open, so name it without an "i dag" claim
+    // rather than guess and risk a hydration mismatch.
+    return (
+      <p className="text-[11px] text-charcoal/45">
+        Kan hentes i {nameClause(stores)}. Ellers levering 1–2 hverdage.
+      </p>
+    );
+  }
+
+  const openStores = stores.filter((store) => isOpenNow(store.hours, liveNow));
+  const closedStores = stores.filter((store) => !isOpenNow(store.hours, liveNow));
 
   return (
     <p className="text-[11px] text-charcoal/45">

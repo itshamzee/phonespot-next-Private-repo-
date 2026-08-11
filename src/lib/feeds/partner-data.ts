@@ -47,7 +47,13 @@ export interface PartnerFeedTemplate {
 }
 
 /** Shape returned by the Supabase query in `fetchPartnerFeedRows` — also the
- * input to `buildPartnerFeedRows`, which is pure and unit-tested directly. */
+ * input to `buildPartnerFeedRows`, which is pure and unit-tested directly.
+ *
+ * Deliberately does NOT include `devices.condition_notes`: that's a
+ * free-text field staff type for internal use (see admin device/opkøb
+ * screens). It has never been reviewed for external distribution, so it
+ * must never reach this feed — a partner-facing payload, sent to a company
+ * outside PhoneSpot. */
 export interface PartnerFeedDeviceRow {
   id: string;
   grade: string;
@@ -58,7 +64,6 @@ export interface PartnerFeedDeviceRow {
   source: string | null;
   source_stock: number | null;
   battery_health: number | null;
-  condition_notes: string | null;
   barcode: string | null;
   template: PartnerFeedTemplate | PartnerFeedTemplate[] | null;
 }
@@ -81,7 +86,6 @@ export interface PartnerFeedRow {
   vatScheme: string | null;
   quantity: number;
   batteryHealth: number | null;
-  conditionNotes: string[] | null;
   warrantyMonths: number;
 }
 
@@ -95,7 +99,6 @@ interface VariantAccumulator {
   vatScheme: string | null;
   barcodes: string[];
   batteryHealthMin: number | null;
-  conditionNotes: Set<string>;
 }
 
 /**
@@ -135,7 +138,6 @@ export function buildPartnerFeedRows(devices: PartnerFeedDeviceRow[]): PartnerFe
         vatScheme: dev.vat_scheme ?? null,
         barcodes: [],
         batteryHealthMin: null,
-        conditionNotes: new Set(),
       };
       variants.set(key, acc);
     }
@@ -155,9 +157,6 @@ export function buildPartnerFeedRows(devices: PartnerFeedDeviceRow[]): PartnerFe
           ? dev.battery_health
           : Math.min(acc.batteryHealthMin, dev.battery_health);
     }
-
-    const note = dev.condition_notes?.trim();
-    if (note) acc.conditionNotes.add(note);
   }
 
   const rows: PartnerFeedRow[] = [];
@@ -196,7 +195,6 @@ export function buildPartnerFeedRows(devices: PartnerFeedDeviceRow[]): PartnerFe
       vatScheme: acc.vatScheme,
       quantity: acc.quantity,
       batteryHealth: acc.batteryHealthMin,
-      conditionNotes: acc.conditionNotes.size > 0 ? [...acc.conditionNotes] : null,
       warrantyMonths: PARTNER_FEED_WARRANTY_MONTHS,
     });
   }
@@ -218,7 +216,7 @@ export async function fetchPartnerFeedRows(
     .select(
       `
       id, grade, storage, color, selling_price, vat_scheme, source, source_stock,
-      battery_health, condition_notes, barcode,
+      battery_health, barcode,
       template:product_templates!template_id!inner (
         id, display_name, brand, category, slug, status, images, default_attributes
       )

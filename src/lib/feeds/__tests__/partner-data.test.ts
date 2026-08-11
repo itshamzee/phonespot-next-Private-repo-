@@ -36,7 +36,6 @@ function device(overrides: Partial<PartnerFeedDeviceRow> = {}): PartnerFeedDevic
     source: "inhouse",
     source_stock: 0,
     battery_health: null,
-    condition_notes: null,
     barcode: null,
     template: TEMPLATE,
     ...overrides,
@@ -157,18 +156,9 @@ describe("buildPartnerFeedRows — row shape", () => {
     expect(rows[0].batteryHealth).toBeNull();
   });
 
-  it("collects distinct non-empty conditionNotes across the variant's units", () => {
-    const rows = buildPartnerFeedRows([
-      device({ id: "d1", condition_notes: "Ridser på skærm" }),
-      device({ id: "d2", condition_notes: "  " }), // blank after trim -> ignored
-      device({ id: "d3", condition_notes: null }),
-    ]);
-    expect(rows[0].conditionNotes).toEqual(["Ridser på skærm"]);
-  });
-
-  it("returns null conditionNotes when no unit has one", () => {
-    const rows = buildPartnerFeedRows([device({ condition_notes: null })]);
-    expect(rows[0].conditionNotes).toBeNull();
+  it("never ships condition_notes to the partner — it's an internal-only free-text field", () => {
+    const rows = buildPartnerFeedRows([device()]);
+    expect(rows[0]).not.toHaveProperty("conditionNotes");
   });
 
   it("prefers the colour-specific image, falling back to the template default", () => {

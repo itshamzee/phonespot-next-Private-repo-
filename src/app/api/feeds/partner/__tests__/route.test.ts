@@ -60,7 +60,6 @@ beforeEach(() => {
     source: "inhouse",
     source_stock: 0,
     battery_health: 95,
-    condition_notes: null,
     barcode: "PS0001",
     template: TEMPLATE,
   });
@@ -117,7 +116,7 @@ describe("GET /api/feeds/partner", () => {
     const text = await res.text();
     const [header, firstRow] = text.trim().split("\r\n");
     expect(header).toBe(
-      "variant_key,barcodes,gtin,brand,display_name,category,storage,colour,grade,grade_label,product_url,image_url,price_dkk,currency,vat_scheme,quantity,battery_health,condition_notes,warranty_months",
+      "variant_key,barcodes,gtin,brand,display_name,category,storage,colour,grade,grade_label,product_url,image_url,price_dkk,currency,vat_scheme,quantity,battery_health,warranty_months",
     );
     expect(firstRow).toContain("Apple");
     expect(firstRow).toContain("regular");

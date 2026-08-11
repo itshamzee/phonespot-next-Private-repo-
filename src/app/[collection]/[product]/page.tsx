@@ -30,7 +30,7 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ConditionIllustrations } from "@/components/product/condition-illustrations";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ITEM_CONDITION, devicesToItemCondition } from "@/lib/seo/item-condition";
-import { getDeviceFaq } from "@/lib/product/device-faq";
+import { getDeviceFaq, getAccessoryFaq } from "@/lib/product/device-faq";
 
 // Allow any product handle to be rendered on-demand (not just pre-built ones)
 export const dynamicParams = true;
@@ -664,7 +664,7 @@ export default async function ProductPage({
           Spørgsmål om dette produkt
         </Heading>
         <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-sm">
-          {getDeviceFaq(product.title).map((faq) => (
+          {getAccessoryFaq(product.title).map((faq) => (
             <details key={faq.q} className="group">
               <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-semibold text-charcoal transition-colors hover:text-green-eco">
                 <span>{faq.q}</span>

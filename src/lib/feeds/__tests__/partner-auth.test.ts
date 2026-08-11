@@ -65,6 +65,24 @@ describe("checkPartnerAuth", () => {
     expect(result).toEqual({ ok: true });
   });
 
+  it("accepts a lowercase 'bearer' scheme — RFC 7235 makes the scheme case-insensitive", () => {
+    process.env.PARTNER_FEED_TOKEN = "correct-token-123";
+    const result = checkPartnerAuth(headersWith({ authorization: "bearer correct-token-123" }));
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("accepts a mixed-case 'BeArEr' scheme", () => {
+    process.env.PARTNER_FEED_TOKEN = "correct-token-123";
+    const result = checkPartnerAuth(headersWith({ authorization: "BeArEr correct-token-123" }));
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("does not case-fold the token itself — only the scheme", () => {
+    process.env.PARTNER_FEED_TOKEN = "Correct-Token-123";
+    const result = checkPartnerAuth(headersWith({ authorization: "bearer correct-token-123" }));
+    expect(result).toEqual({ ok: false, status: 401 });
+  });
+
   it("prefers X-Api-Key over Authorization when both are present", () => {
     process.env.PARTNER_FEED_TOKEN = "correct-token-123";
     const result = checkPartnerAuth(
