@@ -28,6 +28,7 @@ const NAV_SECTIONS = [
       {
         href: "/admin/platform/orders",
         label: "Ordrer",
+        countKey: "orders" as const,
         icon: (
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
@@ -55,6 +56,7 @@ const NAV_SECTIONS = [
       {
         href: "/admin/reparationer",
         label: "Reparationer",
+        countKey: "repairs" as const,
         icon: (
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384-5.383a2.025 2.025 0 01-.586-1.504c.012-.754.328-1.472.886-2.01a2.72 2.72 0 013.93.036l.455.457.457-.457a2.72 2.72 0 013.928-.036 2.72 2.72 0 01.037 3.514l-5.384 5.383a.75.75 0 01-1.06 0z" />
@@ -82,6 +84,7 @@ const NAV_SECTIONS = [
       {
         href: "/admin/henvendelser",
         label: "Henvendelser",
+        countKey: "inquiries" as const,
         icon: (
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -100,9 +103,10 @@ const NAV_SECTIONS = [
       {
         href: "/admin/opkoeb",
         label: "Opkøb",
+        countKey: "buyback" as const,
         icon: (
           <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
           </svg>
         ),
       },
@@ -292,6 +296,10 @@ const NAV_SECTIONS = [
 /* Flat list for active detection + page title */
 const ALL_NAV = NAV_SECTIONS.flatMap((s) => s.items);
 
+/** Live action-needed counts shown as menu badges. */
+type NavCounts = { orders: number; repairs: number; inquiries: number; buyback: number };
+const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, inquiries: 0, buyback: 0 };
+
 /* ------------------------------------------------------------------ */
 /*  Layout Component                                                   */
 /* ------------------------------------------------------------------ */
@@ -304,7 +312,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingOrders, setPendingOrders] = useState(0);
+  const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
 
   const pathname = usePathname();
   const supabase = createBrowserClient();
@@ -322,11 +330,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .then(({ count }) => setPendingOrders(count ?? 0));
+    async function loadCounts() {
+      const [orders, repairs, inquiries, buyback] = await Promise.all([
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("repair_tickets").select("id", { count: "exact", head: true }).eq("status", "modtaget"),
+        supabase.from("contact_inquiries").select("id", { count: "exact", head: true }).eq("status", "ny").neq("source", "saelg-enhed"),
+        supabase.from("contact_inquiries").select("id", { count: "exact", head: true }).eq("status", "ny").eq("source", "saelg-enhed"),
+      ]);
+      setNavCounts({
+        orders: orders.count ?? 0,
+        repairs: repairs.count ?? 0,
+        inquiries: inquiries.count ?? 0,
+        buyback: buyback.count ?? 0,
+      });
+    }
+    loadCounts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
@@ -483,6 +501,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <div className="flex flex-col gap-px">
                 {section.items.map((item) => {
                   const active = isActive(item.href);
+                  const countKey = (item as { countKey?: keyof NavCounts }).countKey;
+                  const badge = countKey ? navCounts[countKey] : 0;
                   return (
                     <Link
                       key={item.href}
@@ -501,9 +521,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         {item.icon}
                       </span>
                       {item.label}
-                      {item.href === "/admin/platform/orders" && pendingOrders > 0 && (
+                      {badge > 0 && (
                         <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                          {pendingOrders}
+                          {badge > 99 ? "99+" : badge}
                         </span>
                       )}
                     </Link>
