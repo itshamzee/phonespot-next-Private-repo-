@@ -93,7 +93,22 @@ function updateUrlParam(pathname: string, currentParams: Record<string, string>)
 
 const UPSELL_COLLECTIONS = ["iphones", "ipads", "smartphones"];
 
-function ProductInfoInner({ product, collectionSlug }: { product: Product; collectionSlug?: string }) {
+function ProductInfoInner({
+  product,
+  collectionSlug,
+  variant = "device",
+}: {
+  product: Product;
+  collectionSlug?: string;
+  /**
+   * "accessory" swaps the "36 mdr. garanti" claim in the compact trust
+   * strip below for the statutory 2-year reklamationsret. This component
+   * is shared between real graded devices (e.g. baerbare/[brand]) and
+   * sku_products (accessories) — the 36-month warranty is sold with, and
+   * priced into, refurbished devices only.
+   */
+  variant?: "device" | "accessory";
+}) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const options = useMemo(
@@ -336,18 +351,34 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
           </svg>
           14 dages retur
         </span>
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-charcoal/70">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 text-green-eco">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-          </svg>
-          36 mdr. garanti
-        </span>
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-charcoal/70">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 text-green-eco">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-          </svg>
-          Prismatch
-        </span>
+        {variant === "accessory" ? (
+          // Accessories (sku_products) aren't graded refurbished devices:
+          // no 36-month device warranty (statutory 2-year reklamationsret
+          // applies instead — see PhoneSpot tilbehørsgaranti note below),
+          // and Prismatch (prismatch/page.tsx) only matches "en sammenlignelig
+          // refurbished enhed... samme grade" — devices, not accessories.
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-charcoal/70">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 text-green-eco">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+            2 års reklamationsret
+          </span>
+        ) : (
+          <>
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-charcoal/70">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 text-green-eco">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+              </svg>
+              36 mdr. garanti
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-charcoal/70">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 text-green-eco">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              Prismatch
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -357,7 +388,15 @@ function ProductInfoInner({ product, collectionSlug }: { product: Product; colle
 /*  Exported wrapper with Suspense                                    */
 /* ------------------------------------------------------------------ */
 
-export function ProductInfo({ product, collectionSlug }: { product: Product; collectionSlug?: string }) {
+export function ProductInfo({
+  product,
+  collectionSlug,
+  variant = "device",
+}: {
+  product: Product;
+  collectionSlug?: string;
+  variant?: "device" | "accessory";
+}) {
   return (
     <Suspense
       fallback={
@@ -369,7 +408,7 @@ export function ProductInfo({ product, collectionSlug }: { product: Product; col
         </div>
       }
     >
-      <ProductInfoInner product={product} collectionSlug={collectionSlug} />
+      <ProductInfoInner product={product} collectionSlug={collectionSlug} variant={variant} />
     </Suspense>
   );
 }

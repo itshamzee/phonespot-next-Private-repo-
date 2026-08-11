@@ -426,10 +426,130 @@ function HighlightIcon({ type }: { type: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Accessory (sku_products) variant                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * An accessory has no battery, no camera, no A/B/C cosmetic grade and is
+ * not covered by the 36-month device warranty (that warranty is sold with —
+ * and priced into — refurbished devices only). `getProductData` above
+ * infers device type by keyword-matching the product TITLE, which is wrong
+ * for e.g. "Apple Smart Folio til iPad Air 11" — the title contains
+ * "iPad Air 11" but the product is a leather case with no iPad specs at
+ * all. This variant never runs that inference: it only ever shows the
+ * accessory's own attributes (passed in as `specs`, sourced from
+ * `sku_products.attributes`) or nothing, and only makes claims that are
+ * true for every accessory — same precedent as `getAccessoryFaq` in
+ * lib/product/device-faq.ts.
+ */
+export type AccessorySpec = { label: string; value: string };
+
+function AccessoryProductDetails({
+  product,
+  specs,
+}: {
+  product: Product;
+  specs?: AccessorySpec[];
+}) {
+  const intro = product.description?.trim() || `Se de fulde detaljer om ${product.title} nedenfor.`;
+
+  const highlights: { icon: string; title: string; detail: string }[] = [
+    { icon: "check", title: "2 års reklamationsret", detail: "Efter købeloven" },
+    { icon: "return", title: "14 dage", detail: "Fuld fortrydelsesret" },
+    { icon: "truck", title: "1-2 hverdage", detail: "Hurtig levering" },
+  ];
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      {/* ---- Intro paragraph ---- */}
+      <p className="mb-8 text-base leading-relaxed text-charcoal/80 md:text-lg md:leading-relaxed">
+        {intro}
+      </p>
+
+      {/* ---- Highlight cards ---- */}
+      <div className="mb-10 grid grid-cols-3 gap-3 md:gap-4">
+        {highlights.map((h) => (
+          <div
+            key={h.title}
+            className="flex flex-col items-center gap-2 rounded-2xl border border-sand bg-white px-4 py-5 text-center shadow-sm"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-eco/8">
+              <HighlightIcon type={h.icon} />
+            </div>
+            <span className="font-display text-sm font-bold text-charcoal leading-tight">
+              {h.title}
+            </span>
+            <span className="text-xs text-charcoal/50">{h.detail}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ---- Spec table — only the accessory's OWN attributes, never a
+              device template's specs. Omitted entirely if there are none. ---- */}
+      {specs && specs.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm">
+          <div className="border-b border-sand bg-sand/30 px-5 py-3.5">
+            <h3 className="font-display text-sm font-bold text-charcoal">
+              Specifikationer
+            </h3>
+          </div>
+          <table className="w-full text-left text-sm">
+            <tbody>
+              {specs.map((spec, idx) => (
+                <tr
+                  key={spec.label}
+                  className={`border-b border-sand/60 last:border-b-0 ${
+                    idx % 2 === 0 ? "bg-white" : "bg-sand/20"
+                  }`}
+                >
+                  <td className="w-2/5 px-5 py-3 font-medium text-charcoal">
+                    {spec.label}
+                  </td>
+                  <td className="px-5 py-3 text-charcoal/70">{spec.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ---- Statutory guarantee note — no device-warranty or grade claim ---- */}
+      <div className="mt-6 flex items-start gap-3 rounded-xl bg-green-eco/5 px-5 py-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mt-0.5 h-5 w-5 shrink-0 text-green-eco">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+        </svg>
+        <div>
+          <p className="text-sm font-semibold text-charcoal">PhoneSpot tilbehørsgaranti</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-charcoal/60">
+            Du har 2 års reklamationsret efter købeloven, samt 14 dages fuld fortrydelsesret fra den dag du modtager varen.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Exported component                                                 */
 /* ------------------------------------------------------------------ */
 
-export function ProductDetails({ product, batteryHealth }: { product: Product; batteryHealth?: number }) {
+export function ProductDetails({
+  product,
+  batteryHealth,
+  variant = "device",
+  accessorySpecs,
+}: {
+  product: Product;
+  batteryHealth?: number;
+  /** "accessory" renders sku_products' own facts only — never a device
+   *  template matched by title keyword. See AccessoryProductDetails above. */
+  variant?: "device" | "accessory";
+  accessorySpecs?: AccessorySpec[];
+}) {
+  if (variant === "accessory") {
+    return <AccessoryProductDetails product={product} specs={accessorySpecs} />;
+  }
+
   const data = getProductData(product, batteryHealth);
 
   return (

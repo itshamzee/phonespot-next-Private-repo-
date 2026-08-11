@@ -864,8 +864,10 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                         collapses to the same static fact 99% of the day.
                         Stating the cutoff (already used verbatim in the
                         Garanti & Levering tab below) is honest and requires
-                        no clock read at all. */}
-                    Bestil før kl. 16 — sendt samme dag
+                        no clock read at all. "på hverdage" matches the
+                        frontpage claim (page.tsx) — without it this pill
+                        implies same-day dispatch on weekends too. */}
+                    Bestil før kl. 16 på hverdage — sendt samme dag
                   </span>
                 )}
               </div>
@@ -1151,7 +1153,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                     { label: "DAO Pakke (49 kr)", desc: "Afhentning i nærmeste pakkeshop, 2-4 hverdage" },
                     { label: "PostNord (59 kr)", desc: "Levering til døren, 2-4 hverdage" },
                     { label: "Fri fragt", desc: "Ved køb over 500 kr" },
-                    { label: "Samme dag", desc: "Bestil før kl. 16 — sendt samme dag" },
+                    { label: "Samme dag", desc: "Bestil før kl. 16 på hverdage — sendt samme dag" },
                     { label: "Sikker betaling", desc: "Kort, MobilePay og Klarna" },
                   ].map((item) => (
                     <li key={item.label} className="flex items-start gap-2">

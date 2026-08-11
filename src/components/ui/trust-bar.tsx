@@ -1,4 +1,11 @@
-const trustItems = [
+/**
+ * "36 mdr. garanti" is the refurbished-device warranty — priced into and
+ * sold with devices only. Accessories (sku_products) carry the statutory
+ * 2-year reklamationsret instead; showing the device warranty claim on an
+ * accessory PDP is a false commercial claim (same class of bug fixed for
+ * the FAQ in getAccessoryFaq). `variant="accessory"` swaps the label.
+ */
+const baseTrustItems = [
   {
     label: "e-mærket",
     icon: (
@@ -96,7 +103,22 @@ const trustItems = [
   },
 ];
 
-export function TrustBar({ className = "" }: { className?: string }) {
+export function TrustBar({
+  className = "",
+  variant = "device",
+}: {
+  className?: string;
+  /** "accessory" swaps the "36 mdr. garanti" device-warranty claim for the
+   *  statutory 2-year reklamationsret that actually applies to sku_products. */
+  variant?: "device" | "accessory";
+}) {
+  const trustItems =
+    variant === "accessory"
+      ? baseTrustItems.map((item) =>
+          item.label === "36 mdr. garanti" ? { ...item, label: "2 års reklamationsret" } : item,
+        )
+      : baseTrustItems;
+
   return (
     <div className={`bg-[#F7F7F8] border-y border-[#E5E5EA] py-4 ${className}`.trim()}>
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8">

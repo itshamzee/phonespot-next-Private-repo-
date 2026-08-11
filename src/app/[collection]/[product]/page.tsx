@@ -27,7 +27,6 @@ import { ProductGridCard } from "@/components/product/product-grid-card";
 import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { ConditionIllustrations } from "@/components/product/condition-illustrations";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ITEM_CONDITION, devicesToItemCondition } from "@/lib/seo/item-condition";
 import { getDeviceFaq, getAccessoryFaq } from "@/lib/product/device-faq";
@@ -54,6 +53,34 @@ function getDeviceTypeFromSlug(slug: string): DeviceType {
   if (slug.includes("baerbar") || slug.includes("laptop")) return "laptop";
   return "phone";
 }
+
+/** Truncate to `max` chars without cutting a word in half (used for the
+ *  meta-description fallback so it doesn't end mid-word). */
+function truncateAtWord(text: string, max: number): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
+
+// Danish labels for sku_products.attributes keys, shown in the accessory
+// spec table (mirrors the map in components/product/accessory-detail.tsx).
+const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
+  connector_type: "Stik-type",
+  case_type: "Type",
+  length: "Længde",
+  width: "Bredde",
+  material: "Materiale",
+  color: "Farve",
+  wattage: "Watt",
+  compatibility: "Kompatibel med",
+  weight: "Vægt",
+  dimensions: "Mål",
+  cable_length: "Kabellængde",
+  screen_size: "Skærmstørrelse",
+  protection_level: "Beskyttelsesniveau",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -143,11 +170,32 @@ export async function generateMetadata({
   }
   const productData = skuProductToProduct(skuProduct);
 
+  // `??` only catches null/undefined — but meta_title/meta_description in
+  // sku_products come back as "" (empty string, not null) for most SKUs,
+  // which `??` happily passes through. Next.js then omits the <title> tag
+  // and <meta name="description"> entirely for an empty string, which is
+  // exactly what shipped: this page had NO <title> and NO meta description
+  // in production. `||` treats "" the same as missing and falls through to
+  // the generated fallback. Also: this is an accessory, not a refurbished
+  // device — it doesn't get the 36-month warranty claim (see
+  // getAccessoryFaq / ProductDetails variant="accessory" for the same fix
+  // applied to on-page copy).
+  // Don't prefix the brand if the product title already starts with it
+  // (e.g. "Apple Smart Folio iPad Air 11\" Denim" already says "Apple" —
+  // prefixing again would render "Apple Apple Smart Folio...").
+  const brandPrefix =
+    productData.vendor &&
+    productData.vendor !== "PhoneSpot" &&
+    !productData.title.toLowerCase().startsWith(productData.vendor.toLowerCase())
+      ? `${productData.vendor} `
+      : "";
   const title =
-    productData.seo.title ?? `${productData.title} - Refurbished | PhoneSpot`;
+    productData.seo.title || `${brandPrefix}${productData.title} | PhoneSpot`;
   const description =
-    productData.seo.description ??
-    `Køb ${productData.title} refurbished med 36 mdr. garanti hos PhoneSpot. ${productData.description.slice(0, 120)}`;
+    productData.seo.description ||
+    (skuProduct.short_description?.trim()
+      ? skuProduct.short_description.trim()
+      : `Køb ${productData.title} hos PhoneSpot. ${truncateAtWord(productData.description, 140) || "Hurtig levering og 2 års reklamationsret."}`);
 
   return {
     title,
@@ -468,6 +516,20 @@ export default async function ProductPage({
   if (!skuProduct) notFound();
   const product = skuProductToProduct(skuProduct);
 
+  // The accessory's OWN specs (material, connector type, dimensions, etc.),
+  // straight from its sku_products.attributes column — never a device
+  // template's spec table matched by title keyword. Internal/bookkeeping
+  // keys are hidden; everything else gets a Danish label where we have one.
+  const accessorySpecs = Object.entries(skuProduct.attributes ?? {})
+    .filter(
+      ([key, value]) =>
+        !["_source", "source", "id"].includes(key) && value !== null && value !== undefined && value !== "",
+    )
+    .map(([key, value]) => ({
+      label: ACCESSORY_ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " "),
+      value: String(value),
+    }));
+
   // Fetch related products from same category
   const accessories: Product[] = [];
   let relatedProducts: Product[] = [];
@@ -522,103 +584,37 @@ export default async function ProductPage({
             images={product.images}
             title={product.title}
             deviceType={deviceType}
+            variant="accessory"
           />
           <div className="flex flex-col gap-4">
             <Suspense fallback={null}>
               <TrustpilotStars />
             </Suspense>
-            <ProductInfo product={product} collectionSlug={collectionSlug} />
+            <ProductInfo product={product} collectionSlug={collectionSlug} variant="accessory" />
           </div>
         </div>
       </section>
 
-      {/* ── 3. Hvad betyder standen? ── */}
-      <SectionWrapper background="default" id="hvad-betyder-standen">
-        <Heading as="h2" size="md" className="mb-4 text-center">
-          Hvad betyder standen?
-        </Heading>
-        <p className="mx-auto mb-8 max-w-2xl text-center font-body text-charcoal/70">
-          Alle vores enheder er 100&nbsp;% funktionelle og gennemgår en
-          grundig kvalitetstest med mindst 30 kontrolpunkter. Standen
-          beskriver udelukkende det kosmetiske udseende.
-        </p>
-        <ConditionIllustrations deviceType={deviceType} />
-        <div className="mt-8 text-center">
-          <Link
-            href="/kvalitet"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-green-eco transition-colors hover:text-charcoal"
-          >
-            Læs mere om vores kvalitetsgaranti
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>
-          </Link>
-        </div>
-      </SectionWrapper>
+      {/*
+        NOTE: the device-only "Hvad betyder standen?" (grade explainer) and
+        "Inkluderet i boksen" (charger/warranty-cert box contents) sections
+        that used to render unconditionally here were removed for the
+        accessory branch. sku_products have no grade column — they are new
+        goods, not graded refurbished devices — so a cosmetic-condition
+        explainer and "ships with a charger + 36-month warranty cert" claim
+        were both false for e.g. a leather iPad case. See ProductDetails
+        variant="accessory" below for the equivalent, accurate replacement.
+      */}
 
-      {/* ── 4. Om dette produkt ── */}
+      {/* ── 3. Om dette produkt ── */}
       <SectionWrapper background="cream">
         <Heading as="h2" size="md" className="mb-8 text-center">
           Om dette produkt
         </Heading>
-        <ProductDetails product={product} />
+        <ProductDetails product={product} variant="accessory" accessorySpecs={accessorySpecs} />
       </SectionWrapper>
 
-      {/* ── 5. Inkluderet i boksen ── */}
-      <SectionWrapper background="sand">
-        <Heading as="h2" size="md" className="mb-10 text-center">
-          Inkluderet i boksen
-        </Heading>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {[
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                </svg>
-              ),
-              label: "Enhed",
-              sub: "Testet & kvalitetssikret",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19.5v-15m0 0-6.75 6.75M12 4.5l6.75 6.75" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 19.5h13.5" />
-                </svg>
-              ),
-              label: "USB-C ladekabel",
-              sub: "Kompatibelt kabel",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                </svg>
-              ),
-              label: "Oplader",
-              sub: "Hurtig opladning",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-              ),
-              label: "36 mdr. garantibevis",
-              sub: "Med QR-kode",
-            },
-          ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-sm">
-              {item.icon}
-              <span className="text-sm font-semibold text-charcoal">{item.label}</span>
-              <span className="mt-1 text-xs text-gray">{item.sub}</span>
-            </div>
-          ))}
-        </div>
-      </SectionWrapper>
-
-      {/* ── 6. Trustpilot Reviews ── */}
+      {/* ── 4. Trustpilot Reviews ── */}
       <SectionWrapper>
         <Heading as="h2" size="md" className="text-center">
           Trustpilot Anmeldelser
@@ -630,7 +626,7 @@ export default async function ProductPage({
         </div>
       </SectionWrapper>
 
-      {/* ── 7. Accessory upsell (phones/smartphones only) ── */}
+      {/* ── 5. Accessory upsell (phones/smartphones only) ── */}
       {accessories.length > 0 && (deviceType === "phone") && (
         <SectionWrapper background="default">
           <Heading as="h2" size="md" className="mb-8 text-center">
@@ -640,7 +636,7 @@ export default async function ProductPage({
         </SectionWrapper>
       )}
 
-      {/* ── 8. Relaterede produkter ── */}
+      {/* ── 6. Relaterede produkter ── */}
       {relatedProducts.length > 0 && (
         <SectionWrapper background="sand">
           <Heading as="h2" size="md" className="mb-10 text-center">
@@ -658,7 +654,7 @@ export default async function ProductPage({
         </SectionWrapper>
       )}
 
-      {/* ── 9. Produktspecifik FAQ ── */}
+      {/* ── 7. Produktspecifik FAQ ── */}
       <SectionWrapper background="default">
         <Heading as="h2" size="md" className="mb-8 text-center">
           Spørgsmål om dette produkt
@@ -678,9 +674,11 @@ export default async function ProductPage({
         </div>
       </SectionWrapper>
 
-      {/* ── 10. Trust bar ── */}
+      {/* ── 8. Trust bar — "accessory" swaps the 36-month device warranty
+             claim for the statutory 2-year reklamationsret that applies
+             here (this is a sku_product, not a graded refurbished device). ── */}
       <SectionWrapper background="sand">
-        <TrustBar />
+        <TrustBar variant="accessory" />
       </SectionWrapper>
     </>
   );
