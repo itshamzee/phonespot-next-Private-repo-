@@ -30,9 +30,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const template = await getTemplateBySlug(slug);
   if (!template) return { title: "Produkt ikke fundet" };
 
-  const title = template.meta_title ?? `${template.display_name} - Refurbished | PhoneSpot`;
+  // `??` only catches null/undefined — meta_title/meta_description come
+  // back as "" (empty string, not null) for some published templates (e.g.
+  // samsung-galaxy-watch-4, samsung-galaxy-z-fold-3), which `??` happily
+  // passes through, leaving the page with NO <title> and NO meta
+  // description in production. `||` treats "" the same as missing and
+  // falls through to the generated fallback.
+  const title = template.meta_title || `${template.display_name} - Refurbished | PhoneSpot`;
   const description =
-    template.meta_description ??
+    template.meta_description ||
     `Køb refurbished ${template.display_name} med 36 måneders garanti. Testet med 30+ kontroller og klar til brug fra dag et.`;
 
   return {

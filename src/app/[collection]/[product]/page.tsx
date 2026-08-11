@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCollectionConfig } from "@/lib/collections";
+import { getCollectionConfig, isDeviceCategory } from "@/lib/collections";
 import {
   getSkuProductBySlug,
   getPublishedSkuProducts,
@@ -145,9 +145,16 @@ export async function generateMetadata({
   // Try product template first (devices: phones, watches, iPads, laptops)
   const template = await getTemplateBySlug(productHandle);
   if (template) {
-    const title = template.meta_title ?? `${template.display_name} - Refurbished | PhoneSpot`;
+    // `??` only catches null/undefined — meta_title/meta_description come
+    // back as "" (empty string, not null) for some published templates
+    // (e.g. samsung-galaxy-watch-4, samsung-galaxy-z-fold-3), which `??`
+    // happily passes through, leaving the page with NO <title> and NO meta
+    // description in production. `||` treats "" the same as missing and
+    // falls through to the generated fallback (same fix already applied to
+    // the SKU-product branch below).
+    const title = template.meta_title || `${template.display_name} - Refurbished | PhoneSpot`;
     const description =
-      template.meta_description ??
+      template.meta_description ||
       `Køb refurbished ${template.display_name} med 36 måneders garanti. Testet med 30+ kontroller og klar til brug fra dag et.`;
 
     return {
@@ -176,10 +183,15 @@ export async function generateMetadata({
   // and <meta name="description"> entirely for an empty string, which is
   // exactly what shipped: this page had NO <title> and NO meta description
   // in production. `||` treats "" the same as missing and falls through to
-  // the generated fallback. Also: this is an accessory, not a refurbished
-  // device — it doesn't get the 36-month warranty claim (see
-  // getAccessoryFaq / ProductDetails variant="accessory" for the same fix
-  // applied to on-page copy).
+  // the generated fallback.
+  //
+  // Most sku_products are accessories/spare parts (no 36-month device
+  // warranty), but a handful — e.g. oneplus-10-pro-5g-256gb-12gb-rom
+  // (category: "smartphone") — are genuine graded devices, which DO get
+  // the 36-month warranty. See getAccessoryFaq / getDeviceFaq and
+  // ProductDetails/ProductInfo/TrustBar `variant` below for the same
+  // category-based split applied to on-page copy.
+  const isDeviceSku = isDeviceCategory(skuProduct.category);
   // Don't prefix the brand if the product title already starts with it
   // (e.g. "Apple Smart Folio iPad Air 11\" Denim" already says "Apple" —
   // prefixing again would render "Apple Apple Smart Folio...").
@@ -195,7 +207,12 @@ export async function generateMetadata({
     productData.seo.description ||
     (skuProduct.short_description?.trim()
       ? skuProduct.short_description.trim()
-      : `Køb ${productData.title} hos PhoneSpot. ${truncateAtWord(productData.description, 140) || "Hurtig levering og 2 års reklamationsret."}`);
+      : `Køb ${productData.title} hos PhoneSpot. ${
+          truncateAtWord(productData.description, 140) ||
+          (isDeviceSku
+            ? "Testet og klar til brug med 36 måneders garanti."
+            : "Hurtig levering og 2 års reklamationsret.")
+        }`);
 
   return {
     title,
@@ -516,6 +533,17 @@ export default async function ProductPage({
   if (!skuProduct) notFound();
   const product = skuProductToProduct(skuProduct);
 
+  // Most published sku_products are accessories/spare parts, but a handful
+  // — e.g. oneplus-10-pro-5g-256gb-12gb-rom (category: "smartphone") — are
+  // genuine graded devices. Those get the 36-month device warranty
+  // treatment (ImageGalleryWithGrade, ProductInfo, ProductDetails, FAQ,
+  // TrustBar below); accessories/spare parts keep the statutory 2-year
+  // reklamationsret treatment. Do not assume every sku_product is an
+  // accessory — check skuProduct.category instead.
+  const skuVariant: "device" | "accessory" = isDeviceCategory(skuProduct.category)
+    ? "device"
+    : "accessory";
+
   // The accessory's OWN specs (material, connector type, dimensions, etc.),
   // straight from its sku_products.attributes column — never a device
   // template's spec table matched by title keyword. Internal/bookkeeping
@@ -584,13 +612,13 @@ export default async function ProductPage({
             images={product.images}
             title={product.title}
             deviceType={deviceType}
-            variant="accessory"
+            variant={skuVariant}
           />
           <div className="flex flex-col gap-4">
             <Suspense fallback={null}>
               <TrustpilotStars />
             </Suspense>
-            <ProductInfo product={product} collectionSlug={collectionSlug} variant="accessory" />
+            <ProductInfo product={product} collectionSlug={collectionSlug} variant={skuVariant} />
           </div>
         </div>
       </section>
@@ -599,11 +627,15 @@ export default async function ProductPage({
         NOTE: the device-only "Hvad betyder standen?" (grade explainer) and
         "Inkluderet i boksen" (charger/warranty-cert box contents) sections
         that used to render unconditionally here were removed for the
-        accessory branch. sku_products have no grade column — they are new
-        goods, not graded refurbished devices — so a cosmetic-condition
-        explainer and "ships with a charger + 36-month warranty cert" claim
-        were both false for e.g. a leather iPad case. See ProductDetails
-        variant="accessory" below for the equivalent, accurate replacement.
+        accessory branch. sku_products have no grade column at all — even
+        the device-category ones (see skuVariant above) — so there's no A/B/C
+        cosmetic grade to explain and no data to back a "ships with a
+        charger + 36-month warranty cert" box-contents claim. That was false
+        for e.g. a leather iPad case, and there's still no grade data for a
+        device-category SKU like the OnePlus 10 Pro. See ProductDetails
+        variant={skuVariant} below for the accurate replacement — it still
+        makes the 36-month warranty claim for device-category SKUs, just
+        without an invented box-contents/grade section.
       */}
 
       {/* ── 3. Om dette produkt ── */}
@@ -611,7 +643,7 @@ export default async function ProductPage({
         <Heading as="h2" size="md" className="mb-8 text-center">
           Om dette produkt
         </Heading>
-        <ProductDetails product={product} variant="accessory" accessorySpecs={accessorySpecs} />
+        <ProductDetails product={product} variant={skuVariant} accessorySpecs={accessorySpecs} />
       </SectionWrapper>
 
       {/* ── 4. Trustpilot Reviews ── */}
@@ -660,7 +692,7 @@ export default async function ProductPage({
           Spørgsmål om dette produkt
         </Heading>
         <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-sm">
-          {getAccessoryFaq(product.title).map((faq) => (
+          {(skuVariant === "device" ? getDeviceFaq(product.title) : getAccessoryFaq(product.title)).map((faq) => (
             <details key={faq.q} className="group">
               <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-semibold text-charcoal transition-colors hover:text-green-eco">
                 <span>{faq.q}</span>
@@ -674,11 +706,13 @@ export default async function ProductPage({
         </div>
       </SectionWrapper>
 
-      {/* ── 8. Trust bar — "accessory" swaps the 36-month device warranty
-             claim for the statutory 2-year reklamationsret that applies
-             here (this is a sku_product, not a graded refurbished device). ── */}
+      {/* ── 8. Trust bar — variant="accessory" swaps the 36-month device
+             warranty claim for the statutory 2-year reklamationsret that
+             applies to sku_products that AREN'T graded refurbished devices.
+             Device-category SKUs (skuVariant === "device") keep the
+             36-month claim, same as the template branch above. ── */}
       <SectionWrapper background="sand">
-        <TrustBar variant="accessory" />
+        <TrustBar variant={skuVariant} />
       </SectionWrapper>
     </>
   );

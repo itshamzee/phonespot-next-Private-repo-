@@ -79,3 +79,20 @@ export function getCollectionConfig(slug: string) {
 export function getAllCollectionSlugs() {
   return Object.keys(COLLECTION_MAP);
 }
+
+// sku_products.category values that represent a graded, refurbished DEVICE
+// (36-month PhoneSpot warranty) rather than an accessory or spare part
+// (statutory 2-year reklamationsret only). Most published sku_products are
+// accessories/spare parts, but a handful — e.g.
+// oneplus-10-pro-5g-256gb-12gb-rom (category: "smartphone") — are genuine
+// devices that must get the device warranty treatment, not the accessory
+// one. Shared by [collection]/page.tsx (collection-level copy) and
+// [collection]/[product]/page.tsx (per-SKU variant selection) so both agree
+// on the same list.
+export const DEVICE_CATEGORIES = new Set(["iphone", "ipad", "smartphone", "laptop", "smartwatch"]);
+
+/** True if `category` (a sku_products.category or template.category value)
+ *  is a graded refurbished device, not an accessory/spare part. */
+export function isDeviceCategory(category?: string | null): boolean {
+  return DEVICE_CATEGORIES.has(category ?? "");
+}

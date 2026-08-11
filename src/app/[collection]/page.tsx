@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCollectionConfig, getAllCollectionSlugs } from "@/lib/collections";
+import { getCollectionConfig, getAllCollectionSlugs, DEVICE_CATEGORIES } from "@/lib/collections";
 import { getPublishedSkuProducts, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 
@@ -38,8 +38,6 @@ const SLUG_TO_CATEGORY: Record<string, string> = {
   restsalg: "accessory",
   outlet: "accessory",
 };
-
-const DEVICE_CATEGORIES = new Set(["iphone", "ipad", "smartphone", "laptop", "smartwatch"]);
 
 // ---------------------------------------------------------------------------
 // Metadata

@@ -58,9 +58,13 @@ export async function generateMetadata({
 
   return {
     title: titleStr,
+    // `??` only catches null/undefined — meta_description comes back as ""
+    // (empty string, not null) for some published spare parts, which `??`
+    // happily passes through, leaving the page with NO meta description in
+    // production. `||` treats "" the same as missing and falls through.
     description:
-      product.meta_description ??
-      product.short_description ??
+      product.meta_description ||
+      product.short_description ||
       `Køb ${product.title} hos PhoneSpot. Leveret med garanti og gratis fragt i Danmark.`,
     alternates: {
       canonical: `https://phonespot.dk/reservedele/${categorySlug}/${brandSlug}/${modelSlug}/${slug}`,

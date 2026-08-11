@@ -65,9 +65,14 @@ export async function generateMetadata({
   if (!skuData) return { title: "Cover ikke fundet - PhoneSpot" };
   const product = skuProductToProduct(skuData);
 
-  const title = product.seo.title ?? `${product.title} | PhoneSpot`;
+  // `??` only catches null/undefined — seo.title/seo.description come back
+  // as "" (empty string, not null) for some published SKUs, which `??`
+  // happily passes through, leaving the page with NO <title> and NO meta
+  // description in production. `||` treats "" the same as missing and
+  // falls through to the generated fallback.
+  const title = product.seo.title || `${product.title} | PhoneSpot`;
   const description =
-    product.seo.description ??
+    product.seo.description ||
     `Køb ${product.title} hos PhoneSpot. Hurtig levering og skarpe priser.`;
 
   return {
