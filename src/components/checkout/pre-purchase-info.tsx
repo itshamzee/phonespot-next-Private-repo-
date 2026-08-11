@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { STORES } from "@/lib/store-config";
 import { useCart } from "@/components/cart/cart-context";
@@ -13,7 +13,24 @@ export function PrePurchaseInfo() {
   // for it, only the statutory 24-month reklamationsret. Showing the device
   // warranty as a blanket legal disclosure at checkout would be a false
   // claim on an accessory-only order.
-  const hasDevice = cartState.items.some((item) => item.type === "device");
+  //
+  // CartProvider's useReducer lazily initializes from localStorage
+  // (lib/cart/storage.ts loadCart()): it returns an EMPTY cart on the server
+  // (no `window`), but on the client it reads the real, persisted cart
+  // synchronously on the very first render — before any effect runs and
+  // before hydration has reconciled. So SSR always renders the safe
+  // (reklamationsret-only) copy, while the client's first render can
+  // already see a device and render the 36-month <li> — a hydration
+  // mismatch that also changes DOM structure (an <li> is added/removed).
+  // To make the first client render match the server exactly, `hasDevice`
+  // starts `false` and is only set from the real cart inside an effect,
+  // i.e. after mount (same deterministic pattern as PickupLine's
+  // clock-independent first render). Never render the 36-month claim
+  // before the cart is genuinely known.
+  const [hasDevice, setHasDevice] = useState(false);
+  useEffect(() => {
+    setHasDevice(cartState.items.some((item) => item.type === "device"));
+  }, [cartState.items]);
 
   return (
     <div className="rounded-xl border border-sand bg-cream">
