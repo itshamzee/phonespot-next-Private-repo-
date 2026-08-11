@@ -233,7 +233,7 @@ export const POPULAR_SPARE_PART_MODELS: PopularSparePartModel[] = [
 export const SPARE_PARTS_FAQ: SparePartFAQ[] = [
   {
     question: "Er jeres reservedele originale?",
-    answer: "Vi fører både originale (OEM) og højkvalitets-aftermarket reservedele. Alle dele er testet og kvalitetskontrolleret inden afsendelse, og leveres med 36 måneders garanti.",
+    answer: "Vi fører både originale (OEM) og højkvalitets-aftermarket reservedele. Alle dele er testet og kvalitetskontrolleret inden afsendelse, og leveres med 2 års reklamationsret.",
   },
   {
     question: "Hvor lang tid tager levering?",

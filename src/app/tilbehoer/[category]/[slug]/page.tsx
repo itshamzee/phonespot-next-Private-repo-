@@ -13,6 +13,7 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
 import { ITEM_CONDITION } from "@/lib/seo/item-condition";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 
 export const revalidate = 60;
 
@@ -77,7 +78,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .map((l: any) => l.product_templates?.display_name)
     .filter(Boolean);
 
-  const title = product.meta_title ?? `${product.title} | PhoneSpot`;
+  // `??` only substitutes on null/undefined — but meta_title/meta_description/
+  // short_description in sku_products come back as "" (empty string, not
+  // null) for most SKUs, which `??` passes straight through, causing Next.js
+  // to silently omit the <title> tag (confirmed via a local prod build: this
+  // exact page rendered with no <title> at all) and produced a
+  // double-space-then-truncated description. Same root cause fixed for the
+  // sibling /tilbehor route in 4ac493c — `||` treats "" the same as missing.
+  const title = product.meta_title || `${product.title} | PhoneSpot`;
 
   let description: string;
   if (product.meta_description) {
@@ -89,10 +97,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? ` til ${compatibleDeviceNames.slice(0, 2).join(" og ")}`
         : "";
     const bodyText =
-      product.short_description ??
-      catConfig?.description ??
+      product.short_description ||
+      catConfig?.description ||
       "Hurtig levering og skarpe priser.";
-    description = `Køb ${product.title}${brandSegment}${deviceSegment} hos PhoneSpot. ${bodyText} Fri fragt over 500 kr. 36 mdr. garanti.`;
+    description = `Køb ${product.title}${brandSegment}${deviceSegment} hos PhoneSpot. ${bodyText} Fri fragt over ${FREE_SHIPPING_THRESHOLD / 100} kr. 2 års reklamationsret.`;
   }
 
   return {
@@ -321,7 +329,11 @@ export default async function AccessoryDetailPage({ params }: Props) {
       itemCondition: ITEM_CONDITION.NEW,
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
-      warranty: "36 måneders garanti",
+      // This is a sku_product (accessory), not a graded refurbished device —
+      // it isn't covered by PhoneSpot's 36-month device warranty. It carries
+      // the statutory 2-year reklamationsret, same as any new good sold in
+      // Denmark (see getAccessoryFaq in lib/product/device-faq.ts).
+      warranty: "2 års reklamationsret efter købeloven",
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: {
@@ -409,9 +421,11 @@ export default async function AccessoryDetailPage({ params }: Props) {
           </Suspense>
         </div>
 
-        {/* Trust bar */}
+        {/* Trust bar — "accessory" swaps the 36-month device warranty claim
+            for the statutory 2-year reklamationsret (this is a sku_product,
+            not a graded refurbished device). */}
         <div className="mt-16">
-          <TrustBar />
+          <TrustBar variant="accessory" />
         </div>
       </div>
     </>

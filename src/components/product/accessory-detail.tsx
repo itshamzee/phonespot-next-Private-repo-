@@ -804,7 +804,7 @@ export function AccessoryDetail({
                 >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                <span className="text-xs text-charcoal/50">36 måneders garanti</span>
+                <span className="text-xs text-charcoal/50">2 års reklamationsret</span>
               </div>
               {/* Returret */}
               <div className="flex items-center gap-1.5">

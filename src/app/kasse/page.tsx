@@ -4,8 +4,14 @@ import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
 import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 import { STORES } from "@/lib/store-config";
+import { useCart } from "@/components/cart/cart-context";
 
 export default function KassePage() {
+  const { cartState } = useCart();
+  // Same rule as PrePurchaseInfo: the 36-month device warranty only applies
+  // when the cart actually contains a graded refurbished device. An
+  // accessory-only cart gets the statutory reklamationsret, not this claim.
+  const hasDevice = cartState.items.some((item) => item.type === "device");
   return (
     <div className="min-h-screen bg-warm-white">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-20">
@@ -107,8 +113,8 @@ export default function KassePage() {
                       <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
                     </svg>
                   ),
-                  title: "36 måneders garanti",
-                  sub: "Fuld dækning på alle enheder",
+                  title: hasDevice ? "36 måneders garanti" : "2 års reklamationsret",
+                  sub: hasDevice ? "Fuld dækning på refurbished enheder" : "Efter købeloven",
                 },
                 {
                   icon: (

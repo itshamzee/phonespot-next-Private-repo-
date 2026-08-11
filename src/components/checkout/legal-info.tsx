@@ -41,7 +41,7 @@ export function CheckoutLegalInfo({ tcVersionId, onAccept }: CheckoutLegalInfoPr
         </p>
         <p>
           <strong>Reklamation:</strong> 24 måneders reklamationsret efter købeloven.
-          PhoneSpot tilbyder desuden 36 måneders garanti.{" "}
+          PhoneSpot tilbyder desuden 36 måneders garanti på refurbished enheder.{" "}
           <Link href="/handelsbetingelser#9" className="text-green-eco underline">Læs mere</Link>
         </p>
         <p>

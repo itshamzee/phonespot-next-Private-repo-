@@ -186,8 +186,8 @@ export function Footer() {
                 className="h-7 w-auto"
               />
               <p className="mt-4 max-w-[260px] text-[13px] leading-relaxed text-[#86868B]">
-                Danmarks specialist i kvalitetstestet refurbished tech. Alle produkter leveres
-                med 36 måneders garanti og 14 dages returret.
+                Danmarks specialist i kvalitetstestet refurbished tech. Alle refurbished
+                enheder leveres med 36 måneders garanti, og alle ordrer har 14 dages returret.
               </p>
 
               {/* Store info block */}

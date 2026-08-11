@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { useCart } from "@/components/cart/cart-context";
 import type { SpotSku, SpotVariantKind } from "@/lib/spot/types";
 import type { CartSkuItem } from "@/lib/cart/types";
@@ -430,7 +431,7 @@ function ModelConfigurator({
             {adding ? "Lagt i kurv ✓" : `Læg i kurv · ${totalKr} kr`}
           </button>
 
-          <p className="mt-3 text-center text-[11px] text-black/40">Gratis fragt over 500 kr · 36 mdr. garanti · Gratis montering i butik</p>
+          <p className="mt-3 text-center text-[11px] text-black/40">Gratis fragt over {FREE_SHIPPING_THRESHOLD / 100} kr · 2 års reklamationsret · Gratis montering i butik</p>
         </div>
       </div>
     </section>

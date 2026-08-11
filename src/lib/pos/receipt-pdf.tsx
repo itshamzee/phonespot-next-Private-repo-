@@ -259,11 +259,19 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
           </Text>
         )}
 
-        {/* Warranty notice */}
-        <Text style={styles.warrantyNotice}>
-          Enheder leveres med 36 måneders garanti.{"\n"}
-          Garantibevis sendes til din email.
-        </Text>
+        {/* Warranty notice — 36-month warranty applies to graded refurbished
+            devices only (they have a `grade`); accessory-only receipts get
+            the statutory reklamationsret instead. */}
+        {receipt.items.some((item) => item.grade) ? (
+          <Text style={styles.warrantyNotice}>
+            Enheder leveres med 36 måneders garanti.{"\n"}
+            Garantibevis sendes til din email.
+          </Text>
+        ) : (
+          <Text style={styles.warrantyNotice}>
+            2 års reklamationsret efter købeloven.
+          </Text>
+        )}
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>

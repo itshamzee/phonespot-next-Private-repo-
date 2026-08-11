@@ -37,6 +37,10 @@ export async function GET(req: NextRequest) {
   const customer = order.customer as any;
   const addr = (order.shipping_address || {}) as Record<string, any>;
   const items = (order.order_items || []) as any[];
+  // 36-month warranty applies to graded refurbished devices only, not
+  // accessories (sku_products) — an accessory-only order gets the statutory
+  // reklamationsret. The footer legal line below reflects order contents.
+  const hasDevice = items.some((item) => item.item_type === "device");
 
   // ── Resolve item details ──────────────────────────────────────────────────
   interface ResolvedItem {
@@ -354,7 +358,7 @@ export async function GET(req: NextRequest) {
       PhoneSpot / PhoneGo ApS &middot; CVR ${BRAND.cvr} &middot; phonespot.dk
     </div>
     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">
-      36 måneders garanti &middot; 14 dages fortrydelsesret
+      ${hasDevice ? "36 måneders garanti &middot; 14 dages fortrydelsesret" : "2 års reklamationsret &middot; 14 dages fortrydelsesret"}
     </div>
     <div style="font-size:12px;color:#9ca3af;">
       ${BRAND.phone} &middot; ${BRAND.email}

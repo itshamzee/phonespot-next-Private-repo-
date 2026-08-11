@@ -4,7 +4,7 @@ const features = [
   {
     title: "36 mdr. garanti",
     description:
-      "Alle produkter leveres med 36 måneders garanti. Tryg handel hver gang.",
+      "Alle refurbished enheder leveres med 36 måneders garanti. Tryg handel hver gang.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -24,7 +24,7 @@ const features = [
   {
     title: "Kvalitetstestet",
     description:
-      "Hvert produkt gennemgår 30+ tests for batteri, skærm, kamera og mere.",
+      "Hver refurbished enhed gennemgår 30+ tests for batteri, skærm, kamera og mere.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

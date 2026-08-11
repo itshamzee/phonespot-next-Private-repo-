@@ -3,9 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { STORES } from "@/lib/store-config";
+import { useCart } from "@/components/cart/cart-context";
 
 export function PrePurchaseInfo() {
   const [isOpen, setIsOpen] = useState(false);
+  const { cartState } = useCart();
+  // The 36-month PhoneSpot warranty is sold with graded refurbished devices
+  // only — an accessory-only cart (cases, chargers, cables) never qualifies
+  // for it, only the statutory 24-month reklamationsret. Showing the device
+  // warranty as a blanket legal disclosure at checkout would be a false
+  // claim on an accessory-only order.
+  const hasDevice = cartState.items.some((item) => item.type === "device");
 
   return (
     <div className="rounded-xl border border-sand bg-cream">
@@ -52,7 +60,7 @@ export function PrePurchaseInfo() {
             <ul className="mt-1 space-y-1 text-xs text-gray list-disc list-inside">
               <li>14 dages fortrydelsesret fra modtagelse</li>
               <li>24 måneders reklamationsret (mangelsansvar)</li>
-              <li>36 måneders garanti fra PhoneSpot</li>
+              {hasDevice && <li>36 måneders garanti fra PhoneSpot på refurbished enheder</li>}
             </ul>
           </div>
 
