@@ -4,8 +4,26 @@
  * 2-year reklamationsret instead; showing the device warranty claim on an
  * accessory PDP is a false commercial claim (same class of bug fixed for
  * the FAQ in getAccessoryFaq). `variant="accessory"` swaps the label.
+ *
+ * Which item gets swapped is marked with the explicit `isGuaranteeClaim`
+ * flag below, not by matching on the label string — a copy edit to "36
+ * mdr. garanti" would silently break a `label === "..."` comparison with no
+ * test failure (the accessory variant would just stop swapping, and nobody
+ * would notice until a customer saw the false claim again).
  */
-const baseTrustItems = [
+export interface TrustItem {
+  label: string;
+  icon: React.ReactNode;
+  /** True for the one item that must become "2 års reklamationsret" under
+   *  variant="accessory". Never rename/duplicate this — it's the single
+   *  source of truth for which item is the guarantee claim. */
+  isGuaranteeClaim?: boolean;
+}
+
+// Exported for a regression test (__tests__/trust-bar.test.tsx) that proves
+// the accessory-variant swap is driven by `isGuaranteeClaim`, not by
+// matching item.label against the literal string "36 mdr. garanti".
+export const baseTrustItems: TrustItem[] = [
   {
     label: "e-mærket",
     icon: (
@@ -27,6 +45,7 @@ const baseTrustItems = [
   },
   {
     label: "36 mdr. garanti",
+    isGuaranteeClaim: true,
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +134,7 @@ export function TrustBar({
   const trustItems =
     variant === "accessory"
       ? baseTrustItems.map((item) =>
-          item.label === "36 mdr. garanti" ? { ...item, label: "2 års reklamationsret" } : item,
+          item.isGuaranteeClaim ? { ...item, label: "2 års reklamationsret" } : item,
         )
       : baseTrustItems;
 
