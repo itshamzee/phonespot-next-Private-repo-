@@ -25,6 +25,10 @@ interface ReadyForPickupEmailProps {
   locationMapUrl?: string;
   /** Opening hours display string for the pickup store. Defaults to Slagelse if absent. */
   locationHours?: string;
+  /** BRAND.usps with the guarantee line already resolved for this order's
+   *  actual items (see uspsForOrder in lib/email/brand.ts). Defaults to the
+   *  unmodified BRAND.usps for callers that don't know the order contents. */
+  usps?: readonly string[];
 }
 
 // Defaults — only used if a caller omits locationMapUrl / locationHours.
@@ -39,6 +43,7 @@ export default function ReadyForPickupEmail({
   locationAddress,
   locationMapUrl,
   locationHours,
+  usps = BRAND.usps,
 }: ReadyForPickupEmailProps) {
   const mapUrl = locationMapUrl ?? DEFAULT_MAP_URL;
   const hours = locationHours ?? DEFAULT_HOURS;
@@ -379,7 +384,7 @@ export default function ReadyForPickupEmail({
             }}
           >
             <Row>
-              {BRAND.usps.map((usp, i) => (
+              {usps.map((usp, i) => (
                 <Column
                   key={i}
                   style={{

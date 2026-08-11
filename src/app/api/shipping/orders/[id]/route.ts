@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STORES } from "@/lib/store-config";
-import { BRAND } from "@/lib/email/brand";
+import { BRAND, hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -106,7 +106,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Check if this is a click & collect order
     const { data: fullOrder } = await supabase
       .from("orders")
-      .select("*, customer:customers(*)")
+      .select(
+        "*, customer:customers(*), items:order_items(item_type, sku_product:sku_products(category))",
+      )
       .eq("id", id)
       .single();
 
@@ -127,6 +129,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const { Resend } = await import("resend");
         const { default: ReadyForPickupEmail } = await import("@/lib/email/templates/ready-for-pickup");
         const resend = new Resend(process.env.RESEND_API_KEY);
+        // Accessory-only click & collect orders must not promise the
+        // 36-month device guarantee in the pickup email's USP bar.
+        const guaranteeItems = ((fullOrder.items as any[]) ?? []).map((item) => ({
+          itemType: item.item_type as "device" | "sku_product",
+          category: item.sku_product?.category ?? null,
+        }));
+        const usps = uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems));
         await resend.emails.send({
           from: "PhoneSpot <info@phonespot.dk>",
           to: fullOrder.customer.email,
@@ -139,6 +148,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             locationPhone: locationInfo.phone,
             locationMapUrl: locationInfo.mapUrl,
             locationHours: locationInfo.hours,
+            usps,
           }),
         });
       } catch {

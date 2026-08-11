@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { Resend } from "resend";
 import RefundConfirmationEmail from "@/lib/email/templates/refund-confirmation";
 import { stripe } from "@/lib/stripe/client";
+import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     .select(`
       *,
       customer:customers(*),
-      items:order_items(*, device:devices(id, status))
+      items:order_items(*, device:devices(id, status), sku_product:sku_products(category))
     `)
     .eq("id", id)
     .single();
@@ -85,6 +86,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (order.customer?.email) {
       try {
+        // Accessory-only orders must not promise the 36-month device
+        // guarantee in the refund confirmation's USP bar.
+        const guaranteeItems = ((order.items as any[]) ?? []).map((item) => ({
+          itemType: item.item_type as "device" | "sku_product",
+          category: item.sku_product?.category ?? null,
+        }));
+        const usps = uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems));
+
         await resend.emails.send({
           from: "PhoneSpot <info@phonespot.dk>",
           to: order.customer.email,
@@ -94,6 +103,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             customerName: order.customer.name ?? "Kunde",
             refundAmount: refund.amount,
             reason,
+            usps,
           }),
         });
       } catch {

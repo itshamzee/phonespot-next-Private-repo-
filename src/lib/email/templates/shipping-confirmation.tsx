@@ -17,6 +17,10 @@ interface ShippingConfirmationEmailProps {
   trackingNumber: string;
   trackingUrl: string;
   shippingMethod: string;
+  /** BRAND.usps with the guarantee line already resolved for this order's
+   *  actual items (see uspsForOrder in lib/email/brand.ts). Defaults to the
+   *  unmodified BRAND.usps for callers that don't know the order contents. */
+  usps?: readonly string[];
 }
 
 export default function ShippingConfirmationEmail({
@@ -25,6 +29,7 @@ export default function ShippingConfirmationEmail({
   trackingNumber,
   trackingUrl,
   shippingMethod,
+  usps = BRAND.usps,
 }: ShippingConfirmationEmailProps) {
   return (
     <Html lang="da">
@@ -148,7 +153,7 @@ export default function ShippingConfirmationEmail({
             <table width="100%" cellPadding={0} cellSpacing={0}>
               <tbody>
                 <tr>
-                  {BRAND.usps.map((usp, i) => (
+                  {usps.map((usp, i) => (
                     <td key={i} style={uspCellStyle}>
                       <span style={uspCheckStyle}>&#10003;</span>
                       <span style={uspTextStyle}>{usp}</span>

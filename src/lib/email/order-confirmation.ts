@@ -6,6 +6,8 @@ import {
   emailFooter,
   emailButton,
   emailItemRow,
+  hasGuaranteeQualifyingDevice,
+  uspsForOrder,
 } from "@/lib/email/brand";
 import { STORES } from "@/lib/store-config";
 
@@ -23,6 +25,11 @@ export interface OrderConfirmationItem {
   image?: string;
   /** Set to true when this order_item had the battery upgrade. */
   batteryUpgrade?: boolean;
+  /** sku_products.category — needed to tell a device-category sku_product
+   *  (e.g. a phone sold outside the graded-device flow) apart from a real
+   *  accessory when deciding the 36-month guarantee vs. reklamationsret
+   *  wording. Absent/undefined for device items (itemType handles those). */
+  category?: string | null;
 }
 
 export interface SendOrderConfirmationParams {
@@ -220,6 +227,11 @@ function buildHtml(params: SendOrderConfirmationParams): string {
 
   const firstName = params.customer.name.split(" ")[0] ?? params.customer.name;
 
+  // An accessory-only order must not promise the 36-month device guarantee
+  // in its footer USP bar — only a genuine device (item_type "device", or a
+  // sku_product in a device category) qualifies. See lib/email/brand.ts.
+  const usps = uspsForOrder(hasGuaranteeQualifyingDevice(params.items));
+
   return `<!DOCTYPE html>
 <html lang="da">
 <head>
@@ -389,7 +401,7 @@ function buildHtml(params: SendOrderConfirmationParams): string {
           </td>
         </tr>
 
-        ${emailFooter()}
+        ${emailFooter(usps)}
 
       </table>
     </td></tr>

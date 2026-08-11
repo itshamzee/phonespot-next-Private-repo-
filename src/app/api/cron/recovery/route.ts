@@ -6,6 +6,7 @@ import AbandonedCartEmail, {
   subject as emailSubject,
   from as emailFrom,
 } from "@/lib/email/templates/abandoned-cart-email";
+import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -77,6 +78,9 @@ export async function GET(req: NextRequest) {
         // Build item list from order_items with product names
         const orderItems = (order.order_items as any[]) ?? [];
         const items: Array<{ title: string; price: number }> = [];
+        // A cart that's accessory-only must not promise the 36-month device
+        // guarantee in the recovery email's USP bar — see lib/email/brand.ts.
+        const guaranteeItems: Array<{ itemType: "device" | "sku_product"; category?: string | null }> = [];
 
         for (const item of orderItems) {
           if (item.item_type === "device" && item.device_id) {
@@ -90,20 +94,23 @@ export async function GET(req: NextRequest) {
               title: t ? [t.brand, t.model, t.storage].filter(Boolean).join(" ") : "Enhed",
               price: item.unit_price,
             });
+            guaranteeItems.push({ itemType: "device" });
           } else if (item.sku_product_id) {
             const { data: sku } = await supabase
               .from("sku_products")
-              .select("title")
+              .select("title, category")
               .eq("id", item.sku_product_id)
               .single();
             items.push({
               title: sku?.title || "Tilbehør",
               price: item.unit_price * item.quantity,
             });
+            guaranteeItems.push({ itemType: "sku_product", category: sku?.category ?? null });
           }
         }
 
         const recoveryUrl = `${BASE_URL}/checkout/recover/${order.recovery_token}`;
+        const usps = uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems));
 
         const { error: sendError } = await resend.emails.send({
           from: EMAIL_FROM,
@@ -114,6 +121,7 @@ export async function GET(req: NextRequest) {
             items,
             total: order.total ?? 0,
             recoveryUrl,
+            usps,
           }),
         });
 

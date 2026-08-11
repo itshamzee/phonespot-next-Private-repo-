@@ -254,11 +254,16 @@ export async function handleCheckoutCompleted(
     title: string;
     image?: string;
     batteryUpgrade?: boolean;
+    // sku_products.category — a sku_product can itself be a device-category
+    // product (see DEVICE_CATEGORIES), so the confirmation email's guarantee
+    // wording can't just assume item_type "sku_product" means accessory.
+    category?: string | null;
   }> = [];
 
   for (const item of orderItems) {
     let title = "";
     let image: string | undefined;
+    let category: string | null | undefined;
 
     if (item.item_type === "device" && item.device_id) {
       const { data: dev } = await supabase
@@ -279,11 +284,12 @@ export async function handleCheckoutCompleted(
     } else if (item.sku_product_id) {
       const { data: sku } = await supabase
         .from("sku_products")
-        .select("title, images")
+        .select("title, images, category")
         .eq("id", item.sku_product_id)
         .single();
       title = sku?.title || "Tilbehør";
       image = sku?.images?.[0] || undefined;
+      category = sku?.category ?? null;
       const qty = item.quantity > 1 ? ` x${item.quantity}` : "";
       itemNames.push(`• ${title}${qty} — ${fmtKr(item.unit_price * item.quantity)}`);
     }
@@ -299,6 +305,7 @@ export async function handleCheckoutCompleted(
       title: title || (item.item_type === "device" ? "Brugt enhed" : "Produkt"),
       image,
       batteryUpgrade: item.battery_upgrade ?? false,
+      category,
     });
   }
 

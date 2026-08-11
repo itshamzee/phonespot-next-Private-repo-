@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { STORES } from "@/lib/store-config";
+import { isDeviceCategory } from "@/lib/collections";
 
 const slagelseAddress = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
 const vejleAddress = `${STORES.vejle.street}, ${STORES.vejle.zip} ${STORES.vejle.city}`;
@@ -62,6 +63,57 @@ export const BRAND = {
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Order-aware guarantee wording
+//
+// PhoneSpot's 36-month commercial guarantee only covers graded refurbished
+// devices — accessories and spare parts carry the statutory 2-year
+// reklamationsret (købeloven) instead, never a "garanti". An email whose
+// order/cart is accessory-only must not print "36 mdr. garanti" in its USP
+// bar/footer: that is a written, binding commercial claim PhoneSpot will not
+// honour on e.g. a leather case.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Minimal per-item shape needed to decide guarantee wording. `category`
+ *  is `sku_products.category` — required because a `sku_product` item can
+ *  itself be a graded device (see DEVICE_CATEGORIES in lib/collections.ts),
+ *  so `itemType === "sku_product"` must NOT be treated as "accessory". */
+export interface GuaranteeQualifyingItem {
+  itemType: "device" | "sku_product";
+  category?: string | null;
+}
+
+/**
+ * True when at least one item is a graded refurbished device — the only
+ * thing the 36-month guarantee covers. Missing/empty/unknown items resolve
+ * to `false` (the safe default): an email that doesn't know what's in the
+ * order must never over-claim the guarantee.
+ */
+export function hasGuaranteeQualifyingDevice(
+  items: readonly GuaranteeQualifyingItem[] | null | undefined,
+): boolean {
+  if (!items || items.length === 0) return false;
+  return items.some(
+    (item) => item.itemType === "device" || isDeviceCategory(item.category),
+  );
+}
+
+/** Correct legal wording for the guarantee USP slot. */
+export function guaranteeUspLabel(hasDevice: boolean): string {
+  return hasDevice ? "36 mdr. garanti" : "2 års reklamationsret";
+}
+
+/**
+ * `BRAND.usps` with the guarantee line swapped to match what's actually in
+ * the order/cart. Use this (instead of `BRAND.usps` directly) in any email
+ * that lists real purchased items.
+ */
+export function uspsForOrder(hasDevice: boolean): string[] {
+  return BRAND.usps.map((usp) =>
+    usp === "36 mdr. garanti" ? guaranteeUspLabel(hasDevice) : usp,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // emailHeader
 // Dark-green bar with the white PhoneSpot wordmark centered.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,8 +142,8 @@ export function emailHeader(): string {
 // 5. Legal / CVR line
 // 6. Unsubscribe notice
 // ─────────────────────────────────────────────────────────────────────────────
-export function emailFooter(): string {
-  const uspItems = BRAND.usps
+export function emailFooter(usps: readonly string[] = BRAND.usps): string {
+  const uspItems = usps
     .map(
       (usp) => `
         <td style="padding:0 12px;text-align:center;vertical-align:top;font-size:12px;color:${BRAND.charcoal};white-space:nowrap;">

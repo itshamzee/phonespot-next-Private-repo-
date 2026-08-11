@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmation";
 import { sendPushover } from "@/lib/notifications/pushover";
 import { sendTrustpilotInvitation } from "@/lib/trustpilot/invite";
+import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -76,7 +77,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("*, customer:customers(email, name, phone)")
+    .select(
+      "*, customer:customers(email, name, phone), items:order_items(item_type, sku_product:sku_products(category))",
+    )
     .single();
 
   if (error) {
@@ -95,6 +98,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   if (tracking_number && order.customer?.email) {
     try {
       const trackingLink = tracking_url || buildTrackingUrl(order.shipping_method, tracking_number);
+      // Accessory-only orders must not promise the 36-month device
+      // guarantee in the shipping confirmation's USP bar.
+      const guaranteeItems = ((order.items as any[]) ?? []).map((item) => ({
+        itemType: item.item_type as "device" | "sku_product",
+        category: item.sku_product?.category ?? null,
+      }));
+      const usps = uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems));
 
       await resend.emails.send({
         from: "PhoneSpot <info@phonespot.dk>",
@@ -106,6 +116,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           trackingNumber: tracking_number,
           trackingUrl: trackingLink,
           shippingMethod: order.shipping_method,
+          usps,
         }),
       });
 

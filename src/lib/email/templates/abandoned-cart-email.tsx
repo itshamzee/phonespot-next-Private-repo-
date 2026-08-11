@@ -19,6 +19,10 @@ export interface AbandonedCartEmailProps {
   items: Array<{ title: string; price: number; image?: string }>; // price in øre
   total: number; // øre
   recoveryUrl: string;
+  /** BRAND.usps with the guarantee line already resolved for this cart's
+   *  actual items (see uspsForOrder in lib/email/brand.ts). Defaults to the
+   *  unmodified BRAND.usps for callers that don't know the cart contents. */
+  usps?: readonly string[];
 }
 
 function formatDKK(oere: number): string {
@@ -45,6 +49,7 @@ export default function AbandonedCartEmail({
   items,
   total,
   recoveryUrl,
+  usps = BRAND.usps,
 }: AbandonedCartEmailProps) {
   return (
     <Html lang="da">
@@ -299,7 +304,7 @@ export default function AbandonedCartEmail({
             }}>
               Hos PhoneSpot får du:
             </Text>
-            {BRAND.usps.map((usp, i) => (
+            {usps.map((usp, i) => (
               <Text key={i} style={{
                 fontSize:   "13px",
                 color:      "#444",
@@ -340,7 +345,7 @@ export default function AbandonedCartEmail({
             padding:         "18px 40px",
           }}>
             <Row>
-              {BRAND.usps.map((usp, i) => (
+              {usps.map((usp, i) => (
                 <Column key={i} style={{ textAlign: "center" as const, padding: "0 6px" }}>
                   <Text style={{
                     fontSize:   "11px",

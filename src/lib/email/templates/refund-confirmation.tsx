@@ -18,6 +18,10 @@ interface RefundConfirmationEmailProps {
   customerName: string;
   refundAmount: number;
   reason: string;
+  /** BRAND.usps with the guarantee line already resolved for this order's
+   *  actual items (see uspsForOrder in lib/email/brand.ts). Defaults to the
+   *  unmodified BRAND.usps for callers that don't know the order contents. */
+  usps?: readonly string[];
 }
 
 function formatAmount(oerer: number): string {
@@ -35,6 +39,7 @@ export default function RefundConfirmationEmail({
   customerName,
   refundAmount,
   reason,
+  usps = BRAND.usps,
 }: RefundConfirmationEmailProps) {
   return (
     <Html lang="da">
@@ -364,7 +369,7 @@ export default function RefundConfirmationEmail({
             }}
           >
             <Row>
-              {BRAND.usps.map((usp, i) => (
+              {usps.map((usp, i) => (
                 <Column
                   key={i}
                   style={{
