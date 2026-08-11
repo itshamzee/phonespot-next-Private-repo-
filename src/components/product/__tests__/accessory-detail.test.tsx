@@ -83,4 +83,29 @@ describe("AccessoryDetail", () => {
     render(<AccessoryDetail product={product} />);
     expect(screen.getByText(/2 års reklamationsret/i)).toBeInTheDocument();
   });
+
+  // Regression test: sku_products.attributes keys that aren't in
+  // ATTRIBUTE_LABELS fall through to `key.replace(/_/g, " ")`, which renders
+  // raw English/snake_case in a Danish spec table (e.g. "watt", "charger
+  // type"). watt and charger_type are live on published charger SKUs.
+  describe("Danish attribute labels", () => {
+    it('labels the "watt" attribute key as "Watt", not the raw key', () => {
+      const charger = makeProduct({
+        subcategory: "charger",
+        attributes: { charger_type: "Vægoplader", watt: "20" },
+      });
+      render(<AccessoryDetail product={charger} />);
+      expect(screen.queryByText("watt")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Watt").length).toBeGreaterThan(0);
+    });
+
+    it('labels the "charger_type" attribute key as "Type", not "charger type"', () => {
+      const charger = makeProduct({
+        subcategory: "charger",
+        attributes: { charger_type: "Vægoplader", watt: "20" },
+      });
+      render(<AccessoryDetail product={charger} />);
+      expect(screen.queryByText(/charger type/i)).not.toBeInTheDocument();
+    });
+  });
 });

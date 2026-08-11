@@ -66,14 +66,23 @@ function truncateAtWord(text: string, max: number): string {
 
 // Danish labels for sku_products.attributes keys, shown in the accessory
 // spec table (mirrors the map in components/product/accessory-detail.tsx).
+// Keys below are every key found live in sku_products.attributes (queried
+// 2026-08 across all statuses, not just published) — watt/charger_type/
+// length/connector_type/case_type are in published SKUs today;
+// protector_type/service_type are on draft SKUs (screen protectors, the
+// battery-install service line) that publish without a code change.
 const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
   connector_type: "Stik-type",
   case_type: "Type",
+  charger_type: "Type",
+  protector_type: "Type",
+  service_type: "Type",
   length: "Længde",
   width: "Bredde",
   material: "Materiale",
   color: "Farve",
   wattage: "Watt",
+  watt: "Watt",
   compatibility: "Kompatibel med",
   weight: "Vægt",
   dimensions: "Mål",

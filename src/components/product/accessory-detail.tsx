@@ -49,15 +49,20 @@ function formatDKK(oere: number): string {
   }).format(oere / 100);
 }
 
-// Attribute label map — Danish translations
+// Attribute label map — Danish translations (mirrors the map in
+// app/[collection]/[product]/page.tsx and app/baerbare/[brand]/page.tsx).
 const ATTRIBUTE_LABELS: Record<string, string> = {
   connector_type: "Stik-type",
   case_type: "Type",
+  charger_type: "Type",
+  protector_type: "Type",
+  service_type: "Type",
   length: "Længde",
   width: "Bredde",
   material: "Materiale",
   color: "Farve",
   wattage: "Watt",
+  watt: "Watt",
   compatibility: "Kompatibel med",
   weight: "Vægt",
   dimensions: "Mål",
