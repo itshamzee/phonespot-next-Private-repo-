@@ -664,24 +664,7 @@ export default async function ProductPage({
           Spørgsmål om dette produkt
         </Heading>
         <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-sm">
-          {[
-            {
-              q: "Hvad er standen på denne enhed?",
-              a: "Vi vurderer alle enheder efter et A/B/C-system. Stand A er næsten som ny uden synlige ridser. Stand B har lette brugsspor, men skærmen er perfekt. Stand C kan have tydelige kosmetiske mærker, men er fuldt funktionel. Alle enheder gennemgår minimum 30 kontrolpunkter uanset stand.",
-            },
-            {
-              q: "Hvad gør jeg hvis enheden har en fejl?",
-              a: "Alle vores produkter leveres med 36 måneders garanti. Hvis du oplever en fejl, kontakt vores kundeservice, og vi finder en løsning hurtigst muligt — enten reparation, ombytning eller refundering. Du er altid dækket.",
-            },
-            {
-              q: "Hvor hurtigt leverer I?",
-              a: "Vi sender din ordre inden for 1-2 hverdage. Du modtager en sporings-mail så snart pakken er afsendt. Vi leverer med DAO eller PostNord direkte til din dør eller nærmeste pakkeshop.",
-            },
-            {
-              q: "Kan jeg returnere enheden?",
-              a: "Ja, du har altid 14 dages fuld returret fra den dag du modtager din ordre. Enheden skal returneres i samme stand som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
-            },
-          ].map((faq) => (
+          {getDeviceFaq(product.title).map((faq) => (
             <details key={faq.q} className="group">
               <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-semibold text-charcoal transition-colors hover:text-green-eco">
                 <span>{faq.q}</span>
