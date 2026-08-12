@@ -16,6 +16,7 @@ import { TradeInTeaser } from "./trade-in-teaser";
 import { normalizeStoreId } from "@/lib/stores";
 import { selectDisplaySpecs, findModelNumber } from "@/lib/product/spec-display";
 import { pickBetterInStockGrade } from "@/lib/product/grade-comparison";
+import { matchesStorage, matchesColor, resolveCartStorage, resolveCartColor } from "@/lib/product/variant-match";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
@@ -347,12 +348,12 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
     setMainImageIndex(0);
   }, [selectedColor]);
 
-  // Find matching devices (grade + storage + color)
-  const matchingDevices = gradeMatchedDevices.filter((d) => {
-    const storageMatch = selectedStorage === "" || d.storage == null || d.storage === selectedStorage;
-    const colorMatch = selectedColor === "" || d.color == null || d.color === selectedColor;
-    return storageMatch && colorMatch;
-  });
+  // Find matching devices (grade + storage + color). See variant-match.ts
+  // for why a unit with an unknown (null) storage/color can only match when
+  // the template has no variants for that field at all.
+  const matchingDevices = gradeMatchedDevices.filter(
+    (d) => matchesStorage(d.storage, selectedStorage) && matchesColor(d.color, selectedColor),
+  );
   const price =
     matchingDevices.length > 0
       ? Math.min(...matchingDevices.map((d) => d.selling_price ?? 0))
@@ -479,8 +480,12 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         templateId: template.id,
         title: template.display_name,
         grade: (selectedGrade === "N" ? "A" : unit.grade) as "A" | "B" | "C",
-        color: unit.color ?? selectedColor,
-        storage: unit.storage ?? selectedStorage,
+        // `unit` always comes from matchingDevices, so (per matchesStorage/
+        // matchesColor above) its own storage/color is never null when the
+        // template has variants for that field — this always records the
+        // unit's own value, never a fabricated customer selection.
+        color: resolveCartColor(unit.color, selectedColor),
+        storage: resolveCartStorage(unit.storage, selectedStorage),
         image: template.images[0] ?? null,
         price: unitPrice,
         reservedAt: new Date().toISOString(),
