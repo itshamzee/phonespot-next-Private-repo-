@@ -12,7 +12,11 @@ export function HubPageClient() {
         activeCategory=""
       />
       <div className="mx-auto max-w-7xl px-4 pb-16">
-        <TrustBar />
+        {/* The tilbehør hub only links into accessory categories (sku_products),
+            never graded refurbished devices — TrustBar defaults to
+            variant="device" (36 mdr. garanti / 30+ kvalitetstests), which is
+            a false claim about what's actually on this page. See trust-bar.tsx. */}
+        <TrustBar variant="accessory" />
       </div>
     </>
   );

@@ -25,7 +25,11 @@ export function TilbehoerCategoryClient({ category, initialCount }: Props) {
       </div>
       {category.faq.length > 0 && <CategoryFaq items={category.faq} />}
       <div className="mx-auto max-w-7xl px-4 pb-16">
-        <TrustBar />
+        {/* Every tilbehør category lists sku_products (accessories), never
+            graded refurbished devices — TrustBar defaults to variant="device"
+            (36 mdr. garanti / 30+ kvalitetstests), which is a false claim
+            about what's actually on this page. See trust-bar.tsx. */}
+        <TrustBar variant="accessory" />
       </div>
     </>
   );
