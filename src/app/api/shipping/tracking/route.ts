@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmation";
+import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -15,7 +16,9 @@ export async function POST(request: NextRequest) {
 
   const { data: order, error } = await supabase
     .from("orders")
-    .select("*, customer:customers(*)")
+    .select(
+      "*, customer:customers(*), items:order_items(item_type, sku_product:sku_products(category))",
+    )
     .eq("id", order_id)
     .single();
 
@@ -40,6 +43,16 @@ export async function POST(request: NextRequest) {
 
   const trackingUrl = buildTrackingUrl(order.shipping_method, order.tracking_number);
 
+  // Accessory-only orders must not promise the 36-month device guarantee in
+  // this route's USP bar either — same rule as fulfill/route.ts. Missing/
+  // malformed items resolve to "no qualifying device" (the safe,
+  // reklamationsret-only wording), never an over-claim.
+  const guaranteeItems = ((order.items as any[]) ?? []).map((item) => ({
+    itemType: item?.item_type as "device" | "sku_product",
+    category: item?.sku_product?.category ?? null,
+  }));
+  const usps = uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems));
+
   try {
     await resend.emails.send({
       from: "PhoneSpot <info@phonespot.dk>",
@@ -51,6 +64,7 @@ export async function POST(request: NextRequest) {
         trackingNumber: order.tracking_number,
         trackingUrl,
         shippingMethod: order.shipping_method,
+        usps,
       }),
     });
 
