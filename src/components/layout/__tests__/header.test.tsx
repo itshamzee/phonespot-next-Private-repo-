@@ -70,15 +70,15 @@ describe("Header", () => {
   // "refurbished" instead of a blanket claim.
   it("scopes the top-bar guarantee badge to refurbished devices, not a blanket claim", () => {
     render(<Header />);
-    expect(screen.getByText("36 mdr. på refurbished")).toBeDefined();
-    expect(screen.queryByText("36 mdr. garanti")).toBeNull();
+    expect(screen.getByText("36 mdr. garanti på refurbished")).toBeDefined();
+    expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
   });
 
   it("scopes the mega-menu USP-bar guarantee badge to refurbished devices, not a blanket claim", () => {
     render(<Header />);
     fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
-    expect(screen.getAllByText("36 mdr. på refurbished").length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText("36 mdr. garanti")).toBeNull();
+    expect(screen.getAllByText("36 mdr. garanti på refurbished").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
   });
 
   it("shows mobile drawer with categories when hamburger is clicked", () => {

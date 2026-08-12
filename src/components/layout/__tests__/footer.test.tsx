@@ -12,8 +12,8 @@ import { Footer } from "../footer";
 describe("Footer", () => {
   it("scopes the USP-bar guarantee badge to refurbished devices, not a blanket claim", () => {
     render(<Footer />);
-    expect(screen.getByText("36 mdr. på refurbished")).toBeDefined();
-    expect(screen.queryByText("36 mdr. garanti")).toBeNull();
+    expect(screen.getByText("36 mdr. garanti på refurbished")).toBeDefined();
+    expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
   });
 
   it("still states the full, accurate guarantee claim in the brand paragraph", () => {

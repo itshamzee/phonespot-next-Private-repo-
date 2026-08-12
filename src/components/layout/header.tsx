@@ -178,7 +178,7 @@ function AnnouncementBar() {
               blanket claim so it stays accurate everywhere with no
               per-page/cart state and no hydration risk (same fix already
               applied to the USP bar below and footer.tsx's USP_ITEMS). */}
-          <span>36 mdr. på refurbished</span>
+          <span>36 mdr. garanti på refurbished</span>
         </div>
       </div>
     </div>
@@ -281,7 +281,7 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckIcon className="h-3.5 w-3.5 text-green-eco" />
-              36 mdr. på refurbished
+              36 mdr. garanti på refurbished
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckIcon className="h-3.5 w-3.5 text-green-eco" />
