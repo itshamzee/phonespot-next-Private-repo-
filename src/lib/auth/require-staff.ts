@@ -25,6 +25,7 @@ export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity
     // query — "modtaget af hvem" is worth nothing as a bare uuid.
     .select("id, role, name, email")
     .eq("auth_id", authId)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (error) throw new Error(`staff lookup failed: ${error.message}`);

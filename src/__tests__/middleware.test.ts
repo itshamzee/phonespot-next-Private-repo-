@@ -86,6 +86,15 @@ describe("authenticated but not staff", () => {
     const res = await middleware(req("/api/platform/devices"));
     expect(res.status).toBe(403);
   });
+
+  it("denies inactive staff members with 403", async () => {
+    cookieUser = { id: "user-1" };
+    // Simulate inactive staff: lookup returns null because is_active filter
+    // excludes them from the database query
+    staffRow = null;
+    const res = await middleware(req("/api/platform/devices"));
+    expect(res.status).toBe(403);
+  });
 });
 
 describe("staff callers", () => {
