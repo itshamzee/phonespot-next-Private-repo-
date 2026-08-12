@@ -18,13 +18,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
  * time.
  */
 export function createBrowserClient() {
-  // createSsrBrowserClient throws on empty credentials, and this runs during
-  // prerender of every admin client component. A misconfigured environment
-  // should break the admin, not the whole build (and with it the storefront) —
-  // so fall back to the plain client, which is inert without credentials.
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return createClient(supabaseUrl, supabaseAnonKey);
-  }
   return createSsrBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 

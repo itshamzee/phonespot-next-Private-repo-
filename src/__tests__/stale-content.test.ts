@@ -58,12 +58,15 @@ const FORBIDDEN: Array<{ name: string; pattern: RegExp }> = [
 
 describe("stale content guard", () => {
   const repoRoot = path.resolve(__dirname, "..", "..");
-  const files = ROOTS.flatMap((r) => walk(path.join(repoRoot, r)));
+  // Read every file once, not once per pattern. Re-reading ~1000 files for
+  // each of the nine checks pushed this past the 5s default timeout on a busy
+  // machine, which made the guard flaky. Same files, same patterns.
+  const sources = ROOTS.flatMap((r) => walk(path.join(repoRoot, r))).map(
+    (f) => [path.relative(repoRoot, f), readFileSync(f, "utf8")] as const,
+  );
 
   it.each(FORBIDDEN)("no $name in source", ({ pattern }) => {
-    const hits = files
-      .filter((f) => pattern.test(readFileSync(f, "utf8")))
-      .map((f) => path.relative(repoRoot, f));
+    const hits = sources.filter(([, content]) => pattern.test(content)).map(([rel]) => rel);
     expect(hits).toEqual([]);
   });
 });
