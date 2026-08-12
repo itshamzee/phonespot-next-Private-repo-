@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/platform/activity-log";
+import { requireStaff } from "@/lib/auth/require-staff";
 import { z } from "zod";
 
 const quickAddSchema = z.object({
@@ -22,6 +23,12 @@ const quickAddSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Staff only: this writes real inventory rows (a live shop reads from
+  // devices.status = 'listed'). Anyone with the URL could otherwise create
+  // sellable stock out of thin air.
+  const staff = await requireStaff(request);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await request.json();
   const parsed = quickAddSchema.safeParse(body);
 
@@ -75,7 +82,7 @@ export async function POST(request: Request) {
   // Log activity
   await logActivity({
     supabase,
-    actorId: "system",
+    actorId: staff.id,
     action: "device_quick_add",
     entityType: "device",
     entityId: device.id,

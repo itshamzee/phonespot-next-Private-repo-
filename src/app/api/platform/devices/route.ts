@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { deviceIntakeSchema } from "@/lib/platform/device-schema";
 import { logActivity } from "@/lib/platform/activity-log";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 export async function GET(request: NextRequest) {
   const supabase = createServerClient();
@@ -79,6 +80,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  // Staff only: this writes real inventory rows (intake creates devices that
+  // can later be listed for sale). Anyone with the URL could otherwise
+  // create sellable stock out of thin air.
+  const staff = await requireStaff(request);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await request.json();
 
   const parsed = deviceIntakeSchema.safeParse(body);
@@ -119,7 +126,7 @@ export async function POST(request: Request) {
 
   await logActivity({
     supabase,
-    actorId: body._actorId ?? "system",
+    actorId: staff.id,
     action: "device_intake",
     entityType: "device",
     entityId: device.id,

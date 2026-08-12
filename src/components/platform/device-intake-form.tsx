@@ -6,6 +6,7 @@ import { TemplateSelect } from "@/components/platform/template-select";
 import { SupplierSelect } from "@/components/platform/supplier-select";
 import { PhotoUploader } from "@/components/platform/photo-uploader";
 import { parseDKKToOere } from "@/lib/platform/format";
+import { staffFetch } from "@/lib/buyback/admin-fetch";
 
 interface Location {
   id: string;
@@ -199,7 +200,7 @@ export function DeviceIntakeForm({ onSuccess }: DeviceIntakeFormProps) {
       if (form.seller_name.trim()) body.seller_name = form.seller_name.trim();
       if (form.seller_address.trim()) body.seller_address = form.seller_address.trim();
 
-      const deviceRes = await fetch("/api/platform/devices", {
+      const deviceRes = await staffFetch("/api/platform/devices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

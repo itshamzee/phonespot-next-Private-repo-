@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { parseDKKToOere, formatDKK } from "@/lib/platform/format";
 import { DEVICE_SPEC_FIELDS } from "@/lib/platform/device-spec-fields";
+import { staffFetch } from "@/lib/buyback/admin-fetch";
 
 interface Template {
   id: string;
@@ -321,7 +322,7 @@ export default function QuickAddPage() {
         const body = { ...baseBody };
         if (count === 1 && imei.trim()) body.imei = imei.trim();
 
-        const res = await fetch("/api/platform/devices/quick-add", {
+        const res = await staffFetch("/api/platform/devices/quick-add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
