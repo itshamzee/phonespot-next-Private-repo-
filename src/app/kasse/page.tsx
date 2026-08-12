@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
 import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
@@ -11,7 +12,25 @@ export default function KassePage() {
   // Same rule as PrePurchaseInfo: the 36-month device warranty only applies
   // when the cart actually contains a graded refurbished device. An
   // accessory-only cart gets the statutory reklamationsret, not this claim.
-  const hasDevice = cartState.items.some((item) => item.type === "device");
+  //
+  // Unlike PrePurchaseInfo's <li>, this USP tile is NOT gated behind a
+  // closed accordion — it renders unconditionally on first paint. So the
+  // same CartProvider hydration hazard (lazy useReducer init reads the real,
+  // persisted cart synchronously on the client's very first render, before
+  // any effect runs and before hydration reconciles, while SSR always sees
+  // an empty cart) is directly visible here: deriving `hasDevice` straight
+  // from `cartState.items` would make the client's first paint show "36
+  // måneders garanti" for a device cart while the server sent "2 års
+  // reklamationsret" — a real hydration mismatch, not just a latent one.
+  // `hasDevice` therefore starts `false` (matching what SSR always
+  // produces) and is only set from the real cart inside an effect, i.e.
+  // after mount — same deterministic-first-render pattern as PrePurchaseInfo
+  // and PickupLine. Never render the over-claiming variant before the cart
+  // is genuinely known.
+  const [hasDevice, setHasDevice] = useState(false);
+  useEffect(() => {
+    setHasDevice(cartState.items.some((item) => item.type === "device"));
+  }, [cartState.items]);
   return (
     <div className="min-h-screen bg-warm-white">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-20">

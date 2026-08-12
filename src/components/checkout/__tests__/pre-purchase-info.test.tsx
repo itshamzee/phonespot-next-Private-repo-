@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import type { CartDeviceItem, CartSkuItem, CartState } from "@/lib/cart/types";
 
 // useCart is provided by CartProvider (which lazily reads localStorage via
@@ -89,5 +90,42 @@ describe("PrePurchaseInfo", () => {
     expect(() => render(<PrePurchaseInfo />)).not.toThrow();
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
+  });
+
+  // The test above is nominal against a regression: React Testing Library's
+  // render() flushes effects synchronously (inside act()), so by the time it
+  // returns, `hasDevice` has ALREADY settled from the effect — a direct
+  // `cartState.items.some(...)` computation (the pre-fix code) would produce
+  // exactly the same "no throw, no warn" result, because both versions reach
+  // the same settled value before any assertion runs.
+  //
+  // The genuinely differentiating technique used for the checkout page
+  // (src/app/kasse/__tests__/page.test.tsx — a bare `flushSync` commit,
+  // read before the scheduled `useEffect` has run) does not carry over
+  // here: this component's guarantee <li> lives inside `{isOpen && ...}`,
+  // and `isOpen` starts `false` on every render regardless of this fix, so
+  // the differing content never reaches the DOM (in SSR, in a plain mount,
+  // or in a `flushSync` snapshot) until a user clicks to open it — and a
+  // second `flushSync` call for that click was observed (empirically, by
+  // running this test against the pre-fix code) to force React to flush the
+  // still-pending passive effect from the first commit first, which makes
+  // `hasDevice` already-settled by the time the click's result is read
+  // either way. There is no reachable render pass — for this specific,
+  // accordion-gated component — where the pre-fix code's output actually
+  // differs from the fixed code's.
+  //
+  // What IS still worth pinning, and IS genuinely different between the two
+  // versions, is the SSR invariant itself: a true server pass
+  // (`renderToString`, which never runs effects, full stop) must never
+  // depend on the cart. This holds for the fixed code by construction
+  // (`hasDevice` starts `false` and only an effect — which SSR never runs —
+  // can move it) and protects against a future change that removes the
+  // accordion gate or renders this content unconditionally (exactly the
+  // shape of bug the checkout-page fix addresses) silently reintroducing
+  // the mismatch.
+  it("SSR output (renderToString) never contains the 36-month claim, regardless of what the cart mock contains", () => {
+    mockCartState.current = { items: [deviceItem], discount: null };
+    const html = renderToString(<PrePurchaseInfo />);
+    expect(html).not.toContain("36 måneders garanti");
   });
 });
