@@ -61,6 +61,26 @@ describe("Header", () => {
     expect(screen.getByText("★ 4.8")).toBeDefined();
   });
 
+  // The header renders on every page, including accessory PDPs, with no
+  // per-page state — accessories carry the statutory 2-year
+  // reklamationsret, not PhoneSpot's 36-month device guarantee (see
+  // lib/email/brand.ts). An unconditional "36 mdr. garanti" badge on every
+  // page (including an accessory PDP) is a misleading overall impression
+  // under markedsføringsloven, so both badges must be scoped to
+  // "refurbished" instead of a blanket claim.
+  it("scopes the top-bar guarantee badge to refurbished devices, not a blanket claim", () => {
+    render(<Header />);
+    expect(screen.getByText("36 mdr. på refurbished")).toBeDefined();
+    expect(screen.queryByText("36 mdr. garanti")).toBeNull();
+  });
+
+  it("scopes the mega-menu USP-bar guarantee badge to refurbished devices, not a blanket claim", () => {
+    render(<Header />);
+    fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
+    expect(screen.getAllByText("36 mdr. på refurbished").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("36 mdr. garanti")).toBeNull();
+  });
+
   it("shows mobile drawer with categories when hamburger is clicked", () => {
     render(<Header />);
     const hamburger = screen.getByLabelText("Åbn menu");
