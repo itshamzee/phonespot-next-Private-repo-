@@ -22,4 +22,14 @@ describe("Footer", () => {
       screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i),
     ).toBeDefined();
   });
+
+  // Same claim, same problem: the 30+ point test only runs on graded
+  // refurbished devices, never on a sku_product like a leather case — see
+  // lib/email/brand.ts's qualityTestUspLabel for the order-aware version of
+  // this same fix.
+  it("scopes the USP-bar quality-test badge to refurbished devices, not a blanket claim", () => {
+    render(<Footer />);
+    expect(screen.getByText("30+ kvalitetstests på refurbished")).toBeDefined();
+    expect(screen.queryByText("30+ kvalitetstests")).toBeNull();
+  });
 });

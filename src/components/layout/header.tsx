@@ -275,9 +275,13 @@ function MegaMenuPanel({ onClose }: { onClose: () => void }) {
       <div className="border-t border-sand bg-cream/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
           <div className="flex items-center gap-5 text-[12px] text-gray">
+            {/* Same unconditional-chrome problem as the guarantee badge
+                below: the 30+ point test runs on graded refurbished devices
+                only, not on sku_products (a leather case never sees the
+                test bench). Scoped to "refurbished" for the same reason. */}
             <span className="inline-flex items-center gap-1.5">
               <CheckIcon className="h-3.5 w-3.5 text-green-eco" />
-              30+ kvalitetstests
+              30+ kvalitetstests på refurbished
             </span>
             <span className="inline-flex items-center gap-1.5">
               <CheckIcon className="h-3.5 w-3.5 text-green-eco" />

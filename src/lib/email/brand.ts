@@ -63,14 +63,15 @@ export const BRAND = {
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Order-aware guarantee wording
+// Order-aware guarantee + quality-test wording
 //
-// PhoneSpot's 36-month commercial guarantee only covers graded refurbished
-// devices — accessories and spare parts carry the statutory 2-year
-// reklamationsret (købeloven) instead, never a "garanti". An email whose
-// order/cart is accessory-only must not print "36 mdr. garanti" in its USP
-// bar/footer: that is a written, binding commercial claim PhoneSpot will not
-// honour on e.g. a leather case.
+// PhoneSpot's 36-month commercial guarantee, and the 30+ point quality test
+// behind it, only cover graded refurbished devices — accessories and spare
+// parts carry the statutory 2-year reklamationsret (købeloven) instead,
+// never a "garanti", and are never put through the test bench. An email
+// whose order/cart is accessory-only must not print "36 mdr. garanti" or
+// "30+ kvalitetstests" in its USP bar/footer: both are written commercial
+// claims PhoneSpot will not honour on e.g. a leather case.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Minimal per-item shape needed to decide guarantee wording. `category`
@@ -103,14 +104,28 @@ export function guaranteeUspLabel(hasDevice: boolean): string {
 }
 
 /**
- * `BRAND.usps` with the guarantee line swapped to match what's actually in
- * the order/cart. Use this (instead of `BRAND.usps` directly) in any email
- * that lists real purchased items.
+ * PhoneSpot's 30+ point quality test is run on graded refurbished devices
+ * only — the same population covered by the 36-month guarantee. Sku_products
+ * (cases, cables, chargers, spare parts) are never put through it, so an
+ * email whose order/cart is accessory-only must not claim "30+
+ * kvalitetstests" either. Swapped for a claim that's actually true of every
+ * order instead of dropping the slot (keeps the USP row the same length).
+ */
+export function qualityTestUspLabel(hasDevice: boolean): string {
+  return hasDevice ? "30+ kvalitetstests" : "Hurtig levering";
+}
+
+/**
+ * `BRAND.usps` with the guarantee and quality-test lines swapped to match
+ * what's actually in the order/cart. Use this (instead of `BRAND.usps`
+ * directly) in any email that lists real purchased items.
  */
 export function uspsForOrder(hasDevice: boolean): string[] {
-  return BRAND.usps.map((usp) =>
-    usp === "36 mdr. garanti" ? guaranteeUspLabel(hasDevice) : usp,
-  );
+  return BRAND.usps.map((usp) => {
+    if (usp === "36 mdr. garanti") return guaranteeUspLabel(hasDevice);
+    if (usp === "30+ kvalitetstests") return qualityTestUspLabel(hasDevice);
+    return usp;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

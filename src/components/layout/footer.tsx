@@ -72,7 +72,11 @@ const USP_ITEMS = [
     ),
   },
   {
-    text: "30+ kvalitetstests",
+    // Same unconditional-chrome problem as the guarantee badge above: the
+    // 30+ point test is run on graded refurbished devices only, not on
+    // sku_products (a leather case never sees the test bench). Scoped to
+    // "refurbished" for the same reason and with the same wording pattern.
+    text: "30+ kvalitetstests på refurbished",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

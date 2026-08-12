@@ -3,6 +3,7 @@ import {
   BRAND,
   hasGuaranteeQualifyingDevice,
   guaranteeUspLabel,
+  qualityTestUspLabel,
   uspsForOrder,
 } from "@/lib/email/brand";
 
@@ -61,20 +62,76 @@ describe("guaranteeUspLabel", () => {
   });
 });
 
+describe("qualityTestUspLabel", () => {
+  it("returns the 30+ quality-test wording when a device is present", () => {
+    expect(qualityTestUspLabel(true)).toBe("30+ kvalitetstests");
+  });
+
+  it("returns a claim that's true of every order when no device is present", () => {
+    expect(qualityTestUspLabel(false)).toBe("Hurtig levering");
+  });
+});
+
 describe("uspsForOrder", () => {
-  it("keeps every other USP unchanged, only swapping the guarantee line", () => {
+  it("keeps every other USP unchanged, only swapping the guarantee and quality-test lines", () => {
     const withDevice = uspsForOrder(true);
     const withoutDevice = uspsForOrder(false);
 
     expect(withDevice).toEqual(BRAND.usps);
     expect(withoutDevice).toEqual([
       "2 års reklamationsret",
-      ...BRAND.usps.slice(1),
+      "14 dages returret",
+      "Hurtig levering",
+      "Gratis afhentning i butik",
     ]);
   });
 
   it("never contains the 36-month claim when hasDevice is false", () => {
     const usps = uspsForOrder(false);
     expect(usps.some((u) => u.includes("36 mdr"))).toBe(false);
+  });
+
+  it("never contains the 30+ quality-test claim when hasDevice is false", () => {
+    const usps = uspsForOrder(false);
+    expect(usps.some((u) => u.includes("30+"))).toBe(false);
+  });
+
+  it("keeps the 30+ quality-test claim when hasDevice is true", () => {
+    const usps = uspsForOrder(true);
+    expect(usps).toContain("30+ kvalitetstests");
+  });
+});
+
+// Integration-shaped regression test: exercises the exact call pattern every
+// order email uses — uspsForOrder(hasGuaranteeQualifyingDevice(items)) — for
+// the three cases that matter for the quality-test claim specifically.
+describe("uspsForOrder(hasGuaranteeQualifyingDevice(items)) — quality-test claim by order shape", () => {
+  it("drops the 30+ quality-test claim for an accessory-only order", () => {
+    const items = [
+      { itemType: "sku_product" as const, category: "accessory" },
+      { itemType: "sku_product" as const, category: "spare-part" },
+    ];
+    const usps = uspsForOrder(hasGuaranteeQualifyingDevice(items));
+    expect(usps).not.toContain("30+ kvalitetstests");
+    expect(usps).toContain("Hurtig levering");
+  });
+
+  it("keeps the 30+ quality-test claim for a mixed order (device + accessory)", () => {
+    const items = [
+      { itemType: "device" as const },
+      { itemType: "sku_product" as const, category: "accessory" },
+    ];
+    const usps = uspsForOrder(hasGuaranteeQualifyingDevice(items));
+    expect(usps).toContain("30+ kvalitetstests");
+  });
+
+  it("falls back to the SAFE wording (no over-claim) when items is unknown", () => {
+    expect(() => uspsForOrder(hasGuaranteeQualifyingDevice(undefined))).not.toThrow();
+    expect(() => uspsForOrder(hasGuaranteeQualifyingDevice(null))).not.toThrow();
+    expect(() => uspsForOrder(hasGuaranteeQualifyingDevice([]))).not.toThrow();
+
+    const usps = uspsForOrder(hasGuaranteeQualifyingDevice(undefined));
+    expect(usps).not.toContain("30+ kvalitetstests");
+    expect(usps).not.toContain("36 mdr. garanti");
   });
 });

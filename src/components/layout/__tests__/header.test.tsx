@@ -81,6 +81,17 @@ describe("Header", () => {
     expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
   });
 
+  // Same unconditional-chrome problem, same fix: the 30+ point test only
+  // runs on graded refurbished devices, never on a sku_product like a
+  // leather case — see lib/email/brand.ts's qualityTestUspLabel for the
+  // order-aware version of this same fix.
+  it("scopes the mega-menu quality-test badge to refurbished devices, not a blanket claim", () => {
+    render(<Header />);
+    fireEvent.click(screen.getByRole("button", { name: /Produkter/i }));
+    expect(screen.getAllByText("30+ kvalitetstests på refurbished").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("30+ kvalitetstests")).toBeNull();
+  });
+
   it("shows mobile drawer with categories when hamburger is clicked", () => {
     render(<Header />);
     const hamburger = screen.getByLabelText("Åbn menu");
