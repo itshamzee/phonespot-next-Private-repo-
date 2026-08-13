@@ -70,6 +70,14 @@ export interface ProductTemplate {
   base_price_c: number | null;
   base_price_n: number | null;
   base_price_p: number | null;
+  /**
+   * Vejledende nypris (i øre) — the actual price of the device as new.
+   * Nullable, and NEVER auto-derived from base_price_a/b/c/n/p — those are
+   * PhoneSpot's own refurbished selling prices, not the manufacturer's price.
+   * Must be filled in by hand per template. Used as the sole source for any
+   * "compare at" / "Nypris" price comparison shown to customers.
+   */
+  new_price: number | null;
   created_at: string;
   updated_at: string;
 }

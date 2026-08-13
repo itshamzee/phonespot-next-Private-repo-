@@ -445,8 +445,13 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Compare-at price (use grade A as "original" reference)
-  const compareAtPrice = template.base_price_a && price && template.base_price_a > price ? template.base_price_a : null;
+  // Compare-at price — must come from the real recommended retail price
+  // (new_price), never from base_price_a/b/c/n/p. Those are PhoneSpot's own
+  // refurbished selling prices; showing one of them struck-through as "Nypris"
+  // would misrepresent our own price as the manufacturer's new price. When
+  // new_price is missing or not actually higher than the current price, no
+  // comparison is shown at all — no struck-through figure, no savings line.
+  const compareAtPrice = template.new_price && price && template.new_price > price ? template.new_price : null;
   const savingsPercent = compareAtPrice && price ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100) : null;
 
   async function handleAddToCart() {
@@ -679,8 +684,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                   {price != null ? formatDKK(price) : "—"}
                 </span>
                 {compareAtPrice && (
-                  <span className="mb-1 text-lg text-[#86868B] line-through">
-                    {formatDKK(compareAtPrice)}
+                  <span className="mb-1 text-lg text-[#86868B]">
+                    <span className="mr-1 align-middle text-xs font-medium">Nypris</span>
+                    <span className="line-through">{formatDKK(compareAtPrice)}</span>
                   </span>
                 )}
               </div>
@@ -697,7 +703,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
                     <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm text-[#1A3D2E] font-semibold">
-                    Du sparer {formatDKK(compareAtPrice - price)}{savingsPercent ? ` (${savingsPercent}%)` : ""} sammenlignet med ny pris
+                    Du sparer {formatDKK(compareAtPrice - price)}{savingsPercent ? ` (${savingsPercent}%)` : ""} sammenlignet med nypris
                   </span>
                 </div>
               )}

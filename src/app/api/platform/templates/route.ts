@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     base_price_a,
     base_price_b,
     base_price_c,
+    new_price,
     description,
     short_description,
     meta_title,
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       base_price_a: base_price_a ?? null,
       base_price_b: base_price_b ?? null,
       base_price_c: base_price_c ?? null,
+      new_price: new_price ?? null,
       description: description || null,
       short_description: short_description || null,
       meta_title: meta_title || null,
@@ -118,6 +120,7 @@ export async function PATCH(request: Request) {
     if (fields.base_price_a !== undefined) allowed.base_price_a = fields.base_price_a;
     if (fields.base_price_b !== undefined) allowed.base_price_b = fields.base_price_b;
     if (fields.base_price_c !== undefined) allowed.base_price_c = fields.base_price_c;
+    if (fields.new_price !== undefined) allowed.new_price = fields.new_price;
     if (fields.brand !== undefined) allowed.brand = fields.brand;
     if (fields.category !== undefined) allowed.category = fields.category;
 

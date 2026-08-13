@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
   // Fetch templates — use correct column names
   let query = supabase
     .from("product_templates")
-    .select("id, slug, display_name, brand, category, images, specifications, base_price_a, status")
+    .select("id, slug, display_name, brand, category, images, specifications, base_price_a, new_price, status")
     .eq("status", "published");
 
   if (categoryFilter) {
@@ -147,7 +147,9 @@ export async function GET(req: NextRequest) {
         title: t.display_name,
         image: t.images?.[0] ?? null,
         minPrice,
-        compareAtPrice: t.base_price_a ?? null,
+        // Real recommended retail price only — never base_price_a, which is
+        // PhoneSpot's own Grade A selling price, not the manufacturer's price.
+        compareAtPrice: t.new_price ?? null,
         deviceCount: stats?.count ?? 0,
         brand: t.brand ?? "",
         category: t.category ?? "",

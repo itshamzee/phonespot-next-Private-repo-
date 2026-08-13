@@ -52,6 +52,7 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
     base_price_a: template?.base_price_a ? String(template.base_price_a / 100) : "",
     base_price_b: template?.base_price_b ? String(template.base_price_b / 100) : "",
     base_price_c: template?.base_price_c ? String(template.base_price_c / 100) : "",
+    new_price: template?.new_price ? String(template.new_price / 100) : "",
     description: template?.description ?? "",
     short_description: template?.short_description ?? "",
     meta_title: template?.meta_title ?? "",
@@ -163,6 +164,7 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
       base_price_a: form.base_price_a ? Math.round(parseFloat(form.base_price_a) * 100) : null,
       base_price_b: form.base_price_b ? Math.round(parseFloat(form.base_price_b) * 100) : null,
       base_price_c: form.base_price_c ? Math.round(parseFloat(form.base_price_c) * 100) : null,
+      new_price: form.new_price ? Math.round(parseFloat(form.new_price) * 100) : null,
       default_attributes: nextDefaultAttrs,
     };
 
@@ -463,6 +465,33 @@ export function ProductTemplateForm({ template, onSave, onCancel }: Props) {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Section: Vejledende nypris — the ONLY source for the "compare at" /
+          "Nypris" struck-through price shown to customers. Must be the
+          device's actual price as new (e.g. Apple/producentens vejl.
+          udsalgspris) — never one of our own refurbished grade prices above. */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h3 className="mb-1 text-sm font-semibold uppercase tracking-wider text-stone-400">
+          Vejledende nypris
+        </h3>
+        <p className="mb-4 text-xs text-stone-500">
+          Den faktiske pris på enheden som fabriksny (f.eks. producentens vejl.
+          udsalgspris). Bruges til at vise en ægte prissammenligning på
+          produktsiden. Valgfri — lad stå tom hvis nyprisen ikke er kendt. Må
+          aldrig sættes til en af vores egne grade-priser ovenfor.
+        </p>
+        <div className="max-w-xs">
+          <input
+            type="number"
+            step="1"
+            min="0"
+            value={form.new_price}
+            onChange={(e) => set("new_price", e.target.value)}
+            placeholder="f.eks. 15846"
+            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
+          />
         </div>
       </section>
 

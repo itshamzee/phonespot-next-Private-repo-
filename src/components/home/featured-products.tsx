@@ -84,7 +84,9 @@ export async function FeaturedProducts() {
       image: t.images?.[0],
       title: t.display_name,
       minPrice: t.min_price ?? t.base_price_a ?? null,
-      compareAtPrice: t.base_price_a ?? null,
+      // Real recommended retail price only — never base_price_a, which is
+      // PhoneSpot's own Grade A selling price, not the manufacturer's price.
+      compareAtPrice: t.new_price ?? null,
       deviceCount: t.device_count,
       brand: t.brand,
       category: t.category,
