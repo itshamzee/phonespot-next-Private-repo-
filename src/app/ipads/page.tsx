@@ -42,7 +42,7 @@ const IPAD_FAQ = [
   {
     question: "Hvad med batteriet på en refurbished iPad?",
     answer:
-      "Vi tester alle batterier med professionelt værktøj. Grade A kræver min. 85% kapacitet, Grade B min. 80%, Grade C min. 75%. Du får altid oplyst batterikapaciteten, så du ved præcis hvad du køber.",
+      "Vi tester alle batterier med professionelt værktøj. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75%. Du får altid oplyst batterikapaciteten, så du ved præcis hvad du køber.",
   },
   {
     question: "Kan jeg bruge Apple Pencil med en refurbished iPad?",
@@ -60,7 +60,7 @@ const COMPARISON = [
   { feature: "Pris", new: "3.000-12.000 kr", refurbished: "899-2.000 kr" },
   { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Batteri", new: "100% kapacitet", refurbished: "Min. 75-85% (gradafhængig)" },
+  { feature: "Batteri", new: "100% kapacitet", refurbished: "75-100% (Grade A: nyt batteri)" },
   { feature: "iPadOS", new: "Nyeste version", refurbished: "Nyeste version" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO₂" },
 ];

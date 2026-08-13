@@ -38,7 +38,7 @@ const GRADE_META: Record<
     label: "Perfekt",
     description: "Ingen synlige brugsspor",
     tooltip:
-      "Grade A: Enheden er i perfekt stand uden synlige ridser eller mærker. Fremstår som ny.",
+      "Grade A: Enheden er i perfekt stand uden synlige ridser eller mærker. Fremstår som ny. Nyt batteri isat — 100% kapacitet.",
     color: "text-green-eco",
     bg: "bg-green-eco/10",
   },

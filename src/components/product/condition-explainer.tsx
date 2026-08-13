@@ -24,7 +24,7 @@ const PHONE_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batteriet er testet og verificeret — mange Grade A-enheder har 100% batteri",
+      "Nyt batteri isat — 100% kapacitet",
     ],
     displayImage: "/quality/grade-a-display.png",
     frameImage: "/quality/grade-a-frame.png",
@@ -67,7 +67,7 @@ const WATCH_GRADES: GradeData[] = [
     bullets: [
       "Glasset er fejlfrit",
       "Kassen har ingen synlige ridser",
-      "Batteriet er testet til min. 85% kapacitet",
+      "Nyt batteri isat — 100% kapacitet",
     ],
     displayImage: "/quality/watch-grade-a-display.png",
     frameImage: "/quality/watch-grade-a-frame.png",
@@ -110,7 +110,7 @@ const IPAD_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batteriet er testet til min. 85% kapacitet",
+      "Nyt batteri isat — 100% kapacitet",
     ],
     displayImage: "/quality/ipad-grade-a-display.png",
     frameImage: "/quality/ipad-grade-a-frame.png",
@@ -153,7 +153,7 @@ const LAPTOP_GRADES: GradeData[] = [
     bullets: [
       "Skærmen og tastaturet er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batteriet er testet til min. 85% kapacitet",
+      "Nyt batteri isat — 100% kapacitet",
     ],
     displayImage: "/quality/laptop-grade-a-display.png",
     frameImage: "/quality/laptop-grade-a-frame.png",

@@ -27,7 +27,7 @@ export function getDeviceFaq(displayName: string): FaqItem[] {
     },
     {
       q: "Hvad er forskellen mellem Grade A, B og C?",
-      a: "Forskellen er udelukkende kosmetisk — alle grader er 100% funktionelle. Grade A er i perfekt stand uden synlige mærker. Grade B har lette brugsspor. Grade C har synlige brugsspor men er den billigste mulighed. Batterikapaciteten varierer: A min. 85%, B min. 80%, C min. 75%.",
+      a: "Forskellen er udelukkende kosmetisk — alle grader er 100% funktionelle. Grade A er i perfekt stand uden synlige mærker og får altid isat et nyt batteri, så du har 100% kapacitet. Grade B har lette brugsspor og min. 80% batterikapacitet. Grade C har synlige brugsspor men er den billigste mulighed, med min. 75% batterikapacitet.",
     },
     {
       q: "Hvad dækker de 36 måneders garanti?",

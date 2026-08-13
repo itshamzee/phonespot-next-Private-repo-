@@ -53,9 +53,9 @@ function formatDKK(oere: number): string {
 /* ------------------------------------------------------------------ */
 
 const GRADE_DETAILS: Record<string, { label: string; battery: string; cosmetic: string }> = {
-  N: { label: "Fabriksny", battery: "100% batterikapacitet", cosmetic: "Forseglet i ubrudt originalemballage — aldrig brugt" },
+  N: { label: "Fabriksny", battery: "100% batterikapacitet — fabriksnyt, aldrig brugt", cosmetic: "Forseglet i ubrudt originalemballage — aldrig brugt" },
   P: { label: "Premium stand", battery: "Min. 90% batterikapacitet", cosmetic: "Næsten perfekt — minimale eller ingen brugsspor" },
-  A: { label: "Som ny", battery: "Min. 85% batterikapacitet", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
+  A: { label: "Som ny", battery: "Nyt batteri isat — 100% kapacitet", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
   B: { label: "God stand", battery: "Min. 80% batterikapacitet", cosmetic: "Lette brugsspor — små ridser eller mærker" },
   C: { label: "Brugt stand", battery: "Min. 75% batterikapacitet", cosmetic: "Synlige brugsspor — ridser og mærker" },
 };

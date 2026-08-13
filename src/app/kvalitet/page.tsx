@@ -49,7 +49,7 @@ const faqJsonLd = {
       name: "Kan en Grade A refurbished iPhone virkelig være som ny?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan ikke se forskel på en Grade A enhed og en fabriksny. Batteriet er testet til minimum 85% kapacitet, og al funktionalitet er verificeret. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med ny.",
+        text: "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan ikke se forskel på en Grade A enhed og en fabriksny. Alle Grade A-enheder får isat et nyt batteri, så du får 100% kapacitet, og al funktionalitet er verificeret. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med ny.",
       },
     },
     {
@@ -308,7 +308,7 @@ const TEST_PROCESS = [
   {
     title: "Batterikapacitet",
     description:
-      "Batteriets sundhed måles med professionelt diagnostisk værktøj — ikke blot Apples egen indikator. Grade A kræver min. 85%, Grade B min. 80%, Grade C min. 75%. Under grænsen? Så sælges den ikke.",
+      "Batteriets sundhed måles med professionelt diagnostisk værktøj — ikke blot Apples egen indikator. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75% — under grænsen sælges enheden ikke.",
     icon: <BatteryIcon />,
   },
   {
@@ -346,10 +346,10 @@ const TEST_PROCESS = [
 const BATTERY_GRADES = [
   {
     grade: "Grade A",
-    minCapacity: "85%",
+    minCapacity: "100%",
     description:
-      "Holder en fuld dags intensiv brug. Sammenlignelig med et batteri der er få måneder gammelt.",
-    detail: "Min. 85% af original kapacitet",
+      "Får altid isat et nyt batteri, så det holder en fuld dags intensiv brug — som en helt ny enhed.",
+    detail: "Nyt batteri isat — 100% kapacitet",
   },
   {
     grade: "Grade B",
@@ -376,7 +376,7 @@ const QUALITY_FAQ = [
   {
     question: "Kan en Grade A refurbished iPhone virkelig være som ny?",
     answer:
-      "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan faktisk ikke se forskel på en Grade A enhed og en fabriksny. Batteriet er testet til minimum 85% kapacitet, og al funktionalitet er 100% verificeret gennem vores 30-punkts testproces. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med en fabriksny enhed.",
+      "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan faktisk ikke se forskel på en Grade A enhed og en fabriksny. Alle Grade A-enheder får isat et nyt batteri, så du får 100% kapacitet, og al funktionalitet er 100% verificeret gennem vores 30-punkts testproces. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med en fabriksny enhed.",
   },
   {
     question: "Er det sikkert at købe en refurbished iPhone i Danmark?",
@@ -391,7 +391,7 @@ const QUALITY_FAQ = [
   {
     question: "Hvad er forskellen på Grade A, B og C?",
     answer:
-      "Graderingen handler udelukkende om kosmetisk stand — alle enheder er funktionelt 100% og har bestået samme 30-punkts testproces. Grade A er som ny uden synlige brugsspor og med batteri på min. 85%. Grade B er i meget god stand med lette brugsspor på kabinettet og batteri på min. 80%. Grade C har synlige brugsspor men er det mest budgetvenlige valg med batteri på min. 75%. Uanset grade får du samme garanti og samme funktionalitet.",
+      "Graderingen handler udelukkende om kosmetisk stand — alle enheder er funktionelt 100% og har bestået samme 30-punkts testproces. Grade A er som ny uden synlige brugsspor og får altid isat et nyt batteri, så du får 100% kapacitet. Grade B er i meget god stand med lette brugsspor på kabinettet og batteri på min. 80%. Grade C har synlige brugsspor men er det mest budgetvenlige valg med batteri på min. 75%. Uanset grade får du samme garanti og samme funktionalitet.",
   },
   {
     question: "Tester I også bærbare computere og iPads på samme måde?",
@@ -722,10 +722,12 @@ export default function KvalitetPage() {
               upræcis.
             </p>
             <p className="mt-3 text-[#86868B] leading-relaxed">
-              Vores minimumsgrænser er strengere end branchestandarden. En
-              iPhone med 85% batterikapacitet holder stadig en fuld dags brug
-              med skærmtid, opkald og apps. Enheder der ikke opfylder vores
-              krav, sælges ganske enkelt ikke som refurbished.
+              Vores minimumsgrænser er strengere end branchestandarden. Selv
+              vores laveste stand, Grade C med minimum 75% batterikapacitet,
+              holder stadig en fuld dags brug med skærmtid, opkald og apps.
+              Grade A får derudover altid isat et nyt batteri, så du får 100%
+              kapacitet. Enheder der ikke opfylder vores krav, sælges ganske
+              enkelt ikke som refurbished.
             </p>
             <p className="mt-3 text-sm font-medium text-[#111111]">
               Batterikapaciteten oplyses altid, så du ved præcis hvad du køber.

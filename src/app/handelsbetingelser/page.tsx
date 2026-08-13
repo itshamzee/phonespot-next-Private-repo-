@@ -85,7 +85,7 @@ export default function HandelsbetingelserPage() {
             <li>
               <strong>Grad A — Som ny:</strong> Enheden fremstår i næsten ny stand med ingen
               eller meget lette brugsspor, som kun ses under direkte lys. Fuld funktionalitet.
-              Batterisundhed minimum 85 %.
+              Der isættes altid et nyt batteri, så batterisundheden er 100 %.
             </li>
             <li>
               <strong>Grad B — God stand:</strong> Enheden har synlige, men begrænsede ridser

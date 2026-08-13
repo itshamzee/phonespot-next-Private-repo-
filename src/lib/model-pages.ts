@@ -113,7 +113,7 @@ export const MODEL_PAGES: ModelPage[] = [
       {
         question: "Hvordan er batteriet på en refurbished iPhone 14 Pro?",
         answer:
-          "Vi tester alle batterier med professionelt udstyr. Grade A enheder har minimum 85% batterikapacitet, Grade B minimum 80% og Grade C minimum 75%. Du får altid oplyst den præcise batterikapacitet.",
+          "Vi tester alle batterier med professionelt udstyr. Grade A enheder får altid isat et nyt batteri, så du får 100% batterikapacitet. Grade B har minimum 80% og Grade C minimum 75%. Du får altid oplyst den præcise batterikapacitet.",
       },
       {
         question: "Er Always-On Display inkluderet?",
