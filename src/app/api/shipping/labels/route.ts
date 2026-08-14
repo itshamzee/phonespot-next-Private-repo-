@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createShipment } from "@/lib/shipmondo/client";
+import { createShipment, getShipmentLabel } from "@/lib/shipmondo/client";
 import { SENDER_ADDRESSES, DEFAULT_PARCEL } from "@/lib/shipmondo/carriers";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 import { pickupCarrierProduct } from "@/lib/shipping";
 import { getShippingOption, getDispatchLocation, isClickCollect } from "@/lib/shipping";
 import type { ShippingMethod, ShipmondoShipmentRequest } from "@/lib/shipmondo/types";
+import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmation";
+import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
+
+import { LABEL_BUCKET, labelStoragePath } from "@/lib/shipmondo/label-storage";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   const { order_id } = await request.json();
@@ -20,7 +27,7 @@ export async function POST(request: NextRequest) {
     .select(`
       *,
       customer:customers(*),
-      items:order_items(*, device:devices(location_id))
+      items:order_items(*, device:devices(location_id), sku_product:sku_products(category))
     `)
     .eq("id", order_id)
     .single();
@@ -115,11 +122,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const shipment = await createShipment(shipmentReq);
+    const trackingUrl = trackingUrlFor(product.carrier_code as string, shipment.pkg_no);
 
     const { error: updateErr } = await supabase
       .from("orders")
       .update({
         tracking_number: shipment.pkg_no,
+        tracking_url: trackingUrl,
         status: "shipped",
         shipped_at: new Date().toISOString(),
       })
@@ -127,6 +136,53 @@ export async function POST(request: NextRequest) {
 
     if (updateErr) {
       console.error("Failed to update order with tracking:", updateErr);
+    }
+
+    // Store the label PDF so staff can view/print it from the admin later.
+    // The booking is already made, so a storage hiccup must not fail the
+    // request — it is reported instead.
+    let labelStored = false;
+    try {
+      const base64 = await getShipmentLabel(shipment.id);
+      const { error: uploadErr } = await supabase.storage
+        .from(LABEL_BUCKET)
+        .upload(labelStoragePath(order.order_number), Buffer.from(base64, "base64"), {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+      if (uploadErr) throw uploadErr;
+      labelStored = true;
+    } catch (labelErr) {
+      console.error("Failed to store label PDF:", labelErr);
+    }
+
+    // Tell the customer straight away — same template and guarantee rules as
+    // the manual tracking route. A mail failure is reported, not fatal.
+    let emailSent = false;
+    const customerEmail = order.customer?.email;
+    if (customerEmail) {
+      try {
+        const guaranteeItems = ((order.items as any[]) ?? []).map((item) => ({
+          itemType: item?.item_type as "device" | "sku_product",
+          category: item?.sku_product?.category ?? null,
+        }));
+        await resend.emails.send({
+          from: "PhoneSpot <info@phonespot.dk>",
+          to: customerEmail,
+          subject: `Din ordre ${order.order_number} er afsendt`,
+          react: ShippingConfirmationEmail({
+            orderNumber: order.order_number,
+            customerName: order.customer?.name ?? "Kunde",
+            trackingNumber: shipment.pkg_no,
+            trackingUrl,
+            shippingMethod: method,
+            usps: uspsForOrder(hasGuaranteeQualifyingDevice(guaranteeItems)),
+          }),
+        });
+        emailSent = true;
+      } catch (mailErr) {
+        console.error("Failed to send shipping confirmation:", mailErr);
+      }
     }
 
     await supabase.from("activity_log").insert({
@@ -137,13 +193,17 @@ export async function POST(request: NextRequest) {
         tracking_number: shipment.pkg_no,
         carrier: product.carrier_code,
         dispatch_location: dispatchFrom,
+        label_stored: labelStored,
+        customer_notified: emailSent,
       },
     });
 
     return NextResponse.json({
       tracking_number: shipment.pkg_no,
-      tracking_url: trackingUrlFor(product.carrier_code as string, shipment.pkg_no),
+      tracking_url: trackingUrl,
       shipment_id: shipment.id,
+      label_url: labelStored ? `/api/admin/shipping/label?order_id=${order_id}` : null,
+      email_sent: emailSent,
     });
   } catch (error) {
     console.error("Shipmondo label generation failed:", error);

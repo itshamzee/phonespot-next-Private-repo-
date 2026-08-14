@@ -41,7 +41,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const trackingUrl = buildTrackingUrl(order.shipping_method, order.tracking_number);
+  // Prefer the URL stored at booking time — it knows the actual carrier, which
+  // the method alone doesn't for "pakkeshop" (GLS or PostNord per chosen shop).
+  const trackingUrl =
+    order.tracking_url || buildTrackingUrl(order.shipping_method, order.tracking_number);
 
   // Accessory-only orders must not promise the 36-month device guarantee in
   // this route's USP bar either — same rule as fulfill/route.ts. Missing/
