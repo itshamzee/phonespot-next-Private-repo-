@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
@@ -9,6 +8,7 @@ import { getAllSlugs, getPostBySlug, getAllPosts } from "@/lib/blog";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { JsonLd } from "@/components/seo/json-ld";
+import { BlogCover } from "@/components/blog/blog-cover";
 
 /* ------------------------------------------------------------------ */
 /*  Static params                                                      */
@@ -289,16 +289,17 @@ export default async function BlogPostPage({ params }: PageProps) {
           </div>
 
           {frontmatter.coverImage && (
-            <div className="relative hidden aspect-square md:block">
-              <div className="absolute inset-0 z-10 bg-gradient-to-r from-charcoal to-transparent" />
-              <Image
-                src={frontmatter.coverImage}
-                alt={frontmatter.title}
-                fill
-                priority
-                className="object-contain object-center p-12"
-                sizes="50vw"
-              />
+            <div className="hidden items-center p-8 md:flex lg:p-12">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
+                <BlogCover
+                  image={frontmatter.coverImage}
+                  title={frontmatter.title}
+                  slug={frontmatter.slug}
+                  sizes="50vw"
+                  priority
+                  padded
+                />
+              </div>
             </div>
           )}
         </div>
@@ -406,20 +407,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={`/blog/${related.frontmatter.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
               >
-                <div className="relative aspect-[16/10] bg-warm-white">
-                  {related.frontmatter.coverImage ? (
-                    <Image
-                      src={related.frontmatter.coverImage}
-                      alt={related.frontmatter.title}
-                      fill
-                      className="object-contain object-center p-6 transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
-                      <div className="font-display text-4xl font-bold text-white/10">PS</div>
-                    </div>
-                  )}
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <BlogCover
+                    image={related.frontmatter.coverImage}
+                    title={related.frontmatter.title}
+                    slug={related.frontmatter.slug}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <div className="mb-3 flex items-center gap-3">

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { JsonLd } from "@/components/seo/json-ld";
+import { BlogCover } from "@/components/blog/blog-cover";
 import { getAllPosts } from "@/lib/blog";
 
 /* ------------------------------------------------------------------ */
@@ -112,22 +112,14 @@ export default function BlogIndexPage() {
           >
             {/* Image side */}
             <div className="relative aspect-[4/3] md:aspect-auto">
-              {featured.frontmatter.coverImage ? (
-                <Image
-                  src={featured.frontmatter.coverImage}
-                  alt={featured.frontmatter.title}
-                  fill
-                  className="object-contain object-center p-8 transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
-                  <div className="text-center">
-                    <div className="font-display text-6xl font-bold text-white/10">PS</div>
-                    <div className="mt-2 font-display text-sm font-bold uppercase tracking-widest text-white/20">PhoneSpot</div>
-                  </div>
-                </div>
-              )}
+              <BlogCover
+                image={featured.frontmatter.coverImage}
+                title={featured.frontmatter.title}
+                slug={featured.frontmatter.slug}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+                padded
+              />
             </div>
 
             {/* Content side */}
@@ -183,20 +175,13 @@ export default function BlogIndexPage() {
                 className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
               >
                 {/* Card image */}
-                <div className="relative aspect-[16/10] bg-[#f0ede7]">
-                  {post.frontmatter.coverImage ? (
-                    <Image
-                      src={post.frontmatter.coverImage}
-                      alt={post.frontmatter.title}
-                      fill
-                      className="object-contain object-center p-6 transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#1A3D2E] to-[#2a5940]">
-                      <div className="font-display text-4xl font-bold text-white/10">PS</div>
-                    </div>
-                  )}
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <BlogCover
+                    image={post.frontmatter.coverImage}
+                    title={post.frontmatter.title}
+                    slug={post.frontmatter.slug}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
 
                 {/* Card content */}

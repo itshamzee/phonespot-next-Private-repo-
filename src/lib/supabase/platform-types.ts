@@ -90,6 +90,13 @@ export interface Device {
   barcode: string | null;
   grade: DeviceGrade;
   battery_health: number | null;
+  /**
+   * Whether this unit's battery was replaced with a new one before sale.
+   * Nullable — null means "not recorded" (unknown), never "false"/"no".
+   * Must only ever be sourced from this field, never inferred from grade —
+   * grade is a cosmetic classification and battery facts are per-unit.
+   */
+  battery_replaced: boolean | null;
   storage: string | null;
   color: string | null;
   condition_notes: string | null;
