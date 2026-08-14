@@ -29,7 +29,7 @@ const GRADE_META: Record<
     label: "Premium",
     description: "Næsten perfekt stand",
     tooltip:
-      "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Batteri min. 90%.",
+      "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Nyt batteri isat — 100% kapacitet.",
     color: "text-indigo-600",
     bg: "bg-indigo-500/10",
     badge: "P",
