@@ -1,10 +1,9 @@
 import Image from "next/image";
 
 /**
- * Blog cover on the warm product stage — the same visual system as the
- * device PDP gallery: cream radial stage, product photo multiplied onto it
- * (white backgrounds disappear), soft floor shadow. Posts without a photo
- * get a branded deep-green cover with a topic icon instead of a placeholder.
+ * Photo-led blog cover: the image fills the frame edge-to-edge (green.dk
+ * style editorial cards). Posts without a photo get a branded deep-green
+ * cover with a topic icon instead of a placeholder.
  */
 
 type BlogCoverProps = {
@@ -13,11 +12,9 @@ type BlogCoverProps = {
   slug: string;
   sizes: string;
   priority?: boolean;
-  /** Extra padding steps for large surfaces (featured/hero). */
-  padded?: boolean;
 };
 
-export function BlogCover({ image, title, slug, sizes, priority, padded }: BlogCoverProps) {
+export function BlogCover({ image, title, slug, sizes, priority }: BlogCoverProps) {
   if (!image) {
     return (
       <div className="relative h-full w-full bg-[#1A3D2E]">
@@ -34,20 +31,14 @@ export function BlogCover({ image, title, slug, sizes, priority, padded }: BlogC
   }
 
   return (
-    <div className="relative h-full w-full bg-[radial-gradient(120%_100%_at_50%_0%,#FFFFFF_0%,#F6F2EA_55%,#ECE6D8_100%)]">
-      <div
-        aria-hidden="true"
-        className="absolute bottom-[18%] left-1/2 h-6 w-1/2 -translate-x-1/2 rounded-[50%] bg-[#111111]/15 blur-xl"
-      />
-      <Image
-        src={image}
-        alt={title}
-        fill
-        priority={priority}
-        className={`object-contain mix-blend-multiply ${padded ? "p-8 sm:p-12" : "p-6"}`}
-        sizes={sizes}
-      />
-    </div>
+    <Image
+      src={image}
+      alt={title}
+      fill
+      priority={priority}
+      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+      sizes={sizes}
+    />
   );
 }
 

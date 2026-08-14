@@ -103,62 +103,56 @@ export default function BlogIndexPage() {
         </div>
       </SectionWrapper>
 
-      {/* Featured post */}
+      {/* Featured post — full-bleed photo with overlaid title */}
       {featured && (
         <SectionWrapper className="!pb-0">
           <Link
             href={`/blog/${featured.frontmatter.slug}`}
-            className="group relative grid overflow-hidden rounded-3xl bg-charcoal md:grid-cols-2"
+            className="group relative block overflow-hidden rounded-3xl"
           >
-            {/* Image side */}
-            <div className="relative aspect-[4/3] md:aspect-auto">
+            <div className="relative aspect-[4/3] sm:aspect-[16/8] md:aspect-[21/9]">
               <BlogCover
                 image={featured.frontmatter.coverImage}
                 title={featured.frontmatter.title}
                 slug={featured.frontmatter.slug}
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 1280px) 100vw, 1232px"
                 priority
-                padded
               />
-            </div>
-
-            {/* Content side */}
-            <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16">
-              <div className="flex items-center gap-3">
-                <CategoryBadge category={featured.frontmatter.category} />
-                <time
-                  dateTime={featured.frontmatter.date}
-                  className="text-xs text-white/40"
-                >
-                  {formatDate(featured.frontmatter.date)}
-                </time>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10 lg:p-14">
+                <div className="flex items-center gap-3">
+                  <CategoryBadge category={featured.frontmatter.category} />
+                  <time
+                    dateTime={featured.frontmatter.date}
+                    className="text-xs font-medium text-white/70"
+                  >
+                    {formatDate(featured.frontmatter.date)}
+                  </time>
+                </div>
+                <h2 className="mt-3 max-w-3xl font-display text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
+                  {featured.frontmatter.title}
+                </h2>
+                <p className="mt-3 hidden max-w-2xl font-body text-base leading-relaxed text-white/75 sm:line-clamp-2">
+                  {featured.frontmatter.description}
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white">
+                  Læs guiden
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                    />
+                  </svg>
+                </span>
               </div>
-
-              <h2 className="mt-4 font-display text-2xl font-bold text-white transition-colors group-hover:text-green-eco md:text-3xl">
-                {featured.frontmatter.title}
-              </h2>
-
-              <p className="mt-3 line-clamp-3 font-body text-base leading-relaxed text-white/60">
-                {featured.frontmatter.description}
-              </p>
-
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-green-eco">
-                Læs guiden
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                  />
-                </svg>
-              </span>
             </div>
           </Link>
         </SectionWrapper>

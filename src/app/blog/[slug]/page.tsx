@@ -81,21 +81,6 @@ function getReadingTime(content: string): number {
   return Math.max(1, Math.ceil(words / 200));
 }
 
-function extractHeadings(content: string): { id: string; text: string; level: number }[] {
-  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  const headings: { id: string; text: string; level: number }[] = [];
-  let match;
-  while ((match = headingRegex.exec(content)) !== null) {
-    const text = match[2].replace(/\*\*/g, "").trim();
-    const id = text
-      .toLowerCase()
-      .replace(/[^a-z0-9æøå]+/g, "-")
-      .replace(/^-|-$/g, "");
-    headings.push({ id, text, level: match[1].length });
-  }
-  return headings;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Custom MDX components                                              */
 /* ------------------------------------------------------------------ */
@@ -219,7 +204,6 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const { frontmatter, content } = post;
   const readingTime = getReadingTime(content);
-  const headings = extractHeadings(content);
 
   const allPosts = getAllPosts();
   const relatedPosts = allPosts
@@ -255,122 +239,71 @@ export default async function BlogPostPage({ params }: PageProps) {
         }}
       />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-charcoal">
-        {/* Subtle pattern for no-image hero */}
-        {!frontmatter.coverImage && (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1A3D2E]/20 to-transparent" />
-        )}
-        <div className={`mx-auto max-w-7xl ${frontmatter.coverImage ? "grid md:grid-cols-2" : ""}`}>
-          <div className={`flex flex-col justify-center px-4 py-16 md:py-20 lg:py-24 ${frontmatter.coverImage ? "md:pr-12 lg:pr-16" : "mx-auto max-w-3xl text-center"}`}>
-            <nav className={`mb-6 flex items-center gap-2 text-sm text-white/50 ${!frontmatter.coverImage ? "justify-center" : ""}`}>
-              <Link href="/" className="transition-colors hover:text-white">Forside</Link>
-              <span>/</span>
-              <Link href="/blog" className="transition-colors hover:text-white">Blog</Link>
-              <span>/</span>
-              <span className="line-clamp-1 text-white/70">{frontmatter.title}</span>
-            </nav>
+      {/* Breadcrumb */}
+      <nav className="mx-auto max-w-6xl px-4 pt-6" aria-label="Brødkrumme">
+        <ol className="flex items-center gap-2 text-sm text-charcoal/45">
+          <li><Link href="/" className="transition-colors hover:text-charcoal">Forside</Link></li>
+          <li aria-hidden="true">/</li>
+          <li><Link href="/blog" className="transition-colors hover:text-charcoal">Blog</Link></li>
+          <li aria-hidden="true">/</li>
+          <li className="line-clamp-1 text-charcoal/70">{frontmatter.title}</li>
+        </ol>
+      </nav>
 
-            <div className={`flex items-center gap-3 ${!frontmatter.coverImage ? "justify-center" : ""}`}>
-              <CategoryBadge category={frontmatter.category} />
-              <time dateTime={frontmatter.date} className="text-sm text-white/40">
-                {formatDate(frontmatter.date)}
-              </time>
-              <span className="text-sm text-white/40">&middot; {readingTime} min</span>
-            </div>
-
-            <h1 className="mt-4 font-display text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
-              {frontmatter.title}
-            </h1>
-
-            <p className={`mt-4 font-body text-base leading-relaxed text-white/60 ${frontmatter.coverImage ? "max-w-lg" : "mx-auto max-w-2xl"}`}>
-              {frontmatter.description}
-            </p>
-          </div>
-
-          {frontmatter.coverImage && (
-            <div className="hidden items-center p-8 md:flex lg:p-12">
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
-                <BlogCover
-                  image={frontmatter.coverImage}
-                  title={frontmatter.title}
-                  slug={frontmatter.slug}
-                  sizes="50vw"
-                  priority
-                  padded
-                />
+      {/* Photo hero with overlaid title — green.dk style */}
+      <section className="mx-auto max-w-6xl px-4 pt-5">
+        <div className="group relative overflow-hidden rounded-3xl">
+          <div className="relative aspect-[4/3] sm:aspect-[16/8] md:aspect-[21/9]">
+            <BlogCover
+              image={frontmatter.coverImage}
+              title={frontmatter.title}
+              slug={frontmatter.slug}
+              sizes="(max-width: 1152px) 100vw, 1104px"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+              <div className="flex items-center gap-3">
+                <CategoryBadge category={frontmatter.category} />
+                <time dateTime={frontmatter.date} className="text-sm font-medium text-white/75">
+                  {formatDate(frontmatter.date)}
+                </time>
+                <span className="text-sm text-white/75">&middot; {readingTime} min læsning</span>
               </div>
+              <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
+                {frontmatter.title}
+              </h1>
             </div>
-          )}
+          </div>
         </div>
       </section>
 
-      {/* Content + Sidebar */}
-      <div className="mx-auto max-w-7xl px-4 py-12 md:py-16 lg:py-20">
-        <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-12">
-          {/* MDX */}
-          <article
-            className="prose prose-lg mx-auto max-w-3xl lg:mx-0
-              prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-charcoal
-              prose-h2:mt-14 prose-h2:mb-6 prose-h2:border-b prose-h2:border-[#ddd] prose-h2:pb-3 prose-h2:text-2xl
-              prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-xl
-              prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
-              prose-li:marker:text-[#1A3D2E]
-              prose-strong:text-charcoal prose-strong:font-semibold
-              prose-p:text-[#2a2d28] prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
-              prose-li:text-[#2a2d28] prose-li:font-body prose-li:leading-[1.8]
-              prose-ul:my-6 prose-ol:my-6
-              prose-img:rounded-xl prose-img:shadow-md"
-          >
-            <MDXRemote
-              source={content}
-              components={mdxComponents}
-              options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
-            />
-          </article>
+      {/* Article — single centered reading column */}
+      <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
+        {/* Intro / standfirst */}
+        <p className="mb-10 border-l-2 border-[#1A3D2E] pl-5 font-body text-lg leading-relaxed text-charcoal/70">
+          {frontmatter.description}
+        </p>
 
-          {/* Sticky TOC sidebar */}
-          {headings.length > 3 && (
-            <aside className="hidden lg:block">
-              <div className="sticky top-24">
-                <p className="mb-4 font-display text-xs font-bold uppercase tracking-wide text-[#888]">
-                  Indhold
-                </p>
-                <nav className="space-y-1 border-l border-sand/40">
-                  {headings.map((h) => (
-                    <a
-                      key={h.id}
-                      href={`#${h.id}`}
-                      className={`block border-l-2 border-transparent py-1.5 font-body text-[13px] leading-snug text-[#555] transition-colors hover:border-[#1A3D2E] hover:text-[#1A3D2E] ${
-                        h.level === 2 ? "pl-4 font-medium" : "pl-7"
-                      }`}
-                    >
-                      {h.text}
-                    </a>
-                  ))}
-                </nav>
-
-                <div className="mt-8 rounded-xl bg-charcoal p-5">
-                  <p className="font-display text-sm font-bold text-white">
-                    Klar til at handle?
-                  </p>
-                  <p className="mt-1 font-body text-xs leading-relaxed text-white/50">
-                    Se vores udvalg af refurbished enheder med 36 mdr. garanti.
-                  </p>
-                  <Link
-                    href="/iphones"
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-green-eco px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                  >
-                    Se produkter
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </aside>
-          )}
-        </div>
+        <article
+          className="prose prose-lg max-w-none
+            prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight
+            prose-h2:mt-14 prose-h2:mb-5 prose-h2:text-[26px] prose-h2:text-[#1A3D2E]
+            prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-xl prose-h3:text-charcoal
+            prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
+            prose-li:marker:text-[#1A3D2E]
+            prose-strong:text-charcoal prose-strong:font-semibold
+            prose-p:text-[#2a2d28] prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
+            prose-li:text-[#2a2d28] prose-li:font-body prose-li:leading-[1.8]
+            prose-ul:my-6 prose-ol:my-6
+            prose-img:rounded-xl prose-img:shadow-md"
+        >
+          <MDXRemote
+            source={content}
+            components={mdxComponents}
+            options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+          />
+        </article>
       </div>
 
       {/* CTA */}
