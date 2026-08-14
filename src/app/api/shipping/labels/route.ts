@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       phone: order.customer?.phone,
     },
     parcels: [DEFAULT_PARCEL],
-    pickup_point_id: pickup?.id ?? address.pickup_point_id,
+    service_point_id: pickup?.id ?? address.pickup_point_id,
     reference: order.order_number,
   };
 

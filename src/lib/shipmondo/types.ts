@@ -18,7 +18,13 @@ export type ShipmondoShipmentRequest = {
   sender: ShipmondoAddress;
   receiver: ShipmondoAddress;
   parcels: ShipmondoParcel[];
-  pickup_point_id?: string;
+  /**
+   * Shipmondo's field for the customer's chosen parcel shop. The API silently
+   * ignores unknown fields, so a misspelling here ("pickup_point_id") made
+   * every ShopDelivery booking fail with "A service point is required" —
+   * verified against the live API 2026-08-14.
+   */
+  service_point_id?: string;
   reference?: string;
 };
 
