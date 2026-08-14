@@ -93,4 +93,18 @@ describe("ProductDetails — device (default variant), unchanged", () => {
     expect(screen.getByText(/kvalitetstest/i)).toBeInTheDocument();
     expect(screen.getByText("Kamera (bag)")).toBeInTheDocument();
   });
+
+  // Regression test: the "Batteri" spec row used to hardcode "Testet til
+  // min. 85% kapacitet" whenever no device's battery_health was known,
+  // contradicting the grade legend above it (which, since Grade A/P now
+  // promise a new battery at 100%, would flatly disagree with an invented
+  // "min. 85%" floor on the very same page). The spec table must never
+  // invent a number — when the unit's real battery_health is unknown, the
+  // row is omitted entirely rather than showing a guessed value.
+  it("omits the Batteri spec row entirely when battery_health is unknown, never inventing a floor", () => {
+    render(<ProductDetails product={device} />);
+    expect(screen.queryByText("Batteri")).not.toBeInTheDocument();
+    expect(screen.queryByText(/min\.\s?85%/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/testet og verificeret/i)).not.toBeInTheDocument();
+  });
 });

@@ -153,15 +153,15 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
         { label: "Kamera (bag)", value: camera },
         { label: "Kamera (front)", value: isPro ? "12 MP TrueDepth, Face ID" : "12 MP TrueDepth, Face ID" },
         { label: "Lagerplads", value: "Se variantvælger" },
-        {
-          label: "Batteri",
-          value:
-            batteryHealth === 100
-              ? "100% (testet og verificeret)"
-              : typeof batteryHealth === "number"
-                ? `${batteryHealth}% (testet og verificeret)`
-                : "Testet til min. 85% kapacitet"
-        },
+        // Only ever the unit's own recorded battery_health. When it's
+        // unknown, the row is omitted rather than showing an invented
+        // floor — the grade legend above already states the grade's
+        // battery promise, and this spec row must never contradict it
+        // (e.g. Grade A/P promise a new battery at 100%, so a hardcoded
+        // "min. 85%" here would read as a same-page contradiction).
+        ...(typeof batteryHealth === "number"
+          ? [{ label: "Batteri", value: `${batteryHealth}% (testet og verificeret)` }]
+          : []),
         { label: "Forbindelse", value: "5G, Wi-Fi 6/6E, Bluetooth 5.3, NFC, UWB" },
         { label: "Vandtæthed", value: isPro ? "IP68 (6 meter, 30 min.)" : "IP68 (6 meter, 30 min.)" },
         { label: "Materiale", value: isPro ? "Titan, Ceramic Shield" : "Aluminium, Ceramic Shield" },
