@@ -46,10 +46,32 @@ export async function POST(request: NextRequest) {
   }
 
   const option = getShippingOption(method);
-  if (!option || !option.carrier_code || !option.product_code) {
+  if (!option) {
     return NextResponse.json(
       { error: `Unknown shipping method: ${method}` },
       { status: 400 }
+    );
+  }
+
+  // With "pakkeshop" the carrier follows the shop the customer chose, so the
+  // product cannot be read off the method alone — resolve it before deciding
+  // whether the method is bookable at all.
+  const pickup = order.pickup_point as { id?: string; carrier_code?: string } | null;
+  const product = pickup?.carrier_code
+    ? pickupCarrierProduct(pickup.carrier_code)
+    : { carrier_code: option.carrier_code, product_code: option.product_code };
+
+  if (!product.carrier_code || !product.product_code) {
+    return NextResponse.json(
+      { error: `Ingen transportør for metoden "${method}" — ordren mangler pakkeshop-data` },
+      { status: 400 }
+    );
+  }
+
+  if (option.requires_pickup_point && !pickup?.id) {
+    return NextResponse.json(
+      { error: "Ordren mangler en valgt pakkeshop" },
+      { status: 400 },
     );
   }
 
@@ -71,20 +93,6 @@ export async function POST(request: NextRequest) {
   const dispatchFrom = getDispatchLocation(firstDeviceLocation, locationMap);
   const sender = SENDER_ADDRESSES[dispatchFrom];
   const address = order.shipping_address as any;
-
-  // With "pakkeshop" the carrier follows the shop the customer chose, so the
-  // product cannot be read off the method alone.
-  const pickup = order.pickup_point as { id?: string; carrier_code?: string } | null;
-  const product = pickup?.carrier_code
-    ? pickupCarrierProduct(pickup.carrier_code)
-    : { carrier_code: option.carrier_code, product_code: option.product_code };
-
-  if (option.requires_pickup_point && !pickup?.id) {
-    return NextResponse.json(
-      { error: "Ordren mangler en valgt pakkeshop" },
-      { status: 400 },
-    );
-  }
 
   const shipmentReq: ShipmondoShipmentRequest = {
     carrier_code: product.carrier_code as string,
@@ -127,7 +135,7 @@ export async function POST(request: NextRequest) {
       entity_id: order_id,
       details: {
         tracking_number: shipment.pkg_no,
-        carrier: option.carrier_code,
+        carrier: product.carrier_code,
         dispatch_location: dispatchFrom,
       },
     });
