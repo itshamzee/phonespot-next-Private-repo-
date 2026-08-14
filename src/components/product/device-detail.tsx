@@ -52,13 +52,33 @@ function formatDKK(oere: number): string {
 /*  Grade detail data                                                  */
 /* ------------------------------------------------------------------ */
 
-const GRADE_DETAILS: Record<string, { label: string; battery: string; cosmetic: string }> = {
-  N: { label: "Fabriksny", battery: "100% batterikapacitet — fabriksnyt, aldrig brugt", cosmetic: "Forseglet i ubrudt originalemballage — aldrig brugt" },
-  P: { label: "Premium stand", battery: "Nyt batteri isat — 100% kapacitet", cosmetic: "Næsten perfekt — minimale eller ingen brugsspor" },
-  A: { label: "Som ny", battery: "Nyt batteri isat — 100% kapacitet", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
-  B: { label: "God stand", battery: "Min. 80% batterikapacitet", cosmetic: "Lette brugsspor — små ridser eller mærker" },
-  C: { label: "Brugt stand", battery: "Min. 75% batterikapacitet", cosmetic: "Synlige brugsspor — ridser og mærker" },
+/**
+ * Grade describes cosmetic condition ONLY — never a battery promise. A
+ * battery figure is a per-unit measurement (devices.battery_health), not
+ * something a cosmetic grade can predict, so it must never be hardcoded
+ * here. See buildBatteryLine() below for the per-unit statement shown
+ * alongside this cosmetic description.
+ */
+const GRADE_DETAILS: Record<string, { label: string; cosmetic: string }> = {
+  N: { label: "Fabriksny", cosmetic: "Forseglet i ubrudt originalemballage — aldrig brugt" },
+  P: { label: "Premium stand", cosmetic: "Næsten perfekt — minimale eller ingen brugsspor" },
+  A: { label: "Som ny", cosmetic: "Ingen synlige brugsspor — fremstår som ny" },
+  B: { label: "God stand", cosmetic: "Lette brugsspor — små ridser eller mærker" },
+  C: { label: "Brugt stand", cosmetic: "Synlige brugsspor — ridser og mærker" },
 };
+
+/**
+ * The battery statement is always about ONE physical unit — never a grade.
+ * `battery_health` is a measured fact recorded per device; when it's
+ * unknown (null), nothing is said about the battery at all rather than
+ * showing an invented floor. `battery_replaced` is only ever mentioned when
+ * explicitly true for that same unit.
+ */
+export function buildBatteryLine(unit: Device | null): string | null {
+  if (!unit || unit.battery_health == null) return null;
+  const base = `Batteri: ${unit.battery_health}% — målt på denne enhed`;
+  return unit.battery_replaced === true ? `${base}. Nyt batteri isat.` : base;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Store count, spelled out in Danish — derived from store-config so   */
@@ -380,6 +400,9 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
   const mainImage = images[mainImageIndex] ?? null;
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
+  // Per-unit battery statement for the specific device that would actually
+  // be added to cart at the displayed price — never a grade-level promise.
+  const batteryLine = buildBatteryLine(bestMatch);
 
   // When the selected grade is sold out, surface other grades of the SAME model
   // that DO have stock so the customer has a one-click path forward instead of a
@@ -638,13 +661,16 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
             <GradeSelector grades={availableGrades} selected={selectedGrade} onChange={setSelectedGrade} />
           )}
 
-          {/* Inline grade clarity — descriptor + savings vs the grade one step up */}
+          {/* Inline grade clarity — descriptor + savings vs the grade one step up.
+              Battery is a per-unit measured fact (never a grade promise) and is
+              only shown when this specific unit has a recorded battery_health —
+              an unknown value shows nothing rather than an invented floor. */}
           {gradeDetail && (
             <div className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#86868B]">
-              <span className="font-semibold text-[#111111]">
-                {gradeDetail.battery}
-              </span>
-              <span>· {gradeDetail.cosmetic}</span>
+              {batteryLine && (
+                <span className="font-semibold text-[#111111]">{batteryLine}</span>
+              )}
+              <span>{batteryLine ? "· " : ""}{gradeDetail.cosmetic}</span>
               {gradeSavingsVsBetter && betterGrade && (
                 <span className="font-semibold text-[#1A3D2E]">
                   · spar {formatDKK(gradeSavingsVsBetter)} vs.{" "}

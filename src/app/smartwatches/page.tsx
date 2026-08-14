@@ -42,7 +42,7 @@ const SMARTWATCH_FAQ = [
   {
     question: "Hvad med batteriet?",
     answer:
-      "Vi tester alle batterier med professionelt værktøj. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75%. De fleste Apple Watches holder en hel dag på en opladning, og vi oplyser altid batterikapaciteten.",
+      "Vi tester alle batterier med professionelt værktøj og oplyser altid den målte batterikapacitet for den præcise enhed på produktsiden. De fleste Apple Watches holder en hel dag på en opladning. Grade A, B og C beskriver udelukkende den kosmetiske stand — batteriet vurderes individuelt for hver enhed.",
   },
   {
     question: "Får jeg den nyeste watchOS?",
@@ -60,7 +60,7 @@ const COMPARISON = [
   { feature: "Pris", new: "2.149-6.399 kr", refurbished: "1.099-4.500 kr" },
   { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Batteri", new: "100% kapacitet", refurbished: "75-100% (Grade A: nyt batteri)" },
+  { feature: "Batteri", new: "100% kapacitet", refurbished: "Målt og oplyst pr. enhed" },
   { feature: "watchOS", new: "Nyeste version", refurbished: "Nyeste version" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO₂" },
 ];

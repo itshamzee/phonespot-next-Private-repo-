@@ -42,7 +42,7 @@ const SMARTPHONE_FAQ = [
   {
     question: "Hvad med batteriet på en refurbished smartphone?",
     answer:
-      "Vi tester alle batterier med professionelt værktøj. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75%. Du får altid oplyst batterikapaciteten.",
+      "Vi tester alle batterier med professionelt værktøj og oplyser altid den målte batterikapacitet for den præcise enhed på produktsiden. Grade A, B og C beskriver udelukkende den kosmetiske stand — batteriet vurderes individuelt for hver enhed.",
   },
   {
     question: "Kan jeg bruge alle danske mobilabonnementer?",
@@ -60,7 +60,7 @@ const COMPARISON = [
   { feature: "Pris", new: "4.000-12.000 kr", refurbished: "799-5.500 kr" },
   { feature: "Garanti", new: "24 mdr. (producent)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Batteri", new: "100% kapacitet", refurbished: "75-100% (Grade A: nyt batteri)" },
+  { feature: "Batteri", new: "100% kapacitet", refurbished: "Målt og oplyst pr. enhed" },
   { feature: "Software", new: "Nyeste version", refurbished: "Nyeste tilgængelige version" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
 ];

@@ -74,7 +74,7 @@ const WARRANTY_FAQ = [
   {
     question: "Dækker garantien batteri?",
     answer:
-      "Ja. Hvis batterikapaciteten falder under minimumskravet for den grade du har købt, er det dækket af garantien. Minimumskravene er: Grade A: 85%, Grade B: 80%, Grade C: 75% af original kapacitet.",
+      "Ja. Batteriets sundhed på købstidspunktet er en individuel måling for din enhed og fremgår altid af produktsiden — det er ikke bundet til grade. Hvis batterikapaciteten i løbet af garantiperioden falder under forringelsesgrænsen for den grade du har købt, er det dækket af garantien. Grænserne for forringelse i garantiperioden er: Grade A: 85%, Grade B: 80%, Grade C: 75% af original kapacitet.",
   },
   {
     question: "Kan jeg få pengene tilbage i stedet?",

@@ -24,7 +24,7 @@ const PHONE_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Nyt batteri isat — 100% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/grade-a-display.png",
     frameImage: "/quality/grade-a-frame.png",
@@ -37,7 +37,7 @@ const PHONE_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batteriet er testet til min. 80% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/grade-b-display.png",
     frameImage: "/quality/grade-b-frame.png",
@@ -50,7 +50,7 @@ const PHONE_GRADES: GradeData[] = [
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batteriet er testet til min. 75% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/grade-c-display.png",
@@ -67,7 +67,7 @@ const WATCH_GRADES: GradeData[] = [
     bullets: [
       "Glasset er fejlfrit",
       "Kassen har ingen synlige ridser",
-      "Nyt batteri isat — 100% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/watch-grade-a-display.png",
     frameImage: "/quality/watch-grade-a-frame.png",
@@ -80,7 +80,7 @@ const WATCH_GRADES: GradeData[] = [
     bullets: [
       "Glasset er i perfekt stand",
       "Kassen kan have lette brugsridser",
-      "Batteriet er testet til min. 80% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/watch-grade-b-display.png",
     frameImage: "/quality/watch-grade-b-frame.png",
@@ -93,7 +93,7 @@ const WATCH_GRADES: GradeData[] = [
     bullets: [
       "Glasset kan have lette ridser",
       "Kassen har synlige brugsspor",
-      "Batteriet er testet til min. 75% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/watch-grade-c-display.png",
@@ -110,7 +110,7 @@ const IPAD_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Nyt batteri isat — 100% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/ipad-grade-a-display.png",
     frameImage: "/quality/ipad-grade-a-frame.png",
@@ -123,7 +123,7 @@ const IPAD_GRADES: GradeData[] = [
     bullets: [
       "Skærmen er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batteriet er testet til min. 80% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/ipad-grade-b-display.png",
     frameImage: "/quality/ipad-grade-b-frame.png",
@@ -136,7 +136,7 @@ const IPAD_GRADES: GradeData[] = [
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batteriet er testet til min. 75% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/ipad-grade-c-display.png",
@@ -153,7 +153,7 @@ const LAPTOP_GRADES: GradeData[] = [
     bullets: [
       "Skærmen og tastaturet er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Nyt batteri isat — 100% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/laptop-grade-a-display.png",
     frameImage: "/quality/laptop-grade-a-frame.png",
@@ -166,7 +166,7 @@ const LAPTOP_GRADES: GradeData[] = [
     bullets: [
       "Skærmen og tastaturet er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batteriet er testet til min. 80% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/laptop-grade-b-display.png",
     frameImage: "/quality/laptop-grade-b-frame.png",
@@ -179,7 +179,7 @@ const LAPTOP_GRADES: GradeData[] = [
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batteriet er testet til min. 75% kapacitet",
+      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/laptop-grade-c-display.png",

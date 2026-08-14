@@ -85,21 +85,24 @@ export default function HandelsbetingelserPage() {
             <li>
               <strong>Grad A — Som ny:</strong> Enheden fremstår i næsten ny stand med ingen
               eller meget lette brugsspor, som kun ses under direkte lys. Fuld funktionalitet.
-              Der isættes altid et nyt batteri, så batterisundheden er 100 %.
             </li>
             <li>
               <strong>Grad B — God stand:</strong> Enheden har synlige, men begrænsede ridser
-              eller mærker fra normal brug. Fuld funktionalitet. Batterisundhed minimum 80 %.
+              eller mærker fra normal brug. Fuld funktionalitet.
             </li>
             <li>
               <strong>Grad C — Acceptabel stand:</strong> Enheden har tydelige brugsspor i form
               af ridser, mærker eller mindre kosmetiske skader, men er fuldt funktionsdygtig.
-              Batterisundhed minimum 75 %.
             </li>
           </ul>
           <p className="mt-3">
             Graderingen fremgår tydeligt af det enkelte produkt på hjemmesiden. Produktbeskrivelsen
             kan desuden indeholde specifikke oplysninger om kendte kosmetiske afvigelser.
+          </p>
+          <p className="mt-3">
+            Batterisundheden er en individuel måling for hver enkelt enhed og hænger ikke sammen
+            med den kosmetiske gradering. Den målte batterikapacitet for den konkrete enhed
+            fremgår altid af produktsiden på købstidspunktet.
           </p>
         </div>
 

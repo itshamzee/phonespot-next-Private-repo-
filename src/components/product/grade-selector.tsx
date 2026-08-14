@@ -29,7 +29,7 @@ const GRADE_META: Record<
     label: "Premium",
     description: "Næsten perfekt stand",
     tooltip:
-      "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Nyt batteri isat — 100% kapacitet.",
+      "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden.",
     color: "text-indigo-600",
     bg: "bg-indigo-500/10",
     badge: "P",
@@ -38,7 +38,7 @@ const GRADE_META: Record<
     label: "Perfekt",
     description: "Ingen synlige brugsspor",
     tooltip:
-      "Grade A: Enheden er i perfekt stand uden synlige ridser eller mærker. Fremstår som ny. Nyt batteri isat — 100% kapacitet.",
+      "Grade A: Enheden er i perfekt stand uden synlige ridser eller mærker. Fremstår som ny. Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden.",
     color: "text-green-eco",
     bg: "bg-green-eco/10",
   },

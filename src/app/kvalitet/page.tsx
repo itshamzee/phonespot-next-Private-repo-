@@ -49,7 +49,7 @@ const faqJsonLd = {
       name: "Kan en Grade A refurbished iPhone virkelig være som ny?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan ikke se forskel på en Grade A enhed og en fabriksny. Alle Grade A-enheder får isat et nyt batteri, så du får 100% kapacitet, og al funktionalitet er verificeret. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med ny.",
+        text: "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan ikke se forskel på en Grade A enhed og en fabriksny. Batterikapaciteten er individuelt målt for hver enhed og oplyses altid på produktsiden, og al funktionalitet er verificeret. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med ny.",
       },
     },
     {
@@ -308,7 +308,7 @@ const TEST_PROCESS = [
   {
     title: "Batterikapacitet",
     description:
-      "Batteriets sundhed måles med professionelt diagnostisk værktøj — ikke blot Apples egen indikator. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75% — under grænsen sælges enheden ikke.",
+      "Batteriets sundhed måles med professionelt diagnostisk værktøj — ikke blot Apples egen indikator. Den målte værdi er individuel for hver enhed og oplyses altid på produktsiden, uanset hvilken grade enheden har.",
     icon: <BatteryIcon />,
   },
   {
@@ -343,27 +343,28 @@ const TEST_PROCESS = [
   },
 ];
 
-const BATTERY_GRADES = [
+// Battery health is a per-unit measurement, not something a cosmetic grade
+// can predict — so these facts are about the MEASUREMENT PROCESS, never a
+// grade-tied percentage. The actual figure for a specific unit only ever
+// appears on that unit's own product page.
+const BATTERY_FACTS = [
   {
-    grade: "Grade A",
-    minCapacity: "100%",
+    title: "Målt for hver enhed",
     description:
-      "Får altid isat et nyt batteri, så det holder en fuld dags intensiv brug — som en helt ny enhed.",
-    detail: "Nyt batteri isat — 100% kapacitet",
+      "Batterisundheden testes individuelt med professionelt diagnostisk værktøj — aldrig et gennemsnit for en grade eller model.",
+    detail: "Ikke Apples egen batteriindikator",
   },
   {
-    grade: "Grade B",
-    minCapacity: "80%",
+    title: "Altid oplyst før køb",
     description:
-      "Udmærket batterilevetid til daglig brug. De fleste når aftenen uden problemer.",
-    detail: "Min. 80% af original kapacitet",
+      "Den målte batterikapacitet for netop den enhed du overvejer, står på produktsiden — så du ved præcis hvad du får.",
+    detail: "Ingen skjulte tal",
   },
   {
-    grade: "Grade C",
-    minCapacity: "75%",
+    title: "Uafhængig af kosmetisk grade",
     description:
-      "God batterilevetid til budgetbevidste. Perfekt med en opladning i løbet af dagen.",
-    detail: "Min. 75% af original kapacitet",
+      "Grade A, B og C beskriver udelukkende enhedens kosmetiske stand. Batteriet vurderes for sig, enhed for enhed.",
+    detail: "Grade er ikke en batteriprocent",
   },
 ];
 
@@ -376,7 +377,7 @@ const QUALITY_FAQ = [
   {
     question: "Kan en Grade A refurbished iPhone virkelig være som ny?",
     answer:
-      "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan faktisk ikke se forskel på en Grade A enhed og en fabriksny. Alle Grade A-enheder får isat et nyt batteri, så du får 100% kapacitet, og al funktionalitet er 100% verificeret gennem vores 30-punkts testproces. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med en fabriksny enhed.",
+      "Ja. Grade A enheder har ingen synlige brugstegn på hverken skærm eller kabinet. De fleste af vores kunder kan faktisk ikke se forskel på en Grade A enhed og en fabriksny. Batterikapaciteten er individuelt målt for hver enhed og oplyses altid på produktsiden, og al funktionalitet er 100% verificeret gennem vores 30-punkts testproces. Den eneste reelle forskel er prisen — du sparer typisk 30-40% sammenlignet med en fabriksny enhed.",
   },
   {
     question: "Er det sikkert at købe en refurbished iPhone i Danmark?",
@@ -391,7 +392,7 @@ const QUALITY_FAQ = [
   {
     question: "Hvad er forskellen på Grade A, B og C?",
     answer:
-      "Graderingen handler udelukkende om kosmetisk stand — alle enheder er funktionelt 100% og har bestået samme 30-punkts testproces. Grade A er som ny uden synlige brugsspor og får altid isat et nyt batteri, så du får 100% kapacitet. Grade B er i meget god stand med lette brugsspor på kabinettet og batteri på min. 80%. Grade C har synlige brugsspor men er det mest budgetvenlige valg med batteri på min. 75%. Uanset grade får du samme garanti og samme funktionalitet.",
+      "Graderingen handler udelukkende om kosmetisk stand — alle enheder er funktionelt 100% og har bestået samme 30-punkts testproces. Grade A er som ny uden synlige brugsspor. Grade B er i meget god stand med lette brugsspor på kabinettet. Grade C har synlige brugsspor men er det mest budgetvenlige valg. Batterikapaciteten hænger ikke sammen med graden — den måles og oplyses individuelt for hver enhed på produktsiden. Uanset grade får du samme garanti og samme funktionalitet.",
   },
   {
     question: "Tester I også bærbare computere og iPads på samme måde?",
@@ -722,32 +723,32 @@ export default function KvalitetPage() {
               upræcis.
             </p>
             <p className="mt-3 text-[#86868B] leading-relaxed">
-              Vores minimumsgrænser er strengere end branchestandarden. Selv
-              vores laveste stand, Grade C med minimum 75% batterikapacitet,
-              holder stadig en fuld dags brug med skærmtid, opkald og apps.
-              Grade A får derudover altid isat et nyt batteri, så du får 100%
-              kapacitet. Enheder der ikke opfylder vores krav, sælges ganske
-              enkelt ikke som refurbished.
+              Vi lover ikke et fast minimumstal per grade — batteriet er ikke
+              kosmetisk, det er en individuel egenskab ved netop den enhed du
+              køber. Derfor måler vi det for hver eneste enhed for sig og
+              oplyser den præcise værdi i stedet for at gætte ud fra standen.
+              Enheder med en batterisundhed der er for lav til daglig brug,
+              sælges ganske enkelt ikke som refurbished.
             </p>
             <p className="mt-3 text-sm font-medium text-[#111111]">
               Batterikapaciteten oplyses altid, så du ved præcis hvad du køber.
             </p>
           </div>
           <div className="space-y-4">
-            {BATTERY_GRADES.map((bg) => (
+            {BATTERY_FACTS.map((bf) => (
               <div
-                key={bg.grade}
+                key={bf.title}
                 className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm"
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E] text-lg font-bold text-white">
-                  {bg.minCapacity}
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1A3D2E] text-white">
+                  <CheckCircleIcon />
                 </div>
                 <div>
                   <p className="font-display text-sm font-bold uppercase tracking-wide text-[#111111]">
-                    {bg.grade}
+                    {bf.title}
                   </p>
-                  <p className="mt-0.5 text-sm text-[#86868B]">{bg.description}</p>
-                  <p className="mt-0.5 text-xs text-[#86868B]/70">{bg.detail}</p>
+                  <p className="mt-0.5 text-sm text-[#86868B]">{bf.description}</p>
+                  <p className="mt-0.5 text-xs text-[#86868B]/70">{bf.detail}</p>
                 </div>
               </div>
             ))}

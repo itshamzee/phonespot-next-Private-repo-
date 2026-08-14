@@ -59,6 +59,7 @@ function makeDevice(overrides: Partial<Device> = {}): Device {
     barcode: null,
     grade: "P",
     battery_health: 97,
+    battery_replaced: null,
     storage: "512GB",
     color: "Sølv",
     condition_notes: null,

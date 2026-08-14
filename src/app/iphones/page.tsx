@@ -41,7 +41,7 @@ const IPHONE_FAQ = [
   {
     question: "Hvad med batteriet på en refurbished iPhone?",
     answer:
-      "Vi tester alle batterier med professionelt værktøj. Grade A får altid isat et nyt batteri, så du får 100% kapacitet. Grade B kræver min. 80%, Grade C min. 75%. Du får altid oplyst batterikapaciteten.",
+      "Vi tester alle batterier med professionelt værktøj og oplyser altid den målte batterikapacitet for den præcise enhed på produktsiden. Grade A, B og C beskriver udelukkende den kosmetiske stand — batteriet vurderes individuelt for hver enhed.",
   },
   {
     question: "Kan jeg bruge alle danske mobilabonnementer?",
@@ -59,7 +59,7 @@ const COMPARISON = [
   { feature: "Pris", new: "6.000-13.000 kr", refurbished: "999-6.200 kr" },
   { feature: "Garanti", new: "24 mdr. (Apple)", refurbished: "36 mdr. (PhoneSpot)" },
   { feature: "Test", new: "Fabrikskontrol", refurbished: "30+ individuelle tests" },
-  { feature: "Batteri", new: "100% kapacitet", refurbished: "75-100% (Grade A: nyt batteri)" },
+  { feature: "Batteri", new: "100% kapacitet", refurbished: "Målt og oplyst pr. enhed" },
   { feature: "iOS", new: "Nyeste version", refurbished: "Nyeste version" },
   { feature: "Bæredygtighed", new: "Ny produktion", refurbished: "80% mindre CO2" },
 ];
