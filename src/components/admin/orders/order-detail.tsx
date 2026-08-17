@@ -364,6 +364,13 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                               Nyt batteri
                             </span>
                           )}
+                          {(item.upgrade_details as Array<{ label: string; price_oere: number }> | null)?.map(
+                            (u, i) => (
+                              <p key={i} className="text-xs text-charcoal-light">
+                                + {u.label} ({formatDKK(u.price_oere)})
+                              </p>
+                            ),
+                          )}
                         </td>
                         <td className="px-5 py-3 text-right text-charcoal-light">{qty}</td>
                         <td className="px-5 py-3 text-right text-charcoal-light">

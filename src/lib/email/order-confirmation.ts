@@ -25,6 +25,9 @@ export interface OrderConfirmationItem {
   image?: string;
   /** Set to true when this order_item had the battery upgrade. */
   batteryUpgrade?: boolean;
+  /** Laptop-opgraderinger (RAM/SSD/etc.) knyttet til denne linje — prisen er
+   *  allerede indregnet i totalPrice; disse vises kun informativt. */
+  upgrades?: Array<{ label: string; priceOere: number }>;
   /** sku_products.category — needed to tell a device-category sku_product
    *  (e.g. a phone sold outside the graded-device flow) apart from a real
    *  accessory when deciding the 36-month guarantee vs. reklamationsret
@@ -120,15 +123,63 @@ function batteryUpgradeItemRow(item: OrderConfirmationItem, hasImages: boolean):
       ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;"></td>`
       : "";
 
+  const upgradeLines = buildUpgradeLinesHtml(item.upgrades);
+
   return `
     <tr>
       ${thumbnailCell}
       <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};">
         ${title}${qtyLabel}
         <span style="display:inline-block;margin-left:6px;background:#FEF3E2;color:#B45309;font-size:10px;font-weight:700;letter-spacing:0.3px;padding:2px 7px;border-radius:20px;vertical-align:middle;line-height:16px;">Batteri-opgradering</span>
+        ${upgradeLines}
       </td>
       <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};text-align:right;white-space:nowrap;">
         +${priceStr}
+      </td>
+    </tr>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Upgrade sub-line helper — renders "+ <label> (<pris>)" under an item's
+// title cell for laptop-opgraderinger (RAM/SSD/etc.). Prisen er allerede
+// indregnet i linjens totalPrice — sub-linjerne er kun informative.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildUpgradeLinesHtml(
+  upgrades: OrderConfirmationItem["upgrades"],
+): string {
+  if (!upgrades?.length) return "";
+  return upgrades
+    .map(
+      (u) =>
+        `<div style="font-size:12px;color:#86868B;margin-top:2px;">+ ${u.label} (${formatOere(u.priceOere)})</div>`,
+    )
+    .join("");
+}
+
+function upgradeItemRow(item: OrderConfirmationItem, hasImages: boolean): string {
+  const title =
+    item.title ?? (item.itemType === "device" ? "Brugt enhed" : "Produkt");
+  const qtyLabel = item.quantity > 1 ? ` &times;${item.quantity}` : "";
+  const priceStr = formatOere(item.totalPrice);
+
+  const thumbnailCell = item.image
+    ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;">
+         <img src="${item.image}" alt="${title}" width="56" height="56"
+              style="width:56px;height:56px;object-fit:cover;border-radius:6px;display:block;border:1px solid ${BRAND.sand};" />
+       </td>`
+    : hasImages
+      ? `<td width="64" style="padding:10px 12px 10px 0;vertical-align:top;"></td>`
+      : "";
+
+  return `
+    <tr>
+      ${thumbnailCell}
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};">
+        ${title}${qtyLabel}
+        ${buildUpgradeLinesHtml(item.upgrades)}
+      </td>
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.sand};vertical-align:middle;font-size:14px;color:${BRAND.charcoal};text-align:right;white-space:nowrap;">
+        ${priceStr}
       </td>
     </tr>`;
 }
@@ -146,6 +197,10 @@ function buildItemsTable(items: OrderConfirmationItem[]): string {
 
       if (item.batteryUpgrade) {
         return batteryUpgradeItemRow(item, hasImages);
+      }
+
+      if (item.upgrades?.length) {
+        return upgradeItemRow(item, hasImages);
       }
 
       return emailItemRow({

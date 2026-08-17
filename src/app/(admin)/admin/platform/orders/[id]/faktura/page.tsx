@@ -28,6 +28,7 @@ interface OrderData {
     unit_price: number;
     purchase_price: number | null;
     vat_scheme: string | null;
+    upgrade_details: Array<{ label: string; price_oere: number }> | null;
   }>;
 }
 
@@ -39,7 +40,15 @@ export default function FakturaPage() {
   const { id } = useParams<{ id: string }>();
   const supabase = createBrowserClient();
   const [order, setOrder] = useState<OrderData | null>(null);
-  const [items, setItems] = useState<Array<{ name: string; qty: number; price: number; vat: string }>>([]);
+  const [items, setItems] = useState<
+    Array<{
+      name: string;
+      qty: number;
+      price: number;
+      vat: string;
+      upgrades: Array<{ label: string; price_oere: number }> | null;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,7 +62,7 @@ export default function FakturaPage() {
         id, order_number, status, total, subtotal, discount_amount, shipping_cost,
         brugtmoms_total, created_at, confirmed_at, shipping_address, shipping_method, notes,
         customer:customers(name, email, phone),
-        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, purchase_price, vat_scheme)
+        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, purchase_price, vat_scheme, upgrade_details)
       `)
       .eq("id", id)
       .single();
@@ -66,7 +75,13 @@ export default function FakturaPage() {
     setOrder(data as any);
 
     // Resolve item names
-    const resolvedItems: Array<{ name: string; qty: number; price: number; vat: string }> = [];
+    const resolvedItems: Array<{
+      name: string;
+      qty: number;
+      price: number;
+      vat: string;
+      upgrades: Array<{ label: string; price_oere: number }> | null;
+    }> = [];
     const orderItems = (data as any).order_items || [];
 
     for (const item of orderItems) {
@@ -85,6 +100,7 @@ export default function FakturaPage() {
           qty: item.quantity,
           price: item.unit_price,
           vat: item.vat_scheme === "brugtmoms" ? "Brugtmoms" : "Momsfri",
+          upgrades: item.upgrade_details ?? null,
         });
       } else if (item.sku_product_id) {
         const { data: sku } = await supabase
@@ -97,6 +113,7 @@ export default function FakturaPage() {
           qty: item.quantity,
           price: item.unit_price * item.quantity,
           vat: "25% moms",
+          upgrades: null,
         });
       }
     }
@@ -178,7 +195,14 @@ export default function FakturaPage() {
           <tbody>
             {items.map((item, i) => (
               <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "10px 0" }}>{item.name}</td>
+                <td style={{ padding: "10px 0" }}>
+                  {item.name}
+                  {item.upgrades?.map((u, i) => (
+                    <div key={i} style={{ fontSize: 11, color: "#999", marginTop: 2 }}>
+                      + {u.label} ({formatDKK(u.price_oere)})
+                    </div>
+                  ))}
+                </td>
                 <td style={{ textAlign: "center", padding: "10px 0" }}>{item.qty}</td>
                 <td style={{ textAlign: "right", padding: "10px 0", fontSize: 12, color: "#999" }}>{item.vat}</td>
                 <td style={{ textAlign: "right", padding: "10px 0", fontWeight: "bold" }}>{formatDKK(item.price)}</td>

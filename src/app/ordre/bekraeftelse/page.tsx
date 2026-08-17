@@ -8,6 +8,7 @@ interface RawOrderItem {
   unit_price: number;
   total_price: number;
   item_type: "device" | "sku_product";
+  upgrade_details: Array<{ label: string; price_oere: number }> | null;
   device: {
     grade: string | null;
     color: string | null;
@@ -65,6 +66,7 @@ export default async function OrderConfirmationPage({
         unit_price,
         total_price,
         item_type,
+        upgrade_details,
         device:devices!device_id (
           grade,
           color,
@@ -115,6 +117,7 @@ export default async function OrderConfirmationPage({
         grade: isDevice ? item.device?.grade ?? null : null,
         color: isDevice ? item.device?.color ?? null : null,
         storage: isDevice ? item.device?.storage ?? null : null,
+        upgrade_details: item.upgrade_details ?? null,
       };
     }),
   };

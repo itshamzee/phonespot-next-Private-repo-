@@ -19,6 +19,7 @@ interface OrderItem {
   grade: string | null;
   color: string | null;
   storage: string | null;
+  upgrade_details?: Array<{ label: string; price_oere: number }> | null;
 }
 
 interface Order {
@@ -37,6 +38,9 @@ interface Order {
 
 export function ConfirmationView({ order }: { order: Order }) {
   const { clearCart } = useCart();
+  const hasUpgrades = order.order_items.some(
+    (item) => (item.upgrade_details?.length ?? 0) > 0,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -154,6 +158,11 @@ export function ConfirmationView({ order }: { order: Order }) {
                 {item.item_type === "sku_product" && item.quantity > 1 && (
                   <p className="text-xs text-gray-500">Antal: {item.quantity}</p>
                 )}
+                {item.upgrade_details?.map((u, i) => (
+                  <p key={i} className="text-xs text-[#86868B]">
+                    + {u.label} ({formatOere(u.price_oere)})
+                  </p>
+                ))}
               </div>
 
               <span className="shrink-0 text-sm font-semibold text-charcoal">
@@ -188,6 +197,13 @@ export function ConfirmationView({ order }: { order: Order }) {
             <span>{formatOere(order.total)}</span>
           </div>
         </div>
+
+        {hasUpgrades && (
+          <p className="mt-4 text-xs text-gray-500">
+            Din ordre indeholder en opgradering — der må påregnes op til 3
+            hverdages ekstra leveringstid, mens vi monterer og tester.
+          </p>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-sand bg-warm-white p-6">

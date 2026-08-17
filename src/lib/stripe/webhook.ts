@@ -33,7 +33,7 @@ export async function handleCheckoutCompleted(
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
        subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token,
-       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade)`,
+       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade, upgrade_details)`,
     )
     .eq("id", orderId)
     .single();
@@ -56,6 +56,7 @@ export async function handleCheckoutCompleted(
     quantity: number;
     unit_price: number;
     battery_upgrade?: boolean;
+    upgrade_details?: Array<{ label: string; price_oere: number }> | null;
   }> = (order as any).order_items ?? [];
 
   // 2. Collect device IDs to fetch purchase_price and vat_scheme
@@ -254,6 +255,7 @@ export async function handleCheckoutCompleted(
     title: string;
     image?: string;
     batteryUpgrade?: boolean;
+    upgrades?: Array<{ label: string; priceOere: number }>;
     // sku_products.category — a sku_product can itself be a device-category
     // product (see DEVICE_CATEGORIES), so the confirmation email's guarantee
     // wording can't just assume item_type "sku_product" means accessory.
@@ -305,6 +307,10 @@ export async function handleCheckoutCompleted(
       title: title || (item.item_type === "device" ? "Brugt enhed" : "Produkt"),
       image,
       batteryUpgrade: item.battery_upgrade ?? false,
+      upgrades: item.upgrade_details?.map((u) => ({
+        label: u.label,
+        priceOere: u.price_oere,
+      })),
       category,
     });
   }
