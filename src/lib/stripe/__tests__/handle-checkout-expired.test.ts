@@ -18,6 +18,7 @@ vi.mock("@/lib/email/staff-order-notification", () => ({
 }));
 
 const updates: Array<{ table: string; values: Record<string, unknown>; eq?: [string, unknown] }> = [];
+const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
 const orderRow = {
   id: "order-1",
   status: "pending",
@@ -28,8 +29,16 @@ const orderRow = {
   ],
 };
 
+// Enhedens herkomst styrer, om lageret skal tilbage via increment_foxway_stock
+// (dropship) eller via en direkte status='listed' (egen enhed).
+let deviceRows: Array<{ id: string; source: string }> = [{ id: "dev-1", source: "internal" }];
+
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
+    rpc(fn: string, args: Record<string, unknown>) {
+      rpcCalls.push({ fn, args });
+      return Promise.resolve({ data: 1, error: null });
+    },
     from(table: string) {
       const builder = {
         select(_cols: string) {
@@ -39,6 +48,7 @@ vi.mock("@/lib/supabase/client", () => ({
                 single: async () => ({ data: orderRow, error: null }),
               };
             },
+            in: async (_col: string, _vals: string[]) => ({ data: deviceRows, error: null }),
           };
         },
         update(values: Record<string, unknown>) {
@@ -63,6 +73,8 @@ import { handleCheckoutExpired } from "../webhook";
 
 beforeEach(() => {
   updates.length = 0;
+  rpcCalls.length = 0;
+  deviceRows = [{ id: "dev-1", source: "internal" }];
 });
 
 describe("handleCheckoutExpired", () => {
@@ -87,6 +99,30 @@ describe("handleCheckoutExpired", () => {
       status: "listed",
       reservation_expires_at: null,
     });
+  });
+
+  it("clears foxway_status/foxway_order_ref so the dropship queue drops the order", async () => {
+    await handleCheckoutExpired({ metadata: { order_id: "order-1" } } as never);
+
+    const orderUpdate = updates.find((u) => u.table === "orders");
+    expect(orderUpdate?.values.foxway_status).toBeNull();
+    expect(orderUpdate?.values.foxway_order_ref).toBeNull();
+  });
+
+  it("restores foxway stock via RPC instead of blindly re-listing the device", async () => {
+    deviceRows = [{ id: "dev-1", source: "foxway" }];
+    await handleCheckoutExpired({ metadata: { order_id: "order-1" } } as never);
+
+    expect(rpcCalls).toEqual([
+      { fn: "increment_foxway_stock", args: { p_device_id: "dev-1" } },
+    ]);
+    // Ingen blind status='listed' paa dropship-enheden — det er RPC'ens job.
+    expect(updates.find((u) => u.table === "devices")).toBeUndefined();
+  });
+
+  it("does not call the foxway RPC for own-stock devices", async () => {
+    await handleCheckoutExpired({ metadata: { order_id: "order-1" } } as never);
+    expect(rpcCalls).toHaveLength(0);
   });
 
   it("does nothing when the order has no metadata.order_id", async () => {

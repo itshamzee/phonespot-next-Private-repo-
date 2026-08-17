@@ -408,8 +408,20 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
               </div>
             </div>
 
-            {/* FoxwayDropshipCard — øverst, så en ubestilt dropship-ordre er det første man ser */}
-            {order.foxway_status && (
+            {/* FoxwayDropshipCard — øverst, så en ubestilt dropship-ordre er det første man ser.
+                Kortet er en bestillingsopfordring, så det kræver en levende OG betalt ordre:
+                en henlagt/annulleret ordre må aldrig kunne bestilles hos leverandøren, og en
+                ubetalt-men-aktiv ordre får i stedet en dæmpet afventer-betaling-linje. */}
+            {order.foxway_status &&
+              !["abandoned", "cancelled"].includes(order.status) &&
+              order.payment_status !== "paid" && (
+                <div className="rounded-xl border border-sand/60 bg-sand/10 px-4 py-3 text-sm text-charcoal/60">
+                  Afventer betaling — bestil først når ordren er betalt
+                </div>
+              )}
+            {order.foxway_status &&
+              !["abandoned", "cancelled"].includes(order.status) &&
+              order.payment_status === "paid" && (
               <FoxwayDropshipCard
                 orderId={order.id}
                 foxwayStatus={order.foxway_status}

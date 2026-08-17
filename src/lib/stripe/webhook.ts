@@ -87,7 +87,15 @@ export async function handleCheckoutCompleted(
     if (item.item_type === "device" && item.device_id) {
       const dev = deviceMap.get(item.device_id);
       if (dev?.vat_scheme === "brugtmoms") {
-        const margin = item.unit_price - (dev.purchase_price ?? 0);
+        // unit_price indeholder nu ogsaa prisen for evt. RAM/SSD-opgraderinger.
+        // En opgradering er en almindeligt momset ydelse (montering + ny del)
+        // og maa IKKE indgaa i brugtmomsgrundlaget — brugtmomsmarginen gaelder
+        // kun selve den brugte enhed. Traek derfor opgraderingerne fra igen.
+        const upgradeTotal = (item.upgrade_details ?? []).reduce(
+          (sum, u) => sum + (u.price_oere ?? 0),
+          0,
+        );
+        const margin = item.unit_price - upgradeTotal - (dev.purchase_price ?? 0);
         const brugtmoms = Math.max(0, Math.round((margin * 25) / 100));
         brugtmomsTotal += brugtmoms;
       }
@@ -403,6 +411,9 @@ export async function handleCheckoutExpired(
   if (!order || order.status !== "pending") return;
 
   // Move the order into the abandoned-cart recovery pipeline.
+  // foxway_status/foxway_order_ref nulstilles: en udloebet, ubetalt ordre maa
+  // ikke blive staaende i dropship-koeen, hvor admin kunne naa at bestille
+  // varen hos leverandoeren for en ordre der aldrig blev betalt.
   const abandonedAt = new Date().toISOString();
   const recoveryToken =
     (order as { recovery_token: string | null }).recovery_token ?? crypto.randomUUID();
@@ -413,6 +424,8 @@ export async function handleCheckoutExpired(
       status: "abandoned",
       abandoned_at: abandonedAt,
       recovery_token: recoveryToken,
+      foxway_status: null,
+      foxway_order_ref: null,
     })
     .eq("id", orderId);
 
@@ -425,10 +438,40 @@ export async function handleCheckoutExpired(
     .map((i) => i.device_id as string);
 
   if (deviceIds.length > 0) {
-    await supabase
+    // Foxway-dropship-enheder fik trukket source_stock ved checkout-start
+    // (decrement_foxway_stock). De skal have lageret tilbage via den
+    // modsvarende RPC — en blind status='listed' ville re-liste en enhed
+    // hvis leverandoerlager stadig staar paa 0.
+    const { data: expiredDevices } = await supabase
       .from("devices")
-      .update({ status: "listed", reservation_expires_at: null })
+      .select("id, source")
       .in("id", deviceIds);
+
+    const foxwayIds = (expiredDevices ?? [])
+      .filter((d) => d.source === "foxway")
+      .map((d) => d.id as string);
+    const ownIds = deviceIds.filter((id) => !foxwayIds.includes(id));
+
+    for (const deviceId of foxwayIds) {
+      const { error: stockErr } = await supabase.rpc("increment_foxway_stock", {
+        p_device_id: deviceId,
+      });
+      if (stockErr) {
+        console.error(
+          "[webhook] failed to restore foxway stock for device:",
+          deviceId,
+          stockErr,
+        );
+        // Non-fatal: ordren er allerede markeret abandoned.
+      }
+    }
+
+    if (ownIds.length > 0) {
+      await supabase
+        .from("devices")
+        .update({ status: "listed", reservation_expires_at: null })
+        .in("id", ownIds);
+    }
   }
 
   console.log("[webhook] order abandoned (session expired):", orderId);
