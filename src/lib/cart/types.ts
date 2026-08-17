@@ -2,6 +2,14 @@
 
 export type CartItemType = "device" | "sku_product";
 
+/** Valgt RAM/SSD-opgradering på en laptop — prisen indgår i linjens total. */
+export interface CartUpgradeSelection {
+  optionId: string;
+  kind: "ram" | "ssd";
+  label: string;
+  price: number;
+}
+
 export interface CartDeviceItem {
   type: "device";
   deviceId: string;
@@ -19,6 +27,8 @@ export interface CartDeviceItem {
   batteryUpgrade?: { priceOere: number };
   /** Cached at add-time for display. */
   batteryHealth?: number;
+  /** RAM/SSD-opgraderingstilvalg (kun laptops). Serverprisen validerer checkout. */
+  upgrades?: CartUpgradeSelection[];
 }
 
 export interface CartSkuItem {

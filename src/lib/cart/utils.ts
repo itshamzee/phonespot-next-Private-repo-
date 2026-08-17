@@ -2,7 +2,11 @@ import type { CartItem, CartSkuItem, CartState, CartTotals, DiscountApplication 
 import { applyBundleDiscounts, type CartLine } from "@/lib/spot/bundle-pricing";
 
 export function lineTotal(item: CartItem): number {
-  return item.type === "device" ? item.price : item.price * item.quantity;
+  if (item.type === "device") {
+    const upgradeSum = item.upgrades?.reduce((n, u) => n + u.price, 0) ?? 0;
+    return item.price + upgradeSum;
+  }
+  return item.price * item.quantity;
 }
 
 export function calcSubtotal(items: CartItem[]): number {
