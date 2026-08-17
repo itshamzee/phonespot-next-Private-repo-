@@ -23,6 +23,7 @@ interface Device {
   color: string | null;
   purchase_price: number;
   selling_price: number | null;
+  source: string | null;
   created_at: string;
   template: {
     display_name: string;
@@ -403,6 +404,9 @@ export function StockTable({ filters }: StockTableProps) {
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-500">
                 Salgspris
               </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Margin
+              </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
                 <span className="sr-only">Handlinger</span>
               </th>
@@ -419,18 +423,19 @@ export function StockTable({ filters }: StockTableProps) {
                   <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="ml-auto h-4 w-16 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="ml-auto h-4 w-16 rounded bg-stone-100" /></td>
+                  <td className="px-4 py-4"><div className="ml-auto h-4 w-16 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="ml-auto h-6 w-20 rounded bg-stone-100" /></td>
                 </tr>
               ))
             ) : error ? (
               <tr>
-                <td colSpan={hasListable ? 8 : 7} className="px-4 py-12 text-center text-sm text-red-500">
+                <td colSpan={hasListable ? 9 : 8} className="px-4 py-12 text-center text-sm text-red-500">
                   {error}
                 </td>
               </tr>
             ) : devices.length === 0 ? (
               <tr>
-                <td colSpan={hasListable ? 8 : 7} className="px-6 py-16 text-center">
+                <td colSpan={hasListable ? 9 : 8} className="px-6 py-16 text-center">
                   <div className="mx-auto max-w-sm">
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
                       <svg className="h-7 w-7 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -483,6 +488,11 @@ export function StockTable({ filters }: StockTableProps) {
                       <span className="font-medium text-stone-800">
                         {device.template?.display_name ?? <span className="text-stone-400 italic">Ukendt</span>}
                       </span>
+                      {device.source === "foxway" && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-[#4B1F82]/10 px-2 py-0.5 text-[11px] font-medium text-[#4B1F82]">
+                          Foxway
+                        </span>
+                      )}
                       {(device.storage || device.color) && (
                         <span className="ml-2 text-xs text-stone-400">
                           {[device.storage, device.color].filter(Boolean).join(" · ")}
@@ -548,6 +558,20 @@ export function StockTable({ filters }: StockTableProps) {
                       >
                         {device.selling_price != null ? formatDKK(device.selling_price) : <span className="text-stone-300">Sæt pris</span>}
                       </button>
+                    )}
+                  </td>
+
+                  {/* Margin (visning) */}
+                  <td className="px-4 py-3 text-right font-mono text-sm">
+                    {device.purchase_price > 0 && device.selling_price != null && device.selling_price > 0 ? (
+                      <span className={device.selling_price - device.purchase_price > 0 ? "text-green-700" : "text-red-600"}>
+                        {formatDKK(device.selling_price - device.purchase_price)}
+                        <span className="ml-1 text-[11px] opacity-70">
+                          {Math.round(((device.selling_price - device.purchase_price) / device.selling_price) * 100)}%
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-stone-300">—</span>
                     )}
                   </td>
 
