@@ -55,15 +55,23 @@ export default function ProductsPage() {
           </p>
         </div>
         {view === "list" && (
-          <button
-            onClick={() => setView("create")}
-            className="flex items-center gap-2 rounded-xl bg-green-eco px-5 py-3 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:bg-green-light hover:shadow-lg active:scale-[0.98]"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Opret produkt
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/platform/products/upgrades"
+              className="rounded-xl border border-sand bg-white px-4 py-2.5 text-sm font-medium text-charcoal-light transition hover:bg-cream"
+            >
+              Opgraderinger
+            </Link>
+            <button
+              onClick={() => setView("create")}
+              className="flex items-center gap-2 rounded-xl bg-green-eco px-5 py-3 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:bg-green-light hover:shadow-lg active:scale-[0.98]"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Opret produkt
+            </button>
+          </div>
         )}
       </div>
 
