@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCart } from "@/lib/checkout/validate";
+import { validateCart, hasFoxwayDevice } from "@/lib/checkout/validate";
 import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
@@ -127,13 +127,8 @@ export async function POST(req: NextRequest) {
       for (const vi of validation.items) {
         if (vi.item.type !== "device") continue;
         const deviceItem = vi.item as CartDeviceItem;
-        const { data: device } = await supabase
-          .from("devices")
-          .select("source")
-          .eq("id", deviceItem.deviceId)
-          .single();
 
-        if (device?.source === "foxway") {
+        if (vi.deviceSource === "foxway") {
           const { error } = await supabase.rpc("decrement_foxway_stock", {
             p_device_id: deviceItem.deviceId,
           });
@@ -161,6 +156,7 @@ export async function POST(req: NextRequest) {
       bundleDiscountAmount,
       total,
       stripeCheckoutSessionId: "pending",
+      foxwayPending: hasFoxwayDevice(validation.items),
     });
 
     // 6. Create Stripe Checkout session

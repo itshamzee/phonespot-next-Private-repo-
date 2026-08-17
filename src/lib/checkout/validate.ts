@@ -6,6 +6,8 @@ export interface ValidatedItem {
   serverPrice: number;
   available: boolean;
   error?: string;
+  /** devices.source for device-linjer — 'foxway' for dropship-enheder. */
+  deviceSource?: string | null;
 }
 
 export interface ValidationResult {
@@ -33,31 +35,31 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
     for (const item of devices) {
       const db = deviceMap.get(item.deviceId);
       if (!db) {
-        validated.push({ item, serverPrice: 0, available: false, error: "Enhed ikke fundet" });
+        validated.push({ item, serverPrice: 0, available: false, error: "Enhed ikke fundet", deviceSource: null });
         errors.push(`${item.title} er ikke tilgængelig`);
         continue;
       }
       if (db.source === "foxway") {
         // Foxway devices: validate stock instead of reservation
         if ((db.source_stock ?? 0) <= 0) {
-          validated.push({ item, serverPrice: 0, available: false, error: "Udsolgt" });
+          validated.push({ item, serverPrice: 0, available: false, error: "Udsolgt", deviceSource: db.source ?? null });
           errors.push(`${item.title} er udsolgt`);
           continue;
         }
-        validated.push({ item, serverPrice: db.selling_price, available: true });
+        validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
         continue;
       }
       if (db.status !== "reserved") {
-        validated.push({ item, serverPrice: 0, available: false, error: "Enhed er ikke reserveret" });
+        validated.push({ item, serverPrice: 0, available: false, error: "Enhed er ikke reserveret", deviceSource: db.source ?? null });
         errors.push(`${item.title} er ikke længere tilgængelig`);
         continue;
       }
       if (db.reservation_expires_at && new Date(db.reservation_expires_at) < new Date()) {
-        validated.push({ item, serverPrice: 0, available: false, error: "Reservation udløbet" });
+        validated.push({ item, serverPrice: 0, available: false, error: "Reservation udløbet", deviceSource: db.source ?? null });
         errors.push(`Reservation for ${item.title} er udløbet`);
         continue;
       }
-      validated.push({ item, serverPrice: db.selling_price, available: true });
+      validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
     }
   }
 
@@ -104,4 +106,9 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
   }
 
   return { valid: errors.length === 0, items: validated, errors };
+}
+
+/** True når mindst én tilgængelig ordrelinje er en Foxway-enhed. */
+export function hasFoxwayDevice(items: ValidatedItem[]): boolean {
+  return items.some((vi) => vi.available && vi.deviceSource === "foxway");
 }

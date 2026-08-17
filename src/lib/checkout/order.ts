@@ -31,6 +31,8 @@ export interface CreateOrderParams {
   bundleDiscountAmount: number;
   total: number;
   stripeCheckoutSessionId: string;
+  /** Ordren indeholder Foxway-enheder og skal bestilles hos leverandøren. */
+  foxwayPending: boolean;
 }
 
 export interface CreatedOrder {
@@ -100,6 +102,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     total: params.total,
     discount_code_id: params.discountCodeId,
     withdrawal_token: withdrawalToken,
+    foxway_status: params.foxwayPending ? "pending" : null,
   }).select("id, order_number").single();
 
   if (orderError || !order) throw new Error(`Failed to create order: ${orderError?.message}`);
