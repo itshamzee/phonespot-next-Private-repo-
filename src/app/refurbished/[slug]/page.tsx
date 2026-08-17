@@ -7,8 +7,10 @@ import {
   getAvailableDevices,
   getPublishedSkuProducts,
   getPublishedTemplates,
+  getUpgradeOptionsForTemplate,
 } from "@/lib/supabase/product-queries";
 import { DeviceDetail } from "@/components/product/device-detail";
+import type { UpgradeOption } from "@/components/product/upgrade-selector";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
@@ -77,9 +79,12 @@ export default async function RefurbishedProductPage({ params }: Props) {
   const template = await getTemplateBySlug(slug);
   if (!template) notFound();
 
-  const [availableDevices, accessories] = await Promise.all([
+  const [availableDevices, accessories, upgradeOptions] = await Promise.all([
     getAvailableDevices(template.id),
     getPublishedSkuProducts(undefined, template.id),
+    template.category === "laptop"
+      ? getUpgradeOptionsForTemplate(template.id)
+      : Promise.resolve<UpgradeOption[]>([]),
   ]);
 
   // When this model is fully sold out, fetch similar in-stock models (same
@@ -202,6 +207,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
           devices={availableDevices}
           accessories={accessories}
           relatedInStock={relatedInStock}
+          upgradeOptions={upgradeOptions}
         />
       </section>
 

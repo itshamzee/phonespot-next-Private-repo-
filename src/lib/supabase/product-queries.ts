@@ -1,5 +1,6 @@
 import { createAdminClient } from "./admin";
 import type { ProductTemplate, SkuProduct } from "./platform-types";
+import type { UpgradeOption } from "@/components/product/upgrade-selector";
 
 interface TemplateWithStock extends ProductTemplate {
   device_count: number;
@@ -101,6 +102,26 @@ export async function getAvailableDevices(templateId: string) {
     .gt("selling_price", 0)
     .order("selling_price", { ascending: true });
   return data || [];
+}
+
+// RAM/SSD-opgraderingstilvalg tilknyttet en laptop-skabelon (Task 8/12).
+// PostgREST returnerer normalt et enkelt objekt for `option:` (FK er 1:1),
+// men vi normaliserer med Array.isArray for robusthed mod array-svar.
+export async function getUpgradeOptionsForTemplate(templateId: string): Promise<UpgradeOption[]> {
+  const supabase = createAdminClient();
+  const { data: links } = await supabase
+    .from("template_upgrade_options")
+    .select("option:laptop_upgrade_options(id, kind, label, target_spec, price, active, sort_order)")
+    .eq("template_id", templateId);
+
+  type OptionRow = { id: string; kind: "ram" | "ssd"; label: string; target_spec: string; price: number; active: boolean; sort_order: number };
+  type LinkRow = { option: OptionRow | OptionRow[] | null };
+
+  return ((links ?? []) as unknown as LinkRow[])
+    .flatMap((l) => (Array.isArray(l.option) ? l.option : l.option ? [l.option] : []))
+    .filter((o): o is OptionRow => !!o && o.active)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((o) => ({ id: o.id, kind: o.kind, label: o.label, targetSpec: o.target_spec, price: o.price }));
 }
 
 // Get location-specific stock counts for a template

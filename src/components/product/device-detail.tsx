@@ -22,6 +22,7 @@ import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 import { TRUSTPILOT_SCORE_LABEL, TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import { STORES } from "@/lib/store-config";
+import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -38,6 +39,8 @@ type DeviceDetailProps = {
   accessories: SkuProduct[];
   /** In-stock same-category models, shown when this model is fully sold out. */
   relatedInStock?: RelatedInStockProduct[];
+  /** RAM/SSD-opgraderingstilvalg (kun laptops). */
+  upgradeOptions?: UpgradeOption[];
 };
 
 function formatDKK(oere: number): string {
@@ -184,7 +187,7 @@ function getCategoryName(category: string): string {
 /*  Main component                                                     */
 /* ================================================================== */
 
-export function DeviceDetail({ template, devices, accessories, relatedInStock = [] }: DeviceDetailProps) {
+export function DeviceDetail({ template, devices, accessories, relatedInStock = [], upgradeOptions = [] }: DeviceDetailProps) {
   const { addDevice, openCart, openUpsell, cartState } = useCart();
 
   const listedDevices = devices.filter((d) => d.status === "listed");
@@ -217,6 +220,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
   );
   const [selectedStorage, setSelectedStorage] = useState<string>(template.storage_options[0] ?? "");
   const [selectedColor, setSelectedColor] = useState<string>(template.colors[0] ?? "");
+  const [selectedUpgrades, setSelectedUpgrades] = useState<{ ram: string | null; ssd: string | null }>({ ram: null, ssd: null });
   const [activeTab, setActiveTab] = useState<Tab>("beskrivelse");
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -497,6 +501,14 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
     );
     const unitPrice = unit.selling_price ?? price;
 
+    const chosenUpgrades = (["ram", "ssd"] as const)
+      .map((kind) => {
+        const id = selectedUpgrades[kind];
+        const opt = id ? upgradeOptions.find((o) => o.id === id) : null;
+        return opt ? { optionId: opt.id, kind: opt.kind, label: opt.label, price: opt.price } : null;
+      })
+      .filter((u): u is NonNullable<typeof u> => u !== null);
+
     setIsAddingToCart(true);
     setCartError(null);
     trackAddToCart({ id: template.id, name: template.display_name, price: unitPrice / 100 });
@@ -519,7 +531,10 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
         reservedAt: new Date().toISOString(),
         locationId: loc?.id,
         locationName: loc?.name,
+        ...(chosenUpgrades.length > 0 ? { upgrades: chosenUpgrades } : {}),
       });
+
+      setSelectedUpgrades({ ram: null, ssd: null });
 
       // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
@@ -698,6 +713,15 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
               selected={selectedColor}
               onChange={handleColorChange}
               availableColors={stockedColors}
+            />
+          )}
+
+          {/* RAM/SSD-opgraderingstilvalg — kun laptops med aktive optioner */}
+          {deviceType === "laptop" && upgradeOptions.length > 0 && (
+            <UpgradeSelector
+              options={upgradeOptions}
+              selected={selectedUpgrades}
+              onChange={(kind, optionId) => setSelectedUpgrades((prev) => ({ ...prev, [kind]: optionId }))}
             />
           )}
 

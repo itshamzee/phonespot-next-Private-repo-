@@ -105,6 +105,11 @@ function DeviceLineItem({ item }: { item: CartDeviceItem }) {
               <span className="text-xs text-gray">{item.storage}</span>
             )}
           </div>
+          {item.upgrades?.map((u) => (
+            <p key={u.optionId} className="mt-1 text-xs text-[#86868B]">
+              + {u.label} ({formatOere(u.price)})
+            </p>
+          ))}
         </div>
 
         <div className="mt-2 flex items-center justify-between">

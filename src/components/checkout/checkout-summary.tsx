@@ -72,6 +72,12 @@ export function CheckoutSummary() {
                     </p>
                   )}
 
+                  {item.type === "device" && item.upgrades?.map((u) => (
+                    <p key={u.optionId} className="text-xs text-gray">
+                      + {u.label} ({formatOere(u.price)})
+                    </p>
+                  ))}
+
                   {item.type === "sku_product" && item.quantity > 1 && (
                     <p className="text-xs text-gray">Antal: {item.quantity}</p>
                   )}
