@@ -16,6 +16,13 @@
 //
 // Rate-limit: højst ~2 requests/sekund mod foxway.dk (både HTML-sider og billed-downloads
 // går igennem samme rate-limiter).
+//
+// Fallback (lavrisiko-udvidelse, reviewer-godkendt 2026-08-17): når INGEN device på en
+// skabelon har source_url, men en device har source_sku, afledes en kandidat-URL efter
+// Foxways kanoniske mønster https://en.foxway.dk/item/<sku lowercased, URL-encoded>. Denne
+// kandidat er KUN et fallback-forsøg — den skal stadig bestå de samme sikkerhedstjek som en
+// rigtig source_url (HTTP 200 + ægte JSON-LD-produktbillede), ellers logges skip som normalt.
+// Skabeloner med eksisterende billeder overskrives aldrig.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -39,6 +46,7 @@ const MAX_IMAGES_PER_TEMPLATE = 3;
 
 type TemplateRow = { id: string; brand: string; model: string; slug: string; images: string[] };
 type DeviceRow = { template_id: string; source_url: string | null };
+type DeviceSkuRow = { template_id: string; source_url: string | null; source_sku: string | null };
 
 type ResultStatus =
   | "uploaded"
@@ -131,6 +139,18 @@ function extFromUrl(url: string): string {
   return ext && /^(jpg|jpeg|png|webp)$/.test(ext) ? ext : "jpg";
 }
 
+/**
+ * Foxways kanoniske URL-mønster for en produktside er https://en.foxway.dk/item/<sku>,
+ * hvor <sku> er device.source_sku lowercased og URL-encoded (fx "#" -> "%23"). Verificeret
+ * mod 15 devices der har BÅDE source_url og source_sku sat — formlen matcher source_url i
+ * alle 15 tilfælde. Bruges KUN som fallback når ingen device på skabelonen har source_url,
+ * og kandidaten skal stadig bestå de samme sikkerhedstjek (HTTP 200 + ægte JSON-LD-billede)
+ * som en rigtig source_url, før den bruges.
+ */
+function deriveCandidateUrlFromSku(sku: string): string {
+  return `https://en.foxway.dk/item/${encodeURIComponent(sku.toLowerCase())}`;
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -192,6 +212,34 @@ async function main() {
     }
   }
 
+  // -------------------------------------------------------------------
+  // Fallback: for skabeloner uden NOGEN device med source_url, afled en kandidat-URL fra
+  // device.source_sku efter Foxways kanoniske mønster (se deriveCandidateUrlFromSku).
+  // Bruges KUN når source_url mangler helt — alle øvrige sikkerhedstjek nedenfor gælder
+  // uændret for disse kandidater (HTTP 200 + ægte JSON-LD-billede).
+  // -------------------------------------------------------------------
+  const templateIdsMissingSourceUrl = templateIds.filter((id) => (urlsByTemplate.get(id) ?? []).length === 0);
+  const derivedUrlsByTemplate = new Map<string, string[]>();
+  if (templateIdsMissingSourceUrl.length > 0) {
+    const { data: devicesNoUrl, error: devSkuErr } = await supabase
+      .from("devices")
+      .select("template_id, source_url, source_sku")
+      .in("template_id", templateIdsMissingSourceUrl)
+      .is("source_url", null)
+      .not("source_sku", "is", null);
+    if (devSkuErr) throw devSkuErr;
+    for (const d of (devicesNoUrl ?? []) as DeviceSkuRow[]) {
+      if (!d.source_sku) continue;
+      const candidate = deriveCandidateUrlFromSku(d.source_sku);
+      const arr = derivedUrlsByTemplate.get(d.template_id) ?? [];
+      if (!arr.includes(candidate)) arr.push(candidate);
+      derivedUrlsByTemplate.set(d.template_id, arr);
+    }
+    console.log(
+      `Fallback (afledt fra source_sku): ${derivedUrlsByTemplate.size} af ${templateIdsMissingSourceUrl.length} skabeloner uden source_url fik mindst én kandidat-URL\n`
+    );
+  }
+
   const results: Result[] = [];
 
   for (const tpl of targets) {
@@ -218,11 +266,19 @@ async function main() {
       }
     }
 
-    const candidateUrls = urlsByTemplate.get(tpl.id) ?? [];
+    let candidateUrls = urlsByTemplate.get(tpl.id) ?? [];
+    let usingDerivedFallback = false;
     if (candidateUrls.length === 0) {
-      console.log(`[SPRING OVER] ${tpl.slug} — ingen tilknyttet device har source_url`);
-      results.push({ ...base, status: "no_source_url" });
-      continue;
+      // Fallback: ingen device har source_url — prøv URL(er) afledt af source_sku i stedet.
+      const derived = derivedUrlsByTemplate.get(tpl.id) ?? [];
+      if (derived.length > 0) {
+        candidateUrls = derived;
+        usingDerivedFallback = true;
+      } else {
+        console.log(`[SPRING OVER] ${tpl.slug} — ingen tilknyttet device har source_url eller source_sku`);
+        results.push({ ...base, status: "no_source_url" });
+        continue;
+      }
     }
 
     let pageResult: { pageUrl: string; statusCode: number; imageUrls: string[] } | null = null;
@@ -231,7 +287,7 @@ async function main() {
       try {
         const res = await rateLimitedFetch(sourceUrl);
         if (!res.ok) {
-          lastError = `HTTP ${res.status} fra ${sourceUrl}`;
+          lastError = `HTTP ${res.status} fra ${sourceUrl}${usingDerivedFallback ? " (afledt fra source_sku)" : ""}`;
           console.log(`  [${tpl.slug}] ${lastError}`);
           continue;
         }
@@ -241,10 +297,10 @@ async function main() {
           pageResult = { pageUrl: sourceUrl, statusCode: res.status, imageUrls };
           break;
         }
-        lastError = `Status 200 fra ${sourceUrl}, men intet brugbart produktbillede fundet (og:image pegede kun på foxway.dk-forsiden, eller siden manglede JSON-LD)`;
+        lastError = `Status 200 fra ${sourceUrl}${usingDerivedFallback ? " (afledt fra source_sku)" : ""}, men intet brugbart produktbillede fundet (og:image pegede kun på foxway.dk-forsiden, eller siden manglede JSON-LD)`;
         console.log(`  [${tpl.slug}] ${lastError}`);
       } catch (e) {
-        lastError = `Netværksfejl ved ${sourceUrl}: ${(e as Error).message}`;
+        lastError = `Netværksfejl ved ${sourceUrl}${usingDerivedFallback ? " (afledt fra source_sku)" : ""}: ${(e as Error).message}`;
         console.log(`  [${tpl.slug}] ${lastError}`);
       }
     }
@@ -254,11 +310,13 @@ async function main() {
       continue;
     }
 
+    const originTag = usingDerivedFallback ? " [afledt fra source_sku]" : "";
+
     if (dryRun) {
       console.log(
-        `[DRY] ${tpl.slug} — ville hente ${pageResult.imageUrls.length} billede(r) fra ${pageResult.pageUrl}: ${pageResult.imageUrls.join(", ")}`
+        `[DRY] ${tpl.slug} — ville hente ${pageResult.imageUrls.length} billede(r) fra ${pageResult.pageUrl}${originTag}: ${pageResult.imageUrls.join(", ")}`
       );
-      results.push({ ...base, status: "would_upload", detail: pageResult.imageUrls.join(", ") });
+      results.push({ ...base, status: "would_upload", detail: `${pageResult.imageUrls.join(", ")}${originTag}` });
       continue;
     }
 
@@ -303,8 +361,10 @@ async function main() {
         continue;
       }
 
-      console.log(`[OK] ${tpl.slug} — ${uploadedUrls.length} billede(r) uploadet og skrevet til DB (fra ${pageResult.pageUrl})`);
-      results.push({ ...base, status: "uploaded", detail: uploadedUrls.join(", ") });
+      console.log(
+        `[OK] ${tpl.slug} — ${uploadedUrls.length} billede(r) uploadet og skrevet til DB (fra ${pageResult.pageUrl})${originTag}`
+      );
+      results.push({ ...base, status: "uploaded", detail: `${uploadedUrls.join(", ")}${originTag}` });
     } catch (e) {
       results.push({ ...base, status: "fetch_failed", detail: (e as Error).message });
     }
