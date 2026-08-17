@@ -28,11 +28,16 @@ test("laptop-opgradering laegges i kurven med korrekt pris", async ({ page }) =>
   const hrefs = await productLinks.evaluateAll((els) =>
     els.map((el) => el.getAttribute("href")).filter((h): h is string => !!h),
   );
-  // ThinkPads først (upgrade-kandidater i praksis), resten som fallback.
-  hrefs.sort((a, b) => Number(b.includes("thinkpad")) - Number(a.includes("thinkpad")));
+  // Modeller med socket-monteret RAM først (de reelle upgrade-kandidater:
+  // EliteBook 840/850, ThinkPad L/T-serien), resten som fallback. Loopet
+  // cappes til de 15 øverste kandidater — et katalog med 100+ modeller ville
+  // ellers bruge hele timeouten på at navigere til PDP'er der aldrig har
+  // tilvalg, i stedet for at skippe hurtigt.
+  const isCandidate = (h: string) => /elitebook|thinkpad/.test(h);
+  hrefs.sort((a, b) => Number(isCandidate(b)) - Number(isCandidate(a)));
 
   let found = false;
-  for (const href of hrefs) {
+  for (const href of hrefs.slice(0, 15)) {
     await page.goto(href);
     if (await page.getByText("Tilvalg", { exact: true }).isVisible().catch(() => false)) {
       found = true;
