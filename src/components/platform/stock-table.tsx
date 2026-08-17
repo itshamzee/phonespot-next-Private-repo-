@@ -398,6 +398,9 @@ export function StockTable({ filters }: StockTableProps) {
                 Lokation
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Indkøbspris
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-500">
                 Salgspris
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
@@ -415,18 +418,19 @@ export function StockTable({ filters }: StockTableProps) {
                   <td className="px-4 py-4"><div className="h-5 w-16 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="ml-auto h-4 w-16 rounded bg-stone-100" /></td>
+                  <td className="px-4 py-4"><div className="ml-auto h-4 w-16 rounded bg-stone-100" /></td>
                   <td className="px-4 py-4"><div className="ml-auto h-6 w-20 rounded bg-stone-100" /></td>
                 </tr>
               ))
             ) : error ? (
               <tr>
-                <td colSpan={hasListable ? 7 : 6} className="px-4 py-12 text-center text-sm text-red-500">
+                <td colSpan={hasListable ? 8 : 7} className="px-4 py-12 text-center text-sm text-red-500">
                   {error}
                 </td>
               </tr>
             ) : devices.length === 0 ? (
               <tr>
-                <td colSpan={hasListable ? 7 : 6} className="px-6 py-16 text-center">
+                <td colSpan={hasListable ? 8 : 7} className="px-6 py-16 text-center">
                   <div className="mx-auto max-w-sm">
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
                       <svg className="h-7 w-7 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -509,6 +513,11 @@ export function StockTable({ filters }: StockTableProps) {
                   {/* Location */}
                   <td className="px-4 py-3 text-sm text-stone-600">
                     {device.location?.name ?? <span className="text-stone-300">—</span>}
+                  </td>
+
+                  {/* Purchase price (read-only) */}
+                  <td className="px-4 py-3 text-right font-mono text-sm text-stone-700">
+                    {device.purchase_price > 0 ? formatDKK(device.purchase_price) : <span className="text-stone-300">—</span>}
                   </td>
 
                   {/* Selling price (inline editable) */}
