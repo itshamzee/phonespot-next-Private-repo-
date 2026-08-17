@@ -22,7 +22,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("orders")
     .select(
-      "id, order_number, status, payment_status, fulfillment_status, type, total, created_at, location_id, customer:customers(name, email, phone)",
+      "id, order_number, status, payment_status, fulfillment_status, type, total, created_at, location_id, foxway_status, customer:customers(name, email, phone)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false })

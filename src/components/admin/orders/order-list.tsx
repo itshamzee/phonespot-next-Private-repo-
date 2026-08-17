@@ -15,6 +15,7 @@ interface Order {
   total: number;
   created_at: string;
   location_id: string | null;
+  foxway_status?: "pending" | "ordered" | null;
   customer: { name: string | null; email: string | null; phone: string | null } | null;
 }
 
@@ -85,6 +86,21 @@ function TypeBadge({ type }: { type: string }) {
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${cfg.cls}`}>
       {cfg.label}
+    </span>
+  );
+}
+
+/* ── Foxway dropship badge (kun admin — aldrig kundevendt) ────────── */
+function FoxwayBadge({ status }: { status?: string | null }) {
+  if (!status) return null;
+  const pending = status === "pending";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        pending ? "bg-[#4B1F82] text-white" : "bg-[#4B1F82]/10 text-[#4B1F82]"
+      }`}
+    >
+      {pending ? "Foxway · skal bestilles" : "Foxway · bestilt"}
     </span>
   );
 }
@@ -241,6 +257,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
   const [to, setTo]               = useState("");
   const [locationId, setLocationId] = useState("");
   const [locations, setLocations]   = useState<Location[]>([]);
+  const [foxway, setFoxway]         = useState("");
 
   /* Selection */
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -270,6 +287,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
         if (to)         params.set("to", to);
         if (locationId) params.set("location", locationId);
         if (search)     params.set("search", search);
+        if (foxway)     params.set("foxway", foxway);
 
         const res  = await fetch(`/api/shipping/orders?${params.toString()}`);
         const json = await res.json();
@@ -286,7 +304,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
         setLoading(false);
       }
     },
-    [activeTab, type, from, to, locationId, search],
+    [activeTab, type, from, to, locationId, search, foxway],
   );
 
   /* Re-fetch when filters change (reset to page 1) */
@@ -294,7 +312,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
     setPage(1);
     setSelected(new Set());
     fetchOrders(1);
-  }, [activeTab, type, from, to, locationId, search]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab, type, from, to, locationId, search, foxway]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Re-fetch when page changes */
   useEffect(() => {
@@ -383,6 +401,18 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
             <option value="pos">POS</option>
             <option value="draft">Kladde</option>
             <option value="shopify">Shopify</option>
+          </select>
+        </div>
+
+        {/* Dropship */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray">
+            Dropship
+          </label>
+          <select value={foxway} onChange={(e) => setFoxway(e.target.value)} className={inputCls}>
+            <option value="">Alle ordrer</option>
+            <option value="any">Kun dropship</option>
+            <option value="pending">Skal bestilles</option>
           </select>
         </div>
 
@@ -477,6 +507,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
                     <OrderStatusBadge status={order.status} />
                     <PaymentStatusBadge status={order.payment_status} />
                     <FulfillmentStatusBadge status={order.fulfillment_status} />
+                    <FoxwayBadge status={order.foxway_status} />
                   </div>
                   <p className="mt-2 text-xs text-gray">{formatDate(order.created_at)}</p>
                 </div>
@@ -556,7 +587,10 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
                         className="cursor-pointer px-4 py-3"
                         onClick={() => router.push(`/admin/platform/orders/${order.id}`)}
                       >
-                        <TypeBadge type={order.type} />
+                        <div className="flex flex-col items-start gap-1">
+                          <TypeBadge type={order.type} />
+                          <FoxwayBadge status={order.foxway_status} />
+                        </div>
                       </td>
 
                       {/* Order status */}

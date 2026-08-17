@@ -50,6 +50,9 @@ export async function GET(request: NextRequest) {
   if (locationId) query = query.eq("location_id", locationId);
   if (from) query = query.gte("created_at", from);
   if (to) query = query.lte("created_at", to + "T23:59:59Z");
+  const foxway = searchParams.get("foxway");
+  if (foxway === "any") query = query.not("foxway_status", "is", null);
+  if (foxway === "pending") query = query.eq("foxway_status", "pending");
 
   const { data, count, error } = await query;
 
