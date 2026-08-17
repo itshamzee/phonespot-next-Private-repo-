@@ -23,12 +23,15 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("devices")
-    .select(`
+    .select(
+      `
       *,
       ${templateJoin},
       location:locations(id, name),
       supplier:suppliers(id, name)
-    `)
+    `,
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false });
 
   const location = params.get("location_id");

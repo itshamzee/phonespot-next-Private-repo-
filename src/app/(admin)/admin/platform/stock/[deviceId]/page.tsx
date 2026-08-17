@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDKK, formatDate, parseDKKToOere } from "@/lib/platform/format";
 import { DeviceTransferDialog } from "@/components/platform/device-transfer-dialog";
+import { ProductImageUploader } from "@/components/platform/product-image-uploader";
+import { DEVICE_SPEC_FIELDS } from "@/lib/platform/device-spec-fields";
+import { GRADE_SHORT_LABEL } from "@/lib/grades";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                                */
@@ -15,9 +18,11 @@ interface DeviceDetail {
   barcode: string;
   serial_number: string | null;
   imei: string | null;
-  grade: "A" | "B" | "C" | null;
+  grade: "N" | "P" | "A" | "B" | "C" | null;
   battery_health: number | null;
   condition_notes: string | null;
+  storage: string | null;
+  color: string | null;
   purchase_price: number;
   selling_price: number | null;
   vat_scheme: string;
@@ -25,7 +30,13 @@ interface DeviceDetail {
   photos: string[];
   purchase_documents: string | null;
   created_at: string;
-  template: { id: string; display_name: string } | null;
+  template: {
+    id: string;
+    display_name: string;
+    category: string;
+    images: string[] | null;
+    specifications: Record<string, unknown> | null;
+  } | null;
   location: { id: string; name: string } | null;
   supplier: { id: string; name: string } | null;
 }
@@ -44,10 +55,35 @@ interface Transfer {
 /* ------------------------------------------------------------------ */
 
 const GRADE_BADGE: Record<string, string> = {
+  N: "bg-blue-100 text-blue-800 border-blue-200",
+  P: "bg-sky-100 text-sky-800 border-sky-200",
   A: "bg-green-100 text-green-800 border-green-200",
   B: "bg-yellow-100 text-yellow-800 border-yellow-200",
   C: "bg-orange-100 text-orange-800 border-orange-200",
 };
+
+const GRADE_ORDER = ["N", "P", "A", "B", "C"] as const;
+
+// Danske labels for spec-nøgler (Foxway-sync gemmer engelske nøgler)
+const SPEC_LABELS: Record<string, string> = {
+  ram: "RAM",
+  processor: "Processor",
+  chip: "Chip",
+  storage: "Lagerplads",
+  lagertype: "Lagertype",
+  screen_size: "Skærmstørrelse",
+  skærm: "Skærmstørrelse",
+  resolution: "Opløsning",
+  graphics: "Grafik",
+  display_type: "Skærmtype",
+  os: "Styresystem",
+  connectivity: "Forbindelse",
+  størrelse: "Størrelse",
+};
+
+function specLabel(key: string): string {
+  return SPEC_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " ");
+}
 
 const STATUS_BADGE: Record<string, string> = {
   intake: "bg-stone-100 text-stone-700 border-stone-200",
@@ -58,6 +94,7 @@ const STATUS_BADGE: Record<string, string> = {
   shipped: "bg-sky-100 text-sky-700 border-sky-200",
   picked_up: "bg-teal-100 text-teal-700 border-teal-200",
   returned: "bg-red-100 text-red-700 border-red-200",
+  delisted: "bg-stone-200 text-stone-500 border-stone-300",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -69,6 +106,7 @@ const STATUS_LABELS: Record<string, string> = {
   shipped: "Sendt",
   picked_up: "Afhentet",
   returned: "Returneret",
+  delisted: "Arkiveret",
 };
 
 const EDITABLE_STATUSES = [
@@ -80,6 +118,7 @@ const EDITABLE_STATUSES = [
   "shipped",
   "picked_up",
   "returned",
+  "delisted",
 ];
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -124,6 +163,21 @@ export default function DeviceDetailPage() {
   const [conditionNotes, setConditionNotes] = useState<string>("");
   const [sellingPriceInput, setSellingPriceInput] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [storage, setStorage] = useState<string>("");
+  const [color, setColor] = useState<string>("");
+  const [serialNumber, setSerialNumber] = useState<string>("");
+  const [imeiInput, setImeiInput] = useState<string>("");
+
+  // Template (produktdata) form state
+  const [templateImages, setTemplateImages] = useState<string[]>([]);
+  const [templateSpecs, setTemplateSpecs] = useState<Record<string, string>>({});
+  const [templateSaving, setTemplateSaving] = useState(false);
+  const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
+  const [templateSaveSuccess, setTemplateSaveSuccess] = useState(false);
+
+  // Device photo upload
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   const [locationId, setLocationId] = useState<string>("");
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
@@ -165,6 +219,18 @@ export default function DeviceDetailPage() {
       );
       setStatus(dev.status);
       setLocationId(dev.location?.id ?? "");
+      setStorage(dev.storage ?? "");
+      setColor(dev.color ?? "");
+      setSerialNumber(dev.serial_number ?? "");
+      setImeiInput(dev.imei ?? "");
+
+      // Populate template form (produktdata for modellen)
+      setTemplateImages(dev.template?.images ?? []);
+      const specs: Record<string, string> = {};
+      for (const [key, value] of Object.entries(dev.template?.specifications ?? {})) {
+        if (value != null) specs[key] = String(value);
+      }
+      setTemplateSpecs(specs);
 
       // Fetch locations for dropdown
       fetch("/api/platform/locations").then(r => r.json()).then(data => {
@@ -199,6 +265,14 @@ export default function DeviceDetailPage() {
       if (conditionNotes !== "") body.condition_notes = conditionNotes;
       if (status) body.status = status;
       if (locationId) body.location_id = locationId;
+      if (storage.trim() !== (device.storage ?? "")) body.storage = storage.trim();
+      if (color.trim() !== (device.color ?? "")) body.color = color.trim();
+      if (serialNumber.trim() !== (device.serial_number ?? "")) {
+        body.serial_number = serialNumber.trim() || null;
+      }
+      if (imeiInput.trim() !== (device.imei ?? "")) {
+        body.imei = imeiInput.trim() || null;
+      }
       const parsedPrice = parseDKKToOere(sellingPriceInput);
       if (parsedPrice !== null) body.selling_price = parsedPrice;
 
@@ -218,6 +292,82 @@ export default function DeviceDetailPage() {
       setSaveError(err instanceof Error ? err.message : "Gem mislykkedes");
     } finally {
       setSaving(false);
+    }
+  }
+
+  /* ---- Device photos ---- */
+  async function handlePhotoUpload(files: FileList | null) {
+    if (!device || !files || files.length === 0) return;
+    setUploadingPhotos(true);
+    try {
+      const formData = new FormData();
+      formData.append("device_id", device.id);
+      for (const file of Array.from(files)) {
+        formData.append("files", file);
+      }
+      const res = await fetch("/api/platform/devices/upload-photos", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload mislykkedes");
+      await fetchDevice();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Upload mislykkedes");
+    } finally {
+      setUploadingPhotos(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  }
+
+  async function handleRemovePhoto(url: string) {
+    if (!device) return;
+    const nextPhotos = device.photos.filter((p) => p !== url);
+    try {
+      const res = await fetch(`/api/platform/devices/${device.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photos: nextPhotos }),
+      });
+      if (!res.ok) throw new Error("Kunne ikke fjerne billedet");
+      setDevice((prev) => (prev ? { ...prev, photos: nextPhotos } : prev));
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Kunne ikke fjerne billedet");
+    }
+  }
+
+  /* ---- Template (produktdata) save ---- */
+  async function handleTemplateSave() {
+    if (!device?.template) return;
+    setTemplateSaving(true);
+    setTemplateSaveError(null);
+    setTemplateSaveSuccess(false);
+    try {
+      // Merge edited specs on top of existing ones so keys the form doesn't
+      // manage (screen_size, resolution, os, ...) survive the update.
+      const mergedSpecs: Record<string, unknown> = {
+        ...(device.template.specifications ?? {}),
+      };
+      for (const [key, value] of Object.entries(templateSpecs)) {
+        if (value.trim() === "") delete mergedSpecs[key];
+        else mergedSpecs[key] = value.trim();
+      }
+
+      const res = await fetch(`/api/platform/templates/${device.template.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: templateImages, specifications: mergedSpecs }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? `Serverfejl (${res.status})`);
+      }
+      setTemplateSaveSuccess(true);
+      await fetchDevice();
+      setTimeout(() => setTemplateSaveSuccess(false), 3000);
+    } catch (err) {
+      setTemplateSaveError(err instanceof Error ? err.message : "Gem mislykkedes");
+    } finally {
+      setTemplateSaving(false);
     }
   }
 
@@ -333,40 +483,70 @@ export default function DeviceDetailPage() {
         {/* Left column (2/3) */}
         <div className="space-y-6 lg:col-span-2">
 
-          {/* Photo gallery */}
-          {device.photos && device.photos.length > 0 && (
-            <div className="rounded-2xl border border-stone-200 bg-white p-5">
-              <SectionHeading>Billeder</SectionHeading>
+          {/* Device photo gallery + upload */}
+          <div className="rounded-2xl border border-stone-200 bg-white p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+                Billeder af denne enhed
+              </h2>
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={uploadingPhotos}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:border-stone-300 hover:bg-stone-50 disabled:opacity-50"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {uploadingPhotos ? "Uploader…" : "Upload billeder"}
+              </button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(e) => handlePhotoUpload(e.target.files)}
+                className="hidden"
+              />
+            </div>
+            {device.photos && device.photos.length > 0 ? (
               <div className="flex flex-wrap gap-3">
                 {device.photos.map((photo, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setLightboxPhoto(photo)}
+                  <div
+                    key={photo}
                     className="group relative h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-100 transition hover:border-stone-300"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={photo}
-                      alt={`Billede ${i + 1}`}
-                      className="h-full w-full object-cover transition group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/10">
-                      <svg
-                        className="h-5 w-5 text-white opacity-0 transition group-hover:opacity-100 drop-shadow"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                    <button
+                      type="button"
+                      onClick={() => setLightboxPhoto(photo)}
+                      className="h-full w-full"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo}
+                        alt={`Billede ${i + 1}`}
+                        className="h-full w-full object-cover transition group-hover:scale-105"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(photo)}
+                      title="Fjern billede"
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-stone-400">
+                Ingen billeder endnu — upload fotos af netop denne enhed.
+              </p>
+            )}
+          </div>
 
           {/* Editable fields */}
           <div className="rounded-2xl border border-stone-200 bg-white p-5">
@@ -384,9 +564,11 @@ export default function DeviceDetailPage() {
                   className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
                 >
                   <option value="">Vælg stand…</option>
-                  <option value="A">A — Perfekt stand</option>
-                  <option value="B">B — God stand</option>
-                  <option value="C">C — Brugt stand</option>
+                  {GRADE_ORDER.map((g) => (
+                    <option key={g} value={g}>
+                      {g} — {GRADE_SHORT_LABEL[g]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -460,14 +642,60 @@ export default function DeviceDetailPage() {
                 </select>
               </div>
 
-              {/* IMEI / Serial */}
+              {/* Storage */}
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-stone-700">
-                  IMEI / Serienummer
+                  Lagerplads (GB)
                 </label>
-                <p className="mt-0.5 text-sm text-stone-600 font-mono">
-                  {device.imei || device.serial_number || <span className="text-stone-300">Ikke registreret</span>}
-                </p>
+                <input
+                  type="text"
+                  value={storage}
+                  onChange={(e) => setStorage(e.target.value)}
+                  placeholder="fx 256GB SSD M.2"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                />
+              </div>
+
+              {/* Color */}
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  Farve
+                </label>
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  placeholder="fx Sort"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                />
+              </div>
+
+              {/* Serial number */}
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  Serienummer
+                </label>
+                <input
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  placeholder="Ikke registreret"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 font-mono text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                />
+              </div>
+
+              {/* IMEI */}
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  IMEI
+                </label>
+                <input
+                  type="text"
+                  value={imeiInput}
+                  onChange={(e) => setImeiInput(e.target.value)}
+                  placeholder="Ikke registreret"
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 font-mono text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                />
               </div>
 
               {/* Condition notes (full width) */}
@@ -553,6 +781,105 @@ export default function DeviceDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Produktdata for modellen (template) */}
+          {device.template && (
+            <div className="rounded-2xl border border-stone-200 bg-white p-5">
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-400">
+                  Produktdata for modellen
+                </h2>
+                <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-semibold text-stone-500">
+                  {device.template.display_name}
+                </span>
+              </div>
+              <p className="mb-4 text-xs text-stone-400">
+                Produktbillede og specifikationer gælder alle enheder af denne model
+                og vises på webshoppens produktside.
+              </p>
+
+              {/* Template images */}
+              <div className="mb-5">
+                <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                  Produktbilleder
+                </label>
+                <ProductImageUploader
+                  images={templateImages}
+                  onChange={setTemplateImages}
+                  folder={`templates/${device.template.id}`}
+                />
+              </div>
+
+              {/* Specifications */}
+              {(() => {
+                const categoryKeys = DEVICE_SPEC_FIELDS.filter((f) =>
+                  f.categories.includes(device.template?.category ?? ""),
+                ).map((f) => f.key);
+                const allKeys = [
+                  ...new Set([...Object.keys(templateSpecs), ...categoryKeys]),
+                ];
+                if (allKeys.length === 0) return null;
+                return (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-stone-700">
+                      Specifikationer
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {allKeys.map((key) => (
+                        <div key={key}>
+                          <label className="mb-1 block text-xs font-semibold text-stone-400">
+                            {specLabel(key)}
+                          </label>
+                          <input
+                            type="text"
+                            value={templateSpecs[key] ?? ""}
+                            onChange={(e) =>
+                              setTemplateSpecs((prev) => ({ ...prev, [key]: e.target.value }))
+                            }
+                            placeholder={`fx ${key === "ram" ? "16GB" : "…"}`}
+                            className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Save feedback */}
+              {templateSaveError && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                  {templateSaveError}
+                </div>
+              )}
+              {templateSaveSuccess && (
+                <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-sm text-green-700">
+                  Produktdata gemt.
+                </div>
+              )}
+
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={handleTemplateSave}
+                  disabled={templateSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-charcoal px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-125 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {templateSaving ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Gemmer…
+                    </>
+                  ) : (
+                    "Gem produktdata"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Transfer history */}
           <div className="rounded-2xl border border-stone-200 bg-white p-5">

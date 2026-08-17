@@ -12,12 +12,13 @@ interface StockFilters {
   grade?: string;
   search?: string;
   category?: string;
+  brand?: string;
 }
 
 interface Device {
   id: string;
   barcode: string;
-  grade: "A" | "B" | "C" | null;
+  grade: "N" | "P" | "A" | "B" | "C" | null;
   status: string;
   storage: string | null;
   color: string | null;
@@ -47,9 +48,19 @@ interface StockTableProps {
   filters: StockFilters;
 }
 
-const LIMIT = 25;
+const PAGE_SIZE_OPTIONS = [
+  { value: 25, label: "25 pr. side" },
+  { value: 50, label: "50 pr. side" },
+  { value: 100, label: "100 pr. side" },
+  { value: 0, label: "Vis alle" },
+];
+
+// Supabase capper svar på 1000 rækker — bruges som limit når "Vis alle" er valgt
+const SHOW_ALL_LIMIT = 1000;
 
 const GRADE_BADGE: Record<string, string> = {
+  N: "bg-blue-100 text-blue-800 border-blue-200",
+  P: "bg-sky-100 text-sky-800 border-sky-200",
   A: "bg-green-100 text-green-800 border-green-200",
   B: "bg-yellow-100 text-yellow-800 border-yellow-200",
   C: "bg-orange-100 text-orange-800 border-orange-200",
@@ -64,7 +75,7 @@ const STATUS_BADGE: Record<string, string> = {
   shipped: "bg-sky-100 text-sky-700 border-sky-200",
   picked_up: "bg-teal-100 text-teal-700 border-teal-200",
   returned: "bg-red-100 text-red-700 border-red-200",
-  archived: "bg-stone-200 text-stone-500 border-stone-300",
+  delisted: "bg-stone-200 text-stone-500 border-stone-300",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -76,13 +87,14 @@ const STATUS_LABELS: Record<string, string> = {
   shipped: "Sendt",
   picked_up: "Afhentet",
   returned: "Returneret",
-  archived: "Arkiveret",
+  delisted: "Arkiveret",
 };
 
 export function StockTable({ filters }: StockTableProps) {
   const [devices, setDevices] = useState<Device[]>([]);
   const [count, setCount] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -115,7 +127,8 @@ export function StockTable({ filters }: StockTableProps) {
       if (filters.grade) params.set("grade", filters.grade);
       if (filters.search) params.set("search", filters.search);
       if (filters.category) params.set("category", filters.category);
-      params.set("limit", String(LIMIT));
+      if (filters.brand) params.set("brand", filters.brand);
+      params.set("limit", String(pageSize === 0 ? SHOW_ALL_LIMIT : pageSize));
       params.set("offset", String(currentOffset));
 
       const res = await fetch(`/api/platform/devices?${params}`);
@@ -128,12 +141,12 @@ export function StockTable({ filters }: StockTableProps) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, pageSize]);
 
   useEffect(() => {
     setOffset(0);
     setSelected(new Set());
-  }, [filters]);
+  }, [filters, pageSize]);
 
   useEffect(() => {
     fetchDevices(offset);
@@ -329,8 +342,9 @@ export function StockTable({ filters }: StockTableProps) {
     }, 200);
   }
 
-  const totalPages = Math.ceil(count / LIMIT);
-  const currentPage = Math.floor(offset / LIMIT) + 1;
+  const effectiveLimit = pageSize === 0 ? SHOW_ALL_LIMIT : pageSize;
+  const totalPages = Math.max(1, Math.ceil(count / effectiveLimit));
+  const currentPage = Math.floor(offset / effectiveLimit) + 1;
   const hasListable = devices.some((d) => ["intake", "graded", "returned"].includes(d.status));
 
   return (
@@ -594,7 +608,7 @@ export function StockTable({ filters }: StockTableProps) {
                         <button
                           type="button"
                           disabled={updatingId === device.id}
-                          onClick={() => quickStatusChange(device.id, "archived")}
+                          onClick={() => quickStatusChange(device.id, "delisted")}
                           className="rounded-lg bg-stone-100 px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 disabled:opacity-40"
                         >
                           {updatingId === device.id ? (
@@ -602,7 +616,7 @@ export function StockTable({ filters }: StockTableProps) {
                           ) : "Arkiver"}
                         </button>
                       )}
-                      {device.status === "archived" && (
+                      {device.status === "delisted" && (
                         <button
                           type="button"
                           disabled={updatingId === device.id}
@@ -640,30 +654,45 @@ export function StockTable({ filters }: StockTableProps) {
         </table>
       </div>
 
-      {/* Pagination */}
-      {count > LIMIT && (
-        <div className="flex items-center justify-between gap-4 border-t border-stone-100 px-4 py-3">
+      {/* Pagination + page size */}
+      {count > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-stone-100 px-4 py-3">
           <p className="text-xs text-stone-400">
-            Viser {offset + 1}–{Math.min(offset + LIMIT, count)} af {count}
+            Viser {offset + 1}–{Math.min(offset + effectiveLimit, count)} af {count} enheder
           </p>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - LIMIT))}
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 focus:outline-none"
             >
-              Forrige
-            </button>
-            <span className="text-xs text-stone-400">Side {currentPage} / {totalPages}</span>
-            <button
-              type="button"
-              disabled={offset + LIMIT >= count}
-              onClick={() => setOffset(offset + LIMIT)}
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Næste
-            </button>
+              {PAGE_SIZE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            {count > effectiveLimit && (
+              <>
+                <button
+                  type="button"
+                  disabled={offset === 0}
+                  onClick={() => setOffset(Math.max(0, offset - effectiveLimit))}
+                  className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Forrige
+                </button>
+                <span className="text-xs text-stone-400">Side {currentPage} / {totalPages}</span>
+                <button
+                  type="button"
+                  disabled={offset + effectiveLimit >= count}
+                  onClick={() => setOffset(offset + effectiveLimit)}
+                  className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Næste
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

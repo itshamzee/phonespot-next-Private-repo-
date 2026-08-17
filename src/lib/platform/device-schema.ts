@@ -26,8 +26,13 @@ export const deviceUpdateSchema = z.object({
   grade: z.enum(["N", "P", "A", "B", "C"]).optional(),
   battery_health: z.number().int().min(0).max(100).optional(),
   condition_notes: z.string().optional(),
+  storage: z.string().optional(),
+  color: z.string().optional(),
+  serial_number: z.string().nullable().optional(),
+  imei: z.string().nullable().optional(),
+  photos: z.array(z.string()).optional(),
   selling_price: z.number().int().positive().optional(),
-  status: z.enum(["intake", "graded", "listed", "reserved", "sold", "shipped", "picked_up", "returned", "archived"]).optional(),
+  status: z.enum(["intake", "graded", "listed", "reserved", "sold", "shipped", "picked_up", "returned", "delisted"]).optional(),
   location_id: z.string().uuid().optional(),
 });
 

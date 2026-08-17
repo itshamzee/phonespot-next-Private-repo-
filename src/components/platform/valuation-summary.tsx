@@ -76,24 +76,24 @@ function ValuationCard({
       </div>
 
       {/* Values */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between gap-2">
           <p className="text-xs text-stone-400">Indkøbsværdi</p>
-          <p className="mt-0.5 text-sm font-semibold text-stone-700">
+          <p className="text-sm font-semibold tabular-nums text-stone-700">
             {formatDKK(totalPurchaseValue)}
           </p>
         </div>
-        <div>
+        <div className="flex items-baseline justify-between gap-2">
           <p className="text-xs text-stone-400">Salgsværdi</p>
-          <p className="mt-0.5 text-sm font-semibold text-stone-700">
+          <p className="text-sm font-semibold tabular-nums text-stone-700">
             {formatDKK(totalSellingValue)}
           </p>
         </div>
-        <div>
+        <div className="flex items-baseline justify-between gap-2 border-t border-stone-100 pt-1.5">
           <p className="text-xs text-stone-400">Margin</p>
           <p
             className={[
-              "mt-0.5 text-sm font-bold",
+              "text-sm font-bold tabular-nums",
               potentialMargin > 0 ? "text-green-700" : "text-stone-400",
             ].join(" ")}
           >
@@ -157,8 +157,8 @@ export function ValuationSummary() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {[0, 1, 2].map((i) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
           <SkeletonCard key={i} />
         ))}
       </div>
@@ -175,8 +175,12 @@ export function ValuationSummary() {
 
   if (!data) return null;
 
+  const cardCount = data.locations.length + 1;
+  const xlCols =
+    cardCount >= 4 ? "xl:grid-cols-4" : cardCount === 3 ? "xl:grid-cols-3" : "xl:grid-cols-2";
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className={["grid gap-4 sm:grid-cols-2", xlCols].join(" ")}>
       {/* Per-location cards */}
       {data.locations.map((loc) => (
         <ValuationCard

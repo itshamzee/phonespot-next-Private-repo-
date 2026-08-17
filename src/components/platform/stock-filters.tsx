@@ -8,6 +8,7 @@ export interface StockFilters {
   grade?: string;
   search?: string;
   category?: string;
+  brand?: string;
 }
 
 interface Location {
@@ -22,10 +23,13 @@ const STATUS_OPTIONS = [
   { value: "listed", label: "Til salg" },
   { value: "reserved", label: "Reserveret" },
   { value: "sold", label: "Solgt" },
+  { value: "delisted", label: "Arkiveret" },
 ];
 
 const GRADE_OPTIONS = [
   { value: "", label: "Alle grader" },
+  { value: "N", label: "N — Fabriksny" },
+  { value: "P", label: "P — Premium stand" },
   { value: "A", label: "A — Perfekt stand" },
   { value: "B", label: "B — God stand" },
   { value: "C", label: "C — Brugt stand" },
@@ -38,6 +42,7 @@ interface StockFiltersProps {
 
 export function StockFilters({ filters, onChange }: StockFiltersProps) {
   const [locations, setLocations] = useState<Location[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -51,7 +56,19 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
         // silently fail — filter still works without locations
       }
     }
+    async function fetchBrands() {
+      try {
+        const res = await fetch("/api/platform/devices/brands");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.brands)) setBrands(data.brands);
+        }
+      } catch {
+        // silently fail — filter still works without brands
+      }
+    }
     fetchLocations();
+    fetchBrands();
   }, []);
 
   function update(patch: Partial<StockFilters>) {
@@ -59,7 +76,7 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
   }
 
   const hasActiveFilters =
-    !!filters.location_id || !!filters.status || !!filters.grade || !!filters.search;
+    !!filters.location_id || !!filters.status || !!filters.grade || !!filters.search || !!filters.brand;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -82,6 +99,22 @@ export function StockFilters({ filters, onChange }: StockFiltersProps) {
           className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-4 text-sm text-stone-800 placeholder:text-stone-400 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
         />
       </div>
+
+      {/* Brand */}
+      {brands.length > 0 && (
+        <select
+          value={filters.brand ?? ""}
+          onChange={(e) => update({ brand: e.target.value || undefined })}
+          className="rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-700 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
+        >
+          <option value="">Alle brands</option>
+          {brands.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+      )}
 
       {/* Location */}
       {locations.length > 0 && (
