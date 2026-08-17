@@ -105,11 +105,23 @@ export async function getTemplateBySlug(slug: string): Promise<ProductTemplate |
   return data;
 }
 
+// Eksplicit kolonneliste — IKKE select("*"). Resultatet sendes videre som
+// props til <DeviceDetail> ("use client"), dvs. hver kolonne bliver
+// serialiseret ind i sidens RSC-payload og er laesbar i kildekoden.
+// select("*") lækkede derfor purchase_price (vores indkoebspris),
+// source_sku og source_url (leverandoer-URL) for hver eneste listet enhed.
+// Felterne herunder er dem der faktisk laeses downstream:
+//   device-detail.tsx, lib/seo/item-condition.ts, lib/supabase/product-adapter.ts
+// `source` beholdes bevidst: device-detail.tsx bruger den til leverings-/
+// afhentningslinjen for dropship-enheder.
+const AVAILABLE_DEVICE_COLUMNS =
+  "id, template_id, status, grade, condition_notes, selling_price, storage, color, battery_health, battery_replaced, source, location:locations(id, name, type)";
+
 export async function getAvailableDevices(templateId: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("devices")
-    .select("*, location:locations(id, name, type)")
+    .select(AVAILABLE_DEVICE_COLUMNS)
     .eq("template_id", templateId)
     .eq("status", "listed")
     .not("selling_price", "is", null)

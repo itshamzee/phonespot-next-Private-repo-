@@ -31,7 +31,11 @@ const mgmtToken   = env.SUPABASE_ACCESS_TOKEN || env.SUPABASE_MANAGEMENT_TOKEN;
 
 if (!supabaseUrl || !serviceKey) { console.error('Missing env'); process.exit(1); }
 
-const MIGRATIONS = ['20260817_foxway_dropship.sql', '20260817_laptop_upgrades.sql'];
+const MIGRATIONS = [
+  '20260817_foxway_dropship.sql',
+  '20260817_laptop_upgrades.sql',
+  '20260817_laptop_upgrades_rls.sql',
+];
 
 const migDir = path.resolve(__dirname, '..', 'supabase', 'migrations');
 

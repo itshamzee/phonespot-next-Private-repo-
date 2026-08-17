@@ -33,9 +33,31 @@ export type RelatedInStockProduct = {
   brand: string;
 };
 
+/**
+ * Kun de device-kolonner denne (client-)komponent faktisk laeser.
+ * Bevidst IKKE hele `Device`: alt hvad der staar her bliver serialiseret ind
+ * i sidens RSC-payload og er laesbart i den offentlige kildekode, saa
+ * purchase_price/source_sku/source_url maa aldrig kunne snige sig med.
+ * Holdes i sync med AVAILABLE_DEVICE_COLUMNS i lib/supabase/product-queries.ts.
+ */
+export type PublicDevice = Pick<
+  Device,
+  | "id"
+  | "template_id"
+  | "status"
+  | "grade"
+  | "condition_notes"
+  | "selling_price"
+  | "storage"
+  | "color"
+  | "battery_health"
+  | "battery_replaced"
+  | "source"
+>;
+
 type DeviceDetailProps = {
   template: ProductTemplate;
-  devices: Device[];
+  devices: PublicDevice[];
   accessories: SkuProduct[];
   /** In-stock same-category models, shown when this model is fully sold out. */
   relatedInStock?: RelatedInStockProduct[];
@@ -77,7 +99,9 @@ const GRADE_DETAILS: Record<string, { label: string; cosmetic: string }> = {
  * showing an invented floor. `battery_replaced` is only ever mentioned when
  * explicitly true for that same unit.
  */
-export function buildBatteryLine(unit: Device | null): string | null {
+export function buildBatteryLine(
+  unit: Pick<Device, "battery_health" | "battery_replaced"> | null,
+): string | null {
   if (!unit || unit.battery_health == null) return null;
   const base = `Batteri: ${unit.battery_health}% — målt på denne enhed`;
   return unit.battery_replaced === true ? `${base}. Nyt batteri isat.` : base;
@@ -259,7 +283,7 @@ export function DeviceDetail({ template, devices, accessories, relatedInStock = 
   }
 
   // Grade filter is reused for availability calculations and final match
-  const matchesGrade = (d: Device): boolean => {
+  const matchesGrade = (d: PublicDevice): boolean => {
     if (selectedGrade === "N") {
       return (
         (d.grade as string) === "N" ||
