@@ -110,15 +110,24 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
   const orderItems = params.items.filter((vi) => vi.available).map((vi) => {
     const item = vi.item;
     if (item.type === "device") {
+      const upgradeSum = item.upgrades?.reduce((n, u) => n + u.price, 0) ?? 0;
       return {
         order_id: order.id,
         item_type: "device" as const,
         device_id: item.deviceId,
         sku_product_id: null,
         quantity: 1,
-        unit_price: vi.serverPrice,
-        total_price: vi.serverPrice,
+        unit_price: vi.serverPrice + upgradeSum,
+        total_price: vi.serverPrice + upgradeSum,
         purchase_price: null,
+        upgrade_details: item.upgrades?.length
+          ? item.upgrades.map((u) => ({
+              option_id: u.optionId,
+              kind: u.kind,
+              label: u.label,
+              price_oere: u.price,
+            }))
+          : null,
       };
     } else {
       return {
@@ -130,6 +139,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
         unit_price: vi.serverPrice,
         total_price: vi.serverPrice * item.quantity,
         purchase_price: null,
+        upgrade_details: null,
       };
     }
   });

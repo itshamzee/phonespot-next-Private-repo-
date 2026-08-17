@@ -54,7 +54,7 @@ function buildLineItems(
 ): Stripe.Checkout.SessionCreateParams.LineItem[] {
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items
     .filter((vi) => vi.available)
-    .map((vi) => {
+    .flatMap((vi) => {
       const item: CartItem = vi.item;
 
       const name =
@@ -67,7 +67,7 @@ function buildLineItems(
         ? { device_id: item.deviceId, item_type: "device", sku_product_id: "" }
         : { sku_product_id: item.skuProductId, item_type: "sku_product", device_id: "" };
 
-      return {
+      const base: Stripe.Checkout.SessionCreateParams.LineItem = {
         price_data: {
           currency: "dkk",
           product_data: {
@@ -79,6 +79,22 @@ function buildLineItems(
         },
         quantity,
       };
+
+      if (item.type === "device" && item.upgrades?.length) {
+        const upgradeLines = item.upgrades.map((u) => ({
+          price_data: {
+            currency: "dkk" as const,
+            product_data: {
+              name: `${item.title}: ${u.label}`,
+              metadata: { item_type: "upgrade", upgrade_option_id: u.optionId, device_id: item.deviceId },
+            },
+            unit_amount: u.price,
+          },
+          quantity: 1,
+        }));
+        return [base, ...upgradeLines];
+      }
+      return [base];
     });
 
   if (shippingCost > 0) {
