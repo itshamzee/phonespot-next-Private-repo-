@@ -372,6 +372,7 @@ export async function syncFoxwayItems(
           template_id: templateId,
           source: "foxway",
           source_sku: item.sourceSku,
+          source_url: item.foxwayUrl || null,
           source_stock: item.stock,
           grade: item.grade,
           storage: item.storage,
@@ -403,6 +404,7 @@ export async function syncFoxwayItems(
         const updates: Record<string, unknown> = {
           source_stock: item.stock,
           status: "listed",
+          source_url: item.foxwayUrl || null,
         };
 
         if (existing.purchase_price !== item.buyPrice) {
