@@ -6,6 +6,16 @@ interface TemplateWithStock extends ProductTemplate {
   device_count: number;
   min_price: number | null;
   locations: { name: string; type: string; count: number }[];
+  /**
+   * True when at least one listed device on this template is NOT sourced
+   * from Foxway dropship (i.e. PhoneSpot's own physical stock). Used to
+   * sort own inventory before dropship on customer-facing category pages.
+   * Internal data only — never rendered or labelled "Foxway" in the UI.
+   * Defaults to false when there are 0 listed devices (nothing to call
+   * "own stock" yet), which also has the effect of sorting stockless
+   * templates after in-stock ones.
+   */
+  has_own_stock: boolean;
 }
 
 // Get published templates with device count and min price
@@ -35,10 +45,11 @@ export async function getPublishedTemplates(
   const { data: templates } = await query.order("display_name");
   if (!templates) return [];
 
-  // Get device counts, min prices, and location info for all templates
+  // Get device counts, min prices, location info, and stock provenance
+  // (own vs. Foxway dropship — Task 17) for all templates.
   const { data: deviceStats } = await supabase
     .from("devices")
-    .select("template_id, selling_price, location:locations(name, type)")
+    .select("template_id, selling_price, source, location:locations(name, type)")
     .in("template_id", templates.map(t => t.id))
     .eq("status", "listed");
 
@@ -46,14 +57,16 @@ export async function getPublishedTemplates(
     count: number;
     minPrice: number | null;
     locations: Map<string, { name: string; type: string; count: number }>;
+    hasOwnStock: boolean;
   }>();
 
   for (const d of deviceStats || []) {
-    const existing = statsMap.get(d.template_id) || { count: 0, minPrice: null, locations: new Map() };
+    const existing = statsMap.get(d.template_id) || { count: 0, minPrice: null, locations: new Map(), hasOwnStock: false };
     existing.count++;
     if (d.selling_price && (existing.minPrice === null || d.selling_price < existing.minPrice)) {
       existing.minPrice = d.selling_price;
     }
+    if (d.source !== "foxway") existing.hasOwnStock = true;
     const loc = d.location as unknown as { name: string; type: string } | null;
     if (loc) {
       const locEntry = existing.locations.get(loc.name) || { name: loc.name, type: loc.type, count: 0 };
@@ -70,6 +83,7 @@ export async function getPublishedTemplates(
       device_count: stats?.count ?? 0,
       min_price: stats?.minPrice ?? t.base_price_a ?? null,
       locations: stats ? Array.from(stats.locations.values()) : [],
+      has_own_stock: stats?.hasOwnStock ?? false,
     };
   });
 

@@ -14,6 +14,10 @@ export interface TemplateWithStock extends ProductTemplate {
   device_count: number;
   min_price: number | null;
   locations: { name: string; type: string; count: number }[];
+  /** True when at least one listed device is PhoneSpot's own stock (not
+   *  Foxway dropship) — see product-queries.ts. Drives sort order in
+   *  CategoryFilters; never surfaced in the UI. */
+  has_own_stock: boolean;
 }
 
 interface PromoSlot {

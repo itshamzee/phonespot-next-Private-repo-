@@ -11,6 +11,13 @@ interface TemplateWithStock extends ProductTemplate {
   device_count: number;
   min_price: number | null;
   locations: { name: string; type: string; count: number }[];
+  /**
+   * True when at least one listed device is PhoneSpot's own stock (not
+   * Foxway dropship). Used as the primary sort key so own inventory shows
+   * before dropship — see product-queries.ts. Internal data only, never
+   * surfaced in the UI.
+   */
+  has_own_stock: boolean;
 }
 
 type SortOption = "price_asc" | "price_desc" | "popular" | "newest";
@@ -208,25 +215,31 @@ function applyFilters(
     return true;
   });
 
-  // Sort
+  // Sort — PhoneSpot's own stock always shows before Foxway dropship stock
+  // (Task 17), with the chosen criterion as the secondary/tie-break key.
+  // has_own_stock is true for anything that isn't Foxway, so this is a
+  // no-op reorder for categories that carry no dropship stock at all.
+  const ownStockFirst = (a: TemplateWithStock, b: TemplateWithStock) =>
+    (b.has_own_stock ? 1 : 0) - (a.has_own_stock ? 1 : 0);
+
   switch (state.sort) {
     case "price_asc":
       results = results.sort(
-        (a, b) => (a.min_price ?? Infinity) - (b.min_price ?? Infinity)
+        (a, b) => ownStockFirst(a, b) || (a.min_price ?? Infinity) - (b.min_price ?? Infinity)
       );
       break;
     case "price_desc":
       results = results.sort(
-        (a, b) => (b.min_price ?? -Infinity) - (a.min_price ?? -Infinity)
+        (a, b) => ownStockFirst(a, b) || (b.min_price ?? -Infinity) - (a.min_price ?? -Infinity)
       );
       break;
     case "popular":
-      results = results.sort((a, b) => b.device_count - a.device_count);
+      results = results.sort((a, b) => ownStockFirst(a, b) || b.device_count - a.device_count);
       break;
     case "newest":
       results = results.sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ownStockFirst(a, b) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       break;
   }
