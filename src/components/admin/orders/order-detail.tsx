@@ -7,6 +7,7 @@ import { OrderStatusActions } from "./order-status-actions";
 import { FulfillmentCard } from "./fulfillment-card";
 import { PaymentCard } from "./payment-card";
 import { OrderTimeline } from "./order-timeline";
+import { FoxwayDropshipCard } from "./foxway-dropship-card";
 import Link from "next/link";
 import { formatDKK, formatDate } from "@/lib/platform/format";
 import type { Order } from "@/lib/supabase/platform-types";
@@ -159,6 +160,8 @@ interface OrderDetailProps {
     items?: any[];
     pickup_point_data?: any;
     total_amount?: number;
+    foxway_status?: "pending" | "ordered" | null;
+    foxway_order_ref?: string | null;
   };
   activity: any[];
   warranties?: any[];
@@ -237,6 +240,13 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
   const shippingCost: number = order.shipping_cost ?? 0;
   const discountAmount: number = order.discount_amount ?? 0;
   const total: number = order.total ?? order.total_amount ?? 0;
+
+  const foxwayItems = items.filter(
+    (it: { device?: { source?: string } | null }) => it.device?.source === "foxway",
+  );
+  const orderHasUpgrades = items.some(
+    (it: { upgrade_details?: unknown[] | null }) => (it.upgrade_details?.length ?? 0) > 0,
+  );
 
   return (
     <>
@@ -390,6 +400,25 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
                 </div>
               </div>
             </div>
+
+            {/* FoxwayDropshipCard — øverst, så en ubestilt dropship-ordre er det første man ser */}
+            {order.foxway_status && (
+              <FoxwayDropshipCard
+                orderId={order.id}
+                foxwayStatus={order.foxway_status}
+                foxwayOrderRef={order.foxway_order_ref ?? null}
+                devices={foxwayItems.map((it: any) => ({
+                  displayName: it.device?.template?.display_name ?? "Ukendt enhed",
+                  grade: it.device?.grade ?? "?",
+                  sourceSku: it.device?.source_sku ?? null,
+                  purchasePrice: it.device?.purchase_price ?? null,
+                  sourceUrl: it.device?.source_url ?? null,
+                }))}
+                hasUpgrades={orderHasUpgrades}
+                shippingAddress={(order.shipping_address as Record<string, any> | null) ?? null}
+                customerName={order.customer?.name ?? "kunden"}
+              />
+            )}
 
             {/* FulfillmentCard */}
             <FulfillmentCard
