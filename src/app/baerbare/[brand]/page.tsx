@@ -186,8 +186,16 @@ export default async function BrandPage({
   try {
     const templates = await getPublishedTemplates("laptop");
     const skuProducts = await getPublishedSkuProducts("laptop");
+    // Task 17: PhoneSpot's own stock before Foxway dropship stock. Sort is
+    // stable, so the existing display_name query order is preserved as the
+    // secondary key. templateToProduct() doesn't carry has_own_stock onto
+    // Product, so this must happen before conversion — see
+    // src/lib/supabase/product-queries.ts for the has_own_stock field.
+    const ownStockFirstTemplates = [...templates].sort(
+      (a, b) => (b.has_own_stock ? 1 : 0) - (a.has_own_stock ? 1 : 0)
+    );
     allProducts = [
-      ...templates.map((t) => templateToProduct(t)),
+      ...ownStockFirstTemplates.map((t) => templateToProduct(t)),
       ...skuProducts.map(skuProductToProduct),
     ];
   } catch {
