@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { deriveTradeInStatus } from "@/lib/supabase/trade-in-types";
+import { deriveTradeInStatus, parseManualStatus } from "@/lib/supabase/trade-in-types";
+
+describe("parseManualStatus", () => {
+  it("accepts every known status", () => {
+    expect(parseManualStatus("modtaget")).toBe("modtaget");
+    expect(parseManualStatus("afvist")).toBe("afvist");
+  });
+
+  it("returns null for garbage, null and missing column", () => {
+    expect(parseManualStatus(undefined)).toBeNull();
+    expect(parseManualStatus(null)).toBeNull();
+    expect(parseManualStatus("finished")).toBeNull();
+    expect(parseManualStatus(42)).toBeNull();
+  });
+});
 
 describe("deriveTradeInStatus with declines", () => {
   it("is afvist when a decline exists and there is no offer", () => {

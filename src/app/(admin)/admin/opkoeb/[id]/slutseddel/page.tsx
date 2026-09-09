@@ -269,7 +269,7 @@ export default function AdminSlutseddelPage() {
               storage: dev?.storage ?? "",
               ram: dev?.ram ?? "",
               condition_grade: "",
-              imei_serial: "",
+              imei_serial: dev?.imei ?? "",
               color: "",
               price_kr: (line.amount_ore / 100).toString(),
               condition_notes: "",
@@ -281,7 +281,7 @@ export default function AdminSlutseddelPage() {
             storage: entry.device.storage ?? "",
             ram: entry.device.ram ?? "",
             condition_grade: "",
-            imei_serial: "",
+            imei_serial: entry.device.imei ?? "",
             color: "",
             // Without a breakdown the single amount can only be attributed to a
             // single device; several devices get their prices filled by hand.

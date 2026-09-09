@@ -5,7 +5,7 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import type { ContactInquiry } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
-import { deriveTradeInStatus, formatDKK } from "@/lib/supabase/trade-in-types";
+import { deriveTradeInStatus, parseManualStatus, formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { normalizeStoreId } from "@/lib/stores";
 import StoreBadge from "@/components/admin/StoreBadge";
@@ -33,9 +33,31 @@ const STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string
   lukket: { label: "Lukket", badge: "bg-charcoal/[0.06] text-charcoal/40", dot: "bg-charcoal/20" },
 };
 
-const ALL_STATUSES: (TradeInDerivedStatus | "alle")[] = [
+// Afviste og lukkede sager er støj mellem de aktive — de bor i deres egen
+// mappe i stedet for at ligge blandet ind i hovedlisten.
+const CLOSED_STATUSES: TradeInDerivedStatus[] = ["afvist", "lukket"];
+
+const ACTIVE_TABS: (TradeInDerivedStatus | "alle")[] = [
   "alle", "ny", "tilbud_sendt", "accepteret", "afventer_forsendelse", "paa_vej",
-  "leveret", "modtaget", "vurderet", "betalt", "afvist", "lukket",
+  "leveret", "modtaget", "vurderet", "betalt",
+];
+
+const CLOSED_TABS: (TradeInDerivedStatus | "alle")[] = ["alle", "afvist", "lukket"];
+
+/**
+ * Procestrinnene, som de læses når man skimmer for "hvem venter på mig, og
+ * hvor er enhederne henne". Driver den grupperede standardvisning.
+ */
+const LIST_GROUPS: { title: string; hint: string; statuses: TradeInDerivedStatus[] }[] = [
+  { title: "Skal behandles", hint: "Nye henvendelser uden svar", statuses: ["ny"] },
+  { title: "Venter på kunde", hint: "Tilbud sendt — kunden har ikke svaret", statuses: ["tilbud_sendt"] },
+  {
+    title: "På vej ind",
+    hint: "Accepteret — enheden er ikke i hus endnu",
+    statuses: ["accepteret", "afventer_forsendelse", "paa_vej", "leveret"],
+  },
+  { title: "I hus", hint: "Modtaget — mangler vurdering eller slutseddel", statuses: ["modtaget", "vurderet"] },
+  { title: "Afsluttet", hint: "Betalt og færdige", statuses: ["betalt"] },
 ];
 
 /**
@@ -85,19 +107,33 @@ function inquiryStoreRaw(inquiry: ContactInquiry): string | null {
 export default function OpkoebPage() {
   const [rows, setRows] = useState<TradeInRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [folder, setFolder] = useState<"aktive" | "afviste">("aktive");
   const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">("alle");
   const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
   // 112 rows in one scroll is not a list, it is a wall. Show a screenful.
   const [visible, setVisible] = useState(30);
+  // Betalte sager vokser for evigt — den gruppe starter foldet sammen.
+  const [showAllDone, setShowAllDone] = useState(false);
   // Stamped when the data lands, so every age on the page is measured against
   // the same instant and nothing impure runs during render.
   const [now, setNow] = useState(0);
 
-  /* Narrowing the list starts it from the top again. */
+  /* Narrowing the list starts it from the top again. Et statusvalg hopper
+     også til den mappe statussen bor i, så et klik aldrig viser en tom liste. */
   const selectFilter = useCallback((next: TradeInDerivedStatus | "alle") => {
+    if (next !== "alle") {
+      setFolder(CLOSED_STATUSES.includes(next) ? "afviste" : "aktive");
+    }
     setFilter(next);
     setVisible(30);
+  }, []);
+
+  const selectFolder = useCallback((next: "aktive" | "afviste") => {
+    setFolder(next);
+    setFilter("alle");
+    setVisible(30);
+    setShowAllDone(false);
   }, []);
 
   const selectStore = useCallback((next: StoreFilterValue) => {
@@ -162,16 +198,23 @@ export default function OpkoebPage() {
         (allLabels || []).find((l) => accepted && l.offer_id === accepted.id) ?? null;
       const receivedAt = accepted?.received_at ?? null;
 
+      // En status admin selv har sat vinder over papirsporet.
+      const manual = parseManualStatus(
+        (inquiry as ContactInquiry & { manual_status?: string | null }).manual_status,
+      );
+
       return {
         inquiry,
         offers,
         receipts,
         shipment,
         receivedAt,
-        derivedStatus: deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
-          label: shipment,
-          receivedAt,
-        }),
+        derivedStatus:
+          manual ??
+          deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
+            label: shipment,
+            receivedAt,
+          }),
       };
     });
 
@@ -186,9 +229,17 @@ export default function OpkoebPage() {
     return () => clearTimeout(timer);
   }, [loadData]);
 
+  // Mappen skiller aktive sager fra afviste/lukkede, så hovedlisten kun
+  // indeholder noget der kræver (eller har krævet) handling.
+  const folderRows = rows.filter((row) =>
+    folder === "afviste"
+      ? CLOSED_STATUSES.includes(row.derivedStatus)
+      : !CLOSED_STATUSES.includes(row.derivedStatus),
+  );
+
   // Status- og søgefiltre anvendes først, så butiksfanernes tal afspejler
   // det aktuelle udsnit — butiksfilteret lægges ovenpå til sidst.
-  const preFiltered = rows.filter((row) => {
+  const preFiltered = folderRows.filter((row) => {
     if (filter !== "alle" && row.derivedStatus !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -273,6 +324,37 @@ export default function OpkoebPage() {
     return acc;
   }, {} as Record<string, number>);
 
+  const closedTotal = rows.filter((r) => CLOSED_STATUSES.includes(r.derivedStatus)).length;
+  const activeTotal = rows.length - closedTotal;
+  const tabs = folder === "afviste" ? CLOSED_TABS : ACTIVE_TABS;
+
+  // Standardvisningen grupperer i procestrin, så "hvem venter på mig" og
+  // "hvor er enhederne" kan aflæses uden at klikke rundt i statusfaner.
+  const grouped = folder === "aktive" && filter === "alle";
+
+  type ListItem =
+    | { kind: "header"; title: string; hint: string; count: number; truncated: number }
+    | { kind: "row"; row: TradeInRow };
+
+  const listItems: ListItem[] = grouped
+    ? LIST_GROUPS.flatMap((group): ListItem[] => {
+        const groupRows = filtered.filter((r) => group.statuses.includes(r.derivedStatus));
+        if (groupRows.length === 0) return [];
+        const shown =
+          group.title === "Afsluttet" && !showAllDone ? groupRows.slice(0, 8) : groupRows;
+        return [
+          {
+            kind: "header",
+            title: group.title,
+            hint: group.hint,
+            count: groupRows.length,
+            truncated: groupRows.length - shown.length,
+          },
+          ...shown.map((row): ListItem => ({ kind: "row", row })),
+        ];
+      })
+    : filtered.slice(0, visible).map((row): ListItem => ({ kind: "row", row }));
+
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("da-DK", {
       day: "numeric",
@@ -290,7 +372,7 @@ export default function OpkoebPage() {
             Opkøb
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
-            {rows.length} henvendelser totalt
+            {activeTotal} aktive · {closedTotal} afviste/lukkede
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -337,6 +419,36 @@ export default function OpkoebPage() {
       {/* Offers still inside their hold window — yours to stop */}
       <BuybackHoldWindow onChange={loadData} />
 
+      {/* Mapper: aktive sager vs. afviste/lukkede i deres egen skuffe */}
+      <div className="mb-5 inline-flex rounded-xl border border-black/[0.06] bg-white p-1 shadow-sm">
+        {(
+          [
+            { key: "aktive", label: "Aktive", count: activeTotal },
+            { key: "afviste", label: "Afviste & lukkede", count: closedTotal },
+          ] as const
+        ).map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => selectFolder(f.key)}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+              folder === f.key
+                ? "bg-charcoal text-white shadow-sm"
+                : "text-charcoal/40 hover:text-charcoal/60"
+            }`}
+          >
+            {f.label}
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                folder === f.key ? "bg-white/20 text-white" : "bg-charcoal/[0.04] text-charcoal/30"
+              }`}
+            >
+              {f.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Search */}
       <div className="mb-5">
         <div className="relative max-w-md">
@@ -357,8 +469,8 @@ export default function OpkoebPage() {
 
       {/* Status filter tabs */}
       <div className="mb-3 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-        {ALL_STATUSES.map((s) => {
-          const count = s === "alle" ? rows.length : (statusCounts[s] ?? 0);
+        {tabs.map((s) => {
+          const count = s === "alle" ? folderRows.length : (statusCounts[s] ?? 0);
           return (
             <button
               key={s}
@@ -412,7 +524,38 @@ export default function OpkoebPage() {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
           <div className="divide-y divide-black/[0.03]">
-            {filtered.slice(0, visible).map((row) => {
+            {listItems.map((item) => {
+              if (item.kind === "header") {
+                return (
+                  <div
+                    key={`header-${item.title}`}
+                    className="flex items-baseline justify-between gap-3 bg-charcoal/[0.02] px-5 py-2.5 sm:px-6"
+                  >
+                    <div className="flex min-w-0 items-baseline gap-2.5">
+                      <h3 className="text-[13px] font-bold text-charcoal">{item.title}</h3>
+                      <span className="hidden truncate text-[11px] text-charcoal/35 sm:inline">
+                        {item.hint}
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      {item.truncated > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllDone(true)}
+                          className="text-[11px] font-medium text-charcoal/40 underline hover:text-charcoal"
+                        >
+                          Vis alle {item.count}
+                        </button>
+                      )}
+                      <span className="rounded-full bg-charcoal/[0.05] px-2 py-0.5 text-[10px] font-bold text-charcoal/40">
+                        {item.count}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              const row = item.row;
               const meta = (row.inquiry.metadata || {}) as Record<string, unknown>;
               const leadDevices = readLeadDevices(meta);
               const first = leadDevices[0]?.device;
@@ -470,7 +613,7 @@ export default function OpkoebPage() {
             })}
           </div>
 
-          {filtered.length > visible && (
+          {!grouped && filtered.length > visible && (
             <button
               type="button"
               onClick={() => setVisible((v) => v + 50)}

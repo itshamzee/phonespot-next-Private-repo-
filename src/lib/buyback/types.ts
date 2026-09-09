@@ -8,6 +8,9 @@ export interface BuybackDevice {
   useCustom: boolean;
   brandCustom: string;
   modelCustom: string;
+  // Sat af admin når enheden kendes fysisk — kundens formular spørger ikke om
+  // det. Forudfyldes videre til slutsedlens imei_serial.
+  imei?: string;
 }
 
 export interface BuybackCondition {

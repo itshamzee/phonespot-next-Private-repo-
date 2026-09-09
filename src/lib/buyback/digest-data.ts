@@ -1,6 +1,6 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { DigestData } from "@/lib/email/buyback-digest";
-import { deriveTradeInStatus } from "@/lib/supabase/trade-in-types";
+import { deriveTradeInStatus, parseManualStatus } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "./lead-devices";
 
 type SupabaseAdmin = ReturnType<typeof createAdminClient>;
@@ -143,12 +143,13 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
   /* --- The manual queue --- */
   const { data: leads } = await client
     .from("contact_inquiries")
-    .select("id, status, created_at, metadata")
+    .select("id, status, manual_status, created_at, metadata")
     .eq("source", "saelg-enhed");
 
   const leadRows = (leads ?? []) as {
     id: string;
     status: string;
+    manual_status?: string | null;
     created_at: string;
     metadata: unknown;
   }[];
@@ -164,7 +165,9 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
       : [{ data: [] }, { data: [] }, { data: [] }];
 
   const waitingLeads = leadRows.filter((lead) => {
-    const status = deriveTradeInStatus(
+    // En manuelt sat status vinder over den afledte — også her, så køen i
+    // digesten matcher hvad admin ser på listen.
+    const status = parseManualStatus(lead.manual_status) ?? deriveTradeInStatus(
       lead.status,
       ((offersForLeads ?? []) as { inquiry_id: string; status: string }[]).filter(
         (o) => o.inquiry_id === lead.id,

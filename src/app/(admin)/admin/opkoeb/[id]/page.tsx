@@ -5,8 +5,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry, InquiryMessage } from "@/lib/supabase/types";
-import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt } from "@/lib/supabase/trade-in-types";
-import { formatDKK } from "@/lib/supabase/trade-in-types";
+import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
+import {
+  formatDKK,
+  deriveTradeInStatus,
+  parseManualStatus,
+  ALL_TRADE_IN_STATUSES,
+} from "@/lib/supabase/trade-in-types";
 import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
@@ -32,6 +37,21 @@ const OFFER_STATUS_CONFIG: Record<TradeInOfferStatus, { label: string; color: st
   accepted: { label: "Accepteret", color: "bg-emerald-100 text-emerald-700" },
   rejected: { label: "Afvist", color: "bg-red-100 text-red-700" },
   expired: { label: "Udloebet", color: "bg-stone-100 text-stone-500" },
+};
+
+/* Samme farvesprog som listen, så en status ser ens ud begge steder. */
+const DERIVED_STATUS_CONFIG: Record<TradeInDerivedStatus, { label: string; badge: string }> = {
+  ny: { label: "Ny", badge: "bg-blue-500/10 text-blue-600" },
+  tilbud_sendt: { label: "Tilbud sendt", badge: "bg-amber-500/10 text-amber-600" },
+  accepteret: { label: "Accepteret", badge: "bg-emerald-500/10 text-emerald-600" },
+  afventer_forsendelse: { label: "Afventer forsendelse", badge: "bg-sky-500/10 text-sky-600" },
+  paa_vej: { label: "På vej", badge: "bg-indigo-500/10 text-indigo-600" },
+  leveret: { label: "Leveret", badge: "bg-teal-500/10 text-teal-700" },
+  afvist: { label: "Afvist", badge: "bg-rose-500/10 text-rose-600" },
+  modtaget: { label: "Modtaget", badge: "bg-violet-500/10 text-violet-600" },
+  vurderet: { label: "Vurderet", badge: "bg-fuchsia-500/10 text-fuchsia-600" },
+  betalt: { label: "Betalt", badge: "bg-green-500/10 text-green-700" },
+  lukket: { label: "Lukket", badge: "bg-stone-100 text-stone-500" },
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -97,6 +117,11 @@ export default function AdminOpkoebDetailPage() {
   // Set once the admin has touched the amount, so a late suggestion never
   // overwrites something they typed.
   const [amountTouched, setAmountTouched] = useState(false);
+
+  // Manuel status + IMEI-redigering
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [imeiDrafts, setImeiDrafts] = useState<Record<number, string>>({});
+  const [imeiSaving, setImeiSaving] = useState<number | null>(null);
 
   // Decline
   const [declines, setDeclines] = useState<{ id: string }[]>([]);
@@ -210,6 +235,72 @@ export default function AdminOpkoebDetailPage() {
   const isDeclined = declines.length > 0;
   const hasAccepted = offers.some((o) => o.status === "accepted");
   const canDecline = !isDeclined && !hasAccepted && receipts.length === 0;
+
+  /* ---- Status: afledt af papirsporet, med mulighed for manuel override ---- */
+
+  const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
+  const manualStatus = parseManualStatus(
+    (inquiry as (ContactInquiry & { manual_status?: string | null }) | null)?.manual_status,
+  );
+  const derivedStatus: TradeInDerivedStatus = inquiry
+    ? deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
+        label: shippingLabel
+          ? {
+              in_transit_at: (shippingLabel.in_transit_at as string | null) ?? null,
+              delivered_at: (shippingLabel.delivered_at as string | null) ?? null,
+            }
+          : null,
+        receivedAt: acceptedOffer?.received_at ?? null,
+      })
+    : "ny";
+  const effectiveStatus = manualStatus ?? derivedStatus;
+
+  async function handleSetStatus(value: string) {
+    setStatusSaving(true);
+    try {
+      const res = await staffFetch(`/api/trade-in/${inquiryId}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: value === "auto" ? null : value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Kunne ikke opdatere status");
+      } else {
+        await loadInquiry();
+      }
+    } catch {
+      alert("Kunne ikke opdatere status — prøv igen");
+    }
+    setStatusSaving(false);
+  }
+
+  /* ---- IMEI pr. enhed ---- */
+
+  async function handleSaveImei(index: number, imei: string) {
+    setImeiSaving(index);
+    try {
+      const res = await staffFetch(`/api/trade-in/${inquiryId}/device-imei`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_index: index, imei }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Kunne ikke gemme IMEI");
+      } else {
+        await loadInquiry();
+        setImeiDrafts((d) => {
+          const next = { ...d };
+          delete next[index];
+          return next;
+        });
+      }
+    } catch {
+      alert("Kunne ikke gemme IMEI — prøv igen");
+    }
+    setImeiSaving(null);
+  }
 
   /* ---- Decline ---- */
 
@@ -432,6 +523,33 @@ export default function AdminOpkoebDetailPage() {
               <span>{formatDate(inquiry.created_at)}</span>
             </div>
           </div>
+
+          {/* Status — med håndtag til at rette den når virkeligheden afviger
+              fra papirsporet (enhed afleveret i butik, pakke aldrig skannet). */}
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${DERIVED_STATUS_CONFIG[effectiveStatus].badge}`}
+            >
+              {DERIVED_STATUS_CONFIG[effectiveStatus].label}
+              {manualStatus && " · manuelt sat"}
+            </span>
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] text-stone-400">Ret status:</label>
+              <select
+                value={manualStatus ?? "auto"}
+                disabled={statusSaving}
+                onChange={(e) => handleSetStatus(e.target.value)}
+                className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[12px] text-charcoal focus:border-green-eco/40 focus:outline-none disabled:opacity-50"
+              >
+                <option value="auto">Automatisk ({DERIVED_STATUS_CONFIG[derivedStatus].label})</option>
+                {ALL_TRADE_IN_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {DERIVED_STATUS_CONFIG[s].label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -464,6 +582,33 @@ export default function AdminOpkoebDetailPage() {
                 <InfoRow label="Model" value={entry.device.model || entry.device.modelCustom} />
                 <InfoRow label="Lagerplads" value={entry.device.storage} />
                 <InfoRow label="RAM" value={entry.device.ram} />
+              </div>
+
+              {/* IMEI registreres når enheden kendes — den følger sagen og
+                  forudfyldes i slutsedlen. */}
+              <div className="mt-4 border-t border-stone-200/60 pt-4">
+                <label className="mb-1 block text-xs font-semibold text-stone-400">
+                  IMEI / serienummer
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={imeiDrafts[i] ?? entry.device.imei ?? ""}
+                    onChange={(e) => setImeiDrafts((d) => ({ ...d, [i]: e.target.value }))}
+                    placeholder="Indtast IMEI eller serienummer..."
+                    className="w-full rounded-lg border border-stone-200 bg-stone-50/50 px-3 py-2 font-mono text-sm text-charcoal placeholder:font-sans placeholder:text-stone-400 focus:border-green-eco/40 focus:bg-white focus:outline-none"
+                  />
+                  {imeiDrafts[i] !== undefined && imeiDrafts[i] !== (entry.device.imei ?? "") && (
+                    <button
+                      type="button"
+                      disabled={imeiSaving === i}
+                      onClick={() => handleSaveImei(i, imeiDrafts[i].trim())}
+                      className="shrink-0 rounded-lg bg-green-eco px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {imeiSaving === i ? "Gemmer..." : "Gem"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 border-t border-stone-200/60 pt-4">
@@ -638,6 +783,41 @@ export default function AdminOpkoebDetailPage() {
                     Fortryd
                   </button>
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Udbetaling — bankoplysningerne kunden afgav ved accept. De har
+              hele tiden ligget på tilbuddet; nu skal ingen grave i mails. */}
+          {acceptedOffer && (
+            <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Udbetaling
+              </h3>
+              {acceptedOffer.seller_bank_reg && acceptedOffer.seller_bank_account ? (
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <InfoRow label="Navn" value={acceptedOffer.seller_name ?? inquiry.name} />
+                    <InfoRow label="Beløb" value={formatDKK(acceptedOffer.offer_amount)} />
+                    <InfoRow label="Reg.nr." value={acceptedOffer.seller_bank_reg} />
+                    <InfoRow label="Kontonr." value={acceptedOffer.seller_bank_account} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(`${acceptedOffer.seller_bank_reg} ${acceptedOffer.seller_bank_account}`)
+                        .catch(() => {});
+                    }}
+                    className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-stone-50"
+                  >
+                    Kopiér reg + konto
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm text-stone-400">
+                  Kunden har ikke oplyst bankoplysninger endnu.
+                </p>
               )}
             </div>
           )}

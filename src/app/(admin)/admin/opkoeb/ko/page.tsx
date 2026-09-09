@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry } from "@/lib/supabase/types";
-import { deriveTradeInStatus } from "@/lib/supabase/trade-in-types";
+import { deriveTradeInStatus, parseManualStatus } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices } from "@/lib/buyback/lead-devices";
 import { DECLINE_REASONS, type DeclineReasonCode } from "@/lib/buyback/decline-reasons";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
@@ -101,7 +101,12 @@ export default function OpkoebQueuePage() {
       ]);
 
       const untouched = (inquiries as ContactInquiry[]).filter((inquiry) => {
-        const status = deriveTradeInStatus(
+        // Manuel status vinder — en sag admin har flyttet ud af "ny" skal ikke
+        // dukke op i køen igen.
+        const manual = parseManualStatus(
+          (inquiry as ContactInquiry & { manual_status?: string | null }).manual_status,
+        );
+        const status = manual ?? deriveTradeInStatus(
           inquiry.status,
           (offers ?? []).filter((o) => o.inquiry_id === inquiry.id),
           (receipts ?? []).filter((r) => r.inquiry_id === inquiry.id),

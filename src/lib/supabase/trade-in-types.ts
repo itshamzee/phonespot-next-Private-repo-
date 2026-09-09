@@ -101,6 +101,33 @@ export type TradeInDerivedStatus =
   | "betalt"
   | "lukket";
 
+/** Every status an admin may set by hand. Mirrors the DB check constraint. */
+export const ALL_TRADE_IN_STATUSES: TradeInDerivedStatus[] = [
+  "ny",
+  "tilbud_sendt",
+  "accepteret",
+  "afventer_forsendelse",
+  "paa_vej",
+  "leveret",
+  "afvist",
+  "modtaget",
+  "vurderet",
+  "betalt",
+  "lukket",
+];
+
+/**
+ * contact_inquiries.manual_status as it comes off the wire: unknown, possibly
+ * absent (column added by migration), possibly garbage. Null means "no
+ * override — use the derived status".
+ */
+export function parseManualStatus(value: unknown): TradeInDerivedStatus | null {
+  return typeof value === "string" &&
+    (ALL_TRADE_IN_STATUSES as string[]).includes(value)
+    ? (value as TradeInDerivedStatus)
+    : null;
+}
+
 /** In the order a device moves through them. Drives the pipeline display. */
 export const TRADE_IN_PIPELINE: TradeInDerivedStatus[] = [
   "ny",

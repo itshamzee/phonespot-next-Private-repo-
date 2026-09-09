@@ -24,6 +24,7 @@ function toDevice(raw: unknown): BuybackDevice | null {
     useCustom: raw.useCustom === true,
     brandCustom: str(raw.brandCustom),
     modelCustom: str(raw.modelCustom),
+    imei: str(raw.imei),
   };
 }
 
