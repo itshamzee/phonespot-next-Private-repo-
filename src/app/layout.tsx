@@ -53,9 +53,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
-  alternates: {
-    canonical: "https://phonespot.dk",
-  },
+  // Ingen global canonical her: en canonical i rod-layoutet arves af alle
+  // undersider uden egen, så hver eneste side fortalte Google "jeg er en kopi
+  // af forsiden". Forsidens canonical bor i app/page.tsx.
   robots: {
     index: true,
     follow: true,

@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 
+// Siden selv er en client component (formular-state), så metadata bor her.
 export const metadata: Metadata = {
-  title: "Reklamation - PhoneSpot",
+  title: "Reklamation | PhoneSpot",
   description:
-    "Indsend en reklamation til PhoneSpot. Vi behandler alle reklamationer inden for 2 hverdage og sikrer en hurtig løsning.",
+    "Opret en reklamation hos PhoneSpot. Enheder er dækket af 36 måneders garanti, tilbehør af 2 års reklamationsret — vi svarer hurtigt på alle sager.",
+  alternates: { canonical: "https://phonespot.dk/reklamation" },
 };
 
-export default function ReklamationLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+export default function ReklamationLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

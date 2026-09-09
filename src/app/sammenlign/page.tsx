@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Sammenligninger | PhoneSpot",
   description:
     "Sammenlign refurbished, brugt og ny elektronik. Se forskelle i garanti, priser, kvalitet og miljøpåvirkning.",
+  alternates: { canonical: "https://phonespot.dk/sammenlign" },
 };
 
 /* ------------------------------------------------------------------ */

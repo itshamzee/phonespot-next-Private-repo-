@@ -33,6 +33,7 @@ export async function generateMetadata({
   return {
     title: comparison.metaTitle,
     description: comparison.metaDescription,
+    alternates: { canonical: `https://phonespot.dk/sammenlign/${comparison.slug}` },
   };
 }
 

@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Guides & Nyheder om Refurbished Elektronik | PhoneSpot Blog",
   description:
     "Læs guides, sammenligninger og nyheder om refurbished iPhones, iPads, MacBooks og mere. Bliv klogere på refurbished tech hos PhoneSpot.",
+  alternates: { canonical: "https://phonespot.dk/blog" },
 };
 
 /* ------------------------------------------------------------------ */

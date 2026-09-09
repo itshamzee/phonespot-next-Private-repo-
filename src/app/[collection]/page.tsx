@@ -76,6 +76,7 @@ export async function generateMetadata({
     // (/tilbehor, /covers, /opladere, /lyd, /outlet). Set it explicitly so
     // shares of those pages describe what's actually on them.
     openGraph: { title, description, url: `https://phonespot.dk/${collection}` },
+    alternates: { canonical: `https://phonespot.dk/${collection}` },
   };
 }
 

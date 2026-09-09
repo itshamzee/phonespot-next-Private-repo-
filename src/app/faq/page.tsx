@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "FAQ - Ofte stillede spørgsmål | PhoneSpot",
   description:
     "Find svar på de mest stillede spørgsmål om refurbished produkter, garanti, levering og returnering hos PhoneSpot.",
+  alternates: { canonical: "https://phonespot.dk/faq" },
 };
 
 const FAQ_ITEMS = [
@@ -53,6 +55,20 @@ const FAQ_ITEMS = [
 export default function FaqPage() {
   return (
     <>
+      {/* FAQPage-schema: netop denne side bør eje FAQ-rich-results for
+          brand-søgninger — de andre sider har kun emne-specifikke uddrag. */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_ITEMS.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
+
       {/* ── Hero ── */}
       <div className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
         <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-20">

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Handelsbetingelser - PhoneSpot",
   description:
     "Læs PhoneSpots handelsbetingelser for køb af refurbished iPhones, iPads og øvrig elektronik — version 2.0.",
+  alternates: { canonical: "https://phonespot.dk/handelsbetingelser" },
 };
 
 export default function HandelsbetingelserPage() {

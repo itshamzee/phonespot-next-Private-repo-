@@ -1,6 +1,11 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://phonespot.dk" },
+};
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Hvorfor PhoneSpot? | PhoneSpot",
   description:
     "PhoneSpot gør premium tech tilgængeligt og bæredygtigt. Kvalitetstestede produkter med 36 måneders garanti og dansk kundeservice.",
+  alternates: { canonical: "https://phonespot.dk/hvorfor-phonespot" },
 };
 
 const VALUES = [

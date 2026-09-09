@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Cookiepolitik - PhoneSpot",
   description:
     "Læs om PhoneSpots brug af cookies, hvilke kategorier vi anvender, og hvordan du administrerer dit samtykke.",
+  alternates: { canonical: "https://phonespot.dk/cookies" },
 };
 
 export default function CookiesPage() {

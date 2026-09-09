@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Privatlivspolitik - PhoneSpot",
   description:
     "Læs om hvordan PhoneSpot håndterer dine personlige data og beskytter dit privatliv i henhold til GDPR.",
+  alternates: { canonical: "https://phonespot.dk/privatlivspolitik" },
 };
 
 export default function PrivatlivspolitikPage() {

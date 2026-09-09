@@ -31,10 +31,25 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return {};
 
+  const url = `https://phonespot.dk/blog/${post.frontmatter.slug}`;
+
   return {
     title: `${post.frontmatter.title} | PhoneSpot Blog`,
     description: post.frontmatter.description,
     keywords: post.frontmatter.keywords,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      locale: "da_DK",
+      siteName: "PhoneSpot",
+      url,
+      title: post.frontmatter.title,
+      description: post.frontmatter.description,
+      publishedTime: post.frontmatter.date,
+      ...(post.frontmatter.coverImage && {
+        images: [{ url: post.frontmatter.coverImage, width: 1200, height: 630 }],
+      }),
+    },
   };
 }
 

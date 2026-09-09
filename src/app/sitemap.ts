@@ -64,12 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1.0,
     },
-    {
-      url: `${BASE_URL}/soeg`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
+    // /soeg er disallowed i robots.txt og hører ikke hjemme i sitemap.
     {
       url: `${BASE_URL}/faq`,
       lastModified: new Date(),
