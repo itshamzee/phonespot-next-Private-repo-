@@ -7,6 +7,7 @@ import type { ContactInquiry } from "@/lib/supabase/types";
 import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import { deriveTradeInStatus, parseManualStatus, formatDKK } from "@/lib/supabase/trade-in-types";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
+import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { normalizeStoreId } from "@/lib/stores";
 import StoreBadge from "@/components/admin/StoreBadge";
 import StoreFilter, {
@@ -115,6 +116,11 @@ export default function OpkoebPage() {
   const [visible, setVisible] = useState(30);
   // Betalte sager vokser for evigt — den gruppe starter foldet sammen.
   const [showAllDone, setShowAllDone] = useState(false);
+  // Masse-redigering: valgte sager + den status de skal flyttes til.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<TradeInDerivedStatus | "auto">("modtaget");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkError, setBulkError] = useState("");
   // Stamped when the data lands, so every age on the page is measured against
   // the same instant and nothing impure runs during render.
   const [now, setNow] = useState(0);
@@ -327,6 +333,47 @@ export default function OpkoebPage() {
   const closedTotal = rows.filter((r) => CLOSED_STATUSES.includes(r.derivedStatus)).length;
   const activeTotal = rows.length - closedTotal;
   const tabs = folder === "afviste" ? CLOSED_TABS : ACTIVE_TABS;
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  /**
+   * Én status, mange sager. Genbruger status-endpointet pr. sag i stedet for
+   * et bulk-endpoint — listen er lille nok til at requests er billigere end
+   * en ny API-flade.
+   */
+  async function applyBulkStatus() {
+    if (selected.size === 0 || bulkSaving) return;
+    setBulkSaving(true);
+    setBulkError("");
+    const failed: string[] = [];
+    for (const id of selected) {
+      try {
+        const res = await staffFetch(`/api/trade-in/${id}/status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: bulkStatus === "auto" ? null : bulkStatus }),
+        });
+        if (!res.ok) failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    setBulkSaving(false);
+    if (failed.length > 0) {
+      setBulkError(`${failed.length} af ${selected.size} kunne ikke opdateres — prøv igen`);
+      setSelected(new Set(failed));
+    } else {
+      setSelected(new Set());
+    }
+    await loadData();
+  }
 
   // Standardvisningen grupperer i procestrin, så "hvem venter på mig" og
   // "hvor er enhederne" kan aflæses uden at klikke rundt i statusfaner.
@@ -570,6 +617,24 @@ export default function OpkoebPage() {
                   href={`/admin/opkoeb/${row.inquiry.id}`}
                   className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-black/[0.015] sm:px-6"
                 >
+                  {/* Vælg til masse-redigering — klik her må ikke åbne sagen */}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleSelect(row.inquiry.id);
+                    }}
+                    className="-m-2 flex shrink-0 cursor-pointer items-center p-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(row.inquiry.id)}
+                      readOnly
+                      tabIndex={-1}
+                      className="pointer-events-none h-4 w-4 rounded border-stone-300 accent-charcoal"
+                    />
+                  </span>
+
                   {/* Status dot */}
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusCfg.dot}`} />
 
@@ -629,6 +694,63 @@ export default function OpkoebPage() {
       <div className="mt-6">
         <BuybackFeed limit={12} />
       </div>
+
+      {/* Masse-redigering: dukker op når mindst én sag er valgt */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/[0.08] bg-white px-5 py-3.5 shadow-xl">
+            <span className="text-sm font-semibold text-charcoal">
+              {selected.size} valgt
+            </span>
+            {selected.size < filtered.length && (
+              <button
+                type="button"
+                onClick={() => setSelected(new Set(filtered.map((r) => r.inquiry.id)))}
+                className="text-[12px] text-charcoal/40 underline hover:text-charcoal"
+              >
+                Vælg alle {filtered.length}
+              </button>
+            )}
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <select
+                value={bulkStatus}
+                disabled={bulkSaving}
+                onChange={(e) => setBulkStatus(e.target.value as TradeInDerivedStatus | "auto")}
+                className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px] text-charcoal focus:border-emerald-500/40 focus:outline-none disabled:opacity-50"
+              >
+                {(Object.keys(STATUS_CONFIG) as TradeInDerivedStatus[]).map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_CONFIG[s].label}
+                  </option>
+                ))}
+                <option value="auto">Automatisk (fjern manuel status)</option>
+              </select>
+              <button
+                type="button"
+                disabled={bulkSaving}
+                onClick={() => void applyBulkStatus()}
+                className="rounded-lg bg-charcoal px-4 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {bulkSaving ? "Opdaterer..." : "Anvend"}
+              </button>
+              <button
+                type="button"
+                disabled={bulkSaving}
+                onClick={() => {
+                  setSelected(new Set());
+                  setBulkError("");
+                }}
+                className="rounded-lg border border-stone-200 px-4 py-2 text-[13px] font-medium text-charcoal/50 transition-colors hover:text-charcoal disabled:opacity-50"
+              >
+                Ryd
+              </button>
+            </div>
+            {bulkError && (
+              <p className="w-full text-[12px] text-rose-600">{bulkError}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
