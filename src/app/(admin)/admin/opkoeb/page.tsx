@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import type { ContactInquiry } from "@/lib/supabase/types";
@@ -334,14 +334,52 @@ export default function OpkoebPage() {
   const activeTotal = rows.length - closedTotal;
   const tabs = folder === "afviste" ? CLOSED_TABS : ACTIVE_TABS;
 
-  const toggleSelect = useCallback((id: string) => {
+  /**
+   * Træk-og-vælg: mousedown på fluebens-zonen starter et træk, og alle rækker
+   * musen passerer får samme tilstand (vælg/fravælg) som den første. Slippes
+   * musen, stopper trækket — lytteren sidder på window, så det også stopper
+   * uden for listen.
+   */
+  const dragRef = useRef<{ active: boolean; select: boolean }>({ active: false, select: false });
+
+  useEffect(() => {
+    const stop = () => {
+      dragRef.current.active = false;
+    };
+    window.addEventListener("mouseup", stop);
+    return () => window.removeEventListener("mouseup", stop);
+  }, []);
+
+  const setRowSelected = useCallback((id: string, on: boolean) => {
     setSelected((prev) => {
+      if (prev.has(id) === on) return prev;
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (on) next.add(id);
+      else next.delete(id);
       return next;
     });
   }, []);
+
+  const startDragSelect = useCallback(
+    (id: string) => {
+      setSelected((prev) => {
+        const on = !prev.has(id);
+        dragRef.current = { active: true, select: on };
+        const next = new Set(prev);
+        if (on) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const dragOverRow = useCallback(
+    (id: string) => {
+      if (dragRef.current.active) setRowSelected(id, dragRef.current.select);
+    },
+    [setRowSelected],
+  );
 
   /**
    * Én status, mange sager. Genbruger status-endpointet pr. sag i stedet for
@@ -612,19 +650,21 @@ export default function OpkoebPage() {
               const statusCfg = STATUS_CONFIG[row.derivedStatus];
 
               return (
-                <Link
+                <div
                   key={row.inquiry.id}
-                  href={`/admin/opkoeb/${row.inquiry.id}`}
-                  className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-black/[0.015] sm:px-6"
+                  onMouseEnter={() => dragOverRow(row.inquiry.id)}
+                  className={`group flex items-center transition-colors hover:bg-black/[0.015] ${
+                    selected.has(row.inquiry.id) ? "bg-emerald-500/[0.04]" : ""
+                  }`}
                 >
-                  {/* Vælg til masse-redigering — klik her må ikke åbne sagen */}
+                  {/* Fluebenet bor UDEN FOR linket, så et klik aldrig kan åbne
+                      sagen. Mousedown starter træk-og-vælg hen over rækkerne. */}
                   <span
-                    onClick={(e) => {
+                    onMouseDown={(e) => {
                       e.preventDefault();
-                      e.stopPropagation();
-                      toggleSelect(row.inquiry.id);
+                      startDragSelect(row.inquiry.id);
                     }}
-                    className="-m-2 flex shrink-0 cursor-pointer items-center p-2"
+                    className="flex shrink-0 cursor-pointer select-none items-center self-stretch pl-5 pr-3 sm:pl-6"
                   >
                     <input
                       type="checkbox"
@@ -635,6 +675,11 @@ export default function OpkoebPage() {
                     />
                   </span>
 
+                  <Link
+                    href={`/admin/opkoeb/${row.inquiry.id}`}
+                    draggable={false}
+                    className="flex min-w-0 flex-1 items-center gap-4 py-4 pr-5 sm:pr-6"
+                  >
                   {/* Status dot */}
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusCfg.dot}`} />
 
@@ -673,7 +718,8 @@ export default function OpkoebPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>
-                </Link>
+                  </Link>
+                </div>
               );
             })}
           </div>
