@@ -9,8 +9,9 @@ Godkendt uændret reference: lokal designvisning port 3110 og mappen nævnt i sp
 
 ## Fremdrift
 
-- Task 1: klargjort — forside, navigation og footer, implementering starter.
-- Task 2–8: afventer sekventielt.
+- Task 1: færdig og godkendt i side-review — commits 729c6a2 + 0469fb3. Desktop 1195/1440 og mobil 390/320 kontrolleret.
+- Task 2: starter — enhedskategorier, filtre og produktkort. Detaljeret brief findes i planens lokale SDD-mappe.
+- Task 3–8: afventer sekventielt.
 
 ## Beslutninger
 
@@ -24,3 +25,8 @@ Godkendt uændret reference: lokal designvisning port 3110 og mappen nævnt i sp
 - node_modules er eksisterende junction; ingen ny installation nødvendig.
 - Local preview må ikke bruge fiktivt lager i produktion. Manglende lokale integrationer rapporteres og testes med isolerede fixtures kun i test-/previewværktøj.
 - Afslut med konkrete resultater, PR-link, billeder, tests og ærlig liste over manglende sider. Stop gentagne nattekørsler, når mandatet er fuldført eller morgenrapporten er klar.
+- Verifikation Task1: 20 fokuserede tests før review + 10 relevante tests efter oprydning, typecheck og lint bestået; fuldt projektbuild/test følger før PR.
+- Inaktiv nyhedsbrevstilmelding fjernet fra public shell/footer: popup loggede kun email, footer pegede på ikkeeksisterende endpoint. Øvrige providers og cookie-/kontakt-/forsikringslinks bevaret.
+- Lokal review på3107 bruger isolerede læsebeskyttede testdata på3112; dette er ikke lagerkobling til produktion. Deploykode bruger stadig de eksisterende reelle queries.
+- Kontrolbilleder: phonespot-webshop-qa/forside-desktop.png i visualiseringsmappen. Godkendt reference på3110 er uændret.
+- Apple-kampagnebilledets offentlige brugsret skal afklares før release.

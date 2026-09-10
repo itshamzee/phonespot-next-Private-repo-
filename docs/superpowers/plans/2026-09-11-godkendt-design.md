@@ -25,7 +25,7 @@
 
 ## Sequential roadmap
 
-- [ ] Task 1 — Homepage plus shared navigation/footer: port revision 3, connect live catalog and existing cart/search, verify.
+- [x] Task 1 — Homepage plus shared navigation/footer: port revision 3, connect live catalog and existing cart/search, verify.
 - [ ] Task 2 — Collection template and shared device cards: consistent image/title/spec/price hierarchy, filters and sorting preserved.
 - [ ] Task 3 — Device product page: gallery, configuration, stock/price/CTA, clear condition/warranty, existing cart payload preserved.
 - [ ] Task 4 — Repair landing then model/booking views: prominent device selection and store path, preserve submission and pricing.
