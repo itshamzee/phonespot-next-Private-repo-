@@ -3,7 +3,7 @@ import Link from "next/link";
 import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
 import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
-import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -40,51 +40,6 @@ const LEGAL_LINKS = [
   { label: "Cookies", href: "/cookies" },
 ] as const;
 
-const USP_ITEMS = [
-  {
-    // Rendered on every page, including accessory PDPs, with no per-page
-    // state — accessories carry the statutory 2-year reklamationsret, not
-    // the 36-month device guarantee (see lib/email/brand.ts). Scoped to
-    // "refurbished" so the claim stays accurate everywhere without adding
-    // cart/category state or hydration risk to a footer that renders on
-    // every route (same fix applied to header.tsx's two USP badges).
-    text: "36 mdr. garanti på refurbished",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    ),
-  },
-  {
-    text: "14 dages returret",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-      </svg>
-    ),
-  },
-  {
-    text: "1-2 dages levering",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-      </svg>
-    ),
-  },
-  {
-    // Same unconditional-chrome problem as the guarantee badge above: the
-    // 30+ point test is run on graded refurbished devices only, not on
-    // sku_products (a leather case never sees the test bench). Scoped to
-    // "refurbished" for the same reason and with the same wording pattern.
-    text: "30+ kvalitetstests på refurbished",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    ),
-  },
-] as const;
-
 function TrustpilotBadge() {
   return (
     <a
@@ -92,7 +47,7 @@ function TrustpilotBadge() {
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-80"
-      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL} stjerner`}
+      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL_DA} stjerner`}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#00b67a]" fill="currentColor" aria-hidden="true">
         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
@@ -109,14 +64,14 @@ function TrustpilotBadge() {
             <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
               <defs>
                 <linearGradient id="footer-half-star">
-                  <stop offset="80%" stopColor="#00b67a" />
-                  <stop offset="80%" stopColor="#4a4d48" />
+                  <stop offset="70%" stopColor="#00b67a" />
+                  <stop offset="70%" stopColor="#4a4d48" />
                 </linearGradient>
               </defs>
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#footer-half-star)" />
             </svg>
           </div>
-          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL}</span>
+          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL_DA}</span>
         </div>
       </div>
     </a>
@@ -140,7 +95,7 @@ function NavColumn({
 }) {
   return (
     <div>
-      <h3 className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
+      <h3 className="font-body text-xs font-semibold text-white/80">
         {heading}
       </h3>
       <ul className="mt-4 flex flex-col gap-2">
@@ -168,18 +123,6 @@ export function Footer() {
 
   return (
     <>
-      {/* USP bar — sits above the dark footer */}
-      <div className="bg-[#F7F7F8]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 md:gap-x-10 gap-y-3 px-4 py-5 md:justify-between lg:px-8">
-          {USP_ITEMS.map((item) => (
-            <div key={item.text} className="flex items-center gap-2">
-              <span className="text-[#1A3D2E]">{item.icon}</span>
-              <span className="text-[13px] font-medium text-[#111111]/60">{item.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Main footer */}
       <footer className="bg-[#111111] text-white">
         {/* Primary content */}
@@ -191,9 +134,9 @@ export function Footer() {
               <Image
                 src="/brand/logos/phonespot-wordmark-white.png"
                 alt="PhoneSpot"
-                width={148}
-                height={28}
-                className="h-7 w-auto"
+                width={200}
+                height={38}
+                className="h-auto w-[200px]"
               />
               <p className="mt-4 max-w-[260px] text-[13px] leading-relaxed text-[#86868B]">
                 Danmarks specialist i kvalitetstestet refurbished tech. Alle refurbished
@@ -278,7 +221,7 @@ export function Footer() {
 
               {/* Partner — Storstrøm Forsikring */}
               <div className="mt-6">
-                <p className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                <p className="font-body text-xs font-semibold text-white/80">
                   I samarbejde med
                 </p>
                 <Link
@@ -332,7 +275,7 @@ export function Footer() {
           {/* Newsletter */}
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
+              <h3 className="font-body text-xs font-semibold text-white/80">
                 Nyhedsbrev
               </h3>
               <p className="mt-1.5 text-[13px] text-[#86868B]">
@@ -346,6 +289,7 @@ export function Footer() {
             >
               <input
                 name="email"
+                aria-label="Din e-mailadresse"
                 type="email"
                 required
                 placeholder="Din e-mailadresse"

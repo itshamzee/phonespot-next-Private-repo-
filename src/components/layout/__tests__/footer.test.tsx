@@ -2,34 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { Footer } from "../footer";
 
-// The footer's USP bar renders unconditionally on every page, including
-// accessory PDPs, with no per-page state — accessories carry the statutory
-// 2-year reklamationsret, not PhoneSpot's 36-month device guarantee (see
-// lib/email/brand.ts). An unconditional "36 mdr. garanti" badge here
-// contributes to a misleading overall impression on an accessory page under
-// markedsføringsloven, so it must be scoped to "refurbished" instead of a
-// blanket claim — the same fix applied to both header.tsx USP badges.
 describe("Footer", () => {
-  it("scopes the USP-bar guarantee badge to refurbished devices, not a blanket claim", () => {
+  it("states the device guarantee and the Danish Trustpilot rating", () => {
     render(<Footer />);
-    expect(screen.getByText("36 mdr. garanti på refurbished")).toBeDefined();
-    expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
+    expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
+    expect(screen.getByRole("link", { name: /Trustpilot — 4,7 stjerner/ })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
-
-  it("still states the full, accurate guarantee claim in the brand paragraph", () => {
+  it("preserves newsletter submission, cookie settings and insurance partner", () => {
     render(<Footer />);
-    expect(
-      screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i),
-    ).toBeDefined();
-  });
-
-  // Same claim, same problem: the 30+ point test only runs on graded
-  // refurbished devices, never on a sku_product like a leather case — see
-  // lib/email/brand.ts's qualityTestUspLabel for the order-aware version of
-  // this same fix.
-  it("scopes the USP-bar quality-test badge to refurbished devices, not a blanket claim", () => {
-    render(<Footer />);
-    expect(screen.getByText("30+ kvalitetstests på refurbished")).toBeDefined();
-    expect(screen.queryByText("30+ kvalitetstests")).toBeNull();
+    const email = screen.getByRole("textbox", { name: "Din e-mailadresse" });
+    expect(email).toHaveAttribute("name", "email");
+    expect(email).toBeRequired();
+    expect(email.closest("form")).toHaveAttribute("action", "/api/newsletter");
+    expect(email.closest("form")).toHaveAttribute("method", "POST");
+    expect(screen.getByRole("button", { name: /cookie/i })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Elektronikforsikring i samarbejde med Storstrøm Forsikring" })).toHaveAttribute("href", "/forsikring");
   });
 });

@@ -1,0 +1,309 @@
+/* Approved revision 3, scoped to the public storefront components. */
+.surface{--green:#1a3d2e;--ink:#111;--paper:#f7f7f8;--line:#e5e5ea;--muted:#626862}
+.surface *{box-sizing:border-box}
+.surface{margin:0;background:#fff;color:var(--ink);font:15px/1.5 var(--font-body),sans-serif}
+.surface a{color:inherit;text-decoration:none}
+.surface button,.surface input{font:inherit}
+.surface button{cursor:pointer}
+.surface img{display:block;max-width:100%}
+.surface svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.surface a,.surface button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.surface a:focus-visible,.surface button:focus-visible,.surface input:focus-visible,.surface summary:focus-visible{outline:3px solid #65866f;outline-offset:4px}
+.surface button:disabled{cursor:default}
+.surface .wrap{max-width:1392px;padding:0 36px;margin:auto}
+.surface .topline{background:var(--green);color:white;font-size:11px}
+.surface .topline .wrap{display:flex;align-items:center;justify-content:space-between;height:32px}
+.surface .topline span{display:flex;gap:32px}
+.surface .brandrow{display:flex;align-items:center;gap:40px;padding-top:22px;padding-bottom:22px}
+.surface .logo{width:187px;flex-shrink:0}
+.surface .search{display:flex;align-items:center;background:#f7f7f8;border:1px solid var(--line);border-radius:5px;height:47px;flex:1}
+.surface .search input{width:100%;min-width:0;padding:12px 16px;background:none;border:0;font-size:14px}
+.surface .search button{border:0;background:none;padding:12px}
+.surface .utilities{display:flex;align-items:center;gap:22px;font-size:12px}
+.surface .utilities a,.surface .cart-preview{display:flex;align-items:center;gap:8px;min-height:44px}
+.surface .cart-preview{border:0;background:none;font-size:12px;padding:0}
+.surface .navwrap{border-block:1px solid var(--line)}
+.surface .nav{display:flex;align-items:center;gap:27px;min-height:57px;font-size:13px;font-weight:550}
+.surface .nav .service{margin-left:auto;display:flex;gap:8px}
+.surface .service a{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#edf1ed;color:var(--green);border-radius:4px}
+.surface .service a:first-child{background:var(--green);color:white}
+.surface .service svg{width:17px;height:17px}
+.surface .nav a:hover{text-decoration:underline;text-underline-offset:4px}
+.surface .mobile-menu{display:none}
+.surface .intro{padding-top:24px}
+.surface .campaign{background:#f1f3f1;border-radius:12px;overflow:hidden;border:1px solid #e8ebe7}
+.surface .campaign-stage{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:375px}
+.surface .campaign-copy{padding:38px 0 35px 48px;align-self:center;z-index:1}
+.surface .eyebrow{font-size:12px;font-weight:600;color:var(--green);display:block;letter-spacing:.3px;margin-bottom:14px}
+.surface .campaign h1{font-size:clamp(39px,4.5vw,60px);font-weight:550;letter-spacing:-2.9px;line-height:1.03;margin:0 0 20px}
+.surface .campaign p{color:#505c53;font-size:15px;max-width:345px;margin:0 0 25px}
+.surface .button{display:inline-flex;min-height:46px;padding:12px 19px;align-items:center;justify-content:space-between;gap:24px;background:var(--green);color:#fff;border:0;border-radius:5px;font-size:13px;font-weight:600;transition:background .15s}
+.surface .button:hover{background:#294d39}
+.surface .button.light{background:white;color:var(--green)}
+.surface .button.light:hover{background:#edf2ef}
+.surface .quality-link{display:flex;gap:7px;font-size:11px;margin-top:16px;color:#526456}
+.surface .quality-link svg{width:16px;height:16px}
+.surface .campaign-visual{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:25px 45px 43px 20px;min-width:0}
+.surface .campaign-visual img{width:100%;height:280px;object-fit:contain;mix-blend-mode:multiply}
+.surface .campaign-visual span{font-size:11px;color:#667066;margin-top:9px}
+.surface .carousel-controls{position:absolute;right:23px;bottom:13px;display:flex;align-items:center;gap:8px}
+.surface .carousel-controls span{font-size:11px;color:#5f6960;margin-right:4px;font-variant-numeric:tabular-nums}
+.surface .carousel-controls button{width:34px;height:34px;border:1px solid #d6ddd7;background:transparent;border-radius:50%;display:grid;place-items:center;color:var(--green)}
+.surface .carousel-controls button:hover{background:white}
+.surface .previous-slide svg{transform:rotate(180deg)}
+.surface .carousel-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #dce3dc}
+.surface .carousel-tabs button{border:0;border-right:1px solid #dce3dc;background:transparent;padding:16px 22px;display:flex;align-items:center;gap:12px;font-size:13px;min-height:59px;color:#657166}
+.surface .carousel-tabs button:last-child{border-right:0}
+.surface .carousel-tabs button[aria-pressed=true]{background:var(--green);color:white}
+.surface .carousel-tabs button>svg:last-child{margin-left:auto;width:17px;height:17px}
+.surface .services{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.surface .service-card{border-radius:10px;position:relative;overflow:hidden;min-height:284px;padding:26px 30px 42px}
+.surface .repair-card{background:var(--green);color:white}
+.surface .service-content{position:relative;z-index:1}
+.surface .service-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:550;margin-bottom:13px}
+.surface .service-label svg{width:17px;height:17px}
+.surface .service-card h2{font-size:32px;letter-spacing:-1.25px;font-weight:550;line-height:1.08;margin:0 0 13px}
+.surface .service-card p{font-size:12px;line-height:1.65;margin:0 0 20px}
+.surface .repair-card p{color:#d7e2db}
+.surface .repair-card img{position:absolute;right:0;top:0;height:100%;width:32%;object-fit:cover;object-position:65% center;opacity:.8}
+.surface .repair-card .service-content{width:71%}
+.surface .service-card .button{font-size:12px;gap:18px;min-height:43px}
+.surface .service-foot{position:absolute;bottom:14px;left:30px;font-size:10px;opacity:.7}
+.surface .buyback-card{background:#eef0eb;border:1px solid #e2e7de;color:var(--green)}
+.surface .buyback-card p{color:#576354}
+.surface .trade-symbol{position:absolute;right:27px;top:48px;opacity:.11;transform:rotate(-24deg)}
+.surface .trade-symbol svg{width:145px;height:145px;stroke-width:.9}
+.surface .assurance{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:23px 0;border-bottom:1px solid var(--line)}
+.surface .assurance a{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px}
+.surface .assurance svg{color:var(--green);width:17px;height:17px}
+.surface .shop{padding:46px 0 43px}
+.surface .section-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:23px;gap:16px}
+.surface .section-head .eyebrow{margin-bottom:7px}
+.surface .section-head h2{font-size:34px;letter-spacing:-1.2px;line-height:1.15;font-weight:550;margin:0}
+.surface .textlink{display:inline-flex;align-items:center;gap:15px;min-height:44px;color:var(--green);font-size:13px;font-weight:600}
+.surface .textlink:hover{text-decoration:underline;text-underline-offset:5px}
+.surface .shop-layout{display:grid;grid-template-columns:205px minmax(0,1fr);gap:20px;align-items:stretch}
+.surface .departments{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid;grid-template-rows:repeat(7,1fr);background:#fff}
+.surface .departments button,.surface .departments a{padding:14px 16px;display:flex;align-items:center;gap:10px;border:0;border-bottom:1px solid var(--line);background:white;color:#586158;font-size:13px;text-align:left;min-height:51px}
+.surface .departments a:last-child{border-bottom:0}
+.surface .departments button[aria-pressed=true]{background:var(--green);color:white}
+.surface .departments button:hover,.surface .departments a:hover{background:#edf2ee;color:var(--green)}
+.surface .departments svg{width:20px;height:20px}
+.surface .departments svg:last-child{width:14px;height:14px;margin-left:auto}
+.surface .products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.surface .product{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;background:white;transition:border-color .15s,box-shadow .15s}
+.surface .product:hover{border-color:#9aaa9b;box-shadow:0 5px 20px #183b2b0b}
+.surface .product>a{height:100%;display:flex;flex-direction:column}
+.surface .product-photo{height:212px;position:relative;display:flex;align-items:center;justify-content:center;background:#f7f7f8;padding:30px 23px 12px}
+.surface .product-photo img{height:100%;width:100%;object-fit:contain;mix-blend-mode:multiply}
+.surface .product-tag{position:absolute;left:14px;top:10px;font-size:10px;color:#566759}
+.surface .product-body{padding:17px 18px;display:flex;flex-direction:column;flex:1}
+.surface .product h3{font-size:18px;letter-spacing:-.5px;line-height:1.2;font-weight:600;margin:0 0 6px;min-height:44px}
+.surface .descriptor{font-size:11px;color:var(--muted);margin:0 0 14px;min-height:32px}
+.surface .price{font-size:25px;font-weight:650;letter-spacing:-.9px;margin-top:auto;line-height:1.15}
+.surface .price small{font-size:11px;font-weight:400;letter-spacing:0;margin-right:5px}
+.surface .product-assurance{display:flex;align-items:center;gap:5px;color:#617063;font-size:10px;margin:9px 0 14px}
+.surface .product-assurance svg{width:14px;height:14px}
+.surface .product .button{font-size:12px;min-height:40px;padding:10px 13px;width:100%;background:#edf2ee;color:var(--green)}
+.surface .product:hover .button{background:var(--green);color:white}
+.surface .data-note{font-size:10px;color:var(--muted);text-align:right;margin:14px 0 0}
+.surface .store{display:grid;grid-template-columns:1fr 1fr;border-radius:10px;overflow:hidden;background:#f4f5f2}
+.surface .store-photo{position:relative;min-height:424px}
+.surface .store-photo img{width:100%;height:100%;object-fit:cover;position:absolute}
+.surface .store-photo>span{position:absolute;bottom:20px;left:20px;display:flex;align-items:center;gap:8px;background:white;padding:10px 14px;font-size:11px;border-radius:4px}
+.surface .store-copy{padding:38px 44px}
+.surface .store h2{font-size:47px;line-height:1.02;font-weight:550;letter-spacing:-2px;margin:0 0 17px}
+.surface .store p{font-size:13px;color:var(--muted);max-width:335px;margin:0 0 20px}
+.surface .store-links{display:grid;grid-template-columns:1fr 1fr;gap:17px;border-top:1px solid #dbe0d9;padding-top:18px}
+.surface .store-links a{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.surface .store-links strong{font-size:13px;font-weight:600}
+.surface .store-links small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.surface .store-links svg{width:17px}
+.surface .quality-section{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:48px 0}
+.surface .quality-section h2{font-size:32px;letter-spacing:-1.1px;line-height:1.1;font-weight:550;margin:0 0 12px}
+.surface .quality-section .eyebrow{margin-bottom:10px}
+.surface .quality-answers{border-top:1px solid var(--line);align-self:center}
+.surface details{border-bottom:1px solid var(--line)}
+.surface summary{display:flex;align-items:center;justify-content:space-between;padding:19px 0;cursor:pointer;font-size:13px;list-style:none}
+.surface summary::-webkit-details-marker{display:none}
+.surface summary span{font-size:22px;font-weight:400;color:var(--green)}
+.surface details[open] summary span{transform:rotate(45deg)}
+.surface details p{font-size:13px;color:var(--muted);margin:0 0 18px;max-width:460px}
+.surface .skip{position:absolute;top:-100px}
+.surface .skip:focus{top:0;z-index:100;padding:12px;background:white}
+.surface .sr-only{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+
+@media(min-width:1350px){.surface .campaign-stage{min-height:410px}
+.surface .campaign-visual img{height:315px}
+.surface .service-card{min-height:300px}
+.surface .service-card h2{font-size:37px}
+.surface .product-photo{height:240px}
+}
+
+@media(max-width:1100px){.surface .wrap{padding-inline:24px}
+.surface .brandrow{gap:28px}
+.surface .utilities span{display:none}
+.surface .nav{gap:20px}
+.surface .nav .optional{display:none}
+.surface .campaign-copy{padding-left:35px}
+.surface .campaign h1{font-size:47px}
+.surface .campaign-visual{padding-right:35px}
+.surface .service-card{padding-left:24px}
+.surface .service-card h2{font-size:30px}
+.surface .repair-card img{width:27%}
+.surface .repair-card .service-content{width:80%}
+.surface .service-foot{left:24px}
+.surface .shop-layout{grid-template-columns:170px 1fr;gap:14px}
+.surface .departments button,.surface .departments a{font-size:12px;padding-inline:12px}
+.surface .products{gap:12px}
+.surface .product-body{padding:15px}
+.surface .product-photo{height:190px;padding-inline:18px}
+.surface .product h3{font-size:17px}
+.surface .store-copy{padding:32px}
+.surface .store h2{font-size:43px}
+.surface .assurance a{font-size:10px;gap:5px}
+}
+
+@media(max-width:760px){.surface .wrap{padding-inline:18px}
+.surface .topline .desktop{display:none}
+.surface .topline .wrap{font-size:10px;height:30px}
+.surface .brandrow{display:grid;grid-template-columns:auto 1fr auto;gap:15px;padding-block:16px}
+.surface .logo{width:155px}
+.surface .mobile-menu{display:flex;border:0;background:none;padding:5px}
+.surface .utilities{gap:14px;justify-content:end}
+.surface .utilities .account{display:none}
+.surface .search{grid-column:1/-1;grid-row:2;margin-top:0}
+.surface .search input{font-size:16px}
+.surface .navwrap{overflow:auto;scrollbar-width:none}
+.surface .nav{width:max-content;font-size:12px;gap:21px;min-height:52px}
+.surface .nav .service{display:none}
+.surface .intro{padding-top:16px}
+.surface .campaign-stage{grid-template-columns:1fr;min-height:0}
+.surface .campaign-copy{padding:27px 25px 0}
+.surface .eyebrow{font-size:11px;margin-bottom:12px}
+.surface .campaign h1{font-size:41px;letter-spacing:-1.9px;margin-bottom:15px}
+.surface .campaign p{font-size:13px;margin-bottom:19px;max-width:280px}
+.surface .campaign .button{font-size:12px;min-height:43px}
+.surface .quality-link{font-size:10px;margin-top:13px}
+.surface .campaign-visual{height:238px;padding:12px 55px 31px}
+.surface .campaign-visual img{height:177px}
+.surface .campaign-visual span{font-size:9px;margin-top:4px}
+.surface .carousel-controls{bottom:10px;right:14px;gap:7px}
+.surface .carousel-controls button{width:32px;height:32px}
+.surface .carousel-tabs button{padding:12px 5px;min-height:60px;gap:6px;font-size:9px;flex-direction:column;justify-content:center}
+.surface .carousel-tabs button>svg:first-child{width:20px;height:20px}
+.surface .carousel-tabs button>svg:last-child{display:none}
+.surface .services{gap:12px;grid-template-columns:1fr;margin-top:12px}
+.surface .service-card{min-height:240px;padding:22px 24px 39px}
+.surface .service-card h2{font-size:31px;margin-bottom:11px}
+.surface .service-label{font-size:11px;margin-bottom:12px}
+.surface .service-card p{font-size:11px;margin-bottom:16px}
+.surface .service-card .button{font-size:11px;min-height:42px;gap:12px;padding-inline:14px}
+.surface .repair-card img{width:31%}
+.surface .repair-card .service-content{width:83%}
+.surface .service-foot{font-size:9px;bottom:12px}
+.surface .trade-symbol{right:15px;top:38px}
+.surface .trade-symbol svg{width:110px;height:110px}
+.surface .assurance{grid-template-columns:1fr 1fr;gap:12px;padding:20px 0}
+.surface .assurance a{justify-content:start;font-size:10px;gap:6px}
+.surface .assurance svg{width:16px;height:16px}
+.surface .shop{padding:31px 0}
+.surface .section-head{align-items:center;margin-bottom:19px;gap:10px}
+.surface .section-head .eyebrow{font-size:9px}
+.surface .section-head h2{font-size:26px;letter-spacing:-.8px}
+.surface .section-head .textlink{font-size:11px;gap:6px;white-space:nowrap}
+.surface .textlink svg{width:17px;height:17px}
+.surface .shop-layout{display:block}
+.surface .departments{display:flex;overflow:auto;border-radius:6px;margin-bottom:14px;scrollbar-width:thin}
+.surface .departments button,.surface .departments a{padding:11px 13px;gap:7px;flex-shrink:0;min-height:45px;border:0;border-right:1px solid var(--line);font-size:11px}
+.surface .departments svg{width:17px;height:17px}
+.surface .departments svg:last-child{display:none}
+.surface .products{display:flex;overflow:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:10px;scrollbar-width:thin}
+.surface .product{flex:0 0 76%;scroll-snap-align:start}
+.surface .product-photo{height:220px;padding:28px 27px 10px}
+.surface .product-body{padding:17px 19px}
+.surface .product h3{font-size:20px;min-height:24px}
+.surface .descriptor{font-size:11px;min-height:30px}
+.surface .price{font-size:26px}
+.surface .product .button{min-height:43px}
+.surface .data-note{text-align:left;font-size:9px;margin-top:9px}
+.surface .store{grid-template-columns:1fr}
+.surface .store-photo{min-height:245px}
+.surface .store-photo>span{left:16px;bottom:16px;font-size:10px}
+.surface .store-copy{padding:26px}
+.surface .store h2{font-size:40px;letter-spacing:-1.6px}
+.surface .store h2 br:nth-child(2){display:none}
+.surface .store p{font-size:12px}
+.surface .store-links{gap:16px}
+.surface .store-links small{font-size:9px}
+.surface .quality-section{grid-template-columns:1fr;gap:17px;padding:32px 0}
+.surface .quality-section h2{font-size:29px}
+.surface .quality-section h2 br{display:none}
+.surface .quality-section .textlink{font-size:12px}
+.surface summary{font-size:12px;padding-block:16px}
+}
+
+@media(prefers-reduced-motion:reduce){.surface *{scroll-behavior:auto!important;transition:none!important}
+}
+
+.surface .mobile-tasks{display:none}
+.surface .is-iphone .campaign-stage{background:#000;color:#fff}
+.surface .is-iphone .eyebrow,.surface .is-iphone .quality-link{color:#c9d7cc}
+.surface .is-iphone .campaign-copy p{color:#c7cdc8}
+.surface .is-iphone .hero-link{background:white;color:var(--green)}
+.surface .is-iphone .campaign-visual{padding:0;overflow:hidden;position:relative}
+.surface .is-iphone .campaign-visual img{height:100%;width:100%;object-fit:cover;object-position:53% center;mix-blend-mode:normal;position:absolute}
+.surface .is-iphone .hero-caption{position:absolute;bottom:16px;left:18px;color:#bfbfbf;font-size:10px}
+.surface .is-iphone .carousel-controls button{color:white;border-color:#666;background:#111}
+.surface .is-iphone .carousel-controls span{color:#ccc}
+.surface .is-iphone .campaign-copy{padding-bottom:42px}
+.surface .carousel-tabs{background:#f1f3f1}
+
+@media(max-width:760px){.surface .mobile-tasks{display:grid;grid-template-columns:.8fr 1fr 1.3fr;background:var(--green);color:white}
+.surface .mobile-tasks a{display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;font-size:11px;border-right:1px solid #496353}
+.surface .mobile-tasks a:last-child{border-right:0}
+.surface .mobile-tasks svg{width:17px;height:17px}
+.surface .is-iphone .campaign-copy{padding-bottom:12px}
+.surface .is-iphone .campaign-visual{height:210px}
+.surface .is-iphone .campaign-visual img{object-position:50% 25%}
+.surface .is-iphone .hero-caption{bottom:13px;font-size:9px}
+.surface .buyback-card h2{font-size:29px}
+.surface .carousel-controls button{width:36px;height:36px}
+}
+
+.surface .is-laptop .campaign-visual{padding:0;position:relative;overflow:hidden}
+.surface .is-laptop .campaign-visual img{position:absolute;width:100%;height:100%;object-fit:cover;mix-blend-mode:normal}
+.surface .is-laptop .hero-caption{position:absolute;bottom:14px;left:18px;color:#25332c}
+.surface .is-laptop .carousel-controls button{background:#f1f3f1}
+.surface .is-laptop .campaign-stage{background:#e9ecee}
+.surface .is-laptop .carousel-controls span{color:#26362b}
+
+.surface .products{grid-template-columns:repeat(var(--product-count,3),minmax(0,1fr))}
+
+@media(max-width:360px){.surface .campaign-copy{padding-inline:22px}
+.surface .campaign h1{font-size:32px;letter-spacing:-1.4px}
+.surface .service-card h2,.surface .buyback-card h2{font-size:26px}
+.surface .service-card{padding-left:20px}
+.surface .service-card .button{gap:8px;font-size:10px}
+.surface .repair-card img{width:25%}
+.surface .trade-symbol{right:6px}
+.surface .trade-symbol svg{width:90px;height:90px}
+.surface .service-foot{left:20px}
+.surface .section-head h2{font-size:24px}
+.surface .section-head .textlink{font-size:10px}
+.surface .assurance a{font-size:9px}
+}
+
+
+.surface .image-fallback { font-size: 12px; color: var(--muted); text-align: center; }
+.surface .stock-status { font-size: 11px; color: var(--muted); margin: 6px 0 0; }
+.surface .catalog-state { grid-column: 1 / -1; min-height: 450px; padding: 40px 24px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; border: 1px solid var(--line); border-radius: 8px; width: 100%; }
+.surface .catalog-state p { margin: 0; font-size: 14px; }
+.surface .menu-backdrop { position: fixed; inset: 0; z-index: 70; background: #1116; }
+.surface .menu-panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(390px, 100%); z-index: 71; background: white; padding: 24px; overflow-y: auto; }
+.surface .menu-panel nav { display: flex; flex-direction: column; }
+.surface .menu-panel a { min-height: 48px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.surface .menu-close { display: flex; align-items: center; gap: 12px; min-height: 44px; margin: 0 0 16px auto; border: 0; background: transparent; }
+.surface .cart-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; border-radius: 50%; background: var(--green); color: white; font-size: 10px; padding: 2px; }
+@media (max-width: 760px) { .surface .catalog-state { flex: 0 0 100%; min-height: 420px; } .surface .utilities .cart-count { display: inline-flex; } }
+@media (max-width: 360px) { .surface .brandrow { gap: 9px; } .surface .logo { width: 130px; } .surface .utilities { gap: 10px; } .surface .topline .wrap { font-size: 9px; gap: 8px; } }
