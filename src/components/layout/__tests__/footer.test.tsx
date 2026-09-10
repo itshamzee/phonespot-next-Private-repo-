@@ -8,13 +8,12 @@ describe("Footer", () => {
     expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
     expect(screen.getByRole("link", { name: /Trustpilot — 4,7 stjerner/ })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
-  it("preserves newsletter submission, cookie settings and insurance partner", () => {
+  it("links to selling an existing device from the footer", () => {
     render(<Footer />);
-    const email = screen.getByRole("textbox", { name: "Din e-mailadresse" });
-    expect(email).toHaveAttribute("name", "email");
-    expect(email).toBeRequired();
-    expect(email.closest("form")).toHaveAttribute("action", "/api/newsletter");
-    expect(email.closest("form")).toHaveAttribute("method", "POST");
+    expect(screen.getByRole("link", { name: "Sælg din enhed" })).toHaveAttribute("href", "/saelg-din-enhed");
+  });
+  it("preserves cookie settings and the insurance partner", () => {
+    render(<Footer />);
     expect(screen.getByRole("button", { name: /cookie/i })).toBeVisible();
     expect(screen.getByRole("link", { name: "Elektronikforsikring i samarbejde med Storstrøm Forsikring" })).toHaveAttribute("href", "/forsikring");
   });

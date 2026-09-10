@@ -16,6 +16,7 @@ const PRODUCT_LINKS = [
 ] as const;
 
 const SERVICE_LINKS = [
+  { label: "Sælg din enhed", href: "/saelg-din-enhed" },
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Garanti", href: "/garanti" },
   { label: "Forsikring", href: "/forsikring" },
@@ -269,40 +270,6 @@ export function Footer() {
             </NavColumn>
           </div>
 
-          {/* Divider */}
-          <div className="mt-12 h-px bg-white/[0.07]" aria-hidden="true" />
-
-          {/* Newsletter */}
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="font-body text-xs font-semibold text-white/80">
-                Nyhedsbrev
-              </h3>
-              <p className="mt-1.5 text-[13px] text-[#86868B]">
-                Få eksklusive tilbud og nyheder direkte i din indbakke.
-              </p>
-            </div>
-            <form
-              action="/api/newsletter"
-              method="POST"
-              className="flex flex-col sm:flex-row gap-2 sm:shrink-0"
-            >
-              <input
-                name="email"
-                aria-label="Din e-mailadresse"
-                type="email"
-                required
-                placeholder="Din e-mailadresse"
-                className="w-full rounded-full border border-white/[0.08] bg-white/[0.05] px-4 py-2 text-[13px] text-white placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.08] focus:outline-none sm:w-56"
-              />
-              <button
-                type="submit"
-                className="shrink-0 rounded-full bg-[#1A3D2E] px-5 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
-              >
-                Tilmeld
-              </button>
-            </form>
-          </div>
         </div>
 
         {/* Bottom bar */}

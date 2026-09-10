@@ -7,7 +7,6 @@ import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUpsellRouter } from "@/components/cart/cart-upsell-router";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { NewsletterPopup } from "@/components/ui/newsletter-popup";
 import { MessengerChat } from "@/components/ui/messenger-chat";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
@@ -25,7 +24,6 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <CartDrawer />
       <CartUpsellRouter />
       <CookieConsent />
-      <NewsletterPopup />
       <MessengerChat />
     </CartProvider>
   );
