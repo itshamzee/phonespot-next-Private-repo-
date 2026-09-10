@@ -1,36 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { ProductTemplate } from "@/lib/supabase/platform-types";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface TemplateWithStock extends ProductTemplate {
-  device_count: number;
-  min_price: number | null;
-  locations: { name: string; type: string; count: number }[];
-  /**
-   * True when at least one listed device is PhoneSpot's own stock (not
-   * Foxway dropship). Used as the primary sort key so own inventory shows
-   * before dropship — see product-queries.ts. Internal data only, never
-   * surfaced in the UI.
-   */
-  has_own_stock: boolean;
-}
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { TemplateWithStock } from "@/components/product/filtered-grid";
 
 type SortOption = "price_asc" | "price_desc" | "popular" | "newest";
+type Grade = "A" | "B" | "C";
 
 interface FilterState {
   priceMin: string;
   priceMax: string;
-  grades: Set<"A" | "B" | "C">;
+  grades: Set<Grade>;
   storageOptions: Set<string>;
   onlyInStock: boolean;
   onlyPickup: boolean;
   sort: SortOption;
-  // Laptop-specific filters
   brands: Set<string>;
   screenSizes: Set<string>;
   ramOptions: Set<string>;
@@ -40,59 +23,58 @@ interface FilterState {
 interface CategoryFiltersProps {
   templates: TemplateWithStock[];
   onFilter: (filtered: TemplateWithStock[]) => void;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** All prices from the DB are in øre (DKK cents). Convert to kroner for UI. */
-function oreToKr(ore: number): number {
-  return Math.round(ore / 100);
-}
-
-/** Parse a user-entered DKK amount to øre, returning null when empty/invalid. */
-function krToOre(kr: string): number | null {
-  const n = parseInt(kr.replace(/\D/g, ""), 10);
-  return isNaN(n) ? null : n * 100;
+  resultCount: number;
+  heading?: string;
+  initialBrand?: string;
+  resultsId: string;
 }
 
 const SORT_LABELS: Record<SortOption, string> = {
-  price_asc: "Pris (lav-høj)",
-  price_desc: "Pris (høj-lav)",
-  popular: "Populære først",
-  newest: "Nyeste",
+  price_asc: "Pris, lav til høj",
+  price_desc: "Pris, høj til lav",
+  popular: "Flest på lager",
+  newest: "Nyeste modeller",
 };
 
-const PRICE_QUICK_BUTTONS: { label: string; min: string; max: string }[] = [
+const QUICK_PRICES = [
   { label: "Under 2.000", min: "", max: "2000" },
   { label: "2.000–4.000", min: "2000", max: "4000" },
   { label: "4.000–6.000", min: "4000", max: "6000" },
   { label: "Over 6.000", min: "6000", max: "" },
+] as const;
+
+const GRADES: { grade: Grade; label: string; description: string }[] = [
+  { grade: "A", label: "Grade A", description: "Meget flot" },
+  { grade: "B", label: "Grade B", description: "Almindelige brugsspor" },
+  { grade: "C", label: "Grade C", description: "Tydelige brugsspor" },
 ];
 
-const GRADE_OPTIONS: { grade: "A" | "B" | "C"; label: string; desc: string }[] = [
-  { grade: "A", label: "Grade A", desc: "Som ny" },
-  { grade: "B", label: "Grade B", desc: "God stand" },
-  { grade: "C", label: "Grade C", desc: "Brugt" },
-];
-
-/** Normalise a storage string so "128 GB" and "128GB" are treated the same. */
-function normaliseStorage(s: string): string {
-  return s.replace(/\s+/g, "").toUpperCase();
+function normaliseStorage(value: string) {
+  return value.replace(/\s+/g, "").toUpperCase();
 }
 
-/** Sort the normalised storage strings by their numeric value. */
-function sortStorageOptions(options: string[]): string[] {
-  return [...options].sort((a, b) => {
-    const numA = parseInt(a, 10);
-    const numB = parseInt(b, 10);
-    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-    return a.localeCompare(b);
-  });
+function normaliseRam(value: string) {
+  return value.replace(/\s+/g, "").toUpperCase();
 }
 
-function buildDefaultState(): FilterState {
+function normaliseScreenSize(value: string) {
+  return `${value.replace(/["\u201D\u2033]/g, "").replace(/\s+/g, "").replace(/\.0$/, "")}"`;
+}
+
+function detectProcessorType(value: string): string | null {
+  const processor = value.toLowerCase();
+  if (processor.includes("intel") || processor.includes("core i") || /i[3579]-/.test(processor)) return "Intel";
+  if (processor.includes("amd") || processor.includes("ryzen")) return "AMD";
+  if (processor.includes("apple") || /\bm[1-4]\b/.test(processor)) return "Apple";
+  return null;
+}
+
+function toOre(value: string): number | null {
+  const digits = value.replace(/\D/g, "");
+  return digits ? Number.parseInt(digits, 10) * 100 : null;
+}
+
+function defaultState(): FilterState {
   return {
     priceMin: "",
     priceMax: "",
@@ -108,963 +90,261 @@ function buildDefaultState(): FilterState {
   };
 }
 
-/** Normalise RAM string: "16 GB" -> "16GB" */
-function normaliseRam(s: string): string {
-  return s.replace(/\s+/g, "").toUpperCase();
+function initialState(templates: TemplateWithStock[], requestedBrand?: string): FilterState {
+  const state = defaultState();
+  if (!requestedBrand) return state;
+  const brand = templates.map((template) => template.brand).find(
+    (candidate) => candidate.toLowerCase() === requestedBrand.toLowerCase(),
+  );
+  if (brand) state.brands.add(brand);
+  return state;
 }
 
-/** Normalise screen size: "14.0" -> "14\"", "15.6" -> "15.6\"" */
-function normaliseScreenSize(s: string): string {
-  return s.replace(/["\u201D\u2033]/g, "").replace(/\s+/g, "").replace(/\.0$/, "") + '"';
+function countActiveFilters(state: FilterState) {
+  return (
+    (state.priceMin || state.priceMax ? 1 : 0) +
+    state.grades.size +
+    state.storageOptions.size +
+    Number(state.onlyInStock) +
+    Number(state.onlyPickup) +
+    state.brands.size +
+    state.screenSizes.size +
+    state.ramOptions.size +
+    state.processorTypes.size
+  );
 }
 
-/** Detect processor type from a processor string */
-function detectProcessorType(proc: string): string | null {
-  const lower = proc.toLowerCase();
-  if (lower.includes("intel") || lower.includes("core i") || /i[3579]-/.test(lower)) return "Intel";
-  if (lower.includes("amd") || lower.includes("ryzen")) return "AMD";
-  if (lower.includes("apple") || lower.includes("m1") || lower.includes("m2") || lower.includes("m3") || lower.includes("m4")) return "Apple";
-  return null;
-}
+export function applyCategoryFilters(templates: TemplateWithStock[], state: FilterState): TemplateWithStock[] {
+  const minPrice = toOre(state.priceMin);
+  const maxPrice = toOre(state.priceMax);
+  const filtered = templates.filter((template) => {
+    if (minPrice !== null && (template.min_price === null || template.min_price < minPrice)) return false;
+    if (maxPrice !== null && (template.min_price === null || template.min_price > maxPrice)) return false;
+    if (state.grades.size > 0 && !(
+      (state.grades.has("A") && template.base_price_a !== null) ||
+      (state.grades.has("B") && template.base_price_b !== null) ||
+      (state.grades.has("C") && template.base_price_c !== null)
+    )) return false;
+    if (state.storageOptions.size > 0 && !template.storage_options.some(
+      (value) => state.storageOptions.has(normaliseStorage(value)),
+    )) return false;
+    if (state.onlyInStock && template.device_count <= 0) return false;
+    if (state.onlyPickup && !template.locations.some(
+      (location) => location.type === "store" && location.count > 0,
+    )) return false;
+    if (state.brands.size > 0 && !state.brands.has(template.brand)) return false;
 
-function countActiveFilters(state: FilterState): number {
-  let count = 0;
-  if (state.priceMin || state.priceMax) count++;
-  count += state.grades.size;
-  count += state.storageOptions.size;
-  if (state.onlyInStock) count++;
-  if (state.onlyPickup) count++;
-  count += state.brands.size;
-  count += state.screenSizes.size;
-  count += state.ramOptions.size;
-  count += state.processorTypes.size;
-  return count;
-}
-
-// ---------------------------------------------------------------------------
-// Filter + sort logic
-// ---------------------------------------------------------------------------
-
-function applyFilters(
-  templates: TemplateWithStock[],
-  state: FilterState
-): TemplateWithStock[] {
-  const minOre = krToOre(state.priceMin);
-  const maxOre = krToOre(state.priceMax);
-
-  let results = templates.filter((t) => {
-    // Price
-    if (minOre !== null && (t.min_price === null || t.min_price < minOre)) return false;
-    if (maxOre !== null && (t.min_price === null || t.min_price > maxOre)) return false;
-
-    // Grade — a template matches if at least one selected grade has a price set
-    if (state.grades.size > 0) {
-      const hasGrade =
-        (state.grades.has("A") && t.base_price_a !== null) ||
-        (state.grades.has("B") && t.base_price_b !== null) ||
-        (state.grades.has("C") && t.base_price_c !== null);
-      if (!hasGrade) return false;
-    }
-
-    // Storage
-    if (state.storageOptions.size > 0) {
-      const templateStorage = (t.storage_options ?? []).map(normaliseStorage);
-      const hasStorage = [...state.storageOptions].some((s) =>
-        templateStorage.includes(normaliseStorage(s))
-      );
-      if (!hasStorage) return false;
-    }
-
-    // In stock
-    if (state.onlyInStock && t.device_count === 0) return false;
-
-    // Pickup
-    if (state.onlyPickup) {
-      const hasStore = t.locations.some((l) => l.type === "store");
-      if (!hasStore) return false;
-    }
-
-    // Brand (laptop filter)
-    if (state.brands.size > 0) {
-      if (!state.brands.has(t.brand)) return false;
-    }
-
-    // Screen size (laptop filter)
-    if (state.screenSizes.size > 0) {
-      const screenSize = t.specifications?.screen_size;
-      if (!screenSize) return false;
-      const normalised = normaliseScreenSize(screenSize);
-      if (![...state.screenSizes].some((s) => normalised.includes(s.replace('"', "")))) return false;
-    }
-
-    // RAM (laptop filter)
-    if (state.ramOptions.size > 0) {
-      const ram = t.specifications?.ram;
-      if (!ram) return false;
-      if (!state.ramOptions.has(normaliseRam(ram))) return false;
-    }
-
-    // Processor type (laptop filter)
+    const screenSize = template.specifications?.screen_size;
+    if (state.screenSizes.size > 0 && (!screenSize || !state.screenSizes.has(normaliseScreenSize(screenSize)))) return false;
+    const ram = template.specifications?.ram;
+    if (state.ramOptions.size > 0 && (!ram || !state.ramOptions.has(normaliseRam(ram)))) return false;
+    const processor = template.specifications?.processor;
     if (state.processorTypes.size > 0) {
-      const proc = t.specifications?.processor;
-      if (!proc) return false;
-      const procType = detectProcessorType(proc);
-      if (!procType || !state.processorTypes.has(procType)) return false;
+      const type = processor ? detectProcessorType(processor) : null;
+      if (!type || !state.processorTypes.has(type)) return false;
     }
-
     return true;
   });
 
-  // Sort — PhoneSpot's own stock always shows before Foxway dropship stock
-  // (Task 17), with the chosen criterion as the secondary/tie-break key.
-  // has_own_stock is true for anything that isn't Foxway, so this is a
-  // no-op reorder for categories that carry no dropship stock at all.
-  const ownStockFirst = (a: TemplateWithStock, b: TemplateWithStock) =>
-    (b.has_own_stock ? 1 : 0) - (a.has_own_stock ? 1 : 0);
-
-  switch (state.sort) {
-    case "price_asc":
-      results = results.sort(
-        (a, b) => ownStockFirst(a, b) || (a.min_price ?? Infinity) - (b.min_price ?? Infinity)
-      );
-      break;
-    case "price_desc":
-      results = results.sort(
-        (a, b) => ownStockFirst(a, b) || (b.min_price ?? -Infinity) - (a.min_price ?? -Infinity)
-      );
-      break;
-    case "popular":
-      results = results.sort((a, b) => ownStockFirst(a, b) || b.device_count - a.device_count);
-      break;
-    case "newest":
-      results = results.sort(
-        (a, b) =>
-          ownStockFirst(a, b) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      break;
-  }
-
-  return results;
+  return [...filtered].sort((a, b) => {
+    const ownStockOrder = Number(b.has_own_stock) - Number(a.has_own_stock);
+    if (ownStockOrder) return ownStockOrder;
+    if (state.sort === "price_asc") return (a.min_price ?? Infinity) - (b.min_price ?? Infinity);
+    if (state.sort === "price_desc") return (b.min_price ?? -Infinity) - (a.min_price ?? -Infinity);
+    if (state.sort === "popular") return b.device_count - a.device_count;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
+function keepAvailable(selected: Set<string>, available: Set<string>) {
+  return new Set([...selected].filter((value) => available.has(value)));
+}
 
-function FilterSectionHeader({
-  label,
-  open,
-  onToggle,
-}: {
+function SectionButton({ label, open, controls, onClick }: {
   label: string;
   open: boolean;
-  onToggle: () => void;
+  controls: string;
+  onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-center justify-between py-3 text-left text-sm font-semibold text-[#111111]"
-      aria-expanded={open}
-    >
-      <span>{label}</span>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className={`h-4 w-4 shrink-0 text-[#6E6E73] transition-transform ${open ? "rotate-180" : ""}`}
-        aria-hidden="true"
-      >
-        <path
-          fillRule="evenodd"
-          d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-          clipRule="evenodd"
-        />
-      </svg>
+    <button type="button" aria-expanded={open} aria-controls={controls} onClick={onClick} className="flex w-full items-center justify-between py-3 text-left text-sm font-semibold text-[#202421]">
+      {label}<span aria-hidden="true" className="text-lg font-normal text-[#1A3D2E]">{open ? "−" : "+"}</span>
     </button>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
-export function CategoryFilters({ templates, onFilter }: CategoryFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>(buildDefaultState);
+export function CategoryFilters({ templates, onFilter, resultCount, heading, initialBrand, resultsId }: CategoryFiltersProps) {
+  const [filters, setFilters] = useState(() => initialState(templates, initialBrand));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [openSections, setOpenSections] = useState({ sort: true, brand: false, screen: false, ram: false, processor: false, price: true, grade: true, storage: false, availability: true });
+  const idBase = useId().replace(/:/g, "");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Detect if templates are laptops
-  const isLaptopCategory = templates.some(
-    (t) => t.category?.toLowerCase() === "laptop" || t.category?.toLowerCase() === "macbook"
-  );
-
-  // Which sections are open. Keep the short-and-common sections open so the
-  // mobile drawer doesn't feel overwhelming on first paint; heavier sections
-  // (brand list, storage, RAM, processor) stay collapsed until tapped.
-  const [openSections, setOpenSections] = useState({
-    price: true,
-    grade: true,
-    storage: false,
-    availability: true,
-    sort: true,
-    brand: false,
-    screenSize: false,
-    ram: false,
-    processor: false,
-  });
-
-  // Derive available storage options from the full template list (memoised by
-  // reference equality — templates doesn't change after initial server fetch).
-  const allStorageOptions = useRef<string[]>([]);
-  useEffect(() => {
-    const seen = new Set<string>();
-    for (const t of templates) {
-      for (const s of t.storage_options ?? []) {
-        seen.add(normaliseStorage(s));
+  const isLaptop = templates.some((template) => ["laptop", "macbook"].includes(template.category.toLowerCase()));
+  const options = useMemo(() => {
+    const storage = new Set<string>();
+    const brands = new Map<string, number>();
+    const screens = new Set<string>();
+    const ram = new Set<string>();
+    const processors = new Map<string, number>();
+    for (const template of templates) {
+      template.storage_options.forEach((value) => storage.add(normaliseStorage(value)));
+      brands.set(template.brand, (brands.get(template.brand) ?? 0) + 1);
+      if (template.specifications?.screen_size) screens.add(normaliseScreenSize(template.specifications.screen_size));
+      if (template.specifications?.ram) ram.add(normaliseRam(template.specifications.ram));
+      if (template.specifications?.processor) {
+        const type = detectProcessorType(template.specifications.processor);
+        if (type) processors.set(type, (processors.get(type) ?? 0) + 1);
       }
     }
-    allStorageOptions.current = sortStorageOptions([...seen]);
+    const numericSort = (a: string, b: string) => Number.parseFloat(a) - Number.parseFloat(b);
+    return {
+      storage: [...storage].sort(numericSort),
+      brands: [...brands].sort((a, b) => b[1] - a[1]),
+      screens: [...screens].sort(numericSort),
+      ram: [...ram].sort(numericSort),
+      processors: [...processors].sort((a, b) => b[1] - a[1]),
+    };
   }, [templates]);
 
-  // Derive laptop-specific filter options
-  const allBrands = useRef<{ brand: string; count: number }[]>([]);
-  const allScreenSizes = useRef<string[]>([]);
-  const allRamOptions = useRef<string[]>([]);
-  const allProcessorTypes = useRef<{ type: string; count: number }[]>([]);
+  const effectiveFilters = useMemo(() => ({
+    ...filters,
+    brands: keepAvailable(filters.brands, new Set(options.brands.map(([brand]) => brand))),
+    screenSizes: keepAvailable(filters.screenSizes, new Set(options.screens)),
+    ramOptions: keepAvailable(filters.ramOptions, new Set(options.ram)),
+    processorTypes: keepAvailable(filters.processorTypes, new Set(options.processors.map(([type]) => type))),
+    storageOptions: keepAvailable(filters.storageOptions, new Set(options.storage)),
+  }), [filters, options]);
+
+  const filtered = useMemo(() => applyCategoryFilters(templates, effectiveFilters), [effectiveFilters, templates]);
+  useEffect(() => onFilter(filtered), [filtered, onFilter]);
+
+  const closeDrawer = useCallback(() => {
+    triggerRef.current?.focus();
+    setDrawerOpen(false);
+  }, []);
 
   useEffect(() => {
-    if (!isLaptopCategory) return;
-    // Brands
-    const brandMap = new Map<string, number>();
-    for (const t of templates) {
-      brandMap.set(t.brand, (brandMap.get(t.brand) ?? 0) + 1);
-    }
-    allBrands.current = [...brandMap.entries()]
-      .map(([brand, count]) => ({ brand, count }))
-      .sort((a, b) => b.count - a.count);
-
-    // Screen sizes
-    const screenSet = new Set<string>();
-    for (const t of templates) {
-      if (t.specifications?.screen_size) {
-        screenSet.add(normaliseScreenSize(t.specifications.screen_size));
+    if (!drawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const results = document.getElementById(resultsId);
+    document.body.style.overflow = "hidden";
+    results?.setAttribute("inert", "");
+    results?.setAttribute("aria-hidden", "true");
+    closeRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDrawer();
+        return;
       }
-    }
-    allScreenSizes.current = [...screenSet].sort((a, b) => {
-      const numA = parseFloat(a);
-      const numB = parseFloat(b);
-      return numA - numB;
-    });
-
-    // RAM
-    const ramSet = new Set<string>();
-    for (const t of templates) {
-      if (t.specifications?.ram) {
-        ramSet.add(normaliseRam(t.specifications.ram));
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
-    }
-    allRamOptions.current = [...ramSet].sort((a, b) => {
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      return numA - numB;
-    });
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      results?.removeAttribute("inert");
+      results?.removeAttribute("aria-hidden");
+    };
+  }, [closeDrawer, drawerOpen, resultsId]);
 
-    // Processor types
-    const procMap = new Map<string, number>();
-    for (const t of templates) {
-      if (t.specifications?.processor) {
-        const type = detectProcessorType(t.specifications.processor);
-        if (type) procMap.set(type, (procMap.get(type) ?? 0) + 1);
-      }
-    }
-    allProcessorTypes.current = [...procMap.entries()]
-      .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => b.count - a.count);
-  }, [templates, isLaptopCategory]);
+  const activeCount = countActiveFilters(effectiveFilters);
+  const toggleSection = (section: keyof typeof openSections) => setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  const toggleSet = (key: "grades" | "storageOptions" | "brands" | "screenSizes" | "ramOptions" | "processorTypes", value: string, checked: boolean) => setFilters((current) => {
+    const next = new Set(current[key] as Set<string>);
+    if (checked) next.add(value);
+    else next.delete(value);
+    return { ...current, [key]: next };
+  });
+  const reset = () => setFilters(defaultState());
 
-  // Run filter + notify parent on every state change
-  useEffect(() => {
-    onFilter(applyFilters(templates, filters));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
-  // ---- Setters ----
-
-  const resetFilters = useCallback(() => setFilters(buildDefaultState()), []);
-
-  const toggleSection = (section: keyof typeof openSections) =>
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-
-  const setGrade = (grade: "A" | "B" | "C", checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.grades);
-      checked ? next.add(grade) : next.delete(grade);
-      return { ...prev, grades: next };
-    });
-
-  const setStorage = (s: string, checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.storageOptions);
-      checked ? next.add(normaliseStorage(s)) : next.delete(normaliseStorage(s));
-      return { ...prev, storageOptions: next };
-    });
-
-  const applyQuickPrice = (min: string, max: string) =>
-    setFilters((prev) => ({ ...prev, priceMin: min, priceMax: max }));
-
-  const setBrand = (brand: string, checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.brands);
-      checked ? next.add(brand) : next.delete(brand);
-      return { ...prev, brands: next };
-    });
-
-  const setScreenSize = (size: string, checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.screenSizes);
-      checked ? next.add(size) : next.delete(size);
-      return { ...prev, screenSizes: next };
-    });
-
-  const setRam = (ram: string, checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.ramOptions);
-      checked ? next.add(ram) : next.delete(ram);
-      return { ...prev, ramOptions: next };
-    });
-
-  const setProcessorType = (type: string, checked: boolean) =>
-    setFilters((prev) => {
-      const next = new Set(prev.processorTypes);
-      checked ? next.add(type) : next.delete(type);
-      return { ...prev, processorTypes: next };
-    });
-
-  const activeCount = countActiveFilters(filters);
-  const storageOpts = allStorageOptions.current;
-
-  // ---- Sidebar panel (shared between desktop sidebar & mobile drawer) ----
-
-  const panelContent = (
-    <div className="flex flex-col gap-0">
-
-      {/* Sort */}
-      <div className="border-b border-[#E5E5EA]">
-        <FilterSectionHeader
-          label="Sortering"
-          open={openSections.sort}
-          onToggle={() => toggleSection("sort")}
-        />
-        {openSections.sort && (
-          <div className="pb-4">
-            <select
-              value={filters.sort}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, sort: e.target.value as SortOption }))
-              }
-              className="w-full rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] px-3 py-2.5 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-1 focus:ring-[#1A3D2E]"
-            >
-              {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
-                <option key={key} value={key}>
-                  {SORT_LABELS[key]}
-                </option>
-              ))}
+  const panel = (surface: "desktop" | "mobile") => {
+    const section = (name: keyof typeof openSections) => `${idBase}-${surface}-${name}`;
+    return (
+      <div className="divide-y divide-[#DDE2DD]">
+        <div>
+          <SectionButton label="Sortering" open={openSections.sort} controls={section("sort")} onClick={() => toggleSection("sort")} />
+          {openSections.sort && <div id={section("sort")} className="pb-4">
+            <label className="sr-only" htmlFor={`${idBase}-${surface}-sort-control`}>Sortering</label>
+            <select id={`${idBase}-${surface}-sort-control`} value={filters.sort} onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value as SortOption }))} className="w-full rounded-md border border-[#DDE2DD] bg-white px-3 py-2.5 text-sm text-[#202421] focus:border-[#1A3D2E] focus:outline-none">
+              {(Object.keys(SORT_LABELS) as SortOption[]).map((value) => <option key={value} value={value}>{SORT_LABELS[value]}</option>)}
             </select>
-          </div>
-        )}
+          </div>}
+        </div>
+
+        {isLaptop && options.brands.length > 0 && <div>
+          <SectionButton label="Mærke" open={openSections.brand} controls={section("brand")} onClick={() => toggleSection("brand")} />
+          {openSections.brand && <div id={section("brand")} className="space-y-1 pb-4">{options.brands.map(([brand, count]) => (
+            <label key={brand} className="flex cursor-pointer items-center gap-3 py-1.5 text-sm"><input type="checkbox" checked={filters.brands.has(brand)} onChange={(event) => toggleSet("brands", brand, event.target.checked)} className="h-4 w-4 accent-[#1A3D2E]" /><span className="flex-1">{brand}</span><span className="text-xs text-[#687069]">{count}</span></label>
+          ))}</div>}
+        </div>}
+
+        {isLaptop && options.screens.length > 0 && <div>
+          <SectionButton label="Skærmstørrelse" open={openSections.screen} controls={section("screen")} onClick={() => toggleSection("screen")} />
+          {openSections.screen && <div id={section("screen")} className="flex flex-wrap gap-2 pb-4">{options.screens.map((value) => <button type="button" key={value} aria-pressed={filters.screenSizes.has(value)} onClick={() => toggleSet("screenSizes", value, !filters.screenSizes.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+        </div>}
+
+        {isLaptop && options.ram.length > 0 && <div>
+          <SectionButton label="RAM" open={openSections.ram} controls={section("ram")} onClick={() => toggleSection("ram")} />
+          {openSections.ram && <div id={section("ram")} className="flex flex-wrap gap-2 pb-4">{options.ram.map((value) => <button type="button" key={value} aria-pressed={filters.ramOptions.has(value)} onClick={() => toggleSet("ramOptions", value, !filters.ramOptions.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+        </div>}
+
+        {isLaptop && options.processors.length > 0 && <div>
+          <SectionButton label="Processor" open={openSections.processor} controls={section("processor")} onClick={() => toggleSection("processor")} />
+          {openSections.processor && <div id={section("processor")} className="space-y-1 pb-4">{options.processors.map(([value, count]) => <label key={value} className="flex cursor-pointer items-center gap-3 py-1.5 text-sm"><input type="checkbox" checked={filters.processorTypes.has(value)} onChange={(event) => toggleSet("processorTypes", value, event.target.checked)} className="h-4 w-4 accent-[#1A3D2E]" /><span className="flex-1">{value}</span><span className="text-xs text-[#687069]">{count}</span></label>)}</div>}
+        </div>}
+
+        <div>
+          <SectionButton label="Pris" open={openSections.price} controls={section("price")} onClick={() => toggleSection("price")} />
+          {openSections.price && <div id={section("price")} className="space-y-3 pb-4">
+            <div className="flex flex-wrap gap-1.5">{QUICK_PRICES.map((price) => <button type="button" key={price.label} onClick={() => setFilters((current) => ({ ...current, priceMin: price.min, priceMax: price.max }))} className="rounded-md border border-[#DDE2DD] px-2.5 py-2 text-xs">{price.label}</button>)}</div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs text-[#687069]">Minimumspris<input aria-label="Minimumspris" inputMode="numeric" value={filters.priceMin} onChange={(event) => setFilters((current) => ({ ...current, priceMin: event.target.value }))} className="mt-1 w-full rounded-md border border-[#DDE2DD] px-3 py-2 text-sm text-[#202421]" /></label>
+              <label className="text-xs text-[#687069]">Maksimumpris<input aria-label="Maksimumpris" inputMode="numeric" value={filters.priceMax} onChange={(event) => setFilters((current) => ({ ...current, priceMax: event.target.value }))} className="mt-1 w-full rounded-md border border-[#DDE2DD] px-3 py-2 text-sm text-[#202421]" /></label>
+            </div>
+          </div>}
+        </div>
+
+        <div>
+          <SectionButton label="Stand" open={openSections.grade} controls={section("grade")} onClick={() => toggleSection("grade")} />
+          {openSections.grade && <div id={section("grade")} className="space-y-1 pb-4">{GRADES.map(({ grade, label, description }) => <label key={grade} className="flex cursor-pointer items-center gap-3 py-1.5 text-sm"><input type="checkbox" checked={filters.grades.has(grade)} onChange={(event) => toggleSet("grades", grade, event.target.checked)} className="h-4 w-4 accent-[#1A3D2E]" /><span><span className="block font-medium">{label}</span><span className="block text-xs text-[#687069]">{description}</span></span></label>)}</div>}
+        </div>
+
+        {options.storage.length > 0 && <div>
+          <SectionButton label="Lagerplads" open={openSections.storage} controls={section("storage")} onClick={() => toggleSection("storage")} />
+          {openSections.storage && <div id={section("storage")} className="flex flex-wrap gap-2 pb-4">{options.storage.map((value) => <button type="button" key={value} aria-pressed={filters.storageOptions.has(value)} onClick={() => toggleSet("storageOptions", value, !filters.storageOptions.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+        </div>}
+
+        <div>
+          <SectionButton label="Tilgængelighed" open={openSections.availability} controls={section("availability")} onClick={() => toggleSection("availability")} />
+          {openSections.availability && <div id={section("availability")} className="space-y-2 pb-4"><label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={filters.onlyInStock} onChange={(event) => setFilters((current) => ({ ...current, onlyInStock: event.target.checked }))} className="h-4 w-4 accent-[#1A3D2E]" />Kun modeller på lager</label><label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={filters.onlyPickup} onChange={(event) => setFilters((current) => ({ ...current, onlyPickup: event.target.checked }))} className="h-4 w-4 accent-[#1A3D2E]" />Kan afhentes i butik</label></div>}
+        </div>
+
+        {surface === "mobile" && activeCount > 0 && <div className="pt-4"><button type="button" onClick={reset} className="w-full rounded-md border border-[#BFC8C0] px-4 py-2.5 text-sm font-semibold text-[#1A3D2E]">Ryd filtre</button></div>}
       </div>
+    );
+  };
 
-      {/* Brand — laptop only */}
-      {isLaptopCategory && allBrands.current.length > 0 && (
-        <div className="border-b border-[#E5E5EA]">
-          <FilterSectionHeader
-            label="Mærke"
-            open={openSections.brand}
-            onToggle={() => toggleSection("brand")}
-          />
-          {openSections.brand && (
-            <div className="pb-4 space-y-2">
-              {allBrands.current.map(({ brand, count }) => (
-                <label
-                  key={brand}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
-                    filters.brands.has(brand)
-                      ? "bg-[#1A3D2E]/8"
-                      : "hover:bg-[#F7F7F8]"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.brands.has(brand)}
-                    onChange={(e) => setBrand(brand, e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
-                  />
-                  <span className="flex-1 text-sm font-medium text-[#111111]">{brand}</span>
-                  <span className="text-xs text-[#6E6E73]">{count}</span>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+  const resultLabel = `${resultCount} ${resultCount === 1 ? "model" : "modeller"}`;
+  return <>
+    <div className="sticky top-0 z-30 col-span-full -mx-4 flex items-center justify-between gap-3 border-y border-[#DDE2DD] bg-white px-4 py-3 lg:hidden"><div><p className="text-sm font-semibold text-[#202421]">{resultLabel}</p>{heading && <p className="text-xs text-[#687069]">{heading}</p>}</div><button ref={triggerRef} type="button" aria-label={activeCount ? `Filtre, ${activeCount} valgt` : "Filtre"} aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="min-h-11 rounded-md border border-[#BFC8C0] bg-white px-4 text-sm font-semibold text-[#1A3D2E]">Filtre{activeCount > 0 ? ` (${activeCount})` : ""}</button></div>
 
-      {/* Screen size — laptop only */}
-      {isLaptopCategory && allScreenSizes.current.length > 0 && (
-        <div className="border-b border-[#E5E5EA]">
-          <FilterSectionHeader
-            label="Skærmstørrelse"
-            open={openSections.screenSize}
-            onToggle={() => toggleSection("screenSize")}
-          />
-          {openSections.screenSize && (
-            <div className="pb-4">
-              <div className="flex flex-wrap gap-1.5">
-                {allScreenSizes.current.map((size) => {
-                  const isActive = filters.screenSizes.has(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setScreenSize(size, !isActive)}
-                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
-                        isActive
-                          ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
-                          : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    <aside aria-label="Produktfiltre" aria-hidden={drawerOpen || undefined} inert={drawerOpen ? true : undefined} className="hidden w-64 shrink-0 lg:block"><div className="sticky top-4 border-t border-[#1A3D2E] py-1"><div className="flex items-center justify-between border-b border-[#DDE2DD] py-3"><h2 className="text-sm font-semibold text-[#202421]">Filtre</h2>{activeCount > 0 && <button type="button" onClick={reset} className="text-xs font-semibold text-[#1A3D2E]">Ryd filtre</button>}</div>{panel("desktop")}</div></aside>
 
-      {/* RAM — laptop only */}
-      {isLaptopCategory && allRamOptions.current.length > 0 && (
-        <div className="border-b border-[#E5E5EA]">
-          <FilterSectionHeader
-            label="RAM"
-            open={openSections.ram}
-            onToggle={() => toggleSection("ram")}
-          />
-          {openSections.ram && (
-            <div className="pb-4">
-              <div className="flex flex-wrap gap-1.5">
-                {allRamOptions.current.map((ram) => {
-                  const isActive = filters.ramOptions.has(ram);
-                  return (
-                    <button
-                      key={ram}
-                      type="button"
-                      onClick={() => setRam(ram, !isActive)}
-                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
-                        isActive
-                          ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
-                          : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
-                      }`}
-                    >
-                      {ram}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Processor — laptop only */}
-      {isLaptopCategory && allProcessorTypes.current.length > 0 && (
-        <div className="border-b border-[#E5E5EA]">
-          <FilterSectionHeader
-            label="Processor"
-            open={openSections.processor}
-            onToggle={() => toggleSection("processor")}
-          />
-          {openSections.processor && (
-            <div className="pb-4 space-y-2">
-              {allProcessorTypes.current.map(({ type, count }) => (
-                <label
-                  key={type}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
-                    filters.processorTypes.has(type)
-                      ? "bg-[#1A3D2E]/8"
-                      : "hover:bg-[#F7F7F8]"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.processorTypes.has(type)}
-                    onChange={(e) => setProcessorType(type, e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
-                  />
-                  <span className="flex-1 text-sm font-medium text-[#111111]">{type}</span>
-                  <span className="text-xs text-[#6E6E73]">{count}</span>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Price range */}
-      <div className="border-b border-[#E5E5EA]">
-        <FilterSectionHeader
-          label="Pris (DKK)"
-          open={openSections.price}
-          onToggle={() => toggleSection("price")}
-        />
-        {openSections.price && (
-          <div className="pb-4 space-y-3">
-            {/* Quick buttons */}
-            <div className="flex flex-wrap gap-1.5">
-              {PRICE_QUICK_BUTTONS.map((btn) => {
-                const isActive =
-                  filters.priceMin === btn.min && filters.priceMax === btn.max;
-                return (
-                  <button
-                    key={btn.label}
-                    type="button"
-                    onClick={() =>
-                      isActive
-                        ? applyQuickPrice("", "")
-                        : applyQuickPrice(btn.min, btn.max)
-                    }
-                    className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
-                      isActive
-                        ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
-                        : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
-                    }`}
-                  >
-                    {btn.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Custom min/max inputs */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Fra"
-                  value={filters.priceMin}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      priceMin: e.target.value.replace(/\D/g, ""),
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] px-3 py-2 pr-10 text-sm text-[#111111] placeholder-[#6E6E73] focus:border-[#1A3D2E] focus:outline-none focus:ring-1 focus:ring-[#1A3D2E]"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6E6E73]">
-                  kr
-                </span>
-              </div>
-              <span className="shrink-0 text-xs text-[#6E6E73]">—</span>
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Til"
-                  value={filters.priceMax}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      priceMax: e.target.value.replace(/\D/g, ""),
-                    }))
-                  }
-                  className="w-full rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] px-3 py-2 pr-10 text-sm text-[#111111] placeholder-[#6E6E73] focus:border-[#1A3D2E] focus:outline-none focus:ring-1 focus:ring-[#1A3D2E]"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6E6E73]">
-                  kr
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Grade / Stand */}
-      <div className="border-b border-[#E5E5EA]">
-        <FilterSectionHeader
-          label="Stand"
-          open={openSections.grade}
-          onToggle={() => toggleSection("grade")}
-        />
-        {openSections.grade && (
-          <div className="pb-4 space-y-2">
-            {GRADE_OPTIONS.map(({ grade, label, desc }) => {
-              // Determine whether this grade is available across any template
-              const available = templates.some((t) => {
-                if (grade === "A") return t.base_price_a !== null;
-                if (grade === "B") return t.base_price_b !== null;
-                return t.base_price_c !== null;
-              });
-
-              return (
-                <label
-                  key={grade}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
-                    filters.grades.has(grade)
-                      ? "bg-[#1A3D2E]/8"
-                      : "hover:bg-[#F7F7F8]"
-                  } ${!available ? "opacity-40" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.grades.has(grade)}
-                    disabled={!available}
-                    onChange={(e) => setGrade(grade, e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
-                  />
-                  <span className="flex-1">
-                    <span className="block text-sm font-semibold text-[#111111]">
-                      {label}
-                    </span>
-                    <span className="block text-xs text-[#6E6E73]">{desc}</span>
-                  </span>
-                  {!available && (
-                    <span className="text-[10px] font-medium text-[#6E6E73]">
-                      Ikke på lager
-                    </span>
-                  )}
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Storage */}
-      {storageOpts.length > 0 && (
-        <div className="border-b border-[#E5E5EA]">
-          <FilterSectionHeader
-            label="Lagerkapacitet"
-            open={openSections.storage}
-            onToggle={() => toggleSection("storage")}
-          />
-          {openSections.storage && (
-            <div className="pb-4">
-              <div className="flex flex-wrap gap-1.5">
-                {storageOpts.map((s) => {
-                  const isActive = filters.storageOptions.has(s);
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setStorage(s, !isActive)}
-                      className={`rounded-full border px-3 py-1.5 sm:py-1 text-xs font-medium transition-colors ${
-                        isActive
-                          ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
-                          : "border-[#E5E5EA] bg-white text-[#111111] hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Availability */}
-      <div className="border-b border-[#E5E5EA]">
-        <FilterSectionHeader
-          label="Tilgængelighed"
-          open={openSections.availability}
-          onToggle={() => toggleSection("availability")}
-        />
-        {openSections.availability && (
-          <div className="pb-4 space-y-2">
-            {/* In stock toggle */}
-            <label className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors ${filters.onlyInStock ? "bg-[#1A3D2E]/8" : "hover:bg-[#F7F7F8]"}`}>
-              <span className="flex-1">
-                <span className="block text-sm font-semibold text-[#111111]">
-                  Kun pa lager
-                </span>
-                <span className="block text-xs text-[#6E6E73]">
-                  Skjul udsolgte modeller
-                </span>
-              </span>
-              {/* Toggle switch */}
-              <div className="relative inline-flex shrink-0">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyInStock}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, onlyInStock: e.target.checked }))
-                  }
-                  className="peer sr-only"
-                  id="toggle-instock"
-                />
-                <div className="h-5 w-9 rounded-full border border-[#E5E5EA] bg-[#E5E5EA] transition-colors peer-checked:border-[#1A3D2E] peer-checked:bg-[#1A3D2E]" />
-                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
-              </div>
-            </label>
-
-            {/* Pickup toggle */}
-            <label className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors ${filters.onlyPickup ? "bg-[#1A3D2E]/8" : "hover:bg-[#F7F7F8]"}`}>
-              <span className="flex-1">
-                <span className="block text-sm font-semibold text-[#111111]">
-                  Kan hentes i butik
-                </span>
-                <span className="block text-xs text-[#6E6E73]">
-                  Vis kun modeller med butikslagre
-                </span>
-              </span>
-              <div className="relative inline-flex shrink-0">
-                <input
-                  type="checkbox"
-                  checked={filters.onlyPickup}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, onlyPickup: e.target.checked }))
-                  }
-                  className="peer sr-only"
-                  id="toggle-pickup"
-                />
-                <div className="h-5 w-9 rounded-full border border-[#E5E5EA] bg-[#E5E5EA] transition-colors peer-checked:border-[#1A3D2E] peer-checked:bg-[#1A3D2E]" />
-                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
-              </div>
-            </label>
-          </div>
-        )}
-      </div>
-
-      {/* Reset button */}
-      {activeCount > 0 && (
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm font-semibold text-[#111111] transition-colors hover:border-[#111111]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 3.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Ryd filtre
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // ---- Render ----
-
-  return (
-    <>
-      {/* ------------------------------------------------------------------ */}
-      {/* Mobile: sticky "Filtre" button + slide-in drawer                    */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="lg:hidden">
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm font-semibold text-[#111111] shadow-sm transition-colors hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
-          aria-label="Abn filterside panel"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M10 3.75a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM17.25 4.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM5 3.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM4.25 17a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM17.25 17a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM9 10a.75.75 0 0 1-.75.75h-6.5a.75.75 0 0 1 0-1.5h6.5A.75.75 0 0 1 9 10ZM17.25 10.75a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM14 10a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM10 16.25a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" />
-          </svg>
-          Filtre
-          {activeCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1A3D2E] text-[10px] font-bold text-white">
-              {activeCount}
-            </span>
-          )}
-        </button>
-
-        {/* Backdrop */}
-        {drawerOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={() => setDrawerOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Drawer */}
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Filtre"
-          className={`fixed bottom-0 left-0 right-0 z-50 flex max-h-[85dvh] flex-col rounded-t-3xl bg-white shadow-2xl transition-transform duration-300 ${
-            drawerOpen ? "translate-y-0" : "translate-y-full"
-          }`}
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="h-1 w-10 rounded-full bg-[#E5E5EA]" aria-hidden="true" />
-          </div>
-
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">
-            <h2 className="text-base font-bold text-[#111111]">
-              Filtre
-              {activeCount > 0 && (
-                <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#1A3D2E] text-[10px] font-bold text-white">
-                  {activeCount}
-                </span>
-              )}
-            </h2>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="rounded-full p-2 sm:p-1.5 text-[#6E6E73] transition-colors hover:bg-[#F7F7F8] hover:text-[#111111]"
-              aria-label="Luk filtre"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-5 w-5"
-                aria-hidden="true"
-              >
-                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Panel content (scrolls; footer stays put) */}
-          <div className="flex-1 overflow-y-auto px-5 pb-4 pt-2">{panelContent}</div>
-
-          {/* Sticky footer: Reset + Apply */}
-          <div className="flex items-center gap-3 border-t border-[#E5E5EA] bg-white px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <button
-              type="button"
-              onClick={resetFilters}
-              disabled={activeCount === 0}
-              className="min-h-[44px] rounded-full border border-[#E5E5EA] px-5 text-sm font-semibold text-[#6E6E73] transition-colors hover:bg-[#F7F7F8] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Nulstil
-            </button>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(false)}
-              className="min-h-[44px] flex-1 rounded-full bg-[#1A3D2E] text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              Se resultater
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Desktop: sticky sidebar                                             */}
-      {/* ------------------------------------------------------------------ */}
-      <aside
-        className="hidden lg:block w-64 shrink-0"
-        aria-label="Produktfiltre"
-      >
-        <div className="sticky top-24 rounded-2xl border border-[#E5E5EA] bg-white p-5">
-          {/* Header */}
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-[#111111]">
-              Filtre
-              {activeCount > 0 && (
-                <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#1A3D2E] text-[10px] font-bold text-white">
-                  {activeCount}
-                </span>
-              )}
-            </h2>
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-xs font-semibold text-[#1A3D2E] hover:underline"
-              >
-                Ryd alle
-              </button>
-            )}
-          </div>
-
-          {panelContent}
-        </div>
-      </aside>
-    </>
-  );
+    {drawerOpen && <><button type="button" tabIndex={-1} aria-label="Luk filterbaggrund" onClick={closeDrawer} className="fixed inset-0 z-40 bg-black/45" /><div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Produktfiltre" className="fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl bg-white shadow-2xl lg:hidden"><div className="flex items-center justify-between border-b border-[#DDE2DD] px-5 py-4"><div><h2 className="text-base font-semibold text-[#202421]">Filtre</h2><p className="text-xs text-[#687069]">{resultLabel}</p></div><button ref={closeRef} type="button" onClick={closeDrawer} aria-label="Luk filtre" className="min-h-11 min-w-11 text-2xl text-[#1A3D2E]">×</button></div><div className="overflow-y-auto px-5">{panel("mobile")}</div><div className="border-t border-[#DDE2DD] p-4"><button type="button" onClick={closeDrawer} className="min-h-11 w-full rounded-md bg-[#1A3D2E] px-4 text-sm font-semibold text-white">Vis {resultLabel}</button></div></div></>}
+  </>;
 }
-
-// ---------------------------------------------------------------------------
-// Usage example — drop-in wrapper for the iphones page "Alle iPhones" grid
-// ---------------------------------------------------------------------------
-//
-// In iphones/page.tsx, convert the "Alle iPhones" section into a client
-// component and pass it the server-fetched templates:
-//
-//   // src/components/product/filtered-grid.tsx  (new client component)
-//   "use client";
-//   import { useState } from "react";
-//   import { CategoryFilters } from "@/components/product/category-filters";
-//   import { ProductGridCard } from "@/components/product/product-grid-card";
-//   import type { ProductTemplate } from "@/lib/supabase/platform-types";
-//
-//   interface TemplateWithStock extends ProductTemplate {
-//     device_count: number;
-//     min_price: number | null;
-//     locations: { name: string; type: string; count: number }[];
-//   }
-//
-//   export function FilteredGrid({ templates }: { templates: TemplateWithStock[] }) {
-//     const [visible, setVisible] = useState(templates);
-//     return (
-//       <div className="flex gap-8">
-//         <CategoryFilters templates={templates} onFilter={setVisible} />
-//         <div className="flex-1">
-//           <p className="mb-4 text-sm text-[#6E6E73]">
-//             Viser {visible.length} af {templates.length} modeller
-//           </p>
-//           {visible.length === 0 ? (
-//             <p className="py-16 text-center text-sm text-[#6E6E73]">
-//               Ingen modeller matcher dine filtre. Prøv at ryd filtrene.
-//             </p>
-//           ) : (
-//             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-//               {visible.map((t) => (
-//                 <ProductGridCard
-//                   key={t.id}
-//                   slug={t.slug}
-//                   image={t.images[0]}
-//                   title={t.display_name}
-//                   minPrice={t.min_price}
-//                   deviceCount={t.device_count}
-//                   locations={t.locations}
-//                   brand={t.brand}
-//                   category={t.category}
-//                 />
-//               ))}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     );
-//   }
-//
-// Then in iphones/page.tsx, replace the "Alle iPhones" SectionWrapper with:
-//   import { FilteredGrid } from "@/components/product/filtered-grid";
-//   ...
-//   <SectionWrapper>
-//     <FilteredGrid templates={templates} />
-//   </SectionWrapper>

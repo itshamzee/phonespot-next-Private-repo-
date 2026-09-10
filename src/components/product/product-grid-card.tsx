@@ -159,14 +159,15 @@ export function ProductGridCard({
   title,
   minPrice,
   compareAtPrice,
-  deviceCount,
   brand,
   category,
   locations,
   showCategoryBadge = false,
   specifications,
 }: ProductGridCardProps) {
-  const storeLocations = locations?.filter((l) => l.type === "store") ?? [];
+  const storeLocations = locations?.filter(
+    (location) => location.type === "store" && location.count > 0,
+  ) ?? [];
 
   // ----- Spec extraction (laptops) -----
   // The DB stores spec keys with mixed casing and Danish labels
@@ -232,26 +233,10 @@ export function ProductGridCard({
   return (
     <Link
       href={`/refurbished/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all hover:shadow-lg hover:border-[#1A3D2E]/20 active:scale-[0.99]"
+      className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#DDE2DD] bg-white transition-[border-color,box-shadow] hover:border-[#91A094] hover:shadow-[0_5px_20px_rgba(24,59,43,0.06)]"
     >
       {/* Image */}
-      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-[#F7F7F8] to-[#EFEFEF]">
-        {/* Stock badge — top left */}
-        {deviceCount > 3 && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#1A3D2E] px-2.5 py-1 text-[10px] sm:text-xs font-semibold text-white shadow-sm">
-              {deviceCount} på lager
-            </span>
-          </div>
-        )}
-        {deviceCount > 0 && deviceCount <= 3 && (
-          <div className="absolute top-3 right-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#F7F7F8] px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-[#6E6E73] shadow-sm">
-              Kun {deviceCount} tilbage
-            </span>
-          </div>
-        )}
-
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
         {/* Category pill — bottom left, only when requested */}
         {showCategoryBadge && (
           <div className="absolute bottom-3 left-3 z-10">
@@ -266,8 +251,8 @@ export function ProductGridCard({
             src={image}
             alt={title}
             fill
-            className="object-contain p-6 transition-transform group-hover:scale-105"
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className="object-contain p-5 sm:p-7"
+            sizes="(min-width: 1024px) 26vw, (min-width: 640px) 33vw, 100vw"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2">
@@ -280,11 +265,11 @@ export function ProductGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-[#86868B]">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <p className="text-[11px] font-medium text-[#687069]">
           {brand} · {categoryLabel(category)}
         </p>
-        <h3 className="mt-1 line-clamp-2 text-sm sm:text-base font-semibold text-[#111111] group-hover:text-[#1A3D2E]">
+        <h3 className="mt-1 min-h-11 line-clamp-2 text-base font-semibold leading-snug text-[#202421] group-hover:text-[#1A3D2E] sm:text-lg">
           {title}
         </h3>
         {specParts.length > 0 && (
@@ -292,7 +277,7 @@ export function ProductGridCard({
             {specParts.join(" · ")}
           </p>
         )}
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-4">
           {minPrice != null ? (
             <div>
               {compareAtPrice != null && compareAtPrice > minPrice && (
@@ -312,19 +297,13 @@ export function ProductGridCard({
                   Spar op til {Math.round((1 - minPrice / compareAtPrice) * 100)}%
                 </p>
               )}
-              {/* Shipping info */}
-              {deviceCount > 0 && (
-                <p className="mt-1 text-[11px] sm:text-xs font-semibold text-[#86868B]">
-                  Kan sendes eller afhentes i butik
+              {storeLocations.length > 0 && (
+                <p className="mt-2 text-xs text-[#687069]">
+                  På lager i {storeLocations.map((location) => location.name).join(" og ")}
                 </p>
               )}
-              {/* CTA pill — visual affordance that the whole card is tappable.
-                  Sized larger on mobile so the touch target is comfortable. */}
-              <div
-                aria-hidden="true"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E] px-4 py-2 text-sm sm:px-3.5 sm:py-1.5 sm:text-xs font-semibold text-white transition-colors group-hover:bg-[#14301F]"
-              >
-                Se priser
+              <span className="mt-4 flex min-h-10 w-full items-center justify-between rounded-md bg-[#EDF2EE] px-3.5 text-sm font-semibold text-[#1A3D2E] transition-colors group-hover:bg-[#1A3D2E] group-hover:text-white">
+                Se modellen
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
@@ -333,7 +312,7 @@ export function ProductGridCard({
                 >
                   <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
                 </svg>
-              </div>
+              </span>
             </div>
           ) : (
             <p className="text-sm font-medium text-[#86868B]">Ikke på lager</p>
