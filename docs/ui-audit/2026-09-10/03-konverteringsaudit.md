@@ -4,6 +4,8 @@
 
 **Observation** er det, der blev set live 10. september 2026. **Kodefund** beskriver implementeringen ved `1a2a18b`. **Hypotese** er en mulig adfærdseffekt, som ikke er målt. Dagens katalog bliver ændret; konkrete varer/priser er reproduktionseksempler, ikke anbefalinger til sortimentet. Der er ingen GA4-adgang og ingen dokumenteret uplift.
 
+Den supplerende [Mobbin-gennemgang med 17 referencer](05-mobbin-referencer.md) konkretiserer mulige løsninger: Depop/Airbnb til pris-/ordresammendrag, On til variantvalg, IKEA/Best Buy til kurv og Etsy til præcis trinbeskrivelse. Referencerne ændrer ikke fundenes evidensstatus eller prioritet. De er arkiverede skærme, ikke PhoneSpot-data eller bevis for kausal konverteringsgevinst.
+
 Score = forventet påvirkning (1–5) × gennemførlighed (1–5, hvor 5 er lille indsats). Dermed prioriteres høj påvirkning/lav indsats; vi belønner ikke dyrere arbejde ved at multiplicere direkte med timer. Indsatserne er relative, omfatter nødvendige dataafklaringer og er ikke tilbud i dage. Ved samme score kommer stærkere evidens og kortere vej til købet først. Faktuel pris-/tillidskorrekthed skal løses uanset A/B-resultat; designforsøg kræver måling.
 
 | # | Problem | Påvirkning | Gennemførlighed | Score | Evidens |

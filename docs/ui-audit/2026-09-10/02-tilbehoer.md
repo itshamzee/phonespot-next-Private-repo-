@@ -2,6 +2,17 @@
 
 Ejeren vurderer tilbehør som en god indtjeningsmulighed. Avancer er ikke verificeret i denne audit. Sortimentet bliver udskiftet og opdateret; nedenstående er en model for det kommende katalog, ikke en anbefaling om at bevare bestemte varer.
 
+## Konkret inspiration fra Mobbin
+
+[Referencegennemgangen](05-mobbin-referencer.md) præciserer fire valg i oplægget:
+
+- **Depops søgeforslag:** adskil modelnavne med synlig kontekst. Et match til iPhone 12 må ikke implicit være et match til mini/Pro.
+- **Ons produktvalg og Glossiers sæt:** brug tydelige variantfotos, pris ved valget og en handling, der skelner mellem at vælge et sæt og tilføje en færdig variant. Ingen forhåndsvalgte tilkøb.
+- **SSENSEs rolige produktflader:** færre rammer og konsekvent billedskala. Den meget lille skrift og det tætte firekolonners grid overføres ikke.
+- **IKEA/Best Buy:** knyt tilgængelighed og afhentning til varen. Et lille relevant tilbehørsafsnit må ikke skubbe samlet pris og vejen til betaling væk på mobil.
+
+De konkrete kilder og fravalg står i referencegennemgangen. Dette er designhypoteser, ikke nye katalogkrav om bestemte brands eller beviser for øget salg.
+
 ## Det findes allerede
 
 - `/tilbehoer` og kategorisider har søgning, sortering og filtre. Modelvalg findes i relevante kategorier, men ligger i sidepanelet og bag “Filtre” på mobil. Det er ikke hubbens primære indgang.

@@ -22,7 +22,7 @@ Skitserne beskriver komposition, ikke færdige skærme. Foto-felter betyder nye 
 
 ## A — Den redaktionelle produktbutik (anbefalet)
 
-**Karakter:** rolig, præcis og produktorienteret. Stor asymmetrisk komposition på creme, én fotograferet enhed fylder billedfeltet. En tydelig typografisk venstrekant og kategorier som tekstnavigation frem for indrammede kort. Et reelt nyt udtryk med kort vej til købsopgaven.
+**Karakter:** et fotografisk produktopslag med en selvstændig, stor displayoverskrift. Under den fylder én ægte enhed et bredt billedfelt forskudt mod venstre; et smallere felt til højre indeholder forklaring og køb. Kompositionen er skærpet efter [Mobbin-gennemgangen](05-mobbin-referencer.md): SIGMAs produktstørrelse, Ons præcise produktvalg og Depops dokumentation af en brugt vare. Ingen afrundet hero-ramme. Kategorier er enkel tekstnavigation. Den tidligere tekst-venstre/foto-højre-opdeling er erstattet, så A får større afstand til standardskabelonen og til B.
 
 Eksempeltekst: “Din næste iPhone. Grundigt testet.” / “Refurbished iPhones med 36 måneders garanti.” / **“Se iPhones”**. Sekundært tekstlink: “Sådan vurderer vi standen”. Hvis heroens produktkategori ændres, ændres tekst og destination samlet.
 
@@ -30,11 +30,12 @@ Eksempeltekst: “Din næste iPhone. Grundigt testet.” / “Refurbished iPhone
 DESKTOP
 Logo     Produkter   Reparation   Sælg din enhed     Søg / Kurv
 ─────────────────────────────────────────────────────────────
-Din næste iPhone.        [ÆGTE FOTO: enhed for/bag i 3/4-vinkel]
-Grundigt testet.         [stor, tæt komposition, naturlig skygge]
-Kort forklaring.         [ingen flydende badges]
-[Se iPhones]
-Sådan vurderer vi standen
+Din næste iPhone. Grundigt testet.
+
+[BREDT ÆGTE PRODUKTFOTO, ca. 70 %]    Refurbished iPhones
+[for/bag og synlig kant i 3/4-vinkel]  36 måneders garanti
+[tæt motiv; ingen dekorativ ramme]    [Se iPhones]
+                                     Sådan vurderer vi standen
 36 måneders garanti på enheder · Butikker i Vejle og Slagelse
 ─────────────────────────────────────────────────────────────
 iPhones →     iPads →     Bærbare →     Ure →
@@ -64,7 +65,7 @@ Rytmen skifter mellem produktudstilling, dokumentation og service. Én kurateret
 
 ## B — Butikken og håndværket
 
-**Karakter:** et troværdigt, lokalt værksted og en rigtig butik. En dokumentarisk scene er det primære billede; tekst står separat. Fotografiet viser medarbejderens hænder og den konkrete enhed, ikke en anonym person med en telefon. Grøn bruges som en enkel bundflade under et stort foto, ikke gradient.
+**Karakter:** et troværdigt, lokalt værksted og en rigtig butik. En dokumentarisk scene er det primære billede; tekst står separat. Fotografiet viser medarbejderens hænder og den konkrete enhed, ikke en anonym person med en telefon. Grøn bruges som en enkel bundflade under et stort foto, ikke gradient. Daylight-referencen i [Mobbin-gennemgangen](05-mobbin-referencer.md) viser princippet om et meningsfuldt miljø; hos PhoneSpot er miljøet den faktiske butik og handlingen en gennemgang af standen. Naturtema og tekst oven på et uroligt billede overføres ikke.
 
 Eksempeltekst: “Se den. Prøv den. Tag den med.” / “Refurbished elektronik online og i vores butikker i Vejle og Slagelse.” / **“Se enheder”**. Sekundært: “Find din butik”. Garantitekst specificerer enheder.
 
@@ -98,7 +99,7 @@ Fotos: P3, P4 og P5. De eksisterende billeder af disk og kundeoverdragelse giver
 
 ## C — Den enkle købsguide
 
-**Karakter:** en fokuseret handelsflade med stor typografi, én åben liste og et fotograferet produktsæt i siden. Opgavevalg bliver hovedindgangen; billeder og produktudstilling understøtter valget. Ingen spørgeskemawizard på forsiden og ingen fire ens kort.
+**Karakter:** en fokuseret handelsflade med stor typografi, én åben liste og et fotograferet produktsæt i siden. Opgavevalg bliver hovedindgangen; billeder og produktudstilling understøtter valget. Ingen spørgeskemawizard på forsiden og ingen fire ens kort. Samaras typografiske hierarki og Depops konkrete søgeforslag er [Mobbin-referencer](05-mobbin-referencer.md) for ro og genkendelige valg. Modelforslag skal komme fra PhoneSpots entydige modeldata, ikke blot ligne en smart søgeboks.
 
 Eksempeltekst: “Hvad skal din næste enhed kunne?” / **“Find en iPhone”** / “Find en bærbar” / “Find tilbehør til min telefon”. En vedvarende “Se alle enheder” giver direkte adgang til kunder, der allerede kender modellen.
 
@@ -143,13 +144,11 @@ Fotos: P6. Ingen “bedst til studie” eller budgetgrænser uden afklarede krit
 
 Anbefaling A er en designvurdering, ikke resultatet af en A/B-test. B's dokumentation passer som senere sektion under A; de tre heroer skal ikke blandes til en ny overfyldt flade.
 
-## Mobbin-referencegennemgang — afventer adgang
+## Mobbin-referencegennemgang — gennemført via offentlige sider
 
-Ejeren har efterspurgt Mobbin som konkret inspirationskilde. Integrationen stillede ingen Mobbin-værktøjer til rådighed i denne samtale. Browserforsøget på [Mobbin](https://mobbin.com/) og Explore viste den offentlige introduktionsside, ikke det søgbare skærmbibliotek. Der er derfor **ingen påståede Mobbin-skærmreferencer i disse forslag**. Retningerne skal udfordres med en referencegennemgang, når adgang er tilgængelig, inden det visuelle valg låses.
+[17 konkrete skærme og sektioner](05-mobbin-referencer.md) er nu åbnet og visuelt vurderet gennem Mobbins offentlige Explore-bibliotek. Den tidligere vurdering af browseradgangen var for snæver. Referencerne dækker fotografiske heroer, produktvisning, søgning, variantvalg, kurv og checkout på website/web/iOS. Dokumentet angiver kilde, observeret mønster, anvendelse hos PhoneSpot og det, vi fravælger.
 
-Gennemgangen skal udvælge 6–9 konkrete skærme/flows med direkte kilde, app/site, platform og registreringsdato: produktfotografi og hero-hierarki til A/B; søgning/model-/variantvalg til C og tilbehør; kurv/checkout med total og valgfrie tilkøb på mobil. Mobbin beskriver netop skærme og sammenhængende flows i sit [offentlige overblik](https://mobbin.com/mcp).
-
-For hver reference noteres: hvilket problem den løser, hvad der kan overføres til PhoneSpot, hvad der er brandspecifikt og ikke skal kopieres, samt hvilken hypotese der skal testes. Et mønster på Mobbin er inspiration fra et eksisterende produkt, ikke dokumentation for højere konvertering. Vi kopierer hverken andres billeder, tekster eller samlede identitet.
+Forslagene ovenfor er justeret ud fra gennemgangen. Mobbins fulde private bibliotek og interaktive appflows er ikke gennemgået. Et kendt brands skærm er inspiration, ikke dokumentation for konverteringsgevinst; fotografisk oprindelse og brugsret kan heller ikke afgøres ud fra et screenshot. PhoneSpots egne fotos, ord, data og identitet skal bære resultatet.
 
 ## Audit af eksisterende billeder
 
