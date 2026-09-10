@@ -390,6 +390,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
+    {
+      url: `${BASE_URL}/iphone-18-tilbehoer`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
   ];
 
   // ---- Feed URLs (for discoverability — not crawled by search engines) ------

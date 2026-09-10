@@ -35,9 +35,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const cheapest = (await getServicesByModel(model.id)).filter(s => s.price_dkk > 0).sort((a, b) => a.price_dkk - b.price_dkk)[0];
 
+  // Helt nye modeller oprettes uden services, så siden kan indekseres fra
+  // lanceringsdagen — titlen må ikke love en pris, der ikke findes endnu.
+  if (!cheapest) {
+    return {
+      title: `${model.name} Reparation — Skærmskift & Batteriskift | PhoneSpot`,
+      description: `${model.name} reparation hos PhoneSpot i Vejle og Slagelse. Priser på skærmskift og batteriskift offentliggøres snart — kontakt os for en vurdering allerede i dag.`,
+      alternates: {
+        canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
+      },
+    };
+  }
+
   return {
-    title: `${model.name} Reparation Slagelse — Fra ${cheapest?.price_dkk ?? ""} DKK | PhoneSpot`,
-    description: `${model.name} reparation i Slagelse. Skærmskift, batteriskift og mere fra ${cheapest?.price_dkk ?? ""} DKK. Livstidsgaranti på alle reparationer. Hurtig service hos PhoneSpot.`,
+    title: `${model.name} Reparation Slagelse — Fra ${cheapest.price_dkk} DKK | PhoneSpot`,
+    description: `${model.name} reparation i Slagelse. Skærmskift, batteriskift og mere fra ${cheapest.price_dkk} DKK. Livstidsgaranti på alle reparationer. Hurtig service hos PhoneSpot.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
     },
@@ -76,16 +88,20 @@ export default async function ModelPricePage({ params }: Props) {
       latitude: STORE.coordinates.lat,
       longitude: STORE.coordinates.lng,
     },
-    hasOfferCatalog: {
-      "@type": "OfferCatalog",
-      name: `${model.name} Reparation`,
-      itemListElement: services.map((s) => ({
-        "@type": "Offer",
-        itemOffered: { "@type": "Service", name: s.name },
-        price: s.price_dkk,
-        priceCurrency: "DKK",
-      })),
-    },
+    // Uden services ville kataloget være tomt — udelad det, så schemaet
+    // stadig validerer på "priser kommer snart"-sider.
+    ...(services.length > 0 && {
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: `${model.name} Reparation`,
+        itemListElement: services.map((s) => ({
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name: s.name },
+          price: s.price_dkk,
+          priceCurrency: "DKK",
+        })),
+      },
+    }),
   };
 
   return (
@@ -131,14 +147,20 @@ export default async function ModelPricePage({ params }: Props) {
 
               {/* Quick stats */}
               <div className="mt-4 flex flex-wrap gap-3">
-                {cheapest && (
+                {cheapest ? (
                   <span className="rounded-full bg-[#1A3D2E] px-4 py-1.5 text-sm font-bold text-white">
                     Fra {cheapest} DKK
                   </span>
+                ) : (
+                  <span className="rounded-full bg-amber-500 px-4 py-1.5 text-sm font-bold text-white">
+                    Priser kommer snart
+                  </span>
                 )}
-                <span className="rounded-full border border-[#E5E5EA] bg-white px-4 py-1.5 text-sm font-medium text-[#86868B]">
-                  {totalServices} reparationer
-                </span>
+                {totalServices > 0 && (
+                  <span className="rounded-full border border-[#E5E5EA] bg-white px-4 py-1.5 text-sm font-medium text-[#86868B]">
+                    {totalServices} reparationer
+                  </span>
+                )}
                 <span className="rounded-full border border-[#E5E5EA] bg-white px-4 py-1.5 text-sm font-medium text-[#86868B]">
                   Livstidsgaranti
                 </span>
@@ -153,6 +175,51 @@ export default async function ModelPricePage({ params }: Props) {
       {/* ================================================================= */}
       <section className="bg-[#F7F7F8]">
         <div className="mx-auto max-w-7xl px-4 py-8">
+          {services.length === 0 ? (
+            /* Ny model: siden er live fra lanceringsdagen, priserne følger så
+               snart reservedelene er i handlen. */
+            <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 md:p-12">
+              <span className="inline-block rounded-full bg-amber-500/10 px-4 py-1.5 text-sm font-bold text-amber-600">
+                Priser kommer snart
+              </span>
+              <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-[#111111]">
+                Vi gør klar til {model.name}
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#111111]/70">
+                {model.name} er netop lanceret, og vi er i gang med at hjemtage originale
+                reservedele og fastlægge priserne på skærmskift, batteriskift og øvrige
+                reparationer. Priserne offentliggøres her, så snart de ligger fast —
+                typisk kort efter at modellen er kommet i handlen.
+              </p>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#111111]/70">
+                Er uheldet allerede ude? Kontakt os, så finder vi en løsning med det samme
+                — vi reparerer også helt nye modeller.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/kontakt"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3 text-sm font-bold text-white transition-all hover:bg-[#1A3D2E]/90"
+                >
+                  Kontakt os om {model.name}
+                </Link>
+                <Link
+                  href={`/reparation/${brand.slug}`}
+                  className="inline-block rounded-full border border-[#E5E5EA] bg-white px-8 py-3 text-sm font-semibold text-[#111111] transition-colors hover:bg-[#F7F7F8]"
+                >
+                  Se alle {brand.name}-modeller
+                </Link>
+              </div>
+              {brand.slug === "iphone" && (
+                <p className="mt-6 text-sm text-[#86868B]">
+                  Beskyt din nye iPhone fra dag ét — se{" "}
+                  <Link href="/iphone-18-tilbehoer" className="font-semibold text-[#1A3D2E] underline">
+                    covers og beskyttelsesglas til den nye serie
+                  </Link>
+                  .
+                </p>
+              )}
+            </div>
+          ) : (
           <RepairCart
             services={services.map((s) => ({
               id: s.id,
@@ -172,6 +239,7 @@ export default async function ModelPricePage({ params }: Props) {
             modelSlug={model.slug}
             modelName={model.name}
           />
+          )}
         </div>
       </section>
 
@@ -216,8 +284,9 @@ export default async function ModelPricePage({ params }: Props) {
             <p>
               Vi tilbyder et bredt udvalg af reparationer til din {model.name}. De mest
               populære reparationer inkluderer skærmskift, batteriskift og udskiftning af
-              opladerstik. Se den fulde prisliste ovenfor for alle tilgængelige reparationer
-              med faste priser.
+              opladerstik. {services.length > 0
+                ? "Se den fulde prisliste ovenfor for alle tilgængelige reparationer med faste priser."
+                : "Priserne offentliggøres her på siden, så snart reservedelene til den nye model er i handlen."}
             </p>
 
             <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
