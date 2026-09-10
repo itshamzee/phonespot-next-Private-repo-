@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
 const MODELS = [
   {
     name: "iPhone 18 Pro",
+    image: "/images/devices/iphone-18-pro.webp",
+    alt: "iPhone 18 Pro i Bordeaux set for- og bagfra",
     screen: "6,3\" display",
     colors: "Bordeaux, Glacier Blue, Silver og Black",
     release: "I handlen fra 18. september 2026",
@@ -37,6 +40,8 @@ const MODELS = [
   },
   {
     name: "iPhone 18 Pro Max",
+    image: "/images/devices/iphone-18-pro-max.webp",
+    alt: "iPhone 18 Pro Max i Glacier Blue set for- og bagfra",
     screen: "6,9\" display",
     colors: "Bordeaux, Glacier Blue, Silver og Black",
     release: "I handlen fra 18. september 2026",
@@ -44,6 +49,8 @@ const MODELS = [
   },
   {
     name: "iPhone Duo",
+    image: "/images/devices/iphone-duo.webp",
+    alt: "Foldbar iPhone Duo i Stjernehvid, delvist åbnet",
     screen: "5,4\" ydre display · 7,6\" udfoldet",
     colors: "Nattehimmel og Stjernehvid",
     release: "I handlen fra 23. oktober 2026",
@@ -152,6 +159,15 @@ export default function Iphone18TilbehoerPage() {
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {MODELS.map((m) => (
               <div key={m.name} className="flex flex-col rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6">
+                <div className="relative mb-5 aspect-square w-full overflow-hidden rounded-xl bg-white">
+                  <Image
+                    src={m.image}
+                    alt={m.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-contain p-4"
+                  />
+                </div>
                 <h3 className="font-display text-xl font-bold text-[#111111]">{m.name}</h3>
                 <p className="mt-1 text-sm font-medium text-[#1A3D2E]">{m.screen}</p>
                 <p className="mt-3 text-sm leading-relaxed text-[#111111]/70">{m.note}</p>
