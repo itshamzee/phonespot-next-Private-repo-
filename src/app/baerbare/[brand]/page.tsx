@@ -13,12 +13,10 @@ import {
   filterProductsByTier,
   filterRealLaptops,
 } from "@/lib/laptop-tiers";
-import { getCollectionConfig } from "@/lib/collections";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
-import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
@@ -61,7 +59,7 @@ export async function generateMetadata({
   const tier = getTier(brand);
   if (tier) {
     const title = `${tier.title} Bærbare - Refurbished med 36 mdr. garanti | PhoneSpot`;
-    const description = `Se vores ${tier.title.toLowerCase()} refurbished bærbare. ${tier.tagline}. Alle testet med 30+ kontroller og 36 måneders garanti.`;
+    const description = `Se det aktuelle udvalg af ${tier.title.toLowerCase()} refurbished bærbare med 36 måneders garanti.`;
     return {
       title,
       description,
@@ -97,13 +95,10 @@ export async function generateMetadata({
 
 export default async function BrandPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ brand: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { brand } = await params;
-  const { sort } = await searchParams;
   const tier = getTier(brand);
 
   // If not a tier slug, try rendering as a product page. This is a
@@ -218,37 +213,24 @@ export default async function BrandPage({
         }}
       />
 
-      <section className="bg-[#F7F7F8] py-16 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center">
-          <Link
-            href="/baerbare"
-            className="mb-6 inline-flex items-center gap-1 text-sm text-[#6E6E73] transition-colors hover:text-[#111111]"
-          >
-            &larr; Alle bærbare
-          </Link>
-          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-            {tier.title} bærbare
-          </p>
-          <Heading size="xl" className="!text-[#111111]">
-            {tier.title} bærbare
-          </Heading>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#6E6E73]">
-            {tier.tagline}. Alle er testet med 30+ kontroller, rengjort og klar
-            til brug med 36 måneders garanti.
-          </p>
+      <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
+          <nav aria-label="Brødkrumme" className="mb-4 flex items-center gap-2 text-xs text-[#687069]">
+            <Link href="/" className="hover:text-[#1A3D2E]">Forside</Link><span aria-hidden="true">/</span>
+            <Link href="/baerbare" className="hover:text-[#1A3D2E]">Bærbare</Link><span aria-hidden="true">/</span>
+            <span className="text-[#202421]">{tier.title}</span>
+          </nav>
+          <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{tier.title} bærbare</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{tier.tagline}. Se de modeller, der er tilgængelige i dette prisniveau lige nu.</p>
+          <p className="mt-4 text-sm font-semibold text-[#1A3D2E]">36 måneders garanti på enheder</p>
         </div>
       </section>
 
-      <SectionWrapper>
+      <SectionWrapper className="!py-10 sm:!py-14">
         {products.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((product, idx) => (
-              <FadeIn key={product.id} delay={idx * 0.04}>
-                <ProductCard
-                  product={product}
-                  collectionHandle="baerbare"
-                />
-              </FadeIn>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} collectionHandle="baerbare" />
             ))}
           </div>
         ) : (
@@ -266,9 +248,7 @@ export default async function BrandPage({
         )}
       </SectionWrapper>
 
-      <SectionWrapper background="sand">
-        <TrustBar />
-      </SectionWrapper>
+      <SectionWrapper background="sand"><TrustBar /></SectionWrapper>
     </>
   );
 }

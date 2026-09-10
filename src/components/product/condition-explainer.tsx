@@ -284,7 +284,7 @@ function FullVariant({ grades }: { grades: GradeData[] }) {
           />
           <div className="px-6 pb-6 pt-5">
             <div className="mb-3 flex items-baseline gap-2">
-              <h3 className="font-sans text-xl font-bold text-charcoal">
+              <h3 className="font-body text-xl font-bold text-charcoal">
                 {g.title}
               </h3>
               <span className="text-xs font-medium text-gray">{g.subtitle}</span>
@@ -343,7 +343,7 @@ function CompactVariant({ grades }: { grades: GradeData[] }) {
                 title={g.title}
               />
               <div className="p-3">
-                <p className="font-sans text-sm font-bold text-charcoal">
+                <p className="font-body text-sm font-bold text-charcoal">
                   {g.title}
                 </p>
                 <ul className="mt-1 space-y-0.5">
