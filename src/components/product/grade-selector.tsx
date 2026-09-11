@@ -96,13 +96,13 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
       <div>
         <dl>
           <div className="flex items-start justify-between gap-3 border-b border-[#E5E5EA] py-2">
-            <dt className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-charcoal/45">
+            <dt className="shrink-0 pt-0.5 text-[11px] font-semibold  text-charcoal/45">
               Stand
             </dt>
             <dd className="flex-1 text-right text-sm font-semibold leading-snug text-charcoal">
               {meta.label}
               {price != null && (
-                <span className="ml-2 font-display text-charcoal">{formatPrice(price)} kr.</span>
+                <span className="ml-2 font-body text-charcoal">{formatPrice(price)} kr.</span>
               )}
             </dd>
           </div>
@@ -123,8 +123,8 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
   }
 
   return (
-    <div>
-      <p className="mb-2 text-sm font-bold text-charcoal">Vælg stand</p>
+    <fieldset>
+      <legend className="mb-2 text-sm font-semibold text-charcoal">Vælg stand</legend>
       <div className="flex flex-col gap-2">
         {inStock.map(({ grade, price }) => {
           const meta = getMeta(grade);
@@ -134,11 +134,12 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
             <button
               key={grade}
               type="button"
+              aria-pressed={isSelected}
               title={meta.tooltip}
               onClick={() => onChange(grade)}
-              className={`flex items-center gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 text-left transition-all cursor-pointer ${
+              className={`flex items-center gap-3 rounded-xl border px-3 sm:px-4 py-3 text-left transition-all cursor-pointer ${
                 isSelected
-                  ? "border-green-eco bg-white shadow-sm ring-2 ring-green-eco/20"
+                  ? "border-green-eco bg-[#F4F5F2] "
                   : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
               }`}
             >
@@ -160,7 +161,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
 
               {/* Label */}
               <div className="min-w-0 flex-1">
-                <span className="font-display text-sm font-bold text-charcoal">
+                <span className="font-body text-sm font-bold text-charcoal">
                   {meta.label}
                 </span>
                 <span className="ml-2 hidden sm:inline text-xs text-charcoal/45">
@@ -171,7 +172,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               {/* Price */}
               {price != null && (
                 <div className="shrink-0 text-right">
-                  <span className="font-display text-sm sm:text-base font-bold text-charcoal">
+                  <span className="font-body text-sm sm:text-base font-bold text-charcoal">
                     {formatPrice(price)} kr.
                   </span>
                 </div>
@@ -180,9 +181,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
           );
         })}
       </div>
-      <p className="mt-2 text-center text-[11px] text-charcoal/45">
-        Alle enheder er 100% funktionelle med 36 mdr. garanti
-      </p>
-    </div>
+      <a href="#hvad-betyder-standen" className="mt-2 inline-flex text-xs text-green-eco underline-offset-2 hover:underline">Hvad betyder standen?</a>
+    </fieldset>
   );
 }

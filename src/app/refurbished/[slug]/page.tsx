@@ -12,9 +12,6 @@ import {
 import { DeviceDetail } from "@/components/product/device-detail";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
 import { JsonLd } from "@/components/seo/json-ld";
-import { TrustBar } from "@/components/ui/trust-bar";
-import { SectionWrapper } from "@/components/ui/section-wrapper";
-import { Heading } from "@/components/ui/heading";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ProductGridCard } from "@/components/product/product-grid-card";
@@ -38,7 +35,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // passes through, leaving the page with NO <title> and NO meta
   // description in production. `||` treats "" the same as missing and
   // falls through to the generated fallback.
-  const title = template.meta_title || `${template.display_name} - Refurbished | PhoneSpot`;
+  const title =
+    template.meta_title || `${template.display_name} - Refurbished | PhoneSpot`;
   const description =
     template.meta_description ||
     `Køb refurbished ${template.display_name} med 36 måneders garanti. Testet med 30+ kontroller og klar til brug fra dag et.`;
@@ -114,21 +112,35 @@ export default async function RefurbishedProductPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Forside",
+        item: "https://phonespot.dk",
+      },
       {
         "@type": "ListItem",
         position: 2,
-        name: template.category === "iphone" ? "Refurbished iPhones"
-          : template.category === "ipad" ? "Refurbished iPads"
-          : template.category === "laptop" ? "Refurbished Bærbare"
-          : template.category === "smartwatch" ? "Refurbished Smartwatches"
-          : "Refurbished Smartphones",
+        name:
+          template.category === "iphone"
+            ? "Refurbished iPhones"
+            : template.category === "ipad"
+              ? "Refurbished iPads"
+              : template.category === "laptop"
+                ? "Refurbished Bærbare"
+                : template.category === "smartwatch"
+                  ? "Refurbished Smartwatches"
+                  : "Refurbished Smartphones",
         item: `https://phonespot.dk/${
-          template.category === "iphone" ? "iphones"
-          : template.category === "ipad" ? "ipads"
-          : template.category === "laptop" ? "baerbare"
-          : template.category === "smartwatch" ? "smartwatches"
-          : "smartphones"
+          template.category === "iphone"
+            ? "iphones"
+            : template.category === "ipad"
+              ? "ipads"
+              : template.category === "laptop"
+                ? "baerbare"
+                : template.category === "smartwatch"
+                  ? "smartwatches"
+                  : "smartphones"
         }`,
       },
       {
@@ -140,9 +152,12 @@ export default async function RefurbishedProductPage({ params }: Props) {
     ],
   };
 
-  const minPrice = availableDevices.length > 0
-    ? Math.min(...availableDevices.map((d) => d.selling_price ?? 0).filter(Boolean))
-    : template.base_price_a;
+  const minPrice =
+    availableDevices.length > 0
+      ? Math.min(
+          ...availableDevices.map((d) => d.selling_price ?? 0).filter(Boolean),
+        )
+      : template.base_price_a;
 
   // itemCondition: NewCondition only if every currently listed device is
   // grade N (fabriksny), else RefurbishedCondition — see
@@ -161,7 +176,10 @@ export default async function RefurbishedProductPage({ params }: Props) {
           "@type": "Offer",
           priceCurrency: "DKK",
           price: (minPrice / 100).toFixed(0),
-          availability: availableDevices.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          availability:
+            availableDevices.length > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
           itemCondition,
           seller: { "@type": "Organization", name: "PhoneSpot" },
         },
@@ -169,39 +187,65 @@ export default async function RefurbishedProductPage({ params }: Props) {
     : null;
 
   const categoryHref =
-    template.category === "iphone" ? "/iphones"
-    : template.category === "ipad" ? "/ipads"
-    : template.category === "laptop" ? "/baerbare"
-    : template.category === "smartwatch" ? "/smartwatches"
-    : "/smartphones";
+    template.category === "iphone"
+      ? "/iphones"
+      : template.category === "ipad"
+        ? "/ipads"
+        : template.category === "laptop"
+          ? "/baerbare"
+          : template.category === "smartwatch"
+            ? "/smartwatches"
+            : "/smartphones";
 
   const categoryLabel =
-    template.category === "iphone" ? "iPhones"
-    : template.category === "ipad" ? "iPads"
-    : template.category === "laptop" ? "Bærbare"
-    : template.category === "smartwatch" ? "Smartwatches"
-    : "Smartphones";
+    template.category === "iphone"
+      ? "iPhones"
+      : template.category === "ipad"
+        ? "iPads"
+        : template.category === "laptop"
+          ? "Bærbare"
+          : template.category === "smartwatch"
+            ? "Smartwatches"
+            : "Smartphones";
 
   const deviceType = getDeviceType(template.category);
 
+  const faqs = getDeviceFaq(template.display_name, template.category);
   return (
-    <>
+    <div className="font-body text-[#202421]">
       <JsonLd data={breadcrumbJsonLd} />
       {productJsonLd && <JsonLd data={productJsonLd} />}
-
-      {/* ── Breadcrumb ── */}
-      <nav className="mx-auto max-w-7xl px-4 pt-4 pb-2" aria-label="Brødkrumme">
-        <ol className="flex items-center gap-1.5 text-sm text-gray">
-          <li><Link href="/" className="hover:text-charcoal">Forside</Link></li>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.q,
+            acceptedAnswer: { "@type": "Answer", text: faq.a },
+          })),
+        }}
+      />
+      <nav className="mx-auto max-w-7xl px-4 pt-6" aria-label="Brødkrumme">
+        <ol className="flex min-w-0 items-center gap-2 text-xs text-[#687069]">
+          <li className="shrink-0">
+            <Link href="/" className="hover:text-[#1A3D2E]">
+              Forside
+            </Link>
+          </li>
           <li aria-hidden="true">/</li>
-          <li><Link href={categoryHref} className="hover:text-charcoal">{categoryLabel}</Link></li>
+          <li className="shrink-0">
+            <Link href={categoryHref} className="hover:text-[#1A3D2E]">
+              {categoryLabel}
+            </Link>
+          </li>
           <li aria-hidden="true">/</li>
-          <li className="text-charcoal font-medium truncate max-w-[200px] md:max-w-none">{template.display_name}</li>
+          <li className="min-w-0 truncate text-[#202421]" aria-current="page">
+            {template.display_name}
+          </li>
         </ol>
       </nav>
-
-      {/* ── 1. Product hero (DeviceDetail component) ── */}
-      <section className="mx-auto max-w-7xl px-4 py-6 md:py-10">
+      <section className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:pb-16 sm:pt-8">
         <DeviceDetail
           template={template}
           devices={availableDevices}
@@ -211,126 +255,72 @@ export default async function RefurbishedProductPage({ params }: Props) {
         />
       </section>
 
-      {/* ── 2. Hvad betyder standen? (full visual explainer) ── */}
-      <SectionWrapper background="sand" id="hvad-betyder-standen">
-        <Heading as="h2" size="md" className="mb-4 text-center">
-          Hvad betyder standen?
-        </Heading>
-        <p className="mx-auto mb-8 max-w-2xl text-center text-charcoal/70">
-          Alle vores enheder er 100&nbsp;% funktionelle og gennemgår en grundig
-          kvalitetstest med mindst 30 kontrolpunkter. Standen beskriver
-          udelukkende det kosmetiske udseende.
-        </p>
-        <ConditionExplainer variant="full" deviceType={deviceType} />
-        <div className="mt-6 text-center">
-          <Link
-            href="/kvalitet"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-green-eco hover:underline"
-          >
-            Læs mere om vores kvalitetsgaranti
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>
-          </Link>
+      <section
+        className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16"
+        id="hvad-betyder-standen"
+      >
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[minmax(16rem,0.75fr)_minmax(0,1.5fr)]">
+          <div>
+            <p className="text-xs font-semibold text-[#1A3D2E]">Fysisk stand</p>
+            <h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em]">
+              Hvad betyder standen?
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-[#566159]">
+              Standen beskriver kosmetiske brugsspor. Se batterimålingen og
+              beskrivelsen af den konkrete enhed ved dine valg ovenfor.
+            </p>
+            <Link
+              href="/kvalitet"
+              className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
+            >
+              Læs om vores kvalitet &rarr;
+            </Link>
+          </div>
+          <ConditionExplainer deviceType={deviceType} />
         </div>
-      </SectionWrapper>
+      </section>
 
-      {/* ── 3. Inkluderet i boksen ── */}
-      <SectionWrapper background="cream">
-        <Heading as="h2" size="md" className="mb-10 text-center">
-          Inkluderet i boksen
-        </Heading>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-          {[
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                </svg>
-              ),
-              label: "Enhed",
-              sub: "Testet & kvalitetssikret",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19.5v-15m0 0-6.75 6.75M12 4.5l6.75 6.75" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 19.5h13.5" />
-                </svg>
-              ),
-              label: "USB-C ladekabel",
-              sub: "Kompatibelt kabel",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                </svg>
-              ),
-              label: "SIM-nål",
-              sub: "Til SIM-kort åbning",
-            },
-            {
-              icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mb-3 h-10 w-10 text-green-eco">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-              ),
-              label: "36 mdr. garantibevis",
-              sub: "Med QR-kode",
-            },
-          ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-sm">
-              {item.icon}
-              <span className="text-sm font-semibold text-charcoal">{item.label}</span>
-              <span className="mt-1 text-xs text-gray">{item.sub}</span>
-            </div>
-          ))}
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:py-16 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div>
+          <p className="text-xs font-semibold text-[#1A3D2E]">Godt at vide</p>
+          <h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em]">
+            Spørgsmål om dette produkt
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-[#566159]">
+            Få overblik over stand, garanti og dit køb. Du er velkommen til at
+            kontakte os, hvis du er i tvivl.
+          </p>
         </div>
-      </SectionWrapper>
-
-      {/* ── 4. Trustpilot anmeldelser ── */}
-      <SectionWrapper>
-        <Heading as="h2" size="md" className="text-center">
-          Trustpilot Anmeldelser
-        </Heading>
-        <div className="mt-8">
-          <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
-            <TrustpilotReviews />
-          </Suspense>
-        </div>
-      </SectionWrapper>
-
-      {/* ── 5. Relaterede produkter (loaded async, non-blocking) ── */}
-      <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
-        <RelatedProducts category={template.category} excludeId={template.id} />
-      </Suspense>
-
-      {/* ── 6. Produktspecifik FAQ ── */}
-      <SectionWrapper background="default">
-        <Heading as="h2" size="md" className="mb-8 text-center">
-          Spørgsmål om dette produkt
-        </Heading>
-        <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-sm">
-          {getDeviceFaq(template.display_name).map((faq) => (
+        <div className="min-w-0 divide-y divide-[#DDE2DD] border-y border-[#DDE2DD]">
+          {faqs.map((faq) => (
             <details key={faq.q} className="group">
-              <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-semibold text-charcoal transition-colors hover:text-green-eco">
-                <span>{faq.q}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
+              <summary className="cursor-pointer py-5 pr-4 font-body text-sm font-semibold leading-6 text-[#202421] focus-visible:outline-2 focus-visible:outline-[#1A3D2E]">
+                {faq.q}
               </summary>
-              <div className="px-6 pb-5 text-sm leading-relaxed text-charcoal/70">{faq.a}</div>
+              <p className="pb-5 text-sm leading-6 text-[#566159]">{faq.a}</p>
             </details>
           ))}
         </div>
-      </SectionWrapper>
+      </section>
 
-      {/* ── 7. Trust bar ── */}
-      <SectionWrapper background="sand">
-        <TrustBar />
-      </SectionWrapper>
-    </>
+      <section className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4">
+          <h2 className="mb-6 font-body text-3xl font-semibold tracking-[-0.035em]">
+            Anmeldelser på Trustpilot
+          </h2>
+          <Suspense
+            fallback={
+              <p className="text-sm text-[#566159]">Henter anmeldelser…</p>
+            }
+          >
+            <TrustpilotReviews />
+          </Suspense>
+        </div>
+      </section>
+      <Suspense fallback={null}>
+        <RelatedProducts category={template.category} excludeId={template.id} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -348,16 +338,16 @@ async function RelatedProducts({
   const relatedTemplates = await getPublishedTemplates(category);
   const related = relatedTemplates
     .filter((t) => t.id !== excludeId)
-    .slice(0, 5);
+    .slice(0, 3);
 
   if (related.length === 0) return null;
 
   return (
-    <SectionWrapper background="sand">
-      <Heading as="h2" size="md" className="mb-10 text-center">
-        Andre kunder kiggede også på
-      </Heading>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:py-16">
+      <h2 className="mb-8 font-body text-3xl font-semibold tracking-[-0.035em]">
+        Flere modeller
+      </h2>
+      <div className="grid grid-flow-col auto-cols-[minmax(230px,78%)] gap-5 overflow-x-auto pb-3 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-3 sm:overflow-visible">
         {related.map((t) => (
           <ProductGridCard
             key={t.id}
@@ -369,9 +359,10 @@ async function RelatedProducts({
             locations={t.locations}
             brand={t.brand}
             category={t.category}
+            compareAtPrice={t.new_price}
           />
         ))}
       </div>
-    </SectionWrapper>
+    </section>
   );
 }
