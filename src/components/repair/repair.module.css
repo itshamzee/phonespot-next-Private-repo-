@@ -1,0 +1,93 @@
+.shell { font-family: var(--font-body), sans-serif; color: #242726; background: #fafaf8; }
+.shell :is(h1,h2,h3,p) { margin-top: 0; }
+.shell :is(a,button,input,select,textarea,summary):focus-visible, .picker :is(a,button,input):focus-visible, .modelGrid :is(a,button,input):focus-visible { outline: 3px solid #1a3d2e; outline-offset: 4px; }
+.container { width: min(1248px, calc(100% - 48px)); margin-inline: auto; }
+.hero { display: grid; grid-template-columns: 1.35fr 1fr; background: #1a3d2e; color: white; border-radius: 20px; overflow: hidden; }
+.heroCopy { padding: 38px 44px; align-self: center; }
+.eyebrow { display: block; font-size: 12px; font-weight: 650; letter-spacing: .035em; margin-bottom: 14px; }
+.hero h1 { font-size: clamp(32px,3.8vw,52px); line-height: 1.03; letter-spacing: -.05em; font-weight: 650; margin-bottom: 16px; max-width: 560px; }
+.hero p { font-size: 15px; line-height: 1.65; color: #e0e9e3; max-width: 490px; margin-bottom: 22px; }
+.heroPhoto { position: relative; min-height: 290px; }
+.heroPhoto img { object-fit: cover; object-position: center 42%; }
+.heroActions { display:flex; flex-wrap:wrap; gap:12px 22px; align-items:center; }
+.heroActions a:first-child { background:white; color:#1a3d2e; padding:12px 20px; border-radius:8px; font-weight:650; font-size:14px; }
+.heroActions a:last-child { color:white; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
+.breadcrumb { padding: 22px 0; font-size: 12px; color: #656d68; }
+.breadcrumb ol { display:flex; flex-wrap:wrap; gap:8px; list-style:none; padding:0; margin:0; }
+.breadcrumb li:last-child { color:#242726; }
+.breadcrumb a:hover { text-decoration:underline; }
+.section { padding-block: 40px; }
+.section h2, .pageTitle { font-weight:650; letter-spacing:-.04em; line-height:1.15; font-size:32px; margin-bottom:12px; }
+.intro { color:#626a65; font-size:15px; line-height:1.7; max-width:630px; margin-bottom:26px; }
+.header { padding: 10px 0 30px; border-bottom:1px solid #dce1db; }
+.header h1 { font-size:clamp(30px,4vw,46px); letter-spacing:-.045em; line-height:1.1; font-weight:650; margin-bottom:14px; }
+.header p { color:#626a65; line-height:1.65; max-width:650px; margin-bottom:0; }
+.help { display:grid; grid-template-columns: 1fr 1fr; gap:50px; padding:44px 0; border-top:1px solid #dce1db; }
+.help h2 { font-size:28px; letter-spacing:-.035em; font-weight:650; line-height:1.15; margin-bottom:16px; }
+.help p { color:#626a65; line-height:1.7; max-width:480px; font-size:14px; }
+.help a, .textLink { color:#1a3d2e; font-weight:650; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
+.storeLinks { display:grid; gap:0; }
+.storeLinks a { display:flex; justify-content:space-between; align-items:center; padding:18px 0; border-bottom:1px solid #dce1db; text-decoration:none; }
+.storeLinks strong, .storeLinks small { display:block; }
+.storeLinks strong { font-size:17px; }
+.storeLinks small { margin-top:4px; font-weight:400; color:#626a65; }
+.faq { display:grid; grid-template-columns:1fr 1.5fr; gap:50px; border-top:1px solid #dce1db; padding:44px 0; }
+.faq h2 { font-size:28px; letter-spacing:-.035em; font-weight:650; }
+.faq details { border-bottom:1px solid #dce1db; }
+.faq summary { display:flex; justify-content:space-between; gap:20px; cursor:pointer; padding:18px 0; font-weight:600; font-size:15px; list-style:none; }
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary::after { content:'+'; font-weight:400; }
+.faq details[open] summary::after { content:'−'; }
+.faq p { color:#626a65; line-height:1.7; font-size:14px; padding-bottom:16px; }
+.picker, .modelGrid { font-family:var(--font-body),sans-serif; }
+.search { position:relative; margin-bottom:26px; max-width:720px; }
+.search label { display:block; font-size:13px; font-weight:600; margin-bottom:8px; }
+.searchField { display:flex; align-items:center; background:white; border:1px solid #c8d0c9; border-radius:10px; padding-left:16px; }
+.searchField:focus-within { border-color:#1a3d2e; box-shadow:0 0 0 2px #1a3d2e1a; }
+.searchField svg { width:20px; height:20px; flex:none; color:#626a65; }
+.searchField input { width:100%; min-width:0; padding:15px 12px; outline:none !important; background:transparent; color:#242726; font-size:15px; }
+.searchField button { width:44px; height:44px; flex:none; font-size:24px; color:#626a65; }
+.hint { font-size:12px; color:#626a65; margin:8px 0 0; }
+.searchResults { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30; border:1px solid #c8d0c9; border-radius:10px; background:white; box-shadow:0 12px 30px #24272615; overflow:hidden; }
+.searchResults > a { display:flex; justify-content:space-between; gap:20px; padding:14px 20px; border-bottom:1px solid #e4e8e2; }
+.searchResults > a:hover, .searchResults > a:focus { background:#edf2ed; outline-offset:-3px; }
+.searchResults strong, .searchResults small { display:block; }
+.searchResults strong { font-size:14px; }
+.searchResults small { color:#626a65; font-size:12px; margin-top:3px; }
+.brandGrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.brandCell { display:flex; align-items:center; gap:16px; min-height:100px; padding:20px; background:white; border:1px solid #dde2dc; border-radius:10px; text-align:left; color:#242726; }
+.brandCell:hover { border-color:#1a3d2e; background:#f4f7f2; }
+.brandCell img { width:34px; height:38px; object-fit:contain; flex:none; }
+.brandCell strong { font-size:15px; font-weight:600; }
+.brandCell small { display:block; font-size:12px; color:#626a65; margin-top:4px; }
+.brandCell > span:last-child { margin-left:auto; color:#1a3d2e; }
+.deviceIcon { color:#1a3d2e; flex:none; }
+.back { font-size:13px; color:#1a3d2e; text-decoration:underline; text-underline-offset:4px; margin-bottom:16px; min-height:30px; }
+.pickerTitle { font-size:18px; font-weight:600; margin-bottom:16px; }
+.empty { padding:28px; background:white; border:1px solid #dce1db; border-radius:10px; }
+.empty p { color:#626a65; font-size:14px; margin-bottom:12px; }
+.empty a { color:#1a3d2e; text-decoration:underline; font-size:14px; font-weight:600; }
+.modelCells { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.modelCell { display:flex; flex-direction:column; align-items:center; border:1px solid #dce1db; border-radius:12px; background:white; padding:24px 16px; text-align:center; }
+.modelCell:hover { border-color:#1a3d2e; }
+.modelPhoto { width:100%; height:154px; margin-bottom:22px; }
+.modelPhoto img { object-fit:contain; }
+.modelCell strong { font-size:16px; font-weight:600; color:#242726; }
+.modelPrice { font-size:14px; font-weight:600; margin-top:10px; color:#1a3d2e; }
+.modelCta { margin-top:16px; color:#626a65; font-size:12px; }
+.series { margin-bottom:36px; }
+.series h3 { font-size:19px; font-weight:600; letter-spacing:-.02em; margin:0 0 16px; }
+.modelHeader { display:flex; align-items:center; gap:28px; }
+.modelHeaderPhoto { width:110px; height:140px; flex:none; }
+.modelHeaderPhoto img { object-fit:contain; }
+.priceLine { display:flex; gap:20px; flex-wrap:wrap; margin-top:18px; font-size:14px; color:#1a3d2e; font-weight:600; }
+.bookingHeader { padding:30px 0; }
+.bookingHeader h1 { font-size:38px; letter-spacing:-.04em; font-weight:650; margin-bottom:12px; }
+.bookingHeader p { color:#626a65; line-height:1.6; }
+@media(max-width:900px) { .brandGrid,.modelCells { grid-template-columns:repeat(3,minmax(0,1fr)); } .heroCopy{padding:30px;} .help,.faq{gap:30px;} }
+@media(max-width:600px) {
+ .container { width:calc(100% - 32px); } .breadcrumb{padding:18px 0;}
+ .hero { grid-template-columns:1fr; border-radius:14px; } .heroCopy{padding:28px 24px;} .hero h1{font-size:36px;} .heroPhoto{display:none;} .hero p{font-size:14px;}
+ .section{padding-block:30px;} .section h2{font-size:27px;} .brandGrid,.modelCells{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;} .brandCell{padding:16px 12px; gap:10px; min-height:84px;} .brandCell strong{font-size:14px;} .brandCell img{width:28px;height:32px;} .brandCell > span:last-child{font-size:14px;}
+ .help,.faq{grid-template-columns:1fr;gap:16px;padding:30px 0;} .modelPhoto{height:125px;margin-bottom:18px;} .modelCell{padding:20px 12px;} .modelCell strong{font-size:14px;} .modelHeader{gap:16px;} .modelHeaderPhoto{width:70px;height:100px;} .modelHeader h1{font-size:28px;} .header{padding-bottom:24px;}
+}
