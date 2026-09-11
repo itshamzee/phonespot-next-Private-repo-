@@ -91,3 +91,73 @@
  .section{padding-block:30px;} .section h2{font-size:27px;} .brandGrid,.modelCells{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;} .brandCell{padding:16px 12px; gap:10px; min-height:84px;} .brandCell strong{font-size:14px;} .brandCell img{width:28px;height:32px;} .brandCell > span:last-child{font-size:14px;}
  .help,.faq{grid-template-columns:1fr;gap:16px;padding:30px 0;} .modelPhoto{height:125px;margin-bottom:18px;} .modelCell{padding:20px 12px;} .modelCell strong{font-size:14px;} .modelHeader{gap:16px;} .modelHeaderPhoto{width:70px;height:100px;} .modelHeader h1{font-size:28px;} .header{padding-bottom:24px;}
 }
+.cart { font-family:var(--font-body),sans-serif; color:#242726; }
+.cart :is(button,a,input,textarea,summary):focus-visible { outline:3px solid #1a3d2e; outline-offset:3px; }
+.cartLayout { display:grid; grid-template-columns:minmax(0,1fr) 370px; gap:36px; align-items:start; }
+.servicesColumn { min-width:0; }
+.cartAside { position:sticky; top:110px; }
+.colors { border:0; padding:0; margin:0 0 28px; }
+.colors legend { font-size:13px; font-weight:600; margin-bottom:12px; }
+.colors legend span { color:#626a65; font-weight:400; }
+.colors > div { display:flex; flex-wrap:wrap; gap:8px; }
+.colors button { display:flex; align-items:center; gap:7px; min-height:34px; border:1px solid #dce1db; border-radius:6px; padding:6px 10px; font-size:12px; background:white; }
+.colors button > span { width:14px;height:14px;border-radius:50%; }
+.colors button[aria-pressed=true] { border-color:#1a3d2e; background:#edf2ed; }
+.serviceHeading { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.serviceHeading h2 { font-size:22px; letter-spacing:-.025em; font-weight:650; margin-bottom:0; }
+.serviceHeading button { font-size:12px; padding:8px 12px; border:1px solid #c8d0c9; border-radius:6px; background:white; }
+.serviceRows { margin-top:18px; border:1px solid #dce1db; border-radius:12px; overflow:hidden; background:white; }
+.serviceCategory + *, .serviceOption + *, .serviceCategory + .serviceCategory { border-top:1px solid #dce1db; }
+.serviceCategory h3 { margin:0; }
+.categoryToggle { width:100%; display:flex; align-items:center; gap:16px; padding:22px; text-align:left; }
+.categoryToggle:hover { background:#f4f7f2; }
+.categoryToggle strong { display:block; font-size:16px; font-weight:600; }
+.categoryToggle small { display:block; font-size:12px; color:#626a65; margin-top:5px; font-weight:400; }
+.rowPrice { margin-left:auto; text-align:right; font-size:16px; white-space:nowrap; }
+.rowPrice small { color:#1a3d2e; }
+.serviceOption { padding:22px; }
+.serviceCategory .serviceOption { border-top:1px solid #e4e8e2; padding-left:30px; }
+.serviceOption[data-selected=true] { background:#edf3ed; }
+.serviceOptionTop { display:flex; align-items:center; gap:16px; }
+.serviceName { flex:1; min-width:0; }
+.serviceName h3 { font-size:16px; font-weight:600; margin:0; }
+.serviceName small { color:#626a65; font-size:12px; display:block; margin-top:5px; }
+.chooseService { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:none; min-width:86px; }
+.chooseService strong { font-size:17px; font-weight:650; }
+.chooseService span { color:#1a3d2e; font-size:12px; font-weight:600; border:1px solid #b8c8ba; border-radius:5px; padding:6px 11px; }
+.chooseService[aria-pressed=true] span { background:#1a3d2e;color:white;border-color:#1a3d2e; }
+.serviceOption > p { color:#626a65; font-size:13px; line-height:1.6; margin:12px 0 0; }
+.serviceDetails { margin-top:12px; font-size:12px; }
+.serviceDetails summary { color:#1a3d2e; cursor:pointer; padding-block:4px; }
+.serviceDetails p { color:#626a65; line-height:1.6; margin:8px 0 0; }
+.unavailable { font-size:12px; font-weight:600; text-align:right; color:#626a65; max-width:130px; }
+.unavailable span { display:block; color:#1a3d2e; text-decoration:underline; margin-top:6px; }
+.discountNote { margin:18px 0; font-size:12px; line-height:1.6; color:#626a65; padding:12px 0; border-bottom:1px solid #dce1db; }
+.summary { border:1px solid #cad7ca; border-radius:12px; background:#f0f4ed; padding:26px; }
+.summary h2 { font-size:22px; letter-spacing:-.025em; font-weight:650; margin:0; }
+.summary .eyebrow { margin-bottom:10px; color:#526b56; }
+.summary .intro { margin-top:20px; margin-bottom:0; font-size:14px; }
+.summaryRows { list-style:none; margin:22px 0 0; padding:0; }
+.summaryRows li { display:flex; align-items:center; gap:8px; padding:12px 0; border-bottom:1px solid #d3ddd0; font-size:13px; }
+.summaryRows li > span { flex:1; }
+.summaryRows strong { white-space:nowrap; font-weight:600; }
+.summaryRows button { width:26px; height:30px; flex:none; font-size:20px; color:#626a65; }
+.glassOption { display:flex; justify-content:space-between; gap:8px; padding:14px 0; width:100%; font-size:12px; border-bottom:1px solid #d3ddd0; text-align:left; }
+.glassOption strong { white-space:nowrap; }
+.glassOption[aria-pressed=true] { color:#1a3d2e; font-weight:650; }
+.summaryDiscount { display:flex; justify-content:space-between; margin-top:16px; font-size:13px; color:#1a3d2e; }
+.total { padding:22px 0; }
+.total p { display:flex; justify-content:space-between; color:#626a65; font-size:12px; margin:0 0 8px; }
+.total > div { display:flex; justify-content:space-between; gap:10px; font-size:19px; font-weight:650; }
+.total small { display:block; color:#626a65; font-size:11px; margin-top:6px; }
+.primaryButton { display:flex; align-items:center; justify-content:center; min-height:46px; background:#1a3d2e; color:white; border-radius:8px; padding:12px 20px; font-size:14px; font-weight:600; width:100%; }
+.primaryButton:hover { background:#264d3b; }
+.summaryHelp { font-size:12px; color:#626a65; line-height:1.7; margin:22px 0 0; }
+.summaryHelp a { display:block; color:#1a3d2e; font-weight:600; text-decoration:underline; }
+.bookingForm { border:1px solid #c8d0c9; border-radius:12px; padding:24px; background:white; }
+.bookingForm > div:first-child { flex-wrap:wrap; gap:12px; }
+.bookingForm :is(input,textarea) { font-size:16px; }
+.mobileTotal { display:none; }
+@media(max-width:1050px) { .cartLayout{grid-template-columns:minmax(0,1fr) 330px;gap:24px;} .categoryToggle,.serviceOption{padding:18px;} }
+@media(max-width:800px) { .cartLayout{grid-template-columns:1fr;} .cartAside{position:static;} .cart{padding-bottom:84px;} .mobileTotal{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:white;border-top:1px solid #c8d0c9;} .mobileTotal > span{font-size:12px; flex:none;} .mobileTotal strong{display:block;font-size:18px;margin-top:2px;} .mobileTotal button{max-width:220px;} }
+@media(max-width:400px) { .serviceOptionTop,.categoryToggle{gap:10px;} .categoryToggle,.serviceOption{padding:16px 12px;} .serviceCategory .serviceOption{padding-left:18px;} .serviceName h3,.categoryToggle strong{font-size:14px;} .rowPrice,.chooseService strong{font-size:15px;} .serviceName small{font-size:11px;} .bookingForm{padding:18px;} .summary{padding:22px;} }
