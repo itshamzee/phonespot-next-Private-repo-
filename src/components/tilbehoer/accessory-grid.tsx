@@ -126,7 +126,7 @@ export function AccessoryGrid({
       .catch((err: unknown) => {
         if (!active) return;
         if (err instanceof Error && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Noget gik galt");
+        setError("Vi kunne ikke hente produkterne. Prøv igen om lidt.");
         setLoading(false);
       });
 

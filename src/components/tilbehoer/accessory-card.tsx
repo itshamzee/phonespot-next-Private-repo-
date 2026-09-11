@@ -1,11 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
 type AccessoryCardProps = Omit<PublicAccessory, "created_at">;
 export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand}: AccessoryCardProps) {
   const [added,setAdded]=useState(false);
+  const confirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (confirmationTimer.current !== null) clearTimeout(confirmationTimer.current);
+  }, []);
   const {addSku,openCart}=useCart();
   const isOnSale=sale_price != null && sale_price < price;
   const effectivePrice=isOnSale ? sale_price : price;
@@ -13,9 +17,13 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   const canBuy=availability === "in_stock" || availability === "orderable";
   const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Kan bestilles" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
   function add() {
-    if (!canBuy) return;
+    if (!canBuy || added) return;
     addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null});
     openCart();setAdded(true);
+    confirmationTimer.current = setTimeout(() => {
+      setAdded(false);
+      confirmationTimer.current = null;
+    }, 1800);
   }
   // eslint-disable-next-line @next/next/no-img-element
   const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
@@ -31,7 +39,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
           {isOnSale && <s className="text-sm text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
         <p className="mt-2 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
-        <button type="button" disabled={!canBuy} onClick={add} className="mt-4 min-h-11 w-full rounded-lg bg-[#1A3D2E] px-3 py-3 text-sm font-semibold text-white hover:bg-[#244f3c] disabled:cursor-not-allowed disabled:bg-sand disabled:text-charcoal/55">{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
+        <button type="button" disabled={!canBuy || added} onClick={add} className="mt-4 min-h-11 w-full rounded-lg bg-[#1A3D2E] px-3 py-3 text-sm font-semibold text-white hover:bg-[#244f3c] disabled:cursor-not-allowed disabled:bg-sand disabled:text-charcoal/55">{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
         <div className="mt-3 min-h-5 text-center text-xs font-medium text-charcoal/70">{href && <Link href={href} className="underline underline-offset-4">Se detaljer og kompatibilitet</Link>}</div>
       </div>
     </div>

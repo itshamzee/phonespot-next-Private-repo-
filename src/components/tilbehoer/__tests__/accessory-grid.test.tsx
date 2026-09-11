@@ -15,9 +15,10 @@ it('keeps B when the superseded A response resolves last despite abort', async (
  expect(screen.queryByText('A')).not.toBeInTheDocument();
 });
 it('shows an error and lets the customer retry a rejected request', async () => {
- vi.stubGlobal('fetch',vi.fn().mockRejectedValueOnce(new Error('Offline')).mockResolvedValueOnce(response('Recovered')));
+ vi.stubGlobal('fetch',vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce(response('Recovered')));
  render(<AccessoryGrid/>);
- expect(await screen.findByRole('alert')).toHaveTextContent('Offline');
+ expect(await screen.findByRole('alert')).toHaveTextContent('Vi kunne ikke hente produkterne. Prøv igen om lidt.');
+ expect(screen.queryByText('Failed to fetch')).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Prøv igen'}));
  expect(await screen.findByText('Recovered')).toBeInTheDocument();
 });
