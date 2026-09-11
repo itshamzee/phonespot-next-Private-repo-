@@ -41,7 +41,7 @@ export interface TilbehoerRoute {
 export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   {
     slug: "covers",
-    label: "Covers & Cases",
+    label: "Covers og cases",
     description: "Beskyt din enhed med stilfulde covers og cases.",
     deviceSpecific: true,
     heroDescription: "Find det perfekte cover til din model — TPU, hardcase og MagSafe-kompatible varianter til alle populære telefoner.",
@@ -69,7 +69,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     faq: [
       {
         q: "Hvad er forskellen på hærdet glas og plastfolie?",
-        a: "Hærdet glas (beskyttelsesglas) er hårdere, skraber ikke og giver en skarpere touchfornemmelse. Plastfolie er tyndere og billigere men slides hurtigere.",
+        a: "Glas og folie er forskellige typer skærmbeskyttelse. Se produktets materiale, tykkelse og kompatible modeller, før du vælger.",
       },
       {
         q: "Dækker skærmbeskyttelsen hele skærmen?",
@@ -86,10 +86,10 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Beskyttelsesglas",
     description: "Spot beskyttelsesglas til alle telefoner og tablets.",
     deviceSpecific: true,
-    heroDescription: "Hærdet 9H glas med perfekt pasform. Gratis professionel montering i Vejle og Slagelse på 60 sekunder.",
+    heroDescription: "Find beskyttelsesglas til din model. Vi hjælper med montering i Vejle og Slagelse.",
     faq: [
       {
-        q: "Holder Spot beskyttelsesglas virkelig mod fald?",
+        q: "Hvordan vælger jeg beskyttelsesglas?",
         a: "Ja. Glasset er 9H hærdet — samme hårdhed som safirglas. Det tager stødet så din skærm ikke gør det. Udskift glasset, ikke skærmen.",
       },
       {
@@ -98,13 +98,13 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
       },
       {
         q: "Er det samme glas til alle iPhones?",
-        a: "Nej. Nogle modeller deler samme dimensioner (f.eks. iPhone 13/14/15) og bruger samme glas. Vores produktsider viser altid hvilke modeller et specifikt glas passer til.",
+        a: "Nej. Vælg altid efter den præcise model. Produktsiden viser, hvilke modeller det enkelte glas passer til.",
       },
     ],
   },
   {
     slug: "opladere",
-    label: "Kabler & Opladere",
+    label: "Kabler og opladere",
     description: "Lightning, USB-C, trådløs opladning og kabler.",
     deviceSpecific: false,
     heroDescription: "Hurtigopladere, USB-C kabler og trådløse opladere til iPhone, Samsung og alle Android-modeller.",
@@ -125,7 +125,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   },
   {
     slug: "lyd",
-    label: "Lyd & Høretelefoner",
+    label: "Lyd og høretelefoner",
     description: "Earbuds, headsets og højttalere til alle enheder.",
     deviceSpecific: false,
     heroDescription: "Trådløse earbuds, over-ear headphones og Bluetooth højttalere — til hjemmet, kontoret og på farten.",
@@ -146,7 +146,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   },
   {
     slug: "holdere",
-    label: "Holdere & Mounts",
+    label: "Holdere og standere",
     description: "Bilholdere, stander og mounts til din enhed.",
     deviceSpecific: false,
     heroDescription: "Bilholdere, skrivebords-standere og MagSafe mounts — hold din telefon stabilt og tilgængeligt.",
@@ -174,7 +174,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     faq: [
       {
         q: "Hvad er outlet-varer?",
-        a: "Outlet-varer er nye produkter fra overskydende lager eller kampagner. De er i perfekt stand og leveres med samme garanti som resten af vores sortiment.",
+        a: "Outlet-varer er nye produkter fra overskydende lager eller kampagner. De sælges med 2 års reklamationsret.",
       },
       {
         q: "Kan jeg returnere outlet-varer?",

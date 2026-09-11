@@ -92,7 +92,7 @@ export default async function TilbehoerCategoryPage({
     <>
       <JsonLd data={breadcrumbJsonLd} />
 
-      <div className="mx-auto max-w-7xl px-4 pt-4">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pt-4">
         <Breadcrumb
           items={[
             { label: "Tilbehør", href: "/tilbehoer" },

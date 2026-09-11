@@ -11,7 +11,7 @@ export function HubPageClient() {
         heroDescription="Covers, opladere, kabler og mere — til alle populære mærker"
         activeCategory=""
       />
-      <div className="mx-auto max-w-7xl px-4 pb-16">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pb-16">
         {/* The tilbehør hub only links into accessory categories (sku_products),
             never graded refurbished devices — TrustBar defaults to
             variant="device" (36 mdr. garanti / 30+ kvalitetstests), which is

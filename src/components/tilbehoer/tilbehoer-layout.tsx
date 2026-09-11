@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { TilbehoerCategoryHero } from "./tilbehoer-category-hero";
 import { TilbehoerSidebar } from "./tilbehoer-sidebar";
@@ -90,11 +90,7 @@ function TilbehoerLayoutInner({
   const protectorType = searchParams.get("protector_type") ?? "";
   const search = searchParams.get("search") ?? "";
   const sort = searchParams.get("sort") ?? "";
-  const priceRanges =
-    searchParams
-      .get("pris")
-      ?.split(",")
-      .filter(Boolean) ?? [];
+  const priceRanges = useMemo(() => searchParams.get("pris")?.split(",").filter(Boolean) ?? [], [searchParams]);
   const inStore = searchParams.get("inStore") === "true";
 
   const hasActiveFilters =
@@ -189,11 +185,11 @@ function TilbehoerLayoutInner({
         productCount={filteredCount ?? productCount}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 py-8">
         <div className="flex gap-8">
           <TilbehoerSidebar activeCategory={activeCategory} />
 
-          <main className="min-w-0 flex-1">
+          <section aria-label="Vareudvalg" className="min-w-0 flex-1 font-body">
             {/* Top bar: filter pills + sort + mobile filter button */}
             <div className="mb-6 flex flex-wrap items-center gap-2">
               {/* Active filter pills */}
@@ -264,6 +260,7 @@ function TilbehoerLayoutInner({
               <div className="ml-auto flex items-center gap-3">
                 {/* Sort dropdown */}
                 <select
+                  aria-label="Sortér produkter"
                   value={sort}
                   onChange={(e) => updateParam("sort", e.target.value)}
                   className="rounded-xl border border-sand bg-white px-3 py-2 text-sm text-charcoal shadow-sm focus:border-green-eco/40 focus:outline-none focus:ring-2 focus:ring-green-eco/15 transition-all"
@@ -312,7 +309,7 @@ function TilbehoerLayoutInner({
               inStore={inStore}
               onCountChange={setFilteredCount}
             />
-          </main>
+          </section>
         </div>
       </div>
 
@@ -334,7 +331,7 @@ export function TilbehoerLayout(props: TilbehoerLayoutProps) {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-9 py-8">
           <div className="h-8 w-64 animate-pulse rounded-full bg-sand" />
         </div>
       }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Accessory } from "@/lib/supabase/platform-types";
+import { useEffect, useMemo, useState } from "react";
+import type { PublicAccessory } from "@/lib/product/public-accessory";
 import { AccessoryCard } from "./accessory-card";
 
 // ---------------------------------------------------------------------------
@@ -84,18 +84,20 @@ export function AccessoryGrid({
   inStore = false,
   onCountChange,
 }: AccessoryGridProps) {
-  const [products, setProducts] = useState<Accessory[]>([]);
+  const [products, setProducts] = useState<PublicAccessory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const abortRef = useRef<AbortController | null>(null);
+  const [retry, setRetry] = useState(0);
 
   // Fetch from API whenever API-level props change
   useEffect(() => {
-    abortRef.current?.abort();
+    let active = true;
     const controller = new AbortController();
-    abortRef.current = controller;
 
+
+    // Loading reflects a new external request; cleanup prevents stale updates.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
 
@@ -114,20 +116,22 @@ export function AccessoryGrid({
     })
       .then((res) => {
         if (!res.ok) throw new Error("Kunne ikke hente produkter");
-        return res.json() as Promise<Accessory[]>;
+        return res.json() as Promise<PublicAccessory[]>;
       })
       .then((data) => {
+        if (!active) return;
         setProducts(data);
         setLoading(false);
       })
       .catch((err: unknown) => {
+        if (!active) return;
         if (err instanceof Error && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Noget gik galt");
         setLoading(false);
       });
 
-    return () => controller.abort();
-  }, [category, brand, model, type, case_type, protector_type, search, inStore]);
+    return () => { active = false; controller.abort(); };
+  }, [category, brand, model, type, case_type, protector_type, search, inStore, retry]);
 
   // Client-side: price filter + sort
   const displayedProducts = useMemo(() => {
@@ -188,10 +192,10 @@ export function AccessoryGrid({
 
   // Notify parent of filtered count
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !error) {
       onCountChange?.(displayedProducts.length);
     }
-  }, [displayedProducts.length, loading, onCountChange]);
+  }, [displayedProducts.length, loading, error, onCountChange]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -199,15 +203,16 @@ export function AccessoryGrid({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-sm text-red-700">
+      <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-sm text-red-700">
         {error}
+        <button type="button" onClick={() => setRetry(n => n + 1)} className="ml-4 rounded-lg border border-current px-3 py-2 font-semibold">Prøv igen</button>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      <div role="status" aria-label="Henter produkter" className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -217,7 +222,7 @@ export function AccessoryGrid({
 
   if (displayedProducts.length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-sand bg-cream p-12 text-center">
+      <div role="status" className="rounded-2xl border-2 border-dashed border-sand bg-cream p-12 text-center">
         <p className="text-lg font-bold text-charcoal">
           Ingen produkter fundet
         </p>
@@ -229,7 +234,7 @@ export function AccessoryGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 lg:grid-cols-3">
       {displayedProducts.map((product) => (
         <AccessoryCard
           key={product.id}
@@ -243,6 +248,7 @@ export function AccessoryGrid({
           image_url={product.image_url}
           store_stock={product.store_stock}
           online_stock={product.online_stock}
+          availability={product.availability}
         />
       ))}
     </div>

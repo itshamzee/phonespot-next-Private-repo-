@@ -48,30 +48,12 @@ function HeroInner({ title, description, productCount }: TilbehoerHeroProps) {
   );
 
   return (
-    <section
-      className="relative border-b border-sand overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(135deg, #F7F7F8 0%, #F0F0EC 40%, #EDEDEA 100%)",
-      }}
-    >
-      {/* Subtle diagonal line texture overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, #111111 0px, #111111 1px, transparent 1px, transparent 12px)",
-        }}
-      />
-
-      {/* Green-eco accent line at top */}
-      <div className="absolute left-0 top-0 h-0.5 w-24 bg-gradient-to-r from-green-eco to-transparent" />
-
-      <div className="relative mx-auto max-w-7xl px-4 py-8 md:py-12">
+    <section className="border-b border-sand bg-white font-body">
+      <div className="relative mx-auto max-w-[1280px] px-5 sm:px-9 py-6 md:py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           {/* Left: title + description */}
           <div className="max-w-xl">
-            <h1 className="font-display text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
+            <h1 className="font-body text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
               {title}
             </h1>
             {description && (
@@ -80,8 +62,8 @@ function HeroInner({ title, description, productCount }: TilbehoerHeroProps) {
               </p>
             )}
             {productCount != null && productCount > 0 && (
-              <p className="mt-3 inline-flex items-center rounded-full border border-sand bg-white/80 px-3 py-1 text-xs font-semibold text-charcoal/50 shadow-sm">
-                {productCount} produkter
+              <p className="mt-3 text-sm text-charcoal/60">
+                {productCount} {productCount === 1 ? "produkt" : "produkter"}
               </p>
             )}
           </div>
@@ -92,6 +74,7 @@ function HeroInner({ title, description, productCount }: TilbehoerHeroProps) {
               <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/30" />
               <input
                 type="search"
+                aria-label="Søg tilbehør"
                 value={activeSearch}
                 onChange={handleSearchChange}
                 placeholder="Søg tilbehør..."

@@ -1,5 +1,6 @@
 "use client";
 
+import { AccessoryCategoryIcon } from "./accessory-category-icon";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -18,21 +19,6 @@ interface TilbehoerSidebarProps {
 // ---------------------------------------------------------------------------
 // Small SVG icons
 // ---------------------------------------------------------------------------
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      className={className}
-    >
-      <circle cx="8.5" cy="8.5" r="5" strokeLinecap="round" />
-      <path strokeLinecap="round" d="M13 13l3.5 3.5" />
-    </svg>
-  );
-}
 
 function ChevronDownIcon({ className }: { className?: string }) {
   return (
@@ -54,7 +40,7 @@ function ChevronDownIcon({ className }: { className?: string }) {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="font-display text-[11px] font-bold uppercase tracking-widest text-charcoal/35">
+    <h3 className="font-body text-[11px] font-bold tracking-normal text-charcoal/35">
       {children}
     </h3>
   );
@@ -84,7 +70,6 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
 
   const activePrices = searchParams.get("pris")?.split(",").filter(Boolean) ?? [];
   const activeModel = searchParams.get("model") ?? "";
-  const activeSearch = searchParams.get("search") ?? "";
 
   // Track which brand sections are expanded beyond default
   const [expandedBrands, setExpandedBrands] = useState<Set<DeviceBrand>>(new Set());
@@ -138,11 +123,6 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
     navigate({ pris: next.length > 0 ? next.join(",") : null });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    navigate({ search: val || null });
-  }
-
   function toggleExpandBrand(brand: DeviceBrand) {
     setExpandedBrands((prev) => {
       const next = new Set(prev);
@@ -174,55 +154,11 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
       <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto space-y-5 pb-6 pr-1">
 
         {/* ------------------------------------------------------------------ */}
-        {/* SEARCH                                                               */}
-        {/* ------------------------------------------------------------------ */}
-        <div className="relative">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/30" />
-          <input
-            type="search"
-            value={activeSearch}
-            onChange={handleSearchChange}
-            placeholder="Søg tilbehør..."
-            className="w-full rounded-xl border border-sand bg-white py-2.5 pl-9 pr-3 text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/20 transition-all"
-          />
-        </div>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* SPOT BESKYTTELSESGLAS PROMO — compact card                           */}
-        {/* ------------------------------------------------------------------ */}
-        <Link
-          href="/beskyttelsesglas"
-          className="group relative block overflow-hidden rounded-xl bg-[#1A3D2E] p-4 transition-all hover:bg-[#2a5c47]"
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-3 -bottom-5 select-none font-display text-[5rem] font-black leading-none text-white/[0.08]"
-          >
-            9H
-          </div>
-          <div className="relative">
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/60">9H hærdet</p>
-            <p className="mt-1 font-display text-sm font-bold leading-tight text-white">
-              Beskyttelsesglas
-              <br />
-              til din enhed
-            </p>
-            <p className="mt-2 text-[11px] text-white/70">Fra 199 kr · gratis montering</p>
-            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white">
-              Se alle
-              <svg aria-hidden className="h-3 w-3 transition-transform group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none">
-                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </div>
-        </Link>
-
-        {/* ------------------------------------------------------------------ */}
         {/* KATEGORIER                                                           */}
         {/* ------------------------------------------------------------------ */}
         <div>
           <SectionHeading>Kategorier</SectionHeading>
-          <nav className="mt-3 space-y-0.5">
+          <nav aria-label="Tilbehørskategorier" className="mt-3 space-y-0.5">
             <Link
               href="/tilbehoer"
               className={
@@ -231,19 +167,20 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
                   : "flex items-center rounded-lg py-1.5 pl-3 text-sm text-charcoal/65 hover:text-charcoal hover:bg-sand/40 transition-colors border-l-2 border-transparent"
               }
             >
-              Alle
+              <AccessoryCategoryIcon slug=""/>Alle
             </Link>
             {TILBEHOER_CATEGORIES.map((cat) => (
               <Link
                 key={cat.slug}
-                href={`/tilbehoer/${cat.slug}`}
+                href={cat.slug === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${cat.slug}`}
+                aria-current={activeCategory === cat.slug ? "page" : undefined}
                 className={
                   activeCategory === cat.slug
                     ? "flex items-center rounded-lg py-1.5 pl-3 text-sm font-semibold text-green-eco border-l-2 border-green-eco bg-green-eco/5"
                     : "flex items-center rounded-lg py-1.5 pl-3 text-sm text-charcoal/65 hover:text-charcoal hover:bg-sand/40 transition-colors border-l-2 border-transparent"
                 }
               >
-                {cat.label}
+                <AccessoryCategoryIcon slug={cat.slug}/>{cat.label}
               </Link>
             ))}
           </nav>
@@ -285,7 +222,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
 
                     return (
                       <div key={brandSlug}>
-                        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-charcoal/50">
+                        <p className="mb-1.5 text-[11px] font-bold tracking-normal text-charcoal/50">
                           {brandLabel}
                         </p>
                         <div className="space-y-0.5">
@@ -358,7 +295,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
                               onClick={() =>
                                 toggleLinkFilter(filter.key, option.value)
                               }
-                              className={`inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium transition-all ${
+                              className={`inline-flex items-center rounded-lg border px-3 py-1 text-[12px] font-medium transition-all ${
                                 isActive
                                   ? "border-green-eco/40 bg-green-eco/10 text-green-eco"
                                   : "border-sand bg-white text-charcoal/60 hover:border-charcoal/20 hover:bg-sand/30 hover:text-charcoal"
@@ -413,6 +350,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
         {/* PRIS                                                                 */}
         {/* ------------------------------------------------------------------ */}
         <Divider />
+        <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={searchParams.get("inStore") === "true"} onChange={e => navigate({inStore:e.target.checked ? "true" : null})}/>Kun på lager i butik</label>
         <div className="pt-0">
           <SectionHeading>Pris</SectionHeading>
           <div className="mt-3 space-y-2">
