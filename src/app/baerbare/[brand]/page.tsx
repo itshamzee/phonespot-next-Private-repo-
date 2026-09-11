@@ -288,7 +288,7 @@ export default async function BrandPage({
         )}
       </SectionWrapper>
 
-      <DeviceCollectionDetails
+      <DeviceCollectionDetails deviceType="laptop"
         guideTitle={`Sådan vælger du blandt ${tier.title.toLowerCase()} bærbare`}
         faqTitle={`Spørgsmål om ${tier.title.toLowerCase()} bærbare`}
         guideIntro="Sammenlign dine vigtigste programmer og din arbejdsform med oplysningerne på hver model. Prisniveauet er et udgangspunkt; den konkrete konfiguration afgør, hvad der passer bedst."

@@ -15,7 +15,7 @@ export type FaqItem = { q: string; a: string };
  * every distinct question that used to appear on the page still does,
  * exactly once, via this single shared source.
  */
-export function getDeviceFaq(displayName: string): FaqItem[] {
+export function getDeviceFaq(displayName: string, category = "iphone"): FaqItem[] {
   return [
     {
       q: `Er denne ${displayName} fuldt funktionel?`,
@@ -37,10 +37,10 @@ export function getDeviceFaq(displayName: string): FaqItem[] {
       q: "Hvad gør jeg hvis enheden har en fejl?",
       a: "Alle vores produkter leveres med 36 måneders garanti. Hvis du oplever en fejl, kontakt vores kundeservice, og vi finder en løsning hurtigst muligt — enten reparation, ombytning eller refundering. Du er altid dækket.",
     },
-    {
+    ...(["iphone", "smartphone"].includes(category) ? [{
       q: "Kan jeg bruge alle danske mobilabonnementer?",
       a: "Ja. Alle enheder er ulåste (factory unlocked) og virker med alle danske operatører — TDC, Telenor, Telia, 3, Lebara og andre.",
-    },
+    }] : []),
     {
       q: "Hvor hurtigt leverer I?",
       a: "Vi sender din ordre inden for 1-2 hverdage. Du modtager en sporings-mail så snart pakken er afsendt. Vi leverer med DAO eller PostNord direkte til din dør eller nærmeste pakkeshop.",

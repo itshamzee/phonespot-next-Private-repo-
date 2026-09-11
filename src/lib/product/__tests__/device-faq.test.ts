@@ -51,3 +51,12 @@ describe("getDeviceFaq — unchanged for real devices", () => {
     expect(faq.length).toBe(9);
   });
 });
+
+it("keeps phone compatibility questions on phones and omits them for other device types", () => {
+ expect(getDeviceFaq("iPhone", "iphone").some((item) => item.q.includes("mobilabonnementer"))).toBe(true);
+ for (const category of ["laptop", "ipad", "smartwatch"]) {
+  const faq = getDeviceFaq("Testmodel", category);
+  expect(faq.some((item) => item.q.includes("mobilabonnementer"))).toBe(false);
+  expect(faq.some((item) => item.q.includes("garanti"))).toBe(true);
+ }
+});

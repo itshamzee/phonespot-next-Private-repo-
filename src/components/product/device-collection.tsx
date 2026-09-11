@@ -8,6 +8,7 @@ export interface CollectionFaq {
 }
 
 interface CollectionDetailsProps {
+  deviceType?: "phone" | "watch" | "ipad" | "laptop";
   guideTitle: string;
   faqTitle?: string;
   guideIntro: string;
@@ -31,6 +32,7 @@ export function DeviceCollectionDetails({
   choices,
   faqs,
   serviceLink,
+  deviceType = "phone",
 }: CollectionDetailsProps) {
   return (
     <>
@@ -43,7 +45,7 @@ export function DeviceCollectionDetails({
               <p className="mt-4 text-sm leading-6 text-[#566159]">Standen beskriver de kosmetiske brugsspor. Se den konkrete enheds batterioplysning og øvrige detaljer på produktsiden.</p>
               <Link href="/kvalitet" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]">Læs om vores kvalitet <span aria-hidden="true">&rarr;</span></Link>
             </div>
-            <ConditionExplainer />
+            <ConditionExplainer deviceType={deviceType} />
           </div>
         </div>
       </section>
@@ -101,6 +103,7 @@ export function DeviceCollection({
   faqs,
   initialBrand,
   serviceLink,
+  deviceType = "phone",
 }: DeviceCollectionProps) {
   const modelLabel = `${templates.length} ${templates.length === 1 ? "model" : "modeller"}`;
 
@@ -141,6 +144,7 @@ export function DeviceCollection({
       </section>
 
       <DeviceCollectionDetails
+        deviceType={deviceType}
         guideTitle={guideTitle}
         faqTitle={faqTitle}
         guideIntro={guideIntro}
