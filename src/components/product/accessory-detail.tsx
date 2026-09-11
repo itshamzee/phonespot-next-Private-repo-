@@ -538,6 +538,11 @@ export function AccessoryDetail({
       ================================================================ */}
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-5">
         {/* Left — image gallery */}
+        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+          {product.brand && <p className="text-xs font-semibold text-charcoal/60">{product.brand}</p>}
+          <h1 className="mt-2 font-body text-3xl font-semibold tracking-[-0.04em] leading-tight sm:text-4xl">{product.title}</h1>
+          {product.short_description && <p className="mt-3 text-base leading-relaxed text-charcoal/70">{product.short_description}</p>}
+        </div>
         <ImageGallery
           images={product.images}
           title={product.title}

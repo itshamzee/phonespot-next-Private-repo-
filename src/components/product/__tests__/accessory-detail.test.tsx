@@ -135,3 +135,9 @@ describe('accessory purchase boundary',()=>{
   expect(cart.addSku).toHaveBeenCalledWith({type:'sku_product',skuProductId:'1',title:product.title,price:42900,image:'/black.png',quantity:1,variantLabel:'Farve: Sort'});
  });
 });
+
+it('keeps one product title before the gallery for reading order',()=>{
+ const product=makeProduct();render(<AccessoryDetail product={product}/>);
+ expect(screen.getAllByRole('heading',{level:1})).toHaveLength(1);
+ expect(screen.getByRole('heading',{level:1})).toHaveTextContent(product.title);
+});
