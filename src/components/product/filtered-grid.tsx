@@ -64,12 +64,12 @@ export function FilteredGrid({ templates, heading, promos, initialBrand }: Filte
   return (
     <div className="grid items-start gap-x-8 gap-y-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <CategoryFilters
+        key={initialBrand?.toLowerCase() ?? "all-brands"}
         templates={templates}
         onFilter={setVisible}
         resultCount={visible.length}
         heading={heading}
         initialBrand={initialBrand}
-        resultsId={resultsId}
       />
 
         <div

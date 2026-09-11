@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { FilteredGrid, type TemplateWithStock } from "../filtered-grid";
 
 function template(
@@ -146,6 +146,28 @@ describe("FilteredGrid", () => {
     await waitFor(() => expect(screen.getByText("ThinkPad")).toBeInTheDocument());
   });
 
+  it("updates the initial brand after navigation without reapplying it on an unchanged rerender", async () => {
+    const templates = [
+      template("MacBook", { category: "laptop" }),
+      template("ThinkPad", { brand: "Lenovo", category: "laptop" }),
+    ];
+    const { rerender } = render(<FilteredGrid templates={templates} initialBrand="apple" />);
+
+    const panel = screen.getByRole("complementary", { name: "Produktfiltre" });
+    fireEvent.click(within(panel).getByRole("button", { name: "Ryd filtre" }));
+    await waitFor(() => expect(screen.getByText("ThinkPad")).toBeInTheDocument());
+
+    rerender(<FilteredGrid templates={templates} initialBrand="apple" />);
+    expect(screen.getByText("ThinkPad")).toBeInTheDocument();
+
+    rerender(<FilteredGrid templates={templates} />);
+    await waitFor(() => expect(screen.getByText("ThinkPad")).toBeInTheDocument());
+
+    rerender(<FilteredGrid templates={templates} initialBrand="apple" />);
+    await waitFor(() => expect(screen.queryByText("ThinkPad")).not.toBeInTheDocument());
+    expect(screen.getByText("MacBook")).toBeInTheDocument();
+  });
+
   it("keeps a closed drawer absent and restores focus, scrolling and content after Escape", () => {
     render(<FilteredGrid templates={[template("iPhone")]} />);
     const trigger = screen.getByRole("button", { name: /^Filtre/ });
@@ -162,6 +184,72 @@ describe("FilteredGrid", () => {
     expect(trigger).toHaveFocus();
     expect(document.body.style.overflow).toBe("");
     expect(screen.getByTestId("product-results")).not.toHaveAttribute("inert");
+  });
+
+  it("makes the complete page background inert and keeps keyboard focus inside the drawer", () => {
+    render(
+      <>
+        <header data-testid="site-header"><a href="#konto">Konto</a></header>
+        <main>
+          <FilteredGrid templates={[template("iPhone")]} />
+          <button type="button">Guidens handling</button>
+        </main>
+        <footer data-testid="site-footer"><a href="#kontakt">Kontakt</a></footer>
+      </>,
+    );
+    const guideAction = screen.getByRole("button", { name: "Guidens handling" });
+    const accountLink = screen.getByRole("link", { name: "Konto" });
+
+    fireEvent.click(screen.getByRole("button", { name: /^Filtre/ }));
+    const dialog = screen.getByRole("dialog", { name: "Produktfiltre" });
+    const close = within(dialog).getByRole("button", { name: "Luk filtre" });
+    const apply = within(dialog).getByRole("button", { name: /Vis 1 model/ });
+
+    expect(screen.getByTestId("site-header")).toHaveAttribute("inert");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("inert");
+    expect(guideAction).toHaveAttribute("inert");
+
+    apply.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(close).toHaveFocus();
+
+    close.focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(apply).toHaveFocus();
+
+    accountLink.focus();
+    expect(close).toHaveFocus();
+  });
+
+  it("closes and cleans up the drawer when the viewport enters desktop", () => {
+    let desktop = false;
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const mediaQuery = {
+      get matches() { return desktop; },
+      media: "(min-width: 1024px)",
+      onchange: null,
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.add(listener),
+      removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => listeners.delete(listener),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as MediaQueryList;
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+
+    render(<><header data-testid="breakpoint-header" /><FilteredGrid templates={[template("iPhone")]} /></>);
+    fireEvent.click(screen.getByRole("button", { name: /^Filtre/ }));
+    expect(screen.getByRole("dialog", { name: "Produktfiltre" })).toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(screen.getByTestId("breakpoint-header")).toHaveAttribute("inert");
+
+    desktop = true;
+    act(() => listeners.forEach((listener) => listener({ matches: true } as MediaQueryListEvent)));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("");
+    expect(screen.getByTestId("product-results")).not.toHaveAttribute("inert");
+    expect(screen.getByTestId("breakpoint-header")).not.toHaveAttribute("inert");
+    vi.unstubAllGlobals();
   });
 
   it("only treats a real store location as available for pickup", async () => {

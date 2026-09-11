@@ -21,6 +21,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
 import { ProductDetails } from "@/components/product/product-details";
+import { DeviceCollectionDetails, type CollectionFaq } from "@/components/product/device-collection";
 import { Suspense } from "react";
 
 function getTier(brand: string) {
@@ -49,6 +50,19 @@ const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
   screen_size: "Skærmstørrelse",
   protection_level: "Beskyttelsesniveau",
 };
+
+const TIER_FAQS: CollectionFaq[] = [
+  { question: "Hvordan er modellerne samlet i dette prisniveau?", answer: "Siden viser de aktuelle bærbare, som matcher prisniveauet ud fra deres viste pris. Udvalget kan ændre sig, når kataloget opdateres." },
+  { question: "Hvad betyder standen på en refurbished bærbar?", answer: "Standen beskriver kosmetiske brugsspor. Specifikationer og øvrige oplysninger står på den konkrete produktside." },
+  { question: "Hvor finder jeg oplysninger om batteriet?", answer: "Se batterioplysningen på den konkrete enhed. Batteriet vurderes særskilt og kan ikke udledes af den kosmetiske grade." },
+  { question: "Kan jeg se en bærbar i en butik?", answer: "Butikslageret står på den konkrete model. Du kan også kontakte PhoneSpot i Vejle eller Slagelse, før du tager afsted." },
+];
+
+const TIER_CHOICES = [
+  { title: "Programmer", body: "Tag udgangspunkt i de programmer, du bruger, og sammenlign deres krav med modellens processor og RAM." },
+  { title: "Skærm og lager", body: "Vælg skærmstørrelse efter din arbejdsform og lagerplads efter de filer, du vil gemme lokalt." },
+  { title: "Stand og batteri", body: "Brug graden til at vurdere kosmetiske brugsspor, og læs batterioplysningen på den konkrete enhed." },
+];
 
 export async function generateMetadata({
   params,
@@ -212,6 +226,17 @@ export default async function BrandPage({
           ],
         }}
       />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: TIER_FAQS.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
 
       <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
         <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
@@ -220,9 +245,24 @@ export default async function BrandPage({
             <Link href="/baerbare" className="hover:text-[#1A3D2E]">Bærbare</Link><span aria-hidden="true">/</span>
             <span className="text-[#202421]">{tier.title}</span>
           </nav>
-          <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{tier.title} bærbare</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{tier.tagline}. Se de modeller, der er tilgængelige i dette prisniveau lige nu.</p>
-          <p className="mt-4 text-sm font-semibold text-[#1A3D2E]">36 måneders garanti på enheder</p>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
+            <div>
+              <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{tier.title} bærbare</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{tier.tagline}. Se de modeller, der er tilgængelige i dette prisniveau lige nu.</p>
+            </div>
+            <div className="border-l border-[#BFC8C0] pl-4 text-sm text-[#566159]">
+              <p className="font-semibold text-[#202421]">{products.length} {products.length === 1 ? "model" : "modeller"} i dette prisniveau</p>
+              <p className="mt-1">36 måneders garanti på enheder</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#DDE2DD] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-2 px-4 py-4 text-xs text-[#566159] sm:grid-cols-3 sm:gap-6 sm:text-sm">
+          <p className="font-medium text-[#1A3D2E]">Testet og klargjort</p>
+          <p>Batteriinfo på den enkelte enhed</p>
+          <p>Butikker i Vejle og Slagelse</p>
         </div>
       </section>
 
@@ -247,6 +287,14 @@ export default async function BrandPage({
           </div>
         )}
       </SectionWrapper>
+
+      <DeviceCollectionDetails
+        guideTitle={`Sådan vælger du blandt ${tier.title.toLowerCase()} bærbare`}
+        faqTitle={`Spørgsmål om ${tier.title.toLowerCase()} bærbare`}
+        guideIntro="Sammenlign dine vigtigste programmer og din arbejdsform med oplysningerne på hver model. Prisniveauet er et udgangspunkt; den konkrete konfiguration afgør, hvad der passer bedst."
+        choices={TIER_CHOICES}
+        faqs={TIER_FAQS}
+      />
 
       <SectionWrapper background="sand"><TrustBar /></SectionWrapper>
     </>

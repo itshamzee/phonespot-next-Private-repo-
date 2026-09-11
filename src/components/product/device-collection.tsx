@@ -7,73 +7,33 @@ export interface CollectionFaq {
   answer: string;
 }
 
-interface DeviceCollectionProps {
-  templates: TemplateWithStock[];
-  title: string;
-  intro: string;
-  collectionHeading: string;
+interface CollectionDetailsProps {
   guideTitle: string;
   faqTitle?: string;
   guideIntro: string;
   choices: { title: string; body: string }[];
   faqs: CollectionFaq[];
-  initialBrand?: string;
   serviceLink?: { href: string; label: string; body: string };
 }
 
-export function DeviceCollection({
-  templates,
-  title,
-  intro,
-  collectionHeading,
+interface DeviceCollectionProps extends CollectionDetailsProps {
+  templates: TemplateWithStock[];
+  title: string;
+  intro: string;
+  collectionHeading: string;
+  initialBrand?: string;
+}
+
+export function DeviceCollectionDetails({
   guideTitle,
   faqTitle = "Ofte stillede spørgsmål",
   guideIntro,
   choices,
   faqs,
-  initialBrand,
   serviceLink,
-}: DeviceCollectionProps) {
-  const modelLabel = `${templates.length} ${templates.length === 1 ? "model" : "modeller"}`;
-
+}: CollectionDetailsProps) {
   return (
     <>
-      <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
-        <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
-          <nav aria-label="Brødkrumme" className="mb-4 flex items-center gap-2 text-xs text-[#687069]">
-            <Link href="/" className="hover:text-[#1A3D2E]">Forside</Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-[#202421]">{title}</span>
-          </nav>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
-            <div>
-              <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">
-                {title}
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{intro}</p>
-            </div>
-            <div className="border-l border-[#BFC8C0] pl-4 text-sm text-[#566159]">
-              <p className="font-semibold text-[#202421]">{modelLabel} i det aktuelle udvalg</p>
-              <p className="mt-1">36 måneders garanti på enheder</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#DDE2DD] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-2 px-4 py-4 text-xs text-[#566159] sm:grid-cols-3 sm:gap-6 sm:text-sm">
-          <p><span className="mr-2 text-[#1A3D2E]">✓</span>Testet og klargjort</p>
-          <p><span className="mr-2 text-[#1A3D2E]">✓</span>Batteriinfo på den enkelte enhed</p>
-          <p><span className="mr-2 text-[#1A3D2E]">✓</span>Butikker i Vejle og Slagelse</p>
-        </div>
-      </section>
-
-      <section className="bg-white py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4">
-          <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} />
-        </div>
-      </section>
-
       <section className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4">
           <div className="grid gap-8 lg:grid-cols-[minmax(16rem,0.75fr)_minmax(0,1.5fr)]">
@@ -81,7 +41,7 @@ export function DeviceCollection({
               <p className="text-xs font-semibold text-[#1A3D2E]">Fysisk stand</p>
               <h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em] text-[#202421]">Hvad betyder standen?</h2>
               <p className="mt-4 text-sm leading-6 text-[#566159]">Standen beskriver de kosmetiske brugsspor. Se den konkrete enheds batterioplysning og øvrige detaljer på produktsiden.</p>
-              <Link href="/kvalitet" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]">Læs om vores kvalitet →</Link>
+              <Link href="/kvalitet" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]">Læs om vores kvalitet <span aria-hidden="true">&rarr;</span></Link>
             </div>
             <ConditionExplainer />
           </div>
@@ -110,10 +70,10 @@ export function DeviceCollection({
               <h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em]">Se den. Prøv den. Tag den med.</h2>
               <p className="mt-4 text-sm leading-6 text-white/75">Kom forbi en butik, hvis du vil se en enhed og have hjælp til at vælge.</p>
               <div className="mt-7 divide-y divide-white/20 border-y border-white/20">
-                <Link href="/butik/vejle" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Vejle <span aria-hidden="true">→</span></Link>
-                <Link href="/butik/slagelse" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Slagelse <span aria-hidden="true">→</span></Link>
+                <Link href="/butik/vejle" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Vejle <span aria-hidden="true">&rarr;</span></Link>
+                <Link href="/butik/slagelse" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Slagelse <span aria-hidden="true">&rarr;</span></Link>
               </div>
-              {serviceLink && <div className="mt-7 border-t border-white/20 pt-6"><p className="text-sm leading-6 text-white/75">{serviceLink.body}</p><Link href={serviceLink.href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold">{serviceLink.label} →</Link></div>}
+              {serviceLink && <div className="mt-7 border-t border-white/20 pt-6"><p className="text-sm leading-6 text-white/75">{serviceLink.body}</p><Link href={serviceLink.href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold">{serviceLink.label} <span aria-hidden="true">&rarr;</span></Link></div>}
             </aside>
           </div>
         </div>
@@ -125,6 +85,69 @@ export function DeviceCollection({
           <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] group-open:rotate-45">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
         </div>
       </section>
+    </>
+  );
+}
+
+export function DeviceCollection({
+  templates,
+  title,
+  intro,
+  collectionHeading,
+  guideTitle,
+  faqTitle,
+  guideIntro,
+  choices,
+  faqs,
+  initialBrand,
+  serviceLink,
+}: DeviceCollectionProps) {
+  const modelLabel = `${templates.length} ${templates.length === 1 ? "model" : "modeller"}`;
+
+  return (
+    <>
+      <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
+          <nav aria-label="Brødkrumme" className="mb-4 flex items-center gap-2 text-xs text-[#687069]">
+            <Link href="/" className="hover:text-[#1A3D2E]">Forside</Link>
+            <span aria-hidden="true">/</span>
+            <span className="text-[#202421]">{title}</span>
+          </nav>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
+            <div>
+              <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{title}</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{intro}</p>
+            </div>
+            <div className="border-l border-[#BFC8C0] pl-4 text-sm text-[#566159]">
+              <p className="font-semibold text-[#202421]">{modelLabel} i det aktuelle udvalg</p>
+              <p className="mt-1">36 måneders garanti på enheder</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#DDE2DD] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-2 px-4 py-4 text-xs text-[#566159] sm:grid-cols-3 sm:gap-6 sm:text-sm">
+          <p className="font-medium text-[#1A3D2E]">Testet og klargjort</p>
+          <p>Batteriinfo på den enkelte enhed</p>
+          <p>Butikker i Vejle og Slagelse</p>
+        </div>
+      </section>
+
+      <section className="bg-white py-8 sm:py-12">
+        <div className="mx-auto max-w-7xl px-4">
+          <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} />
+        </div>
+      </section>
+
+      <DeviceCollectionDetails
+        guideTitle={guideTitle}
+        faqTitle={faqTitle}
+        guideIntro={guideIntro}
+        choices={choices}
+        faqs={faqs}
+        serviceLink={serviceLink}
+      />
     </>
   );
 }
