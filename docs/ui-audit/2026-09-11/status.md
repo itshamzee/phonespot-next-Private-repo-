@@ -11,8 +11,8 @@ Den godkendte selvstændige designreference er bevaret uændret.
 
 - Task 1: færdig og godkendt. Commits 729c6a2 + 0469fb3, dokumenteret i 21fa954. Desktop 1195/1440 og mobil 390/320 kontrolleret. Efter ejerens udtrykkelige eksportgodkendelse er forsiden sendt som draft PR #3: https://github.com/itshamzee/phonespot-next-Private-repo-/pull/3 . Ingen merge.
 - Task 2: færdig og godkendt. Commits 1a48f1d, a651198 og f4716c5. iPhones, iPads, bærbare, smartphones, smartwatches, fælles filtre/kort og bærbare prisniveauer. Filterdialogens breakpoint, fulde baggrundslås, fokusstyring og brandquery er rettet og genkontrolleret.
-- Task 3: næste side er enhedsproduktsiden.
-- Task 4-8: detaljerede briefs er forberedt; reparation, opkøb, tilbehør/beskyttelsesglas, butikker/hjælpesider og samlet slutreview er endnu ikke implementeret.
+- Task 3: færdig og godkendt i 836cca0, 1cd8eef og 635bf4f. Telefon- og laptopprodukt, variantvalg, galleri, batteri, køb, udsolgt, kategori-FAQ og korrekte standbilleder. Laptop viser nu grundpris, tilvalg og samlet pris med uændret kurvkontrakt. Opdigtede fallbackanmeldelser er fjernet.
+- Task 4: næste side er reparation, derefter modelvalg og booking. Task 5-8 er endnu ikke implementeret; detaljerede briefs er forberedt.
 - Ændringer efter forsiden er fortsat lokale. Main og produktionen er uændrede.
 
 ## Kontrol
@@ -32,3 +32,10 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Hovedkunderejser og fælles templates prioriteres før individuelle blog- og indholdssider. Afleveringen skal nævne resterende sider ærligt.
 - Browserkontrollen gik i stå i flere timer natten til 11. september. Lokale forhåndsvisninger er genstartet. Nattens automation er sat på pause ved morgenfristen; det aktive autoriserede arbejde fortsætter.
 - Automatisk kontrol krævede udtrykkelig godkendelse af eksport til GitHub. Ejerens svar omfattede forsiden i 21fa954; senere lokale sider er ikke sendt endnu.
+
+## Produktsidens kontrol
+
+- Task 3: 18 testfiler, 115 bestået og 1 forventet credential-afhængig skip. Typecheck og målrettet lint bestået. Separat spec- og kvalitetsreview godkendt uden fund.
+- Browser: telefon og laptop på desktop samt mobil 390/320, variantpris/batteri, udsolgt vare og alternativer, rigtige kategori-standfotos, metadata og tilvalgssum kontrolleret. Eksempel fra lokale QA-data: 5.199 + 400 + 300 = 5.899 kr.; Klarna-visningen er tydeligt afgrænset til grundprisen.
+- Eksisterende kort SSR-overgang til korrekt lagervariant er bevaret. Fuld suite/build køres igen på den færdige integration før næste eksport.
+- Den offentlige SKU-projektion for tilbehør undersøges og afgrænses i Task 6: indkøbspris og leverandør-id skal ikke serialiseres til klienten. Det er en snæver præsentationsgrænse; interne queries/admin og økonomiske beregninger bevares.
