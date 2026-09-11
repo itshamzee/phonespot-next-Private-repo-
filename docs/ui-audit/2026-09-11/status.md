@@ -65,3 +65,10 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Desktop og mobil: ens kort, hele produktbilleder, URL-filtre, dialogfokus og baggrundslås, butikslager, udsolgt, variant i kurv, glassets model-/variantvalg og lokale Vejle/Slagelse-sider kontrolleret. Ingen ordrer eller henvendelser indsendt.
 - Offentlig tilbehørs-API skelner faktisk butikslager, bestillingsvarer, ukendt status og udsolgt. Indkøbspris og leverandør-id udelades ved tre server/client-grænser. Produktionslager og faktiske attributdata kræver kontrol i staging før release.
 - Task 7 er næste: butikker, kvalitet, garanti, kontakt, FAQ og søgeindgang. Task 8 samler slutkontrollen. Ændringer efter forsiden er fortsat lokale.
+
+## Butikker, information og søgning
+
+- Task 7 er gennemført frem til 789ae39. Separat spec- og kvalitetsreview godkendt uden kritiske eller vigtige fund. 50 fokuserede tests, typecheck og lint bestået.
+- Butikker, kvalitet, garanti, kontakt, FAQ og søgning er kontrolleret på desktop og mobil. Butiksvalg, tastatur, fejlhjælp, gentaget søgning, canonical og FAQ-struktur er kontrolleret. Ingen rigtige henvendelser sendt.
+- Generiske SKU-detaljer bag enkelte søgeresultater beholder endnu deres eksisterende detaildesign. Faktisk lager og søgerelevans kræver stagingkontrol.
+- Task 8 samler nu den samlede gennemgang og slutpolering. Første fulde testkørsel fandt én tidsoverskridelse; samme formularfil består isoleret. Det undersøges før endelig godkendelse.
