@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 interface FaqItem {
   question: string;
@@ -12,6 +12,7 @@ interface FaqAccordionProps {
 }
 
 export function FaqAccordion({ items }: FaqAccordionProps) {
+  const instanceId = useId();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   function toggle(index: number) {
@@ -19,22 +20,23 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="divide-y divide-[#dce1db] border-y border-[#dce1db] font-body">
       {items.map((item, index) => {
         const isOpen = openIndex === index;
         return (
           <div
             key={index}
-            className="overflow-hidden rounded-[16px] border border-sand bg-white"
+            className="bg-transparent"
           >
             <button
               type="button"
+              id={`${instanceId}-question-${index}`}
               onClick={() => toggle(index)}
-              className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-warm-white/50"
+              className="flex min-h-14 w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:text-[#1a3d2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1a3d2e]"
               aria-expanded={isOpen}
-              aria-controls={`faq-answer-${index}`}
+              aria-controls={`${instanceId}-answer-${index}`}
             >
-              <span className="pr-4 font-display text-lg font-bold italic text-charcoal">
+              <span className="text-base font-semibold leading-relaxed text-charcoal">
                 {item.question}
               </span>
               <svg
@@ -53,11 +55,9 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            {isOpen && (
-              <div id={`faq-answer-${index}`} className="border-t border-sand px-6 pb-5 pt-4">
-                <p className="leading-relaxed text-gray">{item.answer}</p>
-              </div>
-            )}
+            <div id={`${instanceId}-answer-${index}`} role="region" aria-labelledby={`${instanceId}-question-${index}`} hidden={!isOpen} className="pb-5 pr-6">
+              <p className="text-sm leading-7 text-[#626a65]">{item.answer}</p>
+            </div>
           </div>
         );
       })}

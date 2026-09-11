@@ -15,7 +15,7 @@
 .panel { border: 1px solid #dce1db; border-radius: 16px; background: white; padding: 28px; }
 .panel p { margin: 0 0 12px; color: #626a65; }
 .address { font-style: normal; line-height: 1.7; margin-bottom: 20px; }
-@media (min-width: 701px) { .panel .address { min-height: 82px; } }
+@media (min-width: 701px) { .panel .address { min-height: 96px; } }
 .hours { margin: 16px 0 22px; font-size: 14px; }
 .hours div { display: flex; justify-content: space-between; gap: 18px; padding-block: 6px; border-bottom: 1px solid #edf0eb; }
 .hours dt { color: #626a65; }
