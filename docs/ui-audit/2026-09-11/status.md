@@ -49,3 +49,11 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Payload- og indsendelsesfunktionerne i begge bookingflows er uændrede; kun lokale valg, præsentation og navigation er rettet.
 - Et mistænkt inputproblem viste sig at være kontrolværktøjets skjulte telefon-/emailværdier. Den afsluttende oversigt bekræftede, at oplysningerne var bevaret. Der hævdes ikke en rettet inputfejl.
 - Mindre punkter til slutpolering: lys fokusmarkering på den grønne reparationshero og gentaget mærke/modelnavn i bookingoversigten.
+
+## Salgssidens kontrol
+
+- Task 5 er færdig i 4af0146 og 9361d33. Separat spec- og kvalitetsreview godkendt; 13/13 tests, typecheck og lint bestået.
+- Desktop 1195 og mobil 390/320: kort introduktion, tidlig formular, tastaturvalg, egen model, to enheders særskilte stand og bevaret tilbage-navigation. Butiksvalg og kontakt gør afsendelse tilgængelig. Intet er indsendt.
+- Private tilbudssider viser hjælp ved manglende token og har egne canonical/noindex. Accept-/afvisningskontrakter er bevaret.
+- Mindre punkt til slutpolering: undgå en ugyldig aktiv valgreference ved pil op i en tom søgeresultatliste.
+- Task 6 er næste: tilbehør, kompatibilitet og beskyttelsesglas. Task 7-8 er forberedt.
