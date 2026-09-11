@@ -26,6 +26,14 @@ describe("repair service selection", () => {
     expect(standard).toHaveAttribute("aria-pressed", "false");
     expect(screen.getAllByText("1888 DKK").length).toBeGreaterThan(0);
   });
+  it("keeps the selected quality visible when all service names are identical", () => {
+    render(<RepairCart services={services.map(service => service.service_category === "Skærmskift" ? { ...service, name: "Skærmskift" } : service)} brandName="iPhone" modelName="iPhone 17 Pro" brandSlug="iphone" modelSlug="iphone-17-pro" />);
+    fireEvent.click(screen.getByRole("button", { name: /^Skærmskift / }));
+    fireEvent.click(screen.getByRole("button", { name: "Vælg Skærmskift til 1599 kr." }));
+    expect(within(screen.getByRole("complementary", { name:"Din reparationsoversigt" })).getByText("Skærmskift (Premium)")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { expanded:true }));
+    expect(screen.getByRole("button", { expanded:false })).toHaveTextContent("Valgt: Skærmskift (Premium)");
+  });
   it("shows unavailable prices as contact options and does not invent time estimates", () => {
     setup();
     expect(screen.queryByRole("button", { name: /^Vælg Kamera/ })).not.toBeInTheDocument();

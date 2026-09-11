@@ -3,6 +3,7 @@
 import { useState, useMemo, useId, useRef, useEffect } from "react";
 import Link from "next/link";
 import styles from "./repair.module.css";
+import { repairServiceLabel } from "./service-label";
 import { STORES } from "@/lib/store-config";
 import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
 
@@ -405,7 +406,7 @@ export function RepairCart({
           <p className="font-bold text-charcoal">{modelName}</p>
           {selectedServices.map((s) => (
             <div key={s.id} className="mt-1 flex justify-between text-gray">
-              <span>{s.name}</span>
+              <span>{repairServiceLabel(s)}</span>
               <span>{fmtPrice(s.price_dkk)} DKK</span>
             </div>
           ))}
@@ -443,7 +444,7 @@ export function RepairCart({
           const prices = items.filter(item => item.price_dkk > 0).map(item => item.price_dkk);
           if (items.length === 1) return <ServiceOption key={category} service={items[0]} selected={!!selected} onToggle={toggleService} formatPrice={fmtPrice} />;
           return <section key={category} className={styles.serviceCategory}>
-            <h3><button type="button" className={styles.categoryToggle} aria-expanded={isOpen} aria-controls={"quality-" + index} onClick={() => setExpandedCategory(isOpen ? null : category)}><ServiceIcon slug={items[0].slug} /><span><strong>{category}</strong>{" "}<small>{selected ? "Valgt: " + selected.name : items.length + " kvaliteter"}</small></span><span className={styles.rowPrice}>{selected ? fmtPrice(selected.price_dkk) + " kr." : prices.length ? "Fra " + fmtPrice(Math.min(...prices)) + " kr." : "Pris på forespørgsel"}<small>{isOpen ? "Luk valg −" : "Vælg kvalitet +"}</small></span></button></h3>
+            <h3><button type="button" className={styles.categoryToggle} aria-expanded={isOpen} aria-controls={"quality-" + index} onClick={() => setExpandedCategory(isOpen ? null : category)}><ServiceIcon slug={items[0].slug} /><span><strong>{category === "Skaerm" ? "Skærm" : category}</strong>{" "}<small>{selected ? "Valgt: " + repairServiceLabel(selected) : items.length + " kvaliteter"}</small></span><span className={styles.rowPrice}>{selected ? fmtPrice(selected.price_dkk) + " kr." : prices.length ? "Fra " + fmtPrice(Math.min(...prices)) + " kr." : "Pris på forespørgsel"}<small>{isOpen ? "Luk valg −" : "Vælg kvalitet +"}</small></span></button></h3>
             {isOpen && <div id={"quality-" + index}>{items.map(service => <ServiceOption key={service.id} service={service} selected={selectedIds.has(service.id)} onToggle={toggleService} formatPrice={fmtPrice} tier />)}</div>}
           </section>;
         })}</div>
@@ -480,7 +481,7 @@ export function RepairCart({
             /> : <div className={styles.summary}>
           <span className={styles.eyebrow}>Din reparation</span><h2>{modelName}</h2>{selectedColor && <p className={styles.hint}>{selectedColor}</p>}
           {selectedServices.length === 0 ? <p className={styles.intro}>Vælg reparationer fra listen. Her ser du dine valg og den samlede pris.</p> : <>
-            <ul className={styles.summaryRows}>{selectedServices.map(service => <li key={service.id}><span>{service.name}</span><strong>{fmtPrice(service.price_dkk)} DKK</strong><button type="button" aria-label={"Fjern " + service.name} onClick={() => toggleService(service.id)}>×</button></li>)}</ul>
+            <ul className={styles.summaryRows}>{selectedServices.map(service => <li key={service.id}><span>{repairServiceLabel(service)}</span><strong>{fmtPrice(service.price_dkk)} DKK</strong><button type="button" aria-label={"Fjern " + repairServiceLabel(service)} onClick={() => toggleService(service.id)}>×</button></li>)}</ul>
             <button type="button" className={styles.glassOption} aria-pressed={includesTemperedGlass} onClick={() => setIncludesTemperedGlass(v => !v)}><span>{includesTemperedGlass ? "Valgt: " : "Tilføj "}beskyttelsesglas</span><strong>+99 DKK</strong></button>
             {discountPercent > 0 && <div className={styles.summaryDiscount}><span>Rabat ({discountPercent}%)</span><strong>−{discountAmount} DKK</strong></div>}
             <div className={styles.total}>{discountPercent > 0 && <p><span>Subtotal</span><span>{subtotal} DKK</span></p>}<div><span>Total</span><strong>{totalPrice} DKK</strong></div><small>Inkl. moms og reservedele</small></div>
@@ -598,7 +599,7 @@ function BookingForm({
         </p>
         {selectedServices.map((s) => (
           <div key={s.id} className="flex justify-between text-sm">
-            <span className="text-charcoal">{s.name}</span>
+            <span className="text-charcoal">{repairServiceLabel(s)}</span>
             <span className="font-bold">{fmtPrice(s.price_dkk)} DKK</span>
           </div>
         ))}
@@ -780,7 +781,7 @@ function BookingForm({
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
           </svg>
-          Tilføj endnu enhed til booking
+          Start en booking med flere enheder
         </Link>
 
         {/* Date picker */}
