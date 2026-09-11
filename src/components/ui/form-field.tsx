@@ -4,6 +4,7 @@ type FormFieldProps = {
   type?: "text" | "email" | "tel" | "textarea" | "select";
   required?: boolean;
   placeholder?: string;
+  autoComplete?: string;
   options?: string[];
   className?: string;
   value?: string;
@@ -23,6 +24,7 @@ export function FormField({
   type = "text",
   required = false,
   placeholder,
+  autoComplete,
   options,
   className = "",
   value,
@@ -69,6 +71,7 @@ export function FormField({
           id={id}
           name={name}
           type={type}
+          autoComplete={autoComplete}
           required={required}
           placeholder={placeholder}
           value={value}
