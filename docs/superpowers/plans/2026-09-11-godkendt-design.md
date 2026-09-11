@@ -26,11 +26,11 @@
 ## Sequential roadmap
 
 - [x] Task 1 — Homepage plus shared navigation/footer: port revision 3, connect live catalog and existing cart/search, verify.
-- [ ] Task 2 — Collection template and shared device cards: consistent image/title/spec/price hierarchy, filters and sorting preserved.
-- [ ] Task 3 — Device product page: gallery, configuration, stock/price/CTA, clear condition/warranty, existing cart payload preserved.
-- [ ] Task 4 — Repair landing then model/booking views: prominent device selection and store path, preserve submission and pricing.
-- [ ] Task 5 — Buyback landing/steps: approved service identity, simpler visual hierarchy, preserve estimate/submit/accept/reject logic.
-- [ ] Task 6 — Accessories and protection pages: same typography/cards and clear compatibility, no old homepage model-selector box, accessory-specific legal copy.
+- [x] Task 2 — Collection template and shared device cards: consistent image/title/spec/price hierarchy, filters and sorting preserved.
+- [x] Task 3 — Device product page: gallery, configuration, stock/price/CTA, clear condition/warranty, existing cart payload preserved.
+- [x] Task 4 — Repair landing then model/booking views: prominent device selection and store path, preserve submission and pricing.
+- [x] Task 5 — Buyback landing/steps: approved service identity, simpler visual hierarchy, preserve estimate/submit/accept/reject logic.
+- [x] Task 6 — Accessories and protection pages: same typography/cards and clear compatibility, no old homepage model-selector box, accessory-specific legal copy.
 - [ ] Task 7 — Store and trust/information pages: apply shared rhythm conservatively to stores, quality, warranty, contact and FAQ, preserving authoritative content.
 - [ ] Task 8 — Whole-branch integration review, mobile/desktop checks, build/tests, draft PR(s), morning handoff and list remaining pages honestly.
 
@@ -72,6 +72,3 @@ expect(screen.getByRole('link', { name: /Se vores bærbare/i })).toHaveAttribute
 ```
 
 Use the actual resulting accessible labels consistently in tests. Do not weaken tests to conceal missing functionality. The visual reference is the authority for composition; existing business behavior is the authority for integration.
-
-
-

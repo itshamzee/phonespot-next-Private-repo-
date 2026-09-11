@@ -57,3 +57,11 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Private tilbudssider viser hjælp ved manglende token og har egne canonical/noindex. Accept-/afvisningskontrakter er bevaret.
 - Mindre punkt til slutpolering: undgå en ugyldig aktiv valgreference ved pil op i en tom søgeresultatliste.
 - Task 6 er næste: tilbehør, kompatibilitet og beskyttelsesglas. Task 7-8 er forberedt.
+
+## Tilbehør og beskyttelsesglas
+
+- Task 6 er færdig i 63bc352, 51f404f, f75f0a9, e8a767e, 14e3bb7 og 5257ba6. Separat spec- og kvalitetsreview godkendt efter rettelse af dansk fejlhjælp og kortvarig kurvbekræftelse.
+- 51/51 fokuserede tests; fixrundens grid/kort 5/5, typecheck og målrettet lint bestået. Fuld suite/build afventer færdig integration.
+- Desktop og mobil: ens kort, hele produktbilleder, URL-filtre, dialogfokus og baggrundslås, butikslager, udsolgt, variant i kurv, glassets model-/variantvalg og lokale Vejle/Slagelse-sider kontrolleret. Ingen ordrer eller henvendelser indsendt.
+- Offentlig tilbehørs-API skelner faktisk butikslager, bestillingsvarer, ukendt status og udsolgt. Indkøbspris og leverandør-id udelades ved tre server/client-grænser. Produktionslager og faktiske attributdata kræver kontrol i staging før release.
+- Task 7 er næste: butikker, kvalitet, garanti, kontakt, FAQ og søgeindgang. Task 8 samler slutkontrollen. Ændringer efter forsiden er fortsat lokale.
