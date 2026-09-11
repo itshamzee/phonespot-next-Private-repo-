@@ -44,11 +44,11 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Covers og cases",
     description: "Beskyt din enhed med stilfulde covers og cases.",
     deviceSpecific: true,
-    heroDescription: "Find det perfekte cover til din model — TPU, hardcase og MagSafe-kompatible varianter til alle populære telefoner.",
+    heroDescription: "Find covers til din model. Se materiale, kompatibilitet og eventuel MagSafe-understøttelse på produktet.",
     faq: [
       {
         q: "Hvad er forskellen på TPU og hardcase?",
-        a: "TPU covers er bløde og absorberer stød bedre. Hardcases er stivere og giver mere kantbeskyttelse. Vi anbefaler TPU til daglig brug og hybrid-cases til maksimal beskyttelse.",
+        a: "TPU er et fleksibelt materiale, mens en hardcase er stiv. Se produktets materiale og konstruktion, og vælg et cover, der passer til din model.",
       },
       {
         q: "Passer et cover til iPhone 15 på iPhone 15 Pro?",
@@ -65,7 +65,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Skærmbeskyttelse",
     description: "Beskyttelsesglas og screen protectors til alle enheder.",
     deviceSpecific: true,
-    heroDescription: "Hærdet beskyttelsesglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
+    heroDescription: "Beskyttelsesglas og folie til din skærm. Se kompatibilitet og egenskaber på det enkelte produkt.",
     faq: [
       {
         q: "Hvad er forskellen på hærdet glas og plastfolie?",
@@ -90,11 +90,11 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     faq: [
       {
         q: "Hvordan vælger jeg beskyttelsesglas?",
-        a: "Ja. Glasset er 9H hærdet — samme hårdhed som safirglas. Det tager stødet så din skærm ikke gør det. Udskift glasset, ikke skærmen.",
+        a: "Vælg din præcise telefon- eller tabletmodel, og se de tilgængelige varianter. Produktbeskrivelsen viser glassets egenskaber og kompatibilitet.",
       },
       {
         q: "Kan jeg få det monteret gratis?",
-        a: "Kom forbi PhoneSpot i Vejle eller Slagelse — vi monterer glasset gratis på under 60 sekunder, perfekt hver gang.",
+        a: "Kom forbi PhoneSpot i Vejle eller Slagelse. Montering er gratis ved køb af beskyttelsesglas hos os.",
       },
       {
         q: "Er det samme glas til alle iPhones?",
@@ -168,9 +168,9 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   {
     slug: "outlet",
     label: "Outlet",
-    description: "Ekstra skarpe priser på udvalgte tilbehør. Begrænset antal.",
+    description: "Udvalgt tilbehør fra vores outlet.",
     deviceSpecific: false,
-    heroDescription: "Overskydende lager og kampagnevarer til ekstra skarpe priser. Begrænset antal — køb mens lager haves.",
+    heroDescription: "Se udvalget af tilbehør i vores outlet. Pris og lagerstatus fremgår af det enkelte produkt.",
     faq: [
       {
         q: "Hvad er outlet-varer?",

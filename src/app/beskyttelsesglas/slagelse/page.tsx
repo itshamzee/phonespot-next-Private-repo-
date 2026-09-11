@@ -4,7 +4,7 @@ import { LocalCityPage } from "../_components/LocalCityPage";
 
 export const metadata: Metadata = {
   title: "Beskyttelsesglas i Slagelse · gratis montering · PhoneSpot",
-  description: "Beskyttelsesglas til iPhone, Samsung og alle telefoner — gratis professionel montering i Slagelse på 60 sekunder.",
+  description: "Beskyttelsesglas i Slagelse. Få hjælp til valg og gratis montering ved køb hos PhoneSpot. Se adresse og åbningstider.",
   alternates: { canonical: "/beskyttelsesglas/slagelse" },
 };
 
