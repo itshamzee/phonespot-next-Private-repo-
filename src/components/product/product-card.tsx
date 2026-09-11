@@ -41,12 +41,12 @@ export function ProductCard({
   return (
     <Link
       href={`/${collectionHandle}/${product.handle}`}
-      className="group relative flex flex-col rounded-[16px] border border-sand bg-white transition-shadow hover:shadow-md"
+      className="group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white transition-shadow hover:shadow-md"
     >
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-[16px]" />
 
       {/* Image area */}
-      <div className="relative aspect-square overflow-hidden rounded-t-[16px] bg-cream">
+      <div className="relative aspect-square overflow-hidden rounded-t-[16px] bg-[#f4f5f2]">
         {grade && (
           <div className="absolute top-3 left-3 z-10">
             <ConditionBadge grade={grade} />
@@ -65,8 +65,8 @@ export function ProductCard({
             alt={image.altText ?? product.title}
             width={image.width}
             height={image.height}
-            className="h-full w-full object-contain p-4 transition-transform group-hover:scale-105"
-            sizes="(min-width: 768px) 25vw, 50vw"
+            className="h-full w-full object-contain p-7"
+            sizes="(min-width: 1024px) 33vw, (min-width: 420px) 50vw, 100vw"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray">
@@ -76,8 +76,8 @@ export function ProductCard({
       </div>
 
       {/* Info area */}
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 font-semibold text-charcoal">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <h3 className="min-h-12 line-clamp-2 text-base leading-6 font-semibold text-charcoal">
           {product.title}
         </h3>
         <p className="mt-0.5 text-xs text-gray">{product.vendor}</p>
@@ -88,6 +88,7 @@ export function ProductCard({
             compareAt={compareAt?.amount ?? null}
           />
         </div>
+        <span className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg bg-[#1A3D2E] px-3 text-sm font-semibold text-white">Se produkt</span>
       </div>
     </Link>
   );

@@ -91,6 +91,7 @@ export default async function TilbehoerCategoryPage({
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
+      {config.faq.length > 0 && <JsonLd data={{"@context":"https://schema.org","@type":"FAQPage",mainEntity:config.faq.map(item=>({"@type":"Question",name:item.q,acceptedAnswer:{"@type":"Answer",text:item.a}}))}}/>}
 
       <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pt-4">
         <Breadcrumb
