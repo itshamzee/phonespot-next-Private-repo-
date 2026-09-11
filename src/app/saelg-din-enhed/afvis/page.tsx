@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { customerFacingError } from "@/lib/customer-facing-error";
 
 type PageState = "loading" | "form" | "success" | "error";
 
@@ -74,7 +75,11 @@ function AfvisContent() {
       setState("success");
     } catch (err) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Kunne ikke afvise tilbud",
+        customerFacingError(
+          err,
+          "Kunne ikke afvise tilbuddet. Prøv igen.",
+          ["Token er ugyldigt eller udløbet", "Tilbuddet er udløbet"],
+        ),
       );
       setState("error");
     } finally {

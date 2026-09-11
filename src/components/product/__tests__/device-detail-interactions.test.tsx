@@ -149,7 +149,7 @@ describe("DeviceDetail interactions", () => {
     ).toBeInTheDocument();
     expect(cart.addDevice).not.toHaveBeenCalled();
   });
-  it("announces a reservation rejection and makes retry available", async () => {
+  it("announces a known reservation conflict and makes retry available", async () => {
     let reject!: (reason: Error) => void;
     cart.addDevice.mockImplementationOnce(
       () =>
@@ -162,13 +162,23 @@ describe("DeviceDetail interactions", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Læg i kurv" }));
     expect(screen.getByRole("button", { name: /Reserverer/ })).toBeDisabled();
-    reject(new Error("Enheden blev netop solgt. Vælg en anden variant."));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Enheden blev netop solgt",
-    );
+    reject(new Error("Udsolgt"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Udsolgt");
     expect(screen.getByRole("button", { name: "Læg i kurv" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Læg i kurv" }));
     await waitFor(() => expect(cart.openUpsell).toHaveBeenCalled());
+  });
+  it("uses Danish guidance for an unexpected reservation error", async () => {
+    cart.addDevice.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    render(
+      <DeviceDetail template={template} devices={units} accessories={[]} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Læg i kurv" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Kunne ikke tilføje til kurv. Prøv igen.",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Failed to fetch");
+    expect(screen.getByRole("button", { name: "Læg i kurv" })).toBeEnabled();
   });
 });
 

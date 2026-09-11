@@ -114,6 +114,25 @@ describe("vurderingsanmodning", () => {
     expect(screen.getByLabelText("Model")).toHaveTextContent("iPhone 13 mini");
     expect(next()).toBeEnabled();
   });
+  it("refererer kun en aktiv mulighed, når søgeresultatet findes", () => {
+    render(<SellDeviceWizard />);
+    category();
+    fireEvent.click(screen.getByLabelText("Mærke"));
+    const search = screen.getByPlaceholderText("Søg...");
+    fireEvent.change(search, { target: { value: "findes ikke" } });
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    expect(search).not.toHaveAttribute("aria-activedescendant");
+    fireEvent.keyDown(search, { key: "ArrowUp" });
+    expect(search).not.toHaveAttribute("aria-activedescendant");
+
+    fireEvent.change(search, { target: { value: "Apple" } });
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    const activeId = search.getAttribute("aria-activedescendant");
+    expect(activeId).toBeTruthy();
+    expect(document.getElementById(activeId!)).toHaveTextContent("Apple");
+    fireEvent.keyDown(search, { key: "Enter" });
+    expect(screen.getByLabelText("Mærke")).toHaveTextContent("Apple");
+  });
   it("bevarer custom model og stand tilbage og frem og fokuserer aktivt trin", () => {
     render(<SellDeviceWizard />);
     custom();
@@ -209,18 +228,33 @@ describe("vurderingsanmodning", () => {
       },
     });
   });
-  it("bevarer oplysninger efter netværksfejl og kan prøve igen", async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(new Error("Netværksfejl"));
+  it("bevarer oplysninger efter en uventet netværksfejl og kan prøve igen", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
     render(<SellDeviceWizard />);
     toContact();
     fireEvent.click(screen.getByRole("button", { name: "Send til vurdering" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Netværksfejl");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Kunne ikke sende anmodningen. Prøv igen.",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Failed to fetch");
     expect(screen.getByLabelText(/Navn/)).toHaveValue(" Test Kunde ");
     expect(screen.getByLabelText(/Email/)).toHaveValue("test@example.com");
     fireEvent.click(screen.getByRole("button", { name: "Send til vurdering" }));
     await screen.findByRole("heading", { name: /Tak for din henvendelse/ });
     expect(vi.mocked(fetch).mock.calls[1][1]?.body).toBe(
       vi.mocked(fetch).mock.calls[0][1]?.body,
+    );
+  });
+  it("viser en kendt fejl fra kontakt-endpointet", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "Kunne ikke sende besked" }),
+    } as Response);
+    render(<SellDeviceWizard />);
+    toContact();
+    fireEvent.click(screen.getByRole("button", { name: "Send til vurdering" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Kunne ikke sende besked",
     );
   });
   it("beskytter en igangværende afsendelse mod gentagelse og tilbagenavigation", async () => {

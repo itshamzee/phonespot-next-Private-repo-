@@ -35,6 +35,7 @@ import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import styles from "./device-detail.module.css";
 import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
+import { customerFacingError } from "@/lib/customer-facing-error";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -619,9 +620,9 @@ export function DeviceDetail({
       }
     } catch (err) {
       setCartError(
-        err instanceof Error
-          ? err.message
-          : "Kunne ikke tilføje til kurv. Prøv igen.",
+        customerFacingError(err, "Kunne ikke tilføje til kurv. Prøv igen.", [
+          "Udsolgt",
+        ]),
       );
     } finally {
       setIsAddingToCart(false);
@@ -762,13 +763,6 @@ export function DeviceDetail({
                 Du sparer {formatDKK(compareAtPrice - price)}
                 {savingsPercent ? ` (${savingsPercent}%)` : ""} sammenlignet med
                 nypris
-              </p>
-            )}
-            {selectedUpgradeTotal === 0 && price && price > 30000 && (
-              <p className={styles.small}>
-                Eller betal{" "}
-                <strong>{formatDKK(Math.round(price / 3))}/md</strong> med
-                Klarna
               </p>
             )}
             {inStock ? (

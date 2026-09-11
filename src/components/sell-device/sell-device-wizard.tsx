@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { normalizeStoreId } from "@/lib/stores";
 import { STORES } from "@/lib/store-config";
+import { customerFacingError } from "@/lib/customer-facing-error";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -594,6 +595,10 @@ function SearchableSelect({
     }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
+      if (filtered.length === 0) {
+        setActiveIndex(-1);
+        return;
+      }
       const index =
         event.key === "ArrowDown"
           ? Math.min(activeIndex + 1, filtered.length - 1)
@@ -640,7 +645,7 @@ function SearchableSelect({
             if (event.key === "ArrowDown") {
               event.preventDefault();
               setOpen(true);
-              setActiveIndex(0);
+              setActiveIndex(options.length > 0 ? 0 : -1);
             }
           }}
           className="flex min-h-12 w-full items-center justify-between gap-3 rounded-md border border-soft-grey bg-white px-4 py-3 text-left text-sm text-charcoal disabled:cursor-not-allowed disabled:opacity-50"
@@ -665,7 +670,9 @@ function SearchableSelect({
                 aria-autocomplete="list"
                 aria-controls={`${id}-options`}
                 aria-activedescendant={
-                  activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined
+                  activeIndex >= 0 && activeIndex < filtered.length
+                    ? `${id}-option-${activeIndex}`
+                    : undefined
                 }
                 placeholder="Søg..."
                 value={query}
@@ -900,7 +907,11 @@ export function SellDeviceWizard() {
     } catch (err) {
       setStatus("error");
       setErrorMessage(
-        err instanceof Error ? err.message : "Kunne ikke sende anmodning",
+        customerFacingError(
+          err,
+          "Kunne ikke sende anmodningen. Prøv igen.",
+          ["Udfyld alle felter", "Kunne ikke sende besked"],
+        ),
       );
     }
   }

@@ -61,6 +61,60 @@ describe("privat tilbudssvar", () => {
       "/api/trade-in/offer-status?token=fixture-expired",
     );
   });
+  it("viser dansk vejledning ved en uventet fejl under accept", async () => {
+    fixture.params = new URLSearchParams("token=fixture-accept-error");
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => offer } as Response)
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    render(<AccepterPage />);
+    for (const [label, value] of [
+      ["Adresse", "Testvej 1"],
+      ["Postnr.", "7100"],
+      ["By", "Vejle"],
+      ["Reg.nr. *", "1234"],
+      ["Kontonr. *", "1234567890"],
+    ])
+      fireEvent.change(await screen.findByLabelText(label), {
+        target: { value },
+      });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Acceptér tilbud" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Kunne ikke acceptere tilbuddet. Prøv igen.",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Failed to fetch");
+  });
+  it("viser dansk vejledning ved en uventet fejl under afvisning", async () => {
+    fixture.params = new URLSearchParams("token=fixture-reject-error");
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => offer } as Response)
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    render(<AfvisPage />);
+    fireEvent.change(await screen.findByLabelText("Kommentar (valgfri)"), {
+      target: { value: "Jeg afventer" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Afvis tilbud" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Kunne ikke afvise tilbuddet. Prøv igen.",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Failed to fetch");
+  });
+  it("bevarer en kendt konflikt fra tilbuds-endpointet", async () => {
+    fixture.params = new URLSearchParams("token=fixture-expired-submit");
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: async () => offer } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "Tilbuddet er udløbet" }),
+      } as Response);
+    render(<AfvisPage />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Afvis tilbud" }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Tilbuddet er udløbet",
+    );
+  });
   it("kobler bank- og adressefelters labels korrekt og bevarer acceptpayload", async () => {
     fixture.params = new URLSearchParams("token=fixture-accept");
     render(<AccepterPage />);

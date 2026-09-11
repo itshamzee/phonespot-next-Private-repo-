@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
+import { customerFacingError } from "@/lib/customer-facing-error";
 
 type PageState = "loading" | "form" | "success" | "error";
 
@@ -114,7 +115,16 @@ function AccepterContent() {
       setState("success");
     } catch (err) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Kunne ikke acceptere tilbud",
+        customerFacingError(
+          err,
+          "Kunne ikke acceptere tilbuddet. Prøv igen.",
+          [
+            "Navn og bankoplysninger er påkrævet",
+            "Adresse, postnummer og by er påkrævet",
+            "Token er ugyldigt eller udløbet",
+            "Tilbuddet er udløbet",
+          ],
+        ),
       );
       setState("error");
     } finally {
