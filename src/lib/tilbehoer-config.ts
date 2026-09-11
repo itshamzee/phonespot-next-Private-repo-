@@ -182,7 +182,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
       },
       {
         q: "Skiftes outlet-sortimentet?",
-        a: "Ja, vi opdaterer løbende outlet-sortimentet. Tilmeld dig vores nyhedsbrev for at få besked når nye tilbud er tilgængelige.",
+        a: "Ja, outlet-sortimentet ændrer sig løbende i takt med lageret.",
       },
     ],
   },

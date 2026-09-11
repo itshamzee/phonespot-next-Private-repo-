@@ -86,6 +86,18 @@ function storeHoursLine(hours: {
   return `Man–Fre ${compactHours(hours.weekdays)} · ${weekend}`;
 }
 
+function deviceDisplayName(brandName?: string, modelName?: string): string {
+  const brand = brandName?.trim() ?? "";
+  const model = modelName?.trim() ?? "";
+  if (!brand) return model;
+  if (!model) return brand;
+  return model.toLocaleLowerCase("da-DK").startsWith(
+    `${brand.toLocaleLowerCase("da-DK")} `,
+  )
+    ? model
+    : `${brand} ${model}`;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -277,7 +289,7 @@ function DeviceTabs({
               Enhed {i + 1}
               {model && (
                 <span className="font-normal opacity-80">
-                  — {brand?.name} {model.name}
+                  — {deviceDisplayName(brand?.name, model.name)}
                 </span>
               )}
             </button>
@@ -1351,7 +1363,7 @@ export function BookingWizard() {
                   return (
                     <div key={booking.id}>
                       <p className="text-xs font-bold text-green-eco">
-                        {brand?.name} {model?.name}
+                        {deviceDisplayName(brand?.name, model?.name)}
                       </p>
                       {deviceServices.map((s) => (
                         <div
@@ -1463,8 +1475,8 @@ export function BookingWizard() {
                             style={{ background: colorDot.hex }}
                           />
                         )}
-                        <p className="text-xs font-bold text-charcoal/70 uppercase tracking-wide">
-                          {brand?.name ?? "—"} {model?.name ?? ""}
+                        <p className="text-xs font-bold text-charcoal/70 tracking-wide">
+                          {deviceDisplayName(brand?.name, model?.name) || "—"}
                           {booking.color ? ` · ${booking.color}` : ""}
                         </p>
                       </div>
@@ -1820,7 +1832,7 @@ export function BookingWizard() {
 
           {/* All devices and their services */}
           <div className="rounded-xl bg-charcoal/[0.03] p-5 space-y-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray">
+            <p className="text-xs font-bold tracking-wide text-gray">
               {deviceBookings.length === 1 ? "Enhed" : "Enheder"}
             </p>
             {deviceBookings.map((booking, i) => {
@@ -1837,11 +1849,11 @@ export function BookingWizard() {
                 >
                   <p className="font-body text-base font-bold text-charcoal">
                     {deviceBookings.length > 1 && (
-                      <span className="mr-2 text-xs font-bold text-green-eco uppercase tracking-wide">
+                      <span className="mr-2 text-xs font-bold text-green-eco tracking-wide">
                         Enhed {i + 1}
                       </span>
                     )}
-                    {brand?.name} {model?.name}
+                    {deviceDisplayName(brand?.name, model?.name)}
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {deviceServices.map((s) => (
@@ -1893,7 +1905,7 @@ export function BookingWizard() {
           {/* Aflevering — butik og dato */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-charcoal/[0.03] p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray">
+              <p className="text-xs font-bold tracking-wide text-gray">
                 Butik
               </p>
               <p className="mt-1 font-body text-lg font-bold text-charcoal">
@@ -1909,7 +1921,7 @@ export function BookingWizard() {
               )}
             </div>
             <div className="rounded-xl bg-charcoal/[0.03] p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray">
+              <p className="text-xs font-bold tracking-wide text-gray">
                 Afleveringsdato
               </p>
               <p className="mt-1 font-body text-lg font-bold text-charcoal">
@@ -1920,7 +1932,7 @@ export function BookingWizard() {
 
           {/* Customer */}
           <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray">
+            <p className="mb-3 text-xs font-bold tracking-wide text-gray">
               Kontaktoplysninger
             </p>
             <dl className="space-y-2 text-sm">

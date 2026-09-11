@@ -38,4 +38,3 @@ it('clears every optional selection on model change and sends only the new SKU',
  fireEvent.click(screen.getByRole('button',{name:/Læg i kurv.*179 kr/}));
  expect(state.addSku).toHaveBeenCalledTimes(1);expect(state.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'other',price:17900}));
 });
-

@@ -64,6 +64,9 @@
   gap: 12px 22px;
   align-items: center;
 }
+.heroActions a:focus-visible {
+  outline-color: white;
+}
 .heroActions a:first-child {
   background: white;
   color: #1a3d2e;
