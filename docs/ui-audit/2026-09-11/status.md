@@ -12,7 +12,7 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Task 1: færdig og godkendt. Commits 729c6a2 + 0469fb3, dokumenteret i 21fa954. Desktop 1195/1440 og mobil 390/320 kontrolleret. Efter ejerens udtrykkelige eksportgodkendelse er forsiden sendt som draft PR #3: https://github.com/itshamzee/phonespot-next-Private-repo-/pull/3 . Ingen merge.
 - Task 2: færdig og godkendt. Commits 1a48f1d, a651198 og f4716c5. iPhones, iPads, bærbare, smartphones, smartwatches, fælles filtre/kort og bærbare prisniveauer. Filterdialogens breakpoint, fulde baggrundslås, fokusstyring og brandquery er rettet og genkontrolleret.
 - Task 3: færdig og godkendt i 836cca0, 1cd8eef og 635bf4f. Telefon- og laptopprodukt, variantvalg, galleri, batteri, køb, udsolgt, kategori-FAQ og korrekte standbilleder. Laptop viser nu grundpris, tilvalg og samlet pris med uændret kurvkontrakt. Opdigtede fallbackanmeldelser er fjernet.
-- Task 4: næste side er reparation, derefter modelvalg og booking. Task 5-8 er endnu ikke implementeret; detaljerede briefs er forberedt.
+- Task 4: færdig og godkendt i 5ff8ff9, 54b0d3f, 4816886 og 4a972d9. Reparationsforside, mærker/modeller, servicevalg, inline booking og booking med flere enheder. Task 5: næste side er Sælg din enhed. Task 6-8 er forberedt.
 - Ændringer efter forsiden er fortsat lokale. Main og produktionen er uændrede.
 
 ## Kontrol
@@ -39,3 +39,13 @@ Den godkendte selvstændige designreference er bevaret uændret.
 - Browser: telefon og laptop på desktop samt mobil 390/320, variantpris/batteri, udsolgt vare og alternativer, rigtige kategori-standfotos, metadata og tilvalgssum kontrolleret. Eksempel fra lokale QA-data: 5.199 + 400 + 300 = 5.899 kr.; Klarna-visningen er tydeligt afgrænset til grundprisen.
 - Eksisterende kort SSR-overgang til korrekt lagervariant er bevaret. Fuld suite/build køres igen på den færdige integration før næste eksport.
 - Den offentlige SKU-projektion for tilbehør undersøges og afgrænses i Task 6: indkøbspris og leverandør-id skal ikke serialiseres til klienten. Det er en snæver præsentationsgrænse; interne queries/admin og økonomiske beregninger bevares.
+
+
+## Reparationssidernes kontrol
+
+- 34/34 fokuserede tests, typecheck og målrettet lint bestået. Separat spec- og kvalitetsreview godkendt uden kritiske eller vigtige fund.
+- Browser:1195/390/320, søgning med tastatur, tomt modeludvalg, kvalitetsvalg, total, tilbage, flere enheder, butik og dato. Ingen rigtig booking eller betaling sendt.
+- Samme enhed kan vælge én kvalitet af samme reparation; andre reparationer og enheder bevares. Tilføj enhed går til modelvalg og aktiverer den nye enhed. Prisløse services henviser til kontakt.
+- Payload- og indsendelsesfunktionerne i begge bookingflows er uændrede; kun lokale valg, præsentation og navigation er rettet.
+- Et mistænkt inputproblem viste sig at være kontrolværktøjets skjulte telefon-/emailværdier. Den afsluttende oversigt bekræftede, at oplysningerne var bevaret. Der hævdes ikke en rettet inputfejl.
+- Mindre punkter til slutpolering: lys fokusmarkering på den grønne reparationshero og gentaget mærke/modelnavn i bookingoversigten.
