@@ -56,22 +56,22 @@ function getAvailableDates(count: number): string[] {
 const SERVICE_ICONS: Record<string, string> = {
   "skaermskift-original": "screen",
   "skaermskift-oem": "screen",
-  "skaermskift": "screen",
-  "batteriskift": "battery",
-  "opladerstik": "charging",
-  "bagkamera": "camera",
-  "frontkamera": "camera",
-  "bagglas": "glass",
-  "hoejttaler": "speaker",
-  "mikrofon": "mic",
+  skaermskift: "screen",
+  batteriskift: "battery",
+  opladerstik: "charging",
+  bagkamera: "camera",
+  frontkamera: "camera",
+  bagglas: "glass",
+  hoejttaler: "speaker",
+  mikrofon: "mic",
   "power-knap": "button",
-  "vibrator": "vibrator",
-  "diagnostik": "diagnostic",
-  "vandskade": "water",
+  vibrator: "vibrator",
+  diagnostik: "diagnostic",
+  vandskade: "water",
   "software-fejl": "software",
-  "tastatur": "keyboard",
-  "topcase": "topcase",
-  "blaeser": "fan",
+  tastatur: "keyboard",
+  topcase: "topcase",
+  blaeser: "fan",
   "termisk-pasta": "thermal",
   "hdmi-port": "hdmi",
   "controller-reparation": "controller",
@@ -135,9 +135,7 @@ function ServiceIcon({ slug }: { slug: string }) {
         <path d="M14 9l-2 2 4 4" />
       </>
     ),
-    water: (
-      <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
-    ),
+    water: <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />,
     keyboard: (
       <>
         <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -156,18 +154,14 @@ function ServiceIcon({ slug }: { slug: string }) {
         <path d="M12 9c0-3-2-6-6-6 0 4 2 6 6 6zM15 12c3 0 6-2 6-6-4 0-6 2-6 6zM12 15c0 3 2 6 6 6 0-4-2-6-6-6zM9 12c-3 0-6 2-6 6 4 0 6-2 6-6z" />
       </>
     ),
-    thermal: (
-      <path d="M14 4v10.54a4 4 0 11-4 0V4a2 2 0 014 0z" />
-    ),
+    thermal: <path d="M14 4v10.54a4 4 0 11-4 0V4a2 2 0 014 0z" />,
     vibrator: (
       <>
         <path d="M5 8l2-2 10 10-2 2z" />
         <path d="M19 4l1 1-2 2-1-1zM3 20l1 1 2-2-1-1z" strokeOpacity="0.5" />
       </>
     ),
-    software: (
-      <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
-    ),
+    software: <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />,
     topcase: (
       <>
         <path d="M4 5h16a1 1 0 011 1v10H3V6a1 1 0 011-1z" />
@@ -188,7 +182,13 @@ function ServiceIcon({ slug }: { slug: string }) {
 
   return (
     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-eco/10 text-green-eco">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        className="h-5 w-5"
+      >
         {paths[type] ?? paths.wrench}
       </svg>
     </div>
@@ -244,7 +244,8 @@ export function RepairCart({
   } | null>(null);
 
   /* Price formatter respecting moms toggle (display only — actual payment always inkl. moms) */
-  const fmtPrice = (dkk: number) => showExclMoms ? Math.round(dkk * 0.8) : dkk;
+  const fmtPrice = (dkk: number) =>
+    showExclMoms ? Math.round(dkk * 0.8) : dkk;
 
   /* Derived values */
   const selectedServices = services.filter((s) => selectedIds.has(s.id));
@@ -285,10 +286,12 @@ export function RepairCart({
         next.delete(id);
       } else {
         // If this service belongs to a grouped category, deselect others in that group
-        const service = services.find(s => s.id === id);
+        const service = services.find((s) => s.id === id);
         if (service) {
           const cat = service.service_category || service.name;
-          const siblings = services.filter(s => (s.service_category || s.name) === cat && s.id !== id);
+          const siblings = services.filter(
+            (s) => (s.service_category || s.name) === cat && s.id !== id,
+          );
           for (const sib of siblings) next.delete(sib.id);
         }
         next.add(id);
@@ -304,7 +307,8 @@ export function RepairCart({
     device_type: brandName,
     device_model: modelName,
     device_color: selectedColor || undefined,
-    issue_description: customer.description.trim() || `Booking via ${modelName} prisside`,
+    issue_description:
+      customer.description.trim() || `Booking via ${modelName} prisside`,
     service_type: selectedServices.map((s) => s.name).join(", "),
     selected_services: selectedServices.map((s) => ({
       id: s.id,
@@ -333,7 +337,10 @@ export function RepairCart({
       });
       const data = await res.json();
       if (!res.ok) {
-        setSubmitResult({ success: false, error: data.error ?? "Noget gik galt." });
+        setSubmitResult({
+          success: false,
+          error: data.error ?? "Noget gik galt.",
+        });
       } else {
         setSubmitResult({ success: true, ticketId: data.ticketId });
       }
@@ -355,12 +362,18 @@ export function RepairCart({
       });
       const data = await res.json();
       if (!res.ok) {
-        setSubmitResult({ success: false, error: data.error ?? "Noget gik galt." });
+        setSubmitResult({
+          success: false,
+          error: data.error ?? "Noget gik galt.",
+        });
         setIsSubmitting(false);
       } else if (data.invoiceUrl || data.url) {
         window.location.href = data.invoiceUrl || data.url;
       } else {
-        setSubmitResult({ success: false, error: "Kunne ikke starte betaling." });
+        setSubmitResult({
+          success: false,
+          error: "Kunne ikke starte betaling.",
+        });
         setIsSubmitting(false);
       }
     } catch {
@@ -432,28 +445,145 @@ export function RepairCart({
   /*  Main layout                                                      */
   /* ---------------------------------------------------------------- */
 
-  return <div className={styles.cart}>
-    <div className={styles.cartLayout}>
-      <div className={styles.servicesColumn}>
-        <fieldset className={styles.colors}><legend>Enhedens farve <span>(valgfrit)</span></legend><div>{DEVICE_COLORS.map(c => <button type="button" key={c.name} aria-pressed={selectedColor === c.name} onClick={() => setSelectedColor(selectedColor === c.name ? "" : c.name)}><span style={{ background: c.hex, border: c.border ? "1px solid #c8d0c9" : undefined }} />{c.name}</button>)}</div></fieldset>
-        <div className={styles.serviceHeading}><h2>Vælg reparation</h2><button type="button" aria-pressed={showExclMoms} aria-label="Vis priser ekskl. moms" onClick={() => setShowExclMoms(v => !v)}>{showExclMoms ? "Ekskl. moms" : "Inkl. moms"}<span aria-hidden="true"> ⇄</span></button></div>
-        <p className={styles.hint}>Vælg en reparation og eventuelt kvalitet på reservedelen.</p>
-        <div className={styles.serviceRows}>{grouped.map(([category, items], index) => {
-          const selected = items.find(item => selectedIds.has(item.id));
-          const isOpen = expandedCategory === category;
-          const prices = items.filter(item => item.price_dkk > 0).map(item => item.price_dkk);
-          if (items.length === 1) return <ServiceOption key={category} service={items[0]} selected={!!selected} onToggle={toggleService} formatPrice={fmtPrice} />;
-          return <section key={category} className={styles.serviceCategory}>
-            <h3><button type="button" className={styles.categoryToggle} aria-expanded={isOpen} aria-controls={"quality-" + index} onClick={() => setExpandedCategory(isOpen ? null : category)}><ServiceIcon slug={items[0].slug} /><span><strong>{category === "Skaerm" ? "Skærm" : category}</strong>{" "}<small>{selected ? "Valgt: " + repairServiceLabel(selected) : items.length + " kvaliteter"}</small></span><span className={styles.rowPrice}>{selected ? fmtPrice(selected.price_dkk) + " kr." : prices.length ? "Fra " + fmtPrice(Math.min(...prices)) + " kr." : "Pris på forespørgsel"}<small>{isOpen ? "Luk valg −" : "Vælg kvalitet +"}</small></span></button></h3>
-            {isOpen && <div id={"quality-" + index}>{items.map(service => <ServiceOption key={service.id} service={service} selected={selectedIds.has(service.id)} onToggle={toggleService} formatPrice={fmtPrice} tier />)}</div>}
-          </section>;
-        })}</div>
-        {services.length === 0 && <div className={styles.empty}><p>Priser kommer snart for denne model.</p><Link href="/kontakt">Kontakt os om reparation</Link></div>}
-        {services.length > 1 && <p className={styles.discountNote}>10% rabat ved 2 reparationer · 15% rabat ved 3 eller flere. Rabatten vises i din oversigt.</p>}
-        <p className={styles.hint}>Se garantioplysningerne ved den enkelte reparation. <Link href="/handelsbetingelser" className={styles.textLink}>Læs reparationsbetingelserne</Link></p>
-      </div>
-      <aside className={styles.cartAside} aria-label="Din reparationsoversigt">
-        {showBookingForm ? <BookingForm
+  return (
+    <div className={styles.cart}>
+      <div className={styles.cartLayout}>
+        <div className={styles.servicesColumn}>
+          <fieldset className={styles.colors}>
+            <legend>
+              Enhedens farve <span>(valgfrit)</span>
+            </legend>
+            <div>
+              {DEVICE_COLORS.map((c) => (
+                <button
+                  type="button"
+                  key={c.name}
+                  aria-pressed={selectedColor === c.name}
+                  onClick={() =>
+                    setSelectedColor(selectedColor === c.name ? "" : c.name)
+                  }
+                >
+                  <span
+                    style={{
+                      background: c.hex,
+                      border: c.border ? "1px solid #c8d0c9" : undefined,
+                    }}
+                  />
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <div className={styles.serviceHeading}>
+            <h2>Vælg reparation</h2>
+            <button
+              type="button"
+              aria-pressed={showExclMoms}
+              aria-label="Vis priser ekskl. moms"
+              onClick={() => setShowExclMoms((v) => !v)}
+            >
+              {showExclMoms ? "Ekskl. moms" : "Inkl. moms"}
+              <span aria-hidden="true"> ⇄</span>
+            </button>
+          </div>
+          <p className={styles.hint}>
+            Vælg en reparation og eventuelt kvalitet på reservedelen.
+          </p>
+          <div className={styles.serviceRows}>
+            {grouped.map(([category, items], index) => {
+              const selected = items.find((item) => selectedIds.has(item.id));
+              const isOpen = expandedCategory === category;
+              const prices = items
+                .filter((item) => item.price_dkk > 0)
+                .map((item) => item.price_dkk);
+              if (items.length === 1)
+                return (
+                  <ServiceOption
+                    key={category}
+                    service={items[0]}
+                    selected={!!selected}
+                    onToggle={toggleService}
+                    formatPrice={fmtPrice}
+                  />
+                );
+              return (
+                <section key={category} className={styles.serviceCategory}>
+                  <h3>
+                    <button
+                      type="button"
+                      className={styles.categoryToggle}
+                      aria-expanded={isOpen}
+                      aria-controls={"quality-" + index}
+                      onClick={() =>
+                        setExpandedCategory(isOpen ? null : category)
+                      }
+                    >
+                      <ServiceIcon slug={items[0].slug} />
+                      <span>
+                        <strong>
+                          {category === "Skaerm" ? "Skærm" : category}
+                        </strong>{" "}
+                        <small>
+                          {selected
+                            ? "Valgt: " + repairServiceLabel(selected)
+                            : items.length + " kvaliteter"}
+                        </small>
+                      </span>
+                      <span className={styles.rowPrice}>
+                        {selected
+                          ? fmtPrice(selected.price_dkk) + " kr."
+                          : prices.length
+                            ? "Fra " + fmtPrice(Math.min(...prices)) + " kr."
+                            : "Pris på forespørgsel"}
+                        <small>
+                          {isOpen ? "Luk valg −" : "Vælg kvalitet +"}
+                        </small>
+                      </span>
+                    </button>
+                  </h3>
+                  {isOpen && (
+                    <div id={"quality-" + index}>
+                      {items.map((service) => (
+                        <ServiceOption
+                          key={service.id}
+                          service={service}
+                          selected={selectedIds.has(service.id)}
+                          onToggle={toggleService}
+                          formatPrice={fmtPrice}
+                          tier
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+          {services.length === 0 && (
+            <div className={styles.empty}>
+              <p>Priser kommer snart for denne model.</p>
+              <Link href="/kontakt">Kontakt os om reparation</Link>
+            </div>
+          )}
+          {services.length > 1 && (
+            <p className={styles.discountNote}>
+              10% rabat ved 2 reparationer · 15% rabat ved 3 eller flere.
+              Rabatten vises i din oversigt.
+            </p>
+          )}
+          <p className={styles.hint}>
+            Se garantioplysningerne ved den enkelte reparation.{" "}
+            <Link href="/handelsbetingelser" className={styles.textLink}>
+              Læs reparationsbetingelserne
+            </Link>
+          </p>
+        </div>
+        <aside
+          className={styles.cartAside}
+          aria-label="Din reparationsoversigt"
+        >
+          {showBookingForm ? (
+            <BookingForm
               modelName={modelName}
               selectedServices={selectedServices}
               includesTemperedGlass={includesTemperedGlass}
@@ -478,35 +608,172 @@ export function RepairCart({
               onSubmitNoPay={handleSubmitNoPay}
               onSubmitAndPay={handleSubmitAndPay}
               showExclMoms={showExclMoms}
-            /> : <div className={styles.summary}>
-          <span className={styles.eyebrow}>Din reparation</span><h2>{modelName}</h2>{selectedColor && <p className={styles.hint}>{selectedColor}</p>}
-          {selectedServices.length === 0 ? <p className={styles.intro}>Vælg reparationer fra listen. Her ser du dine valg og den samlede pris.</p> : <>
-            <ul className={styles.summaryRows}>{selectedServices.map(service => <li key={service.id}><span>{repairServiceLabel(service)}</span><strong>{fmtPrice(service.price_dkk)} DKK</strong><button type="button" aria-label={"Fjern " + repairServiceLabel(service)} onClick={() => toggleService(service.id)}>×</button></li>)}</ul>
-            <button type="button" className={styles.glassOption} aria-pressed={includesTemperedGlass} onClick={() => setIncludesTemperedGlass(v => !v)}><span>{includesTemperedGlass ? "Valgt: " : "Tilføj "}beskyttelsesglas</span><strong>+99 DKK</strong></button>
-            {discountPercent > 0 && <div className={styles.summaryDiscount}><span>Rabat ({discountPercent}%)</span><strong>−{discountAmount} DKK</strong></div>}
-            <div className={styles.total}>{discountPercent > 0 && <p><span>Subtotal</span><span>{subtotal} DKK</span></p>}<div><span>Total</span><strong>{totalPrice} DKK</strong></div><small>Inkl. moms og reservedele</small></div>
-            <button type="button" className={styles.primaryButton} onClick={() => setShowBookingForm(true)}>Gå til booking</button>
-          </>}
-          <p className={styles.summaryHelp}>Spørg os, hvis du er i tvivl om fejlen eller reservedelen. <Link href="/kontakt">Kontakt os</Link></p>
-        </div>}
-      </aside>
+            />
+          ) : (
+            <div className={styles.summary}>
+              <span className={styles.eyebrow}>Din reparation</span>
+              <h2>{modelName}</h2>
+              {selectedColor && <p className={styles.hint}>{selectedColor}</p>}
+              {selectedServices.length === 0 ? (
+                <p className={styles.intro}>
+                  Vælg reparationer fra listen. Her ser du dine valg og den
+                  samlede pris.
+                </p>
+              ) : (
+                <>
+                  <ul className={styles.summaryRows}>
+                    {selectedServices.map((service) => (
+                      <li key={service.id}>
+                        <span>{repairServiceLabel(service)}</span>
+                        <strong>{fmtPrice(service.price_dkk)} DKK</strong>
+                        <button
+                          type="button"
+                          aria-label={"Fjern " + repairServiceLabel(service)}
+                          onClick={() => toggleService(service.id)}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className={styles.glassOption}
+                    aria-pressed={includesTemperedGlass}
+                    onClick={() => setIncludesTemperedGlass((v) => !v)}
+                  >
+                    <span>
+                      {includesTemperedGlass ? "Valgt: " : "Tilføj "}
+                      beskyttelsesglas
+                    </span>
+                    <strong>+99 DKK</strong>
+                  </button>
+                  {discountPercent > 0 && (
+                    <div className={styles.summaryDiscount}>
+                      <span>Rabat ({discountPercent}%)</span>
+                      <strong>−{discountAmount} DKK</strong>
+                    </div>
+                  )}
+                  <div className={styles.total}>
+                    {discountPercent > 0 && (
+                      <p>
+                        <span>Subtotal</span>
+                        <span>{subtotal} DKK</span>
+                      </p>
+                    )}
+                    <div>
+                      <span>Total</span>
+                      <strong>{totalPrice} DKK</strong>
+                    </div>
+                    <small>Inkl. moms og reservedele</small>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => setShowBookingForm(true)}
+                  >
+                    Gå til booking
+                  </button>
+                </>
+              )}
+              <p className={styles.summaryHelp}>
+                Spørg os, hvis du er i tvivl om fejlen eller reservedelen.{" "}
+                <Link href="/kontakt">Kontakt os</Link>
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
+      {selectedServices.length > 0 && !showBookingForm && (
+        <div className={styles.mobileTotal}>
+          <span>
+            {selectedServices.length} reparation
+            {selectedServices.length > 1 ? "er" : ""}
+            <strong>{totalPrice} DKK</strong>
+          </span>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={() => setShowBookingForm(true)}
+          >
+            Gå til booking
+          </button>
+        </div>
+      )}
     </div>
-    {selectedServices.length > 0 && !showBookingForm && <div className={styles.mobileTotal}><span>{selectedServices.length} reparation{selectedServices.length > 1 ? "er" : ""}<strong>{totalPrice} DKK</strong></span><button type="button" className={styles.primaryButton} onClick={() => setShowBookingForm(true)}>Gå til booking</button></div>}
-  </div>;
+  );
 }
 
-function ServiceOption({ service, selected, onToggle, formatPrice, tier = false }: { service: ServiceItem; selected: boolean; onToggle: (id: string) => void; formatPrice: (price: number) => number; tier?: boolean }) {
-  const tierName = service.quality_tier === "original" ? "Original" : service.quality_tier === "premium" ? "Premium" : service.quality_tier === "standard" ? "Standard" : service.name;
-  return <div className={styles.serviceOption} data-selected={selected}>
-    <div className={styles.serviceOptionTop}>
-      {!tier && <ServiceIcon slug={service.slug} />}
-      <div className={styles.serviceName}><h3>{tier ? tierName : service.name}</h3>{service.estimated_minutes != null && service.estimated_minutes > 0 && <small>Forventet tid: ca. {service.estimated_minutes} min.</small>}</div>
-      {service.price_dkk > 0 ? <button type="button" className={styles.chooseService} aria-label={"Vælg " + service.name + " til " + formatPrice(service.price_dkk) + " kr."} aria-pressed={selected} onClick={() => onToggle(service.id)}><strong>{formatPrice(service.price_dkk)} kr.</strong><span>{selected ? "Valgt −" : "Tilføj +"}</span></button> : <Link className={styles.unavailable} href="/kontakt" aria-label={"Kontakt os om " + service.name}>Pris på forespørgsel<span>Kontakt os →</span></Link>}
+function ServiceOption({
+  service,
+  selected,
+  onToggle,
+  formatPrice,
+  tier = false,
+}: {
+  service: ServiceItem;
+  selected: boolean;
+  onToggle: (id: string) => void;
+  formatPrice: (price: number) => number;
+  tier?: boolean;
+}) {
+  const tierName =
+    service.quality_tier === "original"
+      ? "Original"
+      : service.quality_tier === "premium"
+        ? "Premium"
+        : service.quality_tier === "standard"
+          ? "Standard"
+          : service.name;
+  return (
+    <div className={styles.serviceOption} data-selected={selected}>
+      <div className={styles.serviceOptionTop}>
+        {!tier && <ServiceIcon slug={service.slug} />}
+        <div className={styles.serviceName}>
+          <h3>{tier ? tierName : service.name}</h3>
+          {service.estimated_minutes != null &&
+            service.estimated_minutes > 0 && (
+              <small>Forventet tid: ca. {service.estimated_minutes} min.</small>
+            )}
+        </div>
+        {service.price_dkk > 0 ? (
+          <button
+            type="button"
+            className={styles.chooseService}
+            aria-label={
+              "Vælg " +
+              service.name +
+              " til " +
+              formatPrice(service.price_dkk) +
+              " kr."
+            }
+            aria-pressed={selected}
+            onClick={() => onToggle(service.id)}
+          >
+            <strong>{formatPrice(service.price_dkk)} kr.</strong>
+            <span>{selected ? "Valgt −" : "Tilføj +"}</span>
+          </button>
+        ) : (
+          <Link
+            className={styles.unavailable}
+            href="/kontakt"
+            aria-label={"Kontakt os om " + service.name}
+          >
+            Pris på forespørgsel<span>Kontakt os →</span>
+          </Link>
+        )}
+      </div>
+      {service.description && <p>{service.description}</p>}
+      {service.info_note && <p>{service.info_note}</p>}
+      {(service.includes || service.warranty_info) && (
+        <details className={styles.serviceDetails}>
+          <summary>Hvad er inkluderet?</summary>
+          {service.includes && <p>{service.includes}</p>}
+          {service.warranty_info && <p>{service.warranty_info}</p>}
+        </details>
+      )}
     </div>
-    {service.description && <p>{service.description}</p>}
-    {service.info_note && <p>{service.info_note}</p>}
-    {(service.includes || service.warranty_info) && <details className={styles.serviceDetails}><summary>Hvad er inkluderet?</summary>{service.includes && <p>{service.includes}</p>}{service.warranty_info && <p>{service.warranty_info}</p>}</details>}
-  </div>;
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -523,7 +790,12 @@ interface BookingFormProps {
   totalPrice: number;
   customer: { name: string; email: string; phone: string; description: string };
   setCustomer: React.Dispatch<
-    React.SetStateAction<{ name: string; email: string; phone: string; description: string }>
+    React.SetStateAction<{
+      name: string;
+      email: string;
+      phone: string;
+      description: string;
+    }>
   >;
   preferredDate: string;
   setPreferredDate: (d: string) => void;
@@ -568,11 +840,14 @@ function BookingForm({
   onSubmitAndPay,
   showExclMoms,
 }: BookingFormProps) {
-  const fmtPrice = (dkk: number) => showExclMoms ? Math.round(dkk * 0.8) : dkk;
+  const fmtPrice = (dkk: number) =>
+    showExclMoms ? Math.round(dkk * 0.8) : dkk;
   const availableDates = getAvailableDates(6);
   const formId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { headingRef.current?.focus(); }, []);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
   const inputClass =
     "mt-1 w-full rounded-xl border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray/50 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20";
 
@@ -580,7 +855,11 @@ function BookingForm({
     <div className={styles.bookingForm}>
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h3 ref={headingRef} tabIndex={-1} className="font-body text-lg font-bold text-charcoal">
+        <h3
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-body text-lg font-bold text-charcoal"
+        >
           Book reparation
         </h3>
         <button
@@ -593,7 +872,7 @@ function BookingForm({
       </div>
 
       {/* Order summary */}
-      <div className="mb-6 rounded-xl bg-charcoal/[0.03] p-4">
+      <div className={styles.bookingSummary}>
         <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray">
           {modelName}
         </p>
@@ -629,7 +908,10 @@ function BookingForm({
 
       {/* Error message */}
       {submitResult?.error && (
-        <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
           {submitResult.error}
         </div>
       )}
@@ -637,7 +919,12 @@ function BookingForm({
       {/* Form fields */}
       <div className="space-y-4">
         <div>
-          <label htmlFor={formId + "-name"} className="text-sm font-bold text-charcoal">Navn *</label>
+          <label
+            htmlFor={formId + "-name"}
+            className="text-sm font-bold text-charcoal"
+          >
+            Navn *
+          </label>
           <input
             id={formId + "-name"}
             autoComplete="name"
@@ -654,12 +941,17 @@ function BookingForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor={formId + "-email"} className="text-sm font-bold text-charcoal">Email *</label>
+            <label
+              htmlFor={formId + "-email"}
+              className="text-sm font-bold text-charcoal"
+            >
+              Email *
+            </label>
             <input
               id={formId + "-email"}
-            autoComplete="email"
-            required
-            type="email"
+              autoComplete="email"
+              required
+              type="email"
               placeholder="din@email.dk"
               value={customer.email}
               onChange={(e) =>
@@ -669,12 +961,17 @@ function BookingForm({
             />
           </div>
           <div>
-            <label htmlFor={formId + "-phone"} className="text-sm font-bold text-charcoal">Telefon *</label>
+            <label
+              htmlFor={formId + "-phone"}
+              className="text-sm font-bold text-charcoal"
+            >
+              Telefon *
+            </label>
             <input
               id={formId + "-phone"}
-            autoComplete="tel"
-            required
-            type="tel"
+              autoComplete="tel"
+              required
+              type="tel"
               placeholder="+45 XX XX XX XX"
               value={customer.phone}
               onChange={(e) =>
@@ -686,10 +983,14 @@ function BookingForm({
         </div>
 
         <div>
-          <label htmlFor={formId + "-description"} className="text-sm font-bold text-charcoal">
+          <label
+            htmlFor={formId + "-description"}
+            className="text-sm font-bold text-charcoal"
+          >
             Beskrivelse (valgfri)
           </label>
-          <textarea id={formId + "-description"}
+          <textarea
+            id={formId + "-description"}
             placeholder="Beskriv problemet kort..."
             rows={3}
             value={customer.description}
@@ -702,12 +1003,29 @@ function BookingForm({
 
         {/* Delivery method */}
         <div>
-          <label className="text-sm font-bold text-charcoal">Hvordan vil du levere? *</label>
+          <label className="text-sm font-bold text-charcoal">
+            Hvordan vil du levere? *
+          </label>
           <div className="mt-2 flex flex-col gap-2">
             {[
-              { value: "Slagelse", label: "Aflever i Slagelse", desc: STORES.slagelse.street, icon: "pin" },
-              { value: "Vejle", label: "Aflever i Vejle", desc: STORES.vejle.street, icon: "pin" },
-              { value: "Send ind", label: "Send ind", desc: "Gratis forsendelse", icon: "truck" },
+              {
+                value: "Slagelse",
+                label: "Aflever i Slagelse",
+                desc: STORES.slagelse.street,
+                icon: "pin",
+              },
+              {
+                value: "Vejle",
+                label: "Aflever i Vejle",
+                desc: STORES.vejle.street,
+                icon: "pin",
+              },
+              {
+                value: "Send ind",
+                label: "Send ind",
+                desc: "Gratis forsendelse",
+                icon: "truck",
+              },
             ].map((opt) => (
               <button
                 key={opt.value}
@@ -720,18 +1038,40 @@ function BookingForm({
                     : "border-soft-grey hover:border-green-eco/30"
                 }`}
               >
-                <span className={`mt-0.5 shrink-0 ${deliveryMethod === opt.value ? "text-green-eco" : "text-gray"}`}>
+                <span
+                  className={`mt-0.5 shrink-0 ${deliveryMethod === opt.value ? "text-green-eco" : "text-gray"}`}
+                >
                   {opt.icon === "pin" ? (
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5"><path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.274 1.765 11.604 11.604 0 00.757.433l.04.021.01.006.004.002zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" /></svg>
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.274 1.765 11.604 11.604 0 00.757.433l.04.021.01.006.004.002zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   ) : (
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5"><path d="M6.5 3c-1.051 0-2.093.04-3.125.117A1.49 1.49 0 002 4.607V10.5h-.5a.5.5 0 000 1H2v2.257a1.49 1.49 0 001.375 1.49A41.7 41.7 0 006.5 15.5c1.051 0 2.093-.04 3.125-.117A1.49 1.49 0 0011 13.893V11.5h1.256a1.5 1.5 0 001.32-.776l1.162-2.164c.201-.374.212-.825.03-1.21A1.203 1.203 0 0013.756 6.5H11V4.607a1.49 1.49 0 00-1.375-1.49A41.7 41.7 0 006.5 3zM16 10h.5a.5.5 0 010 1H16v2.257a3.49 3.49 0 01-1 2.464V17.5a.5.5 0 01-1 0v-1.07a42.19 42.19 0 01-3-.193V17.5a.5.5 0 01-1 0V16.1a42.19 42.19 0 01-3 .193V17.5a.5.5 0 01-1 0v-1.779a3.49 3.49 0 01-1-2.464V11h-.5a.5.5 0 010-1H5V4.607a3.49 3.49 0 011-2.464V.5a.5.5 0 011 0v1.07c.97-.067 1.983-.1 3-.1s2.03.033 3 .1V.5a.5.5 0 011 0v1.643a3.49 3.49 0 011 2.464V10z" /></svg>
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path d="M6.5 3c-1.051 0-2.093.04-3.125.117A1.49 1.49 0 002 4.607V10.5h-.5a.5.5 0 000 1H2v2.257a1.49 1.49 0 001.375 1.49A41.7 41.7 0 006.5 15.5c1.051 0 2.093-.04 3.125-.117A1.49 1.49 0 0011 13.893V11.5h1.256a1.5 1.5 0 001.32-.776l1.162-2.164c.201-.374.212-.825.03-1.21A1.203 1.203 0 0013.756 6.5H11V4.607a1.49 1.49 0 00-1.375-1.49A41.7 41.7 0 006.5 3zM16 10h.5a.5.5 0 010 1H16v2.257a3.49 3.49 0 01-1 2.464V17.5a.5.5 0 01-1 0v-1.07a42.19 42.19 0 01-3-.193V17.5a.5.5 0 01-1 0V16.1a42.19 42.19 0 01-3 .193V17.5a.5.5 0 01-1 0v-1.779a3.49 3.49 0 01-1-2.464V11h-.5a.5.5 0 010-1H5V4.607a3.49 3.49 0 011-2.464V.5a.5.5 0 011 0v1.07c.97-.067 1.983-.1 3-.1s2.03.033 3 .1V.5a.5.5 0 011 0v1.643a3.49 3.49 0 011 2.464V10z" />
+                    </svg>
                   )}
                 </span>
                 <div className="min-w-0">
-                  <p className={`text-sm font-bold leading-tight ${deliveryMethod === opt.value ? "text-green-eco" : "text-charcoal"}`}>
+                  <p
+                    className={`text-sm font-bold leading-tight ${deliveryMethod === opt.value ? "text-green-eco" : "text-charcoal"}`}
+                  >
                     {opt.label}
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-tight text-gray">{opt.desc}</p>
+                  <p className="mt-0.5 text-[11px] leading-tight text-gray">
+                    {opt.desc}
+                  </p>
                 </div>
               </button>
             ))}
@@ -759,7 +1099,9 @@ function BookingForm({
                           : "border-soft-grey hover:border-green-eco/30"
                       }`}
                     >
-                      <p className={`text-sm font-bold leading-tight ${isSelected ? "text-green-eco" : "text-charcoal"}`}>
+                      <p
+                        className={`text-sm font-bold leading-tight ${isSelected ? "text-green-eco" : "text-charcoal"}`}
+                      >
                         {store.city}
                       </p>
                       <p className="mt-0.5 text-[11px] leading-tight text-gray">
@@ -824,7 +1166,9 @@ function BookingForm({
           {/* Time slot picker — shown after date is selected */}
           {preferredDate && (
             <div className="mt-4">
-              <label className="text-sm font-bold text-charcoal">Vælg tidsinterval *</label>
+              <label className="text-sm font-bold text-charcoal">
+                Vælg tidsinterval *
+              </label>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
                   { value: "10:00-12:00", label: "10-12" },
@@ -843,7 +1187,9 @@ function BookingForm({
                         : "border-soft-grey hover:border-green-eco/30"
                     }`}
                   >
-                    <p className={`text-sm font-bold ${preferredTime === slot.value ? "text-green-eco" : "text-charcoal"}`}>
+                    <p
+                      className={`text-sm font-bold ${preferredTime === slot.value ? "text-green-eco" : "text-charcoal"}`}
+                    >
                       {slot.label}
                     </p>
                   </button>

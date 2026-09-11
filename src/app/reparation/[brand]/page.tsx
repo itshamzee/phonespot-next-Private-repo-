@@ -89,10 +89,62 @@ export default async function BrandPage({ params }: Props) {
     },
   };
 
-  return <div className={styles.shell}><JsonLd data={jsonLd} /><div className={styles.container}>
-    <nav className={styles.breadcrumb} aria-label="Brødkrumme"><ol><li><Link href="/">Forside</Link></li><li aria-hidden="true">/</li><li><Link href="/reparation">Reparation</Link></li><li aria-hidden="true">/</li><li aria-current="page">{brand.name}</li></ol></nav>
-    <header className={styles.header}><span className={styles.eyebrow}>Reparation · {brand.name}</span><h1>Vælg din {brand.name}-model.</h1><p>Find din model og se priser på de reparationer, vi tilbyder. Du vælger reparation og aflevering i næste trin.</p></header>
-    <section className={styles.section} aria-label="Vælg model"><ModelGrid models={modelCards} brandName={brand.name} /></section>
-    <section className={styles.help}><div><h2>Brug for hjælp til at vælge?</h2><p>Vi hjælper med at finde din model og den rette reparation. Garanti og forventet tidsforbrug står ved den enkelte service, når det er oplyst.</p><Link href="/kontakt">Kontakt os</Link></div><div className={styles.storeLinks}><Link href="/butik/vejle"><span><strong>Vejle</strong><small>Find vej og åbningstider</small></span><span aria-hidden="true">→</span></Link><Link href="/butik/slagelse"><span><strong>Slagelse</strong><small>Find vej og åbningstider</small></span><span aria-hidden="true">→</span></Link></div></section>
-  </div></div>;
+  return (
+    <div className={styles.shell}>
+      <JsonLd data={jsonLd} />
+      <div className={styles.container}>
+        <nav className={styles.breadcrumb} aria-label="Brødkrumme">
+          <ol>
+            <li>
+              <Link href="/">Forside</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/reparation">Reparation</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{brand.name}</li>
+          </ol>
+        </nav>
+        <header className={styles.header}>
+          <span className={styles.eyebrow}>Reparation · {brand.name}</span>
+          <h1>Vælg din {brand.name}-model.</h1>
+          <p>
+            Find din model og se priser på de reparationer, vi tilbyder. Du
+            vælger reparation og aflevering i næste trin.
+          </p>
+        </header>
+        <section className={styles.section} aria-label="Vælg model">
+          <ModelGrid models={modelCards} brandName={brand.name} />
+        </section>
+        <section className={styles.help}>
+          <div>
+            <h2>Brug for hjælp til at vælge?</h2>
+            <p>
+              Vi hjælper med at finde din model og den rette reparation. Garanti
+              og forventet tidsforbrug står ved den enkelte service, når det er
+              oplyst.
+            </p>
+            <Link href="/kontakt">Kontakt os</Link>
+          </div>
+          <div className={styles.storeLinks}>
+            <Link href="/butik/vejle">
+              <span>
+                <strong>Vejle</strong>
+                <small>Find vej og åbningstider</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/butik/slagelse">
+              <span>
+                <strong>Slagelse</strong>
+                <small>Find vej og åbningstider</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
