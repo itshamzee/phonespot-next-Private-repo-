@@ -31,8 +31,8 @@
 - [x] Task 4 — Repair landing then model/booking views: prominent device selection and store path, preserve submission and pricing.
 - [x] Task 5 — Buyback landing/steps: approved service identity, simpler visual hierarchy, preserve estimate/submit/accept/reject logic.
 - [x] Task 6 — Accessories and protection pages: same typography/cards and clear compatibility, no old homepage model-selector box, accessory-specific legal copy.
-- [ ] Task 7 — Store and trust/information pages: apply shared rhythm conservatively to stores, quality, warranty, contact and FAQ, preserving authoritative content.
-- [ ] Task 8 — Whole-branch integration review, mobile/desktop checks, build/tests, draft PR(s), morning handoff and list remaining pages honestly.
+- [x] Task 7 — Store and trust/information pages: apply shared rhythm conservatively to stores, quality, warranty, contact and FAQ, preserving authoritative content.
+- [ ] Task 8 — Technical integration, review, mobile/desktop checks, build/tests and handoff complete. Homepage draft PR #3 exists; seven further prepared draft PRs await explicit export approval.
 
 Each task after Task 1 gets its own detailed brief after reading that page's actual implementation. This is intentional page-by-page scoping, not permission to rewrite unrelated pages in parallel. Keep progress in `docs/ui-audit/2026-09-11/status.md` so an overnight continuation can resume safely.
 

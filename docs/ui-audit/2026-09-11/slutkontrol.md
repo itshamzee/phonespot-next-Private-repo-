@@ -81,3 +81,15 @@ Resultat: exit 0, intet output. `git diff --check` rapporterede ingen whitespace
 Selvreview af hele `d8ecc4d..61827e7`-området fandt én utilsigtet typografisk ændring i en åbningstidslabel; den blev gendannet før den afsluttende test/typecheck/lint-kørsel. Ingen andre scopeafvigelser blev fundet. Rootens tre dokumentændringer blev hverken staged eller ændret af denne implementering.
 
 Som aftalt er fuld suite, produktionsbuild og CUA/browser-QA ikke kørt her; root ejer de gates. Verifikationen brugte kun mocks/lokale komponenttests: ingen rigtige requests blev sendt, og intet tilbud blev accepteret eller afvist. De tidligere beskrevne eksterne forhold om billedrettigheder og live stagingdata er ikke ændret af denne rettelsesbølge.
+
+## Uafhængig kontrol af slutrettelser
+
+Den afgrænsede kontrol af d8ecc4d..61827e7 godkendte samtlige 12 fund som rettet. Ingen nye fejl eller observationer uden for rettelsen. Spec og kvalitet godkendt: routing, API-payloads, statusser og økonomiske beregninger er bevaret.
+
+Rootens efterfølgende fulde suite: `npx vitest run --maxWorkers=2`, exit 0, 105 testfiler, 720 bestået og én forventet credential-afhængig udeladelse; 81,88 sekunder. Ingen testgrænser eller tests er svækket.
+
+Målrettet browserkontrol efter rettelserne: bærbart produkt åbner korrekt fra udfyldt prisgruppe; 320 px uden horisontalt overløb; begge reparationslinks har synligt hvidt tastaturfokus; tomt modelvalg skaber ingen ugyldig aktiv reference og kan derefter vælge Apple; iPhone til 9.199 kr. viser kun den eksisterende Klarna-rate på 3.067 kr.; kurvtekster er neutrale og testkurven tømt; bookingnavnet viser iPhone 17 Pro uden gentaget mærke. Ingen rigtige indsendelser.
+
+Endelig produktionsbygning på den samme kildekode: `npm run build`, exit 0. Kompilering 26,8 sekunder, TypeScript bestået, 292/292 statiske sider genereret. Ingen udgivelse udført. Kendte eksisterende byggeadvarsler: flere lockfiler og den udfasede middleware-navnekonvention.
+
+Rootens særskilte `npx tsc --noEmit` efter bygningen sluttede også med exit 0 og intet output. Ingen kildekode blev ændret mellem den fulde suite, reviewet, bygningen og den afsluttende typekontrol.
