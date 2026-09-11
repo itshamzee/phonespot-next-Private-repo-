@@ -14,7 +14,12 @@ interface OfferData {
     name: string;
     email: string;
     phone: string;
-    device: { deviceType?: string; brand?: string; model?: string; storage?: string };
+    device: {
+      deviceType?: string;
+      brand?: string;
+      model?: string;
+      storage?: string;
+    };
     condition: Record<string, string>;
     deliveryMethod: string;
   };
@@ -22,7 +27,17 @@ interface OfferData {
 
 export default function AccepterPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-green-eco border-t-transparent" /></div>}>
+    <Suspense
+      fallback={
+        <div
+          role="status"
+          aria-label="Indlæser tilbud"
+          className="flex min-h-[40vh] items-center justify-center"
+        >
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-eco border-t-transparent" />
+        </div>
+      }
+    >
       <AccepterContent />
     </Suspense>
   );
@@ -48,7 +63,11 @@ function AccepterContent() {
   });
 
   useEffect(() => {
-    if (!token) { setState("error"); setErrorMsg("Ugyldigt link."); return; }
+    if (!token) {
+      setState("error");
+      setErrorMsg("Ugyldigt link.");
+      return;
+    }
 
     fetch(`/api/trade-in/offer-status?token=${token}`)
       .then(async (res) => {
@@ -63,12 +82,16 @@ function AccepterContent() {
         setForm((prev) => ({ ...prev, seller_name: data.prefill.name }));
         setState("form");
       })
-      .catch(() => { setState("error"); setErrorMsg("Kunne ikke indlæse tilbud."); });
+      .catch(() => {
+        setState("error");
+        setErrorMsg("Kunne ikke indlæse tilbud.");
+      });
   }, [token]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.confirmed || !form.seller_bank_reg || !form.seller_bank_account) return;
+    if (!form.confirmed || !form.seller_bank_reg || !form.seller_bank_account)
+      return;
 
     setSubmitting(true);
     try {
@@ -80,7 +103,8 @@ function AccepterContent() {
           ...form,
           // The column stays one field; the form just stopped asking for it
           // as one field.
-          seller_postal_city: `${form.seller_zipcode} ${form.seller_city}`.trim(),
+          seller_postal_city:
+            `${form.seller_zipcode} ${form.seller_city}`.trim(),
         }),
       });
       if (!res.ok) {
@@ -89,18 +113,25 @@ function AccepterContent() {
       }
       setState("success");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Kunne ikke acceptere tilbud");
+      setErrorMsg(
+        err instanceof Error ? err.message : "Kunne ikke acceptere tilbud",
+      );
       setState("error");
     } finally {
       setSubmitting(false);
     }
   }
 
-  const inputStyles = "w-full rounded-xl border border-soft-grey bg-white px-4 py-3.5 text-charcoal placeholder:text-gray/50 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20 transition-all";
+  const inputStyles =
+    "w-full rounded-md border border-soft-grey bg-white px-4 py-3.5 text-charcoal placeholder:text-gray/50 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20 transition-all";
 
   if (state === "loading") {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div
+        role="status"
+        aria-label="Indlæser tilbud"
+        className="flex min-h-[40vh] items-center justify-center"
+      >
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-eco border-t-transparent" />
       </div>
     );
@@ -108,12 +139,24 @@ function AccepterContent() {
 
   if (state === "error") {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-10">
-          <h1 className="font-display text-2xl font-bold text-charcoal">Tilbud ikke tilgængeligt</h1>
+      <div className="mx-auto max-w-lg px-4 py-10 text-center">
+        <div
+          role="alert"
+          className="rounded-xl border border-soft-grey bg-white p-6 sm:p-8"
+        >
+          <h1 className="font-body text-2xl font-semibold text-charcoal">
+            Tilbud ikke tilgængeligt
+          </h1>
           <p className="mt-4 text-gray">{errorMsg}</p>
           <p className="mt-6 text-sm text-gray">
-            Kontakt os på <a href="mailto:info@phonespot.dk" className="text-green-eco underline">info@phonespot.dk</a> for hjælp.
+            Kontakt os på{" "}
+            <a
+              href="mailto:info@phonespot.dk"
+              className="text-green-eco underline"
+            >
+              info@phonespot.dk
+            </a>{" "}
+            for hjælp.
           </p>
         </div>
       </div>
@@ -123,18 +166,30 @@ function AccepterContent() {
   if (state === "success") {
     const isInStore = offer?.prefill.deliveryMethod === "Aflever i butik";
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <div className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-lg shadow-green-eco/25">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-10 w-10">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      <div className="mx-auto max-w-lg px-4 py-10 text-center">
+        <div className="rounded-xl border border-green-eco/20 bg-[#eef0eb] p-6 sm:p-8">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-green-eco ">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth={2.5}
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h1 className="font-display text-2xl font-bold text-charcoal">Tilbud accepteret!</h1>
+          <h1 className="font-body text-2xl font-semibold text-charcoal">
+            Tilbud accepteret!
+          </h1>
           <p className="mt-4 text-gray">
             {isInStore
               ? "Vi kontakter dig med detaljer om aflevering i butikken."
-              : "Vi sender et gratis forsendelseslabel til din email inden for 24 timer."}
+              : "Vi sender en gratis forsendelseslabel og oplysninger om indsendelse til din email."}
           </p>
         </div>
       </div>
@@ -143,27 +198,42 @@ function AccepterContent() {
 
   // Form state
   const device = offer?.prefill.device;
-  const deviceLine = [device?.brand, device?.model, device?.storage].filter(Boolean).join(" · ");
+  const deviceLine = [device?.brand, device?.model, device?.storage]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-16">
+    <div className="mx-auto max-w-lg px-4 py-10">
       <div className="mb-8 text-center">
-        <h1 className="font-display text-3xl font-bold text-charcoal">Acceptér tilbud</h1>
-        <p className="mt-2 text-gray">Udfyld dine oplysninger for at acceptere</p>
+        <h1 className="font-body text-3xl font-semibold text-charcoal">
+          Acceptér tilbud
+        </h1>
+        <p className="mt-2 text-gray">
+          Udfyld dine oplysninger for at acceptere
+        </p>
       </div>
 
       {/* Offer summary */}
-      <div className="mb-8 rounded-2xl border border-green-eco/20 bg-green-eco/5 p-6 text-center">
+      <div className="mb-8 rounded-xl border border-green-eco/20 bg-[#eef0eb] p-6 text-center">
         <p className="text-sm text-gray">{deviceLine}</p>
-        <p className="mt-2 font-display text-4xl font-bold text-charcoal">
+        <p className="mt-2 font-body text-4xl font-semibold text-charcoal">
           {offer ? formatDKK(offer.offer_amount) : ""}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 rounded-xl border border-soft-grey bg-white p-6 sm:p-8"
+      >
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-charcoal">Fulde navn *</label>
+          <label
+            htmlFor="seller_name"
+            className="text-sm font-semibold text-charcoal"
+          >
+            Fulde navn *
+          </label>
           <input
+            id="seller_name"
             type="text"
             required
             value={form.seller_name}
@@ -173,13 +243,21 @@ function AccepterContent() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-charcoal">Adresse</label>
+          <label
+            htmlFor="seller_address"
+            className="text-sm font-semibold text-charcoal"
+          >
+            Adresse
+          </label>
           <input
+            id="seller_address"
             type="text"
             required
             placeholder="Gadenavn og nr."
             value={form.seller_address}
-            onChange={(e) => setForm({ ...form, seller_address: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, seller_address: e.target.value })
+            }
             className={inputStyles}
           />
         </div>
@@ -189,8 +267,14 @@ function AccepterContent() {
             fragtlabel cannot be produced from that. */}
         <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-charcoal">Postnr.</label>
+            <label
+              htmlFor="seller_zipcode"
+              className="text-sm font-semibold text-charcoal"
+            >
+              Postnr.
+            </label>
             <input
+              id="seller_zipcode"
               type="text"
               required
               inputMode="numeric"
@@ -200,19 +284,30 @@ function AccepterContent() {
               title="Fire cifre, f.eks. 4200"
               value={form.seller_zipcode}
               onChange={(e) =>
-                setForm({ ...form, seller_zipcode: e.target.value.replace(/\D/g, "").slice(0, 4) })
+                setForm({
+                  ...form,
+                  seller_zipcode: e.target.value.replace(/\D/g, "").slice(0, 4),
+                })
               }
               className={inputStyles}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-charcoal">By</label>
+            <label
+              htmlFor="seller_city"
+              className="text-sm font-semibold text-charcoal"
+            >
+              By
+            </label>
             <input
+              id="seller_city"
               type="text"
               required
               placeholder="Slagelse"
               value={form.seller_city}
-              onChange={(e) => setForm({ ...form, seller_city: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, seller_city: e.target.value })
+              }
               className={inputStyles}
             />
           </div>
@@ -222,32 +317,58 @@ function AccepterContent() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-charcoal">Reg.nr. *</label>
+            <label
+              htmlFor="seller_bank_reg"
+              className="text-sm font-semibold text-charcoal"
+            >
+              Reg.nr. *
+            </label>
             <input
+              id="seller_bank_reg"
               type="text"
               required
               placeholder="4-cifret"
               maxLength={4}
               value={form.seller_bank_reg}
-              onChange={(e) => setForm({ ...form, seller_bank_reg: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  seller_bank_reg: e.target.value
+                    .replace(/\D/g, "")
+                    .slice(0, 4),
+                })
+              }
               className={inputStyles}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-charcoal">Kontonr. *</label>
+            <label
+              htmlFor="seller_bank_account"
+              className="text-sm font-semibold text-charcoal"
+            >
+              Kontonr. *
+            </label>
             <input
+              id="seller_bank_account"
               type="text"
               required
               placeholder="Op til 10 cifre"
               maxLength={10}
               value={form.seller_bank_account}
-              onChange={(e) => setForm({ ...form, seller_bank_account: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  seller_bank_account: e.target.value
+                    .replace(/\D/g, "")
+                    .slice(0, 10),
+                })
+              }
               className={inputStyles}
             />
           </div>
         </div>
 
-        <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-soft-grey p-4 transition-colors hover:border-green-eco/30">
+        <label className="flex items-start gap-3 cursor-pointer rounded-md border border-soft-grey p-4 transition-colors hover:border-green-eco/30">
           <input
             type="checkbox"
             checked={form.confirmed}
@@ -255,14 +376,20 @@ function AccepterContent() {
             className="mt-0.5 h-5 w-5 rounded border-gray accent-green-eco"
           />
           <span className="text-sm text-charcoal">
-            Jeg bekræfter at enheden er min ejendom og ikke er stjålet eller pansat.
+            Jeg bekræfter at enheden er min ejendom og ikke er stjålet eller
+            pansat.
           </span>
         </label>
 
         <button
           type="submit"
-          disabled={!form.confirmed || !form.seller_bank_reg || !form.seller_bank_account || submitting}
-          className="w-full rounded-xl bg-green-eco px-6 py-4 font-display text-lg font-bold text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={
+            !form.confirmed ||
+            !form.seller_bank_reg ||
+            !form.seller_bank_account ||
+            submitting
+          }
+          className="w-full rounded-md bg-green-eco px-6 py-4 font-body text-base font-semibold text-white transition-all hover:bg-green-eco/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? "Sender..." : "Acceptér tilbud"}
         </button>
