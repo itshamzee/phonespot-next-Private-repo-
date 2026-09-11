@@ -243,6 +243,9 @@ export async function searchProducts(query: string): Promise<{
       .limit(20),
   ]);
 
+  if (templatesRes.error) throw templatesRes.error;
+  if (skuRes.error) throw skuRes.error;
+
   return {
     templates: templatesRes.data || [],
     skuProducts: skuRes.data || [],

@@ -43,6 +43,14 @@
 .rows > div { padding-block: 22px; border-bottom: 1px solid #dce1db; }
 .rows p { margin: 0; color: #626a65; }
 .jumpLinks { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 22px; }
+.searchForm { max-width: 700px; margin-top: 24px; }
+.searchForm label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.searchForm > div { display: flex; gap: 10px; }
+.searchForm input { min-width: 0; flex: 1; border: 1px solid #dce1db; background: white; border-radius: 8px; padding: 12px 14px; font-size: 16px; }
+.results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.results h3 { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: normal; margin: 0; }
+@media (max-width: 1023px) { .results { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 419px) { .results { grid-template-columns: 1fr; } }
 @media (max-width: 700px) {
   .container { width: calc(100% - 32px); }
   .grid, .services { grid-template-columns: 1fr; }

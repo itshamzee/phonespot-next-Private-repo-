@@ -18,6 +18,7 @@ function getConditionGrade(tags: string[]): "N" | "P" | "A" | "B" | "C" | null {
 type ProductCardProps = {
   product: Product;
   collectionHandle?: string;
+  href?: string;
 };
 
 function getSavingsPercent(price: string, compareAt: string | null): number | null {
@@ -31,6 +32,7 @@ function getSavingsPercent(price: string, compareAt: string | null): number | nu
 export function ProductCard({
   product,
   collectionHandle = "iphones",
+  href,
 }: ProductCardProps) {
   const grade = getConditionGrade(product.tags);
   const image = product.images[0];
@@ -40,7 +42,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/${collectionHandle}/${product.handle}`}
+      href={href ?? `/${collectionHandle}/${product.handle}`}
       className="group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white transition-shadow hover:shadow-md"
     >
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-[16px]" />
