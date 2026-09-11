@@ -72,3 +72,4 @@ expect(screen.getByRole('link', { name: /Se vores bærbare/i })).toHaveAttribute
 ```
 
 Use the actual resulting accessible labels consistently in tests. Do not weaken tests to conceal missing functionality. The visual reference is the authority for composition; existing business behavior is the authority for integration.
+
