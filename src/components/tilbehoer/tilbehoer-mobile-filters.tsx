@@ -245,11 +245,11 @@ export function TilbehoerMobileFilters({
             {/* Category navigation */}
             <div className="py-4 border-b border-sand/60">
               <p className="mb-2.5 font-body text-sm font-bold text-charcoal">Kategori</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => handleCategoryPill("alle")}
-                  className={`inline-flex h-9 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors ${
+                  className={`inline-flex min-h-10 min-w-0 items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                     activeCategory === ""
                       ? "bg-green-eco text-white"
                       : "border border-sand bg-white text-charcoal"
@@ -262,7 +262,7 @@ export function TilbehoerMobileFilters({
                     key={cat.slug}
                     type="button"
                     onClick={() => handleCategoryPill(cat.slug)}
-                    className={`inline-flex h-9 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors ${
+                    className={`inline-flex min-h-10 min-w-0 items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                       activeCategory === cat.slug
                         ? "bg-green-eco text-white"
                         : "border border-sand bg-white text-charcoal"

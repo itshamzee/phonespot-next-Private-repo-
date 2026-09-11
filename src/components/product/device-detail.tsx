@@ -6,8 +6,9 @@ import Link from "next/link";
 import type {
   ProductTemplate,
   Device,
-  SkuProduct,
 } from "@/lib/supabase/platform-types";
+import type { PublicSkuProduct } from "@/lib/product/public-sku";
+import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { useCart } from "@/components/cart/cart-context";
 import { GradeSelector } from "./grade-selector";
 import { StorageSelector } from "./storage-selector";
@@ -69,7 +70,7 @@ export type PublicDevice = Pick<
 type DeviceDetailProps = {
   template: ProductTemplate;
   devices: PublicDevice[];
-  accessories: SkuProduct[];
+  accessories: PublicSkuProduct[];
   /** In-stock same-category models, shown when this model is fully sold out. */
   relatedInStock?: RelatedInStockProduct[];
   /** RAM/SSD-opgraderingstilvalg (kun laptops). */
@@ -1029,7 +1030,7 @@ export function DeviceDetail({
               .map((acc) => (
                 <Link
                   key={acc.id}
-                  href={`/tilbehoer/${acc.category ?? ""}/${acc.slug}`}
+                  href={`/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[acc.subcategory ?? ""] ?? "covers"}/${acc.slug}`}
                   className={styles.accessory}
                 >
                   <div className={styles.accessoryImage}>

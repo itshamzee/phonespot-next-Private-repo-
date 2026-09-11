@@ -14,6 +14,7 @@ import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-a
 
 export const revalidate = 60;
 import type { Product } from "@/lib/shopify/types";
+import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import { DeviceDetail } from "@/components/product/device-detail";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
@@ -380,7 +381,7 @@ export default async function ProductPage({
           <DeviceDetail
             template={template}
             devices={availableDevices}
-            accessories={accessories}
+            accessories={accessories.map(toPublicSkuProduct)}
             relatedInStock={relatedInStock}
           />
         </section>

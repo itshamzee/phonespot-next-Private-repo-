@@ -9,6 +9,7 @@ import {
   getPublishedTemplates,
   getUpgradeOptionsForTemplate,
 } from "@/lib/supabase/product-queries";
+import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import { DeviceDetail } from "@/components/product/device-detail";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -249,7 +250,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
         <DeviceDetail
           template={template}
           devices={availableDevices}
-          accessories={accessories}
+          accessories={accessories.map(toPublicSkuProduct)}
           relatedInStock={relatedInStock}
           upgradeOptions={upgradeOptions}
         />

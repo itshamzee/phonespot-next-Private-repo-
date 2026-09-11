@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
 import { getAccessoryBySlug } from "@/lib/supabase/accessories";
 import { createServerClient } from "@/lib/supabase/client";
+import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { getCategoryConfig } from "@/lib/tilbehoer-config";
 import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@/components/product/accessory-detail";
@@ -151,19 +152,20 @@ export default async function AccessoryDetailPage({ params }: Props) {
   // ----------------------------------------------------------------
   // 2. Stock quantity (with per-location data)
   // ----------------------------------------------------------------
-  const { data: stockRows } = await supabase
+  const { data: stockRows, error: stockError } = await supabase
     .from("sku_stock")
     .select("quantity, location:locations(id, name, type)")
     .eq("product_id", product.id);
 
   const stockQuantity: number | null =
-    stockRows && stockRows.length > 0
-      ? stockRows.reduce((sum: number, row: any) => sum + (row.quantity ?? 0), 0)
+    !stockError && stockRows
+      ? stockRows.reduce((sum: number, row: { quantity: number }) => sum + Math.max(0, row.quantity ?? 0), 0)
       : null;
 
-  const storeStockLocations: string[] = (stockRows ?? [])
-    .filter((r: any) => r.location?.type === "store" && (r.quantity ?? 0) > 0)
-    .map((r: any) => r.location.name as string);
+  const stockLocations = (stockError ? [] : stockRows ?? []) as unknown as {quantity:number;location:{name:string;type:string}|null}[];
+  const storeStockLocations: string[] = stockLocations
+    .filter(r => r.location?.type === "store" && r.quantity > 0)
+    .flatMap(r => r.location ? [r.location.name] : []);
 
   // ----------------------------------------------------------------
   // 3. Cross-sell products — share at least one template, different category
@@ -280,7 +282,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
-      { "@type": "ListItem", position: 2, name: "Tilbehoer", item: "https://phonespot.dk/tilbehoer" },
+      { "@type": "ListItem", position: 2, name: "Tilbehør", item: "https://phonespot.dk/tilbehoer" },
       {
         "@type": "ListItem",
         position: 3,
@@ -323,9 +325,9 @@ export default async function AccessoryDetailPage({ params }: Props) {
       priceCurrency: "DKK",
       price: (price / 100).toFixed(2),
       availability:
-        stockQuantity === null || stockQuantity > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+        (stockQuantity ?? 0) > 0 ? "https://schema.org/InStock"
+          : product.always_in_stock ? "https://schema.org/BackOrder"
+          : stockQuantity === null ? undefined : "https://schema.org/OutOfStock",
       itemCondition: ITEM_CONDITION.NEW,
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
@@ -369,29 +371,29 @@ export default async function AccessoryDetailPage({ params }: Props) {
       <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={productJsonLd} />
 
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-[1280px] px-5 py-6 font-body sm:px-9">
         {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-sm text-charcoal/50" aria-label="Breadcrumb">
+        <nav className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-charcoal/60" aria-label="Brødkrumme">
           <Link href="/" className="hover:text-charcoal transition-colors">
             Forside
           </Link>
           <span aria-hidden="true">/</span>
           <Link href="/tilbehoer" className="hover:text-charcoal transition-colors">
-            Tilbehoer
+            Tilbehør
           </Link>
           <span aria-hidden="true">/</span>
           <Link href={`/tilbehoer/${category}`} className="hover:text-charcoal transition-colors">
             {catConfig?.label ?? category}
           </Link>
           <span aria-hidden="true">/</span>
-          <span className="text-charcoal truncate max-w-[200px] sm:max-w-none">
+          <span className="min-w-0 basis-full truncate text-charcoal sm:basis-auto sm:max-w-[50%]">
             {product.title}
           </span>
         </nav>
 
         {/* Product detail */}
         <AccessoryDetail
-          product={product}
+          product={toPublicSkuProduct(product)}
           compatibleDevices={compatibleDevices}
           crossSellProducts={crossSellProducts}
           stockQuantity={stockQuantity}
@@ -402,7 +404,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
 
         {/* Trustpilot reviews — async server component via Suspense */}
         <div className="mt-12">
-          <h2 className="mb-6 font-display text-xl font-bold text-charcoal">
+          <h2 className="mb-6 font-body text-xl font-bold text-charcoal">
             Anmeldelser fra vores kunder
           </h2>
           <Suspense

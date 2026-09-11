@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { SkuProduct } from "@/lib/supabase/platform-types";
+import type { PublicSkuProduct } from "@/lib/product/public-sku";
+import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { useCart } from "@/components/cart/cart-context";
 import type { ColorSibling } from "@/lib/product-color-siblings";
 
@@ -28,7 +29,7 @@ export interface CompatibleDevice {
 }
 
 type AccessoryDetailProps = {
-  product: SkuProduct;
+  product: PublicSkuProduct;
   compatibleDevices?: CompatibleDevice[];
   crossSellProducts?: CrossSellProduct[];
   stockQuantity?: number | null;
@@ -102,39 +103,8 @@ function CheckIcon({ className }: { className?: string }) {
   );
 }
 
-function StockIndicator({ quantity }: { quantity: number | null | undefined }) {
-  if (quantity === null || quantity === undefined) {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-green-500" />
-        <span className="text-sm font-medium text-green-700">På lager</span>
-      </div>
-    );
-  }
-  if (quantity <= 0) {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-red-400" />
-        <span className="text-sm font-medium text-red-600">Udsolgt</span>
-      </div>
-    );
-  }
-  if (quantity < 5) {
-    return (
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-amber-400" />
-        <span className="text-sm font-medium text-amber-700">
-          Kun {quantity} på lager
-        </span>
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="h-2 w-2 rounded-full bg-green-500" />
-      <span className="text-sm font-medium text-green-700">På lager</span>
-    </div>
-  );
+function StockIndicator({ label }: {label:string}) {
+  return <p className="text-sm font-medium text-charcoal/70">{label}</p>;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,14 +144,16 @@ function ImageGallery({
   const displayedImage = overrideImage ?? images[mainIndex] ?? null;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex min-w-0 flex-col-reverse gap-3 sm:flex-row lg:col-start-1 lg:row-start-1 lg:row-span-2">
       {/* Thumbnails — left column */}
       {images.length > 1 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-2 overflow-x-auto sm:flex-col">
           {images.map((img, i) => (
             <button
               key={i}
               type="button"
+              aria-label={`Vis billede ${i + 1}`}
+              aria-pressed={!overrideImage && i === mainIndex}
               onClick={() => handleThumbnailClick(i)}
               className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
                 !overrideImage && i === mainIndex
@@ -204,7 +176,7 @@ function ImageGallery({
       {/* Main image with zoom */}
       <div
         ref={imgContainerRef}
-        className="relative flex-1 aspect-square overflow-hidden rounded-2xl bg-cream cursor-zoom-in"
+        className="relative min-w-0 flex-1 aspect-square overflow-hidden rounded-2xl bg-[#f4f5f2] cursor-zoom-in"
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
         onMouseMove={handleMouseMove}
@@ -258,7 +230,7 @@ function AddToCartButton({
   fullWidth = true,
   label = "Tilføj til kurv",
 }: {
-  product: SkuProduct;
+  product: PublicSkuProduct;
   effectivePrice: number;
   selectedVariants?: Record<string, string>;
   variantImage?: string | null;
@@ -295,7 +267,7 @@ function AddToCartButton({
       type="button"
       onClick={handleAddToCart}
       disabled={disabled || added}
-      className={`flex items-center justify-center gap-2 rounded-full bg-green-eco px-6 py-3.5 text-base font-bold text-white transition-all hover:bg-green-eco/90 active:scale-[0.98] disabled:opacity-60 ${
+      className={`flex items-center justify-center gap-2 rounded-lg bg-[#1A3D2E] px-6 py-3.5 text-base font-bold text-white transition-all hover:bg-green-eco/90 active:scale-[0.98] disabled:opacity-60 ${
         fullWidth ? "w-full" : ""
       }`}
     >
@@ -332,7 +304,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
   }
 
   const href = product.slug
-    ? `/tilbehoer/${product.category ?? "covers"}/${product.slug}`
+    ? `/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[product.subcategory ?? ""] ?? "covers"}/${product.slug}`
     : "#";
 
   return (
@@ -394,12 +366,16 @@ function StickyMobileCta({
   selectedVariants,
   variantImageOverride,
   ctaRef,
+  canBuy,
+  stockLabel,
 }: {
-  product: SkuProduct;
+  product: PublicSkuProduct;
   effectivePrice: number;
   selectedVariants: Record<string, string>;
   variantImageOverride: string | null;
   ctaRef: React.RefObject<HTMLDivElement | null>;
+  canBuy: boolean;
+  stockLabel: string;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -430,6 +406,7 @@ function StickyMobileCta({
           <p className="text-base font-bold text-green-eco">
             {formatDKK(effectivePrice)}
           </p>
+          <p className="text-xs text-charcoal/60">{stockLabel}</p>
         </div>
         <AddToCartButton
           product={product}
@@ -437,7 +414,8 @@ function StickyMobileCta({
           selectedVariants={selectedVariants}
           variantImage={variantImageOverride}
           fullWidth={false}
-          label="Tilføj til kurv"
+          disabled={!canBuy}
+          label={canBuy ? "Tilføj til kurv" : stockLabel}
         />
       </div>
     </div>
@@ -470,14 +448,14 @@ function CompatibilitySection({ devices }: { devices: CompatibleDevice[] }) {
 
   return (
     <section id="compatibility">
-      <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
+      <h2 className="mb-4 font-body text-xl font-bold text-charcoal">
         Kompatibel med
       </h2>
       <div className="rounded-[16px] border border-sand bg-white overflow-hidden">
         <div className="divide-y divide-sand">
           {brandOrder.map((brand) => (
             <div key={brand} className="px-6 py-4">
-              <p className="font-display text-xs font-bold uppercase tracking-wider text-charcoal/40 mb-1.5">
+              <p className="font-body text-xs font-bold tracking-normal text-charcoal/40 mb-1.5">
                 {brand}
               </p>
               <p className="text-sm text-charcoal/70">
@@ -507,6 +485,9 @@ export function AccessoryDetail({
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+
+  const canBuy = (stockQuantity ?? 0) > 0 || product.always_in_stock;
+  const stockLabel = (stockQuantity ?? 0) > 0 ? "På lager" : product.always_in_stock ? "Kan bestilles" : stockQuantity == null ? "Lagerstatus ukendt" : "Udsolgt";
 
   // Compute effective price from selected variant options
   let effectivePrice = product.sale_price ?? product.selling_price;
@@ -551,11 +532,11 @@ export function AccessoryDetail({
   })();
 
   return (
-    <>
+    <div className="font-body text-charcoal">
       {/* ================================================================
           Hero grid
       ================================================================ */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[55%_45%]">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-5">
         {/* Left — image gallery */}
         <ImageGallery
           images={product.images}
@@ -565,29 +546,12 @@ export function AccessoryDetail({
         />
 
         {/* Right — product info */}
-        <div className="flex flex-col gap-5">
-          {/* Brand + title */}
-          <div>
-            {product.brand && (
-              <p className="text-xs font-semibold uppercase tracking-widest text-charcoal/40">
-                {product.brand}
-              </p>
-            )}
-            <h1 className="mt-1 font-display text-2xl font-bold text-charcoal leading-tight">
-              {product.title}
-            </h1>
-            {product.short_description && (
-              <p className="mt-2 text-base text-charcoal/70 leading-relaxed">
-                {product.short_description}
-              </p>
-            )}
-          </div>
-
+        <div className="min-w-0 flex flex-col gap-5 lg:col-start-2 lg:row-start-2">
           {/* Price */}
           <div>
             {hasSale ? (
               <div className="flex items-baseline gap-3">
-                <span className="font-display text-3xl font-bold text-red-600">
+                <span className="font-body text-3xl font-bold text-red-600">
                   {formatDKK(effectivePrice)}
                 </span>
                 <span className="text-lg text-charcoal/40 line-through">
@@ -595,7 +559,7 @@ export function AccessoryDetail({
                 </span>
               </div>
             ) : (
-              <span className="font-display text-3xl font-bold text-green-eco">
+              <span className="font-body text-3xl font-bold text-green-eco">
                 {formatDKK(effectivePrice)}
               </span>
             )}
@@ -643,7 +607,9 @@ export function AccessoryDetail({
                     }`}
                   >
                     {sib.image ? (
-                      <img
+                      <Image
+                        width={32}
+                        height={32}
                         src={sib.image}
                         alt={sib.colorLabel}
                         className="h-8 w-8 rounded-lg object-cover"
@@ -665,15 +631,15 @@ export function AccessoryDetail({
           {product.variants.map((variant) => {
             const isColor = isColorVariant(variant.name);
             return (
-              <div key={variant.name}>
-                <p className="mb-2 text-sm font-bold text-charcoal">
+              <fieldset key={variant.name}>
+                <legend className="mb-2 text-sm font-bold text-charcoal">
                   {variant.name}
                   {selectedVariants[variant.name] && (
                     <span className="ml-2 font-normal text-charcoal/50">
                       — {selectedVariants[variant.name]}
                     </span>
                   )}
-                </p>
+                </legend>
                 <div className="flex flex-wrap gap-2">
                   {variant.options.map((opt) => {
                     const isSelected = selectedVariants[variant.name] === opt.value;
@@ -685,6 +651,8 @@ export function AccessoryDetail({
                           key={opt.value}
                           type="button"
                           title={opt.value}
+                          aria-label={opt.value}
+                          aria-pressed={isSelected}
                           onClick={() => {
                             const newValue = isSelected ? "" : opt.value;
                             setSelectedVariants((prev) => ({
@@ -715,6 +683,7 @@ export function AccessoryDetail({
                       <button
                         key={opt.value}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => {
                           const newValue = isSelected ? "" : opt.value;
                           setSelectedVariants((prev) => ({
@@ -740,7 +709,7 @@ export function AccessoryDetail({
                     );
                   })}
                 </div>
-              </div>
+              </fieldset>
             );
           })}
 
@@ -748,8 +717,8 @@ export function AccessoryDetail({
           <div ref={ctaRef} className="rounded-2xl border border-sand bg-white p-5">
             {/* Stock */}
             <div className="mb-4">
-              <StockIndicator quantity={stockQuantity} />
-              {(stockQuantity === null || stockQuantity === undefined || stockQuantity > 0) && storeStockLocations.length > 0 && (
+              <StockIndicator label={stockLabel} />
+              {(stockQuantity ?? 0) > 0 && storeStockLocations.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {storeStockLocations.map((name) => (
                     <span
@@ -773,7 +742,8 @@ export function AccessoryDetail({
               effectivePrice={effectivePrice}
               selectedVariants={selectedVariants}
               variantImage={variantImageOverride}
-              disabled={stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 0}
+              disabled={!canBuy}
+              label={canBuy ? "Tilføj til kurv" : stockLabel}
             />
 
             {/* Trust strip */}
@@ -839,7 +809,7 @@ export function AccessoryDetail({
         {/* 1. Produktdetaljer — attributes grid */}
         {attributeEntries.length > 0 && (
           <section>
-            <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
+            <h2 className="mb-4 font-body text-xl font-bold text-charcoal">
               Produktdetaljer
             </h2>
             <div className="rounded-[16px] border border-sand bg-white overflow-hidden">
@@ -847,7 +817,7 @@ export function AccessoryDetail({
                 {attributeEntries.map(([key, val], idx) => (
                   <div
                     key={key}
-                    className={`grid grid-cols-[180px_1fr] gap-6 px-6 py-3.5 ${
+                    className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 px-4 sm:px-6 py-3.5 ${
                       idx % 2 === 0 ? "bg-cream/50" : "bg-white"
                     }`}
                   >
@@ -855,7 +825,7 @@ export function AccessoryDetail({
                       {attributeLabel(key)}
                     </dt>
                     <dd className="text-sm font-medium text-charcoal">
-                      {String(val)}
+                      {key === "case_type" ? ({clear:"Gennemsigtigt",wallet:"Pungcover",book:"Bogcover",slim:"Slankt",rugged:"Forstærket",flip:"Flipcover",bumper:"Kantcover"} as Record<string,string>)[String(val).toLowerCase()] ?? String(val) : String(val)}
                     </dd>
                   </div>
                 ))}
@@ -867,7 +837,7 @@ export function AccessoryDetail({
         {/* 2. Beskrivelse */}
         {product.description && (
           <section>
-            <h2 className="mb-4 font-display text-xl font-bold text-charcoal">
+            <h2 className="mb-4 font-body text-xl font-bold text-charcoal">
               Beskrivelse
             </h2>
             <p className="whitespace-pre-line text-base leading-relaxed text-charcoal/70 max-w-prose">
@@ -883,7 +853,7 @@ export function AccessoryDetail({
         {crossSellProducts.length > 0 && (
           <section>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold text-charcoal">
+              <h2 className="font-body text-xl font-bold text-charcoal">
                 {crossSellHeading}
               </h2>
               <span className="text-sm text-charcoal/40">
@@ -906,7 +876,9 @@ export function AccessoryDetail({
         selectedVariants={selectedVariants}
         variantImageOverride={variantImageOverride}
         ctaRef={ctaRef}
+        canBuy={canBuy}
+        stockLabel={stockLabel}
       />
-    </>
+    </div>
   );
 }
