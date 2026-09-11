@@ -22,7 +22,7 @@ export const LAPTOP_TIERS: LaptopTier[] = [
   {
     title: "Budget",
     slug: "budget",
-    tagline: "Bedste pris — perfekt til studiet",
+    tagline: "Til studie og daglig brug",
     description:
       "Pålidelige bærbare under 2.000 kr. Ideel til studiet, browsing og daglig brug. Alle testet med 30+ kontroller og 36 måneders garanti.",
     metaTitle: "Budget Bærbare fra 1.359 kr - Refurbished | PhoneSpot",

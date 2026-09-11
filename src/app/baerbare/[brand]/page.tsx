@@ -182,7 +182,14 @@ export default async function BrandPage({
           <SectionWrapper background="sand">
             <Heading as="h2" size="md" className="mb-10 text-center">Andre kunder kiggede også på</Heading>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-              {relatedProducts.map((p) => (<ProductCard key={p.id} product={p} collectionHandle="baerbare" />))}
+              {relatedProducts.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  collectionHandle="baerbare"
+                  href={`/refurbished/${p.handle}`}
+                />
+              ))}
             </div>
           </SectionWrapper>
         )}
@@ -270,7 +277,16 @@ export default async function BrandPage({
         {products.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} collectionHandle="baerbare" />
+              <ProductCard
+                key={product.id}
+                product={product}
+                collectionHandle="baerbare"
+                href={
+                  product.templateId
+                    ? `/refurbished/${product.handle}`
+                    : `/baerbare/${product.handle}`
+                }
+              />
             ))}
           </div>
         ) : (
