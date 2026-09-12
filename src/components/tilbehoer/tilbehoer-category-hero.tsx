@@ -7,6 +7,7 @@ interface TilbehoerHeroProps {
   title: string;
   description?: string;
   productCount?: number;
+  headingLevel?: "h1" | "h2";
 }
 
 function SearchIcon({ className }: { className?: string }) {
@@ -24,7 +25,7 @@ function SearchIcon({ className }: { className?: string }) {
   );
 }
 
-function HeroInner({ title, description, productCount }: TilbehoerHeroProps) {
+function HeroInner({ title, description, productCount, headingLevel: Heading = "h1" }: TilbehoerHeroProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,9 +54,9 @@ function HeroInner({ title, description, productCount }: TilbehoerHeroProps) {
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           {/* Left: title + description */}
           <div className="max-w-xl">
-            <h1 className="font-body text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
+            <Heading className="font-body text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
               {title}
-            </h1>
+            </Heading>
             {description && (
               <p className="mt-2 text-sm leading-relaxed text-charcoal/55 md:text-base">
                 {description}

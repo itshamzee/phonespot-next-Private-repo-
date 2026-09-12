@@ -202,7 +202,7 @@ export function TilbehoerMobileFilters({
 
   const categoryFiltersConfig = getCategoryFilters(activeCategory);
   const isDeviceSpecific =
-    activeCategory === "covers" || activeCategory === "skaermbeskyttelse";
+    ["", "covers", "skaermbeskyttelse", "beskyttelsesglas"].includes(activeCategory);
 
   if (!open) return null;
 
@@ -257,7 +257,7 @@ export function TilbehoerMobileFilters({
                 >
                   <AccessoryCategoryIcon slug=""/>Alle
                 </button>
-                {TILBEHOER_CATEGORIES.map((cat) => (
+                {TILBEHOER_CATEGORIES.filter(cat => cat.slug !== "skaermbeskyttelse").map((cat) => (
                   <button
                     key={cat.slug}
                     type="button"
@@ -297,7 +297,7 @@ export function TilbehoerMobileFilters({
                         </p>
                         <ul className="space-y-0.5">
                           {visibleDevices.map((device) => {
-                            const isActive = activeModel === device.label;
+                            const isActive = (activeModel === device.label || activeModel === device.slug);
                             return (
                               <li key={device.slug}>
                                 <button

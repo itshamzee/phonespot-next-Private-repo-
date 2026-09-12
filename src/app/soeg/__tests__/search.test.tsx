@@ -44,9 +44,14 @@ it("does not infer accessory category from a misleading product title", async ()
   expect(screen.getByRole("link", { name: /Cover oplader navn.*Se produkt/ })).toHaveAttribute("href", "/tilbehoer/opladere/cover-iphone");
 });
 it("uses the existing generic SKU route for an unmapped subcategory", async () => {
-  search.mockResolvedValue({ templates: [], skuProducts: [{ ...sku, subcategory: "spot-glass" }] });
+  search.mockResolvedValue({ templates: [], skuProducts: [{ ...sku, subcategory: "uncategorized" }] });
   render(await SearchPage({ searchParams: Promise.resolve({ q: "glas" }) }));
   expect(screen.getByRole("link", { name: /Cover til iPhone.*Se produkt/ })).toHaveAttribute("href", "/tilbehor/cover-iphone");
+});
+it("opens glass search results as ordinary accessory products", async () => {
+  search.mockResolvedValue({ templates: [], skuProducts: [{ ...sku, title: "Spot Privacy", slug: "spot-privacy", subcategory: "spot-glass" }] });
+  render(await SearchPage({ searchParams: Promise.resolve({ q: "glas" }) }));
+  expect(screen.getByRole("link", { name: /Spot Privacy.*Se produkt/ })).toHaveAttribute("href", "/tilbehoer/beskyttelsesglas/spot-privacy");
 });
 it("keeps a product without a slug visible without making an invalid product URL", async () => {
   search.mockResolvedValue({ templates: [], skuProducts: [{ ...sku, slug: null }] });

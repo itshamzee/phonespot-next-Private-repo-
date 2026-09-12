@@ -176,11 +176,11 @@ export default async function ReparationPage() {
           </div>
           <div className={styles.heroPhoto}>
             <Image
-              src="/images/repair/tekniker-reparerer.jpg"
-              alt="PhoneSpot-tekniker reparerer en enhed på værkstedet"
+              src="/images/repair/telefon-med-smadret-skaerm.jpg"
+              alt="Telefon med knust skærm og adskilt display"
               fill
               priority
-              sizes="(max-width: 600px) 1px, 45vw"
+              sizes="(max-width: 600px) 90vw, 45vw"
             />
           </div>
         </section>

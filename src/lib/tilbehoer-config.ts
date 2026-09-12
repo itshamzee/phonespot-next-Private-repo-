@@ -309,7 +309,8 @@ export function getAllDeviceParams(): { category: string; device: string }[] {
 /** Maps accessories.category DB values to tilbehoer URL slugs */
 export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
   cover: "covers",
-  screen_protector: "skaermbeskyttelse",
+  screen_protector: "beskyttelsesglas",
+  "spot-glass": "beskyttelsesglas",
   charger: "opladere",
   cable: "opladere",
   audio: "lyd",
@@ -319,7 +320,7 @@ export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
 export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   covers: ["cover"],
   skaermbeskyttelse: ["screen_protector"],
-  beskyttelsesglas: ["screen_protector"],
+  beskyttelsesglas: ["screen_protector", "spot-glass"],
   opladere: ["charger", "cable"],
   lyd: ["audio"],
   holdere: ["other"],

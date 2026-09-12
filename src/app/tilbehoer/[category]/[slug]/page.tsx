@@ -7,7 +7,7 @@ import { getAccessoryBySlug } from "@/lib/supabase/accessories";
 import { createServerClient } from "@/lib/supabase/client";
 import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
-import { getCategoryConfig } from "@/lib/tilbehoer-config";
+import { getCategoryConfig, TILBEHOER_DEVICES, DEVICE_BRANDS } from "@/lib/tilbehoer-config";
 import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@/components/product/accessory-detail";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -15,6 +15,7 @@ import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
 import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { accessoryModelLabels } from "@/lib/product/accessory-models";
 
 export const revalidate = 60;
 
@@ -142,6 +143,13 @@ export default async function AccessoryDetailPage({ params }: Props) {
       brand: (l.product_templates?.brand as string) ?? "",
     }))
     .filter((d: CompatibleDevice) => Boolean(d.name));
+
+  // Some glass SKUs use model slugs instead of template relationships.
+  for (const name of accessoryModelLabels((product as SkuProduct & { compatible_models?: unknown }).compatible_models)) {
+    const brandSlug = TILBEHOER_DEVICES.find(device => device.label === name)?.brand;
+    const brand = DEVICE_BRANDS.find(item => item.slug === brandSlug)?.label ?? "";
+    if (!compatibleDevices.some(device => device.name === name)) compatibleDevices.push({ name, brand });
+  }
 
   // Template IDs this product is linked to
   const templateIds: string[] = (templateLinks ?? [])
@@ -382,7 +390,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
             Tilbehør
           </Link>
           <span aria-hidden="true">/</span>
-          <Link href={`/tilbehoer/${category}`} className="hover:text-charcoal transition-colors">
+          <Link href={category === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${category}`} className="hover:text-charcoal transition-colors">
             {catConfig?.label ?? category}
           </Link>
           <span aria-hidden="true">/</span>

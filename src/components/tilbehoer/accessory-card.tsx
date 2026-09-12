@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
 type AccessoryCardProps = Omit<PublicAccessory, "created_at">;
-export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand}: AccessoryCardProps) {
+export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind}: AccessoryCardProps) {
   const [added,setAdded]=useState(false);
   const confirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -18,7 +18,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Kan bestilles" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
   function add() {
     if (!canBuy || added) return;
-    addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null});
+    addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null,...(spotKind ? {spotKind,...(isOnSale ? {unitPrice:price} : {})} : {})});
     openCart();setAdded(true);
     confirmationTimer.current = setTimeout(() => {
       setAdded(false);
@@ -26,13 +26,14 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
     }, 1800);
   }
   // eslint-disable-next-line @next/next/no-img-element
-  const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
+  const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
   return <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-sand bg-white font-body">
     {/* Product photographs are shown whole, without substitute device artwork. */}
     {href ? <Link href={href} className="flex aspect-square items-center justify-center bg-[#f5f5f2]">{photo}</Link> : <div className="flex aspect-square items-center justify-center bg-[#f5f5f2]">{photo}</div>}
-    <div className="flex flex-1 flex-col p-4 sm:p-5">
+    <div className="flex flex-1 flex-col p-3 sm:p-5">
       <p className="mb-2 min-h-4 text-xs text-charcoal/60">{brand}</p>
-      <h2 className="min-h-12 text-base font-semibold leading-6 text-charcoal">{href ? <Link href={href}>{name}</Link> : name}</h2>
+      <h2 className="min-h-12 text-sm sm:text-base font-semibold leading-5 sm:leading-6 text-charcoal">{href ? <Link href={href}>{name}</Link> : name}</h2>
+      {compatible_models && compatible_models.length > 0 && <p className="mt-2 text-xs leading-relaxed text-charcoal/65">Passer til {compatible_models.join(", ")}</p>}
       <div className="mt-auto pt-5">
         <div className="flex min-h-8 flex-wrap items-baseline gap-x-2">
           <p className="text-xl font-bold text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>

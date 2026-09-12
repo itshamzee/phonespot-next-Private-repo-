@@ -1,35 +1,30 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
-import { SpotPicker } from "./_components/SpotPicker";
-import { QualityStrip } from "./_components/QualityStrip";
-import { fetchActiveSpotSkus } from "@/lib/spot/queries";
-import { TrustBar } from "@/components/ui/trust-bar";
+import { JsonLd } from "@/components/seo/json-ld";
+import { TilbehoerCategoryClient } from "@/components/tilbehoer/tilbehoer-category-client";
+import { getCategoryConfig } from "@/lib/tilbehoer-config";
+
 export const metadata: Metadata = {
-  title: "Beskyttelsesglas til din telefon og tablet | PhoneSpot",
-  description: "Find beskyttelsesglas til din model. Gratis montering ved køb hos PhoneSpot i Vejle og Slagelse. Se varianter og priser online.",
-  alternates: { canonical: "/beskyttelsesglas" },
+  title: "Beskyttelsesglas til telefon og tablet | PhoneSpot",
+  description: "Se beskyttelsesglas med pris og kompatible modeller. Find almindeligt glas og privacy-glas, og få hjælp til montering i Vejle og Slagelse.",
+  alternates: { canonical: "https://phonespot.dk/beskyttelsesglas" },
 };
-export default async function BeskyttelsesglasHubPage() {
-  const skus = await fetchActiveSpotSkus();
-  return <div className="font-body text-charcoal">
-    <section className="border-b border-sand bg-white">
-      <div className="mx-auto max-w-[1280px] px-5 py-7 sm:px-9 sm:py-9">
-        <p className="text-xs font-semibold text-[#1A3D2E]">Beskyttelse til hverdagen</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Beskyttelsesglas til din enhed</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-charcoal/65">Vælg din telefon eller tablet, og se de glas der passer til modellen. Vi hjælper med gratis montering ved køb i Vejle og Slagelse.</p>
-      </div>
-    </section>
-    <Suspense fallback={<p role="status" className="mx-auto max-w-[1280px] px-5 py-8 sm:px-9">Henter modelvælger…</p>}>
-      <SpotPicker skus={skus}/>
-    </Suspense>
-    <QualityStrip/>
-    <section className="border-y border-sand bg-[#f4f5f2]">
-      <div className="mx-auto grid max-w-[1280px] gap-6 px-5 py-10 sm:px-9 lg:grid-cols-2 lg:items-center">
-        <div><h2 className="text-2xl font-semibold tracking-tight">Vi hjælper med monteringen</h2><p className="mt-3 max-w-xl text-sm leading-6 text-charcoal/65">Kom forbi i Vejle eller Slagelse. Montering er gratis, når du køber dit beskyttelsesglas hos os.</p></div>
-        <div className="flex flex-wrap gap-3 lg:justify-end"><Link href="/beskyttelsesglas/vejle" className="rounded-lg bg-[#1A3D2E] px-5 py-3 text-sm font-semibold text-white">Se Vejle-butikken</Link><Link href="/beskyttelsesglas/slagelse" className="rounded-lg border border-[#1A3D2E] px-5 py-3 text-sm font-semibold text-[#1A3D2E]">Se Slagelse-butikken</Link></div>
-      </div>
-    </section>
-    <div className="mx-auto max-w-[1280px] px-5 py-10 sm:px-9"><TrustBar variant="accessory"/></div>
-  </div>;
+
+export default function BeskyttelsesglasHub() {
+  const category = getCategoryConfig("beskyttelsesglas")!;
+  return <>
+    <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+      { "@type": "ListItem", position: 2, name: "Tilbehør", item: "https://phonespot.dk/tilbehoer" },
+      { "@type": "ListItem", position: 3, name: "Beskyttelsesglas", item: "https://phonespot.dk/beskyttelsesglas" },
+    ] }} />
+    <nav aria-label="Brødkrumme" className="mx-auto flex max-w-[1280px] gap-3 px-5 pt-5 text-sm text-charcoal/65 sm:px-9">
+      <Link href="/tilbehoer" className="underline underline-offset-4">Tilbehør</Link><span aria-hidden="true">/</span><span>Beskyttelsesglas</span>
+    </nav>
+    <TilbehoerCategoryClient category={{ ...category, heroDescription: "Se glassene her, og tjek hvilke modeller de passer til. Du kan filtrere efter din enhed og se pris og lagerstatus på hvert produkt." }} initialCount={0} />
+    <div className="mx-auto max-w-[1280px] px-5 pb-12 text-sm sm:px-9">
+      <p className="mb-3 font-semibold">Hjælp til montering i vores butikker</p>
+      <div className="flex gap-6"><Link href="/beskyttelsesglas/vejle" className="underline underline-offset-4">Vejle</Link><Link href="/beskyttelsesglas/slagelse" className="underline underline-offset-4">Slagelse</Link></div>
+    </div>
+  </>;
 }

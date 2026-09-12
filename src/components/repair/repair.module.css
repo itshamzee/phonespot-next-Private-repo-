@@ -53,9 +53,10 @@
 .heroPhoto {
   position: relative;
   min-height: 290px;
+  background: white;
 }
 .heroPhoto img {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center 42%;
 }
 .heroActions {
@@ -510,7 +511,7 @@
     font-size: 36px;
   }
   .heroPhoto {
-    display: none;
+    min-height: 220px;
   }
   .hero p {
     font-size: 14px;

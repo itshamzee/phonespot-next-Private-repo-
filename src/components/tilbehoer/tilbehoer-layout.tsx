@@ -17,6 +17,7 @@ interface TilbehoerLayoutProps {
   heroDescription?: string;
   productCount?: number;
   activeCategory: string; // "" for hub
+  headingLevel?: "h1" | "h2";
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +73,7 @@ function TilbehoerLayoutInner({
   heroDescription,
   productCount,
   activeCategory,
+  headingLevel,
 }: TilbehoerLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -183,6 +185,7 @@ function TilbehoerLayoutInner({
         title={heroTitle}
         description={heroDescription}
         productCount={filteredCount ?? productCount}
+        headingLevel={headingLevel}
       />
 
       <div className="mx-auto max-w-[1280px] px-5 sm:px-9 py-8">

@@ -143,7 +143,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
 
   // Whether to show the device model section (only for device-specific categories)
   const isDeviceSpecific =
-    activeCategory === "covers" || activeCategory === "skaermbeskyttelse";
+    ["", "covers", "skaermbeskyttelse", "beskyttelsesglas"].includes(activeCategory);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -169,7 +169,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
             >
               <AccessoryCategoryIcon slug=""/>Alle
             </Link>
-            {TILBEHOER_CATEGORIES.map((cat) => (
+            {TILBEHOER_CATEGORIES.filter(cat => cat.slug !== "skaermbeskyttelse").map((cat) => (
               <Link
                 key={cat.slug}
                 href={cat.slug === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${cat.slug}`}
@@ -227,7 +227,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
                         </p>
                         <div className="space-y-0.5">
                           {visibleDevices.map((device) => {
-                            const isActive = activeModel === device.label;
+                            const isActive = (activeModel === device.label || activeModel === device.slug);
                             return (
                               <button
                                 key={device.slug}

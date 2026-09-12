@@ -60,7 +60,7 @@ export function StorefrontHero() {
           <Link className={`${styles.button} ${styles.light}`} href="/reparation">Find din reparation<StorefrontIcon kind="arrow" /></Link>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/repair/tekniker-reparerer.jpg" alt="En tekniker arbejder med reparation af en tablet" loading="lazy" />
+        <img src="/images/repair/telefon-med-smadret-skaerm.jpg" alt="Telefon med smadret skærm" loading="lazy" />
         <span className={styles["service-foot"]}>Hjælp online og i vores butikker</span>
       </article>
       <article className={`${styles["service-card"]} ${styles["buyback-card"]}`}>

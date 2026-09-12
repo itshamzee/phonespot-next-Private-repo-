@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PublicAccessory, AccessoryStockRow } from "@/lib/product/public-accessory";
 import { SLUG_TO_ACCESSORY_CATEGORIES, ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
+import { accessoryModelLabels, accessoryModelSlug, accessorySpotKind } from "@/lib/product/accessory-models";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -22,14 +23,11 @@ export async function GET(req: NextRequest) {
   // Query sku_products with category='accessory', excluding spare-parts
   let query = supabase
     .from("sku_products")
-    .select("id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, barcode, ean, description, status, created_at, updated_at, is_active")
+    .select("id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active")
     .eq("status", "published")
     .eq("is_active", true)
     .eq("category", "accessory")
     .neq("subcategory", "spare-part")
-    // Spot beskyttelsesglas lives on its own hub at /beskyttelsesglas — don't dump
-    // its 70+ model-specific SKUs into the generic /tilbehoer grid.
-    .neq("subcategory", "spot-glass")
     .order("created_at", { ascending: false });
 
   if (dbCategories && category !== "outlet") {
@@ -61,34 +59,39 @@ export async function GET(req: NextRequest) {
     query = query.in("id", ids);
   }
 
-  // If model filter is set, check sku_product_templates for matches
+  // Both compatibility sources are used: template links and model-specific SKUs.
   if (model) {
-    const { data: templates } = await supabase
+    const modelSlug = accessoryModelSlug(model);
+    const modelLabel = accessoryModelLabels([modelSlug])[0];
+    const { data: templates, error: templateError } = await supabase
       .from("product_templates")
       .select("id")
-      .ilike("display_name", `%${model}%`);
+      .ilike("display_name", modelLabel);
+
+    const { data: compatible, error: compatibilityError } = await supabase
+      .from("sku_products").select("id")
+      .eq("status", "published").eq("is_active", true)
+      .contains("compatible_models", [modelSlug]);
+    if (templateError || compatibilityError) return NextResponse.json({ error: "Modeloplysninger kunne ikke hentes" }, { status: 503 });
+    const ids = new Set<string>((compatible ?? []).map(p => p.id));
 
     if (templates?.length) {
-      const { data: links } = await supabase
+      const { data: links, error: linkError } = await supabase
         .from("sku_product_templates")
         .select("sku_product_id")
         .in("template_id", templates.map((t) => t.id));
 
-      const linkedIds = (links ?? []).map((l) => l.sku_product_id);
-      if (linkedIds.length > 0) {
-        query = query.in("id", linkedIds);
-      } else {
-        return NextResponse.json([]);
-      }
-    } else {
-      return NextResponse.json([]);
+      if (linkError) return NextResponse.json({ error: "Modeloplysninger kunne ikke hentes" }, { status: 503 });
+      for (const link of links ?? []) ids.add(link.sku_product_id);
     }
+    if (!ids.size) return NextResponse.json([]);
+    query = query.in("id", [...ids]);
   }
 
   const { data, error } = await query.limit(200);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Produkter kunne ikke hentes" }, { status: 500 });
   }
 
   const productIds = (data ?? []).map(p => p.id);
@@ -107,6 +110,8 @@ export async function GET(req: NextRequest) {
       category: ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.subcategory ?? "other",
       brand: p.brand, price: p.selling_price, sale_price: p.sale_price ?? null,
       image_url: Array.isArray(p.images) ? p.images[0] ?? null : null,
+      compatible_models: accessoryModelLabels(p.compatible_models),
+      spotKind: accessorySpotKind(p),
       created_at: p.created_at,
       store_stock: stockKnown ? store : null,
       online_stock: stockKnown ? online : null,

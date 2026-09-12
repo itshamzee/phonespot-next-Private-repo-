@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { TilbehoerMobileFilters } from '../tilbehoer-mobile-filters';
 const push=vi.hoisted(() => vi.fn());
+it('offers an optional device filter for ordinary glass products',()=>{
+ render(<TilbehoerMobileFilters open onClose={()=>{}} activeCategory="beskyttelsesglas" productCount={2}/>);
+ expect(screen.getByRole('button',{name:'iPhone 17 Pro',exact:true})).toBeInTheDocument();
+});
 vi.mock('next/navigation',()=>({useRouter:()=>({push}),usePathname:()=>'/tilbehoer/covers',useSearchParams:()=>new URLSearchParams('brand=apple&model=iPhone+17&search=case&pris=0-9999&side=3')}));
 it('focuses, traps Tab, closes on Escape and restores focus/body scroll',()=>{
  const close=vi.fn(); const trigger=document.createElement('button'); document.body.appendChild(trigger); trigger.focus();

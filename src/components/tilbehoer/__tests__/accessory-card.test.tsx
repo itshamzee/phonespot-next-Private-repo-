@@ -6,6 +6,18 @@ vi.mock('@/components/cart/cart-context',()=>({useCart:()=>cart}));
 beforeEach(()=>vi.clearAllMocks());
 afterEach(()=>vi.useRealTimers());
 const product={id:'cover',name:'Cover',slug:'cover',category:'covers',brand:'Brand',price:19900,sale_price:14900,image_url:'/cover.png',store_stock:3,online_stock:5,availability:'in_stock' as const};
+it('shows the glass compatibility and preserves its kind and original price in the cart',()=>{
+ render(<AccessoryCard {...product} category="beskyttelsesglas" compatible_models={['iPhone 17 Pro']} spotKind="privacy"/>);
+ expect(screen.getByText('Passer til iPhone 17 Pro')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
+ expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'cover',spotKind:'privacy',unitPrice:19900,price:14900}));
+});
+it('keeps full-price glass eligible for the existing quantity discount',()=>{
+ render(<AccessoryCard {...product} sale_price={null} spotKind="glass"/>);
+ fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
+ expect(cart.addSku.mock.calls[0][0]).toMatchObject({spotKind:'glass',price:19900});
+ expect(cart.addSku.mock.calls[0][0]).not.toHaveProperty('unitPrice');
+});
 it('adds exactly the actual SKU sale price, quantity and photograph while preserving the detail link',()=>{
  render(<AccessoryCard {...product}/>);fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
  expect(cart.addSku).toHaveBeenCalledWith({type:'sku_product',skuProductId:'cover',title:'Cover',price:14900,quantity:1,image:'/cover.png'});

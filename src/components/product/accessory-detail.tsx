@@ -256,6 +256,7 @@ function AddToCartButton({
       price: effectivePrice,
       quantity: 1,
       variantLabel,
+      ...(product.spotKind ? { spotKind: product.spotKind, ...(effectivePrice < product.selling_price ? { unitPrice: product.selling_price } : {}) } : {}),
     });
     setAdded(true);
     openCart();
@@ -536,7 +537,7 @@ export function AccessoryDetail({
       {/* ================================================================
           Hero grid
       ================================================================ */}
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-5">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-5">
         {/* Left — image gallery */}
         <div className="min-w-0 lg:col-start-2 lg:row-start-1">
           {product.brand && <p className="text-xs font-semibold text-charcoal/60">{product.brand}</p>}

@@ -212,7 +212,7 @@ export function AccessoryGrid({
 
   if (loading) {
     return (
-      <div role="status" aria-label="Henter produkter" className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 lg:grid-cols-3">
+      <div role="status" aria-label="Henter produkter" className="grid grid-cols-1 gap-5 min-[360px]:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -234,7 +234,7 @@ export function AccessoryGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 min-[420px]:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 min-[360px]:grid-cols-2 lg:grid-cols-3">
       {displayedProducts.map((product) => (
         <AccessoryCard
           key={product.id}
@@ -249,6 +249,8 @@ export function AccessoryGrid({
           store_stock={product.store_stock}
           online_stock={product.online_stock}
           availability={product.availability}
+          compatible_models={product.compatible_models}
+          spotKind={product.spotKind}
         />
       ))}
     </div>
