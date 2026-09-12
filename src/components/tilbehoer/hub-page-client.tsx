@@ -8,11 +8,11 @@ import { BrandCarousel } from "./brand-carousel";
 import styles from "./accessories-landing.module.css";
 
 const categories = [
-  { slug: "covers", title: "Covers", detail: "Til telefon og tablet", image: "covers" },
-  { slug: "beskyttelsesglas", title: "Beskyttelsesglas", detail: "Find glasset til din model", image: "glas" },
-  { slug: "opladere", title: "Kabler og opladere", detail: "Til hverdagens enheder", image: "opladere" },
-  { slug: "lyd", title: "Lyd", detail: "Høretelefoner og højttalere", image: "lyd" },
-  { slug: "holdere", title: "Mere tilbehør", detail: "Holdere og andet tilbehør", image: "holdere" },
+  { slug: "covers", title: "Covers", detail: "Til telefon og tablet", image: "cover-product" },
+  { slug: "beskyttelsesglas", title: "Beskyttelsesglas", detail: "Find glasset til din model", image: "glass-product" },
+  { slug: "opladere", title: "Kabler og opladere", detail: "Til hverdagens enheder", image: "charger-product" },
+  { slug: "lyd", title: "Lyd", detail: "Høretelefoner og højttalere", image: "audio-product" },
+  { slug: "holdere", title: "Mere tilbehør", detail: "Holdere og andet tilbehør", image: "stand-product" },
 ];
 
 export function HubPageClient() {
@@ -26,7 +26,7 @@ export function HubPageClient() {
           <a href="#tilbehoersudvalg" className={styles.button}>Se alt tilbehør <span aria-hidden="true">→</span></a>
         </div>
         <a href="#tilbehoersudvalg" className={styles.heroImage} aria-label="Se alt tilbehør">
-          <Image src="/images/accessories/hero.jpg" alt="Telefon i cover, smartwatch og etui til høretelefoner på en mørk overflade" fill priority sizes="(max-width: 640px) 90vw, 580px" />
+          <Image src="/images/accessories/audio-product.png" alt="Mørke høretelefoner set forfra og fra siden" fill priority sizes="(max-width: 640px) 90vw, 580px" />
           <span>Til hverdagen med din enhed <span aria-hidden="true">↗</span></span>
         </a>
       </section>
@@ -34,7 +34,7 @@ export function HubPageClient() {
         {categories.map(category => {
           return <Link key={category.slug} href={category.slug === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${category.slug}`}>
             <div className={styles.categoryImage}>
-              <Image src={`/images/accessories/${category.image}.jpg`} alt="" fill sizes="(max-width: 640px) 160px, 230px" data-category={category.slug} />
+              <Image src={`/images/accessories/${category.image}.png`} alt="" fill sizes="(max-width: 640px) 140px, 230px" data-category={category.slug} />
             </div>
             <strong>{category.title}<span aria-hidden="true">↗</span></strong>
             <small>{category.detail}</small>
