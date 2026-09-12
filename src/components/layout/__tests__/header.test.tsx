@@ -6,6 +6,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 import { Header } from "../header";
 
 describe("Header", () => {
+  it("offers a direct call to the store from the top bar", () => {
+    render(<Header />);
+    expect(screen.getByRole("link", { name: "Ring til PhoneSpot på 61 10 00 48" })).toHaveAttribute("href", "tel:+4561100048");
+  });
   it("links its logo, categories and services to existing destinations", () => {
     render(<Header />);
     expect(screen.getByAltText("PhoneSpot").closest("a")).toHaveAttribute("href", "/");

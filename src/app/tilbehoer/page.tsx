@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { HubPageClient } from "@/components/tilbehoer/hub-page-client";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 
 export const revalidate = 60;
 
@@ -19,17 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function TilbehoerPage() {
-  const { data } = await createAdminClient().from("sku_products")
-    .select("subcategory, images").eq("category", "accessory")
-    .eq("status", "published").eq("is_active", true)
-    .order("created_at", { ascending: false }).limit(200);
-  const categoryImages: Record<string, string> = {};
-  for (const product of data ?? []) {
-    const category = ACCESSORY_CATEGORY_TO_SLUG[product.subcategory ?? ""];
-    const photo = Array.isArray(product.images) ? product.images.find((image: unknown) => typeof image === "string" && image.length > 0) : undefined;
-    if (category && photo && !categoryImages[category]) categoryImages[category] = photo;
-  }
+export default function TilbehoerPage() {
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -42,7 +30,7 @@ export default async function TilbehoerPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
-      <HubPageClient categoryImages={categoryImages} />
+      <HubPageClient />
     </>
   );
 }

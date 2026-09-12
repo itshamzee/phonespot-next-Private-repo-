@@ -4,18 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { TilbehoerLayout } from "./tilbehoer-layout";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { AccessoryCategoryIcon } from "./accessory-category-icon";
+import { BrandCarousel } from "./brand-carousel";
 import styles from "./accessories-landing.module.css";
 
 const categories = [
-  { slug: "covers", title: "Covers", detail: "Til telefon og tablet", image: "/images/products/tilbehoer-case.webp" },
-  { slug: "beskyttelsesglas", title: "Beskyttelsesglas", detail: "Find glasset til din model", image: null },
-  { slug: "opladere", title: "Kabler og opladere", detail: "Til hverdagens enheder", image: "/blog/covers/apple-oplader.jpg" },
-  { slug: "lyd", title: "Lyd", detail: "Høretelefoner og højttalere", image: null },
-  { slug: "holdere", title: "Mere tilbehør", detail: "Holdere og andet tilbehør", image: null },
+  { slug: "covers", title: "Covers", detail: "Til telefon og tablet", image: "covers" },
+  { slug: "beskyttelsesglas", title: "Beskyttelsesglas", detail: "Find glasset til din model", image: "glas" },
+  { slug: "opladere", title: "Kabler og opladere", detail: "Til hverdagens enheder", image: "opladere" },
+  { slug: "lyd", title: "Lyd", detail: "Høretelefoner og højttalere", image: "lyd" },
+  { slug: "holdere", title: "Mere tilbehør", detail: "Holdere og andet tilbehør", image: "holdere" },
 ];
 
-export function HubPageClient({ categoryImages = {} }: { categoryImages?: Record<string, string> }) {
+export function HubPageClient() {
   return <>
     <div className={styles.landing}>
       <section className={styles.intro} aria-labelledby="accessories-title">
@@ -25,24 +25,23 @@ export function HubPageClient({ categoryImages = {} }: { categoryImages?: Record
           <p>Et cover, der passer. Et kabel ved hånden. Find tilbehøret til din telefon, tablet og computer.</p>
           <a href="#tilbehoersudvalg" className={styles.button}>Se alt tilbehør <span aria-hidden="true">→</span></a>
         </div>
-        <Link href="/tilbehoer/covers" className={styles.heroImage} aria-label="Se covers til telefon og tablet">
-          <Image src="/images/products/tilbehoer-case.webp" alt="Telefoner med gennemsigtige covers" fill priority sizes="(max-width: 640px) 90vw, 520px" />
-          <span>Find dit næste cover <span aria-hidden="true">↗</span></span>
-        </Link>
+        <a href="#tilbehoersudvalg" className={styles.heroImage} aria-label="Se alt tilbehør">
+          <Image src="/images/accessories/hero.jpg" alt="Telefon i cover, smartwatch og etui til høretelefoner på en mørk overflade" fill priority sizes="(max-width: 640px) 90vw, 580px" />
+          <span>Til hverdagen med din enhed <span aria-hidden="true">↗</span></span>
+        </a>
       </section>
       <nav className={styles.categories} aria-label="Find tilbehør efter kategori">
         {categories.map(category => {
-          const photo = categoryImages[category.slug] ?? category.image;
           return <Link key={category.slug} href={category.slug === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${category.slug}`}>
             <div className={styles.categoryImage}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {photo ? <img src={photo} alt="" loading="lazy" /> : <AccessoryCategoryIcon slug={category.slug} />}
+              <Image src={`/images/accessories/${category.image}.jpg`} alt="" fill sizes="(max-width: 640px) 160px, 230px" data-category={category.slug} />
             </div>
             <strong>{category.title}<span aria-hidden="true">↗</span></strong>
             <small>{category.detail}</small>
           </Link>;
         })}
       </nav>
+      <BrandCarousel />
     </div>
     <div id="tilbehoersudvalg" className={styles.catalogue}>
       <TilbehoerLayout heroTitle="Alt tilbehør" heroDescription="Se udvalget, eller afgræns efter kategori, model og pris." activeCategory="" headingLevel="h2" />

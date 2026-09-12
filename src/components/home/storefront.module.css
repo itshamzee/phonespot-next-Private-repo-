@@ -14,6 +14,8 @@
 .surface .topline{background:var(--green);color:white;font-size:11px}
 .surface .topline .wrap{display:flex;align-items:center;justify-content:space-between;height:32px}
 .surface .topline span{display:flex;gap:32px}
+.surface .topline .phoneLink{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-weight:600;min-height:32px;margin-left:auto;margin-right:28px}
+.surface .topline .phoneLink:hover{text-decoration:underline;text-underline-offset:3px}
 .surface .brandrow{display:flex;align-items:center;gap:40px;padding-top:22px;padding-bottom:22px}
 .surface .logo{width:187px;flex-shrink:0}
 .surface .search{display:flex;align-items:center;background:#f7f7f8;border:1px solid var(--line);border-radius:5px;height:47px;flex:1}
@@ -166,7 +168,9 @@
 
 @media(max-width:760px){.surface .wrap{padding-inline:18px}
 .surface .topline .desktop{display:none}
-.surface .topline .wrap{font-size:10px;height:30px}
+.surface .topline .wrap{font-size:10px;height:44px;gap:12px}
+.surface .topline .phoneLink{min-height:44px;margin:0;font-size:12px}
+.surface .topline .ratingLink{display:none}
 .surface .brandrow{display:grid;grid-template-columns:auto 1fr auto;gap:15px;padding-block:16px}
 .surface .logo{width:155px}
 .surface .mobile-menu{display:flex;border:0;background:none;padding:5px}
