@@ -290,6 +290,60 @@
   }
 }
 
+.processImage {
+  position: relative;
+  height: 155px;
+  margin-top: 20px;
+  margin-right: 28px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a3d2e;
+}
+.processImage img { object-fit: cover; object-position: 50% 58%; }
+.secondLife {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #eef0eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 44px 0 0;
+}
+.secondLifeImage { position: relative; min-height: 360px; }
+.secondLifeImage img { object-fit: cover; object-position: 52% center; }
+.secondLifeCopy { padding: 38px 40px; }
+.secondLifeCopy h2 { font-size: clamp(30px, 3vw, 40px); color: #1a3d2e; letter-spacing: -1.2px; }
+.secondLifeCopy > p:not(.eyebrow), .deviceGuideLead, .deviceTopics p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #576354;
+  margin: 18px 0 0;
+}
+.editorialLinks { display: grid; gap: 15px; margin-top: 24px; }
+.editorialLinks a, .deviceGuideHeading > a { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; color: #1a3d2e; }
+.editorialLinks svg, .deviceGuideHeading svg { width: 18px; height: 18px; flex-shrink: 0; }
+.editorialLinks a:last-child { font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.deviceGuide { padding: 48px 0 0; }
+.deviceGuideHeading { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+.deviceGuideLead { max-width: 760px; }
+.deviceTopics { display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; margin-top: 28px; }
+.deviceTopics article { padding: 24px 0; border-top: 1px solid #dce3dc; }
+.deviceTopics h3 { font-size: 19px; letter-spacing: -.4px; }
+.deviceTopics p { margin-top: 10px; }
+.deviceTopics a { color: #1a3d2e; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 900px) {
+  .secondLifeCopy { padding: 28px; }
+  .deviceTopics { column-gap: 28px; }
+}
+@media (max-width: 700px) {
+  .secondLife { grid-template-columns: 1fr; margin-top: 30px; }
+  .secondLifeImage { min-height: 240px; }
+  .secondLifeCopy { padding: 26px; }
+  .deviceGuideHeading { align-items: start; flex-direction: column; gap: 18px; }
+  .deviceTopics { grid-template-columns: 1fr; margin-top: 22px; }
+  .processImage { margin-right: 0; height: 150px; }
+  .deviceGuide { padding-top: 36px; }
+}
+
 .offerSurface {
   font-family: var(--font-body), sans-serif;
   background: #f7f7f8;
