@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import { STORE } from "@/lib/store-config";
+import { DispatchCountdown } from "./dispatch-countdown";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import styles from "@/components/home/storefront.module.css";
 
@@ -72,7 +73,12 @@ export function Header() {
   return <header className={styles.surface}>
     <a className={styles.skip} href="#indhold">Gå til indhold</a>
     <div className={styles.topline}><div className={styles.wrap}>
-      <span>36 måneders garanti på enheder<span className={styles.desktop}>Butikker i Vejle og Slagelse</span></span>
+      <span className={styles.topWarranty}>36 måneders garanti på enheder</span>
+      <DispatchCountdown className={styles.dispatchClock} />
+      <nav className={styles.storeLocations} aria-label="Vores butikker">
+        <Link href="/butik/vejle"><StorefrontIcon kind="pin" />Vejle</Link>
+        <Link href="/butik/slagelse"><StorefrontIcon kind="pin" />Slagelse</Link>
+      </nav>
       <a className={styles.phoneLink} href={`tel:${STORE.phone.replace(/\s/g, "")}`} aria-label={`Ring til PhoneSpot på ${STORE.phone.replace("+45 ", "")}`}>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m7 3 3 5-2 2a15 15 0 0 0 6 6l2-2 5 3v3c0 1-1 2-2 2C10 21 3 14 2 5c0-1 1-2 2-2h3Z" /></svg>
         {STORE.phone.replace("+45 ", "")}

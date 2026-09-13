@@ -311,3 +311,18 @@
 .surface .cart-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; border-radius: 50%; background: var(--green); color: white; font-size: 10px; padding: 2px; }
 @media (max-width: 760px) { .surface .catalog-state { flex: 0 0 100%; min-height: 420px; } .surface .utilities .cart-count { display: inline-flex; } }
 @media (max-width: 360px) { .surface .brandrow { gap: 9px; } .surface .logo { width: 130px; } .surface .utilities { gap: 10px; } .surface .topline .wrap { font-size: 9px; gap: 8px; } }
+.surface .topline .wrap { gap: 18px; }
+.surface .topline .storeLocations { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+.surface .topline .storeLocations a { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; }
+.surface .topline .storeLocations svg { width: 13px; height: 13px; }
+.surface .topline .phoneLink { margin-left: 0; margin-right: 0; }
+.surface .topline .dispatchClock { font-size: 10px; white-space: nowrap; }
+.dispatchClock strong { font-variant-numeric: tabular-nums; font-weight: 600; }
+@media(max-width: 1250px) { .surface .topline .topWarranty { display: none; } }
+@media(max-width: 760px) {
+  .surface .topline .wrap { height: auto; min-height: 72px; flex-wrap: wrap; gap: 0 16px; }
+  .surface .topline .dispatchClock { width: 100%; text-align: center; padding-top: 8px; font-size: 10px; }
+  .surface .topline .storeLocations { margin-left: 0; gap: 18px; }
+  .surface .topline .storeLocations a { min-height: 44px; font-size: 11px; }
+  .surface .topline .phoneLink { margin-left: auto; }
+}

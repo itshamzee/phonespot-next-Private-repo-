@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SellDeviceWizard } from "@/components/sell-device/sell-device-wizard";
+import { SellMethodVideo } from "@/components/sell-device/sell-method-video";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { STORES } from "@/lib/store-config";
 import styles from "@/components/sell-device/sell-device.module.css";
@@ -128,6 +129,15 @@ export default function SaelgDinEnhedPage() {
           <div id="start" className={styles.formStart}>
             <SellDeviceWizard />
           </div>
+        </section>
+        <section className={styles.method} aria-labelledby="method-title">
+          <div className={styles.methodCopy}>
+            <p className={styles.eyebrow}>Din enhed. Dit valg.</p>
+            <h2 id="method-title">Et overblik.<br /> Inden du begynder.</h2>
+            <p>Fra de første oplysninger til en aftale. Se, hvad du skal gøre, og hvad vi hjælper med undervejs.</p>
+            <a href="#process-title">Læs trinene nedenfor <StorefrontIcon kind="arrow" /></a>
+          </div>
+          <SellMethodVideo />
         </section>
         <section className={styles.process} aria-labelledby="process-title">
           <div>

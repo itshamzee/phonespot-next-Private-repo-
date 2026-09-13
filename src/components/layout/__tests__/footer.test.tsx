@@ -3,6 +3,14 @@ import { describe, it, expect } from "vitest";
 import { Footer } from "../footer";
 
 describe("Footer", () => {
+  it("provides named payment logos and direct store links", () => {
+    render(<Footer />);
+    for (const name of ["Visa", "Mastercard", "MobilePay", "Apple Pay", "Klarna"]) {
+      expect(screen.getByRole("img", { name })).toBeVisible();
+    }
+    expect(screen.getByRole("link", { name: "Vejle" })).toHaveAttribute("href", "/butik/vejle");
+    expect(screen.getByRole("link", { name: "Slagelse" })).toHaveAttribute("href", "/butik/slagelse");
+  });
   it("states the device guarantee and the Danish Trustpilot rating", () => {
     render(<Footer />);
     expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
