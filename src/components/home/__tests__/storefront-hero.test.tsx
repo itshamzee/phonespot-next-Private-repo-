@@ -11,7 +11,7 @@ describe("StorefrontHero", () => {
     expect(screen.getByRole("img", { name: "MacBook fotograferet i et studie" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Se vores bærbare" })).toHaveAttribute("href", "/baerbare");
     for (let i = 0; i < 3; i++) fireEvent.click(screen.getByRole("button", { name: "Næste kategori" }));
-    expect(screen.getByRole("img", { name: "Nærfoto af iPhone 17 Pro i kosmisk orange" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "iPhone 17 Pro i sølv, kosmisk orange og dyb blå" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Forrige kategori" }));
     expect(screen.getByRole("link", { name: "Se vores smartwatches" })).toHaveAttribute("href", "/smartwatches");
   });

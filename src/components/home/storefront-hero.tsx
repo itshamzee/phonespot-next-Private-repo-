@@ -7,7 +7,7 @@ import styles from "./storefront.module.css";
 
 // Editorial photography from the approved design; inventory comes only from ShopTabs.
 const categories: { label: string; name: string; href: string; title: [string, string]; description: string; image: string; alt: string; caption: string; icon: StorefrontIconKind }[] = [
-  { label: "iPhones", name: "iPhones", href: "/iphones", title: ["iPhone 17 Pro.", "Et nyt kapitel."], description: "Din næste iPhone behøver ikke være ny. Find din model, og få 36 måneders garanti.", image: "https://www.apple.com/newsroom/images/2025/09/apple-unveils-iphone-17-pro-and-iphone-17-pro-max/article/Apple-iPhone-17-Pro-camera-close-up-250909_big.jpg.large.jpg", alt: "Nærfoto af iPhone 17 Pro i kosmisk orange", caption: "iPhone 17 Pro", icon: "phone" },
+  { label: "iPhones", name: "iPhones", href: "/iphones", title: ["iPhone 17 Pro.", "Et nyt kapitel."], description: "Din næste iPhone behøver ikke være ny. Find din model, og få 36 måneders garanti.", image: "/images/devices/iphone-17.png", alt: "iPhone 17 Pro i sølv, kosmisk orange og dyb blå", caption: "iPhone 17 Pro", icon: "phone" },
   { label: "Bærbare", name: "bærbare", href: "/baerbare", title: ["Til alt det,", "du skal nå."], description: "Til studie, arbejde og hverdagen. Find en testet bærbar med 36 måneders garanti.", image: "/blog/covers/macbook-air-studio.jpg", alt: "MacBook fotograferet i et studie", caption: "MacBooks og bærbare", icon: "laptop" },
   { label: "iPads", name: "iPads", href: "/ipads", title: ["Plads til", "lidt af det hele."], description: "Læs, se, skriv og vær med. Find en refurbished iPad med 36 måneders garanti.", image: "https://cdsassets.apple.com/live/SZLF0YNV/images/sp/111898_sp849-ipad-9gen-480.png", alt: "iPad 10,2″ · 9. generation", caption: "iPad 10,2″ · 9. generation", icon: "tablet" },
   { label: "Smartwatches", name: "smartwatches", href: "/smartwatches", title: ["Mere med.", "Om håndleddet."], description: "Find et smartwatch til din hverdag. Testet og klar med 36 måneders garanti.", image: "https://xfcadewtpmjrvuzfwkku.supabase.co/storage/v1/object/public/product-images/templates/ee2befe2-7cad-451e-82d8-ebdb5c49a54d/1774206341440-hralrn.webp", alt: "Samsung Galaxy Watch 4", caption: "Samsung Galaxy Watch 4", icon: "watch" },
@@ -32,7 +32,7 @@ export function StorefrontHero() {
         <div className={styles["campaign-visual"]}>
           {/* The approved editorial images include external sources outside the product optimizer. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} />
+          <img src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} decoding="async" />
           <span className={styles["hero-caption"]}>{category.caption}</span>
         </div>
         <div className={styles["carousel-controls"]}>
@@ -67,7 +67,7 @@ export function StorefrontHero() {
         <div className={styles["service-content"]}>
           <div className={styles["service-label"]}><StorefrontIcon kind="exchange" />Sælg din enhed</div>
           <h2>Din gamle enhed.<br />Stadig noget værd.</h2>
-          <p>En iPhone, iPad eller computer i skuffen?<br />Få din enhed vurderet hos os.</p>
+          <p>En iPhone, iPad eller computer i skuffen?<br />Få en vurdering, og giv den mulighed for et nyt liv.</p>
           <Link className={styles.button} href="/saelg-din-enhed">Hvad er din enhed værd?<StorefrontIcon kind="arrow" /></Link>
         </div>
         <div className={styles["trade-symbol"]}><StorefrontIcon kind="exchange" /></div>
