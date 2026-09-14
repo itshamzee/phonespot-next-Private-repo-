@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CategoryFilters } from "@/components/product/category-filters";
 import { ProductGridCard } from "@/components/product/product-grid-card";
-import { PromoCard } from "@/components/product/promo-card";
+import { PromoCard, type PromoVariant } from "@/components/product/promo-card";
 import type { ProductTemplate } from "@/lib/supabase/platform-types";
 
 // ---------------------------------------------------------------------------
@@ -20,10 +20,11 @@ export interface TemplateWithStock extends ProductTemplate {
   has_own_stock: boolean;
 }
 
-interface PromoSlot {
-  position: number; // zero-indexed insertion point in the visible array
-  variant: "screen-protector" | "weekly-deal" | "trust";
+export interface PromoSlot {
+  position: number; // Number of products before this editorial card.
+  variant: PromoVariant;
   href: string;
+  device?: "iPhone" | "iPad";
 }
 
 interface FilteredGridProps {
@@ -32,7 +33,7 @@ interface FilteredGridProps {
   heading?: string;
   /** Promo cards to interleave between products at fixed positions. */
   promos?: PromoSlot[];
-  /** Validated against the available laptop brands. Reset always clears it. */
+  /** Validated against available brands. Reset always clears it. */
   initialBrand?: string;
 }
 
@@ -43,8 +44,8 @@ interface FilteredGridProps {
 export function FilteredGrid({ templates, heading, promos, initialBrand }: FilteredGridProps) {
   const [visible, setVisible] = useState<TemplateWithStock[]>(templates);
 
-  // Build the render-list with promo cards spliced in at the configured slots.
-  // Sorted descending so earlier insertions don't shift later positions.
+  // Editorial tiles never count as products. Short catalogues place later
+  // tiles at the end; a single filtered result stays free of editorial tiles.
   type GridItem =
     | { kind: "product"; template: TemplateWithStock }
     | { kind: "promo"; slot: PromoSlot };
@@ -53,7 +54,8 @@ export function FilteredGrid({ templates, heading, promos, initialBrand }: Filte
     const sorted = [...promos].sort((a, b) => a.position - b.position);
     let inserted = 0;
     for (const p of sorted) {
-      const at = Math.min(p.position + inserted, gridItems.length);
+      if (visible.length < 2) continue;
+      const at = Math.min(p.position, visible.length) + inserted;
       gridItems.splice(at, 0, { kind: "promo", slot: p });
       inserted++;
     }
@@ -114,13 +116,14 @@ export function FilteredGrid({ templates, heading, promos, initialBrand }: Filte
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3">
-              {gridItems.map((item, idx) =>
+            <div className="grid auto-rows-fr grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3">
+              {gridItems.map((item) =>
                 item.kind === "product" ? (
                   <ProductGridCard
                     key={item.template.id}
                     slug={item.template.slug}
                     image={item.template.images[0]}
+                    imageSizes="(min-width: 1320px) 310px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 360px) 50vw, 100vw"
                     title={item.template.display_name}
                     minPrice={item.template.min_price}
                     compareAtPrice={item.template.new_price}
@@ -132,9 +135,10 @@ export function FilteredGrid({ templates, heading, promos, initialBrand }: Filte
                   />
                 ) : (
                   <PromoCard
-                    key={`promo-${idx}`}
+                    key={`promo-${item.slot.variant}-${item.slot.position}`}
                     variant={item.slot.variant}
                     href={item.slot.href}
+                    device={item.slot.device}
                   />
                 ),
               )}

@@ -15,6 +15,7 @@ describe("Header", () => {
     expect(screen.getByAltText("PhoneSpot").closest("a")).toHaveAttribute("href", "/");
     const nav = screen.getByRole("navigation", { name: "Kategorier" });
     expect(within(nav).getByRole("link", { name: "iPhones" })).toHaveAttribute("href", "/iphones");
+    expect(within(nav).getByRole("link", { name: "Smartphones" })).toHaveAttribute("href", "/smartphones");
     expect(within(nav).getByRole("link", { name: "Bærbare" })).toHaveAttribute("href", "/baerbare");
     expect(within(nav).getByRole("link", { name: "Reparation" })).toHaveAttribute("href", "/reparation");
     expect(screen.getByRole("link", { name: "Min konto" })).toHaveAttribute("href", "/konto");
@@ -43,6 +44,7 @@ describe("Header", () => {
     const toggle = screen.getByRole("button", { name: "Åbn menu" });
     fireEvent.click(toggle);
     const dialog = screen.getByRole("dialog", { name: "Menu" });
+    expect(within(dialog).getAllByRole("link", { name: "Smartphones" })).toHaveLength(1);
     const close = within(dialog).getByRole("button", { name: "Luk menu" });
     expect(close).toHaveFocus();
     fireEvent.keyDown(close, { key: "Tab", shiftKey: true });

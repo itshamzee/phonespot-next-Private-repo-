@@ -347,7 +347,7 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
           </div>}
         </div>
 
-        {isLaptop && options.brands.length > 0 && <div>
+        {options.brands.length > 1 && <div>
           <SectionButton label="Mærke" open={openSections.brand} controls={section("brand")} onClick={() => toggleSection("brand")} />
           {openSections.brand && <div id={section("brand")} className="space-y-1 pb-4">{options.brands.map(([brand, count]) => (
             <label key={brand} className="flex cursor-pointer items-center gap-3 py-1.5 text-sm"><input type="checkbox" checked={filters.brands.has(brand)} onChange={(event) => toggleSet("brands", brand, event.target.checked)} className="h-4 w-4 accent-[#1A3D2E]" /><span className="flex-1">{brand}</span><span className="text-xs text-[#687069]">{count}</span></label>
@@ -402,7 +402,7 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
 
   const resultLabel = `${resultCount} ${resultCount === 1 ? "model" : "modeller"}`;
   return <>
-    <div className="sticky top-0 z-30 col-span-full -mx-4 flex items-center justify-between gap-3 border-y border-[#DDE2DD] bg-white px-4 py-3 lg:hidden"><div><p className="text-sm font-semibold text-[#202421]">{resultLabel}</p>{heading && <p className="text-xs text-[#687069]">{heading}</p>}</div><button ref={triggerRef} type="button" aria-label={activeCount ? `Filtre, ${activeCount} valgt` : "Filtre"} aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="min-h-11 rounded-md border border-[#BFC8C0] bg-white px-4 text-sm font-semibold text-[#1A3D2E]">Filtre{activeCount > 0 ? ` (${activeCount})` : ""}</button></div>
+    <div className="sticky top-0 z-30 col-span-full -mx-4 flex items-center justify-between gap-3 border-y border-[#DDE2DD] bg-white px-4 py-3 lg:hidden"><div><p className="text-sm font-semibold text-[#202421]">{resultLabel}</p>{heading && <p className="text-xs text-[#687069]">{heading}</p>}</div><button ref={triggerRef} type="button" aria-label={activeCount ? `Filtre, ${activeCount} valgt` : "Filtre"} aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="mr-14 min-h-11 rounded-md border border-[#BFC8C0] bg-white px-4 text-sm font-semibold text-[#1A3D2E]">Filtre{activeCount > 0 ? ` (${activeCount})` : ""}</button></div>
 
     <aside aria-label="Produktfiltre" className="hidden w-64 shrink-0 lg:block"><div className="sticky top-4 border-t border-[#1A3D2E] py-1"><div className="flex items-center justify-between border-b border-[#DDE2DD] py-3"><h2 className="text-sm font-semibold text-[#202421]">Filtre</h2>{activeCount > 0 && <button type="button" onClick={reset} className="text-xs font-semibold text-[#1A3D2E]">Ryd filtre</button>}</div>{panel("desktop")}</div></aside>
 

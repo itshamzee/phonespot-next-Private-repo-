@@ -20,7 +20,7 @@ const categories: { label: string; name: string; key: string; href: string; icon
   { label: "Smartwatches", name: "smartwatches", key: "smartwatches", href: "/smartwatches", icon: "watch" },
 ];
 const links: { label: string; href: string; icon: StorefrontIconKind }[] = [
-  { label: "MacBooks", href: "/baerbare?brand=apple", icon: "laptop" },
+  { label: "Smartphones", href: "/smartphones", icon: "phone" },
   { label: "Tilbehør", href: "/tilbehoer", icon: "cable" },
   { label: "Reservedele", href: "/reservedele", icon: "repair" },
 ];

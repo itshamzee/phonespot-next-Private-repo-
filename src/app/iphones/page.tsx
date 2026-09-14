@@ -40,7 +40,7 @@ export default async function IphonesPage() {
     <DeviceCollection
       templates={templates}
       title="Refurbished iPhones"
-      intro="Find den iPhone, der passer til din hverdag. Sammenlign det aktuelle udvalg efter pris, lagerplads, fysisk stand og hvor enheden er på lager."
+      intro="Til billederne, beskederne og alt det imellem. Find din næste kvalitetstestede iPhone, og vælg den model, lagerplads og stand, der passer til dig."
       collectionHeading="Aktuelle iPhones"
       guideTitle="Sådan vælger du iPhone"
       guideIntro="Modelnavne fortæller ikke hele historien. Tag udgangspunkt i de funktioner, du bruger hver dag, og sammenlign derefter de konkrete enheder."

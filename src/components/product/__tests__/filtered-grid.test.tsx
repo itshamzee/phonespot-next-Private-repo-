@@ -40,6 +40,43 @@ function template(
 }
 
 describe("FilteredGrid", () => {
+  it("offers brand filtering for Android phones and keeps product counts accurate", async () => {
+    render(<FilteredGrid templates={[
+      template("Galaxy", { category: "smartphone", brand: "Samsung" }),
+      template("Nord", { category: "smartphone", brand: "OnePlus" }),
+    ]} />);
+    const panel = screen.getByRole("complementary", { name: "Produktfiltre" });
+    fireEvent.click(within(panel).getByRole("button", { name: "Mærke" }));
+    fireEvent.click(within(panel).getByRole("checkbox", { name: /OnePlus/ }));
+    await waitFor(() => expect(screen.queryByText("Galaxy")).not.toBeInTheDocument());
+    expect(screen.getByText("Nord")).toBeInTheDocument();
+    expect(screen.getAllByText("1 model").length).toBeGreaterThan(0);
+    fireEvent.click(within(panel).getByRole("button", { name: "Ryd filtre" }));
+    expect(screen.getByText("Galaxy")).toBeInTheDocument();
+  });
+
+  it("interleaves editorial cards without inflating counts or crowding a narrowed result", async () => {
+    render(<FilteredGrid templates={Array.from({ length: 6 }, (_, index) => template(`Model ${index}`, { min_price: (index + 1) * 100_000 }))}
+      promos={[{ position: 2, variant: "trust", href: "/garanti" }, { position: 5, variant: "accessories", href: "/tilbehoer" }]} />);
+    const result = screen.getByTestId("product-results");
+    const links = within(result).getAllByRole("link");
+    expect(links.map(link => link.getAttribute("href"))).toEqual([
+      "/refurbished/model 0", "/refurbished/model 1", "/garanti", "/refurbished/model 2", "/refurbished/model 3", "/refurbished/model 4", "/tilbehoer", "/refurbished/model 5",
+    ]);
+    expect(screen.getAllByText("6 modeller").length).toBeGreaterThan(0);
+    const panel = screen.getByRole("complementary", { name: "Produktfiltre" });
+    fireEvent.change(within(panel).getByLabelText("Maksimumpris"), { target: { value: "2500" } });
+    expect(within(result).getAllByRole("link")).toHaveLength(4);
+    expect(screen.getAllByText("2 modeller").length).toBeGreaterThan(0);
+    fireEvent.change(within(panel).getByLabelText("Maksimumpris"), { target: { value: "1500" } });
+    await waitFor(() => expect(within(result).getAllByRole("link")).toHaveLength(1));
+    fireEvent.change(within(panel).getByLabelText("Maksimumpris"), { target: { value: "500" } });
+    expect(within(result).queryAllByRole("link")).toHaveLength(0);
+    expect(screen.getByText("Ingen modeller fundet")).toBeInTheDocument();
+    fireEvent.click(within(panel).getByRole("button", { name: "Ryd filtre" }));
+    expect(within(result).getAllByRole("link")).toHaveLength(8);
+  });
+
   it("uses one shared filter state for the mobile drawer and desktop panel", async () => {
     render(
       <FilteredGrid

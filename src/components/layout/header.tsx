@@ -13,6 +13,7 @@ import styles from "@/components/home/storefront.module.css";
 
 const categories = [
   { label: "iPhones", href: "/iphones" },
+  { label: "Smartphones", href: "/smartphones" },
   { label: "iPads", href: "/ipads" },
   { label: "Bærbare", href: "/baerbare" },
   { label: "Ure", href: "/smartwatches" },
@@ -21,7 +22,6 @@ const categories = [
 ];
 const menuLinks = [
   ...categories,
-  { label: "Smartphones", href: "/smartphones" },
   { label: "Beskyttelsesglas", href: "/beskyttelsesglas" },
   { label: "Reparation", href: "/reparation" },
   { label: "Sælg din enhed", href: "/saelg-din-enhed" },

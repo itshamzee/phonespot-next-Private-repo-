@@ -30,6 +30,6 @@ export default async function SmartwatchesPage() {
   return <>
     <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" }, { "@type": "ListItem", position: 2, name: "Refurbished smartwatches", item: "https://phonespot.dk/smartwatches" }] }} />
     <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
-    <DeviceCollection deviceType="watch" templates={templates} title="Refurbished smartwatches" intro="Find et smartwatch til hverdag, træning og notifikationer. Sammenlign det aktuelle udvalg efter pris, stand og faktisk lager." collectionHeading="Aktuelle smartwatches" guideTitle="Sådan vælger du smartwatch" guideIntro="Vælg først efter kompatibilitet og størrelse. Derefter kan du sammenligne de funktioner, der betyder mest i din hverdag." choices={CHOICES} faqs={FAQS} />
+    <DeviceCollection deviceType="watch" templates={templates} title="Refurbished smartwatches" intro="Til løbeturen, beskederne og de små pauser. Find et kvalitetstestet smartwatch, og vælg størrelse og funktioner, der passer til dig og din telefon." collectionHeading="Aktuelle smartwatches" guideTitle="Sådan vælger du smartwatch" guideIntro="Vælg først efter kompatibilitet og størrelse. Derefter kan du sammenligne de funktioner, der betyder mest i din hverdag." choices={CHOICES} faqs={FAQS} />
   </>;
 }

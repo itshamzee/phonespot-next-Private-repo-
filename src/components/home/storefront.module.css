@@ -146,7 +146,7 @@
 @media(max-width:1100px){.surface .wrap{padding-inline:24px}
 .surface .brandrow{gap:28px}
 .surface .utilities span{display:none}
-.surface .nav{gap:20px}
+.surface .nav{gap:14px;font-size:12px}
 .surface .nav .optional{display:none}
 .surface .campaign-copy{padding-left:35px}
 .surface .campaign h1{font-size:47px}

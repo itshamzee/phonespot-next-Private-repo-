@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { FilteredGrid, type TemplateWithStock } from "@/components/product/filtered-grid";
+import { FilteredGrid, type PromoSlot, type TemplateWithStock } from "@/components/product/filtered-grid";
+import { DeviceCollectionHero, type CollectionKind } from "./device-collection-hero";
+import styles from "./device-collection.module.css";
 
 export interface CollectionFaq {
   question: string;
@@ -18,6 +21,7 @@ interface CollectionDetailsProps {
 }
 
 interface DeviceCollectionProps extends CollectionDetailsProps {
+  collection?: CollectionKind;
   templates: TemplateWithStock[];
   title: string;
   intro: string;
@@ -36,7 +40,7 @@ export function DeviceCollectionDetails({
 }: CollectionDetailsProps) {
   return (
     <>
-      <section className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
+      <section data-collection-section="condition" className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4">
           <div className="grid gap-8 lg:grid-cols-[minmax(16rem,0.75fr)_minmax(0,1.5fr)]">
             <div>
@@ -67,7 +71,8 @@ export function DeviceCollectionDetails({
                 ))}
               </div>
             </div>
-            <aside className="self-start rounded-lg bg-[#1A3D2E] p-7 text-white">
+            <aside className="self-start overflow-hidden rounded-lg bg-[#1A3D2E] p-7 text-white">
+              <Image src="/images/store/butik-indvendig.jpg" alt="En PhoneSpot-butik med telefoner og tilbehør" width={620} height={350} sizes="(min-width: 1024px) 480px, 100vw" className={styles.storePhoto} />
               <p className="text-xs text-white/70">Vejle og Slagelse</p>
               <h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em]">Se den. Prøv den. Tag den med.</h2>
               <p className="mt-4 text-sm leading-6 text-white/75">Kom forbi en butik, hvis du vil se en enhed og have hjælp til at vælge.</p>
@@ -81,7 +86,7 @@ export function DeviceCollectionDetails({
         </div>
       </section>
 
-      <section className="border-t border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
+      <section data-collection-section="faq" className="border-t border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[minmax(14rem,0.7fr)_minmax(0,1.3fr)]">
           <div><p className="text-xs font-semibold text-[#1A3D2E]">Spørgsmål og svar</p><h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em] text-[#202421]">{faqTitle}</h2></div>
           <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] group-open:rotate-45">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
@@ -104,42 +109,21 @@ export function DeviceCollection({
   initialBrand,
   serviceLink,
   deviceType = "phone",
+  collection = deviceType === "phone" ? "iphone" : deviceType,
 }: DeviceCollectionProps) {
-  const modelLabel = `${templates.length} ${templates.length === 1 ? "model" : "modeller"}`;
+  const editorialDevice = collection === "iphone" ? "iPhone" : collection === "ipad" ? "iPad" : undefined;
+  const promos: PromoSlot[] | undefined = editorialDevice ? [
+    { position: 2, variant: "trust", href: "/garanti", device: editorialDevice },
+    { position: 5, variant: "accessories", href: "/tilbehoer", device: editorialDevice },
+  ] : undefined;
 
   return (
-    <>
-      <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
-        <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
-          <nav aria-label="Brødkrumme" className="mb-4 flex items-center gap-2 text-xs text-[#687069]">
-            <Link href="/" className="hover:text-[#1A3D2E]">Forside</Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-[#202421]">{title}</span>
-          </nav>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
-            <div>
-              <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{title}</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{intro}</p>
-            </div>
-            <div className="border-l border-[#BFC8C0] pl-4 text-sm text-[#566159]">
-              <p className="font-semibold text-[#202421]">{modelLabel} i det aktuelle udvalg</p>
-              <p className="mt-1">36 måneders garanti på enheder</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className={styles.collection} data-category={collection}>
+      <DeviceCollectionHero collection={collection} title={title} intro={intro} modelCount={templates.length} />
 
-      <section className="border-b border-[#DDE2DD] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-2 px-4 py-4 text-xs text-[#566159] sm:grid-cols-3 sm:gap-6 sm:text-sm">
-          <p className="font-medium text-[#1A3D2E]">Testet og klargjort</p>
-          <p>Batteriinfo på den enkelte enhed</p>
-          <p>Butikker i Vejle og Slagelse</p>
-        </div>
-      </section>
-
-      <section className="bg-white py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4">
-          <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} />
+      <section id="udvalg" className={styles.products} aria-label={collectionHeading}>
+        <div className={styles.wrap}>
+          <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} promos={promos} />
         </div>
       </section>
 
@@ -152,6 +136,6 @@ export function DeviceCollection({
         faqs={faqs}
         serviceLink={serviceLink}
       />
-    </>
+    </div>
   );
 }

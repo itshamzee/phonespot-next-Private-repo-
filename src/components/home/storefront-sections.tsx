@@ -58,7 +58,7 @@ export function StorefrontSections() {
       <div className={editorial.qualityCopy}>
         <span className={styles.eyebrow}>Brugt før. Klar igen.</span>
         <h2 id="home-quality-title">Refurbished elektronik.<br />Mere at give af.</h2>
-        <p>En god telefon behøver ikke være ny. Hos PhoneSpot finder du kvalitetstestede <Link href="/iphones">iPhones</Link>, <Link href="/ipads">iPads</Link>, <Link href="/baerbare">MacBooks og bærbare</Link> samt <Link href="/smartwatches">smartwatches</Link>. Vælg efter det, du har brug for, og se model, stand og pris, før du beslutter dig.</p>
+        <p>En god telefon behøver ikke være ny. Hos PhoneSpot finder du kvalitetstestede <Link href="/iphones">iPhones</Link>, <Link href="/smartphones">smartphones med Android</Link>, <Link href="/ipads">iPads</Link>, <Link href="/baerbare">MacBooks og bærbare</Link> samt <Link href="/smartwatches">smartwatches</Link>. Vælg efter det, du har brug for, og se model, stand og pris, før du beslutter dig.</p>
         <p>Når elektronik bruges længere, får vi mere ud af de materialer og det arbejde, der allerede ligger i den. Derfor hjælper vi også med <Link href="/reparation">reparation</Link> og <Link href="/saelg-din-enhed">vurdering af din brugte enhed</Link>.</p>
         <Link className={styles.textlink} href="/kvalitet">Sådan sikrer vi kvaliteten<StorefrontIcon kind="arrow" /></Link>
       </div>

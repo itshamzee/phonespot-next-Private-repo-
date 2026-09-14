@@ -4,6 +4,7 @@ import Link from "next/link";
 type ProductGridCardProps = {
   slug: string;
   image?: string;
+  imageSizes?: string;
   title: string;
   minPrice: number | null;
   compareAtPrice?: number | null;
@@ -156,6 +157,7 @@ function DevicePlaceholderIcon({ category }: { category: string }) {
 export function ProductGridCard({
   slug,
   image,
+  imageSizes = "(min-width: 1024px) 26vw, (min-width: 640px) 33vw, 100vw",
   title,
   minPrice,
   compareAtPrice,
@@ -233,10 +235,11 @@ export function ProductGridCard({
   return (
     <Link
       href={`/refurbished/${slug}`}
+      data-product-card
       className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#DDE2DD] bg-white transition-[border-color,box-shadow] hover:border-[#91A094] hover:shadow-[0_5px_20px_rgba(24,59,43,0.06)]"
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
+      <div data-product-image className="relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
         {/* Category pill — bottom left, only when requested */}
         {showCategoryBadge && (
           <div className="absolute bottom-3 left-3 z-10">
@@ -251,8 +254,8 @@ export function ProductGridCard({
             src={image}
             alt={title}
             fill
-            className="object-contain p-5 sm:p-7"
-            sizes="(min-width: 1024px) 26vw, (min-width: 640px) 33vw, 100vw"
+            className="object-contain p-3 sm:p-5"
+            sizes={imageSizes}
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2">
@@ -302,7 +305,7 @@ export function ProductGridCard({
                   På lager i {storeLocations.map((location) => location.name).join(" og ")}
                 </p>
               )}
-              <span className="mt-4 flex min-h-10 w-full items-center justify-between rounded-md bg-[#EDF2EE] px-3.5 text-sm font-semibold text-[#1A3D2E] transition-colors group-hover:bg-[#1A3D2E] group-hover:text-white">
+              <span data-product-action className="mt-4 flex min-h-10 w-full items-center justify-between rounded-md bg-[#EDF2EE] px-3.5 text-sm font-semibold text-[#1A3D2E] transition-colors group-hover:bg-[#1A3D2E] group-hover:text-white">
                 Se modellen
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
