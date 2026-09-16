@@ -124,7 +124,7 @@ export function applyCategoryFilters(templates: TemplateWithStock[], state: Filt
       (state.grades.has("B") && template.base_price_b !== null) ||
       (state.grades.has("C") && template.base_price_c !== null)
     )) return false;
-    if (state.storageOptions.size > 0 && !template.storage_options.some(
+    if (state.storageOptions.size > 0 && !(template.storage_options ?? []).some(
       (value) => state.storageOptions.has(normaliseStorage(value)),
     )) return false;
     if (state.onlyInStock && template.device_count <= 0) return false;
@@ -228,7 +228,7 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
     const ram = new Set<string>();
     const processors = new Map<string, number>();
     for (const template of templates) {
-      template.storage_options.forEach((value) => storage.add(normaliseStorage(value)));
+      (template.storage_options ?? []).forEach((value) => storage.add(normaliseStorage(value)));
       brands.set(template.brand, (brands.get(template.brand) ?? 0) + 1);
       if (template.specifications?.screen_size) screens.add(normaliseScreenSize(template.specifications.screen_size));
       if (template.specifications?.ram) ram.add(normaliseRam(template.specifications.ram));
