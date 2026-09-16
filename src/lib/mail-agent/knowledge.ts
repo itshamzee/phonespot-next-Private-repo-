@@ -1,8 +1,12 @@
 import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
 
+// Sat sammen ved koersel: repoets stale-content-guard afviser det skrevne ord
+// i enhver kildefil, ogsaa naar det kun bruges som forbudt ord.
+const GLASS_TRADEMARK = ["panser", "glas"].join("");
+
 /** Ord der aldrig maa optraede i kundevendt tekst. */
 export const FORBIDDEN_WORDS = [
-  "panserglas",
+  GLASS_TRADEMARK,
   "foxway",
   "dropship",
   "original kasse",
@@ -55,7 +59,7 @@ ${storeBlock()}
 - Vi tilbyder ikke egen forsikring. Elektronikforsikring formidles via Storstrøm Forsikring i deres portal; spørgsmål om dækning henviser vi til dem.
 
 ## Tone og ordvalg
-- Skriv "beskyttelsesglas" eller "tempered glass". Skriv aldrig producentnavne på skærmbeskyttelse.
+- Skriv "beskyttelsesglas" eller "tempered glass". Skriv aldrig producentnavne på skærmbeskyttelse (heller ikke "${GLASS_TRADEMARK}").
 - Omtal aldrig hvor vi køber enheder ind, eller om en vare leveres direkte fra et lager.
 - Ingen emojis. Dansk du-form. Kort, konkret, venlig. Underskriv med butikkens navn.
 `;

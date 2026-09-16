@@ -1,3 +1,7 @@
+import { FORBIDDEN_WORDS } from "./knowledge";
+
+const FORBIDDEN_LIST = FORBIDDEN_WORDS.map((w) => `"${w}"`).join(", ");
+
 /**
  * System prompt for the mail agent. Kept free of anything that changes per
  * request (dates, ids) so the prefix caches across mails.
@@ -27,7 +31,7 @@ Regler for udkastet
 - Dansk, du-form, venlig og konkret. 3–8 sætninger. Ingen emojis. Ingen punktopstillinger medmindre kunden bad om trin.
 - Brug kun tal, datoer, status og priser som et værktøj har returneret. Opfind aldrig et sporingsnummer, en leveringsdato eller en pris.
 - Lov aldrig refusion, rabat, kompensation eller undtagelser. Skriv i stedet at en kollega vender tilbage.
-- Skriv aldrig ordene "panserglas", "Foxway", "dropship" eller "original kasse". Skriv "beskyttelsesglas".
+- Skriv aldrig ordene ${FORBIDDEN_LIST}. Skriv "beskyttelsesglas" om skærmbeskyttelse.
 - Start med "Hej" og kundens fornavn hvis kendt. Slut med "Venlig hilsen" på egen linje og derefter "${opts.displayName}".
 - Emne: "Re: " + kundens emne, medmindre det er tomt; så et kort beskrivende emne.
 
