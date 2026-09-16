@@ -8,16 +8,13 @@
 - Den nedlagte ODR-platform er erstattet med den verificerede danske side fra EU-Kommissionen om klagehjælp: https://consumer-redress.ec.europa.eu/index_da. Afsnittet om Nævnenes Hus er bevaret.
 - Den eksisterende interne henvisning til privatlivspolitikken bruger nu Next.js `Link`, så den ændrede handelsbetingelsesside består lint uden at ændre den kundevendte destination.
 
-## Afventer forretningsbeslutning
+## Afklaret tekstpolitik
 
-Følgende kundevendte løfter er registreret, men ikke ændret, fordi der fortsat mangler beslutning om en fælles returpolitik:
+Ejeren har valgt 14 dages fortrydelsesret ved onlinekøb med kundebetalt returfragt. De tidligere afvigelser er rettet i kassen, på Vejle-siderne og på Trusmi-briller og -blyant, inklusive FAQ. Trusmi har ikke længere særtilbud om 24 måneders fuld returret.
 
-- Trusmi briller og blyant: “24 mdr./24 måneders fuld returret” på side og FAQ.
-- iPhones Vejle og bærbare Vejle: 30 dages returret.
-- Kasse: “Nem og gratis returnering”.
-- Reparation Vejle og iPhone 18-tilbehør: livstidsgaranti.
+Generelle løfter om livstidsgaranti på reparationer er fjernet; garantien henviser nu til den konkrete reparation. Den lovpligtige 2 års reklamationsret ved fejl er særskilt fra fortrydelse, og kundebetalt fortrydelsesfragt gælder ikke en berettiget reklamation.
 
-B2B-vilkår og de eksisterende forbrugerfortrydelsesvilkår i handelsbetingelserne er ikke ændret.
+B2B-vilkår, tidligere bekræftede køb og de eksisterende forbrugerfortrydelsesvilkår i handelsbetingelserne er ikke ændret.
 
 ## Kontrol
 

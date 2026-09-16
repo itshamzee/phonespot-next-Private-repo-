@@ -165,14 +165,6 @@ export default async function TrusmiBrillerPage() {
       availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "PhoneSpot" },
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "DK",
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: 14,
-        customerRemorseReturnFees: "https://schema.org/ReturnShippingFees",
-        merchantReturnLink: "https://phonespot.dk/handelsbetingelser",
-      },
     },
   };
 

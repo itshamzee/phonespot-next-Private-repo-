@@ -150,7 +150,7 @@ export default function KassePage() {
                       <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H4.598a.75.75 0 0 0-.75.75v3.634a.75.75 0 0 0 1.5 0v-2.033l.312.311a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.06-7.795a.75.75 0 0 0-1.5 0v2.033l-.312-.31A7 7 0 0 0 2.838 8.49a.75.75 0 0 0 1.449.39A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h3.634a.75.75 0 0 0 .75-.75V3.63Z" clipRule="evenodd" />
                     </svg>
                   ),
-                  title: "14 dages returret",
+                  title: "14 dages fortrydelsesret",
                   sub: "Returfragt betales af kunden ved fortrydelse",
                 },
                 {
