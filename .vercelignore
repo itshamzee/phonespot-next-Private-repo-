@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+pnpm-workspace.yaml
+find-orders*.mjs
+get-order-details.mjs
+playwright-report
+test-results
+.design-canvas
