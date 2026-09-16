@@ -31,7 +31,9 @@ function skuHref(sku: SkuProduct): string | null {
   const deviceCollection = deviceCollections[sku.category ?? ""];
   if (deviceCollection) return `/${deviceCollection}/${sku.slug}`;
   const category = ACCESSORY_CATEGORY_TO_SLUG[sku.subcategory ?? sku.category ?? "other"];
-  return category ? `/tilbehoer/${category}/${sku.slug}` : `/tilbehor/${sku.slug}`;
+  // Detaljesiden slår kun op på slug, så et ukendt kategorisegment er ufarligt —
+  // men ruten /tilbehor findes ikke, så fald tilbage til /tilbehoer.
+  return `/tilbehoer/${category ?? "andet"}/${sku.slug}`;
 }
 
 export default async function SearchPage({ searchParams }: SearchProps) {

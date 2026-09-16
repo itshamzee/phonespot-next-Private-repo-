@@ -40,8 +40,10 @@ const fixtures = vi.hoisted(() => {
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
-    from(table: keyof typeof fixtures) {
-      let rows: Record<string, unknown>[] = [...fixtures[table]];
+    from(table: keyof typeof fixtures | "checkout_sku_inventory") {
+      let rows: Record<string, unknown>[] = table === "checkout_sku_inventory"
+        ? fixtures.sku_products.map(product => ({ ...product, store_stock: 0, online_stock: 0 }))
+        : [...fixtures[table]];
       const query = {
         select: () => query,
         order: () => query,
@@ -58,8 +60,10 @@ vi.mock("@/lib/supabase/admin", () => ({
           rows = rows.filter(row => values.includes(row[field]));
           return query;
         },
-        contains: (field: string, values: string[]) => {
-          rows = rows.filter(row => Array.isArray(row[field]) && values.every(value => (row[field] as string[]).includes(value)));
+        contains: (field: string, values: string | string[]) => {
+          // jsonb-contains sendes som JSON-tekst af ruten (se route.ts).
+          const list: string[] = typeof values === "string" ? JSON.parse(values) : values;
+          rows = rows.filter(row => Array.isArray(row[field]) && list.every(value => (row[field] as string[]).includes(value)));
           return query;
         },
         ilike: (field: string, pattern: string) => {

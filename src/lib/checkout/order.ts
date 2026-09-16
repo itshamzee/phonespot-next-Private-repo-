@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/client";
+import { readReservationOwner } from "@/lib/cart/reservation-owner";
 import { randomBytes } from "crypto";
 import type { ValidatedItem } from "./validate";
 import type { DiscountApplication } from "@/lib/cart/types";
@@ -115,6 +116,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
         order_id: order.id,
         item_type: "device" as const,
         device_id: item.deviceId,
+        reservation_id: vi.reservationId ?? null,
         sku_product_id: null,
         quantity: 1,
         unit_price: vi.serverPrice + upgradeSum,
@@ -144,7 +146,11 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     }
   });
 
-  const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+  const { error: itemsError } = await supabase.rpc("attach_checkout_order_items", {
+    p_order_id: order.id,
+    p_owner_hash: params.items.some(vi => vi.reservationId) ? await readReservationOwner() : null,
+    p_items: orderItems,
+  });
   if (itemsError) throw new Error(`Failed to create order items: ${itemsError.message}`);
 
   return { id: order.id, orderNumber: order.order_number, withdrawalToken };

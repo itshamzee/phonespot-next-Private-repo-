@@ -8,13 +8,15 @@ const products = vi.hoisted(() => [
   { id: "cover", title: "Cover", slug: "cover", subcategory: "cover", category: "accessory", status: "published", is_active: true, selling_price: 14900, images: [], compatible_models: [], always_in_stock: true },
 ]);
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ from(table: string) {
-  let rows = table === "sku_products" ? [...products] : [];
+  let rows = table === "sku_products" || table === "checkout_sku_inventory"
+    ? products.map(product => ({ ...product, store_stock: 0, online_stock: 0 })) : [];
   const q = {
     select: () => q, order: () => q, limit: () => q,
     eq: (key: string, value: unknown) => { rows = rows.filter(row => row[key as keyof typeof row] === value); return q; },
     neq: (key: string, value: unknown) => { rows = rows.filter(row => row[key as keyof typeof row] !== value); return q; },
     in: (key: string, values: unknown[]) => { rows = rows.filter(row => values.includes(row[key as keyof typeof row])); return q; },
-    contains: (key: string, values: string[]) => { rows = rows.filter(row => values.every(value => (row[key as keyof typeof row] as string[]).includes(value))); return q; },
+    // jsonb-contains sendes som JSON-tekst af ruten (se route.ts).
+    contains: (key: string, values: string | string[]) => { const list: string[] = typeof values === "string" ? JSON.parse(values) : values; rows = rows.filter(row => list.every(value => (row[key as keyof typeof row] as string[]).includes(value))); return q; },
     ilike: () => q,
     then: (resolve: (value: unknown) => unknown) => Promise.resolve(resolve({ data: rows, error: null })),
   };

@@ -11,14 +11,18 @@ export async function getActiveBrands(): Promise<RepairBrand[]> {
   return (data as RepairBrand[]) ?? [];
 }
 
+// Brand-/modelopslag skelner mellem "findes ikke" og "databasen svarede ikke".
+// Siderne kalder notFound() på null, og notFound under prerender/ISR caches
+// som 404 i op til en time — en forbigående fejl må derfor kaste i stedet.
 export async function getBrandBySlug(slug: string): Promise<RepairBrand | null> {
   const supabase = createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("repair_brands")
     .select("*")
     .eq("slug", slug)
     .eq("active", true)
-    .single();
+    .maybeSingle();
+  if (error) throw error;
   return (data as RepairBrand | null) ?? null;
 }
 
@@ -35,13 +39,14 @@ export async function getModelsByBrand(brandId: string): Promise<RepairModel[]> 
 
 export async function getModelBySlug(brandId: string, modelSlug: string): Promise<RepairModel | null> {
   const supabase = createServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("repair_models")
     .select("*")
     .eq("brand_id", brandId)
     .eq("slug", modelSlug)
     .eq("active", true)
-    .single();
+    .maybeSingle();
+  if (error) throw error;
   return (data as RepairModel | null) ?? null;
 }
 
