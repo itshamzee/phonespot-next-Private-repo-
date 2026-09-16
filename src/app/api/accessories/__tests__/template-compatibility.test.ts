@@ -40,8 +40,10 @@ const fixtures = vi.hoisted(() => {
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
-    from(table: keyof typeof fixtures) {
-      let rows: Record<string, unknown>[] = [...fixtures[table]];
+    from(table: keyof typeof fixtures | "checkout_sku_inventory") {
+      let rows: Record<string, unknown>[] = table === "checkout_sku_inventory"
+        ? fixtures.sku_products.map(product => ({ ...product, store_stock: 0, online_stock: 0 }))
+        : [...fixtures[table]];
       const query = {
         select: () => query,
         order: () => query,

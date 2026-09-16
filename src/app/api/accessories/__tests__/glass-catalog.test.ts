@@ -8,7 +8,8 @@ const products = vi.hoisted(() => [
   { id: "cover", title: "Cover", slug: "cover", subcategory: "cover", category: "accessory", status: "published", is_active: true, selling_price: 14900, images: [], compatible_models: [], always_in_stock: true },
 ]);
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ from(table: string) {
-  let rows = table === "sku_products" ? [...products] : [];
+  let rows = table === "sku_products" || table === "checkout_sku_inventory"
+    ? products.map(product => ({ ...product, store_stock: 0, online_stock: 0 })) : [];
   const q = {
     select: () => q, order: () => q, limit: () => q,
     eq: (key: string, value: unknown) => { rows = rows.filter(row => row[key as keyof typeof row] === value); return q; },
