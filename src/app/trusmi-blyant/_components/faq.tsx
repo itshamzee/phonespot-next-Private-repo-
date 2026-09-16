@@ -28,7 +28,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Følger der garanti med?",
-    a: "Ja — 24 måneders fuld returret + reklamationsret efter dansk købelov. Hvis blyanten fejler, ordner vi det uden ekstra omkostninger.",
+    a: "Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen, og du betaler selv returfragten ved fortrydelse. Ved fejl har du særskilt 2 års reklamationsret efter købeloven. Kontakt os, så hjælper vi med reklamationen.",
   },
   {
     q: "Kan jeg betale i rater?",

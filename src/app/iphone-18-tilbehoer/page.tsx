@@ -199,7 +199,7 @@ export default function Iphone18TilbehoerPage() {
               Slagelse — perfekt placeret, uden støv og luftbobler, mens du venter. Skulle
               uheldet alligevel være ude, står vores værksted klar:{" "}
               <Link href="/reparation/iphone" className="font-semibold text-[#1A3D2E] underline">
-                iPhone-reparation med livstidsgaranti
+                iPhone-reparation med garanti efter de konkrete reparationsvilkår
               </Link>{" "}
               — også på de nye modeller.
             </p>

@@ -151,7 +151,7 @@ export default function KassePage() {
                     </svg>
                   ),
                   title: "14 dages returret",
-                  sub: "Nem og gratis returnering",
+                  sub: "Returfragt betales af kunden ved fortrydelse",
                 },
                 {
                   icon: (

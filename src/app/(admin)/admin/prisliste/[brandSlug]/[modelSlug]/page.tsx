@@ -833,7 +833,7 @@ export default function AdminServiceEditorPage({
                   type="text"
                   value={infoForm.warranty_info}
                   onChange={(e) => setInfoForm({ ...infoForm, warranty_info: e.target.value })}
-                  placeholder="Livstidsgaranti på reservedelen"
+                  placeholder="Garanti for den konkrete reparation"
                   className="rounded-lg border border-soft-grey p-3 text-sm focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
                 />
               </div>

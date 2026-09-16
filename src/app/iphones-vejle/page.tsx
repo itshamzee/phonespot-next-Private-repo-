@@ -182,9 +182,9 @@ const USP_ITEMS = [
       "Del betalingen op i 3 måneder rentefrit med Klarna. Ingen skjulte gebyrer.",
   },
   {
-    title: "30 dages returret",
+    title: "14 dages fortrydelsesret",
     description:
-      "Fortryder du dit køb, returnerer du blot enheden inden for 30 dage mod fuld refundering.",
+      "Ved onlinekøb kan du fortryde inden for 14 dage fra modtagelsen. Du betaler selv returfragten ved fortrydelse.",
   },
 ];
 
@@ -433,7 +433,7 @@ export default function IphonesVejlePage() {
               {
                 question: "Kan jeg returnere en refurbished iPhone?",
                 answer:
-                  "Ja, du har 30 dages fuld returret. Er du ikke tilfreds af en hvilken som helst årsag, returnerer du enheden og får pengene tilbage.",
+                  "Ja, ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen. Du betaler selv returfragten ved fortrydelse. Se handelsbetingelserne for fremgangsmåden.",
               },
             ].map((faq) => (
               <details key={faq.question} className="group px-6 py-5">

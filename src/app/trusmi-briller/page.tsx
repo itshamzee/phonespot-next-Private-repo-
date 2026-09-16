@@ -51,7 +51,8 @@ const SPECS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "Materiale",       value: "Plastik PC + ABS" },
   { label: "Mål",             value: "176 × 153,5 × 49 mm" },
   { label: "Vægt",            value: "180 g" },
-  { label: "Garanti",         value: "24 mdr. fuld returret" },
+  { label: "Fortrydelse",     value: "14 dage (returfragt for egen regning)" },
+  { label: "Reklamation",     value: "2 år efter købeloven" },
 ];
 
 const STEPS: ReadonlyArray<{ n: string; title: string; body: string }> = [
@@ -164,6 +165,14 @@ export default async function TrusmiBrillerPage() {
       availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@type": "Organization", name: "PhoneSpot" },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "DK",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 14,
+        customerRemorseReturnFees: "https://schema.org/ReturnShippingFees",
+        merchantReturnLink: "https://phonespot.dk/handelsbetingelser",
+      },
     },
   };
 
@@ -244,7 +253,7 @@ export default async function TrusmiBrillerPage() {
                 "På lager i Slagelse + Vejle",
                 "Hent samme dag",
                 "Fri fragt over 500 kr",
-                "24 mdr. fuld returret",
+                "14 dages fortrydelsesret · returfragt for egen regning",
               ].map((b) => (
                 <li key={b} className="flex items-start gap-2 text-white/85">
                   <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#C9A56F]" viewBox="0 0 20 20" fill="currentColor">

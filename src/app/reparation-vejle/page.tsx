@@ -6,12 +6,12 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "iPhone- og Samsung-reparation i Vejle — fra 299 kr. | PhoneSpot",
   description:
-    "Professionel telefon- og tabletreparation i Vejle. Skærmskift, batteriskift og mere fra 299 kr. Livstidsgaranti på alle reparationer. PhoneSpot Vejle, Løversysselvej 3B.",
+    "Professionel telefon- og tabletreparation i Vejle. Skærmskift, batteriskift og mere fra 299 kr. Se garantien ved den konkrete reparation. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
     title: "iPhone- og Samsung-reparation i Vejle — fra 299 kr. | PhoneSpot",
     description:
-      "Professionel telefon- og tabletreparation i Vejle fra 299 kr. Livstidsgaranti på alle reparationer. Løversysselvej 3B, 7100 Vejle.",
+      "Professionel telefon- og tabletreparation i Vejle fra 299 kr. Se garantien ved den konkrete reparation. Løversysselvej 3B, 7100 Vejle.",
     url: "https://phonespot.dk/reparation-vejle",
     type: "website",
   },
@@ -121,7 +121,7 @@ const faqJsonLd = {
       name: "Hvad koster iPhone-skærmskift i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Prisen afhænger af iPhone-modellen. Se aktuelle priser på vores reparationsside — alle priser er faste og inkluderer moms, reservedele og livstidsgaranti.",
+        text: "Prisen afhænger af iPhone-modellen. Se aktuelle priser og garantioplysninger ved den konkrete reparation på vores reparationsside. Priserne inkluderer moms og reservedele.",
       },
     },
     {
@@ -129,7 +129,7 @@ const faqJsonLd = {
       name: "Hvad er jeres garanti på reparationer?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle reparationer er dækket af livstidsgaranti. Hvis den samme fejl opstår igen, reparerer vi uden beregning.",
+        text: "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper gerne med at afklare, hvad der gælder for den valgte reservedel og reparation.",
       },
     },
   ],
@@ -187,12 +187,12 @@ const FAQS = [
   {
     question: "Hvad koster reparation i Vejle?",
     answer:
-      "Prisen afhænger af model og type reparation. Se vores fulde prisliste på /reparation. Alle priser er faste og inkluderer moms, reservedele og livstidsgaranti.",
+      "Prisen afhænger af model og type reparation. Se priser og garantioplysninger ved den konkrete reparation på /reparation. Priserne inkluderer moms og reservedele.",
   },
   {
     question: "Hvad er jeres garanti på reparationer?",
     answer:
-      "Alle reparationer er dækket af livstidsgaranti. Hvis den samme fejl opstår igen, reparerer vi uden beregning. Det gælder alle reparationer i vores Vejle-butik.",
+      "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper gerne med at afklare, hvad der gælder for den valgte reservedel og reparation i Vejle.",
   },
   {
     question: "Hvilke mærker reparerer I i Vejle?",
@@ -218,7 +218,7 @@ export default function ReparationVejlePage() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
             Professionel iPhone-, Samsung- og iPad-reparation i Vejle. Fra 299 kr.,
-            klar på 30 minutter, med livstidsgaranti på alle reparationer.
+            klar på 30 minutter. Se garantioplysningerne ved den konkrete reparation.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -238,7 +238,7 @@ export default function ReparationVejlePage() {
 
           <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { title: "Livstidsgaranti", desc: "På arbejde og dele" },
+              { title: "Garanti", desc: "Se vilkår ved reparationen" },
               { title: "30 minutter", desc: "90% klar samme dag" },
               { title: "Fra 299 kr", desc: "Faste priser, inkl. moms" },
               { title: "Walk-in", desc: "Ingen tidsbestilling" },
@@ -421,9 +421,9 @@ export default function ReparationVejlePage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                title: "Livstidsgaranti",
+                title: "Garanti ved reparation",
                 description:
-                  "Alle reparationer er dækket af livstidsgaranti. Opstår den samme fejl igen, reparerer vi uden beregning.",
+                  "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser for dækning og varighed.",
               },
               {
                 title: "Hurtig service",
@@ -479,7 +479,7 @@ export default function ReparationVejlePage() {
               uden forudgående tidsbestilling. Vi skifter skærme, batterier,
               opladningsporte og meget mere — og 90% af reparationerne er klar
               inden for 30 minutter. Alle reparationer udføres med
-              reservedele af høj kvalitet og er dækket af livstidsgaranti.
+              reservedele af høj kvalitet. Se garantien ved den konkrete reparation.
             </p>
           </div>
 
