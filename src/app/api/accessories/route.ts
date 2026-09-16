@@ -65,7 +65,10 @@ export async function GET(req: NextRequest) {
     const { data: compatible, error: compatibilityError } = await supabase
       .from("sku_products").select("id")
       .eq("status", "published").eq("is_active", true)
-      .contains("compatible_models", [modelSlug]);
+      // compatible_models er jsonb. Et JS-array serialiseres af supabase-js som
+      // Postgres-array-literal ({a,b}), som PostgREST afviser som ugyldig JSON.
+      // Send derfor JSON-teksten selv.
+      .contains("compatible_models", JSON.stringify([modelSlug]));
     if (templateError || compatibilityError) return NextResponse.json({ error: "Modeloplysninger kunne ikke hentes" }, { status: 503 });
     const ids = new Set<string>((compatible ?? []).map(p => p.id));
 

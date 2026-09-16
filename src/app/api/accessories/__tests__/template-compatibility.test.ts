@@ -60,8 +60,10 @@ vi.mock("@/lib/supabase/admin", () => ({
           rows = rows.filter(row => values.includes(row[field]));
           return query;
         },
-        contains: (field: string, values: string[]) => {
-          rows = rows.filter(row => Array.isArray(row[field]) && values.every(value => (row[field] as string[]).includes(value)));
+        contains: (field: string, values: string | string[]) => {
+          // jsonb-contains sendes som JSON-tekst af ruten (se route.ts).
+          const list: string[] = typeof values === "string" ? JSON.parse(values) : values;
+          rows = rows.filter(row => Array.isArray(row[field]) && list.every(value => (row[field] as string[]).includes(value)));
           return query;
         },
         ilike: (field: string, pattern: string) => {
