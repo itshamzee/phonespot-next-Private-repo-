@@ -25,7 +25,7 @@ describe("loadMailboxes", () => {
       MAIL_AGENT_MAILBOXES: "info@phonespot.dk, slagelse@phonespot.dk,ha@phonespot.dk",
       ONECOM_MAIL_PASSWORD_INFO: "a",
       ONECOM_MAIL_PASSWORD_HA: "c",
-    } as NodeJS.ProcessEnv;
+    } as unknown as NodeJS.ProcessEnv;
     const boxes = loadMailboxes(env);
     expect(boxes.map((b) => b.address)).toEqual(["info@phonespot.dk", "ha@phonespot.dk"]);
     expect(boxes[0]).toMatchObject({ localPart: "info", password: "a", displayName: "PhoneSpot", storeId: null });

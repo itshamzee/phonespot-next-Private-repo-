@@ -171,7 +171,7 @@ export interface RepairComment {
 }
 
 // --- Inquiry types ---
-export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring";
+export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email";
 export type InquiryChannel = "email" | "sms" | "form";
 export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 
@@ -187,6 +187,10 @@ export interface ContactInquiry {
   source: InquirySource;
   assigned_to: string | null;
   metadata: Record<string, unknown> | null;
+  /** Hvilken af vores postkasser traaden lever i (null for kontaktformular). */
+  mailbox?: string | null;
+  /** Mailassistentens kategori, se MailCategory i lib/mail-agent/types. */
+  category?: string | null;
   created_at: string;
 }
 
@@ -197,6 +201,8 @@ export interface InquiryMessage {
   channel: InquiryChannel;
   body: string;
   staff_name: string | null;
+  message_id?: string | null;
+  in_reply_to?: string | null;
   created_at: string;
 }
 

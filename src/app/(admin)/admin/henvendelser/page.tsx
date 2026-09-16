@@ -49,13 +49,14 @@ const ALL_STATUSES: (InquiryStatus | "alle")[] = ["alle", "ny", "besvaret", "ven
 const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   alle: "Alle",
   kontaktformular: "Kontaktformular",
+  email: "Email",
   "saelg-enhed": "Sælg enhed",
   "reparation-booking": "Booking",
   manuel: "Manuel",
   elektronikforsikring: "Forsikring",
 };
 
-const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring"];
+const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "email", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring"];
 
 const CHANNEL_LABELS: Record<string, string> = {
   email: "Email",
