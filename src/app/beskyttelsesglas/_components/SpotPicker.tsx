@@ -10,7 +10,7 @@ import { useCart } from "@/components/cart/cart-context";
 import type { SpotSku, SpotVariantKind } from "@/lib/spot/types";
 import type { CartSkuItem } from "@/lib/cart/types";
 
-// Popular models to surface as quick-picks when nothing is selected.
+// Selected models to surface as quick-picks when nothing is selected.
 const QUICK_PICKS = [
   "iphone-17-pro-max",
   "iphone-17-pro",
@@ -98,6 +98,7 @@ export function SpotPicker({ skus }: { skus: SpotSku[] }) {
   const { glassVariants, lensSku, plateauSkus } = lookupFor(selected);
   return (
     <ModelConfigurator
+      key={selected}
       modelSlug={selected}
       glassVariants={glassVariants}
       lensSku={lensSku}
@@ -119,29 +120,31 @@ function ModelSearch({
   onPick: (slug: string) => void;
 }) {
   const [q, setQ] = useState("");
+  const resultsRef = useRef<HTMLUListElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const coveredSet = useMemo(() => new Set(covered), [covered]);
 
   const matches = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (term.length < 1) return [];
-    return TILBEHOER_DEVICES.filter(
-      (d) => coveredSet.has(d.slug) && (d.label.toLowerCase().includes(term) || d.slug.includes(term)),
+    return covered.map(slug => ({slug,label:labelFor(slug)})).filter(
+      d => d.label.toLowerCase().includes(term) || d.slug.includes(term),
     ).slice(0, 8);
-  }, [q, coveredSet]);
+  }, [q, covered]);
 
   const quickPicks = QUICK_PICKS.filter((s) => coveredSet.has(s));
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-12 md:py-16">
-      <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_4px_24px_-8px_rgba(26,61,46,0.08)] md:rounded-3xl md:p-10">
-        <div className="text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A3D2E]/60">Step 1 af 2</p>
-          <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-[#1A3D2E] md:text-3xl">
+    <section className="mx-auto max-w-[1280px] px-5 py-6 sm:px-9 md:py-8">
+      <div className="max-w-3xl rounded-2xl border border-sand bg-[#f4f5f2] p-5 sm:p-7">
+        <div>
+          <p className="text-[11px] font-bold tracking-normal text-[#1A3D2E]/60">Trin 1 af 2</p>
+          <h2 className="mt-2 font-body text-2xl font-semibold tracking-tight text-[#1A3D2E] md:text-3xl">
             Hvilken enhed har du?
           </h2>
         </div>
 
-        <div className="relative mt-6">
+        <div className="relative mt-5">
           <svg
             aria-hidden
             className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-black/30"
@@ -157,18 +160,25 @@ function ModelSearch({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Skriv fx iPhone 15, Galaxy S25, iPad Pro..."
-            className="w-full rounded-full border border-black/[0.08] bg-[#FAF7F1] py-4 pl-14 pr-5 text-base text-black placeholder-black/40 outline-none transition-all focus:border-[#1A3D2E] focus:bg-white focus:ring-2 focus:ring-[#1A3D2E]/15"
-            autoFocus
+            className="w-full rounded-lg border border-black/[0.08] bg-[#f4f5f2] py-4 pl-14 pr-5 text-base text-black placeholder-black/40 outline-none transition-all focus:border-[#1A3D2E] focus:bg-white focus:ring-2 focus:ring-[#1A3D2E]/15"
+            ref={searchRef}
+            onKeyDown={event => { if (event.key === "ArrowDown") { event.preventDefault(); resultsRef.current?.querySelector("button")?.focus(); } if(event.key === "Escape") setQ(""); }}
             aria-label="Søg efter din enhed"
           />
           {matches.length > 0 && (
-            <ul className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-xl">
+            <ul ref={resultsRef} aria-label="Modeller, der matcher søgningen" onKeyDown={event => {
+              const buttons=Array.from(resultsRef.current?.querySelectorAll("button") ?? []);
+              const index=buttons.indexOf(document.activeElement as HTMLButtonElement);
+              if(event.key === "ArrowDown") { event.preventDefault(); buttons[(index+1)%buttons.length]?.focus(); }
+              if(event.key === "ArrowUp") { event.preventDefault(); if(index<=0) searchRef.current?.focus(); else buttons[index-1]?.focus(); }
+              if(event.key === "Escape") { event.preventDefault(); setQ(""); searchRef.current?.focus(); }
+            }} className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-xl">
               {matches.map((m) => (
                 <li key={m.slug}>
                   <button
                     type="button"
                     onClick={() => onPick(m.slug)}
-                    className="flex w-full items-center justify-between px-5 py-3.5 text-left text-sm font-medium transition-colors hover:bg-[#FAF7F1]"
+                    className="flex w-full items-center justify-between px-5 py-3.5 text-left text-sm font-medium transition-colors hover:bg-[#f4f5f2]"
                   >
                     <span>{m.label}</span>
                     <svg aria-hidden className="h-4 w-4 text-black/40" viewBox="0 0 16 16" fill="none">
@@ -181,16 +191,18 @@ function ModelSearch({
           )}
         </div>
 
+        {q.trim().length > 0 && matches.length === 0 && <p role="status" className="mt-4 text-sm text-charcoal/65">Ingen modeller matcher din søgning. Prøv modelnavnet igen.</p>}
+        {covered.length === 0 && <p role="status" className="mt-4 text-sm text-charcoal/65">Modeludvalget er ikke tilgængeligt lige nu. Kontakt butikken for hjælp.</p>}
         {q.trim().length === 0 && quickPicks.length > 0 && (
-          <div className="mt-8">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">Populære</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-5">
+            <p className="mb-3 text-[11px] font-bold tracking-normal text-black/40">Udvalgte modeller</p>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {quickPicks.map((slug) => (
                 <button
                   key={slug}
                   type="button"
                   onClick={() => onPick(slug)}
-                  className="rounded-full border border-black/[0.08] bg-[#FAF7F1] px-4 py-2 text-sm font-medium text-[#1A3D2E] transition-all hover:border-[#1A3D2E]/30 hover:bg-white"
+                  className="rounded-lg border border-black/[0.08] bg-[#f4f5f2] px-4 py-2 text-sm font-medium text-[#1A3D2E] transition-all hover:border-[#1A3D2E]/30 hover:bg-white"
                 >
                   {labelFor(slug)}
                 </button>
@@ -227,23 +239,20 @@ function ModelConfigurator({
   const [adding, setAdding] = useState(false);
   const configRef = useRef<HTMLDivElement>(null);
 
-  // When model changes, reset variant selection + scroll the configurator into view.
+  // The parent keys each model, so all selections reset together before render.
   useEffect(() => {
-    setVariantId(glassVariants[0]?.id);
-    setAddLens(false);
-    setAddPlateauId(null);
     configRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [modelSlug, glassVariants]);
+  }, []);
 
   if (glassVariants.length === 0) {
     return (
       <section ref={configRef} className="mx-auto max-w-3xl px-4 py-12 md:py-16">
-        <div className="rounded-2xl border border-black/[0.06] bg-white p-8 text-center md:rounded-3xl">
-          <h2 className="font-display text-xl font-bold text-[#1A3D2E]">
+        <div className="rounded-2xl border border-black/[0.06] bg-white p-8 text-center md:rounded-2xl">
+          <h2 className="font-body text-xl font-bold text-[#1A3D2E]">
             Vi har ikke beskyttelsesglas til {labelFor(modelSlug)} endnu
           </h2>
-          <p className="mt-3 text-sm text-black/60">Kig forbi igen snart — eller besøg os i Vejle eller Slagelse så vi kan hjælpe.</p>
-          <button type="button" onClick={onChangeModel} className="mt-6 rounded-full border border-[#1A3D2E] px-6 py-3 text-sm font-semibold text-[#1A3D2E] hover:bg-[#1A3D2E] hover:text-white transition-colors">
+          <p className="mt-3 text-sm text-black/60">Kig forbi igen snart — eller besøg os i Vejle eller Slagelse, så vi kan hjælpe.</p>
+          <button type="button" onClick={onChangeModel} className="mt-6 rounded-lg border border-[#1A3D2E] px-6 py-3 text-sm font-semibold text-[#1A3D2E] hover:bg-[#1A3D2E] hover:text-white transition-colors">
             Vælg en anden enhed
           </button>
         </div>
@@ -278,7 +287,7 @@ function ModelConfigurator({
   }
 
   return (
-    <section ref={configRef} className="mx-auto max-w-6xl px-4 py-10 md:py-14">
+    <section ref={configRef} className="mx-auto max-w-[1280px] px-5 py-6 sm:px-9 md:py-8">
       {/* Change-model link */}
       <button
         type="button"
@@ -293,28 +302,28 @@ function ModelConfigurator({
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
         {/* Product image */}
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#FAF7F1] md:rounded-3xl">
-          <Image
-            src={selected.images[0] ?? "/spot/hero.png"}
+        <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f5f2] md:rounded-2xl">
+          {selected.images[0] ? <Image
+            src={selected.images[0]}
             alt={selected.title}
             fill
             className="object-contain p-8 md:p-12"
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
-          />
+          /> : <p className="flex h-full items-center justify-center text-sm text-charcoal/60">Billede mangler</p>}
         </div>
 
         {/* Config panel */}
         <div className="flex flex-col">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A3D2E]/60">Step 2 af 2</p>
-          <h2 className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight text-[#1A3D2E] md:text-4xl">
+          <p className="text-[11px] font-bold tracking-normal text-[#1A3D2E]/60">Trin 2 af 2</p>
+          <h2 className="mt-2 font-body text-3xl font-semibold leading-tight tracking-tight text-[#1A3D2E] md:text-4xl">
             {labelFor(modelSlug)}
           </h2>
           <p className="mt-2 text-sm text-black/55">Beskyttelsesglas · 9H hærdet · gratis montering i butik</p>
 
           {/* Variant toggle */}
           <div className="mt-7">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">Vælg type</p>
+            <p className="mb-3 text-[11px] font-bold tracking-normal text-black/40">Vælg type</p>
             <div className="grid grid-cols-2 gap-2.5">
               {glassVariants.map((v) => {
                 const active = v.id === selected.id;
@@ -353,7 +362,7 @@ function ModelConfigurator({
                 className="mt-1 h-4 w-4 accent-[#1A3D2E]"
               />
               <div className="flex-1">
-                <div className="text-sm font-semibold text-[#1A3D2E]">+ Kamera-linsebeskyttelse</div>
+                <div className="text-sm font-semibold text-[#1A3D2E]">+ Kameralinsebeskyttelse</div>
                 <div className="mt-0.5 text-xs">
                   <span className="text-black/30 line-through">{(lensSku.selling_price / 100).toFixed(0)} kr</span>
                   <span className="ml-1.5 font-semibold text-[#1A3D2E]">{(lensBundlePrice / 100).toFixed(0)} kr</span>
@@ -368,7 +377,7 @@ function ModelConfigurator({
             <div className="mt-4 rounded-xl border border-black/[0.08] bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-[#1A3D2E]">+ Plateau kamera-frame</div>
+                  <div className="text-sm font-semibold text-[#1A3D2E]">+ Plateau-kameraramme</div>
                   <div className="mt-0.5 text-xs text-black/50">
                     Metallisk ramme over hele kameramodulet · {(plateauSkus[0].selling_price / 100).toFixed(0)} kr
                   </div>
@@ -390,11 +399,12 @@ function ModelConfigurator({
                     <button
                       key={p.id}
                       type="button"
+                      aria-pressed={active}
                       onClick={() => setAddPlateauId(active ? null : p.id)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                         active
                           ? "border-[#1A3D2E] bg-[#1A3D2E] text-white"
-                          : "border-black/[0.08] bg-[#FAF7F1] text-[#1A3D2E] hover:border-[#1A3D2E]/30"
+                          : "border-black/[0.08] bg-[#f4f5f2] text-[#1A3D2E] hover:border-[#1A3D2E]/30"
                       }`}
                     >
                       {p.variant_label ?? "Farve"}
@@ -408,7 +418,7 @@ function ModelConfigurator({
           {/* All-accessories link — filtered to the chosen model */}
           <Link
             href={`/tilbehoer?model=${encodeURIComponent(labelFor(modelSlug))}`}
-            className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-black/[0.12] bg-[#FAF7F1]/60 p-4 transition-colors hover:border-[#1A3D2E]/30 hover:bg-[#FAF7F1]"
+            className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-black/[0.12] bg-[#f4f5f2]/60 p-4 transition-colors hover:border-[#1A3D2E]/30 hover:bg-[#f4f5f2]"
           >
             <div>
               <div className="text-sm font-semibold text-[#1A3D2E]">
@@ -426,7 +436,7 @@ function ModelConfigurator({
             type="button"
             onClick={handleAddToCart}
             disabled={adding}
-            className="mt-6 w-full rounded-full bg-[#1A3D2E] py-4 text-base font-bold text-white shadow-[0_10px_30px_-12px_rgba(26,61,46,0.5)] transition-all hover:bg-[#2a5c47] active:scale-[0.98] disabled:opacity-60"
+            className="mt-6 w-full rounded-lg bg-[#1A3D2E] py-4 text-base font-bold text-white shadow-[0_10px_30px_-12px_rgba(26,61,46,0.5)] transition-all hover:bg-[#2a5c47] active:scale-[0.98] disabled:opacity-60"
           >
             {adding ? "Lagt i kurv ✓" : `Læg i kurv · ${totalKr} kr`}
           </button>

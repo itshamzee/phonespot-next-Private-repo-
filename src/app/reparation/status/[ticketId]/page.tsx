@@ -351,7 +351,7 @@ export default async function RepairStatusPage({
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-charcoal">Email</p>
+                    <p className="text-sm font-semibold text-charcoal">E-mail</p>
                     <a
                       href={`mailto:${store.email}`}
                       className="text-sm text-green-eco hover:underline"

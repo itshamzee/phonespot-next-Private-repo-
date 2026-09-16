@@ -96,7 +96,7 @@ export function CheckoutSummary() {
       {/* Totals */}
       <div className="space-y-2 border-t border-sand pt-4 text-sm">
         <div className="flex items-center justify-between text-gray">
-          <span>Subtotal</span>
+          <span>Delsum</span>
           <span>{formatOere(subtotal)}</span>
         </div>
 
@@ -114,7 +114,7 @@ export function CheckoutSummary() {
 
         {bundleDiscountAmount > 0 && (
           <div className="flex items-center justify-between text-green-eco">
-            <span>Spot bundle rabat</span>
+            <span>Spot-pakkerabat</span>
             <span>−{formatOere(bundleDiscountAmount)}</span>
           </div>
         )}

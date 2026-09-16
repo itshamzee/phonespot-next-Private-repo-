@@ -68,7 +68,7 @@ export default function IndstillingerPage() {
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setProfileMsg({ type: "err", text: "Navn er paakraevet" });
+      setProfileMsg({ type: "err", text: "Dit navn er påkrævet" });
       return;
     }
     setSavingProfile(true);
@@ -89,7 +89,7 @@ export default function IndstillingerPage() {
     if (res.ok) {
       setProfileMsg({ type: "ok", text: "Profil opdateret" });
     } else {
-      setProfileMsg({ type: "err", text: "Kunne ikke gemme. Prov igen." });
+      setProfileMsg({ type: "err", text: "Kunne ikke gemme. Prøv igen." });
     }
     setTimeout(() => setProfileMsg(null), 4000);
   }
@@ -99,7 +99,7 @@ export default function IndstillingerPage() {
     setPasswordMsg(null);
 
     if (newPassword.length < 8) {
-      setPasswordMsg({ type: "err", text: "Adgangskoden skal vaere mindst 8 tegn" });
+      setPasswordMsg({ type: "err", text: "Adgangskoden skal være mindst 8 tegn" });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -118,7 +118,7 @@ export default function IndstillingerPage() {
       });
       if (signInError) {
         setSavingPassword(false);
-        setPasswordMsg({ type: "err", text: "Den nuvaerende adgangskode er forkert" });
+        setPasswordMsg({ type: "err", text: "Den nuværende adgangskode er forkert" });
         return;
       }
     }
@@ -127,9 +127,9 @@ export default function IndstillingerPage() {
     setSavingPassword(false);
 
     if (error) {
-      setPasswordMsg({ type: "err", text: "Kunne ikke opdatere adgangskode. Prov igen." });
+      setPasswordMsg({ type: "err", text: "Kunne ikke opdatere adgangskoden. Prøv igen." });
     } else {
-      setPasswordMsg({ type: "ok", text: "Adgangskode er opdateret" });
+      setPasswordMsg({ type: "ok", text: "Adgangskoden er opdateret" });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -156,7 +156,7 @@ export default function IndstillingerPage() {
     if (res.ok) {
       setMarketingMsg({ type: "ok", text: "Indstillinger gemt" });
     } else {
-      setMarketingMsg({ type: "err", text: "Kunne ikke gemme. Prov igen." });
+      setMarketingMsg({ type: "err", text: "Kunne ikke gemme. Prøv igen." });
     }
     setTimeout(() => setMarketingMsg(null), 4000);
   }
@@ -181,7 +181,7 @@ export default function IndstillingerPage() {
       a.click();
       URL.revokeObjectURL(url);
     } else {
-      setExportMsg("Eksporten mislykkedes. Prov igen.");
+      setExportMsg("Eksporten mislykkedes. Prøv igen.");
     }
   }
 
@@ -211,10 +211,10 @@ export default function IndstillingerPage() {
     setDeleteConfirm(false);
 
     if (res?.ok) {
-      setDeleteMsg({ type: "ok", text: "Din anmodning er modtaget. Vi behandler den inden for 30 dage og sender bekraeftelse til din email." });
+      setDeleteMsg({ type: "ok", text: "Din anmodning er modtaget. Vi behandler den inden for 30 dage og sender en bekræftelse til din e-mailadresse." });
     } else {
       // Fallback: send email directly
-      setDeleteMsg({ type: "ok", text: "Send en email til hej@phonespot.dk med emnet 'Anmodning om sletning' for at fuldfoere processen." });
+      setDeleteMsg({ type: "ok", text: "Send en e-mail til hej@phonespot.dk med emnet 'Anmodning om sletning' for at fuldføre processen." });
     }
   }
 
@@ -277,7 +277,7 @@ export default function IndstillingerPage() {
             disabled={savingProfile}
             className="rounded-lg bg-[#1A3D2E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143324] disabled:opacity-50"
           >
-            {savingProfile ? "Gemmer..." : "Gem aendringer"}
+            {savingProfile ? "Gemmer..." : "Gem ændringer"}
           </button>
         </form>
       </div>
@@ -286,11 +286,11 @@ export default function IndstillingerPage() {
       <div className="overflow-hidden rounded-xl border border-[#E5E5EA] bg-white">
         <SectionHeader
           title="Skift adgangskode"
-          description="Vaelg en stærk adgangskode pa mindst 8 tegn"
+          description="Vælg en stærk adgangskode på mindst 8 tegn"
         />
         <form onSubmit={handleChangePassword} className="space-y-4 px-5 py-5">
           <div>
-            <label className="block text-sm font-medium text-[#111111]">Nuvaerende adgangskode</label>
+            <label className="block text-sm font-medium text-[#111111]">Nuværende adgangskode</label>
             <input
               required
               type="password"
@@ -314,7 +314,7 @@ export default function IndstillingerPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#111111]">Bekraeft ny adgangskode</label>
+            <label className="block text-sm font-medium text-[#111111]">Bekræft ny adgangskode</label>
             <input
               required
               type="password"
@@ -361,9 +361,9 @@ export default function IndstillingerPage() {
               className="mt-0.5 h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
             />
             <div>
-              <p className="text-sm font-medium text-[#111111]">Markedsforing og tilbud</p>
+              <p className="text-sm font-medium text-[#111111]">Markedsføring og tilbud</p>
               <p className="mt-0.5 text-xs text-[#6E6E73]">
-                Modtag emails om nye produkter, tilbud og nyheder fra PhoneSpot. Du kan til enhver tid
+                Modtag e-mails om nye produkter, tilbud og nyheder fra PhoneSpot. Du kan til enhver tid
                 afmelde dig.
               </p>
             </div>
@@ -435,7 +435,7 @@ export default function IndstillingerPage() {
                   Er du sikker? Denne handling kan ikke fortrydes.
                 </p>
                 <p className="mt-1 text-xs text-red-700">
-                  Vi sender en bekraeftelse til din email inden vi sletter dine data.
+                  Vi sender en bekræftelse til din e-mailadresse, inden vi sletter dine data.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -443,7 +443,7 @@ export default function IndstillingerPage() {
                     disabled={deleteRequesting}
                     className="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50"
                   >
-                    {deleteRequesting ? "Sender anmodning..." : "Bekraeft sletning"}
+                    {deleteRequesting ? "Sender anmodning..." : "Bekræft sletning"}
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(false)}

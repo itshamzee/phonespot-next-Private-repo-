@@ -87,7 +87,7 @@ export function AddToCartSection({
             Log ind for at se priser og bestille
           </p>
           <p className="mb-4 text-xs text-[#86868B]">
-            PhoneSpot&apos;s reservedele er forbeholdt godkendte forhandlere og reparationsvirksomheder.
+            PhoneSpots reservedele er forbeholdt godkendte forhandlere og reparationsvirksomheder.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
@@ -120,7 +120,7 @@ export function AddToCartSection({
             Din konto afventer godkendelse
           </p>
           <p className="text-xs text-amber-700">
-            Vi gennemgår din ansogning og giver dig besked via e-mail inden for 1-2 hverdage.
+            Vi gennemgår din ansøgning og giver dig besked via e-mail inden for 1-2 hverdage.
           </p>
         </div>
         <p className="text-xs text-[#86868B]">

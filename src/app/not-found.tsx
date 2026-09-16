@@ -11,7 +11,7 @@ export default function NotFound() {
           Siden blev ikke fundet
         </h1>
         <p className="mt-4 text-lg text-[#6E6E73]">
-          Vi kunne desværre ikke finde den side du leder efter. Måske er den blevet
+          Vi kunne desværre ikke finde den side, du leder efter. Måske er den blevet
           flyttet eller fjernet.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

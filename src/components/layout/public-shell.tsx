@@ -7,7 +7,6 @@ import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUpsellRouter } from "@/components/cart/cart-upsell-router";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { NewsletterPopup } from "@/components/ui/newsletter-popup";
 import { MessengerChat } from "@/components/ui/messenger-chat";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
@@ -20,12 +19,11 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <CartProvider>
       <Header />
-      <main className="overflow-x-hidden">{children}</main>
+      <main id="indhold" tabIndex={-1} className="overflow-x-hidden">{children}</main>
       <Footer />
       <CartDrawer />
       <CartUpsellRouter />
       <CookieConsent />
-      <NewsletterPopup />
       <MessengerChat />
     </CartProvider>
   );

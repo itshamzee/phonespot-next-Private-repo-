@@ -18,13 +18,15 @@ export function CategoryFaq({ items }: CategoryFaqProps) {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
-      <h2 className="mb-6 font-display text-2xl font-bold tracking-tight text-charcoal">
+      <h2 className="mb-6 font-body text-2xl font-bold tracking-tight text-charcoal">
         Ofte stillede spørgsmål
       </h2>
       <div className="divide-y divide-sand">
         {items.map((item, i) => (
           <div key={i} className="py-4">
             <button
+              type="button"
+              aria-expanded={open === i}
               onClick={() => setOpen(open === i ? null : i)}
               className="flex w-full items-center justify-between gap-4 text-left"
             >

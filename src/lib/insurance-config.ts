@@ -67,7 +67,7 @@ export const INSURANCE_COVERED = [
   {
     title: "Batteri under 70 %",
     description:
-      "Skade på mobiltelefonbatteriet, hvis kapaciteten falder til under 70 % af det oprindelige.",
+      "Skade på mobiltelefonbatteriet, hvis kapaciteten falder til under 70 % af den oprindelige kapacitet.",
   },
   {
     title: "Pixelfejl",
@@ -77,7 +77,7 @@ export const INSURANCE_COVERED = [
   {
     title: "Dækning i og uden for Danmark",
     description:
-      "Gælder i Danmark og i hele verden i op til 60 dage for hver 12-måneders periode.",
+      "Gælder i Danmark og i hele verden i op til 60 dage for hver 12-månedersperiode.",
   },
   {
     title: "Reparation eller erstatning",
@@ -87,8 +87,8 @@ export const INSURANCE_COVERED = [
 ];
 
 export const INSURANCE_NOT_COVERED = [
-  "Almindelig slid, ælde og gradvis forringelse",
-  "Skader der alene er kosmetiske og ikke påvirker funktionen",
+  "Almindeligt slid, ælde og gradvis forringelse",
+  "Skader, der alene er kosmetiske og ikke påvirker funktionen",
   "Skader dækket af garanti eller reklamationsret",
   "Skader forårsaget af dyr",
   "Fejl i data, software, virus og hacking",

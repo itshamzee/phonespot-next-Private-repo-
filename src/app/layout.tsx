@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://phonespot.dk"),
   title: {
-    default: "PhoneSpot - Kvalitetstestede iPhones & iPads",
+    default: "PhoneSpot – kvalitetstestede iPhones og iPads",
     template: "%s",
   },
   description:
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "da_DK",
     siteName: "PhoneSpot",
-    title: "PhoneSpot - Kvalitetstestede iPhones & iPads",
+    title: "PhoneSpot – kvalitetstestede iPhones og iPads",
     description:
       "Kvalitetstestede iPhones og iPads med 36 måneders garanti. Spar op til 40% og handl trygt med e-mærket.",
     url: "https://phonespot.dk",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
         url: "/brand/og-image.png",
         width: 1200,
         height: 630,
-        alt: "PhoneSpot - Refurbished tech du kan stole på",
+        alt: "PhoneSpot – refurbished elektronik, du kan stole på",
       },
     ],
   },

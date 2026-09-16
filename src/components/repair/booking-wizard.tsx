@@ -1,11 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
-import type { RepairBrand, RepairModel, RepairService } from "@/lib/supabase/types";
+import type {
+  RepairBrand,
+  RepairModel,
+  RepairService,
+} from "@/lib/supabase/types";
 import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
 import { STORES } from "@/lib/store-config";
+import Link from "next/link";
+import styles from "./repair.module.css";
+import { repairServiceLabel } from "./service-label";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -44,7 +51,8 @@ function getAvailableDates(count: number): string[] {
   d.setDate(d.getDate() + 1); // start from tomorrow
   while (dates.length < count) {
     const day = d.getDay();
-    if (day >= 1 && day <= 6) { // Mon-Sat
+    if (day >= 1 && day <= 6) {
+      // Mon-Sat
       dates.push(d.toISOString().slice(0, 10));
     }
     d.setDate(d.getDate() + 1);
@@ -66,12 +74,28 @@ function compactHours(range: string): string {
 }
 
 /** Kompakt åbningstidslinje for en butik, fx "Man–Fre 10–19 · Lør–Søn 10–17" */
-function storeHoursLine(hours: { weekdays: string; saturday: string; sunday: string }): string {
+function storeHoursLine(hours: {
+  weekdays: string;
+  saturday: string;
+  sunday: string;
+}): string {
   const weekend =
     hours.saturday === hours.sunday
       ? `Lør–Søn ${compactHours(hours.saturday)}`
       : `Lør ${compactHours(hours.saturday)} · Søn ${compactHours(hours.sunday)}`;
   return `Man–Fre ${compactHours(hours.weekdays)} · ${weekend}`;
+}
+
+function deviceDisplayName(brandName?: string, modelName?: string): string {
+  const brand = brandName?.trim() ?? "";
+  const model = modelName?.trim() ?? "";
+  if (!brand) return model;
+  if (!model) return brand;
+  return model.toLocaleLowerCase("da-DK").startsWith(
+    `${brand.toLocaleLowerCase("da-DK")} `,
+  )
+    ? model
+    : `${brand} ${model}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -98,120 +122,27 @@ interface DeviceBooking {
 /*  Step Icons                                                         */
 /* ------------------------------------------------------------------ */
 
-function StepIcon({ type, active }: { type: string; active: boolean }) {
-  const color = active ? "text-white" : "text-gray";
-  const icons: Record<string, React.ReactNode> = {
-    device: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${color}`}>
-        <rect x="5" y="2" width="10" height="16" rx="2" />
-      </svg>
-    ),
-    wrench: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${color}`}>
-        <path d="M13.7 5.3a1 1 0 000 1.4l.6.6a1 1 0 001.4 0l2.77-2.77a5 5 0 01-6.94 6.94l-5.91 5.91a1.62 1.62 0 01-2.3-2.3l5.91-5.91a5 5 0 016.94-6.94L13.7 5.3z" />
-      </svg>
-    ),
-    user: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${color}`}>
-        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zM2 18a8 8 0 0116 0H2z" />
-      </svg>
-    ),
-    calendar: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${color}`}>
-        <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h1.25V2.75A.75.75 0 015.75 2zM4 8v8h12V8H4z" clipRule="evenodd" />
-      </svg>
-    ),
-    check: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${color}`}>
-        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-      </svg>
-    ),
-  };
-  return <>{icons[type] ?? icons.check}</>;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Progress Bar                                                       */
-/* ------------------------------------------------------------------ */
-
 function ProgressBar({ current }: { current: number }) {
   return (
-    <div className="mb-10">
-      {/* Desktop steps */}
-      <div className="hidden sm:flex items-center justify-between">
-        {STEPS.map(({ label, icon }, i) => {
-          const isCompleted = i < current;
-          const isActive = i === current;
-          return (
-            <div key={label} className="flex flex-1 items-center">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${
-                    isCompleted
-                      ? "bg-green-eco shadow-md shadow-green-eco/25"
-                      : isActive
-                        ? "bg-green-eco shadow-lg shadow-green-eco/30 ring-4 ring-green-eco/20"
-                        : "border-2 border-soft-grey bg-white"
-                  }`}
-                >
-                  {isCompleted ? (
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-white">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <StepIcon type={icon} active={isActive} />
-                  )}
-                </div>
-                <span
-                  className={`mt-2 text-xs font-bold ${
-                    isActive ? "text-green-eco" : isCompleted ? "text-charcoal" : "text-gray"
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-
-              {i < STEPS.length - 1 && (
-                <div className="relative mx-3 h-0.5 flex-1 overflow-hidden rounded-full bg-soft-grey">
-                  <div
-                    className="absolute left-0 top-0 h-full bg-green-eco transition-all duration-500"
-                    style={{ width: i < current ? "100%" : "0%" }}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Mobile — compact pills */}
-      <div className="flex items-center justify-between sm:hidden">
-        {STEPS.map(({ label }, i) => {
-          const isCompleted = i < current;
-          const isActive = i === current;
-          return (
-            <div
-              key={label}
-              className={`flex-1 py-2 text-center text-xs font-bold transition-colors ${
-                isActive
-                  ? "border-b-2 border-green-eco text-green-eco"
-                  : isCompleted
-                    ? "border-b-2 border-green-eco/30 text-charcoal"
-                    : "border-b-2 border-transparent text-gray"
-              }`}
-            >
-              {label}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <nav aria-label="Bookingtrin" className={styles.progress}>
+      <ol>
+        {STEPS.map(({ label }, index) => (
+          <li
+            key={label}
+            aria-current={index === current ? "step" : undefined}
+            data-complete={index < current}
+          >
+            <span aria-hidden="true">{index + 1}</span>
+            <span className={styles.stepLabel}>{label}</span>
+          </li>
+        ))}
+      </ol>
+      <p className={styles.progressCaption}>
+        Trin {current + 1} af {STEPS.length} · {STEPS[current].label}
+      </p>
+    </nav>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Navigation Buttons                                                 */
-/* ------------------------------------------------------------------ */
 
 function NavButtons({
   step,
@@ -239,7 +170,11 @@ function NavButtons({
           className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-            <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
+              clipRule="evenodd"
+            />
           </svg>
           Tilbage
         </button>
@@ -254,24 +189,55 @@ function NavButtons({
       >
         {isSubmitting ? (
           <>
-            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <svg
+              className="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
             Sender...
           </>
         ) : isLast ? (
           <>
             Send reparationsanmodning
-            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z" clipRule="evenodd" />
+            <svg
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-3.5 w-3.5"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
+                clipRule="evenodd"
+              />
             </svg>
           </>
         ) : (
           <>
             Næste
-            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+            <svg
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-3.5 w-3.5"
+            >
+              <path
+                fillRule="evenodd"
+                d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
             </svg>
           </>
         )}
@@ -312,6 +278,7 @@ function DeviceTabs({
             <button
               key={booking.id}
               type="button"
+              aria-pressed={i === activeDeviceIndex}
               onClick={() => onSelect(i)}
               className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
                 i === activeDeviceIndex
@@ -322,7 +289,7 @@ function DeviceTabs({
               Enhed {i + 1}
               {model && (
                 <span className="font-normal opacity-80">
-                  — {brand?.name} {model.name}
+                  — {deviceDisplayName(brand?.name, model.name)}
                 </span>
               )}
             </button>
@@ -361,6 +328,13 @@ export function BookingWizard() {
   const supabase = useMemo(() => createBrowserClient(), []);
 
   const [step, setStep] = useState(0);
+  const wizardRef = useRef<HTMLDivElement>(null);
+  const previousStep = useRef(0);
+  useEffect(() => {
+    if (previousStep.current !== step)
+      wizardRef.current?.querySelector<HTMLHeadingElement>("h2")?.focus();
+    previousStep.current = step;
+  }, [step]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
@@ -386,10 +360,18 @@ export function BookingWizard() {
   const [brandsLoading, setBrandsLoading] = useState(true);
 
   /* ---- per-device models and services ---- */
-  const [modelsMap, setModelsMap] = useState<Map<string, RepairModel[]>>(new Map());
-  const [servicesMap, setServicesMap] = useState<Map<string, RepairService[]>>(new Map());
-  const [modelsLoadingSet, setModelsLoadingSet] = useState<Set<string>>(new Set());
-  const [servicesLoadingSet, setServicesLoadingSet] = useState<Set<string>>(new Set());
+  const [modelsMap, setModelsMap] = useState<Map<string, RepairModel[]>>(
+    new Map(),
+  );
+  const [servicesMap, setServicesMap] = useState<Map<string, RepairService[]>>(
+    new Map(),
+  );
+  const [modelsLoadingSet, setModelsLoadingSet] = useState<Set<string>>(
+    new Set(),
+  );
+  const [servicesLoadingSet, setServicesLoadingSet] = useState<Set<string>>(
+    new Set(),
+  );
 
   /* ---- step 3: customer ---- */
   const [customer, setCustomer] = useState<CustomerInfo>({
@@ -411,13 +393,24 @@ export function BookingWizard() {
 
   /* ---- active device shorthand ---- */
   const activeDevice = deviceBookings[activeDeviceIndex];
-  const activeModels = activeDevice ? (modelsMap.get(activeDevice.id) ?? []) : [];
-  const activeServices = activeDevice ? (servicesMap.get(activeDevice.id) ?? []) : [];
-  const isActiveModelsLoading = activeDevice ? modelsLoadingSet.has(activeDevice.id) : false;
-  const isActiveServicesLoading = activeDevice ? servicesLoadingSet.has(activeDevice.id) : false;
+  const activeModels = activeDevice
+    ? (modelsMap.get(activeDevice.id) ?? [])
+    : [];
+  const activeServices = activeDevice
+    ? (servicesMap.get(activeDevice.id) ?? [])
+    : [];
+  const isActiveModelsLoading = activeDevice
+    ? modelsLoadingSet.has(activeDevice.id)
+    : false;
+  const isActiveServicesLoading = activeDevice
+    ? servicesLoadingSet.has(activeDevice.id)
+    : false;
 
   /* ---- price calculations across all devices ---- */
-  const totalServiceCount = deviceBookings.reduce((sum, b) => sum + b.serviceIds.size, 0);
+  const totalServiceCount = deviceBookings.reduce(
+    (sum, b) => sum + b.serviceIds.size,
+    0,
+  );
 
   const subtotal = deviceBookings.reduce((sum, booking) => {
     const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
@@ -430,7 +423,8 @@ export function BookingWizard() {
     );
   }, 0);
 
-  const discountPercent = totalServiceCount >= 3 ? 15 : totalServiceCount >= 2 ? 10 : 0;
+  const discountPercent =
+    totalServiceCount >= 3 ? 15 : totalServiceCount >= 2 ? 10 : 0;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
 
@@ -526,7 +520,13 @@ export function BookingWizard() {
       setDeviceBookings((prev) =>
         prev.map((b) =>
           b.id === deviceId
-            ? { ...b, brandId, modelId: "", serviceIds: new Set(), includesTemperedGlass: false }
+            ? {
+                ...b,
+                brandId,
+                modelId: "",
+                serviceIds: new Set(),
+                includesTemperedGlass: false,
+              }
             : b,
         ),
       );
@@ -546,7 +546,12 @@ export function BookingWizard() {
       setDeviceBookings((prev) =>
         prev.map((b) =>
           b.id === deviceId
-            ? { ...b, modelId, serviceIds: new Set(), includesTemperedGlass: false }
+            ? {
+                ...b,
+                modelId,
+                serviceIds: new Set(),
+                includesTemperedGlass: false,
+              }
             : b,
         ),
       );
@@ -561,17 +566,33 @@ export function BookingWizard() {
     );
   }, []);
 
-  const toggleServiceForDevice = useCallback((deviceId: string, serviceId: string) => {
-    setDeviceBookings((prev) =>
-      prev.map((b) => {
-        if (b.id !== deviceId) return b;
-        const next = new Set(b.serviceIds);
-        if (next.has(serviceId)) next.delete(serviceId);
-        else next.add(serviceId);
-        return { ...b, serviceIds: next };
-      }),
-    );
-  }, []);
+  const toggleServiceForDevice = useCallback(
+    (deviceId: string, serviceId: string) => {
+      setDeviceBookings((prev) =>
+        prev.map((booking) => {
+          if (booking.id !== deviceId) return booking;
+          const next = new Set(booking.serviceIds);
+          if (next.has(serviceId)) next.delete(serviceId);
+          else {
+            const deviceServices = servicesMap.get(deviceId) ?? [];
+            const service = deviceServices.find(
+              (item) => item.id === serviceId,
+            );
+            if (service) {
+              const category = service.service_category || service.name;
+              for (const sibling of deviceServices) {
+                if ((sibling.service_category || sibling.name) === category)
+                  next.delete(sibling.id);
+              }
+            }
+            next.add(serviceId);
+          }
+          return { ...booking, serviceIds: next };
+        }),
+      );
+    },
+    [servicesMap],
+  );
 
   const toggleTemperedGlassForDevice = useCallback((deviceId: string) => {
     setDeviceBookings((prev) =>
@@ -593,8 +614,8 @@ export function BookingWizard() {
       includesTemperedGlass: false,
     };
     setDeviceBookings((prev) => [...prev, newDevice]);
-    setActiveDeviceIndex((prev) => prev + 1);
-  }, []);
+    setActiveDeviceIndex(deviceBookings.length);
+  }, [deviceBookings.length]);
 
   const removeActiveDevice = useCallback(() => {
     setDeviceBookings((prev) => {
@@ -646,7 +667,11 @@ export function BookingWizard() {
     const serviceSlug = searchParams.get("service");
     if (!serviceSlug) return;
     const matchedService = activeServices.find((s) => s.slug === serviceSlug);
-    if (matchedService && activeDevice?.serviceIds.size === 0) {
+    if (
+      matchedService &&
+      matchedService.price_dkk > 0 &&
+      activeDevice?.serviceIds.size === 0
+    ) {
       const deviceId = activeDevice.id;
       setTimeout(() => {
         setDeviceBookings((prev) =>
@@ -667,7 +692,8 @@ export function BookingWizard() {
 
   const handleCustomerChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setCustomer((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+      const { name, value } = e.target;
+      setCustomer((prev) => ({ ...prev, [name]: value }));
     },
     [],
   );
@@ -700,7 +726,9 @@ export function BookingWizard() {
   const buildPayload = () => {
     const firstBooking = deviceBookings[0];
     const firstBrand = brands.find((b) => b.id === firstBooking?.brandId);
-    const firstModels = firstBooking ? (modelsMap.get(firstBooking.id) ?? []) : [];
+    const firstModels = firstBooking
+      ? (modelsMap.get(firstBooking.id) ?? [])
+      : [];
     const firstModel = firstModels.find((m) => m.id === firstBooking?.modelId);
     const firstServices = firstBooking
       ? (servicesMap.get(firstBooking.id) ?? []).filter((s) =>
@@ -766,7 +794,10 @@ export function BookingWizard() {
         setSubmitResult({ success: false, error: data.error });
       }
     } catch {
-      setSubmitResult({ success: false, error: "Noget gik galt. Prøv igen senere." });
+      setSubmitResult({
+        success: false,
+        error: "Noget gik galt. Prøv igen senere.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -785,11 +816,17 @@ export function BookingWizard() {
       if (res.ok && data.invoiceUrl) {
         window.location.href = data.invoiceUrl;
       } else {
-        setSubmitResult({ success: false, error: data.error || "Kunne ikke oprette betaling" });
+        setSubmitResult({
+          success: false,
+          error: data.error || "Kunne ikke oprette betaling",
+        });
         setIsSubmitting(false);
       }
     } catch {
-      setSubmitResult({ success: false, error: "Noget gik galt. Prøv igen senere." });
+      setSubmitResult({
+        success: false,
+        error: "Noget gik galt. Prøv igen senere.",
+      });
       setIsSubmitting(false);
     }
   };
@@ -805,15 +842,29 @@ export function BookingWizard() {
     return (
       <div className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10 text-center">
         <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-lg shadow-green-eco/25">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-10 w-10">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth={2.5}
+            className="h-10 w-10"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
-        <h2 className="font-display text-2xl font-bold text-charcoal">
+        <h2
+          tabIndex={-1}
+          className="font-body text-2xl font-bold text-charcoal"
+        >
           Tak for din anmodning!
         </h2>
         <p className="mt-3 text-gray">
-          Vi har modtaget din reparationsanmodning og vender tilbage inden for få timer.
+          Vi har modtaget din reparationsanmodning og vender tilbage med en
+          bekræftelse.
         </p>
         {submitResult.ticketId && (
           <p className="mt-4 rounded-lg bg-white p-3 text-sm text-gray">
@@ -844,7 +895,9 @@ export function BookingWizard() {
           >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <span className="text-sm font-bold text-green-eco">Livstidsgaranti inkluderet</span>
+          <span className="text-sm font-bold text-green-eco">
+            Oplysninger om din reparation
+          </span>
         </div>
       </div>
     );
@@ -864,12 +917,19 @@ export function BookingWizard() {
   /* ---------------------------------------------------------------- */
 
   return (
-    <div className="rounded-2xl border border-soft-grey bg-white p-6 shadow-sm md:p-8">
+    <div ref={wizardRef} className={styles.wizard}>
       <ProgressBar current={step} />
 
       {submitResult?.error && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0">
+        <div
+          role="alert"
+          className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-5 w-5 shrink-0"
+          >
             <path
               fillRule="evenodd"
               d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
@@ -884,9 +944,15 @@ export function BookingWizard() {
       {step === 0 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">Vælg din enhed</h2>
+            <h2
+              tabIndex={-1}
+              className="font-body text-xl font-bold text-charcoal"
+            >
+              Vælg din enhed
+            </h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg mærke og model for at se tilgængelige reparationer. Du kan tilføje flere enheder.
+              Vælg mærke og model for at se tilgængelige reparationer. Du kan
+              tilføje flere enheder.
             </p>
           </div>
 
@@ -896,7 +962,10 @@ export function BookingWizard() {
             brands={brands}
             modelsMap={modelsMap}
             onSelect={setActiveDeviceIndex}
-            onAdd={addDevice}
+            onAdd={() => {
+              addDevice();
+              setStep(0);
+            }}
             onRemove={removeActiveDevice}
           />
 
@@ -908,7 +977,11 @@ export function BookingWizard() {
                 </label>
                 {brandsLoading ? (
                   <div className="flex items-center gap-2 py-3 text-sm text-gray">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -929,7 +1002,9 @@ export function BookingWizard() {
                   <select
                     id="brand"
                     value={activeDevice.brandId}
-                    onChange={(e) => updateDeviceBrand(activeDevice.id, e.target.value)}
+                    onChange={(e) =>
+                      updateDeviceBrand(activeDevice.id, e.target.value)
+                    }
                     className={inputStyles}
                   >
                     <option value="">Vælg mærke...</option>
@@ -948,7 +1023,11 @@ export function BookingWizard() {
                 </label>
                 {isActiveModelsLoading ? (
                   <div className="flex items-center gap-2 py-3 text-sm text-gray">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -969,12 +1048,16 @@ export function BookingWizard() {
                   <select
                     id="model"
                     value={activeDevice.modelId}
-                    onChange={(e) => updateDeviceModel(activeDevice.id, e.target.value)}
+                    onChange={(e) =>
+                      updateDeviceModel(activeDevice.id, e.target.value)
+                    }
                     disabled={!activeDevice.brandId}
                     className={inputStyles}
                   >
                     <option value="">
-                      {activeDevice.brandId ? "Vælg model..." : "Vælg mærke først..."}
+                      {activeDevice.brandId
+                        ? "Vælg model..."
+                        : "Vælg mærke først..."}
                     </option>
                     {activeModels.map((m) => (
                       <option key={m.id} value={m.id}>
@@ -984,6 +1067,21 @@ export function BookingWizard() {
                   </select>
                 )}
               </div>
+
+              {!brandsLoading && brands.length === 0 && (
+                <div className={styles.empty}>
+                  <p>Vi kan ikke vise mærker lige nu.</p>
+                  <Link href="/kontakt">Få hjælp til din model</Link>
+                </div>
+              )}
+              {activeDevice.brandId &&
+                !isActiveModelsLoading &&
+                activeModels.length === 0 && (
+                  <div className={styles.empty}>
+                    <p>Vi kan ikke vise modeller for dette mærke lige nu.</p>
+                    <Link href="/kontakt">Få hjælp til din model</Link>
+                  </div>
+                )}
 
               {/* Color selector */}
               {activeDevice.modelId && (
@@ -999,7 +1097,13 @@ export function BookingWizard() {
                           key={c.name}
                           type="button"
                           title={c.name}
-                          onClick={() => updateDeviceColor(activeDevice.id, isSelected ? "" : c.name)}
+                          aria-pressed={isSelected}
+                          onClick={() =>
+                            updateDeviceColor(
+                              activeDevice.id,
+                              isSelected ? "" : c.name,
+                            )
+                          }
                           className={`flex items-center gap-2 rounded-full border-2 py-1.5 pl-1.5 pr-3 text-xs font-semibold transition-all ${
                             isSelected
                               ? "border-charcoal bg-charcoal text-white"
@@ -1010,8 +1114,12 @@ export function BookingWizard() {
                             className="h-5 w-5 shrink-0 rounded-full"
                             style={{
                               background: c.hex,
-                              border: c.border ? "1px solid #d1d5db" : undefined,
-                              boxShadow: isSelected ? "0 0 0 2px white, 0 0 0 3px #1c1c1e" : undefined,
+                              border: c.border
+                                ? "1px solid #d1d5db"
+                                : undefined,
+                              boxShadow: isSelected
+                                ? "0 0 0 2px white, 0 0 0 3px #1c1c1e"
+                                : undefined,
                             }}
                           />
                           {c.name}
@@ -1025,7 +1133,11 @@ export function BookingWizard() {
               {/* Incomplete devices warning */}
               {deviceBookings.length > 1 && !canGoNext && (
                 <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-amber-500">
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4 shrink-0 text-amber-500"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
@@ -1043,349 +1155,433 @@ export function BookingWizard() {
       {/* ---- Step 2: Reparation ---- */}
       {step === 1 && (
         <div className="md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
-        {/* Left column: service list */}
-        <div className="space-y-6">
-          <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">Tilføj reparationer til booking</h2>
-            <p className="mt-1 text-sm text-gray">
-              Vælg de reparationer du ønsker — alt er inkl. moms og livstidsgaranti. Flere reparationer = større rabat!
-            </p>
-          </div>
+          {/* Left column: service list */}
+          <div className="space-y-6">
+            <div>
+              <h2
+                tabIndex={-1}
+                className="font-body text-xl font-bold text-charcoal"
+              >
+                Tilføj reparationer til booking
+              </h2>
+              <p className="mt-1 text-sm text-gray">
+                Vælg de reparationer, du ønsker. Priserne er i danske kroner
+                inklusive moms. Din samlede pris vises i oversigten.
+              </p>
+            </div>
 
-          <DeviceTabs
-            deviceBookings={deviceBookings}
-            activeDeviceIndex={activeDeviceIndex}
-            brands={brands}
-            modelsMap={modelsMap}
-            onSelect={setActiveDeviceIndex}
-            onAdd={addDevice}
-            onRemove={removeActiveDevice}
-          />
+            <DeviceTabs
+              deviceBookings={deviceBookings}
+              activeDeviceIndex={activeDeviceIndex}
+              brands={brands}
+              modelsMap={modelsMap}
+              onSelect={setActiveDeviceIndex}
+              onAdd={() => {
+                addDevice();
+                setStep(0);
+              }}
+              onRemove={removeActiveDevice}
+            />
 
-          {activeDevice && (
-            <>
-              {isActiveServicesLoading ? (
-                <div className="flex items-center justify-center gap-2 py-8 text-gray">
-                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Indlæser reparationer...
-                </div>
-              ) : activeServices.length === 0 ? (
-                <p className="py-4 text-sm text-gray">
-                  Ingen reparationer tilgængelige for denne model.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray/70">
-                    Klik på en reparation for at føje den til din booking
-                  </p>
-                  {activeServices.map((s) => {
-                    const isChecked = activeDevice.serviceIds.has(s.id);
-                    return (
-                      <button
-                        type="button"
-                        key={s.id}
-                        onClick={() => toggleServiceForDevice(activeDevice.id, s.id)}
-                        className={`group flex w-full cursor-pointer items-center justify-between rounded-xl border-2 p-4 text-left transition-all duration-150 ${
-                          isChecked
-                            ? "border-green-eco bg-green-eco/5 shadow-sm"
-                            : "border-soft-grey hover:border-green-eco/40 hover:bg-green-eco/[0.03] hover:shadow-sm"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
-                              isChecked
-                                ? "border-green-eco bg-green-eco text-white"
-                                : "border-soft-grey group-hover:border-green-eco/50"
-                            }`}
-                          >
-                            {isChecked && (
-                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                                <path
-                                  fillRule="evenodd"
-                                  d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                          <div>
-                            <span className="font-bold text-charcoal">{s.name}</span>
-                            {s.estimated_minutes && (
-                              <span className="ml-2 text-xs text-gray">
-                                ca. {s.estimated_minutes} min
+            {activeDevice && (
+              <>
+                {isActiveServicesLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-8 text-gray">
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Indlæser reparationer...
+                  </div>
+                ) : activeServices.length === 0 ? (
+                  <div className={styles.empty}>
+                    <p>
+                      Ingen reparationer tilgængelige for denne model endnu.
+                    </p>
+                    <Link href="/kontakt">Få hjælp til din reparation</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray/70">
+                      Klik på en reparation for at føje den til din booking
+                    </p>
+                    {activeServices.map((s) => {
+                      const isChecked = activeDevice.serviceIds.has(s.id);
+                      return (
+                        <div
+                          key={s.id}
+                          className={styles.wizardService}
+                          data-selected={isChecked}
+                        >
+                          {s.price_dkk > 0 ? (
+                            <button
+                              type="button"
+                              aria-pressed={isChecked}
+                              onClick={() =>
+                                toggleServiceForDevice(activeDevice.id, s.id)
+                              }
+                            >
+                              <span>
+                                <strong>{repairServiceLabel(s)}</strong>
+                                {s.estimated_minutes != null &&
+                                  s.estimated_minutes > 0 && (
+                                    <small>
+                                      Forventet tid: ca. {s.estimated_minutes}{" "}
+                                      min.
+                                    </small>
+                                  )}
                               </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`font-display font-bold ${isChecked ? "text-green-eco" : "text-charcoal"}`}>
-                            {s.price_dkk} DKK
-                          </span>
-                          {isChecked ? (
-                            <span className="flex items-center gap-1 rounded-full bg-green-eco px-2.5 py-1 text-xs font-bold text-white">
-                              <svg viewBox="0 0 12 12" fill="currentColor" className="h-2.5 w-2.5">
-                                <path fillRule="evenodd" d="M10.28 2.28a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06 0l-2.5-2.5a.75.75 0 0 1 1.06-1.06L4.25 7.19l4.97-4.91a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-                              </svg>
-                              Tilføjet
-                            </span>
+                              <span>
+                                <strong>{s.price_dkk} DKK</strong>
+                                <small>
+                                  {isChecked ? "Valgt −" : "Tilføj +"}
+                                </small>
+                              </span>
+                            </button>
                           ) : (
-                            <span className="flex items-center gap-1 rounded-full border border-green-eco/30 px-2.5 py-1 text-xs font-bold text-green-eco opacity-0 transition-opacity group-hover:opacity-100">
-                              <svg viewBox="0 0 12 12" fill="currentColor" className="h-2.5 w-2.5">
-                                <path d="M6.75 2.75a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" />
-                              </svg>
-                              Tilføj
-                            </span>
+                            <div className={styles.wizardUnavailable}>
+                              <strong>{repairServiceLabel(s)}</strong>
+                              <span>Pris på forespørgsel</span>
+                              <Link href="/kontakt">
+                                Kontakt os om {s.name}
+                              </Link>
+                            </div>
+                          )}
+                          {s.description && <p>{s.description}</p>}
+                          {(s.includes || s.warranty_info || s.info_note) && (
+                            <details className={styles.serviceDetails}>
+                              <summary>Oplysninger om reparationen</summary>
+                              {s.info_note && <p>{s.info_note}</p>}
+                              {s.includes && <p>{s.includes}</p>}
+                              {s.warranty_info && <p>{s.warranty_info}</p>}
+                            </details>
                           )}
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Tempered glass upsell */}
-              <div
-                className={`rounded-xl border-2 p-4 transition-all ${
-                  activeDevice.includesTemperedGlass
-                    ? "border-green-eco bg-green-eco/5"
-                    : "border-dashed border-green-eco/30 bg-green-eco/[0.02]"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleTemperedGlassForDevice(activeDevice.id)}
-                  className="flex w-full cursor-pointer items-center justify-between text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
-                        activeDevice.includesTemperedGlass
-                          ? "border-green-eco bg-green-eco text-white"
-                          : "border-green-eco/30"
-                      }`}
-                    >
-                      {activeDevice.includesTemperedGlass && (
-                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                          <path
-                            fillRule="evenodd"
-                            d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-bold text-charcoal">Tilføj beskyttelsesglas</span>
-                      <p className="text-xs text-gray">Beskyt din skærm med hærdet glas</p>
-                    </div>
-                  </div>
-                  <span className="font-display font-bold text-green-eco">
-                    {TEMPERED_GLASS_PRICE} DKK
-                  </span>
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Discount badge — based on total across all devices */}
-          {discountPercent > 0 && (
-            <div className="flex items-center gap-3 rounded-xl bg-green-eco/10 p-4">
-              <span className="rounded-full bg-green-eco px-3 py-1.5 text-xs font-bold text-white">
-                -{discountPercent}%
-              </span>
-              <span className="text-sm font-medium text-charcoal">
-                Rabat ved {totalServiceCount} reparationer — du sparer {discountAmount} DKK!
-              </span>
-            </div>
-          )}
-
-          {/* Running total — all devices */}
-          {deviceBookings.some((b) => b.serviceIds.size > 0) && (
-            <div className="mt-6 rounded-xl bg-charcoal/[0.03] p-4 space-y-3">
-              {deviceBookings.map((booking) => {
-                const brand = brands.find((b) => b.id === booking.brandId);
-                const models = modelsMap.get(booking.id) ?? [];
-                const model = models.find((m) => m.id === booking.modelId);
-                const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
-                  booking.serviceIds.has(s.id),
-                );
-                if (deviceServices.length === 0 && !booking.includesTemperedGlass) return null;
-                return (
-                  <div key={booking.id}>
-                    <p className="text-xs font-bold text-green-eco">
-                      {brand?.name} {model?.name}
-                    </p>
-                    {deviceServices.map((s) => (
-                      <div key={s.id} className="flex justify-between text-sm">
-                        <span className="text-charcoal">{s.name}</span>
-                        <span className="font-bold text-charcoal">{s.price_dkk} DKK</span>
-                      </div>
-                    ))}
-                    {booking.includesTemperedGlass && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-charcoal">Beskyttelsesglas</span>
-                        <span className="font-bold text-charcoal">99 DKK</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {/* Total */}
-              <div className="border-t border-soft-grey pt-3">
-                {discountPercent > 0 && (
-                  <div className="flex justify-between text-sm text-gray">
-                    <span>Subtotal</span>
-                    <span className="line-through">{subtotal} DKK</span>
+                      );
+                    })}{" "}
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold text-charcoal">
-                  <span>Total</span>
-                  <span className="text-green-eco">{totalPrice} DKK</span>
-                </div>
-                <p className="mt-1 text-xs text-gray">Inkl. moms, reservedele og livstidsgaranti</p>
-              </div>
-            </div>
-          )}
 
-          {/* Incomplete devices warning */}
-          {deviceBookings.length > 1 && !canGoNext && (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-amber-500">
-                <path
-                  fillRule="evenodd"
-                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Alle enheder skal have mindst én reparation valgt.
-            </div>
-          )}
-        </div>{/* end left column */}
-
-        {/* Right column: sticky Oversigt sidebar (desktop only) */}
-        <div className="hidden md:block">
-          <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-sm">
-            {/* Header */}
-            <div className="border-b border-soft-grey px-5 py-3">
-              <div className="flex items-center gap-2">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-green-eco">
-                  <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-bold text-charcoal">Du booker her</span>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {/* Device(s) */}
-              {deviceBookings.map((booking) => {
-                const brand = brands.find((b) => b.id === booking.brandId);
-                const models = modelsMap.get(booking.id) ?? [];
-                const model = models.find((m) => m.id === booking.modelId);
-                const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
-                  booking.serviceIds.has(s.id),
-                );
-                const colorDot = DEVICE_COLORS.find((c) => c.name === booking.color);
-                return (
-                  <div key={booking.id} className="space-y-2">
-                    {/* Device label */}
-                    <div className="flex items-center gap-2">
-                      {colorDot && (
-                        <span
-                          className="h-3 w-3 shrink-0 rounded-full border border-charcoal/20"
-                          style={{ background: colorDot.hex }}
-                        />
-                      )}
-                      <p className="text-xs font-bold text-charcoal/70 uppercase tracking-wide">
-                        {brand?.name ?? "—"} {model?.name ?? ""}
-                        {booking.color ? ` · ${booking.color}` : ""}
-                      </p>
-                    </div>
-                    {/* Services */}
-                    {deviceServices.length === 0 && !booking.includesTemperedGlass ? (
-                      <p className="text-xs text-gray italic">Ingen valgt endnu</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {deviceServices.map((s) => (
-                          <div key={s.id} className="flex justify-between text-sm">
-                            <span className="text-charcoal/70">{s.name}</span>
-                            <span className="font-bold text-charcoal">{s.price_dkk} kr</span>
-                          </div>
-                        ))}
-                        {booking.includesTemperedGlass && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-charcoal/70">Beskyttelsesglas</span>
-                            <span className="font-bold text-charcoal">99 kr</span>
-                          </div>
+                {/* Tempered glass upsell */}
+                <div
+                  className={`rounded-xl border-2 p-4 transition-all ${
+                    activeDevice.includesTemperedGlass
+                      ? "border-green-eco bg-green-eco/5"
+                      : "border-dashed border-green-eco/30 bg-green-eco/[0.02]"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    aria-pressed={activeDevice.includesTemperedGlass}
+                    onClick={() =>
+                      toggleTemperedGlassForDevice(activeDevice.id)
+                    }
+                    className="flex w-full cursor-pointer items-center justify-between text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-all ${
+                          activeDevice.includesTemperedGlass
+                            ? "border-green-eco bg-green-eco text-white"
+                            : "border-green-eco/30"
+                        }`}
+                      >
+                        {activeDevice.includesTemperedGlass && (
+                          <svg
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            className="h-3 w-3"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Divider */}
-              <div className="border-t border-soft-grey" />
-
-              {/* Discount */}
-              {discountPercent > 0 && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
-                    -{discountPercent}% rabat
-                  </span>
-                  <span className="text-gray line-through">{subtotal} kr</span>
+                      <div>
+                        <span className="font-bold text-charcoal">
+                          Tilføj beskyttelsesglas
+                        </span>
+                        <p className="text-xs text-gray">
+                          Beskyt din skærm med hærdet glas
+                        </p>
+                      </div>
+                    </div>
+                    <span className="font-body font-bold text-green-eco">
+                      {TEMPERED_GLASS_PRICE} DKK
+                    </span>
+                  </button>
                 </div>
-              )}
+              </>
+            )}
 
-              {/* Total */}
-              <div className="flex items-baseline justify-between">
-                <span className="text-sm font-bold text-gray">Total</span>
-                <span className="font-display text-2xl font-bold text-charcoal">
-                  {totalPrice > 0 ? `${totalPrice} kr` : "—"}
+            {/* Discount badge — based on total across all devices */}
+            {discountPercent > 0 && (
+              <div className="flex items-center gap-3 rounded-xl bg-green-eco/10 p-4">
+                <span className="rounded-full bg-green-eco px-3 py-1.5 text-xs font-bold text-white">
+                  -{discountPercent}%
+                </span>
+                <span className="text-sm font-medium text-charcoal">
+                  Rabat ved {totalServiceCount} reparationer — du sparer{" "}
+                  {discountAmount} DKK!
                 </span>
               </div>
-              {totalPrice > 0 && (
-                <p className="text-[11px] text-gray">Inkl. moms & livstidsgaranti</p>
-              )}
+            )}
 
-              {/* CTA */}
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!canGoNext}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-eco py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Fortsæt
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                  <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </button>
+            {/* Running total — all devices */}
+            {deviceBookings.some((b) => b.serviceIds.size > 0) && (
+              <div className="mt-6 rounded-xl bg-charcoal/[0.03] p-4 space-y-3">
+                {deviceBookings.map((booking) => {
+                  const brand = brands.find((b) => b.id === booking.brandId);
+                  const models = modelsMap.get(booking.id) ?? [];
+                  const model = models.find((m) => m.id === booking.modelId);
+                  const deviceServices = (
+                    servicesMap.get(booking.id) ?? []
+                  ).filter((s) => booking.serviceIds.has(s.id));
+                  if (
+                    deviceServices.length === 0 &&
+                    !booking.includesTemperedGlass
+                  )
+                    return null;
+                  return (
+                    <div key={booking.id}>
+                      <p className="text-xs font-bold text-green-eco">
+                        {deviceDisplayName(brand?.name, model?.name)}
+                      </p>
+                      {deviceServices.map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="text-charcoal">
+                            {repairServiceLabel(s)}
+                          </span>
+                          <span className="font-bold text-charcoal">
+                            {s.price_dkk} DKK
+                          </span>
+                        </div>
+                      ))}
+                      {booking.includesTemperedGlass && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-charcoal">
+                            Beskyttelsesglas
+                          </span>
+                          <span className="font-bold text-charcoal">
+                            99 DKK
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* Total */}
+                <div className="border-t border-soft-grey pt-3">
+                  {discountPercent > 0 && (
+                    <div className="flex justify-between text-sm text-gray">
+                      <span>Subtotal</span>
+                      <span className="line-through">{subtotal} DKK</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold text-charcoal">
+                    <span>Total</span>
+                    <span className="text-green-eco">{totalPrice} DKK</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray">
+                    Inkl. moms og reservedele
+                  </p>
+                </div>
+              </div>
+            )}
 
-              {/* Trust */}
-              <div className="flex items-center gap-1.5 justify-center">
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-green-eco">
-                  <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
+            {/* Incomplete devices warning */}
+            {deviceBookings.length > 1 && !canGoNext && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-4 w-4 shrink-0 text-amber-500"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                    clipRule="evenodd"
+                  />
                 </svg>
-                <span className="text-[11px] text-gray">Livstidsgaranti på alle reparationer</span>
+                Alle enheder skal have mindst én reparation valgt.
+              </div>
+            )}
+          </div>
+          {/* end left column */}
+
+          {/* Right column: sticky Oversigt sidebar (desktop only) */}
+          <div className="hidden md:block">
+            <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-sm">
+              {/* Header */}
+              <div className="border-b border-soft-grey px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-4 w-4 text-green-eco"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm font-bold text-charcoal">
+                    Du booker her
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Device(s) */}
+                {deviceBookings.map((booking) => {
+                  const brand = brands.find((b) => b.id === booking.brandId);
+                  const models = modelsMap.get(booking.id) ?? [];
+                  const model = models.find((m) => m.id === booking.modelId);
+                  const deviceServices = (
+                    servicesMap.get(booking.id) ?? []
+                  ).filter((s) => booking.serviceIds.has(s.id));
+                  const colorDot = DEVICE_COLORS.find(
+                    (c) => c.name === booking.color,
+                  );
+                  return (
+                    <div key={booking.id} className="space-y-2">
+                      {/* Device label */}
+                      <div className="flex items-center gap-2">
+                        {colorDot && (
+                          <span
+                            className="h-3 w-3 shrink-0 rounded-full border border-charcoal/20"
+                            style={{ background: colorDot.hex }}
+                          />
+                        )}
+                        <p className="text-xs font-bold text-charcoal/70 tracking-wide">
+                          {deviceDisplayName(brand?.name, model?.name) || "—"}
+                          {booking.color ? ` · ${booking.color}` : ""}
+                        </p>
+                      </div>
+                      {/* Services */}
+                      {deviceServices.length === 0 &&
+                      !booking.includesTemperedGlass ? (
+                        <p className="text-xs text-gray italic">
+                          Ingen valgt endnu
+                        </p>
+                      ) : (
+                        <div className="space-y-1">
+                          {deviceServices.map((s) => (
+                            <div
+                              key={s.id}
+                              className="flex justify-between text-sm"
+                            >
+                              <span className="text-charcoal/70">
+                                {repairServiceLabel(s)}
+                              </span>
+                              <span className="font-bold text-charcoal">
+                                {s.price_dkk} kr
+                              </span>
+                            </div>
+                          ))}
+                          {booking.includesTemperedGlass && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-charcoal/70">
+                                Beskyttelsesglas
+                              </span>
+                              <span className="font-bold text-charcoal">
+                                99 kr
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Divider */}
+                <div className="border-t border-soft-grey" />
+
+                {/* Discount */}
+                {discountPercent > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
+                      -{discountPercent}% rabat
+                    </span>
+                    <span className="text-gray line-through">
+                      {subtotal} kr
+                    </span>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-bold text-gray">Total</span>
+                  <span className="font-body text-2xl font-bold text-charcoal">
+                    {totalPrice > 0 ? `${totalPrice} kr` : "—"}
+                  </span>
+                </div>
+                {totalPrice > 0 && (
+                  <p className="text-[11px] text-gray">
+                    Inkl. moms og reservedele
+                  </p>
+                )}
+
+                {/* CTA */}
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={!canGoNext}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-eco py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Fortsæt
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-3.5 w-3.5"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {/* Trust */}
+                <div className="flex items-center gap-1.5 justify-center">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="h-3.5 w-3.5 text-green-eco"
+                  >
+                    <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
+                  </svg>
+                  <span className="text-[11px] text-gray">
+                    Se garanti ved den valgte reparation
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
         </div>
       )}
 
@@ -1393,7 +1589,12 @@ export function BookingWizard() {
       {step === 2 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">Dine oplysninger</h2>
+            <h2
+              tabIndex={-1}
+              className="font-body text-xl font-bold text-charcoal"
+            >
+              Dine oplysninger
+            </h2>
             <p className="mt-1 text-sm text-gray">
               Vi bruger disse oplysninger til at kontakte dig om reparationen.
             </p>
@@ -1402,10 +1603,11 @@ export function BookingWizard() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className={labelStyles}>
-                Fulde navn
+                Fuldt navn
               </label>
               <input
                 id="name"
+                autoComplete="name"
                 name="name"
                 type="text"
                 required
@@ -1421,6 +1623,7 @@ export function BookingWizard() {
               </label>
               <input
                 id="phone"
+                autoComplete="tel"
                 name="phone"
                 type="tel"
                 required
@@ -1434,10 +1637,11 @@ export function BookingWizard() {
 
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className={labelStyles}>
-              Email
+              E-mail
             </label>
             <input
               id="email"
+              autoComplete="email"
               name="email"
               type="email"
               required
@@ -1456,7 +1660,7 @@ export function BookingWizard() {
               id="description"
               name="description"
               required
-              placeholder="Beskriv hvad der er galt med dine enheder — hvad skete der, og hvornår startede det?"
+              placeholder="Beskriv, hvad der er galt med dine enheder — hvad skete der, og hvornår startede det?"
               rows={4}
               value={customer.description}
               onChange={handleCustomerChange}
@@ -1470,17 +1674,20 @@ export function BookingWizard() {
       {step === 3 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">
+            <h2
+              tabIndex={-1}
+              className="font-body text-xl font-bold text-charcoal"
+            >
               Hvor og hvornår vil du aflevere dine enheder?
             </h2>
             <p className="mt-1 text-sm text-gray">
-              Vælg den butik du vil aflevere i, og en dato der passer dig.
+              Vælg den butik, du vil aflevere i, og en dato, der passer dig.
             </p>
           </div>
 
           {/* Store selection */}
           <div className="flex flex-col gap-2">
-            <label className={labelStyles}>Vælg butik</label>
+            <p className={labelStyles}>Vælg butik</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {STORE_IDS.map((id) => {
                 const store = STORES[id];
@@ -1489,6 +1696,7 @@ export function BookingWizard() {
                   <button
                     key={id}
                     type="button"
+                    aria-pressed={isSelected}
                     onClick={() => setStoreId(id)}
                     className={`rounded-xl border-2 p-4 text-left transition-all ${
                       isSelected
@@ -1498,7 +1706,7 @@ export function BookingWizard() {
                   >
                     <div className="flex items-center justify-between">
                       <p
-                        className={`font-display text-base font-bold ${
+                        className={`font-body text-base font-bold ${
                           isSelected ? "text-green-eco" : "text-charcoal"
                         }`}
                       >
@@ -1512,7 +1720,11 @@ export function BookingWizard() {
                         }`}
                       >
                         {isSelected && (
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                          <svg
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            className="h-3 w-3"
+                          >
                             <path
                               fillRule="evenodd"
                               d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
@@ -1525,7 +1737,9 @@ export function BookingWizard() {
                     <p className="mt-1 text-xs text-gray">
                       {store.street}, {store.zip} {store.city}
                     </p>
-                    <p className="mt-0.5 text-xs text-gray">{storeHoursLine(store.hours)}</p>
+                    <p className="mt-0.5 text-xs text-gray">
+                      {storeHoursLine(store.hours)}
+                    </p>
                   </button>
                 );
               })}
@@ -1533,38 +1747,49 @@ export function BookingWizard() {
           </div>
 
           {/* Date selection */}
-          <div className="flex flex-col gap-2">
-            <label className={labelStyles}>Vælg dato</label>
+          <div
+            role="group"
+            aria-label="Vælg dato"
+            className="flex flex-col gap-2"
+          >
+            <p className={labelStyles}>Vælg dato</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {availableDates.map((date) => {
-              const isSelected = preferredDate === date;
-              return (
-                <button
-                  key={date}
-                  type="button"
-                  onClick={() => setPreferredDate(date)}
-                  className={`rounded-xl border-2 p-4 text-left transition-all ${
-                    isSelected
-                      ? "border-green-eco bg-green-eco/5 shadow-sm"
-                      : "border-soft-grey hover:border-green-eco/30"
-                  }`}
-                >
-                  <p
-                    className={`text-sm font-bold ${isSelected ? "text-green-eco" : "text-charcoal"}`}
+              {availableDates.map((date) => {
+                const isSelected = preferredDate === date;
+                return (
+                  <button
+                    key={date}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => setPreferredDate(date)}
+                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                      isSelected
+                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        : "border-soft-grey hover:border-green-eco/30"
+                    }`}
                   >
-                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", {
-                      weekday: "long",
-                    })}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray">
-                    {new Date(date + "T12:00:00").toLocaleDateString("da-DK", {
-                      day: "numeric",
-                      month: "long",
-                    })}
-                  </p>
-                </button>
-              );
-            })}
+                    <p
+                      className={`text-sm font-bold ${isSelected ? "text-green-eco" : "text-charcoal"}`}
+                    >
+                      {new Date(date + "T12:00:00").toLocaleDateString(
+                        "da-DK",
+                        {
+                          weekday: "long",
+                        },
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray">
+                      {new Date(date + "T12:00:00").toLocaleDateString(
+                        "da-DK",
+                        {
+                          day: "numeric",
+                          month: "long",
+                        },
+                      )}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1582,9 +1807,8 @@ export function BookingWizard() {
               />
             </svg>
             <p className="text-sm text-amber-800">
-              <span className="font-bold">Bemærk:</span> Nogle reservedele har vi ikke på lager,
-              men vi har dag-til-dag levering og kan have dem klar til næste dag. Vi kontakter dig
-              hvis din valgte dato skal justeres.
+              <span className="font-bold">Bemærk:</span> Nogle reservedele har
+              vi ikke på lager, og leveringstiden kan variere. Vi kontakter dig, hvis din valgte dato skal justeres.
             </p>
           </div>
         </div>
@@ -1594,43 +1818,59 @@ export function BookingWizard() {
       {step === 4 && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-display text-xl font-bold text-charcoal">Bekræft din booking</h2>
-            <p className="mt-1 text-sm text-gray">Gennemgå dine valg og vælg betalingsmetode.</p>
+            <h2
+              tabIndex={-1}
+              className="font-body text-xl font-bold text-charcoal"
+            >
+              Bekræft din booking
+            </h2>
+            <p className="mt-1 text-sm text-gray">
+              Gennemgå dine valg og vælg betalingsmetode.
+            </p>
           </div>
 
           {/* All devices and their services */}
           <div className="rounded-xl bg-charcoal/[0.03] p-5 space-y-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-gray">
+            <p className="text-xs font-bold tracking-wide text-gray">
               {deviceBookings.length === 1 ? "Enhed" : "Enheder"}
             </p>
             {deviceBookings.map((booking, i) => {
               const brand = brands.find((b) => b.id === booking.brandId);
               const models = modelsMap.get(booking.id) ?? [];
               const model = models.find((m) => m.id === booking.modelId);
-              const deviceServices = (servicesMap.get(booking.id) ?? []).filter((s) =>
-                booking.serviceIds.has(s.id),
+              const deviceServices = (servicesMap.get(booking.id) ?? []).filter(
+                (s) => booking.serviceIds.has(s.id),
               );
               return (
-                <div key={booking.id} className={i > 0 ? "border-t border-soft-grey pt-4" : ""}>
-                  <p className="font-display text-base font-bold text-charcoal">
+                <div
+                  key={booking.id}
+                  className={i > 0 ? "border-t border-soft-grey pt-4" : ""}
+                >
+                  <p className="font-body text-base font-bold text-charcoal">
                     {deviceBookings.length > 1 && (
-                      <span className="mr-2 text-xs font-bold text-green-eco uppercase tracking-wide">
+                      <span className="mr-2 text-xs font-bold text-green-eco tracking-wide">
                         Enhed {i + 1}
                       </span>
                     )}
-                    {brand?.name} {model?.name}
+                    {deviceDisplayName(brand?.name, model?.name)}
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {deviceServices.map((s) => (
                       <li key={s.id} className="flex justify-between text-sm">
-                        <span className="text-charcoal">{s.name}</span>
-                        <span className="font-bold text-charcoal">{s.price_dkk} DKK</span>
+                        <span className="text-charcoal">
+                          {repairServiceLabel(s)}
+                        </span>
+                        <span className="font-bold text-charcoal">
+                          {s.price_dkk} DKK
+                        </span>
                       </li>
                     ))}
                     {booking.includesTemperedGlass && (
                       <li className="flex justify-between text-sm">
                         <span className="text-charcoal">Beskyttelsesglas</span>
-                        <span className="font-bold text-charcoal">{TEMPERED_GLASS_PRICE} DKK</span>
+                        <span className="font-bold text-charcoal">
+                          {TEMPERED_GLASS_PRICE} DKK
+                        </span>
                       </li>
                     )}
                   </ul>
@@ -1651,32 +1891,39 @@ export function BookingWizard() {
                   </div>
                 </>
               )}
-              <div className="mt-1 flex justify-between font-display text-lg font-bold">
+              <div className="mt-1 flex justify-between font-body text-lg font-bold">
                 <span className="text-charcoal">Total</span>
                 <span className="text-green-eco">{totalPrice} DKK</span>
               </div>
-              <p className="mt-1 text-xs text-gray">Inkl. moms, reservedele og livstidsgaranti</p>
+              <p className="mt-1 text-xs text-gray">
+                Inkl. moms og reservedele
+              </p>
             </div>
           </div>
 
           {/* Aflevering — butik og dato */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-charcoal/[0.03] p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray">Butik</p>
-              <p className="mt-1 font-display text-lg font-bold text-charcoal">
-                {selectedStore ? `PhoneSpot ${selectedStore.city}` : "Ikke valgt"}
+              <p className="text-xs font-bold tracking-wide text-gray">
+                Butik
+              </p>
+              <p className="mt-1 font-body text-lg font-bold text-charcoal">
+                {selectedStore
+                  ? `PhoneSpot ${selectedStore.city}`
+                  : "Ikke valgt"}
               </p>
               {selectedStore && (
                 <p className="mt-0.5 text-xs text-gray">
-                  {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                  {selectedStore.street}, {selectedStore.zip}{" "}
+                  {selectedStore.city}
                 </p>
               )}
             </div>
             <div className="rounded-xl bg-charcoal/[0.03] p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray">
+              <p className="text-xs font-bold tracking-wide text-gray">
                 Afleveringsdato
               </p>
-              <p className="mt-1 font-display text-lg font-bold text-charcoal">
+              <p className="mt-1 font-body text-lg font-bold text-charcoal">
                 {preferredDate ? formatDateDanish(preferredDate) : "Ikke valgt"}
               </p>
             </div>
@@ -1684,14 +1931,14 @@ export function BookingWizard() {
 
           {/* Customer */}
           <div className="rounded-xl bg-charcoal/[0.03] p-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray">
+            <p className="mb-3 text-xs font-bold tracking-wide text-gray">
               Kontaktoplysninger
             </p>
             <dl className="space-y-2 text-sm">
               {(
                 [
                   ["Navn", customer.name],
-                  ["Email", customer.email],
+                  ["E-mail", customer.email],
                   ["Telefon", customer.phone],
                 ] as [string, string][]
               ).map(([label, value]) => (
@@ -1720,9 +1967,12 @@ export function BookingWizard() {
               <path d="M9 12l2 2 4-4" />
             </svg>
             <div>
-              <p className="text-sm font-bold text-charcoal">Livstidsgaranti inkluderet</p>
+              <p className="text-sm font-bold text-charcoal">
+                Oplysninger om din reparation
+              </p>
               <p className="text-xs text-gray">
-                Alle reparationer dækkes af livstidsgaranti på arbejde og reservedele.
+                Se garantioplysningerne ved hver reparation og vores
+                reparationsbetingelser.
               </p>
             </div>
           </div>
@@ -1737,7 +1987,11 @@ export function BookingWizard() {
             >
               {isSubmitting ? (
                 <>
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -1772,30 +2026,64 @@ export function BookingWizard() {
             <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-eco/10">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5 text-green-eco">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    className="h-5 w-5 text-green-eco"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-sm font-bold text-charcoal">
-                    Aflever i butikken{selectedStore ? ` — ${selectedStore.city}` : ""}
+                  <p className="font-body text-sm font-bold text-charcoal">
+                    Aflever i butikken
+                    {selectedStore ? ` — ${selectedStore.city}` : ""}
                   </p>
                   {selectedStore && (
                     <p className="mt-0.5 text-xs text-gray">
-                      {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                      {selectedStore.street}, {selectedStore.zip}{" "}
+                      {selectedStore.city}
                     </p>
                   )}
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray">
                     {selectedStore && (
                       <span className="flex items-center gap-1">
-                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z" clipRule="evenodd" /></svg>
+                        <svg
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          className="h-3 w-3 text-green-eco"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
                         {storeHoursLine(selectedStore.hours)}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
-                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-green-eco"><path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" /></svg>
-                      {selectedStore ? selectedStore.phone.replace("+45 ", "") : "61 10 00 48"}
+                      <svg
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        className="h-3 w-3 text-green-eco"
+                      >
+                        <path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" />
+                      </svg>
+                      {selectedStore
+                        ? selectedStore.phone.replace("+45 ", "")
+                        : "61 10 00 48"}
                     </span>
                   </div>
                 </div>
@@ -1810,7 +2098,7 @@ export function BookingWizard() {
                 {isSubmitting ? "Sender..." : "Book og betal i butikken"}
               </button>
               <p className="mt-2 text-center text-xs text-gray">
-                Ingen betaling nu — du betaler når du afhenter din enhed
+                Ingen betaling nu — du betaler, når du afhenter din enhed
               </p>
             </div>
           </div>
@@ -1822,7 +2110,11 @@ export function BookingWizard() {
               onClick={goPrev}
               className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
             >
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+              <svg
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-3.5 w-3.5"
+              >
                 <path
                   fillRule="evenodd"
                   d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"

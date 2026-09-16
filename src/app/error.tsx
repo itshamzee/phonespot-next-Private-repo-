@@ -36,7 +36,7 @@ export default function Error({
           Noget gik galt
         </h1>
         <p className="mt-4 text-lg text-[#6E6E73]">
-          Vi beklager ulejligheden. Prøv at genindlæse siden eller kontakt os
+          Vi beklager ulejligheden. Prøv at genindlæse siden, eller kontakt os,
           hvis problemet fortsætter.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

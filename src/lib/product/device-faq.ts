@@ -15,43 +15,43 @@ export type FaqItem = { q: string; a: string };
  * every distinct question that used to appear on the page still does,
  * exactly once, via this single shared source.
  */
-export function getDeviceFaq(displayName: string): FaqItem[] {
+export function getDeviceFaq(displayName: string, category = "iphone"): FaqItem[] {
   return [
     {
       q: `Er denne ${displayName} fuldt funktionel?`,
-      a: "Ja, 100%. Alle enheder gennemgår 30+ individuelle kvalitetstests. Vi tester skærm, batteri, kamera, højttalere, mikrofon, sensorer, porte og meget mere. Enheden er nulstillet til fabriksindstillinger og opdateret til nyeste software.",
+      a: "Ja, 100%. Alle enheder gennemgår 30+ individuelle kvalitetstests. Vi tester skærm, batteri, kamera, højttalere, mikrofon, sensorer, porte og meget mere. Enheden er nulstillet til fabriksindstillinger og opdateret til den nyeste software.",
     },
     {
       q: "Hvad er standen på denne enhed?",
       a: "Vi vurderer alle enheder efter et A/B/C-system. Stand A er næsten som ny uden synlige ridser. Stand B har lette brugsspor, men skærmen er perfekt. Stand C kan have tydelige kosmetiske mærker, men er fuldt funktionel. Alle enheder gennemgår minimum 30 kontrolpunkter uanset stand.",
     },
     {
-      q: "Hvad er forskellen mellem Grade A, B og C?",
-      a: "Forskellen er udelukkende kosmetisk — alle grader er 100% funktionelle. Grade A er i perfekt stand uden synlige mærker. Grade B har lette brugsspor. Grade C har synlige brugsspor men er den billigste mulighed. Batterikapaciteten hænger ikke sammen med graden — den måles individuelt for hver enhed og oplyses altid på produktsiden.",
+      q: "Hvad er forskellen mellem stand A, B og C?",
+      a: "Forskellen er udelukkende kosmetisk — enheder i alle stande er 100% funktionelle. Stand A er i perfekt stand uden synlige mærker. Stand B har lette brugsspor. Stand C har synlige brugsspor, men er den billigste mulighed. Batterikapaciteten hænger ikke sammen med standen — den måles individuelt for hver enhed og oplyses altid på produktsiden.",
     },
     {
       q: "Hvad dækker de 36 måneders garanti?",
       a: "Garantien dækker alle fabrikationsfejl og funktionelle mangler i 36 måneder. Det inkluderer problemer med skærm, batteri, kamera, højttalere og interne komponenter. Garantien dækker ikke fysisk skade eller kosmetisk slid.",
     },
     {
-      q: "Hvad gør jeg hvis enheden har en fejl?",
-      a: "Alle vores produkter leveres med 36 måneders garanti. Hvis du oplever en fejl, kontakt vores kundeservice, og vi finder en løsning hurtigst muligt — enten reparation, ombytning eller refundering. Du er altid dækket.",
+      q: "Hvad gør jeg, hvis enheden har en fejl?",
+      a: "Alle vores enheder leveres med 36 måneders garanti. Hvis du oplever en fejl, skal du kontakte vores kundeservice, og vi finder en løsning hurtigst muligt — enten reparation, ombytning eller refundering. Du er altid dækket.",
     },
-    {
+    ...(["iphone", "smartphone"].includes(category) ? [{
       q: "Kan jeg bruge alle danske mobilabonnementer?",
-      a: "Ja. Alle enheder er ulåste (factory unlocked) og virker med alle danske operatører — TDC, Telenor, Telia, 3, Lebara og andre.",
-    },
+      a: "Ja. Alle enheder er uden SIM-lås og virker med alle danske operatører — TDC, Telenor, Telia, 3, Lebara og andre.",
+    }] : []),
     {
       q: "Hvor hurtigt leverer I?",
-      a: "Vi sender din ordre inden for 1-2 hverdage. Du modtager en sporings-mail så snart pakken er afsendt. Vi leverer med DAO eller PostNord direkte til din dør eller nærmeste pakkeshop.",
+      a: "Vi sender din ordre inden for 1-2 hverdage. Du modtager en e-mail med sporing, så snart pakken er afsendt. Vi leverer med DAO eller PostNord direkte til din dør eller nærmeste pakkeshop.",
     },
     {
       q: "Hvad hvis jeg ikke er tilfreds?",
-      a: "Du har 14 dages fuld fortrydelsesret. Returner enheden i original stand, og vi refunderer det fulde beløb inkl. fragt. Ingen spørgsmål stillet.",
+      a: "Du har 14 dages fuld fortrydelsesret. Returner enheden i oprindelig stand, og vi refunderer det fulde beløb inkl. fragt. Ingen spørgsmål stillet.",
     },
     {
       q: "Kan jeg returnere enheden?",
-      a: "Ja, du har altid 14 dages fuld returret fra den dag du modtager din ordre. Enheden skal returneres i samme stand som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
+      a: "Ja, du har altid 14 dages fuld returret fra den dag, du modtager din ordre. Enheden skal returneres i samme stand, som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
     },
   ];
 }
@@ -74,7 +74,7 @@ export function getAccessoryFaq(displayName: string): FaqItem[] {
   return [
     {
       q: `Passer ${displayName} til min enhed?`,
-      a: "Kompatibiliteten fremgår af produkttitlen og beskrivelsen ovenfor. Er du i tvivl om modelmatch, så kontakt os før du bestiller, så bekræfter vi det for dig.",
+      a: "Kompatibiliteten fremgår af produkttitlen og beskrivelsen ovenfor. Er du i tvivl om, hvorvidt tilbehøret passer til din model, så kontakt os, før du bestiller. Så bekræfter vi det for dig.",
     },
     {
       q: "Hvad hvis varen er defekt eller går i stykker?",
@@ -82,11 +82,11 @@ export function getAccessoryFaq(displayName: string): FaqItem[] {
     },
     {
       q: "Kan jeg fortryde mit køb?",
-      a: "Ja, du har 14 dages fuld fortrydelsesret fra den dag du modtager varen. Returner den i den stand du modtog den, og vi refunderer det fulde beløb.",
+      a: "Ja, du har 14 dages fuld fortrydelsesret fra den dag, du modtager varen. Returner den i den stand, du modtog den, og vi refunderer det fulde beløb.",
     },
     {
       q: "Hvor hurtigt leverer I, og er der fri fragt?",
-      a: `Vi sender din ordre inden for 1-2 hverdage. Ved køb over ${freeShippingKr} kr er fragten fri — ellers tilføjes et fragtgebyr ved checkout.`,
+      a: `Vi sender din ordre inden for 1-2 hverdage. Ved køb over ${freeShippingKr} kr er fragten fri — ellers tilføjes et fragtgebyr ved betaling.`,
     },
   ];
 }

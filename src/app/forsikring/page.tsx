@@ -65,12 +65,12 @@ const INSURANCE_FAQ = [
   {
     question: "Hvad dækker elektronikforsikringen?",
     answer:
-      "Forsikringen dækker pludselig skade (uheld med øjeblikkelig virkning, fx fald og slag) og funktionsfejl (mekaniske eller elektriske svigt). Den dækker også skade på mobiltelefonbatteriet, hvis kapaciteten falder til under 70 % af det oprindelige, samt pixelfejl ud over producentens accepterede grænse. Det fulde overblik fremgår af forsikringsbetingelserne.",
+      "Forsikringen dækker pludselig skade (uheld med øjeblikkelig virkning, fx fald og slag) og funktionsfejl (mekaniske eller elektriske svigt). Den dækker også skade på mobiltelefonbatteriet, hvis kapaciteten falder til under 70 % af den oprindelige kapacitet, samt pixelfejl ud over producentens accepterede grænse. Det fulde overblik fremgår af forsikringsbetingelserne.",
   },
   {
     question: "Hvad dækker den ikke?",
     answer:
-      "Forsikringen dækker ikke almindelig slid, ælde eller gradvis forringelse, rent kosmetiske skader, skader der allerede er dækket af garanti eller reklamationsret, skader forårsaget af dyr, fejl i data og software, virus og hacking, samt skader fra oversvømmelse og naturkatastrofer. Se betingelserne for den fulde liste.",
+      "Forsikringen dækker ikke almindeligt slid, ælde eller gradvis forringelse, rent kosmetiske skader, skader, der allerede er dækket af garanti eller reklamationsret, skader forårsaget af dyr, fejl i data og software, virus og hacking samt skader fra oversvømmelse og naturkatastrofer. Se betingelserne for den fulde liste.",
   },
   {
     question: "Hvor længe er jeg dækket?",
@@ -212,7 +212,7 @@ export default function ForsikringPage() {
                   Garanti dækker fejl og mangler — men ikke uheld. Derfor er vi
                   gået sammen med Storstrøm Forsikring om at tilbyde
                   elektronikforsikring på dine produkter. Dæk din enhed mod uheld
-                  og funktionsfejl for en lav månedlig rate, og vær tryg uanset
+                  og funktionsfejl for en lav månedlig rate, og vær tryg, uanset
                   hvad hverdagen byder på.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -376,7 +376,7 @@ export default function ForsikringPage() {
               som udgangspunkt af os i PhoneSpot Slagelse — samme værksted og
               samme teknikere, som klargør alle vores enheder. Vi bruger
               originale Apple-reservedele, hvor det er muligt, så din enhed
-              kommer tilbage i bedst mulige stand.
+              kommer tilbage i den bedst mulige stand.
             </p>
             <p className="mt-3 text-sm text-[#86868B]">
               Du betaler kun en eventuel selvrisiko — resten klarer forsikringen.

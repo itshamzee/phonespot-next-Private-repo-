@@ -9,8 +9,8 @@ type ImageGalleryProps = {
   title: string;
   activeIndex?: number;
   /**
-   * "accessory" swaps the "Refurbished & testet / 36 mdr. garanti /
-   * 30-punkt kvalitetstest" strip below the gallery for claims that are
+   * "accessory" swaps the "Refurbished og testet / 36 mdr. garanti /
+   * Kvalitetstest med 30 kontrolpunkter" strip below the gallery for claims that are
    * actually true of a sku_product (new goods, not a graded refurbished
    * device, not covered by the 36-month device warranty). Without this,
    * every accessory PDP using this gallery — e.g. a leather iPad case —
@@ -188,7 +188,7 @@ export function ImageGallery({ images, title, activeIndex, variant = "device" }:
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-green-eco">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.745 3.745 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
               </svg>
-              <span className="text-xs font-medium text-charcoal/70">Refurbished & testet</span>
+              <span className="text-xs font-medium text-charcoal/70">Refurbished og testet</span>
             </div>
             <span className="hidden text-charcoal/20 sm:inline">|</span>
             <div className="flex items-center gap-1.5">
@@ -202,7 +202,7 @@ export function ImageGallery({ images, title, activeIndex, variant = "device" }:
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-green-eco">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V3a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m7.723-9.285v0" />
               </svg>
-              <span className="text-xs font-medium text-charcoal/70">30-punkt kvalitetstest</span>
+              <span className="text-xs font-medium text-charcoal/70">Kvalitetstest med 30 kontrolpunkter</span>
             </div>
           </>
         )}

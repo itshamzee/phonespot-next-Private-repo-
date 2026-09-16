@@ -6,16 +6,16 @@ import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
-  title: "Prismatch-Garanti | PhoneSpot",
+  title: "Prismatchgaranti | PhoneSpot",
   description:
-    "Finder du en billigere pris på en refurbished enhed hos en dansk konkurrent? PhoneSpot matcher prisen. Læs betingelserne her.",
+    "Finder du en lavere pris på en refurbished enhed hos en dansk konkurrent? PhoneSpot matcher prisen. Læs betingelserne her.",
   alternates: {
     canonical: "https://phonespot.dk/prismatch",
   },
   openGraph: {
-    title: "Prismatch-Garanti | PhoneSpot",
+    title: "Prismatchgaranti | PhoneSpot",
     description:
-      "Finder du en billigere pris på en refurbished enhed hos en dansk konkurrent? PhoneSpot matcher prisen. Læs betingelserne her.",
+      "Finder du en lavere pris på en refurbished enhed hos en dansk konkurrent? PhoneSpot matcher prisen. Læs betingelserne her.",
     url: "https://phonespot.dk/prismatch",
     type: "website",
   },
@@ -30,13 +30,13 @@ const STEPS = [
     number: "1",
     title: "Find en lavere pris",
     description:
-      "Find en billigere pris på en sammenlignelig refurbished enhed hos en dansk konkurrent med aktiv dansk webshop. Enheden skal være samme model, samme grade og på lager.",
+      "Find en lavere pris på en sammenlignelig refurbished enhed hos en dansk konkurrent med en aktiv dansk webshop. Enheden skal være af samme model, have samme grade og være på lager.",
   },
   {
     number: "2",
     title: "Kontakt os med et link",
     description:
-      "Send os et link til den billigere pris via vores kontaktformular eller email. Husk at inkludere hvilken enhed det drejer sig om, og linket til konkurrentens tilbud.",
+      "Send os et link til den lavere pris via vores kontaktformular eller e-mail. Husk at oplyse, hvilken enhed det drejer sig om, og linket til konkurrentens tilbud.",
   },
   {
     number: "3",
@@ -49,7 +49,7 @@ const STEPS = [
 const CONDITIONS = [
   "Kun danske konkurrenter med aktiv dansk webshop",
   "Samme model, samme kosmetiske grade og på lager hos konkurrenten",
-  "Offentligt tilgængelig pris (ikke medlemsrabatter, kuponer eller flash sales)",
+  "Offentligt tilgængelig pris (ikke medlemsrabatter, kuponer eller kortvarige udsalg)",
   "Ikke markedspladssælgere (DBA, Facebook Marketplace) eller private sælgere",
   "PhoneSpot forbeholder sig retten til at vurdere sammenlignelighed",
 ];
@@ -69,12 +69,12 @@ export default function PrismatchPage() {
               Prismatch
             </p>
             <Heading size="xl" className="text-[#111111]">
-              Prismatch-garanti
+              Prismatchgaranti
             </Heading>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
               Hos PhoneSpot er vi overbeviste om, at vi tilbyder Danmarks bedste
               priser på kvalitetstestet refurbished elektronik. Men finder du
-              alligevel en billigere pris hos en dansk konkurrent? Så matcher vi
+              alligevel en lavere pris hos en dansk konkurrent? Så matcher vi
               den &mdash; uden tøven. Du får stadig vores 36 måneders garanti,
               30+ kvalitetstests og 14 dages returret.
             </p>
@@ -130,7 +130,7 @@ export default function PrismatchPage() {
               </Heading>
               <p className="mt-4 text-lg text-[#86868B]">
                 For at sikre en fair sammenligning gælder følgende betingelser
-                for vores prismatch-garanti.
+                for vores prismatchgaranti.
               </p>
             </div>
             <ul className="mt-10 space-y-4">
@@ -175,15 +175,15 @@ export default function PrismatchPage() {
                 Vi køber ind direkte fra certificerede europæiske leverandører og
                 holder vores omkostninger lave. Det betyder, at vi næsten altid
                 har de bedste priser i Danmark på refurbished elektronik. Vi er
-                så sikre på vores priser, at vi tør tilbyde prismatch-garanti
+                så sikre på vores priser, at vi tør tilbyde prismatchgaranti
                 &mdash; noget ingen af vores danske konkurrenter gør.
               </p>
               <p className="mt-4 leading-relaxed text-[#86868B]">
-                Og i de sjældne tilfælde hvor en konkurrent har en lavere pris,
+                Og i de sjældne tilfælde, hvor en konkurrent har en lavere pris,
                 matcher vi den gerne. For hos PhoneSpot får du ikke bare den
                 bedste pris &mdash; du får også 36 måneders garanti, over 30
                 individuelle kvalitetstests og 14 dages fuld returret. Det er
-                tryghed du ikke finder andre steder.
+                tryghed, du ikke finder andre steder.
               </p>
               <div className="mt-6 flex flex-wrap gap-4 text-sm font-medium text-[#1A3D2E]">
                 <span className="flex items-center gap-1.5">
@@ -259,9 +259,9 @@ export default function PrismatchPage() {
               Fundet en lavere pris? Kontakt os
             </Heading>
             <p className="mt-4 text-[#86868B]">
-              Send os et link til den billigere pris, og vi matcher den. Du kan
+              Send os et link til den lavere pris, og vi matcher den. Du kan
               også kontakte os, hvis du har spørgsmål til vores
-              prismatch-garanti.
+              prismatchgaranti.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link

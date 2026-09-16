@@ -241,7 +241,7 @@ export const SPARE_PARTS_FAQ: SparePartFAQ[] = [
   },
   {
     question: "Kan jeg returnere en reservedel?",
-    answer: "Ja, du har 14 dages fuld returret på alle reservedele, så længe delen er ubrugt og i original emballage. Kontakt os, så sender vi en returlabel.",
+    answer: "Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen. Du betaler selv returfragten ved fortrydelse. Kontakt os for hjælp til fremgangsmåden; ved fejl gælder reklamationsretten særskilt.",
   },
   {
     question: "Tilbyder I montering af reservedele?",

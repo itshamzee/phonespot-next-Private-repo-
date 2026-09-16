@@ -12,9 +12,9 @@ import { getAllPosts } from "@/lib/blog";
 /* ------------------------------------------------------------------ */
 
 export const metadata: Metadata = {
-  title: "Guides & Nyheder om Refurbished Elektronik | PhoneSpot Blog",
+  title: "Guides og nyheder om refurbished elektronik | PhoneSpot Blog",
   description:
-    "Læs guides, sammenligninger og nyheder om refurbished iPhones, iPads, MacBooks og mere. Bliv klogere på refurbished tech hos PhoneSpot.",
+    "Læs guides, sammenligninger og nyheder om refurbished iPhones, iPads, MacBooks og mere. Bliv klogere på refurbished elektronik hos PhoneSpot.",
   alternates: { canonical: "https://phonespot.dk/blog" },
 };
 
@@ -95,7 +95,7 @@ export default function BlogIndexPage() {
             PhoneSpot Blog
           </p>
           <Heading as="h1" size="lg" className="!text-white">
-            Guides & Nyheder
+            Guides og nyheder
           </Heading>
           <p className="mx-auto mt-4 max-w-2xl font-body text-lg text-white/70">
             Bliv klogere på refurbished elektronik. Købsguides,

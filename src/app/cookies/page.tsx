@@ -71,7 +71,7 @@ export default function CookiesPage() {
                   Statistik (analytiske cookies)
                 </Heading>
                 <p className="text-muted-foreground leading-relaxed">
-                  Statistik-cookies hjælper os med at forstå, hvordan besøgende bruger
+                  Statistikcookies hjælper os med at forstå, hvordan besøgende bruger
                   vores hjemmeside. De indsamler anonymiserede data om sidevisninger,
                   sessionsvarighed og navigeringsmønstre — eksempelvis via Google
                   Analytics 4. Disse oplysninger bruger vi udelukkende til at forbedre
@@ -83,10 +83,10 @@ export default function CookiesPage() {
               {/* Marketing */}
               <div>
                 <Heading as="h3" size="sm" className="mb-2">
-                  Marketing cookies
+                  Markedsføringscookies
                 </Heading>
                 <p className="text-muted-foreground leading-relaxed">
-                  Marketing-cookies bruges til at vise dig relevante annoncer og måle
+                  Markedsføringscookies bruges til at vise dig relevante annoncer og måle
                   effekten af vores markedsføringskampagner. De kan sættes af
                   tredjepart som Meta (Facebook/Instagram), TikTok og Google og bruges
                   til at målrette annoncer på tværs af hjemmesider og platforme. Disse
@@ -118,14 +118,14 @@ export default function CookiesPage() {
             </Heading>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Du kan til enhver tid ændre eller trække dit samtykke tilbage ved at klikke
-              på cookie-ikonet i bunden af siden. Du kan også slette eller blokere cookies
+              på cookieikonet i bunden af siden. Du kan også slette eller blokere cookies
               via din browsers indstillinger — i de fleste browsere finder du muligheden
               under <em>Privatliv</em> eller <em>Sikkerhed</em>.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Bemærk at blokering af nødvendige cookies kan påvirke hjemmesidens
-              funktionalitet, herunder indkøbskurven og betalingsflow. Blokering af
-              marketing-cookies vil ikke fjerne reklamer, men de vil blot ikke være
+              Bemærk, at blokering af nødvendige cookies kan påvirke hjemmesidens
+              funktionalitet, herunder indkøbskurven og betalingsforløbet. Blokering af
+              markedsføringscookies vil ikke fjerne reklamer, men de vil blot ikke være
               tilpasset dine interesser.
             </p>
           </section>
@@ -150,7 +150,7 @@ export default function CookiesPage() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground italic">
-                Cookieoversigt er ikke tilgængelig i dette miljø (
+                Cookieoversigten er ikke tilgængelig i dette miljø (
                 <code>NEXT_PUBLIC_COOKIEBOT_CBID</code> er ikke sat).
               </p>
             )}

@@ -31,14 +31,6 @@ export async function TrustpilotReviews() {
     getTrustpilotSummary(),
   ]);
 
-  // Fallback reviews when Trustpilot API is unavailable
-  const FALLBACK_REVIEWS = [
-    { id: "f1", stars: 5, title: "Fantastisk service", text: "Bestilte en iPhone 13 Pro og modtog den næste dag. Perfekt stand og hurtig levering. Kan varmt anbefales!", consumer: { displayName: "Mikkel S." }, createdAt: "2026-02-15" },
-    { id: "f2", stars: 5, title: "Bedre end forventet", text: "Min refurbished iPad Air ser ud som ny. 36 måneders garanti giver ekstra tryghed. Super oplevelse fra start til slut.", consumer: { displayName: "Line K." }, createdAt: "2026-01-28" },
-    { id: "f3", stars: 4, title: "God kvalitet og pris", text: "Sparede over 3.000 kr på en iPhone 14 Pro Max i Grade B stand. Kun en lille ridse på bagsiden — ellers perfekt.", consumer: { displayName: "Thomas H." }, createdAt: "2026-03-02" },
-  ];
-
-  const displayReviews = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
   const displaySummary: DisplaySummary = summary ?? {
     stars: 5,
     score: TRUSTPILOT_FALLBACK_SCORE,
@@ -51,24 +43,24 @@ export async function TrustpilotReviews() {
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <StarRow count={displaySummary.stars} />
         <span className="text-lg font-bold text-[#111111]">
-          {displaySummary.score.toFixed(1)}/5
+          {displaySummary.score.toLocaleString("da-DK", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}/5
         </span>
         <span className="text-sm text-[#86868B]">
           {displaySummary.numberOfReviews
             ? `baseret på ${displaySummary.numberOfReviews.toLocaleString("da-DK")} anmeldelser`
-            : "verificerede anmeldelser på Trustpilot"}
+            : "Anmeldelser på Trustpilot"}
         </span>
       </div>
 
       {/* Review cards */}
       <div className="grid gap-6 md:grid-cols-3">
-        {displayReviews.map((review) => (
+        {reviews.map((review) => (
           <div
             key={review.id}
             className="rounded-2xl border border-[#E5E5EA] bg-white p-6 shadow-sm"
           >
             <StarRow count={review.stars} />
-            <h4 className="mt-3 font-display text-base font-bold text-[#111111]">
+            <h4 className="mt-3 font-body text-base font-bold text-[#111111]">
               {review.title}
             </h4>
             <p className="mt-2 line-clamp-3 text-sm text-[#111111]/70">

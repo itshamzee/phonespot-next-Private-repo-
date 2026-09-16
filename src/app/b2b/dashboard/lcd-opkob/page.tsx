@@ -50,7 +50,7 @@ const ALL_MODELS = LCD_PRICING.flatMap((cat) =>
 const TILSTANDE = [
   { value: "smadret", label: "Smadret glas" },
   { value: "defekt", label: "Defekt display" },
-  { value: "burn_in", label: "Burn-in / indbrending" },
+  { value: "burn_in", label: "Indbrænding" },
 ] as const;
 
 type Tilstand = (typeof TILSTANDE)[number]["value"];
@@ -191,10 +191,10 @@ export default function LcdOpkobPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[#111111]">
-            LCD Opkob
+            Opkøb af LCD-skærme
           </h1>
           <p className="mt-0.5 text-sm text-[#86868B]">
-            Saelg dine defekte skaerme til PhoneSpot
+            Sælg dine defekte skærme til PhoneSpot
           </p>
         </div>
         <button
@@ -205,31 +205,31 @@ export default function LcdOpkobPage() {
           }}
           className="rounded-full bg-[#1A3D2E] px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
-          {showForm ? "Luk formular" : "Indmeld skaerme"}
+          {showForm ? "Luk formular" : "Indmeld skærme"}
         </button>
       </div>
 
       {/* How it works */}
       <div className="rounded-xl border border-[#E5E5EA] bg-white p-6">
         <h2 className="mb-4 font-display text-base font-bold text-[#111111]">
-          Saadan virker det
+          Sådan virker det
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             {
               step: "1",
               title: "Indmeld",
-              desc: "Udfyld formularen med model, antal og tilstand. Vedhajft billeder.",
+              desc: "Udfyld formularen med model, antal og tilstand. Vedhæft billeder.",
             },
             {
               step: "2",
               title: "Vi vurderer",
-              desc: "Vi bekraefter prisen inden for 1 hverdag og sender besked pa email.",
+              desc: "Vi bekræfter prisen inden for 1 hverdag og sender besked på e-mail.",
             },
             {
               step: "3",
               title: "Afregning",
-              desc: "Send skaermene til os — eller aflever i Vejle. Udbetaling sker inden for 3 hverdage.",
+              desc: "Send skærmene til os — eller aflever i Vejle. Udbetaling sker inden for 3 hverdage.",
             },
           ].map((item) => (
             <div key={item.step} className="flex gap-3">
@@ -269,8 +269,8 @@ export default function LcdOpkobPage() {
                 Indmelding modtaget
               </h3>
               <p className="mt-2 text-sm text-[#86868B]">
-                Vi bekraefter prisen inden for 1 hverdag og kontakter dig pa din
-                registrerede email.
+                Vi bekræfter prisen inden for 1 hverdag og kontakter dig på din
+                registrerede e-mailadresse.
               </p>
               <button
                 type="button"
@@ -286,7 +286,7 @@ export default function LcdOpkobPage() {
           ) : (
             <>
               <h2 className="mb-5 font-display text-lg font-bold text-[#111111]">
-                Indmeld skaerme
+                Indmeld skærme
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -305,7 +305,7 @@ export default function LcdOpkobPage() {
                       onChange={handleField}
                       className={FIELD_CLASS}
                     >
-                      <option value="">Vaelg model...</option>
+                      <option value="">Vælg model...</option>
                       {LCD_PRICING.map((cat) => (
                         <optgroup key={cat.category} label={cat.category}>
                           {cat.models.map((m) => (
@@ -380,8 +380,8 @@ export default function LcdOpkobPage() {
                       {formatOere(totalEstimated)}
                     </p>
                     <p className="mt-0.5 text-xs text-[#1A3D2E]/70">
-                      {form.antal} stk &times;{" "}
-                      {estimatedPricePerUnit} kr pr. stk &mdash; endelig pris bekraeftes af os
+                      {form.antal} stk. &times;{" "}
+                      {estimatedPricePerUnit} kr. pr. stk. &mdash; den endelige pris bekræftes af os
                     </p>
                   </div>
                 )}
@@ -406,7 +406,7 @@ export default function LcdOpkobPage() {
                     <p className="mt-2 text-sm text-[#86868B]">
                       {form.files.length > 0
                         ? `${form.files.length} fil(er) valgt`
-                        : "Upload billeder af skaermene"}
+                        : "Upload billeder af skærmene"}
                     </p>
                     <p className="mt-0.5 text-xs text-[#86868B]">
                       PNG, JPG op til 10 MB pr. fil
@@ -451,7 +451,7 @@ export default function LcdOpkobPage() {
             Prisoversigt — hvad vi betaler
           </h2>
           <p className="mt-0.5 text-xs text-[#86868B]">
-            Priser i DKK inkl. moms. Endelig pris bekraeftes ved modtagelse.
+            Priser i DKK inkl. moms. Endelig pris bekræftes ved modtagelse.
           </p>
         </div>
 
@@ -488,7 +488,7 @@ export default function LcdOpkobPage() {
                   Defekt display
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-[#6E6E73]">
-                  Burn-in
+                  Indbrænding
                 </th>
               </tr>
             </thead>

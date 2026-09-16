@@ -17,8 +17,8 @@ const MOCK_RMA_LIST = [
     id: "rma-002",
     rmaNumber: "RMA-2024-004",
     orderNumber: "B2B-2024-0021",
-    product: "Samsung S22 skaerm — AMOLED (1 stk)",
-    description: "Dodpixels i ovre venstre hjoerne ved levering.",
+    product: "Samsung S22 skærm — AMOLED (1 stk)",
+    description: "Døde pixels i øvre venstre hjørne ved levering.",
     submittedAt: "2024-03-10",
     status: "godkendt",
   },
@@ -26,8 +26,8 @@ const MOCK_RMA_LIST = [
     id: "rma-003",
     rmaNumber: "RMA-2024-001",
     orderNumber: "B2B-2024-0018",
-    product: "iPhone 13 Pro skaerm — Premium OLED (1 stk)",
-    description: "Touch virker ikke i bunden af skaermen.",
+    product: "iPhone 13 Pro skærm — Premium OLED (1 stk)",
+    description: "Touch virker ikke i bunden af skærmen.",
     submittedAt: "2024-02-25",
     status: "afsluttet",
   },
@@ -125,7 +125,7 @@ export default function ReklamationPage() {
             Reklamation / RMA
           </h1>
           <p className="mt-0.5 text-sm text-[#86868B]">
-            Indmeld fejl og spor status pa dine reklamationssager
+            Indmeld fejl og følg status på dine reklamationssager
           </p>
         </div>
         <button
@@ -164,8 +164,8 @@ export default function ReklamationPage() {
                 Reklamation indsendt
               </h3>
               <p className="mt-2 text-sm text-[#86868B]">
-                Vi behandler din sag inden for 1-2 hverdage og kontakter dig pa
-                din registrerede email.
+                Vi behandler din sag inden for 1-2 hverdage og kontakter dig på
+                din registrerede e-mailadresse.
               </p>
               <button
                 type="button"
@@ -214,7 +214,7 @@ export default function ReklamationPage() {
                       required
                       value={form.product}
                       onChange={handleField}
-                      placeholder="F.eks. iPhone 15 skaerm OLED x3"
+                      placeholder="F.eks. iPhone 15 skærm OLED x3"
                       className={FIELD_CLASS}
                     />
                   </div>
@@ -234,7 +234,7 @@ export default function ReklamationPage() {
                     rows={4}
                     value={form.description}
                     onChange={handleField}
-                    placeholder="Beskriv fejlen sa detaljeret som muligt. Hvad sker der? Nar opstod problemet?"
+                    placeholder="Beskriv fejlen så detaljeret som muligt. Hvad sker der? Hvornår opstod problemet?"
                     className="mt-1 w-full resize-none rounded-xl border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
                   />
                 </div>
@@ -304,7 +304,7 @@ export default function ReklamationPage() {
       {/* RMA status info */}
       <div className="rounded-xl border border-[#E5E5EA] bg-white p-5">
         <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#86868B]">
-          Statusflow
+          Sagens forløb
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {RMA_STATUS_STEPS.map((step, idx) => (

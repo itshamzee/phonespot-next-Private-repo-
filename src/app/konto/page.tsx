@@ -41,7 +41,7 @@ type Address = {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Afventer betaling",
-  confirmed: "Bekraeftet",
+  confirmed: "Bekræftet",
   shipped: "Afsendt",
   picked_up: "Afhentet",
   delivered: "Leveret",
@@ -100,7 +100,7 @@ export default function AccountOverview() {
   if (!data) {
     return (
       <div className="rounded-xl border border-[#E5E5EA] bg-white px-6 py-12 text-center">
-        <p className="text-sm text-[#6E6E73]">Kunne ikke hente kontooplysninger. Prov igen.</p>
+        <p className="text-sm text-[#6E6E73]">Kunne ikke hente kontooplysninger. Prøv igen.</p>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function AccountOverview() {
       <div className="grid grid-cols-3 gap-4">
         <StatCard value={data.orders.length} label="Ordrer i alt" />
         <StatCard value={activeWarranties} label="Aktive garantier" accent />
-        <StatCard value={data.tradeIns.length} label="Trade-ins" />
+        <StatCard value={data.tradeIns.length} label="Indbytninger" />
       </div>
 
       {/* Recent orders */}

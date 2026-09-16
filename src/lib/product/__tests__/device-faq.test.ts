@@ -10,7 +10,7 @@ describe("getAccessoryFaq", () => {
   });
 
   it("never mentions a cosmetic grade", () => {
-    expect(allText).not.toMatch(/grade/i);
+    expect(allText).not.toMatch(/grade|stand\s+[A-CNP]\b/i);
   });
 
   it("never mentions battery/battery health", () => {
@@ -46,8 +46,17 @@ describe("getDeviceFaq — unchanged for real devices", () => {
     const faq = getDeviceFaq("Apple MacBook Air 15 M4");
     const allText = faq.map((f) => `${f.q} ${f.a}`).join(" ");
     expect(allText).toMatch(/36 måneder/i);
-    expect(allText).toMatch(/Grade/);
+    expect(allText).toMatch(/stand A/i);
     expect(allText).toMatch(/batteri/i);
     expect(faq.length).toBe(9);
   });
+});
+
+it("keeps phone compatibility questions on phones and omits them for other device types", () => {
+ expect(getDeviceFaq("iPhone", "iphone").some((item) => item.q.includes("mobilabonnementer"))).toBe(true);
+ for (const category of ["laptop", "ipad", "smartwatch"]) {
+  const faq = getDeviceFaq("Testmodel", category);
+  expect(faq.some((item) => item.q.includes("mobilabonnementer"))).toBe(false);
+  expect(faq.some((item) => item.q.includes("garanti"))).toBe(true);
+ }
 });

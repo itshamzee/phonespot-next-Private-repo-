@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
-import { VisaIcon, MastercardIcon, MobilePayIcon, ApplePayIcon, KlarnaIcon } from "@/components/ui/payment-icons";
+import styles from "./footer.module.css";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
-import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -12,16 +12,16 @@ const PRODUCT_LINKS = [
   { label: "Bærbare", href: "/baerbare" },
   { label: "Smartwatches", href: "/smartwatches" },
   { label: "Reservedele", href: "/reservedele" },
-  { label: "Reparation", href: "/reparation" },
+  { label: "Tilbehør", href: "/tilbehoer" },
 ] as const;
 
 const SERVICE_LINKS = [
+  { label: "Sælg din enhed", href: "/saelg-din-enhed" },
   { label: "Kvalitet", href: "/kvalitet" },
   { label: "Garanti", href: "/garanti" },
-  { label: "Forsikring", href: "/forsikring" },
   { label: "Delbetaling", href: "/delbetaling" },
   { label: "Reparation", href: "/reparation" },
-  { label: "Butik", href: "/butik" },
+  { label: "Erhverv", href: "/erhverv" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },
 ] as const;
@@ -40,51 +40,6 @@ const LEGAL_LINKS = [
   { label: "Cookies", href: "/cookies" },
 ] as const;
 
-const USP_ITEMS = [
-  {
-    // Rendered on every page, including accessory PDPs, with no per-page
-    // state — accessories carry the statutory 2-year reklamationsret, not
-    // the 36-month device guarantee (see lib/email/brand.ts). Scoped to
-    // "refurbished" so the claim stays accurate everywhere without adding
-    // cart/category state or hydration risk to a footer that renders on
-    // every route (same fix applied to header.tsx's two USP badges).
-    text: "36 mdr. garanti på refurbished",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    ),
-  },
-  {
-    text: "14 dages returret",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-      </svg>
-    ),
-  },
-  {
-    text: "1-2 dages levering",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-      </svg>
-    ),
-  },
-  {
-    // Same unconditional-chrome problem as the guarantee badge above: the
-    // 30+ point test is run on graded refurbished devices only, not on
-    // sku_products (a leather case never sees the test bench). Scoped to
-    // "refurbished" for the same reason and with the same wording pattern.
-    text: "30+ kvalitetstests på refurbished",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-      </svg>
-    ),
-  },
-] as const;
-
 function TrustpilotBadge() {
   return (
     <a
@@ -92,7 +47,7 @@ function TrustpilotBadge() {
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-80"
-      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL} stjerner`}
+      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL_DA} stjerner`}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#00b67a]" fill="currentColor" aria-hidden="true">
         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
@@ -109,14 +64,14 @@ function TrustpilotBadge() {
             <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
               <defs>
                 <linearGradient id="footer-half-star">
-                  <stop offset="80%" stopColor="#00b67a" />
-                  <stop offset="80%" stopColor="#4a4d48" />
+                  <stop offset="70%" stopColor="#00b67a" />
+                  <stop offset="70%" stopColor="#4a4d48" />
                 </linearGradient>
               </defs>
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#footer-half-star)" />
             </svg>
           </div>
-          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL}</span>
+          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL_DA}</span>
         </div>
       </div>
     </a>
@@ -131,255 +86,42 @@ function FacebookIcon() {
   );
 }
 
-function NavColumn({
-  heading,
-  children,
-}: {
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <h3 className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
-        {heading}
-      </h3>
-      <ul className="mt-4 flex flex-col gap-2">
-        {children}
-      </ul>
-    </div>
-  );
-}
-
-function NavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="text-[13px] text-[#86868B] transition-colors duration-150 hover:text-white"
-      >
-        {label}
-      </Link>
-    </li>
-  );
-}
-
 export function Footer() {
-  const year = new Date().getFullYear();
-
   return (
-    <>
-      {/* USP bar — sits above the dark footer */}
-      <div className="bg-[#F7F7F8]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 md:gap-x-10 gap-y-3 px-4 py-5 md:justify-between lg:px-8">
-          {USP_ITEMS.map((item) => (
-            <div key={item.text} className="flex items-center gap-2">
-              <span className="text-[#1A3D2E]">{item.icon}</span>
-              <span className="text-[13px] font-medium text-[#111111]/60">{item.text}</span>
+    <footer className={styles.footer}>
+      <div className={styles.wrap}>
+        <div className={styles.main}>
+          <div className={styles.brand}>
+            <Link href="/" aria-label="PhoneSpot forside"><Image src="/brand/logos/phonespot-wordmark-white.png" alt="PhoneSpot" width={180} height={35} /></Link>
+            <p>Brugt elektronik. Klar til mere.<br />Alle refurbished enheder leveres med 36 måneders garanti.</p>
+            <a href={`tel:${STORES.slagelse.phone.replace(/\s/g, "")}`}>{STORES.slagelse.phone}</a>
+            <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
+            <div className={styles.locations}>
+              {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/butik/${store.slug}`}>{store.city} <span aria-hidden="true">↗</span></Link>)}
             </div>
+            <Link className={styles.storeOverview} href="/butik">Butikker og åbningstider</Link>
+          </div>
+          {[{ heading: "Produkter", links: PRODUCT_LINKS }, { heading: "Hjælp og service", links: SERVICE_LINKS }, { heading: "Om PhoneSpot", links: INFO_LINKS }].map(group => (
+            <nav key={group.heading} aria-label={group.heading} className={styles.navigation}>
+              <h2>{group.heading}</h2>
+              <ul>{group.links.map(link => <li key={link.href}><Link href={link.href}>{link.label}</Link></li>)}</ul>
+            </nav>
           ))}
         </div>
+        <div className={styles.trust}>
+          <TrustpilotBadge />
+          <a href="https://www.emaerket.dk" target="_blank" rel="noopener noreferrer" aria-label="Certificeret af e-mærket"><Image src="/emaerket.png" alt="Certificeret af e-mærket" width={32} height={32} /></a>
+          <a href="https://www.facebook.com/phonespot.dk/" target="_blank" rel="noopener noreferrer" aria-label="PhoneSpot på Facebook" className={styles.facebook}><FacebookIcon /> Facebook</a>
+          <Link href="/forsikring" className={styles.partner} aria-label="Elektronikforsikring i samarbejde med Storstrøm Forsikring"><span>I samarbejde med</span><Image src="/brand/partners/storstrom-forsikring-white.svg" alt="Storstrøm Forsikring" width={92} height={27} /></Link>
+          <div className={styles.payments} aria-label="Betalingsmuligheder">
+            {[['visa','Visa'],['master','Mastercard'],['mobilepay','MobilePay'],['apple_pay','Apple Pay'],['klarna','Klarna']].map(([file,name]) => <Image key={file} src={`/images/payments/${file}.svg`} alt={name} width={42} height={27} />)}
+          </div>
+        </div>
+        <div className={styles.bottom}>
+          <p>© {new Date().getFullYear()} PhoneSpot ApS · CVR: 38688766</p>
+          <nav aria-label="Vilkår og privatliv">{LEGAL_LINKS.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}<CookieSettingsButton /></nav>
+        </div>
       </div>
-
-      {/* Main footer */}
-      <footer className="bg-[#111111] text-white">
-        {/* Primary content */}
-        <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 md:grid-cols-3 lg:grid-cols-6 lg:gap-10">
-
-            {/* Brand / store column */}
-            <div className="col-span-2 md:col-span-3 lg:col-span-2">
-              <Image
-                src="/brand/logos/phonespot-wordmark-white.png"
-                alt="PhoneSpot"
-                width={148}
-                height={28}
-                className="h-7 w-auto"
-              />
-              <p className="mt-4 max-w-[260px] text-[13px] leading-relaxed text-[#86868B]">
-                Danmarks specialist i kvalitetstestet refurbished tech. Alle refurbished
-                enheder leveres med 36 måneders garanti, og alle ordrer har 14 dages returret.
-              </p>
-
-              {/* Store info block */}
-              <div className="mt-6 space-y-2.5">
-                {[STORES.slagelse, STORES.vejle].map((store) => (
-                  <div key={store.slug} className="flex items-start gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mt-px h-3.5 w-3.5 shrink-0 text-[#1A3D2E]" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                    </svg>
-                    <span className="text-[12px] leading-relaxed text-[#86868B]">
-                      {store.name}<br />
-                      {store.street}, {store.zip} {store.city}<br />
-                      Man–Fre {store.hours.weekdays} &middot; Lør–Søn {store.hours.saturday}
-                    </span>
-                  </div>
-                ))}
-
-                <a
-                  href={`tel:${STORES.slagelse.phone.replace(/\s/g, "")}`}
-                  className="flex items-center gap-2 group"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#1A3D2E]" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                  </svg>
-                  <span className="text-[12px] text-[#86868B] transition-colors duration-150 group-hover:text-white">
-                    {STORES.slagelse.phone}
-                  </span>
-                </a>
-
-                <a
-                  href={`mailto:${COMPANY_EMAIL}`}
-                  className="flex items-center gap-2 group"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5 shrink-0 text-[#1A3D2E]" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                  </svg>
-                  <span className="text-[12px] text-[#86868B] transition-colors duration-150 group-hover:text-white">
-                    {COMPANY_EMAIL}
-                  </span>
-                </a>
-              </div>
-
-              {/* Social + trust badges */}
-              <div className="mt-6 flex items-center gap-4">
-                <a
-                  href="https://www.facebook.com/phonespot.dk/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[#86868B] transition-colors duration-150 hover:text-white"
-                  aria-label="PhoneSpot på Facebook"
-                >
-                  <FacebookIcon />
-                  <span className="text-[12px]">Facebook</span>
-                </a>
-
-                <div className="h-3.5 w-px bg-white/10" aria-hidden="true" />
-
-                <TrustpilotBadge />
-
-                <div className="h-3.5 w-px bg-white/10" aria-hidden="true" />
-
-                <a
-                  href="https://www.emaerket.dk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="e-mærket certificeret"
-                >
-                  <Image
-                    src="/emaerket.png"
-                    alt="e-mærket certificeret"
-                    width={36}
-                    height={36}
-                    className="h-9 w-9 rounded-md opacity-90 transition-opacity hover:opacity-100"
-                  />
-                </a>
-              </div>
-
-              {/* Partner — Storstrøm Forsikring */}
-              <div className="mt-6">
-                <p className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
-                  I samarbejde med
-                </p>
-                <Link
-                  href="/forsikring"
-                  className="mt-2 inline-block"
-                  aria-label="Elektronikforsikring i samarbejde med Storstrøm Forsikring"
-                >
-                  <Image
-                    src="/brand/partners/storstrom-forsikring-white.svg"
-                    alt="Storstrøm Forsikring"
-                    width={862}
-                    height={249}
-                    className="h-6 w-auto opacity-75 transition-opacity hover:opacity-100"
-                  />
-                </Link>
-              </div>
-            </div>
-
-            {/* Nav columns */}
-            <NavColumn heading="Produkter">
-              {PRODUCT_LINKS.map((link) => (
-                <NavLink key={link.href} href={link.href} label={link.label} />
-              ))}
-            </NavColumn>
-
-            <NavColumn heading="Service">
-              {SERVICE_LINKS.map((link) => (
-                <NavLink key={link.href} href={link.href} label={link.label} />
-              ))}
-            </NavColumn>
-
-            <NavColumn heading="Information">
-              {INFO_LINKS.map((link) => (
-                <NavLink key={link.href} href={link.href} label={link.label} />
-              ))}
-            </NavColumn>
-
-            <NavColumn heading="Juridisk">
-              {LEGAL_LINKS.map((link) => (
-                <NavLink key={link.href} href={link.href} label={link.label} />
-              ))}
-              <li>
-                <CookieSettingsButton />
-              </li>
-            </NavColumn>
-          </div>
-
-          {/* Divider */}
-          <div className="mt-12 h-px bg-white/[0.07]" aria-hidden="true" />
-
-          {/* Newsletter */}
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="font-display text-[10px] font-semibold uppercase tracking-wide text-white/40">
-                Nyhedsbrev
-              </h3>
-              <p className="mt-1.5 text-[13px] text-[#86868B]">
-                Få eksklusive tilbud og nyheder direkte i din indbakke.
-              </p>
-            </div>
-            <form
-              action="/api/newsletter"
-              method="POST"
-              className="flex flex-col sm:flex-row gap-2 sm:shrink-0"
-            >
-              <input
-                name="email"
-                type="email"
-                required
-                placeholder="Din e-mailadresse"
-                className="w-full rounded-full border border-white/[0.08] bg-white/[0.05] px-4 py-2 text-[13px] text-white placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.08] focus:outline-none sm:w-56"
-              />
-              <button
-                type="submit"
-                className="shrink-0 rounded-full bg-[#1A3D2E] px-5 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
-              >
-                Tilmeld
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div className="border-t border-white/[0.07]">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 lg:px-8">
-            <p className="text-[11px] text-[#86868B]">
-              &copy; {year} PhoneSpot ApS &middot; CVR: 38688766
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-[#86868B]/60">Betaling:</span>
-              <div className="flex items-center gap-1.5">
-                <VisaIcon className="h-5 w-auto rounded-[3px]" />
-                <MastercardIcon className="h-5 w-auto rounded-[3px]" />
-                <MobilePayIcon className="h-5 w-auto rounded-[3px]" />
-                <ApplePayIcon className="h-5 w-auto rounded-[3px]" />
-                <KlarnaIcon className="h-5 w-auto rounded-[3px]" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </>
+    </footer>
   );
 }

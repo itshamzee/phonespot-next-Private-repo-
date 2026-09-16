@@ -12,31 +12,31 @@ interface QA {
 const FAQ: ReadonlyArray<QA> = [
   {
     q: "Hvilke sprog kan brillerne oversætte?",
-    a: "Trusmi-app'en understøtter over 40 sprog inklusive engelsk, tysk, fransk, spansk, italiensk, kinesisk, japansk, arabisk og dansk. Oversættelsen sker i real-time via din telefon — så længe du har internet, har du oversættelse.",
+    a: "Trusmi-appen understøtter over 40 sprog inklusive engelsk, tysk, fransk, spansk, italiensk, kinesisk, japansk, arabisk og dansk. Oversættelsen sker i realtid via din telefon — så længe du har internet, har du oversættelse.",
   },
   {
-    q: "Skal jeg bruge en app for at de virker?",
-    a: "Ja. Trusmi-app'en er gratis og findes til både iOS (10.0+) og Android (9.0+). Brillerne forbinder via Bluetooth 5.3 — enkel setup på under 2 minutter.",
+    q: "Skal jeg bruge en app, for at de virker?",
+    a: "Ja. Trusmi-appen er gratis og findes til både iOS (10.0+) og Android (9.0+). Brillerne forbindes via Bluetooth 5.3 — nem opsætning på under 2 minutter.",
   },
   {
     q: "Hvor lang er batterilevetiden?",
-    a: "Op til 8+ timers aktiv brug på en opladning. Standby holder 15 dage. Magnetisk hurtig-opladning bringer dig til 100% på cirka 60 minutter.",
+    a: "Op til 8+ timers aktiv brug på en opladning. Standbytiden er 15 dage. Magnetisk hurtigopladning bringer dig til 100% på cirka 60 minutter.",
   },
   {
     q: "Kan jeg afhente brillerne i butikken?",
     a: `Ja — vi har dem på lager i både Slagelse (${STORES.slagelse.street}) og Vejle (${STORES.vejle.street}). Bestil online og hent samme dag, eller kig forbi og prøv dem først. Du kan også få fri fragt over 500 kr.`,
   },
   {
-    q: "Hvad er forskellen mellem 1.199 kr nyprisen og de 799 kr I tager?",
-    a: "1.199 kr er producentens anbefalede udsalgspris. Vi har en lanceringspris på 799 kr — du sparer 400 kr nu. Ingen skjulte gebyrer, ingen abonnement.",
+    q: "Hvad er forskellen mellem nyprisen på 1.199 kr. og de 799 kr., I tager?",
+    a: "1.199 kr. er producentens anbefalede udsalgspris. Vi har en lanceringspris på 799 kr — du sparer 400 kr nu. Ingen skjulte gebyrer, intet abonnement.",
   },
   {
     q: "Følger der garanti med?",
-    a: `Ja — 24 måneders fuld returret + reklamationsret efter dansk købelov. Hvis brillerne fejler, ordner vi det uden ekstra omkostninger. Vi er e-mærket-certificerede og har ${TRUSTPILOT_SCORE_LABEL_DA} ★ på Trustpilot.`,
+    a: `Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen, og du betaler selv returfragten ved fortrydelse. Ved fejl har du særskilt 2 års reklamationsret efter købeloven. Kontakt os, så hjælper vi med reklamationen. Vi er certificeret af e-mærket og har ${TRUSTPILOT_SCORE_LABEL_DA} ★ på Trustpilot.`,
   },
   {
     q: "Kan jeg betale i rater?",
-    a: "Ja — vi tilbyder delbetaling med ViaBill og Klarna ved checkout. Spred 799 kr over 3-12 måneder med fast lav rente.",
+    a: "Ja — vi tilbyder delbetaling med ViaBill og Klarna ved betaling. Fordel 799 kr. over 3-12 måneder med en fast, lav rente.",
   },
   {
     q: "Hvor leveres der til, og hvor hurtigt?",

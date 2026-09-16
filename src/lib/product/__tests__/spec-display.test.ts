@@ -67,3 +67,7 @@ describe("findModelNumber", () => {
     expect(findModelNumber({})).toBeNull();
   });
 });
+
+it("labels a source resolution value in Danish without changing its value", () => {
+ expect(selectDisplaySpecs({resolution: "1920 × 1080"})).toEqual([{label: "Opløsning", value: "1920 × 1080"}]);
+});

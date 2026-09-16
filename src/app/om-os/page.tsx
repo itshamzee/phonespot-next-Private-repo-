@@ -8,16 +8,16 @@ import { StoreLocation } from "@/components/ui/store-location";
 import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 export const metadata: Metadata = {
-  title: "Om PhoneSpot | Danmarks Specialist i Refurbished Tech",
+  title: "Om PhoneSpot | Danmarks specialist i refurbished elektronik",
   description:
     "PhoneSpot er Danmarks specialist i kvalitetstestede refurbished iPhones, iPads og bærbare. Lær os at kende — vores mission, værdier og løfter til dig.",
   alternates: {
     canonical: "https://phonespot.dk/om-os",
   },
   openGraph: {
-    title: "Om PhoneSpot | Refurbished Tech med 36 Mdr. Garanti",
+    title: "Om PhoneSpot | Refurbished elektronik med 36 mdr. garanti",
     description:
-      "Vi giver premium elektronik nyt liv med 30+ kvalitetstests og 36 måneders garanti. Spar op til 40% og gør en forskel for miljøet.",
+      "Vi giver elektronik i høj kvalitet nyt liv med 30+ kvalitetstests og 36 måneders garanti. Spar op til 40% og gør en forskel for miljøet.",
     url: "https://phonespot.dk/om-os",
     type: "website",
   },
@@ -35,17 +35,17 @@ const STATS = [
   },
   {
     value: "30+",
-    label: "Kvalitetstests per enhed",
-    description: "Grundig testproces på alt vi sælger",
+    label: "Kvalitetstests pr. enhed",
+    description: "Grundig testproces for alle enheder, vi sælger",
   },
   {
-    value: "36 mdr",
-    label: "Garanti på alt",
+    value: "36 mdr.",
+    label: "Garanti på enheder",
     description: "Samme garanti som ved køb af nyt",
   },
   {
     value: `${TRUSTPILOT_SCORE_LABEL}/5`,
-    label: "Trustpilot score",
+    label: "Trustpilot-score",
     description: "Baseret på ægte kundeanmeldelser",
   },
 ];
@@ -54,13 +54,13 @@ const COMMITMENTS = [
   {
     title: "Kvalitet uden kompromis",
     description:
-      "Hver enhed gennemgår vores 30-punkts testproces. Skærm, batteri, kamera, sensorer — alt testes individuelt af uddannede teknikere. Enheder der ikke består, sælges ikke.",
+      "Hver enhed gennemgår vores testproces med 30 punkter. Skærm, batteri, kamera, sensorer — alt testes individuelt af uddannede teknikere. Enheder, der ikke består, sælges ikke.",
     icon: "shield",
   },
   {
     title: "Ærlig gradering",
     description:
-      "Vi pynter aldrig på standen. Vores Grade A, B og C system fortæller dig præcis hvad du kan forvente kosmetisk. Ingen ubehagelige overraskelser når pakken lander.",
+      "Vi pynter aldrig på standen. Vores system med Grade A, B og C fortæller dig præcis, hvad du kan forvente kosmetisk. Ingen ubehagelige overraskelser, når pakken lander.",
     icon: "check",
   },
   {
@@ -72,13 +72,13 @@ const COMMITMENTS = [
   {
     title: "Dansk support — altid",
     description:
-      "Vi er en dansk virksomhed med dansk kundeservice. Rigtige mennesker der svarer på dansk, typisk inden for 24 timer. Ingen chatbots, ingen ventetid i telefonen.",
+      "Vi er en dansk virksomhed med dansk kundeservice. Rigtige mennesker, der svarer på dansk, typisk inden for 24 timer. Ingen chatbots, ingen ventetid i telefonen.",
     icon: "phone",
   },
   {
     title: "Tryg handel med e-mærket",
     description:
-      "PhoneSpot er e-mærket godkendt. Det betyder at vi overholder alle danske regler for nethandel, forbrugerbeskyttelse og persondatasikkerhed. Du handler trygt — hver gang.",
+      "PhoneSpot er godkendt af e-mærket. Det betyder, at vi overholder alle danske regler for nethandel, forbrugerbeskyttelse og persondatasikkerhed. Du handler trygt — hver gang.",
     icon: "badge",
   },
   {
@@ -94,19 +94,19 @@ const TIMELINE = [
     year: "Idéen",
     title: "En frustration blev til en forretning",
     description:
-      "Vi oplevede selv hvor svært det var at finde refurbished elektronik i Danmark, man kunne stole på. Markedet var fyldt med usikre køb, manglende garanti og uærlige standbeskrivelser. Det ville vi lave om på.",
+      "Vi oplevede selv, hvor svært det var at finde refurbished elektronik, man kunne stole på, i Danmark. Markedet var fyldt med usikre køb, manglende garanti og uærlige standbeskrivelser. Det ville vi lave om på.",
   },
   {
     year: "Missionen",
     title: "Kvalitet til en fair pris",
     description:
-      "Vi satte os for at bygge Danmarks mest pålidelige platform for refurbished tech. Med professionelle kvalitetstests, ærlig gradering og en garanti der matcher køb af nyt. Ingen genveje.",
+      "Vi satte os for at bygge Danmarks mest pålidelige platform for refurbished elektronik. Med professionelle kvalitetstests, ærlig gradering og en garanti, der svarer til garantien ved køb af nyt. Ingen genveje.",
   },
   {
     year: "I dag",
-    title: "1.000+ enheder og voksende",
+    title: "Over 1.000 enheder — og tallet vokser",
     description:
-      "I dag har vi solgt over 1.000 kvalitetstestede enheder til kunder over hele Danmark. Hver enhed har bestået vores 30-punkts testproces, og vi stopper ikke her. Udvalget vokser, kvaliteten forbliver.",
+      "I dag har vi solgt over 1.000 kvalitetstestede enheder til kunder over hele Danmark. Hver enhed har bestået vores testproces med 30 punkter, og vi stopper ikke her. Udvalget vokser, kvaliteten forbliver.",
   },
 ];
 
@@ -254,12 +254,12 @@ export default function OmOsPage() {
                 Om PhoneSpot
               </p>
               <Heading size="xl" className="text-[#111111]">
-                Vi giver premium tech nyt liv
+                Vi giver elektronik i høj kvalitet nyt liv
               </Heading>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
                 PhoneSpot er Danmarks specialist i refurbished elektronik. Vi
                 tror på, at kvalitetsteknologi ikke behøver at koste en formue —
-                og at det smarteste køb også er det mest bæredygtige. Hver enhed
+                og at det smarteste køb også er det mest bæredygtige. Hver enhed,
                 vi sælger, er testet, verificeret og dækket af 36 måneders
                 garanti.
               </p>
@@ -268,7 +268,7 @@ export default function OmOsPage() {
                   <span className="text-[#1A3D2E]">✓</span> Dansk virksomhed
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-[#1A3D2E]">✓</span> e-mærket godkendt
+                  <span className="text-[#1A3D2E]">✓</span> Godkendt af e-mærket
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="text-[#1A3D2E]">✓</span> 36 mdr. garanti
@@ -320,10 +320,10 @@ export default function OmOsPage() {
             </p>
             <p className="mt-4 text-lg leading-relaxed text-[#86868B]">
               I dag er PhoneSpot Danmarks dedikerede specialist i
-              kvalitetstestet refurbished tech. Vi har solgt over 1.000
+              kvalitetstestet refurbished elektronik. Vi har solgt over 1.000
               enheder, og hver eneste én har bestået vores grundige 30-punkts
-              testproces. Vores mission er enkel: gøre premium teknologi
-              tilgængelig for alle — med den tryghed og garanti du fortjener.
+              testproces. Vores mission er enkel: at gøre teknologi i høj kvalitet
+              tilgængelig for alle — med den tryghed og garanti, du fortjener.
             </p>
           </FadeIn>
         </div>
@@ -362,11 +362,11 @@ export default function OmOsPage() {
               Vores løfter
             </p>
             <Heading as="h2" size="lg">
-              Det vi står for — hver dag
+              Det, vi står for — hver dag
             </Heading>
             <p className="mt-4 text-lg text-[#86868B]">
               Hos PhoneSpot er vores værdier ikke bare ord på en side. De
-              styrer alle beslutninger vi træffer — fra hvordan vi tester
+              styrer alle beslutninger, vi træffer — fra hvordan vi tester
               enheder, til hvordan vi håndterer garanti og support.
             </p>
           </FadeIn>
@@ -414,7 +414,7 @@ export default function OmOsPage() {
                 samme garanti — men med en brøkdel af miljøbelastningen.
               </p>
               <p className="mt-3 text-[#86868B] leading-relaxed">
-                Det er et valg der giver mening for din pung, din samvittighed
+                Det er et valg, der giver mening for din pung, din samvittighed
                 og vores planet. Og med PhoneSpots 36 måneders garanti risikerer
                 du intet.
               </p>
@@ -429,7 +429,7 @@ export default function OmOsPage() {
                 <p className="mt-1 text-xs font-medium text-[#111111]">
                   Mindre CO&#8322;-udledning
                 </p>
-                <p className="mt-1 text-xs text-[#86868B]">vs. ny produktion</p>
+                <p className="mt-1 text-xs text-[#86868B]">sammenlignet med ny produktion</p>
               </div>
               <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
                 <p className="font-display text-3xl font-bold text-[#1A3D2E]">
@@ -439,7 +439,7 @@ export default function OmOsPage() {
                   Lavere pris
                 </p>
                 <p className="mt-1 text-xs text-[#86868B]">
-                  vs. at købe fabriksny
+                  sammenlignet med at købe nyt
                 </p>
               </div>
               <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
@@ -449,7 +449,7 @@ export default function OmOsPage() {
                 <p className="mt-1 text-xs font-medium text-[#111111]">
                   Ekstra levetid
                 </p>
-                <p className="mt-1 text-xs text-[#86868B]">per refurbished enhed</p>
+                <p className="mt-1 text-xs text-[#86868B]">pr. refurbished enhed</p>
               </div>
               <div className="rounded-2xl bg-[#1A3D2E]/5 p-6 text-center">
                 <p className="font-display text-3xl font-bold text-[#1A3D2E]">
@@ -459,7 +459,7 @@ export default function OmOsPage() {
                   Funktionalitet
                 </p>
                 <p className="mt-1 text-xs text-[#86868B]">
-                  Alt virker som det skal
+                  Alt virker, som det skal
                 </p>
               </div>
             </div>
@@ -479,8 +479,8 @@ export default function OmOsPage() {
                 Fra indkøb til din dør — sådan arbejder vi
               </Heading>
               <p className="mt-4 text-[#86868B]">
-                Bag hvert produkt på PhoneSpot ligger en grundig proces der
-                sikrer, at du får præcis det du forventer.
+                Bag hvert produkt på PhoneSpot ligger en grundig proces, der
+                sikrer, at du får præcis det, du forventer.
               </p>
             </FadeIn>
           </div>
@@ -496,7 +496,7 @@ export default function OmOsPage() {
                 step: "02",
                 title: "Test",
                 description:
-                  "Hver enhed gennemgår vores 30-punkts testproces. Skærm, batteri, kamera, sensorer — alt verificeres.",
+                  "Hver enhed gennemgår vores testproces med 30 punkter. Skærm, batteri, kamera, sensorer — alt verificeres.",
               },
               {
                 step: "03",
@@ -548,8 +548,8 @@ export default function OmOsPage() {
               Derfor kan du handle trygt hos PhoneSpot
             </Heading>
             <p className="mt-4 text-lg text-[#86868B]">
-              Vi er ikke en anonym markedsplads. Vi er en dansk virksomhed der
-              står bag hvert eneste produkt vi sælger. Her er hvad det betyder
+              Vi er ikke en anonym markedsplads. Vi er en dansk virksomhed, der
+              står bag hvert eneste produkt, vi sælger. Her er, hvad det betyder
               for dig.
             </p>
           </FadeIn>
@@ -557,7 +557,7 @@ export default function OmOsPage() {
         <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
-              title: "e-mærket godkendt",
+              title: "Godkendt af e-mærket",
               description:
                 "Vi overholder alle danske regler for nethandel, forbrugerbeskyttelse og persondatasikkerhed. Dit køb er beskyttet.",
             },
@@ -579,7 +579,7 @@ export default function OmOsPage() {
             {
               title: "Dansk kundeservice",
               description:
-                "Rigtige mennesker der svarer på dansk. Typisk svar inden for 24 timer på hverdage. Vi er her for dig.",
+                "Rigtige mennesker, der svarer på dansk. Typisk svar inden for 24 timer på hverdage. Vi er her for dig.",
             },
             {
               title: "Hurtig levering",
@@ -685,8 +685,7 @@ export default function OmOsPage() {
               </Heading>
               <p className="mt-4 text-[#86868B]">
                 Udforsk vores udvalg af kvalitetstestede refurbished iPhones,
-                iPads og bærbare. 36 måneders garanti og 14 dages fortrydelsesret
-                på alt.
+                iPads og bærbare. 36 måneders garanti på enheder og 14 dages fortrydelsesret.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link

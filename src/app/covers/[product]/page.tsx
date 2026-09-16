@@ -166,7 +166,7 @@ export default async function CoverProductPage({
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           {[
             { icon: "M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0H21M3.375 14.25h.386c.51 0 .995-.186 1.374-.514l4.49-3.882c.456-.395 1.059-.539 1.625-.389l3.126.834c.478.128.98.066 1.41-.178l3.1-1.759A1.5 1.5 0 0 0 19.5 7.29V3.75m0 0h-3.75m3.75 0-.75 4.5", label: "Hurtig levering", desc: "1-2 hverdage" },
-            { icon: "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z", label: "Kvalitets-cover", desc: "Testet pasform" },
+            { icon: "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z", label: "Kvalitetscover", desc: "Testet pasform" },
             { icon: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182", label: "14 dages retur", desc: "Fuld returret" },
             { icon: "M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z", label: "Sikker betaling", desc: "Visa, MC, MobilePay" },
           ].map((item) => (
@@ -192,7 +192,7 @@ export default async function CoverProductPage({
       {relatedProducts.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16">
           <h2 className="mb-8 font-display text-2xl font-bold text-charcoal md:text-3xl">
-            Andre covers du vil elske
+            Andre covers, du vil elske
           </h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {relatedProducts.map((p) => (

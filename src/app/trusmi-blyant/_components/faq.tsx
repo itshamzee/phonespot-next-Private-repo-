@@ -8,15 +8,15 @@ interface QA { q: string; a: string }
 const FAQ: ReadonlyArray<QA> = [
   {
     q: "Hvilke iPads er den kompatibel med?",
-    a: "Trusmi Smart Pencil understøtter iPad Pro 11\" (3. gen, 2021) — modelnummer A2378 og A2379 — samt iPad Pro 12,9\" (5. gen, 2021) — modelnummer A2461, A2462 og A2437. Tjek modelnummeret bag på din iPad hvis du er i tvivl.",
+    a: "Trusmi Smart Pencil understøtter iPad Pro 11\" (3. gen, 2021) — modelnummer A2378 og A2379 — samt iPad Pro 12,9\" (5. gen, 2021) — modelnummer A2461, A2462 og A2437. Tjek modelnummeret bag på din iPad, hvis du er i tvivl.",
   },
   {
     q: "Skal jeg parre den via Bluetooth?",
-    a: "Nej — Smart Pencil bruger en aktiv kapacitiv spids og fungerer plug-and-play uden parring. Tryk på den fysiske tænd-knap, og du kan skrive med det samme.",
+    a: "Nej — Smart Pencil bruger en aktiv kapacitiv spids og fungerer med det samme uden parring. Tryk på den fysiske tændknap, og du kan skrive med det samme.",
   },
   {
     q: "Hvor lang er batterilevetiden?",
-    a: "Cirka 8 timers aktiv brug på en opladning, og hele 360 dages standby. Auto-sleep aktiveres efter 5 minutters inaktivitet for at spare strøm. Fuld opladning tager kun 40 minutter via USB Type-C.",
+    a: "Cirka 8 timers aktiv brug på en opladning og hele 360 dages standby. Automatisk dvaletilstand aktiveres efter 5 minutters inaktivitet for at spare strøm. Fuld opladning tager kun 40 minutter via USB Type-C.",
   },
   {
     q: "Kan jeg afhente den i butikken?",
@@ -24,15 +24,15 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Kan spidsen udskiftes?",
-    a: "Ja, POM-spidsen kan udskiftes. Det er praktisk hvis spidsen slides over tid eller hvis du vil have en mere blød skrive-følelse til notater.",
+    a: "Ja, POM-spidsen kan udskiftes. Det er praktisk, hvis spidsen slides over tid eller hvis du vil have en blødere skrivefornemmelse til notater.",
   },
   {
     q: "Følger der garanti med?",
-    a: "Ja — 24 måneders fuld returret + reklamationsret efter dansk købelov. Hvis blyanten fejler, ordner vi det uden ekstra omkostninger.",
+    a: "Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen, og du betaler selv returfragten ved fortrydelse. Ved fejl har du særskilt 2 års reklamationsret efter købeloven. Kontakt os, så hjælper vi med reklamationen.",
   },
   {
     q: "Kan jeg betale i rater?",
-    a: "Ja — vi tilbyder delbetaling med ViaBill og Klarna ved checkout. Spred 349 kr over 3-12 måneder med fast lav rente.",
+    a: "Ja — vi tilbyder delbetaling med ViaBill og Klarna ved betaling. Fordel 349 kr. over 3-12 måneder med en fast, lav rente.",
   },
 ];
 

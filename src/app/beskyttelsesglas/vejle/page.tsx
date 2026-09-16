@@ -4,7 +4,7 @@ import { LocalCityPage } from "../_components/LocalCityPage";
 
 export const metadata: Metadata = {
   title: "Beskyttelsesglas i Vejle · gratis montering · PhoneSpot",
-  description: "Beskyttelsesglas til iPhone, Samsung og alle telefoner — gratis professionel montering i Vejle på 60 sekunder.",
+  description: "Beskyttelsesglas i Vejle. Få hjælp til valg og gratis montering ved køb hos PhoneSpot. Se adresse og åbningstider.",
   alternates: { canonical: "/beskyttelsesglas/vejle" },
 };
 

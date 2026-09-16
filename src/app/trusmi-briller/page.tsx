@@ -15,13 +15,13 @@ const URL = "https://phonespot.dk/trusmi-briller";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Trusmi AI Oversætterbriller — Real-time oversættelse på 40+ sprog | PhoneSpot",
+  title: "Trusmi AI Oversætterbriller — Oversættelse i realtid på 40+ sprog | PhoneSpot",
   description:
-    "Smart-briller med real-time AI-oversættelse via Bluetooth 5.3. På lager i Slagelse + Vejle — hent samme dag. Fri fragt over 500 kr. Spar 400 kr nu — kun 799 kr.",
+    "Smartbriller med AI-oversættelse i realtid via Bluetooth 5.3. På lager i Slagelse + Vejle — hent samme dag. Fri fragt over 500 kr. Spar 400 kr nu — kun 799 kr.",
   alternates: { canonical: URL },
   openGraph: {
     title: "Trusmi AI Oversætterbriller",
-    description: "Real-time AI-oversættelse på 40+ sprog. På lager i Slagelse + Vejle. 799 kr.",
+    description: "AI-oversættelse i realtid på 40+ sprog. På lager i Slagelse + Vejle. 799 kr.",
     url: URL,
     type: "website",
     images: [{ url: "/trusmi/02.webp", width: 550, height: 550 }],
@@ -43,7 +43,7 @@ const SPECS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "Chipsæt",         value: "Allwinner V821" },
   { label: "BT-chipsæt",      value: "JL7018" },
   { label: "Batteri",         value: "255 mAh / 3,8V / 3C" },
-  { label: "Standby",         value: "15 dage" },
+  { label: "Standbytid",         value: "15 dage" },
   { label: "Brugstid",        value: "Over 8 timer" },
   { label: "Foto",            value: "6239 × 5058 pixel" },
   { label: "Opladningstid",   value: "~60 minutter" },
@@ -51,70 +51,71 @@ const SPECS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "Materiale",       value: "Plastik PC + ABS" },
   { label: "Mål",             value: "176 × 153,5 × 49 mm" },
   { label: "Vægt",            value: "180 g" },
-  { label: "Garanti",         value: "24 mdr. fuld returret" },
+  { label: "Fortrydelse",     value: "14 dage (returfragt for egen regning)" },
+  { label: "Reklamation",     value: "2 år efter købeloven" },
 ];
 
 const STEPS: ReadonlyArray<{ n: string; title: string; body: string }> = [
   {
     n: "01",
     title: "Forbind",
-    body: "Hent Trusmi-app'en og forbind via Bluetooth — under 2 minutter første gang.",
+    body: "Hent Trusmi-appen og forbind via Bluetooth — under 2 minutter første gang.",
   },
   {
     n: "02",
     title: "Vælg sprog",
-    body: "40+ sprog at vælge mellem. Skift mellem dem mens samtalen kører.",
+    body: "40+ sprog at vælge mellem. Skift mellem dem, mens samtalen kører.",
   },
   {
     n: "03",
     title: "Tal frit",
-    body: "Brillerne lytter, app'en oversætter, du svarer. Som at have en personlig tolk.",
+    body: "Brillerne lytter, appen oversætter, du svarer. Som at have en personlig tolk.",
   },
 ];
 
 const USECASES: ReadonlyArray<{ title: string; body: string }> = [
   {
     title: "Forretningsmøder",
-    body: "Du holder møder med leverandører i Tyskland, Polen eller Kina. Trusmi sikrer at du forstår nuancerne — og bliver forstået.",
+    body: "Du holder møder med leverandører i Tyskland, Polen eller Kina. Trusmi sikrer, at du forstår nuancerne — og bliver forstået.",
   },
   {
     title: "Rejser",
-    body: "Bestil mad i Tokyo, spørg om vej i Lissabon, forhandl pris i Marrakesh. Uden at føle dig sårbar fordi du ikke kan sproget.",
+    body: "Bestil mad i Tokyo, spørg om vej i Lissabon, forhandl pris i Marrakesh. Uden at føle dig sårbar, fordi du ikke kan sproget.",
   },
   {
     title: "Internationale familier",
-    body: "Snak med svigerforældre i Polen eller Marokko som om I altid har talt samme sprog. Trusmi fjerner barrieren.",
+    body: "Snak med svigerforældre i Polen eller Marokko, som om I altid har talt samme sprog. Trusmi fjerner barrieren.",
   },
   {
-    title: "Konferencer & events",
-    body: "Lyt til foredrag på sprog du ikke mestrer. Real-time undertekster i øret — uden at du skal kigge ned i en telefon.",
+    title: "Konferencer og arrangementer",
+    body: "Lyt til foredrag på sprog, du ikke mestrer. Oversættelse i realtid direkte i øret — uden at du skal kigge ned i en telefon.",
   },
 ];
 
 const FEATURES: ReadonlyArray<{ title: string; body: string; iconPath: string }> = [
   {
-    title: "Real-time oversættelse",
+    title: "Oversættelse i realtid",
     body: "Bluetooth 5.3 Low Energy giver lav latenstid og stabil forbindelse til din telefon, så samtalen flyder.",
     iconPath: "M12 2v20M2 12h20",
   },
   {
     title: "8+ timers brugstid",
-    body: "255 mAh batteri rækker en hel arbejdsdag. 15 dages standby så de altid er klar.",
+    body: "Et batteri på 255 mAh rækker en hel arbejdsdag. 15 dages standby, så de altid er klar.",
     iconPath: "M3 7h14a2 2 0 012 2v6a2 2 0 01-2 2H3M3 7v10M21 11v2",
   },
   {
-    title: "Magnetisk hurtig-opladning",
-    body: "Klik på, snap af. Fuld opladning på cirka 60 minutter via det medfølgende kabel.",
+    title: "Magnetisk hurtigopladning",
+    body: "Klik opladeren på, og tag den af igen. Fuld opladning på cirka 60 minutter via det medfølgende kabel.",
     iconPath: "M13 2L3 14h7l-1 8 10-12h-7l1-8z",
   },
   {
     title: "Indbygget kamera",
-    body: "31 megapixel sensor (6239 × 5058) til hurtig dokumentation. Synkroniseres trådløst.",
+    body: "Sensor på 31 megapixel (6239 × 5058) til hurtig dokumentation. Synkroniseres trådløst.",
     iconPath: "M3 3h18v18H3zM12 8a4 4 0 100 8 4 4 0 000-8zM9 3v2h6V3",
   },
   {
     title: "Lette og diskrete",
-    body: "180 gram total. PC + ABS plastik — ridsefast, holdbart, og diskret nok til møder.",
+    body: "180 gram i alt. PC + ABS-plast — ridsefast, holdbart og diskret nok til møder.",
     iconPath: "M2 12c4-6 14-6 18 0M2 12c4 6 14 6 18 0M9 12a3 3 0 116 0 3 3 0 01-6 0z",
   },
   {
@@ -152,7 +153,7 @@ export default async function TrusmiBrillerPage() {
     "@context": "https://schema.org",
     "@type": "Product",
     name: data.title,
-    description: "AI-oversætterbriller med Bluetooth 5.3, real-time oversættelse på 40+ sprog.",
+    description: "AI-oversætterbriller med Bluetooth 5.3, oversættelse i realtid på 40+ sprog.",
     image: gallery.map((img) => `https://phonespot.dk${img}`),
     brand: { "@type": "Brand", name: "Trusmi" },
     offers: {
@@ -177,7 +178,7 @@ export default async function TrusmiBrillerPage() {
         <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12">
           <div className="flex items-center justify-between gap-4 text-[11px] uppercase tracking-[0.3em] text-white/60">
             <span>Trusmi · Lanceringspris</span>
-            <span className="hidden sm:inline">Dispatch · 2026</span>
+            <span className="hidden sm:inline">Produktnyt · 2026</span>
           </div>
         </div>
 
@@ -196,10 +197,10 @@ export default async function TrusmiBrillerPage() {
             <h1 className="font-display text-[44px] font-bold leading-[0.95] tracking-tight sm:text-[64px] lg:text-[72px]">
               Forstå<br />
               <span className="italic font-light text-white/85">verden</span><br />
-              i real-time.
+              i realtid.
             </h1>
             <p className="mt-6 max-w-md text-base leading-relaxed text-white/75 sm:text-lg">
-              Trusmi-brillerne lytter med dig. App&apos;en oversætter på 40+ sprog. Du svarer
+              Trusmi-brillerne lytter med dig. Appen oversætter på 40+ sprog. Du svarer
               naturligt. Som at have en personlig tolk — uden tolken.
             </p>
 
@@ -244,7 +245,7 @@ export default async function TrusmiBrillerPage() {
                 "På lager i Slagelse + Vejle",
                 "Hent samme dag",
                 "Fri fragt over 500 kr",
-                "24 mdr. fuld returret",
+                "14 dages fortrydelsesret · returfragt for egen regning",
               ].map((b) => (
                 <li key={b} className="flex items-start gap-2 text-white/85">
                   <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#C9A56F]" viewBox="0 0 20 20" fill="currentColor">
@@ -262,7 +263,7 @@ export default async function TrusmiBrillerPage() {
       <section className="border-y border-[#C9A56F]/30 bg-[#F5F1E8] text-[#1A1004]">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-6 sm:flex-row sm:items-center sm:gap-8 sm:px-6">
           <span className="rounded-full bg-[#0F2A20] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#F5F1E8]">
-            Klik & Hent
+            Klik og hent
           </span>
           <p className="text-base font-medium sm:text-lg">
             På lager i begge butikker — bestil online nu, hent samme dag i {slagelse.city} eller {vejle.city}.
@@ -289,7 +290,7 @@ export default async function TrusmiBrillerPage() {
           </h2>
           <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[#3F4A45]">
             Du behøver ikke at lære nye sprog for at forstå verden. Du behøver bare en
-            partner der gør det for dig — i øjeblikket, mens samtalen sker. Det er det
+            partner, der gør det for dig — i øjeblikket, mens samtalen sker. Det er det,
             Trusmi er. Ikke en gimmick. Et redskab.
           </p>
         </div>
@@ -307,7 +308,7 @@ export default async function TrusmiBrillerPage() {
                 Tre skridt fra<br />kasse til samtale.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-[#3F4A45]">
-                Setup tager mindre end fem minutter. Derefter er det bare på og snak.
+                Opsætningen tager mindre end fem minutter. Derefter tager du bare brillerne på og taler.
               </p>
             </div>
             <ol className="grid gap-8 lg:col-span-8 lg:grid-cols-3">
@@ -332,7 +333,7 @@ export default async function TrusmiBrillerPage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <p className="font-display text-[11px] uppercase tracking-[0.4em] text-[#C9A56F]">
-              Specifikationer der betyder noget
+              Specifikationer, der betyder noget
             </p>
             <h2 className="mt-4 font-display text-3xl font-bold text-[#0F2A20] sm:text-4xl">
               Bygget til den globale samtale.
@@ -365,7 +366,7 @@ export default async function TrusmiBrillerPage() {
               Til hvad
             </p>
             <h2 className="mt-4 font-display text-3xl font-bold sm:text-5xl">
-              Designet til folk der<br />
+              Designet til folk, der<br />
               <span className="italic font-light text-white/85">bevæger sig.</span>
             </h2>
           </div>
@@ -449,7 +450,7 @@ export default async function TrusmiBrillerPage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
             <p className="font-display text-[11px] uppercase tracking-[0.4em] text-[#C9A56F]">
-              Klik & hent
+              Klik og hent
             </p>
             <h2 className="mt-4 font-display text-3xl font-bold text-[#0F2A20] sm:text-5xl">
               På lager. Lige nu.<br />
@@ -531,7 +532,7 @@ export default async function TrusmiBrillerPage() {
       <section className="bg-[#F7F7F8]">
         <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24">
           <p className="font-display text-[11px] uppercase tracking-[0.4em] text-[#C9A56F]">
-            Spørgsmål & svar
+            Spørgsmål og svar
           </p>
           <h2 className="mt-4 font-display text-3xl font-bold text-[#0F2A20] sm:text-5xl">
             Det vigtigste.<br />

@@ -14,6 +14,7 @@ import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-a
 
 export const revalidate = 60;
 import type { Product } from "@/lib/shopify/types";
+import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import { DeviceDetail } from "@/components/product/device-detail";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
@@ -72,7 +73,7 @@ function truncateAtWord(text: string, max: number): string {
 // protector_type/service_type are on draft SKUs (screen protectors, the
 // battery-install service line) that publish without a code change.
 const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
-  connector_type: "Stik-type",
+  connector_type: "Stiktype",
   case_type: "Type",
   charger_type: "Type",
   protector_type: "Type",
@@ -380,7 +381,7 @@ export default async function ProductPage({
           <DeviceDetail
             template={template}
             devices={availableDevices}
-            accessories={accessories}
+            accessories={accessories.map(toPublicSkuProduct)}
             relatedInStock={relatedInStock}
           />
         </section>
@@ -409,10 +410,10 @@ export default async function ProductPage({
           </div>
         </SectionWrapper>
 
-        {/* ── 3. Inkluderet i boksen ── */}
+        {/* ── 3. Med i pakken ── */}
         <SectionWrapper background="cream">
           <Heading as="h2" size="md" className="mb-10 text-center">
-            Inkluderet i boksen
+            Med i pakken
           </Heading>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {[
@@ -423,7 +424,7 @@ export default async function ProductPage({
                   </svg>
                 ),
                 label: "Enhed",
-                sub: "Testet & kvalitetssikret",
+                sub: "Testet og kvalitetssikret",
               },
               {
                 icon: (
@@ -432,7 +433,7 @@ export default async function ProductPage({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 19.5h13.5" />
                   </svg>
                 ),
-                label: "USB-C ladekabel",
+                label: "USB-C-ladekabel",
                 sub: "Kompatibelt kabel",
               },
               {
@@ -442,7 +443,7 @@ export default async function ProductPage({
                   </svg>
                 ),
                 label: "SIM-nål",
-                sub: "Til SIM-kort åbning",
+                sub: "Til åbning af SIM-kortholderen",
               },
               {
                 icon: (
@@ -474,7 +475,7 @@ export default async function ProductPage({
         {/* ── 5. Trustpilot anmeldelser ── */}
         <SectionWrapper>
           <Heading as="h2" size="md" className="text-center">
-            Trustpilot Anmeldelser
+            Trustpilot-anmeldelser
           </Heading>
           <div className="mt-8">
             <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
@@ -634,7 +635,7 @@ export default async function ProductPage({
 
       {/*
         NOTE: the device-only "Hvad betyder standen?" (grade explainer) and
-        "Inkluderet i boksen" (charger/warranty-cert box contents) sections
+        "Med i pakken" (charger/warranty-cert box contents) sections
         that used to render unconditionally here were removed for the
         accessory branch. sku_products have no grade column at all — even
         the device-category ones (see skuVariant above) — so there's no A/B/C
@@ -658,7 +659,7 @@ export default async function ProductPage({
       {/* ── 4. Trustpilot Reviews ── */}
       <SectionWrapper>
         <Heading as="h2" size="md" className="text-center">
-          Trustpilot Anmeldelser
+          Trustpilot-anmeldelser
         </Heading>
         <div className="mt-8">
           <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>

@@ -19,7 +19,7 @@ interface UpgradeSelectorProps {
 
 const KIND_LABELS: Record<"ram" | "ssd", string> = {
   ram: "Ekstra RAM (inkl. montering)",
-  ssd: "Harddisk-opgradering (inkl. montering)",
+  ssd: "Harddiskopgradering (inkl. montering)",
 };
 
 export function UpgradeSelector({ options, selected, onChange }: UpgradeSelectorProps) {

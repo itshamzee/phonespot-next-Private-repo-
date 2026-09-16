@@ -5,7 +5,7 @@ import { TradeInTeaser } from "@/components/product/trade-in-teaser";
 describe("TradeInTeaser", () => {
   it("renders a link to the sell flow", () => {
     render(<TradeInTeaser category="laptop" />);
-    const link = screen.getByRole("link", { name: /Få en pris på 30 sekunder/ });
+    const link = screen.getByRole("link", { name: /Få din enhed vurderet/ });
     expect(link).toHaveAttribute("href", "/saelg-din-enhed");
   });
 

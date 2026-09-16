@@ -1,0 +1,43 @@
+.footer { background: #101619; color: #c6ceca; font-family: var(--font-body), sans-serif; font-size: 13px; }
+.wrap { max-width: 1392px; margin: auto; padding: 34px 36px 18px; }
+.main { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr; gap: 44px; }
+.brand > a { display: block; width: fit-content; line-height: 1.9; }
+.brand p { max-width: 285px; margin: 18px 0 12px; line-height: 1.7; }
+.brand > a:first-child img { width: 180px; height: auto; }
+.locations { display: flex; gap: 24px; margin: 14px 0 2px; color: #fff; font-weight: 600; }
+.locations a { display: inline-flex; gap: 18px; min-height: 30px; align-items: center; }
+.storeOverview { font-size: 12px; }
+.navigation h2 { color: #fff; font-size: 13px; font-weight: 600; margin: 3px 0 13px; }
+.navigation ul { list-style: none; padding: 0; margin: 0; }
+.navigation a { display: inline-flex; align-items: center; min-height: 30px; }
+.footer a:hover { color: white; text-decoration: underline; text-underline-offset: 4px; }
+.footer :is(a,button):focus-visible { outline: 2px solid #d3e5b2; outline-offset: 4px; }
+.trust { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 22px 0; margin-top: 20px; border-bottom: 1px solid #ffffff20; }
+.facebook { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; }
+.partner { display: inline-flex; align-items: center; gap: 12px; }
+.partner span { font-size: 11px; }
+.partner img { width: 92px; height: 27px; object-fit: contain; }
+.payments { display: flex; gap: 6px; margin-left: auto; }
+.payments img { width: 42px; height: 27px; object-fit: contain; background: #fff; border-radius: 4px; }
+.bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; font-size: 11px; }
+.bottom p { margin: 0; }
+.bottom nav { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.bottom button { color: inherit; font-size: inherit; }
+@media(max-width: 900px) {
+  .main { gap: 24px; grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  .wrap { padding: 30px 24px 20px; }
+  .trust { gap: 18px; }
+}
+@media(max-width: 600px) {
+  .wrap { padding: 28px 16px 22px; }
+  .main { grid-template-columns: repeat(3,minmax(0,1fr)); column-gap: 12px; row-gap: 25px; }
+  .brand { grid-column: 1 / -1; }
+  .brand p { max-width: 330px; }
+  .navigation h2 { font-size: 12px; }
+  .navigation a { font-size: 12px; min-height: 36px; }
+  .trust { gap: 20px; margin-top: 10px; }
+  .partner { margin-right: auto; }
+  .payments { margin-left: 0; }
+  .bottom nav { gap: 8px 16px; }
+  .bottom nav :is(a,button) { min-height: 32px; display: inline-flex; align-items: center; }
+}

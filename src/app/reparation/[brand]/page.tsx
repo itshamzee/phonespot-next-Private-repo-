@@ -10,6 +10,7 @@ import {
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE } from "@/lib/store-config";
 import { ModelGrid, type ModelCardData } from "./model-grid";
+import styles from "@/components/repair/repair.module.css";
 
 export const revalidate = 3600;
 
@@ -26,8 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!brand) return {};
 
   return {
-    title: `${brand.name} Reparation Slagelse — Se Priser | PhoneSpot`,
-    description: `Professionel ${brand.name} reparation i Slagelse. Se priser på skærmskift, batteriskift og mere for alle ${brand.name} modeller. Livstidsgaranti på alle reparationer.`,
+    title: `${brand.name}-reparation i Vejle og Slagelse — se priser | PhoneSpot`,
+    description: `Professionel ${brand.name}-reparation i Vejle og Slagelse. Se priser på skærmskift, batteriskift og mere for alle ${brand.name}-modeller. Se priser og oplysninger om den enkelte reparation.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}`,
     },
@@ -58,7 +59,7 @@ export default async function BrandPage({ params }: Props) {
     "@type": "LocalBusiness",
     name: `${brand.name} Reparation - ${STORE.name}`,
     url: `https://phonespot.dk/reparation/${brand.slug}`,
-    description: `Professionel ${brand.name} reparation i ${STORE.city}. Livstidsgaranti på alle reparationer.`,
+    description: `Professionel ${brand.name}-reparation i ${STORE.city}. Se priser og oplysninger om den enkelte reparation.`,
     address: {
       "@type": "PostalAddress",
       streetAddress: STORE.street,
@@ -75,7 +76,7 @@ export default async function BrandPage({ params }: Props) {
       "@type": "OfferCatalog",
       name: `${brand.name} Reparationer`,
       itemListElement: modelCards
-        .filter((m) => m.cheapestPrice != null)
+        .filter((m) => m.cheapestPrice != null && m.cheapestPrice > 0)
         .map((m) => ({
           "@type": "Offer",
           itemOffered: {
@@ -89,228 +90,61 @@ export default async function BrandPage({ params }: Props) {
   };
 
   return (
-    <>
+    <div className={styles.shell}>
       <JsonLd data={jsonLd} />
-
-      {/* ================================================================= */}
-      {/*  HERO HEADER — Clean light brand header                           */}
-      {/* ================================================================= */}
-      <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
-          {/* Breadcrumb */}
-          <nav className="mb-6 text-sm" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1.5 text-[#86868B]">
-              <li>
-                <Link href="/reparation" className="transition-colors hover:text-[#111111]">
-                  Reparation
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="font-medium text-[#111111]">{brand.name}</li>
-            </ol>
-          </nav>
-
-          <div className="flex items-end justify-between">
-            <div>
-              <h1 className="font-display text-4xl font-bold leading-[0.95] tracking-tight text-[#111111] md:text-5xl">
-                {brand.name}<br />
-                <span className="text-[#1A3D2E]">Reparation</span>
-              </h1>
-              <p className="mt-4 max-w-lg text-[#86868B]">
-                Vælg din {brand.name} model herunder for at se priser og booke reparation.
-                Alle reparationer udføres med livstidsgaranti i vores butik i {STORE.city}.
-              </p>
-            </div>
-
-            {/* Trust badges — horizontal on desktop */}
-            <div className="hidden items-center gap-6 lg:flex">
-              {[
-                { icon: "shield", label: "Livstidsgaranti" },
-                { icon: "clock", label: "30 min service" },
-                { icon: "tag", label: "Faste priser" },
-                { icon: "walk", label: "Walk-in" },
-              ].map(({ icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-1.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
-                    {icon === "shield" && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                    )}
-                    {icon === "clock" && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                    )}
-                    {icon === "tag" && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
-                        <line x1="7" y1="7" x2="7.01" y2="7" />
-                      </svg>
-                    )}
-                    {icon === "walk" && (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <circle cx="12" cy="11" r="3" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium text-[#86868B]">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile trust badges */}
-          <div className="mt-6 flex flex-wrap gap-3 lg:hidden">
-            {["Livstidsgaranti", "30 min service", "Faste priser", "Walk-in"].map((label) => (
-              <span
-                key={label}
-                className="rounded-full border border-[#E5E5EA] bg-white px-3 py-1.5 text-xs font-medium text-[#86868B]"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  MODEL GRID — Dense, searchable                                    */}
-      {/* ================================================================= */}
-      <section className="bg-[#F7F7F8]">
-        <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className={styles.container}>
+        <nav className={styles.breadcrumb} aria-label="Brødkrumme">
+          <ol>
+            <li>
+              <Link href="/">Forside</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/reparation">Reparation</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{brand.name}</li>
+          </ol>
+        </nav>
+        <header className={styles.header}>
+          <span className={styles.eyebrow}>Reparation · {brand.name}</span>
+          <h1>Vælg din {brand.name}-model.</h1>
+          <p>
+            Find din model og se priser på de reparationer, vi tilbyder. Du
+            vælger reparation og aflevering i næste trin.
+          </p>
+        </header>
+        <section className={styles.section} aria-label="Vælg model">
           <ModelGrid models={modelCards} brandName={brand.name} />
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SEO CONTENT                                                       */}
-      {/* ================================================================= */}
-      <section className="border-t border-[#E5E5EA] bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-16">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111]">
-            {brand.name} Reparation hos PhoneSpot
-          </h2>
-
-          <div className="mt-6 space-y-4 text-sm leading-relaxed text-[#111111]/70">
+        </section>
+        <section className={styles.help}>
+          <div>
+            <h2>Brug for hjælp til at vælge?</h2>
             <p>
-              Hos PhoneSpot i {STORE.mall}, {STORE.city}, tilbyder vi professionel
-              reparation af alle {brand.name} modeller. Uanset om du har brug for
-              skærmskift, batteriskift eller anden reparation, står vi klar til
-              at hjælpe dig med hurtig service og faste priser.
+              Vi hjælper med at finde din model og den rette reparation. Garanti
+              og forventet tidsforbrug står ved den enkelte service, når det er
+              oplyst.
             </p>
-
-            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-              Specialister i {brand.name} reparation
-            </h3>
-            <p>
-              Vores teknikere er specialuddannede i {brand.name} reparation og
-              bruger kun kvalitetsdele der matcher de originale specifikationer.
-              Det sikrer at din enhed fungerer præcis som den skal efter
-              reparationen — med korrekt farvegengivelse, touch-respons og fuld
-              funktionalitet.
-            </p>
-
-            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-              Livstidsgaranti på alle reparationer
-            </h3>
-            <p>
-              Alle {brand.name} reparationer fra PhoneSpot dækkes af vores livstidsgaranti.
-              Det betyder at hvis den samme fejl opstår igen — uanset hvornår — reparerer
-              vi enheden uden beregning. Vi står bag vores arbejde, altid.
-            </p>
-
-            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-              Walk-in service eller book online
-            </h3>
-            <p>
-              Du finder os i {STORE.mall}, {STORE.street}, {STORE.zip} {STORE.city}.
-              Du kan komme forbi som walk-in i vores åbningstider (hverdage {STORE.hours.weekdays},
-              lørdage {STORE.hours.saturday}) eller booke tid online for at sikre dig en plads.
-            </p>
-
-            <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-              Konkurrencedygtige priser uden overraskelser
-            </h3>
-            <p>
-              Vi oplyser altid prisen inden vi starter reparationen. Alle priser
-              er inkl. moms, reservedele og garanti. Vælg din {brand.name} model
-              ovenfor for at se de aktuelle priser på alle reparationer.
-            </p>
+            <Link href="/kontakt">Kontakt os</Link>
           </div>
-
-          {brand.slug === "macbook" && (
-            <div className="mt-8 space-y-4 text-sm leading-relaxed text-[#111111]/70">
-              <h3 className="!mt-0 font-display text-lg font-bold text-[#111111]">
-                MacBook reparation — hurtigere og billigere end Apple
-              </h3>
-              <p>
-                Hos PhoneSpot tilbyder vi professionel MacBook reparation til priser der typisk
-                er 30-50% lavere end Apples autoriserede service. Og hvor Apple ofte tager 5-7
-                hverdage, udfører vi de fleste reparationer samme dag — uden tidsbestilling.
-              </p>
-
-              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-                Hvad kan vi reparere på din MacBook?
-              </h3>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Skærmskift — sprukken eller defekt Retina-skærm</li>
-                <li>Batteriskift — MacBook holder ikke strøm eller lader ikke op</li>
-                <li>Tastatur-reparation — tasterne sidder fast eller virker ikke</li>
-                <li>Logic board reparation — komponent-niveau reparation</li>
-                <li>SSD opgradering — mere plads og hurtigere hastighed</li>
-                <li>Termisk pasta og blæser-service — MacBook overopheder</li>
-                <li>Trackpad og højtaler-udskiftning</li>
-                <li>Ladestik (MagSafe/USB-C) reparation</li>
-              </ul>
-
-              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-                Reservedele til MacBook
-              </h3>
-              <p>
-                Vi sælger også reservedele til MacBook Air og MacBook Pro, hvis du foretrækker
-                at reparere selv. Batterier, skærme, tastaturer, trackpads og mere — alle dele
-                er kvalitetstestet og leveres med garanti. Kom forbi butikken eller bestil online.
-              </p>
-
-              <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-                MacBook går langsomt?
-              </h3>
-              <p>
-                En langsom MacBook skyldes ofte fuldt lager, gammel termisk pasta eller et
-                slidt batteri. Vi tilbyder en komplet MacBook service hvor vi renser, opdaterer
-                og optimerer din Mac — så den kører som ny igen. Ingen tidsbestilling nødvendig.
-              </p>
-            </div>
-          )}
-
-          {/* CTA */}
-          <div className="mt-12 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-8 text-center">
-            <h3 className="font-display text-xl font-bold text-[#111111]">
-              Kan du ikke finde din model?
-            </h3>
-            <p className="mt-2 text-sm text-[#86868B]">
-              Kontakt os, og vi hjælper dig med at finde den rette reparation.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/kontakt"
-                className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                Kontakt os
-              </Link>
-              <Link
-                href="/reparation"
-                className="inline-block rounded-full border border-[#E5E5EA] bg-white px-8 py-3 text-sm font-semibold text-[#111111] transition-colors hover:bg-[#F7F7F8]"
-              >
-                Alle mærker
-              </Link>
-            </div>
+          <div className={styles.storeLinks}>
+            <Link href="/butik/vejle">
+              <span>
+                <strong>Vejle</strong>
+                <small>Find vej og åbningstider</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/butik/slagelse">
+              <span>
+                <strong>Slagelse</strong>
+                <small>Find vej og åbningstider</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
-        </div>
-      </section>
-    </>
+        </section>
+      </div>
+    </div>
   );
 }

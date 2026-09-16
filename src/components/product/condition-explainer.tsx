@@ -19,12 +19,12 @@ const PHONE_GRADES: GradeData[] = [
   {
     grade: "A",
     title: "Som ny",
-    subtitle: "Grade A",
+    subtitle: "Stand A",
     color: "border-green-eco",
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/grade-a-display.png",
     frameImage: "/quality/grade-a-frame.png",
@@ -32,12 +32,12 @@ const PHONE_GRADES: GradeData[] = [
   {
     grade: "B",
     title: "Meget god",
-    subtitle: "Grade B",
+    subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
       "Skærmen er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/grade-b-display.png",
     frameImage: "/quality/grade-b-frame.png",
@@ -45,12 +45,12 @@ const PHONE_GRADES: GradeData[] = [
   {
     grade: "C",
     title: "OK stand",
-    subtitle: "Grade C",
+    subtitle: "Stand C",
     color: "border-gray",
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/grade-c-display.png",
@@ -62,12 +62,12 @@ const WATCH_GRADES: GradeData[] = [
   {
     grade: "A",
     title: "Som ny",
-    subtitle: "Grade A",
+    subtitle: "Stand A",
     color: "border-green-eco",
     bullets: [
       "Glasset er fejlfrit",
       "Kassen har ingen synlige ridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/watch-grade-a-display.png",
     frameImage: "/quality/watch-grade-a-frame.png",
@@ -75,12 +75,12 @@ const WATCH_GRADES: GradeData[] = [
   {
     grade: "B",
     title: "Meget god",
-    subtitle: "Grade B",
+    subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
       "Glasset er i perfekt stand",
       "Kassen kan have lette brugsridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/watch-grade-b-display.png",
     frameImage: "/quality/watch-grade-b-frame.png",
@@ -88,12 +88,12 @@ const WATCH_GRADES: GradeData[] = [
   {
     grade: "C",
     title: "OK stand",
-    subtitle: "Grade C",
+    subtitle: "Stand C",
     color: "border-gray",
     bullets: [
       "Glasset kan have lette ridser",
       "Kassen har synlige brugsspor",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/watch-grade-c-display.png",
@@ -105,12 +105,12 @@ const IPAD_GRADES: GradeData[] = [
   {
     grade: "A",
     title: "Som ny",
-    subtitle: "Grade A",
+    subtitle: "Stand A",
     color: "border-green-eco",
     bullets: [
       "Skærmen er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/ipad-grade-a-display.png",
     frameImage: "/quality/ipad-grade-a-frame.png",
@@ -118,12 +118,12 @@ const IPAD_GRADES: GradeData[] = [
   {
     grade: "B",
     title: "Meget god",
-    subtitle: "Grade B",
+    subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
       "Skærmen er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/ipad-grade-b-display.png",
     frameImage: "/quality/ipad-grade-b-frame.png",
@@ -131,12 +131,12 @@ const IPAD_GRADES: GradeData[] = [
   {
     grade: "C",
     title: "OK stand",
-    subtitle: "Grade C",
+    subtitle: "Stand C",
     color: "border-gray",
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/ipad-grade-c-display.png",
@@ -148,12 +148,12 @@ const LAPTOP_GRADES: GradeData[] = [
   {
     grade: "A",
     title: "Som ny",
-    subtitle: "Grade A",
+    subtitle: "Stand A",
     color: "border-green-eco",
     bullets: [
       "Skærmen og tastaturet er fejlfri",
       "Kabinettet har ingen synlige ridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/laptop-grade-a-display.png",
     frameImage: "/quality/laptop-grade-a-frame.png",
@@ -161,12 +161,12 @@ const LAPTOP_GRADES: GradeData[] = [
   {
     grade: "B",
     title: "Meget god",
-    subtitle: "Grade B",
+    subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
       "Skærmen og tastaturet er i perfekt stand",
       "Kabinettet kan have lette brugsridser",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
     displayImage: "/quality/laptop-grade-b-display.png",
     frameImage: "/quality/laptop-grade-b-frame.png",
@@ -174,12 +174,12 @@ const LAPTOP_GRADES: GradeData[] = [
   {
     grade: "C",
     title: "OK stand",
-    subtitle: "Grade C",
+    subtitle: "Stand C",
     color: "border-gray",
     bullets: [
       "Skærmen kan have lette ridser",
       "Kabinettet har synlige brugsspor",
-      "Batterikapacitet er målt for den enkelte enhed og fremgår på produktsiden",
+      "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
     displayImage: "/quality/laptop-grade-c-display.png",
@@ -222,7 +222,7 @@ function ImageSlider({
         <button
           type="button"
           onClick={() => setView("frame")}
-          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold tracking-wide transition-colors ${
             view === "frame"
               ? "bg-white text-charcoal"
               : "text-white/70 hover:text-white"
@@ -233,7 +233,7 @@ function ImageSlider({
         <button
           type="button"
           onClick={() => setView("display")}
-          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+          className={`rounded-full px-3 py-1 text-[10px] font-semibold tracking-wide transition-colors ${
             view === "display"
               ? "bg-white text-charcoal"
               : "text-white/70 hover:text-white"
@@ -284,7 +284,7 @@ function FullVariant({ grades }: { grades: GradeData[] }) {
           />
           <div className="px-6 pb-6 pt-5">
             <div className="mb-3 flex items-baseline gap-2">
-              <h3 className="font-display text-xl font-bold text-charcoal">
+              <h3 className="font-body text-xl font-bold text-charcoal">
                 {g.title}
               </h3>
               <span className="text-xs font-medium text-gray">{g.subtitle}</span>
@@ -343,7 +343,7 @@ function CompactVariant({ grades }: { grades: GradeData[] }) {
                 title={g.title}
               />
               <div className="p-3">
-                <p className="font-display text-sm font-bold text-charcoal">
+                <p className="font-body text-sm font-bold text-charcoal">
                   {g.title}
                 </p>
                 <ul className="mt-1 space-y-0.5">

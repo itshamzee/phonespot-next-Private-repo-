@@ -1,162 +1,48 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { StoreBadge } from "@/components/ui/store-badge";
 import { useCart } from "@/components/cart/cart-context";
-
-interface AccessoryCardProps {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  brand: string | null;
-  price: number; // øre
-  sale_price: number | null; // øre — if set, price is the original
-  image_url: string | null;
-  store_stock: number;
-  online_stock: number;
-}
-
-export function AccessoryCard({
-  id,
-  name,
-  slug,
-  category,
-  price,
-  sale_price,
-  image_url,
-  store_stock,
-  online_stock,
-  brand,
-}: AccessoryCardProps) {
-  const [added, setAdded] = useState(false);
-  const { addSku, openCart } = useCart();
-
-  const isOnSale = sale_price != null && sale_price < price;
-  const displayPrice = isOnSale ? sale_price : price;
-
-  const priceFormatted = (displayPrice / 100).toLocaleString("da-DK", {
-    minimumFractionDigits: 0,
-  });
-  const originalPriceFormatted = isOnSale
-    ? (price / 100).toLocaleString("da-DK", { minimumFractionDigits: 0 })
-    : null;
-
-  const href = `/tilbehoer/${category}/${slug}`;
-
-  function handleAddToCart(e: React.MouseEvent) {
-    e.preventDefault();
-    addSku({
-      type: "sku_product",
-      skuProductId: id,
-      title: name,
-      price: displayPrice,
-      quantity: 1,
-      image: image_url ?? null,
-    });
-    openCart();
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+import type { PublicAccessory } from "@/lib/product/public-accessory";
+type AccessoryCardProps = Omit<PublicAccessory, "created_at">;
+export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind}: AccessoryCardProps) {
+  const [added,setAdded]=useState(false);
+  const confirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (confirmationTimer.current !== null) clearTimeout(confirmationTimer.current);
+  }, []);
+  const {addSku,openCart}=useCart();
+  const isOnSale=sale_price != null && sale_price < price;
+  const effectivePrice=isOnSale ? sale_price : price;
+  const href=slug ? `/tilbehoer/${category}/${slug}` : null;
+  const canBuy=availability === "in_stock" || availability === "orderable";
+  const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Kan bestilles" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
+  function add() {
+    if (!canBuy || added) return;
+    addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null,...(spotKind ? {spotKind,...(isOnSale ? {unitPrice:price} : {})} : {})});
+    openCart();setAdded(true);
+    confirmationTimer.current = setTimeout(() => {
+      setAdded(false);
+      confirmationTimer.current = null;
+    }, 1800);
   }
-
-  return (
-    <div className="group flex flex-col overflow-hidden rounded-[16px] border border-sand bg-white transition-all duration-200 hover:shadow-md">
-      {/* Image — clickable */}
-      <Link href={href} className="relative aspect-square overflow-hidden bg-cream block">
-        {image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image_url}
-            alt={name}
-            className="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sand">
-            <svg
-              viewBox="0 0 64 64"
-              className="h-16 w-16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <rect x="16" y="8" width="32" height="48" rx="4" />
-              <circle cx="32" cy="52" r="2" />
-            </svg>
-          </div>
-        )}
-        <div className="absolute top-3 left-3">
-          <StoreBadge storeStock={store_stock} onlineStock={online_stock} />
+  // eslint-disable-next-line @next/next/no-img-element
+  const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
+  return <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-sand bg-white font-body">
+    {/* Product photographs are shown whole, without substitute device artwork. */}
+    {href ? <Link href={href} className="flex aspect-square items-center justify-center bg-[#f5f5f2]">{photo}</Link> : <div className="flex aspect-square items-center justify-center bg-[#f5f5f2]">{photo}</div>}
+    <div className="flex flex-1 flex-col p-3 sm:p-5">
+      <p className="mb-2 min-h-4 text-xs text-charcoal/60">{brand}</p>
+      <h2 className="min-h-12 text-sm sm:text-base font-semibold leading-5 sm:leading-6 text-charcoal">{href ? <Link href={href}>{name}</Link> : name}</h2>
+      {compatible_models && compatible_models.length > 0 && <p className="mt-2 text-xs leading-relaxed text-charcoal/65">Passer til {compatible_models.join(", ")}</p>}
+      <div className="mt-auto pt-5">
+        <div className="flex min-h-8 flex-wrap items-baseline gap-x-2">
+          <p className="text-xl font-bold text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>
+          {isOnSale && <s className="text-sm text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
-        {brand && (
-          <span className="absolute top-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-charcoal/70 shadow-sm backdrop-blur-sm">
-            {brand}
-          </span>
-        )}
-        {isOnSale && (
-          <span className="absolute bottom-2 left-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-            Tilbud
-          </span>
-        )}
-      </Link>
-
-      {/* Info */}
-      <div className="flex flex-1 flex-col p-4">
-        <Link href={href}>
-          <h3 className="line-clamp-2 text-sm font-semibold text-charcoal transition-colors hover:text-green-eco">
-            {name}
-          </h3>
-        </Link>
-        <div className="mt-auto pt-3">
-          <div className="flex items-baseline gap-2">
-            <p className={`text-lg font-bold ${isOnSale ? "text-red-600" : "text-green-eco"}`}>
-              {priceFormatted} kr.
-            </p>
-            {originalPriceFormatted && (
-              <p className="text-sm text-charcoal/40 line-through">
-                {originalPriceFormatted} kr.
-              </p>
-            )}
-          </div>
-
-          {/* Stock indicator — combined across all locations */}
-          {(() => {
-            const total = store_stock + online_stock;
-            if (total > 0 && total <= 5) {
-              return (
-                <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  Kun {total} på lager
-                </p>
-              );
-            }
-            if (total > 5) {
-              return (
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-charcoal/50">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-                  På lager
-                </p>
-              );
-            }
-            return null;
-          })()}
-        </div>
-
-        {/* Add to cart — subtle style */}
-        <div className="mt-3">
-          <button
-            onClick={handleAddToCart}
-            className={`w-full rounded-full py-3 text-sm font-bold transition-all ${
-              added
-                ? "bg-green-eco text-white"
-                : "bg-green-eco/10 text-green-eco hover:bg-green-eco hover:text-white"
-            }`}
-          >
-            {added ? "Tilføjet!" : "Tilføj til kurv"}
-          </button>
-        </div>
+        <p className="mt-2 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
+        <button type="button" disabled={!canBuy || added} onClick={add} className="mt-4 min-h-11 w-full rounded-lg bg-[#1A3D2E] px-3 py-3 text-sm font-semibold text-white hover:bg-[#244f3c] disabled:cursor-not-allowed disabled:bg-sand disabled:text-charcoal/55">{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
+        <div className="mt-3 min-h-5 text-center text-xs font-medium text-charcoal/70">{href && <Link href={href} className="underline underline-offset-4">Se detaljer og kompatibilitet</Link>}</div>
       </div>
     </div>
-  );
+  </article>;
 }

@@ -87,7 +87,7 @@ export function NewsletterPopup() {
             name="email"
             type="email"
             required
-            placeholder="Din email"
+            placeholder="Din e-mail"
             className="flex-1 rounded-full border border-soft-grey px-4 py-2.5 text-sm text-charcoal focus:border-green-eco focus:outline-none"
           />
           <button

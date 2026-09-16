@@ -41,43 +41,43 @@ export interface TilbehoerRoute {
 export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   {
     slug: "covers",
-    label: "Covers & Cases",
-    description: "Beskyt din enhed med stilfulde covers og cases.",
+    label: "Covers og etuier",
+    description: "Beskyt din enhed med stilfulde covers og etuier.",
     deviceSpecific: true,
-    heroDescription: "Find det perfekte cover til din model — TPU, hardcase og MagSafe-kompatible varianter til alle populære telefoner.",
+    heroDescription: "Find covers til din model. Se materiale, kompatibilitet og eventuel MagSafe-understøttelse på produktet.",
     faq: [
       {
-        q: "Hvad er forskellen på TPU og hardcase?",
-        a: "TPU covers er bløde og absorberer stød bedre. Hardcases er stivere og giver mere kantbeskyttelse. Vi anbefaler TPU til daglig brug og hybrid-cases til maksimal beskyttelse.",
+        q: "Hvad er forskellen på TPU og hårde covers?",
+        a: "TPU er et fleksibelt materiale, mens et hårdt cover er stift. Se produktets materiale og konstruktion, og vælg et cover, der passer til din model.",
       },
       {
         q: "Passer et cover til iPhone 15 på iPhone 15 Pro?",
-        a: "Nej — iPhone 15 og 15 Pro har forskellig kamerahul-placering og knap-layout. Vælg altid cover der er specifikt til din model.",
+        a: "Nej — iPhone 15 og 15 Pro har forskellig placering af kameraåbninger og knapper. Vælg altid et cover, der er lavet til din model.",
       },
       {
-        q: "Understøtter coverene MagSafe?",
-        a: "Vores MagSafe-kompatible covers er mærket med 'MagSafe' og har den nødvendige magnet-ring. Tjek produktbeskrivelsen for din model.",
+        q: "Understøtter coverne MagSafe?",
+        a: "Vores MagSafe-kompatible covers er mærket med 'MagSafe' og har den nødvendige magnetring. Tjek produktbeskrivelsen for din model.",
       },
     ],
   },
   {
     slug: "skaermbeskyttelse",
     label: "Skærmbeskyttelse",
-    description: "Beskyttelsesglas og screen protectors til alle enheder.",
+    description: "Beskyttelsesglas og beskyttelsesfolie til alle enheder.",
     deviceSpecific: true,
-    heroDescription: "Hærdet beskyttelsesglas og plastfolie til din skærm — monteret rigtigt første gang, ellers bytter vi det.",
+    heroDescription: "Beskyttelsesglas og folie til din skærm. Se kompatibilitet og egenskaber på det enkelte produkt.",
     faq: [
       {
         q: "Hvad er forskellen på hærdet glas og plastfolie?",
-        a: "Hærdet glas (beskyttelsesglas) er hårdere, skraber ikke og giver en skarpere touchfornemmelse. Plastfolie er tyndere og billigere men slides hurtigere.",
+        a: "Glas og folie er forskellige typer skærmbeskyttelse. Se produktets materiale, tykkelse og kompatible modeller, før du vælger.",
       },
       {
         q: "Dækker skærmbeskyttelsen hele skærmen?",
-        a: "Edge-to-edge modeller dækker hele skærmen inkl. kanter. Tjek om din model er kompatibel med edge-to-edge eller flat-skærm-variant.",
+        a: "Kant-til-kant-modeller dækker hele skærmen inkl. kanter. Tjek, om din model er kompatibel med kant-til-kant-glas eller glas til flade skærme.",
       },
       {
         q: "Kan jeg sætte beskyttelsesglas på med cover på?",
-        a: "Ja, de fleste beskyttelsesglas-modeller er designet til at fungere med tynde covers. Tjek produktets kompatibilitets-noter.",
+        a: "Ja, de fleste typer beskyttelsesglas er designet til at fungere med tynde covers. Tjek oplysningerne om kompatibilitet på produktet.",
       },
     ],
   },
@@ -86,35 +86,35 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
     label: "Beskyttelsesglas",
     description: "Spot beskyttelsesglas til alle telefoner og tablets.",
     deviceSpecific: true,
-    heroDescription: "Hærdet 9H glas med perfekt pasform. Gratis professionel montering i Vejle og Slagelse på 60 sekunder.",
+    heroDescription: "Find beskyttelsesglas til din model. Vi hjælper med montering i Vejle og Slagelse.",
     faq: [
       {
-        q: "Holder Spot beskyttelsesglas virkelig mod fald?",
-        a: "Ja. Glasset er 9H hærdet — samme hårdhed som safirglas. Det tager stødet så din skærm ikke gør det. Udskift glasset, ikke skærmen.",
+        q: "Hvordan vælger jeg beskyttelsesglas?",
+        a: "Vælg din præcise telefon- eller tabletmodel, og se de tilgængelige varianter. Produktbeskrivelsen viser glassets egenskaber og kompatibilitet.",
       },
       {
         q: "Kan jeg få det monteret gratis?",
-        a: "Kom forbi PhoneSpot i Vejle eller Slagelse — vi monterer glasset gratis på under 60 sekunder, perfekt hver gang.",
+        a: "Kom forbi PhoneSpot i Vejle eller Slagelse. Montering er gratis ved køb af beskyttelsesglas hos os.",
       },
       {
         q: "Er det samme glas til alle iPhones?",
-        a: "Nej. Nogle modeller deler samme dimensioner (f.eks. iPhone 13/14/15) og bruger samme glas. Vores produktsider viser altid hvilke modeller et specifikt glas passer til.",
+        a: "Nej. Vælg altid efter den præcise model. Produktsiden viser, hvilke modeller det enkelte glas passer til.",
       },
     ],
   },
   {
     slug: "opladere",
-    label: "Kabler & Opladere",
+    label: "Kabler og opladere",
     description: "Lightning, USB-C, trådløs opladning og kabler.",
     deviceSpecific: false,
-    heroDescription: "Hurtigopladere, USB-C kabler og trådløse opladere til iPhone, Samsung og alle Android-modeller.",
+    heroDescription: "Hurtigopladere, USB-C-kabler og trådløse opladere til iPhone, Samsung og alle Android-modeller.",
     faq: [
       {
         q: "Hvad er forskellen på USB-C og Lightning?",
         a: "iPhone 15 og nyere bruger USB-C. Ældre iPhones (14 og tidligere) bruger Lightning. Samsung og de fleste Android-telefoner bruger USB-C.",
       },
       {
-        q: "Hvad er hurtigopladning og har jeg brug for det?",
+        q: "Hvad er hurtigopladning, og har jeg brug for det?",
         a: "Hurtigopladning (f.eks. 20W, 45W eller 65W) lader din telefon markant hurtigere end standard 5W. Din telefon skal understøtte hurtigopladning for at drage nytte af det.",
       },
       {
@@ -125,56 +125,56 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
   },
   {
     slug: "lyd",
-    label: "Lyd & Høretelefoner",
-    description: "Earbuds, headsets og højttalere til alle enheder.",
+    label: "Lyd og høretelefoner",
+    description: "Øretelefoner, headsets og højttalere til alle enheder.",
     deviceSpecific: false,
-    heroDescription: "Trådløse earbuds, over-ear headphones og Bluetooth højttalere — til hjemmet, kontoret og på farten.",
+    heroDescription: "Trådløse øretelefoner, hovedtelefoner og Bluetooth-højttalere — til hjemmet, kontoret og på farten.",
     faq: [
       {
-        q: "Hvad er forskellen på in-ear og on-ear høretelefoner?",
-        a: "In-ear (earbuds) sidder i øregangen og er kompakte til sport og pendling. On-ear/over-ear giver typisk bedre lydkvalitet og er bedre til hjemmebrug og kontoret.",
+        q: "Hvad er forskellen på in-ear- og on-ear-høretelefoner?",
+        a: "In-ear-høretelefoner sidder i øregangen og er kompakte til sport og pendling. On-ear/over-ear giver typisk bedre lydkvalitet og er bedre til hjemmebrug og kontoret.",
       },
       {
-        q: "Understøtter alle earbuds noise cancelling?",
-        a: "Nej — aktiv støjreduktion (ANC) er en premium-funktion. Tjek produktspecifikationerne for ANC hvis det er vigtigt for dig.",
+        q: "Understøtter alle øretelefoner støjreduktion?",
+        a: "Nej — aktiv støjreduktion (ANC) er en premiumfunktion. Tjek produktspecifikationerne for ANC, hvis det er vigtigt for dig.",
       },
       {
-        q: "Virker trådløse earbuds med alle telefoner?",
-        a: "Ja, alle Bluetooth earbuds virker med iPhone, Samsung og Android-telefoner. Apple AirPods giver dog ekstra funktioner (Siri, automatisk pausering) med iPhone.",
+        q: "Virker trådløse øretelefoner med alle telefoner?",
+        a: "Ja, alle Bluetooth-øretelefoner virker med iPhone, Samsung og Android-telefoner. Apple AirPods giver dog ekstra funktioner (Siri, automatisk pausering) med iPhone.",
       },
     ],
   },
   {
     slug: "holdere",
-    label: "Holdere & Mounts",
-    description: "Bilholdere, stander og mounts til din enhed.",
+    label: "Holdere og standere",
+    description: "Bilholdere, standere og beslag til din enhed.",
     deviceSpecific: false,
-    heroDescription: "Bilholdere, skrivebords-standere og MagSafe mounts — hold din telefon stabilt og tilgængeligt.",
+    heroDescription: "Bilholdere, skrivebordsstandere og MagSafe-holdere — hold din telefon stabil og tilgængelig.",
     faq: [
       {
         q: "Hvad er den bedste bilholder til min telefon?",
-        a: "Det afhænger af din bil. Ventilationsholere passer til de fleste biler og er nemme at montere. Magnetiske holdere kræver en metalplate bag coverret men er hurtige at sætte telefonen i.",
+        a: "Det afhænger af din bil. Ventilationsholdere passer til de fleste biler og er nemme at montere. Magnetiske holdere kræver en metalplade bag coveret, men er hurtige at sætte telefonen i.",
       },
       {
-        q: "Er MagSafe bilholdere bedre end klips-holdere?",
-        a: "MagSafe-holdere (til iPhone 12 og nyere) sidder solidt og er meget nemme at bruge med én hånd. Klips-holdere virker med alle telefoner uanset model.",
+        q: "Er MagSafe-bilholdere bedre end klipsholdere?",
+        a: "MagSafe-holdere (til iPhone 12 og nyere) sidder solidt og er meget nemme at bruge med én hånd. Klipsholdere virker med alle telefoner uanset model.",
       },
       {
-        q: "Virker skrivebords-standere med alle telefoner?",
-        a: "Ja, justerbare standere passer til alle telefonstørrelser fra 4\" til 7\". Tjek at stativets bredde passer til din telefons bredde.",
+        q: "Virker skrivebordsstandere med alle telefoner?",
+        a: "Ja, justerbare standere passer til alle telefonstørrelser fra 4\" til 7\". Tjek, at stativets bredde passer til din telefons bredde.",
       },
     ],
   },
   {
     slug: "outlet",
     label: "Outlet",
-    description: "Ekstra skarpe priser på udvalgte tilbehør. Begrænset antal.",
+    description: "Udvalgt tilbehør fra vores outlet.",
     deviceSpecific: false,
-    heroDescription: "Overskydende lager og kampagnevarer til ekstra skarpe priser. Begrænset antal — køb mens lager haves.",
+    heroDescription: "Se udvalget af tilbehør i vores outlet. Pris og lagerstatus fremgår af det enkelte produkt.",
     faq: [
       {
         q: "Hvad er outlet-varer?",
-        a: "Outlet-varer er nye produkter fra overskydende lager eller kampagner. De er i perfekt stand og leveres med samme garanti som resten af vores sortiment.",
+        a: "Outlet-varer er nye produkter fra overskydende lager eller kampagner. De sælges med 2 års reklamationsret.",
       },
       {
         q: "Kan jeg returnere outlet-varer?",
@@ -182,7 +182,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
       },
       {
         q: "Skiftes outlet-sortimentet?",
-        a: "Ja, vi opdaterer løbende outlet-sortimentet. Tilmeld dig vores nyhedsbrev for at få besked når nye tilbud er tilgængelige.",
+        a: "Ja, outlet-sortimentet ændrer sig løbende i takt med lageret.",
       },
     ],
   },
@@ -260,7 +260,7 @@ export const TILBEHOER_ROUTES: TilbehoerRoute[] = [
   ...TILBEHOER_DEVICES.map((device) => ({
     category: "covers",
     device: device.slug,
-    categoryLabel: "Covers & Cases",
+    categoryLabel: "Covers og etuier",
     deviceLabel: device.label,
     brand: device.brand,
   })),
@@ -309,7 +309,8 @@ export function getAllDeviceParams(): { category: string; device: string }[] {
 /** Maps accessories.category DB values to tilbehoer URL slugs */
 export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
   cover: "covers",
-  screen_protector: "skaermbeskyttelse",
+  screen_protector: "beskyttelsesglas",
+  "spot-glass": "beskyttelsesglas",
   charger: "opladere",
   cable: "opladere",
   audio: "lyd",
@@ -319,7 +320,7 @@ export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
 export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   covers: ["cover"],
   skaermbeskyttelse: ["screen_protector"],
-  beskyttelsesglas: ["screen_protector"],
+  beskyttelsesglas: ["screen_protector", "spot-glass"],
   opladere: ["charger", "cable"],
   lyd: ["audio"],
   holdere: ["other"],

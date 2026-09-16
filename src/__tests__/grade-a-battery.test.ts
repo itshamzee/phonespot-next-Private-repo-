@@ -75,7 +75,7 @@ describe("Grade copy never promises a battery percentage — cosmetic only", () 
   it("device-faq.ts Grade A/B/C answer describes cosmetic condition only, no battery percentage", () => {
     const src = read("src/lib/product/device-faq.ts");
     const match = src.match(
-      /Hvad er forskellen mellem Grade A, B og C\?[\s\S]*?a:\s*"([^"]+)"/,
+      /Hvad er forskellen mellem stand A, B og C\?[\s\S]*?a:\s*"([^"]+)"/,
     );
     expect(match).not.toBeNull();
     expect(match![1]).not.toMatch(BATTERY_PERCENT_CLAIM);
@@ -91,7 +91,7 @@ describe("Grade copy never promises a battery percentage — cosmetic only", () 
     // legitimately state "100% kapacitet" for a brand-NEW device (an
     // objective, ungraded fact) — that's not the claim this test guards
     // against, so a bare "NN% kapacitet" alone must not trip it.
-    const gradeTiedClaim = /nyt batteri|min\.\s?\d{2,3}\s?%|Grade [ABC][^.]{0,80}?\d{2,3}\s?%\s*(kapacitet|batteri)/i;
+    const gradeTiedClaim = /nyt batteri|min\.\s?\d{2,3}\s?%|(?:Grade|stand) [ABC][^.]{0,80}?\d{2,3}\s?%\s*(kapacitet|batteri)/i;
     const files = [
       "src/app/iphones/page.tsx",
       "src/app/ipads/page.tsx",
@@ -113,8 +113,8 @@ describe("Grade copy never promises a battery percentage — cosmetic only", () 
 
   it("model-pages.ts iPhone 14 Pro FAQ makes no grade-tied battery percentage claim", () => {
     const src = read("src/lib/model-pages.ts");
-    expect(src).not.toMatch(/Grade A enheder får altid isat et nyt batteri/i);
-    expect(src).not.toMatch(/Grade B har minimum 80%/i);
+    expect(src).not.toMatch(/(?:Grade|stand) A[- ]enheder får altid isat et nyt batteri/i);
+    expect(src).not.toMatch(/(?:Grade|stand) B har minimum 80%/i);
   });
 });
 
@@ -128,7 +128,7 @@ describe("garanti/page.tsx warranty floors — left alone, and read as a post-sa
 
   it("reads as a post-sale degradation threshold, not an at-sale promise", () => {
     const src = read("src/app/garanti/page.tsx");
-    const match = src.match(/Dækker garantien batteri\?[\s\S]*?answer:\s*\n\s*"([^"]+)"/);
+    const match = src.match(/Dækker garantien batteriet\?[\s\S]*?answer:\s*\n\s*"([^"]+)"/);
     expect(match).not.toBeNull();
     const answer = match![1];
     // Must tie the floor to the warranty PERIOD/degradation, not to purchase.

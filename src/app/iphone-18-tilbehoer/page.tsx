@@ -11,7 +11,7 @@ import { JsonLd } from "@/components/seo/json-ld";
  */
 
 export const metadata: Metadata = {
-  title: "Covers & Beskyttelsesglas til iPhone 18 Pro, Pro Max & iPhone Duo | PhoneSpot",
+  title: "Covers og beskyttelsesglas til iPhone 18 Pro, Pro Max og iPhone Duo | PhoneSpot",
   description:
     "Tilbehør til de nye iPhones: covers og beskyttelsesglas til iPhone 18 Pro (6,3\"), iPhone 18 Pro Max (6,9\") og den foldbare iPhone Duo. Se lanceringsdatoer og udvalg hos PhoneSpot.",
   keywords:
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: "da_DK",
     siteName: "PhoneSpot",
     url: "https://phonespot.dk/iphone-18-tilbehoer",
-    title: "Covers & Beskyttelsesglas til iPhone 18-serien og iPhone Duo",
+    title: "Covers og beskyttelsesglas til iPhone 18-serien og iPhone Duo",
     description:
       "Beskyt din nye iPhone fra dag ét. Covers og beskyttelsesglas til iPhone 18 Pro, 18 Pro Max og iPhone Duo — hos PhoneSpot i Vejle, Slagelse og online.",
   },
@@ -77,7 +77,7 @@ const FAQ = [
   {
     question: "Hvad koster beskyttelsesglas med montering?",
     answer:
-      "Vi monterer beskyttelsesglas i butikken, mens du venter — så sidder det perfekt uden støv og bobler. Se de aktuelle priser på vores beskyttelsesglas-side, hvor iPhone 18-serien tilføjes ved lancering.",
+      "Vi monterer beskyttelsesglas i butikken, mens du venter — så sidder det perfekt uden støv og bobler. Se de aktuelle priser på vores side om beskyttelsesglas, hvor iPhone 18-serien tilføjes ved lancering.",
   },
 ];
 
@@ -110,7 +110,7 @@ export default function Iphone18TilbehoerPage() {
       {/* Hero */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
-          <nav aria-label="Breadcrumb" className="mb-6 text-sm">
+          <nav aria-label="Brødkrumme" className="mb-6 text-sm">
             <ol className="flex flex-wrap items-center gap-1.5 text-[#86868B]">
               <li><Link href="/" className="hover:text-[#111111]">Forside</Link></li>
               <li aria-hidden="true">/</li>
@@ -125,7 +125,7 @@ export default function Iphone18TilbehoerPage() {
               Netop lanceret
             </span>
             <h1 className="mt-4 font-display text-3xl font-bold leading-tight tracking-tight text-[#111111] md:text-5xl">
-              Covers & beskyttelsesglas til iPhone 18 Pro, Pro Max og iPhone Duo
+              Covers og beskyttelsesglas til iPhone 18 Pro, Pro Max og iPhone Duo
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-[#86868B]">
               Apple har præsenteret efterårets nye iPhones — og de fortjener beskyttelse fra
@@ -199,7 +199,7 @@ export default function Iphone18TilbehoerPage() {
               Slagelse — perfekt placeret, uden støv og luftbobler, mens du venter. Skulle
               uheldet alligevel være ude, står vores værksted klar:{" "}
               <Link href="/reparation/iphone" className="font-semibold text-[#1A3D2E] underline">
-                iPhone-reparation med livstidsgaranti
+                iPhone-reparation med garanti efter de konkrete reparationsvilkår
               </Link>{" "}
               — også på de nye modeller.
             </p>

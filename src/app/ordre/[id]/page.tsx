@@ -22,8 +22,8 @@ export default async function OrderConfirmationPage({
         <Heading size="lg">Tak for din ordre!</Heading>
 
         <p className="mt-4 text-lg text-gray">
-          Din ordre er modtaget og vi forbereder den til afsendelse.
-          Du modtager en bekræftelsesmail med tracking-info.
+          Din ordre er modtaget, og vi forbereder den til afsendelse.
+          Du modtager en bekræftelsesmail med sporingsoplysninger.
         </p>
 
         <p className="mt-2 text-sm text-gray">
@@ -36,9 +36,9 @@ export default async function OrderConfirmationPage({
           </h3>
           <div className="mt-4 space-y-3 text-left">
             {[
-              { step: "1", text: "Du modtager en ordrebekræftelse på email" },
+              { step: "1", text: "Du modtager en ordrebekræftelse på e-mail" },
               { step: "2", text: "Vi kvalitetstester og klargør din enhed" },
-              { step: "3", text: "Du får tracking-info når pakken sendes (1-2 hverdage)" },
+              { step: "3", text: "Du får sporingsoplysninger, når pakken sendes (1-2 hverdage)" },
             ].map((item) => (
               <div key={item.step} className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-eco text-xs font-bold text-white">

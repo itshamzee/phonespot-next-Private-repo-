@@ -97,7 +97,7 @@ export function ConfirmationView({ order }: { order: Order }) {
         </p>
 
         <p className="mt-2 text-sm text-gray-600">
-          Du modtager en bekræftelse på email til{" "}
+          Du modtager en bekræftelse på e-mail til{" "}
           <span className="font-medium text-charcoal">{order.customer_email}</span>
         </p>
       </div>
@@ -174,7 +174,7 @@ export function ConfirmationView({ order }: { order: Order }) {
 
         <div className="mt-4 space-y-1.5 border-t border-sand pt-4 text-sm">
           <div className="flex justify-between text-gray-600">
-            <span>Subtotal</span>
+            <span>Delsum</span>
             <span>{formatOere(order.subtotal)}</span>
           </div>
 
@@ -212,9 +212,9 @@ export function ConfirmationView({ order }: { order: Order }) {
         </h3>
         <div className="mt-4 space-y-3">
           {[
-            "Du modtager en ordrebekræftelse på email",
+            "Du modtager en ordrebekræftelse på e-mail",
             "Vi kvalitetstester og klargør din enhed",
-            "Du får tracking-info når pakken sendes (1–2 hverdage)",
+            "Du får sporingsoplysninger, når pakken sendes (1–2 hverdage)",
           ].map((text, i) => (
             <div key={i} className="flex items-start gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-eco text-xs font-bold text-white">

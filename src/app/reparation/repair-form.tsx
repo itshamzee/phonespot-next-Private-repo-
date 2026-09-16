@@ -69,7 +69,7 @@ export function RepairForm() {
     } catch (err) {
       setStatus("error");
       setErrorMessage(
-        err instanceof Error ? err.message : "Kunne ikke sende anmodning",
+        err instanceof Error ? err.message : "Kunne ikke sende anmodningen",
       );
     }
   }
@@ -82,7 +82,7 @@ export function RepairForm() {
         </p>
         <p className="mt-2 text-gray">
           Vi har modtaget din sag og sender dig et tilbud hurtigst muligt. Tjek
-          din email for en bekraeftelse.
+          din e-mail for en bekræftelse.
         </p>
         <button
           type="button"
@@ -111,7 +111,7 @@ export function RepairForm() {
           onChange={handleChange}
         />
         <FormField
-          label="Email"
+          label="E-mail"
           name="customer_email"
           type="email"
           required
@@ -137,7 +137,7 @@ export function RepairForm() {
           type="select"
           required
           options={DEVICE_TYPES}
-          placeholder="Vaelg enhedstype..."
+          placeholder="Vælg enhedstype..."
           value={formData.device_type}
           onChange={handleChange}
         />
@@ -154,12 +154,13 @@ export function RepairForm() {
           onChange={handleChange}
         />
         <FormField
-          label="Type reparation"
+          label="Reparationstype"
           name="service_type"
           type="select"
           required
           options={SERVICE_TYPES}
-          placeholder="Vaelg reparationstype..."
+          optionLabels={{ Skaermudskiftning: "Skærmudskiftning", "Kamera-reparation": "Kamerareparation" }}
+          placeholder="Vælg reparationstype..."
           value={formData.service_type}
           onChange={handleChange}
         />
@@ -172,7 +173,7 @@ export function RepairForm() {
           type="select"
           required
           options={STORE_OPTIONS}
-          placeholder="Vaelg butik..."
+          placeholder="Vælg butik..."
           value={formData.store_id}
           onChange={handleChange}
         />

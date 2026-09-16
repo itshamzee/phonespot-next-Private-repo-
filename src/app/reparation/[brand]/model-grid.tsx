@@ -1,10 +1,9 @@
 "use client";
-
-import { useMemo, useState } from "react";
+import { useId, useRef, useState } from "react";
 import Link from "next/link";
 import { DeviceImage } from "@/components/repair/device-image";
 import type { DeviceType } from "@/lib/supabase/types";
-
+import styles from "@/components/repair/repair.module.css";
 export type ModelCardData = {
   slug: string;
   name: string;
@@ -14,165 +13,131 @@ export type ModelCardData = {
   imageUrl: string | null;
   deviceType: DeviceType;
 };
-
-type SeriesGroup = {
-  series: string;
-  models: ModelCardData[];
-};
-
-function groupBySeries(models: ModelCardData[]): SeriesGroup[] {
-  const groups: Map<string, ModelCardData[]> = new Map();
-  for (const m of models) {
-    const key = m.series ?? "__ungrouped__";
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(m);
-  }
-  return Array.from(groups.entries()).map(([series, models]) => ({
-    series: series === "__ungrouped__" ? "" : series,
-    models,
-  }));
-}
-
-function ModelCard({ model, linkPrefix }: { model: ModelCardData; linkPrefix?: string }) {
-  const basePath = linkPrefix ?? `/reparation/${model.brandSlug}`;
+function ModelCard({
+  model,
+  linkPrefix,
+}: {
+  model: ModelCardData;
+  linkPrefix?: string;
+}) {
   return (
     <Link
-      href={`${basePath}/${model.slug}`}
-      className="group relative flex flex-col items-center rounded-2xl border border-soft-grey bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-green-eco hover:shadow-lg hover:shadow-green-eco/10"
+      href={`${linkPrefix ?? `/reparation/${model.brandSlug}`}/${model.slug}`}
+      className={styles.modelCell}
     >
-      {/* Device image */}
-      <div className="mb-4 h-40 w-28">
-        <DeviceImage
-          brandSlug={model.brandSlug}
-          deviceType={model.deviceType}
-          imageUrl={model.imageUrl}
-          modelName={model.name}
-          className="h-full w-full"
-        />
+      <div className={styles.modelPhoto}>
+        {model.imageUrl ? (
+          <DeviceImage
+            brandSlug={model.brandSlug}
+            deviceType={model.deviceType}
+            imageUrl={model.imageUrl}
+            modelName={model.name}
+            className="h-full w-full"
+          />
+        ) : (
+          <span className="flex h-full items-center justify-center text-xs text-gray">
+            Billede ikke tilgængeligt
+          </span>
+        )}
       </div>
-
-      {/* Model name */}
-      <span className="text-center font-display text-lg font-bold leading-tight text-charcoal transition-colors group-hover:text-green-eco">
-        {model.name}
+      <strong>{model.name}</strong>
+      <span className={styles.modelPrice}>
+        {model.cheapestPrice != null && model.cheapestPrice > 0
+          ? `Fra ${model.cheapestPrice.toLocaleString("da-DK")} kr.`
+          : "Priser kommer snart"}
       </span>
-
-      {/* Price badge */}
-      {model.cheapestPrice != null && model.cheapestPrice > 0 && (
-        <span className="mt-2.5 rounded-full bg-green-eco/10 px-3.5 py-1.5 text-sm font-bold text-green-eco">
-          fra {model.cheapestPrice} kr.
-        </span>
-      )}
-
-      {/* CTA hint */}
-      <span className="mt-2.5 flex items-center gap-1 text-sm font-medium text-gray transition-colors group-hover:text-green-eco">
-        Se priser
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5">
-          <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-        </svg>
-      </span>
-
-      {/* Guarantee micro-badge — visible on hover */}
-      <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-eco/10 px-2.5 py-1 text-xs font-bold text-green-eco opacity-0 transition-opacity group-hover:opacity-100">
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-          <path d="M8 1l6 2.5v4c0 3.5-2.5 6.5-6 8-3.5-1.5-6-4.5-6-8v-4L8 1z" />
-        </svg>
-        Garanti
+      <span className={styles.modelCta}>
+        Se reparationer <span aria-hidden="true">→</span>
       </span>
     </Link>
   );
 }
-
-export function ModelGrid({ models, brandName, linkPrefix }: { models: ModelCardData[]; brandName: string; linkPrefix?: string }) {
+export function ModelGrid({
+  models,
+  brandName,
+  linkPrefix,
+}: {
+  models: ModelCardData[];
+  brandName: string;
+  linkPrefix?: string;
+}) {
   const [search, setSearch] = useState("");
-
+  const inputRef = useRef<HTMLInputElement>(null);
+  const id = useId();
   const filtered = models.filter((m) =>
-    m.name.toLowerCase().includes(search.toLowerCase()),
+    m.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
-
-  const hasSeries = models.some((m) => m.series);
-  const groups = useMemo(() => groupBySeries(filtered), [filtered]);
-
+  const groups = new Map<string, ModelCardData[]>();
+  for (const model of filtered) {
+    const key = search.trim() ? "" : (model.series ?? "");
+    groups.set(key, [...(groups.get(key) ?? []), model]);
+  }
   return (
-    <>
-      {/* Search bar */}
-      <div className="sticky top-0 z-10 -mx-4 bg-warm-white/95 px-4 pb-6 pt-2 backdrop-blur-sm">
-        <div className="mx-auto max-w-2xl">
-          <div className="relative">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray"
-              aria-hidden="true"
+    <div className={styles.modelGrid}>
+      <div className={styles.search}>
+        <label htmlFor={id}>Søg efter model</label>
+        <div className={styles.searchField}>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <circle cx="10.5" cy="10.5" r="7.5" />
+            <path d="m16 16 5 5" />
+          </svg>
+          <input
+            id={id}
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Find din ${brandName}-model`}
+          />
+          {search && (
+            <button
+              type="button"
+              aria-label="Ryd søgning"
+              onClick={() => {
+                setSearch("");
+                inputRef.current?.focus();
+              }}
             >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Søg efter ${brandName} model...`}
-              className="w-full rounded-xl border border-soft-grey bg-white py-3.5 pl-12 pr-4 text-charcoal shadow-sm placeholder:text-gray/60 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray hover:text-charcoal"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                </svg>
-              </button>
-            )}
-          </div>
-          <p className="mt-2 text-center text-xs text-gray">
-            {filtered.length} {filtered.length === 1 ? "model" : "modeller"} fundet
-          </p>
+              ×
+            </button>
+          )}
         </div>
+        <p role="status" className={styles.hint}>
+          {filtered.length} {filtered.length === 1 ? "model" : "modeller"}{" "}
+          fundet
+        </p>
       </div>
-
-      {/* Model grid */}
       {filtered.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-lg font-bold text-charcoal">
-            Ingen modeller fundet for &quot;{search}&quot;
+        <div className={styles.empty}>
+          <p>
+            {search
+              ? `Ingen modeller fundet for “${search}”. Prøv et andet modelnavn.`
+              : "Vi kan ikke vise modeller lige nu."}
           </p>
-          <p className="mt-2 text-sm text-gray">
-            Prøv at søge efter et andet modelnavn
-          </p>
-        </div>
-      ) : hasSeries && !search ? (
-        /* Grouped by series */
-        <div className="space-y-10">
-          {groups.map((group) => (
-            <div key={group.series || "other"}>
-              {group.series && (
-                <h3 className="mb-5 font-display text-xl font-bold tracking-tight text-charcoal">
-                  {group.series}
-                </h3>
-              )}
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {group.models.map((model) => (
-                  <ModelCard key={model.slug} model={model} linkPrefix={linkPrefix} />
-                ))}
-              </div>
-            </div>
-          ))}
+          <Link href="/kontakt">Få hjælp til din model</Link>
         </div>
       ) : (
-        /* Flat grid (no series or active search) */
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((model) => (
-            <ModelCard key={model.slug} model={model} linkPrefix={linkPrefix} />
-          ))}
-        </div>
+        Array.from(groups, ([series, items]) => (
+          <div key={series} className={styles.series}>
+            {series && <h3>{series}</h3>}
+            <div className={styles.modelCells}>
+              {items.map((model) => (
+                <ModelCard
+                  key={model.slug}
+                  model={model}
+                  linkPrefix={linkPrefix}
+                />
+              ))}
+            </div>
+          </div>
+        ))
       )}
-    </>
+    </div>
   );
 }

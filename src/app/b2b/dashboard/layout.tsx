@@ -45,7 +45,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/b2b/dashboard/lcd-opkob",
-    label: "LCD Opkob",
+    label: "Opkøb af LCD-skærme",
     icon: (
       <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
@@ -117,7 +117,7 @@ export default function B2BDashboardLayout({ children }: { children: React.React
         <div className="border-b border-[#E5E5EA] px-5 py-5">
           <div className="mb-4 flex items-center justify-between">
             <span className="font-display text-sm font-bold uppercase tracking-widest text-[#1A3D2E]">
-              B2B Portal
+              B2B-portal
             </span>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -199,14 +199,14 @@ export default function B2BDashboardLayout({ children }: { children: React.React
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-1.5 text-[#6E6E73] hover:bg-[#F7F7F8] hover:text-[#111111]"
-            aria-label="Abn menu"
+            aria-label="Åbn menu"
           >
             <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
           <span className="font-display text-sm font-bold uppercase tracking-widest text-[#1A3D2E]">
-            B2B Portal
+            B2B-portal
           </span>
           <div className="h-8 w-8" /> {/* Spacer for centering */}
         </header>

@@ -79,11 +79,11 @@ export function ColorSelectorPlatform({
   if (colors.length === 0) return null;
 
   return (
-    <div>
-      <p className="mb-2 text-sm font-bold text-charcoal">
+    <fieldset>
+      <legend className="mb-2 text-sm font-bold text-charcoal">
         Farve{" "}
         <span className="font-normal text-charcoal/50">— {selected}</span>
-      </p>
+      </legend>
       <div className="flex flex-wrap gap-2">
         {colors.map((color) => {
           const isSelected = color === selected;
@@ -94,11 +94,13 @@ export function ColorSelectorPlatform({
             <button
               key={color}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => isAvailable && onChange(color)}
               disabled={!isAvailable}
               aria-disabled={!isAvailable}
+              aria-label={color}
               title={isAvailable ? color : `${color} — udsolgt`}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
+              className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
                 isSelected
                   ? "border-green-eco ring-2 ring-green-eco/20"
                   : isAvailable
@@ -136,6 +138,6 @@ export function ColorSelectorPlatform({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }

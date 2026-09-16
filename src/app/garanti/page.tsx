@@ -1,43 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SectionWrapper } from "@/components/ui/section-wrapper";
-import { Heading } from "@/components/ui/heading";
-import { TrustBar } from "@/components/ui/trust-bar";
-import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
-import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
+import { FaqAccordion } from "@/components/ui/faq-accordion";
+import styles from "@/components/ui/information.module.css";
 
 export const metadata: Metadata = {
-  title: "36 Måneders Garanti på Refurbished Elektronik | PhoneSpot",
+  title: "36 måneders garanti på refurbished elektronik | PhoneSpot",
   description:
-    "PhoneSpot tilbyder 36 måneders fuld garanti på alle refurbished enheder. Læs om hvad der er dækket, og hvordan du bruger din garanti.",
+    "PhoneSpot tilbyder 36 måneders fuld garanti på alle refurbished enheder. Læs om, hvad der er dækket, og hvordan du bruger din garanti.",
   keywords:
     "refurbished garanti, garanti refurbished iphone, 36 måneders garanti, refurbished elektronik garanti, phonespot garanti, reklamation refurbished",
   alternates: {
     canonical: "https://phonespot.dk/garanti",
   },
   openGraph: {
-    title: "36 Måneders Garanti på Refurbished Elektronik | PhoneSpot",
+    title: "36 måneders garanti på refurbished elektronik | PhoneSpot",
     description:
-      "PhoneSpot tilbyder 36 måneders fuld garanti på alle refurbished enheder. Læs om hvad der er dækket, og hvordan du bruger din garanti.",
+      "PhoneSpot tilbyder 36 måneders fuld garanti på alle refurbished enheder. Læs om, hvad der er dækket, og hvordan du bruger din garanti.",
     url: "https://phonespot.dk/garanti",
     type: "website",
   },
 };
 
-// ---------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------
-
-const STATS = [
-  { value: "36", label: "Måneders garanti", sub: "På alle enheder" },
-  { value: "14", label: "Dages returret", sub: "Ingen spørgsmål" },
-  { value: "1-2", label: "Dages behandling", sub: "Ved garantisag" },
-];
-
 const COVERED_ITEMS = [
   "Skærm og touch",
-  "Batteri (min. kapacitet per grade)",
+  "Batteri (min. kapacitet pr. grade)",
   "Kamera og Face ID / Touch ID",
   "Højttalere og mikrofon",
   "Wi-Fi, Bluetooth og GPS",
@@ -46,35 +33,26 @@ const COVERED_ITEMS = [
   "Software og operativsystem",
 ];
 
-const COMPETITORS = [
-  { name: "PhoneSpot", warranty: "36 mdr.", highlighted: true },
-  { name: "GreenMind", warranty: "36 mdr.", highlighted: false },
-  { name: "Swappie", warranty: "24 mdr.", highlighted: false },
-  { name: "Føniks Computer", warranty: "24 mdr.", highlighted: false },
-  { name: "Back Market", warranty: "Varierer (12-24 mdr.)", highlighted: false },
-  { name: "Refurbed", warranty: "12 mdr.", highlighted: false },
-];
-
 const WARRANTY_FAQ = [
   {
     question: "Hvad dækker garantien?",
     answer:
-      "Garantien dækker alle fabrikationsfejl og funktionelle problemer. Hvis din enhed får en fejl der ikke skyldes forkert brug eller fysisk skade, reparerer eller erstatter vi den gratis inden for garantiperioden på 36 måneder.",
+      "Garantien dækker alle fabrikationsfejl og funktionelle problemer. Hvis din enhed får en fejl, der ikke skyldes forkert brug eller fysisk skade, reparerer eller erstatter vi den gratis inden for garantiperioden på 36 måneder.",
   },
   {
     question: "Dækker garantien kosmetiske skader?",
     answer:
-      "Nej, garantien dækker kun funktionelle fejl. Den kosmetiske stand på din enhed svarer til den grade du har valgt ved køb (A, B eller C). Ridser, buler og andre kosmetiske spor der var til stede ved levering er ikke dækket, da de er en del af enhedens graderede stand.",
+      "Nej, garantien dækker kun funktionelle fejl. Den kosmetiske stand på din enhed svarer til den grade, du har valgt ved køb (A, B eller C). Ridser, buler og andre kosmetiske spor, der var til stede ved levering, er ikke dækket, da de er en del af enhedens graderede stand.",
   },
   {
     question: "Hvad hvis min enhed går i stykker?",
     answer:
-      "Kontakt os via vores reklamationsformular eller send en email. Vi svarer inden for 1-2 hverdage med en løsning. Du får et returetiket, sender enheden til os, og vi reparerer eller erstatter den hurtigst muligt.",
+      "Kontakt os via vores reklamationsformular eller send en e-mail. Vi svarer inden for 1-2 hverdage med en løsning. Du får en returetiket, sender enheden til os, og vi reparerer eller erstatter den hurtigst muligt.",
   },
   {
-    question: "Dækker garantien batteri?",
+    question: "Dækker garantien batteriet?",
     answer:
-      "Ja. Batteriets sundhed på købstidspunktet er en individuel måling for din enhed og fremgår altid af produktsiden — det er ikke bundet til grade. Hvis batterikapaciteten i løbet af garantiperioden falder under forringelsesgrænsen for den grade du har købt, er det dækket af garantien. Grænserne for forringelse i garantiperioden er: Grade A: 85%, Grade B: 80%, Grade C: 75% af original kapacitet.",
+      "Ja. Batteriets sundhed på købstidspunktet er en individuel måling for din enhed og fremgår altid af produktsiden — det er ikke bundet til grade. Hvis batterikapaciteten i løbet af garantiperioden falder under forringelsesgrænsen for den grade, du har købt, er det dækket af garantien. Grænserne for forringelse i garantiperioden er: Grade A: 85%, Grade B: 80%, Grade C: 75% af den oprindelige kapacitet.",
   },
   {
     question: "Kan jeg få pengene tilbage i stedet?",
@@ -96,217 +74,31 @@ const faqJsonLd = {
   })),
 };
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
 export default function GarantiPage() {
   return (
-    <>
+    <div className={styles.shell}>
       <JsonLd data={faqJsonLd} />
-
-      {/* ── All content inside single centered SectionWrapper ── */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-3xl">
-          {/* ── Hero ── */}
-          <FadeIn>
-            <div className="text-center">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-                Din tryghed
-              </p>
-              <Heading size="lg">36 måneders garanti</Heading>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
-                Alle refurbished enheder fra PhoneSpot leveres med 36 måneders
-                fuld garanti. Det er længere end de fleste konkurrenter og
-                matcher de bedste i branchen. Vi stoler på kvaliteten af det vi
-                sælger &mdash; og det skal du også kunne.
-              </p>
-            </div>
-          </FadeIn>
-
-          {/* ── Stat cards ── */}
-          <FadeIn delay={0.1}>
-            <div className="mt-14 grid gap-4 sm:grid-cols-3">
-              {STATS.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-[#1A3D2E]/20 bg-[#1A3D2E]/5 p-5 text-center"
-                >
-                  <p className="font-display text-3xl font-bold text-[#1A3D2E]">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-[#111111]">
-                    {stat.label}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#86868B]">{stat.sub}</p>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
-
-          {/* ── Coverage section ── */}
-          <FadeIn delay={0.15}>
-            <div className="mt-16">
-              <Heading as="h2" size="md">
-                Hvad dækker garantien?
-              </Heading>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {COVERED_ITEMS.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 rounded-xl bg-[#F7F7F8] px-4 py-3"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-5 w-5 shrink-0 text-[#1A3D2E]"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-[#111111]">
-                      {item}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FadeIn>
-
-          {/* ── Competitor comparison table ── */}
-          <FadeIn delay={0.2}>
-            <div className="mt-16">
-              <Heading as="h2" size="md">
-                Sammenligning med konkurrenterne
-              </Heading>
-              <div className="mt-8 overflow-hidden rounded-2xl border border-[#E5E5EA]">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#E5E5EA]">
-                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
-                        Forhandler
-                      </th>
-                      <th className="px-5 py-3 text-left font-display text-xs font-semibold uppercase tracking-wide text-[#111111]">
-                        Garanti
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {COMPETITORS.map((row, i) => (
-                      <tr
-                        key={row.name}
-                        className={`${
-                          i < COMPETITORS.length - 1
-                            ? "border-b border-[#E5E5EA]/50"
-                            : ""
-                        } ${row.highlighted ? "bg-[#1A3D2E]/5" : ""}`}
-                      >
-                        <td
-                          className={`px-5 py-3 ${
-                            row.highlighted
-                              ? "font-bold text-[#1A3D2E]"
-                              : "text-[#111111]"
-                          }`}
-                        >
-                          {row.name}
-                        </td>
-                        <td
-                          className={`px-5 py-3 ${
-                            row.highlighted
-                              ? "font-bold text-[#1A3D2E]"
-                              : "text-[#86868B]"
-                          }`}
-                        >
-                          {row.warranty}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </FadeIn>
-
-          {/* ── FAQ section ── */}
-          <FadeIn delay={0.25}>
-            <div className="mt-16">
-              <Heading as="h2" size="md">
-                Ofte stillede spørgsmål om garanti
-              </Heading>
-              <div className="mt-8 divide-y divide-[#E5E5EA]">
-                {WARRANTY_FAQ.map((item) => (
-                  <details key={item.question} className="group py-5">
-                    <summary className="flex cursor-pointer items-center justify-between font-display text-base font-semibold text-[#111111]">
-                      {item.question}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="h-5 w-5 shrink-0 text-[#86868B] transition-transform group-open:rotate-180"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </summary>
-                    <p className="mt-3 text-sm leading-relaxed text-[#86868B]">
-                      {item.answer}
-                    </p>
-                  </details>
-                ))}
-              </div>
-            </div>
-          </FadeIn>
-
-          {/* ── Insurance cross-link ── */}
-          <FadeIn delay={0.28}>
-            <div className="mt-16">
-              <StorstromInsuranceTeaser variant="warranty" />
-            </div>
-          </FadeIn>
-
-          {/* ── CTA section ── */}
-          <FadeIn delay={0.3}>
-            <div className="mt-16 rounded-2xl bg-[#F7F7F8] border border-[#E5E5EA] p-8 text-center md:p-10">
-              <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] md:text-3xl">
-                Har du en garantisag?
-              </h2>
-              <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-[#86868B]">
-                Vi gør det nemt at bruge din garanti. Indmeld din reklamation
-                online, eller kontakt os direkte &mdash; vi svarer inden for 1-2
-                hverdage.
-              </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/reklamation"
-                  className="inline-block rounded-full bg-[#1A3D2E] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  Indmeld reklamation
-                </Link>
-                <Link
-                  href="/kontakt"
-                  className="inline-block rounded-full border-2 border-[#111111] px-8 py-3 font-semibold text-[#111111] transition-colors hover:bg-[#111111] hover:text-white"
-                >
-                  Kontakt os
-                </Link>
-              </div>
-            </div>
-          </FadeIn>
+      <div className={styles.container}>
+        <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Garanti</nav>
+        <header className={styles.header}>
+          <span className={styles.eyebrow}>Hjælp efter købet</span>
+          <h1>36 måneders garanti på enheder.</h1>
+          <p className={styles.intro}>Her kan du se, hvad garantien dækker, og hvordan du får hjælp ved en fejl. Tilbehør har 2 års reklamationsret.</p>
+          <div className={styles.actions}><Link href="/reklamation" className={styles.button}>Indmeld reklamation</Link><Link href="/kontakt" className={styles.secondary}>Kontakt os</Link></div>
+        </header>
+        <section className={styles.section}>
+          <div className={styles.grid}>
+            <div><h2>Hvad dækker garantien?</h2><p className={styles.intro}>Garantien dækker fabrikationsfejl og funktionelle problemer i garantiperioden. Hvis fejlen ikke skyldes forkert brug eller fysisk skade, reparerer eller erstatter vi enheden gratis.</p></div>
+            <div className={styles.panel}><h3>Funktioner og komponenter</h3><ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-[#626a65]">{COVERED_ITEMS.map((item) => <li key={item}>{item}</li>)}</ul><p className="mt-4! text-sm">Batteriets forringelsesgrænser i garantiperioden står i svaret om batteri nedenfor. Batterisundheden ved køb er en separat, individuel måling.</p></div>
+          </div>
+        </section>
+        <div className={styles.reading}>
+          <section><h2>Sådan får du hjælp</h2><ol className="list-decimal space-y-4 pl-5"><li>Indmeld din reklamation online, eller kontakt os med en beskrivelse af fejlen.</li><li>Vi svarer inden for 1–2 hverdage med en løsning og hjælper dig med at sende enheden til os.</li><li>Vi reparerer eller erstatter enheden hurtigst muligt efter garantivilkårene.</li></ol><p>Svartiden er tiden til vores første svar. Det er ikke en fast behandlingstid for selve reparationen.</p><Link href="/reklamation" className={styles.textLink}>Opret din reklamation →</Link></section>
+          <section><h2>Dækning og undtagelser</h2><FaqAccordion items={WARRANTY_FAQ} /></section>
+          <section><h2>Fortrydelsesret og handelsbetingelser</h2><p>Du har 14 dages fuld fortrydelsesret fra leveringsdagen. Efter de 14 dage håndteres garantisager med reparation eller ombytning til en tilsvarende enhed.</p><div className={styles.actions}><Link href="/handelsbetingelser" className={styles.textLink}>Læs handelsbetingelserne →</Link><Link href="/kontakt" className={styles.textLink}>Få hjælp til returnering →</Link></div></section>
+          <section><h2>Vil du også være dækket mod uheld?</h2><p>Elektronikforsikring gennem Storstrøm Forsikring er en særskilt ordning. Læs om dækning og vilkår, eller spørg i butikken i Slagelse.</p><Link href="/forsikring" className={styles.textLink}>Læs om elektronikforsikring →</Link></section>
         </div>
-      </SectionWrapper>
-
-      {/* ── Trust bar ── */}
-      <SectionWrapper background="sand">
-        <TrustBar />
-      </SectionWrapper>
-    </>
+      </div>
+    </div>
   );
 }

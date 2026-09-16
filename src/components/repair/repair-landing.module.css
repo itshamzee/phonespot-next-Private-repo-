@@ -1,0 +1,131 @@
+.page { background: #f8f9f5; }
+.business { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px 32px; padding: 28px; margin-bottom: 28px; border: 1px solid #dce3dc; border-radius: 10px; background: #eaf2ed; }
+.business h2 { font-size: 24px; margin-bottom: 10px; }
+.business p { font-size: 14px; max-width: 650px; color: #526157; }
+.business a { display: inline-flex; align-items: center; gap: 18px; min-height: 44px; font-size: 13px; font-weight: 600; color: #1a3d2e; }
+.business a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.wrap { max-width: 1392px; padding: 0 36px 44px; margin: auto; }
+.page h2 { font-size: clamp(26px, 2.6vw, 36px); line-height: 1.16; letter-spacing: -1px; font-weight: 550; margin-bottom: 16px; }
+.page h3 { font-size: 20px; line-height: 1.3; letter-spacing: -.4px; font-weight: 600; }
+.page :is(a,button):focus-visible { outline: 3px solid #65866f; outline-offset: 4px; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; background: #1a3d2e; color: white; border-radius: 12px; overflow: hidden; }
+.heroCopy { padding: 44px; align-self: center; }
+.heroCopy h1 { font-size: clamp(34px, 3.9vw, 52px); font-weight: 550; line-height: 1.06; letter-spacing: -1.9px; margin: 0 0 24px; }
+.heroCopy p { color: #d7e1d8; font-size: 15px; line-height: 1.7; max-width: 430px; margin-bottom: 26px; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 24px; }
+.actions a { font-size: 13px; min-height: 46px; display: inline-flex; align-items: center; gap: 20px; }
+.actions a:first-child { color: #1a3d2e; background: white; padding: 12px 20px; border-radius: 6px; font-weight: 600; }
+.actions a:last-child { text-decoration: underline; text-underline-offset: 4px; }
+.actions a:focus-visible { outline-color: #d5e4bc; }
+.actions svg, .heroLocation svg { width: 18px; height: 18px; }
+.heroLocation { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #d7e1d8; margin-top: 26px; }
+.heroPhoto { position: relative; min-height: 400px; }
+.heroPhoto img { object-fit: cover; object-position: 66% center; }
+.heroPhoto > span { position: absolute; bottom: 18px; right: 18px; padding: 7px 10px; background: #1a3d2ee8; font-size: 11px; border-radius: 3px; }
+.facts { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 22px 8px; font-size: 12px; border-bottom: 1px solid #dce3dc; }
+.facts > span { display: inline-flex; align-items: center; gap: 8px; }
+.facts svg { width: 17px; height: 17px; color: #1a3d2e; }
+.facts a { font-weight: 600; color: #1a3d2e; text-decoration: underline; text-underline-offset: 3px; }
+.finder { padding: 34px; margin: 32px 0; border: 1px solid #dce3dc; border-radius: 12px; background: white; scroll-margin-top: 24px; }
+.sectionHeading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 28px; }
+.sectionHeading h2 { margin-bottom: 10px; }
+.sectionHeading p { color: #576354; font-size: 14px; line-height: 1.7; margin-bottom: 0; max-width: 425px; }
+.sectionHeading > a { display: inline-flex; gap: 12px; align-items: center; min-height: 44px; font-size: 12px; color: #1a3d2e; }
+.sectionHeading svg { width: 17px; height: 17px; flex-shrink: 0; }
+.method { display: grid; grid-template-columns: .85fr 1.15fr; align-items: center; gap: 40px; padding: 38px 0; scroll-margin-top: 24px; }
+.methodCopy { padding-left: 8px; }
+.methodCopy > p { font-size: 14px; line-height: 1.7; color: #576354; max-width: 420px; }
+.methodCopy ol { padding: 0; margin: 25px 0 0; list-style: none; }
+.methodCopy li { display: flex; gap: 15px; padding: 14px 0; border-top: 1px solid #dce3dc; }
+.methodCopy li > span { color: #1a3d2e; font-size: 12px; font-weight: 600; padding-top: 3px; }
+.methodCopy li h3 { font-size: 15px; letter-spacing: -.2px; margin-bottom: 5px; }
+.methodCopy li p { font-size: 13px; line-height: 1.6; color: #576354; margin-bottom: 0; }
+.video { border-radius: 10px; overflow: hidden; background: #eef0eb; border: 1px solid #dce3dc; }
+.video video, .video img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.video button { position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: pointer; background: #eef0eb; }
+.play { position: absolute; left: 14px; bottom: 14px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px; background: white; color: #1a3d2e; border-radius: 6px; box-shadow: 0 2px 12px #10281e18; font-size: 12px; font-weight: 600; }
+.play svg { width: 20px; height: 20px; }
+.play small { font-size: 10px; font-weight: 400; }
+.video button:hover .play { background: #f2f5eb; }
+.video button:focus-visible { outline-offset: -4px; }
+.repairs { padding: 42px 0; border-top: 1px solid #dce3dc; }
+.repairEditorial { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.screenStory { background: white; border: 1px solid #e1e5dd; border-radius: 10px; overflow: hidden; }
+.screenPhoto { position: relative; height: 230px; }
+.screenPhoto img { object-fit: contain; padding: 12px 28px 0; }
+.screenStory > div:last-child { padding: 26px 30px; }
+.screenStory h3 { margin-bottom: 12px; }
+.screenStory p, .repairTopics p, .storeCopy > p, .deviceGuide p { font-size: 14px; line-height: 1.75; color: #576354; }
+.screenStory a, .repairTopics a, .contactLink, .deviceGuide article a { font-size: 13px; font-weight: 550; color: #1a3d2e; display: inline-flex; align-items: center; gap: 14px; min-height: 44px; }
+.screenStory svg, .repairTopics svg, .contactLink svg, .deviceGuide svg { width: 18px; height: 18px; flex-shrink: 0; }
+.repairTopics { display: grid; }
+.repairTopics article { padding: 24px 0; border-top: 1px solid #dce3dc; }
+.repairTopics article:first-child { padding-top: 10px; border-top: 0; }
+.repairTopics article:last-child { padding-bottom: 0; }
+.repairTopics h3 { margin-bottom: 10px; }
+.repairTopics p { margin-bottom: 0; }
+.storeSection { display: grid; grid-template-columns: 1fr 1fr; background: #eef0eb; overflow: hidden; border-radius: 12px; margin-top: 12px; scroll-margin-top: 24px; }
+.storePhoto { position: relative; min-height: 450px; }
+.storePhoto img { object-fit: cover; object-position: center; }
+.storeCopy { padding: 38px; }
+.storeCopy h2 { color: #1a3d2e; }
+.storeCopy > p { margin-bottom: 12px; }
+.storeCopy svg { width: 18px; height: 18px; }
+.contactLink { margin-top: 16px; }
+.deviceGuide { border-top: 3px solid #1a3d2e; background: #eef0eb; padding: 32px; margin: 40px 0; border-radius: 12px; }
+.deviceGuide h2 { font-size: 28px; max-width: 620px; margin-bottom: 28px; }
+.deviceGuide > div { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; }
+.deviceGuide h3 { font-size: 18px; }
+.deviceGuide article p { margin-bottom: 8px; }
+.deviceGuide .longerLife { padding-top: 22px; border-top: 1px solid #d6ded3; margin: 24px 0 0; font-size: 13px; }
+.longerLife a { text-decoration: underline; text-underline-offset: 3px; color: #1a3d2e; }
+.faq { border-top: 0; padding: 10px 0 40px; }
+.insurance { display: flex; align-items: center; gap: 28px; background: #1a3d2e; color: white; padding: 25px 28px; border-radius: 10px; }
+.insurance > img { width: 120px; height: 35px; flex-shrink: 0; }
+.insurance h2 { font-size: 17px; letter-spacing: -.3px; margin-bottom: 6px; }
+.insurance p { font-size: 12px; line-height: 1.6; color: #d7e1d8; margin-bottom: 0; }
+.insurance a { display: inline-flex; align-items: center; gap: 12px; margin-left: auto; white-space: nowrap; font-size: 12px; min-height: 44px; }
+.insurance svg { width: 18px; height: 18px; }
+.insurance a:focus-visible { outline-color: #d5e4bc; }
+@media(max-width: 1000px) {
+  .wrap { padding-inline: 24px; }
+  .heroCopy { padding: 30px; }
+  .heroPhoto { min-height: 380px; }
+  .method { gap: 24px; }
+  .finder { padding: 28px; }
+  .repairEditorial { gap: 28px; }
+  .storeCopy { padding: 28px; }
+  .insurance { flex-wrap: wrap; gap: 18px; }
+  .insurance > div { flex: 1; min-width: 230px; }
+  .insurance a { margin-left: 0; }
+}
+@media(max-width: 700px) {
+  .wrap { padding: 0 16px 32px; }
+  .hero { grid-template-columns: 1fr; }
+  .heroCopy { padding: 28px 24px; }
+  .heroCopy h1 { font-size: 38px; letter-spacing: -1.5px; }
+  .heroCopy p { font-size: 14px; }
+  .heroPhoto { min-height: 220px; }
+  .heroLocation { margin-top: 18px; }
+  .facts { align-items: start; flex-direction: column; gap: 13px; padding: 20px 0; font-size: 11px; }
+  .finder { padding: 24px 18px; margin-top: 24px; }
+  .sectionHeading { align-items: start; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .sectionHeading h2 { font-size: 27px; }
+  .method { grid-template-columns: 1fr; padding: 8px 0 32px; gap: 24px; }
+  .methodCopy { padding-left: 0; }
+  .play { left: 10px; bottom: 10px; padding: 10px; font-size: 11px; }
+  .play small { font-size: 9px; }
+  .repairs { padding: 30px 0; }
+  .repairEditorial { grid-template-columns: 1fr; gap: 24px; }
+  .screenPhoto { height: 190px; }
+  .screenStory > div:last-child { padding: 23px; }
+  .repairTopics article { padding-block: 21px; }
+  .storeSection { grid-template-columns: 1fr; }
+  .storePhoto { min-height: 240px; }
+  .storeCopy { padding: 26px; }
+  .deviceGuide { padding: 24px; margin: 28px 0; }
+  .deviceGuide h2 { font-size: 25px; }
+  .deviceGuide > div { grid-template-columns: 1fr; gap: 24px; }
+  .insurance { padding: 23px; align-items: start; flex-direction: column; }
+  .insurance > div { min-width: 0; }
+}

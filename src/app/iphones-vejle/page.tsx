@@ -6,12 +6,12 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
   description:
-    "Køb kvalitetstestede refurbished iPhones i Vejle. Fra 999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
+    "Køb kvalitetstestede refurbished iPhones i Vejle. Fra 999 kr med 36 mdr. garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/iphones-vejle" },
   openGraph: {
     title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
     description:
-      "Kvalitetstestede refurbished iPhones fra 999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
+      "Kvalitetstestede refurbished iPhones fra 999 kr med 36 mdr. garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
     url: "https://phonespot.dk/iphones-vejle",
     type: "website",
   },
@@ -67,17 +67,17 @@ const localBusinessJsonLd = {
       {
         "@type": "OfferCatalog",
         name: "iPhone 13",
-        description: "Refurbished iPhone 13 med 36 mdr garanti fra 999 kr",
+        description: "Refurbished iPhone 13 med 36 mdr. garanti fra 999 kr",
       },
       {
         "@type": "OfferCatalog",
         name: "iPhone 14",
-        description: "Refurbished iPhone 14 med 36 mdr garanti",
+        description: "Refurbished iPhone 14 med 36 mdr. garanti",
       },
       {
         "@type": "OfferCatalog",
         name: "iPhone 15",
-        description: "Refurbished iPhone 15 med 36 mdr garanti",
+        description: "Refurbished iPhone 15 med 36 mdr. garanti",
       },
     ],
   },
@@ -92,7 +92,7 @@ const faqJsonLd = {
       name: "Hvad er en refurbished iPhone?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "En refurbished iPhone er en brugt iPhone der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
+        text: "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
       },
     },
     {
@@ -100,7 +100,7 @@ const faqJsonLd = {
       name: "Kan jeg hente min refurbished iPhone i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling før kl. 14.",
+        text: "Ja! Med vores afhentningsservice kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling før kl. 14.",
       },
     },
     {
@@ -108,7 +108,7 @@ const faqJsonLd = {
       name: "Hvilken garanti får jeg på en refurbished iPhone?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti som de fleste andre forhandlere tilbyder.",
+        text: "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
       },
     },
     {
@@ -116,7 +116,7 @@ const faqJsonLd = {
       name: "Hvad koster en refurbished iPhone i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Priser starter fra 999 kr afhængig af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
+        text: "Priserne starter fra 999 kr. afhængigt af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
       },
     },
   ],
@@ -130,27 +130,27 @@ const IPHONE_MODELS = [
   },
   {
     model: "iPhone 13 Pro",
-    description: "ProMotion display, tredobbelt kamera, 120Hz refresh rate.",
+    description: "ProMotion-skærm, tredobbelt kamera, 120 Hz opdateringsfrekvens.",
     from: "1.299",
   },
   {
     model: "iPhone 14",
-    description: "Crashdetektering, forbedret front-kamera, A15 chip.",
+    description: "Registrering af ulykker, forbedret frontkamera, A15-chip.",
     from: "1.499",
   },
   {
     model: "iPhone 14 Pro",
-    description: "Dynamic Island, 48MP kamera, Always-On Display.",
+    description: "Dynamic Island, 48 MP-kamera, Always-On Display.",
     from: "1.999",
   },
   {
     model: "iPhone 15",
-    description: "USB-C, A16 Bionic, 48MP kamera og Dynamic Island.",
+    description: "USB-C, A16 Bionic, 48 MP-kamera og Dynamic Island.",
     from: "2.299",
   },
   {
     model: "iPhone 15 Pro",
-    description: "Titanium design, A17 Pro chip, USB 3-hastighed.",
+    description: "Titandesign, A17 Pro-chip, USB 3-hastighed.",
     from: "2.999",
   },
 ];
@@ -164,7 +164,7 @@ const USP_ITEMS = [
   {
     title: "30+ kvalitetstests",
     description:
-      "Hver enhed gennemgår minimum 30 kvalitetstests: batteri, skærm, kamera, højtaler, Face ID og mere.",
+      "Hver enhed gennemgår minimum 30 kvalitetstests: batteri, skærm, kamera, højttaler, Face ID og mere.",
   },
   {
     title: "Afhent i Vejle",
@@ -177,14 +177,14 @@ const USP_ITEMS = [
       "Vi matcher konkurrerende priser på identiske modeller og stand. Find det billigere — vi matcher det.",
   },
   {
-    title: "Klarna delbetaling",
+    title: "Delbetaling med Klarna",
     description:
       "Del betalingen op i 3 måneder rentefrit med Klarna. Ingen skjulte gebyrer.",
   },
   {
-    title: "30 dages returret",
+    title: "14 dages fortrydelsesret",
     description:
-      "Fortryder du dit køb, returnerer du blot enheden inden for 30 dage mod fuld refundering.",
+      "Ved onlinekøb kan du fortryde inden for 14 dage fra modtagelsen. Du betaler selv returfragten ved fortrydelse.",
   },
 ];
 
@@ -366,7 +366,7 @@ export default function IphonesVejlePage() {
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
               Hos PhoneSpot Vejle fører vi et bredt udvalg af refurbished
-              iPhones i grade A og B — alle grundigt testet, renset og klar til
+              iPhones i stand A og B — alle grundigt testet, renset og klar til
               brug. Når du køber hos os, medfølger 36 måneders garanti og fuld
               returret. Du kan se og teste enhederne fysisk i vores butik på
               Løversysselvej 3B, inden du beslutter dig.
@@ -375,13 +375,13 @@ export default function IphonesVejlePage() {
 
           <div>
             <h2 className="font-display text-xl font-bold text-[#111111]">
-              Click & Collect — bestil online, hent i Vejle
+              Bestil online, hent i Vejle
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
-              Med vores Click & Collect service kan du bestille online og hente
+              Med vores afhentningsservice kan du bestille online og hente
               din iPhone gratis i butikken på Løversysselvej 3B. Bestiller du
               inden kl. 14, er ordren klar samme dag. Du har mulighed for at
-              teste enheden inden du tager den med.
+              teste enheden, inden du tager den med.
             </p>
           </div>
 
@@ -390,10 +390,10 @@ export default function IphonesVejlePage() {
               Hvad betyder refurbished?
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
-              Refurbished betyder, at enheden er brugt men professionelt
+              Refurbished betyder, at enheden er brugt, men professionelt
               restaureret. Alle vores iPhones gennemgår minimum 30
               kvalitetstests, og eventuelle defekter rettes inden salg. Du får
-              en enhed der fungerer som ny — til en markant lavere pris end ny.
+              en enhed, der fungerer som ny — til en markant lavere pris end ny.
             </p>
           </div>
         </div>
@@ -413,27 +413,27 @@ export default function IphonesVejlePage() {
               {
                 question: "Hvad er en refurbished iPhone?",
                 answer:
-                  "En refurbished iPhone er en brugt iPhone der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
+                  "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
               },
               {
                 question: "Kan jeg hente min refurbished iPhone i Vejle?",
                 answer:
-                  "Ja! Med vores Click & Collect service kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling inden kl. 14.",
+                  "Ja! Med vores afhentningsservice kan du bestille online og hente din iPhone i vores butik på Løversysselvej 3B i Vejle. Gratis afhentning — klar samme dag ved bestilling inden kl. 14.",
               },
               {
                 question: "Hvilken garanti får jeg?",
                 answer:
-                  "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti som de fleste andre forhandlere tilbyder.",
+                  "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
               },
               {
                 question: "Hvad koster en refurbished iPhone?",
                 answer:
-                  "Priser starter fra 999 kr afhængig af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
+                  "Priserne starter fra 999 kr. afhængigt af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
               },
               {
                 question: "Kan jeg returnere en refurbished iPhone?",
                 answer:
-                  "Ja, du har 30 dages fuld returret. Er du ikke tilfreds af en hvilken som helst årsag, returnerer du enheden og får pengene tilbage.",
+                  "Ja, ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen. Du betaler selv returfragten ved fortrydelse. Se handelsbetingelserne for fremgangsmåden.",
               },
             ].map((faq) => (
               <details key={faq.question} className="group px-6 py-5">

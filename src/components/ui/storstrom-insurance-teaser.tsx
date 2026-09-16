@@ -16,25 +16,25 @@ const COPY: Record<Variant, { eyebrow: string; title: string; body: string; cta:
   default: {
     eyebrow: "I samarbejde med Storstrøm Forsikring",
     title: "Elektronikforsikring til din enhed",
-    body: "Dæk din enhed mod uheld og funktionsfejl for en lav månedlig rate. Spørg om elektronikforsikring i PhoneSpot Slagelse.",
+    body: "Dæk din enhed mod uheld og funktionsfejl for en lav månedlig pris. Spørg om elektronikforsikring i PhoneSpot Slagelse.",
     cta: "Læs om elektronikforsikring",
   },
   repair: {
     eyebrow: "I samarbejde med Storstrøm Forsikring",
     title: "Forsikr din enhed i forbindelse med reparationen",
-    body: "Når du reparerer hos os i Slagelse, kan du tilføje elektronikforsikring og være dækket mod fremtidige uheld — 1 kr. den første måned.",
+    body: "Når du får repareret din enhed hos os i Slagelse, kan du tilføje elektronikforsikring og være dækket mod fremtidige uheld — 1 kr. den første måned.",
     cta: "Se elektronikforsikring",
   },
   warranty: {
     eyebrow: "I samarbejde med Storstrøm Forsikring",
     title: "Vil du også være dækket mod uheld?",
-    body: "Garantien dækker fejl og mangler. Elektronikforsikring dækker det garantien ikke gør — som fald, skærmskader og væskeskade.",
+    body: "Garantien dækker fejl og mangler. Elektronikforsikring dækker det, garantien ikke gør — som fald, skærmskader og væskeskade.",
     cta: "Se elektronikforsikring",
   },
   product: {
     eyebrow: "I samarbejde med Storstrøm Forsikring",
     title: "Kan forsikres mod uheld",
-    body: "Tilføj elektronikforsikring til din refurbished enhed for en lav månedlig rate — spørg i butikken i Slagelse.",
+    body: "Tilføj elektronikforsikring til din refurbished enhed for en lav månedlig pris — spørg i butikken i Slagelse.",
     cta: "Læs mere om elektronikforsikring",
   },
 };

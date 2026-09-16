@@ -131,7 +131,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? "Could not reserve device");
+        throw new Error(data.error ?? "Enheden kunne ikke reserveres");
       }
       dispatch({ type: "ADD_DEVICE", item });
     } catch (err) {

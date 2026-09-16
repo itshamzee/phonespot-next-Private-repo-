@@ -6,7 +6,7 @@ import { createServerClient } from "@/lib/supabase/client";
 
 export const metadata: Metadata = {
   title: "Verificer garantibevis - PhoneSpot",
-  description: "Verificer dit PhoneSpot garantibevis online.",
+  description: "Verificer dit PhoneSpot-garantibevis online.",
   robots: { index: false, follow: false },
 };
 

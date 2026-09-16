@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { STORES } from "@/lib/store-config";
+
+const store = STORES.slagelse;
 
 interface ReservationFormProps {
   productId: string;
@@ -93,7 +96,7 @@ export function ReservationForm({
             <h2 className="font-display text-[17px] font-bold text-charcoal">
               Reserver til afhentning
             </h2>
-            <p className="mt-0.5 text-xs text-charcoal/40">PhoneSpot Slagelse</p>
+            <p className="mt-0.5 text-xs text-charcoal/40">{store.name}</p>
           </div>
           <button
             type="button"
@@ -128,15 +131,15 @@ export function ReservationForm({
                   Klar til afhentning inden for 1 time
                 </p>
                 <p className="mt-0.5 text-xs text-emerald-600/70">
-                  Vi sender dig en SMS når din vare er klar
+                  Vi sender dig en sms, når din vare er klar
                 </p>
               </div>
               <div className="mt-5 w-full rounded-xl border border-black/[0.05] bg-[#f9f8f6] px-4 py-3">
                 <p className="text-xs text-charcoal/40">
-                  <span className="font-semibold text-charcoal/60">Adresse:</span> Bredgade 7, 4200 Slagelse
+                  <span className="font-semibold text-charcoal/60">Adresse:</span> {store.street}, {store.zip} {store.city}
                 </p>
                 <p className="mt-0.5 text-xs text-charcoal/40">
-                  <span className="font-semibold text-charcoal/60">Tlf:</span> 58 50 00 00
+                  <span className="font-semibold text-charcoal/60">Tlf:</span> {store.phone}
                 </p>
               </div>
               <button
@@ -159,7 +162,7 @@ export function ReservationForm({
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-semibold text-charcoal">{productName}</p>
-                  <p className="text-[11px] text-charcoal/40">Afhentes i Slagelse</p>
+                  <p className="text-[11px] text-charcoal/40">Afhentes i {store.city}</p>
                 </div>
               </div>
 
@@ -199,7 +202,7 @@ export function ReservationForm({
                 {/* Email (optional) */}
                 <div>
                   <label htmlFor="res-email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-charcoal/40">
-                    Email <span className="text-charcoal/25">(valgfri)</span>
+                    E-mail <span className="text-charcoal/25">(valgfri)</span>
                   </label>
                   <input
                     id="res-email"
@@ -220,7 +223,7 @@ export function ReservationForm({
 
                 {/* Info note */}
                 <p className="text-[11px] leading-relaxed text-charcoal/35">
-                  Reservationen er gyldig i 24 timer. Vi kontakter dig på SMS, når varen er klar til afhentning.
+                  Reservationen er gyldig i 24 timer. Vi kontakter dig på sms, når varen er klar til afhentning.
                 </p>
 
                 {/* Submit */}

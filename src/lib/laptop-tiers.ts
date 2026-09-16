@@ -22,17 +22,17 @@ export const LAPTOP_TIERS: LaptopTier[] = [
   {
     title: "Budget",
     slug: "budget",
-    tagline: "Bedste pris — perfekt til studiet",
+    tagline: "Til studie og daglig brug",
     description:
-      "Pålidelige bærbare under 2.000 kr. Ideel til studiet, browsing og daglig brug. Alle testet med 30+ kontroller og 36 måneders garanti.",
-    metaTitle: "Budget Bærbare fra 1.359 kr - Refurbished | PhoneSpot",
+      "Pålidelige bærbare under 2.000 kr. Ideelle til studiet, internet og daglig brug. Alle testet med 30+ kontroller og 36 måneders garanti.",
+    metaTitle: "Budgetbærbare fra 1.359 kr - Refurbished | PhoneSpot",
     metaDescription:
       "Køb en kvalitetstestet bærbar under 2.000 kr med 36 måneders garanti. Perfekt til studiet og daglig brug.",
     minPrice: 0,
     maxPrice: 2000,
     qualityPoints: [
       "Fra kun 1.359 kr",
-      "Perfekt til Word, browsing og Zoom",
+      "Perfekt til Word, internet og Zoom",
       "Alle testet med min. 4 timers batteri",
     ],
     cardBg: "bg-green-eco/[0.03]",
@@ -47,16 +47,16 @@ export const LAPTOP_TIERS: LaptopTier[] = [
     slug: "mellem",
     tagline: "God balance mellem pris og ydelse",
     description:
-      "Bærbare fra 2.000 til 4.000 kr med mere kraft og større skærme. Til dig der vil have lidt ekstra uden at sprænge budgettet.",
-    metaTitle: "Mellem-klasse Bærbare 2.000-4.000 kr - Refurbished | PhoneSpot",
+      "Bærbare fra 2.000 til 4.000 kr med mere kraft og større skærme. Til dig, der vil have lidt ekstra uden at sprænge budgettet.",
+    metaTitle: "Bærbare i mellemklassen 2.000-4.000 kr - Refurbished | PhoneSpot",
     metaDescription:
       "Refurbished bærbare i mellemklassen med kraftige processorer og god skærm. 36 måneders garanti.",
     minPrice: 2000,
     maxPrice: 4000,
     qualityPoints: [
       "Kraftigere processorer til multitasking",
-      "14\" skærme med god opløsning",
-      "Ideel til kontor og studie",
+      "14\"-skærme med god opløsning",
+      "Ideelle til kontor og studie",
     ],
     cardBg: "bg-white",
     cardBorder: "border border-sand",
@@ -70,16 +70,16 @@ export const LAPTOP_TIERS: LaptopTier[] = [
     slug: "premium",
     tagline: "Topydelse til krævende brugere",
     description:
-      "De nyeste og mest kraftfulde modeller over 4.000 kr. Til dig der kræver det bedste — nyere processorer, mere RAM og hurtigere SSD.",
-    metaTitle: "Premium Bærbare fra 4.000 kr - Refurbished | PhoneSpot",
+      "De nyeste og mest kraftfulde modeller over 4.000 kr. Til dig, der kræver det bedste — nyere processorer, mere RAM og hurtigere SSD.",
+    metaTitle: "Premiumbærbare fra 4.000 kr - Refurbished | PhoneSpot",
     metaDescription:
-      "Premium refurbished bærbare med nyeste Intel i7 processorer og topspecifikationer. 36 måneders garanti.",
+      "Refurbished premiumbærbare med de nyeste Intel i7-processorer og topspecifikationer. 36 måneders garanti.",
     minPrice: 4000,
     maxPrice: Infinity,
     qualityPoints: [
-      "Nyeste Intel i7 processorer",
+      "Nyeste Intel i7-processorer",
       "16 GB RAM og hurtig NVMe SSD",
-      "Business-grade holdbarhed og kvalitet",
+      "Holdbarhed og kvalitet til professionelt brug",
     ],
     cardBg: "bg-charcoal",
     cardBorder: "border-0",

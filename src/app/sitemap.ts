@@ -7,7 +7,7 @@ import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
-import { SPOT_HUB_TILES, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import { SPOT_HUB_TILES, TILBEHOER_DEVICES, ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { fetchActiveSpotSkus } from "@/lib/spot/queries";
 
 const BASE_URL = "https://phonespot.dk";
@@ -58,6 +58,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---- Static pages --------------------------------------------------------
 
   const staticPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/erhverv`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
     {
       url: BASE_URL,
       lastModified: new Date(),
@@ -216,7 +222,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const p of allSkuProducts) {
       if (p.slug) {
         productPages.push({
-          url: `${BASE_URL}/tilbehoer/${p.category ?? "covers"}/${p.slug}`,
+          url: `${BASE_URL}/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.category ?? "covers"}/${p.slug}`,
           lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.5,

@@ -283,7 +283,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <time dateTime={frontmatter.date} className="text-sm font-medium text-white/75">
                   {formatDate(frontmatter.date)}
                 </time>
-                <span className="text-sm text-white/75">&middot; {readingTime} min læsning</span>
+                <span className="text-sm text-white/75">&middot; {readingTime} min. læsning</span>
               </div>
               <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
                 {frontmatter.title}

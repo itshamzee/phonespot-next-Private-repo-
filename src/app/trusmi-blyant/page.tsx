@@ -17,7 +17,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Trusmi Smart Pencil til iPad — Spar 150 kr | PhoneSpot",
   description:
-    "Aluminiumsblyant til iPad Pro 11\" og 12,9\" (2021). 8 timers brugstid, USB-C opladning, udskiftelig spids. På lager i Slagelse + Vejle. Kun 349 kr — spar 150.",
+    "Aluminiumsblyant til iPad Pro 11\" og 12,9\" (2021). 8 timers brugstid, USB-C-opladning, udskiftelig spids. På lager i Slagelse + Vejle. Kun 349 kr — spar 150.",
   alternates: { canonical: URL },
   openGraph: {
     title: "Trusmi Smart Pencil til iPad",
@@ -42,18 +42,19 @@ const SPECS: ReadonlyArray<{ label: string; value: string }> = [
   { label: "Længde",             value: "165,5 mm" },
   { label: "Diameter",           value: "9,0 mm" },
   { label: "Brugstid",           value: "Cirka 8 timer" },
-  { label: "Standby",            value: "Cirka 360 dage" },
+  { label: "Standbytid",            value: "Cirka 360 dage" },
   { label: "Opladningstid",      value: "Cirka 40 minutter" },
   { label: "Opladning",          value: "USB Type-C" },
   { label: "Spænding",           value: "DC 4,2 – 5,0 V" },
   { label: "Strøm (opladning)",  value: "Cirka 220 mA" },
-  { label: "Auto-sleep",         value: "Efter 300 sekunder" },
+  { label: "Automatisk dvaletilstand",         value: "Efter 300 sekunder" },
   { label: "Vægt",               value: "Cirka 14 g" },
   { label: "Materiale",          value: "Aluminiumslegering" },
-  { label: "Spids-materiale",    value: "POM (udskiftelig)" },
+  { label: "Spidsmateriale",    value: "POM (udskiftelig)" },
   { label: "Tænd/sluk",          value: "Fysisk knap" },
   { label: "Batteri",            value: "Lithium 3,7 V / 100 mAh" },
-  { label: "Garanti",            value: "24 mdr. fuld returret" },
+  { label: "Fortrydelse",        value: "14 dage (returfragt for egen regning)" },
+  { label: "Reklamation",        value: "2 år efter købeloven" },
 ];
 
 const COMPATIBLE: ReadonlyArray<{ name: string; codes: string }> = [
@@ -65,53 +66,53 @@ const STEPS: ReadonlyArray<{ n: string; title: string; body: string }> = [
   {
     n: "01",
     title: "Tænd",
-    body: "Tryk én gang på den fysiske tænd-knap. Ingen Bluetooth-parring. Ingen app.",
+    body: "Tryk én gang på den fysiske tændknap. Ingen Bluetooth-parring. Ingen app.",
   },
   {
     n: "02",
     title: "Skriv",
-    body: "Plug-and-play med iPad Pro 2021. Aktiv kapacitiv spids — præcis som en blyant.",
+    body: "Klar til brug med iPad Pro 2021. Aktiv kapacitiv spids — præcis som en blyant.",
   },
   {
     n: "03",
     title: "Oplad via USB-C",
-    body: "40 minutter for fuld opladning. Standby holder 360 dage — den glemmer du sjældent.",
+    body: "Fuld opladning på 40 minutter. 360 dages standbytid — klar, når du skal bruge den.",
   },
 ];
 
 const USECASES: ReadonlyArray<{ title: string; body: string }> = [
   {
-    title: "Notater & forelæsninger",
-    body: "Håndskrevne noter føles naturligt. Spar tonsvis af papir, tag struktur fra dag ét.",
+    title: "Notater og forelæsninger",
+    body: "Håndskrevne noter føles naturlige. Spar papir, og skab struktur fra dag ét.",
   },
   {
-    title: "Tegninger & skitser",
+    title: "Tegninger og skitser",
     body: "POM-spidsen giver præcis kontrol til Procreate, Concepts, Adobe Fresco og Notability.",
   },
   {
     title: "Underskriv PDF'er",
-    body: "Signér kontrakter, faktura og dokumenter direkte i din iPad — ingen printer nødvendig.",
+    body: "Signér kontrakter, fakturaer og dokumenter direkte på din iPad — ingen printer nødvendig.",
   },
   {
-    title: "Annoteringer & gennemgang",
-    body: "Marker op, kommentar dokumenter, ret studierapporter eller gennemgå design-mockups.",
+    title: "Kommentarer og gennemgang",
+    body: "Lav markeringer, kommentér dokumenter, ret studierapporter eller gennemgå designudkast.",
   },
 ];
 
 const FEATURES: ReadonlyArray<{ title: string; body: string; iconPath: string }> = [
   {
-    title: "Plug-and-play",
+    title: "Klar til brug",
     body: "Ingen Bluetooth, ingen parring. Tænd og skriv. Virker på iPad Pro 11\" (3. gen) og 12,9\" (5. gen).",
     iconPath: "M9 17l3 3 8-8M14 4l6 6M3 11l3 3",
   },
   {
     title: "8+ timers brugstid",
-    body: "100 mAh lithium-batteri rækker en hel arbejdsdag. 360 dages standby så den altid er klar.",
+    body: "Et litiumbatteri på 100 mAh rækker en hel arbejdsdag. 360 dages standby, så den altid er klar.",
     iconPath: "M3 7h14a2 2 0 012 2v6a2 2 0 01-2 2H3M3 7v10M21 11v2",
   },
   {
-    title: "USB-C opladning",
-    body: "40 minutter for fuld opladning. Samme kabel som din iPad — ingen ekstra rod på skrivebordet.",
+    title: "USB-C-opladning",
+    body: "Fuld opladning på 40 minutter. Samme kabel som din iPad — intet ekstra rod på skrivebordet.",
     iconPath: "M13 2L3 14h7l-1 8 10-12h-7l1-8z",
   },
   {
@@ -121,12 +122,12 @@ const FEATURES: ReadonlyArray<{ title: string; body: string; iconPath: string }>
   },
   {
     title: "Aluminiumskabinet",
-    body: "Letvægts-aluminium, kun 14 gram. Føles solidt i hånden, men din håndled mærker det ikke.",
+    body: "Letvægtsaluminium, kun 14 gram. Føles solidt i hånden, men dit håndled mærker det ikke.",
     iconPath: "M3 21l9-9 9 9M5 15l7-7 7 7",
   },
   {
-    title: "Ingen abonnement",
-    body: "Engangskøb. Ingen app, ingen subscription, ingen skjulte gebyrer. Bare værktøjet.",
+    title: "Intet abonnement",
+    body: "Engangskøb. Ingen app, intet abonnement, ingen skjulte gebyrer. Bare værktøjet.",
     iconPath: "M5 13l4 4L19 7",
   },
 ];
@@ -158,7 +159,7 @@ export default async function TrusmiBlyantPage() {
     "@context": "https://schema.org",
     "@type": "Product",
     name: data.title,
-    description: "iPad-blyant med USB-C opladning, 8 timers brugstid og udskiftelig POM-spids.",
+    description: "iPad-blyant med USB-C-opladning, 8 timers brugstid og udskiftelig POM-spids.",
     image: [`https://phonespot.dk${heroImage}`],
     brand: { "@type": "Brand", name: "Trusmi" },
     offers: {
@@ -182,7 +183,7 @@ export default async function TrusmiBlyantPage() {
         <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12">
           <div className="flex items-center justify-between gap-4 text-[11px] uppercase tracking-[0.3em] text-white/60">
             <span>Trusmi · iPad Pro 2021</span>
-            <span className="hidden sm:inline">Dispatch · 2026</span>
+            <span className="hidden sm:inline">Produktnyt · 2026</span>
           </div>
         </div>
 
@@ -244,7 +245,7 @@ export default async function TrusmiBlyantPage() {
                 "På lager i Slagelse + Vejle",
                 "Hent samme dag",
                 "Fri fragt over 500 kr",
-                "24 mdr. fuld returret",
+                "14 dages fortrydelsesret · returfragt for egen regning",
               ].map((b) => (
                 <li key={b} className="flex items-start gap-2 text-white/85">
                   <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#C9A56F]" viewBox="0 0 20 20" fill="currentColor">
@@ -262,7 +263,7 @@ export default async function TrusmiBlyantPage() {
       <section className="border-y border-[#C9A56F]/30 bg-[#F5F1E8] text-[#1A1004]">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-6 sm:flex-row sm:items-center sm:gap-8 sm:px-6">
           <span className="rounded-full bg-[#0F2A20] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#F5F1E8]">
-            Klik & Hent
+            Klik og hent
           </span>
           <p className="text-base font-medium sm:text-lg">
             På lager i begge butikker — bestil online nu, hent samme dag i {slagelse.city} eller {vejle.city}.
@@ -287,7 +288,7 @@ export default async function TrusmiBlyantPage() {
             Bygget til iPad Pro 2021.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-center text-base text-[#3F4A45]">
-            Tjek modelnummeret bag på din iPad — står ved siden af FCC-mærket. Trusmi Smart Pencil virker med:
+            Tjek modelnummeret bag på din iPad — det står ved siden af FCC-mærket. Trusmi Smart Pencil virker med:
           </p>
 
           <ul className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -319,7 +320,7 @@ export default async function TrusmiBlyantPage() {
             Hvorfor Trusmi
           </p>
           <h2 className="mt-6 font-display text-3xl font-bold leading-[1.1] text-[#0F2A20] sm:text-5xl lg:text-[56px]">
-            Apple Pencil's følelse.<br />
+            Følelsen af en Apple Pencil.<br />
             <span className="italic font-light text-[#3F4A45]">En tredjedel af prisen.</span>
           </h2>
           <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[#3F4A45]">
@@ -398,7 +399,7 @@ export default async function TrusmiBlyantPage() {
               Til hvad
             </p>
             <h2 className="mt-4 font-display text-3xl font-bold sm:text-5xl">
-              Til folk der<br />
+              Til folk, der<br />
               <span className="italic font-light text-white/85">skaber.</span>
             </h2>
           </div>
@@ -472,7 +473,7 @@ export default async function TrusmiBlyantPage() {
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
           <div className="max-w-2xl">
             <p className="font-display text-[11px] uppercase tracking-[0.4em] text-[#C9A56F]">
-              Klik & hent
+              Klik og hent
             </p>
             <h2 className="mt-4 font-display text-3xl font-bold text-[#0F2A20] sm:text-5xl">
               På lager. Lige nu.<br />
@@ -554,7 +555,7 @@ export default async function TrusmiBlyantPage() {
       <section className="bg-[#F7F7F8]">
         <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24">
           <p className="font-display text-[11px] uppercase tracking-[0.4em] text-[#C9A56F]">
-            Spørgsmål & svar
+            Spørgsmål og svar
           </p>
           <h2 className="mt-4 font-display text-3xl font-bold text-[#0F2A20] sm:text-5xl">
             Det vigtigste.<br />

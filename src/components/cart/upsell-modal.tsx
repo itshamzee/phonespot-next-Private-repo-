@@ -7,18 +7,18 @@ import { useCart } from "@/components/cart/cart-context";
 const UPSELL_PRODUCTS = [
   {
     id: "0a718861-eae0-4c83-8cea-70d114a89fea",
-    title: "Tempered Glass",
+    title: "Hærdet glas",
     subtitle: "Kant til kant",
-    description: "9H hårdheds skærmbeskyttelse der dækker hele skærmen",
+    description: "Skærmbeskyttelse med hårdhed 9H, der dækker hele skærmen",
     price: 15900, // øre
     displayPrice: 159,
     image: "/images/beskyttelsesglas.png",
   },
   {
     id: "979b3baf-96a8-4b80-b284-74941229dd2b",
-    title: "Privacy Glass",
-    subtitle: "Anti-kig beskyttelse",
-    description: "Skærmbeskyttelse med privacy-filter — kun du kan se skærmen",
+    title: "Glas med privatlivsfilter",
+    subtitle: "Beskyttelse mod indkig",
+    description: "Skærmbeskyttelse med privatlivsfilter — kun du kan se skærmen",
     price: 24900, // øre
     displayPrice: 249,
     image: "/images/privacy-glas.png",

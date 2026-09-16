@@ -4,9 +4,9 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
 const SORT_OPTIONS = [
-  { label: "Bestsellere", value: "bestselling" },
-  { label: "Pris: Lav → Høj", value: "price-asc" },
-  { label: "Pris: Høj → Lav", value: "price-desc" },
+  { label: "Bedst sælgende", value: "bestselling" },
+  { label: "Pris: lav → høj", value: "price-asc" },
+  { label: "Pris: høj → lav", value: "price-desc" },
   { label: "Nyeste", value: "newest" },
 ] as const;
 

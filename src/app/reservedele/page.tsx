@@ -10,9 +10,9 @@ import { SparePartsGrid } from "@/components/spare-parts/spare-parts-grid";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Reservedele til iPhone, Samsung & MacBook — Gratis Fragt | PhoneSpot",
+  title: "Reservedele til iPhone, Samsung og MacBook — Gratis fragt | PhoneSpot",
   description:
-    "Køb originale og premium reservedele til alle enheder. Skærme, batterier, bagcovers og mere med op til 2 års garanti. Levering i hele Danmark.",
+    "Køb originale og premiumreservedele til alle enheder. Skærme, batterier, bagcovers og mere med op til 2 års garanti. Levering i hele Danmark.",
   alternates: { canonical: "https://phonespot.dk/reservedele" },
 };
 
@@ -23,7 +23,7 @@ export default async function ReservedelePage() {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Reservedele",
-    description: "Originale og premium reservedele til alle enheder",
+    description: "Originale og premiumreservedele til alle enheder",
     url: "https://phonespot.dk/reservedele",
     provider: {
       "@type": "LocalBusiness",
@@ -108,17 +108,17 @@ export default async function ReservedelePage() {
               flere mærker. Alle reservedele leveres med op til 2 års garanti og gratis fragt i hele Danmark.
             </p>
             <p>
-              Vi fører reservedele i forskellige kvalitetsniveauer — fra budgetvenlige Standard In-Cell skærme
-              til originale Service Pack dele direkte fra producenten. Uanset om du er professionel tekniker
-              eller gør-det-selv reparatør, finder du den rigtige del til den rigtige pris.
+              Vi fører reservedele i forskellige kvalitetsniveauer — fra budgetvenlige Standard In-Cell-skærme
+              til originale Service Pack-dele direkte fra producenten. Uanset om du er professionel tekniker
+              eller gør-det-selv-reparatør, finder du den rigtige del til den rigtige pris.
             </p>
             <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
-              Kvalitet du kan stole på
+              Kvalitet, du kan stole på
             </h3>
             <p>
               Alle vores reservedele gennemgår kvalitetskontrol og leveres med garanti. Skærme og de fleste
               dele har op til 2 års garanti, mens batterier dækkes af 3 måneders garanti. Vi tilbyder
-              Service Pack, Original, Premium OLED, Refurbished og Standard kvaliteter.
+              kvaliteterne Service Pack, Original, Premium OLED, Refurbished og Standard.
             </p>
             <h3 className="!mt-8 font-display text-lg font-bold text-[#111111]">
               Levering i hele Danmark

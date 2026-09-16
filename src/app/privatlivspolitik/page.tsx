@@ -6,7 +6,7 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "Privatlivspolitik - PhoneSpot",
   description:
-    "Læs om hvordan PhoneSpot håndterer dine personlige data og beskytter dit privatliv i henhold til GDPR.",
+    "Læs om, hvordan PhoneSpot håndterer dine personlige data og beskytter dit privatliv i henhold til GDPR.",
   alternates: { canonical: "https://phonespot.dk/privatlivspolitik" },
 };
 
@@ -67,7 +67,7 @@ export default function PrivatlivspolitikPage() {
               leveringsadresse
             </li>
             <li>
-              <strong>Ordreoplysninger:</strong> de produkter du køber, ordrehistorik,
+              <strong>Ordreoplysninger:</strong> de produkter, du køber, ordrehistorik,
               betalingsstatus og faktureringsadresse
             </li>
             <li>
@@ -79,7 +79,7 @@ export default function PrivatlivspolitikPage() {
               klikstrøm via cookies og analyseredskaber
             </li>
             <li>
-              <strong>Kommunikation:</strong> indholdet af e-mails og supporthenvendelser du sender
+              <strong>Kommunikation:</strong> indholdet af e-mails og supporthenvendelser, du sender
               til os
             </li>
             <li>
@@ -306,7 +306,7 @@ export default function PrivatlivspolitikPage() {
               korrekt (f.eks. kurv, session og sikkerhed). De kan ikke fravælges.
             </li>
             <li>
-              <strong>Statistik-cookies:</strong> Vi anvender Google Analytics til at forstå, hvordan
+              <strong>Statistikcookies:</strong> Vi anvender Google Analytics til at forstå, hvordan
               besøgende bruger vores hjemmeside. Data anonymiseres inden behandling.
             </li>
             <li>
@@ -335,7 +335,7 @@ export default function PrivatlivspolitikPage() {
             <li>Regelmæssig gennemgang af adgange og databehandlere</li>
           </ul>
           <p className="mt-3">
-            Bemærk, at ingen metode til transmission over internet eller elektronisk lagring er 100 %
+            Bemærk, at ingen metode til transmission over internettet eller elektronisk lagring er 100 %
             sikker. Hvis du har mistanke om et sikkerhedsbrud, bedes du straks kontakte os på{" "}
             <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>.
           </p>
@@ -343,7 +343,7 @@ export default function PrivatlivspolitikPage() {
 
         {/* 10. Ændringer */}
         <div>
-          <h2>10. Ændringer til denne privatlivspolitik</h2>
+          <h2>10. Ændringer i denne privatlivspolitik</h2>
           <p className="mt-3">
             Vi forbeholder os ret til at opdatere denne privatlivspolitik, efterhånden som vores
             tjenester og lovgivningen udvikler sig. Den seneste version vil altid være tilgængelig

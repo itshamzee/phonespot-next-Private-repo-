@@ -41,7 +41,7 @@ export function ConditionPicker({ grades, selected, onSelect }: ConditionPickerP
             } ${isUnavailable ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <p className="font-display text-sm font-bold tracking-tight text-charcoal">
-              Grade {g.grade}
+              Stand {g.grade}
             </p>
             <p className="mt-1 text-sm font-medium text-charcoal">{g.label}</p>
             <p className="mt-2 text-base font-bold text-charcoal">

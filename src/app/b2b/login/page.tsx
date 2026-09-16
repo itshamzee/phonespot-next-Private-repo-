@@ -29,7 +29,7 @@ export default function B2BLoginPage() {
     setSubmitting(false);
 
     if (!result.ok) {
-      setError(result.error ?? "Login fejlede. Prov igen.");
+      setError(result.error ?? "Du kunne ikke logge ind. Prøv igen.");
       return;
     }
 
@@ -69,10 +69,10 @@ export default function B2BLoginPage() {
               Konto afventer godkendelse
             </h2>
             <p className="mb-6 text-sm text-[#86868B]">
-              Din konto afventer godkendelse. Vi kontakter dig inden for 24 timer, nar din virksomhed er verificeret.
+              Din konto afventer godkendelse. Vi kontakter dig inden for 24 timer, når din virksomhed er verificeret.
             </p>
             <p className="text-sm text-[#86868B]">
-              Spoergsmaal?{" "}
+              Spørgsmål?{" "}
               <a href="mailto:b2b@phonespot.dk" className="text-[#1A3D2E] underline underline-offset-2">
                 b2b@phonespot.dk
               </a>
@@ -101,9 +101,9 @@ export default function B2BLoginPage() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#1A3D2E]">
             B2B / Forhandler
           </p>
-          <h1 className="font-display text-3xl font-bold text-[#111111]">B2B Login</h1>
+          <h1 className="font-display text-3xl font-bold text-[#111111]">B2B-login</h1>
           <p className="mt-2 text-sm text-[#86868B]">
-            Log ind for at se engros-priser pa reservedele
+            Log ind for at se engrospriser på reservedele
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export default function B2BLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-[#111111]">
-                Email
+                E-mail
               </label>
               <input
                 id="login-email"
@@ -179,8 +179,8 @@ export default function B2BLoginPage() {
 
         {/* Trust note */}
         <p className="mt-6 text-center text-xs text-[#86868B]">
-          Adgang til B2B-portalen kraever en godkendt erhvervskonto.
-          Spoergsmaal?{" "}
+          Adgang til B2B-portalen kræver en godkendt erhvervskonto.
+          Spørgsmål?{" "}
           <a href="mailto:b2b@phonespot.dk" className="text-[#1A3D2E] underline underline-offset-2">
             b2b@phonespot.dk
           </a>

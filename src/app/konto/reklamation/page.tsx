@@ -74,7 +74,7 @@ export default function ReklamationPage() {
     setFormSuccess("");
 
     if (!selectedOrderId) {
-      setFormError("Vaelg venligst en ordre");
+      setFormError("Vælg venligst en ordre");
       return;
     }
     if (description.trim().length < 20) {
@@ -119,7 +119,7 @@ export default function ReklamationPage() {
       setFormSuccess("Din reklamation er modtaget. Vi vender tilbage hurtigst muligt.");
     } else {
       const body = await res.json().catch(() => ({}));
-      setFormError(body?.error ?? "Kunne ikke sende reklamation. Prov igen.");
+      setFormError(body?.error ?? "Kunne ikke sende reklamation. Prøv igen.");
     }
   }
 
@@ -140,7 +140,7 @@ export default function ReklamationPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#111111]">Reklamation</h1>
         <p className="mt-1 text-sm text-[#6E6E73]">
-          Opret en reklamationssag pa en af dine ordrer
+          Opret en reklamationssag på en af dine ordrer
         </p>
       </div>
 
@@ -148,8 +148,8 @@ export default function ReklamationPage() {
       <div className="rounded-xl border border-[#E5E5EA] bg-[#F5F2EC] p-5">
         <h2 className="text-sm font-semibold text-[#111111]">Om reklamationsretten</h2>
         <p className="mt-1.5 text-sm text-[#6E6E73]">
-          Som forbruger har du 2 ars reklamationsret pa alle varer. Hvis du har modtaget en defekt
-          vare eller en vare der ikke svarer til beskrivelsen, bedes du udfylde formularen nedenfor.
+          Som forbruger har du 2 års reklamationsret på alle varer. Hvis du har modtaget en defekt
+          vare eller en vare, der ikke svarer til beskrivelsen, bedes du udfylde formularen nedenfor.
           Vi behandler alle henvendelser inden for 2 hverdage.
         </p>
       </div>
@@ -162,7 +162,7 @@ export default function ReklamationPage() {
           <div className="rounded-lg bg-green-50 px-5 py-4 ring-1 ring-inset ring-green-200">
             <p className="text-sm font-medium text-green-800">{formSuccess}</p>
             <p className="mt-1 text-xs text-green-700">
-              Vi har sendt en bekraeftelse til {contactEmail}
+              Vi har sendt en bekræftelse til {contactEmail}
             </p>
             <button
               onClick={() => setFormSuccess("")}
@@ -179,7 +179,7 @@ export default function ReklamationPage() {
               </label>
               {eligibleOrders.length === 0 ? (
                 <p className="mt-1.5 text-sm text-[#6E6E73]">
-                  Du har ingen eligible ordrer at reklamere pa.
+                  Der er ingen ordrer, du kan oprette en reklamation for.
                 </p>
               ) : (
                 <select
@@ -188,7 +188,7 @@ export default function ReklamationPage() {
                   onChange={(e) => setSelectedOrderId(e.target.value)}
                   className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm text-[#111111] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
                 >
-                  <option value="">Vaelg en ordre...</option>
+                  <option value="">Vælg en ordre...</option>
                   {eligibleOrders.map((o) => (
                     <option key={o.id} value={o.id}>
                       {o.order_number} —{" "}
@@ -208,14 +208,14 @@ export default function ReklamationPage() {
                 Beskrivelse af fejl
               </label>
               <p className="mt-0.5 text-xs text-[#6E6E73]">
-                Beskriv fejlen sa detaljeret som muligt (hvad sker der, hvornaar sker det, osv.)
+                Beskriv fejlen så detaljeret som muligt (hvad sker der, hvornår sker det, osv.)
               </p>
               <textarea
                 required
                 rows={5}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Eks: Skermen flimrer efter 3 ugers brug. Problemet opstar nar telefonen er under 20% batteri..."
+                placeholder="Fx: Skærmen flimrer efter 3 ugers brug. Problemet opstår, når telefonens batteriniveau er under 20 % …"
                 className="mt-1.5 w-full resize-none rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder-[#AEAEB2] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
               />
               <p className="mt-1 text-right text-xs text-[#AEAEB2]">
@@ -225,7 +225,7 @@ export default function ReklamationPage() {
 
             <div>
               <label className="block text-sm font-medium text-[#111111]">
-                Kontakt-email
+                E-mailadresse
               </label>
               <input
                 required
@@ -234,7 +234,7 @@ export default function ReklamationPage() {
                 onChange={(e) => setContactEmail(e.target.value)}
                 className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] px-4 py-2.5 text-sm text-[#111111] placeholder-[#AEAEB2] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
               />
-              <p className="mt-1 text-xs text-[#AEAEB2]">Vi svarer pa denne email</p>
+              <p className="mt-1 text-xs text-[#AEAEB2]">Vi svarer på denne e-mailadresse</p>
             </div>
 
             {formError && (

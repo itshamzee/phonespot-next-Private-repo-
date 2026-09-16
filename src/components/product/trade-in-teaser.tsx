@@ -6,6 +6,7 @@ export type TradeInTeaserProps = {
    *  the generic "enhed" for anything unrecognised so the sentence is always
    *  grammatically safe ("en gammel enhed"). */
   category?: string;
+  inverse?: boolean;
 };
 
 const DEVICE_WORD: Record<string, string> = {
@@ -34,17 +35,17 @@ function deviceWord(category?: string): string {
  * the sell flow, where a real, individual price is calculated from the
  * customer's actual device and condition.
  */
-export function TradeInTeaser({ category }: TradeInTeaserProps) {
+export function TradeInTeaser({ category, inverse = false }: TradeInTeaserProps) {
   const word = deviceWord(category);
 
   return (
-    <div className="border-l-2 border-[#1A3D2E]/25 py-0.5 pl-3">
-      <p className="text-xs font-semibold text-[#111111]">Har du en gammel {word}?</p>
+    <div className={inverse ? "my-5 border-t border-white/20 pt-5 text-white" : "border-l-2 border-[#1A3D2E]/25 py-0.5 pl-3 text-[#1A3D2E]"}>
+      <p className="text-sm font-semibold text-current">Har du en gammel {word}?</p>
       <Link
         href="/saelg-din-enhed"
-        className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-green-eco hover:underline"
+        className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-current hover:underline"
       >
-        Få en pris på 30 sekunder
+        Få din enhed vurderet
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
