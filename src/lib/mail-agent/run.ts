@@ -324,7 +324,9 @@ async function processMail(
 }
 
 function isStopWorthy(message: string): boolean {
-  return /\b(401|429)\b|authentication|rate limit|invalid x-api-key/i.test(message);
+  // Auth, rate limit, or an empty credit balance: the whole run will fail the
+  // same way, so stop early instead of burning a call per mail.
+  return /\b(401|429)\b|authentication|rate limit|invalid x-api-key|credit balance/i.test(message);
 }
 
 /**
