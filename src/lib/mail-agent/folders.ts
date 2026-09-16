@@ -33,7 +33,7 @@ export function folderPath(key: FolderKey): string[] {
 const SUPPLIER_DOMAINS = ["capida.dk", "batteriekspert.dk", "foneday.nl", "foneday.com", "mytrendyphone.dk", "laptops.dk", "foxway.com", "relatel.dk", "one.com", "shipmondo.com"];
 const SHIPPING_DOMAINS = ["dao.as", "postnord.com", "postnord.dk", "sendcloud.com", "fedex.com", "gls-group.eu", "gls.dk", "bring.com", "ups.com", "dhl.com"];
 const PLATFORM_DOMAINS = ["fruugo.com", "pricerunner.com", "shopify.com", "service.tiktok.com", "tiktok.com", "facebookmail.com", "meta.com", "google.com", "trustpilot.com", "stripe.com", "klarna.com", "vercel.com", "supabase.com", "resend.com"];
-const FINANCE_SUBJECT = /\b(faktura|invoice|bill payment|betaling|kreditnota|rykker|forfaldne)\b/i;
+const FINANCE_SUBJECT = /\b(faktura\w*|invoice\w*|bill payment|betaling\w*|kreditnota\w*|rykker\w*|forfaldne)\b/i;
 const APPLICATION_SUBJECT = /\b(ansøgning|ansoegning|jobansøgning|praktik|elevplads|cv)\b/i;
 
 function domainOf(email: string): string {
