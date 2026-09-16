@@ -70,6 +70,9 @@ export default function AiDraftCard({ draft, busy, onApprove, onDiscard }: Props
             onChange={(e) => setBody(e.target.value)}
             className="mt-2 w-full rounded-lg border border-black/[0.06] bg-white px-4 py-3 text-sm text-charcoal focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
           />
+          <p className="mt-1 text-[11px] text-charcoal/35">
+            Hilsen med kundens fornavn og signaturen tilføjes automatisk ved afsendelse.
+          </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"

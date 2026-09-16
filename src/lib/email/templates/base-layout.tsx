@@ -1,12 +1,16 @@
 // src/lib/email/templates/base-layout.tsx
 import {
-  Html, Head, Body, Container, Section, Text, Img, Hr, Row, Column, Link,
+  Html, Head, Body, Container, Section, Text, Hr, Link,
 } from "@react-email/components";
 import type { StaffProfile, CompanySettings } from "@/lib/supabase/email-types";
 import { STORES } from "@/lib/store-config";
+import { buildSignature, displayPhone, websiteLabel, type Signature } from "@/lib/email/signature";
 
 interface BaseLayoutProps {
   children: React.ReactNode;
+  /** Resolved signature (preferred). */
+  signature?: Signature | null;
+  /** Legacy: a staff profile to sign with; converted to a Signature. */
   staffProfile?: StaffProfile | null;
   companySettings?: CompanySettings | null;
   previewText?: string;
@@ -19,10 +23,16 @@ const mutedText = "#888888";
 
 export default function BaseLayout({
   children,
+  signature,
   staffProfile,
   companySettings,
   previewText,
 }: BaseLayoutProps) {
+  const sig: Signature | null =
+    signature ??
+    (staffProfile
+      ? buildSignature({ mailbox: staffProfile.mailbox ?? null, staff: staffProfile, company: companySettings ?? null })
+      : null);
   const company = companySettings || {
     company_name: "PhoneSpot",
     address: STORES.slagelse.street,
@@ -55,41 +65,36 @@ export default function BaseLayout({
           </Section>
 
           {/* Signature */}
-          {staffProfile && (
+          {sig && (
             <Section style={signatureSection}>
               <Hr style={signatureDivider} />
-              <Row>
-                <Column style={{ width: "60px", verticalAlign: "top" } as const}>
-                  {staffProfile.avatar_url ? (
-                    <Img
-                      src={staffProfile.avatar_url}
-                      width="48"
-                      height="48"
-                      alt={staffProfile.display_name}
-                      style={avatarStyle}
-                    />
-                  ) : (
-                    <Text style={initialsStyle}>
-                      {staffProfile.display_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                    </Text>
-                  )}
-                </Column>
-                <Column style={{ verticalAlign: "top" } as const}>
-                  <Text style={sigNameStyle}>{staffProfile.display_name}</Text>
-                  {staffProfile.title && (
-                    <Text style={sigTitleStyle}>{staffProfile.title}</Text>
-                  )}
-                  <Text style={sigContactStyle}>
-                    {staffProfile.phone && <>{staffProfile.phone} | </>}
-                    {company.email}
-                  </Text>
-                  <Text style={sigContactStyle}>{company.website?.replace("https://", "")}</Text>
-                </Column>
-                <Column style={{ verticalAlign: "top", textAlign: "right", width: "120px" } as const}>
-                  <Text style={sigCompanyName}>{company.company_name}</Text>
-                  <Text style={sigCompanySub}>Refurbished Electronics</Text>
-                </Column>
-              </Row>
+              <Text style={sigNameStyle}>{sig.name}</Text>
+              {sig.title && <Text style={sigTitleStyle}>{sig.title}</Text>}
+              <Text style={sigCompanyName}>{sig.company.toUpperCase()}</Text>
+              <Text style={sigContactStyle}>
+                <span style={sigLabel}>Telefon</span>
+                <Link href={`tel:${sig.phone.replace(/\s+/g, "")}`} style={sigLink}>{displayPhone(sig.phone)}</Link>
+              </Text>
+              <Text style={sigContactStyle}>
+                <span style={sigLabel}>Mail</span>
+                <Link href={`mailto:${sig.email}`} style={sigLink}>{sig.email}</Link>
+              </Text>
+              <Text style={sigContactStyle}>
+                <span style={sigLabel}>Web</span>
+                <Link href={sig.website} style={sigLink}>{websiteLabel(sig.website)}</Link>
+              </Text>
+              {sig.cvr && (
+                <Text style={sigContactStyle}>
+                  <span style={sigLabel}>CVR</span>
+                  {sig.cvr}
+                </Text>
+              )}
+              {sig.trustpilotUrl && (
+                <Text style={sigTrustpilot}>
+                  Bedøm os på Trustpilot{" · "}
+                  <Link href={sig.trustpilotUrl} style={sigTrustpilotLink}>Skriv en anmeldelse</Link>
+                </Text>
+              )}
             </Section>
           )}
 
@@ -159,27 +164,9 @@ const signatureDivider = {
   marginBottom: "16px",
 } as const;
 
-const avatarStyle = {
-  borderRadius: "50%",
-  objectFit: "cover" as const,
-} as const;
-
-const initialsStyle = {
-  width: "48px",
-  height: "48px",
-  borderRadius: "50%",
-  backgroundColor: headerBg,
-  color: "#ffffff",
-  fontSize: "18px",
-  fontWeight: "bold" as const,
-  lineHeight: "48px",
-  textAlign: "center" as const,
-  margin: "0",
-} as const;
-
 const sigNameStyle = {
   fontWeight: "bold" as const,
-  fontSize: "14px",
+  fontSize: "15px",
   color: headerBg,
   margin: "0",
 } as const;
@@ -190,24 +177,42 @@ const sigTitleStyle = {
   margin: "2px 0 0 0",
 } as const;
 
-const sigContactStyle = {
-  fontSize: "11px",
-  color: mutedText,
-  margin: "2px 0 0 0",
-} as const;
-
 const sigCompanyName = {
-  fontSize: "16px",
+  fontSize: "11px",
   fontWeight: "bold" as const,
-  color: headerBg,
-  margin: "0",
-  letterSpacing: "0.5px",
+  color: accentGreen,
+  letterSpacing: "2px",
+  margin: "4px 0 10px 0",
 } as const;
 
-const sigCompanySub = {
-  fontSize: "9px",
+const sigContactStyle = {
+  fontSize: "12px",
+  color: textColor,
+  margin: "0 0 3px 0",
+  lineHeight: "1.4",
+} as const;
+
+const sigLabel = {
+  display: "inline-block",
+  width: "58px",
   color: mutedText,
-  margin: "2px 0 0 0",
+} as const;
+
+const sigLink = {
+  color: textColor,
+  textDecoration: "none" as const,
+} as const;
+
+const sigTrustpilot = {
+  fontSize: "12px",
+  color: mutedText,
+  margin: "12px 0 0 0",
+} as const;
+
+const sigTrustpilotLink = {
+  color: accentGreen,
+  fontWeight: "bold" as const,
+  textDecoration: "underline" as const,
 } as const;
 
 const footerStyle = {

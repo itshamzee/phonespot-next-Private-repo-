@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { render } from "@react-email/render";
-import InquiryReplyEmail from "@/lib/email/templates/inquiry-reply";
+import InquiryReplyEmail, { greetingName } from "@/lib/email/templates/inquiry-reply";
 import { resend } from "@/lib/email/resend";
+import { resolveSignature, signatureText } from "@/lib/email/signature";
 import { loadMailboxes } from "@/lib/mail-agent/config";
 import { sendViaOnecom } from "@/lib/mail-agent/send";
 
@@ -34,20 +35,16 @@ export async function sendInquiryReply(sb: SupabaseClient, args: SendReplyArgs):
   if (error || !inquiry) throw new Error("Henvendelse ikke fundet");
   if (!inquiry.email) throw new Error("Ingen email på henvendelsen");
 
-  const { data: staffProfile } = await sb
-    .from("staff_profiles")
-    .select("*")
-    .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
-  const { data: companySettings } = await sb.from("company_settings").select("*").maybeSingle();
+  const mailboxAddress = typeof inquiry.mailbox === "string" ? inquiry.mailbox.toLowerCase() : null;
+  const signature = await resolveSignature(sb, mailboxAddress);
 
   const subject = args.subjectOverride ?? `Re: ${inquiry.subject || "Din henvendelse"}`;
   const html = await render(
-    InquiryReplyEmail({ customerName: inquiry.name, replyBody: args.body, staffProfile, companySettings }),
+    InquiryReplyEmail({ customerName: inquiry.name, replyBody: args.body, signature }),
   );
+  const first = greetingName(inquiry.name);
+  const text = `${first ? `Hej ${first},` : "Hej,"}\n\n${args.body.trim()}\n\n${signatureText(signature)}`;
 
-  const mailboxAddress = typeof inquiry.mailbox === "string" ? inquiry.mailbox.toLowerCase() : null;
   const box = mailboxAddress ? loadMailboxes().find((b) => b.address === mailboxAddress) : undefined;
 
   let transport: SendReplyResult["transport"] = "resend";
@@ -71,7 +68,7 @@ export async function sendInquiryReply(sb: SupabaseClient, args: SendReplyArgs):
       to: inquiry.email,
       toName: inquiry.name,
       subject,
-      text: args.body,
+      text,
       html,
       inReplyTo,
       references,

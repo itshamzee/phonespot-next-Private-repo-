@@ -5,6 +5,8 @@ export interface StaffProfile {
   title: string;
   phone: string | null;
   avatar_url: string | null;
+  /** Postkasse denne person signerer for (fx ha@phonespot.dk). */
+  mailbox?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -19,6 +21,8 @@ export interface CompanySettings {
   phone: string | null;
   email: string | null;
   website: string | null;
+  cvr?: string | null;
+  trustpilot_url?: string | null;
   created_at: string;
   updated_at: string;
 }
