@@ -42,6 +42,7 @@ async function main() {
 
   for (const box of boxes) {
     console.log(`\n=== ${box.address}`);
+    try {
     await withImap(box, async (client) => {
       if (apply) {
         for (const key of Object.keys(FOLDERS) as FolderKey[]) {
@@ -98,6 +99,9 @@ async function main() {
         }
       }
     });
+    } catch (err) {
+      console.error(`  FEJL paa ${box.address}: ${(err as Error).message} (springer over, proev igen senere)`);
+    }
   }
 
   if (analyzePath) {
