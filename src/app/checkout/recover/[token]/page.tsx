@@ -84,37 +84,10 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     : (order.customer ?? null);
 
   const orderItems = Array.isArray(order.order_items) ? order.order_items : [];
-  const deviceItems = orderItems.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (item: any) => item.item_type === "device" && item.device_id
-  );
-
-  // Check that all devices are still available (listed or reserved but expired)
-  const unavailableDevices: string[] = [];
-  for (const item of deviceItems) {
-    const { data: device } = await supabase
-      .from("devices")
-      .select("id, status, reservation_expires_at")
-      .eq("id", item.device_id)
-      .single();
-
-    if (!device) {
-      unavailableDevices.push(item.device_id);
-      continue;
-    }
-
-    const isListed = device.status === "listed";
-    const isExpiredReservation =
-      device.status === "reserved" &&
-      device.reservation_expires_at &&
-      new Date(device.reservation_expires_at) < new Date();
-
-    if (!isListed && !isExpiredReservation) {
-      unavailableDevices.push(item.device_id);
-    }
-  }
-
-  if (unavailableDevices.length > 0) {
+  const { data: reservation, error: reservationError } = await supabase.rpc("reserve_recovery_order", {
+    p_order_id: order.id, p_recovery_token: token,
+  });
+  if (reservationError || reservation?.status !== "reserved") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
@@ -132,15 +105,6 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
         </div>
       </div>
     );
-  }
-
-  // Re-reserve all devices (15 min TTL)
-  const reservationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-  for (const item of deviceItems) {
-    await supabase
-      .from("devices")
-      .update({ status: "reserved", reservation_expires_at: reservationExpires })
-      .eq("id", item.device_id);
   }
 
   // Build line items for Stripe

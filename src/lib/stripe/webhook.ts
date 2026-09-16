@@ -39,13 +39,8 @@ export async function handleCheckoutCompleted(
     .single();
 
   if (orderError || !order) {
-    console.error("[webhook] order not found:", orderId, orderError);
-    return;
-  }
-
-  if (order.status !== "pending") {
-    console.log("[webhook] order already processed:", orderId, order.status);
-    return;
+    console.error("[webhook] order could not be read:", orderId);
+    throw new Error("Checkout order could not be read");
   }
 
   const orderItems: Array<{
@@ -64,160 +59,31 @@ export async function handleCheckoutCompleted(
     .filter((i) => i.item_type === "device" && i.device_id)
     .map((i) => i.device_id as string);
 
-  let deviceMap = new Map<
-    string,
-    { purchase_price: number; vat_scheme: string }
-  >();
-  if (deviceIds.length > 0) {
-    const { data: devices } = await supabase
-      .from("devices")
-      .select("id, purchase_price, vat_scheme")
-      .in("id", deviceIds);
-    deviceMap = new Map(
-      (devices ?? []).map((d) => [
-        d.id,
-        { purchase_price: d.purchase_price, vat_scheme: d.vat_scheme },
-      ]),
-    );
-  }
-
-  // 3. Mark order as confirmed and calculate brugtmoms
-  let brugtmomsTotal = 0;
-  for (const item of orderItems) {
-    if (item.item_type === "device" && item.device_id) {
-      const dev = deviceMap.get(item.device_id);
-      if (dev?.vat_scheme === "brugtmoms") {
-        // unit_price indeholder nu ogsaa prisen for evt. RAM/SSD-opgraderinger.
-        // En opgradering er en almindeligt momset ydelse (montering + ny del)
-        // og maa IKKE indgaa i brugtmomsgrundlaget — brugtmomsmarginen gaelder
-        // kun selve den brugte enhed. Traek derfor opgraderingerne fra igen.
-        const upgradeTotal = (item.upgrade_details ?? []).reduce(
-          (sum, u) => sum + (u.price_oere ?? 0),
-          0,
-        );
-        const margin = item.unit_price - upgradeTotal - (dev.purchase_price ?? 0);
-        const brugtmoms = Math.max(0, Math.round((margin * 25) / 100));
-        brugtmomsTotal += brugtmoms;
-      }
+  // Resolve battery metadata before finalizing immutable order items.
+  const batteryItemIds = new Set<string>();
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { expand: ["data.price.product"] });
+  for (const li of lineItems.data) {
+    const product = li.price?.product;
+    if (!product || typeof product === "string" || product.deleted) continue;
+    const meta = (product as Stripe.Product).metadata;
+    if (meta?.kind !== "battery-upgrade" || !meta.parent_item_key) continue;
+    const [kind, id] = meta.parent_item_key.split(":");
+    for (const item of orderItems) {
+      if ((kind === "device" && item.device_id === id) || (kind === "sku" && item.sku_product_id === id)) batteryItemIds.add(item.id);
     }
   }
-
-  const { error: confirmError } = await supabase
-    .from("orders")
-    .update({
-      status: "confirmed",
-      payment_status: "paid",
-      confirmed_at: new Date().toISOString(),
-      brugtmoms_total: brugtmomsTotal,
-      stripe_payment_id: session.payment_intent as string | null,
-    })
-    .eq("id", orderId);
-
-  if (confirmError) {
-    console.error("[webhook] failed to confirm order:", confirmError);
-    throw new Error(`Failed to confirm order: ${confirmError.message}`);
+  const { data: completion, error: completionError } = await supabase.rpc("complete_checkout_order", {
+    p_order_id: orderId, p_session_id: session.id,
+    p_payment_id: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
+    p_battery_item_ids: [...batteryItemIds],
+  });
+  if (completionError || !completion) throw new Error("Checkout stock transaction failed");
+  if (completion.status === "already_completed" || completion.status === "already_finalized") return;
+  if (completion.status !== "completed") {
+    console.error("[webhook] checkout stock failure:", orderId, completion.code ?? completion.status);
+    throw new Error("Checkout stock could not be committed");
   }
-
-  // 4. Mark devices as sold + back-fill purchase_price/vat_scheme on order_items
-  for (const item of orderItems) {
-    if (item.item_type === "device" && item.device_id) {
-      const dev = deviceMap.get(item.device_id);
-
-      // Mark device as sold
-      await supabase
-        .from("devices")
-        .update({ status: "sold" })
-        .eq("id", item.device_id);
-
-      // Back-fill purchase_price and vat_scheme on order_item
-      if (dev) {
-        await supabase
-          .from("order_items")
-          .update({
-            purchase_price: dev.purchase_price,
-            vat_scheme: dev.vat_scheme,
-          })
-          .eq("id", item.id);
-      }
-    }
-  }
-
-  // 5. Decrement SKU stock via RPC for sku_product items
-  const skuItems = orderItems.filter(
-    (i) => i.item_type === "sku_product" && i.sku_product_id,
-  );
-  for (const item of skuItems) {
-    const { error: stockError } = await supabase.rpc("decrement_sku_stock", {
-      p_product_id: item.sku_product_id,
-      p_quantity: item.quantity,
-    });
-    if (stockError) {
-      console.error(
-        "[webhook] failed to decrement stock for SKU:",
-        item.sku_product_id,
-        stockError,
-      );
-      // Non-fatal: log but don't throw — order is already confirmed
-    }
-  }
-
-  // 6. Persist battery_upgrade flag on order_items
-  // For each line item with kind=battery-upgrade, set the parent device/SKU order_item row to TRUE.
-  // Wrapped in try/catch: if the migration hasn't been applied yet, this is non-fatal.
-  try {
-    const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-      expand: ["data.price.product"],
-    });
-
-    for (const li of lineItems.data) {
-      const product = li.price?.product;
-      if (typeof product === "string" || !product || product.deleted) continue;
-      const meta = (product as Stripe.Product).metadata ?? {};
-      if (meta.kind !== "battery-upgrade") continue;
-      if (!meta.parent_item_key) continue;
-
-      // parent_item_key shape: "sku:<id>[:<variantLabel>]" or "device:<id>"
-      // Split on the first colon only so variantLabels containing colons
-      // (e.g. "Farve: Sort") don't corrupt the UUID extraction.
-      const firstColon = meta.parent_item_key.indexOf(":");
-      if (firstColon < 0) continue;
-      const kind = meta.parent_item_key.slice(0, firstColon);
-      // The rest is "<id>[:<variantLabel>]" — the id ends at the next colon (or end).
-      const rest = meta.parent_item_key.slice(firstColon + 1);
-      const secondColon = rest.indexOf(":");
-      const parentId = secondColon < 0 ? rest : rest.slice(0, secondColon);
-
-      if (!parentId) continue;
-
-      if (kind === "sku") {
-        const { error: buErr } = await supabase
-          .from("order_items")
-          .update({ battery_upgrade: true })
-          .eq("order_id", orderId)
-          .eq("sku_product_id", parentId)
-          .eq("battery_upgrade", false); // idempotency guard
-        if (buErr) {
-          console.error("[webhook] failed to set battery_upgrade on sku order_item:", buErr);
-        }
-      } else if (kind === "device") {
-        const { error: buErr } = await supabase
-          .from("order_items")
-          .update({ battery_upgrade: true })
-          .eq("order_id", orderId)
-          .eq("device_id", parentId)
-          .eq("battery_upgrade", false); // idempotency guard
-        if (buErr) {
-          console.error("[webhook] failed to set battery_upgrade on device order_item:", buErr);
-        }
-      }
-    }
-  } catch (err) {
-    console.error(
-      "[webhook] failed to set order_items.battery_upgrade — migration not applied?",
-      err,
-    );
-    // Non-fatal: order completion must not be blocked by this
-  }
+  for (const item of orderItems) if (batteryItemIds.has(item.id)) item.battery_upgrade = true;
 
   // 7. Increment discount code usage
   if (order.discount_code_id) {
@@ -402,77 +268,6 @@ export async function handleCheckoutExpired(
   const orderId = session.metadata?.order_id;
   if (!orderId) return;
 
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, status, recovery_token, order_items(id, item_type, device_id)")
-    .eq("id", orderId)
-    .single();
-
-  if (!order || order.status !== "pending") return;
-
-  // Move the order into the abandoned-cart recovery pipeline.
-  // foxway_status/foxway_order_ref nulstilles: en udloebet, ubetalt ordre maa
-  // ikke blive staaende i dropship-koeen, hvor admin kunne naa at bestille
-  // varen hos leverandoeren for en ordre der aldrig blev betalt.
-  const abandonedAt = new Date().toISOString();
-  const recoveryToken =
-    (order as { recovery_token: string | null }).recovery_token ?? crypto.randomUUID();
-
-  await supabase
-    .from("orders")
-    .update({
-      status: "abandoned",
-      abandoned_at: abandonedAt,
-      recovery_token: recoveryToken,
-      foxway_status: null,
-      foxway_order_ref: null,
-    })
-    .eq("id", orderId);
-
-  // Release device reservations so the inventory becomes purchasable again.
-  const orderItems: Array<{ id: string; item_type: string; device_id: string | null }> =
-    (order as { order_items?: Array<{ id: string; item_type: string; device_id: string | null }> })
-      .order_items ?? [];
-  const deviceIds = orderItems
-    .filter((i) => i.item_type === "device" && i.device_id)
-    .map((i) => i.device_id as string);
-
-  if (deviceIds.length > 0) {
-    // Foxway-dropship-enheder fik trukket source_stock ved checkout-start
-    // (decrement_foxway_stock). De skal have lageret tilbage via den
-    // modsvarende RPC — en blind status='listed' ville re-liste en enhed
-    // hvis leverandoerlager stadig staar paa 0.
-    const { data: expiredDevices } = await supabase
-      .from("devices")
-      .select("id, source")
-      .in("id", deviceIds);
-
-    const foxwayIds = (expiredDevices ?? [])
-      .filter((d) => d.source === "foxway")
-      .map((d) => d.id as string);
-    const ownIds = deviceIds.filter((id) => !foxwayIds.includes(id));
-
-    for (const deviceId of foxwayIds) {
-      const { error: stockErr } = await supabase.rpc("increment_foxway_stock", {
-        p_device_id: deviceId,
-      });
-      if (stockErr) {
-        console.error(
-          "[webhook] failed to restore foxway stock for device:",
-          deviceId,
-          stockErr,
-        );
-        // Non-fatal: ordren er allerede markeret abandoned.
-      }
-    }
-
-    if (ownIds.length > 0) {
-      await supabase
-        .from("devices")
-        .update({ status: "listed", reservation_expires_at: null })
-        .in("id", ownIds);
-    }
-  }
-
-  console.log("[webhook] order abandoned (session expired):", orderId);
+  const { error } = await supabase.rpc("expire_checkout_order", { p_order_id: orderId, p_session_id: session.id });
+  if (error) throw new Error("Checkout expiry transaction failed");
 }

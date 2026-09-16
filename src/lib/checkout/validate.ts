@@ -1,3 +1,4 @@
+import { readReservationOwner } from "@/lib/cart/reservation-owner";
 import { createServerClient } from "@/lib/supabase/client";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 import { resolveUpgrades, type AllowedUpgrade } from "./upgrades";
@@ -9,6 +10,7 @@ export interface ValidatedItem {
   error?: string;
   /** devices.source for device-linjer — 'foxway' for dropship-enheder. */
   deviceSource?: string | null;
+  reservationId?: string;
 }
 
 export interface ValidationResult {
@@ -27,12 +29,14 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
 
   if (devices.length > 0) {
     const deviceIds = devices.map((d) => d.deviceId);
-    const { data: dbDevices } = await supabase
+    const { data: dbDevices, error: deviceError } = await supabase
       .from("devices")
-      .select("id, status, selling_price, reservation_expires_at, source, source_stock, template_id")
+      .select("id, status, selling_price, reservation_expires_at, source, source_stock, template_id, reservation_id, reservation_owner_hash, reservation_order_id")
       .in("id", deviceIds);
-    const deviceMap = new Map((dbDevices ?? []).map((d) => [d.id, d]));
+    const deviceMap = new Map((deviceError ? [] : dbDevices ?? []).map((d) => [d.id, d]));
 
+    const owner = [...deviceMap.values()].some(d => d.source !== "foxway") ? await readReservationOwner() : null;
+    const duplicateIds = new Set(deviceIds.filter((id, i) => deviceIds.indexOf(id) !== i));
     const upgradeTemplateIds = devices
       .filter((d) => (d.upgrades?.length ?? 0) > 0)
       .map((d) => deviceMap.get(d.deviceId)?.template_id)
@@ -54,7 +58,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
 
     for (const item of devices) {
       const db = deviceMap.get(item.deviceId);
-      if (!db) {
+      if (!db || duplicateIds.has(item.deviceId)) {
         validated.push({ item, serverPrice: 0, available: false, error: "Enhed ikke fundet", deviceSource: null });
         errors.push(`${item.title} er ikke tilgængelig`);
         continue;
@@ -84,7 +88,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
         errors.push(`${item.title} er ikke længere tilgængelig`);
         continue;
       }
-      if (db.reservation_expires_at && new Date(db.reservation_expires_at) < new Date()) {
+      if (!owner || db.reservation_owner_hash !== owner || !db.reservation_id || db.reservation_order_id || !db.reservation_expires_at || !(new Date(db.reservation_expires_at).getTime() > Date.now())) {
         validated.push({ item, serverPrice: 0, available: false, error: "Reservation udløbet", deviceSource: db.source ?? null });
         errors.push(`Reservation for ${item.title} er udløbet`);
         continue;
@@ -96,52 +100,32 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
           errors.push(`${item.title}: ${resolved.error}`);
           continue;
         }
-        validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
+        validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
         continue;
       }
-      validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
+      validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
     }
   }
 
   if (skus.length > 0) {
-    const realSkus = skus;
-    {
-      const skuIds = realSkus.map((s) => s.skuProductId);
-      const { data: dbSkus } = await supabase
-        .from("sku_products")
-        .select("id, selling_price, sale_price, is_active, always_in_stock")
-        .in("id", skuIds);
-      // Sum stock across ALL locations (store + online + warehouse)
-      // A product is orderable if it exists anywhere
-      const { data: stocks } = await supabase
-        .from("sku_stock")
-        .select("product_id, quantity")
-        .in("product_id", skuIds);
-      const skuMap = new Map((dbSkus ?? []).map((s) => [s.id, s]));
-      const stockMap = new Map<string, number>();
-      for (const s of stocks ?? []) {
-        stockMap.set(s.product_id, (stockMap.get(s.product_id) ?? 0) + (s.quantity as number));
-      }
-
-      for (const item of realSkus) {
-        const db = skuMap.get(item.skuProductId);
-        if (!db || !db.is_active) {
-          validated.push({ item, serverPrice: 0, available: false, error: "Produkt ikke fundet" });
-          errors.push(`${item.title} er ikke tilgængelig`);
-          continue;
-        }
-        // Skip stock check for always-in-stock products (e.g., screen protectors)
-        if (!db.always_in_stock) {
-          const stock = stockMap.get(item.skuProductId) ?? 0;
-          if (stock < item.quantity) {
-            validated.push({ item, serverPrice: db.sale_price ?? db.selling_price, available: false, error: `Kun ${stock} på lager` });
-            errors.push(`${item.title}: kun ${stock} på lager`);
-            continue;
-          }
-        }
-        const serverPrice = db.sale_price ?? db.selling_price;
-        validated.push({ item, serverPrice, available: true });
-      }
+    const requested = new Map<string, number>();
+    for (const item of skus) {
+      const total = (requested.get(item.skuProductId) ?? 0) + item.quantity;
+      requested.set(item.skuProductId, Number.isSafeInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(total) ? total : NaN);
+    }
+    const { data, error } = await supabase.from("checkout_sku_inventory")
+      .select("id, selling_price, sale_price, is_active, always_in_stock, total_stock")
+      .in("id", [...requested.keys()]);
+    const skuMap = new Map((error ? [] : data ?? []).map(s => [s.id, s]));
+    for (const item of skus) {
+      const db = skuMap.get(item.skuProductId);
+      const demand = requested.get(item.skuProductId)!;
+      const stock = db?.total_stock;
+      const available = !!db?.is_active && Number.isSafeInteger(demand) && demand > 0 &&
+        (!!db.always_in_stock || (Number.isSafeInteger(stock) && stock >= demand));
+      const message = "Produktets lager eller antal kunne ikke bekræftes";
+      validated.push({ item, serverPrice: db?.sale_price ?? db?.selling_price ?? 0, available, ...(available ? {} : {error: message}) });
+      if (!available) errors.push(item.title + ": " + message);
     }
   }
 
