@@ -15,6 +15,9 @@ import StoreFilter, {
   matchesStoreFilter,
   type StoreFilterValue,
 } from "@/components/admin/StoreFilter";
+import AiDraftCard from "@/components/admin/inquiries/AiDraftCard";
+import MailAgentPanel from "@/components/admin/inquiries/MailAgentPanel";
+import { CATEGORY_LABELS, type AiDraftRow, type MailCategory } from "@/lib/mail-agent/types";
 
 // `store_id` tilføjes af en parallel migration — typen kender den muligvis ikke endnu,
 // og kolonnen kan mangle i databasen (select("*") giver da bare undefined).
@@ -86,6 +89,9 @@ export default function AdminHenvendelserPage() {
   const [replySending, setReplySending] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [templates, setTemplates] = useState<ReplyTemplate[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, AiDraftRow[]>>({});
+  const [needsHumanOnly, setNeedsHumanOnly] = useState(false);
+  const [draftBusy, setDraftBusy] = useState(false);
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [newForm, setNewForm] = useState({
@@ -107,6 +113,24 @@ export default function AdminHenvendelserPage() {
       .order("created_at", { ascending: false });
     setInquiries((data as ContactInquiry[]) ?? []);
     setLoading(false);
+    await loadDrafts();
+  }
+
+  async function loadDrafts() {
+    try {
+      const res = await fetch("/api/admin/mail-agent/drafts?status=pending");
+      if (!res.ok) return;
+      const rows: AiDraftRow[] = await res.json();
+      const byInquiry: Record<string, AiDraftRow[]> = {};
+      for (const d of rows) (byInquiry[d.inquiry_id] ??= []).push(d);
+      setDrafts(byInquiry);
+    } catch {
+      // Assistenten er valgfri; listen virker uden.
+    }
+  }
+
+  function inquiryNeedsHuman(id: string): boolean {
+    return (drafts[id] ?? []).some((d) => d.needs_human);
   }
 
   async function loadTemplates() {
@@ -138,6 +162,11 @@ export default function AdminHenvendelserPage() {
     const timer = setTimeout(() => {
       loadInquiries();
       loadTemplates();
+      const deepLink = new URLSearchParams(window.location.search).get("id");
+      if (deepLink) {
+        setExpandedId(deepLink);
+        loadMessages(deepLink);
+      }
     }, 0);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,8 +200,10 @@ export default function AdminHenvendelserPage() {
     else storeCounts.generel += 1;
   }
 
-  const filtered = preFiltered.filter((inq) =>
-    matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(inq))),
+  const filtered = preFiltered.filter(
+    (inq) =>
+      matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(inq))) &&
+      (!needsHumanOnly || inquiryNeedsHuman(inq.id)),
   );
 
   async function updateStatus(id: string, status: InquiryStatus) {
@@ -200,20 +231,10 @@ export default function AdminHenvendelserPage() {
   async function generateAiReply(inq: ContactInquiry) {
     setAiGenerating(true);
     try {
-      const inqMessages = messages[inq.id] ?? [];
-      const customerMessage = inqMessages.length > 0
-        ? inqMessages.filter(m => m.sender === "customer").map(m => m.body).join("\n")
-        : inq.message;
-
       const res = await fetch("/api/admin/ai-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: inq.name,
-          customerMessage,
-          subject: inq.subject,
-          context: inq.source === "saelg-enhed" ? "Kunden vil sælge sin enhed" : inq.source === "reparation-booking" ? "Kunden har en reparationsforespørgsel" : undefined,
-        }),
+        body: JSON.stringify({ inquiryId: inq.id }),
       });
       const data = await res.json();
       if (data.reply) {
@@ -225,6 +246,40 @@ export default function AdminHenvendelserPage() {
       alert("Netværksfejl — prøv igen");
     } finally {
       setAiGenerating(false);
+    }
+  }
+
+  async function approveDraft(inq: ContactInquiry, draft: AiDraftRow, body: string) {
+    setDraftBusy(true);
+    try {
+      const res = await fetch(`/api/admin/mail-agent/drafts/${draft.id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body, staff_name: "Admin" }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        alert(e.error || "Kunne ikke sende svaret");
+        return;
+      }
+      await loadMessages(inq.id);
+      await loadInquiries();
+    } finally {
+      setDraftBusy(false);
+    }
+  }
+
+  async function discardDraft(draft: AiDraftRow) {
+    setDraftBusy(true);
+    try {
+      await fetch(`/api/admin/mail-agent/drafts/${draft.id}/discard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staff_name: "Admin" }),
+      });
+      await loadDrafts();
+    } finally {
+      setDraftBusy(false);
     }
   }
 
@@ -320,6 +375,8 @@ export default function AdminHenvendelserPage() {
         </button>
       </div>
 
+      <MailAgentPanel />
+
       {/* Search */}
       <div className="mb-4">
         <div className="relative max-w-md">
@@ -355,6 +412,18 @@ export default function AdminHenvendelserPage() {
             {s === "alle" ? "Alle" : STATUS_LABELS[s]}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setNeedsHumanOnly((v) => !v)}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-all ${
+            needsHumanOnly
+              ? "bg-red-600 text-white shadow-sm"
+              : "bg-white text-charcoal/40 border border-black/[0.04] hover:text-charcoal/60 shadow-sm"
+          }`}
+        >
+          <span className={`h-2 w-2 rounded-full ${needsHumanOnly ? "bg-white" : "bg-red-500"}`} />
+          Kræver dig
+        </button>
       </div>
 
       {/* Source filter */}
@@ -433,6 +502,21 @@ export default function AdminHenvendelserPage() {
 
                   {/* Right side */}
                   <div className="flex shrink-0 items-center gap-2">
+                    {inq.mailbox && (
+                      <span className="hidden rounded-md bg-charcoal/[0.04] px-2 py-0.5 text-[10px] font-semibold text-charcoal/50 md:inline">
+                        {String(inq.mailbox).split("@")[0]}
+                      </span>
+                    )}
+                    {inq.category && (
+                      <span className="hidden rounded-md bg-charcoal/[0.04] px-2 py-0.5 text-[10px] font-semibold text-charcoal/50 md:inline">
+                        {CATEGORY_LABELS[inq.category as MailCategory] ?? inq.category}
+                      </span>
+                    )}
+                    {inquiryNeedsHuman(inq.id) && (
+                      <span className="rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                        Kræver dig
+                      </span>
+                    )}
                     <StoreBadge store={inquiryStoreRaw(inq)} />
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${STATUS_BADGE[inq.status]}`}>
                       {STATUS_LABELS[inq.status]}
@@ -504,6 +588,16 @@ export default function AdminHenvendelserPage() {
                       ))}
                     </div>
 
+                    {(drafts[inq.id] ?? []).map((d) => (
+                      <AiDraftCard
+                        key={d.id}
+                        draft={d}
+                        busy={draftBusy}
+                        onApprove={(b) => approveDraft(inq, d, b)}
+                        onDiscard={() => discardDraft(d)}
+                      />
+                    ))}
+
                     {/* Reply box */}
                     <div className="mb-4 rounded-xl border border-black/[0.04] bg-[#f4f3f0]/50 p-4">
                       <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-charcoal/25">
@@ -531,7 +625,7 @@ export default function AdminHenvendelserPage() {
                         type="button"
                         onClick={() => generateAiReply(inq)}
                         disabled={aiGenerating}
-                        className="mb-2 flex w-full items-center justify-center gap-2 rounded-lg border border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-2.5 text-sm font-semibold text-violet-700 transition-all hover:from-violet-100 hover:to-purple-100 disabled:opacity-50"
+                        className="mb-2 flex w-full items-center justify-center gap-2 rounded-lg border border-black/[0.06] bg-white px-4 py-2.5 text-sm font-semibold text-charcoal/70 transition-colors hover:text-charcoal disabled:opacity-50"
                       >
                         {aiGenerating ? (
                           <>
@@ -546,7 +640,7 @@ export default function AdminHenvendelserPage() {
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                             </svg>
-                            Generer svar med AI
+                            Generer svar med assistenten
                           </>
                         )}
                       </button>

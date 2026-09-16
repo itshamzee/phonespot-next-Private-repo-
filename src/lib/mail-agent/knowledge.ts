@@ -59,7 +59,7 @@ ${storeBlock()}
 - Vi tilbyder ikke egen forsikring. Elektronikforsikring formidles via Storstrøm Forsikring i deres portal; spørgsmål om dækning henviser vi til dem.
 
 ## Tone og ordvalg
-- Skriv "beskyttelsesglas" eller "tempered glass". Skriv aldrig producentnavne på skærmbeskyttelse (heller ikke "${GLASS_TRADEMARK}").
+- Skriv "beskyttelsesglas" eller "tempered glass". Skriv aldrig producentnavne på skærmbeskyttelse.
 - Omtal aldrig hvor vi køber enheder ind, eller om en vare leveres direkte fra et lager.
 - Ingen emojis. Dansk du-form. Kort, konkret, venlig. Underskriv med butikkens navn.
 `;
