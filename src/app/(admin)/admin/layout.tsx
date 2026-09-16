@@ -491,6 +491,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">Admin Panel</p>
         </div>
 
+        {/* Primær handling: ét sted at oprette produkter */}
+        <div className="px-3 pb-1 pt-1">
+          <Link
+            href="/admin/produkter/ny"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex h-10 items-center justify-center gap-2 rounded-lg text-[13px] font-semibold transition-colors ${
+              pathname.startsWith("/admin/produkter/ny")
+                ? "bg-white text-green-eco"
+                : "bg-white/15 text-white hover:bg-white/25"
+            }`}
+          >
+            <span aria-hidden className="text-[16px] leading-none">+</span>
+            Opret produkt
+          </Link>
+        </div>
+
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-2">
           {NAV_SECTIONS.map((section) => (
