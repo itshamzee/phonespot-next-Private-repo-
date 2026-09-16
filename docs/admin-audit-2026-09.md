@@ -144,11 +144,14 @@ Global søgning i topbaren: ordrenummer, kundenavn, e-mail, telefon, IMEI/serien
 
 ## 4. Rækkefølge
 
-1. **Fundament** (AdminTable, AdminPage, StoreContext, useAdminQuery) + ny sidebar med de 7 områder, hvor alle gamle sider stadig virker på deres gamle URL'er. Ingen funktion forsvinder.
-2. **Ordrer**: "I dag"-side, lagerfejl-fane, butikskolonne, fjern dobbelt-hentning.
-3. **Produkter**: én tilbehørsliste mod `sku_products`, ét registrér-flow, én bulk-editor, én reservedelsformular.
-4. **Reparation, Opkøb, Kunder**: paginering, butiksfilter overalt, venteliste-handling, kunder læser `?search=`.
-5. **Indstillinger**: samlet, to butiksadresser, logs.
-6. **Oprydning**: slet `tilfoej-cover`, gamle `accessories`-læsninger, døde sider; redirects fra gamle URL'er.
+Ejerens prioritering (16. september 2026): produktoprettelse er den største smerte. Der er fem forskellige opret-sider, det tager for lang tid, og der ligger mange produkter, som endnu ikke er oprettet. Webshoppen kommer først, butikslager er et tilvalg. Derudover er knapper og layout forældede. Derfor:
+
+1. **Visuelt fundament + Opret produkt.** Nyt designsystem for admin (tokens, knapper, inputs, tabel, sidelayout) og ét "Opret produkt"-flow for enheder, tilbehør og reservedele, med hurtig masseoprettelse (indsæt fra regneark eller CSV) og billedupload i samme flow. Webshop-status og online-lager som standard; butikslager som tilvalg. De gamle opret-sider får en redirect hertil.
+2. **Produkter-området**: én tilbehørsliste mod `sku_products`, én reservedelsformular, én bulk-editor, kategorier og tilvalg samlet.
+3. **Ny sidebar med de 7 områder**, hvor alle gamle sider stadig virker på deres gamle URL'er, plus butiksvælger og global søgning.
+4. **Ordrer**: "I dag"-side, lagerfejl-fane, butikskolonne, fjern dobbelt-hentning.
+5. **Reparation, Opkøb, Kunder**: paginering, butiksfilter overalt, venteliste-handling, kunder læser `?search=`.
+6. **Indstillinger**: samlet, to butiksadresser, logs.
+7. **Oprydning**: slet `tilfoej-cover`, gamle `accessories`-læsninger, døde sider; redirects fra gamle URL'er.
 
 Hvert trin er sin egen PR med skærmbilleder (desktop og 390 px) og en liste over "flyttet fra → til" til personalet.
