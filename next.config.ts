@@ -6,6 +6,8 @@ const shopifyDomain =
   "";
 
 const nextConfig: NextConfig = {
+  // Node-only mail libraries (IMAP/SMTP/MIME) must not be bundled by Turbopack.
+  serverExternalPackages: ["imapflow", "mailparser", "nodemailer"],
   images: {
     unoptimized: true,
     remotePatterns: [
