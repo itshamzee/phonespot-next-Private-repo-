@@ -6,11 +6,13 @@ const s = vi.hoisted(() => ({
   missing: false,
   readError: false,
   orderStatus: "pending",
+  stockFailureAt: null as string | null,
   rpc: vi.fn(),
   update: vi.fn(),
   mail: vi.fn(),
   warranty: vi.fn(),
   notify: vi.fn(),
+  alert: vi.fn(),
   staff: vi.fn(),
   draft: vi.fn(),
   lineItems: vi.fn(),
@@ -26,7 +28,7 @@ vi.mock("@/lib/warranty/generate", () => ({
   generateWarrantiesForOrder: s.warranty,
 }));
 vi.mock("@/lib/draft-orders/convert", () => ({ convertDraftToOrder: s.draft }));
-vi.mock("@/lib/notifications/pushover", () => ({ notifyNewOrder: s.notify }));
+vi.mock("@/lib/notifications/pushover", () => ({ notifyNewOrder: s.notify, sendPushover: s.alert }));
 vi.mock("@/lib/email/staff-order-notification", () => ({
   sendStaffOrderNotification: s.staff,
 }));
@@ -47,6 +49,7 @@ vi.mock("@/lib/supabase/client", () => ({
                   id: "order",
                   order_number: "S-1001",
                   status: s.orderStatus,
+                  stock_failure_at: s.stockFailureAt,
                   order_items: s.items,
                   total: 100,
                 }
@@ -74,6 +77,7 @@ beforeEach(() => {
   s.missing = false;
   s.readError = false;
   s.orderStatus = "pending";
+  s.stockFailureAt = null;
   s.items = [
     {
       id: "line-device",
@@ -96,6 +100,16 @@ function noSuccess() {
 it("stock failure rejects without confirmation, warranty or success notifications", async () => {
   await expect(handleCheckoutCompleted(session)).rejects.toThrow();
   noSuccess();
+  expect(s.alert).toHaveBeenCalledTimes(1);
+  expect(s.alert).toHaveBeenCalledWith(
+    expect.objectContaining({ title: expect.stringContaining("S-1001"), priority: 1 }),
+  );
+});
+it("stock failure alerts staff only on the first attempt, not on Stripe retries", async () => {
+  s.stockFailureAt = "2026-09-16T10:00:00Z";
+  await expect(handleCheckoutCompleted(session)).rejects.toThrow();
+  noSuccess();
+  expect(s.alert).not.toHaveBeenCalled();
 });
 it.each(["already_completed", "already_finalized"])(
   "database-authorized replay skips side effects: %s",
@@ -112,6 +126,7 @@ it("only the winning completion runs downstream once", async () => {
   await handleCheckoutCompleted(session);
   for (const fn of [s.notify, s.mail, s.staff, s.warranty])
     expect(fn).toHaveBeenCalledTimes(1);
+  expect(s.alert).not.toHaveBeenCalled();
   expect(s.rpc).toHaveBeenCalledExactlyOnceWith(
     "complete_checkout_order",
     expect.objectContaining({

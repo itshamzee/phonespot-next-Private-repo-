@@ -4,7 +4,7 @@ import { stripe } from "@/lib/stripe/client";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
-import { notifyNewOrder } from "@/lib/notifications/pushover";
+import { notifyNewOrder, sendPushover } from "@/lib/notifications/pushover";
 import { sendStaffOrderNotification } from "@/lib/email/staff-order-notification";
 
 export async function handleCheckoutCompleted(
@@ -32,7 +32,7 @@ export async function handleCheckoutCompleted(
     .from("orders")
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
-       subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token,
+       subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at,
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade, upgrade_details)`,
     )
     .eq("id", orderId)
@@ -80,7 +80,21 @@ export async function handleCheckoutCompleted(
   if (completionError || !completion) throw new Error("Checkout stock transaction failed");
   if (completion.status === "already_completed" || completion.status === "already_finalized") return;
   if (completion.status !== "completed") {
-    console.error("[webhook] checkout stock failure:", orderId, completion.code ?? completion.status);
+    const code = completion.code ?? completion.status;
+    console.error("[webhook] checkout stock failure:", orderId, code);
+    // Kunden har betalt, men lager/reservation kunne ikke bekræftes. Ordren
+    // står som pending/paid med stock_failure_code. Stripe prøver webhooken
+    // igen; alarmér kun personalet ved første fejl, ikke ved hvert genforsøg.
+    if (completion.status === "stock_failed" && !order.stock_failure_at) {
+      await sendPushover({
+        title: `Betalt ordre ${order.order_number} kunne ikke bekræftes`,
+        message: `Lager eller reservation fejlede (${code}). Ordren skal afklares manuelt i admin, før den kan bekræftes eller refunderes.`,
+        sound: "siren",
+        priority: 1,
+        url: `https://phonespot.dk/admin/platform/orders/${orderId}`,
+        url_title: "Åbn ordren",
+      });
+    }
     throw new Error("Checkout stock could not be committed");
   }
   for (const item of orderItems) if (batteryItemIds.has(item.id)) item.battery_upgrade = true;
