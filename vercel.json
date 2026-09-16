@@ -20,10 +20,6 @@
     {
       "path": "/api/cron/buyback-digest",
       "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/cron/mail-agent",
-      "schedule": "*/20 * * * *"
     }
   ]
 }
