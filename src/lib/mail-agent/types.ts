@@ -49,6 +49,8 @@ export interface InboundMail {
   inReplyTo: string | null;
   references: string[];
   attachments: string[];
+  /** List-Unsubscribe header present: a newsletter or marketing list. */
+  listUnsubscribe: boolean;
 }
 
 export interface LookupLog {

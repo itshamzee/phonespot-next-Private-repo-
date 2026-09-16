@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInquiryReply } from "@/lib/inquiries/send-reply";
 import { markDraft } from "@/lib/mail-agent/drafts";
+import { fileInquiryMail } from "@/lib/mail-agent/run";
 
 /**
  * POST /api/admin/mail-agent/drafts/[id]/approve
@@ -32,7 +33,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
     const now = new Date().toISOString();
     await markDraft(sb, id, { status: "sent", final_body: body, reviewed_by: staffName, reviewed_at: now, sent_at: now });
-    return NextResponse.json({ ok: true, transport: sent.transport });
+    let filed = 0;
+    try {
+      filed = await fileInquiryMail(sb, draft.inquiry_id, draft.category);
+    } catch (err) {
+      console.warn("[mail-agent] kunne ikke flytte mailen til mappe:", (err as Error).message);
+    }
+    return NextResponse.json({ ok: true, transport: sent.transport, filed });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 502 });
   }

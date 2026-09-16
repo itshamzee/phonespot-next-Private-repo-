@@ -46,5 +46,11 @@ describe("parseInbound", () => {
     expect(m.messageId).toBe("<uid-7@info@phonespot.dk>");
     expect(m.fromName).toBeNull();
     expect(m.references).toEqual([]);
+    expect(m.listUnsubscribe).toBe(false);
+  });
+
+  it("flags newsletters via List-Unsubscribe", () => {
+    const parsed = { from: { value: [{ address: "news@x.dk" }] }, subject: "Tilbud", text: "", headers: new Map([["list-unsubscribe", "<mailto:x>"]]) } as never;
+    expect(parseInbound({ mailbox: "info@phonespot.dk", uid: 1, parsed }).listUnsubscribe).toBe(true);
   });
 });

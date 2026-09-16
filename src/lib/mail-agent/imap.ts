@@ -46,6 +46,7 @@ export function parseInbound({ mailbox, uid, parsed }: { mailbox: string; uid: n
     inReplyTo: parsed.inReplyTo ?? null,
     references: refs,
     attachments: (parsed.attachments ?? []).map((a) => a.filename ?? "bilag").filter(Boolean),
+    listUnsubscribe: Boolean(parsed.headers?.get("list-unsubscribe")),
   };
 }
 
@@ -92,6 +93,40 @@ export async function markSeen(box: MailboxConfig, uids: number[]): Promise<void
     const lock = await client.getMailboxLock("INBOX");
     try {
       await client.messageFlagsAdd(uids, ["\\Seen"], { uid: true });
+    } finally {
+      lock.release();
+    }
+  });
+}
+
+/** Create the folder if missing. Returns the server path. Idempotent. */
+export async function ensureFolder(client: ImapFlow, path: string[]): Promise<string> {
+  const list = await client.list();
+  const delimiter = list.find((m) => m.delimiter)?.delimiter ?? ".";
+  const target = path.join(delimiter);
+  const found = list.find((m) => m.path.toLowerCase() === target.toLowerCase());
+  if (found) return found.path;
+  const res = await client.mailboxCreate(path);
+  return res.path;
+}
+
+/** Create every folder in `paths` in one connection. */
+export async function ensureFolders(box: MailboxConfig, paths: string[][]): Promise<string[]> {
+  return withImap(box, async (client) => {
+    const out: string[] = [];
+    for (const p of paths) out.push(await ensureFolder(client, p));
+    return out;
+  });
+}
+
+/** Move messages (by INBOX uid) into a folder, creating it if needed. */
+export async function moveToFolder(box: MailboxConfig, uids: number[], path: string[]): Promise<void> {
+  if (uids.length === 0) return;
+  await withImap(box, async (client) => {
+    const target = await ensureFolder(client, path);
+    const lock = await client.getMailboxLock("INBOX");
+    try {
+      await client.messageMove(uids, target, { uid: true });
     } finally {
       lock.release();
     }

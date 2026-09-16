@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { assessMessage, type AssessOutput } from "./agent";
 import { displayNameFor, loadMailboxes, type MailboxConfig } from "./config";
 import { insertDraft, markDraft } from "./drafts";
-import { fetchUnseen, markSeen } from "./imap";
+import { folderByRules, folderForCategory, folderPath, type FolderKey } from "./folders";
+import { fetchUnseen, markSeen, moveToFolder } from "./imap";
 import { ingestInboundEmail } from "./ingest";
 import { notifyNeedsHuman } from "./notify";
 import { handlingFor } from "./schema";
@@ -18,7 +19,54 @@ export interface RunReport {
   drafted: number;
   autoSent: number;
   skipped: number;
+  filed: number;
   errors: { mailbox: string; messageId: string; error: string }[];
+}
+
+/** Folder moves collected during a run and executed after \Seen, per mailbox. */
+type PendingMoves = Map<FolderKey, number[]>;
+
+function queueMove(moves: PendingMoves, key: FolderKey, uid: number): void {
+  const list = moves.get(key) ?? [];
+  list.push(uid);
+  moves.set(key, list);
+}
+
+/** Rule-matched folders map onto the agent's categories for the audit column. */
+const RULE_CLASSIFICATION: Partial<Record<FolderKey, string>> = {
+  nyhedsbreve: "nyhedsbrev_spam",
+  leverandoerer: "leverandoer_b2b",
+  fragt: "leverandoer_b2b",
+  platforme: "leverandoer_b2b",
+  oekonomi: "leverandoer_b2b",
+  ansoegninger: "andet",
+};
+
+/**
+ * Move the inbox copy of an inquiry's mails into the customer folder for its
+ * category. Called when a draft is approved or discarded, so customer mail
+ * stays in INBOX while it is unanswered.
+ */
+export async function fileInquiryMail(sb: SupabaseClient, inquiryId: string, category: string): Promise<number> {
+  const { data: rows } = await sb
+    .from("mail_inbound")
+    .select("id, mailbox, imap_uid")
+    .eq("inquiry_id", inquiryId)
+    .is("folder", null)
+    .not("imap_uid", "is", null);
+  const list = (rows ?? []) as { id: string; mailbox: string; imap_uid: number }[];
+  if (!list.length) return 0;
+  const key = folderForCategory(category as Parameters<typeof folderForCategory>[0]);
+  const boxes = loadMailboxes();
+  let moved = 0;
+  for (const box of boxes) {
+    const mine = list.filter((r) => r.mailbox === box.address);
+    if (!mine.length) continue;
+    await moveToFolder(box, mine.map((r) => r.imap_uid), folderPath(key));
+    await sb.from("mail_inbound").update({ folder: folderPath(key).join("/") }).in("id", mine.map((r) => r.id));
+    moved += mine.length;
+  }
+  return moved;
 }
 
 /** Phase 2 switch: only categories the owner has enabled, and only clean, confident drafts. */
@@ -159,6 +207,7 @@ async function processMail(
   mail: InboundMail,
   settings: MailAgentSettings,
   report: RunReport,
+  moves: PendingMoves,
   anthropic?: Anthropic,
 ): Promise<void> {
   const { data: existing } = await sb
@@ -210,9 +259,13 @@ async function processMail(
     return;
   }
 
-  // Our own addresses never count as customers (own replies, other mailboxes, forwards).
-  if (mail.fromEmail.endsWith("@phonespot.dk")) {
-    await finishInbound(sb, inboundId, { classification: "system_notifikation" });
+  // Cheap filing first: our own notifications, shipping, suppliers, platforms,
+  // newsletters and applications never reach Claude and go straight to a folder.
+  const ruleFolder = folderByRules({ fromEmail: mail.fromEmail, subject: mail.subject, listUnsubscribe: mail.listUnsubscribe });
+  if (ruleFolder) {
+    const classification = mail.fromEmail.endsWith("@phonespot.dk") ? "system_notifikation" : (RULE_CLASSIFICATION[ruleFolder] ?? "system_notifikation");
+    await finishInbound(sb, inboundId, { classification, folder: folderPath(ruleFolder).join("/") });
+    queueMove(moves, ruleFolder, mail.uid);
     report.processed++;
     return;
   }
@@ -220,7 +273,9 @@ async function processMail(
   // First pass on the raw mail decides whether it becomes an inquiry at all.
   const first = await assessRaw(sb, mail, box, anthropic);
   if (!handlingFor(first.assessment.category).createInquiry) {
-    await finishInbound(sb, inboundId, { classification: first.assessment.category });
+    const key = folderForCategory(first.assessment.category);
+    await finishInbound(sb, inboundId, { classification: first.assessment.category, folder: folderPath(key).join("/") });
+    queueMove(moves, key, mail.uid);
     report.processed++;
     return;
   }
@@ -283,7 +338,7 @@ export async function runMailAgent(
   const maxMails = opts.maxMails ?? 15;
   const budget = opts.timeBudgetMs ?? 240_000;
   const sb = opts.supabase ?? createAdminClient();
-  const report: RunReport = { runId: null, fetched: 0, processed: 0, drafted: 0, autoSent: 0, skipped: 0, errors: [] };
+  const report: RunReport = { runId: null, fetched: 0, processed: 0, drafted: 0, autoSent: 0, skipped: 0, filed: 0, errors: [] };
   const boxes = loadMailboxes();
   const settings = await loadMailAgentSettings(sb);
 
@@ -312,6 +367,7 @@ export async function runMailAgent(
     report.fetched += mails.length;
 
     const seen: number[] = [];
+    const moves: PendingMoves = new Map();
     for (const mail of mails) {
       if (Date.now() - started > budget) break;
       try {
@@ -322,7 +378,7 @@ export async function runMailAgent(
             `\n[${box.address}] ${mail.fromEmail} · ${mail.subject}\n  → ${a.category} · needs_human=${a.needs_human} · ${a.confidence}\n  ${a.summary}\n  ${a.reason}\n  opslag: ${out.lookups.map((l) => `${l.tool}=${l.hits}`).join(", ") || "ingen"}\n${a.draft ? `\n${a.draft.body}\n` : ""}`,
           );
         } else {
-          await processMail(sb, box, mail, settings, report, opts.anthropic);
+          await processMail(sb, box, mail, settings, report, moves, opts.anthropic);
           seen.push(mail.uid);
         }
         remaining--;
@@ -335,11 +391,13 @@ export async function runMailAgent(
         if (isStopWorthy(message)) {
           console.error(`[mail-agent] stopper koerslen: ${message}`);
           if (!opts.dryRun && seen.length) await markSeenSafely(box, seen, report);
+          if (!opts.dryRun) await applyMoves(box, moves, report);
           break outer;
         }
       }
     }
     if (!opts.dryRun && seen.length) await markSeenSafely(box, seen, report);
+    if (!opts.dryRun) await applyMoves(box, moves, report);
   }
 
   if (report.runId) {
@@ -356,6 +414,18 @@ export async function runMailAgent(
       .eq("id", report.runId);
   }
   return report;
+}
+
+async function applyMoves(box: MailboxConfig, moves: PendingMoves, report: RunReport): Promise<void> {
+  for (const [key, uids] of moves) {
+    try {
+      await moveToFolder(box, uids, folderPath(key));
+      report.filed += uids.length;
+    } catch (err) {
+      report.errors.push({ mailbox: box.address, messageId: "-", error: `move ${key}: ${(err as Error).message}` });
+    }
+  }
+  moves.clear();
 }
 
 async function markSeenSafely(box: MailboxConfig, uids: number[], report: RunReport): Promise<void> {
