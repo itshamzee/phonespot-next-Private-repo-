@@ -1,6 +1,9 @@
 // src/app/api/webhooks/resend-inbound/route.ts
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { ingestInboundEmail } from "@/lib/mail-agent/ingest";
+import { assessAndDraft } from "@/lib/mail-agent/run";
+import { CENTRAL_INBOX } from "@/lib/email/staff-routing";
 
 // Simple rate limiting in-memory (per-process, good enough for single instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -85,87 +88,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Body too large" }, { status: 413 });
   }
 
-  // 5. Match to inquiry
-  let inquiryId: string | null = null;
-
-  // Primary: match via In-Reply-To header against mail_log.message_id
-  if (inReplyTo) {
-    const { data: logEntry } = await supabase
-      .from("mail_log")
-      .select("inquiry_id")
-      .eq("message_id", inReplyTo)
-      .single();
-
-    if (logEntry) {
-      inquiryId = logEntry.inquiry_id;
-    }
+  // 5-7. Match or create the inquiry thread and store the message (shared with the IMAP poller).
+  let inquiryId: string;
+  let inquiryMessageId: string;
+  try {
+    const result = await ingestInboundEmail(supabase, {
+      fromEmail,
+      fromName: data.from?.[0]?.name ?? null,
+      subject,
+      text: textBody,
+      inReplyTo,
+      messageId: data.headers?.["message-id"] ?? null,
+      mailbox: null,
+    });
+    inquiryId = result.inquiryId;
+    inquiryMessageId = result.inquiryMessageId;
+  } catch (err) {
+    console.error("[resend-inbound] ingest failed", err);
+    return NextResponse.json({ error: "Failed to create inquiry" }, { status: 500 });
   }
 
-  // Fallback: match sender email to most recent active inquiry
-  if (!inquiryId && fromEmail) {
-    const { data: inquiries } = await supabase
-      .from("contact_inquiries")
-      .select("id, subject, status")
-      .eq("email", fromEmail)
-      .in("status", ["ny", "besvaret", "venter_paa_svar"])
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    if (inquiries && inquiries.length > 0) {
-      // If subject matches, prefer that inquiry
-      if (subject && inquiries.length > 1) {
-        const subjectMatch = inquiries.find(
-          (inq) => inq.subject && subject.toLowerCase().includes(inq.subject.toLowerCase())
-        );
-        inquiryId = subjectMatch?.id || inquiries[0].id;
-      } else {
-        inquiryId = inquiries[0].id;
-      }
-    }
-  }
-
-  // No match: create new inquiry
-  if (!inquiryId) {
-    const { data: newInquiry, error: createErr } = await supabase
-      .from("contact_inquiries")
-      .insert({
-        name: data.from?.[0]?.name || fromEmail,
-        email: fromEmail,
-        subject: subject || "Email henvendelse",
-        message: textBody.slice(0, 5000),
-        status: "ny",
-        source: "email" as any,
-      })
-      .select("id")
-      .single();
-
-    if (createErr || !newInquiry) {
-      return NextResponse.json({ error: "Failed to create inquiry" }, { status: 500 });
-    }
-    inquiryId = newInquiry.id;
-  }
-
-  // 6. Create inquiry_message
-  await supabase.from("inquiry_messages").insert({
-    inquiry_id: inquiryId,
-    sender: "customer",
-    channel: "email",
-    body: textBody.slice(0, 10000),
-    in_reply_to: inReplyTo,
-  });
-
-  // 7. Update inquiry status
-  const { data: currentInquiry } = await supabase
-    .from("contact_inquiries")
-    .select("status")
-    .eq("id", inquiryId)
-    .single();
-
-  if (currentInquiry?.status === "besvaret" || currentInquiry?.status === "lukket") {
-    await supabase
-      .from("contact_inquiries")
-      .update({ status: "venter_paa_svar" })
-      .eq("id", inquiryId);
+  // 7b. Let the mail agent classify and draft; never block the webhook on it.
+  try {
+    await assessAndDraft(supabase, {
+      inquiryId,
+      inquiryMessageId,
+      senderEmail: fromEmail,
+      senderName: data.from?.[0]?.name ?? null,
+      mailbox: CENTRAL_INBOX,
+      subject,
+    });
+  } catch (err) {
+    console.error("[resend-inbound] agent failed", err);
   }
 
   // 8. Log to mail_log (for idempotency)
