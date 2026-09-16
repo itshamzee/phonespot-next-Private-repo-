@@ -40,7 +40,7 @@ export default async function WithdrawalPage({ params }: Props) {
             })}
           </p>
           <p className="mt-1 text-sm text-charcoal/60">
-            Total: {(order.total / 100).toLocaleString("da-DK", {
+            I alt: {(order.total / 100).toLocaleString("da-DK", {
               style: "currency",
               currency: "DKK",
             })}
@@ -67,8 +67,8 @@ export default async function WithdrawalPage({ params }: Props) {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-charcoal/80">
                 <strong>Bemærk:</strong> Returomkostninger afholdes af dig som køber.
-                Tilbagebetaling sker senest 14 dage efter vi har modtaget din
-                fortrydelsesmeddelelse, dog tidligst når varen er modtaget retur.
+                Tilbagebetaling sker senest 14 dage efter at vi har modtaget din
+                fortrydelsesmeddelelse, dog tidligst, når varen er modtaget retur.
               </p>
             </div>
 

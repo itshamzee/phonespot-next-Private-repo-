@@ -2,34 +2,27 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { Footer } from "../footer";
 
-// The footer's USP bar renders unconditionally on every page, including
-// accessory PDPs, with no per-page state — accessories carry the statutory
-// 2-year reklamationsret, not PhoneSpot's 36-month device guarantee (see
-// lib/email/brand.ts). An unconditional "36 mdr. garanti" badge here
-// contributes to a misleading overall impression on an accessory page under
-// markedsføringsloven, so it must be scoped to "refurbished" instead of a
-// blanket claim — the same fix applied to both header.tsx USP badges.
 describe("Footer", () => {
-  it("scopes the USP-bar guarantee badge to refurbished devices, not a blanket claim", () => {
+  it("provides named payment logos and direct store links", () => {
     render(<Footer />);
-    expect(screen.getByText("36 mdr. garanti på refurbished")).toBeDefined();
-    expect(screen.queryByText("36 mdr. garanti på")).toBeNull();
+    for (const name of ["Visa", "Mastercard", "MobilePay", "Apple Pay", "Klarna"]) {
+      expect(screen.getByRole("img", { name })).toBeVisible();
+    }
+    expect(screen.getByRole("link", { name: "Vejle" })).toHaveAttribute("href", "/butik/vejle");
+    expect(screen.getByRole("link", { name: "Slagelse" })).toHaveAttribute("href", "/butik/slagelse");
   });
-
-  it("still states the full, accurate guarantee claim in the brand paragraph", () => {
+  it("states the device guarantee and the Danish Trustpilot rating", () => {
     render(<Footer />);
-    expect(
-      screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i),
-    ).toBeDefined();
+    expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
+    expect(screen.getByRole("link", { name: /Trustpilot — 4,7 stjerner/ })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
-
-  // Same claim, same problem: the 30+ point test only runs on graded
-  // refurbished devices, never on a sku_product like a leather case — see
-  // lib/email/brand.ts's qualityTestUspLabel for the order-aware version of
-  // this same fix.
-  it("scopes the USP-bar quality-test badge to refurbished devices, not a blanket claim", () => {
+  it("links to selling an existing device from the footer", () => {
     render(<Footer />);
-    expect(screen.getByText("30+ kvalitetstests på refurbished")).toBeDefined();
-    expect(screen.queryByText("30+ kvalitetstests")).toBeNull();
+    expect(screen.getByRole("link", { name: "Sælg din enhed" })).toHaveAttribute("href", "/saelg-din-enhed");
+  });
+  it("preserves cookie settings and the insurance partner", () => {
+    render(<Footer />);
+    expect(screen.getByRole("button", { name: /cookie/i })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Elektronikforsikring i samarbejde med Storstrøm Forsikring" })).toHaveAttribute("href", "/forsikring");
   });
 });

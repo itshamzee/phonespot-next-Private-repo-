@@ -60,7 +60,7 @@ export function ServiceInfoTooltip({ info }: { info: ServiceInfo }) {
             <div className="mb-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">Estimeret tid</p>
               <p className="mt-1 text-sm text-charcoal/80">
-                {info.estimated_time_label ?? `${info.estimated_minutes} min`}
+                {info.estimated_time_label ?? `${info.estimated_minutes} min.`}
               </p>
             </div>
           )}

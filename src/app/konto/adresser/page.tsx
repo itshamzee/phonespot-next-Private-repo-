@@ -143,10 +143,10 @@ export default function AdresserPage() {
       setAddresses(updated);
       setForm(null);
       setEditingId(null);
-      setSaveSuccess(editingId ? "Adresse opdateret" : "Adresse tilfojet");
+      setSaveSuccess(editingId ? "Adresse opdateret" : "Adresse tilføjet");
       setTimeout(() => setSaveSuccess(""), 3000);
     } else {
-      setSaveError("Kunne ikke gemme. Prov igen.");
+      setSaveError("Kunne ikke gemme. Prøv igen.");
     }
   }
 
@@ -173,7 +173,7 @@ export default function AdresserPage() {
       setSaveSuccess("Adresse slettet");
       setTimeout(() => setSaveSuccess(""), 3000);
     } else {
-      setSaveError("Kunne ikke slette. Prov igen.");
+      setSaveError("Kunne ikke slette. Prøv igen.");
     }
   }
 
@@ -193,7 +193,7 @@ export default function AdresserPage() {
       setSaveSuccess("Standardadresse opdateret");
       setTimeout(() => setSaveSuccess(""), 3000);
     } else {
-      setSaveError("Kunne ikke gemme. Prov igen.");
+      setSaveError("Kunne ikke gemme. Prøv igen.");
     }
   }
 
@@ -217,7 +217,7 @@ export default function AdresserPage() {
             onClick={startAdd}
             className="rounded-lg bg-[#1A3D2E] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#143324]"
           >
-            Tilfoej adresse
+            Tilføj adresse
           </button>
         )}
       </div>
@@ -307,7 +307,7 @@ export default function AdresserPage() {
                 onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
                 className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1A3D2E]"
               />
-              <span className="text-sm text-[#111111]">Saet som standard leveringsadresse</span>
+              <span className="text-sm text-[#111111]">Sæt som standardleveringsadresse</span>
             </label>
 
             <div className="flex gap-3 pt-1">
@@ -316,7 +316,7 @@ export default function AdresserPage() {
                 disabled={saving}
                 className="rounded-lg bg-[#1A3D2E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#143324] disabled:opacity-50"
               >
-                {saving ? "Gemmer..." : editingId ? "Gem aendringer" : "Tilfoej adresse"}
+                {saving ? "Gemmer..." : editingId ? "Gem ændringer" : "Tilføj adresse"}
               </button>
               <button
                 type="button"
@@ -340,12 +340,12 @@ export default function AdresserPage() {
             </svg>
           </div>
           <p className="text-sm font-medium text-[#111111]">Ingen adresser endnu</p>
-          <p className="mt-1 text-xs text-[#6E6E73]">Tilfoej en leveringsadresse for hurtigere checkout</p>
+          <p className="mt-1 text-xs text-[#6E6E73]">Tilføj en leveringsadresse for hurtigere bestilling</p>
           <button
             onClick={startAdd}
             className="mt-4 rounded-lg bg-[#1A3D2E] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#143324]"
           >
-            Tilfoej adresse
+            Tilføj adresse
           </button>
         </div>
       ) : (
@@ -390,7 +390,7 @@ export default function AdresserPage() {
                     disabled={saving}
                     className="rounded-lg border border-[#E5E5EA] px-3 py-1.5 text-xs font-medium text-[#6E6E73] transition hover:bg-[#F5F2EC] hover:text-[#111111] disabled:opacity-50"
                   >
-                    Saet som standard
+                    Sæt som standard
                   </button>
                 )}
                 {deleteConfirm === addr.id ? (

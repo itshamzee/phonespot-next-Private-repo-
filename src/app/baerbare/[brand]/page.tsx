@@ -13,16 +13,15 @@ import {
   filterProductsByTier,
   filterRealLaptops,
 } from "@/lib/laptop-tiers";
-import { getCollectionConfig } from "@/lib/collections";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
-import { FadeIn } from "@/components/ui/fade-in";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
 import { ProductDetails } from "@/components/product/product-details";
+import { DeviceCollectionDetails, type CollectionFaq } from "@/components/product/device-collection";
 import { Suspense } from "react";
 
 function getTier(brand: string) {
@@ -33,7 +32,7 @@ function getTier(brand: string) {
 // spec table (mirrors the map in components/product/accessory-detail.tsx
 // and [collection]/[product]/page.tsx).
 const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
-  connector_type: "Stik-type",
+  connector_type: "Stiktype",
   case_type: "Type",
   charger_type: "Type",
   protector_type: "Type",
@@ -52,6 +51,19 @@ const ACCESSORY_ATTRIBUTE_LABELS: Record<string, string> = {
   protection_level: "Beskyttelsesniveau",
 };
 
+const TIER_FAQS: CollectionFaq[] = [
+  { question: "Hvordan er modellerne samlet i dette prisniveau?", answer: "Siden viser de aktuelle bærbare, som matcher prisniveauet ud fra deres viste pris. Udvalget kan ændre sig, når kataloget opdateres." },
+  { question: "Hvad betyder standen på en refurbished bærbar?", answer: "Standen beskriver kosmetiske brugsspor. Specifikationer og øvrige oplysninger står på den konkrete produktside." },
+  { question: "Hvor finder jeg oplysninger om batteriet?", answer: "Se batterioplysningen på den konkrete enhed. Batteriet vurderes særskilt og kan ikke udledes af den kosmetiske stand." },
+  { question: "Kan jeg se en bærbar i en butik?", answer: "Butikslageret står på den konkrete model. Du kan også kontakte PhoneSpot i Vejle eller Slagelse, før du tager afsted." },
+];
+
+const TIER_CHOICES = [
+  { title: "Programmer", body: "Tag udgangspunkt i de programmer, du bruger, og sammenlign deres krav med modellens processor og RAM." },
+  { title: "Skærm og lager", body: "Vælg skærmstørrelse efter din arbejdsform og lagerplads efter de filer, du vil gemme lokalt." },
+  { title: "Stand og batteri", body: "Brug standen til at vurdere kosmetiske brugsspor, og læs batterioplysningen på den konkrete enhed." },
+];
+
 export async function generateMetadata({
   params,
 }: {
@@ -61,7 +73,7 @@ export async function generateMetadata({
   const tier = getTier(brand);
   if (tier) {
     const title = `${tier.title} Bærbare - Refurbished med 36 mdr. garanti | PhoneSpot`;
-    const description = `Se vores ${tier.title.toLowerCase()} refurbished bærbare. ${tier.tagline}. Alle testet med 30+ kontroller og 36 måneders garanti.`;
+    const description = `Se det aktuelle udvalg af ${tier.title.toLowerCase()} refurbished bærbare med 36 måneders garanti.`;
     return {
       title,
       description,
@@ -97,13 +109,10 @@ export async function generateMetadata({
 
 export default async function BrandPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ brand: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { brand } = await params;
-  const { sort } = await searchParams;
   const tier = getTier(brand);
 
   // If not a tier slug, try rendering as a product page. This is a
@@ -173,7 +182,14 @@ export default async function BrandPage({
           <SectionWrapper background="sand">
             <Heading as="h2" size="md" className="mb-10 text-center">Andre kunder kiggede også på</Heading>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-              {relatedProducts.map((p) => (<ProductCard key={p.id} product={p} collectionHandle="baerbare" />))}
+              {relatedProducts.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  collectionHandle="baerbare"
+                  href={`/refurbished/${p.handle}`}
+                />
+              ))}
             </div>
           </SectionWrapper>
         )}
@@ -212,43 +228,65 @@ export default async function BrandPage({
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
-            { "@type": "ListItem", position: 2, name: "Refurbished Bærbare", item: "https://phonespot.dk/baerbare" },
+            { "@type": "ListItem", position: 2, name: "Refurbished bærbare", item: "https://phonespot.dk/baerbare" },
             { "@type": "ListItem", position: 3, name: tier.title, item: `https://phonespot.dk/baerbare/${brand}` },
           ],
         }}
       />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: TIER_FAQS.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
 
-      <section className="bg-[#F7F7F8] py-16 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center">
-          <Link
-            href="/baerbare"
-            className="mb-6 inline-flex items-center gap-1 text-sm text-[#6E6E73] transition-colors hover:text-[#111111]"
-          >
-            &larr; Alle bærbare
-          </Link>
-          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-[#1A3D2E]">
-            {tier.title} bærbare
-          </p>
-          <Heading size="xl" className="!text-[#111111]">
-            {tier.title} bærbare
-          </Heading>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#6E6E73]">
-            {tier.tagline}. Alle er testet med 30+ kontroller, rengjort og klar
-            til brug med 36 måneders garanti.
-          </p>
+      <section className="border-b border-[#DDE2DD] bg-[#F4F5F2]">
+        <div className="mx-auto max-w-7xl px-4 py-7 sm:py-10">
+          <nav aria-label="Brødkrumme" className="mb-4 flex items-center gap-2 text-xs text-[#687069]">
+            <Link href="/" className="hover:text-[#1A3D2E]">Forside</Link><span aria-hidden="true">/</span>
+            <Link href="/baerbare" className="hover:text-[#1A3D2E]">Bærbare</Link><span aria-hidden="true">/</span>
+            <span className="text-[#202421]">{tier.title}</span>
+          </nav>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-end">
+            <div>
+              <h1 className="font-body text-3xl font-semibold leading-tight tracking-[-0.04em] text-[#202421] sm:text-5xl">{tier.title} bærbare</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#566159] sm:text-base">{tier.tagline}. Se de modeller, der er tilgængelige i dette prisniveau lige nu.</p>
+            </div>
+            <div className="border-l border-[#BFC8C0] pl-4 text-sm text-[#566159]">
+              <p className="font-semibold text-[#202421]">{products.length} {products.length === 1 ? "model" : "modeller"} i dette prisniveau</p>
+              <p className="mt-1">36 måneders garanti på enheder</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <SectionWrapper>
+      <section className="border-b border-[#DDE2DD] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-2 px-4 py-4 text-xs text-[#566159] sm:grid-cols-3 sm:gap-6 sm:text-sm">
+          <p className="font-medium text-[#1A3D2E]">Testet og klargjort</p>
+          <p>Batteriinfo på den enkelte enhed</p>
+          <p>Butikker i Vejle og Slagelse</p>
+        </div>
+      </section>
+
+      <SectionWrapper className="!py-10 sm:!py-14">
         {products.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((product, idx) => (
-              <FadeIn key={product.id} delay={idx * 0.04}>
-                <ProductCard
-                  product={product}
-                  collectionHandle="baerbare"
-                />
-              </FadeIn>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                collectionHandle="baerbare"
+                href={
+                  product.templateId
+                    ? `/refurbished/${product.handle}`
+                    : `/baerbare/${product.handle}`
+                }
+              />
             ))}
           </div>
         ) : (
@@ -266,9 +304,15 @@ export default async function BrandPage({
         )}
       </SectionWrapper>
 
-      <SectionWrapper background="sand">
-        <TrustBar />
-      </SectionWrapper>
+      <DeviceCollectionDetails deviceType="laptop"
+        guideTitle={`Sådan vælger du blandt ${tier.title.toLowerCase()} bærbare`}
+        faqTitle={`Spørgsmål om ${tier.title.toLowerCase()} bærbare`}
+        guideIntro="Sammenlign dine vigtigste programmer og din arbejdsform med oplysningerne på hver model. Prisniveauet er et udgangspunkt; den konkrete konfiguration afgør, hvad der passer bedst."
+        choices={TIER_CHOICES}
+        faqs={TIER_FAQS}
+      />
+
+      <SectionWrapper background="sand"><TrustBar /></SectionWrapper>
     </>
   );
 }

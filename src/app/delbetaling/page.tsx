@@ -8,9 +8,9 @@ import { KlarnaIcon } from "@/components/ui/payment-icons";
 
 export const metadata: Metadata = {
   title:
-    "Delbetaling med Klarna - Køb Refurbished Tech på Afbetaling | PhoneSpot",
+    "Delbetaling med Klarna - Køb refurbished elektronik på afbetaling | PhoneSpot",
   description:
-    "Del betalingen op i 3 rentefrie rater med Klarna hos PhoneSpot. Køb refurbished iPhones, iPads og MacBooks på afbetaling uden renter. Læs hvordan det virker.",
+    "Del betalingen op i 3 rentefrie rater med Klarna hos PhoneSpot. Køb refurbished iPhones, iPads og MacBooks på afbetaling uden renter. Læs, hvordan det virker.",
   keywords:
     "delbetaling refurbished, klarna delbetaling, køb iphone på afbetaling, refurbished afbetaling, delbetaling iphone, klarna refurbished, betal i rater, rentefri delbetaling, phonespot klarna",
   alternates: {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title:
-      "Delbetaling med Klarna - Køb Refurbished Tech på Afbetaling | PhoneSpot",
+      "Delbetaling med Klarna - Køb refurbished elektronik på afbetaling | PhoneSpot",
     description:
       "Del betalingen op i 3 rentefrie rater med Klarna hos PhoneSpot. Køb refurbished iPhones, iPads og MacBooks på afbetaling uden renter.",
     url: "https://phonespot.dk/delbetaling",
@@ -35,11 +35,11 @@ const STEPS = [
     number: "1",
     title: "Vælg dit produkt",
     description:
-      "Find den refurbished iPhone, iPad eller MacBook du ønsker. Alle produkter er kvalitetstestede med 36 måneders garanti.",
+      "Find den refurbished iPhone, iPad eller MacBook, du ønsker. Alle enheder er kvalitetstestede og har 36 måneders garanti.",
   },
   {
     number: "2",
-    title: "Vælg Klarna ved checkout",
+    title: "Vælg Klarna ved betaling",
     description:
       'Når du er klar til at betale, vælger du "Betal i 3 rater" med Klarna som betalingsmetode.',
   },
@@ -143,7 +143,7 @@ const BENEFITS = [
     ),
     title: "Hurtig godkendelse",
     description:
-      "Klarna godkender din delbetaling på få sekunder direkte ved checkout. Ingen langvarig kreditvurdering.",
+      "Klarna godkender din delbetaling på få sekunder direkte ved betaling. Ingen langvarig kreditvurdering.",
   },
   {
     icon: (
@@ -165,25 +165,25 @@ const BENEFITS = [
     ),
     title: "Styr det i Klarna-appen",
     description:
-      "Hold styr på alle dine rater og betalinger direkte i Klarna-appen. Fuld overblik til enhver tid.",
+      "Hold styr på alle dine rater og betalinger direkte i Klarna-appen. Fuldt overblik til enhver tid.",
   },
 ];
 
 const FAQ = [
   {
-    question: "Hvad koster det at bruge Klarna delbetaling?",
+    question: "Hvad koster det at bruge Klarna-delbetaling?",
     answer:
       "Det er helt gratis. Der er ingen renter, gebyrer eller skjulte omkostninger. Du betaler præcis den samme pris som ved almindelig betaling — bare fordelt over 3 måneder.",
   },
   {
     question: "Hvordan fungerer de 3 rater?",
     answer:
-      "Når du vælger Klarna ved checkout, deles totalprisen i 3 lige store rater. Den første rate betales med det samme. De næste to rater trækkes automatisk efter 30 og 60 dage fra dit betalingskort eller bankkonto.",
+      "Når du vælger Klarna ved betaling, deles totalprisen i 3 lige store rater. Den første rate betales med det samme. De næste to rater trækkes automatisk efter 30 og 60 dage fra dit betalingskort eller din bankkonto.",
   },
   {
     question: "Kræver det en kreditvurdering?",
     answer:
-      "Klarna laver en hurtig, blød kreditvurdering som ikke påvirker din kreditværdighed. Godkendelsen sker på få sekunder direkte ved checkout.",
+      "Klarna laver en hurtig, blød kreditvurdering, som ikke påvirker din kreditværdighed. Godkendelsen sker på få sekunder direkte ved betaling.",
   },
   {
     question: "Kan jeg stadig returnere mit produkt?",
@@ -191,9 +191,9 @@ const FAQ = [
       "Ja, du har stadig 14 dages fuld fortrydelsesret. Hvis du returnerer produktet, refunderer Klarna automatisk de betalte rater, og eventuelle resterende rater annulleres.",
   },
   {
-    question: "Hvad sker der hvis jeg ikke betaler en rate?",
+    question: "Hvad sker der, hvis jeg ikke betaler en rate?",
     answer:
-      "Klarna sender dig en påmindelse inden hver rate trækkes. Hvis en betaling mislykkes, kontakter Klarna dig for at finde en løsning. Vi anbefaler altid at sikre der er dækning på kontoen.",
+      "Klarna sender dig en påmindelse, inden hver rate trækkes. Hvis en betaling mislykkes, kontakter Klarna dig for at finde en løsning. Vi anbefaler altid at sikre, at der er dækning på kontoen.",
   },
   {
     question: "Gælder garantien stadig ved delbetaling?",
@@ -238,7 +238,7 @@ export default function DelbetalingPage() {
               Del betalingen op med Klarna
             </Heading>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
-              Køb kvalitetstestet refurbished tech og betal i{" "}
+              Køb kvalitetstestet refurbished elektronik og betal i{" "}
               <span className="font-semibold text-[#111111]">
                 3 rentefrie rater
               </span>
@@ -312,11 +312,11 @@ export default function DelbetalingPage() {
                 Priseksempler
               </p>
               <Heading as="h2" size="md">
-                Se hvad det koster pr. måned
+                Se, hvad det koster pr. måned
               </Heading>
               <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#86868B]">
-                Her er eksempler på populære produkter og hvad de koster med
-                Klarna delbetaling i 3 rater.
+                Her er eksempler på populære produkter, og hvad de koster med
+                Klarna-delbetaling i 3 rater.
               </p>
             </div>
           </FadeIn>
@@ -404,7 +404,7 @@ export default function DelbetalingPage() {
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#86868B]">
               Når du køber refurbished, sparer du allerede op til{" "}
               <span className="font-semibold text-[#111111]">40%</span>{" "}
-              sammenlignet med nypris. Med Klarna delbetaling kan du fordele
+              sammenlignet med nypris. Med Klarna-delbetaling kan du fordele
               besparelsen over 3 måneder — og stadig få{" "}
               <span className="font-semibold text-[#111111]">
                 36 måneders garanti
@@ -488,7 +488,7 @@ export default function DelbetalingPage() {
             </Heading>
             <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-[#86868B]">
               Udforsk vores udvalg af kvalitetstestede refurbished produkter og
-              vælg Klarna ved checkout for rentefri delbetaling.
+              vælg Klarna ved betaling for rentefri delbetaling.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link

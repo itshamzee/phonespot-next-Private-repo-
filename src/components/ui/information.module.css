@@ -1,0 +1,63 @@
+.shell { font-family: var(--font-body), sans-serif; color: #242726; background: #fafaf8; padding-bottom: 52px; }
+.shell :is(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #1a3d2e; outline-offset: 4px; }
+.container { width: min(1248px, calc(100% - 72px)); margin-inline: auto; }
+.breadcrumb { padding-block: 22px; font-size: 12px; color: #626a65; }
+.breadcrumb a:hover, .textLink:hover { text-decoration: underline; }
+.header { padding: 12px 0 30px; border-bottom: 1px solid #dce1db; }
+.eyebrow { display: block; margin-bottom: 12px; color: #1a3d2e; font-size: 12px; font-weight: 650; }
+.shell h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.08; font-weight: 650; letter-spacing: -.045em; margin: 0 0 16px; }
+.shell h2 { font-size: clamp(24px, 2.5vw, 32px); line-height: 1.18; font-weight: 650; letter-spacing: -.035em; margin: 0 0 16px; }
+.shell h3 { font-size: 19px; font-weight: 650; line-height: 1.3; margin: 0 0 10px; }
+.shell p { line-height: 1.7; }
+.intro { max-width: 650px; color: #626a65; margin: 0; }
+.section { padding-block: 36px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.panel { border: 1px solid #dce1db; border-radius: 16px; background: white; padding: 28px; }
+.panel p { margin: 0 0 12px; color: #626a65; }
+.address { font-style: normal; line-height: 1.7; margin-bottom: 20px; }
+@media (min-width: 701px) { .panel .address { min-height: 96px; } }
+.hours { margin: 16px 0 22px; font-size: 14px; }
+.hours div { display: flex; justify-content: space-between; gap: 18px; padding-block: 6px; border-bottom: 1px solid #edf0eb; }
+.hours dt { color: #626a65; }
+.hours dd { margin: 0; white-space: nowrap; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 22px; }
+.button, .secondary { display: inline-flex; justify-content: center; align-items: center; padding: 12px 20px; border-radius: 8px; font-weight: 650; font-size: 14px; min-height: 44px; text-decoration: none; }
+.button { background: #1a3d2e; color: white; border: 1px solid #1a3d2e; }
+.button:hover { background: #254f3c; }
+.button:disabled { opacity: .55; cursor: wait; }
+.secondary { background: white; border: 1px solid #dce1db; color: #242726; }
+.secondary:hover { border-color: #1a3d2e; }
+.textLink { color: #1a3d2e; text-decoration: underline; text-underline-offset: 4px; font-size: 14px; font-weight: 600; }
+.services { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; padding-block: 34px; border-block: 1px solid #dce1db; }
+.services p { color: #626a65; margin: 0 0 18px; font-size: 14px; }
+.photo { margin: 0; }
+.photo img { width: 100%; height: auto; max-height: 390px; object-fit: cover; border-radius: 16px; }
+.photo figcaption { margin-top: 10px; color: #626a65; font-size: 12px; }
+.map { width: 100%; height: 300px; border: 1px solid #dce1db; border-radius: 16px; }
+.reading { max-width: 800px; }
+.reading > section { padding-block: 30px; border-bottom: 1px solid #dce1db; }
+.reading p, .reading li { color: #626a65; line-height: 1.75; }
+.reading ul { padding-left: 20px; list-style: disc; }
+.notice { padding: 24px; background: #edf2ed; border-radius: 12px; }
+.notice p:last-child { margin-bottom: 0; }
+.rows > div { padding-block: 22px; border-bottom: 1px solid #dce1db; }
+.rows p { margin: 0; color: #626a65; }
+.jumpLinks { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 22px; }
+.searchForm { max-width: 700px; margin-top: 24px; }
+.searchForm label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.searchForm > div { display: flex; gap: 10px; }
+.searchForm input { min-width: 0; flex: 1; border: 1px solid #dce1db; background: white; border-radius: 8px; padding: 12px 14px; font-size: 16px; }
+.results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.results h3 { font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: normal; margin: 0; }
+@media (max-width: 1023px) { .results { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 419px) { .results { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .container { width: calc(100% - 32px); }
+  .grid, .services { grid-template-columns: 1fr; }
+  .panel { padding: 22px; }
+  .section { padding-block: 28px; }
+  .services { gap: 24px; }
+  .services > div + div { padding-top: 22px; border-top: 1px solid #dce1db; }
+  .map { height: 230px; }
+  .header { padding-top: 6px; }
+}

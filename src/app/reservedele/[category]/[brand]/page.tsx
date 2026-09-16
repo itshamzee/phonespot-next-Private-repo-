@@ -32,7 +32,7 @@ export async function generateMetadata({
 
   const brandName = capitalise(brandSlug);
   const title = `${category.name} til ${brandName} | PhoneSpot`;
-  const description = `Køb ${category.name.toLowerCase()} til ${brandName}. Original og premium kvalitet med op til 2 års garanti. Levering i hele Danmark.`;
+  const description = `Køb ${category.name.toLowerCase()} til ${brandName}. Original kvalitet og premiumkvalitet med op til 2 års garanti. Levering i hele Danmark.`;
 
   return {
     title,

@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = await getSparePartCategoryBySlug(slug);
   if (!cat) return {};
 
-  const title = cat.seo_title || `${cat.name} til iPhone & Samsung | PhoneSpot`;
+  const title = cat.seo_title || `${cat.name} til iPhone og Samsung | PhoneSpot`;
   const description =
     cat.seo_description ||
     `Køb ${cat.name.toLowerCase()} til alle enheder. Op til 2 års garanti. Levering i hele Danmark.`;
@@ -61,7 +61,7 @@ export default async function CategoryPage({ params }: Props) {
         title={cat.hero_title || `${cat.name} til alle enheder`}
         subtitle={cat.hero_subtitle || `Originale og premium ${cat.name.toLowerCase()} med garanti.`}
         breadcrumb={
-          <nav aria-label="Breadcrumb" className="mb-6 text-sm">
+          <nav aria-label="Brødkrumme" className="mb-6 text-sm">
             <ol className="flex items-center gap-1.5 text-[#86868B]">
               <li><Link href="/reservedele" className="hover:text-[#111111]">Reservedele</Link></li>
               <li aria-hidden="true">/</li>
@@ -91,7 +91,7 @@ export default async function CategoryPage({ params }: Props) {
                     >
                       {tier.name}
                     </span>
-                    <span className="text-xs text-[#86868B]">{tier.default_warranty_months} mdr garanti</span>
+                    <span className="text-xs text-[#86868B]">{tier.default_warranty_months} mdr. garanti</span>
                   </div>
                   <p className="text-xs text-[#111111]/70">{tier.short_description}</p>
                 </div>
@@ -142,7 +142,7 @@ export default async function CategoryPage({ params }: Props) {
             {cat.seo_text && (
               <div className="text-sm leading-relaxed text-[#111111]/70">
                 <h2 className="font-display text-2xl font-bold text-[#111111] mb-6">
-                  {cat.name} — Alt hvad du skal vide
+                  {cat.name} — Alt, hvad du skal vide
                 </h2>
                 <p>{cat.seo_text}</p>
               </div>

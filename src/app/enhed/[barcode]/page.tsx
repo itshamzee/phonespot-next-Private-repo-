@@ -15,25 +15,25 @@ export async function generateMetadata({ params }: PageProps) {
   const name = (data?.product_templates as unknown as { display_name: string } | null)?.display_name ?? "Enhed";
   return {
     title: `${name} — Enhedshistorik | PhoneSpot`,
-    description: `Se kvalitetsoplysninger, batterikapacitet og grading for denne enhed.`,
+    description: `Se kvalitetsoplysninger, batterikapacitet og stand for denne enhed.`,
   };
 }
 
 const GRADE_INFO: Record<string, { label: string; color: string; description: string }> = {
   A: {
-    label: "Grade A — Perfekt stand",
+    label: "Stand A — Perfekt stand",
     color: "bg-green-100 text-green-800 border-green-200",
-    description: "Ingen synlige ridser eller skader. Skarm og krop i perfekt stand.",
+    description: "Ingen synlige ridser eller skader. Skærm og kabinet i perfekt stand.",
   },
   B: {
-    label: "Grade B — Let brugt",
+    label: "Stand B — Let brugt",
     color: "bg-amber-100 text-amber-800 border-amber-200",
-    description: "Lette kosmetiske brugsspor. Skaerm i god stand, mulige lette ridser pa krop.",
+    description: "Lette kosmetiske brugsspor. Skærm i god stand, muligvis lette ridser på kabinettet.",
   },
   C: {
-    label: "Grade C — Tydeligt brugt",
+    label: "Stand C — Tydeligt brugt",
     color: "bg-red-100 text-red-800 border-red-200",
-    description: "Tydelige brugsspor, ridser eller sma skader. Fuld funktionalitet.",
+    description: "Tydelige brugsspor, ridser eller små skader. Fuld funktionalitet.",
   },
 };
 
@@ -69,7 +69,7 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
       {/* Header */}
       <div className="mb-8 text-center">
         <p className="text-sm font-semibold tracking-tight text-green-600">
-          PhoneSpot Enhedshistorik
+          PhoneSpot-enhedshistorik
         </p>
         <h1 className="mt-2 text-3xl font-bold text-stone-800">
           {template?.display_name ?? "Enhed"}
@@ -152,7 +152,7 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
         {device.condition_notes && (
           <div className="rounded-xl border border-stone-200 bg-white p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
-              Tilstandsbemaerkninger
+              Bemærkninger om stand
             </h2>
             <p className="text-sm text-stone-700 whitespace-pre-line">{device.condition_notes}</p>
           </div>
@@ -165,8 +165,8 @@ export default async function DeviceHistoryPage({ params }: PageProps) {
           </h2>
           <p className="text-sm text-stone-700">
             Denne enhed er testet og kvalitetsgodkendt af PhoneSpot.
-            Alle enheder gennemgar en grundig funktionstest, batterikontrol og
-            kosmetisk vurdering for de saeettes til salg.
+            Alle enheder gennemgår en grundig funktionstest, batterikontrol og
+            kosmetisk vurdering før de sættes til salg.
           </p>
           {device.listed_at && (
             <p className="mt-2 text-xs text-stone-500">

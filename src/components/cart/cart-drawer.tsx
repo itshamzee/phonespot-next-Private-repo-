@@ -99,7 +99,7 @@ export function CartDrawer() {
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Indkobskurv"
+        aria-label="Indkøbskurv"
       >
         <div className="flex h-full flex-col">
           {/* Header */}
@@ -181,14 +181,14 @@ export function CartDrawer() {
               {/* Subtotal / total rows */}
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#86868B]">Subtotal</span>
+                  <span className="text-sm text-[#86868B]">Delsum</span>
                   <span className="text-sm font-medium text-[#111111]">
                     {formatOere(totals.subtotal)}
                   </span>
                 </div>
                 {totals.bundleDiscountAmount > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#1A3D2E]">Spot bundle rabat</span>
+                    <span className="text-sm text-[#1A3D2E]">Spot-pakkerabat</span>
                     <span className="text-sm font-medium text-[#1A3D2E]">
                       -{formatOere(totals.bundleDiscountAmount)}
                     </span>
@@ -209,7 +209,7 @@ export function CartDrawer() {
                   </div>
                 )}
                 <div className="flex items-center justify-between border-t border-[#E5E5EA] pt-1.5">
-                  <span className="text-sm font-semibold text-[#111111]">Total</span>
+                  <span className="text-sm font-semibold text-[#111111]">I alt</span>
                   <span className="text-lg font-semibold text-[#111111]">
                     {formatOere(totals.total)}
                   </span>

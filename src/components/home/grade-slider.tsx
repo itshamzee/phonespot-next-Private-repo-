@@ -21,7 +21,7 @@ const GRADES = [
   {
     grade: "C",
     title: "OK stand",
-    desc: "Lette skærmridser og synlige brugsspor. Mest budgetvenlige valg.",
+    desc: "Lette skærmridser og synlige brugsspor. Det mest budgetvenlige valg.",
     image: "/quality/grade-c.png",
     color: "bg-gray",
   },

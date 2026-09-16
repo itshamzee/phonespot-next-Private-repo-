@@ -41,7 +41,7 @@ export default async function OrderConfirmationPage({
   const { session_id: sessionId } = await searchParams;
 
   if (!sessionId) {
-    return <ConfirmationError message="Ingen ordre-session fundet." />;
+    return <ConfirmationError message="Vi kunne ikke finde oplysninger om din bestilling." />;
   }
 
   // Server-side fetch with service role bypasses RLS — Stripe session IDs are

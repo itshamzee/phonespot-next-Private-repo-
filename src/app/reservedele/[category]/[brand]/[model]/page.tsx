@@ -61,7 +61,7 @@ export async function generateMetadata({
 
   const priceFragment = cheapestPrice != null ? ` — Fra ${cheapestPrice} kr` : "";
   const title = `${category.name} til ${modelName}${priceFragment} | PhoneSpot`;
-  const description = `Køb ${category.name.toLowerCase()} til ${modelName}. Originale og premium kvalitetsdele med op til 2 års garanti. Levering i hele Danmark.`;
+  const description = `Køb ${category.name.toLowerCase()} til ${modelName}. Originale dele og kvalitetsdele i premiumklassen med op til 2 års garanti. Levering i hele Danmark.`;
 
   return {
     title,

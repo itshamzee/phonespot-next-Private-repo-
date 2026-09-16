@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { STORES } from "@/lib/store-config";
@@ -6,7 +7,7 @@ import { STORES } from "@/lib/store-config";
 export const metadata: Metadata = {
   title: "Handelsbetingelser - PhoneSpot",
   description:
-    "Læs PhoneSpots handelsbetingelser for køb af refurbished iPhones, iPads og øvrig elektronik — version 2.0.",
+    "Læs PhoneSpots handelsbetingelser for køb af refurbished iPhones, iPads og øvrig elektronik — version 2.1.",
   alternates: { canonical: "https://phonespot.dk/handelsbetingelser" },
 };
 
@@ -23,7 +24,7 @@ export default function HandelsbetingelserPage() {
         <div>
           <Heading size="lg">Handelsbetingelser</Heading>
           <p className="mt-2 text-sm text-gray">
-            Version 2.0 — Sidst opdateret: 12. marts 2026
+            Version 2.1 — Sidst opdateret: 16. september 2026
           </p>
         </div>
 
@@ -59,11 +60,11 @@ export default function HandelsbetingelserPage() {
           <p className="mt-3">
             Disse handelsbetingelser gælder for alle køb foretaget hos PhoneSpot ApS — både via
             vores webshop på phonespot.dk og i vores fysiske butik. Ved at gennemføre et køb
-            accepterer du disse betingelser i sin helhed.
+            accepterer du disse betingelser i deres helhed.
           </p>
           <p className="mt-3">
             Betingelserne gælder for køb foretaget af forbrugere (privatpersoner) samt
-            erhvervskunder. Bemærk at visse rettigheder, herunder fortrydelsesretten, alene
+            erhvervskunder. Bemærk, at visse rettigheder, herunder fortrydelsesretten, alene
             gælder for forbrugere og ikke for erhvervskunder, medmindre andet er aftalt
             skriftligt.
           </p>
@@ -80,7 +81,7 @@ export default function HandelsbetingelserPage() {
           <p className="mt-3">
             PhoneSpot sælger professionelt renoveret (refurbished) elektronik. Alle produkter
             gennemgår en grundig funktionstest og rengøring inden salg. Vi anvender følgende
-            kvalitetsgraderingsystem:
+            kvalitetsgraderingssystem:
           </p>
           <ul className="mt-3 space-y-3">
             <li>
@@ -166,8 +167,9 @@ export default function HandelsbetingelserPage() {
           </ul>
           <p className="mt-3">
             Fragtpriserne fremgår ved checkout. Levering er gratis ved ordrer over 500 kr.
-            Risikoen for varens hændelige undergang overgår til dig som køber, når forsendelsen
-            er afleveret til transportøren.
+            Ved forbrugerkøb har vi ansvaret for varen, indtil den er afleveret til dig eller en
+            person, du har bedt om at modtage den. Vælger du selv en transportør, som vi ikke
+            tilbyder, overgår risikoen dog til dig, når varen er afleveret til denne transportør.
           </p>
           <p className="mt-3">
             Hvis din pakke er synligt beskadiget ved modtagelse, bedes du afvise forsendelsen
@@ -269,9 +271,9 @@ export default function HandelsbetingelserPage() {
           </p>
         </div>
 
-        {/* 10. PhoneSpot Garanti */}
+        {/* 10. PhoneSpot-garanti */}
         <div>
-          <h2>10. PhoneSpot Garanti (36 måneder)</h2>
+          <h2>10. PhoneSpot-garanti (36 måneder)</h2>
           <p className="mt-3">
             Ud over den lovpligtige reklamationsret tilbyder PhoneSpot en udvidet garanti på
             36 måneder på alle refurbished produkter. Garantien er en frivillig garanti fra
@@ -280,7 +282,7 @@ export default function HandelsbetingelserPage() {
           <h3 className="mt-4">Garantien dækker</h3>
           <ul className="mt-2 space-y-1">
             <li>Fabrikationsfejl og funktionelle mangler, der ikke skyldes brugerens adfærd</li>
-            <li>Pludselig funktionssvigt ved normal brug</li>
+            <li>Pludseligt funktionssvigt ved normal brug</li>
             <li>Batterisundhed under garanteret minimumsniveau (jf. produktbeskrivelsen)</li>
           </ul>
           <h3 className="mt-4">Garantien dækker ikke</h3>
@@ -325,17 +327,16 @@ export default function HandelsbetingelserPage() {
             </p>
           </div>
           <p className="mt-3">
-            Hvis du er bosiddende i et andet EU-land, kan du klage via EU-Kommissionens
-            online klageplatform (ODR-platformen):{" "}
+            Hvis du er bosiddende i et andet EU-land, kan du finde EU-Kommissionens information
+            om klagehjælp her:{" "}
             <a
-              href="https://ec.europa.eu/consumers/odr"
+              href="https://consumer-redress.ec.europa.eu/index_da"
               target="_blank"
               rel="noopener noreferrer"
             >
-              ec.europa.eu/consumers/odr
+              consumer-redress.ec.europa.eu
             </a>
-            . Vores e-mailadresse til brug for ODR-klager er{" "}
-            <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>.
+            .
           </p>
         </div>
 
@@ -346,7 +347,7 @@ export default function HandelsbetingelserPage() {
             PhoneSpot behandler dine personoplysninger i overensstemmelse med gældende
             databeskyttelseslovgivning (GDPR). Du kan læse mere om, hvordan vi indsamler,
             anvender og beskytter dine personoplysninger i vores{" "}
-            <a href="/privatlivspolitik">privatlivspolitik</a>.
+            <Link href="/privatlivspolitik">privatlivspolitik</Link>.
           </p>
         </div>
 

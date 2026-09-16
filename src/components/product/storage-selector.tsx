@@ -17,11 +17,11 @@ export function StorageSelector({
   if (options.length === 0) return null;
 
   return (
-    <div>
-      <p className="mb-2 text-sm font-bold text-charcoal">
+    <fieldset>
+      <legend className="mb-2 text-sm font-bold text-charcoal">
         Lagerplads{" "}
         <span className="font-normal text-charcoal/50">— {selected}</span>
-      </p>
+      </legend>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const isSelected = opt === selected;
@@ -30,6 +30,7 @@ export function StorageSelector({
             <button
               key={opt}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => isAvailable && onChange(opt)}
               disabled={!isAvailable}
               aria-disabled={!isAvailable}
@@ -44,7 +45,7 @@ export function StorageSelector({
             >
               {opt}
               {!isAvailable && (
-                <span className="ml-1 text-[10px] font-normal uppercase tracking-wide no-underline">
+                <span className="ml-1 text-[10px] font-normal  no-underline">
                   udsolgt
                 </span>
               )}
@@ -52,6 +53,6 @@ export function StorageSelector({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }

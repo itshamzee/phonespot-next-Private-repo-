@@ -1,0 +1,65 @@
+.accessories {
+  display: grid;
+  grid-template-columns: 1fr 1.9fr;
+  align-items: center;
+  gap: 40px;
+  padding: 32px 36px;
+  margin-bottom: 44px;
+  border-radius: 10px;
+  background: #f6f6f2;
+}
+.accessoryCopy h2, .qualityCopy h2 {
+  margin: 0 0 18px;
+  color: #1a3d2e;
+  font-size: clamp(29px, 2.8vw, 39px);
+  font-weight: 550;
+  line-height: 1.1;
+  letter-spacing: -1.3px;
+  text-wrap: balance;
+}
+.accessoryCopy p { margin: 0 0 10px; max-width: 270px; color: #596456; font-size: 14px; line-height: 1.7; }
+.accessoryLinks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.accessoryLinks a { display: flex; min-width: 0; flex-direction: column; }
+.accessoryImage { display: grid; place-items: center; height: 185px; padding: 8px 16px; }
+.accessoryImage img { width: 100%; height: 100%; object-fit: contain; }
+.accessoryLinks a>span { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; padding: 12px 0 0; border-top: 1px solid #d7ddd3; font-size: 13px; font-weight: 550; }
+.accessoryLinks a>span svg { width: 16px; height: 16px; }
+.accessoryLinks a:hover>span { text-decoration: underline; text-underline-offset: 4px; }
+.quality { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; padding: 60px 0; }
+.qualityCopy p { color: #586158; font-size: 15px; line-height: 1.8; margin: 0 0 18px; max-width: 490px; }
+.qualityCopy p a { text-decoration: underline; text-decoration-color: #a6b3a7; text-underline-offset: 3px; }
+.qualityCopy p a:hover { color: #1a3d2e; }
+.answers h3 { font-size: 20px; font-weight: 550; margin: 0 0 18px; letter-spacing: -.4px; }
+.answers details:first-of-type { border-top: 1px solid #dce1d9; }
+.answers details summary { font-size: 14px; min-height: 64px; gap: 16px; }
+.answers .answer p { font-size: 14px; line-height: 1.8; margin: 0 0 6px; }
+.answer a { display: inline-flex; align-items: center; gap: 10px; color: #1a3d2e; font-size: 13px; font-weight: 550; min-height: 44px; margin-bottom: 10px; }
+.answer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.answer a svg { width: 16px; height: 16px; }
+@media (max-width: 1100px) {
+  .accessories { padding: 26px; gap: 24px; }
+  .accessoryLinks { gap: 14px; }
+  .accessoryImage { height: 155px; padding-inline: 6px; }
+  .quality { gap: 40px; }
+}
+@media (max-width: 760px) {
+  .accessories { grid-template-columns: 1fr; gap: 14px; padding: 25px 22px; margin-bottom: 30px; }
+  .accessoryCopy h2 br { display: none; }
+  .accessoryCopy h2 { font-size: 30px; margin-bottom: 12px; }
+  .accessoryCopy p { max-width: 100%; }
+  .accessoryLinks { gap: 14px; }
+  .accessoryImage { height: 116px; padding: 0; }
+  .accessoryLinks a>span { font-size: 11px; align-items: flex-start; min-height: 54px; gap: 3px; }
+  .accessoryLinks a>span svg { display: none; }
+  .quality { grid-template-columns: 1fr; gap: 30px; padding: 38px 0; }
+  .qualityCopy h2 { font-size: 31px; }
+  .qualityCopy p { font-size: 14px; }
+  .answers h3 { font-size: 20px; }
+}
+@media (max-width: 360px) {
+  .accessories { padding: 22px 16px; }
+  .accessoryLinks { gap: 10px; }
+  .accessoryImage { height: 96px; }
+  .accessoryLinks a>span { font-size: 10px; }
+  .qualityCopy h2 { font-size: 28px; }
+}

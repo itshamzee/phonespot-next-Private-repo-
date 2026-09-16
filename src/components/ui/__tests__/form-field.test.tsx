@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import { FormField } from "../form-field";
 
 describe("FormField", () => {
@@ -30,5 +30,26 @@ describe("FormField", () => {
   it("shows required indicator", () => {
     render(<FormField label="Email" name="email" required />);
     expect(screen.getByText("*")).toBeInTheDocument();
+  });
+
+  it("submits the existing value when an option has a corrected display label", () => {
+    const onChange = vi.fn();
+    render(
+      <form aria-label="Reparation">
+        <FormField
+          label="Reparationstype"
+          name="repairType"
+          type="select"
+          options={["Skaermudskiftning", "Batteri"]}
+          optionLabels={{ Skaermudskiftning: "Skærmudskiftning" }}
+          onChange={onChange}
+        />
+      </form>,
+    );
+    fireEvent.change(screen.getByLabelText("Reparationstype"), { target: { value: "Skaermudskiftning" } });
+    expect(screen.getByRole("option", { name: "Skærmudskiftning" })).toBeInTheDocument();
+    expect(new FormData(screen.getByRole("form") as HTMLFormElement).get("repairType")).toBe("Skaermudskiftning");
+    expect(screen.getByRole("option", { name: "Batteri" })).toHaveValue("Batteri");
+    expect(onChange).toHaveBeenCalledOnce();
   });
 });

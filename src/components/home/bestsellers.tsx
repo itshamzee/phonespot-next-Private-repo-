@@ -39,14 +39,14 @@ function categoryLabel(category: string): string {
   const map: Record<string, string> = {
     iphone: "iPhone",
     smartphone: "Smartphone",
-    laptop: "Laptop",
+    laptop: "Bærbar",
     macbook: "MacBook",
     ipad: "iPad",
     tablet: "Tablet",
     smartwatch: "Smartwatch",
-    watch: "Watch",
+    watch: "Ur",
     airpods: "AirPods",
-    headphones: "Headphones",
+    headphones: "Høretelefoner",
     accessory: "Tilbehør",
   };
   return map[category.toLowerCase()] ?? category;

@@ -1,3 +1,5 @@
+import { getSpecLabel } from "@/lib/product/spec-display";
+
 type SpecificationsTableProps = {
   specs: Record<string, string>;
 };
@@ -9,17 +11,22 @@ export function SpecificationsTable({ specs }: SpecificationsTableProps) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-sand">
-      <table className="w-full text-sm">
+      <table className="w-full table-fixed font-body text-sm">
         <tbody>
           {entries.map(([key, value], index) => (
             <tr
               key={key}
               className={index % 2 === 0 ? "bg-white" : "bg-warm-white"}
             >
-              <td className="w-2/5 px-4 py-3 font-semibold text-charcoal">
-                {key}
+              <th
+                scope="row"
+                className="w-2/5 break-words px-4 py-3 text-left font-semibold text-charcoal"
+              >
+                {getSpecLabel(key)}
+              </th>
+              <td className="break-words px-4 py-3 text-charcoal/70">
+                {value}
               </td>
-              <td className="px-4 py-3 text-charcoal/70">{value}</td>
             </tr>
           ))}
         </tbody>

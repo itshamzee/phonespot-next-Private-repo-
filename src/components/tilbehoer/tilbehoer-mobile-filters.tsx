@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { AccessoryCategoryIcon } from "./accessory-category-icon";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   TILBEHOER_CATEGORIES,
@@ -76,7 +77,7 @@ function AccordionSection({ heading, children, defaultOpen = false }: AccordionS
         className="flex w-full items-center justify-between py-3.5 text-left"
         aria-expanded={expanded}
       >
-        <span className="font-display text-sm font-bold text-charcoal">{heading}</span>
+        <span className="font-body text-sm font-bold text-charcoal">{heading}</span>
         <ChevronDownIcon
           className={`h-4 w-4 text-charcoal/60 transition-transform duration-200 ${
             expanded ? "rotate-180" : ""
@@ -96,6 +97,39 @@ export function TilbehoerMobileFilters({
   activeCategory,
   productCount,
 }: TilbehoerMobileFiltersProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const background: {element:HTMLElement; inert:boolean; hidden:string|null}[] = [];
+    let branch: HTMLElement | null = dialogRef.current;
+    while (branch?.parentElement) {
+      for (const sibling of Array.from(branch.parentElement.children)) {
+        if (sibling === branch || !(sibling instanceof HTMLElement) || sibling.hasAttribute("data-filter-backdrop")) continue;
+        background.push({element:sibling,inert:sibling.hasAttribute("inert"),hidden:sibling.getAttribute("aria-hidden")});
+        sibling.setAttribute("inert", ""); sibling.setAttribute("aria-hidden", "true");
+      }
+      branch = branch.parentElement;
+    }
+    const focusable = () => Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex="0"]') ?? []);
+    focusable()[0]?.focus();
+    function keydown(event: KeyboardEvent) {
+      if (event.key === "Escape") { event.preventDefault(); closeRef.current(); }
+      if (event.key !== "Tab") return;
+      const nodes = focusable(); const first = nodes[0]; const last = nodes[nodes.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialogRef.current?.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current?.contains(document.activeElement))) { event.preventDefault(); first?.focus(); }
+    }
+    const wide = window.matchMedia?.("(min-width: 1024px)");
+    const resized = () => { if (wide?.matches) closeRef.current(); };
+    wide?.addEventListener?.("change", resized);
+    document.addEventListener("keydown", keydown);
+    return () => { document.removeEventListener("keydown", keydown); wide?.removeEventListener?.("change", resized); document.body.style.overflow = overflow; for (const item of background) { if (!item.inert) item.element.removeAttribute("inert"); if (item.hidden === null) item.element.removeAttribute("aria-hidden"); else item.element.setAttribute("aria-hidden",item.hidden); } previous?.focus(); };
+  }, [open]);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -138,7 +172,7 @@ export function TilbehoerMobileFilters({
     if (slug === "alle") {
       router.push("/tilbehoer");
     } else {
-      router.push(`/tilbehoer/${slug}`);
+      router.push(slug === "beskyttelsesglas" ? "/beskyttelsesglas" : `/tilbehoer/${slug}`);
     }
     onClose();
   };
@@ -168,7 +202,7 @@ export function TilbehoerMobileFilters({
 
   const categoryFiltersConfig = getCategoryFilters(activeCategory);
   const isDeviceSpecific =
-    activeCategory === "covers" || activeCategory === "skaermbeskyttelse";
+    ["", "covers", "skaermbeskyttelse", "beskyttelsesglas"].includes(activeCategory);
 
   if (!open) return null;
 
@@ -176,6 +210,7 @@ export function TilbehoerMobileFilters({
     <>
       {/* Backdrop */}
       <div
+        data-filter-backdrop="true"
         className="fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
         aria-hidden="true"
@@ -183,6 +218,7 @@ export function TilbehoerMobileFilters({
 
       {/* Sheet */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Filter"
@@ -193,44 +229,46 @@ export function TilbehoerMobileFilters({
           <div className="p-5 space-y-0">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-sand/60">
-              <h2 className="font-display text-lg font-bold text-charcoal">Filter</h2>
+              <h2 className="font-body text-lg font-bold text-charcoal">Filter</h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-charcoal/60 hover:bg-sand/40 hover:text-charcoal transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-charcoal/60 hover:bg-sand/40 hover:text-charcoal transition-colors"
                 aria-label="Luk filter"
               >
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Category pills */}
+            <button type="button" className="my-3 text-sm underline" onClick={() => updateParam({brand:null,model:null,type:null,case_type:null,protector_type:null,search:null,pris:null,inStore:null,sort:null})}>Nulstil alle</button>
+            <label className="flex items-center gap-3 py-3 text-sm"><input type="checkbox" checked={searchParams.get("inStore") === "true"} onChange={e => updateParam({inStore:e.target.checked ? "true" : null})}/>Kun på lager i butik</label>
+            {/* Category navigation */}
             <div className="py-4 border-b border-sand/60">
-              <p className="mb-2.5 font-display text-sm font-bold text-charcoal">Kategori</p>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+              <p className="mb-2.5 font-body text-sm font-bold text-charcoal">Kategori</p>
+              <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => handleCategoryPill("alle")}
-                  className={`inline-flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                  className={`inline-flex min-h-10 min-w-0 items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                     activeCategory === ""
                       ? "bg-green-eco text-white"
                       : "border border-sand bg-white text-charcoal"
                   }`}
                 >
-                  Alle
+                  <AccessoryCategoryIcon slug=""/>Alle
                 </button>
-                {TILBEHOER_CATEGORIES.map((cat) => (
+                {TILBEHOER_CATEGORIES.filter(cat => cat.slug !== "skaermbeskyttelse").map((cat) => (
                   <button
                     key={cat.slug}
                     type="button"
                     onClick={() => handleCategoryPill(cat.slug)}
-                    className={`inline-flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                    className={`inline-flex min-h-10 min-w-0 items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
                       activeCategory === cat.slug
                         ? "bg-green-eco text-white"
                         : "border border-sand bg-white text-charcoal"
                     }`}
                   >
-                    {cat.label}
+                    <AccessoryCategoryIcon slug={cat.slug}/>{cat.label}
                   </button>
                 ))}
               </div>
@@ -254,12 +292,12 @@ export function TilbehoerMobileFilters({
 
                     return (
                       <div key={brandSlug}>
-                        <p className="mb-1 px-2 text-[11px] font-bold uppercase tracking-wider text-charcoal/50">
+                        <p className="mb-1 px-2 text-[11px] font-bold tracking-normal text-charcoal/50">
                           {brandLabel}
                         </p>
                         <ul className="space-y-0.5">
                           {visibleDevices.map((device) => {
-                            const isActive = activeModel === device.label;
+                            const isActive = (activeModel === device.label || activeModel === device.slug);
                             return (
                               <li key={device.slug}>
                                 <button
@@ -328,7 +366,7 @@ export function TilbehoerMobileFilters({
                                 onClick={() =>
                                   handleFilterClick(filter.key, option.value)
                                 }
-                                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
+                                className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
                                   isActive
                                     ? "border-green-eco/40 bg-green-eco/10 text-green-eco"
                                     : "border-sand bg-white text-charcoal/70"
@@ -411,7 +449,7 @@ export function TilbehoerMobileFilters({
             onClick={onClose}
             className="w-full rounded-xl bg-green-eco py-3.5 text-sm font-bold text-white transition-colors hover:bg-green-eco/90 active:bg-green-eco/80"
           >
-            Vis {productCount} produkter
+            Vis {productCount} {productCount === 1 ? "produkt" : "produkter"}
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ const MOCK_ORDERS = [
     itemCount: 12,
     total: 384000,
     items: [
-      { name: "iPhone 15 Pro skaerm — Premium OLED", qty: 5, unitPrice: 42000 },
+      { name: "iPhone 15 Pro skærm — Premium OLED", qty: 5, unitPrice: 42000 },
       { name: "iPhone 14 batteri — OEM", qty: 7, unitPrice: 18000 },
     ],
   },
@@ -24,7 +24,7 @@ const MOCK_ORDERS = [
     itemCount: 5,
     total: 162500,
     items: [
-      { name: "Samsung S23 skaerm — In-Cell", qty: 3, unitPrice: 32500 },
+      { name: "Samsung S23 skærm — In-Cell", qty: 3, unitPrice: 32500 },
       { name: "iPhone 13 bagcover — sort", qty: 2, unitPrice: 15000 },
     ],
   },
@@ -36,8 +36,8 @@ const MOCK_ORDERS = [
     itemCount: 20,
     total: 596000,
     items: [
-      { name: "iPhone 15 skaerm — Service Pack", qty: 10, unitPrice: 45000 },
-      { name: "iPhone 14 Pro skaerm — Premium Soft OLED", qty: 5, unitPrice: 38000 },
+      { name: "iPhone 15 skærm — Service Pack", qty: 10, unitPrice: 45000 },
+      { name: "iPhone 14 Pro skærm — Premium Soft OLED", qty: 5, unitPrice: 38000 },
       { name: "USB-C opladningsstik — iPhone 15 serie", qty: 5, unitPrice: 8200 },
     ],
   },
@@ -60,7 +60,7 @@ const MOCK_ORDERS = [
     itemCount: 3,
     total: 89500,
     items: [
-      { name: "iPhone 11 skaerm — Hard OLED", qty: 3, unitPrice: 29833 },
+      { name: "iPhone 11 skærm — Hard OLED", qty: 3, unitPrice: 29833 },
     ],
   },
   {
@@ -71,7 +71,7 @@ const MOCK_ORDERS = [
     itemCount: 4,
     total: 112000,
     items: [
-      { name: "Samsung S22 skaerm — AMOLED", qty: 4, unitPrice: 28000 },
+      { name: "Samsung S22 skærm — AMOLED", qty: 4, unitPrice: 28000 },
     ],
   },
   {
@@ -82,7 +82,7 @@ const MOCK_ORDERS = [
     itemCount: 15,
     total: 427500,
     items: [
-      { name: "iPhone 13 Pro skaerm — Premium OLED", qty: 8, unitPrice: 36500 },
+      { name: "iPhone 13 Pro skærm — Premium OLED", qty: 8, unitPrice: 36500 },
       { name: "iPhone 13 batteri", qty: 7, unitPrice: 16500 },
     ],
   },
@@ -90,7 +90,7 @@ const MOCK_ORDERS = [
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Afventer",
-  confirmed: "Bekraeftet",
+  confirmed: "Bekræftet",
   shipped: "Afsendt",
   delivered: "Leveret",
   cancelled: "Annulleret",
@@ -168,7 +168,7 @@ export default function B2BOrdersPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Soeg ordrenummer..."
+            placeholder="Søg ordrenummer..."
             className="w-full rounded-xl border border-[#E5E5EA] bg-white py-2.5 pl-9 pr-4 text-sm text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/20"
           />
         </div>
@@ -194,7 +194,7 @@ export default function B2BOrdersPage() {
       {/* Orders list */}
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-[#E5E5EA] bg-white py-16 text-center">
-          <p className="text-sm text-[#86868B]">Ingen ordrer matcher din soegning</p>
+          <p className="text-sm text-[#86868B]">Ingen ordrer matcher din søgning</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -266,7 +266,7 @@ export default function B2BOrdersPage() {
 
                     <div className="mt-3 flex justify-end border-t border-[#E5E5EA] pt-3">
                       <span className="text-sm font-bold text-[#111111]">
-                        Total: {formatOere(order.total)}
+                        I alt: {formatOere(order.total)}
                       </span>
                     </div>
 

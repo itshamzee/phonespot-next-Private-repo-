@@ -4,9 +4,9 @@ import Link from "next/link";
 import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
-  title: "B2B Reservedele — Engros-priser til værksteder og forhandlere | PhoneSpot",
+  title: "B2B-reservedele — Engrospriser til værksteder og forhandlere | PhoneSpot",
   description:
-    "Køb reservedele til iPhone, Samsung og alle enheder til engros-priser. Skærme, batterier, bagcovers og mere med garanti. Hurtig levering i hele Danmark. Afhentning i Vejle.",
+    "Køb reservedele til iPhone, Samsung og alle enheder til engrospriser. Skærme, batterier, bagcovers og mere med garanti. Hurtig levering i hele Danmark. Afhentning i Vejle.",
   alternates: { canonical: "https://phonespot.dk/b2b" },
 };
 
@@ -17,7 +17,7 @@ const vejle = STORES.vejle;
 /* ------------------------------------------------------------------ */
 
 const STATS = [
-  { value: "30+", label: "Reservedels-kategorier" },
+  { value: "30+", label: "Reservedelskategorier" },
   { value: "168+", label: "Enhedsmodeller" },
   { value: "6", label: "Kvalitetsniveauer" },
   { value: "24t", label: "Levering i DK" },
@@ -25,28 +25,28 @@ const STATS = [
 
 const CATEGORIES = [
   { name: "Skærme", desc: "OLED, LCD, In-Cell — alle kvaliteter", slug: "skaerme", icon: "M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" },
-  { name: "Batterier", desc: "OEM og original — alle mærker", slug: "batterier", icon: "M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 18h15A2.25 2.25 0 0021 15.75v-6a2.25 2.25 0 00-2.25-2.25h-15A2.25 2.25 0 001.5 9.75v6A2.25 2.25 0 003.75 18z" },
-  { name: "Bagcovers", desc: "Frames og bagsider i alle farver", slug: "bagcovers", icon: "M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12" },
-  { name: "Opladningsstik", desc: "Charge connectors og flex", slug: "opladningsstik", icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" },
+  { name: "Batterier", desc: "OEM og originale batterier — alle mærker", slug: "batterier", icon: "M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 18h15A2.25 2.25 0 0021 15.75v-6a2.25 2.25 0 00-2.25-2.25h-15A2.25 2.25 0 001.5 9.75v6A2.25 2.25 0 003.75 18z" },
+  { name: "Bagcovers", desc: "Rammer og bagsider i alle farver", slug: "bagcovers", icon: "M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12" },
+  { name: "Opladningsstik", desc: "Ladestik og flekskabler", slug: "opladningsstik", icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" },
   { name: "Kameraer", desc: "Moduler og linser", slug: "kameraer", icon: "M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" },
-  { name: "Flex-kabler", desc: "Alle typer til alle modeller", slug: "flex-kabler", icon: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" },
+  { name: "Flekskabler", desc: "Alle typer til alle modeller", slug: "flex-kabler", icon: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" },
 ];
 
 const QUALITY_TIERS = [
-  { name: "Service Pack", warranty: "24 mdr", color: "#1A3D2E", desc: "Original fra producenten i certificeret emballage", tag: "Bedst" },
-  { name: "Original (Pulled)", warranty: "24 mdr", color: "#2D5A3D", desc: "Autentisk del fra brugt enhed — testet og inspiceret", tag: null },
-  { name: "Premium Soft OLED", warranty: "18 mdr", color: "#0071E3", desc: "Levende farver, fleksibelt substrat, præcis touch", tag: "Populær" },
-  { name: "Premium Hard OLED", warranty: "18 mdr", color: "#5856D6", desc: "Skarp billedkvalitet, robust glassubstrat", tag: null },
-  { name: "Refurbished", warranty: "12 mdr", color: "#4A7C5B", desc: "Original skærm med nyt frontglas", tag: null },
-  { name: "Standard In-Cell", warranty: "12 mdr", color: "#86868B", desc: "Budgetvenlig LCD til volumenreparationer", tag: "Budget" },
+  { name: "Service Pack", warranty: "24 mdr.", color: "#1A3D2E", desc: "Original fra producenten i certificeret emballage", tag: "Bedst" },
+  { name: "Original (Pulled)", warranty: "24 mdr.", color: "#2D5A3D", desc: "Autentisk del fra brugt enhed — testet og inspiceret", tag: null },
+  { name: "Premium Soft OLED", warranty: "18 mdr.", color: "#0071E3", desc: "Levende farver, fleksibelt substrat, præcis touch", tag: "Populær" },
+  { name: "Premium Hard OLED", warranty: "18 mdr.", color: "#5856D6", desc: "Skarp billedkvalitet, robust glassubstrat", tag: null },
+  { name: "Refurbished", warranty: "12 mdr.", color: "#4A7C5B", desc: "Original skærm med nyt frontglas", tag: null },
+  { name: "Standard In-Cell", warranty: "12 mdr.", color: "#86868B", desc: "Budgetvenlig LCD til volumenreparationer", tag: "Budget" },
 ];
 
 const FAQ_ITEMS = [
   { q: "Hvem kan blive B2B-kunde?", a: "Alle virksomheder med et gyldigt CVR-nummer — reparationsværksteder, telefonforhandlere, IT-virksomheder og andre erhvervskunder." },
-  { q: "Hvad er jeres minimumordre?", a: "Ingen minimumordre. Bestil fra ét styk til store volumenordrer." },
+  { q: "Har I en minimumsordre?", a: "Ingen minimumsordre. Bestil fra én reservedel til store ordrer." },
   { q: "Hvilke betalingsbetingelser tilbyder I?", a: "Forudbetaling, net15 og net30 for godkendte erhvervskunder med fast handelsforhold." },
-  { q: "Hvor hurtigt leverer I?", a: "Same-day afhentning i Vejle på ordrer inden kl. 14. Levering til resten af Danmark på 1-2 hverdage." },
-  { q: "Hvad er jeres garanti?", a: "Op til 2 års garanti på skærme, 3 mdr på batterier. Hurtig RMA-process via b2b@phonespot.dk." },
+  { q: "Hvor hurtigt leverer I?", a: "Afhentning samme dag i Vejle på ordrer inden kl. 14. Levering til resten af Danmark på 1-2 hverdage." },
+  { q: "Hvad er jeres garanti?", a: "Op til 2 års garanti på skærme, 3 mdr. på batterier. Hurtig reklamationsproces via b2b@phonespot.dk." },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -60,7 +60,7 @@ function buildJsonLd() {
       {
         "@type": "LocalBusiness",
         "@id": "https://phonespot.dk/#vejle",
-        name: "PhoneSpot Vejle — B2B Reservedele",
+        name: "PhoneSpot Vejle — B2B-reservedele",
         url: "https://phonespot.dk/b2b",
         telephone: vejle.phone,
         email: "b2b@phonespot.dk",
@@ -69,8 +69,8 @@ function buildJsonLd() {
       },
       {
         "@type": "Product",
-        name: "B2B Reservedele til iPhone og Samsung",
-        description: "Engros-reservedele til professionelle reparationsværksteder og forhandlere.",
+        name: "B2B-reservedele til iPhone og Samsung",
+        description: "Reservedele til engrospriser til professionelle reparationsværksteder og forhandlere.",
         brand: { "@type": "Brand", name: "PhoneSpot" },
         offers: { "@type": "AggregateOffer", priceCurrency: "DKK", availability: "https://schema.org/InStock" },
       },
@@ -107,7 +107,7 @@ export default function B2BLandingPage() {
             <div className="max-w-2xl">
               <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white/90 backdrop-blur-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                B2B Portal
+                B2B-portal
               </span>
 
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -116,7 +116,7 @@ export default function B2BLandingPage() {
               </h1>
 
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/65">
-                Engros-priser på skærme, batterier og reservedele til alle enheder.
+                Engrospriser på skærme, batterier og reservedele til alle enheder.
                 Op til 2 års garanti. Levering i hele Danmark.
               </p>
 
@@ -134,6 +134,7 @@ export default function B2BLandingPage() {
                   Se sortiment
                 </Link>
               </div>
+              <p className="mt-6 text-sm text-white/80">Skal jeres egne enheder repareres? <Link href="/erhverv" className="underline underline-offset-4">Se reparation til erhverv</Link>.</p>
             </div>
 
             {/* Stats bar */}
@@ -157,7 +158,7 @@ export default function B2BLandingPage() {
                 Alt til reparationen
               </h2>
               <p className="mt-3 text-base text-[#86868B]">
-                Over 30 kategorier. Fra premium OLED-skærme til flex-kabler og klæbebånd.
+                Over 30 kategorier. Fra premium OLED-skærme til flekskabler og klæbebånd.
               </p>
             </div>
 
@@ -246,7 +247,7 @@ export default function B2BLandingPage() {
             <div className="mb-14 text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-[#1A3D2E]">Kom i gang</p>
               <h2 className="font-display text-3xl font-bold text-[#111111] md:text-4xl">
-                3 trin til engros-priser
+                3 trin til engrospriser
               </h2>
             </div>
 
@@ -257,7 +258,7 @@ export default function B2BLandingPage() {
               {[
                 { n: "1", title: "Registrer", body: "Opret gratis B2B-konto med CVR. Tager under 2 minutter.", icon: "M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" },
                 { n: "2", title: "Godkendelse", body: "Vi verificerer din virksomhed inden for 24 timer.", icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
-                { n: "3", title: "Bestil", body: "Se engros-priser og bestil direkte. Betal online eller på kredit.", icon: "M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" },
+                { n: "3", title: "Bestil", body: "Se engrospriser og bestil direkte. Betal online eller på kredit.", icon: "M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" },
               ].map((step) => (
                 <div key={step.n} className="relative flex flex-col items-center text-center">
                   <div className="relative z-10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1A3D2E] text-white shadow-lg shadow-[#1A3D2E]/20">
@@ -293,7 +294,7 @@ export default function B2BLandingPage() {
                 <div className="p-8 md:p-12 lg:p-14">
                   <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E]/8 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#1A3D2E]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E]" />
-                    Same-day afhentning
+                    Afhentning samme dag
                   </span>
 
                   <h2 className="mt-4 font-display text-3xl font-bold text-[#111111]">
@@ -309,7 +310,7 @@ export default function B2BLandingPage() {
                       ["Hverdage", vejle.hours.weekdays],
                       ["Weekend", `${vejle.hours.saturday} (lør) / ${vejle.hours.sunday} (søn)`],
                       ["Telefon", vejle.phone],
-                      ["Email", "b2b@phonespot.dk"],
+                      ["E-mail", "b2b@phonespot.dk"],
                     ].map(([label, val]) => (
                       <div key={label} className="flex gap-3">
                         <dt className="w-20 shrink-0 font-semibold text-[#111111]">{label}</dt>
@@ -379,7 +380,7 @@ export default function B2BLandingPage() {
 
           <div className="relative z-10 mx-auto max-w-2xl">
             <h2 className="font-display text-3xl font-bold text-white lg:text-4xl">
-              Klar til engros-priser?
+              Klar til engrospriser?
             </h2>
             <p className="mt-4 text-lg text-white/60">
               Opret din gratis B2B-konto og få adgang inden for 24 timer.

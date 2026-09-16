@@ -23,8 +23,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
-          <div className="text-5xl">🔒</div>
-          <h1 className="text-2xl font-bold text-stone-800">Link ugyldig eller udløbet</h1>
+          <h1 className="text-2xl font-bold text-stone-800">Linket er ugyldigt eller udløbet</h1>
           <p className="text-stone-500">
             Dette gendannelseslink er enten ugyldigt eller er allerede blevet brugt.
           </p>
@@ -44,7 +43,6 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
-          <div className="text-5xl">✅</div>
           <h1 className="text-2xl font-bold text-stone-800">Denne ordre er allerede genoptaget</h1>
           <p className="text-stone-500">
             Din ordre #{order.order_number} er allerede blevet betalt eller genoptaget.
@@ -65,8 +63,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
-          <div className="text-5xl">🔒</div>
-          <h1 className="text-2xl font-bold text-stone-800">Link ugyldig eller udløbet</h1>
+          <h1 className="text-2xl font-bold text-stone-800">Linket er ugyldigt eller udløbet</h1>
           <p className="text-stone-500">
             Dette gendannelseslink kan ikke bruges på nuværende tidspunkt.
           </p>
@@ -121,11 +118,10 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
-          <div className="text-5xl">😔</div>
           <h1 className="text-2xl font-bold text-stone-800">Varen er desværre ikke længere tilgængelig</h1>
           <p className="text-stone-500">
-            En eller flere varer i din kurv er solgt siden du forlod checkout. Du er velkommen til at se vores
-            øvrige lager.
+            En eller flere varer i din kurv er blevet solgt, siden du forlod kassen. Du er velkommen til at se vores
+            øvrige udvalg.
           </p>
           <a
             href="/brugte-telefoner"
@@ -170,7 +166,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
         : null;
 
       const name = device
-        ? `${template?.name ?? "Enhed"} — Grade ${device.grade} (${device.storage}, ${device.color})`
+        ? `${template?.name ?? "Enhed"} — Stand ${device.grade} (${device.storage}, ${device.color})`
         : "Enhed";
 
       lineItems.push({

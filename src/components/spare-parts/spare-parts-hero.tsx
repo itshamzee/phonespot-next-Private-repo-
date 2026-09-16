@@ -59,7 +59,7 @@ function HeroShell({
 
         {hasImage && (
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-[11px] font-semibold tracking-wide text-white/90 backdrop-blur-sm">
-            B2B RESERVEDELE
+            Reservedele til erhverv
           </span>
         )}
 

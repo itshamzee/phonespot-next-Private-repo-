@@ -61,7 +61,7 @@ export default function IndstillingerPage() {
       return;
     }
     if (pwForm.newPassword.length < 8) {
-      setPwError("Adgangskoden skal vaere mindst 8 tegn.");
+      setPwError("Adgangskoden skal være mindst 8 tegn.");
       return;
     }
 
@@ -103,7 +103,7 @@ export default function IndstillingerPage() {
           Indstillinger
         </h1>
         <p className="mt-0.5 text-sm text-[#86868B]">
-          Kontoplysninger og praeferencer
+          Kontooplysninger og præferencer
         </p>
       </div>
 
@@ -154,7 +154,7 @@ export default function IndstillingerPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-[#111111]">
-              Email
+              E-mail
             </label>
             <input
               type="email"
@@ -166,7 +166,7 @@ export default function IndstillingerPage() {
         </div>
 
         <p className="mt-4 text-xs text-[#86868B]">
-          For at aendre virksomhedsoplysninger, kontakt{" "}
+          Hvis du vil ændre virksomhedsoplysningerne, skal du kontakte{" "}
           <a
             href="mailto:b2b@phonespot.dk"
             className="text-[#1A3D2E] hover:underline"
@@ -180,7 +180,7 @@ export default function IndstillingerPage() {
       {/* Account terms */}
       <div className="rounded-xl border border-[#E5E5EA] bg-white p-6">
         <h2 className="mb-5 font-display text-base font-bold text-[#111111]">
-          Kontovilkar
+          Kontovilkår
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] p-4">
@@ -233,7 +233,7 @@ export default function IndstillingerPage() {
 
         {pwSuccess && (
           <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            Adgangskoden er aendret.
+            Adgangskoden er ændret.
           </div>
         )}
         {pwError && (
@@ -248,7 +248,7 @@ export default function IndstillingerPage() {
               htmlFor="current-pw"
               className="block text-sm font-medium text-[#111111]"
             >
-              Nuvaerende adgangskode
+              Nuværende adgangskode
             </label>
             <input
               id="current-pw"
@@ -286,7 +286,7 @@ export default function IndstillingerPage() {
                 htmlFor="confirm-pw"
                 className="block text-sm font-medium text-[#111111]"
               >
-                Bekraeft ny adgangskode
+                Bekræft ny adgangskode
               </label>
               <input
                 id="confirm-pw"
@@ -324,18 +324,18 @@ export default function IndstillingerPage() {
             [
               {
                 key: "ordrebekraeftelser" as const,
-                label: "Ordrebekraeftelser",
-                desc: "Email nar vi modtager og bekraefter din ordre",
+                label: "Ordrebekræftelser",
+                desc: "E-mail, når vi modtager og bekræfter din ordre",
               },
               {
                 key: "forsendelsesnotifikationer" as const,
                 label: "Forsendelsesnotifikationer",
-                desc: "Email nar din ordre er afsendt med trackingnummer",
+                desc: "E-mail med sporingsnummer, når din ordre er afsendt",
               },
               {
                 key: "rmaOpdateringer" as const,
                 label: "RMA-opdateringer",
-                desc: "Email nar der er nyt i dine reklamationssager",
+                desc: "E-mail, når der er nyt i dine reklamationssager",
               },
               {
                 key: "nyeProdukter" as const,
@@ -395,7 +395,7 @@ export default function IndstillingerPage() {
             onClick={handleNotifSave}
             className="rounded-full bg-[#1A3D2E] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
           >
-            Gem praeferencer
+            Gem præferencer
           </button>
           {notifSaved && (
             <span className="text-sm font-medium text-green-600">
@@ -411,7 +411,7 @@ export default function IndstillingerPage() {
           Support
         </h2>
         <p className="text-sm text-[#86868B]">
-          Har du brug for at lukke din konto eller aendre CVR? Kontakt os
+          Har du brug for at lukke din konto eller ændre CVR? Kontakt os
           direkte.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">

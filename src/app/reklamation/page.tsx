@@ -47,7 +47,7 @@ export default function ReklamationPage() {
     } catch (err) {
       setStatus("error");
       setErrorMessage(
-        err instanceof Error ? err.message : "Kunne ikke sende reklamation",
+        err instanceof Error ? err.message : "Kunne ikke sende reklamationen",
       );
     }
   }
@@ -58,7 +58,7 @@ export default function ReklamationPage() {
         Reklamation
       </Heading>
       <p className="mt-4 mb-10 max-w-2xl text-[#86868B]">
-        Har du modtaget en defekt vare eller oplever problemer med dit produkt?
+        Har du modtaget en defekt vare eller oplever du problemer med dit produkt?
         Udfyld formularen herunder, og vi vender tilbage inden for 2 hverdage.
       </p>
 
@@ -93,7 +93,7 @@ export default function ReklamationPage() {
                 onChange={handleChange}
               />
               <FormField
-                label="Email"
+                label="E-mail"
                 name="email"
                 type="email"
                 required
@@ -121,7 +121,7 @@ export default function ReklamationPage() {
                 name="description"
                 type="textarea"
                 required
-                placeholder="Beskriv hvad der er galt med produktet..."
+                placeholder="Beskriv, hvad der er galt med produktet..."
                 value={formData.description}
                 onChange={handleChange}
               />

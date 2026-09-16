@@ -24,13 +24,13 @@ export function merchantCondition(grade: string | null | undefined): "new" | "re
 
 /** Short Danish label for a grade, used in feed titles/descriptions in place of "Grade N". */
 export function gradeFeedLabel(grade: string): string {
-  return isNewGrade(grade) ? "Fabriksny" : `Grade ${grade} Refurbished`;
+  return isNewGrade(grade) ? "Fabriksny" : `Stand ${grade} Refurbished`;
 }
 
 /** Short customer-facing Danish label for a grade (no battery/cosmetic detail). */
 export const GRADE_SHORT_LABEL: Record<DeviceGrade, string> = {
   N: "Fabriksny",
-  P: "Premium stand",
+  P: "Premiumstand",
   A: "Som ny",
   B: "God stand",
   C: "Brugt stand",

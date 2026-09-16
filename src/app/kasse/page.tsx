@@ -110,7 +110,7 @@ export default function KassePage() {
                 </div>
                 {/* MobilePay */}
                 <div className="flex h-8 w-12 items-center justify-center rounded bg-[#5A78FF] border border-sand px-1">
-                  <span className="text-[7px] font-bold text-white leading-none">Mobile Pay</span>
+                  <span className="text-[7px] font-bold text-white leading-none">MobilePay</span>
                 </div>
                 {/* Apple Pay */}
                 <div className="flex h-8 w-12 items-center justify-center rounded bg-black border border-sand px-1">

@@ -33,8 +33,8 @@ describe("gradeFeedLabel", () => {
     expect(label.toLowerCase()).not.toContain("refurbished");
   });
 
-  it("labels other grades as 'Grade X Refurbished'", () => {
-    expect(gradeFeedLabel("A")).toBe("Grade A Refurbished");
+  it("labels other grades as 'Stand X Refurbished'", () => {
+    expect(gradeFeedLabel("A")).toBe("Stand A Refurbished");
   });
 });
 
@@ -47,6 +47,6 @@ describe("GRADE_SHORT_LABEL", () => {
     }
     expect(GRADE_SHORT_LABEL.N.toLowerCase()).not.toContain("refurbished");
     expect(GRADE_SHORT_LABEL.N).toBe("Fabriksny");
-    expect(GRADE_SHORT_LABEL.P).toBe("Premium stand");
+    expect(GRADE_SHORT_LABEL.P).toBe("Premiumstand");
   });
 });

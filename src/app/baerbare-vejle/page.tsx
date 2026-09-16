@@ -4,14 +4,14 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
-  title: "Refurbished Bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
+  title: "Refurbished bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
   description:
-    "Køb kvalitetstestede refurbished bærbare computere i Vejle. Fra 1.999 kr med 36 mdr garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
+    "Køb kvalitetstestede refurbished bærbare computere i Vejle. Fra 1.999 kr med 36 mdr. garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/baerbare-vejle" },
   openGraph: {
-    title: "Refurbished Bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
+    title: "Refurbished bærbare i Vejle — Fra 1.999 kr | PhoneSpot Vejle",
     description:
-      "Kvalitetstestede refurbished laptops fra 1.999 kr med 36 mdr garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
+      "Kvalitetstestede refurbished bærbare fra 1.999 kr med 36 mdr. garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
     url: "https://phonespot.dk/baerbare-vejle",
     type: "website",
   },
@@ -67,22 +67,22 @@ const localBusinessJsonLd = {
       {
         "@type": "OfferCatalog",
         name: "MacBook Air",
-        description: "Refurbished MacBook Air med 36 mdr garanti",
+        description: "Refurbished MacBook Air med 36 mdr. garanti",
       },
       {
         "@type": "OfferCatalog",
         name: "MacBook Pro",
-        description: "Refurbished MacBook Pro med 36 mdr garanti",
+        description: "Refurbished MacBook Pro med 36 mdr. garanti",
       },
       {
         "@type": "OfferCatalog",
         name: "Lenovo ThinkPad",
-        description: "Refurbished Lenovo ThinkPad og IdeaPad med 36 mdr garanti",
+        description: "Refurbished Lenovo ThinkPad og IdeaPad med 36 mdr. garanti",
       },
       {
         "@type": "OfferCatalog",
         name: "HP EliteBook",
-        description: "Refurbished HP bærbare med 36 mdr garanti",
+        description: "Refurbished HP bærbare med 36 mdr. garanti",
       },
     ],
   },
@@ -94,26 +94,26 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Kan jeg hente en refurbished laptop i Vejle?",
+      name: "Kan jeg hente en refurbished bærbar i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
+        text: "Ja! Med vores afhentningsservice kan du bestille online og hente din bærbare gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
       },
     },
     {
       "@type": "Question",
-      name: "Hvilken garanti får jeg på en refurbished laptop?",
+      name: "Hvilken garanti får jeg på en refurbished bærbar?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti som de fleste andre forhandlere tilbyder.",
+        text: "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
       },
     },
     {
       "@type": "Question",
-      name: "Hvad koster en refurbished laptop i Vejle?",
+      name: "Hvad koster en refurbished bærbar i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Priser starter fra 1.999 kr afhængig af mærke, model og specifikationer. Se aktuelle priser og lagerstatus i vores laptop-katalog.",
+        text: "Priserne starter fra 1.999 kr. afhængigt af mærke, model og specifikationer. Se aktuelle priser og lagerstatus i vores katalog over bærbare.",
       },
     },
     {
@@ -121,7 +121,7 @@ const faqJsonLd = {
       name: "Hvilke mærker fører I?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Vi fører et bredt udvalg af refurbished laptops fra Apple (MacBook), Lenovo, HP og Dell. Alle modeller er grundigt testet inden salg.",
+        text: "Vi fører et bredt udvalg af refurbished bærbare fra Apple (MacBook), Lenovo, HP og Dell. Alle modeller er grundigt testet inden salg.",
       },
     },
   ],
@@ -131,42 +131,42 @@ const LAPTOP_MODELS = [
   {
     brand: "MacBook Air",
     description:
-      "Tynd, let og stilfuld. Ideel til studerende og professionelle der prioriterer portabilitet.",
+      "Tynd, let og stilfuld. Ideel til studerende og professionelle, der prioriterer lav vægt.",
     from: "2.999",
     href: "/baerbare/apple",
   },
   {
     brand: "MacBook Pro",
     description:
-      "Kraftfuld performance til krævende opgaver. M1, M2 og M3 chip-varianter på lager.",
+      "Høj ydeevne til krævende opgaver. Varianter med M1-, M2- og M3-chip på lager.",
     from: "4.999",
     href: "/baerbare/apple",
   },
   {
     brand: "Lenovo ThinkPad",
     description:
-      "Robuste business-laptops med fantastisk tastatur og lang batterilevetid.",
+      "Robuste erhvervsbærbare med fantastisk tastatur og lang batterilevetid.",
     from: "1.999",
     href: "/baerbare/lenovo",
   },
   {
     brand: "HP EliteBook",
     description:
-      "Driftssikre HP-laptops designet til professionelt brug. Let at arbejde med hele dagen.",
+      "Driftssikre HP-bærbare designet til professionelt brug. Let at arbejde med hele dagen.",
     from: "2.299",
     href: "/baerbare/hp",
   },
   {
     brand: "Dell Latitude",
     description:
-      "Pålidelige Dell business-laptops med god performance og solid bygge-kvalitet.",
+      "Pålidelige Dell-erhvervsbærbare med god ydeevne og solid byggekvalitet.",
     from: "2.199",
     href: "/baerbare",
   },
   {
     brand: "Studiecomputer",
     description:
-      "Prisniveauvenlige laptops der klarer alt hvad en studerende har brug for.",
+      "Prisvenlige bærbare, der klarer alt, hvad en studerende har brug for.",
     from: "1.999",
     href: "/baerbare/studiecomputer",
   },
@@ -176,7 +176,7 @@ const USP_ITEMS = [
   {
     title: "36 mdr. garanti",
     description:
-      "Alle vores refurbished laptops leveres med 36 måneders garanti — tre gange mere end standard.",
+      "Alle vores refurbished bærbare leveres med 36 måneders garanti — tre gange mere end standard.",
   },
   {
     title: "Grundigt testet",
@@ -191,10 +191,10 @@ const USP_ITEMS = [
   {
     title: "Op til 70% billigere",
     description:
-      "En refurbished laptop koster typisk 40–70% less end en tilsvarende ny model — med samme ydeevne.",
+      "En refurbished bærbar koster typisk 40–70% mindre end en tilsvarende ny model — med samme ydeevne.",
   },
   {
-    title: "Klarna delbetaling",
+    title: "Delbetaling med Klarna",
     description:
       "Del betalingen op i 3 måneder rentefrit med Klarna. Ingen skjulte gebyrer.",
   },
@@ -218,10 +218,10 @@ export default function BaerbareVejlePage() {
             Kvalitetstestede refurbished computere
           </p>
           <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-            Refurbished Bærbare i Vejle
+            Refurbished bærbare i Vejle
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
-            Køb en kvalitetstestet refurbished laptop fra 1.999 kr med 36
+            Køb en kvalitetstestet refurbished bærbar fra 1.999 kr med 36
             måneders garanti. Afhent i vores butik i Vejle eller få leveret
             direkte til døren.
           </p>
@@ -309,7 +309,7 @@ export default function BaerbareVejlePage() {
               Vores udvalg
             </p>
             <h2 className="font-display text-3xl font-bold tracking-tight text-[#111111]">
-              Populære laptop-mærker og modeller
+              Populære computermærker og modeller
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-[#6E6E73]">
               Alle modeller er grundigt testet og leveres med 36 mdr. garanti.
@@ -357,7 +357,7 @@ export default function BaerbareVejlePage() {
           <div className="overflow-hidden rounded-2xl border-2 border-[#1A3D2E]/20 bg-[#EFF5F1] p-8 md:p-10">
             <div className="mb-8 text-center">
               <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-                Click &amp; Collect — hent i Vejle
+                Bestil online, hent i Vejle
               </h2>
               <p className="mt-2 text-base text-[#6E6E73]">
                 Bestil online, hent gratis i butikken. Klar samme dag ved
@@ -369,7 +369,7 @@ export default function BaerbareVejlePage() {
                 {
                   step: "1",
                   title: "Bestil online",
-                  desc: "Find din laptop og bestil til Click & Collect",
+                  desc: "Find din bærbare og vælg afhentning i butik",
                 },
                 {
                   step: "2",
@@ -379,7 +379,7 @@ export default function BaerbareVejlePage() {
                 {
                   step: "3",
                   title: "Hent i Vejle",
-                  desc: "Afhent på Løversysselvej 3B — test inden du tager den med",
+                  desc: "Afhent på Løversysselvej 3B — test, inden du tager den med",
                 },
               ].map((s) => (
                 <div key={s.step} className="flex flex-col items-center text-center">
@@ -398,7 +398,7 @@ export default function BaerbareVejlePage() {
                 href="/baerbare"
                 className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
               >
-                Se laptops og bestil &rarr;
+                Se bærbare og bestil &rarr;
               </Link>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function BaerbareVejlePage() {
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-10 text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-              Hvorfor købe refurbished laptop hos PhoneSpot?
+              Hvorfor købe en refurbished bærbar hos PhoneSpot?
             </h2>
           </div>
 
@@ -437,7 +437,7 @@ export default function BaerbareVejlePage() {
         <div className="mx-auto max-w-3xl space-y-10 px-4">
           <div>
             <h2 className="font-display text-xl font-bold text-[#111111]">
-              Køb refurbished laptop i Vejle
+              Køb refurbished bærbar i Vejle
             </h2>
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
               Hos PhoneSpot Vejle fører vi et bredt udvalg af refurbished
@@ -469,7 +469,7 @@ export default function BaerbareVejlePage() {
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
               Er du studerende og leder efter en pålidelig computer til en
               rimelig pris? Vores udvalg af studiecomputere starter fra 1.999
-              kr og inkluderer modeller fra Lenovo, HP og Dell der er ideelle
+              kr og inkluderer modeller fra Lenovo, HP og Dell, der er ideelle
               til studielivet. Alle leveres med 36 mdr. garanti.
             </p>
           </div>
@@ -488,27 +488,27 @@ export default function BaerbareVejlePage() {
           <div className="divide-y divide-[#E5E5EA] rounded-2xl border border-[#E5E5EA] bg-white">
             {[
               {
-                question: "Kan jeg hente en refurbished laptop i Vejle?",
+                question: "Kan jeg hente en refurbished bærbar i Vejle?",
                 answer:
-                  "Ja! Med vores Click & Collect service kan du bestille online og hente din laptop gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
+                  "Ja! Med vores afhentningsservice kan du bestille online og hente din bærbare gratis i vores butik på Løversysselvej 3B i Vejle. Klar samme dag ved bestilling inden kl. 14.",
               },
               {
-                question: "Hvilken garanti får jeg på en refurbished laptop?",
+                question: "Hvilken garanti får jeg på en refurbished bærbar?",
                 answer:
-                  "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti som de fleste andre forhandlere tilbyder.",
+                  "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
               },
               {
-                question: "Hvad koster en refurbished laptop i Vejle?",
+                question: "Hvad koster en refurbished bærbar i Vejle?",
                 answer:
-                  "Priser starter fra 1.999 kr afhængig af mærke, model og specifikationer. Se aktuelle priser og lagerstatus i vores laptop-katalog.",
+                  "Priserne starter fra 1.999 kr. afhængigt af mærke, model og specifikationer. Se aktuelle priser og lagerstatus i vores katalog over bærbare.",
               },
               {
                 question: "Hvilke mærker fører I?",
                 answer:
-                  "Vi fører et bredt udvalg af refurbished laptops fra Apple (MacBook), Lenovo, HP og Dell. Alle modeller er grundigt testet inden salg.",
+                  "Vi fører et bredt udvalg af refurbished bærbare fra Apple (MacBook), Lenovo, HP og Dell. Alle modeller er grundigt testet inden salg.",
               },
               {
-                question: "Kan jeg returnere en refurbished laptop?",
+                question: "Kan jeg returnere en refurbished bærbar?",
                 answer:
                   "Ja, du har 30 dages fuld returret. Er du ikke tilfreds af en hvilken som helst årsag, returnerer du enheden og får pengene tilbage.",
               },
@@ -542,12 +542,11 @@ export default function BaerbareVejlePage() {
       <section className="bg-[#1A3D2E] py-16">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-            Find din næste laptop i Vejle
+            Find din næste bærbare i Vejle
           </h2>
           <p className="mt-4 text-base text-white/75">
             Se hele udvalget af refurbished bærbare computere med aktuelle
-            priser og lagerstatus. Afhent gratis i butikken på Løversysselvej
-            3A, Vejle.
+            priser og lagerstatus. Afhent gratis i butikken på {store.street}, {store.city}.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -564,7 +563,7 @@ export default function BaerbareVejlePage() {
             </Link>
           </div>
           <p className="mt-8 text-sm text-white/50">
-            PhoneSpot Vejle · Løversysselvej 3B · 7100 Vejle ·{" "}
+            {store.name} · {store.street} · {store.zip} {store.city} ·{" "}
             <a
               href={`tel:${store.phone.replace(/\s/g, "")}`}
               className="hover:text-white/80"

@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Hvorfor PhoneSpot? | PhoneSpot",
   description:
-    "PhoneSpot gør premium tech tilgængeligt og bæredygtigt. Kvalitetstestede produkter med 36 måneders garanti og dansk kundeservice.",
+    "PhoneSpot gør elektronik i høj kvalitet tilgængeligt og bæredygtigt. Kvalitetstestede enheder med 36 måneders garanti og dansk kundeservice.",
   alternates: { canonical: "https://phonespot.dk/hvorfor-phonespot" },
 };
 
@@ -56,7 +56,7 @@ const VALUES = [
   {
     title: "Tilgængeligt",
     description:
-      "Premium tech behøver ikke koste en formue. Spar op til 40% sammenlignet med nye produkter — uden at gå på kompromis med kvaliteten.",
+      "Elektronik i høj kvalitet behøver ikke koste en formue. Spar op til 40% sammenlignet med nye produkter — uden at gå på kompromis med kvaliteten.",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -109,7 +109,7 @@ const TRUST_ITEMS = [
   {
     title: "36 mdr. garanti",
     description:
-      "Alle refurbished produkter leveres med 36 måneders garanti som standard.",
+      "Alle refurbished enheder leveres med 36 måneders garanti som standard.",
   },
 ];
 
@@ -127,7 +127,7 @@ export default function HvorforPhonespotPage() {
               Hvorfor PhoneSpot?
             </h1>
             <p className="text-lg leading-relaxed text-[#86868B]">
-              Vi tror på, at premium tech skal være tilgængeligt for alle — uden at
+              Vi tror på, at elektronik i høj kvalitet skal være tilgængeligt for alle — uden at
               det koster jorden. Bogstaveligt talt. PhoneSpot gør det nemt at
               vælge kvalitetstestet, bæredygtig teknologi til en fair pris.
             </p>
@@ -190,7 +190,7 @@ export default function HvorforPhonespotPage() {
                   2+ år
                 </p>
                 <p className="mt-1 text-sm text-white/70">
-                  ekstra levetid for enheder der genbruges
+                  ekstra levetid for enheder, der genbruges
                 </p>
               </div>
             </div>

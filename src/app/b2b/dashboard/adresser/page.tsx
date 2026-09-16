@@ -150,7 +150,7 @@ export default function AdresserPage() {
           onClick={openCreateForm}
           className="rounded-full bg-[#1A3D2E] px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
-          Tilfoej adresse
+          Tilføj adresse
         </button>
       </div>
 
@@ -284,7 +284,7 @@ export default function AdresserPage() {
                 type="submit"
                 className="rounded-full bg-[#1A3D2E] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               >
-                {editingId ? "Gem aendringer" : "Tilfoej adresse"}
+                {editingId ? "Gem ændringer" : "Tilføj adresse"}
               </button>
               <button
                 type="button"
@@ -311,7 +311,7 @@ export default function AdresserPage() {
             onClick={openCreateForm}
             className="mt-4 text-sm font-medium text-[#1A3D2E] hover:underline"
           >
-            Tilfoej din foerste adresse
+            Tilføj din første adresse
           </button>
         </div>
       ) : (
@@ -355,7 +355,7 @@ export default function AdresserPage() {
                     onClick={() => setDefault(addr.id)}
                     className="rounded-lg border border-[#E5E5EA] px-3 py-1.5 text-xs font-medium text-[#6E6E73] transition-colors hover:border-[#1A3D2E]/30 hover:text-[#1A3D2E]"
                   >
-                    Saet som standard
+                    Sæt som standard
                   </button>
                 )}
                 <button
@@ -373,7 +373,7 @@ export default function AdresserPage() {
                       onClick={() => deleteAddress(addr.id)}
                       className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
                     >
-                      Bekraeft sletning
+                      Bekræft sletning
                     </button>
                     <button
                       type="button"

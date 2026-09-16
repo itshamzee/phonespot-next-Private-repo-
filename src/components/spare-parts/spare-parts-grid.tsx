@@ -413,7 +413,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   }
 
   return (
-    <nav className="flex items-center justify-center gap-1" aria-label="Pagination">
+    <nav className="flex items-center justify-center gap-1" aria-label="Sidenavigation">
       <button
         type="button"
         onClick={() => onPageChange(page - 1)}
@@ -489,8 +489,8 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 
 const SORT_LABELS: Record<SortOption, string> = {
   stock: "På lager først",
-  price_asc: "Pris lav-høj",
-  price_desc: "Pris høj-lav",
+  price_asc: "Pris, lav til høj",
+  price_desc: "Pris, høj til lav",
   newest: "Nyeste",
 };
 
@@ -740,7 +740,7 @@ function SparePartsGridInner() {
           </svg>
           <p className="text-base font-semibold text-[#111111]">Ingen resultater</p>
           <p className="mt-1 text-sm text-[#86868B]">
-            Prøv at justere dine filtre eller søg efter noget andet.
+            Prøv at justere dine filtre eller søge efter noget andet.
           </p>
         </div>
       ) : viewMode === "grid" ? (

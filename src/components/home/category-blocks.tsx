@@ -10,22 +10,22 @@ const categories = [
   {
     name: "iPads",
     href: "/ipads",
-    description: "iPad, Air, Pro & Mini",
+    description: "iPad, Air, Pro og mini",
   },
   {
     name: "Computere",
     href: "/baerbare",
-    description: "Bærbare & stationære",
+    description: "Bærbare og stationære",
   },
   {
     name: "Covers",
     href: "/reservedele",
-    description: "Covers, sleeves & beskyttelse",
+    description: "Covers, sleeves og beskyttelse",
   },
   {
     name: "Reservedele",
     href: "/reservedele",
-    description: "Skærme, batterier & mere",
+    description: "Skærme, batterier og mere",
   },
   {
     name: "Outlet",

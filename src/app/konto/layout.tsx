@@ -112,7 +112,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
     setLoginError("");
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setLoginError("Forkert email eller adgangskode");
+      setLoginError("Forkert e-mail eller adgangskode");
       setLoggingIn(false);
       return;
     }
@@ -154,7 +154,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-[#111111]">
-                Email
+                E-mail
               </label>
               <input
                 id="login-email"
@@ -212,7 +212,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
         <button
           onClick={() => setMobileNavOpen(true)}
           className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[#111111] hover:bg-[#F5F2EC]"
-          aria-label="Abn navigation"
+          aria-label="Åbn navigation"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />

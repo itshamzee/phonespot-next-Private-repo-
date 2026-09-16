@@ -113,7 +113,7 @@ export function CheckoutForm() {
     // A parcel with no shop attached cannot be booked, so it is caught here
     // rather than after the customer has paid.
     if (requiresPickupPoint && !pickupPoint) {
-      setSubmitError("Vælg den pakkeshop du vil hente pakken i.");
+      setSubmitError("Vælg den pakkeshop, du vil hente pakken i.");
       return;
     }
 
@@ -180,7 +180,7 @@ export function CheckoutForm() {
             htmlFor="name"
             className="mb-1 block text-sm font-medium text-charcoal"
           >
-            Fulde navn <span className="text-red-500">*</span>
+            Fuldt navn <span className="text-red-500">*</span>
           </label>
           <input
             id="name"

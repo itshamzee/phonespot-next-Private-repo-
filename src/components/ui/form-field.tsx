@@ -4,7 +4,9 @@ type FormFieldProps = {
   type?: "text" | "email" | "tel" | "textarea" | "select";
   required?: boolean;
   placeholder?: string;
+  autoComplete?: string;
   options?: string[];
+  optionLabels?: Record<string, string>;
   className?: string;
   value?: string;
   onChange?: (
@@ -23,7 +25,9 @@ export function FormField({
   type = "text",
   required = false,
   placeholder,
+  autoComplete,
   options,
+  optionLabels,
   className = "",
   value,
   onChange,
@@ -60,7 +64,7 @@ export function FormField({
           <option value="">{placeholder ?? "Vælg..."}</option>
           {options?.map((opt) => (
             <option key={opt} value={opt}>
-              {opt}
+              {optionLabels?.[opt] ?? opt}
             </option>
           ))}
         </select>
@@ -69,6 +73,7 @@ export function FormField({
           id={id}
           name={name}
           type={type}
+          autoComplete={autoComplete}
           required={required}
           placeholder={placeholder}
           value={value}

@@ -29,7 +29,7 @@ type OrderData = {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Afventer betaling",
-  confirmed: "Bekraeftet",
+  confirmed: "Bekræftet",
   shipped: "Afsendt",
   picked_up: "Afhentet",
   delivered: "Leveret",
@@ -48,7 +48,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 // Steps: pending → confirmed → shipped → delivered
-const PROGRESS_STEPS = ["Bestilt", "Bekraeftet", "Afsendt", "Leveret"] as const;
+const PROGRESS_STEPS = ["Bestilt", "Bekræftet", "Afsendt", "Leveret"] as const;
 
 function getProgressStep(status: string): number {
   switch (status) {
@@ -174,7 +174,7 @@ export default function OrdersPage() {
             </svg>
             <input
               type="search"
-              placeholder="Sog pa ordrenummer..."
+              placeholder="Søg på ordrenummer..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-lg border border-[#E5E5EA] bg-white py-2.5 pl-9 pr-4 text-sm text-[#111111] placeholder-[#AEAEB2] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
@@ -200,7 +200,7 @@ export default function OrdersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-[#E5E5EA] bg-white px-6 py-12 text-center">
-          <p className="text-sm text-[#6E6E73]">Ingen ordrer matcher din sogning</p>
+          <p className="text-sm text-[#6E6E73]">Ingen ordrer matcher din søgning</p>
           <button
             onClick={() => { setSearch(""); setStatusFilter("all"); }}
             className="mt-3 text-xs font-medium text-[#1A3D2E] hover:underline"

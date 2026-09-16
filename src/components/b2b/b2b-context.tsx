@@ -60,7 +60,7 @@ export function B2BProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json() as { user?: B2BUser; token?: string; error?: string };
-      if (!res.ok) return { ok: false, error: data.error ?? "Login fejlede" };
+      if (!res.ok) return { ok: false, error: data.error ?? "Du kunne ikke logge ind" };
 
       if (data.user) {
         setUser(data.user);

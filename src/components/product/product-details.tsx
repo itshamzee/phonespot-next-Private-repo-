@@ -90,10 +90,10 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
 
     return {
       intro: isUltra
-        ? `${title} er designet til eventyr og ekstrem udholdenhed. Med det mest robuste Apple Watch-design, ${chip} processor, præcis dual-frekvens GPS og op til 36 timers batteritid er dette det ultimative ur til atleter og udendørs entusiaster.`
+        ? `${title} er designet til eventyr og ekstrem udholdenhed. Med det mest robuste Apple Watch-design, ${chip}-processor, præcis GPS med to frekvenser og op til 36 timers batteritid er dette det ultimative ur til atleter og friluftsentusiaster.`
         : isSE
-        ? `${title} giver dig de vigtigste Apple Watch-funktioner til en attraktiv pris. Med ${chip} processor, sundhedssensorer og sømløs integration med din iPhone er det den smarteste vej ind i Apple Watch-universet.`
-        : `${title} kombinerer banebrydende sundhedsteknologi med et elegant design. Med ${chip} processor, Always-On Retina-display og avancerede sensorer får du et kraftfuldt værktøj på håndleddet — til sundhed, fitness og hverdagen.`,
+        ? `${title} giver dig de vigtigste Apple Watch-funktioner til en attraktiv pris. Med ${chip}-processor, sundhedssensorer og sømløs integration med din iPhone er det den smarteste vej ind i Apple Watch-universet.`
+        : `${title} kombinerer banebrydende sundhedsteknologi med et elegant design. Med ${chip}-processor, Always-On Retina-display og avancerede sensorer får du et kraftfuldt værktøj på håndleddet — til sundhed, fitness og hverdagen.`,
       highlights: [
         {
           icon: "cpu",
@@ -118,7 +118,7 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
       ],
       specs: [
         { label: "Processor", value: chip },
-        { label: "Display", value: display },
+        { label: "Skærm", value: display },
         { label: "Sensorer", value: isUltra ? "Puls, SpO2, temperatur, dybdemåler, kompas" : isSE ? "Puls, accelerometer, gyroskop" : "Puls, SpO2, temperatur, accelerometer, gyroskop" },
         { label: "Vandtæthed", value: water },
         { label: "Batteri", value: isUltra ? "Op til 36 timer (72 t. i strømsparetilstand)" : "Op til 18 timer (36 t. i strømsparetilstand)" },
@@ -139,17 +139,17 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
 
     return {
       intro: isPro
-        ? `${title} sætter en ny standard for smartphone-ydeevne med ${chip}-chippen og det mest avancerede kamerasystem i en iPhone. Pro-graden titankonstruktion, Always-On display og hele dagens batteritid gør den til det professionelle valg.`
-        : `${title} leverer imponerende ydeevne med ${chip}-chippen, et fremragende kamerasystem og lang batteritid. Det perfekte valg til dig der vil have premium Apple-kvalitet til en fornuftig pris.`,
+        ? `${title} sætter en ny standard for smartphoneydeevne med ${chip}-chippen og det mest avancerede kamerasystem i en iPhone. Titankonstruktion i professionel kvalitet, Always-On-skærm og batteritid til hele dagen gør den til det professionelle valg.`
+        : `${title} leverer imponerende ydeevne med ${chip}-chippen, et fremragende kamerasystem og lang batteritid. Det perfekte valg til dig, der vil have Apple-kvalitet i topklasse til en fornuftig pris.`,
       highlights: [
         { icon: "cpu", title: chip, detail: "Toppræstation" },
-        { icon: "camera", title: isPro ? "Pro kamera" : "Dual kamera", detail: camera.split("+")[0].trim() },
+        { icon: "camera", title: isPro ? "Pro-kamera" : "Dobbeltkamera", detail: camera.split("+")[0].trim() },
         { icon: "display", title: isPro ? "Super Retina XDR" : "Super Retina", detail: isPro ? "Always-On, ProMotion" : "OLED HDR" },
         { icon: "battery", title: "Hele dagen", detail: "Batteritid" },
       ],
       specs: [
         { label: "Processor", value: chip },
-        { label: "Display", value: isPro ? "Super Retina XDR OLED, ProMotion 120 Hz, Always-On" : "Super Retina XDR OLED, 60 Hz" },
+        { label: "Skærm", value: isPro ? "Super Retina XDR OLED, ProMotion 120 Hz, Always-On" : "Super Retina XDR OLED, 60 Hz" },
         { label: "Kamera (bag)", value: camera },
         { label: "Kamera (front)", value: isPro ? "12 MP TrueDepth, Face ID" : "12 MP TrueDepth, Face ID" },
         { label: "Lagerplads", value: "Se variantvælger" },
@@ -179,21 +179,21 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
 
     return {
       intro: isPro
-        ? `${title} er det ultimative kreative værktøj. Med M-serie chip, Liquid Retina XDR-display og Apple Pencil Pro-understøttelse erstatter den nemt en bærbar — til video, design og multitasking.`
+        ? `${title} er det ultimative kreative værktøj. Med en M-serie-chip, Liquid Retina XDR-display og Apple Pencil Pro-understøttelse erstatter den nemt en bærbar — til video, design og multitasking.`
         : isAir
-        ? `${title} kombinerer tynd og let konstruktion med kraftig M-serie ydeevne. Perfekt til studier, underholdning og produktivitet — med understøttelse af Apple Pencil og Magic Keyboard.`
+        ? `${title} kombinerer en tynd og let konstruktion med kraftig ydeevne fra M-serien. Perfekt til studier, underholdning og produktivitet — med understøttelse af Apple Pencil og Magic Keyboard.`
         : isMini
         ? `${title} pakker fuld iPad-kraft ind i det mest kompakte format. Perfekt til noter, læsning og produktivitet på farten.`
-        : `${title} leverer alt hvad du har brug for i en tablet — et flot display, lang batteritid og adgang til hele iPad-app-økosystemet.`,
+        : `${title} leverer alt, hvad du har brug for i en tablet — en flot skærm, lang batteritid og adgang til hele iPad-app-økosystemet.`,
       highlights: [
-        { icon: "cpu", title: isPro ? "M-serie chip" : isAir ? "M-serie chip" : "A-serie chip", detail: "Desktop-kraft" },
+        { icon: "cpu", title: isPro ? "M-serie chip" : isAir ? "M-serie chip" : "A-serie chip", detail: "Ydeevne som en computer" },
         { icon: "display", title: isPro ? "Liquid Retina XDR" : "Liquid Retina", detail: isPro ? "ProMotion 120 Hz" : "True Tone" },
         { icon: "pencil", title: "Apple Pencil", detail: isPro ? "Pro-understøttelse" : "Understøttet" },
         { icon: "battery", title: "Op til 10 timer", detail: "Batteritid" },
       ],
       specs: [
         { label: "Processor", value: isPro ? "Apple M-serie chip" : isAir ? "Apple M-serie chip" : "Apple A-serie chip" },
-        { label: "Display", value: isPro ? "Liquid Retina XDR, ProMotion 120 Hz, True Tone" : "Liquid Retina, True Tone" },
+        { label: "Skærm", value: isPro ? "Liquid Retina XDR, ProMotion 120 Hz, True Tone" : "Liquid Retina, True Tone" },
         { label: "Kamera (bag)", value: isPro ? "12 MP vidvinkel + 10 MP ultra, LiDAR" : "12 MP vidvinkel" },
         { label: "Kamera (front)", value: "12 MP ultravid, Center Stage" },
         { label: "Lagerplads", value: "Se variantvælger" },
@@ -214,19 +214,19 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
 
     return {
       intro: isFold || isFlip
-        ? `${title} redefinerer smartphones med sit innovative foldbare design. Udfoldet får du en tablet-lignende oplevelse, og sammenfoldet en kompakt telefon — alt sammen med Samsungs topklasse hardware.`
+        ? `${title} redefinerer smartphones med sit innovative foldbare design. Udfoldet får du en tabletlignende oplevelse, og sammenfoldet en kompakt telefon — alt sammen med Samsungs hardware i topklasse.`
         : isUltra
-        ? `${title} er Samsungs absolutte flagskib med det mest avancerede kamerasystem, S Pen-integration og en kæmpe Dynamic AMOLED-skærm. Bygget til dem der kræver det bedste.`
-        : `${title} kombinerer Samsung-kvalitet med et skarpt AMOLED-display, kraftig processor og et alsidigt kamerasystem. En solid daglig driver til en fornuftig pris.`,
+        ? `${title} er Samsungs absolutte flagskib med det mest avancerede kamerasystem, S Pen-integration og en kæmpe Dynamic AMOLED-skærm. Bygget til dem, der kræver det bedste.`
+        : `${title} kombinerer Samsung-kvalitet med en skarp AMOLED-skærm, kraftig processor og et alsidigt kamerasystem. En solid telefon til hverdagen til en fornuftig pris.`,
       highlights: [
         { icon: "cpu", title: "Snapdragon / Exynos", detail: "Flagskibsprocessor" },
-        { icon: "display", title: "Dynamic AMOLED 2X", detail: isUltra ? "120 Hz, 3120×1440" : "120 Hz adapativ" },
+        { icon: "display", title: "Dynamic AMOLED 2X", detail: isUltra ? "120 Hz, 3120×1440" : "120 Hz adaptiv" },
         { icon: "camera", title: isUltra ? "200 MP kamera" : "Multi-kamera", detail: isUltra ? "10× optisk zoom" : "AI-forbedret" },
         { icon: "battery", title: isUltra ? "5000 mAh" : "4500+ mAh", detail: "Hurtigopladning 45W" },
       ],
       specs: [
         { label: "Processor", value: "Qualcomm Snapdragon / Samsung Exynos" },
-        { label: "Display", value: isUltra ? "Dynamic AMOLED 2X, 120 Hz, QHD+" : "Dynamic AMOLED 2X, 120 Hz, FHD+" },
+        { label: "Skærm", value: isUltra ? "Dynamic AMOLED 2X, 120 Hz, QHD+" : "Dynamic AMOLED 2X, 120 Hz, FHD+" },
         { label: "Kamera (bag)", value: isUltra ? "200 MP + 12 MP ultra + 50 MP tele (5×) + 10 MP tele (3×)" : "50 MP + 12 MP ultra + 10 MP tele" },
         { label: "Kamera (front)", value: "12 MP" },
         { label: "Lagerplads", value: "Se variantvælger" },
@@ -246,8 +246,8 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
 
     return {
       intro: isPro
-        ? `${title} er den bærbare til professionelle. Med Apple M-serie chip, et fantastisk Liquid Retina XDR-display og op til 22 timers batteritid håndterer den alt fra videoredigering til softwareudvikling — uden at blinke.`
-        : `${title} er den perfekte bærbare til studier, arbejde og kreativitet. Utrolig tynd og let, med Apple-silicium der leverer fantastisk ydeevne og hele dagen lang batteritid.`,
+        ? `${title} er den bærbare til professionelle. Med en Apple M-serie-chip, et fantastisk Liquid Retina XDR-display og op til 22 timers batteritid håndterer den alt fra videoredigering til softwareudvikling — uden at blinke.`
+        : `${title} er den perfekte bærbare til studier, arbejde og kreativitet. Utrolig tynd og let, med en Apple-chip, der leverer fantastisk ydeevne og batteritid til hele dagen.`,
       highlights: [
         { icon: "cpu", title: "Apple M-serie", detail: "Op til 12-core CPU" },
         { icon: "display", title: isPro ? "Liquid Retina XDR" : "Liquid Retina", detail: isPro ? "ProMotion 120 Hz" : "True Tone, P3" },
@@ -256,8 +256,8 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
       ],
       specs: [
         { label: "Processor", value: "Apple M-serie chip" },
-        { label: "Display", value: isPro ? "Liquid Retina XDR, ProMotion 120 Hz, True Tone" : "Liquid Retina, True Tone, P3" },
-        { label: "Displaystørrelse", value: isPro ? "14\" / 16\"" : isAir ? "13,6\" / 15,3\"" : "13,3\" / 15\"" },
+        { label: "Skærm", value: isPro ? "Liquid Retina XDR, ProMotion 120 Hz, True Tone" : "Liquid Retina, True Tone, P3" },
+        { label: "Skærmstørrelse", value: isPro ? "14\" / 16\"" : isAir ? "13,6\" / 15,3\"" : "13,3\" / 15\"" },
         { label: "RAM", value: "Se variantvælger" },
         { label: "Lagerplads", value: "SSD — se variantvælger" },
         { label: "Grafik", value: "Integreret Apple GPU (op til 38-core)" },
@@ -274,17 +274,17 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
   // ---- Lenovo ThinkPad ----
   if (t.includes("thinkpad") || t.includes("lenovo")) {
     return {
-      intro: `${title} er bygget til erhvervslivet. Med den ikoniske ThinkPad-kvalitet, MIL-STD-810G holdbarhed, fremragende tastatur og virksomhedssikkerhed er det den pålidelige partner til professionelt arbejde — dag efter dag.`,
+      intro: `${title} er bygget til erhvervslivet. Med den ikoniske ThinkPad-kvalitet, MIL-STD-810G-holdbarhed, fremragende tastatur og virksomhedssikkerhed er det den pålidelige partner til professionelt arbejde — dag efter dag.`,
       highlights: [
         { icon: "cpu", title: "Intel Core", detail: "i5 / i7 processor" },
-        { icon: "display", title: "IPS Full HD", detail: "Anti-glare, lav blåt lys" },
+        { icon: "display", title: "IPS Full HD", detail: "Antirefleks, mindre blåt lys" },
         { icon: "security", title: "Virksomhedssikkerhed", detail: "Fingeraftryk + TPM 2.0" },
         { icon: "durability", title: "MIL-STD-810G", detail: "Militær holdbarhed" },
       ],
       specs: [
         { label: "Processor", value: "Intel Core i5 / i7" },
-        { label: "Display", value: "IPS Full HD (1920×1080), anti-glare" },
-        { label: "Displaystørrelse", value: "14\" / 15,6\"" },
+        { label: "Skærm", value: "IPS Full HD (1920×1080), anti-glare" },
+        { label: "Skærmstørrelse", value: "14\" / 15,6\"" },
         { label: "Grafik", value: "Intel UHD / Iris Xe Graphics" },
         { label: "RAM", value: "Se variantvælger" },
         { label: "Lagerplads", value: "SSD — se variantvælger" },
@@ -313,8 +313,8 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
       ],
       specs: [
         { label: "Processor", value: "Intel Core i5 / i7" },
-        { label: "Display", value: "IPS Full HD (1920×1080)" },
-        { label: "Displaystørrelse", value: "14\" / 15,6\"" },
+        { label: "Skærm", value: "IPS Full HD (1920×1080)" },
+        { label: "Skærmstørrelse", value: "14\" / 15,6\"" },
         { label: "Grafik", value: "Intel UHD / Iris Xe Graphics" },
         { label: "RAM", value: "Se variantvælger" },
         { label: "Lagerplads", value: "SSD — se variantvælger" },
@@ -334,7 +334,7 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
   return {
     intro: `${title} er grundigt testet og kvalitetssikret af vores teknikere. Enheden leveres med 36 måneders garanti og er klar til brug fra dag ét.`,
     highlights: [
-      { icon: "check", title: "30-punkt test", detail: "Kvalitetssikret" },
+      { icon: "check", title: "Test med 30 kontrolpunkter", detail: "Kvalitetssikret" },
       { icon: "shield", title: "36 mdr. garanti", detail: "Fuld dækning" },
       { icon: "truck", title: "1-2 dage", detail: "Hurtig levering" },
       { icon: "return", title: "14 dage", detail: "Fuld returret" },
@@ -528,7 +528,7 @@ function AccessoryProductDetails({
         <div>
           <p className="text-sm font-semibold text-charcoal">Dine rettigheder</p>
           <p className="mt-0.5 text-xs leading-relaxed text-charcoal/60">
-            Du har 2 års reklamationsret efter købeloven, samt 14 dages fuld fortrydelsesret fra den dag du modtager varen.
+            Du har 2 års reklamationsret efter købeloven samt 14 dages fuld fortrydelsesret fra den dag, du modtager varen.
           </p>
         </div>
       </div>
@@ -616,9 +616,9 @@ export function ProductDetails({
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
         </svg>
         <div>
-          <p className="text-sm font-semibold text-charcoal">PhoneSpot Refurbished-garanti</p>
+          <p className="text-sm font-semibold text-charcoal">PhoneSpots refurbished-garanti</p>
           <p className="mt-0.5 text-xs leading-relaxed text-charcoal/60">
-            Alle specifikationer er verificeret af vores teknikere. Enheden er gennemgået med en 30-punkt kvalitetstest og leveres med 36 måneders fuld garanti.
+            Alle specifikationer er verificeret af vores teknikere. Enheden er gennemgået med en kvalitetstest med 30 kontrolpunkter og leveres med 36 måneders fuld garanti.
           </p>
         </div>
       </div>

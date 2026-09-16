@@ -105,7 +105,7 @@ export function CartEmailCapture() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="din@email.dk"
           disabled={submitting}
-          aria-label="E-mailadresse til kurv-påmindelse"
+          aria-label="E-mailadresse til påmindelse om din kurv"
           className="min-w-0 flex-1 rounded-lg border border-[#E5E5EA] bg-white px-3 py-2 text-sm text-[#111111] placeholder-[#AEAEB2] outline-none focus:border-[#1A3D2E] focus:ring-1 focus:ring-[#1A3D2E] disabled:opacity-50"
         />
         <button

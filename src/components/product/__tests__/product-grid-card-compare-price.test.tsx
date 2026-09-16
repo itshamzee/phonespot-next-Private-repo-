@@ -37,4 +37,33 @@ describe("ProductGridCard — compare-at price", () => {
     render(<ProductGridCard {...base} minPrice={999900} compareAtPrice={999900} />);
     expect(screen.queryByText(/Nypris/)).not.toBeInTheDocument();
   });
+
+  it("shows a full Se modellen action without an invented low-stock message", () => {
+    render(<ProductGridCard {...base} minPrice={999900} />);
+    expect(screen.getByRole("link", { name: /Se modellen/ })).toHaveAttribute(
+      "href",
+      "/refurbished/hp-elitebook-8-g1i",
+    );
+    expect(screen.queryByText(/Kun .* tilbage/)).not.toBeInTheDocument();
+  });
+
+  it("mentions pickup only when a real store location is present", () => {
+    const { rerender } = render(
+      <ProductGridCard
+        {...base}
+        minPrice={999900}
+        locations={[{ name: "Weblager", type: "online", count: 2 }]}
+      />,
+    );
+    expect(screen.queryByText(/afhent/)).not.toBeInTheDocument();
+
+    rerender(
+      <ProductGridCard
+        {...base}
+        minPrice={999900}
+        locations={[{ name: "Vejle", type: "store", count: 1 }]}
+      />,
+    );
+    expect(screen.getByText("På lager i Vejle")).toBeInTheDocument();
+  });
 });

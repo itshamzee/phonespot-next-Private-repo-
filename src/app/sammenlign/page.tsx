@@ -54,11 +54,11 @@ export default function ComparisonIndexPage() {
             Sammenligninger
           </p>
           <Heading as="h1" size="lg" className="!text-[#111111]">
-            Hvad skal du vaelge?
+            Hvad skal du vælge?
           </Heading>
           <p className="mx-auto mt-4 max-w-2xl font-body text-lg text-[#6E6E73]">
-            Forstaa forskellen mellem refurbished, brugt og ny elektronik — og
-            find ud af hvad der passer bedst til dig.
+            Forstå forskellen mellem refurbished, brugt og ny elektronik — og
+            find ud af, hvad der passer bedst til dig.
           </p>
         </div>
       </section>
@@ -112,7 +112,7 @@ export default function ComparisonIndexPage() {
                   ))}
                   {comparison.rows.length > 3 && (
                     <span className="rounded-full bg-warm-white px-3 py-1 text-xs font-medium text-charcoal/40">
-                      +{comparison.rows.length - 3} mere
+                      +{comparison.rows.length - 3} flere
                     </span>
                   )}
                 </div>

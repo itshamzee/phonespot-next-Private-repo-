@@ -22,18 +22,18 @@ export const COLLECTION_MAP: Record<string, {
   smartphones: {
     shopifyHandle: "smartphones",
     title: "Smartphones",
-    description: "Samsung, Google og andre topmodeller — kvalitetstestet med garanti.",
+    description: "Samsung, Google og andre topmodeller — kvalitetstestede med garanti.",
     showConditionWalkthrough: true,
   },
   baerbare: {
     shopifyHandle: "baerbare",
-    title: "Bærbare Computere",
+    title: "Bærbare computere",
     description: "Refurbished bærbare computere klar til arbejde og studie. Testet og med garanti.",
     showConditionWalkthrough: true,
   },
   covers: {
     shopifyHandle: "covers-1",
-    title: "Covers & Beskyttelse",
+    title: "Covers og beskyttelse",
     description: "Beskyt din enhed med kvalitetscovers og beskyttelsesglas.",
   },
   tilbehor: {
@@ -43,8 +43,8 @@ export const COLLECTION_MAP: Record<string, {
   },
   lyd: {
     shopifyHandle: "lyd",
-    title: "Lyd & Høretelefoner",
-    description: "Høretelefoner, earbuds og headsets til alle enheder.",
+    title: "Lyd og høretelefoner",
+    description: "Høretelefoner, øretelefoner og headsets til alle enheder.",
   },
   opladere: {
     shopifyHandle: "opladere",

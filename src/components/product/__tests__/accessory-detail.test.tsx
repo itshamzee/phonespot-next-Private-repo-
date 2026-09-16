@@ -1,13 +1,15 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { AccessoryDetail } from "../accessory-detail";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 
 // AccessoryDetail renders AddToCartButton/CrossSellCard, which call
 // useCart() — stub it so the component tree doesn't need a real
 // CartProvider for these render-only assertions.
+const cart = vi.hoisted(() => ({addSku:vi.fn(),openCart:vi.fn()}));
+beforeEach(() => vi.clearAllMocks());
 vi.mock("@/components/cart/cart-context", () => ({
-  useCart: () => ({ addSku: vi.fn(), openCart: vi.fn() }),
+  useCart: () => cart,
 }));
 
 // jsdom has no IntersectionObserver — StickyMobileCta observes the CTA
@@ -66,7 +68,7 @@ describe("AccessoryDetail", () => {
 
   it("never mentions a cosmetic grade", () => {
     render(<AccessoryDetail product={product} />);
-    expect(screen.queryByText(/grade/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/grade|stand\s+[A-CNP]\b/i)).not.toBeInTheDocument();
   });
 
   it("never mentions battery", () => {
@@ -108,4 +110,34 @@ describe("AccessoryDetail", () => {
       expect(screen.queryByText(/charger type/i)).not.toBeInTheDocument();
     });
   });
+});
+
+describe('accessory purchase boundary',()=>{
+ it.each([0,null])('disables both purchase actions for stock %s without orderability', stock => {
+  render(<AccessoryDetail product={makeProduct()} stockQuantity={stock}/>);
+  const buttons=screen.getAllByRole('button',{name:stock===0?'Udsolgt':'Lagerstatus ukendt'});
+  expect(buttons).toHaveLength(2); buttons.forEach(button=>{expect(button).toBeDisabled();fireEvent.click(button);});
+  expect(cart.addSku).not.toHaveBeenCalled();
+ });
+ it('allows explicit orderability without claiming physical stock',()=>{
+  render(<AccessoryDetail product={makeProduct({always_in_stock:true})} stockQuantity={null}/>);
+  expect(screen.queryByText(/^På lager$/)).not.toBeInTheDocument();
+  expect(screen.getAllByText('Kan bestilles').length).toBeGreaterThan(0);
+  fireEvent.click(screen.getAllByRole('button',{name:'Tilføj til kurv'})[0]);
+  expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'1',price:39900,quantity:1}));
+ });
+ it('selects a keyboard-operable image variant and preserves its actual price/image/cart label',()=>{
+  const product=makeProduct({images:['/base.png'],variants:[{name:'Farve',options:[{value:'Sort',price_override:42900,image:'/black.png',sku:'black'}]}]});
+  render(<AccessoryDetail product={product} stockQuantity={4}/>);
+  const option=screen.getByRole('button',{name:'Sort'}); option.focus(); fireEvent.click(option);
+  expect(option).toHaveAttribute('aria-pressed','true');
+  fireEvent.click(screen.getAllByRole('button',{name:'Tilføj til kurv'})[1]);
+  expect(cart.addSku).toHaveBeenCalledWith({type:'sku_product',skuProductId:'1',title:product.title,price:42900,image:'/black.png',quantity:1,variantLabel:'Farve: Sort'});
+ });
+});
+
+it('keeps one product title before the gallery for reading order',()=>{
+ const product=makeProduct();render(<AccessoryDetail product={product}/>);
+ expect(screen.getAllByRole('heading',{level:1})).toHaveLength(1);
+ expect(screen.getByRole('heading',{level:1})).toHaveTextContent(product.title);
 });

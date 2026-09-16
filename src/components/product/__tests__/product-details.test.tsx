@@ -39,7 +39,7 @@ describe("ProductDetails — variant=\"accessory\"", () => {
 
   it("never mentions a cosmetic grade", () => {
     render(<ProductDetails product={product} variant="accessory" />);
-    expect(screen.queryByText(/grade/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/grade|stand\s+[A-CNP]\b/i)).not.toBeInTheDocument();
   });
 
   it("never mentions battery", () => {

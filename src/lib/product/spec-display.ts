@@ -23,6 +23,7 @@ const CANONICAL_ORDER = [
   "Hukommelse",
   "Lager",
   "Skærm",
+  "Opløsning",
   "Batteri",
   "Farve",
   "Styresystem",
@@ -58,6 +59,9 @@ const KEY_TO_LABEL: Record<string, CanonicalLabel> = {
   display_type: "Skærm",
   "størrelse": "Skærm",
 
+  resolution: "Opløsning",
+  opløsning: "Opløsning",
+
   batteri: "Batteri",
   battery: "Batteri",
 
@@ -72,6 +76,10 @@ const KEY_TO_LABEL: Record<string, CanonicalLabel> = {
   vaegt: "Vægt",
   weight: "Vægt",
 };
+
+export function getSpecLabel(key: string): string {
+  return KEY_TO_LABEL[key.trim().toLowerCase()] ?? key;
+}
 
 /** Keys excluded from the row list — they're rendered separately (model number). */
 const MODEL_KEYS = new Set(["model"]);

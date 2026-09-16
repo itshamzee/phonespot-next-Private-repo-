@@ -11,7 +11,7 @@ type GradeMeta = { label: string; description: string; badgeBg: string; badgeCol
 const DEFAULT_GRADE_META: Record<Grade, GradeMeta> = {
   A: {
     label: "Som ny",
-    description: "Enheden fremstår næsten som ny. Ingen synlige ridser eller brugstegn. Skærmen er perfekt og batteriet er i top tilstand.",
+    description: "Enheden fremstår næsten som ny. Ingen synlige ridser eller brugstegn. Skærmen er perfekt, og batteriet er i topstand.",
     badgeBg: "bg-green-eco/10",
     badgeColor: "text-green-eco",
     ringColor: "ring-green-eco",
@@ -35,21 +35,21 @@ const DEFAULT_GRADE_META: Record<Grade, GradeMeta> = {
 const LAPTOP_GRADE_META: Record<Grade, GradeMeta> = {
   A: {
     label: "Som ny",
-    description: "Laptop fremstår næsten som ny. Ingen synlige ridser på låg eller kabinet. Skærm, tastatur og trackpad er i perfekt stand.",
+    description: "Den bærbare fremstår næsten som ny. Ingen synlige ridser på låg eller kabinet. Skærm, tastatur og trackpad er i perfekt stand.",
     badgeBg: "bg-green-eco/10",
     badgeColor: "text-green-eco",
     ringColor: "ring-green-eco",
   },
   B: {
     label: "God stand",
-    description: "Laptop kan have lette brugsspor på låg eller kabinet. Skærm og tastatur er fri for ridser. Fuldt funktionel.",
+    description: "Den bærbare kan have lette brugsspor på låg eller kabinet. Skærm og tastatur er frie for ridser. Fuldt funktionel.",
     badgeBg: "bg-amber-50",
     badgeColor: "text-amber-600",
     ringColor: "ring-amber-500",
   },
   C: {
     label: "Okay stand",
-    description: "Laptop har tydelige brugsspor på låg og kabinet. Skærm og tastatur kan have lette ridser. Alle funktioner virker perfekt. Bedste pris.",
+    description: "Den bærbare har tydelige brugsspor på låg og kabinet. Skærm og tastatur kan have lette ridser. Alle funktioner virker perfekt. Bedste pris.",
     badgeBg: "bg-gray/10",
     badgeColor: "text-gray",
     ringColor: "ring-gray",
@@ -86,8 +86,8 @@ const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; fram
 export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: DeviceType }) {
   const [view, setView] = useState<"frame" | "display">("frame");
 
-  const frameLabel = deviceType === "laptop" ? "Låg & bagside" : "Bagside";
-  const displayLabel = deviceType === "laptop" ? "Tastatur & skærm" : "Forside";
+  const frameLabel = deviceType === "laptop" ? "Låg og bagside" : "Bagside";
+  const displayLabel = deviceType === "laptop" ? "Tastatur og skærm" : "Forside";
 
   return (
     <div>
@@ -142,7 +142,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
                 {/* Grade badge overlay */}
                 <div className="absolute top-3 left-3">
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold backdrop-blur-sm ${meta.badgeBg} ${meta.badgeColor}`}>
-                    Grade {grade}
+                    Stand {grade}
                   </span>
                 </div>
               </div>

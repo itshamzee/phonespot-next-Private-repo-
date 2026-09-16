@@ -41,14 +41,14 @@ export function IntroStrip() {
           {/* Left: brand voice */}
           <div>
             <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-green-eco">
-              Refurbished tech &middot; Danmark
+              Refurbished elektronik &middot; Danmark
             </p>
             <h1 className="mt-3 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-charcoal sm:text-5xl md:text-[3.5rem] lg:text-[4rem]">
-              Refurbished tech<br />med 36 mdr. garanti
+              Refurbished elektronik<br />med 36 mdr. garanti
             </h1>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-gray md:text-[16px]">
               Kvalitetstestet, rengjort og klar til brug — fra Danmarks højest bedømte
-              refurb-butik. To fysiske butikker i Slagelse og Vejle.
+              butik med refurbished elektronik. To fysiske butikker i Slagelse og Vejle.
             </p>
           </div>
 

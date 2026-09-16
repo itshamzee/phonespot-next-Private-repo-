@@ -17,7 +17,7 @@ type WarrantyData = {
 const STATUS_LABELS: Record<string, string> = {
   active: "Aktiv",
   claimed: "Benyttet",
-  expired: "Udlobet",
+  expired: "Udløbet",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -50,7 +50,7 @@ export default function WarrantiesPage() {
   }, []);
 
   if (loading) {
-    return <div className="py-12 text-center text-[#6E6E73]">Indlaeser garantier...</div>;
+    return <div className="py-12 text-center text-[#6E6E73]">Indlæser garantier...</div>;
   }
 
   if (warranties.length === 0) {
@@ -58,7 +58,7 @@ export default function WarrantiesPage() {
       <div className="py-12 text-center">
         <p className="text-[#6E6E73]">Du har ingen garantibeviser endnu</p>
         <p className="mt-2 text-xs text-[#6E6E73]">
-          Garantibeviser udstedes automatisk ved kob af enheder.
+          Garantibeviser udstedes automatisk ved køb af enheder.
         </p>
       </div>
     );

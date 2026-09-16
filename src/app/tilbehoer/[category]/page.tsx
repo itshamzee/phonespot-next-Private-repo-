@@ -22,7 +22,7 @@ export async function generateMetadata({
   const config = getCategoryConfig(category);
   if (!config) return { title: "Ikke fundet" };
 
-  const title = `${config.label} til iPhone & Samsung | PhoneSpot`;
+  const title = `${config.label} til iPhone og Samsung | PhoneSpot`;
   const description = config.description;
 
   const canonical =
@@ -91,8 +91,9 @@ export default async function TilbehoerCategoryPage({
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
+      {config.faq.length > 0 && <JsonLd data={{"@context":"https://schema.org","@type":"FAQPage",mainEntity:config.faq.map(item=>({"@type":"Question",name:item.q,acceptedAnswer:{"@type":"Answer",text:item.a}}))}}/>}
 
-      <div className="mx-auto max-w-7xl px-4 pt-4">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pt-4">
         <Breadcrumb
           items={[
             { label: "Tilbehør", href: "/tilbehoer" },

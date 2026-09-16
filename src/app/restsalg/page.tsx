@@ -41,7 +41,7 @@ export default async function RestsalgPage() {
       {/* Hero */}
       <section className="bg-[#F7F7F8] border-b border-[#E5E5EA]">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 md:py-16">
-          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Breadcrumb">
+          <nav className="mb-6 flex items-center gap-2 text-sm text-[#86868B]" aria-label="Brødkrumme">
             <Link href="/" className="hover:text-[#111111] transition-colors">Forside</Link>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0" aria-hidden="true">
               <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />

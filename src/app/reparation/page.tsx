@@ -1,34 +1,34 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORE, STORES } from "@/lib/store-config";
-import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
+import { STORE, STORES, openingHoursJsonLd } from "@/lib/store-config";
 import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
 import { BrandPicker } from "./brand-picker";
-import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
-import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
-import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
+import styles from "@/components/repair/repair.module.css";
+import { RepairMethodVideo } from "@/components/repair/repair-method-video";
+import { StorefrontIcon } from "@/components/ui/storefront-icon";
+import landing from "@/components/repair/repair-landing.module.css";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title:
-    "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot",
+  title: "Reparation af iPhone, Samsung, iPad og MacBook | PhoneSpot",
   description:
-    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, MacBook service og mere. Faste priser, hurtig service og livstidsgaranti.",
+    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, MacBook-service og mere. Se priser og vælg din reparation.",
   keywords:
     "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle, macbook service, mac reparation, macbook batteriskift, macbook skærmskift, reservedele macbook",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
   openGraph: {
-    title: "Reparation af iPhone, iPad, Samsung & Mere | PhoneSpot Slagelse & Vejle",
+    title:
+      "Reparation af iPhone, Samsung, iPad og MacBook | PhoneSpot Slagelse & Vejle",
     description:
-      "Professionel reparation med kvalitetsdele og garanti. Skærmskift, batteriskift, vandskade og mere. Faste priser og hurtig service i Slagelse og Vejle.",
+      "Reparation af telefoner, tablets og bærbare i Vejle og Slagelse. Find din model, se priser og book skærmskift, batteriskift eller anden reparation.",
     url: "https://phonespot.dk/reparation",
     type: "website",
+    images: [{ url: "https://phonespot.dk/images/repair/tekniker-reparerer.jpg", alt: "Reparation af en tablet ved arbejdsbordet" }],
   },
 };
 
@@ -40,53 +40,45 @@ const REPAIR_FAQ = [
   {
     question: "Hvad koster en skærmudskiftning?",
     answer:
-      "Prisen afhænger af modellen. Vælg dit mærke og model ovenfor for faste priser. Alle skærmskift inkluderer garanti og kvalitetsdele.",
+      "Prisen afhænger af din model og den valgte reservedel. Find din model ovenfor for at se priser på skærmskift, batteriskift og andre reparationer. Priserne er i danske kroner inklusive moms.",
   },
   {
     question: "Hvor lang tid tager en reparation?",
     answer:
-      "90% af alle reparationer tager kun 30 minutter. Skærmskift, batteriskift og de fleste andre reparationer udføres mens du venter. Vi holder dig opdateret undervejs.",
+      "Tiden afhænger af fejlen, modellen og om reservedelen er på lager. Du kan se det forventede tidsforbrug ved den enkelte reparation, når det er oplyst. Kontakt butikken, hvis du har brug for at kende tiden inden dit besøg.",
   },
   {
-    question: "Får jeg garanti på reparationen?",
+    question: "Hvilken garanti gælder for reparationen?",
     answer:
-      "Ja — livstidsgaranti på alle reparationer. Hvis den samme fejl opstår igen, reparerer vi uden beregning. Du er dækket.",
-  },
-  {
-    question: "Bruger I originale reservedele?",
-    answer:
-      "Vi bruger højkvalitets reservedele der matcher de originale specifikationer — korrekt farvegengivelse, touch-respons og fuld funktionalitet.",
+      "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper dig gerne med at afklare, hvad der gælder for den valgte reservedel og reparation.",
   },
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
     answer:
-      "Ja! Vi tilbyder walk-in service i begge vores butikker — VestsjællandsCentret i Slagelse og Løversysselvej 3B i Vejle. Du kan også booke tid online.",
+      "Du kan komme forbi vores butikker i Vejle og Slagelse. Du kan også booke online og vælge, hvilken butik du vil aflevere i.",
   },
   {
-    question: "Mister jeg mine data?",
+    question: "Skal jeg tage backup først?",
     answer:
-      "Ved de fleste reparationer bevares dine data. Vi anbefaler altid backup inden indsendelse, men data-tab er sjældent ved standard reparationer.",
+      "Vi anbefaler, at du tager en backup af dine data, inden du afleverer din enhed til reparation.",
   },
   {
-    question: "Reparerer I MacBooks?",
-    answer: "Ja — vi reparerer alle MacBook Air og MacBook Pro modeller. Skærmskift, batteriskift, tastatur, logic board og mere. De fleste reparationer udføres samme dag, og vi er typisk 30-50% billigere end Apples autoriserede service.",
+    question: "Reparerer I også iPad og MacBook?",
+    answer:
+      "Ja. Vælg Apple og derefter din enhedstype i modelvælgeren. Find din model for at se de tilgængelige reparationer, eller kontakt os for hjælp.",
   },
   {
-    question: "Sælger I reservedele til MacBooks og iPhones?",
-    answer: "Ja! Vi sælger reservedele til MacBooks, iPhones, iPads og Samsung. Batterier, skærme, tastaturer og mere. Køb delene og monter selv, eller lad os gøre det i butikken.",
+    question: "Sælger I også reservedele?",
+    answer: "Ja. Se vores reservedele til blandt andet iPhone, iPad, Samsung og MacBook. Find delen til din model, eller kontakt os, hvis du vil have hjælp til reparationen.",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// JSON-LD
-// ---------------------------------------------------------------------------
 
 const REPAIR_SERVICE_JSONLD = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: STORE.name,
   description:
-    "Professionel reparation af smartphones, tablets og bærbare i Slagelse og Vejle. Skærmskift, batteriskift, vandskade og mere med faste priser og garanti.",
+    "Reparation af smartphones, tablets og bærbare i Slagelse og Vejle. Find din model for priser på skærmskift, batteriskift og andre reparationer.",
   url: "https://phonespot.dk/reparation",
   telephone: STORE.phone,
   email: STORE.email,
@@ -102,39 +94,28 @@ const REPAIR_SERVICE_JSONLD = {
     latitude: STORE.coordinates.lat,
     longitude: STORE.coordinates.lng,
   },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "10:00",
-      closes: "19:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "10:00",
-      closes: "17:00",
-    },
-  ],
+  openingHoursSpecification: openingHoursJsonLd(STORE.hours),
   priceRange: "$$",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
-    name: "Reparationsservices",
+    name: "Reparationer",
     itemListElement: [
       {
         "@type": "OfferCatalog",
         name: "Skærmskift",
-        description: "Professionel udskiftning af skærm på smartphones og tablets",
+        description:
+          "Professionel udskiftning af skærm på smartphones og tablets",
       },
       {
         "@type": "OfferCatalog",
         name: "Batteriskift",
-        description: "Udskiftning af batteri med højkapacitets reservedele",
+        description: "Udskiftning af batteri på telefoner, tablets og bærbare",
       },
       {
         "@type": "OfferCatalog",
-        name: "Vandskade-behandling",
-        description: "Professionel rensning og reparation af vandskadede enheder",
+        name: "Behandling af vandskader",
+        description:
+          "Professionel rensning og reparation af vandskadede enheder",
       },
     ],
   },
@@ -151,415 +132,141 @@ export default async function ReparationPage() {
   ]);
 
   return (
-    <>
+    <div className={`${styles.shell} ${landing.page}`}>
       <JsonLd data={REPAIR_SERVICE_JSONLD} />
-      <JsonLd data={{
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: REPAIR_FAQ.map((item) => ({
-          "@type": "Question",
-          name: item.question,
-          acceptedAnswer: { "@type": "Answer", text: item.answer },
-        })),
-      }} />
-
-      {/* ================================================================= */}
-      {/*  SECTION 1: HERO — Workshop background + USP cards                */}
-      {/* ================================================================= */}
-      <section className="px-4 pt-4 pb-0 md:px-6 md:pt-6">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-2xl md:rounded-3xl">
-          <Image
-            src="/images/lifestyle/workshop.jpg"
-            alt=""
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-            aria-hidden="true"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-eco/90 via-green-eco/80 to-green-eco/50" />
-
-          <div className="relative z-10 mx-auto max-w-4xl px-8 py-10 text-center md:py-14">
-            <div className="mb-4 inline-flex">
-              <Suspense fallback={<div className="text-white/60 text-sm">Indlæser anmeldelser...</div>}>
-                <TrustpilotStars />
-              </Suspense>
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+        { "@type": "ListItem", position: 2, name: "Reparation", item: "https://phonespot.dk/reparation" },
+      ] }} />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: REPAIR_FAQ.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        }}
+      />
+      <div className={landing.wrap}>
+        <nav aria-label="Brødkrumme" className={styles.breadcrumb}>
+          <ol>
+            <li>
+              <Link href="/">Forside</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">Reparation</li>
+          </ol>
+        </nav>
+        <section className={landing.hero} aria-labelledby="repair-title">
+          <div className={landing.heroCopy}>
+            <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
+            <h1 id="repair-title">Reparation.<br />Tilbage til hverdagen.</h1>
+            <p>Reparation af iPhone, Samsung, iPad og MacBook. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder.</p>
+            <div className={landing.actions}>
+              <a href="#find-din-pris">Find model og pris <StorefrontIcon kind="arrow" /></a>
+              <a href="#reparationsforloeb">Sådan foregår det</a>
             </div>
-
-            <h1 className="font-display text-3xl font-bold leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
-              Reparation i Slagelse &amp; Vejle
-              <br />
-              <span className="text-white/80">— hurtigt og professionelt</span>
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
-              Professionel reparation af iPhones, iPads, Samsung, MacBooks og mere i vores butikker i Slagelse og Vejle. Livstidsgaranti, faste priser og 90% klar på 30 minutter.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <a href="#find-din-pris" className="rounded-full border-2 border-white bg-white px-8 py-3.5 text-sm font-bold text-green-eco transition-all hover:bg-white/90">
-                Find din pris ↓
-              </a>
-              <Link href="/reparation/booking" className="rounded-full border-2 border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20">
-                Book reparation
-              </Link>
-            </div>
-
-            <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { title: "Livstidsgaranti", desc: "På arbejde & dele" },
-                { title: "30 minutter", desc: "90% klar samme dag" },
-                { title: "Faste priser", desc: "Inkl. moms & dele" },
-                { title: "Walk-in", desc: "Ingen tidsbestilling" },
-              ].map(({ title, desc }) => (
-                <div key={title} className="rounded-xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur-sm">
-                  <p className="text-sm font-bold text-white">{title}</p>
-                  <p className="mt-0.5 text-xs text-white/60">{desc}</p>
-                </div>
-              ))}
-            </div>
+            <span className={landing.heroLocation}><StorefrontIcon kind="pin" /> I Vejle og Slagelse</span>
           </div>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 2: TRUST BADGES — One compact line                       */}
-      {/* ================================================================= */}
-      <section className="border-b border-[#E5E5EA] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-3.5 text-sm sm:gap-x-6">
-          {[
-            { icon: "shield", label: "Livstidsgaranti" },
-            { icon: "clock", label: "90% klar på 30 min" },
-            { icon: "tag", label: "Fast pris" },
-            { icon: "star", label: `Trustpilot ${TRUSTPILOT_SCORE_LABEL}` },
-          ].map(({ icon, label }) => (
-            <span key={label} className="inline-flex items-center gap-1.5 text-[#111111]">
-              <span className="flex h-5 w-5 items-center justify-center text-[#1A3D2E]">
-                {icon === "shield" && (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                    <path d="M8 1l6 2.5v4c0 3.5-2.5 6.5-6 8-3.5-1.5-6-4.5-6-8v-4L8 1z" />
-                  </svg>
-                )}
-                {icon === "clock" && (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z" clipRule="evenodd" />
-                  </svg>
-                )}
-                {icon === "tag" && (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M2.5 7.775V2.75a.25.25 0 0 1 .25-.25h2.025a.25.25 0 0 1 .177.073l6.25 6.25a.25.25 0 0 1 0 .354l-2.025 2.025a.25.25 0 0 1-.354 0l-6.25-6.25a.25.25 0 0 1-.073-.177Z" clipRule="evenodd" />
-                  </svg>
-                )}
-                {icon === "star" && (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                    <path d="M8 1.63l1.766 4.278 4.584.422-3.48 2.98 1.082 4.471L8 11.49l-3.952 2.291 1.082-4.471-3.48-2.98 4.584-.422L8 1.63z" />
-                  </svg>
-                )}
-              </span>
-              <span className="font-medium">{label}</span>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 3: FIND DIN PRIS — Brand + Model selector (MAIN CTA)    */}
-      {/* ================================================================= */}
-      <section id="find-din-pris" className="bg-[#F7F7F8]">
-        <div className="mx-auto max-w-7xl px-4 py-10 md:py-14">
-          <div className="mb-6 max-w-xl">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
-              Find din pris
-            </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-[#111111]">
-              Hvad skal repareres?
-            </h2>
-            <p className="mt-2 text-[#86868B]">
-              Vælg dit mærke og model for at se faste priser på alle reparationer.
-              Alle priser inkluderer moms, reservedele og livstidsgaranti.
-            </p>
+          <div className={landing.heroPhoto}>
+            <Image src="/images/repair/tekniker-reparerer.jpg" alt="En tekniker reparerer en tablet ved arbejdsbordet" fill priority sizes="(max-width: 700px) 100vw, 650px" />
+            <span>Et blik for detaljerne.</span>
           </div>
-
+        </section>
+        <div className={landing.facts}>
+          <span><StorefrontIcon kind="check" /> Se pris og reservedel til din model</span>
+          <span><StorefrontIcon kind="pin" /> Book online eller kom forbi</span>
+          <span><StorefrontIcon kind="phone" /> Hjælp på <a href={`tel:${STORE.phone.replace(/\s/g, "")}`}>61 10 00 48</a></span>
+        </div>
+        <section id="find-din-pris" className={landing.finder} aria-labelledby="finder-title">
+          <div className={landing.sectionHeading}>
+            <div><h2 id="finder-title">Hvad skal vi reparere?</h2><p>Find din model for at se reparationer, reservedele og priser.</p></div>
+            <Link href="/kontakt">Kan du ikke finde din model? <StorefrontIcon kind="arrow" /></Link>
+          </div>
           <BrandPicker brands={brands} models={allModels} />
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 4: HOW IT WORKS — Simple 3-step                         */}
-      {/* ================================================================= */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-12 md:py-16">
-          <div className="mb-10 text-center">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
-              Sådan virker det
-            </p>
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-              3 nemme trin
-            </h2>
+        </section>
+        <section id="reparationsforloeb" className={landing.method} aria-labelledby="method-title">
+          <div className={landing.methodCopy}>
+            <span className={styles.eyebrow}>Fra fejl til reparation</span>
+            <h2 id="method-title">Sådan får du hjælp.</h2>
+            <p>Find din model og vælg reparation. Book en aflevering, eller kom forbi en af vores butikker.</p>
+            <ol>
+              <li><span>01</span><div><h3>Find model og reparation</h3><p>Se priser og oplysninger om reservedele til din enhed.</p></div></li>
+              <li><span>02</span><div><h3>Vælg butik og aflevering</h3><p>Book online, og tag en backup inden dit besøg.</p></div></li>
+              <li><span>03</span><div><h3>Vi tager os af reparationen</h3><p>Tal med butikken om tidsforbrug og afhentning.</p></div></li>
+            </ol>
           </div>
-
-          <div className="grid gap-8 sm:grid-cols-3">
-            {[
-              {
-                step: "1",
-                title: "Vælg reparation",
-                desc: "Find dit mærke og model ovenfor, og se faste priser på alle reparationer.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6">
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                ),
-              },
-              {
-                step: "2",
-                title: "Book tid",
-                desc: "Book online eller kom forbi som walk-in — ingen tidsbestilling nødvendig.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                ),
-              },
-              {
-                step: "3",
-                title: "Få din enhed repareret",
-                desc: "90% af reparationer tager kun 30 min. Vent i butikken og få din enhed tilbage.",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-6 w-6">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-              },
-            ].map(({ step, title, desc, icon }) => (
-              <div key={step} className="text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-eco/10 text-[#1A3D2E]">
-                  {icon}
-                </div>
-                <div className="mb-1 font-display text-xs font-bold uppercase tracking-wider text-[#1A3D2E]">
-                  Trin {step}
-                </div>
-                <h3 className="font-display text-lg font-bold text-[#111111]">
-                  {title}
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-[#86868B]">
-                  {desc}
-                </p>
-              </div>
-            ))}
+          <RepairMethodVideo />
+        </section>
+        <section className={landing.repairs} aria-labelledby="common-repairs-title">
+          <div className={landing.sectionHeading}>
+            <div><span className={styles.eyebrow}>Mere tid med det, du har</span><h2 id="common-repairs-title">En fejl behøver ikke<br />være farvel.</h2></div>
+            <p>Skærmen, batteriet eller forbindelsen til opladeren. Nogle gange er det én del, der står mellem dig og en enhed, du stadig er glad for.</p>
           </div>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 5: LOCATION — Store info with photos                    */}
-      {/* ================================================================= */}
-      <section className="bg-cream">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="mb-10 max-w-2xl">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-green-eco">
-              Find os
-            </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-charcoal">
-              Reparation i Slagelse &amp; Vejle
-            </h2>
-            <p className="mt-4 text-base text-gray">
-              Vi tilbyder walk-in reparation uden tidsbestilling i begge vores butikker. De
-              fleste reparationer tager kun 30 minutter — vent i butikken og få din enhed med
-              hjem samme dag.
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            {[STORES.slagelse, STORES.vejle].map((store) => (
-              <div
-                key={store.slug}
-                className="flex flex-col rounded-2xl border border-soft-grey bg-white p-6 md:p-8"
-              >
-                <h3 className="font-display text-2xl font-bold tracking-tight text-charcoal">
-                  {store.name}
-                </h3>
-
-                <div className="mt-6 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <circle cx="12" cy="11" r="3" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-bold text-charcoal">{store.mall ?? store.street}</p>
-                      <p className="text-sm text-gray">{store.street}, {store.zip} {store.city}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-bold text-charcoal">Åbningstider</p>
-                      <p className="text-sm text-gray">Hverdage: {store.hours.weekdays}</p>
-                      <p className="text-sm text-gray">Lørdag: {store.hours.saturday}</p>
-                      <p className="text-sm text-gray">Søndag: {store.hours.sunday}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-eco/10 text-green-eco">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
-                        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-bold text-charcoal">Kontakt</p>
-                      <p className="text-sm text-gray">{store.phone}</p>
-                      <p className="text-sm text-gray">{store.email}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <a
-                  href={store.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-green-eco hover:underline"
-                >
-                  Se på kort &rarr;
-                </a>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="col-span-2 overflow-hidden rounded-2xl">
-              <img
-                src="/images/store/vestsjællandscentret.jpg"
-                alt="VestsjællandsCentret i Slagelse — her finder du PhoneSpot"
-                className="h-40 w-full object-cover sm:h-48"
-                loading="lazy"
-              />
-            </div>
-            <div className="overflow-hidden rounded-2xl">
-              <img
-                src="/images/store/butik-indvendig.jpg"
-                alt="PhoneSpot butik indvendig"
-                className="h-40 w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="overflow-hidden rounded-2xl">
-              <img
-                src="/images/store/butik-produkter.jpg"
-                alt="Refurbished telefoner i PhoneSpot butikken"
-                className="h-40 w-full object-cover"
-                loading="lazy"
-              />
+          <div className={landing.repairEditorial}>
+            <article className={landing.screenStory}>
+              <div className={landing.screenPhoto}><Image src="/images/repair/telefon-med-smadret-skaerm.jpg" alt="En knust telefonskærm taget af en telefon" fill sizes="(max-width: 700px) 90vw, 560px" /></div>
+              <div><h3>Skærmskift</h3><p>Revner i glasset, streger i billedet eller en skærm, der ikke reagerer? Find din model for at se muligheder og priser på skærmudskiftning. Den valgte reservedel har betydning for prisen.</p><a href="#find-din-pris">Se reparationer til din model <StorefrontIcon kind="arrow" /></a></div>
+            </article>
+            <div className={landing.repairTopics}>
+              <article><h3>Batteriskift</h3><p>Løber telefonen hurtigt tør, eller holder din bærbare kun strøm med opladeren i? Et batteriskift kan være en mulighed. Vælg din model, og se de tilgængelige reparationer.</p></article>
+              <article><h3>Ladestik, kamera og lyd</h3><p>En løs forbindelse, et kamera med fejl eller lyd, der driller. Fortæl os, hvad du oplever, og om fejlen opstår hele tiden eller kun indimellem. Det hjælper os med at finde årsagen.</p></article>
+              <article><h3>Væskeskade eller ukendt fejl</h3><p>Du behøver ikke kende den præcise fejl for at få hjælp. Kontakt os eller kom forbi med enheden, så vi kan tale om undersøgelse og muligheder. Pris og tid afhænger af, hvad der skal laves.</p><Link href="/kontakt">Tal med os om fejlen <StorefrontIcon kind="arrow" /></Link></article>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 6: TRUSTPILOT REVIEWS                                    */}
-      {/* ================================================================= */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
-          <div className="mb-8 text-center">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
-              Kundeanmeldelser
-            </p>
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-              Det siger vores kunder
-            </h2>
+        </section>
+        <section id="butikker" className={landing.storeSection} aria-labelledby="repair-stores-title">
+          <div className={landing.storePhoto}><Image src="/images/store/butik-indvendig.jpg" alt="Inde i PhoneSpots butik i Slagelse" fill sizes="(max-width: 700px) 100vw, 600px" /></div>
+          <div className={landing.storeCopy}>
+            <span className={styles.eyebrow}>Hjælp tæt på dig</span>
+            <h2 id="repair-stores-title">Reparation i<br />Vejle og Slagelse.</h2>
+            <p>Er du i tvivl om modellen eller fejlen? Tag din enhed med i butikken, eller kontakt os før dit besøg.</p>
+            <div className={styles.storeLinks}>
+              {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/butik/${store.slug}`}><span><strong>{store.city}</strong><small>{store.street}, {store.zip} {store.city}</small><small>Find vej og åbningstider</small></span><StorefrontIcon kind="arrow" /></Link>)}
+            </div>
+            <Link className={landing.contactLink} href="/kontakt">Få hjælp til din reparation <StorefrontIcon kind="arrow" /></Link>
           </div>
-          <Suspense fallback={<div className="py-8 text-center text-[#86868B]">Indlæser anmeldelser...</div>}>
-            <TrustpilotReviews />
-          </Suspense>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  SECTION 7: FAQ                                                   */}
-      {/* ================================================================= */}
-      <section className="border-t border-[#E5E5EA] bg-[#F7F7F8]">
-        <div className="mx-auto max-w-3xl px-4 py-12 md:py-16">
-          <div className="mb-8 text-center">
-            <p className="mb-2 font-display text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
-              FAQ
-            </p>
-            <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-              Ofte stillede spørgsmål
-            </h2>
+        </section>
+        <section className={landing.deviceGuide} aria-labelledby="repair-devices-title">
+          <h2 id="repair-devices-title">Reparation af telefoner, tablets og bærbare</h2>
+          <div>
+            <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a></article>
+            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><Link href="/reservedele">Se også vores reservedele <StorefrontIcon kind="arrow" /></Link></article>
           </div>
-
-          <div className="divide-y divide-[#E5E5EA] rounded-2xl border border-[#E5E5EA] bg-white">
+          <p className={landing.longerLife}>Når en reparation holder din enhed i brug, får du mere ud af det, du allerede har. Er reparation ikke den rette løsning for dig, kan du også <Link href="/saelg-din-enhed">få din brugte enhed vurderet</Link>.</p>
+        </section>
+        <section className={`${styles.faq} ${landing.faq}`}>
+          <div>
+            <h2>
+              Godt at vide
+              <br />
+              før reparationen.
+            </h2>
+            <Link href="/handelsbetingelser" className={styles.textLink}>
+              Læs reparationsbetingelserne
+            </Link>
+          </div>
+          <div>
             {REPAIR_FAQ.map((item) => (
-              <details key={item.question} className="group px-6 py-5">
-                <summary className="flex cursor-pointer items-center justify-between font-display text-base font-bold text-[#111111]">
-                  {item.question}
-                  <svg
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="h-5 w-5 shrink-0 text-[#86868B] transition-transform duration-200 group-open:rotate-180"
-                  >
-                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
-                </summary>
-                <p className="mt-3 text-base leading-relaxed text-[#86868B]">
-                  {item.answer}
-                </p>
+              <details key={item.question}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
               </details>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  INSURANCE TEASER — Storstrøm Forsikring                          */}
-      {/* ================================================================= */}
-      <section className="border-t border-[#E5E5EA] bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-12 md:py-16">
-          <StorstromInsuranceTeaser variant="repair" />
-        </div>
-      </section>
-
-      {/* ================================================================= */}
-      {/*  BOTTOM CTA                                                       */}
-      {/* ================================================================= */}
-      <section className="border-t border-[#E5E5EA] bg-white">
-        <div className="mx-auto max-w-3xl px-4 py-12 text-center md:py-16">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-[#111111] sm:text-3xl">
-            Klar til at få din enhed fikset?
-          </h2>
-          <p className="mt-3 text-[#86868B]">
-            Walk-in eller book online — vi er klar til at hjælpe dig i vores butikker i Slagelse og Vejle.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <a
-              href="#find-din-pris"
-              className="inline-flex items-center gap-2 rounded-full bg-green-eco px-8 py-3.5 font-display text-sm font-bold tracking-wide text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-[#1A3D2E]/20"
-            >
-              Find din pris
-            </a>
-            <Link
-              href="/kontakt"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-[#E5E5EA] px-8 py-3.5 font-display text-sm font-bold tracking-wide text-[#111111] transition-all hover:border-[#111111]/30 hover:bg-[#F7F7F8]"
-            >
-              Kontakt os
-            </Link>
-          </div>
-          <div className="mt-5 flex justify-center">
-            <Suspense fallback={null}>
-              <TrustpilotStars />
-            </Suspense>
-          </div>
-        </div>
-      </section>
-    </>
+        </section>
+        <aside className={landing.business}>
+          <div><h2>Flere enheder på arbejdet?</h2><p>Vi kører ud til virksomheder på hele Sjælland og i hele Jylland, når flere enheder skal repareres.</p></div>
+          <Link href="/erhverv">Se reparation til erhverv <StorefrontIcon kind="arrow" /></Link>
+        </aside>
+        <aside className={landing.insurance}>
+          <Image src="/brand/partners/storstrom-forsikring-white.svg" alt="Storstrøm Forsikring" width={120} height={35} />
+          <div><h2>Elektronikforsikring via Storstrøm</h2><p>Læs om muligheder og vilkår for elektronikforsikring i samarbejde med Storstrøm Forsikring.</p></div>
+          <Link href="/forsikring">Se elektronikforsikring <StorefrontIcon kind="arrow" /></Link>
+        </aside>
+      </div>
+    </div>
   );
 }

@@ -20,11 +20,11 @@ export function TilbehoerCategoryClient({ category, initialCount }: Props) {
         productCount={initialCount}
         activeCategory={category.slug}
       />
-      <div className="mx-auto max-w-7xl px-4 pb-8">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pb-8">
         <KlarnaMicroBanner />
       </div>
       {category.faq.length > 0 && <CategoryFaq items={category.faq} />}
-      <div className="mx-auto max-w-7xl px-4 pb-16">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-9 pb-16">
         {/* Every tilbehør category lists sku_products (accessories), never
             graded refurbished devices — TrustBar defaults to variant="device"
             (36 mdr. garanti / 30+ kvalitetstests), which is a false claim
