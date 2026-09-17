@@ -136,19 +136,32 @@ export default async function AccessoryDetailPage({ params }: Props) {
     .select("template_id, product_templates(display_name, slug, category, brand)")
     .eq("sku_product_id", product.id);
 
-  const compatibleDevices: CompatibleDevice[] = (templateLinks ?? [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((l: any) => ({
-      name: l.product_templates?.display_name as string,
-      brand: (l.product_templates?.brand as string) ?? "",
-    }))
-    .filter((d: CompatibleDevice) => Boolean(d.name));
+  // "Passer til" has two sources (template links from the old admin form,
+  // compatible_models from the new one). A product can have both, and templates
+  // are named "Apple iPhone 17 Pro" where the model list says "iPhone 17 Pro" —
+  // so show the customer-facing name and dedupe on it.
+  const modelName = (name: string) => name.replace(/^apple\s+/i, "").trim();
+  const compatibleDevices: CompatibleDevice[] = [];
+  const addDevice = (rawName: string | undefined, brand: string) => {
+    if (!rawName) return;
+    const name = modelName(rawName);
+    if (!compatibleDevices.some((d) => d.name.toLowerCase() === name.toLowerCase())) compatibleDevices.push({ name, brand });
+  };
 
-  // Some glass SKUs use model slugs instead of template relationships.
+  for (const l of templateLinks ?? []) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const t = (l as any).product_templates;
+    addDevice(t?.display_name as string | undefined, (t?.brand as string) ?? "");
+  }
+
+  // Some SKUs use model slugs instead of template relationships.
   for (const name of accessoryModelLabels((product as SkuProduct & { compatible_models?: unknown }).compatible_models)) {
     const brandSlug = TILBEHOER_DEVICES.find(device => device.label === name)?.brand;
     const brand = DEVICE_BRANDS.find(item => item.slug === brandSlug)?.label ?? "";
-    if (!compatibleDevices.some(device => device.name === name)) compatibleDevices.push({ name, brand });
+    // Combined labels like "iPhone 17e/16e" become "iPhone 17e" + "iPhone 16e"
+    const [first, ...rest] = name.split("/");
+    const prefix = first.slice(0, first.lastIndexOf(" ") + 1);
+    for (const part of [first, ...rest.map((r) => (r.includes(" ") ? r : prefix + r))]) addDevice(part, brand);
   }
 
   // Salgsargumenter fra opret-flowet (sku_products.specifications.highlights)
