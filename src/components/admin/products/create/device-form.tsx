@@ -213,7 +213,7 @@ export function DeviceForm() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,640px)_300px] lg:items-start">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,640px)_300px] lg:items-start">
       <form className="flex flex-col gap-8" onSubmit={(e) => { e.preventDefault(); if (ready) void submit(); }}>
         <Section title="Hvilken model?">
           <Segmented

@@ -11,6 +11,7 @@ import {
   type SkuProductRow,
   type StockSpec,
 } from "@/lib/admin/products/create";
+import { modelsForProduct } from "@/lib/admin/products/update";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 
 /**
@@ -108,7 +109,23 @@ export async function GET(req: NextRequest) {
   const from = (page - 1) * limit;
   const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + limit - 1);
   if (error) return NextResponse.json({ error: "Produkterne kunne ikke hentes" }, { status: 503 });
-  return NextResponse.json({ items: data ?? [], total: count ?? 0, page, limit });
+
+  // "Passer til" har to kilder. Listen viser dem samlet, så et produkt med
+  // skabelon-koblinger (den gamle formular) ikke ser ud til at mangle modeller.
+  const rows = data ?? [];
+  const names = new Map<string, string[]>();
+  if (rows.length) {
+    const { data: links } = await supabase
+      .from("sku_product_templates")
+      .select("sku_product_id, product_templates(display_name)")
+      .in("sku_product_id", rows.map((r) => r.id));
+    for (const l of (links ?? []) as unknown as { sku_product_id: string; product_templates: { display_name: string | null } | null }[]) {
+      const name = l.product_templates?.display_name;
+      if (name) names.set(l.sku_product_id, [...(names.get(l.sku_product_id) ?? []), name]);
+    }
+  }
+  const items = rows.map((r) => ({ ...r, models: modelsForProduct(r.compatible_models, names.get(r.id) ?? []) }));
+  return NextResponse.json({ items, total: count ?? 0, page, limit });
 }
 
 export interface CreatedProduct {

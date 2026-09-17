@@ -1,326 +1,261 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+/**
+ * Søgefeltet i admin-topbjælken. Et rigtigt felt med en liste lige under —
+ * ingen dialog og ingen sløring af siden. Tomt felt viser genveje og de
+ * seneste søgninger; fra to tegn søges der på tværs af ordrer, kunder,
+ * reparationssager, enheder (IMEI/stregkode) og produkter.
+ */
 
-interface SearchResult {
+interface Hit {
   id: string;
   label: string;
   sublabel?: string;
   link: string;
 }
 
-interface SearchResults {
-  templates: SearchResult[];
-  products: SearchResult[];
-  devices: SearchResult[];
-  orders: SearchResult[];
+type Group = "orders" | "customers" | "repairs" | "devices" | "products" | "templates";
+type Results = Record<Group, Hit[]>;
+type Row = Hit & { kind: "hit" | "shortcut" | "recent" };
+
+const GROUPS: { key: Group; label: string }[] = [
+  { key: "orders", label: "Ordrer" },
+  { key: "customers", label: "Kunder" },
+  { key: "repairs", label: "Reparationer" },
+  { key: "devices", label: "Enheder" },
+  { key: "products", label: "Tilbehør og reservedele" },
+  { key: "templates", label: "Modeller" },
+];
+
+const SHORTCUTS: Hit[] = [
+  { id: "ny-produkt", label: "Opret produkt", link: "/admin/produkter/ny" },
+  { id: "ordrer", label: "Alle ordrer", link: "/admin/platform/orders" },
+  { id: "indlevering", label: "Ny indlevering til reparation", link: "/admin/indlevering" },
+  { id: "registrer", label: "Registrér enhed til salg", link: "/admin/platform/intake" },
+  { id: "tilbehoer", label: "Tilbehør", link: "/admin/tilbehoer" },
+];
+
+const RECENT_KEY = "ps-admin-recent-searches";
+
+function readRecent(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((s): s is string => typeof s === "string").slice(0, 5) : [];
+  } catch {
+    return [];
+  }
 }
 
-const CATEGORY_LABELS: Record<keyof SearchResults, string> = {
-  templates: "Produktskabeloner",
-  products: "Tilbehør",
-  devices: "Enheder",
-  orders: "Ordrer",
-};
-
-const CATEGORY_ICONS: Record<keyof SearchResults, React.ReactNode> = {
-  templates: (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-    </svg>
-  ),
-  products: (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-    </svg>
-  ),
-  devices: (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-    </svg>
-  ),
-  orders: (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-    </svg>
-  ),
-};
-
-const CATEGORIES: (keyof SearchResults)[] = ["templates", "products", "devices", "orders"];
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
 export default function GlobalSearch() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResults | null>(null);
+  const [results, setResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [active, setActive] = useState(0);
+  const [recent, setRecent] = useState<string[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const router = useRouter();
 
-  // Build flat list of results for keyboard navigation
-  const flatResults: SearchResult[] = results
-    ? CATEGORIES.flatMap((cat) => results[cat])
-    : [];
+  const searching = query.trim().length >= 2;
 
-  /* ---- Open / close ---- */
-  const openSearch = useCallback(() => {
-    setOpen(true);
-    setQuery("");
-    setResults(null);
-    setActiveIndex(0);
+  // The rows the arrow keys move through, in the order they are drawn
+  const rows = useMemo<Row[]>(() => {
+    if (searching) return results ? GROUPS.flatMap((g) => results[g.key].map((h) => ({ ...h, kind: "hit" as const }))) : [];
+    return [
+      ...recent.map((r) => ({ id: `recent-${r}`, label: r, link: "", kind: "recent" as const })),
+      ...SHORTCUTS.map((s) => ({ ...s, kind: "shortcut" as const })),
+    ];
+  }, [searching, results, recent]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const closeSearch = useCallback(() => {
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (!searching) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(query.trim())}`, { signal: controller.signal });
+        if (!res.ok) throw new Error(String(res.status));
+        setResults(await res.json());
+        setFailed(false);
+        setActive(0);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") setFailed(true);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }, 180);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [query, searching]);
+
+  function remember(text: string) {
+    const next = [text, ...readRecent().filter((r) => r.toLowerCase() !== text.toLowerCase())].slice(0, 5);
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch {
+      // private mode: recent searches are a convenience, not a requirement
+    }
+    setRecent(next);
+  }
+
+  function choose(row: Row) {
+    if (row.kind === "recent") {
+      setQuery(row.label);
+      inputRef.current?.focus();
+      return;
+    }
+    if (row.kind === "hit") remember(query.trim());
     setOpen(false);
     setQuery("");
     setResults(null);
-    setActiveIndex(0);
-  }, []);
-
-  /* ---- Global keyboard shortcut (Ctrl/Cmd+K) ---- */
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        if (open) {
-          closeSearch();
-        } else {
-          openSearch();
-        }
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, openSearch, closeSearch]);
-
-  /* ---- Auto-focus input when modal opens ---- */
-  useEffect(() => {
-    if (open) {
-      // Small delay so the modal is rendered
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
-  }, [open]);
-
-  /* ---- Debounced search ---- */
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (query.length < 2) {
-      setResults(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(query)}`);
-        if (res.ok) {
-          const data: SearchResults = await res.json();
-          setResults(data);
-          setActiveIndex(0);
-        }
-      } catch {
-        // Silently ignore fetch errors
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query]);
-
-  /* ---- Navigate to result ---- */
-  function navigateTo(link: string) {
-    closeSearch();
-    router.push(link);
+    inputRef.current?.blur();
+    router.push(row.link);
   }
 
-  /* ---- Keyboard nav within modal ---- */
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
-      closeSearch();
-      return;
-    }
-    if (e.key === "ArrowDown") {
+      setOpen(false);
+      inputRef.current?.blur();
+    } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, flatResults.length - 1));
-      return;
-    }
-    if (e.key === "ArrowUp") {
+      setOpen(true);
+      setActive((i) => Math.min(i + 1, Math.max(rows.length - 1, 0)));
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-      return;
-    }
-    if (e.key === "Enter" && flatResults[activeIndex]) {
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter" && rows[active]) {
       e.preventDefault();
-      navigateTo(flatResults[activeIndex].link);
+      choose(rows[active]);
     }
   }
 
-  /* ---- Determine which category a flat index belongs to ---- */
-  function getCategoryForIndex(index: number): keyof SearchResults | null {
-    if (!results) return null;
-    let count = 0;
-    for (const cat of CATEGORIES) {
-      if (index < count + results[cat].length) return cat;
-      count += results[cat].length;
-    }
-    return null;
-  }
-
-  const hasResults = flatResults.length > 0;
-  const hasQuery = query.length >= 2;
-
-  if (!open) {
-    // Render just the trigger button
-    return (
-      <button
-        type="button"
-        onClick={openSearch}
-        className="flex items-center gap-2 rounded-lg border border-black/[0.06] bg-white/60 px-3 py-1.5 text-xs text-charcoal/40 transition-all hover:bg-white hover:text-charcoal/60"
-        title="Søg (Ctrl+K)"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-        <span className="hidden sm:inline">Søg...</span>
-        <kbd className="ml-1 hidden rounded border border-black/[0.08] bg-black/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-charcoal/30 sm:inline">
-          ⌘K
-        </kbd>
-      </button>
-    );
-  }
-
-  // Track cumulative index per category
-  let cumulativeIndex = 0;
+  const rowClass = (i: number) =>
+    `flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left text-[14px] sm:flex-row sm:items-baseline sm:justify-between sm:gap-3 ${i === active ? "bg-cream" : "hover:bg-cream"}`;
+  const indexOf = (row: { id: string; kind: Row["kind"] }) => rows.findIndex((r) => r.kind === row.kind && r.id === row.id);
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
-        onClick={closeSearch}
-      />
+    <div ref={rootRef} className="relative w-full max-w-[520px]">
+      <div className="flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 text-white transition-colors focus-within:border-white/40 focus-within:bg-white/15">
+        <svg className="h-4 w-4 shrink-0 text-white/70" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+        <input
+          ref={inputRef}
+          type="search"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="admin-search-list"
+          aria-autocomplete="list"
+          aria-label="Søg i admin"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (e.target.value.trim().length < 2) setResults(null);
+            setOpen(true);
+            setActive(0);
+          }}
+          onFocus={() => {
+            setRecent(readRecent());
+            setOpen(true);
+          }}
+          onKeyDown={onKeyDown}
+          placeholder="Søg ordre, kunde, IMEI eller produkt"
+          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-white placeholder:text-white/65 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+        />
+        {loading && searching ? (
+          <span aria-hidden className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+        ) : (
+          <kbd className="hidden shrink-0 rounded border border-white/20 px-1.5 py-0.5 text-[11px] text-white/60 sm:inline">Ctrl K</kbd>
+        )}
+      </div>
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-[101] flex items-start justify-center px-4 pt-[15vh]">
+      {open && (
         <div
-          className="w-full max-w-lg overflow-hidden rounded-2xl border border-black/[0.08] bg-white shadow-2xl"
-          onKeyDown={handleKeyDown}
+          id="admin-search-list"
+          role="listbox"
+          className="fixed inset-x-2 top-[60px] z-[60] max-h-[70vh] overflow-y-auto rounded-xl border border-sand bg-white p-1.5 text-charcoal shadow-[0_12px_32px_rgba(0,0,0,0.14)] sm:absolute sm:inset-x-0 sm:top-11"
         >
-          {/* Search input */}
-          <div className="flex items-center gap-3 border-b border-black/[0.06] px-4 py-3">
-            <svg className="h-5 w-5 shrink-0 text-charcoal/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Søg produkter, enheder, ordrer..."
-              className="min-w-0 flex-1 bg-transparent text-sm text-charcoal outline-none placeholder:text-charcoal/30"
-            />
-            {loading && (
-              <div className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-emerald-500/20 border-t-emerald-500" />
-            )}
-            <kbd
-              className="shrink-0 cursor-pointer rounded border border-black/[0.08] bg-black/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-charcoal/30 hover:bg-black/[0.06]"
-              onClick={closeSearch}
-            >
-              ESC
-            </kbd>
-          </div>
-
-          {/* Results */}
-          <div className="max-h-[50vh] overflow-y-auto">
-            {hasQuery && !loading && !hasResults && (
-              <div className="px-4 py-8 text-center text-sm text-charcoal/40">
-                Ingen resultater
-              </div>
-            )}
-
-            {hasResults &&
-              CATEGORIES.map((cat) => {
-                const items = results![cat];
-                if (items.length === 0) return null;
-
-                const startIndex = cumulativeIndex;
-                cumulativeIndex += items.length;
-
-                return (
-                  <div key={cat}>
-                    <div className="flex items-center gap-2 px-4 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.12em] text-charcoal/30">
-                      <span className="text-charcoal/20">{CATEGORY_ICONS[cat]}</span>
-                      {CATEGORY_LABELS[cat]}
-                    </div>
-                    {items.map((item, i) => {
-                      const flatIdx = startIndex + i;
-                      const isActive = flatIdx === activeIndex;
+          {searching ? (
+            <>
+              {failed && <p className="px-3 py-3 text-[14px] text-[#B42318]">Søgningen fejlede. Prøv igen.</p>}
+              {!failed && !results && <p className="px-3 py-3 text-[14px] text-gray">Søger</p>}
+              {!failed && results && rows.length === 0 && (
+                <p className="px-3 py-3 text-[14px] text-gray">
+                  Ingen resultater for &quot;{query.trim()}&quot;. Prøv ordrenummer, kundens navn eller telefon, IMEI eller en del af produktnavnet.
+                </p>
+              )}
+              {results &&
+                GROUPS.filter((g) => results[g.key].length > 0).map((g) => (
+                  <div key={g.key} className="mb-1 last:mb-0">
+                    <p className="px-3 pb-1 pt-2 text-[12px] font-medium text-gray">{g.label}</p>
+                    {results[g.key].map((hit) => {
+                      const i = indexOf({ id: hit.id, kind: "hit" });
                       return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => navigateTo(item.link)}
-                          onMouseEnter={() => setActiveIndex(flatIdx)}
-                          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                            isActive
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "text-charcoal hover:bg-black/[0.02]"
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">{item.label}</p>
-                            {item.sublabel && (
-                              <p className={`truncate text-xs ${isActive ? "text-emerald-500/60" : "text-charcoal/40"}`}>
-                                {item.sublabel}
-                              </p>
-                            )}
-                          </div>
-                          {isActive && (
-                            <svg className="h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                            </svg>
-                          )}
+                        <button key={`${g.key}-${hit.id}`} type="button" role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onClick={() => choose({ ...hit, kind: "hit" })} className={rowClass(i)}>
+                          <span className="line-clamp-2 min-w-0 font-medium sm:line-clamp-1">{hit.label}</span>
+                          {hit.sublabel && <span className="truncate text-[13px] text-gray sm:max-w-[50%] sm:shrink-0">{hit.sublabel}</span>}
                         </button>
                       );
                     })}
                   </div>
+                ))}
+            </>
+          ) : (
+            <>
+              {recent.length > 0 && (
+                <div className="mb-1">
+                  <p className="px-3 pb-1 pt-2 text-[12px] font-medium text-gray">Seneste søgninger</p>
+                  {recent.map((r) => {
+                    const i = indexOf({ id: `recent-${r}`, kind: "recent" });
+                    return (
+                      <button key={r} type="button" role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onClick={() => choose({ id: `recent-${r}`, label: r, link: "", kind: "recent" })} className={rowClass(i)}>
+                        <span className="truncate">{r}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="px-3 pb-1 pt-2 text-[12px] font-medium text-gray">Genveje</p>
+              {SHORTCUTS.map((s) => {
+                const i = indexOf({ id: s.id, kind: "shortcut" });
+                return (
+                  <button key={s.id} type="button" role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onClick={() => choose({ ...s, kind: "shortcut" })} className={rowClass(i)}>
+                    <span className="truncate font-medium">{s.label}</span>
+                  </button>
                 );
               })}
-          </div>
-
-          {/* Footer hint */}
-          <div className="flex items-center gap-4 border-t border-black/[0.06] px-4 py-2 text-[10px] text-charcoal/25">
-            <span className="flex items-center gap-1">
-              <kbd className="rounded border border-black/[0.06] px-1 py-0.5 font-mono">↑↓</kbd>
-              navigér
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="rounded border border-black/[0.06] px-1 py-0.5 font-mono">↵</kbd>
-              åbn
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="rounded border border-black/[0.06] px-1 py-0.5 font-mono">esc</kbd>
-              luk
-            </span>
-          </div>
+            </>
+          )}
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }

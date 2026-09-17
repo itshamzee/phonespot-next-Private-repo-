@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { SkuProductForm } from "@/components/platform/sku-product-form";
-import type { SkuProduct } from "@/lib/supabase/platform-types";
+import { useRouter } from "next/navigation";
 import { ACCESSORY_SUBCATEGORIES } from "@/lib/admin/products/attributes";
 import { ACCESSORY_CATEGORY_TO_SLUG, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { Button, DataTable, Input, Notice, PageHeader, Pagination, Segmented, Select, Tag, type Column } from "@/components/admin/ui";
@@ -20,6 +19,8 @@ interface Row {
   always_in_stock: boolean;
   images: string[] | null;
   compatible_models: string[] | null;
+  /** Modeller samlet fra compatible_models og skabelon-koblinger. */
+  models?: string[];
   status: "published" | "draft";
   is_active: boolean;
   created_at: string;
@@ -52,7 +53,7 @@ export function AccessoryList() {
   const [status, setStatus] = useState<StatusFilter>("");
   const [stock, setStock] = useState<StockFilter>("");
   const [brands, setBrands] = useState<string[]>([]);
-  const [editing, setEditing] = useState<SkuProduct | null>(null);
+  const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Row | null>(null);
 
@@ -115,10 +116,8 @@ export function AccessoryList() {
     }
   }
 
-  async function openEdit(row: Row) {
-    const res = await fetch(`/api/platform/sku/${row.id}`);
-    if (!res.ok) { setError("Produktet kunne ikke åbnes."); return; }
-    setEditing(await res.json());
+  function openEdit(row: Row) {
+    router.push(`/admin/produkter/${row.id}`);
   }
 
   async function duplicate(row: Row) {
@@ -128,9 +127,7 @@ export function AccessoryList() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error ?? "Kopien blev ikke oprettet."); return; }
       // Åbn kopien til redigering med det samme; den er gemt som kladde.
-      const full = await fetch(`/api/platform/sku/${data.id}`);
-      if (full.ok) setEditing(await full.json());
-      else void load();
+      router.push(`/admin/produkter/${data.id}`);
     } finally {
       setBusyId(null);
     }
@@ -150,7 +147,7 @@ export function AccessoryList() {
             ) : null}
           </div>
           <div className="min-w-0">
-            <p className="truncate font-medium text-charcoal">{r.title}</p>
+            <p className="line-clamp-2 font-medium leading-snug text-charcoal">{r.title}</p>
             <p className="truncate text-[12px] text-gray">
               {[r.brand, r.subcategory === "spot-glass" ? "Beskyttelsesglas (Spot)" : ACCESSORY_SUBCATEGORIES.find((c) => c.value === r.subcategory)?.label ?? r.subcategory].filter(Boolean).join(" · ")}
               {!r.slug && <span className="text-[#B42318]"> · mangler link</span>}
@@ -165,10 +162,10 @@ export function AccessoryList() {
       hideBelow: "lg",
       className: "whitespace-nowrap",
       render: (r) => {
-        const m = r.compatible_models ?? [];
+        const m = r.models ?? r.compatible_models ?? [];
         if (!m.length) return <span className="text-gray">–</span>;
-        const first = labelBySlug.get(m[0]) ?? m[0];
-        return <span className="text-[13px]">{first}{m.length > 1 ? ` +${m.length - 1}` : ""}</span>;
+        const shown = m.slice(0, 2).map((slug) => labelBySlug.get(slug) ?? slug).join(", ");
+        return <span className="text-[13px]">{shown}{m.length > 2 ? ` +${m.length - 2}` : ""}</span>;
       },
     },
     {
@@ -178,7 +175,12 @@ export function AccessoryList() {
       className: "whitespace-nowrap",
       render: (r) =>
         r.sale_price != null && r.sale_price < r.selling_price ? (
-          <span>{formatOere(r.sale_price)} <span className="text-[12px] text-gray line-through">{formatOere(r.selling_price)}</span></span>
+          <span className="inline-flex flex-col items-end leading-tight">
+            <span className="font-semibold text-[#B42318]">
+              {formatOere(r.sale_price)} <span className="ml-0.5 rounded bg-[#FDECEC] px-1 py-0.5 text-[11px]">−{Math.round((1 - r.sale_price / r.selling_price) * 100)}%</span>
+            </span>
+            <span className="text-[12px] text-gray line-through">{formatOere(r.selling_price)}</span>
+          </span>
         ) : (
           formatOere(r.selling_price)
         ),
@@ -208,33 +210,24 @@ export function AccessoryList() {
       key: "actions",
       header: "",
       align: "right",
+      // På telefon åbner et tryk på rækken produktet; Dupliker og Slet ligger øverst på produktets side.
+      hideBelow: "sm",
       className: "whitespace-nowrap",
       render: (r) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => patch(r, { status: r.status === "published" ? "draft" : "published" }, "Status blev ikke ændret.")}>
+          <Button size="sm" variant="quiet" className="hidden lg:inline-flex" loading={busyId === r.id} onClick={() => patch(r, { status: r.status === "published" ? "draft" : "published" }, "Status blev ikke ændret.")}>
             {r.status === "published" ? "Skjul" : "Vis"}
           </Button>
           <Button size="sm" variant="quiet" onClick={() => openEdit(r)}>Rediger</Button>
           <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => duplicate(r)}>Dupliker</Button>
           {publicUrl(r) && (
-            <Link href={publicUrl(r)!} target="_blank" className="inline-flex h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal">Se</Link>
+            <Link href={publicUrl(r)!} target="_blank" className="hidden h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal lg:inline-flex">Se</Link>
           )}
-          <Button size="sm" variant="quiet" onClick={() => setConfirmDelete(r)}>Slet</Button>
+          <Button size="sm" variant="quiet" className="hidden lg:inline-flex" onClick={() => setConfirmDelete(r)}>Slet</Button>
         </div>
       ),
     },
   ], [busyId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (editing) {
-    return (
-      <div className="mx-auto max-w-[900px]">
-        <PageHeader title={editing.title} actions={<Button onClick={() => setEditing(null)}>Tilbage til listen</Button>} />
-        <div className="rounded-xl border border-sand bg-white p-5">
-          <SkuProductForm product={editing} lockedCategory="accessory" onSave={() => { setEditing(null); void load(); }} onCancel={() => setEditing(null)} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-[1200px]">
