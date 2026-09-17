@@ -119,6 +119,10 @@ function CompatBadges({ templates }: { templates: string[] }) {
   );
 }
 
+function isOnSale(p: { selling_price: number; sale_price: number | null }): boolean {
+  return p.sale_price != null && p.sale_price > 0 && p.sale_price < p.selling_price;
+}
+
 export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excludeSubcategory }: Props) {
   const [products, setProducts] = useState<ProductWithStock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +132,9 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
   const [brandFilter, setBrandFilter] = useState("");
   const [templateFilter, setTemplateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [saleOnly, setSaleOnly] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [templates, setTemplates] = useState<{ id: string; display_name: string }[]>([]);
@@ -173,9 +180,9 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
       const ids = data.map(p => p.id);
       const map: Record<string, string[]> = {};
       const add = (id: string, name: string) => {
-        const key = name.replace(/^apples+/i, "").toLowerCase();
+        const norm = (n: string) => n.replace(/^apple\s+/i, "").trim().toLowerCase();
         const list = (map[id] ??= []);
-        if (!list.some((n) => n.replace(/^apples+/i, "").toLowerCase() === key)) list.push(name);
+        if (!list.some((n) => norm(n) === norm(name))) list.push(name);
       };
       for (const p of data) {
         for (const label of accessoryModelLabels((p as { compatible_models?: unknown }).compatible_models)) add(p.id, label);
@@ -227,7 +234,32 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
     filtered = filtered.filter((p) => p.subcategory === subcategoryFilter);
   }
 
-  const hasFilters = search || categoryFilter || subcategoryFilter || brandFilter || templateFilter || statusFilter || locationFilter;
+  if (saleOnly) {
+    filtered = filtered.filter(isOnSale);
+  }
+
+  const saleCount = products.filter(isOnSale).length;
+
+  // Kopierer produktet som kladde (billeder, priser, attributter, modeller) og
+  // åbner kopien til redigering med det samme.
+  async function duplicate(p: ProductWithStock) {
+    setDuplicatingId(p.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/admin/products/${p.id}/duplicate`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setActionError(data?.error ?? "Kopien blev ikke oprettet."); return; }
+      const full = await fetch(`/api/platform/sku/${data.id}`);
+      if (full.ok) onEdit(await full.json());
+      else load();
+    } catch {
+      setActionError("Netværksfejl. Kopien blev ikke oprettet.");
+    } finally {
+      setDuplicatingId(null);
+    }
+  }
+
+  const hasFilters = search || categoryFilter || subcategoryFilter || brandFilter || templateFilter || statusFilter || locationFilter || saleOnly;
 
   // Get stock qty for a product at a specific location
   function getStock(p: ProductWithStock, locationId: string): number {
@@ -303,6 +335,16 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
           <option value="published">Publiceret</option>
           <option value="draft">Kladde</option>
         </select>
+        <button
+          type="button"
+          aria-pressed={saleOnly}
+          onClick={() => setSaleOnly((v) => !v)}
+          className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+            saleOnly ? "border-red-200 bg-red-50 text-red-700" : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300"
+          }`}
+        >
+          Nedsat ({saleCount})
+        </button>
         {stockLocationIds.length > 0 && (
           <select
             value={locationFilter}
@@ -332,6 +374,10 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
         onComplete={() => { setSelected(new Set()); load(); }}
         onClear={() => setSelected(new Set())}
       />
+
+      {actionError && (
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{actionError}</p>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -413,8 +459,20 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                   <td className="hidden lg:table-cell px-4 py-3">
                     <CompatBadges templates={compatMap[p.id] ?? []} />
                   </td>
-                  <td className="px-4 py-3 text-stone-600">
-                    {formatDKK(p.selling_price)}
+                  <td className="whitespace-nowrap px-4 py-3 text-stone-600">
+                    {isOnSale(p) ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1.5">
+                          <span className="font-semibold text-red-600">{formatDKK(p.sale_price!)}</span>
+                          <span className="rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-700">
+                            −{Math.round((1 - p.sale_price! / p.selling_price) * 100)}%
+                          </span>
+                        </span>
+                        <span className="text-xs text-stone-400 line-through">{formatDKK(p.selling_price)}</span>
+                      </div>
+                    ) : (
+                      formatDKK(p.selling_price)
+                    )}
                   </td>
                   {stockLocationIds.map(l => (
                     <td key={l.id} className="hidden lg:table-cell px-4 py-3 text-center text-xs">
@@ -432,12 +490,19 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
                       {p.status === "published" ? "Publiceret" : "Kladde"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3">
                     <button
                       onClick={() => onEdit(p)}
                       className="text-xs font-medium text-green-600 hover:underline"
                     >
                       Rediger
+                    </button>
+                    <button
+                      onClick={() => duplicate(p)}
+                      disabled={duplicatingId !== null}
+                      className="ml-3 text-xs font-medium text-stone-500 hover:text-stone-800 hover:underline disabled:opacity-50"
+                    >
+                      {duplicatingId === p.id ? "Kopierer…" : "Dupliker"}
                     </button>
                   </td>
                 </tr>
