@@ -189,6 +189,10 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
 ];
 
 export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
+  // Apple - iPhone 18 series (lanceret september 2026; iPhone 18 og 18e følger i 2027)
+  { slug: "iphone-18-pro-max", label: "iPhone 18 Pro Max", brand: "apple" },
+  { slug: "iphone-18-pro", label: "iPhone 18 Pro", brand: "apple" },
+  { slug: "iphone-duo", label: "iPhone Duo", brand: "apple" },
   // Apple - iPhone 17 series
   { slug: "iphone-17-pro-max", label: "iPhone 17 Pro Max", brand: "apple" },
   { slug: "iphone-17-pro", label: "iPhone 17 Pro", brand: "apple" },

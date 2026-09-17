@@ -8,7 +8,12 @@ import { ACCESSORY_SUBCATEGORIES, MODEL_SPECIFIC_SUBCATEGORIES, TYPE_ATTRIBUTES 
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { ModelsPicker } from "./models-picker";
 import { WebshopPreview, type ReadinessCheck } from "./webshop-preview";
+import { SupplierImport, type SupplierImportResult } from "./supplier-import";
 import { parseKrToOere } from "./money";
+import type { SupplierProduct } from "@/lib/admin/products/supplier-paste";
+
+/** EUR → DKK til kostpris-forslag. Ikke en valutakurs-tjeneste; personalet retter selv. */
+const EUR_TO_DKK = 7.46;
 
 const KNOWN_BRANDS = ["Swissten", "Rexus", "NovaNL", "Apple", "Samsung", "Celly", "Trusmi"];
 
@@ -31,6 +36,10 @@ interface FormState {
   ean: string;
   images: string[];
   description: string;
+  shortDescription: string;
+  highlights: string[];
+  /** Leverandørdata, hvis produktet er indsat derfra; bruges til dansk tekst. */
+  supplier: SupplierProduct | null;
   attributes: Record<string, string>;
   alwaysInStock: boolean;
   online: string;
@@ -51,6 +60,9 @@ const initial: FormState = {
   ean: "",
   images: [],
   description: "",
+  shortDescription: "",
+  highlights: [],
+  supplier: null,
   attributes: {},
   alwaysInStock: false,
   online: "",
@@ -101,6 +113,63 @@ export function AccessoryForm() {
   const ready = checks.every((c) => c.ok);
   const rowCount = perModel ? form.models.length : 1;
 
+  const [writing, setWriting] = useState(false);
+  const [writeError, setWriteError] = useState<string | null>(null);
+
+  function applySupplier({ product, suggestedTitle, images, failedImages }: SupplierImportResult) {
+    const attributes = { ...product.guess.attributes };
+    setForm((f) => ({
+      ...f,
+      supplier: product,
+      title: suggestedTitle || product.title,
+      brand: product.brand ?? f.brand,
+      subcategory: product.guess.subcategory,
+      attributes,
+      models: product.modelSlugs.length ? product.modelSlugs : f.models,
+      mode: product.modelSlugs.length > 1 ? "per-model" : f.mode,
+      images: images.length ? images : f.images,
+      description: product.description || f.description,
+      highlights: product.benefits.slice(0, 5),
+      costPrice: product.priceEur != null ? String(Math.round(product.priceEur * EUR_TO_DKK)) : f.costPrice,
+      ean: f.ean,
+    }));
+    if (failedImages > 0) setError(`${failedImages} ${failedImages === 1 ? "billede" : "billeder"} kunne ikke hentes fra leverandøren. Upload dem selv nedenfor.`);
+  }
+
+  async function writeDanish() {
+    setWriteError(null);
+    setWriting(true);
+    try {
+      const res = await fetch("/api/admin/products/copywrite", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: form.supplier?.title || form.title,
+          brand: form.brand || null,
+          subcategory: form.subcategory,
+          models: form.models,
+          specs: form.supplier?.specs ?? form.attributes,
+          benefits: form.supplier?.benefits ?? form.highlights,
+          description: form.supplier?.description ?? form.description,
+          perModel: form.models.length > 0 && form.mode === "per-model",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setWriteError(data?.error ?? "Teksten kunne ikke skrives."); return; }
+      setForm((f) => ({
+        ...f,
+        title: data.title || f.title,
+        shortDescription: data.shortDescription || f.shortDescription,
+        highlights: Array.isArray(data.highlights) && data.highlights.length ? data.highlights : f.highlights,
+        description: data.description || f.description,
+      }));
+    } catch {
+      setWriteError("Ingen forbindelse. Prøv igen.");
+    } finally {
+      setWriting(false);
+    }
+  }
+
   async function generateEan() {
     setGeneratingEan(true);
     try {
@@ -134,6 +203,8 @@ export function AccessoryForm() {
               ean: form.ean || null,
               images: form.images,
               description: form.description || null,
+              shortDescription: form.shortDescription || null,
+              highlights: form.highlights.filter((h) => h.trim()),
               attributes: form.attributes,
               alwaysInStock: form.alwaysInStock,
               status: form.status,
@@ -207,6 +278,8 @@ export function AccessoryForm() {
           if (ready) void submit();
         }}
       >
+        <SupplierImport onApply={applySupplier} />
+
         <Section title="Hvad er det?">
           <Field label="Kategori">
             <Segmented
@@ -334,8 +407,30 @@ export function AccessoryForm() {
               </div>
             )}
           </Field>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-cream px-3 py-2">
+            <p className="text-[13px] text-charcoal">
+              <span className="font-medium">Dansk tekst.</span>{" "}
+              <span className="text-gray">Skriver titel, én linje, salgsargumenter og beskrivelse ud fra det, der er udfyldt{form.supplier ? " og leverandørens data" : ""}. Du retter bagefter.</span>
+            </p>
+            <Button size="sm" loading={writing} disabled={!form.title.trim() && !form.supplier} onClick={writeDanish}>Skriv dansk tekst</Button>
+          </div>
+          {writeError && <Notice tone="danger">{writeError}</Notice>}
+          <Field label="Én linje under titlen" hint="Vises i grid og øverst på produktsiden. Højst ca. 110 tegn.">
+            {(id) => <Input id={id} value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} placeholder="Aftagelig pung med magnet, plads til tre kort" />}
+          </Field>
+          <Field label="Salgsargumenter" hint="Én pr. linje, 3–5 stk. Vises som liste på produktsiden.">
+            {(id) => (
+              <Textarea
+                id={id}
+                rows={4}
+                value={form.highlights.join("\n")}
+                onChange={(e) => set("highlights", e.target.value.split("\n"))}
+                placeholder={"Pungen kan tages af med et træk\nKompatibel med MagSafe\nPlads til tre kort og sedler"}
+              />
+            )}
+          </Field>
           <Field label="Beskrivelse">
-            {(id) => <Textarea id={id} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Kort beskrivelse til produktsiden" />}
+            {(id) => <Textarea id={id} rows={6} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Kort beskrivelse til produktsiden" />}
           </Field>
         </Section>
 

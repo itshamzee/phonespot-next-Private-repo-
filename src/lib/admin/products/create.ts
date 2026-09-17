@@ -42,6 +42,10 @@ export interface AccessoryInput {
   ean?: string | null;
   images: string[];
   description?: string | null;
+  /** Én linje under titlen i webshoppen. */
+  shortDescription?: string | null;
+  /** 3–5 korte salgsargumenter; gemmes i specifications.highlights. */
+  highlights?: string[];
   attributes?: Record<string, string | null | undefined>;
   alwaysInStock?: boolean;
   status?: ProductStatus;
@@ -150,6 +154,8 @@ export function buildAccessoryRows(input: AccessoryInput): SkuProductRow[] {
     ean: text(input.ean),
     images: input.images.filter(Boolean),
     description: text(input.description),
+    short_description: text(input.shortDescription),
+    specifications: input.highlights?.length ? { highlights: input.highlights.map((h) => h.trim()).filter(Boolean) } : {},
     attributes,
     always_in_stock: input.alwaysInStock ?? false,
     status: input.status ?? "published",

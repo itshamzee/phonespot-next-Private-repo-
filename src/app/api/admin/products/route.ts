@@ -38,6 +38,8 @@ const accessoryItem = z.object({
   ean: z.string().nullable().optional(),
   images: z.array(z.string()).default([]),
   description: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  highlights: z.array(z.string()).max(6).optional(),
   attributes: z.record(z.string(), z.string().nullable().optional()).optional(),
   alwaysInStock: z.boolean().optional(),
   status: z.enum(["published", "draft"]).optional(),
