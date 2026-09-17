@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { IMAGE_CACHE_SECONDS, optimizeProductImage } from "@/lib/images/optimize";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -31,16 +32,16 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  // Gemmes som WebP på højst 1600 px: det der ligger i storage er det kunderne henter.
+  const image = await optimizeProductImage(Buffer.from(await file.arrayBuffer()), file.type);
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${image.ext}`;
   const path = folder ? `${folder}/${fileName}` : fileName;
-
-  const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, buffer, {
-      contentType: file.type,
+    .upload(path, image.data, {
+      contentType: image.contentType,
+      cacheControl: IMAGE_CACHE_SECONDS,
       upsert: false,
     });
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { IMAGE_CACHE_SECONDS, optimizeProductImage } from "@/lib/images/optimize";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeFetchPublic } from "@/lib/admin/products/safe-fetch";
@@ -38,8 +39,11 @@ export async function POST(req: NextRequest) {
       if (!res.ok || !EXT[type]) throw new Error("not-image");
       const bytes = new Uint8Array(await res.arrayBuffer());
       if (bytes.byteLength > MAX_BYTES) throw new Error("too-large");
-      const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[type]}`;
-      const { error } = await supabase.storage.from("product-images").upload(name, bytes, { contentType: type, upsert: false });
+      const image = await optimizeProductImage(Buffer.from(bytes), type);
+      const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${image.ext}`;
+      const { error } = await supabase.storage
+        .from("product-images")
+        .upload(name, image.data, { contentType: image.contentType, cacheControl: IMAGE_CACHE_SECONDS, upsert: false });
       if (error) throw new Error("storage");
       const { data } = supabase.storage.from("product-images").getPublicUrl(name);
       results.push({ source, url: data.publicUrl, error: null });

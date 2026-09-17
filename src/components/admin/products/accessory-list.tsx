@@ -143,7 +143,7 @@ export function AccessoryList() {
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-cream">
             {r.images?.[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={r.images[0]} alt="" className="h-full w-full object-contain" />
+              <img src={r.images[0]} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
             ) : null}
           </div>
           <div className="min-w-0">
@@ -221,7 +221,7 @@ export function AccessoryList() {
           <Button size="sm" variant="quiet" onClick={() => openEdit(r)}>Rediger</Button>
           <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => duplicate(r)}>Dupliker</Button>
           {publicUrl(r) && (
-            <Link href={publicUrl(r)!} target="_blank" className="hidden h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal lg:inline-flex">Se</Link>
+            <Link href={publicUrl(r)!} target="_blank" prefetch={false} className="hidden h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal lg:inline-flex">Se</Link>
           )}
           <Button size="sm" variant="quiet" className="hidden lg:inline-flex" onClick={() => setConfirmDelete(r)}>Slet</Button>
         </div>
