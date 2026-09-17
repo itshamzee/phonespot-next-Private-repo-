@@ -29,9 +29,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = createBrowserClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
+    // Den lokale session viser rammen med det samme; getUser() (et netværkskald)
+    // bekræfter den bagefter. Data er alligevel beskyttet af middleware på API'erne,
+    // så en udløbet session kan højst se en tom ramme, indtil tjekket logger den ud.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        setUser(data.session.user);
+        setLoading(false);
+      }
+      supabase.auth.getUser().then(({ data: verified }) => {
+        setUser(verified.user);
+        setLoading(false);
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
