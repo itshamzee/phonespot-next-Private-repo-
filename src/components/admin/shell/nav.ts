@@ -60,6 +60,7 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/platform/products", label: "Alle produkter", match: ["/admin/platform/sku"] },
       { href: "/admin/tilbehoer", label: "Tilbehør", match: ["/admin/spot", "/admin/tilfoej-cover"] },
+      { href: "/admin/produkter/importer", label: "Importér fra leverandør" },
       { href: "/admin/reservedele", label: "Reservedele" },
       { href: "/admin/platform/kategorier", label: "Kategorier" },
       { href: "/admin/reservedele/kategorier", label: "Kategorier, reservedele" },

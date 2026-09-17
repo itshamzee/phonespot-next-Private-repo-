@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageHeader, Segmented } from "@/components/admin/ui";
 import { AccessoryForm } from "./accessory-form";
@@ -27,6 +28,11 @@ export function CreateProduct() {
       <PageHeader
         title="Opret produkt"
         description="Ét sted for alt, der skal på webshoppen. Udfyld det nødvendige, se hvordan produktet kommer til at se ud, og opret. Resten kan rettes senere."
+        actions={
+          <Link href="/admin/produkter/importer" className="inline-flex h-10 items-center rounded-lg border border-sand bg-white px-4 text-[14px] font-medium text-charcoal hover:bg-cream">
+            Importér mange fra leverandør
+          </Link>
+        }
       />
       <div className="mb-8">
         <Segmented label="Produkttype" value={kind} onChange={setKind} options={KINDS} />

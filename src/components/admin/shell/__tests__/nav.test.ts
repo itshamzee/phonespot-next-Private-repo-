@@ -25,6 +25,7 @@ describe("resolveActive", () => {
 
   it("sider uden eget menupunkt lander under rette område", () => {
     expect(at("/admin/produkter/ny")).toEqual(["produkter", null]);
+    expect(at("/admin/produkter/importer")).toEqual(["produkter", "Importér fra leverandør"]);
     expect(at("/admin/produkter/d91fbf19")).toEqual(["produkter", null]);
     expect(at("/admin/platform/orders/123/faktura")).toEqual(["ordrer", "Alle ordrer"]);
     expect(at("/admin/spot/opret")).toEqual(["produkter", "Tilbehør"]);

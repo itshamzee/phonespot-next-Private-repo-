@@ -35,7 +35,7 @@ const KNOWN_LABELS = [
   "color", "colour", "what's included in the box?", "what's included in the box", "ean", "sku", "weight",
 ];
 
-const SPEC_LABEL_KEYS: Record<string, string> = {
+export const SPEC_LABEL_KEYS: Record<string, string> = {
   "article number": "article_number", "advised price": "advised_price", "manufacturer": "brand", "brand": "brand",
   "device brands": "device_brands", "series": "series", "models": "models", "model codes": "model_codes",
   "compatible with": "compatible_with", "product group": "product_group", "product type": "product_type",
@@ -79,7 +79,7 @@ export function matchModels(labels: string[]): { slugs: string[]; unknown: strin
   return { slugs, unknown };
 }
 
-function decodeEntities(s: string): string {
+export function decodeEntities(s: string): string {
   return s
     .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ")
@@ -114,7 +114,7 @@ function parsePrice(value: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function guessAttributes(title: string, specs: Record<string, string>): SupplierProduct["guess"] {
+export function guessAttributes(title: string, specs: Record<string, string>): SupplierProduct["guess"] {
   const t = title.toLowerCase();
   const type = (specs.product_type ?? specs.product_group ?? "").toLowerCase();
   const attributes: Record<string, string> = {};
