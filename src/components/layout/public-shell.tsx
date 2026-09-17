@@ -19,7 +19,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <CartProvider>
       <Header />
-      <main id="indhold" tabIndex={-1} className="overflow-x-hidden">{children}</main>
+      <main id="indhold" tabIndex={-1} className="overflow-x-clip">{children}</main>
       <Footer />
       <CartDrawer />
       <CartUpsellRouter />
