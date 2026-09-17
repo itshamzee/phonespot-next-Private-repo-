@@ -173,7 +173,9 @@ export function AccessoryForm() {
     return (
       <div className="max-w-[640px]">
         <Notice tone="success" title={created.length === 1 ? "Produktet er oprettet" : `${created.length} produkter er oprettet`}>
-          {form.status === "published" ? "De er synlige på webshoppen nu." : "De er gemt som kladde og vises ikke på webshoppen endnu."}
+          {created.length === 1
+            ? form.status === "published" ? "Det er synligt på webshoppen nu." : "Det er gemt som kladde og vises ikke på webshoppen endnu."
+            : form.status === "published" ? "De er synlige på webshoppen nu." : "De er gemt som kladde og vises ikke på webshoppen endnu."}
         </Notice>
         <ul className="mt-4 divide-y divide-sand rounded-xl border border-sand bg-white">
           {created.map((c) => (
