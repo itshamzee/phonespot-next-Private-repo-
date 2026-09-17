@@ -151,6 +151,12 @@ export default async function AccessoryDetailPage({ params }: Props) {
     if (!compatibleDevices.some(device => device.name === name)) compatibleDevices.push({ name, brand });
   }
 
+  // Salgsargumenter fra opret-flowet (sku_products.specifications.highlights)
+  const rawHighlights = (product as SkuProduct & { specifications?: { highlights?: unknown } }).specifications?.highlights;
+  const highlights: string[] = Array.isArray(rawHighlights)
+    ? rawHighlights.filter((h): h is string => typeof h === "string" && h.trim().length > 0)
+    : [];
+
   // Template IDs this product is linked to
   const templateIds: string[] = (templateLinks ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -408,6 +414,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           storeStockLocations={storeStockLocations}
           category={category}
           colorSiblings={colorSiblings}
+          highlights={highlights}
         />
 
         {/* Trustpilot reviews — async server component via Suspense */}
