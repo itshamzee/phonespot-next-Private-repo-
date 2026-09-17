@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PublicSkuProduct } from "@/lib/product/public-sku";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { useCart } from "@/components/cart/cart-context";
 import type { ColorSibling } from "@/lib/product-color-siblings";
+import { AccessoryMedia } from "./accessory-media";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -136,116 +137,6 @@ function CheckIcon({ className }: { className?: string }) {
 
 function StockIndicator({ label }: {label:string}) {
   return <p className="text-sm font-medium text-charcoal/70">{label}</p>;
-}
-
-// ---------------------------------------------------------------------------
-// Image gallery with zoom and override support
-// ---------------------------------------------------------------------------
-
-function ImageGallery({
-  images,
-  title,
-  overrideImage,
-  onThumbnailClick,
-}: {
-  images: string[];
-  title: string;
-  overrideImage?: string | null;
-  onThumbnailClick?: () => void;
-}) {
-  const [mainIndex, setMainIndex] = useState(0);
-  const [zoom, setZoom] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const imgContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = imgContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePos({ x, y });
-  }, []);
-
-  function handleThumbnailClick(i: number) {
-    setMainIndex(i);
-    // Clicking a thumbnail clears the variant override
-    onThumbnailClick?.();
-  }
-
-  const displayedImage = overrideImage ?? images[mainIndex] ?? null;
-
-  return (
-    <div className="flex min-w-0 flex-col-reverse gap-3 sm:flex-row lg:col-start-1 lg:row-start-1 lg:row-span-2">
-      {/* Thumbnails — left column */}
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto sm:flex-col">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Vis billede ${i + 1}`}
-              aria-pressed={!overrideImage && i === mainIndex}
-              onClick={() => handleThumbnailClick(i)}
-              className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
-                !overrideImage && i === mainIndex
-                  ? "border-green-eco shadow-sm"
-                  : "border-sand hover:border-charcoal/30"
-              }`}
-            >
-              <Image
-                src={img}
-                alt={`${title} billede ${i + 1}`}
-                fill
-                className="object-contain p-1"
-                sizes="64px"
-              />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Main image with zoom */}
-      <div
-        ref={imgContainerRef}
-        className="relative min-w-0 flex-1 aspect-square overflow-hidden rounded-2xl bg-[#f4f5f2] cursor-zoom-in"
-        onMouseEnter={() => setZoom(true)}
-        onMouseLeave={() => setZoom(false)}
-        onMouseMove={handleMouseMove}
-      >
-        {displayedImage ? (
-          <Image
-            src={displayedImage}
-            alt={title}
-            fill
-            className="object-contain p-8 transition-transform duration-200 ease-out"
-            style={
-              zoom
-                ? {
-                    transform: "scale(1.5)",
-                    transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-                  }
-                : { transform: "scale(1)" }
-            }
-            sizes="(min-width: 1024px) 55vw, 100vw"
-            priority
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <svg
-              viewBox="0 0 64 64"
-              className="h-20 w-20 text-sand"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <rect x="8" y="8" width="48" height="48" rx="4" />
-              <path d="M8 24h48M24 8v16" />
-            </svg>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -515,7 +406,7 @@ function FitBlock({ devices }: { devices: CompatibleDevice[] }) {
   const hasIphone = devices.some((d) => /iphone/i.test(d.name));
 
   return (
-    <div className="border-y border-sand py-4">
+    <div className="border-y border-sand py-4 lg:py-3.5">
       <p className="text-[13px] font-medium text-gray">Passer til</p>
       <ul className="mt-2 flex flex-wrap gap-2">
         {shown.map((d) => (
@@ -539,7 +430,7 @@ function FitBlock({ devices }: { devices: CompatibleDevice[] }) {
         )}
       </ul>
       {hasIphone && (
-        <p className="mt-2.5 text-[13px] leading-snug text-gray">
+        <p className="mt-2.5 text-[13px] leading-snug text-gray lg:hidden">
           I tvivl om din model? Se den under Indstillinger, Generelt, Om på din iPhone.
         </p>
       )}
@@ -554,34 +445,23 @@ function FitBlock({ devices }: { devices: CompatibleDevice[] }) {
 
 function FeatureSection({
   highlights,
-  image,
-  title,
   heading,
 }: {
   highlights: { title: string; body: string | null }[];
-  image: string | null;
-  title: string;
   heading: string;
 }) {
   if (highlights.length === 0) return null;
   return (
-    <section id="funktioner" className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
-      {image && (
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#f4f5f2] lg:aspect-square">
-          <Image src={image} alt={title} fill className="object-contain p-5 sm:p-8" sizes="(min-width: 1024px) 45vw, 100vw" />
-        </div>
-      )}
-      <div className={image ? "" : "lg:col-span-2 lg:max-w-3xl"}>
-        <h2 className="font-body text-2xl font-semibold tracking-[-0.02em] text-charcoal sm:text-[28px]">{heading}</h2>
-        <dl className="mt-5 divide-y divide-sand border-y border-sand">
-          {highlights.map((h) => (
-            <div key={h.title} className="py-4">
-              <dt className="text-base font-semibold text-charcoal">{h.title}</dt>
-              {h.body && <dd className="mt-1 text-[15px] leading-relaxed text-charcoal/70">{h.body}</dd>}
-            </div>
-          ))}
-        </dl>
-      </div>
+    <section id="funktioner" className="scroll-mt-6">
+      <h2 className="font-body text-2xl font-semibold tracking-[-0.02em] text-charcoal sm:text-[28px]">{heading}</h2>
+      <dl className="mt-6 grid gap-x-10 sm:grid-cols-2">
+        {highlights.map((h) => (
+          <div key={h.title} className="border-t border-sand py-5">
+            <dt className="text-[17px] font-semibold leading-snug text-charcoal">{h.title}</dt>
+            {h.body && <dd className="mt-1.5 text-[15px] leading-relaxed text-charcoal/70">{h.body}</dd>}
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
@@ -667,28 +547,26 @@ export function AccessoryDetail({
       {/* ================================================================
           Hero grid
       ================================================================ */}
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-5">
-        {/* Title block (right column on desktop, above the gallery on mobile) */}
-        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-          {(brand || typeLabel) && (
-            <p className="text-[13px] font-medium text-gray">
-              {brand}
-              {brand && typeLabel && <span className="mx-2 text-sand" aria-hidden="true">|</span>}
-              {typeLabel}
-            </p>
-          )}
-          <h1 className="mt-2 font-body text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[32px]">{product.title}</h1>
-          {shortDescription && <p className="mt-3 text-base leading-relaxed text-charcoal/70">{shortDescription}</p>}
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12">
+        {/* Left — every photo, large. The buy column stays in view while they scroll past. */}
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+          <AccessoryMedia images={product.images} title={product.title} overrideImage={variantImageOverride} />
         </div>
-        <ImageGallery
-          images={product.images}
-          title={product.title}
-          overrideImage={variantImageOverride}
-          onThumbnailClick={() => setVariantImageOverride(null)}
-        />
 
-        {/* Right — product info */}
-        <div className="min-w-0 flex flex-col gap-5 lg:col-start-2 lg:row-start-2">
+        {/* Right — title, fit, price and buy; sticky on desktop */}
+        <div className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-5 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:gap-4">
+          <div>
+            {(brand || typeLabel) && (
+              <p className="text-[13px] font-medium text-gray">
+                {brand}
+                {brand && typeLabel && <span className="mx-2 text-sand" aria-hidden="true">|</span>}
+                {typeLabel}
+              </p>
+            )}
+            <h1 className="mt-2 font-body text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[30px]">{product.title}</h1>
+            {shortDescription && <p className="mt-3 text-base leading-relaxed text-charcoal/70">{shortDescription}</p>}
+          </div>
+
           {/* Which phone it fits — first thing after the title */}
           <FitBlock devices={compatibleDevices} />
 
@@ -720,14 +598,14 @@ export function AccessoryDetail({
           {featureList.length > 0 && (
             <div>
               <ul className="flex flex-col gap-2">
-                {featureList.slice(0, 4).map((h) => (
+                {featureList.slice(0, 3).map((h) => (
                   <li key={h.title} className="flex items-start gap-2.5 text-[15px] leading-snug text-charcoal">
                     <CheckIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-light" />
                     {h.title}
                   </li>
                 ))}
               </ul>
-              {(featureList.length > 4 || featureList.some((h) => h.body)) && (
+              {(featureList.length > 3 || featureList.some((h) => h.body)) && (
                 <a href="#funktioner" className="mt-3 inline-block text-sm font-medium text-green-eco underline underline-offset-4 hover:text-green-light">
                   Se alle funktioner
                 </a>
@@ -897,69 +775,33 @@ export function AccessoryDetail({
               label={canBuy ? "Tilføj til kurv" : stockLabel}
             />
 
-            {/* Trust strip */}
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              {/* Fri fragt */}
-              <div className="flex items-center gap-1.5">
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v3" />
-                  <rect x="9" y="11" width="14" height="10" rx="1" />
-                  <circle cx="12" cy="21" r="1" />
-                  <circle cx="20" cy="21" r="1" />
-                </svg>
-                <span className="text-xs text-charcoal/50">Fri fragt over 500 kr.</span>
-              </div>
-              {/* Garanti */}
-              <div className="flex items-center gap-1.5">
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <span className="text-xs text-charcoal/50">2 års reklamationsret</span>
-              </div>
-              {/* Returret */}
-              <div className="flex items-center gap-1.5">
-                <svg
-                  className="h-3.5 w-3.5 flex-shrink-0 text-charcoal/40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                  <path d="M3 3v5h5" />
-                </svg>
-                <span className="text-xs text-charcoal/50">14 dages returret</span>
-              </div>
-            </div>
+            {/* What you get with the purchase — same three facts, readable */}
+            <ul className="mt-4 divide-y divide-sand border-t border-sand text-[14px] text-charcoal">
+              {[
+                ["Fri fragt over 500 kr.", "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"],
+                ["2 års reklamationsret", "M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"],
+                ["14 dages returret", "M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"],
+              ].map(([label, d]) => (
+                <li key={label} className="flex items-center gap-3 py-2.5">
+                  <svg className="h-[18px] w-[18px] shrink-0 text-green-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+                  </svg>
+                  {label}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </div>
 
+        {/* Story — facts, functions and description under the photos, beside the sticky buy column */}
+        <div className="flex min-w-0 flex-col gap-12 pt-3 lg:col-start-1 lg:row-start-2 lg:gap-16 lg:pt-8">
       {/* Facts band — the key specs at a glance, before the long-form content */}
       {factEntries.length >= 3 && (
-        <dl className="mt-10 grid grid-cols-2 border-y border-sand lg:mt-14 lg:grid-cols-4">
+        <dl className="grid grid-cols-2 border-y border-sand">
           {factEntries.map(([label, value], i) => (
             <div
               key={label}
-              className={`px-1 py-5 sm:px-5 lg:py-6 ${i % 2 === 1 ? "border-l border-sand pl-4" : ""} ${i >= 2 ? "border-t border-sand lg:border-t-0" : ""} ${i > 0 ? "lg:border-l lg:pl-6" : "lg:pl-0"}`}
+              className={`py-5 ${i % 2 === 1 ? "border-l border-sand pl-5" : "pr-5"} ${i >= 2 ? "border-t border-sand" : ""}`}
             >
               <dt className="text-[13px] text-gray">{label}</dt>
               <dd className="mt-1 text-[17px] font-semibold leading-snug tracking-[-0.01em] text-charcoal">{value}</dd>
@@ -968,21 +810,12 @@ export function AccessoryDetail({
         </dl>
       )}
 
-      {/* ================================================================
-          Below-fold content
-      ================================================================ */}
-      <div className="mt-14 flex flex-col gap-14 lg:mt-20 lg:gap-20">
-        {/* 1. Funktioner — second photo + full highlight list */}
-        <FeatureSection
-          highlights={featureList}
-          image={product.images[1] ?? product.images[0] ?? null}
-          title={product.title}
-          heading={isCover ? "Det kan coveret" : "Det får du"}
-        />
+        {/* 1. Funktioner — the full highlight list */}
+        <FeatureSection highlights={featureList} heading={isCover ? "Det kan coveret" : "Det får du"} />
 
         {/* 2. Beskrivelse + specifikationer side by side */}
         {(product.description || specEntries.length > 0) && (
-          <section className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-16">
+          <section className="flex flex-col gap-12">
             {product.description && (
               <div>
                 <h2 className="mb-4 font-body text-xl font-semibold text-charcoal">Beskrivelse</h2>
@@ -1013,6 +846,13 @@ export function AccessoryDetail({
           </section>
         )}
 
+        </div>
+      </div>
+
+      {/* ================================================================
+          Full-width content after the product story
+      ================================================================ */}
+      <div className="mt-14 flex flex-col gap-14 empty:hidden lg:mt-20 lg:gap-20">
         {/* 3. Kompatibel med — full list only when the chips above can't show them all */}
         {compatibleDevices.length > FIT_INLINE_MAX && <CompatibilitySection devices={compatibleDevices} />}
 
