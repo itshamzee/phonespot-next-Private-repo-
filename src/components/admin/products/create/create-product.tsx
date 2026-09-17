@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageHeader, Segmented } from "@/components/admin/ui";
 import { AccessoryForm } from "./accessory-form";
 import { SparePartForm } from "./spare-part-form";
 import { BulkPaste } from "./bulk-paste";
+import { DeviceForm } from "./device-form";
 
 type Kind = "accessory" | "spare-part" | "bulk" | "device";
 
@@ -34,17 +34,7 @@ export function CreateProduct() {
       {kind === "accessory" && <AccessoryForm />}
       {kind === "spare-part" && <SparePartForm />}
       {kind === "bulk" && <BulkPaste />}
-      {kind === "device" && (
-        <div className="max-w-[640px] rounded-xl border border-sand bg-white p-6 text-[14px] text-charcoal">
-          <p className="font-medium">Enheder registreres stadig via “Registrér enhed”.</p>
-          <p className="mt-1 text-gray">
-            Der vælger du model, stand, lagerplads og pris, og enheden kommer på webshoppen med det samme. Det flow flytter hertil i næste trin.
-          </p>
-          <Link href="/admin/platform/intake" className="mt-4 inline-flex h-10 items-center rounded-lg bg-green-eco px-4 font-medium text-white hover:bg-green-light">
-            Gå til Registrér enhed
-          </Link>
-        </div>
-      )}
+      {kind === "device" && <DeviceForm />}
     </div>
   );
 }

@@ -297,6 +297,48 @@ export function ProductImageUploader({
     }
   }
 
+  // Baggrundsfjernelse kører i browseren (@imgly/background-removal, WASM).
+  // Første gang hentes en model på ~40 MB; derefter er den cachet.
+  const [bgBusy, setBgBusy] = useState<{ index: number; text: string } | null>(null);
+  const [bgError, setBgError] = useState<string | null>(null);
+
+  async function handleRemoveBackground(index: number) {
+    const url = images[index];
+    if (!url) return;
+    setBgError(null);
+    setBgBusy({ index, text: "Henter billede…" });
+    try {
+      const source = await fetch(url).then((r) => {
+        if (!r.ok) throw new Error("download");
+        return r.blob();
+      });
+      const { removeBackground } = await import("@imgly/background-removal");
+      const cut = await removeBackground(source, {
+        progress: (key, current, total) => {
+          if (key === "compute:inference") setBgBusy({ index, text: "Fjerner baggrund…" });
+          else if (key.startsWith("fetch:")) setBgBusy({ index, text: `Henter model… ${total > 0 ? Math.round((current / total) * 100) : 0}%` });
+        },
+      });
+      setBgBusy({ index, text: "Gemmer…" });
+      const name = (url.split("/").pop() ?? "billede").replace(/\.\w+$/, "") + "-fritlagt.png";
+      const formData = new FormData();
+      formData.append("file", new File([cut], name, { type: "image/png" }));
+      formData.append("folder", folder);
+      const res = await fetch("/api/platform/images/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("upload");
+      const data = await res.json();
+      onChange(images.map((img, i) => (i === index ? data.url : img)));
+    } catch (err) {
+      setBgError(
+        err instanceof Error && err.message === "download"
+          ? "Billedet kunne ikke hentes. Prøv at uploade det igen."
+          : "Baggrunden kunne ikke fjernes. Prøv igen, eller brug et billede med roligere baggrund.",
+      );
+    } finally {
+      setBgBusy(null);
+    }
+  }
+
   function handleRemove(index: number) {
     const updated = images.filter((_, i) => i !== index);
     onChange(updated);
@@ -315,6 +357,9 @@ export function ProductImageUploader({
 
   return (
     <div className="space-y-3">
+      {bgError && (
+        <p role="alert" className="rounded-lg border border-[#F3C6C2] bg-[#FDECEC] px-3 py-2 text-[13px] text-[#B42318]">{bgError}</p>
+      )}
       {images.length > 0 && (
         <div className="grid grid-cols-4 gap-3">
           {images.map((url, i) => (
@@ -332,7 +377,23 @@ export function ProductImageUploader({
                   Hoved
                 </span>
               )}
+              {bgBusy?.index === i && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 px-2 text-center text-[12px] font-medium text-charcoal">
+                  {bgBusy.text}
+                </div>
+              )}
               <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveBackground(i)}
+                  disabled={bgBusy !== null}
+                  className="rounded-lg bg-white/90 p-1.5 text-stone-700 hover:bg-white disabled:opacity-50"
+                  title="Fjern baggrund"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 3.5l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5L6 7l2.5-1 1-2.5zM4 20l9.5-9.5M14 12l2.5 2.5M17.5 9.5L20 12" />
+                  </svg>
+                </button>
                 {i > 0 && (
                   <button
                     type="button"

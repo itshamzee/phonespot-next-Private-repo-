@@ -69,6 +69,46 @@ const bodySchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("spare-part"), items: z.array(sparePartItem).min(1).max(100) }),
 ]);
 
+/**
+ * GET /api/admin/products — pagineret liste over tilbehør/reservedele med lager,
+ * fra viewet checkout_sku_inventory (samme tal som webshoppen bruger).
+ * Params: type (accessory|spare-part), page, limit (≤100), search, subcategory,
+ * brand, status (published|draft), stock (in|out|order).
+ */
+export async function GET(req: NextRequest) {
+  const p = req.nextUrl.searchParams;
+  const type = p.get("type") === "spare-part" ? "spare-part" : "accessory";
+  const page = Math.max(1, Number(p.get("page")) || 1);
+  const limit = Math.min(100, Math.max(1, Number(p.get("limit")) || 50));
+  const search = p.get("search")?.trim() ?? "";
+  const subcategory = p.get("subcategory")?.trim() ?? "";
+  const brand = p.get("brand")?.trim() ?? "";
+  const status = p.get("status");
+  const stock = p.get("stock");
+
+  const supabase = createAdminClient();
+  let query = supabase
+    .from("checkout_sku_inventory")
+    .select(
+      "id, title, slug, subcategory, brand, selling_price, sale_price, always_in_stock, images, compatible_models, status, is_active, created_at, store_stock, online_stock, total_stock",
+      { count: "exact" },
+    )
+    .eq("category", type);
+  if (type === "accessory") query = query.neq("subcategory", "spare-part");
+  if (search) query = query.or(`title.ilike.%${search.replace(/[%,]/g, " ")}%,brand.ilike.%${search.replace(/[%,]/g, " ")}%`);
+  if (subcategory) query = query.eq("subcategory", subcategory);
+  if (brand) query = query.ilike("brand", brand);
+  if (status === "published" || status === "draft") query = query.eq("status", status);
+  if (stock === "in") query = query.gt("total_stock", 0);
+  else if (stock === "out") query = query.eq("total_stock", 0).eq("always_in_stock", false);
+  else if (stock === "order") query = query.eq("always_in_stock", true);
+
+  const from = (page - 1) * limit;
+  const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + limit - 1);
+  if (error) return NextResponse.json({ error: "Produkterne kunne ikke hentes" }, { status: 503 });
+  return NextResponse.json({ items: data ?? [], total: count ?? 0, page, limit });
+}
+
 export interface CreatedProduct {
   id: string;
   slug: string;

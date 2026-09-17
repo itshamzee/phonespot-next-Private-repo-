@@ -7,3 +7,4 @@ export { Chip } from "./chip";
 export { Toggle } from "./toggle";
 export { Notice } from "./notice";
 export { PageHeader } from "./page-header";
+export { DataTable, Pagination, Tag, type Column } from "./table";
