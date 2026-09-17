@@ -26,7 +26,7 @@ export function CreateProduct() {
     <div className="mx-auto max-w-[1040px]">
       <PageHeader
         title="Opret produkt"
-        description="Ét sted for alt, der skal på webshoppen. Udfyld det nødvendige, se produktet til højre, og opret. Resten kan rettes senere."
+        description="Ét sted for alt, der skal på webshoppen. Udfyld det nødvendige, se hvordan produktet kommer til at se ud, og opret. Resten kan rettes senere."
       />
       <div className="mb-8">
         <Segmented label="Produkttype" value={kind} onChange={setKind} options={KINDS} />
