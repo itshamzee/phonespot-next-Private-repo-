@@ -125,6 +125,7 @@ export function AccessoryList() {
     {
       key: "product",
       header: "Produkt",
+      className: "w-full max-w-0",
       render: (r) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-cream">
@@ -136,7 +137,7 @@ export function AccessoryList() {
           <div className="min-w-0">
             <p className="truncate font-medium text-charcoal">{r.title}</p>
             <p className="truncate text-[12px] text-gray">
-              {[r.brand, ACCESSORY_SUBCATEGORIES.find((c) => c.value === r.subcategory)?.label ?? r.subcategory].filter(Boolean).join(" · ")}
+              {[r.brand, r.subcategory === "spot-glass" ? "Beskyttelsesglas (Spot)" : ACCESSORY_SUBCATEGORIES.find((c) => c.value === r.subcategory)?.label ?? r.subcategory].filter(Boolean).join(" · ")}
               {!r.slug && <span className="text-[#B42318]"> · mangler link</span>}
             </p>
           </div>
@@ -147,6 +148,7 @@ export function AccessoryList() {
       key: "models",
       header: "Passer til",
       hideBelow: "lg",
+      className: "whitespace-nowrap",
       render: (r) => {
         const m = r.compatible_models ?? [];
         if (!m.length) return <span className="text-gray">–</span>;
@@ -158,6 +160,7 @@ export function AccessoryList() {
       key: "price",
       header: "Pris",
       align: "right",
+      className: "whitespace-nowrap",
       render: (r) =>
         r.sale_price != null && r.sale_price < r.selling_price ? (
           <span>{formatOere(r.sale_price)} <span className="text-[12px] text-gray line-through">{formatOere(r.selling_price)}</span></span>
@@ -183,6 +186,7 @@ export function AccessoryList() {
       key: "status",
       header: "Status",
       hideBelow: "md",
+      className: "whitespace-nowrap",
       render: (r) => (r.status === "published" ? <Tag tone="green">På webshoppen</Tag> : <Tag tone="amber">Kladde</Tag>),
     },
     {
