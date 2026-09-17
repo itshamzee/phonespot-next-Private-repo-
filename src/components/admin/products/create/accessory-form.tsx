@@ -418,7 +418,7 @@ export function AccessoryForm() {
           <Field label="Én linje under titlen" hint="Vises i grid og øverst på produktsiden. Højst ca. 110 tegn.">
             {(id) => <Input id={id} value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} placeholder="Aftagelig pung med magnet, plads til tre kort" />}
           </Field>
-          <Field label="Salgsargumenter" hint="Én pr. linje, 3–5 stk. Vises som liste på produktsiden.">
+          <Field label="Salgsargumenter" hint="Én pr. linje, 3–5 stk. Vises som liste på produktsiden. Skriv evt. “Overskrift: forklaring” for at få en uddybende tekst under hvert punkt.">
             {(id) => (
               <Textarea
                 id={id}
