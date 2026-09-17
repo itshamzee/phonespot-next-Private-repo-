@@ -69,7 +69,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response.parsed_output);
   } catch (err) {
     if (err instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "For mange forespørgsler. Vent lidt og prøv igen." }, { status: 429 });
-    if (err instanceof Anthropic.APIError) return NextResponse.json({ error: `Tekstgenerering fejlede (${err.status})` }, { status: 502 });
+    if (err instanceof Anthropic.APIError) {
+      if (/credit balance/i.test(err.message)) {
+        return NextResponse.json({ error: "Anthropic-kontoen mangler kredit. Fyld op på console.anthropic.com under Plans & Billing, så virker dansk tekst igen." }, { status: 502 });
+      }
+      return NextResponse.json({ error: `Tekstgenerering fejlede (${err.status})` }, { status: 502 });
+    }
     return NextResponse.json({ error: "Tekstgenerering fejlede" }, { status: 502 });
   }
 }
