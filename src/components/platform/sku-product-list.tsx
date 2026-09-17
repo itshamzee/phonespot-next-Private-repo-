@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { accessoryModelLabels } from "@/lib/product/accessory-models";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
 import { formatDKK } from "@/lib/platform/format";
 import { BulkEditor } from "@/components/platform/bulk-editor";
@@ -167,26 +168,32 @@ export function SkuProductList({ onEdit, lockedCategory, lockedSubcategory, excl
       setSelected(new Set());
 
       // Fetch compatibility data for all products on this page
+      // "Passer til" har to kilder: compatible_models (nyt opret-flow) og
+      // skabelon-koblinger (denne formular). Vis begge, uden dubletter.
       const ids = data.map(p => p.id);
+      const map: Record<string, string[]> = {};
+      const add = (id: string, name: string) => {
+        const key = name.replace(/^apples+/i, "").toLowerCase();
+        const list = (map[id] ??= []);
+        if (!list.some((n) => n.replace(/^apples+/i, "").toLowerCase() === key)) list.push(name);
+      };
+      for (const p of data) {
+        for (const label of accessoryModelLabels((p as { compatible_models?: unknown }).compatible_models)) add(p.id, label);
+      }
       if (ids.length > 0) {
         try {
           const compatRes = await fetch(`/api/platform/sku-product-templates?sku_product_ids=${ids.join(",")}`);
           if (compatRes.ok) {
             const links: TemplateLink[] = await compatRes.json();
-            const map: Record<string, string[]> = {};
             for (const link of links) {
-              if (!link.template) continue;
-              if (!map[link.sku_product_id]) map[link.sku_product_id] = [];
-              map[link.sku_product_id].push(link.template.display_name);
+              if (link.template) add(link.sku_product_id, link.template.display_name);
             }
-            setCompatMap(map);
           }
         } catch {
           // Compatibility data is non-critical
         }
-      } else {
-        setCompatMap({});
       }
+      setCompatMap(map);
     }
     setLoading(false);
   }, [search, categoryFilter, brandFilter, templateFilter, statusFilter, locationFilter, lockedCategory, lockedSubcategory, excludeSubcategory]);

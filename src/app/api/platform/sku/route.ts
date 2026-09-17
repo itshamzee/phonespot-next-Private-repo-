@@ -134,16 +134,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // "Passer til"-modeller valgt i opret-formularen. Produktet har intet id, mens
+  // formularen er åben, så koblingerne kan først gemmes her — sammen med oprettelsen.
+  const templateIds = Array.isArray(body.template_ids)
+    ? [...new Set((body.template_ids as unknown[]).filter((id): id is string => typeof id === "string" && id.length > 0))]
+    : [];
+  let warning: string | undefined;
+  if (templateIds.length > 0) {
+    const { error: linkError } = await supabase
+      .from("sku_product_templates")
+      .insert(templateIds.map((template_id) => ({ sku_product_id: data.id, template_id })));
+    if (linkError) {
+      console.error("[sku create] kunne ikke gemme passer til-modeller:", linkError.message);
+      warning = "Produktet er oprettet, men 'Passer til'-modellerne kunne ikke gemmes. Åbn produktet og vælg dem igen.";
+    }
+  }
+
   await logActivity({
     supabase,
     actorId: _actorId ?? "system",
     action: "sku_create",
     entityType: "sku_product",
     entityId: data.id,
-    details: { title, selling_price, category },
+    details: { title, selling_price, category, template_ids: templateIds },
   });
 
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json(warning ? { ...data, warning } : data, { status: 201 });
 }
 
 export async function PATCH(request: Request) {
