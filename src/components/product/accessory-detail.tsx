@@ -78,6 +78,7 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
   capacity: "Kapacitet",
   audio_type: "Type",
   wireless: "Trådløs",
+  magsafe: "MagSafe",
 };
 
 const CASE_TYPE_LABELS: Record<string, string> = {
