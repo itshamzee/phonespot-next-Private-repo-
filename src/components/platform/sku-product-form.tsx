@@ -388,6 +388,9 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
           image: null,
         })),
       })),
+      // Ved redigering gemmes "Passer til" straks (linkTemplate); et nyt produkt har
+      // intet id endnu, så de valgte modeller sendes med og gemmes af POST.
+      ...(isEdit ? {} : { template_ids: linkedTemplates.map((t) => t.id) }),
     };
 
     try {
@@ -404,6 +407,8 @@ export function SkuProductForm({ product, onSave, onCancel, lockedCategory, lock
         const data = await res.json();
         setError(data.error ?? "Kunne ikke gemme");
       } else {
+        const saved = await res.json().catch(() => null);
+        if (saved?.warning) window.alert(saved.warning);
         onSave();
       }
     } catch {
