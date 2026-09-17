@@ -655,6 +655,12 @@ export function AccessoryDetail({
       .sort(([a], [b]) => Number(b.endsWith("_type")) - Number(a.endsWith("_type")))
       .map(([key, val]) => [attributeLabel(key), attributeValue(key, val)] as [string, string]),
   ];
+  // Up to four product facts for the band under the hero (brand is already in the title block)
+  // — colour last, since the photos and title already show it.
+  const factEntries = specEntries
+    .filter(([label]) => label !== "Mærke")
+    .sort(([a], [b]) => Number(a === "Farve") - Number(b === "Farve"))
+    .slice(0, 4);
 
   return (
     <div className="font-body text-charcoal">
@@ -946,6 +952,21 @@ export function AccessoryDetail({
           </div>
         </div>
       </div>
+
+      {/* Facts band — the key specs at a glance, before the long-form content */}
+      {factEntries.length >= 3 && (
+        <dl className="mt-10 grid grid-cols-2 border-y border-sand lg:mt-14 lg:grid-cols-4">
+          {factEntries.map(([label, value], i) => (
+            <div
+              key={label}
+              className={`px-1 py-5 sm:px-5 lg:py-6 ${i % 2 === 1 ? "border-l border-sand pl-4" : ""} ${i >= 2 ? "border-t border-sand lg:border-t-0" : ""} ${i > 0 ? "lg:border-l lg:pl-6" : "lg:pl-0"}`}
+            >
+              <dt className="text-[13px] text-gray">{label}</dt>
+              <dd className="mt-1 text-[17px] font-semibold leading-snug tracking-[-0.01em] text-charcoal">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       {/* ================================================================
           Below-fold content
