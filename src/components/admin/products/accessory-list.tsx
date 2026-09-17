@@ -210,18 +210,20 @@ export function AccessoryList() {
       key: "actions",
       header: "",
       align: "right",
+      // På telefon åbner et tryk på rækken produktet; Dupliker og Slet ligger øverst på produktets side.
+      hideBelow: "sm",
       className: "whitespace-nowrap",
       render: (r) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => patch(r, { status: r.status === "published" ? "draft" : "published" }, "Status blev ikke ændret.")}>
+          <Button size="sm" variant="quiet" className="hidden lg:inline-flex" loading={busyId === r.id} onClick={() => patch(r, { status: r.status === "published" ? "draft" : "published" }, "Status blev ikke ændret.")}>
             {r.status === "published" ? "Skjul" : "Vis"}
           </Button>
           <Button size="sm" variant="quiet" onClick={() => openEdit(r)}>Rediger</Button>
           <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => duplicate(r)}>Dupliker</Button>
           {publicUrl(r) && (
-            <Link href={publicUrl(r)!} target="_blank" className="inline-flex h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal">Se</Link>
+            <Link href={publicUrl(r)!} target="_blank" className="hidden h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal lg:inline-flex">Se</Link>
           )}
-          <Button size="sm" variant="quiet" onClick={() => setConfirmDelete(r)}>Slet</Button>
+          <Button size="sm" variant="quiet" className="hidden lg:inline-flex" onClick={() => setConfirmDelete(r)}>Slet</Button>
         </div>
       ),
     },
