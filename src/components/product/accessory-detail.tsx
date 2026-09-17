@@ -36,6 +36,8 @@ type AccessoryDetailProps = {
   storeStockLocations?: string[];
   category?: string;
   colorSiblings?: ColorSibling[];
+  /** Salgsargumenter fra sku_products.specifications.highlights ("Titel: tekst" eller ren tekst). */
+  highlights?: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -70,12 +72,41 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
   cable_length: "Kabellængde",
   screen_size: "Skærmstørrelse",
   protection_level: "Beskyttelsesniveau",
+  card_slots: "Kortpladser",
+  closure: "Lukning",
+  capacity: "Kapacitet",
+  audio_type: "Type",
+  wireless: "Trådløs",
+};
+
+const CASE_TYPE_LABELS: Record<string, string> = {
+  clear: "Gennemsigtigt cover",
+  wallet: "Pungcover",
+  book: "Bogcover",
+  slim: "Slankt cover",
+  rugged: "Forstærket cover",
+  flip: "Flipcover",
+  bumper: "Kantcover",
 };
 
 const HIDDEN_ATTRS = new Set(["_source", "source", "id"]);
 
 function attributeLabel(key: string): string {
-  return ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " ");
+  const label = ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function attributeValue(key: string, val: unknown): string {
+  if (key === "case_type") return CASE_TYPE_LABELS[String(val).toLowerCase()] ?? String(val);
+  return String(val);
+}
+
+/** "Aftageligt cover: Tag kun coveret med" → titel + tekst. Uden kolon er hele linjen titlen. */
+function splitHighlight(raw: string): { title: string; body: string | null } {
+  const text = raw.trim();
+  const idx = text.indexOf(": ");
+  if (idx > 0 && idx <= 40) return { title: text.slice(0, idx), body: text.slice(idx + 2).trim() || null };
+  return { title: text, body: null };
 }
 
 function isColorVariant(name: string): boolean {
@@ -471,6 +502,91 @@ function CompatibilitySection({ devices }: { devices: CompatibleDevice[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Fit block — "which phone does this fit" is the first question on a cover,
+// so it sits directly under the title instead of in a grey line below the price.
+// ---------------------------------------------------------------------------
+
+const FIT_INLINE_MAX = 4;
+
+function FitBlock({ devices }: { devices: CompatibleDevice[] }) {
+  if (devices.length === 0) return null;
+  const shown = devices.slice(0, FIT_INLINE_MAX);
+  const remaining = devices.length - shown.length;
+  const hasIphone = devices.some((d) => /iphone/i.test(d.name));
+
+  return (
+    <div className="border-y border-sand py-4">
+      <p className="text-[13px] font-medium text-gray">Passer til</p>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {shown.map((d) => (
+          <li
+            key={d.name}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-green-pale px-3 py-1.5 text-[15px] font-semibold text-green-eco"
+          >
+            <CheckIcon className="h-4 w-4" />
+            {d.name}
+          </li>
+        ))}
+        {remaining > 0 && (
+          <li>
+            <a
+              href="#compatibility"
+              className="inline-flex items-center rounded-lg border border-sand px-3 py-1.5 text-[15px] font-medium text-charcoal hover:border-charcoal/40"
+            >
+              og {remaining} flere
+            </a>
+          </li>
+        )}
+      </ul>
+      {hasIphone && (
+        <p className="mt-2.5 text-[13px] leading-snug text-gray">
+          I tvivl om din model? Se den under Indstillinger, Generelt, Om på din iPhone.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feature section — the second product photo next to the full list of
+// highlights, so the functions of the cover are shown rather than buried in prose.
+// ---------------------------------------------------------------------------
+
+function FeatureSection({
+  highlights,
+  image,
+  title,
+  heading,
+}: {
+  highlights: { title: string; body: string | null }[];
+  image: string | null;
+  title: string;
+  heading: string;
+}) {
+  if (highlights.length === 0) return null;
+  return (
+    <section id="funktioner" className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14">
+      {image && (
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#f4f5f2] lg:aspect-square">
+          <Image src={image} alt={title} fill className="object-contain p-5 sm:p-8" sizes="(min-width: 1024px) 45vw, 100vw" />
+        </div>
+      )}
+      <div className={image ? "" : "lg:col-span-2 lg:max-w-3xl"}>
+        <h2 className="font-body text-2xl font-semibold tracking-[-0.02em] text-charcoal sm:text-[28px]">{heading}</h2>
+        <dl className="mt-5 divide-y divide-sand border-y border-sand">
+          {highlights.map((h) => (
+            <div key={h.title} className="py-4">
+              <dt className="text-base font-semibold text-charcoal">{h.title}</dt>
+              {h.body && <dd className="mt-1 text-[15px] leading-relaxed text-charcoal/70">{h.body}</dd>}
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -482,6 +598,7 @@ export function AccessoryDetail({
   storeStockLocations = [],
   category,
   colorSiblings = [],
+  highlights = [],
 }: AccessoryDetailProps) {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
@@ -521,28 +638,41 @@ export function AccessoryDetail({
     ? "Fuldend beskyttelsen — skærmbeskyttelse"
     : "Fuldend beskyttelsen — cover";
 
-  // Above-fold compatibility summary
-  const compatibilityLine = (() => {
-    if (compatibleDevices.length === 0) return null;
-    const first = compatibleDevices[0].name;
-    if (compatibleDevices.length === 1) return { text: `Passer til ${first}`, showLink: false };
-    const second = compatibleDevices[1].name;
-    const remaining = compatibleDevices.length - 2;
-    if (remaining <= 0) return { text: `Passer til ${first} og ${second}`, showLink: false };
-    return { text: `Passer til ${first}, ${second} og ${remaining} flere`, showLink: true };
-  })();
+  const brand = product.brand?.trim() || null;
+  const caseType = product.attributes?.case_type;
+  const typeLabel = caseType ? CASE_TYPE_LABELS[String(caseType).toLowerCase()] ?? null : null;
+  // Imported products often repeat the title as short description — skip it then.
+  const shortDescription =
+    product.short_description && product.short_description.trim().toLowerCase() !== product.title.trim().toLowerCase()
+      ? product.short_description.trim()
+      : null;
+
+  const featureList = highlights.map(splitHighlight).filter((h) => h.title);
+  const specEntries: [string, string][] = [
+    ...(brand ? [["Mærke", brand] as [string, string]] : []),
+    // jsonb returns keys alphabetically — lead with the product type instead
+    ...[...attributeEntries]
+      .sort(([a], [b]) => Number(b.endsWith("_type")) - Number(a.endsWith("_type")))
+      .map(([key, val]) => [attributeLabel(key), attributeValue(key, val)] as [string, string]),
+  ];
 
   return (
     <div className="font-body text-charcoal">
       {/* ================================================================
           Hero grid
       ================================================================ */}
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-5">
-        {/* Left — image gallery */}
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-5">
+        {/* Title block (right column on desktop, above the gallery on mobile) */}
         <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-          {product.brand && <p className="text-xs font-semibold text-charcoal/60">{product.brand}</p>}
-          <h1 className="mt-2 font-body text-3xl font-semibold tracking-[-0.04em] leading-tight sm:text-4xl">{product.title}</h1>
-          {product.short_description && <p className="mt-3 text-base leading-relaxed text-charcoal/70">{product.short_description}</p>}
+          {(brand || typeLabel) && (
+            <p className="text-[13px] font-medium text-gray">
+              {brand}
+              {brand && typeLabel && <span className="mx-2 text-sand" aria-hidden="true">|</span>}
+              {typeLabel}
+            </p>
+          )}
+          <h1 className="mt-2 font-body text-[26px] font-semibold leading-[1.15] tracking-[-0.03em] sm:text-[32px]">{product.title}</h1>
+          {shortDescription && <p className="mt-3 text-base leading-relaxed text-charcoal/70">{shortDescription}</p>}
         </div>
         <ImageGallery
           images={product.images}
@@ -553,41 +683,50 @@ export function AccessoryDetail({
 
         {/* Right — product info */}
         <div className="min-w-0 flex flex-col gap-5 lg:col-start-2 lg:row-start-2">
+          {/* Which phone it fits — first thing after the title */}
+          <FitBlock devices={compatibleDevices} />
+
           {/* Price */}
           <div>
             {hasSale ? (
-              <div className="flex items-baseline gap-3">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="font-body text-3xl font-bold text-red-600">
                   {formatDKK(effectivePrice)}
                 </span>
                 <span className="text-lg text-charcoal/40 line-through">
                   {formatDKK(product.selling_price)}
                 </span>
+                {effectivePrice < product.selling_price && (
+                  <span className="rounded-md bg-red-600/10 px-2 py-0.5 text-[13px] font-semibold text-red-700">
+                    Spar {formatDKK(product.selling_price - effectivePrice)}
+                  </span>
+                )}
               </div>
             ) : (
-              <span className="font-body text-3xl font-bold text-green-eco">
+              <span className="font-body text-3xl font-bold text-charcoal">
                 {formatDKK(effectivePrice)}
               </span>
             )}
             <p className="mt-1 text-xs text-charcoal/50">Inkl. moms</p>
           </div>
 
-          {/* Above-fold compatibility line */}
-          {compatibilityLine && (
-            <p className="text-sm text-charcoal/60">
-              {compatibilityLine.text}
-              {compatibilityLine.showLink && (
-                <>
-                  {" "}
-                  <a
-                    href="#compatibility"
-                    className="font-medium text-green-eco underline underline-offset-2 hover:text-green-eco/80 transition-colors"
-                  >
-                    Se alle
-                  </a>
-                </>
+          {/* Key functions — short list, full version in #funktioner */}
+          {featureList.length > 0 && (
+            <div>
+              <ul className="flex flex-col gap-2">
+                {featureList.slice(0, 4).map((h) => (
+                  <li key={h.title} className="flex items-start gap-2.5 text-[15px] leading-snug text-charcoal">
+                    <CheckIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-light" />
+                    {h.title}
+                  </li>
+                ))}
+              </ul>
+              {(featureList.length > 4 || featureList.some((h) => h.body)) && (
+                <a href="#funktioner" className="mt-3 inline-block text-sm font-medium text-green-eco underline underline-offset-4 hover:text-green-light">
+                  Se alle funktioner
+                </a>
               )}
-            </p>
+            </div>
           )}
 
           {/* Color siblings — linked products in different colors */}
@@ -811,49 +950,50 @@ export function AccessoryDetail({
       {/* ================================================================
           Below-fold content
       ================================================================ */}
-      <div className="mt-12 flex flex-col gap-10">
-        {/* 1. Produktdetaljer — attributes grid */}
-        {attributeEntries.length > 0 && (
-          <section>
-            <h2 className="mb-4 font-body text-xl font-bold text-charcoal">
-              Produktdetaljer
-            </h2>
-            <div className="rounded-[16px] border border-sand bg-white overflow-hidden">
-              <dl>
-                {attributeEntries.map(([key, val], idx) => (
-                  <div
-                    key={key}
-                    className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 px-4 sm:px-6 py-3.5 ${
-                      idx % 2 === 0 ? "bg-cream/50" : "bg-white"
-                    }`}
-                  >
-                    <dt className="text-sm font-medium text-charcoal/50">
-                      {attributeLabel(key)}
-                    </dt>
-                    <dd className="text-sm font-medium text-charcoal">
-                      {key === "case_type" ? ({clear:"Gennemsigtigt",wallet:"Pungcover",book:"Bogcover",slim:"Slankt",rugged:"Forstærket",flip:"Flipcover",bumper:"Kantcover"} as Record<string,string>)[String(val).toLowerCase()] ?? String(val) : String(val)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
+      <div className="mt-14 flex flex-col gap-14 lg:mt-20 lg:gap-20">
+        {/* 1. Funktioner — second photo + full highlight list */}
+        <FeatureSection
+          highlights={featureList}
+          image={product.images[1] ?? product.images[0] ?? null}
+          title={product.title}
+          heading={isCover ? "Det kan coveret" : "Det får du"}
+        />
+
+        {/* 2. Beskrivelse + specifikationer side by side */}
+        {(product.description || specEntries.length > 0) && (
+          <section className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-16">
+            {product.description && (
+              <div>
+                <h2 className="mb-4 font-body text-xl font-semibold text-charcoal">Beskrivelse</h2>
+                <p className="max-w-[62ch] whitespace-pre-line text-base leading-relaxed text-charcoal/75">
+                  {product.description}
+                </p>
+              </div>
+            )}
+            {specEntries.length > 0 && (
+              <div>
+                <h2 className="mb-4 font-body text-xl font-semibold text-charcoal">Specifikationer</h2>
+                <dl className="divide-y divide-sand border-y border-sand">
+                  {specEntries.map(([label, value]) => (
+                    <div key={label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3">
+                      <dt className="text-sm text-gray">{label}</dt>
+                      <dd className="text-sm font-medium text-charcoal">{value}</dd>
+                    </div>
+                  ))}
+                  {compatibleDevices.length > 0 && compatibleDevices.length <= FIT_INLINE_MAX && (
+                    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3">
+                      <dt className="text-sm text-gray">Passer til</dt>
+                      <dd className="text-sm font-medium text-charcoal">{compatibleDevices.map((d) => d.name).join(", ")}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
           </section>
         )}
 
-        {/* 2. Beskrivelse */}
-        {product.description && (
-          <section>
-            <h2 className="mb-4 font-body text-xl font-bold text-charcoal">
-              Beskrivelse
-            </h2>
-            <p className="whitespace-pre-line text-base leading-relaxed text-charcoal/70 max-w-prose">
-              {product.description}
-            </p>
-          </section>
-        )}
-
-        {/* 3. Kompatibel med */}
-        <CompatibilitySection devices={compatibleDevices} />
+        {/* 3. Kompatibel med — full list only when the chips above can't show them all */}
+        {compatibleDevices.length > FIT_INLINE_MAX && <CompatibilitySection devices={compatibleDevices} />}
 
         {/* 4. Cross-sell */}
         {crossSellProducts.length > 0 && (
