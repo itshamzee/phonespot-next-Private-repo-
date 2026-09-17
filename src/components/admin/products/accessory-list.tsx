@@ -121,6 +121,21 @@ export function AccessoryList() {
     setEditing(await res.json());
   }
 
+  async function duplicate(row: Row) {
+    setBusyId(row.id);
+    try {
+      const res = await fetch(`/api/admin/products/${row.id}/duplicate`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data?.error ?? "Kopien blev ikke oprettet."); return; }
+      // Åbn kopien til redigering med det samme; den er gemt som kladde.
+      const full = await fetch(`/api/platform/sku/${data.id}`);
+      if (full.ok) setEditing(await full.json());
+      else void load();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const columns = useMemo<Column<Row>[]>(() => [
     {
       key: "product",
@@ -200,6 +215,7 @@ export function AccessoryList() {
             {r.status === "published" ? "Skjul" : "Vis"}
           </Button>
           <Button size="sm" variant="quiet" onClick={() => openEdit(r)}>Rediger</Button>
+          <Button size="sm" variant="quiet" loading={busyId === r.id} onClick={() => duplicate(r)}>Dupliker</Button>
           {publicUrl(r) && (
             <Link href={publicUrl(r)!} target="_blank" className="inline-flex h-8 items-center rounded-lg px-3 text-[13px] text-gray hover:bg-cream hover:text-charcoal">Se</Link>
           )}
