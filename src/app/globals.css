@@ -27,6 +27,11 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
+/* `clip` hides horizontal overflow like `hidden`, but without turning the element
+   into a scroll container — `hidden` here silently disabled every
+   position: sticky on the site. `hidden` stays as the fallback for browsers
+   without `clip` (Safari < 16); the @supports block below upgrades the rest.
+   (Two declarations in one rule get merged by the CSS minifier, hence @supports.) */
 html {
   overflow-x: hidden;
 }
@@ -38,6 +43,13 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 .ps-pattern-dots-green {
