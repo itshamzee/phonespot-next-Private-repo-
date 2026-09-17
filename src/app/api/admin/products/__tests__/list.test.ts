@@ -4,7 +4,8 @@ import { NextRequest } from "next/server";
 
 const s = vi.hoisted(() => ({
   calls: [] as { method: string; args: unknown[] }[],
-  rows: [{ id: "a", title: "Cover", total_stock: 2 }] as Record<string, unknown>[],
+  rows: [{ id: "a", title: "Cover", total_stock: 2, compatible_models: ["iphone-17"] }] as Record<string, unknown>[],
+  links: [{ sku_product_id: "a", product_templates: { display_name: "Apple iPhone 17 Pro" } }] as Record<string, unknown>[],
   count: 1,
   error: null as null | { message: string },
 }));
@@ -17,7 +18,9 @@ vi.mock("@/lib/supabase/admin", () => ({
       q[m] = (...args: unknown[]) => { s.calls.push({ method: m, args }); return q; };
     }
     q.range = async (...args: unknown[]) => { s.calls.push({ method: "range", args }); return { data: s.rows, error: s.error, count: s.count }; };
-    return { from: (table: string) => { s.calls.push({ method: "from", args: [table] }); return q; } };
+    // Skabelon-koblinger slås op for sidens produkter, så "Passer til" viser begge kilder
+    const links = { select: () => ({ in: async () => ({ data: s.links }) }) };
+    return { from: (table: string) => { s.calls.push({ method: "from", args: [table] }); return table === "sku_product_templates" ? links : q; } };
   },
 }));
 
@@ -30,7 +33,12 @@ const get = (qs: string) => GET(new NextRequest(`https://x/api/admin/products?${
 it("læser fra lager-viewet, filtrerer tilbehør og paginerer", async () => {
   const res = await get("type=accessory&page=2&limit=25");
   expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ items: s.rows, total: 1, page: 2, limit: 25 });
+  expect(await res.json()).toEqual({
+    items: [{ ...s.rows[0], models: ["iphone-17", "iphone-17-pro"] }],
+    total: 1,
+    page: 2,
+    limit: 25,
+  });
   expect(s.calls.find((c) => c.method === "from")?.args).toEqual(["checkout_sku_inventory"]);
   expect(s.calls).toContainEqual({ method: "eq", args: ["category", "accessory"] });
   expect(s.calls).toContainEqual({ method: "neq", args: ["subcategory", "spare-part"] });

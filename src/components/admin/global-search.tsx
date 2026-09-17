@@ -58,6 +58,7 @@ const CATEGORIES: (keyof SearchResults)[] = ["templates", "products", "devices",
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+/** Søgefeltet i topbjælken. Feltet bliver stående, mens søgevinduet er åbent, så bjælken ikke hopper. */
 export default function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -185,31 +186,29 @@ export default function GlobalSearch() {
   const hasResults = flatResults.length > 0;
   const hasQuery = query.length >= 2;
 
-  if (!open) {
-    // Render just the trigger button
-    return (
-      <button
-        type="button"
-        onClick={openSearch}
-        className="flex items-center gap-2 rounded-lg border border-black/[0.06] bg-white/60 px-3 py-1.5 text-xs text-charcoal/40 transition-all hover:bg-white hover:text-charcoal/60"
-        title="Søg (Ctrl+K)"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-        <span className="hidden sm:inline">Søg...</span>
-        <kbd className="ml-1 hidden rounded border border-black/[0.08] bg-black/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-charcoal/30 sm:inline">
-          ⌘K
-        </kbd>
-      </button>
-    );
-  }
+  const trigger = (
+    <button
+      type="button"
+      onClick={openSearch}
+      className="flex h-9 w-full max-w-[520px] items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 text-[13px] text-white/70 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      title="Søg (Ctrl+K)"
+    >
+      <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+      <span className="truncate">Søg ordre, kunde, IMEI eller produkt</span>
+      <kbd className="ml-auto hidden rounded border border-white/20 px-1.5 py-0.5 text-[11px] text-white/60 sm:inline">Ctrl K</kbd>
+    </button>
+  );
+
+  if (!open) return trigger;
 
   // Track cumulative index per category
   let cumulativeIndex = 0;
 
   return (
     <>
+      {trigger}
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"

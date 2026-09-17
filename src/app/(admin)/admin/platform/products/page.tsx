@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ProductTemplate, SkuProduct } from "@/lib/supabase/platform-types";
 import { ProductTemplateList } from "@/components/platform/product-template-list";
 import { ProductTemplateForm } from "@/components/platform/product-template-form";
@@ -24,15 +25,16 @@ export default function ProductsPage() {
   const [editTemplate, setEditTemplate] = useState<ProductTemplate | null>(null);
   const [editSku, setEditSku] = useState<SkuProduct | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const router = useRouter();
 
   function handleEditTemplate(t: ProductTemplate) {
     setEditTemplate(t);
     setView("edit");
   }
 
+  // Tilbehør oprettes og redigeres i den fælles formular under /admin/produkter.
   function handleEditSku(s: SkuProduct) {
-    setEditSku(s);
-    setView("edit");
+    router.push(`/admin/produkter/${s.id}`);
   }
 
   function handleBack() {
@@ -63,7 +65,7 @@ export default function ProductsPage() {
               Opgraderinger
             </Link>
             <button
-              onClick={() => setView("create")}
+              onClick={() => (tab === "templates" ? setView("create") : router.push("/admin/produkter/ny"))}
               className="flex items-center gap-2 rounded-xl bg-green-eco px-5 py-3 text-sm font-bold text-white shadow-md shadow-green-eco/15 transition-all hover:bg-green-light hover:shadow-lg active:scale-[0.98]"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
