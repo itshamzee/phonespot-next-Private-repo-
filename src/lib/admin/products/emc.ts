@@ -198,7 +198,10 @@ export interface DanishCopy {
 
 export function danishCopy(p: SupplierProduct): DanishCopy {
   const sub = p.guess.subcategory;
-  const noun = NOUNS[sub] ?? "";
+  const wallet = sub === "cover" && p.guess.attributes.case_type === "Wallet";
+  const detachable = wallet && /detachable/i.test(p.title);
+  // Pungcovers hedder det samme som ejerens egne: "Rixus Duo pungcover med aftageligt cover"
+  const noun = wallet ? (detachable ? "pungcover med aftageligt cover" : "pungcover") : (NOUNS[sub] ?? "");
   const models = modelsText(p);
   const color = translateList(p.specs.color, COLORS);
   const material = translateList(p.specs.material, MATERIALS);
@@ -210,6 +213,8 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     .replace(/\s+(with\s+magsafe(\s+compatible)?\s+)?(for|til)\s+(apple|samsung|google|huawei|oneplus|xiaomi|universal)\b.*$/i, "")
     .replace(/\s+with\s+magsafe(\s+compatible)?$/i, "")
     .replace(/\b(phone\s+)?(case|cover)s?\b/gi, "")
+    .replace(/\b(magnetic\s+)?detachable\s+wallet\b/gi, "")
+    .replace(/\bwallet\b/gi, "")
     // "Tempered Glass"/"Screen Protector" siges på dansk af navneordet ("beskyttelsesglas")
     .replace(/\b(tempered\s+glass|screen\s+protector|protective\s+glass|glass)\b/gi, "")
     .replace(/\s+/g, " ")
@@ -231,6 +236,14 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     else if (material) highlights.push(`Holdbar skal: ${capital(material)} beskytter mod ridser og slid i hverdagen.`);
     if (models) highlights.push(`Passer præcist: Lavet til ${models}, med udskæringer til knapper, kamera og ladestik.`);
   }
+  if (sub === "screen_protector") {
+    if (/privacy/i.test(p.title)) highlights.push("Privatliv: Skærmen kan kun ses lige forfra, ikke af sidemanden.");
+    if (/camera/i.test(p.title)) highlights.push("Beskytter kameraet: Hærdet glas over linserne mod ridser og stød.");
+    else highlights.push("Hærdet glas: Tager ridserne og slagene, så skærmen ikke gør det.");
+    if (/fit ?box/i.test(p.title)) highlights.push("Monteringsramme følger med: Rammen holder glasset lige, så det sidder rigtigt første gang.");
+    highlights.push("Montering i butikken: Køb det online, og få det sat på i vores butik i Vejle eller Slagelse.");
+    if (models) highlights.push(`Passer præcist: Skåret til ${models}.`);
+  }
 
   const shortDescription = [
     sub === "cover" ? "Cover" : capital(noun || "Tilbehør"),
@@ -246,7 +259,12 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     magsafe && sub === "cover" ? "Det virker med MagSafe, så magnetiske opladere, kortholdere og bilholdere sidder fast uden på coveret." : "",
     antiBurst ? "Hjørnerne er forstærkede og tager imod stødet, hvis telefonen bliver tabt." : "",
   ].filter(Boolean);
-  const second = sub === "cover" ? "Udskæringerne til knapper, kamera og ladestik sidder præcist, så du kan bruge og lade telefonen uden at tage coveret af." : "";
+  const second =
+    sub === "cover"
+      ? "Udskæringerne til knapper, kamera og ladestik sidder præcist, så du kan bruge og lade telefonen uden at tage coveret af."
+      : sub === "screen_protector"
+        ? "Vil du være sikker på, at det sidder lige og uden bobler, kan du få det monteret i vores butik i Vejle eller Slagelse."
+        : "";
   const description = [sentences.join(" "), second, models ? `Passer til ${models}.` : ""].filter(Boolean).join("\n\n");
 
   const attributes: Record<string, string> = {};

@@ -515,9 +515,12 @@ export function AccessoryDetail({
     category === "covers" ||
     product.category === "cover" ||
     product.subcategory === "cover";
-  const crossSellHeading = isCover
-    ? "Fuldend beskyttelsen — skærmbeskyttelse"
-    : "Fuldend beskyttelsen — cover";
+  const crossSellHeading =
+    compatibleDevices.length === 1
+      ? `Passer også til ${compatibleDevices[0].name}`
+      : compatibleDevices.length > 1
+        ? "Passer også til din model"
+        : "Andre kunder så også på";
 
   const brand = product.brand?.trim() || null;
   const caseType = product.attributes?.case_type;
@@ -865,11 +868,11 @@ export function AccessoryDetail({
                 {crossSellHeading}
               </h2>
               <span className="text-sm text-charcoal/40">
-                Passer til de samme enheder
+                {isCover ? "Beskyttelsesglas og andet tilbehør" : "Covers og andet tilbehør"}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {crossSellProducts.slice(0, 3).map((p) => (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {crossSellProducts.slice(0, 8).map((p) => (
                 <CrossSellCard key={p.id} product={p} />
               ))}
             </div>

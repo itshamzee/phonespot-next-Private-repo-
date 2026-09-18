@@ -195,46 +195,50 @@ export default async function AccessoryDetailPage({ params }: Props) {
     .flatMap(r => r.location ? [r.location.name] : []);
 
   // ----------------------------------------------------------------
-  // 3. Cross-sell products — share at least one template, different category
+  // 3. "Passer også til" — alt andet publiceret tilbehør til de samme modeller,
+  //    fundet både via compatible_models (nyt flow) og skabelon-koblinger (gammelt).
+  //    Andre kategorier først (glas til et cover, cover til et glas), så samme kategori.
   // ----------------------------------------------------------------
   let crossSellProducts: CrossSellProduct[] = [];
-
-  if (templateIds.length > 0) {
-    // Determine opposite category for cross-sell
-    const isCover =
-      category === "covers" ||
-      product.category === "cover" ||
-      product.subcategory === "cover";
-
-    const crossSellCategory = isCover ? "screen_protector" : "cover";
-
-    // Find sku_product_ids linked to the same templates
-    const { data: siblingLinks } = await supabase
-      .from("sku_product_templates")
-      .select("sku_product_id")
-      .in("template_id", templateIds)
-      .neq("sku_product_id", product.id)
-      .limit(20);
-
-    const siblingIds = [...new Set(
-      (siblingLinks ?? []).map((l: { sku_product_id: string }) => l.sku_product_id),
-    )];
-
-    if (siblingIds.length > 0) {
-      const { data: siblingProducts } = await supabase
+  {
+    const rawModels = (product as SkuProduct & { compatible_models?: unknown }).compatible_models;
+    const modelSlugs = Array.isArray(rawModels) ? rawModels.filter((m): m is string => typeof m === "string").slice(0, 4) : [];
+    const ids = new Set<string>();
+    // compatible_models er jsonb: contains pr. model (samme mønster som /api/accessories)
+    for (const slug of modelSlugs) {
+      const { data } = await supabase
+        .from("sku_products")
+        .select("id")
+        .eq("status", "published")
+        .eq("is_active", true)
+        .eq("category", "accessory")
+        .neq("id", product.id)
+        .contains("compatible_models", JSON.stringify([slug]))
+        .limit(30);
+      for (const r of data ?? []) ids.add(r.id as string);
+    }
+    if (templateIds.length > 0) {
+      const { data } = await supabase
+        .from("sku_product_templates")
+        .select("sku_product_id")
+        .in("template_id", templateIds)
+        .neq("sku_product_id", product.id)
+        .limit(40);
+      for (const r of data ?? []) ids.add(r.sku_product_id as string);
+    }
+    if (ids.size > 0) {
+      const { data } = await supabase
         .from("sku_products")
         .select("id, title, slug, selling_price, sale_price, images, category, subcategory, status")
-        .in("id", siblingIds)
+        .in("id", [...ids].slice(0, 60))
         .eq("status", "published")
-        .limit(6);
-
-      if (siblingProducts) {
-        // Prefer opposite category, then any sibling
-        const filtered = (siblingProducts as CrossSellProduct[]).filter(
-          (p) => p.subcategory === crossSellCategory,
-        );
-        crossSellProducts = (filtered.length > 0 ? filtered : siblingProducts as CrossSellProduct[]).slice(0, 3);
-      }
+        .eq("is_active", true)
+        .neq("category", "spare-part")
+        .limit(60);
+      const rows = ((data ?? []) as CrossSellProduct[]).filter((p) => p.slug && p.images?.length);
+      const other = rows.filter((p) => p.subcategory !== product.subcategory);
+      const same = rows.filter((p) => p.subcategory === product.subcategory);
+      crossSellProducts = [...other, ...same].slice(0, 8);
     }
   }
 
