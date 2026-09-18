@@ -129,6 +129,13 @@ export function listingPageUrl(listingUrl: string, page: number): string {
 }
 
 /** Vejledende europris → dansk udsalgspris: under 100 kr. rundes op til x9, ellers til 49/99. */
+/** "(10-Pack)" / "6 pcs" i leverandørens titel → antal; 1 for en enkelt vare. */
+export function packSize(supplierTitle: string): number {
+  const m = supplierTitle.match(/\b(\d+)\s*[- ]?\s*(pack|pcs|pieces|stk)\b/i);
+  const n = m ? Number(m[1]) : 1;
+  return Number.isFinite(n) && n > 1 ? n : 1;
+}
+
 export function suggestedPriceOere(advisedEur: number | null): number | null {
   if (advisedEur == null || !Number.isFinite(advisedEur) || advisedEur <= 0) return null;
   const kr = advisedEur * 7.46;
@@ -212,7 +219,7 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     `${line}${noun ? ` ${noun}` : ""}`,
     magsafe && sub === "cover" ? "med MagSafe" : "",
     models ? `til ${models}` : "",
-  ].filter(Boolean).join(" ") + (color ? `, ${color}` : "");
+  ].filter(Boolean).join(" ") + (color ? `, ${color}` : "") + (packSize(p.title) > 1 ? `, ${packSize(p.title)} stk.` : "");
 
   const highlights: string[] = [];
   if (sub === "cover") {

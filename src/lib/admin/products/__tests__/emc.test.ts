@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
-import { danishCopy, isEmcUrl, listingPageUrl, parseEmcListing, parseEmcProduct, suggestedPriceOere } from "../emc";
+import { danishCopy, isEmcUrl, listingPageUrl, packSize, parseEmcListing, parseEmcProduct, suggestedPriceOere } from "../emc";
 
 const html = readFileSync(join(__dirname, "fixtures/emc-product.html"), "utf8");
 const url = "https://euromobilecompany.com/en/accessories/cases-and-covers/rixus-snapgrip-360-case-for-apple-iphone-17-pro-18-pro-deep-purple-39171";
@@ -89,6 +89,19 @@ describe("isEmcUrl", () => {
     expect(isEmcUrl("http://euromobilecompany.com/en")).toBe(false);
     expect(isEmcUrl("https://euromobilecompany.com.evil.dk/en")).toBe(false);
     expect(isEmcUrl("ikke en url")).toBe(false);
+  });
+});
+
+describe("packSize", () => {
+  it("læser pakkestørrelse af leverandørens titel", () => {
+    expect(packSize("Rixus Clear HD Tempered Glass For Apple iPhone 17 Pro (10-Pack)")).toBe(10);
+    expect(packSize("Rixus Glass For Apple iPhone 17 Pro 6 pcs")).toBe(6);
+    expect(packSize("Rixus Glass For Apple iPhone 17 Pro")).toBe(1);
+  });
+  it("sætter antallet i den danske titel", () => {
+    const p = { ...parseEmcProduct(html, url), title: "Rixus Clear HD Tempered Glass For Apple iPhone 17 Pro, 18 Pro (10-Pack)" };
+    p.guess = { subcategory: "screen_protector", attributes: {} };
+    expect(danishCopy(p).title).toMatch(/, 10 stk.$/);
   });
 });
 

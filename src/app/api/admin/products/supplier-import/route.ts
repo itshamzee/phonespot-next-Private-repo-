@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { safeFetchPublic } from "@/lib/admin/products/safe-fetch";
 import { buildAccessoryRows, uniqueSlugs } from "@/lib/admin/products/create";
 import { planTemplateLinks } from "@/lib/admin/products/update";
-import { danishCopy, isEmcProductUrl, isEmcUrl, listingPageUrl, parseEmcListing, parseEmcProduct, suggestedPriceOere, type EmcProduct } from "@/lib/admin/products/emc";
+import { danishCopy, isEmcProductUrl, isEmcUrl, listingPageUrl, packSize, parseEmcListing, parseEmcProduct, suggestedPriceOere, type EmcProduct } from "@/lib/admin/products/emc";
 import { IMAGE_CACHE_SECONDS, optimizeProductImage } from "@/lib/images/optimize";
 
 /**
@@ -71,6 +71,8 @@ function previewOf(product: EmcProduct, existing: Awaited<ReturnType<typeof find
     imageCount: product.imageUrls.length,
     advisedPriceEur: product.advisedPriceEur,
     suggestedPrice: suggestedPriceOere(product.advisedPriceEur),
+    /** Antal i pakken; over 1 er en engrospakke, som normalt ikke skal på webshoppen. */
+    pack: packSize(product.title),
     existing,
   };
 }

@@ -27,6 +27,7 @@ interface Preview {
   imageCount: number;
   advisedPriceEur: number | null;
   suggestedPrice: number | null;
+  pack: number;
   existing: { id: string; title: string; status: string } | null;
 }
 
@@ -108,7 +109,7 @@ export function SupplierBulkImport() {
           try {
             const preview = await call<Preview>({ action: "preview", url });
             if (id !== runId.current) return;
-            patch(url, { state: "ready", preview, selected: !preview.existing && Boolean(preview.suggestedPrice), price: preview.suggestedPrice ? String(preview.suggestedPrice / 100) : "" });
+            patch(url, { state: "ready", preview, selected: !preview.existing && preview.pack <= 1 && Boolean(preview.suggestedPrice), price: preview.suggestedPrice ? String(preview.suggestedPrice / 100) : "" });
           } catch (err) {
             if (id === runId.current) patch(url, { state: "error", error: err instanceof Error ? err.message : "Kunne ikke hentes" });
           }
@@ -273,6 +274,7 @@ export function SupplierBulkImport() {
                           {[p.articleNumber, p.models.map((m) => labelBySlug.get(m) ?? m).join(", ") || "ingen model fundet", `${p.imageCount} billeder`].filter(Boolean).join(" · ")}
                         </p>
                         {p.unknownModels.length > 0 && <p className="mt-0.5 text-[12px] text-[#8A4B08]">Ukendt hos os: {p.unknownModels.join(", ")}</p>}
+                        {p.pack > 1 && <p className="mt-0.5 text-[12px] text-[#8A4B08]">Pakke med {p.pack} stk. Fravalgt, da den normalt ikke skal på webshoppen.</p>}
                       </>
                     ) : (
                       <p className="truncate text-[13px] text-gray">{item.state === "error" ? item.url : "Læser varen"}</p>
