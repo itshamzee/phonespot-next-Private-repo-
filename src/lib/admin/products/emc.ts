@@ -203,6 +203,8 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     .replace(/\s+(with\s+magsafe(\s+compatible)?\s+)?(for|til)\s+(apple|samsung|google|huawei|oneplus|xiaomi|universal)\b.*$/i, "")
     .replace(/\s+with\s+magsafe(\s+compatible)?$/i, "")
     .replace(/\b(phone\s+)?(case|cover)s?\b/gi, "")
+    // "Tempered Glass"/"Screen Protector" siges på dansk af navneordet ("beskyttelsesglas")
+    .replace(/\b(tempered\s+glass|screen\s+protector|protective\s+glass|glass)\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 

@@ -108,6 +108,12 @@ describe("danishCopy", () => {
     expect(copy.title).toBe("Rixus SnapGrip 360 cover med MagSafe til iPhone 17 Pro og 18 Pro, lilla");
   });
 
+  it("kalder glas beskyttelsesglas én gang", () => {
+    const glass = { ...parseEmcProduct(html, url), title: "Rixus Privacy Full Curved Edge Tempered Glass For Apple iPhone 18 Pro", specs: {} };
+    glass.guess = { subcategory: "screen_protector", attributes: { protector_type: "Privacy" } };
+    expect(danishCopy(glass).title).toBe("Rixus Privacy Full Curved Edge beskyttelsesglas til iPhone 17 Pro og 18 Pro");
+  });
+
   it("bygger kort tekst, salgsargumenter og attributter af fakta fra siden", () => {
     expect(copy.shortDescription).toMatch(/MagSafe/);
     expect(copy.highlights).toContain("Virker med MagSafe: Magnetiske opladere og holdere sidder fast gennem coveret.");
