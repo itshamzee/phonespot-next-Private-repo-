@@ -154,7 +154,12 @@ export async function POST(req: NextRequest) {
         attributes: { ...row.attributes, ...copy.attributes },
         product_number: product.articleNumber,
         barcode: product.articleNumber,
-        specifications: { ...(row.specifications as Record<string, unknown>), source_url: product.sourceUrl, supplier_title: product.title },
+        specifications: {
+          ...(row.specifications as Record<string, unknown>),
+          source_url: product.sourceUrl,
+          supplier_title: product.title,
+          ...(product.modelCodes.length ? { model_codes: product.modelCodes } : {}),
+        },
       })
       .select("id, title, slug")
       .single();
@@ -168,7 +173,7 @@ export async function POST(req: NextRequest) {
     if (plan.add.length) await supabase.from("sku_product_templates").insert(plan.add.map((template_id) => ({ sku_product_id: created.id, template_id })));
 
     revalidatePath("/tilbehoer", "layout");
-    return NextResponse.json({ ...created, images: images.length, price }, { status: 201 });
+    return NextResponse.json({ ...created, images, price }, { status: 201 });
   } catch (err) {
     const code = err instanceof Error ? err.message : "";
     if (code === "blocked") return NextResponse.json({ error: "Leverandørens side afviste forespørgslen. Prøv igen om lidt." }, { status: 502 });
