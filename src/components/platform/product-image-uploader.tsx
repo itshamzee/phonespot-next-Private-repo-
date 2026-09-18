@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { removeBackgroundAndUpload } from "@/lib/images/remove-background-client";
 
 interface ProductImageUploaderProps {
   images: string[];
@@ -306,28 +307,10 @@ export function ProductImageUploader({
     const url = images[index];
     if (!url) return;
     setBgError(null);
-    setBgBusy({ index, text: "Henter billede…" });
+    setBgBusy({ index, text: "Henter billede" });
     try {
-      const source = await fetch(url).then((r) => {
-        if (!r.ok) throw new Error("download");
-        return r.blob();
-      });
-      const { removeBackground } = await import("@imgly/background-removal");
-      const cut = await removeBackground(source, {
-        progress: (key, current, total) => {
-          if (key === "compute:inference") setBgBusy({ index, text: "Fjerner baggrund…" });
-          else if (key.startsWith("fetch:")) setBgBusy({ index, text: `Henter model… ${total > 0 ? Math.round((current / total) * 100) : 0}%` });
-        },
-      });
-      setBgBusy({ index, text: "Gemmer…" });
-      const name = (url.split("/").pop() ?? "billede").replace(/\.\w+$/, "") + "-fritlagt.png";
-      const formData = new FormData();
-      formData.append("file", new File([cut], name, { type: "image/png" }));
-      formData.append("folder", folder);
-      const res = await fetch("/api/platform/images/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("upload");
-      const data = await res.json();
-      onChange(images.map((img, i) => (i === index ? data.url : img)));
+      const cutUrl = await removeBackgroundAndUpload(url, folder, (text) => setBgBusy({ index, text }));
+      onChange(images.map((img, i) => (i === index ? cutUrl : img)));
     } catch (err) {
       setBgError(
         err instanceof Error && err.message === "download"

@@ -155,6 +155,8 @@ const patchSchema = z
     selling_price: z.number().int().positive().optional(),
     sale_price: z.number().int().positive().nullable().optional(),
     always_in_stock: z.boolean().optional(),
+    /** Fx et fritlagt hovedbillede sat ind i stedet for leverandørens. */
+    images: z.array(z.string().url()).max(12).optional(),
   })
   .strict();
 
@@ -170,7 +172,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     .from("sku_products")
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .select("id, status, is_active, selling_price, sale_price, always_in_stock, category")
+    .select("id, status, is_active, selling_price, sale_price, always_in_stock, category, images")
     .maybeSingle();
   if (error) return NextResponse.json({ error: "Ændringen blev ikke gemt" }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Produktet findes ikke" }, { status: 404 });

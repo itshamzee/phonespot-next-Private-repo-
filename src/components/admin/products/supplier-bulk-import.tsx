@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Field, Input, Notice, PageHeader, Tag, Textarea } from "@/components/admin/ui";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { parseKrToOere } from "./create/money";
+import { removeBackgroundAndUpload } from "@/lib/images/remove-background-client";
 
 /**
  * Importér mange varer fra leverandøren på én gang: indsæt et link til en
@@ -31,12 +32,14 @@ interface Preview {
 
 interface Item {
   url: string;
-  state: "loading" | "ready" | "error" | "creating" | "created";
+  state: "loading" | "ready" | "error" | "creating" | "cutting" | "created";
   preview?: Preview;
   error?: string;
   selected: boolean;
   price: string;
   createdId?: string;
+  /** Hvad fritlægningen er i gang med, eller hvorfor den sprang over. */
+  cutNote?: string;
 }
 
 const labelBySlug = new Map(TILBEHOER_DEVICES.map((d) => [d.slug, d.label]));
@@ -68,6 +71,7 @@ export function SupplierBulkImport() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [bulkPrice, setBulkPrice] = useState("");
+  const [cutFirst, setCutFirst] = useState(true);
   const runId = useRef(0);
 
   const patch = (url: string, change: Partial<Item>) => setItems((list) => list.map((i) => (i.url === url ? { ...i, ...change } : i)));
@@ -123,20 +127,40 @@ export function SupplierBulkImport() {
     const todo = items.filter((i) => i.selected && i.state === "ready");
     setPhase("creating");
     setError(null);
+    // Fritlægning kører i browseren og er tung, så den tager ét billede ad gangen i sin egen kø
+    const cutQueue: Promise<void>[] = [];
+    let cutChain = Promise.resolve();
+    const cut = (url: string, productId: string, images: string[]) => {
+      cutChain = cutChain.then(async () => {
+        if (id !== runId.current || !images[0]) return;
+        patch(url, { state: "cutting", cutNote: "Fritlægger" });
+        try {
+          const cutUrl = await removeBackgroundAndUpload(images[0], `sku/${productId}`, (text) => patch(url, { cutNote: text }));
+          const res = await fetch(`/api/admin/products/${productId}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ images: [cutUrl, ...images.slice(1)] }) });
+          if (!res.ok) throw new Error("save");
+          patch(url, { state: "created", cutNote: undefined });
+        } catch {
+          patch(url, { state: "created", cutNote: "Baggrunden kunne ikke fjernes. Gør det fra kladden." });
+        }
+      });
+      cutQueue.push(cutChain);
+    };
     await inBatches(
       todo,
       2,
       async (item) => {
         patch(item.url, { state: "creating" });
         try {
-          const out = await call<{ id: string }>({ action: "create", url: item.url, price: parseKrToOere(item.price) });
+          const out = await call<{ id: string; images: string[] }>({ action: "create", url: item.url, price: parseKrToOere(item.price) });
           patch(item.url, { state: "created", createdId: out.id, selected: false });
+          if (cutFirst) cut(item.url, out.id, out.images);
         } catch (err) {
           patch(item.url, { state: "error", error: err instanceof Error ? err.message : "Blev ikke oprettet", selected: false });
         }
       },
       () => id !== runId.current,
     );
+    await Promise.all(cutQueue);
     if (id === runId.current) setPhase("idle");
   }
 
@@ -144,7 +168,8 @@ export function SupplierBulkImport() {
   const selectable = ready.filter((i) => !i.preview?.existing);
   const selected = selectable.filter((i) => i.selected);
   const missingPrice = selected.filter((i) => !parseKrToOere(i.price));
-  const created = items.filter((i) => i.state === "created");
+  const created = items.filter((i) => i.state === "created" || i.state === "cutting");
+  const cutting = items.filter((i) => i.state === "cutting").length;
   const loadingCount = items.filter((i) => i.state === "loading").length;
   const busy = phase !== "idle";
 
@@ -201,7 +226,12 @@ export function SupplierBulkImport() {
                 Sæt på valgte
               </Button>
             </div>
+            <label className="flex items-center gap-2 text-[14px] text-charcoal">
+              <input type="checkbox" className="h-4 w-4 rounded border-sand accent-[#1A3D2E]" checked={cutFirst} onChange={(e) => setCutFirst(e.target.checked)} disabled={busy} />
+              Fritlæg første billede
+            </label>
             <div className="ml-auto flex items-center gap-3">
+              {phase === "creating" && cutting > 0 && <p className="text-[13px] text-gray">Fritlægger billeder</p>}
               {missingPrice.length > 0 && <p className="text-[13px] text-[#8A4B08]">{missingPrice.length} mangler pris</p>}
               <Button variant="primary" loading={phase === "creating"} disabled={busy || selected.length === 0 || missingPrice.length > 0} onClick={createSelected}>
                 {selected.length === 1 ? "Opret 1 kladde" : `Opret ${selected.length} kladder`}
@@ -248,12 +278,13 @@ export function SupplierBulkImport() {
                       <p className="truncate text-[13px] text-gray">{item.state === "error" ? item.url : "Læser varen"}</p>
                     )}
                     {item.state === "error" && <p className="mt-0.5 text-[12px] text-[#B42318]">{item.error}</p>}
+                    {item.cutNote && <p className={`mt-0.5 text-[12px] ${item.state === "cutting" ? "text-gray" : "text-[#8A4B08]"}`}>{item.cutNote}</p>}
                   </div>
                   <div className="hidden w-[84px] shrink-0 text-right text-[12px] text-gray sm:block">
                     {p?.advisedPriceEur != null ? `Vejl. €${p.advisedPriceEur.toFixed(2)}` : ""}
                   </div>
                   <div className="w-[104px] shrink-0">
-                    {item.state === "created" ? (
+                    {item.state === "created" || item.state === "cutting" ? (
                       <Link href={`/admin/produkter/${item.createdId}`} className="text-[13px] font-medium text-green-eco underline-offset-2 hover:underline">Åbn kladden</Link>
                     ) : p?.existing ? (
                       <Link href={`/admin/produkter/${p.existing.id}`} className="text-[13px] text-gray underline-offset-2 hover:underline">Findes allerede</Link>
