@@ -127,6 +127,20 @@ describe("danishCopy", () => {
     expect(danishCopy(glass).title).toBe("Rixus Privacy Full Curved Edge beskyttelsesglas til iPhone 17 Pro og 18 Pro");
   });
 
+  it("kalder et aftageligt pungcover det samme som ejerens egne", () => {
+    const duo = { ...parseEmcProduct(html, url), title: "Rixus Duo Magnetic Detachable Wallet For Apple iPhone 15 Black", specs: { color: "Black" } };
+    duo.guess = { subcategory: "cover", attributes: { case_type: "Wallet" } };
+    expect(danishCopy(duo).title).toBe("Rixus Duo pungcover med aftageligt cover til iPhone 17 Pro og 18 Pro, sort");
+  });
+
+  it("nævner montering i butikken på beskyttelsesglas", () => {
+    const glass = { ...parseEmcProduct(html, url), title: "Rixus Clear HD Tempered Glass For Apple iPhone 18 Pro", specs: {} };
+    glass.guess = { subcategory: "screen_protector", attributes: {} };
+    const copy = danishCopy(glass);
+    expect(copy.highlights.some((h) => /Vejle eller Slagelse/.test(h))).toBe(true);
+    expect(copy.description).toMatch(/monteret i vores butik/);
+  });
+
   it("bygger kort tekst, salgsargumenter og attributter af fakta fra siden", () => {
     expect(copy.shortDescription).toMatch(/MagSafe/);
     expect(copy.highlights).toContain("Virker med MagSafe: Magnetiske opladere og holdere sidder fast gennem coveret.");

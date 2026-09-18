@@ -219,10 +219,18 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   // Apple - iPads
   { slug: "ipad-pro-13", label: "iPad Pro 13\"", brand: "apple" },
   { slug: "ipad-pro-11", label: "iPad Pro 11\"", brand: "apple" },
+  { slug: "ipad-pro-12-9", label: "iPad Pro 12,9\" (2018–2022)", brand: "apple" },
+  { slug: "ipad-pro-11-2018", label: "iPad Pro 11\" (2018–2021)", brand: "apple" },
+  { slug: "ipad-air-13", label: "iPad Air 13\"", brand: "apple" },
+  { slug: "ipad-air-11", label: "iPad Air 11\"", brand: "apple" },
   { slug: "ipad-air-m2", label: "iPad Air M2", brand: "apple" },
   { slug: "ipad-air-m1", label: "iPad Air M1", brand: "apple" },
+  { slug: "ipad-air-4", label: "iPad Air 4", brand: "apple" },
+  { slug: "ipad-11", label: "iPad 11. gen", brand: "apple" },
   { slug: "ipad-10", label: "iPad 10. gen", brand: "apple" },
   { slug: "ipad-9", label: "iPad 9. gen", brand: "apple" },
+  { slug: "ipad-7-8", label: "iPad 7./8. gen", brand: "apple" },
+  { slug: "ipad-mini-7", label: "iPad Mini 7", brand: "apple" },
   { slug: "ipad-mini-6", label: "iPad Mini 6", brand: "apple" },
   // Samsung - S-serie
   { slug: "samsung-s25-ultra", label: "Galaxy S25 Ultra", brand: "samsung" },
