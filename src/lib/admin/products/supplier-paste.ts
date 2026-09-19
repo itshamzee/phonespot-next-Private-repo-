@@ -130,6 +130,13 @@ export function guessAttributes(title: string, specs: Record<string, string>): S
   } else if (/screen protector|tempered|glass|beskyttelsesglas|hærdet/.test(t) || /protector/.test(type)) {
     subcategory = "screen_protector";
     attributes.protector_type = /privacy/.test(t) ? "Privacy" : /film|hydrogel/.test(t) ? "Film" : /edge|full/.test(t) ? "Edge to Edge" : "Hærdet glas";
+  } else if (/power ?bank/.test(t)) {
+    // Før kabel/oplader: "Powerbank With Built-in USB-C Cable 22.5W" er en powerbank
+    subcategory = "powerbank";
+    const mah = t.match(/(\d{4,6})\s?mah/);
+    if (mah) attributes.capacity = mah[1];
+    const w = t.match(/(\d{2,3})\s?w\b/);
+    if (w) attributes.watt = w[1];
   } else if (/cable|kabel/.test(t)) {
     subcategory = "cable";
     if (/usb-?c.*lightning/.test(t)) attributes.connector_type = "USB-C til Lightning";
@@ -143,10 +150,6 @@ export function guessAttributes(title: string, specs: Record<string, string>): S
     attributes.charger_type = /car/.test(t) ? "Biloplader" : /wireless|magsafe/.test(t) ? (/magsafe/.test(t) ? "MagSafe" : "Trådløs") : "Vægoplader";
     const w = t.match(/(\d{2,3})\s?w\b/);
     if (w) attributes.watt = w[1];
-  } else if (/power ?bank/.test(t)) {
-    subcategory = "powerbank";
-    const mah = t.match(/(\d{4,6})\s?mah/);
-    if (mah) attributes.capacity = mah[1];
   } else if (/earbud|headphone|speaker|høretelefon|airpods|earphone/.test(t)) {
     subcategory = "audio";
   }
