@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button, Field, Input, Notice, PageHeader, Tag, Textarea } from "@/components/admin/ui";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { parseKrToOere } from "./create/money";
-import { removeBackgroundAndUpload } from "@/lib/images/remove-background-client";
+import { preloadBackgroundRemoval, removeBackgroundAndUpload } from "@/lib/images/remove-background-client";
 
 /**
  * Importér mange varer fra leverandøren på én gang: indsæt et link til en
@@ -73,6 +73,7 @@ export function SupplierBulkImport() {
   const [notice, setNotice] = useState<string | null>(null);
   const [bulkPrice, setBulkPrice] = useState("");
   const [cutFirst, setCutFirst] = useState(true);
+  const [publishNow, setPublishNow] = useState(false);
   const runId = useRef(0);
 
   const patch = (url: string, change: Partial<Item>) => setItems((list) => list.map((i) => (i.url === url ? { ...i, ...change } : i)));
@@ -85,6 +86,8 @@ export function SupplierBulkImport() {
     setNotice(null);
     setItems([]);
     setPhase("listing");
+    // Hent fritlægnings-modellen imens listen læses, så første vare ikke skal vente på den
+    if (cutFirst) void preloadBackgroundRemoval();
     try {
       const found: string[] = [];
       let truncated = false;
@@ -152,7 +155,7 @@ export function SupplierBulkImport() {
       async (item) => {
         patch(item.url, { state: "creating" });
         try {
-          const out = await call<{ id: string; images: string[] }>({ action: "create", url: item.url, price: parseKrToOere(item.price) });
+          const out = await call<{ id: string; images: string[] }>({ action: "create", url: item.url, price: parseKrToOere(item.price), status: publishNow ? "published" : "draft" });
           patch(item.url, { state: "created", createdId: out.id, selected: false });
           if (cutFirst) cut(item.url, out.id, out.images);
         } catch (err) {
@@ -231,20 +234,32 @@ export function SupplierBulkImport() {
               <input type="checkbox" className="h-4 w-4 rounded border-sand accent-[#1A3D2E]" checked={cutFirst} onChange={(e) => setCutFirst(e.target.checked)} disabled={busy} />
               Fritlæg første billede
             </label>
+            <label className="flex items-center gap-2 text-[14px] text-charcoal">
+              <input type="checkbox" className="h-4 w-4 rounded border-sand accent-[#1A3D2E]" checked={publishNow} onChange={(e) => setPublishNow(e.target.checked)} disabled={busy} />
+              Sæt på webshoppen med det samme
+            </label>
             <div className="ml-auto flex items-center gap-3">
               {phase === "creating" && cutting > 0 && <p className="text-[13px] text-gray">Fritlægger billeder</p>}
               {missingPrice.length > 0 && <p className="text-[13px] text-[#8A4B08]">{missingPrice.length} mangler pris</p>}
               <Button variant="primary" loading={phase === "creating"} disabled={busy || selected.length === 0 || missingPrice.length > 0} onClick={createSelected}>
-                {selected.length === 1 ? "Opret 1 kladde" : `Opret ${selected.length} kladder`}
+                {publishNow
+                  ? selected.length === 1 ? "Opret og sæt 1 vare på webshoppen" : `Opret og sæt ${selected.length} varer på webshoppen`
+                  : selected.length === 1 ? "Opret 1 kladde" : `Opret ${selected.length} kladder`}
               </Button>
             </div>
           </div>
 
           {created.length > 0 && phase === "idle" && (
             <div className="mt-4">
-              <Notice tone="success" title={created.length === 1 ? "1 kladde er oprettet" : `${created.length} kladder er oprettet`}>
-                De er ikke synlige på webshoppen endnu. Se dem igennem under{" "}
-                <Link href="/admin/tilbehoer" className="underline underline-offset-2">Tilbehør</Link>, og sæt dem på webshoppen, når pris og tekst er i orden.
+              <Notice tone="success" title={publishNow ? (created.length === 1 ? "1 vare er på webshoppen" : `${created.length} varer er på webshoppen`) : created.length === 1 ? "1 kladde er oprettet" : `${created.length} kladder er oprettet`}>
+                {publishNow ? (
+                  <>Kunderne kan se og købe dem nu. Ret pris eller tekst under <Link href="/admin/tilbehoer" className="underline underline-offset-2">Tilbehør</Link>.</>
+                ) : (
+                  <>
+                    De er ikke synlige på webshoppen endnu. Se dem igennem under{" "}
+                    <Link href="/admin/tilbehoer" className="underline underline-offset-2">Tilbehør</Link>, og sæt dem på webshoppen, når pris og tekst er i orden.
+                  </>
+                )}
               </Notice>
             </div>
           )}
@@ -287,7 +302,7 @@ export function SupplierBulkImport() {
                   </div>
                   <div className="w-[104px] shrink-0">
                     {item.state === "created" || item.state === "cutting" ? (
-                      <Link href={`/admin/produkter/${item.createdId}`} className="text-[13px] font-medium text-green-eco underline-offset-2 hover:underline">Åbn kladden</Link>
+                      <Link href={`/admin/produkter/${item.createdId}`} className="text-[13px] font-medium text-green-eco underline-offset-2 hover:underline">{publishNow ? "Åbn varen" : "Åbn kladden"}</Link>
                     ) : p?.existing ? (
                       <Link href={`/admin/produkter/${p.existing.id}`} className="text-[13px] text-gray underline-offset-2 hover:underline">Findes allerede</Link>
                     ) : item.state === "creating" ? (

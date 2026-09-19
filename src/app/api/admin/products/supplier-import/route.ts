@@ -14,7 +14,7 @@ import { IMAGE_CACHE_SECONDS, optimizeProductImage } from "@/lib/images/optimize
  *
  *   { action: "list",    url }          → produktlinks fra en kategori-/filterside (eller ét produktlink)
  *   { action: "preview", url }          → det vi kan læse af én produktside + dansk tekst og prisforslag
- *   { action: "create",  url, price? }  → opretter kladden med billeder, modeller og tekst
+ *   { action: "create",  url, price?, status? } → opretter varen (kladde, eller direkte på webshoppen) med billeder, modeller og tekst
  *
  * Klienten kalder preview/create én vare ad gangen, så hvert kald er kort og
  * leverandørens side ikke får mange samtidige forespørgsler. Bag middleware.
@@ -31,7 +31,13 @@ const BROWSER_HEADERS = {
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("list"), url: z.string().url() }),
   z.object({ action: z.literal("preview"), url: z.string().url() }),
-  z.object({ action: z.literal("create"), url: z.string().url(), price: z.number().int().positive().nullable().optional() }),
+  z.object({
+    action: z.literal("create"),
+    url: z.string().url(),
+    price: z.number().int().positive().nullable().optional(),
+    /** "published" sætter varen på webshoppen med det samme; ellers kladde. */
+    status: z.enum(["published", "draft"]).optional(),
+  }),
 ]);
 
 async function fetchPage(url: string): Promise<string> {
@@ -125,7 +131,7 @@ export async function POST(req: NextRequest) {
       highlights: copy.highlights,
       attributes: product.guess.attributes,
       alwaysInStock: true,
-      status: "draft",
+      status: input.status ?? "draft",
     });
 
     // Billeder hentes hjem, gøres små og lægges i vores eget lager
