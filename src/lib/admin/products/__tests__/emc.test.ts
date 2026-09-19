@@ -141,6 +141,14 @@ describe("danishCopy", () => {
     expect(copy.description).toMatch(/monteret i vores butik/);
   });
 
+  it("gentager ikke navneordet og tager varenummer og engelsk farve ud", () => {
+    const pb = { ...parseEmcProduct(html, url), title: "Rixus RXPB13B Mini Click-On 3 in 1 Powerbank 4500mAh Black", specs: { color: "Black" }, modelSlugs: [], modelLabels: [] };
+    pb.guess = { subcategory: "powerbank", attributes: {} };
+    const copy = danishCopy(pb);
+    expect(copy.title).toBe("Rixus Mini Click-On 3 in 1 Powerbank 4500mAh, sort");
+    expect(copy.highlights[0]).toMatch(/^4\.500 mAh:/);
+  });
+
   it("bygger kort tekst, salgsargumenter og attributter af fakta fra siden", () => {
     expect(copy.shortDescription).toMatch(/MagSafe/);
     expect(copy.highlights).toContain("Virker med MagSafe: Magnetiske opladere og holdere sidder fast gennem coveret.");

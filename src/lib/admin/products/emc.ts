@@ -217,16 +217,39 @@ export function danishCopy(p: SupplierProduct): DanishCopy {
     .replace(/\bwallet\b/gi, "")
     // "Tempered Glass"/"Screen Protector" siges på dansk af navneordet ("beskyttelsesglas")
     .replace(/\b(tempered\s+glass|screen\s+protector|protective\s+glass|glass)\b/gi, "")
+    // Varenummeret står i sit eget felt; "RXPB13B" hører ikke til i et produktnavn
+    .replace(/\b[A-Z]{2,4}\d{2,5}[A-Z]?\b/g, "")
+    // "Power Bank" skrives i ét ord, så navneordet ikke bliver gentaget nedenfor
+    .replace(/\bpower\s+bank\b/gi, "Powerbank")
+    // Farven sættes på dansk til sidst, så den engelske hale skal væk ("… Rose Gold")
+    .replace(new RegExp(`(\\s+(dark|light|deep|rose|space)?\\s*(${Object.keys(COLORS).join("|")}))+$`, "i"), "")
     .replace(/\s+/g, " ")
     .trim();
 
+  // Står navneordet allerede i navnet ("… Powerbank 5000mAh"), gentages det ikke
+  const needsNoun = Boolean(noun) && !new RegExp(`\\b${noun.split(" ")[0]}\\b`, "i").test(line);
+
   const title = [
-    `${line}${noun ? ` ${noun}` : ""}`,
+    `${line}${needsNoun ? ` ${noun}` : ""}`,
     magsafe && sub === "cover" ? "med MagSafe" : "",
     models ? `til ${models}` : "",
   ].filter(Boolean).join(" ") + (color ? `, ${color}` : "") + (packSize(p.title) > 1 ? `, ${packSize(p.title)} stk.` : "");
 
+  // Tal og funktioner, leverandøren skriver ind i navnet på strøm- og lydtilbehør
+  const mah = p.title.match(/(\d{4,6})\s?mah/i)?.[1];
+  const watt = p.title.match(/(\d{2,3})\s?w\b/i)?.[1];
+  const builtInCable = /built[- ]?in\s+(usb-?c\s+)?cable|with\s+built-in/i.test(p.title);
+  const display = /display|tft|screen/i.test(p.title);
+
   const highlights: string[] = [];
+  if (["powerbank", "charger", "cable", "audio", "other"].includes(sub)) {
+    if (mah) highlights.push(`${Number(mah).toLocaleString("da-DK")} mAh: Strøm til omkring ${Math.max(1, Math.round(Number(mah) / 3500))} fuld opladning${Math.round(Number(mah) / 3500) > 1 ? "er" : ""} af en iPhone.`);
+    if (watt) highlights.push(`${watt} W: Hurtig opladning, så telefonen er langt oppe på en halv time.`);
+    if (builtInCable) highlights.push("Kablet sidder i: Du skal ikke huske et kabel ved siden af.");
+    if (magsafe) highlights.push("Magnetisk: Klikker fast bag på telefonen og oplader trådløst.");
+    if (display) highlights.push("Display: Viser hvor meget strøm der er tilbage.");
+    if (material) highlights.push(`Materiale: ${capital(material)}.`);
+  }
   if (sub === "cover") {
     if (magsafe) highlights.push("Virker med MagSafe: Magnetiske opladere og holdere sidder fast gennem coveret.");
     if (antiBurst) highlights.push("Forstærkede hjørner: Hjørnerne tager imod stødet, når telefonen bliver tabt.");
