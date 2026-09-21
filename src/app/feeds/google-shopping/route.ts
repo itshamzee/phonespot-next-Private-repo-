@@ -148,42 +148,65 @@ function buildAccessoryItem(product: SkuProduct): string | null {
   return lines.join("\n");
 }
 
-interface DeviceWithTemplate extends Device {
+/** Google vil have varen i den rigtige hylde; alt lå før under mobiltelefoner. */
+const DEVICE_GOOGLE_CATEGORY: Record<string, string> = {
+  iphone: "Electronics > Communications > Telephony > Mobile Phones",
+  smartphone: "Electronics > Communications > Telephony > Mobile Phones",
+  ipad: "Electronics > Computers > Tablet Computers",
+  tablet: "Electronics > Computers > Tablet Computers",
+  laptop: "Electronics > Computers > Laptops",
+  smartwatch: "Electronics > Electronics Accessories > Wearable Technology > Smartwatches",
+};
+
+/**
+ * Én vare pr. model og stand — ikke pr. fysisk eksemplar. To eksemplarer af
+ * samme model deler landingsside, og Google afviser varer med ens links.
+ * Prisen er den laveste i gruppen, så feedet matcher "fra"-prisen på siden.
+ */
+interface DeviceGroup {
   template: ProductTemplate;
+  grade: string;
+  minPrice: number;
+  count: number;
+  photos: string[];
 }
 
-function buildDeviceItem(device: DeviceWithTemplate): string | null {
-  const template = device.template;
-
-  // Require a selling price
-  if (!device.selling_price) return null;
-
-  // Require at least one image (prefer device photos, fall back to template images)
-  const images =
-    device.photos && device.photos.length > 0
-      ? device.photos
-      : template.images ?? [];
-  if (images.length === 0) return null;
-
-  // Determine URL path from template category
-  const categoryLower = template.category?.toLowerCase() ?? "";
-  let urlBase = "smartphones";
-  for (const [key, path] of Object.entries(DEVICE_CATEGORY_MAP)) {
-    if (categoryLower.includes(key)) {
-      urlBase = path;
-      break;
+function groupDevices(devices: Device[], templates: Map<string, ProductTemplate>): DeviceGroup[] {
+  const groups = new Map<string, DeviceGroup>();
+  for (const device of devices) {
+    const template = templates.get(device.template_id);
+    if (!template || !device.selling_price) continue;
+    const key = `${template.id}-${device.grade}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count += 1;
+      if (device.selling_price < existing.minPrice) existing.minPrice = device.selling_price;
+      if (!existing.photos.length && device.photos?.length) existing.photos = device.photos;
+    } else {
+      groups.set(key, { template, grade: device.grade as string, minPrice: device.selling_price, count: 1, photos: device.photos ?? [] });
     }
   }
+  return [...groups.values()];
+}
 
-  const gradeLabel = isNewGrade(device.grade) ? "Fabriksny" : `Grade ${device.grade}`;
-  const storagePart = device.storage ? ` ${device.storage}` : "";
-  const rawTitle = `${template.display_name}${storagePart} - ${gradeLabel}`;
+function buildDeviceItem(group: DeviceGroup): string | null {
+  const { template } = group;
+
+  // Require at least one image (prefer device photos, fall back to template images)
+  const images = group.photos.length > 0 ? group.photos : template.images ?? [];
+  if (images.length === 0) return null;
+  if (!template.slug) return null;
+
+  const categoryLower = template.category?.toLowerCase() ?? "";
+
+  const gradeLabel = isNewGrade(group.grade) ? "Fabriksny" : `Grade ${group.grade}`;
+  const rawTitle = `${template.display_name} - ${gradeLabel}`;
   const title = escapeXml(rawTitle);
 
   const rawDescription =
     template.short_description ??
     template.description ??
-    (isNewGrade(device.grade)
+    (isNewGrade(group.grade)
       ? `${rawTitle} — fabriksny, forseglet original emballage, hos PhoneSpot.dk`
       : `${rawTitle} — Refurbished hos PhoneSpot.dk`);
   const description = escapeXml(rawDescription);
@@ -193,16 +216,17 @@ function buildDeviceItem(device: DeviceWithTemplate): string | null {
 
   const lines: string[] = [
     "    <item>",
-    `      <g:id>${escapeXml(device.id)}</g:id>`,
+    `      <g:id>${escapeXml(`${template.id}-${group.grade}`)}</g:id>`,
+    `      <g:item_group_id>${escapeXml(template.id)}</g:item_group_id>`,
     `      <g:title>${title}</g:title>`,
     `      <g:description>${description}</g:description>`,
     `      <g:link>${productUrl}</g:link>`,
     `      <g:image_link>${escapeXml(imageUrl)}</g:image_link>`,
-    `      <g:condition>${merchantCondition(device.grade)}</g:condition>`,
+    `      <g:condition>${merchantCondition(group.grade)}</g:condition>`,
     `      <g:availability>in_stock</g:availability>`,
-    `      <g:price>${formatPrice(device.selling_price)}</g:price>`,
+    `      <g:price>${formatPrice(group.minPrice)}</g:price>`,
     `      <g:brand>${escapeXml(template.brand)}</g:brand>`,
-    `      <g:google_product_category>Electronics &gt; Communications &gt; Telephony &gt; Mobile Phones</g:google_product_category>`,
+    `      <g:google_product_category>${escapeXml(DEVICE_GOOGLE_CATEGORY[template.category?.toLowerCase() ?? ""] ?? "Electronics")}</g:google_product_category>`,
     `      <g:shipping>`,
     `        <g:country>DK</g:country>`,
     `        <g:price>0.00 DKK</g:price>`,
@@ -255,7 +279,7 @@ export async function GET() {
     ...new Set((devices ?? []).map((d) => d.template_id)),
   ];
 
-  let templateMap = new Map<string, ProductTemplate>();
+  const templateMap = new Map<string, ProductTemplate>();
   if (templateIds.length > 0) {
     const { data: templates } = await supabase
       .from("product_templates")
@@ -275,15 +299,10 @@ export async function GET() {
     if (item) accessoryItems.push(item);
   }
 
-  // Build device items
+  // Build device items — grupperet pr. model og stand
   const deviceItems: string[] = [];
-  for (const device of devices ?? []) {
-    const template = templateMap.get(device.template_id);
-    if (!template) continue;
-    const item = buildDeviceItem({
-      ...(device as unknown as Device),
-      template,
-    });
+  for (const group of groupDevices((devices ?? []) as unknown as Device[], templateMap)) {
+    const item = buildDeviceItem(group);
     if (item) deviceItems.push(item);
   }
 
