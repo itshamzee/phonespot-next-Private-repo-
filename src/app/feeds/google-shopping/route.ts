@@ -53,14 +53,6 @@ const ACCESSORY_CATEGORY_MAP: Record<string, CategoryMapping> = {
   },
 };
 
-const DEVICE_CATEGORY_MAP: Record<string, string> = {
-  iphone: "iphones",
-  smartphone: "smartphones",
-  tablet: "ipads",
-  laptop: "baerbare",
-  smartwatch: "smartwatches",
-};
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -197,7 +189,6 @@ function buildDeviceItem(group: DeviceGroup): string | null {
   if (images.length === 0) return null;
   if (!template.slug) return null;
 
-  const categoryLower = template.category?.toLowerCase() ?? "";
 
   const gradeLabel = isNewGrade(group.grade) ? "Fabriksny" : `Grade ${group.grade}`;
   const rawTitle = `${template.display_name} - ${gradeLabel}`;
