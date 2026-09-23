@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PublicAccessory, AccessoryStockRow } from "@/lib/product/public-accessory";
+import type { PublicAccessory } from "@/lib/product/public-accessory";
 import { SLUG_TO_ACCESSORY_CATEGORIES, ACCESSORY_CATEGORY_TO_SLUG, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { accessoryModelLabels, accessoryModelSlug, accessorySpotKind } from "@/lib/product/accessory-models";
 
@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
   // Query sku_products with category='accessory', excluding spare-parts
   let query = supabase
-    .from("sku_products")
-    .select("id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active")
+    .from("checkout_sku_inventory")
+    .select("id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active, store_stock, online_stock")
     .eq("status", "published")
     .eq("is_active", true)
     .eq("category", "accessory")
@@ -48,16 +48,7 @@ export async function GET(req: NextRequest) {
   if (caseType) query = query.eq("attributes->>case_type", caseType);
   if (protectorType) query = query.eq("attributes->>protector_type", protectorType);
 
-  let storeStock: AccessoryStockRow[] | null = null;
-  if (inStore) {
-    const { data, error } = await supabase.from("sku_stock")
-      .select("product_id, quantity, location:locations(type)").gt("quantity", 0);
-    if (error || !data) return NextResponse.json({ error: "Lagerstatus kunne ikke hentes" }, { status: 503 });
-    storeStock = data as unknown as AccessoryStockRow[];
-    const ids = [...new Set(storeStock.filter(s => s.quantity > 0 && s.location?.type === "store").map(s => s.product_id))];
-    if (!ids.length) return NextResponse.json([]);
-    query = query.in("id", ids);
-  }
+  if (inStore) query = query.gt("store_stock", 0);
 
   // Both compatibility sources are used: template links and model-specific SKUs.
   if (model) {
@@ -74,7 +65,10 @@ export async function GET(req: NextRequest) {
     const { data: compatible, error: compatibilityError } = await supabase
       .from("sku_products").select("id")
       .eq("status", "published").eq("is_active", true)
-      .contains("compatible_models", [modelSlug]);
+      // compatible_models er jsonb. Et JS-array serialiseres af supabase-js som
+      // Postgres-array-literal ({a,b}), som PostgREST afviser som ugyldig JSON.
+      // Send derfor JSON-teksten selv.
+      .contains("compatible_models", JSON.stringify([modelSlug]));
     if (templateError || compatibilityError) return NextResponse.json({ error: "Modeloplysninger kunne ikke hentes" }, { status: 503 });
     const ids = new Set<string>((compatible ?? []).map(p => p.id));
 
@@ -93,21 +87,13 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query.limit(200);
 
-  if (error) {
-    return NextResponse.json({ error: "Produkter kunne ikke hentes" }, { status: 500 });
+  if (error || !data) {
+    return NextResponse.json({ error: "Produkter kunne ikke hentes" }, { status: 503 });
   }
 
-  const productIds = (data ?? []).map(p => p.id);
-  const stockResult = storeStock !== null ? { data: storeStock, error: null }
-    : productIds.length ? await supabase.from("sku_stock")
-      .select("product_id, quantity, location:locations(type)").in("product_id", productIds)
-    : { data: [], error: null };
-  const stockKnown = !stockResult.error && stockResult.data !== null;
-  const stockRows = (stockResult.data ?? []) as unknown as AccessoryStockRow[];
-  const mapped: PublicAccessory[] = (data ?? []).map(p => {
-    const rows = stockRows.filter(row => row.product_id === p.id);
-    const store = rows.filter(row => row.location?.type === "store").reduce((n, row) => n + Math.max(0, row.quantity), 0);
-    const online = rows.filter(row => row.location?.type !== "store").reduce((n, row) => n + Math.max(0, row.quantity), 0);
+  const mapped: PublicAccessory[] = data.map(p => {
+    const store = p.store_stock;
+    const online = p.online_stock;
     return {
       id: p.id, name: p.title, slug: p.slug ?? null,
       category: ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.subcategory ?? "other",
@@ -116,10 +102,10 @@ export async function GET(req: NextRequest) {
       compatible_models: accessoryModelLabels(p.compatible_models),
       spotKind: accessorySpotKind(p),
       created_at: p.created_at,
-      store_stock: stockKnown ? store : null,
-      online_stock: stockKnown ? online : null,
-      availability: stockKnown && store + online > 0 ? "in_stock" : p.always_in_stock ? "orderable" : stockKnown ? "out_of_stock" : "unknown",
+      store_stock: store,
+      online_stock: online,
+      availability: store + online > 0 ? "in_stock" : p.always_in_stock ? "orderable" : "out_of_stock",
     };
   });
-  return NextResponse.json(inStore ? mapped.filter(p => (p.store_stock ?? 0) > 0) : mapped);
+  return NextResponse.json(mapped);
 }
