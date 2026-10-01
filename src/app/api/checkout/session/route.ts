@@ -7,7 +7,7 @@ import { calcBundleDiscounts, calcDiscount, calcSubtotal } from "@/lib/cart/util
 import type { CartItem, CartDeviceItem, DiscountApplication } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
 import { createServerClient } from "@/lib/supabase/client";
-import { getShippingPrice, getShippingOption, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { getShippingPrice, getShippingOption, resolveShippingCost } from "@/lib/shipping";
 import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 
 // Prices come from lib/shipping, which is also what the checkout page renders.
@@ -111,13 +111,13 @@ export async function POST(req: NextRequest) {
 
     const discountAmount = discount ? calcDiscount(subtotal, discount) : 0;
 
-    // Determine shipping cost (free shipping threshold or free_shipping discount)
-    let shippingCost = listPrice;
-    if (discount?.type === "free_shipping") {
-      shippingCost = 0;
-    } else if (subtotal - discountAmount - bundleDiscountAmount >= FREE_SHIPPING_THRESHOLD) {
-      shippingCost = 0;
-    }
+    // Determine shipping cost (free shipping threshold or free_shipping discount).
+    // Same rule as the checkout summary — see resolveShippingCost in lib/shipping.
+    const shippingCost = resolveShippingCost({
+      method: shippingMethod,
+      subtotalAfterDiscounts: subtotal - discountAmount - bundleDiscountAmount,
+      freeShipping: discount?.type === "free_shipping",
+    });
 
     const total = Math.max(0, subtotal - discountAmount - bundleDiscountAmount + shippingCost);
 

@@ -3,6 +3,7 @@ import {
   getShippingOptions,
   getShippingOption,
   getShippingPrice,
+  resolveShippingCost,
   pickupCarrierProduct,
   FREE_SHIPPING_THRESHOLD,
 } from "@/lib/shipping";
@@ -63,6 +64,38 @@ describe("pricing an order", () => {
     // The Google and PriceRunner feeds promise free shipping without
     // qualification; every phone clears this threshold.
     expect(FREE_SHIPPING_THRESHOLD).toBe(50000);
+  });
+});
+
+describe("the final shipping price (summary == Stripe)", () => {
+  it("shows no fee until a method is chosen", () => {
+    expect(resolveShippingCost({ method: null, subtotalAfterDiscounts: 10000 })).toBe(0);
+    expect(resolveShippingCost({ method: undefined, subtotalAfterDiscounts: 10000 })).toBe(0);
+  });
+
+  it("keeps the parcel shop free regardless of order size", () => {
+    expect(resolveShippingCost({ method: "pakkeshop", subtotalAfterDiscounts: 10000 })).toBe(0);
+    expect(resolveShippingCost({ method: "pakkeshop", subtotalAfterDiscounts: 90000 })).toBe(0);
+  });
+
+  it("charges 39 kr for door delivery under the threshold", () => {
+    expect(resolveShippingCost({ method: "postnord", subtotalAfterDiscounts: 49999 })).toBe(3900);
+  });
+
+  it("makes door delivery free at or over the threshold", () => {
+    expect(resolveShippingCost({ method: "postnord", subtotalAfterDiscounts: FREE_SHIPPING_THRESHOLD })).toBe(0);
+    expect(resolveShippingCost({ method: "postnord", subtotalAfterDiscounts: 60000 })).toBe(0);
+  });
+
+  it("is free with a free_shipping discount even under the threshold", () => {
+    expect(
+      resolveShippingCost({ method: "postnord", subtotalAfterDiscounts: 10000, freeShipping: true }),
+    ).toBe(0);
+  });
+
+  it("treats store pickup as free", () => {
+    expect(resolveShippingCost({ method: "pickup_slagelse", subtotalAfterDiscounts: 10000 })).toBe(0);
+    expect(resolveShippingCost({ method: "pickup_vejle", subtotalAfterDiscounts: 10000 })).toBe(0);
   });
 });
 

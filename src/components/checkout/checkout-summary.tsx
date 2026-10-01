@@ -3,12 +3,29 @@
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal } from "@/lib/cart/utils";
+import { resolveShippingCost } from "@/lib/shipping";
 
-export function CheckoutSummary() {
+interface CheckoutSummaryProps {
+  /** The method chosen in the form, lifted via KassePage. Null until picked. */
+  shippingMethod?: string | null;
+}
+
+export function CheckoutSummary({ shippingMethod = null }: CheckoutSummaryProps) {
   const { cartState, totals } = useCart();
 
   const { items, discount } = cartState;
-  const { subtotal, discountAmount, bundleDiscountAmount, shippingCost, total } = totals;
+  const { subtotal, discountAmount, bundleDiscountAmount } = totals;
+
+  // Price shipping from the SAME method + rule the Stripe session uses, so the
+  // total shown here equals the amount charged. Before a method is picked we
+  // show "Vælg levering" rather than a flat fee that may be wrong.
+  const subtotalAfterDiscounts = subtotal - discountAmount - bundleDiscountAmount;
+  const shippingCost = resolveShippingCost({
+    method: shippingMethod,
+    subtotalAfterDiscounts,
+    freeShipping: discount?.type === "free_shipping",
+  });
+  const total = subtotalAfterDiscounts + shippingCost;
 
   return (
     <div className="rounded-2xl border border-sand bg-cream p-6 space-y-5">
@@ -121,7 +138,13 @@ export function CheckoutSummary() {
 
         <div className="flex items-center justify-between text-gray">
           <span>Fragt</span>
-          <span>{shippingCost === 0 ? "Gratis" : formatOere(shippingCost)}</span>
+          <span>
+            {!shippingMethod
+              ? "Vælg levering"
+              : shippingCost === 0
+                ? "Gratis"
+                : formatOere(shippingCost)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between border-t border-sand pt-2 text-base font-bold text-charcoal">

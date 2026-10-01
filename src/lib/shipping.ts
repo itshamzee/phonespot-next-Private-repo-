@@ -110,6 +110,30 @@ export function getShippingPrice(method: string): number | undefined {
   return SHIPPING_PRICES[method]?.price ?? CLICK_COLLECT_OPTIONS.find((o) => o.method === method)?.price;
 }
 
+/**
+ * The final shipping price the customer pays, after the free-shipping threshold
+ * (door delivery over {@link FREE_SHIPPING_THRESHOLD}) and any free_shipping
+ * discount. This is the single rule both the checkout summary and the checkout
+ * session route read, so the price shown on the page equals the price charged.
+ *
+ * `subtotalAfterDiscounts` is the cart subtotal minus code and bundle discounts
+ * — the same basis the Stripe session uses. With no method chosen yet it
+ * returns 0 (the floor), so the summary can show "vælg levering" instead of a
+ * made-up fee.
+ */
+export function resolveShippingCost(args: {
+  method: string | null | undefined;
+  subtotalAfterDiscounts: number;
+  freeShipping?: boolean;
+}): number {
+  const { method, subtotalAfterDiscounts, freeShipping } = args;
+  if (!method) return 0;
+  const listPrice = getShippingPrice(method) ?? 0;
+  if (freeShipping) return 0;
+  if (subtotalAfterDiscounts >= FREE_SHIPPING_THRESHOLD) return 0;
+  return listPrice;
+}
+
 /** The product to book once the customer has chosen a shop. */
 export function pickupCarrierProduct(carrierCode: string) {
   return carrierCode === "gls" ? CARRIER_PRODUCTS.gls_pickup : CARRIER_PRODUCTS.postnord_pickup;

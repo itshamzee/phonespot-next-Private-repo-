@@ -36,13 +36,20 @@ const EMPTY_CUSTOMER: CustomerInfo = {
   },
 };
 
-export function CheckoutForm() {
+interface CheckoutFormProps {
+  /** Lifted to KassePage so the order summary prices the chosen method. */
+  shippingMethod: string | null;
+  onShippingMethodChange: (method: string | null) => void;
+}
+
+export function CheckoutForm({
+  shippingMethod,
+  onShippingMethodChange,
+}: CheckoutFormProps) {
   const router = useRouter();
   const { cartState, applyDiscount, removeDiscount } = useCart();
 
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER);
-  const [shippingMethod, setShippingMethod] = useState<string | null>(null);
-  const [shippingCost, setShippingCost] = useState<number>(0);
   const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState<string | null>(null);
@@ -339,9 +346,8 @@ export function CheckoutForm() {
           zipcode={customer.address.postal_code}
           pickupPoint={pickupPoint}
           onPickupPoint={setPickupPoint}
-          onSelect={(method, cost) => {
-            setShippingMethod(method);
-            setShippingCost(cost);
+          onSelect={(method) => {
+            onShippingMethodChange(method);
             // A shop chosen for one carrier means nothing for another.
             setPickupPoint(null);
           }}

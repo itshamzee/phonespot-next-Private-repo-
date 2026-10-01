@@ -31,6 +31,11 @@ export default function KassePage() {
   useEffect(() => {
     setHasDevice(cartState.items.some((item) => item.type === "device"));
   }, [cartState.items]);
+
+  // Selected shipping method is lifted here so the order summary can price
+  // shipping from the SAME method the customer picked in the form — otherwise
+  // the summary shows a flat fee that doesn't match what Stripe will charge.
+  const [shippingMethod, setShippingMethod] = useState<string | null>(null);
   return (
     <div className="min-h-screen bg-warm-white">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-20">
@@ -53,12 +58,15 @@ export default function KassePage() {
         <div className="grid grid-cols-1 gap-6 sm:gap-10 lg:grid-cols-[1fr_400px]">
           {/* Left: Customer form */}
           <div>
-            <CheckoutForm />
+            <CheckoutForm
+              shippingMethod={shippingMethod}
+              onShippingMethodChange={setShippingMethod}
+            />
           </div>
 
           {/* Right: Order summary + trust elements */}
           <div className="space-y-5 lg:sticky lg:top-8 lg:self-start">
-            <CheckoutSummary />
+            <CheckoutSummary shippingMethod={shippingMethod} />
 
             {/* Klarna installments teaser */}
             <div className="rounded-2xl border border-sand bg-[#FFB3C7]/10 p-4">
@@ -141,8 +149,8 @@ export default function KassePage() {
                       <path d="M11.983 1.907a.75.75 0 0 0-1.292-.657l-8.5 9.5A.75.75 0 0 0 2.75 12h6.572l-1.305 6.093a.75.75 0 0 0 1.292.657l8.5-9.5A.75.75 0 0 0 17.25 8h-6.572l1.305-6.093Z" />
                     </svg>
                   ),
-                  title: "1-2 dages levering",
-                  sub: "Hurtig afsendelse med sporing",
+                  title: "Hurtig afsendelse",
+                  sub: "Levering typisk 2-4 hverdage med sporing",
                 },
                 {
                   icon: (
