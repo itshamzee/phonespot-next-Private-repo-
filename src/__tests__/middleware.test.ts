@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
 let cookieUser: { id: string } | null = null;
 let bearerStaff: { id: string; role: string } | null = null;
@@ -43,8 +44,49 @@ beforeEach(() => {
 });
 
 describe("middleware matcher", () => {
-  it("covers both gated prefixes and nothing else", () => {
-    expect(config.matcher).toEqual(["/api/admin/:path*", "/api/platform/:path*"]);
+  const matches = (url: string) =>
+    unstable_doesMiddlewareMatch({ config, url, nextConfig: {} });
+
+  it.each([
+    "/api/admin/orders",
+    "/api/platform/sku",
+    "/api/shipping/orders",
+    "/api/shipping/orders/abc/refund",
+    "/api/shipping/labels",
+    "/api/shipping/return-label",
+    "/api/shipping/tracking",
+    "/api/pos/terminal/connection-token",
+    "/api/sms/send",
+    "/api/intake",
+    "/api/pdf/intake-receipt/abc",
+    "/api/upload",
+    "/api/seo/audit",
+    "/api/repairs/abc/status",
+    "/api/repairs/abc/quote",
+    "/api/repairs/abc/comments",
+    "/api/contact/abc",
+    "/api/contact/abc/reply",
+    "/api/trade-in/receipts/abc",
+    "/api/trade-in/receipts/abc/pdf",
+    "/api/trade-in/abc/upload-label",
+  ])("gates staff-only route %s", (url) => {
+    expect(matches(url)).toBe(true);
+  });
+
+  it.each([
+    "/api/repairs",
+    "/api/repairs/checkout",
+    "/api/repairs/abc/public",
+    "/api/contact",
+    "/api/shipping/rates",
+    "/api/shipping/pickup-points",
+    "/api/checkout/session",
+    "/api/trade-in/accept",
+    "/api/trade-in/offer-status",
+    "/api/webhook/stripe",
+    "/llms.txt",
+  ])("leaves public route %s open", (url) => {
+    expect(matches(url)).toBe(false);
   });
 
   it("does not match the Stripe webhook", () => {

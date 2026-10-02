@@ -23,7 +23,25 @@ import { lookupStaffByAuthId, requireStaff } from "@/lib/auth/require-staff";
  */
 export const config = {
   runtime: "nodejs",
-  matcher: ["/api/admin/:path*", "/api/platform/:path*"],
+  matcher: [
+    "/api/admin/:path*",
+    "/api/platform/:path*",
+    // Personale-ruter uden for /api/admin, som lå åbne (2026-10-02): ordrer,
+    // refusion, fragtlabels, SMS, kvitteringer, sagsstatus og henvendelser.
+    // Offentlige ruter (booking, checkout, fragtpriser, pakkeshops,
+    // /api/repairs/[id]/public, /api/contact POST) er bevidst ikke med.
+    "/api/shipping/:route(orders|labels|return-label|tracking)/:path*",
+    "/api/pos/:path*",
+    "/api/sms/:path*",
+    "/api/intake/:path*",
+    "/api/pdf/:path*",
+    "/api/upload/:path*",
+    "/api/seo/:path*",
+    "/api/repairs/:id/:action(status|quote|comments)",
+    "/api/contact/:id/:path*",
+    "/api/trade-in/receipts/:id/:path*",
+    "/api/trade-in/:id/upload-label",
+  ],
 };
 
 /**
