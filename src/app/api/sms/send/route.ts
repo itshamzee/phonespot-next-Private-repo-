@@ -1,3 +1,4 @@
+import { requireTicketAccess } from "@/lib/repairs/ticket-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendSms } from "@/lib/gateway-api/client";
@@ -11,6 +12,11 @@ export async function POST(request: Request) {
       { error: "Telefon og besked er paakraevet" },
       { status: 400 },
     );
+  }
+
+  if (ticket_id) {
+    const access = await requireTicketAccess(request, String(ticket_id));
+    if (!access.ok) return access.response;
   }
 
   const supabase = createServerClient();

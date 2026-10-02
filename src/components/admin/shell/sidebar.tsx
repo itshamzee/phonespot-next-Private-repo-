@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { NAV, resolveActive, type CountKey, type NavArea } from "./nav";
+import { useStoreScope } from "./store-scope-context";
 
 export type NavCounts = Record<CountKey, number>;
 
@@ -45,6 +46,7 @@ export function Sidebar({
   onNavigate: () => void;
 }) {
   const active = resolveActive(pathname);
+  const { isOwner } = useStoreScope();
   const main = NAV.filter((a) => !a.pinned);
   const pinned = NAV.filter((a) => a.pinned);
 
@@ -69,7 +71,7 @@ export function Sidebar({
         </Link>
         {expanded && (
           <ul className="mb-1 mt-0.5 flex flex-col">
-            {area.children!.map((child) => {
+            {area.children!.filter((child) => !child.ownerOnly || isOwner).map((child) => {
               const current = active.child?.href === child.href;
               return (
                 <li key={child.href}>

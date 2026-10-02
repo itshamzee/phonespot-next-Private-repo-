@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-let mockStaff: { id: string; role: string; name: string; email: string } | null = null;
+let mockStaff: Record<string, unknown> | null = null;
 const updates: Record<string, unknown>[] = [];
 let updateResult: { data: unknown; error: unknown } = { data: { id: "t1" }, error: null };
 
@@ -30,7 +30,8 @@ vi.mock("@/lib/supabase/client", () => ({
 import { PATCH } from "../route";
 import type { NextRequest } from "next/server";
 
-const STAFF = { id: "s1", role: "admin", name: "Test", email: "t@phonespot.dk" };
+// Ejeren: butiksafgrænsningen har sin egen testfil (src/app/api/admin/repairs/__tests__/scope.test.ts).
+const STAFF = { id: "s1", role: "owner", name: "Test", email: "t@phonespot.dk", location_id: null, location_slug: null };
 
 function call(body: unknown) {
   const req = new Request("http://localhost/api/repairs/t1", {

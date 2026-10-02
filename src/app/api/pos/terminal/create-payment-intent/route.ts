@@ -1,3 +1,4 @@
+import { STRIPE_TERMINAL_ENABLED, terminalDisabled } from "@/lib/pos/terminal-flag";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
  * Creates a PaymentIntent for in-person Terminal payments.
  */
 export async function POST(req: NextRequest) {
+  if (!STRIPE_TERMINAL_ENABLED) return terminalDisabled();
   try {
     const { amount, orderId } = await req.json();
 
@@ -35,10 +37,10 @@ export async function POST(req: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[terminal] Failed to create payment intent:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to create payment intent" },
+      { error: err instanceof Error ? err.message : "Failed to create payment intent" },
       { status: 500 },
     );
   }

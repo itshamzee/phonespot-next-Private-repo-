@@ -1,3 +1,4 @@
+import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendSms } from "@/lib/gateway-api/client";
@@ -8,6 +9,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireInquiryAccess(req, id);
+  if (!access.ok) return access.response;
   const supabase = createServerClient();
   const { body, channel, staff_name } = await req.json();
 

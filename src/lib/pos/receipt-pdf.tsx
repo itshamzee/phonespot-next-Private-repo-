@@ -118,31 +118,43 @@ const styles = StyleSheet.create({
 type ReceiptItem = {
   name: string;
   grade?: string;
-  quantity: number;
-  unitPrice: number; // øre, inkl. moms
-  lineTotal: number; // øre
+  /** True for graded devices (drives the 36-month warranty notice). */
+  isDevice?: boolean;
+  quantity: number; // negative on credit notes
+  unitPrice: number; // oere, inkl. moms
+  lineTotal: number; // oere, before discount
   vatScheme: "brugtmoms" | "regular";
 };
 
-type PosReceiptProps = {
+export type ReceiptPayment = { label: string; amount: number; reference?: string | null };
+
+export type PosReceiptProps = {
   receiptNumber: string;
   date: string;
   locationName: string;
   locationAddress: string;
+  registerName?: string;
   staffName: string;
   items: ReceiptItem[];
-  subtotal: number; // øre
-  discountAmount: number; // øre
-  total: number; // øre
-  paymentMethod: string;
+  subtotal: number; // oere
+  discountAmount: number; // oere (negative on credit notes)
+  discountReason?: string | null;
+  total: number; // oere (negative on credit notes)
+  payments: ReceiptPayment[];
+  /** Fallback label for legacy sales without payment lines. */
+  legacyPaymentLabel?: string;
   customerName?: string;
   hasBrugtmomsItems: boolean;
   hasRegularVatItems: boolean;
-  regularVatTotal?: number; // øre — total of regular VAT items
+  /** Standard 25 % VAT included in the total (stored on the order). */
+  vatTotal?: number;
+  isCreditNote?: boolean;
+  originalReceiptNumber?: string | null;
+  creditReason?: string | null;
 };
 
-function formatPrice(øre: number): string {
-  return (øre / 100).toLocaleString("da-DK", {
+function formatPrice(oere: number): string {
+  return (oere / 100).toLocaleString("da-DK", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -150,6 +162,7 @@ function formatPrice(øre: number): string {
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("da-DK", {
+    timeZone: "Europe/Copenhagen",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -158,16 +171,9 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-const PAYMENT_LABELS: Record<string, string> = {
-  card: "Kort (Dankort/Visa)",
-  cash: "Kontant",
-  mobilepay: "MobilePay",
-};
-
 export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
-  const regularVatAmount = receipt.regularVatTotal
-    ? Math.round(receipt.regularVatTotal * 0.2) // 25/125 of total = 0.2
-    : 0;
+  const credit = !!receipt.isCreditNote;
+  const vatAmount = receipt.vatTotal ?? 0;
 
   return (
     <Document>
@@ -184,15 +190,19 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
 
         {/* Receipt meta */}
         <Text style={styles.receiptNumber}>
-          Kvittering {receipt.receiptNumber}
+          {credit ? "Kreditnota" : "Kvittering"} {receipt.receiptNumber}
         </Text>
+        {credit && receipt.originalReceiptNumber ? (
+          <Text style={styles.receiptNumber}>
+            Vedr. kvittering {receipt.originalReceiptNumber}
+          </Text>
+        ) : null}
+        <Text style={styles.receiptNumber}>{formatDate(receipt.date)}</Text>
         <Text style={styles.receiptNumber}>
-          {formatDate(receipt.date)} · {receipt.staffName}
+          {receipt.registerName ? `${receipt.registerName} · ` : ""}Ekspedient: {receipt.staffName}
         </Text>
         {receipt.customerName && (
-          <Text style={styles.receiptNumber}>
-            Kunde: {receipt.customerName}
-          </Text>
+          <Text style={styles.receiptNumber}>Kunde: {receipt.customerName}</Text>
         )}
 
         <View style={styles.divider} />
@@ -205,11 +215,9 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
                 {item.name}
                 {item.grade ? ` (${item.grade})` : ""}
               </Text>
-              <Text style={styles.itemPrice}>
-                {formatPrice(item.lineTotal)}
-              </Text>
+              <Text style={styles.itemPrice}>{formatPrice(item.lineTotal)}</Text>
             </View>
-            {item.quantity > 1 && (
+            {Math.abs(item.quantity) > 1 && (
               <Text style={styles.itemDetail}>
                 {item.quantity} x {formatPrice(item.unitPrice)}
               </Text>
@@ -220,66 +228,86 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
         <View style={styles.divider} />
 
         {/* Totals */}
-        {receipt.discountAmount > 0 && (
+        {receipt.discountAmount !== 0 && (
           <>
             <View style={styles.itemRow}>
               <Text style={styles.itemName}>Subtotal</Text>
               <Text style={styles.itemPrice}>{formatPrice(receipt.subtotal)}</Text>
             </View>
             <View style={styles.itemRow}>
-              <Text style={styles.itemName}>Rabat</Text>
-              <Text style={styles.itemPrice}>-{formatPrice(receipt.discountAmount)}</Text>
+              <Text style={styles.itemName}>
+                Rabat{receipt.discountReason ? ` (${receipt.discountReason})` : ""}
+              </Text>
+              <Text style={styles.itemPrice}>{formatPrice(-receipt.discountAmount)}</Text>
             </View>
           </>
         )}
 
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total inkl. moms</Text>
+          <Text style={styles.totalLabel}>
+            {credit ? "Tilbagebetalt inkl. moms" : "Total inkl. moms"}
+          </Text>
           <Text style={styles.totalPrice}>{formatPrice(receipt.total)} DKK</Text>
         </View>
 
-        {/* VAT breakdown — ONLY for regular VAT items */}
-        {receipt.hasRegularVatItems && regularVatAmount > 0 && (
+        {/* VAT breakdown: standard VAT only (brugtmoms is never itemised). */}
+        {receipt.hasRegularVatItems && vatAmount !== 0 && (
           <View style={styles.itemRow}>
             <Text style={styles.itemDetail}>Heraf moms (25%)</Text>
-            <Text style={styles.itemDetail}>{formatPrice(regularVatAmount)} DKK</Text>
+            <Text style={styles.itemDetail}>{formatPrice(vatAmount)} DKK</Text>
           </View>
         )}
 
-        {/* Payment method */}
-        <Text style={styles.paymentMethod}>
-          Betalt med: {PAYMENT_LABELS[receipt.paymentMethod] ?? receipt.paymentMethod}
-        </Text>
+        {/* Payment lines */}
+        <View style={styles.divider} />
+        {receipt.payments.length > 0 ? (
+          <>
+            <Text style={styles.paymentMethod}>{credit ? "Udbetalt som" : "Betalt med"}</Text>
+            {receipt.payments.map((p, i) => (
+              <View key={i} style={styles.itemRow}>
+                <Text style={styles.itemName}>
+                  {p.label}
+                  {p.reference ? ` (${p.reference})` : ""}
+                </Text>
+                <Text style={styles.itemPrice}>{formatPrice(Math.abs(p.amount))}</Text>
+              </View>
+            ))}
+          </>
+        ) : (
+          <Text style={styles.paymentMethod}>
+            {credit ? "Udbetalt" : "Betalt med"}: {receipt.legacyPaymentLabel ?? "-"}
+          </Text>
+        )}
+
+        {credit && receipt.creditReason ? (
+          <Text style={styles.warrantyNotice}>Årsag: {receipt.creditReason}</Text>
+        ) : null}
 
         {/* Brugtmoms notice — required for margin scheme items */}
         {receipt.hasBrugtmomsItems && (
           <Text style={styles.brugtmomsNotice}>
-            Varer solgt efter brugtmomsordningen (momslovens §69-71).{"\n"}
+            Varer solgt efter brugtmomsordningen (momslovens §69-71).
+            {"\n"}
             Køber har ikke fradragsret for moms.
           </Text>
         )}
 
-        {/* Warranty notice — 36-month warranty applies to graded refurbished
-            devices only (they have a `grade`); accessory-only receipts get
-            the statutory reklamationsret instead. */}
-        {receipt.items.some((item) => item.grade) ? (
-          <Text style={styles.warrantyNotice}>
-            Enheder leveres med 36 måneders garanti.{"\n"}
-            Garantibevis sendes til din email.
-          </Text>
-        ) : (
-          <Text style={styles.warrantyNotice}>
-            2 års reklamationsret efter købeloven.
-          </Text>
-        )}
+        {/* Warranty notice — 36 months applies to devices only; accessory-only
+            receipts get the statutory reklamationsret. Not shown on credit notes. */}
+        {!credit &&
+          (receipt.items.some((item) => item.isDevice) ? (
+            <Text style={styles.warrantyNotice}>
+              Enheder leveres med 36 måneders garanti.
+              {"\n"}
+              Garantibevis sendes til din email.
+            </Text>
+          ) : receipt.items.some((item) => item.vatScheme === "regular" && !item.isDevice) ? (
+            <Text style={styles.warrantyNotice}>2 års reklamationsret efter købeloven.</Text>
+          ) : null)}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            PhoneSpot · phonespot.dk · hej@phonespot.dk
-          </Text>
-          <Text style={styles.footerText}>
-            Tak for dit køb!
-          </Text>
+          <Text style={styles.footerText}>PhoneSpot · phonespot.dk · hej@phonespot.dk</Text>
+          <Text style={styles.footerText}>{credit ? "Kreditnota er bogført" : "Tak for dit køb!"}</Text>
         </View>
       </Page>
     </Document>

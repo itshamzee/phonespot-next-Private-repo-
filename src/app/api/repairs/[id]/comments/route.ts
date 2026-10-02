@@ -1,11 +1,14 @@
+import { requireTicketAccess } from "@/lib/repairs/ticket-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireTicketAccess(req, id);
+  if (!access.ok) return access.response;
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("repair_comments")
@@ -23,6 +26,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireTicketAccess(req, id);
+  if (!access.ok) return access.response;
   const supabase = createServerClient();
   const { author, message, visibility } = await req.json();
 

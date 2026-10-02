@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  applyLocationScope,
+  applyStoreScope,
+  loadLocationIndex,
+  requireStaffScope,
+  unauthorizedResponse,
+} from "@/lib/auth/store-scope-server";
 
 /**
  * GET /api/admin/search?q= — den globale søgning i admin-topbjælken.
  * Søger på det personalet faktisk har i hånden: ordrenummer, kundens navn,
  * mail eller telefon, IMEI/stregkode/serienummer, produktnavn, EAN og
  * sagsnummer. Bag middleware (cookie-session), derfor service-klient.
+ *
+ * Butiksafgrænset: ordrer og reparationssager afgrænses til personalets butik
+ * (ejeren: butikken valgt i topbjælken, ellers alle). Kunder, enheder og
+ * produktkatalog er fælles på tværs af butikker.
  */
 
 export interface SearchHit {
@@ -36,22 +47,30 @@ function kr(oere: unknown): string {
 }
 
 export async function GET(req: Request) {
+  const ctx = await requireStaffScope(req);
+  if (!ctx) return unauthorizedResponse();
+  const { scope } = ctx;
   const raw = (new URL(req.url).searchParams.get("q") ?? "").trim();
   // Tegn med betydning i PostgREST-filtre fjernes, så søgeteksten ikke kan ændre forespørgslen
   const q = raw.replace(/[,()%*\\"]/g, " ").replace(/\s+/g, " ").trim();
   if (q.length < 2) return NextResponse.json(EMPTY);
 
   const supabase = createAdminClient();
+  const locations = await loadLocationIndex();
   const like = `%${q}%`;
   const digits = q.replace(/\D/g, "");
 
   const [orders, customers, repairs, devices, products, templates] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("id, order_number, status, total, customer:customers(name)")
-      .ilike("order_number", like)
-      .order("created_at", { ascending: false })
-      .limit(LIMIT),
+    applyLocationScope(
+      supabase
+        .from("orders")
+        .select("id, order_number, status, total, customer:customers(name)")
+        .ilike("order_number", like)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT),
+      scope,
+      locations,
+    ),
 
     supabase
       .from("customers")
@@ -59,12 +78,14 @@ export async function GET(req: Request) {
       .or(`name.ilike.${like},email.ilike.${like},company_name.ilike.${like}${digits.length >= 4 ? `,phone.ilike.%${digits}%` : ""}`)
       .limit(LIMIT),
 
+    applyStoreScope(
     supabase
       .from("repair_tickets")
       .select("id, ticket_number, customer_name, device_model, status")
       .or(`customer_name.ilike.${like},device_model.ilike.${like},customer_email.ilike.${like}${/^\d+$/.test(q) ? `,ticket_number.eq.${q}` : ""}`)
       .order("created_at", { ascending: false })
       .limit(LIMIT),
+    scope),
 
     supabase
       .from("devices")
@@ -86,12 +107,12 @@ export async function GET(req: Request) {
   let customerOrders: Record<string, unknown>[] = [];
   const customerIds = (customers.data ?? []).map((c) => c.id);
   if ((orders.data ?? []).length < LIMIT && customerIds.length) {
-    const { data } = await supabase
+    const { data } = await applyLocationScope(supabase
       .from("orders")
       .select("id, order_number, status, total, customer:customers(name)")
       .in("customer_id", customerIds)
       .order("created_at", { ascending: false })
-      .limit(LIMIT);
+      .limit(LIMIT), scope, locations);
     customerOrders = (data ?? []) as Record<string, unknown>[];
   }
   const orderRows = [...((orders.data ?? []) as Record<string, unknown>[]), ...customerOrders]

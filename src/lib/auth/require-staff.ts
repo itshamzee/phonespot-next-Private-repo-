@@ -1,12 +1,17 @@
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createRequestAuthClient } from "@/lib/supabase/server";
+import { deriveLocationSlug, type ScopeSlug } from "@/lib/auth/store-scope";
 
 export type StaffIdentity = {
   id: string;
   role: string;
   name: string | null;
   email: string | null;
+  /** locations.id for medarbejderens butik; null = ingen tildelt (ejeren behøver ingen). */
+  location_id: string | null;
+  /** 'vejle' | 'slagelse' | 'webshop' — udledt af location_id. */
+  location_slug: ScopeSlug | null;
 };
 
 /**
@@ -23,13 +28,54 @@ export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity
     .from("staff")
     // name and email so a route can record who did something without a second
     // query — "modtaget af hvem" is worth nothing as a bare uuid.
-    .select("id, role, name, email")
+    .select("id, role, name, email, location_id")
     .eq("auth_id", authId)
     .eq("is_active", true)
     .maybeSingle();
 
   if (error) throw new Error(`staff lookup failed: ${error.message}`);
-  return (data as StaffIdentity | null) ?? null;
+  if (!data) return null;
+
+  const row = data as {
+    id: string;
+    role: string;
+    name: string | null;
+    email: string | null;
+    location_id: string | null;
+  };
+  return {
+    id: row.id,
+    role: row.role,
+    name: row.name,
+    email: row.email,
+    location_id: row.location_id ?? null,
+    location_slug: row.location_id ? await locationSlugFor(supabase, row.location_id) : null,
+  };
+}
+
+/**
+ * Slug for en location. Prøver først med `slug`-kolonnen; findes den ikke endnu
+ * (migration 20261003100000 ikke kørt) udledes slug af type/navn, så login
+ * ikke går i stykker i overgangen.
+ */
+async function locationSlugFor(
+  supabase: ReturnType<typeof createServerClient>,
+  locationId: string,
+): Promise<ScopeSlug | null> {
+  const withSlug = await supabase
+    .from("locations")
+    .select("id, name, type, slug")
+    .eq("id", locationId)
+    .maybeSingle();
+  if (!withSlug.error) return withSlug.data ? deriveLocationSlug(withSlug.data) : null;
+
+  const legacy = await supabase
+    .from("locations")
+    .select("id, name, type")
+    .eq("id", locationId)
+    .maybeSingle();
+  if (legacy.error) throw new Error(`location lookup failed: ${legacy.error.message}`);
+  return legacy.data ? deriveLocationSlug(legacy.data) : null;
 }
 
 /** Verify an `Authorization: Bearer <supabase access token>` header. */

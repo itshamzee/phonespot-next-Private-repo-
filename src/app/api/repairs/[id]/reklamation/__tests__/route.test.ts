@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-let mockStaff: { id: string; role: string; name: string; email: string } | null = null;
+let mockStaff: Record<string, unknown> | null = null;
 const inserted: Record<string, unknown>[] = [];
 const logged: Record<string, unknown>[] = [];
 
@@ -58,7 +58,9 @@ vi.mock("@/lib/supabase/client", () => ({
 import { POST } from "../route";
 import type { NextRequest } from "next/server";
 
-const STAFF = { id: "s1", role: "admin", name: "T", email: "t@phonespot.dk" };
+const STAFF = { id: "s1", role: "owner", name: "T", email: "t@phonespot.dk", location_id: null, location_slug: null };
+const VEJLE_STAFF = { id: "s2", role: "employee", name: "V", email: "v@phonespot.dk", location_id: "L-v", location_slug: "vejle" };
+const SLAGELSE_STAFF = { id: "s3", role: "employee", name: "S", email: "s@phonespot.dk", location_id: "L-s", location_slug: "slagelse" };
 
 function call() {
   const req = new Request("http://localhost/api/repairs/x/reklamation", { method: "POST" }) as unknown as NextRequest;
@@ -106,6 +108,16 @@ describe("POST /api/repairs/[id]/reklamation", () => {
     original = { ...ORIGINAL, ticket_number: null };
     await call();
     expect(inserted[0].issue_description).toBe("Reklamation på sag aaaaaaaa: Skærmskift");
+  });
+
+  it("staff of the ticket's own store can create a reklamation, staff of another store get 404", async () => {
+    mockStaff = VEJLE_STAFF;
+    expect((await call()).status).toBe(201);
+    expect(inserted).toHaveLength(1);
+
+    mockStaff = SLAGELSE_STAFF;
+    expect((await call()).status).toBe(404);
+    expect(inserted).toHaveLength(1);
   });
 
   it("returns 404 for an unknown ticket", async () => {

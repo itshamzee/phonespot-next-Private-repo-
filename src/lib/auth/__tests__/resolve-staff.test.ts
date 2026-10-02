@@ -54,17 +54,18 @@ describe("resolveStaff", () => {
     expect(result).toEqual({ id: "s-1", auth_id: "auth-1", role: "manager" });
   });
 
-  it("auto-provisions an owner for an @phonespot.dk email", async () => {
+  it("auto-provisions only an employee (never owner) for an @phonespot.dk email", async () => {
     const { client, insertCalls } = makeSupabase({
       staffByAuthId: {},
-      insertResult: { id: "s-new", auth_id: "auth-2", role: "owner" },
+      insertResult: { id: "s-new", auth_id: "auth-2", role: "employee" },
     });
     const result = await resolveStaff(
       client as never,
       { id: "auth-2", email: "newowner@phonespot.dk" },
     );
-    expect(result?.role).toBe("owner");
+    expect(result?.role).toBe("employee");
     expect(insertCalls).toHaveLength(1);
+    expect((insertCalls[0] as { role: string }).role).toBe("employee");
   });
 
   it("auto-provisions an owner for a whitelisted email", async () => {

@@ -13,6 +13,8 @@ export interface NavChild {
   /** Ekstra sti-præfikser, der hører til dette punkt. */
   match?: string[];
   countKey?: CountKey;
+  /** Kun ejeren ser punktet (siden og API'et håndhæver det også). */
+  ownerOnly?: boolean;
 }
 
 export interface NavArea {
@@ -138,6 +140,7 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/indstillinger", label: "Skabeloner" },
       { href: "/admin/indstillinger/virksomhed", label: "Virksomhed" },
+      { href: "/admin/indstillinger/medarbejdere", label: "Medarbejdere", ownerOnly: true },
       { href: "/admin/indstillinger/profil", label: "Profil og signatur" },
       { href: "/admin/seo", label: "SEO" },
       { href: "/admin/sms-log", label: "SMS-log" },

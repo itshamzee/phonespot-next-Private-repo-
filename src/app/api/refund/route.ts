@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(`
-        id, order_number, status, total, stripe_payment_id,
+        id, order_number, type, status, total, stripe_payment_id,
         order_items ( id, item_type, device_id, quantity, unit_price, total_price )
       `)
       .eq("id", orderId)
@@ -69,6 +69,15 @@ export async function POST(request: NextRequest) {
 
     if (orderError || !order) {
       return NextResponse.json({ error: "Ordre ikke fundet" }, { status: 404 });
+    }
+
+    // POS sales are returned as credit notes (POST /api/pos/return). Mutating a
+    // finalized order is blocked by the immutability trigger and must never be attempted.
+    if (order.type === "pos" || order.type === "credit_note") {
+      return NextResponse.json(
+        { error: "Kassesalg returneres som kreditnota i kassen (Returnering)." },
+        { status: 400 }
+      );
     }
 
     if (!["confirmed", "shipped", "picked_up", "delivered"].includes(order.status)) {
@@ -119,12 +128,12 @@ export async function POST(request: NextRequest) {
       .eq("id", orderId);
 
     // Mark returned devices
-    const orderItems = (order as any).order_items ?? [];
+    const orderItems = ((order as { order_items?: Array<{ item_type: string; device_id: string | null }> }).order_items ?? []);
     const returnedDeviceIds = deviceIds && Array.isArray(deviceIds)
       ? deviceIds
       : orderItems
-          .filter((i: any) => i.item_type === "device" && i.device_id)
-          .map((i: any) => i.device_id);
+          .filter((i) => i.item_type === "device" && i.device_id)
+          .map((i) => i.device_id);
 
     if (isFullRefund && returnedDeviceIds.length > 0) {
       await supabase

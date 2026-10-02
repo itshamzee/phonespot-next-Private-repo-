@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  applyLocationScope,
+  loadLocationIndex,
+  requireStaffScope,
+  unauthorizedResponse,
+} from "@/lib/auth/store-scope-server";
 
 export async function GET(request: NextRequest) {
+  // Butiksafgrænsning: butiksmedarbejdere ser kun ordrer fra deres egen butik og aldrig rene
+  // webshop-ordrer; ejeren ser alt eller den butik der er valgt i topbjælken.
+  const ctx = await requireStaffScope(request);
+  if (!ctx) return unauthorizedResponse();
+  const { scope } = ctx;
+  const locations = await loadLocationIndex();
+
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
   const type = searchParams.get("type");
@@ -13,14 +26,18 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
 
-  let query = supabase
-    .from("orders")
-    .select(
-      "*, customer:customers(name, email, phone)",
-      { count: "exact" }
-    )
-    .order("created_at", { ascending: false })
-    .range((page - 1) * perPage, page * perPage - 1);
+  let query = applyLocationScope(
+    supabase
+      .from("orders")
+      .select(
+        "*, customer:customers(name, email, phone)",
+        { count: "exact" }
+      )
+      .order("created_at", { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1),
+    scope,
+    locations,
+  );
 
   const search = searchParams.get("search");
   if (search) {
@@ -71,7 +88,7 @@ export async function GET(request: NextRequest) {
   // Fetch counts per status for tabs
   const countStatuses = ["pending", "confirmed", "shipped", "delivered", "refunded"];
   const countPromises = countStatuses.map((s) =>
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", s)
+    applyLocationScope(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", s), scope, locations)
   );
   const countResults = await Promise.all(countPromises);
   const counts: Record<string, number> = {};

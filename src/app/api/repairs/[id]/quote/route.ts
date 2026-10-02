@@ -1,3 +1,4 @@
+import { requireTicketAccess } from "@/lib/repairs/ticket-access";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
@@ -11,6 +12,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireTicketAccess(request, id);
+  if (!access.ok) return access.response;
   const body = await request.json();
   const { price_dkk, estimated_days, notes } = body;
 

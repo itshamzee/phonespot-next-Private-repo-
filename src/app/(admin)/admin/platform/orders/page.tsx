@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrderList } from "@/components/admin/orders/order-list";
+import { staffScopeForPage } from "@/lib/auth/store-scope-page";
+import { applyLocationScope, loadLocationIndex } from "@/lib/auth/store-scope-server";
 
 const PER_PAGE = 25;
 
@@ -19,14 +21,24 @@ export default async function OrdersPage({ searchParams }: PageProps) {
 
   const supabase = createAdminClient();
 
-  let query = supabase
-    .from("orders")
-    .select(
-      "id, order_number, status, payment_status, fulfillment_status, type, total, created_at, location_id, foxway_status, customer:customers(name, email, phone)",
-      { count: "exact" },
-    )
-    .order("created_at", { ascending: false })
-    .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
+  // Butiksafgrænsning (samme regler som /api/shipping/orders). Uden gyldig personale-session
+  // er scopet "ingen": siden viser da ingenting, i stedet for hele ordretabellen.
+  const auth = await staffScopeForPage();
+  const scope = auth?.scope ?? "ingen";
+  const locations = await loadLocationIndex();
+
+  let query = applyLocationScope(
+    supabase
+      .from("orders")
+      .select(
+        "id, order_number, status, payment_status, fulfillment_status, type, total, created_at, location_id, foxway_status, customer:customers(name, email, phone)",
+        { count: "exact" },
+      )
+      .order("created_at", { ascending: false })
+      .range((page - 1) * PER_PAGE, page * PER_PAGE - 1),
+    scope,
+    locations,
+  );
 
   if (status)     query = query.eq("status", status);
   if (type)       query = query.eq("type", type);

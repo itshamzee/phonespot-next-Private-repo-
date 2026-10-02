@@ -8,6 +8,7 @@ import { Sidebar, type NavCounts } from "@/components/admin/shell/sidebar";
 import { Topbar } from "@/components/admin/shell/topbar";
 import { SaveBarProvider } from "@/components/admin/shell/save-bar";
 import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
+import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
 
 const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, inquiries: 0, buyback: 0 };
 
@@ -22,8 +23,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
 
   const pathname = usePathname();
   const supabase = createBrowserClient();
@@ -44,29 +43,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    async function loadCounts() {
-      const [orders, repairs, inquiries, buyback] = await Promise.all([
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("repair_tickets").select("id", { count: "exact", head: true }).eq("status", "modtaget"),
-        supabase.from("contact_inquiries").select("id", { count: "exact", head: true }).eq("status", "ny").neq("source", "saelg-enhed"),
-        supabase.from("contact_inquiries").select("id", { count: "exact", head: true }).eq("status", "ny").eq("source", "saelg-enhed"),
-      ]);
-      setNavCounts({
-        orders: orders.count ?? 0,
-        repairs: repairs.count ?? 0,
-        inquiries: inquiries.count ?? 0,
-        buyback: buyback.count ?? 0,
-      });
-    }
-    loadCounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -185,9 +161,58 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   /*  få områder, indhold på cream. Se components/admin/shell.          */
   /* ---------------------------------------------------------------- */
   return (
+    <StoreScopeProvider>
+      <AuthedShell email={user.email ?? null} pathname={pathname} onLogout={handleLogout}>
+        {children}
+      </AuthedShell>
+    </StoreScopeProvider>
+  );
+}
+
+/**
+ * Den indloggede ramme. Ligger inde i StoreScopeProvider, så topbjælken, menu-tal og
+ * sidens indhold alle følger butiksvalget. `key={scope}` genmonterer siden ved skift,
+ * så alle lister henter data igen for den nye butik.
+ */
+function AuthedShell({
+  email,
+  pathname,
+  onLogout,
+  children,
+}: {
+  email: string | null;
+  pathname: string;
+  onLogout: () => void;
+  children: ReactNode;
+}) {
+  const { scope, loading: scopeLoading } = useStoreScope();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
+
+  useEffect(() => {
+    // Lukker menuen når man navigerer (mobil).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSidebarOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (scopeLoading) return;
+    let cancelled = false;
+    fetch("/api/admin/nav-counts")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((counts: NavCounts | null) => {
+        if (!cancelled && counts) setNavCounts({ ...EMPTY_COUNTS, ...counts });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, scope, scopeLoading]);
+
+  return (
     <SaveBarProvider>
       <div className="flex h-dvh flex-col overflow-hidden bg-cream font-body">
-        <Topbar email={user.email ?? null} onMenu={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
+        <Topbar email={email} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
 
         <div className="relative flex min-h-0 flex-1">
           {sidebarOpen && (
@@ -195,8 +220,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           )}
           <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
-          <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-8">
-            {children}
+          <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-8">
+            {scopeLoading ? null : children}
           </main>
         </div>
 

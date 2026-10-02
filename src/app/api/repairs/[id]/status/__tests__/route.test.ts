@@ -11,6 +11,10 @@ vi.mock("resend", () => ({
   },
 }));
 vi.mock("@/lib/gateway-api/client", () => ({ sendSms: (...a: unknown[]) => sendSms(...a) }));
+// Butiksadgang er testet i src/app/api/admin/repairs/__tests__/scope.test.ts.
+vi.mock("@/lib/repairs/ticket-access", () => ({
+  requireTicketAccess: async () => ({ ok: true, staff: { id: "s1", role: "owner" }, ticketStoreId: "vejle" }),
+}));
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
     from: (table: string) => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
 import { normalizeStoreId } from "@/lib/stores";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
@@ -79,24 +79,25 @@ export default function AdminReparationerPage() {
   const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
   const [search, setSearch] = useState("");
 
-  const supabase = createBrowserClient();
+  // Serveren afgrænser listen til personalets butik (ejeren: butikken valgt i topbjælken).
+  const { scope } = useStoreScope();
 
   useEffect(() => {
     async function loadTickets() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("repair_tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        setTickets(data as RepairTicket[]);
+      try {
+        const res = await fetch("/api/admin/repairs");
+        if (res.ok) {
+          const json = await res.json();
+          setTickets((json.tickets ?? []) as RepairTicket[]);
+        }
+      } catch {
+        // tom liste vises
       }
       setLoading(false);
     }
 
     loadTickets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Status- og søgefiltre anvendes først, så butiksfanernes tal afspejler
@@ -130,7 +131,8 @@ export default function AdminReparationerPage() {
   }
 
   const filteredTickets = preFiltered.filter((ticket) =>
-    matchesStoreFilter(storeFilter, normalizeStoreId(ticketStoreRaw(ticket))),
+    // Det globale butiksvalg i topbjælken har forrang; fanerne bruges kun i ejerens samlede visning.
+    scope !== "alle" || matchesStoreFilter(storeFilter, normalizeStoreId(ticketStoreRaw(ticket))),
   );
 
   // Count per status for filter badges
@@ -222,12 +224,16 @@ export default function AdminReparationerPage() {
       </div>
 
       {/* Store filter */}
-      <StoreFilter
-        value={storeFilter}
-        onChange={setStoreFilter}
-        counts={storeCounts}
-        className="mb-6"
-      />
+      {scope === "alle" ? (
+        <StoreFilter
+          value={storeFilter}
+          onChange={setStoreFilter}
+          counts={storeCounts}
+          className="mb-6"
+        />
+      ) : (
+        <div className="mb-6" />
+      )}
 
       {/* Ticket list */}
       {loading ? (

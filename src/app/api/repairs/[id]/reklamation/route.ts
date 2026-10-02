@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
+import { canAccessStore } from "@/lib/auth/store-scope";
 
 // Ikke dækket af middleware-matcheren — personale-tjekket ligger i ruten.
 
@@ -37,7 +38,9 @@ export async function POST(
     console.error("[repairs] reklamation load failed:", id, loadError);
     return NextResponse.json({ error: "Kunne ikke hente den oprindelige sag" }, { status: 500 });
   }
-  if (!original) return NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 });
+  if (!original || !canAccessStore(staff, original.store_id)) {
+    return NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 });
+  }
 
   const label = ticketLabel(original);
   const description =

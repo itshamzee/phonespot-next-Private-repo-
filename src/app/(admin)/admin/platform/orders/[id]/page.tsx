@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrderDetail } from "@/components/admin/orders/order-detail";
+import { staffScopeForPage } from "@/lib/auth/store-scope-page";
+import { loadLocationIndex } from "@/lib/auth/store-scope-server";
+import { canAccessStore, slugForLocationId } from "@/lib/auth/store-scope";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -37,6 +40,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .single();
 
   if (error || !order) {
+    notFound();
+  }
+
+  // En ordre fra en anden butik (eller en ren webshop-ordre, hvis man er butiksmedarbejder) findes ikke for dig.
+  const auth = await staffScopeForPage();
+  const locations = await loadLocationIndex();
+  if (!auth || !canAccessStore(auth.staff, slugForLocationId(locations, order.location_id))) {
     notFound();
   }
 

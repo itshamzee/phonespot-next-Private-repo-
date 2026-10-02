@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ChecklistStatus, ChecklistItem } from "@/lib/supabase/types";
 import { Button } from "@/components/admin/ui";
 import { allNormal } from "@/lib/repairs/intake-checklist";
+import { previewSrc, rememberPreview } from "@/lib/repairs/photo-preview";
 import type { IntakeFormData } from "../page";
 
 interface Props {
@@ -35,8 +36,9 @@ export function Checklist({ formData, updateFormData }: Props) {
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (res.ok) {
-        const { url } = await res.json();
-        updateItem(index, { photo_url: url });
+        const { url, path } = await res.json();
+        rememberPreview(path ?? url, url);
+        updateItem(index, { photo_url: path ?? url });
       }
     } catch {
       // ignore
@@ -53,8 +55,9 @@ export function Checklist({ formData, updateFormData }: Props) {
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (res.ok) {
-        const { url } = await res.json();
-        updateFormData({ intakePhotos: [...formData.intakePhotos, url] });
+        const { url, path } = await res.json();
+        rememberPreview(path ?? url, url);
+        updateFormData({ intakePhotos: [...formData.intakePhotos, path ?? url] });
       }
     } catch {
       // ignore
@@ -148,7 +151,7 @@ export function Checklist({ formData, updateFormData }: Props) {
               {item.photo_url && (
                 <div className="mt-2">
                   <img
-                    src={item.photo_url}
+                    src={previewSrc(item.photo_url)}
                     alt={`Foto: ${item.label}`}
                     className="h-20 w-20 rounded-lg border border-soft-grey object-cover"
                   />
@@ -168,7 +171,7 @@ export function Checklist({ formData, updateFormData }: Props) {
           {formData.intakePhotos.map((url, i) => (
             <div key={url} className="group relative">
               <img
-                src={url}
+                src={previewSrc(url)}
                 alt={`Foto ${i + 1}`}
                 className="h-24 w-24 rounded-lg border border-soft-grey object-cover"
               />

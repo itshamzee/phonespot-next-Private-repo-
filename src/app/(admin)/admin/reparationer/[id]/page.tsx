@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@/lib/supabase/client";
 import type {
   RepairTicket,
   RepairQuote,
@@ -16,6 +15,7 @@ import {
   type PDFPreviewData,
 } from "@/components/admin/pdf-preview-modal";
 import StoreBadge from "@/components/admin/StoreBadge";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { STORE_IDS, normalizeStoreId, storeLabel } from "@/lib/stores";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { HOLD_REASONS } from "@/lib/repairs/hold";
@@ -73,6 +73,7 @@ export default function AdminTicketDetailPage({
   const [quotes, setQuotes] = useState<RepairQuote[]>([]);
   const [statusLogs, setStatusLogs] = useState<RepairStatusLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isOwner } = useStoreScope();
 
   // Quote form state
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -113,33 +114,24 @@ export default function AdminTicketDetailPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const router = useRouter();
 
-  const supabase = createBrowserClient();
-
   async function loadData() {
     setLoading(true);
 
-    const ticketRes = await supabase.from("repair_tickets").select("*").eq("id", id).single();
-    const quotesRes = await supabase
-      .from("repair_quotes")
-      .select("*")
-      .eq("ticket_id", id)
-      .order("created_at", { ascending: false });
-    const logsRes = await supabase
-      .from("repair_status_log")
-      .select("*")
-      .eq("ticket_id", id)
-      .order("created_at", { ascending: false });
-
-    const commentsRes = await supabase
-      .from("repair_comments")
-      .select("*")
-      .eq("ticket_id", id)
-      .order("created_at", { ascending: true });
-
-    if (ticketRes.data) setTicket(ticketRes.data as unknown as RepairTicket);
-    if (quotesRes.data) setQuotes(quotesRes.data as unknown as RepairQuote[]);
-    if (logsRes.data) setStatusLogs(logsRes.data as unknown as RepairStatusLog[]);
-    if (commentsRes.data) setComments(commentsRes.data as unknown as RepairComment[]);
+    // Serveren afgrænser adgangen: en sag i en anden butik svarer 404 (vises som "ikke fundet").
+    try {
+      const res = await fetch(`/api/admin/repairs/${id}`);
+      if (res.ok) {
+        const json = await res.json();
+        setTicket(json.ticket as RepairTicket);
+        setQuotes((json.quotes ?? []) as RepairQuote[]);
+        setStatusLogs((json.logs ?? []) as RepairStatusLog[]);
+        setComments((json.comments ?? []) as RepairComment[]);
+      } else {
+        setTicket(null);
+      }
+    } catch {
+      // ticket forbliver som den var
+    }
 
     setLoading(false);
   }
@@ -265,16 +257,18 @@ export default function AdminTicketDetailPage({
     if (!ticket || !noteText.trim()) return;
     setNoteSaving(true);
     setActionError(null);
-    const existingNotes = ticket.internal_notes ?? [];
-    const newNotes = [
-      ...existingNotes,
-      { text: noteText.trim(), author: "Admin", timestamp: new Date().toISOString() },
-    ];
-    const { error } = await supabase
-      .from("repair_tickets")
-      .update({ internal_notes: newNotes, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) {
+    let failed = false;
+    try {
+      const res = await fetch(`/api/admin/repairs/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: noteText.trim() }),
+      });
+      failed = !res.ok;
+    } catch {
+      failed = true;
+    }
+    if (failed) {
       setActionError("Noten blev ikke gemt. Prøv igen.");
     } else {
       setNoteText("");
@@ -454,6 +448,8 @@ export default function AdminTicketDetailPage({
 
             {/* Hastesag, hold og reklamation */}
             <div className="mb-6 flex flex-wrap gap-2">
+              {/* Kun ejeren kan flytte en sag mellem butikker; serveren afviser det for alle andre. */}
+              {isOwner && (
               <select
                 value={normalizeStoreId(ticket.store_id) ?? ""}
                 onChange={(e) => handleStoreChange(e.target.value)}
@@ -467,6 +463,7 @@ export default function AdminTicketDetailPage({
                   </option>
                 ))}
               </select>
+              )}
               <button
                 type="button"
                 onClick={handleToggleUrgent}

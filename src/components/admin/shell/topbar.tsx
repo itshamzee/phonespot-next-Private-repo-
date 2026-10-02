@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import GlobalSearch from "@/components/admin/global-search";
 import { useSaveBarState } from "./save-bar";
+import { StoreSwitcher } from "./store-switcher";
 
 export function Topbar({
   email,
@@ -82,7 +83,9 @@ export function Topbar({
         </div>
       )}
 
-      <div ref={menuRef} className={`relative ml-auto shrink-0 ${unsaved ? "hidden sm:block" : ""}`}>
+      <div className={`ml-auto flex shrink-0 items-center gap-2 ${unsaved ? "hidden sm:flex" : ""}`}>
+      <StoreSwitcher />
+      <div ref={menuRef} className="relative shrink-0">
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
@@ -107,6 +110,7 @@ export function Topbar({
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

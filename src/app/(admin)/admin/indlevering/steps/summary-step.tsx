@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { IntakeFormData } from "../page";
 import { PDFPreviewModal } from "@/components/admin/pdf-preview-modal";
-import { STORE_IDS, storeLabel } from "@/lib/stores";
+import { STORE_IDS, storeLabel, type StoreId } from "@/lib/stores";
+import { previewSrc } from "@/lib/repairs/photo-preview";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 
 interface Props {
   formData: IntakeFormData;
@@ -27,6 +29,18 @@ export function SummaryStep({
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { isOwner, scope, ownSlug } = useStoreScope();
+
+  // Butikken kommer fra scopet: medarbejdere indleverer altid i deres egen butik (ingen
+  // vælger), og ejeren har den butik der er valgt i topbjælken. Kun ejeren i "Alle"
+  // eller "Webshop" vælger selv. Serveren afgør det endelige valg alligevel.
+  const physical = (v: unknown): StoreId | null => (v === "vejle" || v === "slagelse" ? v : null);
+  const forcedStore = isOwner ? physical(scope) : physical(ownSlug);
+  const canPickStore = isOwner && !forcedStore;
+  useEffect(() => {
+    if (forcedStore && formData.storeId !== forcedStore) updateFormData({ storeId: forcedStore });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forcedStore, formData.storeId]);
   const [pdfModal, setPdfModal] = useState<{ type: "intake-receipt" | "workshop-report" } | null>(null);
 
   const allServices = [
@@ -226,7 +240,7 @@ export function SummaryStep({
             {formData.intakePhotos.map((url) => (
               <img
                 key={url}
-                src={url}
+                src={previewSrc(url)}
                 alt="Check-in foto"
                 className="h-16 w-16 rounded-lg border border-soft-grey object-cover"
               />
@@ -273,7 +287,16 @@ export function SummaryStep({
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray">
           Butik *
         </h3>
-        <div className="flex gap-2">
+        {!canPickStore && (
+          <p className="text-sm text-charcoal">
+            {forcedStore
+              ? isOwner
+                ? `${storeLabel(forcedStore)} (valgt i topbjælken)`
+                : storeLabel(forcedStore)
+              : "Din bruger er ikke knyttet til en fysisk butik. Bed ejeren tildele dig en butik under Indstillinger."}
+          </p>
+        )}
+        <div className={canPickStore ? "flex gap-2" : "hidden"}>
           {STORE_IDS.map((id) => (
             <button
               key={id}
@@ -289,7 +312,7 @@ export function SummaryStep({
             </button>
           ))}
         </div>
-        {!formData.storeId && (
+        {canPickStore && !formData.storeId && (
           <p className="mt-2 text-xs text-gray">
             Vælg hvilken butik enheden er indleveret i.
           </p>

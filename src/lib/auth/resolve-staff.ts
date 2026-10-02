@@ -14,20 +14,27 @@ export type AuthUserInfo = {
 };
 
 /**
- * Emails that always get an `owner` staff row auto-provisioned, even if the
- * domain isn't @phonespot.dk. Add aliases here; keep the list short — every
+ * Emails that always get an `owner` staff row auto-provisioned (the one and
+ * only super-admin). Add aliases here; keep the list short — every
  * entry here can access the admin panel.
  */
 export const OWNER_EMAIL_WHITELIST: readonly string[] = [
   "hamza150668@gmail.com",
 ];
 
-const OWNER_DOMAIN = "@phonespot.dk";
+const COMPANY_DOMAIN = "@phonespot.dk";
 
 function isOwnerEmail(email: string): boolean {
-  const lc = email.trim().toLowerCase();
-  if (lc.endsWith(OWNER_DOMAIN)) return true;
-  return OWNER_EMAIL_WHITELIST.includes(lc);
+  return OWNER_EMAIL_WHITELIST.includes(email.trim().toLowerCase());
+}
+
+/**
+ * Other @phonespot.dk addresses are provisioned as plain employees with NO
+ * store. Ejeren er den eneste super-admin, så domænet må ikke give 'owner';
+ * ejeren tildeler butik under Indstillinger > Medarbejdere.
+ */
+function isCompanyEmail(email: string): boolean {
+  return email.trim().toLowerCase().endsWith(COMPANY_DOMAIN);
 }
 
 /**
@@ -54,13 +61,14 @@ export async function resolveStaff(
   if (existing) return existing as StaffRow;
 
   if (!user.email) return null;
-  if (!isOwnerEmail(user.email)) return null;
+  const owner = isOwnerEmail(user.email);
+  if (!owner && !isCompanyEmail(user.email)) return null;
 
   const insertPayload = {
     auth_id: user.id,
     email: user.email,
     name: user.email.split("@")[0],
-    role: "owner",
+    role: owner ? "owner" : "employee",
     is_active: true,
   };
 

@@ -1,11 +1,14 @@
+import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const access = await requireInquiryAccess(req, id);
+  if (!access.ok) return access.response;
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("inquiry_messages")

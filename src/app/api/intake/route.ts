@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { normalizeStoreId } from "@/lib/stores";
+import { requireStaffScope, unauthorizedResponse } from "@/lib/auth/store-scope-server";
+import { storeForNewRecord } from "@/lib/auth/store-scope";
 import { storeForId } from "@/lib/store-config";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { sendSms } from "@/lib/gateway-api/client";
@@ -11,6 +12,9 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
+  const ctx = await requireStaffScope(request);
+  if (!ctx) return unauthorizedResponse();
+
   const body = await request.json();
   const {
     customer,
@@ -30,6 +34,21 @@ export async function POST(request: Request) {
 
   if (!customer?.id) {
     return NextResponse.json({ error: "Kunde mangler" }, { status: 400 });
+  }
+
+  // Butikken afgøres på serveren: medarbejdere indleverer altid i deres egen butik, uanset hvad
+  // klienten sender; ejeren bruger butikken valgt i topbjælken eller den der sendes med.
+  const storeId = storeForNewRecord(ctx.staff, ctx.scope, store_id);
+  if (!storeId) {
+    return NextResponse.json(
+      {
+        error:
+          ctx.staff.role === "owner"
+            ? "Vælg hvilken butik enheden er indleveret i."
+            : "Din bruger er ikke knyttet til en fysisk butik. Bed ejeren tildele dig en butik.",
+      },
+      { status: 400 },
+    );
   }
 
   const supabase = createServerClient();
@@ -105,7 +124,7 @@ export async function POST(request: Request) {
         status: "modtaget",
         customer_id: customer.id,
         device_id: deviceId,
-        store_id: normalizeStoreId(store_id),
+        store_id: storeId,
         services: allServices,
         internal_notes: notes,
         intake_checklist: checklist,

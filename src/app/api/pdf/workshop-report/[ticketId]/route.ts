@@ -1,3 +1,4 @@
+import { requireTicketAccess } from "@/lib/repairs/ticket-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { renderToBuffer } from "@react-pdf/renderer";
@@ -6,10 +7,12 @@ import { WorkshopReportDocument } from "@/lib/pdf/workshop-report";
 import type { ChecklistItem } from "@/lib/supabase/types";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ ticketId: string }> },
 ) {
   const { ticketId } = await params;
+  const access = await requireTicketAccess(request, ticketId);
+  if (!access.ok) return access.response;
   const supabase = createServerClient();
 
   // Fetch ticket

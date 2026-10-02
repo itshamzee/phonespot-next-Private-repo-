@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import type {
   ContactInquiry,
   InquiryStatus,
@@ -103,15 +103,18 @@ export default function AdminHenvendelserPage() {
   });
   const [newSubmitting, setNewSubmitting] = useState(false);
 
-  const supabase = createBrowserClient();
+  const { scope, ownSlug } = useStoreScope();
 
   async function loadInquiries() {
     setLoading(true);
-    const { data } = await supabase
-      .from("contact_inquiries")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setInquiries((data as ContactInquiry[]) ?? []);
+    try {
+      // Serveren afgrænser til personalets butik (ejeren: butikken valgt i topbjælken).
+      const res = await fetch("/api/admin/inquiries");
+      const json = res.ok ? await res.json() : { inquiries: [] };
+      setInquiries((json.inquiries as ContactInquiry[]) ?? []);
+    } catch {
+      setInquiries([]);
+    }
     setLoading(false);
     await loadDrafts();
   }
@@ -202,7 +205,7 @@ export default function AdminHenvendelserPage() {
 
   const filtered = preFiltered.filter(
     (inq) =>
-      matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(inq))) &&
+      (scope !== "alle" || matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(inq)))) &&
       (!needsHumanOnly || inquiryNeedsHuman(inq.id)),
   );
 
@@ -317,6 +320,8 @@ export default function AdminHenvendelserPage() {
         body: JSON.stringify({
           ...newForm,
           source: "manuel",
+          // En manuelt oprettet henvendelse får oprettets butik, ellers kan oprettet ikke selv se den.
+          store_id: scope === "vejle" || scope === "slagelse" ? scope : ownSlug === "vejle" || ownSlug === "slagelse" ? ownSlug : null,
         }),
       });
       if (res.ok) {
@@ -445,12 +450,16 @@ export default function AdminHenvendelserPage() {
       </div>
 
       {/* Store filter */}
-      <StoreFilter
-        value={storeFilter}
-        onChange={setStoreFilter}
-        counts={storeCounts}
-        className="mb-6"
-      />
+      {scope === "alle" ? (
+        <StoreFilter
+          value={storeFilter}
+          onChange={setStoreFilter}
+          counts={storeCounts}
+          className="mb-6"
+        />
+      ) : (
+        <div className="mb-6" />
+      )}
 
       {/* List */}
       {loading ? (

@@ -31,12 +31,7 @@ import {
 import { Notice } from "@/components/admin/ui";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
-import { normalizeStoreId } from "@/lib/stores";
 import StoreBadge from "@/components/admin/StoreBadge";
-import StoreFilter, {
-  matchesStoreFilter,
-  type StoreFilterValue,
-} from "@/components/admin/StoreFilter";
 import BuybackFeed from "@/components/admin/BuybackFeed";
 import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
 import BuybackPauseBanner from "@/components/admin/buyback/BuybackPauseBanner";
@@ -167,7 +162,8 @@ function OpkoebOverview() {
   const [loadError, setLoadError] = useState(false);
   const [folder, setFolder] = useState<"aktive" | "afviste">(initialUrl.folder);
   const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">(initialUrl.filter);
-  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>(initialUrl.store);
+  // Butikken styres af det globale valg i topbjælken (serveren afgrænser listen, og siden genindlæses
+  // ved skift); der er ikke længere et lokalt butiksfilter.
   const [search, setSearch] = useState(initialUrl.search);
   // 112 rows in one scroll is not a list, it is a wall. Show a screenful.
   const [visible, setVisible] = useState(30);
@@ -202,11 +198,6 @@ function OpkoebOverview() {
     setShowAllDone(false);
   }, []);
 
-  const selectStore = useCallback((next: StoreFilterValue) => {
-    setStoreFilter(next);
-    setVisible(30);
-  }, []);
-
   const changeSearch = useCallback((next: string) => {
     setSearch(next);
     setVisible(30);
@@ -215,21 +206,27 @@ function OpkoebOverview() {
   // Folder, stage filter, store and search live in the URL, so a reload or a
   // shared link lands on the same view.
   useEffect(() => {
-    const qs = buildOverviewQuery({ folder, filter, store: storeFilter, search });
+    const qs = buildOverviewQuery({ folder, filter, store: "alle", search });
     if (qs === searchParams.toString()) return;
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [folder, filter, storeFilter, search, pathname, router, searchParams]);
+  }, [folder, filter, search, pathname, router, searchParams]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
 
     const supabase = createBrowserClient();
 
-    const { data: inquiries, error: inquiriesError } = await supabase
-      .from("contact_inquiries")
-      .select("*")
-      .eq("source", "saelg-enhed")
-      .order("created_at", { ascending: false });
+    // Sagerne hentes via serveren, som afgrænser dem til personalets butik (ejeren: butikken
+    // valgt i topbjælken). Tilbud, kvitteringer m.m. hentes kun for netop de sager.
+    let inquiries: ContactInquiry[] | null = null;
+    let inquiriesError = false;
+    try {
+      const res = await fetch("/api/admin/inquiries?source=saelg-enhed");
+      if (res.ok) inquiries = ((await res.json()).inquiries ?? []) as ContactInquiry[];
+      else inquiriesError = true;
+    } catch {
+      inquiriesError = true;
+    }
 
     if (inquiriesError) {
       setRows([]);
@@ -366,21 +363,7 @@ function OpkoebOverview() {
     return true;
   });
 
-  const storeCounts: Record<StoreFilterValue, number> = {
-    alle: preFiltered.length,
-    slagelse: 0,
-    vejle: 0,
-    generel: 0,
-  };
-  for (const row of preFiltered) {
-    const store = normalizeStoreId(inquiryStoreRaw(row.inquiry));
-    if (store) storeCounts[store] += 1;
-    else storeCounts.generel += 1;
-  }
-
-  const filtered = preFiltered.filter((row) =>
-    matchesStoreFilter(storeFilter, normalizeStoreId(inquiryStoreRaw(row.inquiry))),
-  );
+  const filtered = preFiltered;
 
   /**
    * The position, in numbers, from data already on the page. Everything here is
@@ -731,13 +714,7 @@ function OpkoebOverview() {
         })}
       </div>
 
-      {/* Store filter */}
-      <StoreFilter
-        value={storeFilter}
-        onChange={selectStore}
-        counts={storeCounts}
-        className="mb-6"
-      />
+      <div className="mb-6" />
 
       {/* List */}
       {loading ? (

@@ -25,6 +25,9 @@ const SKIP = [
   // customer. (The stale address literal elsewhere in this same file was
   // still corrected, for the record.)
   /[\\/]scripts[\\/]migrate-shopify-to-supabase\.mjs$/,
+  // Claude-prompten til dansk produkttekst nævner ordet for at forbyde det
+  // ("Skriv aldrig ordet ..."); det vises aldrig for en kunde.
+  /[\\/]api[\\/]admin[\\/]products[\\/]copywrite[\\/]route\.ts$/,
 ];
 
 function walk(dir: string): string[] {
