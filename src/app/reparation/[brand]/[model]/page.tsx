@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORE } from "@/lib/store-config";
+import { STORES } from "@/lib/store-config";
 import { DeviceImage } from "@/components/repair/device-image";
 import { RepairCart } from "@/components/repair/repair-cart";
 import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
@@ -74,22 +74,34 @@ export default async function ModelPricePage({ params }: Props) {
       ? Math.min(...paidServices.map((s) => s.price_dkk))
       : null;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: STORE.name,
+  // Reparationerne udføres i begge butikker, så schemaet beskriver ydelsen
+  // med begge som udbyder i stedet for at binde modelsiden til én adresse.
+  const providers = [STORES.vejle, STORES.slagelse].map((store) => ({
+    "@type": "ElectronicsRepair",
+    name: store.name,
+    telephone: store.phone,
+    url: store.slug === "vejle" ? "https://phonespot.dk/reparation-vejle" : `https://phonespot.dk/butik/${store.slug}`,
     address: {
       "@type": "PostalAddress",
-      streetAddress: STORE.street,
-      addressLocality: STORE.city,
-      postalCode: STORE.zip,
-      addressCountry: STORE.countryCode,
+      streetAddress: store.street,
+      addressLocality: store.city,
+      postalCode: store.zip,
+      addressCountry: store.countryCode,
     },
     geo: {
       "@type": "GeoCoordinates",
-      latitude: STORE.coordinates.lat,
-      longitude: STORE.coordinates.lng,
+      latitude: store.coordinates.lat,
+      longitude: store.coordinates.lng,
     },
+  }));
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: `${model.name} reparation`,
+    serviceType: "Mobilreparation",
+    provider: providers,
+    areaServed: [STORES.vejle.city, STORES.slagelse.city],
     // Uden services ville kataloget være tomt — udelad det, så schemaet
     // stadig validerer på "priser kommer snart"-sider.
     ...(paidServices.length > 0 && {
@@ -206,10 +218,10 @@ export default async function ModelPricePage({ params }: Props) {
             <Link href="/kontakt">Få hjælp til reparationen</Link>
           </div>
           <div className={styles.storeLinks}>
-            <Link href="/butik/vejle">
+            <Link href="/reparation-vejle">
               <span>
                 <strong>Vejle</strong>
-                <small>Find vej og åbningstider</small>
+                <small>Walk-in, priser og garanti</small>
               </span>
               <span aria-hidden="true">→</span>
             </Link>

@@ -2,22 +2,65 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORES } from "@/lib/store-config";
+import { getRepairPriceSummaries } from "@/lib/supabase/repairs";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "iPhone- og Samsung-reparation i Vejle — fra 299 kr. | PhoneSpot",
+  title: "Mobilreparation i Vejle — mens du venter, livstidsgaranti | PhoneSpot",
   description:
-    "Professionel telefon- og tabletreparation i Vejle. Skærmskift, batteriskift og mere fra 299 kr. Se garantien ved den konkrete reparation. PhoneSpot Vejle, Løversysselvej 3B.",
+    "iPhone- og Samsung-reparation i Vejle med livstidsgaranti på arbejde og dele. 90% af skærm- og batteriskift er klar på 30 minutter. Walk-in og gratis parkering på Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
-    title: "iPhone- og Samsung-reparation i Vejle — fra 299 kr. | PhoneSpot",
+    title: "Mobilreparation i Vejle — mens du venter, livstidsgaranti | PhoneSpot",
     description:
-      "Professionel telefon- og tabletreparation i Vejle fra 299 kr. Se garantien ved den konkrete reparation. Løversysselvej 3B, 7100 Vejle.",
+      "Skærmskift og batteriskift i Vejle mens du venter. Livstidsgaranti på arbejde og dele, faste priser og gratis parkering. Løversysselvej 3B, 7100 Vejle.",
     url: "https://phonespot.dk/reparation-vejle",
     type: "website",
   },
 };
 
 const store = STORES.vejle;
+
+// Svarer til warranty_info på telefonreparationerne i repair_services
+// ("Livstidsgaranti på arbejde og dele"). Vandskade har 3 måneder, og
+// diagnose/laptop/konsol har ingen fast tekst — derfor nævnes de særskilt.
+const WARRANTY_ANSWER =
+  "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele. Opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning, så længe du ejer enheden. Garantien dækker ikke nye skader som fald, tryk eller væske. Behandling af vandskade har 3 måneders garanti.";
+
+const WARRANTY_TERMS = [
+  {
+    title: "Det dækker",
+    text: "Fejl på den del, vi har skiftet, og på vores arbejde. Opstår den samme fejl igen, reparerer vi den uden beregning — så længe du ejer enheden.",
+  },
+  {
+    title: "Det dækker ikke",
+    text: "Nye skader som fald, slag, tryk og væske, eller hvis enheden efterfølgende er åbnet af andre. Et batteris naturlige kapacitetsfald over tid er ikke en fejl.",
+  },
+  {
+    title: "Særlige reparationer",
+    text: "Behandling af vandskade har 3 måneders garanti. For laptops, konsoller og diagnose gælder vilkårene ved den enkelte reparation.",
+  },
+  {
+    title: "Sådan bruger du den",
+    text: "Kom forbi butikken med enheden og din kvittering. Garantien gælder ud over din lovpligtige reklamationsret.",
+  },
+];
+
+const PRICE_MODELS = [
+  { brand: "iphone", model: "iphone-16" },
+  { brand: "iphone", model: "iphone-15" },
+  { brand: "iphone", model: "iphone-14" },
+  { brand: "iphone", model: "iphone-13" },
+  { brand: "iphone", model: "iphone-12" },
+  { brand: "iphone", model: "iphone-11" },
+  { brand: "samsung", model: "galaxy-s24" },
+  { brand: "samsung", model: "galaxy-s23" },
+  { brand: "samsung", model: "galaxy-a55" },
+];
+
+const formatKr = (value: number | null) =>
+  value === null ? "—" : `${value.toLocaleString("da-DK")} kr.`;
 
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
@@ -121,7 +164,7 @@ const faqJsonLd = {
       name: "Hvad koster iPhone-skærmskift i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Prisen afhænger af iPhone-modellen. Se aktuelle priser og garantioplysninger ved den konkrete reparation på vores reparationsside. Priserne inkluderer moms og reservedele.",
+        text: "Prisen afhænger af iPhone-modellen og den skærmkvalitet, du vælger. Se prisoversigten på siden her eller den fulde prisliste på vores reparationsside. Priserne er faste og inkluderer moms, reservedele og garanti.",
       },
     },
     {
@@ -129,7 +172,7 @@ const faqJsonLd = {
       name: "Hvad er jeres garanti på reparationer?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper gerne med at afklare, hvad der gælder for den valgte reservedel og reparation.",
+        text: WARRANTY_ANSWER,
       },
     },
   ],
@@ -187,12 +230,17 @@ const FAQS = [
   {
     question: "Hvad koster reparation i Vejle?",
     answer:
-      "Prisen afhænger af model og type reparation. Se priser og garantioplysninger ved den konkrete reparation på /reparation. Priserne inkluderer moms og reservedele.",
+      "Prisen afhænger af model, reparation og den skærmkvalitet, du vælger. Se prisoversigten her på siden eller alle priser på /reparation. Priserne er faste og inkluderer moms, reservedel og garanti.",
   },
   {
     question: "Hvad er jeres garanti på reparationer?",
     answer:
-      "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper gerne med at afklare, hvad der gælder for den valgte reservedel og reparation i Vejle.",
+      WARRANTY_ANSWER,
+  },
+  {
+    question: "Koster det noget at få tjekket fejlen?",
+    answer:
+      "Nej. Kom forbi butikken, så tjekker vi fejlen gratis ved disken og giver dig en fast pris, før vi går i gang. Kræver fejlen en fuld diagnose — fx ved vandskade eller fejl på printet — koster den 249 kr., og det aftaler vi med dig først.",
   },
   {
     question: "Hvilke mærker reparerer I i Vejle?",
@@ -201,7 +249,9 @@ const FAQS = [
   },
 ];
 
-export default function ReparationVejlePage() {
+export default async function ReparationVejlePage() {
+  const prices = await getRepairPriceSummaries(PRICE_MODELS);
+
   return (
     <>
       <JsonLd data={localBusinessJsonLd} />
@@ -214,34 +264,35 @@ export default function ReparationVejlePage() {
             Telefon- og tabletreparation
           </p>
           <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-            Reparation i Vejle
+            Mobilreparation i Vejle — mens du venter
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
-            Professionel iPhone-, Samsung- og iPad-reparation i Vejle. Fra 299 kr.,
-            klar på 30 minutter. Se garantioplysningerne ved den konkrete reparation.
+            Kom forbi uden tidsbestilling. 90% af alle skærm- og batteriskift er
+            klar på 30 minutter, og du får livstidsgaranti på arbejde og dele.
+            Gratis parkering lige ved døren.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/reparation"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
-            >
-              Se alle priser
-            </Link>
-            <Link
               href="/reparation/booking"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
             >
               Book reparation
             </Link>
+            <a
+              href={`tel:${store.phone.replace(/\s/g, "")}`}
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+            >
+              Ring {store.phone}
+            </a>
           </div>
 
           <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { title: "Garanti", desc: "Se vilkår ved reparationen" },
-              { title: "30 minutter", desc: "90% klar samme dag" },
-              { title: "Fra 299 kr", desc: "Faste priser, inkl. moms" },
-              { title: "Walk-in", desc: "Ingen tidsbestilling" },
+              { title: "Livstidsgaranti", desc: "På arbejde og dele" },
+              { title: "30 minutter", desc: "90% klar mens du venter" },
+              { title: "Gratis diagnose", desc: "I butikken, uden tidsbestilling" },
+              { title: "Gratis parkering", desc: "Lige ved døren" },
             ].map(({ title, desc }) => (
               <div
                 key={title}
@@ -366,8 +417,69 @@ export default function ReparationVejlePage() {
         </div>
       </section>
 
+      {/* Prices */}
+      {prices.length > 0 && (
+        <section className="bg-[#F7F7F8] py-16" aria-labelledby="priser">
+          <div className="mx-auto max-w-4xl px-4">
+            <div className="mb-8 text-center">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
+                Faste priser
+              </p>
+              <h2
+                id="priser"
+                className="font-display text-3xl font-bold tracking-tight text-[#111111]"
+              >
+                Hvad koster det?
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-base text-[#6E6E73]">
+                Du vælger selv skærmkvaliteten — fra vores billigste skærm til en
+                original. Prisen er fast og inkluderer moms, reservedel og garanti.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-[#E5E5EA] bg-white">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="bg-[#F7F7F8] text-xs font-semibold text-[#6E6E73]">
+                  <tr>
+                    <th scope="col" className="px-5 py-3">Model</th>
+                    <th scope="col" className="px-5 py-3">Skærm fra</th>
+                    <th scope="col" className="px-5 py-3">Original skærm</th>
+                    <th scope="col" className="px-5 py-3">Batteri</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E5EA]">
+                  {prices.map((row) => (
+                    <tr key={row.modelSlug}>
+                      <th scope="row" className="px-5 py-3 font-semibold text-[#111111]">
+                        <Link
+                          href={`/reparation/${row.brandSlug}/${row.modelSlug}`}
+                          className="hover:text-[#1A3D2E] hover:underline"
+                        >
+                          {row.modelName}
+                        </Link>
+                      </th>
+                      <td className="px-5 py-3 text-[#111111]">{formatKr(row.screenFrom)}</td>
+                      <td className="px-5 py-3 text-[#6E6E73]">{formatKr(row.screenOriginal)}</td>
+                      <td className="px-5 py-3 text-[#111111]">{formatKr(row.battery)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-4 text-center text-sm text-[#6E6E73]">
+              Din model er ikke på listen?{" "}
+              <Link href="/reparation" className="font-semibold text-[#1A3D2E] hover:underline">
+                Se priser på alle modeller
+              </Link>{" "}
+              — eller kom forbi til en gratis diagnose i butikken.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Services grid */}
-      <section className="bg-[#F7F7F8] py-16">
+      <section className="bg-white py-16">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-10 text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
@@ -409,6 +521,37 @@ export default function ReparationVejlePage() {
         </div>
       </section>
 
+      {/* Warranty */}
+      <section id="garanti" className="bg-[#F7F7F8] py-16" aria-labelledby="garanti-titel">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="mb-10 text-center">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#1A3D2E]">
+              Garanti
+            </p>
+            <h2
+              id="garanti-titel"
+              className="font-display text-3xl font-bold tracking-tight text-[#111111]"
+            >
+              Livstidsgaranti på arbejde og dele
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-[#6E6E73]">
+              Vi står ved vores reparationer. Her er vilkårene i klart sprog.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {WARRANTY_TERMS.map((term) => (
+              <div key={term.title} className="rounded-2xl border border-[#E5E5EA] bg-white p-6">
+                <p className="font-display text-base font-bold text-[#111111]">
+                  {term.title}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-[#6E6E73]">{term.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Trust signals */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-4xl px-4">
@@ -421,9 +564,9 @@ export default function ReparationVejlePage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                title: "Garanti ved reparation",
+                title: "Livstidsgaranti",
                 description:
-                  "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser for dækning og varighed.",
+                  "Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer. Opstår samme fejl igen, reparerer vi uden beregning.",
               },
               {
                 title: "Hurtig service",
@@ -441,9 +584,9 @@ export default function ReparationVejlePage() {
                   "Ingen skjulte gebyrer. Prisen er fast og inkluderer moms, reservedele og garanti. Vi oplyser prisen, inden reparationen påbegyndes.",
               },
               {
-                title: "Service uden tidsbestilling",
+                title: "Gratis diagnose i butikken",
                 description:
-                  "Ingen tidsbestilling nødvendig. Kig forbi på Løversysselvej 3B i åbningstiden — vi er klar til at hjælpe.",
+                  "Kig forbi uden tidsbestilling. Vi tjekker fejlen gratis ved disken og giver dig en fast pris, før vi går i gang.",
               },
               {
                 title: "Gratis parkering",
@@ -478,8 +621,8 @@ export default function ReparationVejlePage() {
               Hos PhoneSpot Vejle tilbyder vi professionel iPhone-reparation
               uden forudgående tidsbestilling. Vi skifter skærme, batterier,
               opladningsporte og meget mere — og 90% af reparationerne er klar
-              inden for 30 minutter. Alle reparationer udføres med
-              reservedele af høj kvalitet. Se garantien ved den konkrete reparation.
+              inden for 30 minutter. Du vælger selv skærmkvaliteten, fra budget
+              til original, og du får livstidsgaranti på arbejde og dele.
             </p>
           </div>
 

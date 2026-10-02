@@ -110,3 +110,55 @@ export async function getAllModelSlugs(): Promise<{ brand: string; model: string
     model: row.slug,
   }));
 }
+
+export type RepairPriceSummary = {
+  brandSlug: string;
+  modelSlug: string;
+  modelName: string;
+  screenFrom: number | null;
+  screenOriginal: number | null;
+  battery: number | null;
+};
+
+// Prisoversigt til lokale landingssider: billigste skærm, original skærm og
+// batteri pr. model. Rækkefølgen følger `models`, og modeller uden priser
+// udelades, så tabellen aldrig viser tomme rækker.
+export async function getRepairPriceSummaries(
+  models: { brand: string; model: string }[],
+): Promise<RepairPriceSummary[]> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("repair_models")
+    .select(
+      "slug, name, repair_brands!inner(slug), repair_services(price_dkk, service_category, quality_tier, active)",
+    )
+    .eq("active", true)
+    .in("slug", models.map((m) => m.model));
+  if (!data) return [];
+
+  type PriceRow = {
+    slug: string;
+    name: string;
+    repair_brands: { slug: string };
+    repair_services: Pick<RepairService, "price_dkk" | "service_category" | "quality_tier" | "active">[];
+  };
+  const rows = data as unknown as PriceRow[];
+  return models.flatMap(({ brand, model }) => {
+    const row = rows.find((r) => r.slug === model && r.repair_brands.slug === brand);
+    if (!row) return [];
+    const services = row.repair_services.filter((s) => s.active && s.price_dkk > 0);
+    const screens = services.filter((s) => s.service_category === "Skærmskift");
+    const batteries = services.filter((s) => s.service_category === "Batteriskift");
+    const min = (list: typeof services) =>
+      list.length > 0 ? Math.min(...list.map((s) => s.price_dkk)) : null;
+    const summary: RepairPriceSummary = {
+      brandSlug: brand,
+      modelSlug: model,
+      modelName: row.name,
+      screenFrom: min(screens),
+      screenOriginal: min(screens.filter((s) => s.quality_tier === "original")),
+      battery: min(batteries),
+    };
+    return summary.screenFrom || summary.battery ? [summary] : [];
+  });
+}

@@ -48,7 +48,7 @@ export function StorefrontSections() {
       <div className={styles["store-copy"]}>
         <span className={styles.eyebrow}>Vejle og Slagelse</span>
         <h2>Se den.<br />Prøv den.<br />Tag den med.</h2>
-        <p>Kom forbi, se standen med egne øjne, og få hjælp til at vælge. Du kan også få hjælp til reparation eller en vurdering af din gamle enhed.</p>
+        <p>Kom forbi, se standen med egne øjne, og få hjælp til at vælge. Du kan også få hjælp til reparation — i Vejle <Link href="/reparation-vejle">mens du venter</Link> — eller en vurdering af din gamle enhed.</p>
         <div className={styles["store-links"]}>
           {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/butik/${store.slug}`}><span><strong>{store.city}</strong><small>{store.street}</small><small>Find vej og åbningstider</small></span><StorefrontIcon kind="arrow" /></Link>)}
         </div>

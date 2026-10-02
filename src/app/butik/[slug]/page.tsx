@@ -112,7 +112,7 @@ function getVejleFAQs(): Array<{ question: string; answer: string }> {
     },
     {
       question: "Hvad er jeres garanti på reparationer?",
-      answer: "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. På refurbished enheder giver vi 36 måneders garanti. Tilbehør har 2 års reklamationsret.",
+      answer: "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele: opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning. Nye skader som fald og væske er ikke dækket, og vandskadebehandling har 3 måneders garanti. På refurbished enheder giver vi 36 måneders garanti. Tilbehør har 2 års reklamationsret.",
     },
     {
       question: "Hvilke mærker reparerer I i Vejle?",
@@ -193,7 +193,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
         </section>
         <section className={styles.services} aria-label="Hjælp i butikken">
           <div><h2>Køb refurbished</h2><p>Se og prøv vores enheder. Vi hjælper med model, kosmetisk stand og batteri.</p><Link href="/iphones" className={styles.textLink}>Se iPhones →</Link></div>
-          <div><h2>Reparation</h2><p>Find skærmskift, batteriskift og andre reparationer. Tid og garanti fremgår ved den valgte service.</p><Link href="/reparation" className={styles.textLink}>Se modeller og priser →</Link></div>
+          <div><h2>Reparation</h2><p>Find skærmskift, batteriskift og andre reparationer. Tid og garanti fremgår ved den valgte service.</p><Link href={store.slug === "vejle" ? "/reparation-vejle" : "/reparation"} className={styles.textLink}>Se modeller og priser →</Link></div>
           <div><h2>Sælg din enhed</h2><p>Vi vurderer din enhed ud fra model og stand. Send en forespørgsel eller kom forbi butikken.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Få en vurdering →</Link></div>
         </section>
         <section className={styles.section}><div className={styles.grid}>
@@ -202,7 +202,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
         </div></section>
         {store.slug === "slagelse" && <figure className={styles.photo}><Image src="/images/store/butik-indvendig.jpg" alt="Enheder og tilbehør i PhoneSpots butik" width={1248} height={650} sizes="(max-width: 700px) 100vw, 1248px" /><figcaption>Et kig indenfor hos PhoneSpot.</figcaption></figure>}
         <div className={styles.reading}>
-          <section><h2>iPhone-reparation i {store.city}</h2><p>Vi hjælper med skærme, batterier og opladningsporte på din iPhone. Du kan komme forbi i butikken eller booke en tid. Tiden afhænger af model, fejl og reservedelens tilgængelighed.</p><Link href="/reparation" className={styles.textLink}>Se aktuelle reparationer og vilkår →</Link></section>
+          <section><h2>iPhone-reparation i {store.city}</h2><p>Vi hjælper med skærme, batterier og opladningsporte på din iPhone. Du kan komme forbi i butikken eller booke en tid. Tiden afhænger af model, fejl og reservedelens tilgængelighed.</p><Link href={store.slug === "vejle" ? "/reparation-vejle" : "/reparation"} className={styles.textLink}>Se aktuelle reparationer og vilkår →</Link></section>
           <section><h2>Køb brugte iPhones i {store.city}</h2><p>Vores refurbished enheder er testet og renset, og enhederne har 36 måneders garanti. Se og prøv dem i butikken, og læs om stand og den enkelte enheds batteri, inden du vælger.</p><div className={styles.actions}><Link href="/kvalitet" className={styles.textLink}>Sådan vurderer vi kvalitet →</Link><Link href="/garanti" className={styles.textLink}>Læs garantivilkårene →</Link></div></section>
           <section><h2>Sælg din brugte telefon i {store.city}</h2><p>Har du en iPhone, Samsung eller iPad liggende? Kig forbi {store.street} for en gratis og uforpligtende vurdering. Du kan også sende oplysninger om din enhed online. Vi gennemgår din forespørgsel og vender tilbage med et tilbud.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Fortæl os om din enhed →</Link></section>
           <section><h2>Afhentning i butikken</h2><p>Vælg afhentning, når du bestiller online, og afvent besked om, at din ordre er klar. Kontakt os, hvis du har spørgsmål til afhentning i {store.city}.</p></section>
