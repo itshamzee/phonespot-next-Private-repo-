@@ -172,7 +172,8 @@ export async function createPosSale(input: CreateSaleInput): Promise<SaleResult>
   for (const row of orderItemRows) {
     if (row.vat_scheme === "brugtmoms" && row.purchase_price !== null) {
       const margin = row.unit_price - row.purchase_price;
-      brugtmomsTotal += Math.max(0, Math.round((margin * 25) / 100));
+      // 25/125 af avancen: salgspris og avance er inkl. moms (momsloven §§ 69-71).
+      brugtmomsTotal += Math.max(0, Math.round((margin * 25) / 125));
     }
   }
 

@@ -230,8 +230,8 @@ export default function FakturaPage() {
             </div>
             {order.brugtmoms_total > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 12, color: "#999" }}>
-                <span>Heraf brugtmoms (25%)</span>
-                <span>{formatDKK(order.brugtmoms_total)}</span>
+                {/* Ved brugtmoms må fakturaen ikke angive momsbeløbet — kun ordningen. */}
+                <span>Varer solgt efter brugtmomsordningen (momslovens §§ 69-71). Momsen fremgår ikke af fakturaen.</span>
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 16, fontWeight: "bold", borderTop: "2px solid #1a1a2e", marginTop: 4 }}>
