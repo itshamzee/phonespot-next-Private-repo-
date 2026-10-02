@@ -417,6 +417,28 @@ export default async function ReparationVejlePage() {
         </div>
       </section>
 
+      {/* Mail-in band */}
+      <section className="border-b border-[#E5E5EA] bg-white py-10" aria-labelledby="send-ind">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-6 px-4">
+          <div className="max-w-xl">
+            <h2 id="send-ind" className="font-display text-xl font-bold text-[#111111]">
+              Bor du langt væk? Send din telefon ind
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#6E6E73]">
+              Book online og vælg Send ind, så mailer vi en gratis fragtlabel.
+              Du afleverer pakken i en pakkeshop, og vi kontakter dig, når
+              reparationen er færdig. Garantien er den samme.
+            </p>
+          </div>
+          <Link
+            href="/reparation/indsend"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+          >
+            Se hvordan det virker
+          </Link>
+        </div>
+      </section>
+
       {/* Prices */}
       {prices.length > 0 && (
         <section className="bg-[#F7F7F8] py-16" aria-labelledby="priser">
@@ -685,6 +707,29 @@ export default async function ReparationVejlePage() {
               </details>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Customers from nearby towns */}
+      <section className="border-t border-[#E5E5EA] bg-white py-10">
+        <div className="mx-auto max-w-3xl px-4 text-sm text-[#6E6E73]">
+          <p className="font-semibold text-[#111111]">Kunder fra omegnen</p>
+          <p className="mt-2">
+            Kommer du fra en af nabobyerne? Se, hvordan du nemmest kommer til
+            os:{" "}
+            <Link href="/reparation-horsens" className="font-semibold text-[#1A3D2E] hover:underline">
+              Reparation Horsens
+            </Link>
+            ,{" "}
+            <Link href="/reparation-kolding" className="font-semibold text-[#1A3D2E] hover:underline">
+              Reparation Kolding
+            </Link>{" "}
+            og{" "}
+            <Link href="/reparation-fredericia" className="font-semibold text-[#1A3D2E] hover:underline">
+              Reparation Fredericia
+            </Link>
+            .
+          </p>
         </div>
       </section>
 

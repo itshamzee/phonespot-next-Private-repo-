@@ -325,10 +325,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // ---- Location-specific repair pages -----------------------------------------
-  // Only the static landing page that actually exists (/reparation-vejle) —
-  // the dynamic /reparation/[location]/... routes were removed in 79cc23d, and
-  // /reparation-slagelse was never a real route (it 301s to /reparation), so it
-  // must not be advertised here.
+  // Static landing pages only — the dynamic /reparation/[location]/... routes
+  // were removed in 79cc23d. The town pages and /reparation/indsend (mail-in)
+  // were added in 2026-10.
 
   const locationRepairPages: MetadataRoute.Sitemap = [
     {
@@ -336,6 +335,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.9,
+    },
+    ...[
+      "/reparation-slagelse",
+      "/reparation-horsens",
+      "/reparation-kolding",
+      "/reparation-fredericia",
+    ].map((path) => ({
+      url: `${BASE_URL}${path}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
+    {
+      url: `${BASE_URL}/reparation/indsend`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     },
   ];
 

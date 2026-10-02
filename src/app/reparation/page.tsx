@@ -224,8 +224,9 @@ export default async function ReparationPage() {
             <h2 id="repair-stores-title">Reparation i<br />Vejle og Slagelse.</h2>
             <p>Er du i tvivl om modellen eller fejlen? Tag din enhed med i butikken, eller kontakt os før dit besøg.</p>
             <div className={styles.storeLinks}>
-              {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={store.slug === "vejle" ? "/reparation-vejle" : `/butik/${store.slug}`}><span><strong>{store.city}</strong><small>{store.street}, {store.zip} {store.city}</small><small>{store.slug === "vejle" ? "Priser, garanti og walk-in" : "Find vej og åbningstider"}</small></span><StorefrontIcon kind="arrow" /></Link>)}
+              {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/reparation-${store.slug}`}><span><strong>{store.city}</strong><small>{store.street}, {store.zip} {store.city}</small><small>Priser, garanti og walk-in</small></span><StorefrontIcon kind="arrow" /></Link>)}
             </div>
+            <Link className={landing.contactLink} href="/reparation/indsend">Bor du langt væk? Send ind med gratis fragtlabel <StorefrontIcon kind="arrow" /></Link>
             <Link className={landing.contactLink} href="/kontakt">Få hjælp til din reparation <StorefrontIcon kind="arrow" /></Link>
           </div>
         </section>

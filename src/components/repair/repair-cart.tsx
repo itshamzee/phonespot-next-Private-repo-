@@ -1077,7 +1077,7 @@ function BookingForm({
               {
                 value: "Send ind",
                 label: "Send ind",
-                desc: "Gratis forsendelse",
+                desc: "Gratis fragtlabel på mail",
                 icon: "truck",
               },
             ].map((opt) => (
@@ -1137,6 +1137,16 @@ function BookingForm({
               <label className="text-sm font-bold text-charcoal">
                 Hvilken butik vil du sende til? *
               </label>
+              <p className="mt-1 text-xs leading-snug text-gray">
+                Vi mailer en gratis fragtlabel, når du har booket. Du afleverer
+                pakken i en pakkeshop.{" "}
+                <Link
+                  href="/reparation/indsend"
+                  className="font-semibold text-green-eco hover:underline"
+                >
+                  Sådan virker det
+                </Link>
+              </p>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 {STORE_IDS.map((id) => {
                   const store = STORES[id];

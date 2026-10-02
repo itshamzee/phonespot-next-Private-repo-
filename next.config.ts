@@ -84,9 +84,8 @@ const nextConfig: NextConfig = {
       // or to the brand-level model detail.
       { source: "/reparation/vejle", destination: "/reparation-vejle", permanent: true },
       { source: "/reparation/slagelse", destination: "/reparation", permanent: true },
-      // /reparation-slagelse was briefly advertised in the sitemap but never a
-      // real route — safety net for any already-indexed copies.
-      { source: "/reparation-slagelse", destination: "/reparation", permanent: true },
+      // /reparation-slagelse is a real landing page again (2026-10), so the old
+      // redirect to /reparation was removed.
       { source: "/reparation/vejle/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/slagelse/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },
