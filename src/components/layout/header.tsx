@@ -66,7 +66,7 @@ export function Header() {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", keydown);
       window.removeEventListener("resize", closeOnDesktop);
-      returnFocusTo?.focus();
+      returnFocusTo?.focus({ preventScroll: true });
     };
   }, [mobileOpen]);
 

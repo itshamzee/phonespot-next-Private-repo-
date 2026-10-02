@@ -2,6 +2,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn() }));
 vi.mock("@/lib/supabase/client", () => ({ createServerClient: () => state }));
+vi.mock("@/lib/stripe/repair-payment", () => ({ handleRepairPayment: vi.fn() }));
 vi.mock("@/lib/stripe/client", () => ({ stripe: {} }));
 vi.mock("@/lib/email/order-confirmation", () => ({
   sendOrderConfirmation: vi.fn(),

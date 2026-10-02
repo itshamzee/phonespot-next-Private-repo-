@@ -179,15 +179,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 7. Update ticket with Stripe session ID
-    const { error: updateError } = await supabase
-      .from("repair_tickets")
-      .update({ stripe_session_id: session.id })
-      .eq("id", ticket.id);
-
-    if (updateError) {
-      console.error("Failed to update ticket with Stripe session ID:", updateError);
-    }
+    // Betalingen kobles til sagen via metadata.repair_ticket_id i Stripe-
+    // webhooken (lib/stripe/repair-payment.ts), som markerer den betalt.
 
     // 8. Send staff notification email
     try {

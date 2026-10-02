@@ -1,23 +1,74 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createServerClient } from "@/lib/supabase/client";
+import { stripe } from "@/lib/stripe/client";
+import { normalizeStoreId } from "@/lib/stores";
+import { STORES } from "@/lib/store-config";
+import { formatDanishDate } from "@/lib/email/repair-confirmation";
 
 export const metadata: Metadata = {
-  title: "Betaling gennemført - PhoneSpot Reparation",
+  title: "Reparation bekræftet | PhoneSpot",
   robots: { index: false, follow: false },
 };
+
+export const dynamic = "force-dynamic";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type BookingDetails = {
+  selected_services?: { name: string; price_dkk: number }[];
+  total_price_dkk?: number;
+  preferred_date?: string | null;
+  preferred_time?: string | null;
+  delivery_method?: string | null;
+};
+
+// Sags-ID'et er et uuid og fungerer som adgangsnøgle, ligesom statussiden.
+// Siden viser derfor kun det, kunden selv har indtastet, plus butik og pris.
+async function loadTicket(ticketId: string | undefined) {
+  if (!ticketId || !UUID.test(ticketId)) return null;
+  const { data } = await createServerClient()
+    .from("repair_tickets")
+    .select("id, customer_email, device_type, device_model, store_id, paid, booking_details")
+    .eq("id", ticketId)
+    .maybeSingle();
+  return data;
+}
+
+async function sessionIsPaid(sessionId: string | undefined, ticketId: string | undefined) {
+  if (!sessionId || !sessionId.startsWith("cs_")) return false;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return session.payment_status === "paid" && session.metadata?.repair_ticket_id === ticketId;
+  } catch {
+    return false;
+  }
+}
+
+const kr = (value: number) => `${value.toLocaleString("da-DK")} kr.`;
 
 export default async function BekraeftelsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ticket?: string }>;
+  searchParams: Promise<{ ticket?: string; ticket_id?: string; session_id?: string }>;
 }) {
-  const { ticket } = await searchParams;
-  const shortTicket = ticket ? ticket.slice(0, 8) : null;
+  // Stripe-checkout sender ticket_id; ældre links brugte ticket.
+  const params = await searchParams;
+  const ticketId = params.ticket_id ?? params.ticket;
+  const [ticket, paidNow] = await Promise.all([
+    loadTicket(ticketId),
+    sessionIsPaid(params.session_id, ticketId),
+  ]);
+  const paid = paidNow || !!ticket?.paid;
+  const details = (ticket?.booking_details ?? {}) as BookingDetails;
+  const storeSlug = normalizeStoreId(ticket?.store_id) ?? normalizeStoreId(details.delivery_method);
+  const store = storeSlug ? STORES[storeSlug] : null;
+  const mailIn = details.delivery_method === "Send ind";
+  const shortTicket = ticketId ? ticketId.slice(0, 8) : null;
 
   return (
-    <main className="flex min-h-[60vh] items-center justify-center bg-[#fafaf8] px-4 py-12 font-body">
+    <div className="flex min-h-[60vh] items-center justify-center bg-[#fafaf8] px-4 py-12 font-body">
       <div className="w-full max-w-2xl rounded-2xl border border-[#dce1db] bg-white p-6 md:p-10">
-        {/* Success icon */}
         <div className="mb-6 flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-eco">
             <svg
@@ -27,104 +78,121 @@ export default async function BekraeftelsePage({
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2.5}
+              aria-hidden="true"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
         </div>
 
-        {/* Heading */}
         <h1 className="mb-3 text-center font-body text-2xl font-bold text-charcoal md:text-3xl">
-          Tak! Din reparation er betalt
+          {paid ? "Tak! Din reparation er betalt og booket" : "Din reparation er booket"}
         </h1>
-
-        {/* Subtitle */}
         <p className="mx-auto mb-8 max-w-md text-center text-charcoal/70">
-          Vi har modtaget din betaling og forbereder din reparation. Du vil
-          modtage en bekræftelse på e-mail.
+          {ticket?.customer_email ? (
+            <>
+              Vi har sendt en bekræftelse til{" "}
+              <strong className="text-charcoal">{ticket.customer_email}</strong>.
+              Tjek evt. din spam-mappe.
+            </>
+          ) : (
+            "Du modtager en bekræftelse på e-mail."
+          )}
         </p>
 
-        {/* Ticket ID */}
-        {shortTicket && (
-          <div className="mb-8 flex flex-col items-center gap-1">
-            <span className="text-sm text-charcoal/60">Sags-ID</span>
-            <div className="rounded-lg bg-white px-6 py-3 shadow-sm">
-              <span className="font-mono text-lg tracking-wide text-charcoal">
-                {shortTicket}
-              </span>
-            </div>
-          </div>
+        {(shortTicket || ticket) && (
+          <dl className="mb-8 divide-y divide-[#E5E5EA] rounded-xl border border-[#E5E5EA] text-sm">
+            {shortTicket && (
+              <div className="flex justify-between gap-4 px-5 py-3">
+                <dt className="text-charcoal/60">Sags-nr.</dt>
+                <dd className="font-mono font-semibold tracking-wide text-charcoal">{shortTicket}</dd>
+              </div>
+            )}
+            {ticket && (
+              <div className="flex justify-between gap-4 px-5 py-3">
+                <dt className="text-charcoal/60">Enhed</dt>
+                <dd className="text-right font-semibold text-charcoal">
+                  {ticket.device_type} {ticket.device_model}
+                </dd>
+              </div>
+            )}
+            {(details.selected_services ?? []).map((s) => (
+              <div key={s.name} className="flex justify-between gap-4 px-5 py-3">
+                <dt className="text-charcoal">{s.name}</dt>
+                <dd className="text-charcoal">{kr(s.price_dkk)}</dd>
+              </div>
+            ))}
+            {details.total_price_dkk != null && (
+              <div className="flex justify-between gap-4 px-5 py-3">
+                <dt className="font-semibold text-charcoal">I alt</dt>
+                <dd className="text-right font-semibold text-charcoal">
+                  {kr(details.total_price_dkk)}
+                  <span className="block text-xs font-normal text-green-eco">
+                    {paid ? "Betalt online" : "Betales i butikken"}
+                  </span>
+                </dd>
+              </div>
+            )}
+            {store && !mailIn && (
+              <div className="flex justify-between gap-4 px-5 py-3">
+                <dt className="text-charcoal/60">Aflevering</dt>
+                <dd className="text-right text-charcoal">
+                  <span className="font-semibold">{store.name}</span>
+                  <span className="block">
+                    {store.street}, {store.zip} {store.city}
+                  </span>
+                  {details.preferred_date && (
+                    <span className="block">
+                      {formatDanishDate(details.preferred_date)}
+                      {details.preferred_time ? `, kl. ${details.preferred_time}` : ""}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            )}
+            {mailIn && (
+              <div className="px-5 py-3 text-charcoal">
+                Du sender din enhed ind. Vi kontakter dig med instruktioner til
+                den gratis forsendelse.
+              </div>
+            )}
+          </dl>
         )}
 
-        {/* Next steps */}
-        <div className="mb-8 rounded-xl bg-white/60 p-6">
-          <h2 className="mb-4 font-body text-lg font-semibold text-charcoal">
-            Hvad sker der nu?
-          </h2>
-          <ol className="space-y-3 text-charcoal/80">
-            <li className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-eco text-sm font-bold text-white">
-                1
-              </span>
-              <span className="pt-0.5">Vi bekræfter din booking på e-mail</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-eco text-sm font-bold text-white">
-                2
-              </span>
-              <span className="pt-0.5">
-                Aflever din enhed på den valgte dato
-              </span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-eco text-sm font-bold text-white">
-                3
-              </span>
-              <span className="pt-0.5">
-                Vi reparerer og kontakter dig, når den er klar
-              </span>
-            </li>
-          </ol>
+        <div className="mb-8 rounded-xl bg-[#F7F7F8] p-5 text-sm text-charcoal/80">
+          <p className="font-semibold text-charcoal">Inden du kommer</p>
+          <p className="mt-1">
+            Tag en backup af din telefon, og husk din skærmkode, så vi kan teste
+            enheden, når den er repareret.
+          </p>
         </div>
 
-        {/* Trust signal */}
-        <div className="mb-8 flex items-center justify-center gap-2 text-green-eco">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
-          <Link
-            href="/handelsbetingelser"
-            className="text-sm font-semibold underline underline-offset-4"
-          >
-            Læs reparationsbetingelserne
-          </Link>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {ticketId && UUID.test(ticketId) && (
+            <Link
+              href={`/reparation/status/${ticketId}`}
+              className="rounded-full bg-charcoal px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Følg din reparation
+            </Link>
+          )}
+          {store && !mailIn && (
+            <a
+              href={store.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-[#dce1db] px-8 py-3 text-sm font-semibold text-charcoal hover:bg-[#F7F7F8]"
+            >
+              Find vej til butikken
+            </a>
+          )}
         </div>
 
-        {/* Back to homepage */}
-        <div className="flex justify-center">
-          <Link
-            href="/"
-            className="rounded-full bg-charcoal px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Tilbage til forsiden
-          </Link>
-        </div>
+        <p className="mt-8 text-center text-sm text-charcoal/60">
+          Skal du ændre noget? Ring på {store?.phone ?? "61 10 00 48"} eller svar
+          på bekræftelsesmailen.
+        </p>
       </div>
-    </main>
+    </div>
   );
 }

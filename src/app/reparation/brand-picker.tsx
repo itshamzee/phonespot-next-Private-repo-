@@ -156,7 +156,7 @@ export function BrandPicker({
     return () => document.removeEventListener("mousedown", close);
   }, []);
   useEffect(() => {
-    if (selectedParent) backRef.current?.focus();
+    if (selectedParent) backRef.current?.focus({ preventScroll: true });
   }, [selectedParent]);
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -177,7 +177,7 @@ export function BrandPicker({
     ),
   ];
   const closeSearch = () => {
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
     setIsOpen(false);
   };
   return (
@@ -226,7 +226,7 @@ export function BrandPicker({
                 if (showResults)
                   resultsRef.current
                     ?.querySelector<HTMLAnchorElement>("a")
-                    ?.focus();
+                    ?.focus({ preventScroll: true });
                 else setIsOpen(true);
               }
             }}
@@ -237,7 +237,7 @@ export function BrandPicker({
               aria-label="Ryd søgning"
               onClick={() => {
                 setQuery("");
-                inputRef.current?.focus();
+                inputRef.current?.focus({ preventScroll: true });
                 setIsOpen(false);
               }}
             >
@@ -268,14 +268,14 @@ export function BrandPicker({
                   document.activeElement as HTMLAnchorElement,
                 );
                 if (e.key === "ArrowUp" && index === 0)
-                  inputRef.current?.focus();
+                  inputRef.current?.focus({ preventScroll: true });
                 else
                   links[
                     Math.min(
                       links.length - 1,
                       Math.max(0, index + (e.key === "ArrowDown" ? 1 : -1)),
                     )
-                  ]?.focus();
+                  ]?.focus({ preventScroll: true });
               }
             }}
           >
@@ -319,7 +319,7 @@ export function BrandPicker({
             onClick={() => {
               const key = selectedParent;
               flushSync(() => setSelectedParent(null));
-              brandRefs.current.get(key)?.focus();
+              brandRefs.current.get(key)?.focus({ preventScroll: true });
             }}
           >
             Alle mærker

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useId, useRef, useEffect } from "react";
+import { focusWithoutScroll, revealTop } from "@/lib/reveal";
+import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import Link from "next/link";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
@@ -221,7 +223,10 @@ export function RepairCart({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [includesTemperedGlass, setIncludesTemperedGlass] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  // Flere kvalitetsgrupper kan være åbne samtidig: lukkede vi den forrige,
+  // ville indholdet over kundens finger forsvinde og siden hoppe.
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set());
   const [selectedColor, setSelectedColor] = useState("");
   const [showExclMoms, setShowExclMoms] = useState(false);
 
@@ -242,6 +247,14 @@ export function RepairCart({
     ticketId?: string;
     error?: string;
   } | null>(null);
+  // Ved succes erstattes hele kurven af en kort besked; uden at scrolle
+  // derhen står kunden (især på mobil) foran tom plads og ser aldrig, at
+  // bookingen er gået igennem.
+  useEffect(() => {
+    if (!submitResult?.success) return;
+    focusWithoutScroll(successRef.current?.querySelector<HTMLElement>("h2"));
+    revealTop(successRef.current, 80);
+  }, [submitResult?.success]);
 
   /* Price formatter respecting moms toggle (display only — actual payment always inkl. moms) */
   const fmtPrice = (dkk: number) =>
@@ -270,8 +283,8 @@ export function RepairCart({
   const totalPrice = subtotal - discountAmount;
   const canSubmit = !!(
     customer.name.trim() &&
-    customer.email.trim() &&
-    customer.phone.trim() &&
+    isValidEmail(customer.email) &&
+    isValidPhone(customer.phone) &&
     deliveryMethod &&
     (deliveryMethod !== "Send ind" || mailInStore) &&
     preferredDate &&
@@ -388,7 +401,7 @@ export function RepairCart({
 
   if (submitResult?.success) {
     return (
-      <div className="mx-auto max-w-md py-16 text-center">
+      <div ref={successRef} className="mx-auto max-w-md py-16 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-eco/10">
           <svg
             viewBox="0 0 24 24"
@@ -400,12 +413,13 @@ export function RepairCart({
             <path d="M9 12l2 2 4-4M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
         </div>
-        <h2 className="font-body text-2xl font-bold text-charcoal">
-          Tak for din booking!
+        <h2 tabIndex={-1} className="font-body text-2xl font-bold text-charcoal">
+          Din reparation er booket
         </h2>
         <p className="mt-3 text-sm text-gray">
-          Vi har modtaget din reparationsanmodning og sender en bekræftelse til{" "}
-          <span className="font-semibold text-charcoal">{customer.email}</span>.
+          Bookingen er gået igennem. Vi har sendt en bekræftelse til{" "}
+          <span className="font-semibold text-charcoal">{customer.email}</span>{" "}
+          — tjek evt. din spam-mappe.
         </p>
         {submitResult.ticketId && (
           <p className="mt-2 text-xs text-gray">
@@ -414,6 +428,14 @@ export function RepairCart({
               {submitResult.ticketId.slice(0, 8).toUpperCase()}
             </span>
           </p>
+        )}
+        {submitResult.ticketId && (
+          <Link
+            href={`/reparation/status/${submitResult.ticketId}`}
+            className="mt-5 inline-flex rounded-full bg-charcoal px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
+          >
+            Følg din reparation
+          </Link>
         )}
         <div className="mt-6 rounded-xl border border-soft-grey bg-white p-4 text-left text-sm">
           <p className="font-bold text-charcoal">{modelName}</p>
@@ -492,7 +514,7 @@ export function RepairCart({
           <div className={styles.serviceRows}>
             {grouped.map(([category, items], index) => {
               const selected = items.find((item) => selectedIds.has(item.id));
-              const isOpen = expandedCategory === category;
+              const isOpen = expandedCategories.has(category);
               const prices = items
                 .filter((item) => item.price_dkk > 0)
                 .map((item) => item.price_dkk);
@@ -515,7 +537,12 @@ export function RepairCart({
                       aria-expanded={isOpen}
                       aria-controls={"quality-" + index}
                       onClick={() =>
-                        setExpandedCategory(isOpen ? null : category)
+                        setExpandedCategories((prev) => {
+                          const next = new Set(prev);
+                          if (isOpen) next.delete(category);
+                          else next.add(category);
+                          return next;
+                        })
                       }
                     >
                       <ServiceIcon slug={items[0].slug} />
@@ -604,7 +631,14 @@ export function RepairCart({
               canSubmit={canSubmit}
               isSubmitting={isSubmitting}
               submitResult={submitResult}
-              onBack={() => setShowBookingForm(false)}
+              onBack={() => {
+                setShowBookingForm(false);
+                // Formularen er langt højere end oversigten; uden dette
+                // lander kunden et tilfældigt sted, når siden krymper.
+                requestAnimationFrame(() =>
+                  revealTop(document.querySelector<HTMLElement>("[aria-label='Din reparationsoversigt']")),
+                );
+              }}
               onSubmitNoPay={handleSubmitNoPay}
               onSubmitAndPay={handleSubmitAndPay}
               showExclMoms={showExclMoms}
@@ -845,8 +879,12 @@ function BookingForm({
   const availableDates = getAvailableDates(6);
   const formId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [blurred, setBlurred] = useState<{ email?: boolean; phone?: boolean }>({});
+  const emailError = !!(blurred.email && customer.email.trim() && !isValidEmail(customer.email));
+  const phoneError = !!(blurred.phone && customer.phone.trim() && !isValidPhone(customer.phone));
   useEffect(() => {
-    headingRef.current?.focus();
+    focusWithoutScroll(headingRef.current);
+    revealTop(headingRef.current);
   }, []);
   const inputClass =
     "mt-1 w-full rounded-xl border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray/50 focus:border-green-eco focus:outline-none focus:ring-2 focus:ring-green-eco/20";
@@ -957,8 +995,16 @@ function BookingForm({
               onChange={(e) =>
                 setCustomer((p) => ({ ...p, email: e.target.value }))
               }
+              onBlur={() => setBlurred((b) => ({ ...b, email: true }))}
+              aria-invalid={emailError || undefined}
+              aria-describedby={emailError ? formId + "-email-error" : undefined}
               className={inputClass}
             />
+            {emailError && (
+              <p id={formId + "-email-error"} className="mt-1 text-sm text-red-600">
+                Tjek e-mailadressen — vi sender din bekræftelse hertil.
+              </p>
+            )}
           </div>
           <div>
             <label
@@ -977,8 +1023,16 @@ function BookingForm({
               onChange={(e) =>
                 setCustomer((p) => ({ ...p, phone: e.target.value }))
               }
+              onBlur={() => setBlurred((b) => ({ ...b, phone: true }))}
+              aria-invalid={phoneError || undefined}
+              aria-describedby={phoneError ? formId + "-phone-error" : undefined}
               className={inputClass}
             />
+            {phoneError && (
+              <p id={formId + "-phone-error"} className="mt-1 text-sm text-red-600">
+                Skriv et telefonnummer med mindst 8 cifre.
+              </p>
+            )}
           </div>
         </div>
 

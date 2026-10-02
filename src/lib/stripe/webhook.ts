@@ -6,10 +6,16 @@ import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
 import { notifyNewOrder, sendPushover } from "@/lib/notifications/pushover";
 import { sendStaffOrderNotification } from "@/lib/email/staff-order-notification";
+import { handleRepairPayment } from "@/lib/stripe/repair-payment";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  if (session.metadata?.type === "repair") {
+    await handleRepairPayment(session);
+    return;
+  }
+
   // Draft order payment: if the session was created for a draft order,
   // convert it to a confirmed order and return early.
   const draftOrderId = session.metadata?.draft_order_id;

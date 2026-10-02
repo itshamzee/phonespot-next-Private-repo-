@@ -18,6 +18,7 @@ const s = vi.hoisted(() => ({
   lineItems: vi.fn(),
   items: [] as Array<Record<string, unknown>>,
 }));
+vi.mock("@/lib/stripe/repair-payment", () => ({ handleRepairPayment: vi.fn() }));
 vi.mock("@/lib/stripe/client", () => ({
   stripe: { checkout: { sessions: { listLineItems: s.lineItems } } },
 }));

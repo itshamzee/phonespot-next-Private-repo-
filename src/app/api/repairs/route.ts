@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
-import { storeForId } from "@/lib/store-config";
 import { normalizeStoreId, storeLabel } from "@/lib/stores";
 import { getStaffRecipients } from "@/lib/email/staff-routing";
+import { sendRepairConfirmation } from "@/lib/email/repair-confirmation";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -58,7 +58,6 @@ export async function POST(request: Request) {
     // unattributed rather than being filed as Slagelse, and only the signature
     // falls back, because the customer must be given some address.
     const storeId = normalizeStoreId(body.store_id);
-    const store = storeForId(storeId);
 
     // Insert repair ticket
     const { data: ticket, error: insertError } = await supabase
@@ -112,32 +111,26 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send confirmation email to customer
-    await resend.emails.send({
-      from: "PhoneSpot Reparation <noreply@phonespot.dk>",
-      to: body.customer_email.trim(),
-      subject: `Reparationssag modtaget — ${ticket.id.slice(0, 8)}`,
-      text: [
-        `Hej ${body.customer_name},`,
-        "",
-        "Tak for din reparationsanmodning. Vi har modtaget den og vender tilbage hurtigst muligt med et tilbud.",
-        "",
-        `Sags-ID: ${ticket.id}`,
-        `Enhed: ${body.device_type} — ${body.device_model}`,
-        `Service: ${body.service_type}`,
-        ...bookingLines,
-        "",
-        "Du vil modtage en email naar vi har vurderet din enhed og kan give dig en fast pris.",
-        "",
-        "Med venlig hilsen,",
-        store.name,
-        `${store.street}, ${store.zip} ${store.city}`,
-        store.email,
-      ].join("\n"),
-    });
+    // Kundens kvittering. Fejler den, må bookingen ikke fejle — sagen er
+    // oprettet — men fejlen logges i sendRepairConfirmation.
+    await sendRepairConfirmation({
+      ticketId: ticket.id,
+      customerName: body.customer_name,
+      customerEmail: body.customer_email,
+      deviceLabel: `${body.device_type} ${body.device_model}`.trim(),
+      services: bookingDetails?.selected_services ?? [],
+      includesTemperedGlass: bookingDetails?.includes_tempered_glass,
+      discountPercent: bookingDetails?.discount_percent,
+      totalDkk: bookingDetails?.total_price_dkk ?? null,
+      paid: false,
+      deliveryMethod: bookingDetails?.delivery_method,
+      storeId,
+      preferredDate: bookingDetails?.preferred_date,
+      preferredTime: bookingDetails?.preferred_time,
+    }).catch((err) => console.error("[repairs] customer confirmation threw:", err));
 
     // Send notification email to staff
-    await resend.emails.send({
+    const { error: staffEmailError } = await resend.emails.send({
       from: "PhoneSpot System <noreply@phonespot.dk>",
       ...getStaffRecipients(storeId),
       subject: `Ny reparationssag${storeId ? ` (${storeLabel(storeId)})` : ""}: ${body.device_type} ${body.device_model}`,
@@ -156,6 +149,7 @@ export async function POST(request: Request) {
         `Sags-ID: ${ticket.id}`,
       ].join("\n"),
     });
+    if (staffEmailError) console.error("[repairs] staff email failed:", ticket.id, staffEmailError);
 
     return NextResponse.json({ success: true, ticketId: ticket.id });
   } catch (err) {

@@ -101,7 +101,7 @@ export function ModelGrid({
               aria-label="Ryd søgning"
               onClick={() => {
                 setSearch("");
-                inputRef.current?.focus();
+                inputRef.current?.focus({ preventScroll: true });
               }}
             >
               ×

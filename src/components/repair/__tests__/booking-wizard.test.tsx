@@ -123,7 +123,7 @@ function fillDetails() {
     ["Fuldt navn", "Testkunde"],
     ["Telefon", "12345678"],
     ["E-mail", "test@example.com"],
-    ["Beskriv problemet", "Batteriet holder ikke strøm"],
+    ["Beskriv problemet (valgfri)", "Batteriet holder ikke strøm"],
   ])
     fireEvent.change(screen.getByRole("textbox", { name }), {
       target: { value },
@@ -373,7 +373,7 @@ describe("booking presentation preserves existing flow", () => {
       ["Fuldt navn", "Testkunde"],
       ["Telefon", "12345678"],
       ["E-mail", "test@example.com"],
-      ["Beskriv problemet", "Batteriet holder ikke strøm"],
+      ["Beskriv problemet (valgfri)", "Batteriet holder ikke strøm"],
     ];
     for (const [name, value] of values) {
       const field = screen.getByRole("textbox", { name });

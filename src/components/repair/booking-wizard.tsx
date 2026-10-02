@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { focusWithoutScroll, revealTop } from "@/lib/reveal";
+import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import { useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type {
@@ -331,8 +333,10 @@ export function BookingWizard() {
   const wizardRef = useRef<HTMLDivElement>(null);
   const previousStep = useRef(0);
   useEffect(() => {
-    if (previousStep.current !== step)
-      wizardRef.current?.querySelector<HTMLHeadingElement>("h2")?.focus();
+    if (previousStep.current !== step) {
+      focusWithoutScroll(wizardRef.current?.querySelector<HTMLHeadingElement>("h2"));
+      revealTop(wizardRef.current);
+    }
     previousStep.current = step;
   }, [step]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -341,6 +345,12 @@ export function BookingWizard() {
     ticketId?: string;
     error?: string;
   } | null>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!submitResult?.success) return;
+    focusWithoutScroll(successRef.current?.querySelector<HTMLElement>("h2, h3"));
+    revealTop(successRef.current);
+  }, [submitResult?.success]);
 
   /* ---- multi-device state ---- */
   const [deviceBookings, setDeviceBookings] = useState<DeviceBooking[]>([
@@ -380,6 +390,9 @@ export function BookingWizard() {
     phone: "",
     description: "",
   });
+  const [blurred, setBlurred] = useState<{ email?: boolean; phone?: boolean }>({});
+  const emailError = !!(blurred.email && customer.email.trim() && !isValidEmail(customer.email));
+  const phoneError = !!(blurred.phone && customer.phone.trim() && !isValidPhone(customer.phone));
 
   /* ---- step 4: store + date ---- */
   // Prefill via ?store=vejle|slagelse — læses ved mount, så butikssiderne
@@ -709,9 +722,8 @@ export function BookingWizard() {
       case 2:
         return !!(
           customer.name.trim() &&
-          customer.email.trim() &&
-          customer.phone.trim() &&
-          customer.description.trim()
+          isValidEmail(customer.email) &&
+          isValidPhone(customer.phone)
         );
       case 3:
         // Butik er påkrævet — en reparation uden butik kan ikke håndteres
@@ -740,7 +752,8 @@ export function BookingWizard() {
       customer_name: customer.name.trim(),
       customer_email: customer.email.trim(),
       customer_phone: customer.phone.trim(),
-      issue_description: customer.description.trim(),
+      issue_description:
+        customer.description.trim() || "Booking via reparationsguiden",
       preferred_date: preferredDate,
       store_id: storeId,
       // Backward-compatible top-level fields from first device
@@ -840,7 +853,7 @@ export function BookingWizard() {
 
   if (submitResult?.success) {
     return (
-      <div className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10 text-center">
+      <div ref={successRef} className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10 text-center">
         <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-lg shadow-green-eco/25">
           <svg
             viewBox="0 0 24 24"
@@ -860,11 +873,12 @@ export function BookingWizard() {
           tabIndex={-1}
           className="font-body text-2xl font-bold text-charcoal"
         >
-          Tak for din anmodning!
+          Din reparation er booket
         </h2>
         <p className="mt-3 text-gray">
-          Vi har modtaget din reparationsanmodning og vender tilbage med en
-          bekræftelse.
+          Bookingen er gået igennem. Vi har sendt en bekræftelse til{" "}
+          <span className="font-semibold text-charcoal">{customer.email}</span>{" "}
+          — tjek evt. din spam-mappe.
         </p>
         {submitResult.ticketId && (
           <p className="mt-4 rounded-lg bg-white p-3 text-sm text-gray">
@@ -873,6 +887,14 @@ export function BookingWizard() {
               {submitResult.ticketId.slice(0, 8)}
             </span>
           </p>
+        )}
+        {submitResult.ticketId && (
+          <Link
+            href={`/reparation/status/${submitResult.ticketId}`}
+            className="mt-5 inline-flex rounded-full bg-charcoal px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
+          >
+            Følg din reparation
+          </Link>
         )}
         {preferredDate && (
           <p className="mt-2 text-sm text-gray">
@@ -1630,8 +1652,16 @@ export function BookingWizard() {
                 placeholder="+45 XX XX XX XX"
                 value={customer.phone}
                 onChange={handleCustomerChange}
+                onBlur={() => setBlurred((b) => ({ ...b, phone: true }))}
+                aria-invalid={phoneError || undefined}
+                aria-describedby={phoneError ? "phone-error" : undefined}
                 className={inputStyles}
               />
+              {phoneError && (
+                <p id="phone-error" className="text-sm text-red-600">
+                  Skriv et telefonnummer med mindst 8 cifre.
+                </p>
+              )}
             </div>
           </div>
 
@@ -1648,18 +1678,25 @@ export function BookingWizard() {
               placeholder="din@email.dk"
               value={customer.email}
               onChange={handleCustomerChange}
+              onBlur={() => setBlurred((b) => ({ ...b, email: true }))}
+              aria-invalid={emailError || undefined}
+              aria-describedby={emailError ? "email-error" : undefined}
               className={inputStyles}
             />
+            {emailError && (
+              <p id="email-error" className="text-sm text-red-600">
+                Tjek e-mailadressen — vi sender din bekræftelse hertil.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">
             <label htmlFor="description" className={labelStyles}>
-              Beskriv problemet
+              Beskriv problemet (valgfri)
             </label>
             <textarea
               id="description"
               name="description"
-              required
               placeholder="Beskriv, hvad der er galt med dine enheder — hvad skete der, og hvornår startede det?"
               rows={4}
               value={customer.description}
