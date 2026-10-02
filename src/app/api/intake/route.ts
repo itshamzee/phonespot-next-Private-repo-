@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { normalizeStoreId } from "@/lib/stores";
+import { storeForId } from "@/lib/store-config";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { stripe } from "@/lib/stripe/client";
@@ -178,6 +180,8 @@ export async function POST(request: Request) {
           customerName: customer.name,
           deviceName,
           ticketId: ticket.id,
+          ticketNumber: ticket.ticket_number,
+          storeId: ticket.store_id,
           trackingUrl,
         });
 
@@ -209,19 +213,19 @@ export async function POST(request: Request) {
             `Hej ${customer.name},`,
             "",
             `Vi har modtaget din ${deviceName} til reparation.`,
-            `Sags-ID: ${ticket.id.slice(0, 8)}`,
+            `Sagsnummer: ${ticketLabel(ticket)}`,
             "",
             "Reparationer:",
             ...allServices.map((s: { name: string; price_dkk: number }) => `- ${s.name}: ${s.price_dkk} DKK`),
             "",
             `Estimeret total: ${totalPrice} DKK`,
             "",
-            `Foelg din reparation her: https://phonespot.dk/reparation/status/${ticket.id}`,
+            `Følg din reparation her: https://phonespot.dk/reparation/status/${ticket.id}`,
             "",
             "Vi kontakter dig, når din enhed er klar til afhentning.",
             "",
             "Med venlig hilsen,",
-            "PhoneSpot",
+            storeForId(ticket.store_id).name,
           ].join("\n"),
         });
       } catch (err) {
@@ -229,7 +233,10 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ ticketId: ticket.id }, { status: 201 });
+    return NextResponse.json(
+      { ticketId: ticket.id, ticketNumber: ticket.ticket_number ?? null },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("Intake error:", err);
     return NextResponse.json(

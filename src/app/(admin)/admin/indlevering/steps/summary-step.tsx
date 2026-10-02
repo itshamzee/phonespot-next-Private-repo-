@@ -10,8 +10,9 @@ interface Props {
   formData: IntakeFormData;
   updateFormData: (partial: Partial<IntakeFormData>) => void;
   onBack: () => void;
-  onSubmitted: (ticketId: string) => void;
+  onSubmitted: (ticketId: string, ticketNumber: string | null) => void;
   submittedTicketId: string | null;
+  submittedTicketNumber: string | null;
   onReset: () => void;
 }
 
@@ -21,6 +22,7 @@ export function SummaryStep({
   onBack,
   onSubmitted,
   submittedTicketId,
+  submittedTicketNumber,
   onReset,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +40,7 @@ export function SummaryStep({
     : `${formData.newDevice.brand} ${formData.newDevice.model}`;
 
   const faultItems = formData.checklist.filter((c) => c.status === "fejl");
+  const unassessedCount = formData.checklist.filter((c) => c.status === "ikke_vurderet").length;
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -58,7 +61,7 @@ export function SummaryStep({
           customServices: formData.customServices,
           internalNotes: formData.internalNotes,
           store_id: formData.storeId,
-          createShopifyPayment: formData.createShopifyPayment,
+          createShopifyPayment: false,
           sendSms: formData.sendSms,
           sendEmail: formData.sendEmail,
         }),
@@ -72,9 +75,9 @@ export function SummaryStep({
       }
 
       const data = await res.json();
-      onSubmitted(data.ticketId);
+      onSubmitted(data.ticketId, data.ticketNumber ?? null);
     } catch {
-      setError("Netvaerksfejl");
+      setError("Netværksfejl. Tjek forbindelsen og prøv igen.");
     }
     setSubmitting(false);
   }
@@ -82,6 +85,7 @@ export function SummaryStep({
   const pdfPreviewData = submittedTicketId
     ? {
         ticketId: submittedTicketId,
+        ticketNumber: submittedTicketNumber ?? undefined,
         customerName: formData.customer?.name ?? "",
         customerPhone: formData.customer?.phone ?? "",
         customerEmail: formData.customer?.email ?? "",
@@ -107,10 +111,10 @@ export function SummaryStep({
             </svg>
           </div>
           <h3 className="mb-2 text-xl font-bold text-charcoal">
-            Sag oprettet!
+            Sagen er oprettet
           </h3>
           <p className="mb-6 text-sm text-gray">
-            Sags-ID: {submittedTicketId.slice(0, 8)}
+            Sagsnummer: {submittedTicketNumber || submittedTicketId.slice(0, 8)}
           </p>
 
           <div className="flex flex-wrap justify-center gap-3">
@@ -126,7 +130,7 @@ export function SummaryStep({
               onClick={() => setPdfModal({ type: "workshop-report" })}
               className="rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-semibold text-charcoal transition-colors hover:bg-sand"
             >
-              Download vaerkstedsrapport
+              Download værkstedsrapport
             </button>
           </div>
 
@@ -211,6 +215,12 @@ export function SummaryStep({
           </div>
         )}
 
+        {unassessedCount > 0 && (
+          <p className="mt-3 text-sm text-[#8A4B08]">
+            {unassessedCount} {unassessedCount === 1 ? "punkt" : "punkter"} i tilstandstjeklisten er ikke vurderet. De står som &quot;Ikke vurderet&quot; på indleveringsbeviset.
+          </p>
+        )}
+
         {formData.intakePhotos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {formData.intakePhotos.map((url) => (
@@ -292,15 +302,6 @@ export function SummaryStep({
           Handlinger
         </h3>
         <div className="space-y-3">
-          <label className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={formData.createShopifyPayment}
-              onChange={(e) => updateFormData({ createShopifyPayment: e.target.checked })}
-              className="h-4 w-4 rounded border-gray text-green-eco focus:ring-green-eco"
-            />
-            <span className="text-sm text-charcoal">Opret Shopify betaling (Draft Order)</span>
-          </label>
           <label className="flex items-center gap-3">
             <input
               type="checkbox"

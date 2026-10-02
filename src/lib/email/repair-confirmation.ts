@@ -2,6 +2,7 @@ import { resend } from "./resend";
 import { BRAND, emailButton, emailFooter, emailHeader } from "./brand";
 import { escapeHtml } from "./escape";
 import { normalizeStoreId } from "@/lib/stores";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { STORES, type StoreLocationConfig } from "@/lib/store-config";
 
 // Kundens kvittering for en reparationsbooking. Den skal svare på tre
@@ -18,6 +19,8 @@ const REPAIR_USPS = [
 
 export interface RepairConfirmationParams {
   ticketId: string;
+  /** PS-2026-0001. Mangler den, vises de første 8 tegn af ticketId. */
+  ticketNumber?: string | null;
   customerName: string;
   customerEmail: string;
   deviceLabel: string;
@@ -50,12 +53,16 @@ function storeFor(params: RepairConfirmationParams): StoreLocationConfig | null 
   return slug ? STORES[slug] : null;
 }
 
+function caseNumber(params: { ticketId: string; ticketNumber?: string | null }): string {
+  return ticketLabel({ id: params.ticketId, ticket_number: params.ticketNumber });
+}
+
 export function repairStatusUrl(ticketId: string): string {
   return `${BRAND.website}/reparation/status/${ticketId}`;
 }
 
 export function buildRepairConfirmationSubject(params: RepairConfirmationParams): string {
-  const short = params.ticketId.slice(0, 8);
+  const short = caseNumber(params);
   return params.paid
     ? `Betalt og booket: din reparation (${short})`
     : `Booking bekræftet: din reparation (${short})`;
@@ -145,7 +152,7 @@ export function buildRepairConfirmationHtml(params: RepairConfirmationParams): s
           <p style="margin:0;font-size:15px;line-height:1.6;color:#6E6E73;">Hej ${firstName}, vi har modtaget din booking. Du behøver ikke gøre mere end at møde op.</p>
         </td></tr>
         <tr><td style="padding:20px 40px 24px;text-align:center;">
-          <span style="display:inline-block;padding:8px 16px;border-radius:8px;background:${BRAND.warmWhite};font-size:14px;">Sags-nr. <strong style="font-family:monospace;letter-spacing:1px;">${escapeHtml(params.ticketId.slice(0, 8))}</strong></span>
+          <span style="display:inline-block;padding:8px 16px;border-radius:8px;background:${BRAND.warmWhite};font-size:14px;">Sags-nr. <strong style="font-family:monospace;letter-spacing:1px;">${escapeHtml(caseNumber(params))}</strong></span>
         </td></tr>
         <tr><td style="padding:0 40px 8px;font-size:13px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#6E6E73;">Næste skridt</td></tr>
         <tr><td style="padding:0 40px 16px;font-size:15px;line-height:1.6;">${nextStep}</td></tr>
@@ -171,7 +178,7 @@ export function buildRepairConfirmationText(params: RepairConfirmationParams): s
     `Hej ${params.customerName.trim().split(/\s+/)[0] ?? ""},`,
     "",
     params.paid ? "Tak! Din reparation er betalt og booket." : "Din reparation er booket.",
-    `Sags-nr.: ${params.ticketId.slice(0, 8)}`,
+    `Sags-nr.: ${caseNumber(params)}`,
     `Enhed: ${params.deviceLabel}`,
     ...params.services.map((s) => `- ${s.name}: ${kr(s.price_dkk)}`),
   ];

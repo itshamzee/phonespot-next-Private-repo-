@@ -343,6 +343,7 @@ export function BookingWizard() {
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
     ticketId?: string;
+    ticketNumber?: string | null;
     error?: string;
   } | null>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -802,7 +803,7 @@ export function BookingWizard() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSubmitResult({ success: true, ticketId: data.ticketId });
+        setSubmitResult({ success: true, ticketId: data.ticketId, ticketNumber: data.ticketNumber });
       } else {
         setSubmitResult({ success: false, error: data.error });
       }
@@ -882,9 +883,9 @@ export function BookingWizard() {
         </p>
         {submitResult.ticketId && (
           <p className="mt-4 rounded-lg bg-white p-3 text-sm text-gray">
-            Sags-ID:{" "}
+            Sagsnummer:{" "}
             <span className="font-mono font-bold text-charcoal">
-              {submitResult.ticketId.slice(0, 8)}
+              {submitResult.ticketNumber || submitResult.ticketId.slice(0, 8)}
             </span>
           </p>
         )}

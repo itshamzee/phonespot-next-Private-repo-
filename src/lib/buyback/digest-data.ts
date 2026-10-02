@@ -1,6 +1,11 @@
 import type { createAdminClient } from "@/lib/supabase/admin";
 import type { DigestData } from "@/lib/email/buyback-digest";
-import { deriveTradeInStatus, parseManualStatus } from "@/lib/supabase/trade-in-types";
+import {
+  deriveTradeInStatus,
+  parseManualStatus,
+  resolveTradeInStatus,
+} from "@/lib/supabase/trade-in-types";
+import { fetchInChunks } from "@/lib/supabase/in-chunks";
 import { readLeadDevices, deviceLabel } from "./lead-devices";
 
 type SupabaseAdmin = ReturnType<typeof createAdminClient>;
@@ -155,42 +160,56 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
   }[];
 
   const leadIds = leadRows.map((l) => l.id);
-  const [{ data: offersForLeads }, { data: receiptsForLeads }, { data: declinesForLeads }] =
-    leadIds.length
-      ? await Promise.all([
-          client.from("trade_in_offers").select("inquiry_id, status").in("inquiry_id", leadIds),
-          client.from("trade_in_receipts").select("inquiry_id, status").in("inquiry_id", leadIds),
-          client.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", leadIds),
-        ])
-      : [{ data: [] }, { data: [] }, { data: [] }];
+  const [offersRes, receiptsRes, declinesRes] = await Promise.all([
+    fetchInChunks<{ inquiry_id: string; status: string }>(leadIds, (c) =>
+      client.from("trade_in_offers").select("inquiry_id, status").in("inquiry_id", c),
+    ),
+    fetchInChunks<{ inquiry_id: string; status: string }>(leadIds, (c) =>
+      client.from("trade_in_receipts").select("inquiry_id, status").in("inquiry_id", c),
+    ),
+    fetchInChunks<{ id: string; inquiry_id: string }>(leadIds, (c) =>
+      client.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", c),
+    ),
+  ]);
+
+  // Without the paper trail every lead would read as "ny" and the digest would
+  // report a queue that does not exist. Better to fail the run than send that.
+  const queryError = offersRes.error ?? receiptsRes.error ?? declinesRes.error;
+  if (queryError) {
+    throw new Error(`Buyback digest: kunne ikke hente tilbud/kvitteringer (${queryError.message})`);
+  }
 
   const waitingLeads = leadRows.filter((lead) => {
-    // En manuelt sat status vinder over den afledte — også her, så køen i
-    // digesten matcher hvad admin ser på listen.
-    const status = parseManualStatus(lead.manual_status) ?? deriveTradeInStatus(
+    // En manuelt sat status vinder over den afledte, undtagen over et
+    // accepteret tilbud, så køen i digesten matcher hvad admin ser på listen.
+    const derived = deriveTradeInStatus(
       lead.status,
-      ((offersForLeads ?? []) as { inquiry_id: string; status: string }[]).filter(
-        (o) => o.inquiry_id === lead.id,
-      ) as never,
-      ((receiptsForLeads ?? []) as { inquiry_id: string; status: string }[]).filter(
-        (r) => r.inquiry_id === lead.id,
-      ) as never,
-      ((declinesForLeads ?? []) as { id: string; inquiry_id: string }[]).filter(
-        (d) => d.inquiry_id === lead.id,
-      ),
+      offersRes.data.filter((o) => o.inquiry_id === lead.id) as never,
+      receiptsRes.data.filter((r) => r.inquiry_id === lead.id) as never,
+      declinesRes.data.filter((d) => d.inquiry_id === lead.id),
     );
-    return status === "ny";
+    return resolveTradeInStatus(parseManualStatus(lead.manual_status), derived).status === "ny";
   });
 
   // The reason each one is still here comes from the event the dispatcher wrote.
-  const { data: manualEvents } = waitingLeads.length
-    ? await client
+  const manualEventsRes = await fetchInChunks<{
+    inquiry_id: string;
+    summary: string;
+    created_at: string;
+  }>(
+    waitingLeads.map((l) => l.id),
+    (c) =>
+      client
         .from("buyback_events")
         .select("inquiry_id, summary, created_at")
         .eq("type", "manual")
-        .in("inquiry_id", waitingLeads.map((l) => l.id))
-        .order("created_at", { ascending: false })
-    : { data: [] };
+        .in("inquiry_id", c)
+        .order("created_at", { ascending: false }),
+  );
+  // Batches arrive separately, so the newest-first order is restored here.
+  const manualEvents = [...manualEventsRes.data].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 
   const reasonByInquiry = new Map<string, string>();
   for (const ev of (manualEvents ?? []) as { inquiry_id: string; summary: string }[]) {

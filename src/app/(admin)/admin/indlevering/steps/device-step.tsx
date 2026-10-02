@@ -173,7 +173,7 @@ export function DeviceStep({ formData, updateFormData, onNext, onBack }: Props) 
           disabled={!hasDevice}
           className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          Naeste: Reparation
+          Næste: Reparation
         </button>
       </div>
     </div>

@@ -191,3 +191,51 @@ export function deriveTradeInStatus(
   if (inquiryStatus === "lukket") return "lukket";
   return "ny";
 }
+
+/**
+ * Statuses that can only be reached through a real accepted offer (or later
+ * paperwork). When the paper trail says one of these, a manual status must not
+ * hide it: an accepted offer disappearing from the overview is the worst
+ * possible failure here, because the customer has a device on its way.
+ */
+export const ACCEPTED_OR_LATER_STATUSES: TradeInDerivedStatus[] = [
+  "accepteret",
+  "afventer_forsendelse",
+  "paa_vej",
+  "leveret",
+  "modtaget",
+  "vurderet",
+  "betalt",
+];
+
+export interface ResolvedTradeInStatus {
+  status: TradeInDerivedStatus;
+  /** A manual status is what the row currently shows. */
+  manualActive: boolean;
+  /** A manual status exists but the accepted offer outranks it. */
+  manualIgnored: TradeInDerivedStatus | null;
+}
+
+/**
+ * Combines contact_inquiries.manual_status with the status derived from the
+ * paper trail.
+ *
+ * Rule (deliberately simple, no timestamp is stored on manual_status): once the
+ * paper trail shows an accepted offer or anything after it, the derived status
+ * wins over any manual status. The accept endpoint also clears manual_status, so
+ * in practice a manual status only survives on cases that have no accepted offer.
+ */
+export function resolveTradeInStatus(
+  manual: TradeInDerivedStatus | null,
+  derived: TradeInDerivedStatus,
+): ResolvedTradeInStatus {
+  if (!manual) return { status: derived, manualActive: false, manualIgnored: null };
+  if (ACCEPTED_OR_LATER_STATUSES.includes(derived)) {
+    return {
+      status: derived,
+      manualActive: false,
+      manualIgnored: manual === derived ? null : manual,
+    };
+  }
+  return { status: manual, manualActive: true, manualIgnored: null };
+}

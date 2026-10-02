@@ -10,6 +10,7 @@ import {
   formatDKK,
   deriveTradeInStatus,
   parseManualStatus,
+  resolveTradeInStatus,
   ALL_TRADE_IN_STATUSES,
 } from "@/lib/supabase/trade-in-types";
 import { DECLINE_REASONS } from "@/lib/buyback/decline-reasons";
@@ -110,6 +111,9 @@ export default function AdminOpkoebDetailPage() {
   const [shippingLabel, setShippingLabel] = useState<Record<string, unknown> | null>(null);
   const [labelLoading, setLabelLoading] = useState(false);
   const [receiveLoading, setReceiveLoading] = useState(false);
+  const [verbalOpen, setVerbalOpen] = useState(false);
+  const [verbalSaving, setVerbalSaving] = useState(false);
+  const [verbalError, setVerbalError] = useState("");
   const [labelOpening, setLabelOpening] = useState(false);
 
   // Price suggestion from the engine
@@ -253,7 +257,10 @@ export default function AdminOpkoebDetailPage() {
         receivedAt: acceptedOffer?.received_at ?? null,
       })
     : "ny";
-  const effectiveStatus = manualStatus ?? derivedStatus;
+  // Same rule as the overview: an accepted offer outranks a manual status.
+  const resolved = resolveTradeInStatus(manualStatus, derivedStatus);
+  const effectiveStatus = resolved.status;
+  const pendingOffer = offers.find((o) => o.status === "pending") ?? null;
 
   async function handleSetStatus(value: string) {
     setStatusSaving(true);
@@ -408,6 +415,28 @@ export default function AdminOpkoebDetailPage() {
   }
 
   /**
+   * The customer said yes by phone or in the store. Turns the latest pending
+   * offer into a real accepted offer, so payout and label flows work.
+   */
+  async function handleVerbalAccept() {
+    setVerbalSaving(true);
+    setVerbalError("");
+    try {
+      const res = await staffFetch(`/api/trade-in/${inquiryId}/verbal-accept`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setVerbalError(data.error || "Kunne ikke registrere accept");
+      } else {
+        setVerbalOpen(false);
+        await loadAll();
+      }
+    } catch {
+      setVerbalError("Kunne ikke registrere accept. Prøv igen.");
+    }
+    setVerbalSaving(false);
+  }
+
+  /**
    * Signed storage links expire, so the stored one is usually dead. A fresh one
    * is minted per click.
    */
@@ -531,7 +560,7 @@ export default function AdminOpkoebDetailPage() {
               className={`rounded-full px-3 py-1 text-xs font-bold ${DERIVED_STATUS_CONFIG[effectiveStatus].badge}`}
             >
               {DERIVED_STATUS_CONFIG[effectiveStatus].label}
-              {manualStatus && " · manuelt sat"}
+              {resolved.manualActive && " · manuelt sat"}
             </span>
             <div className="flex items-center gap-2">
               <label className="text-[11px] text-stone-400">Ret status:</label>
@@ -549,6 +578,12 @@ export default function AdminOpkoebDetailPage() {
                 ))}
               </select>
             </div>
+            {resolved.manualIgnored && (
+              <p className="max-w-xs text-right text-[11px] text-amber-700">
+                Den manuelle status ({DERIVED_STATUS_CONFIG[resolved.manualIgnored].label}) vises ikke,
+                fordi tilbuddet er accepteret. Vælg Automatisk for at fjerne den.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -782,6 +817,63 @@ export default function AdminOpkoebDetailPage() {
                   >
                     Fortryd
                   </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Mundtlig accept — kunden har sagt ja i telefonen eller i butikken */}
+          {pendingOffer && !hasAccepted && !isDeclined && (
+            <div className="rounded-xl border border-stone-200/60 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-stone-400">
+                Mundtlig accept
+              </h3>
+              {!verbalOpen ? (
+                <>
+                  <p className="mb-3 text-sm text-stone-500">
+                    Har kunden sagt ja til {formatDKK(pendingOffer.offer_amount)} i telefonen eller i
+                    butikken? Så registrerer du det her, og sagen får et rigtigt accepteret tilbud.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setVerbalOpen(true)}
+                    className="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-charcoal transition-colors hover:bg-stone-50"
+                  >
+                    Registrér mundtlig accept
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-stone-600">
+                    Registrér accept af {formatDKK(pendingOffer.offer_amount)}? Kunden får ingen mail.
+                    Bankoplysninger og adresse udfyldes bagefter på sagen.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={verbalSaving}
+                      onClick={() => void handleVerbalAccept()}
+                      className="rounded-full bg-charcoal px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {verbalSaving ? "Registrerer..." : "Ja, registrér accept"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={verbalSaving}
+                      onClick={() => {
+                        setVerbalOpen(false);
+                        setVerbalError("");
+                      }}
+                      className="text-[13px] text-stone-400 underline"
+                    >
+                      Fortryd
+                    </button>
+                  </div>
+                  {verbalError && (
+                    <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+                      {verbalError}
+                    </p>
+                  )}
                 </>
               )}
             </div>

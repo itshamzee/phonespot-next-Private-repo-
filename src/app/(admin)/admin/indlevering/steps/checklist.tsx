@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { ChecklistStatus, ChecklistItem } from "@/lib/supabase/types";
+import { Button } from "@/components/admin/ui";
+import { allNormal } from "@/lib/repairs/intake-checklist";
 import type { IntakeFormData } from "../page";
 
 interface Props {
@@ -69,9 +71,18 @@ export function Checklist({ formData, updateFormData }: Props) {
   return (
     <div>
       <div className="mb-6 rounded-2xl border border-soft-grey bg-white p-5">
-        <h3 className="mb-4 font-semibold text-charcoal">
-          Tilstandstjekliste
-        </h3>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-semibold text-charcoal">Tilstandstjekliste</h3>
+          <Button
+            size="sm"
+            onClick={() => updateFormData({ checklist: allNormal(formData.checklist) })}
+          >
+            Alt som normalt
+          </Button>
+        </div>
+        <p className="mb-4 text-sm text-gray">
+          Intet er forhåndsvalgt. Punkter du ikke har vurderet, står som &quot;Ikke vurderet&quot; på indleveringsbeviset.
+        </p>
         <div className="grid gap-4">
           {formData.checklist.map((item, i) => (
             <div

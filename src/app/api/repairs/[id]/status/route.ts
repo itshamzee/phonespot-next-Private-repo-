@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { storeForId, type StoreLocationConfig } from "@/lib/store-config";
 import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
 import type { RepairStatus } from "@/lib/supabase/types";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -21,7 +22,7 @@ const VALID_STATUSES: RepairStatus[] = [
 const STATUS_EMAIL_SUBJECTS: Partial<Record<RepairStatus, string>> = {
   godkendt: "Din reparation er godkendt",
   i_gang: "Din reparation er i gang",
-  faerdig: "Din reparation er faerdig",
+  faerdig: "Din reparation er færdig",
 };
 
 function getStatusEmailBody(
@@ -30,15 +31,18 @@ function getStatusEmailBody(
   deviceType: string,
   deviceModel: string,
   store: StoreLocationConfig,
+  caseNumber: string,
 ): string | null {
   switch (status) {
     case "godkendt":
       return [
         `Hej ${customerName},`,
         "",
-        `Tak! Dit tilbud paa reparation af din ${deviceType} ${deviceModel} er blevet godkendt.`,
+        `Tak! Dit tilbud på reparation af din ${deviceType} ${deviceModel} er blevet godkendt.`,
         "",
-        "Vi gaar i gang med reparationen hurtigst muligt og holder dig opdateret.",
+        "Vi går i gang med reparationen hurtigst muligt og holder dig opdateret.",
+        "",
+        `Sagsnummer: ${caseNumber}`,
         "",
         "Med venlig hilsen,",
         store.name,
@@ -50,7 +54,9 @@ function getStatusEmailBody(
         "",
         `Vi er nu i gang med at reparere din ${deviceType} ${deviceModel}.`,
         "",
-        "Vi giver dig besked saa snart reparationen er faerdig.",
+        "Vi giver dig besked, så snart reparationen er færdig.",
+        "",
+        `Sagsnummer: ${caseNumber}`,
         "",
         "Med venlig hilsen,",
         store.name,
@@ -60,9 +66,11 @@ function getStatusEmailBody(
       return [
         `Hej ${customerName},`,
         "",
-        `Din ${deviceType} ${deviceModel} er nu faerdigrepareret og klar til afhentning/forsendelse.`,
+        `Din ${deviceType} ${deviceModel} er nu færdigrepareret og klar til afhentning/forsendelse.`,
         "",
         "Kontakt os for at aftale afhentning eller returnering.",
+        "",
+        `Sagsnummer: ${caseNumber}`,
         "",
         "Med venlig hilsen,",
         store.name,
@@ -130,7 +138,12 @@ export async function PATCH(
       note: note ?? null,
     });
 
-    // Send email for specific statuses
+    // Statusændringen er gemt. Beskeder til kunden er en bivirkning: fejler de,
+    // skal personalet have besked, men ændringen står ved magt.
+    const warnings: string[] = [];
+    const store = storeForId(ticket.store_id);
+    const caseNumber = ticketLabel(ticket);
+
     const emailSubject = STATUS_EMAIL_SUBJECTS[status as RepairStatus];
     const emailBody = getStatusEmailBody(
       status as RepairStatus,
@@ -138,16 +151,24 @@ export async function PATCH(
       ticket.device_type,
       ticket.device_model,
       // The ticket's own store, so a Vejle customer is not told to come to Slagelse.
-      storeForId(ticket.store_id),
+      store,
+      caseNumber,
     );
 
-    if (emailSubject && emailBody && ticket.customer_email) {
-      await resend.emails.send({
-        from: "PhoneSpot Reparation <noreply@phonespot.dk>",
-        to: ticket.customer_email,
-        subject: `${emailSubject} — ${ticket.device_type} ${ticket.device_model}`,
-        text: emailBody,
-      });
+    // Walk-ins har ofte ingen e-mail (indlevering gemmer tom streng).
+    if (emailSubject && emailBody && ticket.customer_email?.trim()) {
+      try {
+        const { error: emailError } = await resend.emails.send({
+          from: "PhoneSpot Reparation <noreply@phonespot.dk>",
+          to: ticket.customer_email,
+          subject: `${emailSubject}: ${ticket.device_type} ${ticket.device_model}`,
+          text: emailBody,
+        });
+        if (emailError) throw new Error(emailError.message);
+      } catch (emailErr) {
+        console.error("Status email error:", id, emailErr);
+        warnings.push("Statussen er ændret, men e-mailen til kunden kunne ikke sendes.");
+      }
     }
 
     // Send SMS notification
@@ -158,6 +179,8 @@ export async function PATCH(
           customerName: ticket.customer_name,
           deviceName: `${ticket.device_type} ${ticket.device_model}`.trim(),
           ticketId: id,
+          ticketNumber: ticket.ticket_number,
+          storeId: ticket.store_id,
         });
 
         if (smsMessage) {
@@ -171,17 +194,24 @@ export async function PATCH(
             provider_message_id: smsResult.messageId,
             status: smsResult.success ? "sent" : "failed",
           });
+          if (!smsResult.success) {
+            warnings.push("Statussen er ændret, men SMS'en til kunden kunne ikke sendes.");
+          }
         }
       } catch (smsErr) {
         console.error("SMS send error:", smsErr);
+        warnings.push("Statussen er ændret, men SMS'en til kunden kunne ikke sendes.");
       }
     }
 
+    if (warnings.length > 0) {
+      return NextResponse.json({ success: true, warning: warnings.join(" ") });
+    }
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Status update error:", err);
     return NextResponse.json(
-      { error: "Noget gik galt. Proev igen senere." },
+      { error: "Noget gik galt. Prøv igen senere." },
       { status: 500 },
     );
   }

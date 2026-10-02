@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type {
   RepairTicket,
@@ -16,6 +17,9 @@ import {
 } from "@/components/admin/pdf-preview-modal";
 import StoreBadge from "@/components/admin/StoreBadge";
 import { STORE_IDS, normalizeStoreId, storeLabel } from "@/lib/stores";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
+import { HOLD_REASONS } from "@/lib/repairs/hold";
+import { Button, Notice } from "@/components/admin/ui";
 
 const STATUS_LABELS: Record<RepairStatus, string> = {
   modtaget: "Modtaget",
@@ -23,12 +27,12 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   tilbud_sendt: "Tilbud sendt",
   godkendt: "Godkendt",
   i_gang: "I gang",
-  faerdig: "Faerdig",
+  faerdig: "Færdig",
   afhentet: "Afhentet",
   bero: "Bero",
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
-  reklamation_loest: "Reklamation loest",
+  reklamation_loest: "Reklamation løst",
 };
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
@@ -58,13 +62,6 @@ const STATUS_PROGRESSION: Record<RepairStatus, RepairStatus | null> = {
   reklamation_vurderet: "reklamation_loest",
   reklamation_loest: null,
 };
-
-const BERO_REASONS = [
-  "Venter paa dele",
-  "Venter paa kundesvar",
-  "Venter paa godkendelse",
-  "Andet",
-];
 
 export default function AdminTicketDetailPage({
   params,
@@ -110,10 +107,11 @@ export default function AdminTicketDetailPage({
   // Urgent / Bero / Reklamation state
   const [urgentUpdating, setUrgentUpdating] = useState(false);
   const [showBeroDropdown, setShowBeroDropdown] = useState(false);
-  const [beroReason, setBeroReason] = useState(BERO_REASONS[0]);
+  const [beroReason, setBeroReason] = useState<string>(HOLD_REASONS[0]);
   const [beroUpdating, setBeroUpdating] = useState(false);
   const [reklamationUpdating, setReklamationUpdating] = useState(false);
-  const [previousStatusBeforeBero, setPreviousStatusBeforeBero] = useState<RepairStatus | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const router = useRouter();
 
   const supabase = createBrowserClient();
 
@@ -143,15 +141,6 @@ export default function AdminTicketDetailPage({
     if (logsRes.data) setStatusLogs(logsRes.data as unknown as RepairStatusLog[]);
     if (commentsRes.data) setComments(commentsRes.data as unknown as RepairComment[]);
 
-    // Track what status was before bero (from status logs)
-    if (ticketRes.data && (ticketRes.data as unknown as RepairTicket).status === "bero" && logsRes.data) {
-      const logs = logsRes.data as unknown as RepairStatusLog[];
-      const beroLog = logs.find((l) => l.new_status === "bero");
-      if (beroLog?.old_status) {
-        setPreviousStatusBeforeBero(beroLog.old_status as RepairStatus);
-      }
-    }
-
     setLoading(false);
   }
 
@@ -160,9 +149,21 @@ export default function AdminTicketDetailPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  /** Læser fejlteksten fra et API-svar, så personalet får en konkret besked. */
+  async function errorFrom(res: Response, fallback: string): Promise<string> {
+    try {
+      const data = await res.json();
+      if (data?.error && typeof data.error === "string") return data.error;
+    } catch {
+      // svaret var ikke JSON
+    }
+    return fallback;
+  }
+
   async function handleSendQuote(e: React.FormEvent) {
     e.preventDefault();
     setQuoteSending(true);
+    setActionError(null);
 
     try {
       const res = await fetch(`/api/repairs/${id}/quote`, {
@@ -176,14 +177,18 @@ export default function AdminTicketDetailPage({
       });
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data?.warning) setActionError(data.warning);
         setShowQuoteForm(false);
         setQuotePrice("");
         setQuoteDays("");
         setQuoteNotes("");
         await loadData();
+      } else {
+        setActionError(await errorFrom(res, "Tilbuddet blev ikke sendt. Prøv igen."));
       }
     } catch {
-      // Silently handle error — user sees no change
+      setActionError("Tilbuddet blev ikke sendt, fordi forbindelsen fejlede. Tjek nettet og prøv igen.");
     }
 
     setQuoteSending(false);
@@ -195,6 +200,7 @@ export default function AdminTicketDetailPage({
     if (!nextStatus) return;
 
     setStatusUpdating(true);
+    setActionError(null);
 
     try {
       const res = await fetch(`/api/repairs/${id}/status`, {
@@ -204,23 +210,44 @@ export default function AdminTicketDetailPage({
       });
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data?.warning) setActionError(data.warning);
         await loadData();
+      } else {
+        setActionError(await errorFrom(res, "Status blev ikke ændret. Prøv igen."));
       }
     } catch {
-      // Silently handle error
+      setActionError("Status blev ikke ændret, fordi forbindelsen fejlede. Tjek nettet og prøv igen.");
     }
 
     setStatusUpdating(false);
   }
 
+  /** Fælles PATCH mod /api/repairs/[id]; returnerer true ved succes. */
+  async function patchTicket(body: Record<string, unknown>, failMessage: string): Promise<boolean> {
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/repairs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        setActionError(await errorFrom(res, failMessage));
+        return false;
+      }
+      await loadData();
+      return true;
+    } catch {
+      setActionError(`${failMessage} Forbindelsen fejlede.`);
+      return false;
+    }
+  }
+
   async function handleStoreChange(value: string) {
     if (!ticket) return;
     setStoreUpdating(true);
-    await supabase
-      .from("repair_tickets")
-      .update({ store_id: normalizeStoreId(value), updated_at: new Date().toISOString() })
-      .eq("id", id);
-    await loadData();
+    await patchTicket({ store_id: normalizeStoreId(value) }, "Butikken blev ikke ændret.");
     setStoreUpdating(false);
   }
 
@@ -237,42 +264,57 @@ export default function AdminTicketDetailPage({
   async function handleAddNote() {
     if (!ticket || !noteText.trim()) return;
     setNoteSaving(true);
+    setActionError(null);
     const existingNotes = ticket.internal_notes ?? [];
     const newNotes = [
       ...existingNotes,
       { text: noteText.trim(), author: "Admin", timestamp: new Date().toISOString() },
     ];
-    await supabase
+    const { error } = await supabase
       .from("repair_tickets")
       .update({ internal_notes: newNotes, updated_at: new Date().toISOString() })
       .eq("id", id);
-    setNoteText("");
-    await loadData();
+    if (error) {
+      setActionError("Noten blev ikke gemt. Prøv igen.");
+    } else {
+      setNoteText("");
+      await loadData();
+    }
     setNoteSaving(false);
   }
 
   async function handleSendSms() {
     if (!ticket || !smsMessage.trim()) return;
     setSmsSending(true);
-    await fetch("/api/sms/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ticket_id: id,
-        customer_id: ticket.customer_id,
-        phone: ticket.customer_phone,
-        message: smsMessage.trim(),
-      }),
-    });
-    setSmsMessage("");
+    setActionError(null);
+    try {
+      const res = await fetch("/api/sms/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticket_id: id,
+          customer_id: ticket.customer_id,
+          phone: ticket.customer_phone,
+          message: smsMessage.trim(),
+        }),
+      });
+      if (res.ok) {
+        setSmsMessage("");
+      } else {
+        setActionError(await errorFrom(res, "SMS'en blev ikke sendt. Prøv igen."));
+      }
+    } catch {
+      setActionError("SMS'en blev ikke sendt, fordi forbindelsen fejlede.");
+    }
     setSmsSending(false);
   }
 
   async function handleAddComment() {
     if (!newComment.trim()) return;
     setCommentSending(true);
+    setActionError(null);
     try {
-      await fetch(`/api/repairs/${id}/comments`, {
+      const res = await fetch(`/api/repairs/${id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -281,10 +323,14 @@ export default function AdminTicketDetailPage({
           author: "Admin",
         }),
       });
-      setNewComment("");
-      await loadData();
+      if (res.ok) {
+        setNewComment("");
+        await loadData();
+      } else {
+        setActionError(await errorFrom(res, "Kommentaren blev ikke gemt. Prøv igen."));
+      }
     } catch {
-      // Silently handle error
+      setActionError("Kommentaren blev ikke gemt, fordi forbindelsen fejlede.");
     }
     setCommentSending(false);
   }
@@ -292,68 +338,47 @@ export default function AdminTicketDetailPage({
   async function handleToggleUrgent() {
     if (!ticket) return;
     setUrgentUpdating(true);
-    try {
-      await fetch(`/api/repairs/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_urgent: !ticket.is_urgent }),
-      });
-      await loadData();
-    } catch {
-      // Silently handle error
-    }
+    await patchTicket({ is_urgent: !ticket.is_urgent }, "Hastesag blev ikke ændret.");
     setUrgentUpdating(false);
   }
 
   async function handleSetBero() {
     setBeroUpdating(true);
-    try {
-      await fetch(`/api/repairs/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "bero", note: beroReason }),
-      });
-      setShowBeroDropdown(false);
-      await loadData();
-    } catch {
-      // Silently handle error
-    }
+    const ok = await patchTicket({ on_hold_reason: beroReason }, "Sagen blev ikke sat på hold.");
+    if (ok) setShowBeroDropdown(false);
     setBeroUpdating(false);
   }
 
   async function handleResumeBero() {
-    if (!previousStatusBeforeBero) return;
     setStatusUpdating(true);
-    try {
-      await fetch(`/api/repairs/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: previousStatusBeforeBero, note: "Genoptaget fra bero" }),
-      });
-      await loadData();
-    } catch {
-      // Silently handle error
-    }
+    await patchTicket({ on_hold_reason: null }, "Sagen blev ikke fjernet fra hold.");
     setStatusUpdating(false);
   }
 
   async function handleReklamation() {
+    if (!ticket) return;
+    const ok = window.confirm(
+      `Opret en ny reklamationssag for ${ticketLabel(ticket)}? Kunde og enhed kopieres til den nye sag.`,
+    );
+    if (!ok) return;
     setReklamationUpdating(true);
+    setActionError(null);
     try {
-      await fetch(`/api/repairs/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "reklamation_modtaget" }),
-      });
-      await loadData();
+      const res = await fetch(`/api/repairs/${id}/reklamation`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/admin/reparationer/${data.ticketId}`);
+        return;
+      }
+      setActionError(await errorFrom(res, "Reklamationssagen blev ikke oprettet. Prøv igen."));
     } catch {
-      // Silently handle error
+      setActionError("Reklamationssagen blev ikke oprettet, fordi forbindelsen fejlede.");
     }
     setReklamationUpdating(false);
   }
 
   if (loading) {
-    return <p className="text-gray">Indlaeser sag...</p>;
+    return <p className="text-gray">Indlæser sag...</p>;
   }
 
   if (!ticket) {
@@ -378,7 +403,7 @@ export default function AdminTicketDetailPage({
           <div className="rounded-2xl border border-soft-grey bg-white p-6">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
               <h2 className="font-display text-xl font-bold text-charcoal">
-                Sag: {ticket.id.slice(0, 8)}
+                Sag {ticketLabel(ticket)}
               </h2>
               <div className="flex flex-wrap items-center gap-2">
                 <StoreBadge store={ticket.store_id} className="!text-xs px-3 py-1" />
@@ -392,15 +417,42 @@ export default function AdminTicketDetailPage({
                     Hastesag
                   </span>
                 )}
-                {ticket.status === "bero" && ticket.on_hold_reason && (
-                  <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                    {ticket.on_hold_reason}
+                {ticket.on_hold_reason && (
+                  <span className="inline-block rounded-full bg-[#FFF4E5] px-3 py-1 text-xs font-semibold text-[#8A4B08]">
+                    På hold: {ticket.on_hold_reason}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Urgent / Bero / Reklamation controls */}
+            {actionError && (
+              <div className="mb-4">
+                <Notice
+                  tone="danger"
+                  action={
+                    <Button size="sm" variant="quiet" onClick={() => setActionError(null)}>
+                      Luk
+                    </Button>
+                  }
+                >
+                  {actionError}
+                </Notice>
+              </div>
+            )}
+
+            {ticket.parent_ticket_id && (
+              <p className="mb-4 text-sm text-gray">
+                Reklamation på en tidligere sag.{" "}
+                <Link
+                  href={`/admin/reparationer/${ticket.parent_ticket_id}`}
+                  className="font-medium text-green-eco hover:underline"
+                >
+                  Åbn den oprindelige sag
+                </Link>
+              </p>
+            )}
+
+            {/* Hastesag, hold og reklamation */}
             <div className="mb-6 flex flex-wrap gap-2">
               <select
                 value={normalizeStoreId(ticket.store_id) ?? ""}
@@ -428,14 +480,14 @@ export default function AdminTicketDetailPage({
                 {urgentUpdating ? "..." : "Hastesag"}
               </button>
 
-              {ticket.status === "bero" ? (
+              {ticket.on_hold_reason ? (
                 <button
                   type="button"
                   onClick={handleResumeBero}
                   disabled={statusUpdating}
                   className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
                 >
-                  {statusUpdating ? "..." : "Genoptag fra bero"}
+                  {statusUpdating ? "..." : "Fjern fra hold"}
                 </button>
               ) : (
                 <div className="relative">
@@ -444,17 +496,17 @@ export default function AdminTicketDetailPage({
                     onClick={() => setShowBeroDropdown(!showBeroDropdown)}
                     className="rounded-full bg-stone-200 px-4 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-stone-300"
                   >
-                    Bero
+                    Sæt på hold
                   </button>
                   {showBeroDropdown && (
                     <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-soft-grey bg-white p-4 shadow-lg">
-                      <p className="mb-2 text-xs font-semibold text-charcoal">Vaelg aarsag:</p>
+                      <p className="mb-2 text-xs font-semibold text-charcoal">Vælg årsag:</p>
                       <select
                         value={beroReason}
                         onChange={(e) => setBeroReason(e.target.value)}
                         className="mb-3 w-full rounded-lg border border-soft-grey px-3 py-2 text-sm text-charcoal focus:border-green-eco focus:outline-none"
                       >
-                        {BERO_REASONS.map((r) => (
+                        {HOLD_REASONS.map((r) => (
                           <option key={r} value={r}>{r}</option>
                         ))}
                       </select>
@@ -465,7 +517,7 @@ export default function AdminTicketDetailPage({
                           disabled={beroUpdating}
                           className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
                         >
-                          {beroUpdating ? "..." : "Saet paa bero"}
+                          {beroUpdating ? "..." : "Sæt på hold"}
                         </button>
                         <button
                           type="button"
@@ -480,7 +532,7 @@ export default function AdminTicketDetailPage({
                 </div>
               )}
 
-              {!["reklamation_modtaget", "reklamation_vurderet", "reklamation_loest"].includes(ticket.status) && (
+              {(
                 <button
                   type="button"
                   onClick={handleReklamation}
@@ -726,7 +778,7 @@ export default function AdminTicketDetailPage({
                       )}
                       {quote.declined_at && (
                         <span className="text-xs font-semibold text-red-600">
-                          Afslaet {formatDateTime(quote.declined_at)}
+                          Afslået {formatDateTime(quote.declined_at)}
                         </span>
                       )}
                     </div>
@@ -759,7 +811,7 @@ export default function AdminTicketDetailPage({
             </div>
             {ticket.shopify_draft_order_id && (
               <p className="mt-2 text-xs text-gray">
-                Shopify Draft: {ticket.shopify_draft_order_id}
+                Betalingsreference: {ticket.shopify_draft_order_id}
               </p>
             )}
           </div>
@@ -782,7 +834,7 @@ export default function AdminTicketDetailPage({
                 onClick={() => setPdfModal({ type: "workshop-report" })}
                 className="rounded-full border border-soft-grey px-5 py-2 text-sm font-semibold text-charcoal transition-colors hover:bg-sand"
               >
-                Vaerkstedsrapport
+                Værkstedsrapport
               </button>
             </div>
           </div>
@@ -797,7 +849,7 @@ export default function AdminTicketDetailPage({
                 {(ticket.intake_checklist as { label: string; status: string; note: string }[]).map((item) => (
                   <div key={item.label} className="flex items-center gap-2 text-sm">
                     <span
-                      className={`w-10 text-xs font-bold ${
+                      className={`w-24 text-xs font-bold ${
                         item.status === "fejl"
                           ? "text-red-600"
                           : item.status === "ok"
@@ -805,7 +857,7 @@ export default function AdminTicketDetailPage({
                             : "text-gray"
                       }`}
                     >
-                      {item.status === "ok" ? "OK" : item.status === "fejl" ? "FEJL" : "N/A"}
+                      {item.status === "ok" ? "OK" : item.status === "fejl" ? "Fejl" : item.status === "ikke_relevant" ? "N/A" : "Ikke vurderet"}
                     </span>
                     <span className="text-charcoal">{item.label}</span>
                     {item.note && <span className="text-gray">— {item.note}</span>}
@@ -956,7 +1008,7 @@ export default function AdminTicketDetailPage({
               Statushistorik
             </h3>
             {statusLogs.length === 0 ? (
-              <p className="text-sm text-gray">Ingen statusaendringer endnu.</p>
+              <p className="text-sm text-gray">Ingen statusændringer endnu.</p>
             ) : (
               <div className="relative space-y-0">
                 {statusLogs.map((log, i) => (
@@ -995,6 +1047,7 @@ export default function AdminTicketDetailPage({
           type={pdfModal.type}
           data={{
             ticketId: ticket.id,
+            ticketNumber: ticketLabel(ticket),
             customerName: ticket.customer_name,
             customerPhone: ticket.customer_phone,
             customerEmail: ticket.customer_email,

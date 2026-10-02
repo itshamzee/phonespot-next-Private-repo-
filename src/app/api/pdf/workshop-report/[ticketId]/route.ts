@@ -55,6 +55,7 @@ export async function GET(
     React.createElement(WorkshopReportDocument, {
       data: {
         ticketId: ticket.id,
+        ticketNumber: ticket.ticket_number ?? undefined,
         createdAt: ticket.created_at,
         customerName: customer?.name ?? ticket.customer_name,
         customerPhone: customer?.phone ?? ticket.customer_phone,
@@ -85,6 +86,7 @@ export async function POST(
   const { ticketId } = await params;
 
   let body: {
+    ticketNumber?: string;
     customerName: string;
     customerPhone: string;
     customerEmail?: string;
@@ -113,6 +115,7 @@ export async function POST(
     React.createElement(WorkshopReportDocument, {
       data: {
         ticketId,
+        ticketNumber: body.ticketNumber || undefined,
         createdAt: new Date().toISOString(),
         customerName: body.customerName,
         customerPhone: body.customerPhone,

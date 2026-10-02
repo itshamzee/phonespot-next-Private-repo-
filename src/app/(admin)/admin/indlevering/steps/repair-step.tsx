@@ -134,7 +134,7 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
       {/* Available services from prisliste */}
       <div className="mb-6 rounded-2xl border border-soft-grey bg-white p-5">
         <h3 className="mb-4 font-semibold text-charcoal">
-          Tilgaengelige reparationer
+          Tilgængelige reparationer
         </h3>
 
         {loading ? (
@@ -245,7 +245,7 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
       {/* Internal notes */}
       <div className="mb-6 rounded-2xl border border-soft-grey bg-white p-5">
         <h3 className="mb-2 font-semibold text-charcoal">
-          Interne noter (til vaerkstedet)
+          Interne noter (til værkstedet)
         </h3>
         <textarea
           rows={3}
@@ -281,7 +281,7 @@ export function RepairStep({ formData, updateFormData, onNext, onBack }: Props) 
           disabled={!hasServices}
           className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          Naeste: Opsummering
+          Næste: Opsummering
         </button>
       </div>
     </div>

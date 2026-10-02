@@ -1,11 +1,34 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import type { ContactInquiry } from "@/lib/supabase/types";
-import type { TradeInOffer, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
-import { deriveTradeInStatus, parseManualStatus, formatDKK } from "@/lib/supabase/trade-in-types";
+import type { TradeInOffer, TradeInDerivedStatus, TradeInReceiptStatus } from "@/lib/supabase/trade-in-types";
+import {
+  deriveTradeInStatus,
+  parseManualStatus,
+  resolveTradeInStatus,
+  formatDKK,
+  ALL_TRADE_IN_STATUSES,
+} from "@/lib/supabase/trade-in-types";
+import { fetchInChunks } from "@/lib/supabase/in-chunks";
+import {
+  acceptedAt,
+  acceptedOffer,
+  buildOverviewQuery,
+  daysBetween,
+  formatDays,
+  lastActivity,
+  latestOffer as pickLatestOffer,
+  parseOverviewState,
+  payoutState,
+  PAYOUT_LABELS,
+  stageSince,
+  type PayoutState,
+} from "@/lib/buyback/overview";
+import { Notice } from "@/components/admin/ui";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { normalizeStoreId } from "@/lib/stores";
@@ -61,35 +84,54 @@ const LIST_GROUPS: { title: string; hint: string; statuses: TradeInDerivedStatus
   { title: "Afsluttet", hint: "Betalt og færdige", statuses: ["betalt"] },
 ];
 
-/**
- * "3 dage" beats "12. jun. 2026" when you are scanning for what has gone stale.
- *
- * `now` is passed in rather than read here: calling Date.now() during render is
- * impure, and the whole page should measure ages against one instant anyway.
- */
-function relativeAge(iso: string, now: number): string {
-  const days = Math.floor((now - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return "i dag";
-  if (days === 1) return "i går";
-  if (days < 7) return `${days} dage`;
-  if (days < 31) return `${Math.floor(days / 7)} uger`;
-  const months = Math.floor(days / 30);
-  return `${months} ${months === 1 ? "måned" : "mdr"}`;
-}
+/* Skrivebord: faste kolonner. Mobil: stablet, to kolonner pr. linje. */
+const ROW_GRID =
+  "grid grid-cols-2 items-center gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_5.5rem_minmax(0,9.5rem)_5rem_6.5rem_minmax(0,9rem)]";
 
 interface ShipmentInfo {
   tracking_number: string | null;
   in_transit_at: string | null;
   delivered_at: string | null;
+  created_at: string | null;
 }
 
 interface TradeInRow {
   inquiry: ContactInquiry;
-  offers: Pick<TradeInOffer, "id" | "status" | "offer_amount" | "created_at" | "received_at">[];
-  receipts: { status: string; total_amount?: number }[];
+  offers: OfferRow[];
+  receipts: ReceiptRow[];
   derivedStatus: TradeInDerivedStatus;
+  /** A manual status is what the row shows (tag "Manuelt sat"). */
+  manualActive: boolean;
   shipment: ShipmentInfo | null;
   receivedAt: string | null;
+  /** Newest timestamp anywhere on the case; rows sort by it, newest first. */
+  activityAt: string;
+  /** When the case entered its current stage. */
+  stageAt: string;
+  acceptedAt: string | null;
+  payout: PayoutState | null;
+}
+
+type OfferRow = Pick<
+  TradeInOffer,
+  | "id"
+  | "inquiry_id"
+  | "status"
+  | "offer_amount"
+  | "created_at"
+  | "received_at"
+  | "responded_at"
+  | "seller_bank_reg"
+  | "seller_bank_account"
+>;
+
+interface ReceiptRow {
+  inquiry_id: string;
+  status: TradeInReceiptStatus;
+  total_amount?: number;
+  created_at: string | null;
+  confirmed_at: string | null;
+  paid_at: string | null;
 }
 
 // Primær kilde er `store_id` (tilføjes af parallel migration — kolonnen kan mangle,
@@ -106,12 +148,27 @@ function inquiryStoreRaw(inquiry: ContactInquiry): string | null {
 }
 
 export default function OpkoebPage() {
+  // useSearchParams needs a Suspense boundary above it.
+  return (
+    <Suspense fallback={null}>
+      <OpkoebOverview />
+    </Suspense>
+  );
+}
+
+function OpkoebOverview() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Read once: afterwards the state lives here and is mirrored out to the URL.
+  const [initialUrl] = useState(() => parseOverviewState(searchParams, ALL_TRADE_IN_STATUSES));
   const [rows, setRows] = useState<TradeInRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [folder, setFolder] = useState<"aktive" | "afviste">("aktive");
-  const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">("alle");
-  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>("alle");
-  const [search, setSearch] = useState("");
+  const [loadError, setLoadError] = useState(false);
+  const [folder, setFolder] = useState<"aktive" | "afviste">(initialUrl.folder);
+  const [filter, setFilter] = useState<TradeInDerivedStatus | "alle">(initialUrl.filter);
+  const [storeFilter, setStoreFilter] = useState<StoreFilterValue>(initialUrl.store);
+  const [search, setSearch] = useState(initialUrl.search);
   // 112 rows in one scroll is not a list, it is a wall. Show a screenful.
   const [visible, setVisible] = useState(30);
   // Betalte sager vokser for evigt — den gruppe starter foldet sammen.
@@ -121,6 +178,9 @@ export default function OpkoebPage() {
   const [bulkStatus, setBulkStatus] = useState<TradeInDerivedStatus | "auto">("modtaget");
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState("");
+  // Accepterede sager er beskyttet mod masse-redigering, medmindre man siger til.
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkIncludeAccepted, setBulkIncludeAccepted] = useState(false);
   // Stamped when the data lands, so every age on the page is measured against
   // the same instant and nothing impure runs during render.
   const [now, setNow] = useState(0);
@@ -152,62 +212,105 @@ export default function OpkoebPage() {
     setVisible(30);
   }, []);
 
+  // Folder, stage filter, store and search live in the URL, so a reload or a
+  // shared link lands on the same view.
+  useEffect(() => {
+    const qs = buildOverviewQuery({ folder, filter, store: storeFilter, search });
+    if (qs === searchParams.toString()) return;
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [folder, filter, storeFilter, search, pathname, router, searchParams]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
 
     const supabase = createBrowserClient();
 
-    const { data: inquiries } = await supabase
+    const { data: inquiries, error: inquiriesError } = await supabase
       .from("contact_inquiries")
       .select("*")
       .eq("source", "saelg-enhed")
       .order("created_at", { ascending: false });
 
-    if (!inquiries || inquiries.length === 0) { setRows([]); setLoading(false); return; }
+    if (inquiriesError) {
+      setRows([]);
+      setLoadError(true);
+      setLoading(false);
+      return;
+    }
+    if (!inquiries || inquiries.length === 0) {
+      setRows([]);
+      setLoadError(false);
+      setLoading(false);
+      return;
+    }
 
     const ids = inquiries.map((i) => i.id);
 
-    const { data: allOffers } = await supabase
-      .from("trade_in_offers")
-      .select("id, inquiry_id, status, offer_amount, created_at, received_at")
-      .in("inquiry_id", ids);
+    // .in() lists go in the URL, so they are fetched in batches of 100.
+    const [offersRes, receiptsRes, declinesRes] = await Promise.all([
+      fetchInChunks<OfferRow>(ids, (chunk) =>
+        supabase
+          .from("trade_in_offers")
+          .select(
+            "id, inquiry_id, status, offer_amount, created_at, received_at, responded_at, seller_bank_reg, seller_bank_account",
+          )
+          .in("inquiry_id", chunk)
+          .order("created_at", { ascending: false }),
+      ),
+      fetchInChunks<ReceiptRow>(ids, (chunk) =>
+        supabase
+          .from("trade_in_receipts")
+          .select("inquiry_id, status, total_amount, created_at, confirmed_at, paid_at")
+          .in("inquiry_id", chunk),
+      ),
+      fetchInChunks<{ id: string; inquiry_id: string }>(ids, (chunk) =>
+        supabase.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", chunk),
+      ),
+    ]);
 
+    const allOffers = offersRes.data;
     // Carrier progress hangs off the accepted offer, not the inquiry.
-    const acceptedOfferIds = (allOffers || [])
-      .filter((o) => o.status === "accepted")
-      .map((o) => o.id);
+    const acceptedOfferIds = allOffers.filter((o) => o.status === "accepted").map((o) => o.id);
 
-    const { data: allLabels } = acceptedOfferIds.length
-      ? await supabase
+    const labelsRes = await fetchInChunks<ShipmentInfo & { offer_id: string }>(
+      acceptedOfferIds,
+      (chunk) =>
+        supabase
           .from("shipping_labels")
-          .select("offer_id, tracking_number, in_transit_at, delivered_at")
-          .in("offer_id", acceptedOfferIds)
-      : { data: [] };
+          .select("offer_id, tracking_number, in_transit_at, delivered_at, created_at")
+          .in("offer_id", chunk),
+    );
 
-    const { data: allReceipts } = await supabase
-      .from("trade_in_receipts")
-      .select("inquiry_id, status, total_amount")
-      .in("inquiry_id", ids);
+    // A failed query would otherwise read as "no offers", and every case as new.
+    setLoadError(
+      Boolean(offersRes.error || receiptsRes.error || declinesRes.error || labelsRes.error),
+    );
 
-    const { data: allDeclines } = await supabase
-      .from("buyback_declines")
-      .select("id, inquiry_id")
-      .in("inquiry_id", ids);
+    const allReceipts = receiptsRes.data;
+    const allDeclines = declinesRes.data;
+    const allLabels = labelsRes.data;
 
     const result: TradeInRow[] = inquiries.map((inquiry) => {
-      const offers = (allOffers || []).filter((o) => o.inquiry_id === inquiry.id);
-      const receipts = (allReceipts || []).filter((r) => r.inquiry_id === inquiry.id);
-      const declines = (allDeclines || []).filter((d) => d.inquiry_id === inquiry.id);
+      const offers = allOffers.filter((o) => o.inquiry_id === inquiry.id);
+      const receipts = allReceipts.filter((r) => r.inquiry_id === inquiry.id);
+      const declines = allDeclines.filter((d) => d.inquiry_id === inquiry.id);
 
-      const accepted = offers.find((o) => o.status === "accepted");
-      const shipment =
-        (allLabels || []).find((l) => accepted && l.offer_id === accepted.id) ?? null;
+      const accepted = acceptedOffer(offers);
+      const shipment = allLabels.find((l) => accepted && l.offer_id === accepted.id) ?? null;
       const receivedAt = accepted?.received_at ?? null;
 
-      // En status admin selv har sat vinder over papirsporet.
       const manual = parseManualStatus(
         (inquiry as ContactInquiry & { manual_status?: string | null }).manual_status,
       );
+      const derived = deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
+        label: shipment,
+        receivedAt,
+      });
+      // En status admin selv har sat vinder over papirsporet, men aldrig over
+      // et accepteret tilbud.
+      const resolved = resolveTradeInStatus(manual, derived);
+
+      const facts = { createdAt: inquiry.created_at, offers, receipts, label: shipment };
 
       return {
         inquiry,
@@ -215,14 +318,17 @@ export default function OpkoebPage() {
         receipts,
         shipment,
         receivedAt,
-        derivedStatus:
-          manual ??
-          deriveTradeInStatus(inquiry.status, offers, receipts, declines, {
-            label: shipment,
-            receivedAt,
-          }),
+        derivedStatus: resolved.status,
+        manualActive: resolved.manualActive,
+        activityAt: lastActivity(facts),
+        stageAt: stageSince(resolved.status, facts),
+        acceptedAt: acceptedAt(offers),
+        payout: payoutState(facts),
       };
     });
+
+    // Newest activity first, so inside every stage the case that just moved is on top.
+    result.sort((a, b) => new Date(b.activityAt).getTime() - new Date(a.activityAt).getTime());
 
     setRows(result);
     setNow(Date.now());
@@ -386,12 +492,34 @@ export default function OpkoebPage() {
    * et bulk-endpoint — listen er lille nok til at requests er billigere end
    * en ny API-flade.
    */
+  const acceptedSelected = rows.filter(
+    (r) => selected.has(r.inquiry.id) && r.offers.some((o) => o.status === "accepted"),
+  );
+
   async function applyBulkStatus() {
     if (selected.size === 0 || bulkSaving) return;
+
+    // En manuel status på en sag med accepteret tilbud er næsten altid en fejl,
+    // så de spørges der først om. "Automatisk" fjerner kun en override og er sikker.
+    const protectedIds =
+      bulkStatus === "auto" ? new Set<string>() : new Set(acceptedSelected.map((r) => r.inquiry.id));
+    if (protectedIds.size > 0 && !bulkConfirmOpen) {
+      setBulkIncludeAccepted(false);
+      setBulkConfirmOpen(true);
+      return;
+    }
+
+    const ids = [...selected].filter((id) => bulkIncludeAccepted || !protectedIds.has(id));
+    if (ids.length === 0) {
+      setBulkError("Alle valgte sager har et accepteret tilbud og blev udeladt");
+      setBulkConfirmOpen(false);
+      return;
+    }
+
     setBulkSaving(true);
     setBulkError("");
     const failed: string[] = [];
-    for (const id of selected) {
+    for (const id of ids) {
       try {
         const res = await staffFetch(`/api/trade-in/${id}/status`, {
           method: "POST",
@@ -404,8 +532,9 @@ export default function OpkoebPage() {
       }
     }
     setBulkSaving(false);
+    setBulkConfirmOpen(false);
     if (failed.length > 0) {
-      setBulkError(`${failed.length} af ${selected.size} kunne ikke opdateres — prøv igen`);
+      setBulkError(`${failed.length} af ${ids.length} kunne ikke opdateres. Prøv igen`);
       setSelected(new Set(failed));
     } else {
       setSelected(new Set());
@@ -480,6 +609,27 @@ export default function OpkoebPage() {
 
       {/* Automation stopped itself — nothing else matters until that is read */}
       <BuybackPauseBanner />
+
+      {loadError && (
+        <div className="mb-5">
+          <Notice
+            tone="danger"
+            title="Kunne ikke hente alle data. Tallene kan være forkerte"
+            action={
+              <button
+                type="button"
+                onClick={() => void loadData()}
+                className="shrink-0 text-[13px] font-medium underline"
+              >
+                Prøv igen
+              </button>
+            }
+          >
+            Statusserne under kan afvige fra virkeligheden, indtil alt er hentet. Genindlæs listen
+            før du handler på den.
+          </Notice>
+        </div>
+      )}
 
       {/* What buyback owes and is owed today */}
       <BuybackHeadline facts={facts} onFilter={selectFilter} />
@@ -597,7 +747,7 @@ export default function OpkoebPage() {
             <p className="text-sm text-charcoal/30">Indlæser opkøb...</p>
           </div>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && loadError ? null : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-black/[0.04] bg-white py-20 shadow-sm">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-charcoal/[0.03]">
             <svg className="h-5 w-5 text-charcoal/20" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -608,6 +758,20 @@ export default function OpkoebPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-black/[0.04] bg-white shadow-sm">
+          <div
+            className="hidden items-center border-b border-black/[0.04] py-2.5 pl-[3.25rem] pr-6 text-[12px] font-medium text-charcoal/40 sm:flex"
+            aria-hidden="true"
+          >
+            <div className={`min-w-0 flex-1 ${ROW_GRID}`}>
+              <span>Kunde</span>
+              <span>Enhed</span>
+              <span>Tilbud</span>
+              <span>Trin</span>
+              <span>Dage i trin</span>
+              <span>Accepteret</span>
+              <span>Udbetaling</span>
+            </div>
+          </div>
           <div className="divide-y divide-black/[0.03]">
             {listItems.map((item) => {
               if (item.kind === "header") {
@@ -645,9 +809,10 @@ export default function OpkoebPage() {
               const leadDevices = readLeadDevices(meta);
               const first = leadDevices[0]?.device;
               const extraCount = Math.max(0, leadDevices.length - 1);
-              const latestOffer = row.offers.find((o) => o.status === "pending" || o.status === "accepted")
-                || row.offers[0];
+              const offer = pickLatestOffer(row.offers);
               const statusCfg = STATUS_CONFIG[row.derivedStatus];
+              const stageDays = daysBetween(row.stageAt, now);
+              const payout = row.payout;
 
               return (
                 <div
@@ -678,46 +843,75 @@ export default function OpkoebPage() {
                   <Link
                     href={`/admin/opkoeb/${row.inquiry.id}`}
                     draggable={false}
-                    className="flex min-w-0 flex-1 items-center gap-4 py-4 pr-5 sm:pr-6"
+                    className={`min-w-0 flex-1 py-3.5 pr-5 sm:pr-6 ${ROW_GRID}`}
                   >
-                  {/* Status dot */}
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusCfg.dot}`} />
-
-                  {/* Info */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-semibold text-charcoal group-hover:text-emerald-700">
-                        {row.inquiry.name}
+                    {/* Kunde */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${statusCfg.dot}`} />
+                        <p className="truncate text-sm font-semibold text-charcoal group-hover:text-emerald-700">
+                          {row.inquiry.name}
+                        </p>
+                        <StoreBadge store={inquiryStoreRaw(row.inquiry)} />
+                      </div>
+                      <p className="mt-0.5 truncate pl-4 text-xs text-charcoal/35">
+                        {meta.deliveryMethod === "Aflever i butik" ? "Butik" : "Forsendelse"}
                       </p>
                     </div>
-                    <p className="mt-0.5 truncate text-xs text-charcoal/35">
-                      {deviceLabel(first)}
-                      {extraCount > 0 && ` \· +${extraCount} enhed${extraCount > 1 ? "er" : ""}`}
-                      {` \· ${meta.deliveryMethod === "Aflever i butik" ? "Butik" : "Forsendelse"}`}
-                    </p>
-                  </div>
 
-                  {/* Right */}
-                  <div className="flex shrink-0 items-center gap-3">
-                    {latestOffer && (
-                      <span className="hidden rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600 sm:inline-block">
-                        {formatDKK(latestOffer.offer_amount)}
+                    {/* Enhed */}
+                    <p className="min-w-0 truncate text-[13px] text-charcoal/70">
+                      {deviceLabel(first)}
+                      {extraCount > 0 && ` · +${extraCount} enhed${extraCount > 1 ? "er" : ""}`}
+                    </p>
+
+                    {/* Tilbud */}
+                    <p className="text-[13px] font-semibold tabular-nums text-charcoal">
+                      {offer ? formatDKK(offer.offer_amount) : <span className="text-charcoal/25">Intet tilbud</span>}
+                    </p>
+
+                    {/* Trin */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusCfg.badge}`}>
+                        {statusCfg.label}
                       </span>
-                    )}
-                    <StoreBadge store={inquiryStoreRaw(row.inquiry)} />
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${statusCfg.badge}`}>
-                      {statusCfg.label}
-                    </span>
-                    <span
-                      className="w-16 text-right text-xs text-charcoal/35"
-                      title={formatDate(row.inquiry.created_at)}
+                      {row.manualActive && (
+                        <span
+                          className="rounded-full border border-amber-300/60 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700"
+                          title="Status er sat manuelt og følger ikke forløbet"
+                        >
+                          Manuelt sat
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Dage i trinnet */}
+                    <p
+                      className={`text-[13px] tabular-nums ${stageDays >= 7 ? "font-semibold text-amber-700" : "text-charcoal/50"}`}
+                      title={`I trinnet siden ${formatDate(row.stageAt)}`}
                     >
-                      {relativeAge(row.inquiry.created_at, now)}
-                    </span>
-                    <svg className="h-4 w-4 text-charcoal/15" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </div>
+                      <span className="text-charcoal/30 sm:hidden">I trinnet: </span>
+                      {formatDays(stageDays)}
+                    </p>
+
+                    {/* Accepteret */}
+                    <p className="text-[13px] tabular-nums text-charcoal/50">
+                      <span className="text-charcoal/30 sm:hidden">Accepteret: </span>
+                      {row.acceptedAt ? formatDate(row.acceptedAt) : <span className="text-charcoal/20">-</span>}
+                    </p>
+
+                    {/* Udbetaling */}
+                    <p
+                      className={`text-[13px] ${
+                        payout === "mangler_bank"
+                          ? "font-semibold text-rose-600"
+                          : payout === "skal_udbetales"
+                            ? "font-medium text-charcoal"
+                            : "text-charcoal/50"
+                      }`}
+                    >
+                      {payout ? PAYOUT_LABELS[payout] : <span className="text-charcoal/20">-</span>}
+                    </p>
                   </Link>
                 </div>
               );
@@ -757,11 +951,38 @@ export default function OpkoebPage() {
                 Vælg alle {filtered.length}
               </button>
             )}
+            {bulkConfirmOpen && (
+              <div className="w-full rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-[13px] text-amber-900">
+                <p className="font-semibold">
+                  {acceptedSelected.length} af de valgte sager har et accepteret tilbud
+                </p>
+                <p className="mt-0.5 text-amber-800">
+                  De udelades, så en accept ikke overskrives af en manuel status:
+                </p>
+                <ul className="mt-1.5 max-h-24 list-disc space-y-0.5 overflow-y-auto pl-5">
+                  {acceptedSelected.map((r) => (
+                    <li key={r.inquiry.id}>{r.inquiry.name}</li>
+                  ))}
+                </ul>
+                <label className="mt-2 flex items-center gap-2 text-[13px]">
+                  <input
+                    type="checkbox"
+                    checked={bulkIncludeAccepted}
+                    onChange={(e) => setBulkIncludeAccepted(e.target.checked)}
+                    className="h-4 w-4 accent-charcoal"
+                  />
+                  Medtag dem alligevel
+                </label>
+              </div>
+            )}
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <select
                 value={bulkStatus}
                 disabled={bulkSaving}
-                onChange={(e) => setBulkStatus(e.target.value as TradeInDerivedStatus | "auto")}
+                onChange={(e) => {
+                  setBulkStatus(e.target.value as TradeInDerivedStatus | "auto");
+                  setBulkConfirmOpen(false);
+                }}
                 className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-[13px] text-charcoal focus:border-emerald-500/40 focus:outline-none disabled:opacity-50"
               >
                 {(Object.keys(STATUS_CONFIG) as TradeInDerivedStatus[]).map((s) => (
@@ -777,7 +998,13 @@ export default function OpkoebPage() {
                 onClick={() => void applyBulkStatus()}
                 className="rounded-lg bg-charcoal px-4 py-2 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {bulkSaving ? "Opdaterer..." : "Anvend"}
+                {bulkSaving
+                  ? "Opdaterer..."
+                  : bulkConfirmOpen
+                    ? bulkIncludeAccepted
+                      ? `Anvend på ${selected.size} sager`
+                      : `Anvend på ${selected.size - acceptedSelected.length} sager`
+                    : "Anvend"}
               </button>
               <button
                 type="button"
@@ -785,6 +1012,7 @@ export default function OpkoebPage() {
                 onClick={() => {
                   setSelected(new Set());
                   setBulkError("");
+                  setBulkConfirmOpen(false);
                 }}
                 className="rounded-lg border border-stone-200 px-4 py-2 text-[13px] font-medium text-charcoal/50 transition-colors hover:text-charcoal disabled:opacity-50"
               >

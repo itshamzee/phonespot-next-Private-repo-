@@ -245,6 +245,7 @@ export function RepairCart({
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
     ticketId?: string;
+    ticketNumber?: string | null;
     error?: string;
   } | null>(null);
   // Ved succes erstattes hele kurven af en kort besked; uden at scrolle
@@ -355,7 +356,7 @@ export function RepairCart({
           error: data.error ?? "Noget gik galt.",
         });
       } else {
-        setSubmitResult({ success: true, ticketId: data.ticketId });
+        setSubmitResult({ success: true, ticketId: data.ticketId, ticketNumber: data.ticketNumber });
       }
     } catch {
       setSubmitResult({ success: false, error: "Netværksfejl. Prøv igen." });
@@ -423,9 +424,9 @@ export function RepairCart({
         </p>
         {submitResult.ticketId && (
           <p className="mt-2 text-xs text-gray">
-            Sags-ID:{" "}
+            Sagsnummer:{" "}
             <span className="font-mono font-semibold text-charcoal">
-              {submitResult.ticketId.slice(0, 8).toUpperCase()}
+              {submitResult.ticketNumber || submitResult.ticketId.slice(0, 8).toUpperCase()}
             </span>
           </p>
         )}

@@ -73,7 +73,7 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
 
   async function handleCreateCustomer() {
     if (!newName.trim() || !newPhone.trim()) {
-      setError("Navn og telefon er paakraevet");
+      setError("Navn og telefon er påkrævet");
       return;
     }
 
@@ -106,7 +106,7 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
       updateFormData({ customer, isNewCustomer: true });
       setShowForm(false);
     } catch {
-      setError("Netvaerksfejl");
+      setError("Netværksfejl. Tjek forbindelsen og prøv igen.");
     }
     setCreating(false);
   }
@@ -328,7 +328,7 @@ export function CustomerStep({ formData, updateFormData, onNext }: Props) {
           disabled={!canProceed}
           className="rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          Naeste: Enhed
+          Næste: Enhed
         </button>
       </div>
     </div>

@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry } from "@/lib/supabase/types";
-import { deriveTradeInStatus, parseManualStatus } from "@/lib/supabase/trade-in-types";
+import {
+  deriveTradeInStatus,
+  parseManualStatus,
+  resolveTradeInStatus,
+} from "@/lib/supabase/trade-in-types";
+import { fetchInChunks } from "@/lib/supabase/in-chunks";
+import { Notice } from "@/components/admin/ui";
 import { readLeadDevices } from "@/lib/buyback/lead-devices";
 import { DECLINE_REASONS, type DeclineReasonCode } from "@/lib/buyback/decline-reasons";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
@@ -61,6 +67,9 @@ export default function OpkoebQueuePage() {
   const [drafts, setDrafts] = useState<Record<string, LeadDraft>>({});
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  // A failed list query must never read as "no offers yet": that would put
+  // accepted cases back in the queue as new leads.
+  const [loadError, setLoadError] = useState(false);
 
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reasonPickerFor, setReasonPickerFor] = useState<number | null>(null);
@@ -79,11 +88,19 @@ export default function OpkoebQueuePage() {
     let cancelled = false;
 
     async function load() {
-      const { data: inquiries } = await supabase
+      const { data: inquiries, error: inquiriesError } = await supabase
         .from("contact_inquiries")
         .select("*")
         .eq("source", "saelg-enhed")
         .order("created_at", { ascending: true });
+
+      if (inquiriesError) {
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
+        return;
+      }
 
       if (!inquiries || inquiries.length === 0) {
         if (!cancelled) {
@@ -94,25 +111,44 @@ export default function OpkoebQueuePage() {
       }
 
       const ids = inquiries.map((i) => i.id);
-      const [{ data: offers }, { data: receipts }, { data: declines }] = await Promise.all([
-        supabase.from("trade_in_offers").select("inquiry_id, status").in("inquiry_id", ids),
-        supabase.from("trade_in_receipts").select("inquiry_id, status").in("inquiry_id", ids),
-        supabase.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", ids),
+      const [offersRes, receiptsRes, declinesRes] = await Promise.all([
+        fetchInChunks<{ inquiry_id: string; status: string }>(ids, (c) =>
+          supabase.from("trade_in_offers").select("inquiry_id, status").in("inquiry_id", c),
+        ),
+        fetchInChunks<{ inquiry_id: string; status: string }>(ids, (c) =>
+          supabase.from("trade_in_receipts").select("inquiry_id, status").in("inquiry_id", c),
+        ),
+        fetchInChunks<{ id: string; inquiry_id: string }>(ids, (c) =>
+          supabase.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", c),
+        ),
       ]);
 
+      if (offersRes.error || receiptsRes.error || declinesRes.error) {
+        if (!cancelled) {
+          setLoadError(true);
+          setQueue([]);
+          setLoading(false);
+        }
+        return;
+      }
+
+      const offers = offersRes.data;
+      const receipts = receiptsRes.data;
+      const declines = declinesRes.data;
+
       const untouched = (inquiries as ContactInquiry[]).filter((inquiry) => {
-        // Manuel status vinder — en sag admin har flyttet ud af "ny" skal ikke
-        // dukke op i køen igen.
+        // Manuel status vinder, undtagen over et accepteret tilbud — en sag
+        // admin har flyttet ud af "ny" skal ikke dukke op i køen igen.
         const manual = parseManualStatus(
           (inquiry as ContactInquiry & { manual_status?: string | null }).manual_status,
         );
-        const status = manual ?? deriveTradeInStatus(
+        const derived = deriveTradeInStatus(
           inquiry.status,
-          (offers ?? []).filter((o) => o.inquiry_id === inquiry.id),
-          (receipts ?? []).filter((r) => r.inquiry_id === inquiry.id),
-          (declines ?? []).filter((d) => d.inquiry_id === inquiry.id),
+          offers.filter((o) => o.inquiry_id === inquiry.id) as never,
+          receipts.filter((r) => r.inquiry_id === inquiry.id) as never,
+          declines.filter((d) => d.inquiry_id === inquiry.id),
         );
-        return status === "ny";
+        return resolveTradeInStatus(manual, derived).status === "ny";
       });
 
       if (cancelled) return;
@@ -455,6 +491,28 @@ export default function OpkoebQueuePage() {
   }
 
   const handled = Object.values(drafts).filter((d) => d.outcome).length;
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl py-16">
+        <Notice
+          tone="danger"
+          title="Kunne ikke hente alle data. Tallene kan være forkerte"
+          action={
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="shrink-0 text-[13px] font-medium underline"
+            >
+              Prøv igen
+            </button>
+          }
+        >
+          Køen er ikke vist, så accepterede sager ikke dukker op som nye. Prøv igen om lidt.
+        </Notice>
+      </div>
+    );
+  }
 
   if (!current || !draft) {
     return (

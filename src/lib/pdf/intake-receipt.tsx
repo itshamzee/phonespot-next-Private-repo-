@@ -159,6 +159,11 @@ const styles = StyleSheet.create({
   statusNa: {
     backgroundColor: "#D1D5DB",
   },
+  checklistStatusText: {
+    fontSize: 8,
+    color: colors.gray,
+    marginLeft: 4,
+  },
   checklistLabel: {
     fontSize: 9,
     color: colors.charcoal,
@@ -275,6 +280,8 @@ const styles = StyleSheet.create({
 
 interface IntakeReceiptData {
   ticketId: string;
+  /** Menneskelæsbart sagsnummer (PS-2026-0001). Falder tilbage til kort uuid. */
+  ticketNumber?: string;
   createdAt: string;
   customerName: string;
   customerPhone: string;
@@ -291,8 +298,21 @@ interface IntakeReceiptData {
   totalPrice: number;
 }
 
+function checklistStatusText(status: string): string {
+  switch (status) {
+    case "ok":
+      return "OK";
+    case "fejl":
+      return "Fejl";
+    case "ikke_relevant":
+      return "Ikke relevant";
+    default:
+      return "Ikke vurderet";
+  }
+}
+
 export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
-  const shortId = `#${data.ticketId.slice(0, 8).toUpperCase()}`;
+  const shortId = data.ticketNumber || `#${data.ticketId.slice(0, 8).toUpperCase()}`;
   const dateStr = new Date(data.createdAt).toLocaleDateString("da-DK", {
     day: "numeric",
     month: "long",
@@ -416,6 +436,7 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
                     ]}
                   />
                   <Text style={styles.checklistLabel}>{item.label}</Text>
+                  <Text style={styles.checklistStatusText}>{checklistStatusText(item.status)}</Text>
                 </View>
               ))}
             </View>
@@ -453,18 +474,18 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
 
           {/* ── Terms & Conditions ────────────── */}
           <View style={styles.termsSection}>
-            <Text style={styles.termsTitle}>Vilkaar og betingelser</Text>
+            <Text style={styles.termsTitle}>Vilkår og betingelser</Text>
             <Text style={styles.termsText}>
-              1. PhoneSpot yder 3 maaneders garanti paa alle reparationer,
+              1. PhoneSpot yder 3 måneders garanti på alle reparationer,
               medmindre andet er aftalt.
             </Text>
             <Text style={styles.termsText}>
-              2. Enheder der ikke afhentes inden 30 dage efter faerdigmelding,
+              2. Enheder der ikke afhentes inden 30 dage efter færdigmelding,
               kan bortskaffes uden yderligere varsel.
             </Text>
             <Text style={styles.termsText}>
-              3. PhoneSpot er ikke ansvarlig for data paa enheden. Kunden
-              opfordres til at tage backup foer indlevering.
+              3. PhoneSpot er ikke ansvarlig for data på enheden. Kunden
+              opfordres til at tage backup før indlevering.
             </Text>
             <Text style={styles.termsText}>
               4. Prisen er et estimat og kan aendre sig efter diagnosticering.

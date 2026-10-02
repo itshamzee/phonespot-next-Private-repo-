@@ -29,7 +29,7 @@ async function loadTicket(ticketId: string | undefined) {
   if (!ticketId || !UUID.test(ticketId)) return null;
   const { data } = await createServerClient()
     .from("repair_tickets")
-    .select("id, customer_email, device_type, device_model, store_id, paid, booking_details")
+    .select("id, ticket_number, customer_email, device_type, device_model, store_id, paid, booking_details")
     .eq("id", ticketId)
     .maybeSingle();
   return data;
@@ -64,7 +64,7 @@ export default async function BekraeftelsePage({
   const storeSlug = normalizeStoreId(ticket?.store_id) ?? normalizeStoreId(details.delivery_method);
   const store = storeSlug ? STORES[storeSlug] : null;
   const mailIn = details.delivery_method === "Send ind";
-  const shortTicket = ticketId ? ticketId.slice(0, 8) : null;
+  const shortTicket = ticket?.ticket_number || (ticketId ? ticketId.slice(0, 8) : null);
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center bg-[#fafaf8] px-4 py-12 font-body">

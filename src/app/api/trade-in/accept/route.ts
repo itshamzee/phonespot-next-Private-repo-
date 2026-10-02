@@ -7,6 +7,7 @@ import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { render } from "@react-email/render";
 import OfferAcceptanceEmail from "@/lib/email/templates/offer-acceptance";
 import { logBuybackEvent } from "@/lib/buyback/events";
+import { clearManualStatusOnAccept } from "@/lib/buyback/accept-offer";
 import { sendCriticalAlert } from "@/lib/buyback/alerts";
 import { loadBuybackSettings } from "@/lib/buyback/settings";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
@@ -68,6 +69,9 @@ export async function POST(req: Request) {
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
+
+  // The acceptance outranks any manual status set earlier.
+  await clearManualStatusOnAccept(supabase, offer.inquiry_id, offer.id);
 
   // The acceptance is the moment money starts moving, so it goes in the event
   // log, and above the threshold it also reaches a phone.

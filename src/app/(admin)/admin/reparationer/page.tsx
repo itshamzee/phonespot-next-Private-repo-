@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { RepairStatus, RepairTicket } from "@/lib/supabase/types";
 import { normalizeStoreId } from "@/lib/stores";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
 import StoreBadge from "@/components/admin/StoreBadge";
 import StoreFilter, {
   matchesStoreFilter,
@@ -159,7 +160,7 @@ export default function AdminReparationerPage() {
           </h2>
           <p className="mt-0.5 text-sm text-charcoal/35">
             {filteredTickets.length} {filteredTickets.length === 1 ? "sag" : "sager"}
-            {filter !== "alle" && ` \— ${STATUS_LABELS[filter]}`}
+            {filter !== "alle" && ` · ${STATUS_LABELS[filter]}`}
           </p>
         </div>
         <Link
@@ -183,7 +184,7 @@ export default function AdminReparationerPage() {
           </div>
           <input
             type="text"
-            placeholder="Søg efter navn, email, telefon, model eller sags-ID..."
+            placeholder="Søg efter navn, email, telefon, model eller sagsnummer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-black/[0.06] bg-white py-3 pl-11 pr-4 text-sm text-charcoal placeholder:text-charcoal/25 shadow-sm transition-all focus:border-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
@@ -263,7 +264,7 @@ export default function AdminReparationerPage() {
                     {ticket.customer_name}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-charcoal/35">
-                    {ticket.device_type} \— {ticket.device_model} \· {ticket.service_type}
+                    <span className="font-mono tabular-nums">{ticketLabel(ticket)}</span> · {ticket.device_type} {ticket.device_model} · {ticket.service_type}
                   </p>
                 </div>
 
@@ -278,6 +279,11 @@ export default function AdminReparationerPage() {
                   <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${STATUS_BADGE[ticket.status]}`}>
                     {STATUS_LABELS[ticket.status]}
                   </span>
+                  {ticket.on_hold_reason && (
+                    <span className="hidden rounded-full bg-[#FFF4E5] px-2.5 py-1 text-[10px] font-bold text-[#8A4B08] sm:inline-block">
+                      På hold: {ticket.on_hold_reason}
+                    </span>
+                  )}
                   <span className="hidden text-xs text-charcoal/20 sm:block">
                     {formatDate(ticket.created_at)}
                   </span>

@@ -115,6 +115,7 @@ export async function POST(request: Request) {
     // oprettet — men fejlen logges i sendRepairConfirmation.
     await sendRepairConfirmation({
       ticketId: ticket.id,
+      ticketNumber: ticket.ticket_number,
       customerName: body.customer_name,
       customerEmail: body.customer_email,
       deviceLabel: `${body.device_type} ${body.device_model}`.trim(),
@@ -146,12 +147,17 @@ export async function POST(request: Request) {
         `Beskrivelse: ${body.issue_description}`,
         ...bookingLines,
         "",
+        `Sagsnummer: ${ticket.ticket_number ?? ticket.id}`,
         `Sags-ID: ${ticket.id}`,
       ].join("\n"),
     });
     if (staffEmailError) console.error("[repairs] staff email failed:", ticket.id, staffEmailError);
 
-    return NextResponse.json({ success: true, ticketId: ticket.id });
+    return NextResponse.json({
+      success: true,
+      ticketId: ticket.id,
+      ticketNumber: ticket.ticket_number ?? null,
+    });
   } catch (err) {
     console.error("Repair ticket error:", err);
     return NextResponse.json(

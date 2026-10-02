@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export interface PDFPreviewData {
   ticketId: string;
+  ticketNumber?: string;
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -44,7 +45,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
   const totalPrice = services.reduce((sum, s) => sum + (s.price || 0), 0);
 
   const typeLabel =
-    type === "intake-receipt" ? "Indleveringsbevis" : "Vaerkstedsrapport";
+    type === "intake-receipt" ? "Indleveringsbevis" : "Værkstedsrapport";
 
   function updateService(index: number, field: "name" | "price", value: string) {
     setServices((prev) =>
@@ -70,6 +71,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
     try {
       const body: PDFPreviewData = {
         ticketId: data.ticketId,
+        ticketNumber: data.ticketNumber,
         customerName,
         customerPhone,
         customerEmail,

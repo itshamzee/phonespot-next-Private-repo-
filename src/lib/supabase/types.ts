@@ -143,7 +143,7 @@ export interface CustomerDevice {
   created_at: string;
 }
 
-export type ChecklistStatus = "ok" | "fejl" | "ikke_relevant";
+export type ChecklistStatus = "ok" | "fejl" | "ikke_relevant" | "ikke_vurderet";
 
 export interface ChecklistItem {
   label: string;

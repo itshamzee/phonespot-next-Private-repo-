@@ -41,7 +41,7 @@ export async function handleRepairPayment(session: Stripe.Checkout.Session): Pro
     .update({ paid: true, paid_at: new Date().toISOString() })
     .eq("id", ticketId)
     .eq("paid", false)
-    .select("id, customer_name, customer_email, customer_phone, device_type, device_model, store_id, booking_details")
+    .select("id, ticket_number, customer_name, customer_email, customer_phone, device_type, device_model, store_id, booking_details")
     .maybeSingle();
 
   if (error) throw new Error(`Could not mark repair ticket ${ticketId} as paid: ${error.message}`);
@@ -52,6 +52,7 @@ export async function handleRepairPayment(session: Stripe.Checkout.Session): Pro
 
   await sendRepairConfirmation({
     ticketId: ticket.id,
+    ticketNumber: ticket.ticket_number,
     customerName: ticket.customer_name,
     customerEmail: ticket.customer_email,
     deviceLabel: `${ticket.device_type} ${ticket.device_model}`.trim(),

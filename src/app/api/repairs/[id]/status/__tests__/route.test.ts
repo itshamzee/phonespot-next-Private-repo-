@@ -1,0 +1,82 @@
+// @vitest-environment node
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const send = vi.fn();
+const sendSms = vi.fn();
+let ticket: Record<string, unknown>;
+
+vi.mock("resend", () => ({
+  Resend: class {
+    emails = { send: (...a: unknown[]) => send(...a) };
+  },
+}));
+vi.mock("@/lib/gateway-api/client", () => ({ sendSms: (...a: unknown[]) => sendSms(...a) }));
+vi.mock("@/lib/supabase/client", () => ({
+  createServerClient: () => ({
+    from: (table: string) => {
+      if (table === "repair_tickets") {
+        return {
+          select: () => ({ eq: () => ({ single: async () => ({ data: ticket, error: null }) }) }),
+          update: () => ({ eq: async () => ({ error: null }) }),
+        };
+      }
+      return { insert: async () => ({ error: null }) };
+    },
+  }),
+}));
+
+import { PATCH } from "../route";
+
+function call(status: string) {
+  return PATCH(
+    new Request("http://localhost/api/repairs/t1/status", {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+    { params: Promise.resolve({ id: "t1" }) },
+  );
+}
+
+describe("PATCH /api/repairs/[id]/status notifications", () => {
+  beforeEach(() => {
+    send.mockReset();
+    sendSms.mockReset();
+    ticket = {
+      id: "t1",
+      ticket_number: "PS-2026-0009",
+      status: "i_gang",
+      customer_name: "Mette",
+      customer_email: "mette@example.com",
+      customer_phone: "",
+      device_type: "smartphone",
+      device_model: "iPhone 13",
+      store_id: "vejle",
+    };
+  });
+
+  it("skips the email when the customer has none (walk-in)", async () => {
+    ticket.customer_email = "";
+    const res = await call("faerdig");
+    expect(res.status).toBe(200);
+    expect(send).not.toHaveBeenCalled();
+    expect((await res.json()).warning).toBeUndefined();
+  });
+
+  it("keeps the status change and returns a warning when Resend fails", async () => {
+    send.mockRejectedValue(new Error("resend down"));
+    const res = await call("faerdig");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.warning).toMatch(/e-mail/i);
+  });
+
+  it("signs with the ticket's store and includes the ticket number", async () => {
+    send.mockResolvedValue({ error: null });
+    await call("faerdig");
+    const arg = send.mock.calls[0][0];
+    expect(arg.text).toContain("PS-2026-0009");
+    expect(arg.text).toContain("Vejle");
+    expect(arg.text).not.toMatch(/faerdig|paa /);
+  });
+});

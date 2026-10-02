@@ -7,6 +7,7 @@ import type {
   ChecklistItem,
 } from "@/lib/supabase/types";
 import { normalizeStoreId, type StoreId } from "@/lib/stores";
+import { INITIAL_CHECKLIST } from "@/lib/repairs/intake-checklist";
 import { CustomerStep } from "./steps/customer-step";
 import { DeviceStep } from "./steps/device-step";
 import { RepairStep } from "./steps/repair-step";
@@ -38,20 +39,6 @@ export interface IntakeFormData {
   sendEmail: boolean;
 }
 
-const INITIAL_CHECKLIST: ChecklistItem[] = [
-  { label: "Skaerm (ridser/revner/dead pixels)", status: "ok", note: "", photo_url: null },
-  { label: "Bagside/ramme (buler/ridser)", status: "ok", note: "", photo_url: null },
-  { label: "Kamera (virker/ridset)", status: "ok", note: "", photo_url: null },
-  { label: "Opladning", status: "ok", note: "", photo_url: null },
-  { label: "Lyd/hoejttaler", status: "ok", note: "", photo_url: null },
-  { label: "Knapper", status: "ok", note: "", photo_url: null },
-  { label: "Vandskade-indikator", status: "ok", note: "", photo_url: null },
-  { label: "Batteri health", status: "ok", note: "", photo_url: null },
-  { label: "Find My / iCloud", status: "ok", note: "", photo_url: null },
-  { label: "Adgangskode modtaget", status: "ok", note: "", photo_url: null },
-  { label: "Tilbehoer indleveret", status: "ok", note: "", photo_url: null },
-];
-
 const INITIAL_FORM_DATA: IntakeFormData = {
   customer: null,
   isNewCustomer: false,
@@ -64,7 +51,7 @@ const INITIAL_FORM_DATA: IntakeFormData = {
   customServices: [],
   internalNotes: "",
   storeId: null,
-  createShopifyPayment: true,
+  createShopifyPayment: false,
   sendSms: true,
   sendEmail: true,
 };
@@ -89,6 +76,7 @@ export default function IntakePage() {
     storeId: rememberedStore(),
   }));
   const [submittedTicketId, setSubmittedTicketId] = useState<string | null>(null);
+  const [submittedTicketNumber, setSubmittedTicketNumber] = useState<string | null>(null);
 
   function updateFormData(partial: Partial<IntakeFormData>) {
     if (partial.storeId && typeof window !== "undefined") {
@@ -101,6 +89,7 @@ export default function IntakePage() {
     setFormData({ ...INITIAL_FORM_DATA, storeId: rememberedStore() });
     setCurrentStep(1);
     setSubmittedTicketId(null);
+    setSubmittedTicketNumber(null);
   }
 
   return (
@@ -173,8 +162,12 @@ export default function IntakePage() {
           formData={formData}
           updateFormData={updateFormData}
           onBack={() => setCurrentStep(3)}
-          onSubmitted={(ticketId) => setSubmittedTicketId(ticketId)}
+          onSubmitted={(ticketId, ticketNumber) => {
+            setSubmittedTicketId(ticketId);
+            setSubmittedTicketNumber(ticketNumber);
+          }}
           submittedTicketId={submittedTicketId}
+          submittedTicketNumber={submittedTicketNumber}
           onReset={handleReset}
         />
       )}

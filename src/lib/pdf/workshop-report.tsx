@@ -143,6 +143,11 @@ const styles = StyleSheet.create({
   statusNa: {
     backgroundColor: "#D1D5DB",
   },
+  checklistStatusText: {
+    fontSize: 8,
+    color: colors.gray,
+    marginLeft: 4,
+  },
   checklistLabel: {
     fontSize: 9,
     color: colors.charcoal,
@@ -260,6 +265,8 @@ const styles = StyleSheet.create({
 
 interface WorkshopReportData {
   ticketId: string;
+  /** Menneskelæsbart sagsnummer (PS-2026-0001). Falder tilbage til kort uuid. */
+  ticketNumber?: string;
   createdAt: string;
   customerName: string;
   customerPhone: string;
@@ -272,8 +279,21 @@ interface WorkshopReportData {
   internalNotes: string;
 }
 
+function checklistStatusText(status: string): string {
+  switch (status) {
+    case "ok":
+      return "OK";
+    case "fejl":
+      return "Fejl";
+    case "ikke_relevant":
+      return "Ikke relevant";
+    default:
+      return "Ikke vurderet";
+  }
+}
+
 export function WorkshopReportDocument({ data }: { data: WorkshopReportData }) {
-  const shortId = `#${data.ticketId.slice(0, 8).toUpperCase()}`;
+  const shortId = data.ticketNumber || `#${data.ticketId.slice(0, 8).toUpperCase()}`;
   const dateStr = new Date(data.createdAt).toLocaleDateString("da-DK", {
     day: "numeric",
     month: "long",
@@ -353,6 +373,7 @@ export function WorkshopReportDocument({ data }: { data: WorkshopReportData }) {
                       ]}
                     />
                     <Text style={styles.checklistLabel}>{item.label}</Text>
+                  <Text style={styles.checklistStatusText}>{checklistStatusText(item.status)}</Text>
                   </View>
                   {item.note ? (
                     <Text style={styles.checklistNote}>{item.note}</Text>
@@ -364,7 +385,7 @@ export function WorkshopReportDocument({ data }: { data: WorkshopReportData }) {
 
           {/* ── Repairs Performed ─────────────────── */}
           <View style={styles.repairsSection}>
-            <Text style={styles.cardTitle}>Udfoerte reparationer</Text>
+            <Text style={styles.cardTitle}>Udførte reparationer</Text>
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderText, { width: 18 }]} />
               <Text style={[styles.tableHeaderText, { flex: 1 }]}>
