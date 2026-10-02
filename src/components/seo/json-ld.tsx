@@ -27,7 +27,15 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
   logo: "https://phonespot.dk/brand/logo.png",
   image: "https://phonespot.dk/brand/logo.png",
   description:
-    "Danmarks specialist i kvalitetstestet refurbished elektronik. iPhones, iPads, MacBooks, Samsung og Apple Watch med 36 måneders garanti, prismatch-garanti og 30+ kvalitetstests.",
+    "Refurbished elektronik og reparation af telefoner og tablets med butikker i Vejle og Slagelse. Refurbished iPhones, iPads og MacBooks med 36 måneders garanti; reparation mens du venter med livstidsgaranti på arbejde og dele.",
+  telephone: "+45 61 10 00 48",
+  areaServed: { "@type": "Country", name: "Danmark" },
+  // Samler PhoneSpot som én entitet på tværs af profiler — søgemaskiner og
+  // AI-søgning (bl.a. via Bing) bruger sameAs til at koble omtale og anmeldelser.
+  sameAs: [
+    "https://dk.trustpilot.com/review/phonespot.dk",
+    "https://www.facebook.com/phonespot.dk/",
+  ],
   address: {
     "@type": "PostalAddress",
     streetAddress: STORE.street,
