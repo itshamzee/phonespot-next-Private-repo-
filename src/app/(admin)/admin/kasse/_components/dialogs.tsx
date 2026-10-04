@@ -380,11 +380,7 @@ export function CustomerDialog({ onPick, onClose }: { onPick: (c: CustomerPick) 
 
   useEffect(() => {
     const term = q.replace(/[,()*%\\]/g, " ").trim();
-    if (term.length < 2) {
-      setRows([]);
-      setSearched(false);
-      return;
-    }
+    if (term.length < 2) return;
     const mine = ++seq.current;
     const t = setTimeout(async () => {
       const { data } = await supabase
@@ -399,6 +395,8 @@ export function CustomerDialog({ onPick, onClose }: { onPick: (c: CustomerPick) 
     return () => clearTimeout(t);
   }, [q, supabase]);
 
+  const term = q.replace(/[,()*%\\]/g, " ").trim();
+  const shown = term.length >= 2 ? rows : [];
   return (
     <Modal title="Tilføj kunde" onClose={onClose}>
       <input
@@ -410,7 +408,7 @@ export function CustomerDialog({ onPick, onClose }: { onPick: (c: CustomerPick) 
         className={fieldClass}
       />
       <ul className="mt-3 divide-y divide-[#EEF0EC]">
-        {rows.map((r) => (
+        {shown.map((r) => (
           <li key={r.id}>
             <button type="button" onClick={() => onPick(r)} className="flex w-full flex-col items-start py-2.5 text-left hover:bg-[#F5F6F4]">
               <span className="text-sm font-semibold text-[#15211B]">{r.name}</span>
@@ -419,7 +417,7 @@ export function CustomerDialog({ onPick, onClose }: { onPick: (c: CustomerPick) 
           </li>
         ))}
       </ul>
-      {searched && rows.length === 0 && <p className="mt-3 text-sm text-[#5E6A63]">Ingen kunder fundet.</p>}
+      {searched && term.length >= 2 && shown.length === 0 && <p className="mt-3 text-sm text-[#5E6A63]">Ingen kunder fundet.</p>}
     </Modal>
   );
 }

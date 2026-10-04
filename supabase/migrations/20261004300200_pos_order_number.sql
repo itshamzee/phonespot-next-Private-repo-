@@ -1,40 +1,13 @@
--- Repair deposit (depositum) model, part 2 of 2: replaces pos_create_sale and
--- pos_create_return from 20261003130000 (same signatures, same grants).
--- Apply AFTER 20261004300000_pos_deposit_schema.sql.
---
--- pos_create_sale item types (p_items):
---   {type:'device', device_id}
---   {type:'sku_product', sku_product_id, quantity}
---   {type:'free_text', description, unit_price_oere, quantity?}
---   {type:'deposit', repair_ticket_id, description?, unit_price_oere}          prepayment on a case (25 % VAT)
---   {type:'repair_service', repair_ticket_id, description?, unit_price_oere}   the case total (25 % VAT); marks the case paid
---   {type:'deposit_applied', deposit_item_id, amount_oere}                     negative line; needs a repair_service line for the same case
---
--- Rules enforced here (business errors are pos:<code>, mapped in src/lib/pos/errors.ts):
---   * a sale touches at most one case
---   * deposit / repair_service need an existing, unpaid case
---   * a deposit is applied at most up to its remaining balance (locked, race-free)
---     and never twice in one request
---   * the total can never become negative (deposit larger than the final price
---     is applied up to the price; the rest is refunded through the return flow)
---   * repair_service marks repair_tickets.paid = true / paid_at (also for faktura:
---     the case is billed; order.payment_status stays 'pending' until paid)
---
--- pos_create_return additions:
---   * credit-note lines copy repair_ticket_id and deposit_item_id
---   * a deposit that has been (even partly) applied cannot be returned
---   * repair_service and deposit_applied lines are returned together (all or
---     nothing), which gives the customer exactly what they paid at pickup, and
---     the deposit becomes available again (the reversal restores its balance)
---   * returning a repair_service line resets repair_tickets.paid / paid_at
+-- Kassesalg og kreditnotaer skal have et ordrenummer (orders.order_number er NOT NULL
+-- og UNIQUE). Fundet ved røgtest 2026-10-04: alle kassesalg fejlede uden det.
+-- Salg bruger bonnummeret (fx V1-000001), kreditnotaer 'KN-' + bonnummer.
 
-BEGIN;
-
-CREATE OR REPLACE FUNCTION public.pos_create_sale(
-  p_location_id uuid, p_register_id uuid, p_staff_id uuid, p_customer_id uuid,
-  p_items jsonb, p_payments jsonb, p_discount_amount integer, p_discount_reason text, p_notes text
-) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+CREATE OR REPLACE FUNCTION public.pos_create_sale(p_location_id uuid, p_register_id uuid, p_staff_id uuid, p_customer_id uuid, p_items jsonb, p_payments jsonb, p_discount_amount integer, p_discount_reason text, p_notes text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
 DECLARE
   reg public.registers%ROWTYPE;
   sess_id uuid;
@@ -250,11 +223,11 @@ BEGIN
   v_receipt_number := reg.code || '-' || lpad(v_receipt_no::text, 6, '0');
 
   INSERT INTO public.orders (
-    type, customer_id, location_id, is_b2b, status, payment_method, payment_status,
+    order_number, type, customer_id, location_id, is_b2b, status, payment_method, payment_status,
     subtotal, discount_amount, shipping_cost, total, brugtmoms_total, vat_total, notes, confirmed_at,
     register_id, cash_session_id, staff_id, receipt_no, receipt_number, discount_reason, repair_ticket_id
   ) VALUES (
-    'pos', v_customer, p_location_id, false, 'confirmed',
+    v_receipt_number, 'pos', v_customer, p_location_id, false, 'confirmed',
     public.pos_legacy_payment_method(v_pay_types),
     CASE WHEN v_has_invoice THEN 'pending' ELSE 'paid' END,
     v_subtotal, v_discount, 0, v_total, v_brugt_total, v_vat_total, nullif(btrim(coalesce(p_notes, '')), ''),
@@ -326,16 +299,14 @@ BEGIN
     'vat_total', v_vat_total, 'brugtmoms_total', v_brugt_total, 'cash_session_id', sess_id,
     'repair_ticket_id', v_order_ticket, 'deposit_applied', v_applied_total, 'case_paid', v_has_repair);
 END;
-$$;
+$function$;
 
--- ============================================================
--- pos_create_return: credit note against a POS sale (deposit-aware).
--- ============================================================
-CREATE OR REPLACE FUNCTION public.pos_create_return(
-  p_original_order_id uuid, p_register_id uuid, p_location_id uuid, p_staff_id uuid,
-  p_lines jsonb, p_refunds jsonb, p_reason text, p_notes text
-) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+CREATE OR REPLACE FUNCTION public.pos_create_return(p_original_order_id uuid, p_register_id uuid, p_location_id uuid, p_staff_id uuid, p_lines jsonb, p_refunds jsonb, p_reason text, p_notes text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
 DECLARE
   reg public.registers%ROWTYPE; orig public.orders%ROWTYPE; oi public.order_items%ROWTYPE;
   d public.devices%ROWTYPE; ln record; pay record;
@@ -466,12 +437,12 @@ BEGIN
   v_receipt_number := reg.code || '-' || lpad(v_receipt_no::text, 6, '0');
 
   INSERT INTO public.orders (
-    type, customer_id, location_id, is_b2b, status, payment_method, payment_status,
+    order_number, type, customer_id, location_id, is_b2b, status, payment_method, payment_status,
     subtotal, discount_amount, shipping_cost, total, brugtmoms_total, vat_total, notes, confirmed_at,
     register_id, cash_session_id, staff_id, receipt_no, receipt_number, original_order_id, credit_reason,
     repair_ticket_id
   ) VALUES (
-    'credit_note', orig.customer_id, p_location_id, false, 'confirmed',
+    'KN-' || v_receipt_number, 'credit_note', orig.customer_id, p_location_id, false, 'confirmed',
     public.pos_legacy_payment_method(v_pay_types), 'paid',
     -v_subtotal, -v_discount, 0, -v_total, -v_brugt_total, -v_vat_total,
     nullif(btrim(coalesce(p_notes, '')), ''), clock_timestamp(),
@@ -532,19 +503,5 @@ BEGIN
     'receipt_no', v_receipt_no, 'total', -v_total, 'refund_amount', v_total,
     'original_order_id', orig.id, 'cash_session_id', sess_id);
 END;
-$$;
+$function$;
 
--- CREATE OR REPLACE keeps existing privileges, but restate them so the file is self-contained.
-REVOKE ALL ON FUNCTION public.pos_create_sale(uuid,uuid,uuid,uuid,jsonb,jsonb,integer,text,text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.pos_create_sale(uuid,uuid,uuid,uuid,jsonb,jsonb,integer,text,text) TO service_role;
-REVOKE ALL ON FUNCTION public.pos_create_return(uuid,uuid,uuid,uuid,jsonb,jsonb,text,text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.pos_create_return(uuid,uuid,uuid,uuid,jsonb,jsonb,text,text) TO service_role;
-
-COMMIT;
-
--- Verification (run after applying; use a test case / register):
---   SELECT has_function_privilege('anon', 'public.pos_create_sale(uuid,uuid,uuid,uuid,jsonb,jsonb,integer,text,text)', 'execute');  -- false
---   -- 1. deposit:   pos_create_sale(..., '[{"type":"deposit","repair_ticket_id":"<ticket>","unit_price_oere":50000}]', '[{"type":"kontant","amount_oere":50000}]', 0, null, null)
---   -- 2. pickup:    items [{"type":"repair_service","repair_ticket_id":"<ticket>","description":"Skærm","unit_price_oere":169800},
---   --                      {"type":"deposit_applied","deposit_item_id":"<deposit order_items.id>","amount_oere":50000}], payments summing to 119800
---   --               -> repair_tickets.paid = true; same deposit again -> pos:deposit_exceeded:0

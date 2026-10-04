@@ -15,6 +15,7 @@ import {
   validateDeposit,
   type CartLine,
   type CaseContext,
+  type PaymentChoice,
 } from "../kasse-logic";
 import { parseCaseReference } from "../case-lookup";
 import { saleBodySchema } from "../schemas";
@@ -189,8 +190,13 @@ describe("payments", () => {
   });
 
   it("split payment must sum to exactly the total", () => {
-    const split = (a: number, b: number) =>
-      ({ kind: "split", lines: [{ type: "kontant", amountOere: a }, { type: "kort_terminal", amountOere: b }] }) as const;
+    const split = (a: number, b: number): PaymentChoice => ({
+      kind: "split",
+      lines: [
+        { type: "kontant", amountOere: a },
+        { type: "kort_terminal", amountOere: b },
+      ],
+    });
     expect(checkPayments(split(50_000, 79_700), 129_700).ok).toBe(true);
     const short = checkPayments(split(50_000, 79_600), 129_700);
     expect(short.ok).toBe(false);

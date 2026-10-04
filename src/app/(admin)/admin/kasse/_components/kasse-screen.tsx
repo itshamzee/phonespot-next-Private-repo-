@@ -188,7 +188,6 @@ export function KasseScreen() {
     if (locations.length === 0) return;
     const wanted = scope === "vejle" || scope === "slagelse" ? scope : ownSlug;
     const match = wanted ? locations.find((l) => (l.slug ?? l.name).toLowerCase().includes(wanted)) : null;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocationId((cur) => (match && cur !== match.id ? match.id : locations.some((l) => l.id === cur) ? cur : (match ?? locations[0]).id));
   }, [locations, scope, ownSlug]);
 
@@ -205,7 +204,6 @@ export function KasseScreen() {
   }, [locationId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadRegisters();
   }, [loadRegisters]);
 
@@ -351,7 +349,6 @@ export function KasseScreen() {
         setError(err instanceof Error ? err.message : "Sagen kunne ikke hentes");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   async function submitCaseDialog(q: string, mode: "payment" | "deposit") {
@@ -447,7 +444,6 @@ export function KasseScreen() {
     const value = query.trim();
     const mine = ++searchSeq.current;
     if (value.length < 2) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLookup(null);
       setCaseHit(null);
       setCaseHitError("");
