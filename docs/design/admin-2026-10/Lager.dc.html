@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Varer og lager – PhoneSpot Vejle</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1A3D2E}a:hover{color:#2D6B45}
+</style>
+</helmet>
+<div style="min-height: 960px; background: #F5F6F4; font-family: 'DM Sans', system-ui, sans-serif; color: #15211B; display: flex; flex-direction: column">
+  <header style="height: 56px; background: #FFFFFF; border-bottom: 1px solid #E2E5E0; display: flex; align-items: center; gap: 20px; padding: 0 20px">
+    <span style="font-weight: 700; font-size: 20px; color: #1A3D2E">PhoneSpot</span>
+    <span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid #E2E5E0; border-radius: 8px; background: #F5F6F4; font-size: 14px; font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 4px; background: #2F8F55"></span>Vejle</span>
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1">
+    <nav aria-label="Hovedmenu" style="flex: 1 1 210px; max-width: 232px; background: #FFFFFF; border-right: 1px solid #E2E5E0; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 15px">
+      <a href="Main.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Overblik</a>
+      <a href="Sager.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Sagsstyring</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Kasse</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Kunder</a>
+      <a href="Lager.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; background: #E7EFE9; color: #1A3D2E; font-weight: 600; text-decoration: none">Varer</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Opkøb</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Statistik</a>
+    </nav>
+    <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em">Varer</h1>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; border: 1px solid #C9D0C7; background: #fff; color: #15211B; font-size: 15px; font-weight: 600; text-decoration: none">Modtag varer</a>
+          <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 18px; border-radius: 8px; background: #1A3D2E; color: #fff; font-size: 15px; font-weight: 600; text-decoration: none">Ny vare</a>
+        </div>
+      </div>
+      <div role="tablist" style="display: flex; gap: 6px; border-bottom: 1px solid #E2E5E0; flex-wrap: wrap">
+        <button type="button" role="tab" aria-selected="true" style="height: 40px; padding: 0 14px; border: 0; border-bottom: 2px solid #1A3D2E; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #1A3D2E">Varer</button>
+        <button type="button" role="tab" style="height: 40px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: 14px; color: #3D4842">Indkøb (3)</button>
+        <button type="button" role="tab" style="height: 40px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: 14px; color: #3D4842">Lagerbevægelser</button>
+        <a href="Overforsler.dc.html" role="tab" style="height: 40px; display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: #3D4842; text-decoration: none">Overførsler (2)</a>
+      </div>
+      <section style="background: #fff; border: 1px solid #E2E5E0; border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+          <label style="flex: 1 1 300px; display: flex; align-items: center; height: 40px; padding: 0 12px; border: 1px solid #C9D0C7; border-radius: 8px"><input type="search" aria-label="Søg i varer" placeholder="Søg på navn, EAN, IMEI" style="border: 0; outline: 0; font: inherit; font-size: 14px; flex: 1"></label>
+          <div role="group" aria-label="Vis lager" style="display: flex; background: #E9ECE7; border-radius: 10px; padding: 4px; gap: 4px">
+            <button type="button" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 14px; color: #3D4842">Kun Vejle</button>
+            <button type="button" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #fff; font: inherit; font-size: 14px; font-weight: 600">Alle butikker</button>
+          </div>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><input type="checkbox" checked>Vis kostpris</label>
+        </div>
+        <div style="overflow-x: auto">
+          <div style="min-width: 900px; font-size: 14px">
+            <div style="display: grid; grid-template-columns: 1fr 100px 100px 80px 80px 80px 110px; gap: 12px; padding: 8px; color: #5E6A63; font-size: 13px; font-weight: 600; border-bottom: 1px solid #E2E5E0"><span>Vare</span><span style="text-align: right">Kostpris</span><span style="text-align: right">Pris</span><span style="text-align: center">Vejle</span><span style="text-align: center">Slagelse</span><span style="text-align: center">Webshop</span><span></span></div>
+            <div style="display: grid; grid-template-columns: 1fr 100px 100px 80px 80px 80px 110px; gap: 12px; align-items: center; padding: 12px 8px; border-bottom: 1px solid #EEF0EC"><span><b>iPhone 14 Pro 128 GB · Grade A</b><br><span style="color: #5E6A63; font-size: 13px">Serievare · brugtmoms</span></span><span style="text-align: right">3.100 kr.</span><span style="text-align: right">4.999 kr.</span><span style="text-align: center; color: #9A5B0A; font-weight: 600">0</span><span style="text-align: center; font-weight: 600">2</span><span style="text-align: center">1</span><a href="Overforsler.dc.html" style="height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #1A3D2E; color: #1A3D2E; font-weight: 600; text-decoration: none">Anmod</a></div>
+            <div style="display: grid; grid-template-columns: 1fr 100px 100px 80px 80px 80px 110px; gap: 12px; align-items: center; padding: 12px 8px; border-bottom: 1px solid #EEF0EC"><span><b>iPhone 13 · Skærm (OEM)</b><br><span style="color: #5E6A63; font-size: 13px">Reservedel · 25 % moms · min. 2</span></span><span style="text-align: right">310 kr.</span><span style="text-align: right">–</span><span style="text-align: center; font-weight: 600">3</span><span style="text-align: center">1</span><span style="text-align: center">–</span><span></span></div>
+            <div style="display: grid; grid-template-columns: 1fr 100px 100px 80px 80px 80px 110px; gap: 12px; align-items: center; padding: 12px 8px; border-bottom: 1px solid #EEF0EC"><span><b>USB-C kabel 1 m</b><br><span style="color: #5E6A63; font-size: 13px">Tilbehør · 25 % moms · min. 5</span></span><span style="text-align: right">18 kr.</span><span style="text-align: right">99 kr.</span><span style="text-align: center; font-weight: 600">14</span><span style="text-align: center; color: #9A5B0A; font-weight: 600">1</span><span style="text-align: center">40</span><span></span></div>
+            <div style="display: grid; grid-template-columns: 1fr 100px 100px 80px 80px 80px 110px; gap: 12px; align-items: center; padding: 12px 8px; border-bottom: 1px solid #EEF0EC"><span><b>Samsung Galaxy A55 128 GB · Grade B</b><br><span style="color: #5E6A63; font-size: 13px">Serievare · brugtmoms</span></span><span style="text-align: right">1.150 kr.</span><span style="text-align: right">1.899 kr.</span><span style="text-align: center; font-weight: 600">1</span><span style="text-align: center">0</span><span style="text-align: center">2</span><span></span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

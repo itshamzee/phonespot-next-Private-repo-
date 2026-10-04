@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>Alle butikker – PhoneSpot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1A3D2E}a:hover{color:#2D6B45}
+</style>
+</helmet>
+<div style="min-height: 960px; background: #F5F6F4; font-family: 'DM Sans', system-ui, sans-serif; color: #15211B; display: flex; flex-direction: column">
+  <header style="height: 56px; background: #FFFFFF; border-bottom: 1px solid #E2E5E0; display: flex; align-items: center; gap: 20px; padding: 0 20px">
+    <span style="font-weight: 700; font-size: 20px; color: #1A3D2E">PhoneSpot</span>
+    <span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid #1A3D2E; border-radius: 8px; background: #E7EFE9; font-size: 14px; font-weight: 600; color: #1A3D2E">Alle butikker</span>
+    <span style="font-size: 13px; color: #5E6A63">Kun ejeren ser denne visning</span>
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1">
+    <nav aria-label="Hovedmenu" style="flex: 1 1 210px; max-width: 232px; background: #FFFFFF; border-right: 1px solid #E2E5E0; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 15px">
+      <a href="Samlet.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; background: #E7EFE9; color: #1A3D2E; font-weight: 600; text-decoration: none">Overblik</a>
+      <a href="Sager.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Sagsstyring</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Kasse</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Kunder</a>
+      <a href="Lager.dc.html" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Varer</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Opkøb</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Statistik</a>
+      <a href="#" style="height: 42px; display: flex; align-items: center; padding: 0 12px; color: #15211B; text-decoration: none">Økonomi</a>
+    </nav>
+    <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em">Alle butikker</h1>
+        <div role="group" aria-label="Periode" style="display: flex; background: #E9ECE7; border-radius: 10px; padding: 4px; gap: 4px">
+          <button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 14px; color: #3D4842">I dag</button>
+          <button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: #fff; font: inherit; font-size: 14px; font-weight: 600">Denne uge</button>
+          <button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 14px; color: #3D4842">Denne måned</button>
+        </div>
+      </div>
+      <section style="background: #fff; border: 1px solid #E2E5E0; border-radius: 12px; padding: 18px 20px">
+        <h2 style="margin: 0 0 12px; font-size: 17px">Pr. butik</h2>
+        <div style="overflow-x: auto">
+          <div style="min-width: 760px; font-size: 14px; font-variant-numeric: tabular-nums">
+            <div style="display: grid; grid-template-columns: 1fr repeat(5, 120px); gap: 12px; padding: 8px 0; color: #5E6A63; font-size: 13px; font-weight: 600; border-bottom: 1px solid #E2E5E0"><span>Butik</span><span style="text-align: right">Omsætning</span><span style="text-align: right">Profit</span><span style="text-align: right">Salg</span><span style="text-align: right">Åbne sager</span><span style="text-align: right">Kasse</span></div>
+            <div style="display: grid; grid-template-columns: 1fr repeat(5, 120px); gap: 12px; padding: 12px 0; border-bottom: 1px solid #EEF0EC"><b>Vejle</b><span style="text-align: right">41.200 kr.</span><span style="text-align: right">14.900 kr.</span><span style="text-align: right">63</span><span style="text-align: right">12</span><span style="text-align: right">Åben</span></div>
+            <div style="display: grid; grid-template-columns: 1fr repeat(5, 120px); gap: 12px; padding: 12px 0; border-bottom: 1px solid #EEF0EC"><b>Slagelse</b><span style="text-align: right">53.995 kr.</span><span style="text-align: right">19.400 kr.</span><span style="text-align: right">84</span><span style="text-align: right">21</span><span style="text-align: right">Åben</span></div>
+            <div style="display: grid; grid-template-columns: 1fr repeat(5, 120px); gap: 12px; padding: 12px 0; border-bottom: 1px solid #EEF0EC"><b>Webshop</b><span style="text-align: right">38.700 kr.</span><span style="text-align: right">11.200 kr.</span><span style="text-align: right">22</span><span style="text-align: right">3</span><span style="text-align: right">–</span></div>
+            <div style="display: grid; grid-template-columns: 1fr repeat(5, 120px); gap: 12px; padding: 12px 0; font-weight: 700"><span>I alt</span><span style="text-align: right">133.895 kr.</span><span style="text-align: right">45.500 kr.</span><span style="text-align: right">169</span><span style="text-align: right">36</span><span></span></div>
+          </div>
+        </div>
+      </section>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px">
+        <section style="background: #fff; border: 1px solid #E2E5E0; border-radius: 12px; padding: 18px 20px">
+          <h2 style="margin: 0 0 8px; font-size: 17px">Dagsopgørelser</h2>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px"><span>Vejle · Kasse 1 · 2. okt.</span><span>Låst · difference 0 kr.</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px"><span>Slagelse · Kasse 1 · 2. okt.</span><span style="color: #9A5B0A">Difference −20 kr.</span></div>
+          <a href="#" style="display: inline-block; margin-top: 8px; font-size: 14px">Hent til Dinero (PDF + CSV)</a>
+        </section>
+        <section style="background: #fff; border: 1px solid #E2E5E0; border-radius: 12px; padding: 18px 20px">
+          <h2 style="margin: 0 0 8px; font-size: 17px">Moms denne uge</h2>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px"><span>Standardmoms (25 %)</span><span>8.420 kr.</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px"><span>Brugtmoms (brugt elektronik)</span><span>3.110 kr.</span></div>
+          <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px"><span>Depositum modtaget (ikke indtægt endnu)</span><span>1.500 kr.</span></div>
+        </section>
+        <section style="background: #fff; border: 1px solid #E2E5E0; border-radius: 12px; padding: 18px 20px">
+          <h2 style="margin: 0 0 8px; font-size: 17px">Kræver opmærksomhed</h2>
+          <div style="padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px">4 sager klar til afhentning i over 5 dage</div>
+          <div style="padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px">2 overførsler på vej i over 2 dage</div>
+          <div style="padding: 10px 0; border-top: 1px solid #EEF0EC; font-size: 14px">3 varer under minimum i Slagelse</div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -21,10 +21,25 @@ export const saleItemSchema = z.discriminatedUnion("type", [
     unitPriceOere: oere.min(1),
     quantity: z.number().int().min(1).max(1000).default(1),
   }),
+  // Prepayment on a repair case. Must name the case.
   z.object({
     type: z.literal("deposit"),
+    repairTicketId: uuid,
     description: z.string().trim().max(200).optional(),
     unitPriceOere: oere.min(1),
+  }),
+  // Final payment of a repair case (the case total). Marks the case paid.
+  z.object({
+    type: z.literal("repair_service"),
+    repairTicketId: uuid,
+    description: z.string().trim().max(200).optional(),
+    unitPriceOere: oere.min(1),
+  }),
+  // A deposit used against the final payment (becomes a negative line).
+  z.object({
+    type: z.literal("deposit_applied"),
+    depositItemId: uuid,
+    amountOere: oere.min(1),
   }),
 ]);
 export type SaleItem = z.infer<typeof saleItemSchema>;

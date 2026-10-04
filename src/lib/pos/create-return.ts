@@ -3,6 +3,7 @@ import { rpcError, PosError } from "./errors";
 import { renderReceiptPdf } from "./receipt-data";
 import type { OriginalLine, ReturnedSoFar } from "./credit-note";
 import type { PaymentLineInput } from "./calc";
+import { depositRemaining } from "./deposit-math";
 
 export type CreateReturnInput = {
   originalOrderId: string;
@@ -162,6 +163,19 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
   }
   const returned = sumReturned(creditItems);
 
+  // Deposit lines: what is left of them (applied to a case payment = not refundable).
+  const depositIds = rows.filter((r) => r.item_type === "deposit").map((r) => r.id);
+  const appliedBy = new Map<string, number[]>();
+  if (depositIds.length > 0) {
+    const { data: applied } = await supabase
+      .from("order_items")
+      .select("deposit_item_id, total_price")
+      .in("deposit_item_id", depositIds);
+    for (const a of (applied ?? []) as Array<{ deposit_item_id: string; total_price: number }>) {
+      appliedBy.set(a.deposit_item_id, [...(appliedBy.get(a.deposit_item_id) ?? []), a.total_price]);
+    }
+  }
+
   const deviceIds = rows.map((r) => r.device_id).filter((x): x is string => !!x);
   const statusById = new Map<string, string>();
   if (deviceIds.length > 0) {
@@ -198,6 +212,14 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
         vatAmount: r.vat_amount ?? 0,
         vatScheme: r.vat_scheme,
         purchasePrice: r.purchase_price,
+        depositRemaining:
+          r.item_type === "deposit"
+            ? depositRemaining({
+                depositTotal: r.total_price,
+                appliedLines: appliedBy.get(r.id) ?? [],
+                returnLines: creditItems.filter((c) => c.original_order_item_id === r.id).map((c) => c.total_price),
+              })
+            : null,
         returned: so,
         remaining: r.quantity - so.quantity,
         deviceStatus: r.device_id ? (statusById.get(r.device_id) ?? null) : null,

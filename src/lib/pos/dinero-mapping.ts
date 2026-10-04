@@ -17,6 +17,7 @@ export type DineroKey =
   | "debitorer"
   | "tilgodebevis"
   | "gavekort"
+  | "depositum"
   | "kassedifference"
   | "bank"
   | "udlaeg";
@@ -33,6 +34,7 @@ export const DINERO_ACCOUNTS: Record<DineroKey, { label: string; account: string
   debitorer: { label: "Debitorer (faktura)", account: "[KONTO-DEBITORER]" },
   tilgodebevis: { label: "Tilgodebeviser", account: "[KONTO-TILGODEBEVIS]" },
   gavekort: { label: "Gavekort", account: "[KONTO-GAVEKORT]" },
+  depositum: { label: "Depositum (forudbetalinger på sager, ekskl. moms)", account: "[KONTO-DEPOSITUM]" },
   kassedifference: { label: "Kassedifference", account: "[KONTO-KASSEDIFFERENCE]" },
   bank: { label: "Bank / pengeskab", account: "[KONTO-BANK]" },
   udlaeg: { label: "Dagens udlæg", account: "[KONTO-UDLAEG]" },

@@ -13,6 +13,8 @@ export type RegisterInfo = {
 export type OpenSession = {
   id: string;
   openedAt: string;
+  /** Name of the staff member who opened the till (null if unknown). */
+  openedByName: string | null;
   openingFloat: number;
   /** Live: kontant payments net of cash refunds so far (before expenses). */
   netCashPayments: number;
@@ -64,12 +66,19 @@ export async function listRegisters(locationId: string): Promise<RegisterInfo[]>
 
   const { data: open } = await supabase
     .from("cash_sessions")
-    .select("id, register_id, opened_at, opening_float")
+    .select("id, register_id, opened_at, opening_float, opened_by")
     .in(
       "register_id",
       list.map((r) => r.id),
     )
     .is("closed_at", null);
+
+  const openerIds = [...new Set((open ?? []).map((o) => o.opened_by).filter((x): x is string => !!x))];
+  const openerNames = new Map<string, string | null>();
+  if (openerIds.length > 0) {
+    const { data: people } = await supabase.from("staff").select("id, name").in("id", openerIds);
+    for (const p of people ?? []) openerNames.set(p.id, p.name ?? null);
+  }
 
   const result: RegisterInfo[] = [];
   for (const r of list) {
@@ -81,6 +90,7 @@ export async function listRegisters(locationId: string): Promise<RegisterInfo[]>
       openSession = {
         id: s.id,
         openedAt: s.opened_at,
+        openedByName: s.opened_by ? (openerNames.get(s.opened_by) ?? null) : null,
         openingFloat: s.opening_float,
         netCashPayments: netCash,
         expectedCash: computeExpectedCash({ openingFloat: s.opening_float, netCashPayments: netCash, expenses: [] }),

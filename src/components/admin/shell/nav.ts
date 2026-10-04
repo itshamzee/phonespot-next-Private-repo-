@@ -1,11 +1,16 @@
 /**
- * Admin-menuen: få områder, og underpunkter der kun vises for det område man
- * står i (samme idé som Shopify-admin). Rækkefølgen følger arbejdsdagen i
- * butikken, ikke hvornår siderne blev bygget. Alle gamle URL'er virker stadig;
- * `match` lægger sider uden eget menupunkt (opret, detaljer) under rette område.
+ * Admin-menuen, bygget som POS-systemet C1ST og drevet af de godkendte skærmbilleder
+ * (docs/design/admin-2026-10): Overblik, Sagsstyring, Kasse, Kunder, Varer, Opkøb,
+ * Statistik, Økonomi (kun ejer) og Indstillinger nederst. Underpunkter vises kun
+ * for det område man står i. Alle gamle URL'er virker stadig; `match` lægger sider
+ * uden eget menupunkt (opret, detaljer) under rette område.
+ *
+ * Andre dele af admin udvider menuen ved at tilføje børn her; hvert href skal have
+ * en page.tsx (testen i __tests__/nav.test.ts tjekker det).
  */
 
-export type CountKey = "orders" | "repairs" | "inquiries" | "buyback";
+/** repairs = åbne sager i butikken (menu-tallet); newRepairs = ikke-modtagne, til notifikationer. */
+export type CountKey = "orders" | "repairs" | "newRepairs" | "inquiries" | "buyback";
 
 export interface NavChild {
   href: string;
@@ -21,13 +26,15 @@ export interface NavArea {
   key: string;
   label: string;
   href: string;
-  /** Heroicons outline path(s). */
+  /** SVG-stier (24x24, streg). */
   icon: string[];
   match?: string[];
   countKey?: CountKey;
   children?: NavChild[];
   /** Vises nederst i menuen, adskilt fra resten. */
   pinned?: boolean;
+  /** Kun ejeren ser området. */
+  ownerOnly?: boolean;
 }
 
 export const NAV: NavArea[] = [
@@ -36,16 +43,30 @@ export const NAV: NavArea[] = [
     label: "Overblik",
     href: "/admin",
     match: ["/admin/platform"],
-    icon: ["M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"],
+    icon: ["m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"],
   },
   {
-    key: "ordrer",
-    label: "Ordrer",
-    href: "/admin/platform/orders",
-    countKey: "orders",
-    icon: ["M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75"],
+    key: "sagsstyring",
+    label: "Sagsstyring",
+    href: "/admin/reparationer",
+    countKey: "repairs",
+    icon: ["M9 6h11M9 12h11M9 18h11", "m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"],
     children: [
-      { href: "/admin/platform/orders", label: "Alle ordrer" },
+      { href: "/admin/reparationer", label: "Sager" },
+      { href: "/admin/indlevering", label: "Ny indlevering" },
+      { href: "/admin/prisliste", label: "Prisliste" },
+    ],
+  },
+  {
+    key: "kasse",
+    label: "Kasse",
+    href: "/admin/kasse",
+    match: ["/admin/platform/pos"],
+    icon: ["M5 10h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z", "M7 10V5h10v5M7 15h2M11 15h2"],
+    children: [
+      { href: "/admin/kasse", label: "Kasseapparat", match: ["/admin/platform/pos"] },
+      { href: "/admin/platform/pos/cashup", label: "Dagsopgørelse" },
+      { href: "/admin/platform/orders", label: "Webshop-ordrer", countKey: "orders" },
       { href: "/admin/platform/draft-orders", label: "Fakturakladder" },
       { href: "/admin/platform/abandoned-checkouts", label: "Forladte kurve" },
       { href: "/admin/platform/rabatkoder", label: "Rabatkoder" },
@@ -54,44 +75,41 @@ export const NAV: NavArea[] = [
     ],
   },
   {
-    key: "produkter",
-    label: "Produkter",
-    href: "/admin/platform/products",
-    match: ["/admin/produkter"],
-    icon: ["M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z", "M6 6h.008v.008H6V6z"],
+    key: "kunder",
+    label: "Kunder",
+    href: "/admin/kunder",
+    icon: [
+      "M12 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
+      "M3 20c0-3 3-5 6-5s6 2 6 5",
+      "M19.5 9a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z",
+      "M17 14c2.5 0 4 1.5 4 4",
+    ],
     children: [
-      { href: "/admin/platform/products", label: "Alle produkter", match: ["/admin/platform/sku"] },
+      { href: "/admin/kunder", label: "Kunder" },
+      { href: "/admin/henvendelser", label: "Henvendelser", countKey: "inquiries" },
+      { href: "/admin/b2b", label: "Erhverv" },
+    ],
+  },
+  {
+    key: "varer",
+    label: "Varer",
+    href: "/admin/varer",
+    match: ["/admin/produkter"],
+    icon: ["M4 5v14M7 5v14M11 5v14M14 5v14M17 5v14M20 5v14"],
+    children: [
+      { href: "/admin/varer", label: "Lager" },
+      { href: "/admin/varer/overforsler", label: "Overførsler" },
+      { href: "/admin/platform/products", label: "Produkter", match: ["/admin/platform/sku"] },
       { href: "/admin/tilbehoer", label: "Tilbehør", match: ["/admin/spot", "/admin/tilfoej-cover"] },
-      { href: "/admin/produkter/importer", label: "Importér fra leverandør" },
       { href: "/admin/reservedele", label: "Reservedele" },
+      { href: "/admin/platform/stock", label: "Enheder på lager" },
+      { href: "/admin/platform/intake", label: "Registrér enhed" },
+      { href: "/admin/produkter/importer", label: "Importér fra leverandør" },
       { href: "/admin/platform/kategorier", label: "Kategorier" },
       { href: "/admin/reservedele/kategorier", label: "Kategorier, reservedele" },
       { href: "/admin/reservedele/kvaliteter", label: "Kvalitetsniveauer" },
       { href: "/admin/foneday", label: "Foneday" },
-    ],
-  },
-  {
-    key: "lager",
-    label: "Lager",
-    href: "/admin/platform/stock",
-    icon: ["M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"],
-    children: [
-      { href: "/admin/platform/stock", label: "Enheder på lager" },
-      { href: "/admin/platform/intake", label: "Registrér enhed" },
-      { href: "/admin/platform/transfers", label: "Overførsler" },
       { href: "/admin/foxway-import", label: "Foxway-import" },
-    ],
-  },
-  {
-    key: "reparation",
-    label: "Reparation",
-    href: "/admin/reparationer",
-    countKey: "repairs",
-    icon: ["M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"],
-    children: [
-      { href: "/admin/reparationer", label: "Sager" },
-      { href: "/admin/indlevering", label: "Ny indlevering" },
-      { href: "/admin/prisliste", label: "Prisliste" },
     ],
   },
   {
@@ -99,7 +117,7 @@ export const NAV: NavArea[] = [
     label: "Opkøb",
     href: "/admin/opkoeb",
     countKey: "buyback",
-    icon: ["M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"],
+    icon: ["M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2", "M20 4v5h-5M4 20v-5h5"],
     children: [
       { href: "/admin/opkoeb", label: "Pipeline" },
       { href: "/admin/opkoeb/ko", label: "Kø" },
@@ -108,25 +126,21 @@ export const NAV: NavArea[] = [
     ],
   },
   {
-    key: "kunder",
-    label: "Kunder",
-    href: "/admin/kunder",
-    icon: ["M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"],
+    key: "statistik",
+    label: "Statistik",
+    href: "/admin/statistik",
+    icon: ["M4 20V10M10 20V4M16 20v-8M22 20H2"],
     children: [
-      { href: "/admin/kunder", label: "Kunder" },
-      { href: "/admin/henvendelser", label: "Henvendelser", countKey: "inquiries" },
-      { href: "/admin/b2b", label: "Erhverv" },
+      { href: "/admin/statistik", label: "Salg" },
+      { href: "/admin/seo", label: "SEO" },
     ],
   },
   {
-    key: "kasse",
-    label: "Kasse",
-    href: "/admin/platform/pos",
-    icon: ["M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"],
-    children: [
-      { href: "/admin/platform/pos", label: "Kasseapparat" },
-      { href: "/admin/platform/pos/cashup", label: "Dagsopgørelse" },
-    ],
+    key: "okonomi",
+    label: "Økonomi",
+    href: "/admin/okonomi",
+    ownerOnly: true,
+    icon: ["M5 7h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z", "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
   },
   {
     key: "indstillinger",
@@ -142,13 +156,20 @@ export const NAV: NavArea[] = [
       { href: "/admin/indstillinger/virksomhed", label: "Virksomhed" },
       { href: "/admin/indstillinger/medarbejdere", label: "Medarbejdere", ownerOnly: true },
       { href: "/admin/indstillinger/profil", label: "Profil og signatur" },
-      { href: "/admin/seo", label: "SEO" },
       { href: "/admin/sms-log", label: "SMS-log" },
       { href: "/admin/mail-log", label: "Mail-log" },
       { href: "/admin/platform/aktivitetslog", label: "Aktivitetslog" },
     ],
   },
 ];
+
+/** Menuen som den ser ud for en rolle: ejer-områder og -punkter skjules for alle andre. */
+export function visibleNav(isOwner: boolean, nav: NavArea[] = NAV): NavArea[] {
+  if (isOwner) return nav;
+  return nav
+    .filter((area) => !area.ownerOnly)
+    .map((area) => (area.children ? { ...area, children: area.children.filter((c) => !c.ownerOnly) } : area));
+}
 
 export interface ActiveNav {
   area: NavArea | null;

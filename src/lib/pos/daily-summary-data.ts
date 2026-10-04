@@ -47,7 +47,7 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
     .select(
       `id, order_number, receipt_number, receipt_no, type, total, discount_amount, discount_reason,
        vat_total, brugtmoms_total, confirmed_at, payment_method, register_id,
-       order_items ( item_type, quantity, total_price, discount_amount, vat_scheme ),
+       order_items ( item_type, quantity, total_price, discount_amount, vat_scheme, vat_amount ),
        order_payments ( type, amount_oere )`,
     )
     .in("type", ["pos", "credit_note"])

@@ -124,6 +124,8 @@ type ReceiptItem = {
   unitPrice: number; // oere, inkl. moms
   lineTotal: number; // oere, before discount
   vatScheme: "brugtmoms" | "regular";
+  /** Repair-case lines: no reklamationsret notice, deposit notice instead. */
+  kind?: "deposit" | "deposit_applied" | "repair_service";
 };
 
 export type ReceiptPayment = { label: string; amount: number; reference?: string | null };
@@ -301,9 +303,21 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
               {"\n"}
               Garantibevis sendes til din email.
             </Text>
-          ) : receipt.items.some((item) => item.vatScheme === "regular" && !item.isDevice) ? (
+          ) : receipt.items.some((item) => item.vatScheme === "regular" && !item.isDevice && !item.kind) ? (
             <Text style={styles.warrantyNotice}>2 års reklamationsret efter købeloven.</Text>
           ) : null)}
+
+        {/* Deposit: a prepayment on a repair case. VAT is included above (due on receipt). */}
+        {!credit && receipt.items.some((item) => item.kind === "deposit") && (
+          <Text style={styles.warrantyNotice}>
+            Depositum er en forudbetaling på din reparation.
+            {"\n"}
+            Beløbet fratrækkes, når du afhenter og betaler resten.
+          </Text>
+        )}
+        {!credit && receipt.items.some((item) => item.kind === "deposit_applied") && (
+          <Text style={styles.warrantyNotice}>Tidligere indbetalt depositum er fratrukket.</Text>
+        )}
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>PhoneSpot · phonespot.dk · hej@phonespot.dk</Text>

@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { requireTicketAccess } from "@/lib/repairs/ticket-access";
-import { withSignedRepairPhotos } from "@/lib/repairs/photo-storage";
+import { loadCaseDetail } from "@/lib/repairs/case-detail";
 
 /**
- * GET  /api/admin/repairs/[id] — sagen med tilbud, statuslog og kommentarer.
+ * GET  /api/admin/repairs/[id] — sagen med tilbud, statuslog, kommentarer, enhed,
+ *      SMS-tråd, depositum, linjer og totaler. `?light=1` giver kun det sidepanelet
+ *      skal bruge (ingen fotos, kommentarer eller kundehistorik).
  * POST /api/admin/repairs/[id] — tilføj en intern note: { note: string }.
  *
  * Adgang: kun personale i sagens butik (ejeren: alle). En sag i en anden butik
@@ -15,29 +17,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const access = await requireTicketAccess(request, id);
   if (!access.ok) return access.response;
 
+  const light = new URL(request.url).searchParams.get("light") === "1";
   const supabase = createServerClient();
-  const [ticket, quotes, logs, comments] = await Promise.all([
-    supabase.from("repair_tickets").select("*").eq("id", id).maybeSingle(),
-    supabase.from("repair_quotes").select("*").eq("ticket_id", id).order("created_at", { ascending: false }),
-    supabase.from("repair_status_log").select("*").eq("ticket_id", id).order("created_at", { ascending: false }),
-    supabase.from("repair_comments").select("*").eq("ticket_id", id).order("created_at", { ascending: true }),
-  ]);
 
-  if (ticket.error) {
-    console.error("[admin/repairs] detail failed:", id, ticket.error);
+  let detail;
+  try {
+    detail = await loadCaseDetail(supabase, id, { light });
+  } catch (err) {
+    console.error("[admin/repairs] detail failed:", id, err);
     return NextResponse.json({ error: "Kunne ikke hente sagen" }, { status: 500 });
   }
-  if (!ticket.data) return NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 });
+  if (!detail) return NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 });
 
-  return NextResponse.json(
-    {
-      ticket: await withSignedRepairPhotos(supabase, ticket.data),
-      quotes: quotes.data ?? [],
-      logs: logs.data ?? [],
-      comments: comments.data ?? [],
-    },
-    { headers: { "Cache-Control": "no-store" } },
-  );
+  return NextResponse.json(detail, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

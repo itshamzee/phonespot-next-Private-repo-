@@ -31,11 +31,11 @@ vi.mock("@/lib/supabase/client", () => ({
 
 import { PATCH } from "../route";
 
-function call(status: string) {
+function call(status: string, extra: Record<string, unknown> = {}) {
   return PATCH(
     new Request("http://localhost/api/repairs/t1/status", {
       method: "PATCH",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     }),
     { params: Promise.resolve({ id: "t1" }) },
   );
@@ -82,5 +82,26 @@ describe("PATCH /api/repairs/[id]/status notifications", () => {
     expect(arg.text).toContain("PS-2026-0009");
     expect(arg.text).toContain("Vejle");
     expect(arg.text).not.toMatch(/faerdig|paa /);
+  });
+
+  it("sends the pickup SMS on faerdig by default", async () => {
+    ticket.customer_phone = "20123456";
+    sendSms.mockResolvedValue({ success: true, messageId: "m1" });
+    await call("faerdig");
+    expect(sendSms).toHaveBeenCalledTimes(1);
+    expect(sendSms.mock.calls[0][1]).toContain("klar til afhentning");
+  });
+
+  it("skips the SMS when Meld klar is sent with skip_sms", async () => {
+    ticket.customer_phone = "20123456";
+    const res = await call("faerdig", { skip_sms: true });
+    expect(res.status).toBe(200);
+    expect(sendSms).not.toHaveBeenCalled();
+  });
+
+  it("afhentet (Faerdig og betalt) never sends an SMS", async () => {
+    ticket.customer_phone = "20123456";
+    await call("afhentet");
+    expect(sendSms).not.toHaveBeenCalled();
   });
 });

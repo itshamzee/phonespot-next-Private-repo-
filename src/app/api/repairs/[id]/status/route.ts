@@ -92,6 +92,8 @@ export async function PATCH(
   if (!access.ok) return access.response;
   const body = await request.json();
   const { status, note } = body;
+  // "Meld klar" kan vælge ikke at sende SMS (kunden er fx ved skranken).
+  const skipSms = body.skip_sms === true;
 
   if (!status || !VALID_STATUSES.includes(status)) {
     return NextResponse.json(
@@ -138,7 +140,7 @@ export async function PATCH(
       ticket_id: id,
       old_status: oldStatus,
       new_status: status,
-      note: note ?? null,
+      note: note ?? (skipSms && status === "faerdig" ? "Uden SMS til kunden" : null),
     });
 
     // Statusændringen er gemt. Beskeder til kunden er en bivirkning: fejler de,
@@ -176,7 +178,7 @@ export async function PATCH(
 
     // Send SMS notification
     const customerPhone = ticket.customer_phone;
-    if (customerPhone) {
+    if (customerPhone && !skipSms) {
       try {
         const smsMessage = getSmsTemplate(status, {
           customerName: ticket.customer_name,

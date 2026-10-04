@@ -38,8 +38,15 @@ export function buildJournalRows(s: DailySummary): JournalRow[] {
   // Debit side: where the money (or claim) ended up.
   for (const p of s.payments) add(PAYMENT_TO_DINERO[p.type], p.net, "debit");
 
-  // Credit side: revenue and VAT.
-  add("omsaetning", s.regularGross - s.vatStandard, "credit");
+  // Credit side: revenue and VAT. A repair deposit is a prepayment: VAT is due when
+  // it is received (momsloven § 23, stk. 3), but it is not revenue until the case is
+  // delivered. Received deposits (ex VAT) are credited to the deposit account and
+  // applied deposits are debited from it; revenue excludes both.
+  const depReceivedEx = s.deposits.received - s.deposits.receivedVat;
+  const depAppliedEx = s.deposits.applied - s.deposits.appliedVat;
+  add("omsaetning", s.regularGross - s.vatStandard - depReceivedEx + depAppliedEx, "credit");
+  add("depositum", depReceivedEx, "credit", "Depositum modtaget (ekskl. moms)");
+  add("depositum", depAppliedEx, "debit", "Depositum modregnet (ekskl. moms)");
   add("udgaaende_moms", s.vatStandard, "credit");
   add("brugt_salg", s.brugtGross - s.brugtmoms, "credit");
   add("brugtmoms_skyld", s.brugtmoms, "credit");

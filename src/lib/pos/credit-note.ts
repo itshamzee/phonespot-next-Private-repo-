@@ -16,7 +16,7 @@
 
 export type OriginalLine = {
   id: string;
-  itemType: "device" | "sku_product" | "free_text" | "deposit";
+  itemType: "device" | "sku_product" | "free_text" | "deposit" | "repair_service" | "deposit_applied";
   deviceId: string | null;
   skuProductId: string | null;
   description: string | null;
@@ -27,6 +27,11 @@ export type OriginalLine = {
   vatAmount: number;
   vatScheme: "brugtmoms" | "regular" | null;
   purchasePrice: number | null;
+  /**
+   * Deposit lines only: what is still unapplied (see depositRemaining). Below the
+   * line's own amount means it was used on a case payment and cannot be refunded.
+   */
+  depositRemaining?: number | null;
 };
 
 /** Positive sums of what earlier credit notes already took back, per original line. */
@@ -123,6 +128,12 @@ export function buildCreditNote(
     }
 
     const total = portion(orig.totalPrice, so.total, orig.quantity, remainingQty, req.quantity);
+    if (orig.itemType === "deposit" && orig.depositRemaining != null && orig.depositRemaining < total) {
+      throw new CreditNoteError(
+        "return_deposit_applied",
+        "Depositummet er brugt på en sag og kan ikke returneres. Returnér i stedet sagens betaling.",
+      );
+    }
     const discount = portion(orig.discountAmount, so.discount, orig.quantity, remainingQty, req.quantity);
     const vat = portion(orig.vatAmount, so.vat, orig.quantity, remainingQty, req.quantity);
 
@@ -141,6 +152,16 @@ export function buildCreditNote(
       purchasePrice: orig.purchasePrice,
       restock: req.restock,
     });
+  }
+
+  // The repair line and the deposit applied to it are returned together.
+  const open = (type: OriginalLine["itemType"]) =>
+    originalLines.filter(
+      (l) => l.itemType === type && l.quantity > 0 && (returned[l.id]?.quantity ?? 0) < l.quantity && !seen.has(l.id),
+    );
+  const has = (type: OriginalLine["itemType"]) => lines.some((l) => l.itemType === type);
+  if ((has("repair_service") && open("deposit_applied").length > 0) || (has("deposit_applied") && open("repair_service").length > 0)) {
+    throw new CreditNoteError("return_deposit_pair", "Returnér reparationen og det modregnede depositum sammen");
   }
 
   const subtotal = lines.reduce((s, l) => s + l.totalPrice, 0);

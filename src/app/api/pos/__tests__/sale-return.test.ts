@@ -39,7 +39,7 @@ const saleBody = {
     { type: "device", deviceId: U(10) },
     { type: "sku_product", skuProductId: U(11), quantity: 2 },
     { type: "free_text", description: "Diverse salg", unitPriceOere: 5000 },
-    { type: "deposit", unitPriceOere: 20000 },
+    { type: "deposit", repairTicketId: U(12), unitPriceOere: 20000 },
   ],
   payments: [
     { type: "kontant", amountOere: 50000 },
@@ -109,7 +109,7 @@ describe("POST /api/pos/sale", () => {
       { type: "device", device_id: U(10) },
       { type: "sku_product", sku_product_id: U(11), quantity: 2 },
       { type: "free_text", description: "Diverse salg", unit_price_oere: 5000, quantity: 1 },
-      { type: "deposit", description: "Depositum", unit_price_oere: 20000 },
+      { type: "deposit", repair_ticket_id: U(12), description: "Depositum", unit_price_oere: 20000 },
     ]);
     expect(JSON.stringify(args)).not.toContain("pi_should_be_ignored");
     expect(fromMock).not.toHaveBeenCalled();

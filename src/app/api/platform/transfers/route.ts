@@ -46,12 +46,18 @@ export async function POST(request: Request) {
 
   const { data: device, error: fetchError } = await supabase
     .from("devices")
-    .select("id, location_id, barcode")
+    .select("id, location_id, barcode, status")
     .eq("id", device_id)
     .single();
 
   if (fetchError || !device) {
     return NextResponse.json({ error: "Device not found" }, { status: 404 });
+  }
+
+  // En enhed der er på vej mellem butikker (stock_transfers) må ikke flyttes direkte;
+  // den lander hos modtageren, når denne scanner den.
+  if (device.status === "in_transit") {
+    return NextResponse.json({ error: "Enheden er på vej i en overførsel og kan ikke flyttes direkte" }, { status: 409 });
   }
 
   if (device.location_id === to_location_id) {

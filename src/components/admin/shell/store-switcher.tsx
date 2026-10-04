@@ -16,9 +16,17 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
 
   if (loading) return null;
 
+  const pill =
+    "flex h-9 items-center gap-2 rounded-lg border border-[#E2E5E0] bg-[#F5F6F4] text-[14px] font-semibold text-[#15211B]";
+  const dot = <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-[#2F8F55]" />;
+
   if (isOwner) {
+    const all = scope === "alle" || scope === "ingen";
     return (
-      <div className={`relative shrink-0 ${className}`}>
+      <div
+        className={`relative shrink-0 ${pill} pl-3 pr-8 focus-within:ring-2 focus-within:ring-[#1A3D2E]/40 ${all ? "border-[#1A3D2E] bg-[#E7EFE9] text-[#1A3D2E]" : ""} ${className}`}
+      >
+        {dot}
         <label htmlFor="admin-store-switcher" className="sr-only">
           Vælg butik
         </label>
@@ -29,23 +37,23 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
             const next = parseRequestedScope(e.target.value);
             if (next) setScope(next);
           }}
-          className="h-9 cursor-pointer appearance-none rounded-lg bg-white/10 py-0 pl-3 pr-8 text-[13px] font-medium text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          className="h-full cursor-pointer appearance-none bg-transparent pr-1 font-semibold focus:outline-none"
         >
           {OWNER_OPTIONS.map((slug) => (
-            <option key={slug} value={slug} className="text-charcoal">
+            <option key={slug} value={slug} className="text-[#15211B]">
               {slug === "alle" ? "Alle butikker" : SCOPE_LABELS[slug]}
             </option>
           ))}
         </select>
         <svg
-          className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/70"
+          className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#5E6A63]"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}
           stroke="currentColor"
           aria-hidden
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
         </svg>
       </div>
     );
@@ -56,8 +64,9 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
     <p
       data-testid="store-label"
       aria-label="Din butik"
-      className={`shrink-0 rounded-lg bg-white/10 px-3 py-1.5 text-[13px] font-medium ${known ? "text-white" : "text-white/70"} ${className}`}
+      className={`${pill} shrink-0 px-3 ${known ? "" : "text-[#5E6A63]"} ${className}`}
     >
+      {known ? dot : null}
       {known ? SCOPE_LABELS[ownSlug] : "Ingen butik tildelt"}
     </p>
   );

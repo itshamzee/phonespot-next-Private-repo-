@@ -90,11 +90,18 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
     const name =
       i.description ??
       (i.device_id ? dev?.name : i.sku_product_id ? skuMap.get(i.sku_product_id) : null) ??
-      (i.item_type === "deposit" ? "Depositum" : "Vare");
+      (i.item_type === "deposit"
+        ? "Depositum"
+        : i.item_type === "deposit_applied"
+          ? "Depositum modregnet"
+          : i.item_type === "repair_service"
+            ? "Reparation"
+            : "Vare");
     return {
       name,
       grade: dev?.grade,
       isDevice: i.item_type === "device",
+      kind: (["deposit", "deposit_applied", "repair_service"] as const).find((k) => k === i.item_type),
       quantity: i.quantity,
       unitPrice: i.unit_price,
       lineTotal: i.total_price,

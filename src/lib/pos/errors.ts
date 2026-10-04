@@ -77,6 +77,26 @@ const CATALOG: Record<string, Entry> = {
   invalid_stock_delta: { status: 400, message: () => "Ugyldig lagerændring" },
   stock_note_required: { status: 400, message: () => "Skriv en begrundelse til lagerreguleringen" },
   stock_would_go_negative: { status: 409, message: () => "Lageret kan ikke blive negativt" },
+  ticket_required: { status: 400, message: () => "Vælg den sag, depositum eller betaling hører til" },
+  ticket_not_found: { status: 404, message: () => "Sagen findes ikke" },
+  ticket_already_paid: { status: 409, message: (d) => `Sagen ${d ?? ""} er allerede betalt` },
+  one_ticket_per_sale: { status: 400, message: () => "Et salg kan kun høre til én sag" },
+  deposit_not_found: { status: 404, message: () => "Depositummet findes ikke" },
+  deposit_exceeded: {
+    status: 409,
+    message: (d) => `Depositummet er allerede brugt eller har kun ${d ? (Number(d) / 100).toLocaleString("da-DK", { minimumFractionDigits: 2 }) : "0,00"} kr. tilbage`,
+  },
+  duplicate_deposit_application: { status: 400, message: () => "Samme depositum er modregnet to gange" },
+  deposit_requires_repair_line: { status: 400, message: () => "Depositum kan kun modregnes i betalingen af den sag, det hører til" },
+  negative_total: { status: 400, message: () => "Totalen kan ikke blive negativ. Modregn mindre depositum." },
+  return_deposit_applied: {
+    status: 409,
+    message: () => "Depositummet er allerede brugt på en sag og kan ikke returneres. Returnér i stedet sagens betaling.",
+  },
+  return_deposit_pair: {
+    status: 409,
+    message: () => "Returnér reparationen og det modregnede depositum sammen",
+  },
   location_not_found: { status: 404, message: () => "Lokationen findes ikke" },
 };
 

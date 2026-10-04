@@ -52,7 +52,10 @@ export function distributeDiscount(lineTotals: number[], discount: number): numb
 
 /** Standard 25 % VAT contained in a VAT-inclusive amount: 25/125 of it. */
 export function standardVat(grossOere: number): number {
-  return Math.round((grossOere * STANDARD_VAT_NUMERATOR) / STANDARD_VAT_DENOMINATOR);
+  // Round half away from zero like Postgres round(), so a negative line (applied
+  // deposit) carries exactly minus the VAT of the positive one.
+  const vat = Math.round((Math.abs(grossOere) * STANDARD_VAT_NUMERATOR) / STANDARD_VAT_DENOMINATOR);
+  return grossOere < 0 ? -vat : vat;
 }
 
 /**
@@ -66,7 +69,7 @@ export function brugtmomsVat(netOere: number, purchaseOere: number): number {
 }
 
 export type SaleLineInput = {
-  kind: "device" | "sku_product" | "free_text" | "deposit";
+  kind: "device" | "sku_product" | "free_text" | "deposit" | "repair_service" | "deposit_applied";
   unitPrice: number;
   quantity: number;
   /** Purchase/cost price per unit (devices: purchase_price, accessories: cost_price). */
@@ -92,14 +95,19 @@ export type SaleTotals = {
   brugtmomsTotal: number;
 };
 
+/** Prepayment lines (deposit received / applied) are never discountable. */
+export function isDepositKind(kind: SaleLineInput["kind"]): boolean {
+  return kind === "deposit" || kind === "deposit_applied";
+}
+
 /**
- * Totals for a cart. Discount is distributed over all lines except deposits
- * (a deposit is a prepayment, not discountable), THEN VAT is computed per line
- * on the discounted amount.
+ * Totals for a cart. Discount is distributed over all lines except deposit
+ * lines (a deposit is a prepayment, not discountable), THEN VAT is computed per
+ * line on the discounted amount. An applied deposit is a negative line.
  */
 export function computeSaleTotals(lines: SaleLineInput[], discount = 0): SaleTotals {
   const totals = lines.map((l) => l.unitPrice * l.quantity);
-  const discountable = lines.map((l, i) => (l.kind === "deposit" ? 0 : totals[i]));
+  const discountable = lines.map((l, i) => (isDepositKind(l.kind) ? 0 : totals[i]));
   const discountableBase = discountable.reduce((s, t) => s + t, 0);
   if (discount < 0) throw new Error("discount_negative");
   if (discount > discountableBase) throw new Error("discount_exceeds_total");

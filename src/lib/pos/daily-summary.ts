@@ -1,4 +1,5 @@
 import { PAYMENT_TYPES, isPaymentType, type PaymentType } from "./constants";
+import { standardVat } from "./calc";
 import { finalDifference, sumExpenses, type CashExpense } from "./cash-session";
 
 /**
@@ -30,6 +31,8 @@ export type SummaryOrder = {
     total_price: number;
     discount_amount: number | null;
     vat_scheme: "brugtmoms" | "regular" | null;
+    /** Needed to split deposit VAT; falls back to 25/125 of the line when absent. */
+    vat_amount?: number | null;
   }>;
   order_payments: Array<{ type: string; amount_oere: number }>;
 };
@@ -72,6 +75,13 @@ export type DailySummary = {
   regularGross: number;
   /** Net sales on brugtmoms lines (gross selling price after discount). */
   brugtGross: number;
+  /**
+   * Repair deposits (prepayments). Received and applied are reported separately:
+   * VAT is booked when the deposit is received, and the applied amount is taken off
+   * the pickup receipt. Amounts are net of returns (a refunded deposit reduces
+   * "received"), VAT-inclusive, positive numbers.
+   */
+  deposits: { received: number; receivedVat: number; applied: number; appliedVat: number };
   deviceCount: number;
   skuCount: number;
   receiptRange: { first: string | null; last: string | null; count: number };
@@ -108,6 +118,10 @@ export function aggregateDailySummary(
   let deviceCount = 0;
   let skuCount = 0;
   let legacyOrderCount = 0;
+  let depReceived = 0;
+  let depReceivedVat = 0;
+  let depApplied = 0;
+  let depAppliedVat = 0;
 
   const numbered = orders
     .filter((o) => o.receipt_no != null)
@@ -135,6 +149,14 @@ export function aggregateDailySummary(
       if (it.item_type === "device") deviceCount += it.quantity;
       else if (it.item_type === "sku_product") skuCount += it.quantity;
       if (it.vat_scheme === "brugtmoms") brugtGross += it.total_price - (it.discount_amount ?? 0);
+      if (it.item_type === "deposit") {
+        depReceived += it.total_price;
+        depReceivedVat += it.vat_amount ?? standardVat(it.total_price);
+      } else if (it.item_type === "deposit_applied") {
+        // Applied lines are negative on a sale, positive on the credit note that reverses them.
+        depApplied += -it.total_price;
+        depAppliedVat += -(it.vat_amount ?? standardVat(it.total_price));
+      }
     }
 
     // Legacy sales (before order_payments) fall back to the single payment_method.
@@ -186,6 +208,7 @@ export function aggregateDailySummary(
     brugtmoms,
     regularGross: netTotal - brugtGross,
     brugtGross,
+    deposits: { received: depReceived, receivedVat: depReceivedVat, applied: depApplied, appliedVat: depAppliedVat },
     deviceCount,
     skuCount,
     receiptRange: {

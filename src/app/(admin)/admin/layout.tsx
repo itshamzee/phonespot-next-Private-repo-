@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Sidebar, type NavCounts } from "@/components/admin/shell/sidebar";
@@ -10,7 +10,7 @@ import { SaveBarProvider } from "@/components/admin/shell/save-bar";
 import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
 
-const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, inquiries: 0, buyback: 0 };
+const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, inquiries: 0, buyback: 0 };
 
 /* ------------------------------------------------------------------ */
 /*  Layout Component                                                   */
@@ -157,7 +157,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   /* ---------------------------------------------------------------- */
   /*  Authenticated Layout                                             */
-  /*  Topbjælke i fuld bredde (søgning / gem-bjælke), lys sidemenu med  */
+  /*  Hvid topbjælke (butik, søgning / gem-bjælke), hvid sidemenu med   */
   /*  få områder, indhold på cream. Se components/admin/shell.          */
   /* ---------------------------------------------------------------- */
   return (
@@ -185,7 +185,9 @@ function AuthedShell({
   onLogout: () => void;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const { scope, loading: scopeLoading } = useStoreScope();
+  const settledScope = useRef<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
 
@@ -194,6 +196,13 @@ function AuthedShell({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Når ejeren skifter butik, hentes serverrenderede sider (Overblik m.fl.) igen med den nye cookie.
+  useEffect(() => {
+    if (scopeLoading) return;
+    if (settledScope.current !== null && settledScope.current !== scope) router.refresh();
+    settledScope.current = scope;
+  }, [scope, scopeLoading, router]);
 
   useEffect(() => {
     if (scopeLoading) return;
@@ -211,8 +220,8 @@ function AuthedShell({
 
   return (
     <SaveBarProvider>
-      <div className="flex h-dvh flex-col overflow-hidden bg-cream font-body">
-        <Topbar email={email} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
+      <div className="flex h-dvh flex-col overflow-hidden bg-[#F5F6F4] font-body text-[#15211B]">
+        <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
 
         <div className="relative flex min-h-0 flex-1">
           {sidebarOpen && (
@@ -220,7 +229,7 @@ function AuthedShell({
           )}
           <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
-          <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-8">
+          <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
             {scopeLoading ? null : children}
           </main>
         </div>

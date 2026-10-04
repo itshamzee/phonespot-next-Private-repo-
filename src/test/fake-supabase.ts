@@ -78,6 +78,31 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null; count: numb
     this.filters.push((r) => values.includes(r[column]));
     return this;
   }
+  gte(column: string, value: string | number) {
+    this.note(column, "gte", value);
+    this.filters.push((r) => r[column] != null && (r[column] as string | number) >= value);
+    return this;
+  }
+  gt(column: string, value: string | number) {
+    this.note(column, "gt", value);
+    this.filters.push((r) => r[column] != null && (r[column] as string | number) > value);
+    return this;
+  }
+  lt(column: string, value: string | number) {
+    this.note(column, "lt", value);
+    this.filters.push((r) => r[column] != null && (r[column] as string | number) < value);
+    return this;
+  }
+  /** Understands `not(col, "is", null)` and `not(col, "in", "(a,b)")`. */
+  not(column: string, op: string, value: unknown) {
+    this.note(column, `not-${op}`, value);
+    if (op === "is") this.filters.push((r) => (r[column] ?? null) !== value);
+    else if (op === "in") {
+      const list = String(value).replace(/^\(|\)$/g, "").split(",");
+      this.filters.push((r) => !list.includes(String(r[column])));
+    }
+    return this;
+  }
   ilike(column: string, pattern: string) {
     const needle = pattern.replace(/%/g, "").toLowerCase();
     this.filters.push((r) => String(r[column] ?? "").toLowerCase().includes(needle));

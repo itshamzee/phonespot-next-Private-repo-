@@ -166,16 +166,28 @@ function ReturnPageInner() {
                       {l.returned.quantity > 0 ? ` · ${l.returned.quantity} allerede returneret` : ""}
                     </p>
                   </div>
-                  {l.remaining > 0 ? (
+                  {l.remaining > 0 && l.itemType === "deposit" && (l.depositRemaining ?? l.totalPrice) < l.totalPrice ? (
+                    <span className="text-xs text-charcoal/40">Brugt på en sag. Returnér sagens betaling.</span>
+                  ) : l.remaining > 0 ? (
                     <>
                       <input
                         type="number"
                         min={0}
                         max={l.remaining}
                         value={qty[l.id] ?? 0}
-                        onChange={(e) =>
-                          setQty((q) => ({ ...q, [l.id]: Math.max(0, Math.min(l.remaining, Number(e.target.value) || 0)) }))
-                        }
+                        onChange={(e) => {
+                          const next = Math.max(0, Math.min(l.remaining, Number(e.target.value) || 0));
+                          setQty((q) => {
+                            const out = { ...q, [l.id]: next };
+                            // Repair line and applied deposit go back together.
+                            const partner =
+                              l.itemType === "repair_service" ? "deposit_applied" : l.itemType === "deposit_applied" ? "repair_service" : null;
+                            if (partner) {
+                              for (const o of order.lines) if (o.itemType === partner && o.remaining > 0) out[o.id] = next > 0 ? 1 : 0;
+                            }
+                            return out;
+                          });
+                        }}
                         className={`${input} w-20 text-right`}
                         aria-label={`Antal der returneres: ${l.description ?? "vare"}`}
                       />

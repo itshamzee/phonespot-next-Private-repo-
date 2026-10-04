@@ -55,7 +55,21 @@ export function toRpcItems(items: SaleItem[]) {
           quantity: i.quantity ?? 1,
         };
       case "deposit":
-        return { type: "deposit", description: i.description ?? "Depositum", unit_price_oere: i.unitPriceOere };
+        return {
+          type: "deposit",
+          repair_ticket_id: i.repairTicketId,
+          description: i.description ?? "Depositum",
+          unit_price_oere: i.unitPriceOere,
+        };
+      case "repair_service":
+        return {
+          type: "repair_service",
+          repair_ticket_id: i.repairTicketId,
+          description: i.description ?? "Reparation",
+          unit_price_oere: i.unitPriceOere,
+        };
+      case "deposit_applied":
+        return { type: "deposit_applied", deposit_item_id: i.depositItemId, amount_oere: i.amountOere };
     }
   });
 }

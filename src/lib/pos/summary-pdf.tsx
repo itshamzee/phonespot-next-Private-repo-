@@ -54,6 +54,12 @@ export function DailySummaryPDF({ summary: s }: { summary: DailySummary }) {
         <Line label="Brugt-salg (brugtmoms)" value={`${kr(s.brugtGross)} kr`} />
         <Line label="Heraf brugtmoms (25/125 af avance)" value={`${kr(s.brugtmoms)} kr`} />
 
+        <Text style={styles.h2}>Depositum (forudbetalinger på sager)</Text>
+        <Line label="Depositum modtaget (inkl. moms)" value={`${kr(s.deposits.received)} kr`} />
+        <Line label="  heraf moms (betales ved modtagelse)" value={`${kr(s.deposits.receivedVat)} kr`} />
+        <Line label="Depositum modregnet i sagsbetalinger" value={`${kr(s.deposits.applied)} kr`} />
+        <Line label="  heraf moms" value={`${kr(s.deposits.appliedVat)} kr`} />
+
         <Text style={styles.h2}>Betalingstyper (netto)</Text>
         {s.payments.length === 0 ? <Line label="Ingen betalinger" value="-" /> : null}
         {s.payments.map((p) => (

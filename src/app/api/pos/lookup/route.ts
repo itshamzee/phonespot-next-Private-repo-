@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q")?.trim();
+    // Strip characters that would change the meaning of the PostgREST .or() filter below.
+    const query = searchParams.get("q")?.replace(/[,()*%\\]/g, " ").trim();
     const locationId = searchParams.get("location_id");
 
     if (!query || query.length < 2) {

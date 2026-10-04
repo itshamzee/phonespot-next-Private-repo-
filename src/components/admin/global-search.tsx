@@ -163,8 +163,8 @@ export default function GlobalSearch() {
 
   return (
     <div ref={rootRef} className="relative w-full max-w-[520px]">
-      <div className="flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 text-white transition-colors focus-within:border-white/40 focus-within:bg-white/15">
-        <svg className="h-4 w-4 shrink-0 text-white/70" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden>
+      <div className="flex h-9 items-center gap-2 rounded-lg border border-[#E2E5E0] bg-white px-3 text-[#15211B] transition-colors focus-within:border-[#1A3D2E]">
+        <svg className="h-4 w-4 shrink-0 text-[#5E6A63]" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
         <input
@@ -187,13 +187,13 @@ export default function GlobalSearch() {
             setOpen(true);
           }}
           onKeyDown={onKeyDown}
-          placeholder="Søg ordre, kunde, IMEI eller produkt"
-          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-white placeholder:text-white/65 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+          placeholder="Søg på navn, telefon, sagsnr., IMEI"
+          className="h-full min-w-0 flex-1 bg-transparent text-[14px] text-[#15211B] placeholder:text-[#5E6A63] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {loading && searching ? (
-          <span aria-hidden className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          <span aria-hidden className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#E2E5E0] border-t-[#1A3D2E]" />
         ) : (
-          <kbd className="hidden shrink-0 rounded border border-white/20 px-1.5 py-0.5 text-[11px] text-white/60 sm:inline">Ctrl K</kbd>
+          <kbd className="hidden shrink-0 rounded border border-[#E2E5E0] px-1.5 py-0.5 text-[11px] text-[#5E6A63] sm:inline">Ctrl K</kbd>
         )}
       </div>
 

@@ -143,6 +143,9 @@ function CashupPageInner() {
               <Row label="Heraf moms" value={formatOere(summary.vatStandard)} />
               <Row label="Brugt-salg (brugtmoms)" value={formatOere(summary.brugtGross)} />
               <Row label="Heraf brugtmoms" value={formatOere(summary.brugtmoms)} />
+              <h2 className="mb-2 mt-5 text-[11px] font-bold tracking-[0.08em] text-charcoal/30">Depositum</h2>
+              <Row label="Depositum modtaget" value={formatOere(summary.deposits.received)} />
+              <Row label="Depositum modregnet" value={formatOere(summary.deposits.applied)} />
               <h2 className="mb-2 mt-5 text-[11px] font-bold tracking-[0.08em] text-charcoal/30">Bonnumre</h2>
               <Row
                 label="Første til sidste"

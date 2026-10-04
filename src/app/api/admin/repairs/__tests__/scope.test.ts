@@ -60,7 +60,7 @@ beforeEach(() => {
   state.staff = null;
 });
 
-const ids = async (res: Response) => ((await res.json()).tickets as { id: string }[]).map((t) => t.id).sort();
+const ids = async (res: Response) => ((await res.json()).rows as { id: string }[]).map((t) => t.id).sort();
 const storeOf = (id: string) => db.tables.repair_tickets.find((t) => t.id === id)?.store_id;
 
 describe("GET /api/admin/repairs (list)", () => {
