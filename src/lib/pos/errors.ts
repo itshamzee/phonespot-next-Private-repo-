@@ -98,6 +98,18 @@ const CATALOG: Record<string, Entry> = {
     message: () => "Returnér reparationen og det modregnede depositum sammen",
   },
   location_not_found: { status: 404, message: () => "Lokationen findes ikke" },
+  ticket_item_not_found: { status: 404, message: () => "Sagens linje findes ikke længere. Hent sagen igen." },
+  ticket_item_mismatch: { status: 409, message: () => "Varen passer ikke til sagens linje. Hent sagen igen." },
+  ticket_item_sold: { status: 409, message: () => "Sagens linje er allerede solgt" },
+  ticket_item_quantity: { status: 409, message: (d) => `Antallet skal være ${d ?? "det samme som på sagen"}` },
+  ticket_item_location: {
+    status: 409,
+    message: () => "Delen er reserveret i den anden butik. Sælg den fra den butiks kasse.",
+  },
+  stock_below_reserved: {
+    status: 409,
+    message: (d) => `${d ?? "Noget"} af lageret er reserveret til reparationssager. Fjern reservationen først.`,
+  },
 };
 
 const PATTERN = /pos:([a-z_]+)(?::([^\n]*))?/;

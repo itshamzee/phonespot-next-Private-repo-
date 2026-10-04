@@ -139,7 +139,7 @@ export default function CaseListPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-[#15211B]">Sagsstyring</h1>
           <div className="flex gap-2.5">
-            <BtnLink href="/admin/indlevering" variant="primary" className="!h-[42px] !px-[18px] !text-[15px]">
+            <BtnLink href="/admin/reparationer/ny" variant="primary" className="!h-[42px] !px-[18px] !text-[15px]">
               Ny sag
             </BtnLink>
             <BtnLink href="/admin/kasse" className="!h-[42px] !px-[18px] !text-[15px]">

@@ -58,7 +58,7 @@ export type CaseListTicket = {
   repair_quotes?: { estimated_days?: number | null; created_at?: string | null }[] | null;
 };
 
-const CLOSED: string[] = ["afhentet", "reklamation_loest"];
+const CLOSED: string[] = ["afhentet", "reklamation_loest", "annulleret"];
 
 export function isClosed(status: string): boolean {
   return CLOSED.includes(status);

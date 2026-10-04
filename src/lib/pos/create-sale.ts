@@ -44,9 +44,14 @@ export function toRpcItems(items: SaleItem[]) {
   return items.map((i) => {
     switch (i.type) {
       case "device":
-        return { type: "device", device_id: i.deviceId };
+        return { type: "device", device_id: i.deviceId, ...(i.repairTicketItemId ? { repair_ticket_item_id: i.repairTicketItemId } : {}) };
       case "sku_product":
-        return { type: "sku_product", sku_product_id: i.skuProductId, quantity: i.quantity };
+        return {
+          type: "sku_product",
+          sku_product_id: i.skuProductId,
+          quantity: i.quantity,
+          ...(i.repairTicketItemId ? { repair_ticket_item_id: i.repairTicketItemId } : {}),
+        };
       case "free_text":
         return {
           type: "free_text",

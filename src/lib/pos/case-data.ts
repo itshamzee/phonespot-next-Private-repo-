@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase/client";
-import { caseLines, computeCaseTotals, type CaseLine } from "@/lib/repairs/case-money";
+import { caseLines, computeCaseTotals, isRepairLineKind, type CaseLine } from "@/lib/repairs/case-money";
+import { loadCaseItems } from "@/lib/repairs/case-items";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { getCaseDeposits, type CaseDepositWithBalance } from "./deposits";
 import type { CaseQuery } from "./case-lookup";
@@ -15,7 +16,7 @@ export type PosCase = {
   storeId: string | null;
   customer: { id: string | null; name: string; phone: string | null; email: string | null };
   deviceLabel: string;
-  /** Case lines as on the case page (services, glass or quote). */
+  /** Case lines as on the case page (case items first, then services, booking or quote). */
   lines: CaseLine[];
   /** Case total after the booking discount (oere). 0 when the case has no price yet. */
   totalOere: number;
@@ -84,11 +85,13 @@ export async function loadPosCase(
     depositsOk = false;
   }
 
-  const lines = caseLines(t, (quotes ?? []) as Parameters<typeof caseLines>[1]);
+  const items = await loadCaseItems(supabase, id);
+  const lines = caseLines(t, (quotes ?? []) as Parameters<typeof caseLines>[1], items);
   const totals = computeCaseTotals(lines, [], { paid: t.paid ?? false, booking: t.booking_details });
   const label = ticketLabel({ id: t.id, ticket_number: t.ticket_number });
   const device = [t.device_type, t.device_model].filter(Boolean).join(" ").trim();
-  const serviceNames = lines.map((l) => l.name).join(", ");
+  // Product/device lines are sold as their own cart lines, so they are not part of the repair description.
+  const serviceNames = lines.filter((l) => isRepairLineKind(l.kind)).map((l) => l.name).join(", ");
 
   return {
     id: t.id,

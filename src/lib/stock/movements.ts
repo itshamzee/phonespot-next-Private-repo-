@@ -6,7 +6,7 @@ import { visibleLocationId } from "@/lib/transfers/service";
 
 type Db = ReturnType<typeof createServerClient>;
 
-export type MovementReason = "sale" | "return" | "adjust" | "receive" | "transfer";
+export type MovementReason = "sale" | "return" | "adjust" | "receive" | "transfer" | "repair";
 
 export const REASON_LABELS: Record<MovementReason, string> = {
   sale: "Salg",
@@ -14,6 +14,7 @@ export const REASON_LABELS: Record<MovementReason, string> = {
   adjust: "Regulering",
   receive: "Varemodtagelse",
   transfer: "Overførsel",
+  repair: "Reparation",
 };
 
 export type MovementRow = {

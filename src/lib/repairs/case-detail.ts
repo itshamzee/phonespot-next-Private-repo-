@@ -8,6 +8,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCaseDeposits, type CaseDeposit } from "@/lib/pos/deposits";
 import { withSignedRepairPhotos } from "@/lib/repairs/photo-storage";
 import { caseLines, computeCaseTotals, type CaseLine, type CaseTotals } from "@/lib/repairs/case-money";
+import { loadCaseItems, loadCaseItemViews } from "@/lib/repairs/case-items";
+import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import type {
   CustomerDevice,
   RepairComment,
@@ -18,7 +20,7 @@ import type {
 } from "@/lib/supabase/types";
 
 export type CaseDetail = {
-  ticket: RepairTicket & { promised_at?: string | null; assigned_to?: string | null; signature_url?: string | null };
+  ticket: RepairTicket & { repair_model_id?: string | null; device_passcode?: string | null; promised_at?: string | null; assigned_to?: string | null; signature_url?: string | null };
   quotes: RepairQuote[];
   logs: RepairStatusLog[];
   comments: RepairComment[];
@@ -28,6 +30,8 @@ export type CaseDetail = {
   /** false hvis depositum ikke kunne hentes; så er "rest" ikke til at stole på. */
   deposits_ok: boolean;
   lines: CaseLine[];
+  /** Sagens linjer (Ny sag) med lagerstatus. Tom for ældre sager. */
+  items: CaseItemView[];
   totals: CaseTotals;
   warranty: string | null;
   history: { tickets: number | null; orders: number | null } | null;
@@ -37,7 +41,7 @@ export type CaseDetail = {
 export async function loadCaseDetail(
   supabase: SupabaseClient,
   id: string,
-  opts: { light?: boolean } = {},
+  opts: { light?: boolean; canSeeCost?: boolean } = {},
 ): Promise<CaseDetail | null> {
   const light = Boolean(opts.light);
 
@@ -74,7 +78,11 @@ export async function loadCaseDetail(
   ]);
 
   const quoteRows = (quotes.data ?? []) as RepairQuote[];
-  const lines = caseLines(raw, quoteRows);
+  const [itemRows, itemViews] = await Promise.all([
+    loadCaseItems(supabase, id),
+    loadCaseItemViews(supabase, id, Boolean(opts.canSeeCost)),
+  ]);
+  const lines = caseLines(raw, quoteRows, itemRows);
   const totals = computeCaseTotals(lines, depositsResult.deposits, { paid: raw.paid, booking: raw.booking_details });
 
   let warranty: string | null = null;
@@ -86,7 +94,8 @@ export async function loadCaseDetail(
   }
 
   return {
-    ticket: light ? raw : await withSignedRepairPhotos(supabase, raw),
+    // Adgangskoden følger kun med den fulde sagsside, aldrig sidepanelet.
+    ticket: light ? { ...raw, device_passcode: undefined } : await withSignedRepairPhotos(supabase, raw),
     quotes: quoteRows,
     logs: (logs.data ?? []) as RepairStatusLog[],
     comments: (comments.data ?? []) as RepairComment[],
@@ -95,6 +104,7 @@ export async function loadCaseDetail(
     deposits: depositsResult.deposits,
     deposits_ok: depositsResult.ok,
     lines,
+    items: itemViews,
     totals,
     warranty,
     history,

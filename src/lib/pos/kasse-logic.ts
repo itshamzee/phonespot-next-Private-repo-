@@ -12,12 +12,13 @@ import { computeSaleTotals, validatePayments, type PaymentLineInput, type Paymen
 import { planDepositApplication, type DepositApplication } from "./deposit-math";
 import type { PaymentType } from "./constants";
 import type { SaleItem } from "./schemas";
+import type { CaseLine } from "@/lib/repairs/case-money";
 
 export const DEFAULT_DEPOSIT_SUGGESTION_OERE = 50_000;
 
 export type CartLine =
-  | { key: string; type: "device"; deviceId: string; name: string; detail?: string; price: number; vatScheme: "brugtmoms" | "regular" }
-  | { key: string; type: "sku_product"; skuProductId: string; name: string; price: number; quantity: number }
+  | { key: string; type: "device"; deviceId: string; name: string; detail?: string; price: number; vatScheme: "brugtmoms" | "regular"; repairTicketItemId?: string }
+  | { key: string; type: "sku_product"; skuProductId: string; name: string; price: number; quantity: number; repairTicketItemId?: string }
   | { key: string; type: "free_text"; name: string; price: number; quantity: number }
   | { key: string; type: "deposit"; ticketId: string; ticketNumber: string; name: string; price: number }
   | { key: string; type: "repair_service"; ticketId: string; ticketNumber: string; name: string; detail?: string; price: number };
@@ -30,6 +31,8 @@ export type CaseContext = {
   customer: { id: string | null; name: string; phone: string | null; email: string | null };
   deviceLabel: string;
   totalOere: number;
+  /** Case lines (items first). Product/device lines are sold as real lines, the rest as one repair line. */
+  lines?: CaseLine[];
   description: string;
   deposits: Array<{ id: string; amount_oere: number; paid_at: string; remaining_oere: number }>;
   depositsOk: boolean;
@@ -63,6 +66,7 @@ export function lineTotal(l: CartLine): number {
 }
 
 export function lineIsLocked(l: CartLine): boolean {
+  if ((l.type === "device" || l.type === "sku_product") && l.repairTicketItemId) return true;
   return l.type === "deposit" || l.type === "repair_service";
 }
 
@@ -158,9 +162,14 @@ export function toSaleItems(lines: CartLine[], applied: AppliedDepositLine[]): S
   const items: SaleItem[] = lines.map((l): SaleItem => {
     switch (l.type) {
       case "device":
-        return { type: "device", deviceId: l.deviceId };
+        return { type: "device", deviceId: l.deviceId, ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}) };
       case "sku_product":
-        return { type: "sku_product", skuProductId: l.skuProductId, quantity: l.quantity };
+        return {
+          type: "sku_product",
+          skuProductId: l.skuProductId,
+          quantity: l.quantity,
+          ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}),
+        };
       case "free_text":
         return { type: "free_text", description: l.name.slice(0, 200), unitPriceOere: l.price, quantity: l.quantity };
       case "deposit":
@@ -179,21 +188,52 @@ export function toSaleItems(lines: CartLine[], applied: AppliedDepositLine[]): S
 }
 
 /**
- * Cart lines for "Hent sag til betaling" (?sag=<id>): one repair line for the
- * case total. The deposit deductions are derived from the case (planAppliedDeposits).
+ * Cart lines for "Hent sag til betaling" (?sag=<id>). Repair, free text and the old case lines
+ * stay ONE repair line for the case total. A device or product the customer bought with the case
+ * becomes a real device/sku_product line (stock, warranty and brugtmoms are then handled
+ * correctly: a device is never folded into the repair line). Items already sold are left out.
+ * The deposit deductions are derived from the case (planAppliedDeposits).
  */
 export function casePaymentLines(c: CaseContext, key = `case-${c.id}`): CartLine[] {
-  return [
-    {
+  const own = (c.lines ?? []).filter((l) => (l.kind === "device" || l.kind === "product") && !l.sold && l.item_id);
+  const ownSum = own.reduce((s, l) => s + l.total_oere, 0);
+  const repairPrice = Math.max(0, c.totalOere - ownSum);
+  const out: CartLine[] = [];
+  if (repairPrice > 0 || own.length === 0) {
+    out.push({
       key,
       type: "repair_service",
       ticketId: c.id,
       ticketNumber: c.ticketNumber,
       name: c.description.slice(0, 200) || `Sag ${c.ticketNumber}`,
       detail: c.description.replace(/^Sag\s+\S+\s*·\s*/, "") || c.deviceLabel,
-      price: Math.max(0, c.totalOere),
-    },
-  ];
+      price: repairPrice,
+    });
+  }
+  for (const l of own) {
+    if (l.kind === "device" && l.device_id) {
+      out.push({
+        key: `item-${l.item_id}`,
+        type: "device",
+        deviceId: l.device_id,
+        name: l.name,
+        price: l.unit_oere,
+        vatScheme: l.vat_scheme ?? "brugtmoms",
+        repairTicketItemId: l.item_id,
+      });
+    } else if (l.kind === "product" && l.sku_product_id) {
+      out.push({
+        key: `item-${l.item_id}`,
+        type: "sku_product",
+        skuProductId: l.sku_product_id,
+        name: l.name,
+        price: l.unit_oere,
+        quantity: l.qty,
+        repairTicketItemId: l.item_id,
+      });
+    }
+  }
+  return out;
 }
 
 /** Why a case cannot be charged / taken a deposit on, or null. */

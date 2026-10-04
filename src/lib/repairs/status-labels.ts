@@ -12,6 +12,7 @@ export const STATUS_LABELS: Record<RepairStatus, string> = {
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
   reklamation_loest: "Reklamation løst",
+  annulleret: "Annulleret",
 };
 
 /**

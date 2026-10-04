@@ -17,6 +17,7 @@ vi.mock("@/lib/repairs/ticket-access", () => ({
 }));
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
+    rpc: async () => ({ data: { consumed: 0, shortfall: 0 }, error: null }),
     from: (table: string) => {
       if (table === "repair_tickets") {
         return {

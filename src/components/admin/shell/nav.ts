@@ -53,7 +53,7 @@ export const NAV: NavArea[] = [
     icon: ["M9 6h11M9 12h11M9 18h11", "m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"],
     children: [
       { href: "/admin/reparationer", label: "Sager" },
-      { href: "/admin/indlevering", label: "Ny indlevering" },
+      { href: "/admin/reparationer/ny", label: "Ny sag" },
       { href: "/admin/prisliste", label: "Prisliste" },
     ],
   },

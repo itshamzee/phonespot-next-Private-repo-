@@ -9,11 +9,13 @@ const uuid = z
 const oere = z.number().int().safe();
 
 export const saleItemSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("device"), deviceId: uuid }),
+  z.object({ type: z.literal("device"), deviceId: uuid, repairTicketItemId: uuid.optional() }),
   z.object({
     type: z.literal("sku_product"),
     skuProductId: uuid,
     quantity: z.number().int().min(1).max(1000),
+    // A product sold from a repair case: consumes the case reservation and marks the case item sold.
+    repairTicketItemId: uuid.optional(),
   }),
   z.object({
     type: z.literal("free_text"),

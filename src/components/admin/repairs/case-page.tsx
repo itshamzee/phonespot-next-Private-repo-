@@ -16,6 +16,8 @@ import { STORE_IDS, normalizeStoreId, storeLabel } from "@/lib/stores";
 import type { RepairStatus } from "@/lib/supabase/types";
 import { focusWithoutScroll, revealTop } from "@/lib/reveal";
 import { Btn, BtnLink, Card, Dl, Pill, apiError, btnClass } from "@/components/admin/repairs/ui";
+import CaseItemsEditor from "@/components/admin/repairs/case-items-editor";
+import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { PrintModal } from "@/components/admin/repairs/print-modal";
 import { SmsThread } from "@/components/admin/repairs/sms-thread";
@@ -391,30 +393,17 @@ export default function CasePage({ id }: { id: string }) {
 
       <Card title="Opgaver og varer">
         {t.on_hold_reason && <p className="mb-2 mt-0 text-sm text-[#7A4A06]">På hold: {t.on_hold_reason.toLowerCase()}</p>}
-        {detail.lines.length === 0 ? (
-          <p className="m-0 text-sm text-[#5E6A63]">Ingen opgaver eller varer på sagen endnu. Send et tilbud, eller læg varer på sagen i kassen.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-[#E2E5E0] text-left text-[13px] font-semibold text-[#5E6A63]">
-                  <th className="py-2 font-semibold">Vare</th>
-                  <th className="w-20 py-2 font-semibold">Antal</th>
-                  <th className="w-36 py-2 text-right font-semibold">Pris</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detail.lines.map((l) => (
-                  <tr key={l.id} className="border-b border-[#EEF0EC]">
-                    <td className="py-3">{[t.device_model, l.name].filter(Boolean).join(" · ")}</td>
-                    <td className="py-3">{l.qty}</td>
-                    <td className="py-3 text-right tabular-nums">{formatKr(l.total_oere)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <CaseItemsEditor
+          ticketId={id}
+          store={normalizeStoreId(t.store_id)}
+          modelId={(t as { repair_model_id?: string | null }).repair_model_id ?? null}
+          deviceModel={t.device_model}
+          closed={closed}
+          lines={detail.lines}
+          items={(detail as CaseDetail & { items?: CaseItemView[] }).items}
+          onChanged={load}
+          onNotice={setNotice}
+        />
         <div className="flex flex-col items-end gap-1.5 pt-3.5 text-sm tabular-nums">
           {totals.discount_oere > 0 && (
             <div className="flex gap-6">

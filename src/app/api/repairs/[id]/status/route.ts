@@ -7,6 +7,7 @@ import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import type { RepairStatus } from "@/lib/supabase/types";
+import { consumeRepairParts } from "@/lib/repairs/case-create";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -120,11 +121,16 @@ export async function PATCH(
     }
 
     const oldStatus = ticket.status;
+    // En annulleret sag er lukket: delene er frigivet og kan ikke genoptages her.
+    if (oldStatus === "annulleret") {
+      return NextResponse.json({ error: "Sagen er annulleret og kan ikke ændres" }, { status: 409 });
+    }
 
     // Update ticket status
     const { error: updateError } = await supabase
       .from("repair_tickets")
-      .update({ status, updated_at: new Date().toISOString() })
+      // Enhedens adgangskode ryddes når enheden er afhentet.
+      .update({ status, updated_at: new Date().toISOString(), ...(status === "afhentet" ? { device_passcode: null } : {}) })
       .eq("id", id);
 
     if (updateError) {
@@ -146,6 +152,21 @@ export async function PATCH(
     // Statusændringen er gemt. Beskeder til kunden er en bivirkning: fejler de,
     // skal personalet have besked, men ændringen står ved magt.
     const warnings: string[] = [];
+
+    // Færdig: træk reservede dele fra lager (idempotent). En fejl her ændrer ikke statussen.
+    let partsConsumed: number | undefined;
+    if (status === "faerdig") {
+      try {
+        const r = await consumeRepairParts(id, access.staff.id);
+        if (r.consumed > 0) partsConsumed = r.consumed;
+        if (r.shortfall > 0) {
+          warnings.push("En del var ikke på lager, så lageret er ikke trukket for den. Tjek lagertallet.");
+        }
+      } catch (consumeErr) {
+        console.error("Consume parts error:", id, consumeErr);
+        warnings.push("Statussen er ændret, men delene kunne ikke trækkes fra lager.");
+      }
+    }
     const store = storeForId(ticket.store_id);
     const caseNumber = ticketLabel(ticket);
 
@@ -209,10 +230,11 @@ export async function PATCH(
       }
     }
 
+    const extras = partsConsumed ? { parts_consumed: partsConsumed } : {};
     if (warnings.length > 0) {
-      return NextResponse.json({ success: true, warning: warnings.join(" ") });
+      return NextResponse.json({ success: true, warning: warnings.join(" "), ...extras });
     }
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, ...extras });
   } catch (err) {
     console.error("Status update error:", err);
     return NextResponse.json(

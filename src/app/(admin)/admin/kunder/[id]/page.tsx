@@ -24,6 +24,7 @@ const STATUS_LABELS: Record<RepairStatus, string> = {
   reklamation_modtaget: "Reklamation modtaget",
   reklamation_vurderet: "Reklamation vurderet",
   reklamation_loest: "Reklamation løst",
+  annulleret: "Annulleret",
 };
 
 const STATUS_COLORS: Record<RepairStatus, string> = {
@@ -38,6 +39,7 @@ const STATUS_COLORS: Record<RepairStatus, string> = {
   reklamation_modtaget: "bg-red-100 text-red-800",
   reklamation_vurderet: "bg-purple-100 text-purple-800",
   reklamation_loest: "bg-teal-100 text-teal-800",
+  annulleret: "bg-gray-100 text-gray-500",
 };
 
 type Order = {
@@ -213,13 +215,13 @@ export default function CustomerDetailPage({
             Ring op
           </a>
           <Link
-            href="/admin/indlevering"
+            href="/admin/reparationer/ny"
             className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-500/15 transition hover:bg-emerald-600"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Ny indlevering
+            Ny sag
           </Link>
         </div>
       </div>

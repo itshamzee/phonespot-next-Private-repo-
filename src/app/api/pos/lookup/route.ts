@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       .from("sku_products")
       .select("id, title, ean, product_number, selling_price, sale_price, category, images")
       .eq("is_active", true)
+      .eq("repair_only", false) // reservedele til reparationer vises ikke i kassens søgning
       .or(`ean.eq.${query},product_number.eq.${query},title.ilike.%${query}%`)
       .limit(10);
 

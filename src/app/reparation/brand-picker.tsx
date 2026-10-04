@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { flushSync } from "react-dom";
 import styles from "@/components/repair/repair.module.css";
+import { PARENT_BRAND_MAP, PARENT_BRAND_META, PARENT_BRAND_ORDER } from "@/lib/repairs/parent-brands";
 import type {
   DeviceType,
   RepairBrand,
@@ -16,42 +17,6 @@ type ModelWithBrand = RepairModel & { brand_slug: string; brand_name: string };
 // ---------------------------------------------------------------------------
 // Parent brand groupings
 // ---------------------------------------------------------------------------
-
-const PARENT_BRAND_MAP: Record<string, string> = {
-  iphone: "apple",
-  ipad: "apple",
-  macbook: "apple",
-  "apple-watch": "apple",
-  samsung: "samsung",
-  "google-pixel": "google",
-  oneplus: "oneplus",
-  huawei: "huawei",
-  sony: "sony",
-  xiaomi: "xiaomi",
-  motorola: "motorola",
-};
-
-const PARENT_BRAND_META: Record<string, { name: string; logo: string }> = {
-  apple: { name: "Apple", logo: "/images/brands/apple.svg" },
-  samsung: { name: "Samsung", logo: "/images/brands/samsung.svg" },
-  google: { name: "Google", logo: "/images/brands/google.svg" },
-  oneplus: { name: "OnePlus", logo: "/images/brands/oneplus.svg" },
-  huawei: { name: "Huawei", logo: "/images/brands/huawei.svg" },
-  sony: { name: "Sony", logo: "/images/brands/sony.svg" },
-  xiaomi: { name: "Xiaomi", logo: "/images/brands/xiaomi.svg" },
-  motorola: { name: "Motorola", logo: "/images/brands/motorola.svg" },
-};
-
-const PARENT_BRAND_ORDER = [
-  "apple",
-  "samsung",
-  "google",
-  "oneplus",
-  "huawei",
-  "xiaomi",
-  "sony",
-  "motorola",
-];
 
 const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   smartphone: "Telefon",

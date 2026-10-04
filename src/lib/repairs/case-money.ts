@@ -11,8 +11,42 @@ export type CaseLine = {
   /** Pris pr. stk. i øre. */
   unit_oere: number;
   total_oere: number;
-  kind: "service" | "glass" | "quote";
+  kind: "service" | "glass" | "quote" | "repair" | "part" | "device" | "product" | "free_text";
+  /** Kun for linjer fra repair_ticket_items. */
+  item_id?: string;
+  sku_product_id?: string | null;
+  device_id?: string | null;
+  stock_status?: string;
+  /** Enhedens momsordning (kun device-linjer); brugtmoms regnes i kassen. */
+  vat_scheme?: "brugtmoms" | "regular";
+  /** Allerede solgt i kassen: tæller ikke med i det der står til betaling. */
+  sold?: boolean;
 };
+
+/** En række fra repair_ticket_items, som caseLines() bruger. */
+export type CaseItemRow = {
+  id: string;
+  parent_item_id?: string | null;
+  kind: "repair" | "part" | "device" | "product" | "free_text";
+  description: string;
+  qty: number;
+  unit_price_oere: number;
+  stock_status: string;
+  sku_product_id?: string | null;
+  device_id?: string | null;
+  created_at?: string;
+  vat_scheme?: "brugtmoms" | "regular";
+};
+
+/** Linjer der indgår i ÉN repair_service-linje i kassen (reparation, fritekst og ældre sagers linjer). */
+export function isRepairLineKind(kind: CaseLine["kind"]): boolean {
+  return kind !== "device" && kind !== "product" && kind !== "part";
+}
+
+/** Linjer kassen sælger som egne varelinjer (rigtig lager- og momsbehandling). */
+export function isOwnLineKind(kind: CaseLine["kind"]): boolean {
+  return kind === "device" || kind === "product";
+}
 
 export type CaseTotals = {
   subtotal_oere: number;
@@ -65,7 +99,28 @@ export const TEMPERED_GLASS_DKK = 99;
  * `booking_details.selected_services` (+ evt. beskyttelsesglas). Uden begge bruges
  * det seneste ikke-afslåede tilbud som én linje.
  */
-export function caseLines(ticket: TicketForMoney, quotes: QuoteForMoney[] = []): CaseLine[] {
+export function caseLines(ticket: TicketForMoney, quotes: QuoteForMoney[] = [], items: CaseItemRow[] = []): CaseLine[] {
+  // 1. Sagens egne linjer (Ny sag) har forrang. Frigivne linjer (annulleret sag) vises ikke.
+  const live = items.filter((i) => i.stock_status !== "released");
+  if (live.length > 0) {
+    return [...live]
+      .sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")))
+      .map((i): CaseLine => ({
+        id: i.id,
+        item_id: i.id,
+        name: i.description,
+        qty: i.qty,
+        unit_oere: i.unit_price_oere,
+        total_oere: i.unit_price_oere * i.qty,
+        kind: i.kind,
+        sku_product_id: i.sku_product_id ?? null,
+        device_id: i.device_id ?? null,
+        stock_status: i.stock_status,
+        vat_scheme: i.kind === "device" ? (i.vat_scheme ?? "brugtmoms") : undefined,
+        sold: i.stock_status === "sold",
+      }));
+  }
+
   const fromServices = (ticket.services ?? []).filter((s) => s && s.name);
   if (fromServices.length > 0) {
     return fromServices.map((s, i) => ({
@@ -132,7 +187,8 @@ export function computeCaseTotals(
   deposits: Pick<CaseDeposit, "amount_oere">[],
   opts: { paid?: boolean; booking?: TicketForMoney["booking_details"] } = {},
 ): CaseTotals {
-  const subtotal = lines.reduce((sum, l) => sum + l.total_oere, 0);
+  // Linjer der allerede er solgt i kassen er betalt for sig og står ikke til betaling igen.
+  const subtotal = lines.reduce((sum, l) => sum + (l.sold ? 0 : l.total_oere), 0);
   const booking = opts.booking;
 
   let discount = 0;

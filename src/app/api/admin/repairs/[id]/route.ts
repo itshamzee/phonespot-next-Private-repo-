@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { requireTicketAccess } from "@/lib/repairs/ticket-access";
 import { loadCaseDetail } from "@/lib/repairs/case-detail";
+import { canSeeCost } from "@/lib/repairs/availability";
 
 /**
  * GET  /api/admin/repairs/[id] — sagen med tilbud, statuslog, kommentarer, enhed,
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let detail;
   try {
-    detail = await loadCaseDetail(supabase, id, { light });
+    detail = await loadCaseDetail(supabase, id, { light, canSeeCost: canSeeCost(access.staff.role) });
   } catch (err) {
     console.error("[admin/repairs] detail failed:", id, err);
     return NextResponse.json({ error: "Kunne ikke hente sagen" }, { status: 500 });

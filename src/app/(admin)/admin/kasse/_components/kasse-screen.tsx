@@ -317,7 +317,7 @@ export function KasseScreen() {
   function loadCaseForPayment(c: CaseContext): string | null {
     const blocked = caseBlockedReason(c, "payment");
     if (blocked) return blocked;
-    setLines((prev) => [...prev.filter((l) => l.type !== "repair_service" && l.type !== "deposit"), ...casePaymentLines(c)]);
+    setLines((prev) => [...prev.filter((l) => l.type !== "repair_service" && l.type !== "deposit" && !("repairTicketItemId" in l && l.repairTicketItemId)), ...casePaymentLines(c)]);
     setCaseCtx(c);
     setCustomer((cur) => cur ?? (c.customer.id ? { id: c.customer.id, name: c.customer.name, phone: c.customer.phone, email: c.customer.email } : null));
     setPayChoice((cur) => (cur.kind === "split" ? { kind: "single", type: "kort_terminal" } : cur));

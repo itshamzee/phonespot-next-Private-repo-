@@ -53,7 +53,8 @@ export type RepairStatus =
   | "bero"
   | "reklamation_modtaget"
   | "reklamation_vurderet"
-  | "reklamation_loest";
+  | "reklamation_loest"
+  | "annulleret";
 
 export interface BookingDetails {
   selected_services: { id: string; name: string; price_dkk: number }[];
