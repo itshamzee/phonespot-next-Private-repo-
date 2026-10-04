@@ -5,6 +5,7 @@ vi.mock("@/lib/email/resend", () => ({ resend: { emails: { send: vi.fn() } } }))
 import {
   buildRepairConfirmationHtml,
   buildRepairConfirmationSubject,
+  buildRepairConfirmationText,
   type RepairConfirmationParams,
 } from "../repair-confirmation";
 
@@ -43,5 +44,25 @@ describe("repair confirmation email", () => {
     const html = buildRepairConfirmationHtml({ ...base, deliveryMethod: "Send ind" });
     expect(html).toContain("gratis forsendelse");
     expect(html).not.toContain("Find vej");
+  });
+
+  it("lists every device and the group total for a multi-device booking", () => {
+    const params = {
+      ...base,
+      totalDkk: 2000,
+      devices: [
+        { deviceLabel: "Apple iPhone 15", services: [{ name: "Skærmskift", price_dkk: 1500 }], includesTemperedGlass: true },
+        { deviceLabel: "Samsung Galaxy S24", services: [{ name: "Batteriskift", price_dkk: 700 }] },
+      ],
+    };
+    const html = buildRepairConfirmationHtml(params);
+    expect(html).toContain("Apple iPhone 15");
+    expect(html).toContain("Samsung Galaxy S24");
+    expect(html).toContain("Batteriskift");
+    expect(html).toContain("Beskyttelsesglas");
+    expect(html).toContain("2 enheder");
+    const text = buildRepairConfirmationText(params);
+    expect(text).toContain("Enhed: Samsung Galaxy S24");
+    expect(text).toContain("Enhed: Apple iPhone 15");
   });
 });
