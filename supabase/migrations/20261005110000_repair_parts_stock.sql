@@ -140,7 +140,8 @@ LANGUAGE sql STABLE SET search_path = pg_catalog, public AS $$
   JOIN public.repair_part_tier_rules r
     ON r.part_category_id = rs.part_category_id
    AND r.repair_quality = coalesce(rs.quality_tier, 'standard')
-  WHERE rs.part_mode = 'part' AND rs.part_category_id IS NOT NULL AND coalesce(rs.active, true)
+  -- Også inaktive reparationer (priser kommer snart): delene skal kunne lagerføres før modellen åbner.
+  WHERE rs.part_mode = 'part' AND rs.part_category_id IS NOT NULL
     AND (p_service_id IS NULL OR rs.id = p_service_id)
 $$;
 
@@ -271,7 +272,7 @@ BEGIN
 
   SELECT count(*) INTO v_no_rule
     FROM public.repair_services rs
-    WHERE rs.part_mode = 'part' AND rs.part_category_id IS NOT NULL AND coalesce(rs.active, true)
+    WHERE rs.part_mode = 'part' AND rs.part_category_id IS NOT NULL
       AND (p_repair_service_id IS NULL OR rs.id = p_repair_service_id)
       AND NOT EXISTS (SELECT 1 FROM public.repair_part_tier_rules r
                        WHERE r.part_category_id = rs.part_category_id
