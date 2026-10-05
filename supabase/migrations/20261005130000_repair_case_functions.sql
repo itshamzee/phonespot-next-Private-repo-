@@ -419,6 +419,8 @@ BEGIN
 
   -- Idempotens: samme nøgle + samme body giver det gemte svar; en anden body er en fejl.
   IF v_key IS NOT NULL THEN
+    -- Gamle nøgler ryddes løbende (en nøgle bruges kun til at gentage et dobbeltklik).
+    DELETE FROM public.repair_case_requests WHERE created_at < clock_timestamp() - interval '7 days';
     INSERT INTO public.repair_case_requests (staff_id, idem_key, request_hash)
       VALUES (v_staff, v_key, v_hash) ON CONFLICT (staff_id, idem_key) DO NOTHING;
     GET DIAGNOSTICS v_rc = ROW_COUNT;
