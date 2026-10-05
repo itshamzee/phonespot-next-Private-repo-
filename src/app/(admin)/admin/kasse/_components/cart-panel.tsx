@@ -4,7 +4,7 @@ import { useState } from "react";
 import { parseKr } from "@/lib/pos/money";
 import type { PaymentType } from "@/lib/pos/constants";
 import { PAYMENT_LABELS } from "@/lib/pos/constants";
-import type { AppliedDepositLine, CartLine, CartTotals, PaymentChoice } from "@/lib/pos/kasse-logic";
+import type { AppliedDepositLine, CartLine, CartTotals, CaseStockSummary, PaymentChoice } from "@/lib/pos/kasse-logic";
 import { lineTotal } from "@/lib/pos/kasse-logic";
 import type { CustomerPick } from "./dialogs";
 import { fmt, fmtKr, shortDate } from "./format";
@@ -28,6 +28,9 @@ type Props = {
   blockReason: string | null;
   error: string;
   hasOpenSession: boolean;
+  /** Stock status per case line + deposit hint (null when no case is loaded). */
+  caseStock?: CaseStockSummary | null;
+  onTakeDeposit?: () => void;
   onQty: (key: string, delta: number) => void;
   onRemove: (key: string) => void;
   onPrice: (key: string, oere: number) => void;
@@ -76,6 +79,36 @@ export function CartPanel(p: Props) {
           </button>
         )}
       </div>
+
+      {p.caseStock && p.caseStock.rows.length > 0 && (
+        <div data-testid="case-stock" className="border-b border-[#E2E5E0] px-5 py-3 text-sm">
+          <div className="mb-1 text-xs font-semibold text-[#5E6A63]">Lagerstatus på sagen</div>
+          <ul className="space-y-1">
+            {p.caseStock.rows.map((r) => (
+              <li key={r.key} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate">{r.name}</span>
+                <span className={r.status === "backorder" ? "shrink-0 font-semibold text-[#8A5A00]" : "shrink-0 text-[#5E6A63]"}>
+                  {r.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {p.caseStock.suggestDeposit && (
+            <div role="status" className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#E8D3A0] bg-[#FBF4E2] px-3 py-2 text-[#6B4A00]">
+              <span>Del skal bestilles — overvej depositum</span>
+              {p.onTakeDeposit && (
+                <button
+                  type="button"
+                  onClick={p.onTakeDeposit}
+                  className="shrink-0 rounded-md border border-[#C9A24D] bg-white px-3 py-1 text-xs font-semibold text-[#6B4A00] hover:bg-[#FFF9EA]"
+                >
+                  Tag depositum
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex min-h-[120px] flex-1 flex-col overflow-y-auto px-5 py-2 text-sm">
         {p.lines.length === 0 && p.applied.length === 0 && (

@@ -14,6 +14,7 @@ import type { QuickTile, DeviceTile, TileCategory } from "@/lib/pos/quick-tiles"
 import {
   cartTotals,
   caseBlockedReason,
+  caseStockSummary,
   casePaymentLines,
   checkPayments,
   discountableBase,
@@ -976,6 +977,13 @@ export function KasseScreen() {
             blockReason={blockReason}
             error={error}
             hasOpenSession={!!openSession}
+            caseStock={caseCtx ? caseStockSummary(caseCtx) : null}
+            onTakeDeposit={() => {
+              if (caseCtx) {
+                const problem = openDepositFor(caseCtx);
+                if (problem) setError(problem);
+              }
+            }}
             onQty={changeQty}
             onRemove={removeLine}
             onPrice={setPrice}

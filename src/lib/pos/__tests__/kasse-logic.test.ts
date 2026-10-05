@@ -4,6 +4,7 @@ import {
   cartTotals,
   caseBlockedReason,
   casePaymentLines,
+  caseStockSummary,
   checkPayments,
   discountableBase,
   parseKasseParams,
@@ -250,5 +251,61 @@ describe("quick tiles", () => {
       { id: "a", sold: 6 },
       { id: "b", sold: 5 },
     ]);
+  });
+});
+
+describe("case own lines and stock status", () => {
+  const item = (over: Record<string, unknown>) => ({
+    id: "i",
+    item_id: "i",
+    name: "Del",
+    qty: 1,
+    unit_oere: 0,
+    total_oere: 0,
+    kind: "part" as const,
+    ...over,
+  });
+
+  it("puts a device and a product from the case on their own cart lines, not in the repair line", () => {
+    const c = ctx({
+      totalOere: 100_000 + 500_000 + 9_900,
+      lines: [
+        item({ id: "r", item_id: "r", name: "Skærmskift", kind: "repair", unit_oere: 100_000, total_oere: 100_000 }),
+        item({ id: "d", item_id: "d", name: "iPhone 13", kind: "device", device_id: U(40), unit_oere: 500_000, total_oere: 500_000, vat_scheme: "brugtmoms" }),
+        item({ id: "p", item_id: "p", name: "Cover", kind: "product", sku_product_id: U(41), unit_oere: 9_900, total_oere: 9_900 }),
+      ],
+    });
+    const lines = casePaymentLines(c);
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).toMatchObject({ type: "repair_service", price: 100_000 });
+    expect(lines[1]).toMatchObject({ type: "device", deviceId: U(40), price: 500_000, repairTicketItemId: "d" });
+    expect(lines[2]).toMatchObject({ type: "sku_product", skuProductId: U(41), price: 9_900, repairTicketItemId: "p" });
+  });
+
+  it("lists stock status per stock-carrying line and suggests a deposit on backorder without deposit", () => {
+    const c = ctx({
+      deposits: [],
+      lines: [
+        item({ id: "r", item_id: "r", name: "Skærmskift", kind: "repair", stock_status: "none" }),
+        item({ id: "a", item_id: "a", name: "Skærm", kind: "part", stock_status: "backorder" }),
+        item({ id: "b", item_id: "b", name: "Batteri", kind: "part", stock_status: "reserved" }),
+        item({ id: "c", item_id: "c", name: "Cover", kind: "product", stock_status: "none" }),
+      ],
+    });
+    const s = caseStockSummary(c);
+    expect(s.rows.map((r) => [r.name, r.label])).toEqual([
+      ["Skærm", "Skal bestilles"],
+      ["Batteri", "Reserveret"],
+      ["Cover", "Ingen reservation"],
+    ]);
+    expect(s.hasBackorder).toBe(true);
+    expect(s.suggestDeposit).toBe(true);
+  });
+
+  it("no deposit hint when a deposit exists, nothing is on backorder, or the case is paid", () => {
+    const back = [item({ id: "a", item_id: "a", kind: "part", stock_status: "backorder" })];
+    expect(caseStockSummary(ctx({ lines: back })).suggestDeposit).toBe(false); // ctx() has a deposit
+    expect(caseStockSummary(ctx({ deposits: [], paid: true, lines: back })).suggestDeposit).toBe(false);
+    expect(caseStockSummary(ctx({ deposits: [], lines: [item({ stock_status: "reserved" })] })).suggestDeposit).toBe(false);
   });
 });

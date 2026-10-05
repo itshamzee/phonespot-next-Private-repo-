@@ -236,6 +236,39 @@ export function casePaymentLines(c: CaseContext, key = `case-${c.id}`): CartLine
   return out;
 }
 
+const STOCK_LABELS: Record<string, string> = {
+  reserved: "Reserveret",
+  backorder: "Skal bestilles",
+  planned: "Planlagt",
+  consumed: "Brugt",
+  sold: "Solgt",
+  none: "Ingen reservation",
+};
+
+export type CaseStockRow = { key: string; name: string; status: string; label: string };
+
+export type CaseStockSummary = {
+  rows: CaseStockRow[];
+  hasBackorder: boolean;
+  /** Calm hint: a part must be ordered and no deposit has been taken yet. */
+  suggestDeposit: boolean;
+};
+
+/**
+ * Per-line stock status for a loaded case (from repair_ticket_items). Only lines that carry stock
+ * (part, product, device) are listed; repair and free-text lines have no stock of their own.
+ */
+export function caseStockSummary(c: CaseContext): CaseStockSummary {
+  const rows = (c.lines ?? [])
+    .filter((l) => l.item_id && (l.kind === "part" || l.kind === "product" || l.kind === "device") && !l.sold)
+    .map((l) => {
+      const status = l.stock_status ?? "none";
+      return { key: l.item_id as string, name: l.name, status, label: STOCK_LABELS[status] ?? status };
+    });
+  const hasBackorder = (c.lines ?? []).some((l) => l.item_id && !l.sold && l.stock_status === "backorder");
+  return { rows, hasBackorder, suggestDeposit: hasBackorder && !c.paid && c.deposits.length === 0 };
+}
+
 /** Why a case cannot be charged / taken a deposit on, or null. */
 export function caseBlockedReason(c: CaseContext, mode: "payment" | "deposit"): string | null {
   if (c.paid) return `Sag ${c.ticketNumber} er allerede betalt`;

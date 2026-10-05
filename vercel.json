@@ -21,6 +21,10 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/repair-part-costs",
+      "schedule": "30 6 * * *"
+    },
+    {
       "path": "/api/cron/buyback-digest",
       "schedule": "0 7 * * *"
     }
