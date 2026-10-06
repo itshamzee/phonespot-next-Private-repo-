@@ -99,6 +99,24 @@ export const createCaseSchema = z.object({
 });
 export type CreateCaseBody = z.infer<typeof createCaseSchema>;
 
+/** Indlevering af flere enheder: én kunde, 1..10 enheder (én sag hver). */
+export const createCaseGroupSchema = z.object({
+  customer: customerSchema,
+  devices: z
+    .array(
+      z.object({
+        device: deviceSchema,
+        items: z.array(itemSchema).min(1, "Tilføj mindst én reparation til hver enhed").max(NEW_CASE_LIMITS.items),
+        details: detailsSchema.optional(),
+      }),
+    )
+    .min(1, "Tilføj mindst én enhed")
+    .max(NEW_CASE_LIMITS.devices, `Maks. ${NEW_CASE_LIMITS.devices} enheder ad gangen`),
+  store_id: z.enum(["vejle", "slagelse"]).nullish(),
+  notify_sms: z.boolean().optional(),
+});
+export type CreateCaseGroupBody = z.infer<typeof createCaseGroupSchema>;
+
 export const addItemSchema = z.object({ item: itemSchema });
 export const swapPartSchema = z.object({ sku_product_id: uuid });
 export const cancelSchema = z.object({ reason: z.string().trim().min(1, "Skriv hvorfor sagen annulleres").max(300) });

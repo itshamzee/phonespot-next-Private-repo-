@@ -3,50 +3,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
-import { formatKrShort } from "@/lib/repairs/case-money";
-import { INITIAL_CHECKLIST } from "@/lib/repairs/intake-checklist";
-import type { CatalogTreeResponse, CreateRepairCaseRequest, CreateRepairCaseResponse, RepairServicesResponse } from "@/lib/repairs/new-case-types";
-import type { ChecklistItem } from "@/lib/supabase/types";
-import { createCase, fetchModelServices, fetchTree } from "./api";
-import { AddonsSection } from "./addons-section";
+import { formatKr } from "@/lib/repairs/case-money";
+import type {
+  CatalogTreeResponse,
+  CreateRepairCaseGroupRequest,
+  CreateRepairCaseGroupResponse,
+  CreateRepairCaseRequest,
+  CreateRepairCaseResponse,
+} from "@/lib/repairs/new-case-types";
+import { createCase, createCaseGroup, fetchTree } from "./api";
 import { CustomerSection, CustomerTypeToggle } from "./customer-section";
-import { DetailsSection } from "./details-section";
-import { DeviceSection, type DeviceFields, type SelectedModel } from "./device-section";
+import { DeviceBlock } from "./device-block";
 import {
-  EMPTY_CUSTOMER,
-  buildPanelLines,
-  buildRequest,
-  checklistSummary,
-  customerValid,
-  defaultPromisedAt,
-  defaultService,
-  depositHint,
-  formatPhoneDk,
-  formatPromised,
-  hasBackorder,
-  toLocalInput,
-  totalOere,
-  type AddonLine,
-  type CatalogService,
-  type CustomerDraft,
-  type ExistingCustomer,
-  type FreeTask,
-  type LocationSlug,
-  type PanelLine,
-  type ServiceCategory,
-} from "./logic";
-import { RepairSection } from "./repair-section";
+  MAX_DEVICES,
+  buildGroupRequest,
+  buildSingleRequest,
+  deriveDevice,
+  grandTotalOere,
+  newDraft,
+  newKey,
+  previousSection,
+  removeLineFrom,
+  type DeviceDraft,
+  type DeviceSectionId,
+} from "./devices";
+import { EMPTY_CUSTOMER, customerValid, formatPhoneDk, type CustomerDraft, type ExistingCustomer, type LocationSlug, type PanelLine } from "./logic";
+import { GroupSuccessScreen } from "./group-success-screen";
 import { SectionCard } from "./section-card";
 import { SuccessScreen } from "./success-screen";
-import { SummaryPanel } from "./summary-panel";
+import { SummaryPanel, type PanelDevice } from "./summary-panel";
 
-type SectionId = "customer" | "device" | "repair" | "addons" | "details";
-const ORDER: SectionId[] = ["customer", "device", "repair", "addons", "details"];
+type Active = { kind: "customer" } | { kind: "device"; key: string; section: DeviceSectionId };
 
-function newKey(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+type Done =
+  | { kind: "single"; result: CreateRepairCaseResponse; request: CreateRepairCaseRequest }
+  | { kind: "group"; result: CreateRepairCaseGroupResponse; request: CreateRepairCaseGroupRequest };
 
 function physical(v: unknown): LocationSlug | null {
   return v === "vejle" || v === "slagelse" ? v : null;
@@ -68,6 +59,7 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
   const location: LocationSlug | null = forced ?? pickedStore;
   const displayLocation: LocationSlug = location ?? "vejle";
 
+  // Én nøgle for hele indleveringen (også med flere enheder).
   const [idempotencyKey] = useState(newKey);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -75,44 +67,25 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
     return () => clearInterval(t);
   }, []);
 
-  const [active, setActive] = useState<SectionId>("customer");
-
-  // Kunde
+  // Kunde (deles af alle enheder)
   const [customerType, setCustomerType] = useState<"privat" | "erhverv">("privat");
   const [existing, setExisting] = useState<ExistingCustomer | null>(null);
   const [draft, setDraft] = useState<CustomerDraft>(EMPTY_CUSTOMER);
 
-  // Enhed
-  const [model, setModel] = useState<SelectedModel | null>(null);
-  const [fields, setFields] = useState<DeviceFields>({ serial: "", color: "", passcode: "" });
+  // Enheder: hver bliver til sin egen sag
+  const [devices, setDevices] = useState<DeviceDraft[]>(() => [newDraft(newKey())]);
+  const [expandedKey, setExpandedKey] = useState<string>(() => "");
+  const [active, setActive] = useState<Active>({ kind: "customer" });
   const [tree, setTree] = useState<CatalogTreeResponse | null>(null);
   const [treeError, setTreeError] = useState("");
   const [treeTry, setTreeTry] = useState(0);
-
-  // Reparation
-  const [svc, setSvc] = useState<{ key: string; data: RepairServicesResponse | null; error: string } | null>(null);
-  const [svcTry, setSvcTry] = useState(0);
-  const [selected, setSelected] = useState<Record<string, string>>({});
-  const [viewingState, setViewingState] = useState<string | null>(null);
-  const [free, setFree] = useState<FreeTask[]>([]);
-
-  // Tilkøb
-  const [addons, setAddons] = useState<AddonLine[]>([]);
-
-  // Detaljer
-  const [issue, setIssue] = useState("");
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(INITIAL_CHECKLIST);
-  const [promisedOverride, setPromisedOverride] = useState<string | null>(null);
-  const [assignedOverride, setAssignedOverride] = useState<string | null>(null);
-  const [notes, setNotes] = useState("");
-  const [photos, setPhotos] = useState<string[]>([]);
 
   // Panel / oprettelse
   const [sendSms, setSendSms] = useState(true);
   const [print, setPrint] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState<{ result: CreateRepairCaseResponse; request: CreateRepairCaseRequest } | null>(null);
+  const [done, setDone] = useState<Done | null>(null);
   const inFlight = useRef(false);
 
   /* ----------------------------- data ------------------------------ */
@@ -130,62 +103,41 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
     return () => ctrl.abort();
   }, [treeTry]);
 
-  const svcKey = model ? `${model.id}|${location ?? ""}` : null;
-  useEffect(() => {
-    if (!svcKey || !model) return;
-    const ctrl = new AbortController();
-    fetchModelServices(model.id, location, ctrl.signal)
-      .then((data) => setSvc({ key: svcKey, data, error: "" }))
-      .catch((err) => {
-        if ((err as { name?: string })?.name !== "AbortError") setSvc({ key: svcKey, data: null, error: err instanceof Error ? err.message : "Reparationer kunne ikke hentes." });
-      });
-    return () => ctrl.abort();
-    // model.id og location indgår i svcKey
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [svcKey, svcTry]);
-
-  const svcUsable = svc && model && svc.key.startsWith(`${model.id}|`) ? svc : null;
-  const svcLoading = svcKey !== null && svc?.key !== svcKey;
-  const categories: ServiceCategory[] = useMemo(() => svcUsable?.data?.categories ?? [], [svcUsable]);
-  const viewing = viewingState ?? categories[0]?.name ?? null;
-
   /* ----------------------------- afledt ---------------------------- */
 
-  const lines: PanelLine[] = useMemo(
-    () => buildPanelLines({ categories, selected, free, addons, location: displayLocation }),
-    [categories, selected, free, addons, displayLocation],
+  const meName = me?.name ?? "";
+  const views = useMemo(
+    () => devices.map((d) => deriveDevice(d, location, displayLocation, now, meName)),
+    [devices, location, displayLocation, now, meName],
   );
-  const total = totalOere(lines);
-  const needsDeposit = depositHint(lines);
-  const backorder = hasBackorder(lines);
-
-  const maxMinutes = useMemo(() => {
-    let m: number | null = null;
-    for (const c of categories) {
-      const s = c.services.find((x) => x.id === selected[c.name]);
-      if (s?.estimated_minutes) m = Math.max(m ?? 0, s.estimated_minutes);
-    }
-    return m;
-  }, [categories, selected]);
-
-  const promisedAt = promisedOverride ?? toLocalInput(defaultPromisedAt(now, maxMinutes, backorder));
-  const assignedTo = assignedOverride ?? me?.name ?? "";
+  const multi = devices.length > 1;
+  const total = grandTotalOere(views);
+  const openKey = expandedKey || devices[0].key;
 
   const customerOk = existing !== null || customerValid(draft);
   const customerName = existing?.name ?? (customerValid(draft) ? draft.name.trim() : null);
   const customerPhone = existing?.phone ?? draft.phone;
-  const hasRepair = lines.some((l) => l.kind !== "addon");
 
   const missing: string[] = [];
   if (!customerOk) missing.push("kunde");
-  if (!model) missing.push("enhed");
-  if (!hasRepair) missing.push("mindst én reparation");
+  devices.forEach((d, i) => {
+    const n = multi ? ` ${i + 1}` : "";
+    if (!d.model) missing.push(`enhed${n}`);
+    if (!views[i].hasRepair) missing.push(multi ? `reparation på enhed ${i + 1}` : "mindst én reparation");
+  });
   if (!location) missing.push(pickStore ? "butik" : "butik (din bruger har ingen)");
   const canSubmit = missing.length === 0;
 
   /* ---------------------------- handlers --------------------------- */
 
-  const go = useCallback((id: SectionId) => setActive(id), []);
+  const patchDevice = useCallback((key: string, patch: Partial<DeviceDraft> | ((d: DeviceDraft) => Partial<DeviceDraft>)) => {
+    setDevices((ds) => ds.map((d) => (d.key === key ? { ...d, ...(typeof patch === "function" ? patch(d) : patch) } : d)));
+  }, []);
+
+  const goDevice = (key: string, section: DeviceSectionId) => {
+    setExpandedKey(key);
+    setActive({ kind: "device", key, section });
+  };
 
   function changeType(t: "privat" | "erhverv") {
     setCustomerType(t);
@@ -195,59 +147,40 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
   function pickExisting(c: ExistingCustomer) {
     setExisting(c);
     setCustomerType(c.type);
-    go("device");
+    goDevice(openKey, "device");
   }
 
-  function pickModel(m: SelectedModel) {
-    if (model?.id !== m.id) {
-      setSelected({});
-      setViewingState(null);
-    }
-    setModel(m);
-    // Fokus til IMEI-feltet: scanneren kan bruges med det samme.
-    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-imei]")?.focus({ preventScroll: true }));
-  }
-
-  function chipClick(cat: ServiceCategory) {
-    const chosen = selected[cat.name];
-    if (!chosen) {
-      const d = defaultService(cat, displayLocation);
-      if (d) setSelected((s) => ({ ...s, [cat.name]: d.id }));
-      setViewingState(cat.name);
-    } else if (viewing === cat.name) {
-      setSelected((s) => {
-        const next = { ...s };
-        delete next[cat.name];
-        return next;
-      });
-    } else {
-      setViewingState(cat.name);
-    }
-  }
-
-  function toggleService(cat: ServiceCategory, s: CatalogService) {
-    setSelected((cur) => {
-      const next = { ...cur };
-      if (next[cat.name] === s.id) delete next[cat.name];
-      else next[cat.name] = s.id;
-      return next;
+  const addDevice = useCallback(() => {
+    if (devices.length >= MAX_DEVICES) return;
+    const key = newKey();
+    setDevices((ds) => (ds.length >= MAX_DEVICES ? ds : [...ds, newDraft(key)]));
+    // Enhed 1 folder sig sammen til en opsummering; den nye enhed er åben.
+    setExpandedKey(key);
+    setActive({ kind: "device", key, section: "device" });
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-device-block="${devices.length + 1}"] [data-autofocus]`)?.focus({ preventScroll: true });
     });
+  }, [devices.length]);
+
+  function expandDevice(key: string) {
+    const d = devices.find((x) => x.key === key);
+    goDevice(key, d?.model ? "repair" : "device");
   }
 
-  function removeLine(line: PanelLine) {
-    if (line.kind === "repair") {
-      const cat = categories.find((c) => c.services.some((s) => `svc:${s.id}` === line.key));
-      if (cat)
-        setSelected((cur) => {
-          const next = { ...cur };
-          delete next[cat.name];
-          return next;
-        });
-    } else if (line.kind === "free") {
-      setFree((f) => f.filter((x) => `free:${x.id}` !== line.key));
-    } else {
-      setAddons((a) => a.filter((x) => `addon:${x.key}` !== line.key));
+  function removeDevice(key: string) {
+    if (devices.length <= 1) return;
+    const rest = devices.filter((d) => d.key !== key);
+    setDevices(rest);
+    if (openKey === key || (active.kind === "device" && active.key === key)) {
+      const next = rest[rest.length - 1];
+      goDevice(next.key, next.model ? "repair" : "device");
     }
+  }
+
+  function removeLine(deviceKey: string, line: PanelLine) {
+    const i = devices.findIndex((d) => d.key === deviceKey);
+    if (i < 0) return;
+    patchDevice(deviceKey, removeLineFrom(devices[i], views[i].categories, line));
   }
 
   const submit = useCallback(async () => {
@@ -255,73 +188,71 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
     inFlight.current = true;
     setSubmitting(true);
     setError("");
-    const request = buildRequest({
-      customerType,
-      existing,
-      draft,
-      storeId: isOwner ? location : null,
-      model: model ? { id: model.id, name: model.name, brandName: model.brandName } : null,
-      device: { serial: fields.serial, color: fields.color, passcode: fields.passcode },
-      categories,
-      selected,
-      free,
-      addons,
-      checklist,
-      photos,
-      notes,
-      promisedAt,
-      assignedTo,
-      sendSms,
-    });
+    const shared = { customerType, existing, draft, storeId: isOwner ? location : null, sendSms };
     try {
-      const result = await createCase(request, idempotencyKey);
-      setDone({ result, request });
+      if (devices.length === 1) {
+        const request = buildSingleRequest(shared, devices[0], views[0]);
+        const result = await createCase(request, idempotencyKey);
+        setDone({ kind: "single", result, request });
+      } else {
+        const request = buildGroupRequest(shared, devices.map((d, i) => ({ draft: d, view: views[i] })));
+        const result = await createCaseGroup(request, idempotencyKey);
+        setDone({ kind: "group", result, request });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sagen kunne ikke oprettes. Prøv igen.");
     } finally {
       inFlight.current = false;
       setSubmitting(false);
     }
-  }, [canSubmit, customerType, existing, draft, isOwner, location, model, fields, categories, selected, free, addons, checklist, photos, notes, promisedAt, assignedTo, sendSms, idempotencyKey]);
+  }, [canSubmit, customerType, existing, draft, isOwner, location, sendSms, devices, views, idempotencyKey]);
 
-  // Ctrl+Enter opretter sagen fra hvor som helst på siden.
+  // Ctrl+Enter opretter sagen, Ctrl+D tilføjer en enhed, fra hvor som helst på siden.
   useEffect(() => {
     if (done) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         void submit();
+      } else if ((e.key === "d" || e.key === "D") && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        e.preventDefault(); // Ctrl+D er "bogmærk" i browseren
+        addDevice();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [done, submit]);
+  }, [done, submit, addDevice]);
 
   // Esc åbner den forrige sektion igen (felter der bruger Esc selv, markerer den som håndteret).
   function onRootKeyDown(e: React.KeyboardEvent) {
-    if (e.key !== "Escape" || e.defaultPrevented) return;
-    const i = ORDER.indexOf(active);
-    if (i > 0) {
-      e.preventDefault();
-      go(ORDER[i - 1]);
-    }
+    if (e.key !== "Escape" || e.defaultPrevented || active.kind === "customer") return;
+    e.preventDefault();
+    const prev = previousSection(
+      devices.map((d) => d.key),
+      active,
+    );
+    if (prev === "customer") setActive({ kind: "customer" });
+    else goDevice(prev.key, prev.section);
   }
 
   /* ----------------------------- visning --------------------------- */
 
-  if (done) {
+  if (done?.kind === "single") {
     return <SuccessScreen result={done.result} request={done.request} autoPrint={print} onReset={onReset} />;
+  }
+  if (done?.kind === "group") {
+    return <GroupSuccessScreen result={done.result} request={done.request} autoPrint={print} onReset={onReset} />;
   }
 
   const customerSummary = customerName ? `${customerName} · ${customerType === "erhverv" ? "Erhverv" : "Privat"} · ${formatPhoneDk(customerPhone)}` : null;
-  const deviceSummary = model ? `${model.name} · ${fields.serial.trim() ? fields.serial.trim() : "IMEI mangler"}` : null;
-  const repairLabels = lines.filter((l) => l.kind !== "addon");
-  const repairSummary =
-    repairLabels.length > 0
-      ? `${repairLabels.map((l) => l.label).join(", ")} · ${formatKrShort(totalOere(repairLabels))}`
-      : null;
-  const addonSummary = addons.length > 0 ? `${addons.length} ${addons.length === 1 ? "tilkøb" : "tilkøb"}` : null;
-  const detailsSummary = `lovet klar ${formatPromised(promisedAt, now)} · ansvarlig ${assignedTo || "ikke valgt"} · ${checklistSummary(checklist)}`;
+  const panelDevices: PanelDevice[] = devices.map((d, i) => ({
+    key: d.key,
+    name: d.model?.name ?? null,
+    sub: d.fields.serial.trim() ? d.fields.serial.trim() : "IMEI mangler",
+    lines: views[i].lines,
+    total_oere: views[i].total_oere,
+    depositHint: views[i].needsDeposit,
+  }));
 
   return (
     <div className="flex min-h-full flex-wrap" onKeyDown={onRootKeyDown}>
@@ -336,8 +267,8 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
           step={1}
           title="Kunde"
           summary={customerSummary}
-          open={active === "customer"}
-          onOpen={() => go("customer")}
+          open={active.kind === "customer"}
+          onOpen={() => setActive({ kind: "customer" })}
           headerExtra={<CustomerTypeToggle value={customerType} onChange={changeType} />}
         >
           <CustomerSection
@@ -348,7 +279,7 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
             onDraftChange={setDraft}
             confirmed={!existing && customerValid(draft)}
             onPick={pickExisting}
-            onConfirmDraft={() => go("device")}
+            onConfirmDraft={() => goDevice(openKey, "device")}
             onClear={() => {
               setExisting(null);
               setDraft(EMPTY_CUSTOMER);
@@ -356,89 +287,49 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
           />
         </SectionCard>
 
-        <SectionCard id="sec-device" step={2} title="Enhed" summary={deviceSummary} open={active === "device"} onOpen={() => go("device")}>
-          <DeviceSection
+        {devices.map((d, i) => (
+          <DeviceBlock
+            key={d.key}
+            draft={d}
+            view={views[i]}
+            index={i}
+            count={devices.length}
+            location={location}
+            displayLocation={displayLocation}
             tree={tree}
             treeError={treeError}
-            onRetry={() => setTreeTry((n) => n + 1)}
-            model={model}
-            onModel={pickModel}
-            fields={fields}
-            onFields={setFields}
+            onRetryTree={() => setTreeTry((n) => n + 1)}
             customer={existing}
-            onDone={() => go("repair")}
+            now={now}
+            expanded={!multi || d.key === openKey}
+            activeSection={active.kind === "device" && active.key === d.key ? active.section : null}
+            onGo={(section) => goDevice(d.key, section)}
+            onExpand={() => expandDevice(d.key)}
+            onRemove={() => removeDevice(d.key)}
+            onPatch={patchDevice}
           />
-        </SectionCard>
+        ))}
 
-        <SectionCard
-          id="sec-repair"
-          step={3}
-          title="Reparation"
-          hint={model ? `${model.name} · priser fra hjemmesiden` : undefined}
-          summary={repairSummary}
-          open={active === "repair"}
-          onOpen={() => go("repair")}
-        >
-          <RepairSection
-            modelName={model?.name ?? null}
-            loading={svcLoading}
-            error={svcUsable?.error ?? ""}
-            onRetry={() => {
-              setSvc(null);
-              setSvcTry((n) => n + 1);
-            }}
-            categories={categories}
-            location={displayLocation}
-            selected={selected}
-            viewing={viewing}
-            onChipClick={chipClick}
-            onToggleService={toggleService}
-            free={free}
-            onAddFree={(t) => setFree((f) => [...f, { id: newKey(), ...t }])}
-            onRemoveFree={(id) => setFree((f) => f.filter((x) => x.id !== id))}
-            onDone={() => go("addons")}
-          />
-        </SectionCard>
-
-        <SectionCard id="sec-addons" step={4} title="Tilkøb" summary={addonSummary} open={active === "addons"} onOpen={() => go("addons")}>
-          <AddonsSection
-            modelId={model?.id ?? null}
-            modelName={model?.name ?? null}
-            location={displayLocation}
-            addons={addons}
-            onAdd={(l) => setAddons((a) => [...a, l])}
-            onRemove={(key) => setAddons((a) => a.filter((x) => x.key !== key))}
-            onQty={(key, qty) => setAddons((a) => a.map((x) => (x.key === key ? { ...x, qty: Math.max(1, qty) } : x)))}
-            onDone={() => go("details")}
-          />
-        </SectionCard>
-
-        <SectionCard id="sec-details" step={5} title="Detaljer" summary={detailsSummary} open={active === "details"} onOpen={() => go("details")}>
-          <DetailsSection
-            issue={issue}
-            onIssue={setIssue}
-            checklist={checklist}
-            onChecklist={setChecklist}
-            promisedAt={promisedAt}
-            onPromisedAt={setPromisedOverride}
-            assignedTo={assignedTo}
-            onAssignedTo={setAssignedOverride}
-            notes={notes}
-            onNotes={setNotes}
-            photos={photos}
-            onPhotos={setPhotos}
-          />
-        </SectionCard>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={addDevice}
+            disabled={devices.length >= MAX_DEVICES}
+            className="h-10 rounded-lg border border-dashed border-[#1A3D2E] px-4 text-sm font-semibold text-[#1A3D2E] hover:bg-[#E7EFE9] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F8F55]"
+          >
+            + Tilføj enhed
+          </button>
+          <span className="text-xs text-[#5E6A63]">
+            {multi ? `${devices.length} enheder, én sag hver, samlet beløb ${formatKr(total)}. ` : "Kunden har flere enheder med? "}Ctrl + D
+          </span>
+        </div>
       </main>
 
       <SummaryPanel
         customerName={customerName}
         customerSub={`${customerType === "erhverv" ? "Erhverv" : "Privat"} · ${formatPhoneDk(customerPhone)}`}
-        deviceName={model?.name ?? null}
-        deviceSub={fields.serial.trim() ? fields.serial.trim() : "IMEI mangler"}
-        lines={lines}
+        devices={panelDevices}
         total_oere={total}
-        depositHint={needsDeposit}
         onRemoveLine={removeLine}
         sendSms={sendSms}
         onSendSms={setSendSms}

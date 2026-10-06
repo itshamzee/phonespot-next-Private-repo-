@@ -21,6 +21,25 @@ describe("repair SMS templates", () => {
     expect(getSmsTemplate("tilbud_sendt", base)).toBeNull();
   });
 
+  it("group 'modtaget' lists every device and ticket number; single stays unchanged", () => {
+    const group = [
+      { ticketNumber: "PS-2026-0101", deviceName: "iPhone 13" },
+      { ticketNumber: "PS-2026-0102", deviceName: "iPad 9" },
+      { ticketNumber: "PS-2026-0103", deviceName: "MacBook Air" },
+    ];
+    const sms = getSmsTemplate("modtaget", { ...base, ticketNumber: "PS-2026-0101", storeId: "vejle", group })!;
+    expect(sms).toContain("3 enheder");
+    for (const g of group) {
+      expect(sms).toContain(g.deviceName);
+      expect(sms).toContain(g.ticketNumber);
+    }
+    expect(sms).toContain(STORES.vejle.name);
+    const single = getSmsTemplate("modtaget", { ...base, ticketNumber: "PS-2026-0007", storeId: "vejle" })!;
+    expect(single).toContain("din iPhone 13");
+    expect(single).toContain("Sagsnummer: PS-2026-0007");
+    expect(getSmsTemplate("modtaget", { ...base, ticketNumber: "PS-2026-0007", storeId: "vejle", group: [group[0]] })).toBe(single);
+  });
+
   it("writes proper Danish letters", () => {
     const sms = getSmsTemplate("faerdig", { ...base, storeId: "slagelse" })!;
     expect(sms).toMatch(/Åbent/);

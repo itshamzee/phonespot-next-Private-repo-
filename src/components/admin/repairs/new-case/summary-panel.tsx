@@ -4,15 +4,23 @@ import { formatKr } from "@/lib/repairs/case-money";
 import { LOCATION_LABELS, type LocationSlug, type PanelLine } from "./logic";
 import { focusRing } from "./section-card";
 
-type Props = {
-  customerName: string | null;
-  customerSub: string | null;
-  deviceName: string | null;
-  deviceSub: string | null;
+/** En enhed i panelet. Med mere end én enhed vises hver for sig med egen delsum og depositum-besked. */
+export type PanelDevice = {
+  key: string;
+  name: string | null;
+  sub: string;
   lines: PanelLine[];
   total_oere: number;
   depositHint: boolean;
-  onRemoveLine: (line: PanelLine) => void;
+};
+
+type Props = {
+  customerName: string | null;
+  customerSub: string | null;
+  devices: PanelDevice[];
+  /** Samlet beløb for alle enheder. */
+  total_oere: number;
+  onRemoveLine: (deviceKey: string, line: PanelLine) => void;
   sendSms: boolean;
   onSendSms: (v: boolean) => void;
   print: boolean;
@@ -28,7 +36,32 @@ type Props = {
   onSubmit: () => void;
 };
 
+function LineList({ lines, onRemove, suffix }: { lines: PanelLine[]; onRemove: (l: PanelLine) => void; suffix: string }) {
+  return (
+    <ul className="m-0 flex list-none flex-col p-0">
+      {lines.map((l) => (
+        <li key={l.key} className="flex items-start justify-between gap-3 border-b border-[#EEF0EC] py-3">
+          <span className="min-w-0">
+            {l.label}
+            {l.note && <span className={`block text-[13px] ${l.noteTone === "warn" ? "text-[#9A5B0A]" : "text-[#5E6A63]"}`}>{l.note}</span>}
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className="tabular-nums">{formatKr(l.amount_oere).replace(" kr.", "")}</span>
+            <button type="button" aria-label={`Fjern ${l.label}${suffix}`} onClick={() => onRemove(l)} className={`h-6 w-6 rounded-md text-[#5E6A63] hover:bg-[#F5F6F4] ${focusRing}`}>
+              x
+            </button>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const DEPOSIT_TEXT = "Del skal flyttes eller bestilles. Tag et depositum, når sagen er oprettet.";
+
 export function SummaryPanel(p: Props) {
+  const multi = p.devices.length > 1;
+  const single = p.devices[0];
   return (
     <aside
       aria-label="Sagen"
@@ -43,44 +76,62 @@ export function SummaryPanel(p: Props) {
         ) : (
           <span className="text-sm text-[#5E6A63]">Ingen kunde valgt</span>
         )}
-        <span className="mt-1.5 text-sm">
-          {p.deviceName ? (
-            <>
-              <b>{p.deviceName}</b> · {p.deviceSub}
-            </>
-          ) : (
-            <span className="text-[#5E6A63]">Ingen enhed valgt</span>
-          )}
-        </span>
+        {multi ? (
+          <span className="mt-1.5 text-sm text-[#5E6A63]">{p.devices.length} enheder · én sag pr. enhed</span>
+        ) : (
+          <span className="mt-1.5 text-sm">
+            {single?.name ? (
+              <>
+                <b>{single.name}</b> · {single.sub}
+              </>
+            ) : (
+              <span className="text-[#5E6A63]">Ingen enhed valgt</span>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="flex min-h-[120px] flex-1 flex-col overflow-y-auto px-5 py-2 text-sm">
-        {p.lines.length === 0 && <p className="m-0 py-3 text-[#5E6A63]">Ingen opgaver endnu.</p>}
-        <ul className="m-0 flex list-none flex-col p-0">
-          {p.lines.map((l) => (
-            <li key={l.key} className="flex items-start justify-between gap-3 border-b border-[#EEF0EC] py-3">
-              <span className="min-w-0">
-                {l.label}
-                {l.note && <span className={`block text-[13px] ${l.noteTone === "warn" ? "text-[#9A5B0A]" : "text-[#5E6A63]"}`}>{l.note}</span>}
-              </span>
-              <span className="flex shrink-0 items-center gap-2">
-                <span className="tabular-nums">{formatKr(l.amount_oere).replace(" kr.", "")}</span>
-                <button type="button" aria-label={`Fjern ${l.label}`} onClick={() => p.onRemoveLine(l)} className={`h-6 w-6 rounded-md text-[#5E6A63] hover:bg-[#F5F6F4] ${focusRing}`}>
-                  x
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
+        {multi ? (
+          p.devices.map((dev, i) => (
+            <section key={dev.key} aria-label={`Opsummering, enhed ${i + 1}`} className="border-b border-[#E2E5E0] py-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="text-[#5E6A63]">Enhed {i + 1}</span>
+                  <b className="block">{dev.name ?? "Ingen enhed valgt"}</b>
+                  <span className="text-[13px] text-[#5E6A63]">{dev.sub}</span>
+                </span>
+                <span className="shrink-0 font-semibold tabular-nums" data-testid={`device-total-${i + 1}`}>
+                  {formatKr(dev.total_oere)}
+                </span>
+              </div>
+              {dev.lines.length === 0 ? (
+                <p className="m-0 py-2 text-[#5E6A63]">Ingen opgaver endnu.</p>
+              ) : (
+                <LineList lines={dev.lines} onRemove={(l) => p.onRemoveLine(dev.key, l)} suffix={`, enhed ${i + 1}`} />
+              )}
+              {dev.depositHint && (
+                <div role="note" className="mt-2 rounded-[10px] bg-[#FBEFD9] px-3 py-2.5 text-[13px] text-[#7A4A06]">
+                  Enhed {i + 1}: {DEPOSIT_TEXT}
+                </div>
+              )}
+            </section>
+          ))
+        ) : (
+          <>
+            {(single?.lines.length ?? 0) === 0 && <p className="m-0 py-3 text-[#5E6A63]">Ingen opgaver endnu.</p>}
+            {single && <LineList lines={single.lines} onRemove={(l) => p.onRemoveLine(single.key, l)} suffix="" />}
+          </>
+        )}
         <div className="mt-auto flex justify-between pb-2 pt-3 text-lg font-bold">
           <span>I alt</span>
           <span className="tabular-nums" data-testid="panel-total">
             {formatKr(p.total_oere)}
           </span>
         </div>
-        {p.depositHint && (
+        {!multi && single?.depositHint && (
           <div role="note" className="mb-2 rounded-[10px] bg-[#FBEFD9] px-3 py-2.5 text-[13px] text-[#7A4A06]">
-            Del skal flyttes eller bestilles. Tag et depositum, når sagen er oprettet.
+            {DEPOSIT_TEXT}
           </div>
         )}
       </div>
@@ -121,7 +172,7 @@ export function SummaryPanel(p: Props) {
           onClick={p.onSubmit}
           className={`h-14 rounded-xl bg-[#1A3D2E] text-lg font-bold text-white hover:bg-[#2D6B45] disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
         >
-          {p.submitting ? "Opretter sag..." : "Opret sag"}
+          {p.submitting ? (multi ? "Opretter sager..." : "Opretter sag...") : multi ? `Opret ${p.devices.length} sager` : "Opret sag"}
         </button>
         {p.missing.length > 0 ? (
           <span role="status" className="text-center text-xs text-[#5E6A63]">

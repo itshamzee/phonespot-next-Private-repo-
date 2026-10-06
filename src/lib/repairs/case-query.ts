@@ -7,6 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { applyStoreScope } from "@/lib/auth/store-scope-server";
 import type { StoreScope } from "@/lib/auth/store-scope";
 import {
+  attachGroups,
   compareRows,
   inTab,
   isCaseTab,
@@ -24,6 +25,8 @@ const BASE_COLUMNS =
   "id, ticket_number, customer_name, customer_email, customer_phone, device_type, device_model, issue_description, service_type, status, paid, on_hold_reason, is_urgent, store_id, created_at, device_id, booking_details, services";
 /** Findes først efter migrationen 2026100420…_repair_promised_assigned.sql. */
 const OPTIONAL_COLUMNS = "promised_at, assigned_to";
+/** Findes først efter migrationen 20261005170000_repair_case_group.sql. */
+const GROUP_COLUMN = "intake_group_id";
 const EMBEDS = "customer_devices(serial_number, color), repair_quotes(estimated_days, created_at)";
 
 const PAGE_FETCH = 1000; // Supabase afkorter som standard svar ved 1000 rækker.
@@ -35,6 +38,7 @@ export const MAX_PAGE_SIZE = 100;
 type Selection = { columns: string; hasOptional: boolean };
 
 const SELECTIONS: Selection[] = [
+  { columns: `${BASE_COLUMNS}, ${OPTIONAL_COLUMNS}, ${GROUP_COLUMN}, ${EMBEDS}`, hasOptional: true },
   { columns: `${BASE_COLUMNS}, ${OPTIONAL_COLUMNS}, ${EMBEDS}`, hasOptional: true },
   { columns: `${BASE_COLUMNS}, ${EMBEDS}`, hasOptional: false },
   { columns: BASE_COLUMNS, hasOptional: false },
@@ -123,13 +127,14 @@ export function buildCaseList(tickets: CaseListTicket[], params: CaseListParams)
   const counts = tabCounts(matching);
 
   const inActiveTab = matching.filter((t) => inTab(t, params.tab)).map(toCaseRow).sort(compareRows);
+  const withGroups = attachGroups(inActiveTab, tickets);
   const total = inActiveTab.length;
   const pages = Math.max(1, Math.ceil(total / params.pageSize));
   const page = Math.min(params.page, pages);
   const start = (page - 1) * params.pageSize;
 
   return {
-    rows: inActiveTab.slice(start, start + params.pageSize),
+    rows: withGroups.slice(start, start + params.pageSize),
     counts,
     total,
     page,

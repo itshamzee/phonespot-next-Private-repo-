@@ -192,6 +192,19 @@ export default function CasePage({ id }: { id: string }) {
           <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-[#15211B]">Sag {label}</h1>
           <span className="rounded-lg bg-[#EEF0EC] px-2.5 py-1 text-[13px] font-semibold text-[#3D4842]">{tabLabel}</span>
           {t.is_urgent && <Pill tone="amber">Hastesag</Pill>}
+          {detail.group && (
+            <p className="m-0 basis-full text-sm text-[#5E6A63]" data-testid="group-with">
+              Del af indlevering med{" "}
+              {detail.group.siblings.map((g, i) => (
+                <span key={g.id}>
+                  {i > 0 && ", "}
+                  <Link href={`/admin/reparationer/${g.id}`} className="font-medium text-[#1A3D2E] underline" title={g.device}>
+                    #{g.label}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2" role="toolbar" aria-label="Handlinger på sagen">
           <Btn
@@ -212,6 +225,9 @@ export default function CasePage({ id }: { id: string }) {
             </Btn>
           )}
           <Btn onClick={() => setPrint("intake-receipt")}>Print</Btn>
+          {detail.group && (
+            <Btn onClick={() => window.open(`/api/pdf/intake-receipt/${id}?group=1`, "_blank")}>Print alle enheder</Btn>
+          )}
           {!closed && <BtnLink href={`/admin/kasse?sag=${id}&depositum=1`}>Depositum</BtnLink>}
           {!closed && (
             <BtnLink href={`/admin/kasse?sag=${id}`} variant="primary">

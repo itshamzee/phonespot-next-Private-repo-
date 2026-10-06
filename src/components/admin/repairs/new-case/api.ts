@@ -3,6 +3,8 @@ import { apiError } from "@/components/admin/repairs/ui";
 import type {
   CaseStore,
   CatalogTreeResponse,
+  CreateRepairCaseGroupRequest,
+  CreateRepairCaseGroupResponse,
   CreateRepairCaseRequest,
   CreateRepairCaseResponse,
   CvrLookupResponse,
@@ -64,7 +66,7 @@ export async function searchCustomers(q: string, type: "privat" | "erhverv", sig
 export const lookupCvr = (cvr: string) =>
   getJson<CvrLookupResponse>(`/api/customers/cvr?cvr=${encodeURIComponent(cvr)}`, "CVR-opslaget fejlede.");
 
-export async function createCase(body: CreateRepairCaseRequest, idempotencyKey: string): Promise<CreateRepairCaseResponse> {
+async function postCase<T>(body: unknown, idempotencyKey: string, fallback: string): Promise<T> {
   let res: Response;
   try {
     res = await fetch("/api/admin/repairs", {
@@ -75,9 +77,16 @@ export async function createCase(body: CreateRepairCaseRequest, idempotencyKey: 
   } catch {
     throw new Error("Forbindelsen fejlede. Tryk Opret sag igen: det er sikkert, du får ikke to sager.");
   }
-  if (!res.ok) throw new Error(await apiError(res, "Sagen kunne ikke oprettes. Prøv igen."));
-  return (await res.json()) as CreateRepairCaseResponse;
+  if (!res.ok) throw new Error(await apiError(res, fallback));
+  return (await res.json()) as T;
 }
+
+export const createCase = (body: CreateRepairCaseRequest, idempotencyKey: string) =>
+  postCase<CreateRepairCaseResponse>(body, idempotencyKey, "Sagen kunne ikke oprettes. Prøv igen.");
+
+/** Flere enheder: én sag pr. enhed, oprettet samlet med én nøgle. */
+export const createCaseGroup = (body: CreateRepairCaseGroupRequest, idempotencyKey: string) =>
+  postCase<CreateRepairCaseGroupResponse>(body, idempotencyKey, "Sagerne kunne ikke oprettes. Prøv igen.");
 
 export async function uploadIntakePhoto(file: File, folder: "intake" | "checklist" = "intake"): Promise<{ url: string; path: string }> {
   const fd = new FormData();

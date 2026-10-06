@@ -47,6 +47,8 @@ export type PartMode = "part" | "none" | "manual";
 /** Maksimale længder, delt mellem UI og server. */
 export const NEW_CASE_LIMITS = {
   items: 30,
+  /** Enheder pr. indlevering (én sag pr. enhed). */
+  devices: 10,
   description: 200,
   priceReason: 200,
   internalNotes: 2000,
@@ -327,6 +329,26 @@ export type CreateRepairCaseRequest = {
   notify_sms?: boolean;
 };
 
+/** Én enhed i en indlevering med flere enheder. Hver enhed bliver til sin egen sag. */
+export type NewCaseGroupDevice = {
+  device: NewCaseDevice;
+  items: NewCaseItemInput[];
+  details?: NewCaseDetails;
+};
+
+/**
+ * POST /api/admin/repairs med flere enheder: samme kunde, én sag pr. enhed, oprettet samlet
+ * (alle eller ingen) og knyttet sammen med et fælles gruppe-id (repair_tickets.intake_group_id).
+ * Maks. NEW_CASE_LIMITS.devices enheder. Én Idempotency-Key gælder hele gruppen.
+ */
+export type CreateRepairCaseGroupRequest = {
+  customer: NewCaseCustomer;
+  devices: NewCaseGroupDevice[];
+  store_id?: CaseStore | null;
+  /** Én SMS med alle sagsnumre. */
+  notify_sms?: boolean;
+};
+
 /** Header: `Idempotency-Key: <uuid>`. Samme nøgle + samme body gentager svaret (replayed: true). */
 export const IDEMPOTENCY_HEADER = "Idempotency-Key";
 
@@ -374,6 +396,19 @@ export type CreateRepairCaseResponse = {
   kasse_url: string;
   /** /admin/kasse?sag=<id>&depositum=1 */
   deposit_url: string;
+  replayed: boolean;
+  warnings: string[];
+};
+
+export type CreateRepairCaseGroupResponse = {
+  /** Null når gruppen kun har én enhed (så er der ingen gruppe). */
+  group_id: string | null;
+  customer_id: string;
+  /** Én pr. enhed, i samme rækkefølge som `devices` i requesten. */
+  tickets: CreateRepairCaseResponse[];
+  ticket_ids: string[];
+  total_oere: number;
+  needs_deposit: boolean;
   replayed: boolean;
   warnings: string[];
 };

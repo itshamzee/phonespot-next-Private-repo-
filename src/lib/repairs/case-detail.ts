@@ -9,6 +9,7 @@ import { getCaseDeposits, type CaseDeposit } from "@/lib/pos/deposits";
 import { withSignedRepairPhotos } from "@/lib/repairs/photo-storage";
 import { caseLines, computeCaseTotals, type CaseLine, type CaseTotals } from "@/lib/repairs/case-money";
 import { loadCaseItems, loadCaseItemViews } from "@/lib/repairs/case-items";
+import { ticketLabel } from "@/lib/repairs/ticket-label";
 import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import type {
   CustomerDevice,
@@ -20,7 +21,7 @@ import type {
 } from "@/lib/supabase/types";
 
 export type CaseDetail = {
-  ticket: RepairTicket & { repair_model_id?: string | null; device_passcode?: string | null; promised_at?: string | null; assigned_to?: string | null; signature_url?: string | null };
+  ticket: RepairTicket & { repair_model_id?: string | null; device_passcode?: string | null; promised_at?: string | null; assigned_to?: string | null; intake_group_id?: string | null; signature_url?: string | null };
   quotes: RepairQuote[];
   logs: RepairStatusLog[];
   comments: RepairComment[];
@@ -36,6 +37,8 @@ export type CaseDetail = {
   warranty: string | null;
   history: { tickets: number | null; orders: number | null } | null;
   light: boolean;
+  /** De andre sager fra samme indlevering (flere enheder), ellers null/udeladt. */
+  group?: { id: string; siblings: { id: string; label: string; device: string }[] } | null;
 };
 
 export async function loadCaseDetail(
@@ -93,6 +96,22 @@ export async function loadCaseDetail(
     history = h;
   }
 
+  let group: CaseDetail["group"] = null;
+  if (raw.intake_group_id) {
+    const { data: sib } = await supabase
+      .from("repair_tickets")
+      .select("id, ticket_number, device_model")
+      .eq("intake_group_id", raw.intake_group_id)
+      .neq("id", id)
+      .order("ticket_number", { ascending: true });
+    const siblings = ((sib ?? []) as { id: string; ticket_number: string | null; device_model: string }[]).map((t) => ({
+      id: t.id,
+      label: ticketLabel(t),
+      device: t.device_model,
+    }));
+    if (siblings.length > 0) group = { id: raw.intake_group_id, siblings };
+  }
+
   return {
     // Adgangskoden følger kun med den fulde sagsside, aldrig sidepanelet.
     ticket: light ? { ...raw, device_passcode: undefined } : await withSignedRepairPhotos(supabase, raw),
@@ -109,6 +128,7 @@ export async function loadCaseDetail(
     warranty,
     history,
     light,
+    group,
   };
 }
 

@@ -296,6 +296,22 @@ interface IntakeReceiptData {
   checklist: ChecklistItem[];
   services: { name: string; price_dkk: number }[];
   totalPrice: number;
+  /**
+   * Indlevering med flere enheder: ét bevis med alle enheder (én sag hver). Med mindst to
+   * enheder bruges listen; felterne ovenfor beskriver så den første. Ellers det normale bevis.
+   */
+  devices?: IntakeReceiptDevice[];
+}
+
+export interface IntakeReceiptDevice {
+  ticketId: string;
+  ticketNumber?: string;
+  deviceBrand: string;
+  deviceModel: string;
+  serialNumber?: string;
+  deviceColor?: string;
+  checklist: ChecklistItem[];
+  services: { name: string; price_dkk: number }[];
 }
 
 function checklistStatusText(status: string): string {
@@ -311,15 +327,114 @@ function checklistStatusText(status: string): string {
   }
 }
 
+type DeviceLike = {
+  deviceBrand: string;
+  deviceModel: string;
+  serialNumber?: string;
+  deviceColor?: string;
+  checklist: ChecklistItem[];
+};
+
+function DeviceCard({ dev }: { dev: DeviceLike }) {
+  const faultItems = dev.checklist.filter((c) => c.status === "fejl");
+  return (
+    <View style={styles.deviceCard}>
+      <Text style={styles.cardTitle}>Enhed</Text>
+      <View style={styles.twoCol}>
+        <View style={styles.col}>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Brand</Text>
+            <Text style={styles.fieldValue}>{dev.deviceBrand}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Model</Text>
+            <Text style={styles.fieldValue}>{dev.deviceModel}</Text>
+          </View>
+        </View>
+        <View style={styles.col}>
+          {dev.serialNumber ? (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Serienummer</Text>
+              <Text style={styles.fieldValue}>{dev.serialNumber}</Text>
+            </View>
+          ) : null}
+          {dev.deviceColor ? (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Farve</Text>
+              <Text style={styles.fieldValue}>{dev.deviceColor}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      {faultItems.length > 0 && (
+        <View style={styles.conditionNote}>
+          <Text style={styles.conditionNoteLabel}>Noteret fejl ved indlevering</Text>
+          {faultItems.map((item) => (
+            <Text key={item.label} style={styles.conditionNoteText}>
+              {"•"} {item.label}
+              {item.note ? `: ${item.note}` : ""}
+            </Text>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function ChecklistBlock({ checklist }: { checklist: ChecklistItem[] }) {
+  return (
+    <View style={styles.checklistSection}>
+      <Text style={styles.cardTitle}>Tilstand ved indlevering</Text>
+      <View style={styles.checklistGrid}>
+        {checklist.map((item) => (
+          <View key={item.label} style={styles.checklistItem}>
+            <View
+              style={[
+                styles.statusDot,
+                item.status === "ok" ? styles.statusOk : item.status === "fejl" ? styles.statusFejl : styles.statusNa,
+              ]}
+            />
+            <Text style={styles.checklistLabel}>{item.label}</Text>
+            <Text style={styles.checklistStatusText}>{checklistStatusText(item.status)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function ServicesTable({ services, label, total }: { services: { name: string; price_dkk: number }[]; label: string; total: number }) {
+  return (
+    <View style={styles.servicesSection}>
+      <Text style={styles.cardTitle}>Reparationer</Text>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.tableHeaderText, { flex: 1 }]}>Ydelse</Text>
+        <Text style={[styles.tableHeaderText, { width: 80, textAlign: "right" }]}>Pris</Text>
+      </View>
+      {services.map((s, i) => (
+        <View key={i} style={styles.tableRow}>
+          <Text style={styles.tableServiceName}>{s.name}</Text>
+          <Text style={styles.tableServicePrice}>{s.price_dkk} DKK</Text>
+        </View>
+      ))}
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>{label}</Text>
+        <Text style={styles.totalValue}>{total} DKK</Text>
+      </View>
+    </View>
+  );
+}
+
 export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
-  const shortId = data.ticketNumber || `#${data.ticketId.slice(0, 8).toUpperCase()}`;
+  const group = data.devices && data.devices.length > 1 ? data.devices : null;
+  const shortId = group
+    ? group.map((d) => d.ticketNumber || `#${d.ticketId.slice(0, 8).toUpperCase()}`).join(" · ")
+    : data.ticketNumber || `#${data.ticketId.slice(0, 8).toUpperCase()}`;
   const dateStr = new Date(data.createdAt).toLocaleDateString("da-DK", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-
-  const faultItems = data.checklist.filter((c) => c.status === "fejl");
 
   return (
     <Document>
@@ -373,104 +488,32 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
             </View>
           </View>
 
-          {/* ── Device Info ──────────────────── */}
-          <View style={styles.deviceCard}>
-            <Text style={styles.cardTitle}>Enhed</Text>
-            <View style={styles.twoCol}>
-              <View style={styles.col}>
-                <View style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>Brand</Text>
-                  <Text style={styles.fieldValue}>{data.deviceBrand}</Text>
-                </View>
-                <View style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>Model</Text>
-                  <Text style={styles.fieldValue}>{data.deviceModel}</Text>
-                </View>
-              </View>
-              <View style={styles.col}>
-                {data.serialNumber ? (
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Serienummer</Text>
-                    <Text style={styles.fieldValue}>{data.serialNumber}</Text>
-                  </View>
-                ) : null}
-                {data.deviceColor ? (
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Farve</Text>
-                    <Text style={styles.fieldValue}>{data.deviceColor}</Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-
-            {/* Condition notes (fault summary inline) */}
-            {faultItems.length > 0 && (
-              <View style={styles.conditionNote}>
-                <Text style={styles.conditionNoteLabel}>
-                  Noteret fejl ved indlevering
-                </Text>
-                {faultItems.map((item) => (
-                  <Text key={item.label} style={styles.conditionNoteText}>
-                    {"\u2022"} {item.label}
-                    {item.note ? `: ${item.note}` : ""}
+          {group ? (
+            <>
+              <Text style={styles.cardTitle}>{group.length} enheder indleveret</Text>
+              {group.map((dev, i) => (
+                <View key={i} wrap={false} style={{ marginBottom: 6 }}>
+                  <Text style={[styles.cardTitle, { marginBottom: 4 }]}>
+                    Enhed {i + 1}
+                    {dev.ticketNumber ? ` · ${dev.ticketNumber}` : ""}
                   </Text>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* ── Checklist ────────────────────── */}
-          <View style={styles.checklistSection}>
-            <Text style={styles.cardTitle}>Tilstand ved indlevering</Text>
-            <View style={styles.checklistGrid}>
-              {data.checklist.map((item) => (
-                <View key={item.label} style={styles.checklistItem}>
-                  <View
-                    style={[
-                      styles.statusDot,
-                      item.status === "ok"
-                        ? styles.statusOk
-                        : item.status === "fejl"
-                          ? styles.statusFejl
-                          : styles.statusNa,
-                    ]}
-                  />
-                  <Text style={styles.checklistLabel}>{item.label}</Text>
-                  <Text style={styles.checklistStatusText}>{checklistStatusText(item.status)}</Text>
+                  <DeviceCard dev={dev} />
+                  <ChecklistBlock checklist={dev.checklist} />
+                  <ServicesTable services={dev.services} label="Delsum" total={dev.services.reduce((sum, x) => sum + x.price_dkk, 0)} />
                 </View>
               ))}
-            </View>
-          </View>
-
-          {/* ── Services Table ────────────────── */}
-          <View style={styles.servicesSection}>
-            <Text style={styles.cardTitle}>Reparationer</Text>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, { flex: 1 }]}>
-                Ydelse
-              </Text>
-              <Text
-                style={[
-                  styles.tableHeaderText,
-                  { width: 80, textAlign: "right" },
-                ]}
-              >
-                Pris
-              </Text>
-            </View>
-            {data.services.map((s, i) => (
-              <View key={i} style={styles.tableRow}>
-                <Text style={styles.tableServiceName}>{s.name}</Text>
-                <Text style={styles.tableServicePrice}>
-                  {s.price_dkk} DKK
-                </Text>
+              <View style={[styles.totalRow, { marginBottom: 16, borderRadius: 4 }]}>
+                <Text style={styles.totalLabel}>Estimeret total, alle enheder</Text>
+                <Text style={styles.totalValue}>{data.totalPrice} DKK</Text>
               </View>
-            ))}
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Estimeret total</Text>
-              <Text style={styles.totalValue}>{data.totalPrice} DKK</Text>
-            </View>
-          </View>
+            </>
+          ) : (
+            <>
+              <DeviceCard dev={data} />
+              <ChecklistBlock checklist={data.checklist} />
+              <ServicesTable services={data.services} label="Estimeret total" total={data.totalPrice} />
+            </>
+          )}
 
           {/* ── Terms & Conditions ────────────── */}
           <View style={styles.termsSection}>

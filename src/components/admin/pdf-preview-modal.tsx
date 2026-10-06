@@ -2,7 +2,21 @@
 
 import { useState } from "react";
 
+/** Én enhed på et samlet indleveringsbevis (indlevering med flere enheder). */
+export interface PDFPreviewDevice {
+  ticketId: string;
+  ticketNumber?: string;
+  deviceBrand: string;
+  deviceModel: string;
+  serialNumber?: string;
+  deviceColor?: string;
+  services: { name: string; price: number }[];
+  checklist?: { label: string; status: string }[];
+}
+
 export interface PDFPreviewData {
+  /** Mindst to enheder: ét samlet bevis, enhederne vises som liste (kun kunde og noter kan redigeres). */
+  devices?: PDFPreviewDevice[];
   ticketId: string;
   ticketNumber?: string;
   customerName: string;
@@ -42,7 +56,10 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
   const [internalNotes, setInternalNotes] = useState(data.internalNotes);
   const [generating, setGenerating] = useState(false);
 
-  const totalPrice = services.reduce((sum, s) => sum + (s.price || 0), 0);
+  const group = data.devices && data.devices.length > 1 ? data.devices : null;
+  const totalPrice = group
+    ? group.reduce((sum, d) => sum + d.services.reduce((x, s) => x + (s.price || 0), 0), 0)
+    : services.reduce((sum, s) => sum + (s.price || 0), 0);
 
   const typeLabel =
     type === "intake-receipt" ? "Indleveringsbevis" : "Værkstedsrapport";
@@ -84,6 +101,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
         services,
         internalNotes,
         checklist: data.checklist,
+        devices: group ?? undefined,
       };
 
       const res = await fetch(`/api/pdf/${type}/${data.ticketId}`, {
@@ -192,6 +210,34 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
             </div>
           </fieldset>
 
+          {group ? (
+            <fieldset className="space-y-3" aria-label="Enheder">
+              <legend className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">
+                {group.length} enheder
+              </legend>
+              {group.map((d, i) => (
+                <div key={d.ticketId} className="rounded-lg border border-soft-grey px-3 py-2 text-sm text-charcoal">
+                  <p className="m-0 font-semibold">
+                    {d.ticketNumber ? `${d.ticketNumber} · ` : ""}
+                    {[d.deviceBrand, d.deviceModel].filter(Boolean).join(" ")}
+                    {d.serialNumber ? ` · ${d.serialNumber}` : ""}
+                  </p>
+                  <ul className="m-0 mt-1 list-none p-0 text-gray">
+                    {d.services.map((s, j) => (
+                      <li key={`${i}-${j}`}>
+                        {s.name} · {s.price} DKK
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t border-soft-grey pt-2">
+                <span className="text-sm font-semibold text-charcoal">Total</span>
+                <span className="text-sm font-bold text-green-eco">{totalPrice} DKK</span>
+              </div>
+            </fieldset>
+          ) : (
+            <>
           {/* Device fields */}
           <fieldset className="space-y-3">
             <legend className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">
@@ -291,6 +337,9 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
               </span>
             </div>
           </fieldset>
+
+            </>
+          )}
 
           {/* Internal notes */}
           <fieldset className="space-y-3">

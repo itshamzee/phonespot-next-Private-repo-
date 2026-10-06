@@ -10,6 +10,7 @@ import {
   pickupFor,
   tabCounts,
   toCaseRow,
+  attachGroups,
   type CaseListTicket,
 } from "../case-list";
 import { buildCaseList, parseListParams } from "../case-query";
@@ -133,5 +134,37 @@ describe("buildCaseList", () => {
       page: 1,
       pageSize: 100,
     });
+  });
+});
+
+describe("attachGroups", () => {
+  const g = "00000000-0000-4000-8000-0000000000aa";
+  const a = base({ id: "a", ticket_number: "PS-2026-0101", intake_group_id: g });
+  const b = base({ id: "b", ticket_number: "PS-2026-0102", intake_group_id: g });
+  const c = base({ id: "c", ticket_number: "PS-2026-0103", intake_group_id: g });
+  const solo = base({ id: "s", ticket_number: "PS-2026-0200", intake_group_id: null });
+
+  it("attaches siblings sorted by label and excludes the row itself", () => {
+    const rows = [a, b, c, solo].map((t) => toCaseRow(t));
+    const out = attachGroups(rows, [c, a, b, solo]);
+    const byId = Object.fromEntries(out.map((r) => [r.id, r]));
+    expect(byId.a.group_with?.map((x) => x.id)).toEqual(["b", "c"]);
+    expect(byId.b.group_with?.map((x) => x.id)).toEqual(["a", "c"]);
+    expect(byId.c.group_with?.map((x) => x.id)).toEqual(["a", "b"]);
+    expect(byId.s.group_with).toBeUndefined();
+  });
+  it("finds siblings outside the visible rows (other tab or search)", () => {
+    const out = attachGroups([toCaseRow(a)], [a, b]);
+    expect(out[0].group_with).toHaveLength(1);
+    expect(out[0].group_with?.[0].id).toBe("b");
+  });
+  it("leaves a group of one and tickets without the column untouched", () => {
+    expect(attachGroups([toCaseRow(a)], [a])[0].group_with).toBeUndefined();
+    const noCol = base({ id: "n" });
+    expect(attachGroups([toCaseRow(noCol)], [noCol])[0]).not.toHaveProperty("group_with");
+  });
+  it("is wired into buildCaseList", () => {
+    const res = buildCaseList([a, b], parseListParams(new URL("http://x/api?tab=alle")));
+    expect(res.rows.find((r) => r.id === "a")?.group_with?.[0].id).toBe("b");
   });
 });

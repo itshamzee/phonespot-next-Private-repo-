@@ -223,3 +223,27 @@ describe("reserved_qty awareness", () => {
     expect(fn(reserved, "complete_checkout_order")).toContain("25 / 125.0");
   });
 });
+
+describe("repair_case_create_group (20261005170000)", () => {
+  const group = read("20261005170000_repair_case_group.sql");
+  const body = fn(group, "repair_case_create_group");
+  it("is one transaction", () => {
+    expect(group).toMatch(/^BEGIN;$/m);
+    expect(group).toMatch(/^COMMIT;$/m);
+  });
+  it("is callable by service_role only", () => {
+    expect(group).toContain("REVOKE ALL ON FUNCTION public.repair_case_create_group(jsonb) FROM PUBLIC, anon, authenticated;");
+    expect(group).toContain("GRANT EXECUTE ON FUNCTION public.repair_case_create_group(jsonb) TO service_role;");
+    expect(group).not.toMatch(/GRANT EXECUTE ON FUNCTION public\.repair_case_create_group\(jsonb\) TO (anon|authenticated|PUBLIC)/);
+  });
+  it("adds a partial index on intake_group_id", () => {
+    expect(group).toContain("ADD COLUMN IF NOT EXISTS intake_group_id uuid");
+    expect(group).toMatch(/ON public\.repair_tickets \(intake_group_id\) WHERE intake_group_id IS NOT NULL/);
+  });
+  it("reuses repair_case_create per device and enforces 1..10 devices", () => {
+    expect(body).toContain("public.repair_case_create(");
+    expect(body).toContain("case_fail('no_devices')");
+    expect(body).toContain("v_n > 10");
+    expect(body).toContain("case_fail('too_many_devices')");
+  });
+});

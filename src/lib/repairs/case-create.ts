@@ -13,12 +13,13 @@ import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { CaseError, caseRpcError } from "@/lib/repairs/case-errors";
 import { assertPricesValid } from "@/lib/repairs/case-pricing";
 import { canSeeCost } from "@/lib/repairs/availability";
-import type { CreateCaseBody } from "@/lib/repairs/case-schemas";
+import type { CreateCaseBody, CreateCaseGroupBody } from "@/lib/repairs/case-schemas";
 import type {
   AddCaseItemResponse,
   CancelCaseResponse,
   CaseBackorder,
   CaseItemView,
+  CreateRepairCaseGroupResponse,
   CreateRepairCaseResponse,
   NewCaseItemInput,
   RemoveCaseItemResponse,
@@ -120,6 +121,113 @@ export async function createRepairCase(
   }
   return result;
 }
+
+/** Payload til repair_case_create_group. Eksporteret så formen kan testes uden database. */
+export function buildGroupPayload(
+  body: CreateCaseGroupBody,
+  staff: Pick<StaffIdentity, "id" | "name">,
+  store: "vejle" | "slagelse",
+  idempotencyKey: string | null,
+) {
+  return {
+    staff_id: staff.id,
+    idempotency_key: idempotencyKey,
+    store_id: store,
+    customer: body.customer,
+    devices: body.devices.map((d) => ({
+      device: d.device,
+      items: d.items,
+      details: {
+        ...(d.details ?? {}),
+        assigned_to: d.details?.assigned_to ?? staff.name ?? null,
+      },
+    })),
+  };
+}
+
+type RawGroup = Omit<CreateRepairCaseGroupResponse, "tickets"> & { tickets: RawCreate[] };
+
+/** Opret én sag pr. enhed i ét kald (alle eller ingen). Samme kunde, delt gruppe-id, én SMS. */
+export async function createRepairCaseGroup(
+  body: CreateCaseGroupBody,
+  ctx: { staff: StaffIdentity; scope: StoreScope },
+  idempotencyKey: string | null,
+  db: Db = createServerClient(),
+): Promise<CreateRepairCaseGroupResponse> {
+  const store = resolveCaseStore(ctx.staff, ctx.scope, body.store_id);
+  for (const d of body.devices) assertPricesValid(d.items as NewCaseItemInput[]);
+
+  const { data, error } = await db.rpc("repair_case_create_group", {
+    p: buildGroupPayload(body, ctx.staff, store, idempotencyKey),
+  });
+  if (error || !data) throw caseRpcError("Sagerne kunne ikke oprettes", error ?? { message: "tomt svar" });
+
+  const raw = data as RawGroup;
+  const tickets = (raw.tickets ?? []).map((t) => shapeCreateResponse(t, ctx.staff.role));
+  const result: CreateRepairCaseGroupResponse = {
+    group_id: raw.group_id ?? null,
+    customer_id: raw.customer_id,
+    tickets,
+    ticket_ids: raw.ticket_ids ?? tickets.map((t) => t.ticket_id),
+    total_oere: raw.total_oere ?? tickets.reduce((sum, t) => sum + t.total_oere, 0),
+    needs_deposit: Boolean(raw.needs_deposit),
+    replayed: Boolean(raw.replayed),
+    warnings: raw.warnings ?? [],
+  };
+  if (body.notify_sms && !result.replayed) {
+    const warning = await sendGroupReceivedSms(db, result.ticket_ids, body.customer.phone);
+    if (warning) result.warnings = [...result.warnings, warning];
+  }
+  return result;
+}
+
+/** Én SMS "modtaget" med alle sagsnumre. Logges på hver sag, så den vises i hver sags SMS-tråd. */
+export async function sendGroupReceivedSms(db: Db, ticketIds: string[], phone: string): Promise<string | null> {
+  const failed = "Sagerne er oprettet, men SMS'en til kunden kunne ikke sendes.";
+  try {
+    const { data } = await db
+      .from("repair_tickets")
+      .select("id, ticket_number, store_id, customer_id, customer_name, device_model")
+      .in("id", ticketIds);
+    const byId = new Map(((data ?? []) as GroupTicketRow[]).map((t) => [t.id, t]));
+    const rows = ticketIds.map((id) => byId.get(id)).filter((t): t is GroupTicketRow => Boolean(t));
+    if (rows.length === 0) return null;
+    const first = rows[0];
+    const message = getSmsTemplate("modtaget", {
+      customerName: first.customer_name,
+      deviceName: rows.map((t) => t.device_model).join(", "),
+      ticketId: first.id,
+      ticketNumber: first.ticket_number,
+      storeId: first.store_id,
+      group: rows.map((t) => ({ ticketNumber: t.ticket_number ?? t.id.slice(0, 8), deviceName: t.device_model })),
+    });
+    if (!message) return null;
+    const result = await sendSms(phone, message);
+    await db.from("sms_log").insert(
+      rows.map((t) => ({
+        ticket_id: t.id,
+        customer_id: t.customer_id,
+        phone,
+        message,
+        provider_message_id: result.messageId,
+        status: result.success ? "sent" : "failed",
+      })),
+    );
+    return result.success ? null : failed;
+  } catch (err) {
+    console.error("[repairs] group received SMS failed:", ticketIds, err);
+    return failed;
+  }
+}
+
+type GroupTicketRow = {
+  id: string;
+  ticket_number: string | null;
+  store_id: string | null;
+  customer_id: string | null;
+  customer_name: string;
+  device_model: string;
+};
 
 /** SMS "modtaget" som ved indlevering. Fejl her fortryder aldrig sagen; kun en advarsel. */
 export async function sendReceivedSms(db: Db, ticketId: string, phone: string): Promise<string | null> {

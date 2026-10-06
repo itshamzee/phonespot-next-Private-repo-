@@ -53,6 +53,8 @@ export type CaseListTicket = {
   /** Findes først efter migrationen 2026100420…; ellers undefined. */
   promised_at?: string | null;
   assigned_to?: string | null;
+  /** Fælles id for sager fra samme indlevering med flere enheder (migrationen 20261005170000). */
+  intake_group_id?: string | null;
   /** Indlejret fra customer_devices (kun til søgning). */
   customer_devices?: { serial_number?: string | null; color?: string | null } | null;
   repair_quotes?: { estimated_days?: number | null; created_at?: string | null }[] | null;
@@ -289,6 +291,8 @@ export type CaseRow = {
   assigned_to: string | null;
   is_web_booking: boolean;
   created_at: string;
+  /** Sagsnumre på de andre sager fra samme indlevering ("Del af indlevering med ..."). */
+  group_with?: { id: string; label: string }[];
 };
 
 /** "Batteriskift, Skærmskift" ud fra ydelserne; ellers service_type eller fejlbeskrivelsen. */
@@ -327,6 +331,28 @@ export function toCaseRow(t: CaseListTicket): CaseRow {
     is_web_booking: isWebBooking(t),
     created_at: t.created_at,
   };
+}
+
+/**
+ * Tilføjer `group_with` til rækker, hvis sag er del af en indlevering med flere enheder.
+ * Søskende slås op i ALLE hentede sager (ikke kun den aktuelle fane/søgning).
+ */
+export function attachGroups(rows: CaseRow[], tickets: Pick<CaseListTicket, "id" | "ticket_number" | "intake_group_id">[]): CaseRow[] {
+  const groups = new Map<string, { id: string; label: string }[]>();
+  const groupOf = new Map<string, string>();
+  for (const t of tickets) {
+    if (!t.intake_group_id) continue;
+    groupOf.set(t.id, t.intake_group_id);
+    const list = groups.get(t.intake_group_id) ?? [];
+    list.push({ id: t.id, label: ticketLabel(t) });
+    groups.set(t.intake_group_id, list);
+  }
+  if (groups.size === 0) return rows;
+  return rows.map((r) => {
+    const g = groupOf.get(r.id);
+    const others = g ? (groups.get(g) ?? []).filter((x) => x.id !== r.id).sort((a, b) => a.label.localeCompare(b.label)) : [];
+    return others.length > 0 ? { ...r, group_with: others } : r;
+  });
 }
 
 /** Åbne sager først (nærmeste afhentning øverst); afsluttede til sidst, nyeste først. */

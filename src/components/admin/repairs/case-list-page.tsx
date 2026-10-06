@@ -248,6 +248,11 @@ export default function CaseListPage() {
                           </span>
                           <span role="gridcell" className="min-w-0">
                             {row.title}
+                            {row.group_with && row.group_with.length > 0 && (
+                              <span className="block text-xs text-[#5E6A63]" data-testid="group-with">
+                                Del af indlevering med {row.group_with.map((g) => `#${g.label}`).join(", ")}
+                              </span>
+                            )}
                             {row.is_urgent && (
                               <span className="ml-1.5 inline-block rounded-md bg-[#FBEFD9] px-1.5 py-0.5 text-xs text-[#7A4A06]">Hastesag</span>
                             )}

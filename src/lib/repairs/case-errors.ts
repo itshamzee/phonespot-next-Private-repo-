@@ -25,6 +25,8 @@ export const CASE_ERROR_CATALOG: Record<string, Entry> = {
   forbidden_store: { status: 403, message: () => "Du har ikke adgang til denne butik" },
   store_required: { status: 400, message: () => "Vælg hvilken butik sagen oprettes i" },
   no_items: { status: 400, message: () => "Tilføj mindst én reparation" },
+  no_devices: { status: 400, message: () => "Tilføj mindst én enhed" },
+  too_many_devices: { status: 400, message: () => "For mange enheder i én indlevering (maks. 10)" },
   too_many_items: { status: 400, message: () => "For mange linjer på sagen" },
   repair_required: { status: 400, message: () => "Tilføj mindst én reparation eller en fritekstlinje" },
   idempotency_conflict: {

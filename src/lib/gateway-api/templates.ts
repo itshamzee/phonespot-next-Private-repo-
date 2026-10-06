@@ -11,18 +11,24 @@ interface SmsTemplateData {
   trackingUrl?: string;
   price?: number;
   estimatedDate?: string;
+  /** Indlevering af flere enheder: "modtaget" nævner alle sagsnumre i én besked. */
+  group?: { ticketNumber: string; deviceName: string }[];
 }
 
 export function getSmsTemplate(
   status: string,
   data: SmsTemplateData,
 ): string | null {
-  const { customerName, deviceName, ticketId, ticketNumber, storeId, trackingUrl, price, estimatedDate } = data;
+  const { customerName, deviceName, ticketId, ticketNumber, storeId, trackingUrl, price, estimatedDate, group } = data;
   const caseNumber = ticketNumber?.trim() || ticketId.slice(0, 8);
   const store = storeForId(storeId);
 
   switch (status) {
     case "modtaget":
+      if (group && group.length > 1) {
+        const list = group.map((g) => `${g.deviceName} (${g.ticketNumber})`).join(", ");
+        return `Hej ${customerName}, vi har modtaget dine ${group.length} enheder: ${list}. Vi vender tilbage med et tilbud. - ${store.name}`;
+      }
       return `Hej ${customerName}, vi har modtaget din ${deviceName}. Sagsnummer: ${caseNumber}.${trackingUrl ? ` Følg din reparation her: ${trackingUrl}` : ""} Vi vender tilbage med et tilbud. - ${store.name}`;
     case "tilbud_sendt":
       // Uden en pris ville kunden læse "undefined DKK".

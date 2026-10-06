@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { requireStaffScope, unauthorizedResponse } from "@/lib/auth/store-scope-server";
 import { buildCaseList, fetchScopedTickets, parseListParams } from "@/lib/repairs/case-query";
-import { createCaseSchema, parseIdempotencyKey } from "@/lib/repairs/case-schemas";
-import { createRepairCase } from "@/lib/repairs/case-create";
+import { createCaseGroupSchema, createCaseSchema, parseIdempotencyKey } from "@/lib/repairs/case-schemas";
+import { createRepairCase, createRepairCaseGroup } from "@/lib/repairs/case-create";
 import { caseErrorResponse } from "@/lib/repairs/case-errors";
+import type { CreateCaseBody, CreateCaseGroupBody } from "@/lib/repairs/case-schemas";
 import { IDEMPOTENCY_HEADER } from "@/lib/repairs/new-case-types";
 
 /**
@@ -47,7 +48,10 @@ export async function POST(request: Request) {
   if (!key) {
     return NextResponse.json({ error: `Headeren ${IDEMPOTENCY_HEADER} mangler eller er ugyldig` }, { status: 400 });
   }
-  const parsed = createCaseSchema.safeParse(await request.json().catch(() => null));
+  const json = await request.json().catch(() => null);
+  // Flere enheder: { customer, devices: [...] } (maks. 10). Ellers den uændrede enkelt-enhedsform.
+  const isGroup = Boolean(json) && typeof json === "object" && "devices" in (json as object);
+  const parsed = isGroup ? createCaseGroupSchema.safeParse(json) : createCaseSchema.safeParse(json);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     return NextResponse.json(
@@ -57,7 +61,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await createRepairCase(parsed.data, ctx, key);
+    const result = isGroup
+      ? await createRepairCaseGroup(parsed.data as CreateCaseGroupBody, ctx, key)
+      : await createRepairCase(parsed.data as CreateCaseBody, ctx, key);
     return NextResponse.json(result, { status: result.replayed ? 200 : 201, headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     return caseErrorResponse(err, "Sagen kunne ikke oprettes");
