@@ -12,7 +12,7 @@ vi.mock("@/lib/supabase/client", () => ({ createServerClient: () => state.client
 
 import { createFakeDb } from "@/test/fake-supabase";
 import { resetLocationCache } from "@/lib/auth/store-scope-server";
-import { GET, PATCH } from "../route";
+import { GET, PATCH, POST } from "../route";
 import { GET as getMe } from "../../me/route";
 
 const OWNER = { id: "o", role: "owner", name: "Ejer", email: "o@phonespot.dk", location_id: null, location_slug: null };
@@ -41,10 +41,30 @@ const req = (method: string, body?: unknown, cookie?: string) =>
   }) as unknown as NextRequest;
 
 let db: ReturnType<typeof seed>["db"];
+
+const authCalls: Array<{ op: string; args: unknown[] }> = [];
+const fakeAuthAdmin = {
+  createUser: async (attrs: { email: string }) => {
+    authCalls.push({ op: "create", args: [attrs] });
+    if (attrs.email === "taken@phonespot.dk") return { data: { user: null }, error: { message: "A user with this email address has already been registered" } };
+    return { data: { user: { id: `auth-${attrs.email}` } }, error: null };
+  },
+  updateUserById: async (id: string, attrs: unknown) => {
+    authCalls.push({ op: "update", args: [id, attrs] });
+    return { data: {}, error: null };
+  },
+  deleteUser: async (id: string) => {
+    authCalls.push({ op: "delete", args: [id] });
+    return { data: {}, error: null };
+  },
+};
+
+const NEW = { name: "Ali", email: "Ali@PhoneSpot.dk", role: "employee", location_slug: "vejle", password: "abcdefgh23" };
 beforeEach(() => {
   const s = seed();
   db = s.db;
-  state.client = s.client;
+  authCalls.length = 0;
+  state.client = { ...s.client, auth: { admin: fakeAuthAdmin } };
   state.staff = null;
   resetLocationCache();
 });
@@ -82,6 +102,55 @@ describe("/api/admin/staff", () => {
     expect((await PATCH(req("PATCH", { id: "o", location_slug: "vejle" }))).status).toBe(400);
     expect((await PATCH(req("PATCH", {}))).status).toBe(400);
     expect(db.tables.staff.find((s) => s.id === "o")?.location_id).toBeNull();
+  });
+});
+
+describe("POST /api/admin/staff (ny medarbejder)", () => {
+  it("only the owner can create staff", async () => {
+    expect((await POST(req("POST", NEW))).status).toBe(401);
+    state.staff = VEJLE;
+    expect((await POST(req("POST", NEW))).status).toBe(403);
+    expect(authCalls).toHaveLength(0);
+  });
+
+  it("creates a confirmed login and a staff row in the chosen store", async () => {
+    state.staff = OWNER;
+    const res = await POST(req("POST", NEW));
+    expect(res.status).toBe(201);
+    expect(authCalls[0]).toMatchObject({ op: "create", args: [{ email: "ali@phonespot.dk", password: "abcdefgh23", email_confirm: true }] });
+    const row = db.tables.staff.find((s) => s.email === "ali@phonespot.dk");
+    expect(row).toMatchObject({ auth_id: "auth-ali@phonespot.dk", role: "employee", location_id: "L-v", is_active: true });
+    expect((await res.json()).staff.location_slug).toBe("vejle");
+  });
+
+  it("validates input and refuses owner role, short passwords and taken e-mails", async () => {
+    state.staff = OWNER;
+    expect((await POST(req("POST", { ...NEW, role: "owner" }))).status).toBe(400);
+    expect((await POST(req("POST", { ...NEW, password: "kort" }))).status).toBe(400);
+    expect((await POST(req("POST", { ...NEW, location_slug: "" }))).status).toBe(400);
+    expect((await POST(req("POST", { ...NEW, email: "v@phonespot.dk" }))).status).toBe(409);
+    expect((await POST(req("POST", { ...NEW, email: "taken@phonespot.dk" }))).status).toBe(409);
+    expect(db.tables.staff.some((s) => s.email === "taken@phonespot.dk")).toBe(false);
+  });
+});
+
+describe("PATCH /api/admin/staff (rolle, aktiv, kode)", () => {
+  it("changes role and deactivates, but never the owner", async () => {
+    state.staff = OWNER;
+    expect((await PATCH(req("PATCH", { id: "n", role: "manager" }))).status).toBe(200);
+    expect((await PATCH(req("PATCH", { id: "n", is_active: false }))).status).toBe(200);
+    expect(db.tables.staff.find((s) => s.id === "n")).toMatchObject({ role: "manager", is_active: false });
+    expect((await PATCH(req("PATCH", { id: "n", role: "owner" }))).status).toBe(400);
+    expect((await PATCH(req("PATCH", { id: "o", is_active: false }))).status).toBe(400);
+    expect(db.tables.staff.find((s) => s.id === "o")?.is_active).toBe(true);
+  });
+
+  it("sets a new password on the login", async () => {
+    state.staff = OWNER;
+    db.tables.staff.find((s) => s.id === "n")!.auth_id = "auth-n";
+    expect((await PATCH(req("PATCH", { id: "n", password: "kort" }))).status).toBe(400);
+    expect((await PATCH(req("PATCH", { id: "n", password: "nyKode2345" }))).status).toBe(200);
+    expect(authCalls).toContainEqual({ op: "update", args: ["auth-n", { password: "nyKode2345" }] });
   });
 });
 

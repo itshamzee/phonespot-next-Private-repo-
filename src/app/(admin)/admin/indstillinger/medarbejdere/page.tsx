@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { DataTable, Notice, PageHeader, Select, Tag, type Column } from "@/components/admin/ui";
+import { Button, DataTable, Field, FieldRow, Input, Notice, PageHeader, Select, Tag, type Column } from "@/components/admin/ui";
+import { MIN_PASSWORD_LENGTH, generatePassword } from "@/lib/auth/staff-admin";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 
 type StaffRow = {
@@ -33,6 +34,9 @@ export default function MedarbejderePage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  /** Vises én gang efter oprettelse eller ny kode, så ejeren kan give den videre. */
+  const [handover, setHandover] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,27 +62,38 @@ export default function MedarbejderePage() {
     void load();
   }, [scopeLoading, isOwner, load]);
 
-  async function assign(row: StaffRow, slug: string) {
+  async function patch(row: StaffRow, changes: Record<string, unknown>, local: Partial<StaffRow>): Promise<boolean> {
     setSavingId(row.id);
     setError(null);
     setSavedId(null);
+    let ok = false;
     try {
       const res = await fetch("/api/admin/staff", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row.id, location_slug: slug || null }),
+        body: JSON.stringify({ id: row.id, ...changes }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? `Butikken for ${row.name} blev ikke gemt. Prøv igen.`);
+        setError(json.error ?? `Ændringen for ${row.name} blev ikke gemt. Prøv igen.`);
       } else {
-        setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, location_slug: slug || null } : r)));
+        setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...local } : r)));
         setSavedId(row.id);
+        ok = true;
       }
     } catch {
-      setError(`Butikken for ${row.name} blev ikke gemt, fordi forbindelsen fejlede.`);
+      setError(`Ændringen for ${row.name} blev ikke gemt, fordi forbindelsen fejlede.`);
     }
     setSavingId(null);
+    return ok;
+  }
+
+  const assign = (row: StaffRow, slug: string) =>
+    void patch(row, { location_slug: slug || null }, { location_slug: slug || null });
+
+  async function resetPassword(row: StaffRow) {
+    const password = generatePassword();
+    if (await patch(row, { password }, {})) setHandover({ name: row.name, email: row.email, password });
   }
 
   if (scopeLoading) return null;
@@ -106,7 +121,27 @@ export default function MedarbejderePage() {
       ),
     },
     { key: "email", header: "E-mail", hideBelow: "md", render: (r) => <span className="text-gray">{r.email}</span> },
-    { key: "role", header: "Rolle", hideBelow: "sm", render: (r) => ROLE_LABELS[r.role] ?? r.role },
+    {
+      key: "role",
+      header: "Rolle",
+      hideBelow: "sm",
+      className: "w-[160px]",
+      render: (r) =>
+        r.role === "owner" ? (
+          ROLE_LABELS.owner
+        ) : (
+          <Select
+            aria-label={`Rolle for ${r.name}`}
+            value={r.role}
+            disabled={savingId === r.id}
+            onChange={(e) => void patch(r, { role: e.target.value }, { role: e.target.value })}
+            className="!h-9 !text-[14px]"
+          >
+            <option value="employee">{ROLE_LABELS.employee}</option>
+            <option value="manager">{ROLE_LABELS.manager}</option>
+          </Select>
+        ),
+    },
     {
       key: "store",
       header: "Butik",
@@ -122,7 +157,7 @@ export default function MedarbejderePage() {
                 value={r.location_slug ?? ""}
                 disabled={savingId === r.id}
                 invalid={!r.location_slug && r.is_active}
-                onChange={(e) => void assign(r, e.target.value)}
+                onChange={(e) => assign(r, e.target.value)}
                 className="!h-9 !text-[14px]"
               >
                 <option value="">Ingen butik</option>
@@ -137,6 +172,27 @@ export default function MedarbejderePage() {
           </div>
         ),
     },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[200px]",
+      render: (r) =>
+        r.role === "owner" ? null : (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="quiet" disabled={savingId === r.id} onClick={() => void resetPassword(r)}>
+              Ny kode
+            </Button>
+            <Button
+              size="sm"
+              variant={r.is_active ? "danger" : "secondary"}
+              disabled={savingId === r.id}
+              onClick={() => void patch(r, { is_active: !r.is_active }, { is_active: !r.is_active })}
+            >
+              {r.is_active ? "Deaktivér" : "Aktivér"}
+            </Button>
+          </div>
+        ),
+    },
   ];
 
   return (
@@ -144,7 +200,48 @@ export default function MedarbejderePage() {
       <PageHeader
         title="Medarbejdere"
         description="Hver medarbejder hører til én butik og ser kun den butiks reparationer, henvendelser, opkøb og ordrer. Du som ejer ser alle butikker og kan skifte i topbjælken."
+        actions={
+          !showNew && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                setShowNew(true);
+                setHandover(null);
+              }}
+            >
+              Ny medarbejder
+            </Button>
+          )
+        }
       />
+      {handover && (
+        <div className="mb-4">
+          <Notice tone="success" title={`Login til ${handover.name}`}>
+            <p>
+              E-mail: <strong>{handover.email}</strong>
+              <br />
+              Adgangskode: <strong className="font-mono tracking-wide">{handover.password}</strong>
+            </p>
+            <p className="mt-2 text-[13px]">Giv koden videre nu. Den vises ikke igen. Login sker på phonespot.dk/admin.</p>
+            <div className="mt-3">
+              <Button size="sm" onClick={() => setHandover(null)}>
+                Skjul
+              </Button>
+            </div>
+          </Notice>
+        </div>
+      )}
+      {showNew && (
+        <NewStaffForm
+          stores={stores}
+          onCancel={() => setShowNew(false)}
+          onCreated={(row, password) => {
+            setRows((prev) => [row, ...prev]);
+            setShowNew(false);
+            setHandover({ name: row.name, email: row.email, password });
+          }}
+        />
+      )}
       {error && (
         <div className="mb-4">
           <Notice tone="danger">{error}</Notice>
@@ -162,8 +259,108 @@ export default function MedarbejderePage() {
         rows={rows}
         rowKey={(r) => r.id}
         loading={loading}
-        empty={{ title: "Ingen medarbejdere endnu", description: "Medarbejdere oprettes som brugere i Supabase og dukker op her." }}
+        empty={{ title: "Ingen medarbejdere endnu", description: "Tryk på Ny medarbejder for at oprette den første." }}
       />
     </div>
+  );
+}
+
+function NewStaffForm({
+  stores,
+  onCancel,
+  onCreated,
+}: {
+  stores: StoreOption[];
+  onCancel: () => void;
+  onCreated: (row: StaffRow, password: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("employee");
+  const [store, setStore] = useState("");
+  const [password, setPassword] = useState(() => generatePassword());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, role, location_slug: store, password }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) setError(json.error ?? "Medarbejderen blev ikke oprettet. Prøv igen.");
+      else onCreated(json.staff as StaffRow, password);
+    } catch {
+      setError("Medarbejderen blev ikke oprettet, fordi forbindelsen fejlede.");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <form onSubmit={submit} className="mb-6 flex flex-col gap-4 rounded-xl border border-sand bg-white p-5">
+      <h2 className="text-[17px] font-semibold text-charcoal">Ny medarbejder</h2>
+      <FieldRow>
+        <Field label="Navn" required>
+          {(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" required />}
+        </Field>
+        <Field label="E-mail" required hint="Bruges til login.">
+          {(id) => (
+            <Input id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" required />
+          )}
+        </Field>
+      </FieldRow>
+      <FieldRow>
+        <Field label="Butik" required>
+          {(id) => (
+            <Select id={id} value={store} onChange={(e) => setStore(e.target.value)} required>
+              <option value="">Vælg butik</option>
+              {stores.map((s) => (
+                <option key={s.slug} value={s.slug} disabled={!s.available}>
+                  {s.label}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <Field label="Rolle" required hint="Butikschef kan også se kostpriser og rette reparationspriser.">
+          {(id) => (
+            <Select id={id} value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="employee">{ROLE_LABELS.employee}</option>
+              <option value="manager">{ROLE_LABELS.manager}</option>
+            </Select>
+          )}
+        </Field>
+      </FieldRow>
+      <Field label="Adgangskode" required hint={`Mindst ${MIN_PASSWORD_LENGTH} tegn. Den vises én gang, når profilen er oprettet.`}>
+        {(id) => (
+          <div className="flex gap-2">
+            <Input
+              id={id}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              className="font-mono"
+              minLength={MIN_PASSWORD_LENGTH}
+              required
+            />
+            <Button onClick={() => setPassword(generatePassword())}>Ny kode</Button>
+          </div>
+        )}
+      </Field>
+      {error && <Notice tone="danger">{error}</Notice>}
+      <div className="flex justify-end gap-2">
+        <Button variant="quiet" onClick={onCancel}>
+          Annuller
+        </Button>
+        <Button type="submit" variant="primary" loading={saving}>
+          Opret medarbejder
+        </Button>
+      </div>
+    </form>
   );
 }
