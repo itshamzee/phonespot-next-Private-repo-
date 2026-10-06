@@ -1,22 +1,40 @@
 /**
- * TS-spejl af SQL-parserne i supabase/migrations/20261005190000_repair_part_costs_by_title.sql
- * (repair_parts_title_models / _category / _tiers). Hold de to i takt.
+ * TS-spejl af SQL-parserne i supabase/migrations/20261006100000_repair_part_title_match_v2.sql
+ * (repair_parts_title_models / _model_match / _category / _tiers). Hold de to i takt.
  */
 
-const COLOR_STOP =
-  "black|white|blue|red|green|gold|silver|gr[ae]y|space|pink|purple|yellow|midnight|starlight|graphite|titanium|natural|desert|orange|coral|rose|jet|refurbished|original|oem|genuine|with|without";
+const BRAND_PREFIX = /^(samsung|apple|google|huawei|xiaomi|oneplus|motorola|nokia|sony|oppo|realme|honor|lg|asus|vivo) /;
+const VARIANT_WORDS = new Set(["pro", "max", "mini", "plus", "ultra", "fe", "lite", "edge", "neo", "xl"]);
 
-const MODEL_RE = new RegExp(`\\bFor\\s+(.+?)(?:\\s*\\||\\s+(?:${COLOR_STOP})\\b|\\s*$)`, "i");
+/** Lowercase, "+" -> " plus", ét mellemrum. Bruges på både titler og modelnavne. */
+export function normalizeModelName(name: string): string {
+  return (name ?? "").toLowerCase().replace(/\+/g, " plus ").replace(/\s+/g, " ").trim();
+}
 
-/** Model-noegler i prioriteret raekkefolge: foerst med parentes, derefter uden. Lowercase. */
+/** Haler efter "For ": selve halen og halen uden førende mærkenavn ("samsung galaxy s23" -> "galaxy s23"). */
 export function parseTitleModels(title: string): string[] {
-  const t = (title ?? "").replace(/\s+/g, " ");
-  const m = MODEL_RE.exec(t);
-  if (!m) return [];
-  const a = m[1].replace(/[\s,;-]+$/, "").trim().toLowerCase();
-  if (!a) return [];
-  const b = a.replace(/\s*\(.*$/, "").trim();
-  return !b || b === a ? [a] : [a, b];
+  const t = ` ${(title ?? "").replace(/\s+/g, " ")} `;
+  const pos = t.toLowerCase().indexOf(" for ");
+  if (pos < 0) return [];
+  const tail = normalizeModelName(t.slice(pos + 5));
+  if (!tail) return [];
+  const stripped = tail.replace(BRAND_PREFIX, "");
+  return stripped === tail ? [tail] : [tail, stripped];
+}
+
+/** 0 = præcis modellen, 1 = halen starter med modellen (fx "galaxy a35 5g"), null = intet match. */
+export function titleModelMatch(tails: string[], modelName: string): 0 | 1 | null {
+  const n = normalizeModelName(modelName);
+  if (!n) return null;
+  let best: 1 | null = null;
+  for (const t of tails) {
+    if (t === n) return 0;
+    if (t.startsWith(`${n} `)) {
+      const next = t.slice(n.length + 1).split(" ")[0];
+      if (!VARIANT_WORDS.has(next) && !/^\(\d{4}\)$/.test(next)) best = 1;
+    }
+  }
+  return best;
 }
 
 export type PartCategorySlug = "skaerme" | "batterier" | "bagcovers" | "opladningsstik" | "kameraer";
@@ -24,8 +42,11 @@ export type PartCategorySlug = "skaerme" | "batterier" | "bagcovers" | "opladnin
 export function parseTitleCategory(title: string): PartCategorySlug | null {
   const t = (title ?? "").replace(/\s+/g, " ");
   const head = /^(.*?)\bFor\b/i.exec(t);
-  const pre = (head ? head[1] : t).replace(/\([^)]*\)/g, " ").toLowerCase();
-  if (/(adhesive|tape|sticker|protector|tool|tester|cleaner|\bkit\b|screw|gasket|bracket|lens)/.test(pre)) return null;
+  const raw = (head ? head[1] : t).toLowerCase();
+  // Chips, FPC-stik på bundkortet og flerpak ("(3 pieces)") er ikke den del, reparationen bruger.
+  if (/(\bchip\b|\bfpc\b|\bpieces?\b|\bpcs\b)/.test(raw)) return null;
+  const pre = raw.replace(/\([^)]*\)/g, " ");
+  if (/(\bic\b|adhesive|tape|sticker|protector|tool|tester|cleaner|\bkit\b|screw|gasket|bracket|lens)/.test(pre)) return null;
   if (/(back\s*cover|back\s*glass|rear\s*glass|battery\s*cover|battery\s*door|back\s*housing|rear\s*housing)/.test(pre)) return "bagcovers";
   if (/(charging\s*port|charge\s*port|dock\s*connector|charging\s*connector|usb\s*connector)/.test(pre)) return "opladningsstik";
   if (/\bcamera\b/.test(pre) && !/flex/.test(pre)) return "kameraer";
@@ -51,6 +72,7 @@ export function parseTitleTiers(
     if (/\brefurbished\b/.test(s)) return ["refurbished", "original-pulled"];
     return [];
   }
+  if (/\brefurbished\b/.test(s)) return ["refurbished", "original-pulled"];
   return ["oem-equivalent"];
 }
 
@@ -59,8 +81,7 @@ export function parseFonedayTitle(title: string, quality: string | null = null) 
   return { models: parseTitleModels(title), category, tiers: parseTitleTiers(title, quality, category) };
 }
 
-/** Eksakt (case-insensitive) match mod modelnavn: "iPhone 15" matcher aldrig "iPhone 15 Pro". */
+/** "iPhone 15" matcher aldrig "iPhone 15 Pro"; "Galaxy A35" matcher "Galaxy A35 5G (SM-A356B)". */
 export function titleMatchesModel(title: string, modelName: string): boolean {
-  const key = modelName.replace(/\s+/g, " ").trim().toLowerCase();
-  return parseTitleModels(title).includes(key);
+  return titleModelMatch(parseTitleModels(title), modelName) !== null;
 }
