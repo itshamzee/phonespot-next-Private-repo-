@@ -17,6 +17,13 @@ const REPAIR_USPS = [
   "Gratis parkering",
 ] as const;
 
+/** En enhed i en booking med flere enheder (hver enhed er sin egen sag). */
+export interface RepairConfirmationDevice {
+  deviceLabel: string;
+  services: { name: string; price_dkk: number }[];
+  includesTemperedGlass?: boolean;
+}
+
 export interface RepairConfirmationParams {
   ticketId: string;
   /** PS-2026-0001. Mangler den, vises de første 8 tegn af ticketId. */
@@ -34,6 +41,20 @@ export interface RepairConfirmationParams {
   storeId?: string | null;
   preferredDate?: string | null;
   preferredTime?: string | null;
+  /** Sæt ved booking af flere enheder; overstyrer deviceLabel/services/glas. totalDkk er da samlet sum. */
+  devices?: RepairConfirmationDevice[];
+}
+
+/** Enhederne i kvitteringen: altid mindst én, flere ved gruppebooking. */
+function devicesOf(params: RepairConfirmationParams): RepairConfirmationDevice[] {
+  if (params.devices && params.devices.length > 1) return params.devices;
+  return [
+    {
+      deviceLabel: params.deviceLabel,
+      services: params.services,
+      includesTemperedGlass: params.includesTemperedGlass,
+    },
+  ];
 }
 
 const kr = (value: number) => `${value.toLocaleString("da-DK")} kr.`;
@@ -72,7 +93,10 @@ export function buildRepairConfirmationHtml(params: RepairConfirmationParams): s
   const store = storeFor(params);
   const mailIn = params.deliveryMethod === "Send ind";
   const firstName = escapeHtml(params.customerName.trim().split(/\s+/)[0] ?? "");
-  const hasBooking = params.services.length > 0;
+  const devices = devicesOf(params);
+  const multi = devices.length > 1;
+  const glassPrice = params.temperedGlassPrice ?? 99;
+  const hasBooking = devices.some((d) => d.services.length > 0);
 
   const when = params.preferredDate
     ? `${formatDanishDate(params.preferredDate)}${params.preferredTime ? `, kl. ${escapeHtml(params.preferredTime)}` : ""}`
@@ -100,25 +124,37 @@ export function buildRepairConfirmationHtml(params: RepairConfirmationParams): s
         </td></tr>`
       : "";
 
-  const subtotal =
-    params.services.reduce((sum, s) => sum + s.price_dkk, 0) +
-    (params.includesTemperedGlass ? params.temperedGlassPrice ?? 99 : 0);
+  const subtotal = devices.reduce(
+    (sum, d) =>
+      sum + d.services.reduce((a, svc) => a + svc.price_dkk, 0) + (d.includesTemperedGlass ? glassPrice : 0),
+    0,
+  );
   const discount = params.totalDkk != null ? Math.round(subtotal - params.totalDkk) : 0;
 
-  const serviceRows = params.services
-    .map(
-      (s) => `
+  const cell = `padding:8px 0;font-size:14px;color:${BRAND.charcoal};border-bottom:1px solid ${BRAND.sand};`;
+  const deviceRows = (d: RepairConfirmationDevice) =>
+    [
+      ...d.services.map(
+        (s) => `
         <tr>
-          <td style="padding:8px 0;font-size:14px;color:${BRAND.charcoal};border-bottom:1px solid ${BRAND.sand};">${escapeHtml(s.name)}</td>
-          <td style="padding:8px 0;font-size:14px;color:${BRAND.charcoal};border-bottom:1px solid ${BRAND.sand};text-align:right;white-space:nowrap;">${kr(s.price_dkk)}</td>
+          <td style="${cell}">${escapeHtml(s.name)}</td>
+          <td style="${cell}text-align:right;white-space:nowrap;">${kr(s.price_dkk)}</td>
         </tr>`,
+      ),
+      d.includesTemperedGlass
+        ? `<tr><td style="${cell}">Beskyttelsesglas</td><td style="${cell}text-align:right;">${kr(glassPrice)}</td></tr>`
+        : "",
+    ].join("");
+
+  const serviceRows = devices
+    .map((d) =>
+      multi
+        ? `<tr><td colspan="2" style="padding:14px 0 4px;font-size:14px;font-weight:700;color:${BRAND.charcoal};">${escapeHtml(d.deviceLabel)}</td></tr>${deviceRows(d)}`
+        : deviceRows(d),
     )
     .join("");
 
   const extraRows = [
-    params.includesTemperedGlass
-      ? `<tr><td style="padding:8px 0;font-size:14px;border-bottom:1px solid ${BRAND.sand};">Beskyttelsesglas</td><td style="padding:8px 0;font-size:14px;text-align:right;border-bottom:1px solid ${BRAND.sand};">${kr(params.temperedGlassPrice ?? 99)}</td></tr>`
-      : "",
     params.discountPercent
       ? `<tr><td style="padding:8px 0;font-size:14px;color:${BRAND.green};">Rabat (${params.discountPercent}%)</td><td style="padding:8px 0;font-size:14px;text-align:right;color:${BRAND.green};">${discount > 0 ? `−${kr(discount)}` : "Fratrukket"}</td></tr>`
       : "",
@@ -128,9 +164,10 @@ export function buildRepairConfirmationHtml(params: RepairConfirmationParams): s
       : "",
   ].join("");
 
+  const summaryTitle = multi ? `Din reparation · ${devices.length} enheder` : `Din reparation · ${escapeHtml(params.deviceLabel)}`;
   const summary = hasBooking
     ? `
-        <tr><td style="padding:0 40px 8px;font-size:13px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#6E6E73;">Din reparation · ${escapeHtml(params.deviceLabel)}</td></tr>
+        <tr><td style="padding:0 40px 8px;font-size:13px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#6E6E73;">${summaryTitle}</td></tr>
         <tr><td style="padding:0 40px 24px;">
           <table width="100%" cellpadding="0" cellspacing="0">${serviceRows}${extraRows}</table>
         </td></tr>`
@@ -179,9 +216,14 @@ export function buildRepairConfirmationText(params: RepairConfirmationParams): s
     "",
     params.paid ? "Tak! Din reparation er betalt og booket." : "Din reparation er booket.",
     `Sags-nr.: ${caseNumber(params)}`,
-    `Enhed: ${params.deviceLabel}`,
-    ...params.services.map((s) => `- ${s.name}: ${kr(s.price_dkk)}`),
   ];
+  const devices = devicesOf(params);
+  for (const d of devices) {
+    lines.push(`Enhed: ${d.deviceLabel}`);
+    lines.push(...d.services.map((s) => `- ${s.name}: ${kr(s.price_dkk)}`));
+    if (d.includesTemperedGlass) lines.push(`- Beskyttelsesglas: ${kr(params.temperedGlassPrice ?? 99)}`);
+  }
+  if (params.discountPercent) lines.push(`Rabat: ${params.discountPercent}%`);
   if (params.totalDkk != null)
     lines.push(`I alt: ${kr(params.totalDkk)} (${params.paid ? "betalt online" : "betales i butikken"})`);
   if (store && params.deliveryMethod !== "Send ind")

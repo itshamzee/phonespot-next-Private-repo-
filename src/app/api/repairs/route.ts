@@ -4,6 +4,14 @@ import { createServerClient } from "@/lib/supabase/client";
 import { normalizeStoreId, storeLabel } from "@/lib/stores";
 import { getStaffRecipients } from "@/lib/email/staff-routing";
 import { sendRepairConfirmation } from "@/lib/email/repair-confirmation";
+import { priceFromCatalog } from "@/lib/repair/catalog-pricing";
+import {
+  type BookingDevice,
+  TEMPERED_GLASS_PRICE_DKK,
+  newBookingGroup,
+  parseBookingDevices,
+  priceBookingDevices,
+} from "@/lib/repair/booking-devices";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -23,8 +31,139 @@ const REQUIRED_FIELDS = [
   "service_type",
 ] as const;
 
+async function handleMultiDeviceBooking(
+  body: Record<string, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
+  rawDevices: BookingDevice[],
+) {
+  for (const field of ["customer_name", "customer_email", "customer_phone"] as const) {
+    if (typeof body[field] !== "string" || !body[field].trim()) {
+      return NextResponse.json({ error: `Feltet "${field}" er påkrævet` }, { status: 400 });
+    }
+  }
+
+  const storeId = normalizeStoreId(body.store_id);
+  const issue = (body.issue_description ?? "").trim() || "Booking via reparationsguiden";
+
+  const supabase = createServerClient();
+  try {
+    // Priser og rabat slås op server-side; klientens beløb ignoreres.
+    const catalog = await priceFromCatalog(supabase, rawDevices);
+    if (!catalog.ok) return NextResponse.json({ error: catalog.error }, { status: 400 });
+    const discountPercent = catalog.discountPercent;
+    const priced = priceBookingDevices(catalog.devices, discountPercent);
+    if (Number(body.total_price_dkk) !== priced.total) {
+      console.warn("[repairs] client total differs from server total:", body.total_price_dkk, priced.total);
+    }
+    const group = newBookingGroup(priced.devices.length, priced.total);
+
+    const rows = priced.devices.map((d, index) => ({
+      customer_name: body.customer_name.trim(),
+      customer_email: body.customer_email.trim(),
+      customer_phone: body.customer_phone.trim(),
+      device_type: d.device_type,
+      device_model: d.device_model,
+      issue_description: issue,
+      service_type: d.service_type,
+      store_id: storeId,
+      booking_details: {
+        selected_services: d.selected_services,
+        total_price_dkk: d.total_price_dkk,
+        discount_percent: discountPercent,
+        discount_dkk: d.discount_dkk,
+        includes_tempered_glass: d.includes_tempered_glass,
+        preferred_date: body.preferred_date || null,
+        preferred_time: body.preferred_time || null,
+        delivery_method: body.delivery_method || null,
+        ...group,
+        booking_device_index: index + 1,
+      },
+    }));
+
+    const { data: tickets, error: insertError } = await supabase
+      .from("repair_tickets")
+      .insert(rows)
+      .select();
+
+    if (insertError || !tickets || tickets.length !== rows.length) {
+      console.error("Supabase insert error (multi-device):", insertError);
+      return NextResponse.json({ error: "Kunne ikke oprette reparationssag" }, { status: 500 });
+    }
+
+    const first = tickets[0];
+    const customerDevices = priced.devices.map((d) => ({
+      deviceLabel: `${d.device_type} ${d.device_model}`.trim(),
+      services: d.selected_services,
+      includesTemperedGlass: d.includes_tempered_glass,
+    }));
+
+    await sendRepairConfirmation({
+      ticketId: first.id,
+      customerName: body.customer_name,
+      customerEmail: body.customer_email,
+      deviceLabel: customerDevices.map((d) => d.deviceLabel).join(", "),
+      services: customerDevices[0].services,
+      devices: customerDevices,
+      discountPercent,
+      totalDkk: priced.total,
+      paid: false,
+      deliveryMethod: body.delivery_method,
+      storeId,
+      preferredDate: body.preferred_date,
+      preferredTime: body.preferred_time,
+    }).catch((err) => console.error("[repairs] customer confirmation threw:", err));
+
+    const lines = priced.devices.flatMap((d, i) => [
+      "",
+      `Enhed ${i + 1}: ${d.device_type} — ${d.device_model} (sags-ID ${tickets[i].id})`,
+      ...d.selected_services.map((svc) => `  ${svc.name}: ${svc.price_dkk} DKK`),
+      ...(d.includes_tempered_glass ? [`  Beskyttelsesglas: ${TEMPERED_GLASS_PRICE_DKK} DKK`] : []),
+    ]);
+    const { error: staffEmailError } = await resend.emails.send({
+      from: "PhoneSpot System <noreply@phonespot.dk>",
+      ...getStaffRecipients(storeId),
+      subject: `Ny reparationssag${storeId ? ` (${storeLabel(storeId)})` : ""}: ${priced.devices.length} enheder`,
+      text: [
+        `Ny reparationsanmodning modtaget (${priced.devices.length} enheder, én sag pr. enhed):`,
+        "",
+        `Butik: ${storeLabel(storeId)}`,
+        `Kunde: ${body.customer_name}`,
+        `Email: ${body.customer_email}`,
+        `Telefon: ${body.customer_phone}`,
+        `Beskrivelse: ${issue}`,
+        ...lines,
+        "",
+        ...(discountPercent > 0 ? [`Rabat: ${discountPercent}% (-${priced.discount} DKK, fordelt på sagerne)`] : []),
+        `Total for hele bookingen: ${priced.total} DKK`,
+        ...(body.delivery_method ? [`Levering: ${body.delivery_method}`] : []),
+        ...(body.preferred_date
+          ? [`Ønsket dato: ${formatDanishDate(body.preferred_date)}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}`]
+          : []),
+        "",
+        `Booking-ID: ${group.booking_group_id}`,
+      ].join("\n"),
+    });
+    if (staffEmailError) console.error("[repairs] staff email failed:", first.id, staffEmailError);
+
+    return NextResponse.json({
+      success: true,
+      ticketId: first.id,
+      ticketIds: tickets.map((t: { id: string }) => t.id),
+      bookingGroupId: group.booking_group_id,
+    });
+  } catch (err) {
+    console.error("Repair ticket error (multi-device):", err);
+    return NextResponse.json({ error: "Noget gik galt. Prøv igen senere." }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
+
+  const parsed = parseBookingDevices(body);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  if (parsed.multi) return handleMultiDeviceBooking(body, parsed.devices);
 
   // Validate required fields
   for (const field of REQUIRED_FIELDS) {
@@ -39,13 +178,25 @@ export async function POST(request: Request) {
   const supabase = createServerClient();
 
   try {
-    // Build booking_details JSONB if booking flow fields are present
-    const bookingDetails = body.selected_services
+    // Build booking_details JSONB if booking flow fields are present. Priser og
+    // rabat slås op server-side; klientens beløb ignoreres.
+    let pricedSingle: ReturnType<typeof priceBookingDevices> | null = null;
+    let singlePct = 0;
+    if (body.selected_services) {
+      const catalog = await priceFromCatalog(supabase, parsed.devices);
+      if (!catalog.ok) return NextResponse.json({ error: catalog.error }, { status: 400 });
+      singlePct = catalog.discountPercent;
+      pricedSingle = priceBookingDevices(catalog.devices, singlePct);
+      if (Number(body.total_price_dkk) !== pricedSingle.total) {
+        console.warn("[repairs] client total differs from server total:", body.total_price_dkk, pricedSingle.total);
+      }
+    }
+    const bookingDetails = pricedSingle
       ? {
-          selected_services: body.selected_services,
-          total_price_dkk: body.total_price_dkk,
-          discount_percent: body.discount_percent || 0,
-          includes_tempered_glass: body.includes_tempered_glass || false,
+          selected_services: pricedSingle.devices[0].selected_services,
+          total_price_dkk: pricedSingle.total,
+          discount_percent: singlePct,
+          includes_tempered_glass: pricedSingle.devices[0].includes_tempered_glass,
           preferred_date: body.preferred_date || null,
           preferred_time: body.preferred_time || null,
           delivery_method: body.delivery_method || null,
