@@ -54,7 +54,6 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/reparationer", label: "Sager" },
       { href: "/admin/reparationer/ny", label: "Ny sag" },
-      { href: "/admin/prisliste", label: "Prisliste" },
     ],
   },
   {
@@ -102,6 +101,7 @@ export const NAV: NavArea[] = [
       { href: "/admin/platform/products", label: "Produkter", match: ["/admin/platform/sku"] },
       { href: "/admin/tilbehoer", label: "Tilbehør", match: ["/admin/spot", "/admin/tilfoej-cover"] },
       { href: "/admin/reservedele", label: "Reservedele" },
+      { href: "/admin/varer/reparationer", label: "Reparationer" },
       { href: "/admin/platform/stock", label: "Enheder på lager" },
       { href: "/admin/platform/intake", label: "Registrér enhed" },
       { href: "/admin/produkter/importer", label: "Importér fra leverandør" },

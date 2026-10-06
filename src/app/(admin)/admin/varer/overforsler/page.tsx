@@ -1,6 +1,6 @@
 import { staffScopeForPage } from "@/lib/auth/store-scope-page";
 import { listTransfers } from "@/lib/transfers/service";
-import { myStoreSlug } from "@/lib/stock/rules";
+import { canSeeCost, myStoreSlug } from "@/lib/stock/rules";
 import { TransferBoard } from "@/components/admin/varer/transfer-board";
 import { VarerTabs } from "@/components/admin/varer/varer-tabs";
 
@@ -17,7 +17,7 @@ export default async function OverforslerPage() {
 
   return (
     <div className="flex flex-col gap-5 text-[#15211B]">
-      <VarerTabs active="overforsler" transferCount={open} />
+      <VarerTabs active="overforsler" transferCount={open} canManageRepairs={canSeeCost(staff)} />
       <TransferBoard transfers={transfers} mine={myStoreSlug(staff, scope)} />
     </div>
   );

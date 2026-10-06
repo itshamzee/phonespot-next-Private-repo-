@@ -225,5 +225,6 @@ export async function adjustStock(args: {
     p_staff_id: args.staffId,
   });
   if (error) throw rpcError("Lagerreguleringen kunne ikke gemmes", error);
-  return data as { quantity: number };
+  // tracking_started: delen gik fra "altid på lager" til optalt lager ved denne regulering.
+  return data as { quantity: number; tracking_started?: boolean };
 }

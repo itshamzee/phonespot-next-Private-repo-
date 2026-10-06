@@ -2,7 +2,7 @@ import Link from "next/link";
 import { staffScopeForPage } from "@/lib/auth/store-scope-page";
 import { isOwner } from "@/lib/auth/store-scope";
 import { resolveLocationId } from "@/lib/auth/store-scope-server";
-import { OVERVIEW_PER_PAGE, canReceiveGoods, myStoreSlug, queryOverview } from "@/lib/stock/overview";
+import { OVERVIEW_PER_PAGE, canReceiveGoods, canSeeCost, myStoreSlug, queryOverview } from "@/lib/stock/overview";
 import { REASON_LABELS, queryMovements } from "@/lib/stock/movements";
 import { formatWhen } from "@/lib/transfers/format";
 import { getPendingTransfers } from "@/lib/transfers/summary";
@@ -35,7 +35,7 @@ export default async function VarerPage({ searchParams }: { searchParams: Search
   return (
     <div className="flex flex-col gap-5 text-[#15211B]">
       <VarerHeader canReceive={canReceiveGoods(staff)} isOwner={isOwner(staff)} defaultLocation={mine ?? "vejle"} />
-      <VarerTabs active={fane} transferCount={pending} />
+      <VarerTabs active={fane} transferCount={pending} canManageRepairs={canSeeCost(staff)} />
 
       {fane === "varer" && (
         <VarerTabContent staff={staff} q={first(params.q) ?? ""} kun={first(params.kun) === "1"} page={pageNo} mine={mine} />

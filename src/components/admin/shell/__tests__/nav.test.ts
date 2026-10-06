@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
 import { NAV, resolveActive, visibleNav } from "../nav";
@@ -82,5 +82,20 @@ describe("NAV", () => {
   it("menuen bruger ingen versaler i etiketter (ingen skrigende navigation)", () => {
     const labels = NAV.flatMap((a) => [a.label, ...(a.children ?? []).map((c) => c.label)]);
     expect(labels.filter((l) => l === l.toUpperCase() && l.length > 3)).toEqual([]);
+  });
+});
+
+describe("Varer, Reparationer", () => {
+  it("ligger under Varer og erstatter den gamle Prisliste i Sagsstyring", () => {
+    const varer = NAV.find((a) => a.key === "varer");
+    expect(varer?.children?.map((c) => c.href)).toContain("/admin/varer/reparationer");
+    const sagsstyring = NAV.find((a) => a.key === "sagsstyring");
+    expect(sagsstyring?.children?.map((c) => c.href)).not.toContain("/admin/prisliste");
+    expect(resolveActive("/admin/varer/reparationer").child?.label).toBe("Reparationer");
+  });
+
+  it("den gamle prisliste videresender til den nye side", () => {
+    const old = readFileSync(join(process.cwd(), "src/app/(admin)/admin/prisliste/page.tsx"), "utf8");
+    expect(old).toContain('redirect("/admin/varer/reparationer")');
   });
 });
