@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth/require-staff";
-import { createPosSale } from "@/lib/pos/create-sale";
+import { createSaleWithTerminal } from "@/lib/pos/terminal-flow";
 import { saleBodySchema } from "@/lib/pos/schemas";
 import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
 
@@ -19,11 +19,16 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  *                     amountOere, reference? }>,    // must sum to the total
  *   locationId, registerId, customerId?,
  *   discountAmount?: number (oere), discountReason?: "Fejl"|"Kundeservice"|"Tilbud"|"Andet",
- *   notes?
+ *   notes?,
+ *   terminalReference?   // only with an integrated terminal: lets the Kasse cancel a pending charge
  * }
  *
- * In-store card payments are taken on the stand-alone terminal first and then
- * recorded here as a "kort_terminal" line; no card is ever charged by this route.
+ * Manual terminal (default, POS_TERMINAL_PROVIDER unset/"manual"): in-store card
+ * payments are taken on the stand-alone terminal first and then recorded here as
+ * a "kort_terminal" line; no card is charged by this route.
+ * Integrated terminal: the "kort_terminal" lines are charged on the store's
+ * terminal before the sale is saved, and the terminal transaction id is stored
+ * as the line's reference. A declined/failed charge creates no sale.
  *
  * Returns: { orderId, orderNumber, receiptNumber, total, receiptPdf (base64 | null), warnings }
  */
@@ -36,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
-    const result = await createPosSale({
+    const result = await createSaleWithTerminal({
       items: body.items,
       payments: body.payments,
       locationId: body.locationId,
@@ -46,6 +51,7 @@ export async function POST(request: NextRequest) {
       discountReason: body.discountReason ?? null,
       notes: body.notes ?? null,
       staffId: staff.id,
+      terminalReference: body.terminalReference ?? null,
     });
 
     return NextResponse.json({

@@ -49,6 +49,20 @@ export const POS_TIME_ZONE = "Europe/Copenhagen";
  */
 export const STRIPE_TERMINAL_ENABLED = process.env.NEXT_PUBLIC_POS_STRIPE_TERMINAL === "true";
 
+/**
+ * Which card terminal integration the Kasse runs with. "manual" = today's flow
+ * (the cashier types the amount on the stand-alone Worldline terminal and confirms
+ * "Kortet er godkendt"). Anything else means the server sends the amount to the
+ * terminal itself. Chosen server side by POS_TERMINAL_PROVIDER (see
+ * src/lib/pos/payment-terminal.ts); the client only ever receives the kind.
+ */
+export const PAYMENT_TERMINAL_KINDS = ["manual", "worldline"] as const;
+export type PaymentTerminalKind = (typeof PAYMENT_TERMINAL_KINDS)[number];
+
+export function isIntegratedTerminal(kind: PaymentTerminalKind | null | undefined): boolean {
+  return !!kind && kind !== "manual";
+}
+
 export function isPaymentType(v: unknown): v is PaymentType {
   return typeof v === "string" && (PAYMENT_TYPES as readonly string[]).includes(v);
 }

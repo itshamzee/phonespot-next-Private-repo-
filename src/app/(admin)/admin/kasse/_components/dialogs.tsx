@@ -9,7 +9,9 @@ import {
   PAYMENT_LABELS,
   PAYMENT_TYPES,
   REFERENCE_REQUIRED_TYPES,
+  isIntegratedTerminal,
   type DiscountReason,
+  type PaymentTerminalKind,
   type PaymentType,
 } from "@/lib/pos/constants";
 import { oereToInput, parseKr } from "@/lib/pos/money";
@@ -83,6 +85,29 @@ function ErrorLine({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Integrated card terminal only: the amount is on its way to / waiting on the
+ * terminal. The cashier can ask the terminal to cancel; the sale request then
+ * answers by itself (cancelled, or completed if the card was already approved).
+ */
+function TerminalPending({ amountOere, cancelling, onCancel }: { amountOere: number; cancelling: boolean; onCancel?: () => void }) {
+  return (
+    <div role="status" aria-live="polite" className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
+      <p className="text-[15px] font-semibold text-[#15211B]">Sender beløb til terminalen…</p>
+      <p className="mt-1 text-sm text-[#5E6A63]">
+        <b>{fmtKr(amountOere)}</b>. Bed kunden betale på terminalen. Salget gemmes, når kortet er godkendt.
+      </p>
+      {onCancel && (
+        <div className="mt-3 flex justify-end">
+          <button type="button" className={btnSecondary} onClick={onCancel} disabled={cancelling}>
+            {cancelling ? "Annullerer…" : "Annuller betaling"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Find case                                                          */
 /* ------------------------------------------------------------------ */
@@ -142,13 +167,23 @@ export function DepositDialog({
   onClose,
   busy,
   error,
+  terminalKind = "manual",
+  cancelling = false,
+  onCancelTerminal,
 }: {
   c: CaseContext;
   onSubmit: (amountOere: number, method: PaymentType) => void;
   onClose: () => void;
   busy: boolean;
   error: string;
+  /** "manual" (default) = confirm "Kortet er godkendt"; integrated = the amount is sent to the terminal. */
+  terminalKind?: PaymentTerminalKind;
+  cancelling?: boolean;
+  onCancelTerminal?: () => void;
 }) {
+  const integrated = isIntegratedTerminal(terminalKind);
+  // With an integrated terminal there is no manual confirmation step for card.
+  const needsCardStep = (m: PaymentType) => m === "kort_terminal" && !integrated;
   const [amountKr, setAmountKr] = useState(oereToInput(DEFAULT_DEPOSIT_SUGGESTION_OERE));
   const [method, setMethod] = useState<PaymentType>("kort_terminal");
   const [cardStep, setCardStep] = useState(false);
@@ -185,7 +220,7 @@ export function DepositDialog({
         onFocus={(e) => e.currentTarget.select()}
         onKeyDown={(e) => {
           if (e.key === "Enter" && check.ok && !busy) {
-            if (method === "kort_terminal") setCardStep(true);
+            if (needsCardStep(method)) setCardStep(true);
             else onSubmit(amount!, method);
           }
         }}
@@ -221,7 +256,9 @@ export function DepositDialog({
       </p>
       {error && <ErrorLine>{error}</ErrorLine>}
 
-      {cardStep ? (
+      {integrated && busy && method === "kort_terminal" ? (
+        <TerminalPending amountOere={amount ?? 0} cancelling={cancelling} onCancel={onCancelTerminal} />
+      ) : cardStep ? (
         <div className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
           <p className="text-sm text-[#15211B]">
             Slå <b>{fmtKr(amount ?? 0)}</b> ind på Worldline-terminalen. Tryk først, når kortet er godkendt.
@@ -244,7 +281,7 @@ export function DepositDialog({
             type="button"
             className={btnPrimary}
             disabled={!check.ok || busy}
-            onClick={() => (method === "kort_terminal" ? setCardStep(true) : onSubmit(amount!, method))}
+            onClick={() => (needsCardStep(method) ? setCardStep(true) : onSubmit(amount!, method))}
           >
             {busy ? "Gemmer..." : `Opkræv ${fmtKr(amount ?? 0)}`}
           </button>
@@ -531,13 +568,44 @@ export function CardDialog({
   error,
   onApproved,
   onClose,
+  terminalKind = "manual",
+  cancelling = false,
+  onCancelTerminal,
 }: {
   amountOere: number;
   busy: boolean;
   error: string;
+  /** Manual: the cashier confirms "Kortet er godkendt". Integrated: (re)sends the amount to the terminal. */
   onApproved: () => void;
   onClose: () => void;
+  terminalKind?: PaymentTerminalKind;
+  cancelling?: boolean;
+  onCancelTerminal?: () => void;
 }) {
+  if (isIntegratedTerminal(terminalKind)) {
+    return (
+      <Modal title="Kortbetaling" onClose={busy ? () => undefined : onClose}>
+        {busy ? (
+          <TerminalPending amountOere={amountOere} cancelling={cancelling} onCancel={onCancelTerminal} />
+        ) : (
+          <>
+            <p className="text-[15px] text-[#15211B]">
+              Send <b>{fmtKr(amountOere)}</b> til terminalen.
+            </p>
+            {error && <ErrorLine>{error}</ErrorLine>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" className={btnSecondary} onClick={onClose}>
+                Luk
+              </button>
+              <button type="button" autoFocus className={btnPrimary} onClick={onApproved}>
+                {error ? "Prøv igen" : "Send til terminalen"}
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
+    );
+  }
   return (
     <Modal title="Kortbetaling" onClose={busy ? () => undefined : onClose}>
       <p className="text-[15px] text-[#15211B]">

@@ -8,7 +8,7 @@ import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { posFetch, posJson } from "@/lib/pos/client";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
 import { oereToInput, parseKr } from "@/lib/pos/money";
-import type { DiscountReason, PaymentType } from "@/lib/pos/constants";
+import { isIntegratedTerminal, type DiscountReason, type PaymentTerminalKind, type PaymentType } from "@/lib/pos/constants";
 import type { RegisterInfo } from "@/lib/pos/sessions";
 import type { QuickTile, DeviceTile, TileCategory } from "@/lib/pos/quick-tiles";
 import {
@@ -22,6 +22,7 @@ import {
   parseKasseParams,
   planAppliedDeposits,
   resolvePayments,
+  terminalBodyExtras,
   toSaleItems,
   usesCardTerminal,
   type CartLine,
@@ -111,7 +112,8 @@ function shortStoreName(name: string) {
 /*  Screen                                                             */
 /* ------------------------------------------------------------------ */
 
-export function KasseScreen() {
+export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: PaymentTerminalKind } = {}) {
+  const integratedTerminal = isIntegratedTerminal(terminalKind);
   const supabase = useMemo(() => createBrowserClient(), []);
   const router = useRouter();
   const params = useSearchParams();
@@ -157,6 +159,9 @@ export function KasseScreen() {
   const [depositCase, setDepositCase] = useState<CaseContext | null>(null);
   const [splitInitial, setSplitInitial] = useState<ReturnType<typeof newPaymentLine>[]>([]);
   const [processing, setProcessing] = useState(false);
+  // Integrated terminal only: the key of the charge that is waiting on the terminal.
+  const terminalRef = useRef<string | null>(null);
+  const [cancellingTerminal, setCancellingTerminal] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<DoneSale | null>(null);
 
@@ -568,13 +573,31 @@ export function KasseScreen() {
     if (usesCardTerminal(payments)) {
       setDialogError("");
       setDialog("card");
+      // Integrated terminal: the amount goes to the terminal straight away.
+      if (integratedTerminal) void submitSale({ card: true });
     } else {
       void submitSale();
     }
   }
 
-  async function submitSale() {
+  /** Integrated terminal: ask the terminal to abort the pending charge. The sale request then answers. */
+  async function cancelTerminal() {
+    const reference = terminalRef.current;
+    if (!reference || cancellingTerminal) return;
+    setCancellingTerminal(true);
+    try {
+      await posJson("/api/pos/terminal/cancel", { method: "POST", body: JSON.stringify({ reference, locationId }) });
+    } catch (err) {
+      setDialogError(err instanceof Error ? err.message : "Betalingen kunne ikke annulleres");
+    }
+    setCancellingTerminal(false);
+  }
+
+  async function submitSale(opts: { card?: boolean } = {}) {
     if (!register || !canCharge) return;
+    const inCardDialog = opts.card ?? dialog === "card";
+    const reference = crypto.randomUUID();
+    terminalRef.current = integratedTerminal ? reference : null;
     setProcessing(true);
     setDialogError("");
     setError("");
@@ -589,6 +612,7 @@ export function KasseScreen() {
           customerId: customer?.id ?? undefined,
           discountAmount: discount > 0 ? discount : undefined,
           discountReason: discount > 0 ? discountReason : undefined,
+          ...terminalBodyExtras(terminalKind, payments, reference),
         }),
       });
       setDialog(null);
@@ -606,14 +630,18 @@ export function KasseScreen() {
       void loadRegisters();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Fejl ved salg";
-      if (dialog === "card") setDialogError(msg);
+      if (inCardDialog) setDialogError(msg);
       else setError(msg);
     }
+    terminalRef.current = null;
     setProcessing(false);
   }
 
   async function submitDeposit(amountOere: number, method: PaymentType) {
     if (!register || !depositCase) return;
+    const depositPayments = [{ type: method, amountOere }];
+    const reference = crypto.randomUUID();
+    terminalRef.current = integratedTerminal ? reference : null;
     setDialogBusy(true);
     setDialogError("");
     try {
@@ -628,10 +656,11 @@ export function KasseScreen() {
               unitPriceOere: amountOere,
             },
           ],
-          payments: [{ type: method, amountOere }],
+          payments: depositPayments,
           locationId,
           registerId: register.id,
           customerId: depositCase.customer.id ?? undefined,
+          ...terminalBodyExtras(terminalKind, depositPayments, reference),
         }),
       });
       setDialog(null);
@@ -650,6 +679,7 @@ export function KasseScreen() {
     } catch (err) {
       setDialogError(err instanceof Error ? err.message : "Depositum kunne ikke gemmes");
     }
+    terminalRef.current = null;
     setDialogBusy(false);
   }
 
@@ -972,6 +1002,7 @@ export function KasseScreen() {
             discountOere={discount}
             discountReason={discountReason}
             payChoice={payChoice}
+            terminalKind={terminalKind}
             canCharge={canCharge}
             processing={processing}
             blockReason={blockReason}
@@ -1005,7 +1036,16 @@ export function KasseScreen() {
         <CaseDialog mode="deposit" busy={dialogBusy} error={dialogError} onClose={() => setDialog(null)} onFind={(q) => void submitCaseDialog(q, "deposit")} />
       )}
       {dialog === "deposit" && depositCase && (
-        <DepositDialog c={depositCase} busy={dialogBusy} error={dialogError} onClose={() => setDialog(null)} onSubmit={(a, m) => void submitDeposit(a, m)} />
+        <DepositDialog
+          c={depositCase}
+          busy={dialogBusy}
+          error={dialogError}
+          terminalKind={terminalKind}
+          cancelling={cancellingTerminal}
+          onCancelTerminal={() => void cancelTerminal()}
+          onClose={() => setDialog(null)}
+          onSubmit={(a, m) => void submitDeposit(a, m)}
+        />
       )}
       {dialog === "freetext" && <FreeTextDialog onAdd={addFreeText} onClose={() => setDialog(null)} />}
       {dialog === "discount" && (
@@ -1047,8 +1087,11 @@ export function KasseScreen() {
           amountOere={payments.filter((p) => p.type === "kort_terminal").reduce((s, p) => s + p.amountOere, 0)}
           busy={processing}
           error={dialogError}
+          terminalKind={terminalKind}
+          cancelling={cancellingTerminal}
+          onCancelTerminal={() => void cancelTerminal()}
           onClose={() => setDialog(null)}
-          onApproved={() => void submitSale()}
+          onApproved={() => void submitSale({ card: true })}
         />
       )}
       {done && <DoneDialog sale={done} onNew={newCustomer} />}

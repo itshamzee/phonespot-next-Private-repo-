@@ -8,6 +8,18 @@ const uuid = z
 
 const oere = z.number().int().safe();
 
+/**
+ * Correlation key for an integrated card terminal (sent by the Kasse only when a
+ * terminal integration is configured, so the cashier can cancel a pending
+ * payment). Ignored in the manual flow.
+ */
+const terminalReference = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z0-9-]{8,64}$/, "Ugyldig terminalreference")
+  .optional()
+  .nullable();
+
 export const saleItemSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("device"), deviceId: uuid, repairTicketItemId: uuid.optional() }),
   z.object({
@@ -68,6 +80,7 @@ export const saleBodySchema = z
     discountAmount: oere.min(0).optional(),
     discountReason: z.enum(DISCOUNT_REASONS).optional().nullable(),
     notes: z.string().trim().max(500).optional().nullable(),
+    terminalReference,
   })
   .refine((b) => !b.discountAmount || b.discountReason, {
     message: "Vælg en årsag til rabatten",
@@ -91,6 +104,12 @@ export const returnBodySchema = z.object({
   refunds: z.array(refundLineSchema).min(1).max(10),
   reason: z.string().trim().min(1, "Vælg en returårsag").max(200),
   notes: z.string().trim().max(500).optional().nullable(),
+  terminalReference,
+});
+
+export const terminalCancelSchema = z.object({
+  reference: z.string().trim().regex(/^[A-Za-z0-9-]{8,64}$/, "Ugyldig terminalreference"),
+  locationId: uuid,
 });
 export type ReturnBody = z.infer<typeof returnBodySchema>;
 

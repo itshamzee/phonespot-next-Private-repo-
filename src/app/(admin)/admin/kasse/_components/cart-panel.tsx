@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { parseKr } from "@/lib/pos/money";
-import type { PaymentType } from "@/lib/pos/constants";
-import { PAYMENT_LABELS } from "@/lib/pos/constants";
+import type { PaymentTerminalKind, PaymentType } from "@/lib/pos/constants";
+import { PAYMENT_LABELS, isIntegratedTerminal } from "@/lib/pos/constants";
 import type { AppliedDepositLine, CartLine, CartTotals, CaseStockSummary, PaymentChoice } from "@/lib/pos/kasse-logic";
 import { lineTotal } from "@/lib/pos/kasse-logic";
 import type { CustomerPick } from "./dialogs";
@@ -23,6 +23,8 @@ type Props = {
   discountOere: number;
   discountReason: string;
   payChoice: PaymentChoice;
+  /** Card terminal integration; "manual" (default) = today's "Kortet er godkendt" flow. */
+  terminalKind?: PaymentTerminalKind;
   canCharge: boolean;
   processing: boolean;
   blockReason: string | null;
@@ -55,7 +57,9 @@ export function CartPanel(p: Props) {
 
   const hint =
     single === "kort_terminal" || (split && split.some((l) => l.type === "kort_terminal"))
-      ? "Slå beløbet ind på Worldline-terminalen, og tryk når kortet er godkendt"
+      ? isIntegratedTerminal(p.terminalKind)
+        ? "Beløbet sendes til terminalen, når du trykker opkræv"
+        : "Slå beløbet ind på Worldline-terminalen, og tryk når kortet er godkendt"
       : single === "kontant"
         ? "Indtast det modtagne beløb for at se byttepenge"
         : single === "mobilepay"

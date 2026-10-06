@@ -6,9 +6,17 @@ import { useSearchParams } from "next/navigation";
 import { formatOere } from "@/lib/cart/utils";
 import { posJson, printBase64Pdf } from "@/lib/pos/client";
 import { oereToInput, parseKr } from "@/lib/pos/money";
-import { PAYMENT_LABELS, REFUND_TYPES, RETURN_REASONS, type RefundType } from "@/lib/pos/constants";
+import {
+  PAYMENT_LABELS,
+  REFUND_TYPES,
+  RETURN_REASONS,
+  isIntegratedTerminal,
+  type PaymentTerminalKind,
+  type RefundType,
+} from "@/lib/pos/constants";
 import { buildCreditNote, CreditNoteError, type CreditNote } from "@/lib/pos/credit-note";
 import type { ReturnableOrder } from "@/lib/pos/create-return";
+import { terminalBodyExtras } from "@/lib/pos/kasse-logic";
 
 type RefundLine = { id: string; type: RefundType; amountKr: string; reference: string };
 
@@ -30,6 +38,9 @@ function ReturnPageInner() {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Card terminal integration from GET /api/pos/return; "manual" = refund on the terminal by hand.
+  const [terminalKind, setTerminalKind] = useState<PaymentTerminalKind>("manual");
+  const integrated = isIntegratedTerminal(terminalKind);
   const [done, setDone] = useState<{ receiptNumber: string; refundAmount: number; receiptPdf: string | null } | null>(null);
 
   async function find() {
@@ -37,8 +48,11 @@ function ReturnPageInner() {
     setDone(null);
     setOrder(null);
     try {
-      const data = await posJson<{ order: ReturnableOrder }>(`/api/pos/return?q=${encodeURIComponent(query)}`);
+      const data = await posJson<{ order: ReturnableOrder; terminalKind?: PaymentTerminalKind }>(
+        `/api/pos/return?q=${encodeURIComponent(query)}`,
+      );
       setOrder(data.order);
+      setTerminalKind(data.terminalKind === "worldline" ? "worldline" : "manual");
       setQty({});
       setRestock(
         Object.fromEntries(data.order.lines.map((l) => [l.id, l.itemType === "sku_product"])),
@@ -77,6 +91,7 @@ function ReturnPageInner() {
     if (!order || !canSubmit) return;
     setBusy(true);
     setError("");
+    const refundLines = refunds.map((r) => ({ type: r.type, amountOere: parseKr(r.amountKr) ?? 0, reference: r.reference || undefined }));
     try {
       const res = await posJson<{ receiptNumber: string; refundAmount: number; receiptPdf: string | null }>("/api/pos/return", {
         method: "POST",
@@ -87,9 +102,10 @@ function ReturnPageInner() {
           lines: order.lines
             .filter((l) => (qty[l.id] ?? 0) > 0)
             .map((l) => ({ orderItemId: l.id, quantity: qty[l.id], restock: !!restock[l.id] })),
-          refunds: refunds.map((r) => ({ type: r.type, amountOere: parseKr(r.amountKr) ?? 0, reference: r.reference || undefined })),
+          refunds: refundLines,
           reason,
           notes: notes || undefined,
+          ...terminalBodyExtras(terminalKind, refundLines, crypto.randomUUID()),
         }),
       });
       setDone(res);
@@ -234,7 +250,9 @@ function ReturnPageInner() {
               {refunds.map((r) => (
                 <div key={r.id} className="mt-2 flex items-center gap-2">
                   <span className="flex-1 text-sm font-semibold text-charcoal">{PAYMENT_LABELS[r.type]}</span>
-                  {r.type === "kort_terminal" && <span className="text-[11px] text-charcoal/40">Refunder på terminalen</span>}
+                  {r.type === "kort_terminal" && (
+                    <span className="text-[11px] text-charcoal/40">{integrated ? "Sendes til terminalen" : "Refunder på terminalen"}</span>
+                  )}
                   {r.type === "tilgodebevis" && (
                     <input
                       value={r.reference}
@@ -258,7 +276,11 @@ function ReturnPageInner() {
               </p>
 
               <button onClick={submit} disabled={!canSubmit} className="mt-4 rounded-xl bg-charcoal px-6 py-3 text-sm font-bold text-white disabled:opacity-40">
-                {busy ? "Behandler..." : "Opret kreditnota"}
+                {busy
+                  ? integrated && refunds.some((r) => r.type === "kort_terminal")
+                    ? "Sender beløb til terminalen…"
+                    : "Behandler..."
+                  : "Opret kreditnota"}
               </button>
             </div>
           )}

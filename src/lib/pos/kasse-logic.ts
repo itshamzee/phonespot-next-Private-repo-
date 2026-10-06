@@ -10,7 +10,7 @@
  */
 import { computeSaleTotals, validatePayments, type PaymentLineInput, type PaymentValidation } from "./calc";
 import { planDepositApplication, type DepositApplication } from "./deposit-math";
-import type { PaymentType } from "./constants";
+import { isIntegratedTerminal, type PaymentTerminalKind, type PaymentType } from "./constants";
 import type { SaleItem } from "./schemas";
 import type { CaseLine } from "@/lib/repairs/case-money";
 
@@ -308,6 +308,20 @@ export function checkPayments(choice: PaymentChoice, total: number): PaymentVali
 /** Does the payment include the stand-alone card terminal (needs the manual "Kortet er godkendt")? */
 export function usesCardTerminal(payments: PaymentLineInput[]): boolean {
   return payments.some((p) => p.type === "kort_terminal");
+}
+
+/**
+ * Extra body fields for /api/pos/sale and /api/pos/return when an integrated
+ * card terminal takes the card lines: a correlation key so a pending charge can
+ * be cancelled. With the manual terminal nothing is added, so the request body
+ * is exactly what it was before the terminal integration existed.
+ */
+export function terminalBodyExtras(
+  kind: PaymentTerminalKind,
+  payments: PaymentLineInput[],
+  reference: string,
+): { terminalReference?: string } {
+  return isIntegratedTerminal(kind) && usesCardTerminal(payments) ? { terminalReference: reference } : {};
 }
 
 export function paymentsNeedCustomer(payments: PaymentLineInput[]): boolean {
