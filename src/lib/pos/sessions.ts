@@ -19,6 +19,8 @@ export type OpenSession = {
   /** Live: kontant payments net of cash refunds so far (before expenses). */
   netCashPayments: number;
   expectedCash: number;
+  /** Live: kort_terminal payments net of card refunds so far. */
+  netCardPayments: number;
 };
 
 export type SessionHistoryRow = {
@@ -35,6 +37,10 @@ export type SessionHistoryRow = {
   adjustments: Array<{ id: string; amountOere: number; reason: string; createdAt: string }>;
   finalDifference: number | null;
   notes: string | null;
+  expectedCard: number | null;
+  countedCard: number | null;
+  cardDifference: number | null;
+  cardNote: string | null;
 };
 
 type SessionRow = {
@@ -50,6 +56,10 @@ type SessionRow = {
   expenses: Array<{ description: string; amount_oere: number }> | null;
   locked: boolean;
   notes: string | null;
+  expected_card: number | null;
+  counted_card: number | null;
+  card_difference: number | null;
+  card_note: string | null;
 };
 
 export async function listRegisters(locationId: string): Promise<RegisterInfo[]> {
@@ -87,6 +97,7 @@ export async function listRegisters(locationId: string): Promise<RegisterInfo[]>
     if (s) {
       const { data: net } = await supabase.rpc("pos_session_net_cash", { p_session_id: s.id });
       const netCash = typeof net === "number" ? net : 0;
+      const { data: netCard } = await supabase.rpc("pos_session_net_card", { p_session_id: s.id });
       openSession = {
         id: s.id,
         openedAt: s.opened_at,
@@ -94,6 +105,7 @@ export async function listRegisters(locationId: string): Promise<RegisterInfo[]>
         openingFloat: s.opening_float,
         netCashPayments: netCash,
         expectedCash: computeExpectedCash({ openingFloat: s.opening_float, netCashPayments: netCash, expenses: [] }),
+        netCardPayments: typeof netCard === "number" ? netCard : 0,
       };
     }
     result.push({ id: r.id, name: r.name, code: r.code, locationId: r.location_id, openSession });
@@ -106,7 +118,7 @@ export async function recentSessions(registerId: string, limit = 8): Promise<Ses
   const { data } = await supabase
     .from("cash_sessions")
     .select(
-      "id, register_id, opened_at, closed_at, opening_float, counted_cash, expected_cash, difference, cash_to_bank, expenses, locked, notes",
+      "id, register_id, opened_at, closed_at, opening_float, counted_cash, expected_cash, difference, cash_to_bank, expenses, locked, notes, expected_card, counted_card, card_difference, card_note",
     )
     .eq("register_id", registerId)
     .order("opened_at", { ascending: false })
@@ -147,6 +159,10 @@ export async function recentSessions(registerId: string, limit = 8): Promise<Ses
               adjustments.map((a) => a.amountOere),
             ),
       notes: r.notes,
+      expectedCard: r.expected_card ?? null,
+      countedCard: r.counted_card ?? null,
+      cardDifference: r.card_difference ?? null,
+      cardNote: r.card_note ?? null,
     };
   });
 }
@@ -169,6 +185,8 @@ export async function closeCashSession(args: {
   cashToBank: number;
   expenses: CashExpense[];
   notes?: string | null;
+  countedCard: number;
+  cardNote?: string | null;
 }) {
   const supabase = createServerClient();
   const { data, error } = await supabase.rpc("pos_close_cash_session", {
@@ -178,6 +196,8 @@ export async function closeCashSession(args: {
     p_cash_to_bank: args.cashToBank,
     p_expenses: args.expenses.map((e) => ({ description: e.description, amount_oere: e.amountOere })),
     p_notes: args.notes ?? null,
+    p_counted_card: args.countedCard,
+    p_card_note: args.cardNote ?? null,
   });
   if (error) throw rpcError("Kassen kunne ikke lukkes", error);
   return data as {
@@ -187,6 +207,9 @@ export async function closeCashSession(args: {
     difference: number;
     net_cash_payments: number;
     expenses_total: number;
+    expected_card: number;
+    counted_card: number;
+    card_difference: number;
   };
 }
 

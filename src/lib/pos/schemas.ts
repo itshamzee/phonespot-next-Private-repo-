@@ -127,6 +127,10 @@ export const sessionActionSchema = z.discriminatedUnion("action", [
     cashToBank: oere.min(0).default(0),
     expenses: z.array(expenseSchema).max(50).default([]),
     notes: z.string().trim().max(500).optional().nullable(),
+    /** Total from the card terminal's day report (required; 0 allowed). */
+    countedCard: oere.min(0),
+    /** Required by the database when the card total differs from the kasse. */
+    cardNote: z.string().trim().max(300).optional().nullable(),
   }),
   z.object({
     action: z.literal("adjust"),

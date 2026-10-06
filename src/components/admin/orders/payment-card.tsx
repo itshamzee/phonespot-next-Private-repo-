@@ -1,6 +1,13 @@
 "use client";
 
 import { formatDKK } from "@/lib/platform/format";
+import { PAYMENT_LABELS, type PaymentType } from "@/lib/pos/constants";
+
+export interface OrderPaymentLine {
+  type: string;
+  amount_oere: number;
+  reference?: string | null;
+}
 
 interface Order {
   id: string;
@@ -12,6 +19,8 @@ interface Order {
 
 interface PaymentCardProps {
   order: Order;
+  /** POS payment lines (order_payments). Webshop orders have none. */
+  payments?: OrderPaymentLine[];
 }
 
 function PaymentBadge({ status }: { status: string | null | undefined }) {
@@ -45,7 +54,7 @@ function PaymentBadge({ status }: { status: string | null | undefined }) {
   );
 }
 
-export function PaymentCard({ order }: PaymentCardProps) {
+export function PaymentCard({ order, payments = [] }: PaymentCardProps) {
   return (
     <div className="rounded-xl bg-white border border-sand p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -65,6 +74,19 @@ export function PaymentCard({ order }: PaymentCardProps) {
             <p className="text-sm text-charcoal-light">{order.payment_method}</p>
           </div>
         )}
+
+        {payments.map((p, i) => (
+          <div key={i} className="flex items-start justify-between gap-2">
+            <p className="text-xs text-gray shrink-0">
+              {PAYMENT_LABELS[p.type as PaymentType] ?? p.type}
+              {p.type === "kort_terminal" && p.reference ? " · kvitteringsnr." : p.reference ? " · ref." : ""}
+            </p>
+            <p className="text-right text-sm text-charcoal-light">
+              {formatDKK(p.amount_oere)}
+              {p.reference && <span className="ml-2 font-mono text-xs text-gray">{p.reference}</span>}
+            </p>
+          </div>
+        ))}
 
         {order.stripe_payment_id && (
           <div className="flex items-start justify-between gap-2">

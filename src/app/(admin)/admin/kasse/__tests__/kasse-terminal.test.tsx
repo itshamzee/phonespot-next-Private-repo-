@@ -111,6 +111,23 @@ describe("Kasse card terminal", () => {
     expect(await screen.findByText("Betaling gennemført")).toBeTruthy();
   });
 
+  it("manual: an optional terminal receipt number is saved as the card line's reference", async () => {
+    render(<KasseScreen />);
+    fireEvent.click(await chargeButton());
+    fireEvent.change(screen.getByLabelText("Kvitteringsnr. fra terminalen (valgfrit)"), { target: { value: " 004217 " } });
+    fireEvent.click(screen.getByRole("button", { name: "Kortet er godkendt" }));
+
+    await waitFor(() => expect(saleCalls()).toHaveLength(1));
+    expect(saleCalls()[0].body!.payments).toEqual([{ type: "kort_terminal", amountOere: 100_000, reference: "004217" }]);
+  });
+
+  it("manual: an invalid receipt number blocks the confirmation button", async () => {
+    render(<KasseScreen />);
+    fireEvent.click(await chargeButton());
+    fireEvent.change(screen.getByLabelText("Kvitteringsnr. fra terminalen (valgfrit)"), { target: { value: "12 34" } });
+    expect((screen.getByRole("button", { name: "Kortet er godkendt" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("integrated: sends the amount to the terminal at once, can cancel, and a refused charge shows a calm error", async () => {
     let reject!: (e: Error) => void;
     api.sale = () => new Promise((_, r) => (reject = r));

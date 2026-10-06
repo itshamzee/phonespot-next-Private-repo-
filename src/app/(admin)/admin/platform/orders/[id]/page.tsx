@@ -74,5 +74,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .eq("order_id", id)
     .order("created_at", { ascending: true });
 
-  return <OrderDetail order={order} activity={activity ?? []} warranties={warranties ?? []} />;
+  const { data: payments } = await supabase
+    .from("order_payments")
+    .select("type, amount_oere, reference")
+    .eq("order_id", id)
+    .order("created_at", { ascending: true });
+
+  return <OrderDetail order={order} activity={activity ?? []} warranties={warranties ?? []} payments={payments ?? []} />;
 }

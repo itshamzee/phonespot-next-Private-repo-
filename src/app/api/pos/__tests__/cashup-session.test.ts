@@ -116,7 +116,7 @@ describe("POST /api/pos/session", () => {
   it("closing sends counted cash, bank deposit and expenses; the database computes expected cash and locks", async () => {
     requireStaffMock.mockResolvedValue(staff);
     rpcMock.mockResolvedValue({
-      data: { session_id: U(9), expected_cash: 165000, counted_cash: 164000, difference: -1000, net_cash_payments: 120000, expenses_total: 5000 },
+      data: { session_id: U(9), expected_cash: 165000, counted_cash: 164000, difference: -1000, net_cash_payments: 120000, expenses_total: 5000, expected_card: 90000, counted_card: 89100, card_difference: -900 },
       error: null,
     });
     const res = await post({
@@ -125,8 +125,13 @@ describe("POST /api/pos/session", () => {
       countedCash: 164000,
       cashToBank: 100000,
       expenses: [{ description: "Kaffe", amountOere: 5000 }],
+      countedCard: 89100,
+      cardNote: "  Slåfejl på bon 12  ",
     });
-    expect(await res.json()).toEqual({ sessionId: U(9), expectedCash: 165000, countedCash: 164000, difference: -1000, locked: true });
+    expect(await res.json()).toEqual({
+      sessionId: U(9), expectedCash: 165000, countedCash: 164000, difference: -1000,
+      expectedCard: 90000, countedCard: 89100, cardDifference: -900, locked: true,
+    });
     expect(rpcMock).toHaveBeenCalledWith("pos_close_cash_session", {
       p_session_id: U(9),
       p_staff_id: staff.id,
@@ -134,12 +139,34 @@ describe("POST /api/pos/session", () => {
       p_cash_to_bank: 100000,
       p_expenses: [{ description: "Kaffe", amount_oere: 5000 }],
       p_notes: null,
+      p_counted_card: 89100,
+      p_card_note: "Slåfejl på bon 12",
     });
+  });
+
+  it("requires the terminal total to close (0 is allowed)", async () => {
+    requireStaffMock.mockResolvedValue(staff);
+    const missing = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [] });
+    expect(missing.status).toBe(400);
+    expect(rpcMock).not.toHaveBeenCalled();
+
+    rpcMock.mockResolvedValue({ data: { session_id: U(9), expected_cash: 1000, counted_cash: 1000, difference: 0, expected_card: 0, counted_card: 0, card_difference: 0 }, error: null });
+    const zero = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [], countedCard: 0 });
+    expect(zero.status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_counted_card: 0, p_card_note: null });
+  });
+
+  it("surfaces the database rule that a card difference needs a note", async () => {
+    requireStaffMock.mockResolvedValue(staff);
+    rpcMock.mockResolvedValue({ data: null, error: { message: "pos:card_note_required" } });
+    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [], countedCard: 500 });
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("card_note_required");
   });
 
   it("rejects banking more than counted before touching the database", async () => {
     requireStaffMock.mockResolvedValue(staff);
-    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 2000, expenses: [] });
+    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 2000, expenses: [], countedCard: 0 });
     expect(res.status).toBe(400);
     expect(rpcMock).not.toHaveBeenCalled();
   });
@@ -147,7 +174,7 @@ describe("POST /api/pos/session", () => {
   it("a locked session cannot be closed again", async () => {
     requireStaffMock.mockResolvedValue(staff);
     rpcMock.mockResolvedValue({ data: null, error: { message: "pos:session_closed" } });
-    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [] });
+    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [], countedCard: 0 });
     expect(res.status).toBe(409);
     expect((await res.json()).code).toBe("session_closed");
   });

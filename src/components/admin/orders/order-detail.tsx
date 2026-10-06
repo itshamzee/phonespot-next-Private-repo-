@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { OrderStatusBadge } from "./order-status-badge";
 import { OrderStatusActions } from "./order-status-actions";
 import { FulfillmentCard } from "./fulfillment-card";
-import { PaymentCard } from "./payment-card";
+import { PaymentCard, type OrderPaymentLine } from "./payment-card";
 import { OrderTimeline } from "./order-timeline";
 import { FoxwayDropshipCard } from "./foxway-dropship-card";
 import Link from "next/link";
@@ -165,9 +165,10 @@ interface OrderDetailProps {
   };
   activity: any[];
   warranties?: any[];
+  payments?: OrderPaymentLine[];
 }
 
-export function OrderDetail({ order, activity, warranties = [] }: OrderDetailProps) {
+export function OrderDetail({ order, activity, warranties = [], payments = [] }: OrderDetailProps) {
   const router = useRouter();
   const [fulfillOpen, setFulfillOpen] = useState(false);
   const [internalNotes, setInternalNotes] = useState(order.internal_notes ?? "");
@@ -446,7 +447,7 @@ export function OrderDetail({ order, activity, warranties = [] }: OrderDetailPro
             />
 
             {/* PaymentCard */}
-            <PaymentCard order={{ ...order, total }} />
+            <PaymentCard order={{ ...order, total }} payments={payments} />
 
             {/* OrderTimeline */}
             <OrderTimeline order={order} />

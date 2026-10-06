@@ -7,8 +7,10 @@ import { formatOere } from "@/lib/cart/utils";
 import { posJson } from "@/lib/pos/client";
 import { oereToInput, parseKr } from "@/lib/pos/money";
 import {
+  computeCardDifference,
   computeCashDifference,
   computeExpectedCash,
+  validateCardClose,
   validateCashClose,
   type CashExpense,
 } from "@/lib/pos/cash-session";
@@ -42,7 +44,14 @@ function SessionPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [closedInfo, setClosedInfo] = useState<{ expected: number; counted: number; difference: number } | null>(null);
+  const [closedInfo, setClosedInfo] = useState<{
+    expected: number;
+    counted: number;
+    difference: number;
+    expectedCard: number;
+    countedCard: number;
+    cardDifference: number;
+  } | null>(null);
 
   // open form
   const [openingFloat, setOpeningFloat] = useState("");
@@ -51,6 +60,8 @@ function SessionPageInner() {
   const [toBank, setToBank] = useState("");
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [notes, setNotes] = useState("");
+  const [terminalTotal, setTerminalTotal] = useState("");
+  const [cardNote, setCardNote] = useState("");
   // adjustment form
   const [adjusting, setAdjusting] = useState<string | null>(null);
   const [adjAmount, setAdjAmount] = useState("");
@@ -109,6 +120,11 @@ function SessionPageInner() {
       ? { ok: false as const, code: "counted", message: "Indtast optalt kontant" }
       : validateCashClose({ countedCash: countedOere, cashToBank: toBankOere, expenses: expenseList });
 
+  const expectedCard = open?.netCardPayments ?? 0;
+  const terminalOere = parseKr(terminalTotal);
+  const cardDiff = terminalOere == null ? null : computeCardDifference(terminalOere, expectedCard);
+  const cardCheck = validateCardClose({ countedTerminal: terminalOere, expectedCard, note: cardNote });
+
   async function act(body: Record<string, unknown>) {
     setBusy(true);
     setError("");
@@ -137,7 +153,7 @@ function SessionPageInner() {
   }
 
   async function closeSession() {
-    if (!open || countedOere == null || !closeCheck.ok) return;
+    if (!open || countedOere == null || terminalOere == null || !closeCheck.ok || !cardCheck.ok) return;
     if (!window.confirm("Luk og lås kassen? Sessionen kan ikke ændres bagefter.")) return;
     const res = await act({
       action: "close",
@@ -146,17 +162,24 @@ function SessionPageInner() {
       cashToBank: toBankOere,
       expenses: expenseList,
       notes: notes || undefined,
+      countedCard: terminalOere,
+      cardNote: cardNote.trim() || undefined,
     });
     if (res) {
       setClosedInfo({
         expected: Number(res.expectedCash),
         counted: Number(res.countedCash),
         difference: Number(res.difference),
+        expectedCard: Number(res.expectedCard),
+        countedCard: Number(res.countedCard),
+        cardDifference: Number(res.cardDifference),
       });
       setCounted("");
       setToBank("");
       setExpenses([]);
       setNotes("");
+      setTerminalTotal("");
+      setCardNote("");
       await load();
     }
   }
@@ -211,6 +234,10 @@ function SessionPageInner() {
             Forventet {formatOere(closedInfo.expected)} · Optalt {formatOere(closedInfo.counted)} · Difference{" "}
             <strong>{formatOere(closedInfo.difference)}</strong>
           </p>
+          <p className="mt-1 text-sm text-emerald-800">
+            Kortsalg i kassen {formatOere(closedInfo.expectedCard)} · Terminal {formatOere(closedInfo.countedCard)} · Kortdifference{" "}
+            <strong>{formatOere(closedInfo.cardDifference)}</strong>
+          </p>
           <Link
             href={`/admin/platform/pos/cashup?location_id=${locationId}&register_id=${registerId}`}
             className="mt-2 inline-block text-sm font-semibold text-emerald-700"
@@ -254,6 +281,7 @@ function SessionPageInner() {
             <div><dt className="text-charcoal/40">Startbeholdning</dt><dd className="font-semibold">{formatOere(open.openingFloat)}</dd></div>
             <div><dt className="text-charcoal/40">Kontant netto</dt><dd className="font-semibold">{formatOere(open.netCashPayments)}</dd></div>
             <div><dt className="text-charcoal/40">Forventet i kassen</dt><dd className="font-semibold">{formatOere(expected)}</dd></div>
+            <div><dt className="text-charcoal/40">Kortsalg i kassen</dt><dd className="font-semibold">{formatOere(expectedCard)}</dd></div>
           </dl>
 
           <div className="mt-5">
@@ -310,9 +338,36 @@ function SessionPageInner() {
           )}
           {!closeCheck.ok && counted && <p className="mt-2 text-xs text-red-500">{closeCheck.message}</p>}
 
+          <div className="mt-6 border-t border-black/[0.06] pt-5">
+            <p className="mb-2 text-[11px] font-bold tracking-[0.08em] text-charcoal/30">Kortafstemning</p>
+            <label className="block text-sm">
+              <span className="mb-1 block text-charcoal/50">Total fra terminalens dagsrapport (kr)</span>
+              <input
+                inputMode="decimal"
+                value={terminalTotal}
+                onChange={(e) => setTerminalTotal(e.target.value)}
+                className={`${input} w-full text-right sm:w-60`}
+              />
+            </label>
+            {cardDiff != null && (
+              <p className="mt-3 text-sm">
+                Kortdifference:{" "}
+                <strong className={cardDiff === 0 ? "text-emerald-600" : "text-red-600"}>{formatOere(cardDiff)}</strong>
+                {cardDiff !== 0 && <span className="text-charcoal/50"> · Tjek bonerne for slåfejl</span>}
+              </p>
+            )}
+            {cardDiff != null && cardDiff !== 0 && (
+              <label className="mt-3 block text-sm">
+                <span className="mb-1 block text-charcoal/50">Note til kortdifferencen</span>
+                <input value={cardNote} onChange={(e) => setCardNote(e.target.value)} maxLength={300} className={`${input} w-full`} />
+              </label>
+            )}
+            {!cardCheck.ok && (terminalTotal || cardNote) && <p className="mt-2 text-xs text-red-500">{cardCheck.message}</p>}
+          </div>
+
           <button
             onClick={closeSession}
-            disabled={busy || !closeCheck.ok}
+            disabled={busy || !closeCheck.ok || !cardCheck.ok}
             className="mt-5 rounded-xl bg-charcoal px-6 py-3 text-sm font-bold text-white disabled:opacity-40"
           >
             Luk og lås kassen
@@ -339,6 +394,13 @@ function SessionPageInner() {
                     <span className="text-amber-600">Åben</span>
                   )}
                 </div>
+                {h.locked && h.countedCard != null && (
+                  <p className="mt-1 text-xs text-charcoal/50">
+                    Kort: kortsalg {formatOere(h.expectedCard ?? 0)} · Terminal {formatOere(h.countedCard)} · Difference{" "}
+                    <strong className={h.cardDifference ? "text-red-600" : undefined}>{formatOere(h.cardDifference ?? 0)}</strong>
+                    {h.cardNote ? ` · ${h.cardNote}` : ""}
+                  </p>
+                )}
                 {h.adjustments.map((a) => (
                   <p key={a.id} className="mt-1 text-xs text-charcoal/40">
                     Justering {formatOere(a.amountOere)}: {a.reason}

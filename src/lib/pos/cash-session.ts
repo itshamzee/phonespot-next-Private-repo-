@@ -56,3 +56,30 @@ export function validateCashClose(args: {
 export function finalDifference(difference: number, adjustments: number[]): number {
   return difference + adjustments.reduce((s, a) => s + a, 0);
 }
+
+/* ------------------------------------------------------------------ */
+/*  Card reconciliation (stand-alone terminal day report)               */
+/* ------------------------------------------------------------------ */
+
+/** terminal day report total - card payments in the kasse (positive = terminal charged more). */
+export function computeCardDifference(countedTerminal: number, expectedCard: number): number {
+  return countedTerminal - expectedCard;
+}
+
+/**
+ * The terminal total is required (0 is allowed). A difference may be closed,
+ * but then needs a short note. SQL (pos_close_cash_session, 8 args) enforces the same.
+ */
+export function validateCardClose(args: {
+  countedTerminal: number | null;
+  expectedCard: number;
+  note?: string | null;
+}): CloseValidation {
+  if (args.countedTerminal == null || !Number.isInteger(args.countedTerminal) || args.countedTerminal < 0) {
+    return { ok: false, code: "invalid_counted_card", message: "Indtast terminalens total (0 hvis ingen kortsalg)" };
+  }
+  if (computeCardDifference(args.countedTerminal, args.expectedCard) !== 0 && !(args.note ?? "").trim()) {
+    return { ok: false, code: "card_note_required", message: "Skriv en kort note om kortdifferencen" };
+  }
+  return { ok: true };
+}

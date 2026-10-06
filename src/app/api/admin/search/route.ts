@@ -115,7 +115,27 @@ export async function GET(req: Request) {
       .limit(LIMIT), scope, locations);
     customerOrders = (data ?? []) as Record<string, unknown>[];
   }
-  const orderRows = [...((orders.data ?? []) as Record<string, unknown>[]), ...customerOrders]
+  // Terminalens kvitteringsnr. (order_payments.reference) skal også finde salget
+  let referenceOrders: Record<string, unknown>[] = [];
+  if (q.length >= 3 && /^[A-Za-z0-9-]+$/.test(q) && (orders.data ?? []).length + customerOrders.length < LIMIT) {
+    const { data: pays } = await supabase
+      .from("order_payments")
+      .select("order_id")
+      .eq("type", "kort_terminal")
+      .ilike("reference", like)
+      .limit(LIMIT);
+    const orderIds = [...new Set((pays ?? []).map((p) => p.order_id as string))];
+    if (orderIds.length) {
+      const { data } = await applyLocationScope(supabase
+        .from("orders")
+        .select("id, order_number, status, total, customer:customers(name)")
+        .in("id", orderIds)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT), scope, locations);
+      referenceOrders = (data ?? []) as Record<string, unknown>[];
+    }
+  }
+  const orderRows = [...((orders.data ?? []) as Record<string, unknown>[]), ...customerOrders, ...referenceOrders]
     .filter((o, i, all) => all.findIndex((x) => x.id === o.id) === i)
     .slice(0, LIMIT);
 

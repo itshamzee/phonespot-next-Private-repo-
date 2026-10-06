@@ -29,6 +29,7 @@ import {
   type CaseContext,
   type PaymentChoice,
 } from "@/lib/pos/kasse-logic";
+import { withTerminalReceipt } from "@/lib/pos/terminal-receipt";
 import { CartPanel } from "./cart-panel";
 import {
   CardDialog,
@@ -593,7 +594,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     setCancellingTerminal(false);
   }
 
-  async function submitSale(opts: { card?: boolean } = {}) {
+  async function submitSale(opts: { card?: boolean; terminalReceipt?: string } = {}) {
     if (!register || !canCharge) return;
     const inCardDialog = opts.card ?? dialog === "card";
     const reference = crypto.randomUUID();
@@ -606,7 +607,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
         method: "POST",
         body: JSON.stringify({
           items: toSaleItems(lines, applied),
-          payments,
+          payments: withTerminalReceipt(payments, opts.terminalReceipt),
           locationId,
           registerId: register.id,
           customerId: customer?.id ?? undefined,
@@ -637,9 +638,9 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     setProcessing(false);
   }
 
-  async function submitDeposit(amountOere: number, method: PaymentType) {
+  async function submitDeposit(amountOere: number, method: PaymentType, terminalReceipt?: string) {
     if (!register || !depositCase) return;
-    const depositPayments = [{ type: method, amountOere }];
+    const depositPayments = withTerminalReceipt([{ type: method, amountOere }], terminalReceipt);
     const reference = crypto.randomUUID();
     terminalRef.current = integratedTerminal ? reference : null;
     setDialogBusy(true);
@@ -1044,7 +1045,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           cancelling={cancellingTerminal}
           onCancelTerminal={() => void cancelTerminal()}
           onClose={() => setDialog(null)}
-          onSubmit={(a, m) => void submitDeposit(a, m)}
+          onSubmit={(a, m, r) => void submitDeposit(a, m, r)}
         />
       )}
       {dialog === "freetext" && <FreeTextDialog onAdd={addFreeText} onClose={() => setDialog(null)} />}
@@ -1091,7 +1092,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           cancelling={cancellingTerminal}
           onCancelTerminal={() => void cancelTerminal()}
           onClose={() => setDialog(null)}
-          onApproved={() => void submitSale({ card: true })}
+          onApproved={(r) => void submitSale({ card: true, terminalReceipt: r })}
         />
       )}
       {done && <DoneDialog sale={done} onNew={newCustomer} />}

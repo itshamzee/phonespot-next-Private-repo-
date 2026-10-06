@@ -17,6 +17,7 @@ import {
 import { buildCreditNote, CreditNoteError, type CreditNote } from "@/lib/pos/credit-note";
 import type { ReturnableOrder } from "@/lib/pos/create-return";
 import { terminalBodyExtras } from "@/lib/pos/kasse-logic";
+import { checkTerminalReceipt, TERMINAL_RECEIPT_MAX } from "@/lib/pos/terminal-receipt";
 
 type RefundLine = { id: string; type: RefundType; amountKr: string; reference: string };
 
@@ -79,8 +80,9 @@ function ReturnPageInner() {
 
   const refundAmount = preview.note?.refundAmount ?? 0;
   const refundSum = refunds.reduce((s, r) => s + (parseKr(r.amountKr) ?? 0), 0);
+  const cardReceiptsOk = refunds.every((r) => r.type !== "kort_terminal" || integrated || checkTerminalReceipt(r.reference).ok);
   const canSubmit =
-    !!order && !!preview.note && !!reason && refundSum === refundAmount && refundAmount > 0 && !busy && !!locationId && !!registerId;
+    !!order && !!preview.note && !!reason && refundSum === refundAmount && refundAmount > 0 && cardReceiptsOk && !busy && !!locationId && !!registerId;
 
   function addRefund(type: RefundType) {
     const rest = Math.max(0, refundAmount - refundSum);
@@ -91,7 +93,14 @@ function ReturnPageInner() {
     if (!order || !canSubmit) return;
     setBusy(true);
     setError("");
-    const refundLines = refunds.map((r) => ({ type: r.type, amountOere: parseKr(r.amountKr) ?? 0, reference: r.reference || undefined }));
+    const refundLines = refunds.map((r) => {
+      let reference: string | undefined = r.reference || undefined;
+      if (r.type === "kort_terminal") {
+        const c = integrated ? null : checkTerminalReceipt(r.reference);
+        reference = c && c.ok ? (c.value ?? undefined) : undefined;
+      }
+      return { type: r.type, amountOere: parseKr(r.amountKr) ?? 0, reference };
+    });
     try {
       const res = await posJson<{ receiptNumber: string; refundAmount: number; receiptPdf: string | null }>("/api/pos/return", {
         method: "POST",
@@ -252,6 +261,16 @@ function ReturnPageInner() {
                   <span className="flex-1 text-sm font-semibold text-charcoal">{PAYMENT_LABELS[r.type]}</span>
                   {r.type === "kort_terminal" && (
                     <span className="text-[11px] text-charcoal/40">{integrated ? "Sendes til terminalen" : "Refunder på terminalen"}</span>
+                  )}
+                  {r.type === "kort_terminal" && !integrated && (
+                    <input
+                      value={r.reference}
+                      maxLength={TERMINAL_RECEIPT_MAX}
+                      onChange={(e) => setRefunds((rs) => rs.map((x) => (x.id === r.id ? { ...x, reference: e.target.value } : x)))}
+                      placeholder="Kvitteringsnr. fra terminalen (valgfrit)"
+                      aria-label="Kvitteringsnr. fra terminalen (valgfrit)"
+                      className={`${input} w-64 ${checkTerminalReceipt(r.reference).ok ? "" : "border-red-300"}`}
+                    />
                   )}
                   {r.type === "tilgodebevis" && (
                     <input

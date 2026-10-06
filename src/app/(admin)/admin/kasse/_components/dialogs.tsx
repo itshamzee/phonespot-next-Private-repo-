@@ -15,6 +15,7 @@ import {
   type PaymentType,
 } from "@/lib/pos/constants";
 import { oereToInput, parseKr } from "@/lib/pos/money";
+import { checkTerminalReceipt, TERMINAL_RECEIPT_MAX } from "@/lib/pos/terminal-receipt";
 import {
   DEFAULT_DEPOSIT_SUGGESTION_OERE,
   validateDeposit,
@@ -155,6 +156,36 @@ export function CaseDialog({
   );
 }
 
+/** Optional receipt number from the stand-alone terminal (saved on the card payment line). */
+export function TerminalReceiptField({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const check = checkTerminalReceipt(value);
+  return (
+    <div className="mt-3">
+      <label className="mb-1 block text-sm text-[#5E6A63]" htmlFor="kasse-terminal-receipt">
+        Kvitteringsnr. fra terminalen (valgfrit)
+      </label>
+      <input
+        id="kasse-terminal-receipt"
+        value={value}
+        disabled={disabled}
+        maxLength={TERMINAL_RECEIPT_MAX}
+        autoComplete="off"
+        onChange={(e) => onChange(e.target.value)}
+        className={fieldClass}
+      />
+      {!check.ok && <p className="mt-1 text-sm text-red-700">{check.message}</p>}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Deposit                                                            */
 /* ------------------------------------------------------------------ */
@@ -172,7 +203,7 @@ export function DepositDialog({
   onCancelTerminal,
 }: {
   c: CaseContext;
-  onSubmit: (amountOere: number, method: PaymentType) => void;
+  onSubmit: (amountOere: number, method: PaymentType, terminalReceipt?: string) => void;
   onClose: () => void;
   busy: boolean;
   error: string;
@@ -187,6 +218,8 @@ export function DepositDialog({
   const [amountKr, setAmountKr] = useState(oereToInput(DEFAULT_DEPOSIT_SUGGESTION_OERE));
   const [method, setMethod] = useState<PaymentType>("kort_terminal");
   const [cardStep, setCardStep] = useState(false);
+  const [receiptNo, setReceiptNo] = useState("");
+  const receiptCheck = checkTerminalReceipt(receiptNo);
   const amount = parseKr(amountKr);
   const check = validateDeposit(amount, c);
   const open = c.deposits.reduce((s, d) => s + Math.max(0, d.remaining_oere), 0);
@@ -263,11 +296,17 @@ export function DepositDialog({
           <p className="text-sm text-[#15211B]">
             Slå <b>{fmtKr(amount ?? 0)}</b> ind på Worldline-terminalen. Tryk først, når kortet er godkendt.
           </p>
+          <TerminalReceiptField value={receiptNo} onChange={setReceiptNo} disabled={busy} />
           <div className="mt-3 flex justify-end gap-2">
             <button type="button" className={btnSecondary} onClick={() => setCardStep(false)} disabled={busy}>
               Tilbage
             </button>
-            <button type="button" className={btnPrimary} disabled={busy || !check.ok} onClick={() => onSubmit(amount!, method)}>
+            <button
+              type="button"
+              className={btnPrimary}
+              disabled={busy || !check.ok || !receiptCheck.ok}
+              onClick={() => onSubmit(amount!, method, receiptCheck.ok ? (receiptCheck.value ?? undefined) : undefined)}
+            >
               {busy ? "Gemmer..." : "Kortet er godkendt"}
             </button>
           </div>
@@ -576,12 +615,14 @@ export function CardDialog({
   busy: boolean;
   error: string;
   /** Manual: the cashier confirms "Kortet er godkendt". Integrated: (re)sends the amount to the terminal. */
-  onApproved: () => void;
+  onApproved: (terminalReceipt?: string) => void;
   onClose: () => void;
   terminalKind?: PaymentTerminalKind;
   cancelling?: boolean;
   onCancelTerminal?: () => void;
 }) {
+  const [receiptNo, setReceiptNo] = useState("");
+  const receiptCheck = checkTerminalReceipt(receiptNo);
   if (isIntegratedTerminal(terminalKind)) {
     return (
       <Modal title="Kortbetaling" onClose={busy ? () => undefined : onClose}>
@@ -597,7 +638,7 @@ export function CardDialog({
               <button type="button" className={btnSecondary} onClick={onClose}>
                 Luk
               </button>
-              <button type="button" autoFocus className={btnPrimary} onClick={onApproved}>
+              <button type="button" autoFocus className={btnPrimary} onClick={() => onApproved()}>
                 {error ? "Prøv igen" : "Send til terminalen"}
               </button>
             </div>
@@ -612,12 +653,19 @@ export function CardDialog({
         Slå <b>{fmtKr(amountOere)}</b> ind på Worldline-terminalen.
       </p>
       <p className="mt-1 text-sm text-[#5E6A63]">Tryk på knappen, først når kortet er godkendt. Salget gemmes først da.</p>
+      <TerminalReceiptField value={receiptNo} onChange={setReceiptNo} disabled={busy} />
       {error && <ErrorLine>{error}</ErrorLine>}
       <div className="mt-5 flex justify-end gap-2">
         <button type="button" className={btnSecondary} onClick={onClose} disabled={busy}>
           Annuller
         </button>
-        <button type="button" autoFocus className={btnPrimary} onClick={onApproved} disabled={busy}>
+        <button
+          type="button"
+          autoFocus
+          className={btnPrimary}
+          onClick={() => onApproved(receiptCheck.ok ? (receiptCheck.value ?? undefined) : undefined)}
+          disabled={busy || !receiptCheck.ok}
+        >
           {busy ? "Gemmer..." : "Kortet er godkendt"}
         </button>
       </div>

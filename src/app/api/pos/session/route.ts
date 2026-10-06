@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/pos/session
  *   { action: "open",   registerId, openingFloat }
- *   { action: "close",  sessionId, countedCash, cashToBank, expenses[], notes? }  -> locks the session
+ *   { action: "close",  sessionId, countedCash, cashToBank, expenses[], notes?, countedCard, cardNote? }  -> locks the session
  *   { action: "adjust", sessionId, amountOere, reason }   (locked sessions only; manager/owner)
  */
 export async function POST(request: NextRequest) {
@@ -78,12 +78,17 @@ export async function POST(request: NextRequest) {
         cashToBank: body.cashToBank,
         expenses: body.expenses,
         notes: body.notes ?? null,
+        countedCard: body.countedCard,
+        cardNote: body.cardNote ?? null,
       });
       return NextResponse.json({
         sessionId: res.session_id,
         expectedCash: res.expected_cash,
         countedCash: res.counted_cash,
         difference: res.difference,
+        expectedCard: res.expected_card,
+        countedCard: res.counted_card,
+        cardDifference: res.card_difference,
         locked: true,
       });
     }

@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  computeCardDifference,
   computeCashDifference,
   computeExpectedCash,
   finalDifference,
   sumExpenses,
+  validateCardClose,
   validateCashClose,
 } from "../cash-session";
 
@@ -51,5 +53,26 @@ describe("cash session maths", () => {
       expect(validateCashClose({ countedCash: 1000, cashToBank: 0, expenses: [{ description: " ", amountOere: 100 }] })).toMatchObject({ code: "invalid_expense" });
       expect(validateCashClose({ countedCash: 1000, cashToBank: 0, expenses: [{ description: "x", amountOere: 0 }] })).toMatchObject({ code: "invalid_expense" });
     });
+  });
+});
+
+describe("card reconciliation", () => {
+  it("difference = terminal total - card sales in the kasse", () => {
+    expect(computeCardDifference(198900, 189900)).toBe(9000);
+    expect(computeCardDifference(189900, 189900)).toBe(0);
+    expect(computeCardDifference(0, 5000)).toBe(-5000);
+  });
+
+  it("the terminal total is required, but 0 is fine", () => {
+    expect(validateCardClose({ countedTerminal: null, expectedCard: 0 })).toMatchObject({ ok: false, code: "invalid_counted_card" });
+    expect(validateCardClose({ countedTerminal: -1, expectedCard: 0 })).toMatchObject({ ok: false });
+    expect(validateCardClose({ countedTerminal: 0, expectedCard: 0 })).toEqual({ ok: true });
+  });
+
+  it("a difference may be closed only with a note", () => {
+    expect(validateCardClose({ countedTerminal: 100, expectedCard: 0 })).toMatchObject({ ok: false, code: "card_note_required" });
+    expect(validateCardClose({ countedTerminal: 100, expectedCard: 0, note: "   " })).toMatchObject({ ok: false });
+    expect(validateCardClose({ countedTerminal: 100, expectedCard: 0, note: "Slåfejl bon 12" })).toEqual({ ok: true });
+    expect(validateCardClose({ countedTerminal: 100, expectedCard: 100 })).toEqual({ ok: true });
   });
 });
