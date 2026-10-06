@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe/client";
 import { normalizeStoreId } from "@/lib/stores";
 import { STORES } from "@/lib/store-config";
 import { formatDanishDate } from "@/lib/email/repair-confirmation";
+import { TEMPERED_GLASS_PRICE_DKK, parseTicketIdList } from "@/lib/repair/booking-devices";
 
 export const metadata: Metadata = {
   title: "Reparation bekræftet | PhoneSpot",
@@ -21,25 +22,39 @@ type BookingDetails = {
   preferred_date?: string | null;
   preferred_time?: string | null;
   delivery_method?: string | null;
+  includes_tempered_glass?: boolean;
+  booking_group_id?: string;
+  booking_device_index?: number;
+  booking_group_total_dkk?: number;
 };
+
+const TICKET_COLUMNS = "id, ticket_number, customer_email, device_type, device_model, store_id, paid, booking_details";
 
 // Sags-ID'et er et uuid og fungerer som adgangsnøgle, ligesom statussiden.
 // Siden viser derfor kun det, kunden selv har indtastet, plus butik og pris.
-async function loadTicket(ticketId: string | undefined) {
-  if (!ticketId || !UUID.test(ticketId)) return null;
-  const { data } = await createServerClient()
+// En booking med flere enheder er én sag pr. enhed (fælles booking_group_id); alle vises.
+async function loadTickets(ticketId: string | undefined) {
+  if (!ticketId || !UUID.test(ticketId)) return [];
+  const supabase = createServerClient();
+  const { data } = await supabase.from("repair_tickets").select(TICKET_COLUMNS).eq("id", ticketId).maybeSingle();
+  if (!data) return [];
+  const groupId = (data.booking_details as BookingDetails | null)?.booking_group_id;
+  if (!groupId || !UUID.test(groupId)) return [data];
+  const { data: group } = await supabase
     .from("repair_tickets")
-    .select("id, ticket_number, customer_email, device_type, device_model, store_id, paid, booking_details")
-    .eq("id", ticketId)
-    .maybeSingle();
-  return data;
+    .select(TICKET_COLUMNS)
+    .eq("booking_details->>booking_group_id", groupId)
+    .limit(10);
+  const rows = group && group.length > 0 ? group : [data];
+  const index = (t: typeof data) => (t.booking_details as BookingDetails | null)?.booking_device_index ?? 0;
+  return [...rows].sort((a, b) => index(a) - index(b));
 }
 
 async function sessionIsPaid(sessionId: string | undefined, ticketId: string | undefined) {
   if (!sessionId || !sessionId.startsWith("cs_")) return false;
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    return session.payment_status === "paid" && session.metadata?.repair_ticket_id === ticketId;
+    return session.payment_status === "paid" && !!ticketId && parseTicketIdList(session.metadata).includes(ticketId);
   } catch {
     return false;
   }
@@ -55,12 +70,18 @@ export default async function BekraeftelsePage({
   // Stripe-checkout sender ticket_id; ældre links brugte ticket.
   const params = await searchParams;
   const ticketId = params.ticket_id ?? params.ticket;
-  const [ticket, paidNow] = await Promise.all([
-    loadTicket(ticketId),
+  const [tickets, paidNow] = await Promise.all([
+    loadTickets(ticketId),
     sessionIsPaid(params.session_id, ticketId),
   ]);
-  const paid = paidNow || !!ticket?.paid;
+  const ticket = tickets[0] ?? null;
+  const multi = tickets.length > 1;
+  const paid = paidNow || (tickets.length > 0 && tickets.every((t) => t.paid));
   const details = (ticket?.booking_details ?? {}) as BookingDetails;
+  const detailsOf = (t: (typeof tickets)[number]) => (t.booking_details ?? {}) as BookingDetails;
+  const total = multi
+    ? details.booking_group_total_dkk ?? tickets.reduce((sum, t) => sum + (detailsOf(t).total_price_dkk ?? 0), 0)
+    : details.total_price_dkk;
   const storeSlug = normalizeStoreId(ticket?.store_id) ?? normalizeStoreId(details.delivery_method);
   const store = storeSlug ? STORES[storeSlug] : null;
   const mailIn = details.delivery_method === "Send ind";
@@ -102,31 +123,44 @@ export default async function BekraeftelsePage({
 
         {(shortTicket || ticket) && (
           <dl className="mb-8 divide-y divide-[#E5E5EA] rounded-xl border border-[#E5E5EA] text-sm">
-            {shortTicket && (
+            {!multi && shortTicket && (
               <div className="flex justify-between gap-4 px-5 py-3">
                 <dt className="text-charcoal/60">Sags-nr.</dt>
                 <dd className="font-mono font-semibold tracking-wide text-charcoal">{shortTicket}</dd>
               </div>
             )}
-            {ticket && (
-              <div className="flex justify-between gap-4 px-5 py-3">
-                <dt className="text-charcoal/60">Enhed</dt>
-                <dd className="text-right font-semibold text-charcoal">
-                  {ticket.device_type} {ticket.device_model}
-                </dd>
-              </div>
-            )}
-            {(details.selected_services ?? []).map((s) => (
-              <div key={s.name} className="flex justify-between gap-4 px-5 py-3">
-                <dt className="text-charcoal">{s.name}</dt>
-                <dd className="text-charcoal">{kr(s.price_dkk)}</dd>
+            {tickets.map((t, i) => (
+              <div key={t.id} className="px-5 py-3">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-charcoal/60">{multi ? `Enhed ${i + 1}` : "Enhed"}</dt>
+                  <dd className="text-right font-semibold text-charcoal">
+                    {t.device_type} {t.device_model}
+                    {multi && (
+                      <span className="block font-mono text-xs font-normal tracking-wide text-charcoal/60">
+                        Sags-nr. {t.ticket_number || t.id.slice(0, 8)}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                {(detailsOf(t).selected_services ?? []).map((s) => (
+                  <div key={s.name} className="mt-2 flex justify-between gap-4">
+                    <dt className="text-charcoal">{s.name}</dt>
+                    <dd className="text-charcoal">{kr(s.price_dkk)}</dd>
+                  </div>
+                ))}
+                {multi && detailsOf(t).includes_tempered_glass && (
+                  <div className="mt-2 flex justify-between gap-4">
+                    <dt className="text-charcoal">Beskyttelsesglas</dt>
+                    <dd className="text-charcoal">{kr(TEMPERED_GLASS_PRICE_DKK)}</dd>
+                  </div>
+                )}
               </div>
             ))}
-            {details.total_price_dkk != null && (
+            {total != null && (
               <div className="flex justify-between gap-4 px-5 py-3">
                 <dt className="font-semibold text-charcoal">I alt</dt>
                 <dd className="text-right font-semibold text-charcoal">
-                  {kr(details.total_price_dkk)}
+                  {kr(total)}
                   <span className="block text-xs font-normal text-green-eco">
                     {paid ? "Betalt online" : "Betales i butikken"}
                   </span>
