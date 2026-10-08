@@ -338,6 +338,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...[
       "/reparation-slagelse",
+      "/reparation-hedensted",
       "/reparation-horsens",
       "/reparation-kolding",
       "/reparation-fredericia",

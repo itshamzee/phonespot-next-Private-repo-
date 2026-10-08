@@ -215,6 +215,68 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     ],
   },
 
+  hedensted: {
+    name: "Hedensted",
+    storeSlug: "vejle",
+    path: "/reparation-hedensted",
+    metaTitle: "Mobilreparation Hedensted – skærmskift i Vejle | PhoneSpot",
+    metaDescription:
+      "Fra Hedensted er der ca. 15 min ad E45 til PhoneSpot i Vejle. Skærm- og batteriskift mens du venter, livstidsgaranti og gratis parkering.",
+    h1: "Mobilreparation til dig i Hedensted",
+    heroLead:
+      "Vores værksted i Vejle ligger ca. 15 minutter fra Hedensted ad E45. Kom forbi uden tidsbestilling, og få 90% af skærm- og batteriskift klar på 30 minutter. Vil du hellere blive hjemme, sender du telefonen ind med en gratis fragtlabel.",
+    intro: [
+      "Bor du i Hedensted, er PhoneSpot i Vejle det nærmeste værksted med skærm- og batteriskift, mens du venter. Turen tager ca. 15 minutter, og de fleste reparationer er klar på 30 minutter, så du er hjemme igen, før du ville have nået at sende telefonen afsted.",
+      "Du vælger selv skærmkvaliteten: budget, OEM eller original. Prisen er fast og oplyst, før vi går i gang, og du får livstidsgaranti på arbejde og dele. Længere nede kan du se aktuelle priser på de mest almindelige modeller.",
+    ],
+    travel: {
+      headline: "Ca. 15 min",
+      caption: "fra Hedensted til Vejle ad E45",
+      paragraphs: [
+        "Fra Hedensted kører du på E45 mod Vejle. Turen tager ca. 15 minutter, afhængigt af trafikken. Butikken ligger på Løversysselvej 3B i Vejle.",
+        "Der er gratis parkering ved butikken, så du kan køre direkte hen og vente, mens vi arbejder. Kommer du forbi efter arbejde, kan du også aflevere telefonen og hente den, når den er klar.",
+      ],
+    },
+    nearbyLine:
+      "Vi tager også imod kunder fra Juelsminde, Løsning, Daugård, Stouby og Barrit.",
+    mailIn: {
+      heading: "Vil du hellere blive i Hedensted?",
+      text: "Book online og vælg Send ind. Vi mailer dig en gratis fragtlabel, du afleverer pakken i en pakkeshop i Hedensted, og vi reparerer enheden og kontakter dig, når den er færdig.",
+    },
+    faqs: [
+      {
+        question: "Hvor langt er der fra Hedensted til PhoneSpot i Vejle?",
+        answer:
+          "Der er ca. 15 minutters kørsel ad E45 fra Hedensted til Løversysselvej 3B i Vejle. Tiden afhænger af trafikken.",
+      },
+      {
+        question: "Kan jeg komme forbi uden at bestille tid?",
+        answer:
+          "Ja, du kan komme som walk-in. 90% af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken. Vil du være sikker på, at vi har tid, kan du booke online og vælge Vejle.",
+      },
+      {
+        question: "Er der gratis parkering ved butikken?",
+        answer:
+          "Ja, der er gratis parkering ved butikken på Løversysselvej 3B i Vejle.",
+      },
+      {
+        question: "Kan jeg sende min telefon ind fra Hedensted?",
+        answer:
+          "Ja. Du booker online og vælger Send ind. Vi mailer en gratis fragtlabel, du afleverer pakken i en pakkeshop, og vi reparerer og kontakter dig, når den er færdig. Garantien er den samme som ved reparation i butikken.",
+      },
+      {
+        question: "Koster det mere, når jeg kommer fra Hedensted?",
+        answer:
+          "Nej, prisen er den samme, uanset hvor du bor. Den afhænger af model og den skærmkvalitet, du vælger. Prisen er fast og inkluderer moms, reservedel og garanti.",
+      },
+      {
+        question: "Skal jeg betale for at få tjekket fejlen?",
+        answer:
+          "Nej, vi laver en hurtig diagnose gratis ved disken i butikken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
+      },
+    ],
+  },
+
   slagelse: {
     name: "Slagelse",
     storeSlug: "slagelse",
@@ -292,4 +354,4 @@ export function buildTownMetadata(town: LocalRepairTown): Metadata {
 }
 
 /** Byer, der linkes til fra /reparation-vejle ("Kunder fra omegnen"). */
-export const SATELLITE_TOWN_KEYS = ["horsens", "kolding", "fredericia"] as const;
+export const SATELLITE_TOWN_KEYS = ["hedensted", "horsens", "kolding", "fredericia"] as const;

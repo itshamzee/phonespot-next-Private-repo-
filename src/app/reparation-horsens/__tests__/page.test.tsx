@@ -18,6 +18,7 @@ import HorsensPage, { metadata } from "../page";
 import KoldingPage, { metadata as koldingMetadata } from "../../reparation-kolding/page";
 import SlagelsePage, { metadata as slagelseMetadata } from "../../reparation-slagelse/page";
 import FredericiaPage, { metadata as frederMetadata } from "../../reparation-fredericia/page";
+import HedenstedPage, { metadata as hedenstedMetadata } from "../../reparation-hedensted/page";
 
 afterEach(cleanup);
 
@@ -54,6 +55,7 @@ describe("local repair town pages", () => {
     [koldingMetadata, "/reparation-kolding"],
     [frederMetadata, "/reparation-fredericia"],
     [slagelseMetadata, "/reparation-slagelse"],
+    [hedenstedMetadata, "/reparation-hedensted"],
   ])("has its own canonical and length-safe metadata (%#)", (meta, path) => {
     expect(meta.alternates?.canonical).toBe(`https://phonespot.dk${path}`);
     expect(String(meta.title).length).toBeLessThanOrEqual(60);
@@ -77,5 +79,13 @@ describe("local repair town pages", () => {
     expect(a).not.toBe(b);
     expect(b).not.toBe(c);
     expect(a).toContain("Hedensted");
+  });
+
+  it("renders Hedensted as a Vejle satellite town", async () => {
+    const { container } = render(await HedenstedPage());
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mobilreparation til dig i Hedensted");
+    const business = jsonLd(container).find((b) => b["@type"] === "ElectronicsRepair");
+    expect(business.name).toBe("PhoneSpot Vejle");
+    expect(business.areaServed).toMatchObject({ name: "Hedensted" });
   });
 });

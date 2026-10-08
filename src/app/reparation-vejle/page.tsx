@@ -7,12 +7,12 @@ import { getRepairPriceSummaries } from "@/lib/supabase/repairs";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Mobilreparation i Vejle — mens du venter, livstidsgaranti | PhoneSpot",
+  title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
   description:
     "iPhone- og Samsung-reparation i Vejle med livstidsgaranti på arbejde og dele. 90% af skærm- og batteriskift er klar på 30 minutter. Walk-in og gratis parkering på Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
-    title: "Mobilreparation i Vejle — mens du venter, livstidsgaranti | PhoneSpot",
+    title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
     description:
       "Skærmskift og batteriskift i Vejle mens du venter. Livstidsgaranti på arbejde og dele, faste priser og gratis parkering. Løversysselvej 3B, 7100 Vejle.",
     url: "https://phonespot.dk/reparation-vejle",
@@ -264,7 +264,7 @@ export default async function ReparationVejlePage() {
             Telefon- og tabletreparation
           </p>
           <h1 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
-            Mobilreparation i Vejle — mens du venter
+            iPhone- og mobilreparation i Vejle — mens du venter
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
             Kom forbi uden tidsbestilling. 90% af alle skærm- og batteriskift er
@@ -717,6 +717,10 @@ export default async function ReparationVejlePage() {
           <p className="mt-2">
             Kommer du fra en af nabobyerne? Se, hvordan du nemmest kommer til
             os:{" "}
+            <Link href="/reparation-hedensted" className="font-semibold text-[#1A3D2E] hover:underline">
+              Reparation Hedensted
+            </Link>
+            ,{" "}
             <Link href="/reparation-horsens" className="font-semibold text-[#1A3D2E] hover:underline">
               Reparation Horsens
             </Link>
