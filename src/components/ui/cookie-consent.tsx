@@ -2,24 +2,34 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  OPEN_COOKIE_SETTINGS_EVENT,
+  readStoredConsent,
+  setConsent,
+} from "@/lib/consent-client";
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie-consent");
-    if (!consent) {
-      setVisible(true);
-    }
+    const frame = requestAnimationFrame(() => {
+      if (!readStoredConsent()) setVisible(true);
+    });
+    const reopen = () => setVisible(true);
+    window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, reopen);
+    };
   }, []);
 
   function accept() {
-    localStorage.setItem("cookie-consent", "accepted");
+    setConsent(true);
     setVisible(false);
   }
 
   function reject() {
-    localStorage.setItem("cookie-consent", "rejected");
+    setConsent(false);
     setVisible(false);
   }
 

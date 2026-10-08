@@ -5,7 +5,6 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import { LayoutShell } from "@/components/layout/public-shell";
-import { CookiebotProvider } from "@/components/consent/cookiebot-provider";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
 import "./globals.css";
 
@@ -73,38 +72,35 @@ export default function RootLayout({
   return (
     <html lang="da" className={`${barlowCondensed.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-warm-white font-body text-charcoal antialiased">
-        {/* Google Consent Mode v2 defaults — must load before gtag */}
+        {/* Google Consent Mode v2 defaults — must load before gtag. Denied
+            until the visitor accepts our cookie banner; a stored choice
+            (lib/consent-client.ts) is applied here so it holds on every page. */}
         <Script id="consent-mode-defaults" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            var consent = 'denied';
+            try { if (localStorage.getItem('cookie-consent') === 'accepted') consent = 'granted'; } catch (e) {}
             gtag('consent', 'default', {
-              analytics_storage: 'denied',
-              ad_storage: 'denied',
-              ad_user_data: 'denied',
-              ad_personalization: 'denied',
+              analytics_storage: consent,
+              ad_storage: consent,
+              ad_user_data: consent,
+              ad_personalization: consent,
               wait_for_update: 500
             });
           `}
         </Script>
         {GA4_ID && <GoogleAnalytics gaId={GA4_ID} />}
         {/* Google Ads conversion tracking. gtag.js is already loaded via
-            <GoogleAnalytics> above so we just register the AW config. Gated
-            behind marketing consent via Cookiebot — Consent Mode v2 also
-            holds it back until ad_storage is granted. */}
-        <Script
-          id="google-ads-aw-config"
-          strategy="afterInteractive"
-          type="text/plain"
-          data-cookieconsent="marketing"
-        >
+            <GoogleAnalytics> above so we just register the AW config.
+            Consent Mode v2 holds it back until ad_storage is granted. */}
+        <Script id="google-ads-aw-config" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('config', 'AW-17754730649');
           `}
         </Script>
-        <CookiebotProvider />
         <JsonLd data={ORGANIZATION_JSONLD} />
         <LayoutShell>{children}</LayoutShell>
         {/* e-maerket verification widget — not gated (trust badge, not tracking) */}
@@ -112,19 +108,7 @@ export default function RootLayout({
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"
           strategy="afterInteractive"
         />
-        {/* Trustpilot invitation API — gated behind marketing consent */}
-        <Script
-          src="https://invitejs.trustpilot.com/tp.min.js"
-          strategy="afterInteractive"
-          type="text/plain"
-          data-cookieconsent="marketing"
-        />
-        <Script
-          id="trustpilot-register"
-          strategy="lazyOnload"
-          type="text/plain"
-          data-cookieconsent="marketing"
-        >{`if(window.tp){window.tp("register","samJZr5LOOVwoRYo")}`}</Script>
+        {/* Trustpilot invitations load from TrackingScripts after consent. */}
         <TrackingScripts />
         {/* Vercel Analytics — first-party traffic dashboard at vercel.com/<project>/analytics */}
         <VercelAnalytics />

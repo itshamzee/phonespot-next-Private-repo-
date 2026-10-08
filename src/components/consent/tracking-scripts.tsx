@@ -1,43 +1,27 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect } from "react";
+import { loadTrustpilotInvites, readStoredConsent } from "@/lib/consent-client";
 
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? "";
 const TIKTOK_PIXEL_ID = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID ?? "";
 const KLAVIYO_PUBLIC_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY ?? "";
 
 export function TrackingScripts() {
+  useEffect(() => {
+    if (readStoredConsent() === "accepted") loadTrustpilotInvites();
+  }, []);
+
   return (
     <>
-      {/* GA4 is now loaded via @next/third-parties/google in layout.tsx
-          with Consent Mode v2 defaults (denied). Cookiebot updates consent
-          on accept via the CookiebotCallback_OnAccept hook. */}
+      {/* GA4 + Google Ads load in layout.tsx under Consent Mode v2; the
+          stored banner choice sets their defaults there. */}
 
-      {/* Consent Mode update — grant analytics when Cookiebot statistics accepted */}
-      <Script id="consent-mode-cookiebot-bridge" strategy="afterInteractive">
-        {`
-          window.addEventListener('CookiebotOnAccept', function() {
-            if (window.Cookiebot && window.Cookiebot.consent) {
-              function gtag(){window.dataLayer=window.dataLayer||[];window.dataLayer.push(arguments);}
-              gtag('consent', 'update', {
-                analytics_storage: window.Cookiebot.consent.statistics ? 'granted' : 'denied',
-                ad_storage: window.Cookiebot.consent.marketing ? 'granted' : 'denied',
-                ad_user_data: window.Cookiebot.consent.marketing ? 'granted' : 'denied',
-                ad_personalization: window.Cookiebot.consent.marketing ? 'granted' : 'denied'
-              });
-            }
-          });
-        `}
-      </Script>
-
-      {/* Facebook Pixel — marketing category */}
+      {/* Facebook Pixel — loads for everyone but sends nothing until the
+          visitor accepts (fbq consent revoke/grant, see consent-client.ts). */}
       {FB_PIXEL_ID && (
-        <Script
-          id="fb-pixel"
-          type="text/plain"
-          data-cookieconsent="marketing"
-          strategy="afterInteractive"
-        >
+        <Script id="fb-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -47,6 +31,9 @@ export function TrackingScripts() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+            var stored = null;
+            try { stored = localStorage.getItem('cookie-consent'); } catch (e) {}
+            fbq('consent', stored === 'accepted' ? 'grant' : 'revoke');
             fbq('init', '${FB_PIXEL_ID}');
             fbq('track', 'PageView');
           `}
