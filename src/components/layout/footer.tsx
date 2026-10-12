@@ -98,6 +98,7 @@ export function Footer() {
             <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
             <div className={styles.locations}>
               {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/butik/${store.slug}`}>{store.city} <span aria-hidden="true">↗</span></Link>)}
+              <Link href="/butik/esbjerg">Esbjerg (snart) <span aria-hidden="true">↗</span></Link>
             </div>
             <Link className={styles.storeOverview} href="/butik">Butikker og åbningstider</Link>
           </div>

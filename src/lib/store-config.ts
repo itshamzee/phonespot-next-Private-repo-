@@ -1,5 +1,8 @@
 import { normalizeStoreId } from "@/lib/stores";
 
+// Declared before the store tables because UPCOMING_STORES uses it.
+const COMPANY_EMAIL_ADDRESS = "info@phonespot.dk";
+
 export interface StoreLocationConfig {
   slug: string;
   name: string;
@@ -80,6 +83,45 @@ export const STORES: Record<string, StoreLocationConfig> = {
   },
 };
 
+export interface UpcomingStoreConfig extends StoreLocationConfig {
+  /** Shown as "Åbner {opens}" — a month, not a date, until one is confirmed. */
+  opens: string;
+}
+
+/**
+ * Stores that are announced but not open yet. Deliberately kept out of STORES:
+ * everything that iterates STORES (checkout pickup, booking, contact form,
+ * mail signatures, the mail agent) would otherwise offer a store customers
+ * cannot visit. Only the /butik pages read this. When a store opens, move it
+ * into STORES and add it to StoreId in src/lib/stores.ts.
+ */
+export const UPCOMING_STORES: Record<string, UpcomingStoreConfig> = {
+  esbjerg: {
+    slug: "esbjerg",
+    name: "PhoneSpot Esbjerg",
+    company: "PhoneSpot ApS",
+    mall: "Esbjerg Storcenter",
+    street: "Gl. Vardevej 230",
+    city: "Esbjerg N",
+    zip: "6715",
+    country: "Danmark",
+    countryCode: "DK",
+    phone: "+45 61 10 00 48",
+    email: COMPANY_EMAIL_ADDRESS,
+    shopifyLocationId: null,
+    // Expected to follow the centre's hours.
+    hours: {
+      weekdays: "10:00 – 19:00",
+      saturday: "10:00 – 16:00",
+      sunday: "10:00 – 16:00",
+    },
+    googleMapsUrl: "https://maps.google.com/?q=Esbjerg+Storcenter,+Gl.+Vardevej+230,+6715+Esbjerg+N",
+    googleMapsEmbed: "https://www.google.com/maps?q=Esbjerg+Storcenter,+Gl.+Vardevej+230,+6715+Esbjerg+N&output=embed",
+    coordinates: { lat: 55.5082, lng: 8.4479 },
+    opens: "november 2026",
+  },
+};
+
 // Backwards compatibility
 export const STORE = STORES.slagelse;
 
@@ -90,7 +132,7 @@ export const STORE = STORES.slagelse;
  * details — must use this rather than STORE.email, which is Slagelse's own
  * mailbox and stopped being the shared one when slagelse@ was created.
  */
-export const COMPANY_EMAIL = "info@phonespot.dk";
+export const COMPANY_EMAIL = COMPANY_EMAIL_ADDRESS;
 
 /**
  * The store a record belongs to, for signing customer mail with the right

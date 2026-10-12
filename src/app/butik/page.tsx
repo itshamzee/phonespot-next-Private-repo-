@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORES, openingHoursJsonLd } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES, openingHoursJsonLd } from "@/lib/store-config";
 import styles from "@/components/ui/information.module.css";
 
 export const metadata: Metadata = {
-  title: "Besøg PhoneSpot – butikker i Slagelse og Vejle",
-  description: "Find adresse og åbningstider for PhoneSpot i Slagelse og Vejle. Besøg os for reparation, refurbished enheder og vurdering af din brugte elektronik.",
+  title: "Besøg PhoneSpot – butikker i Slagelse og Vejle, snart Esbjerg",
+  description: "Find adresse og åbningstider for PhoneSpot i Slagelse og Vejle – og snart i Esbjerg Storcenter. Besøg os for reparation, refurbished enheder og vurdering af din brugte elektronik.",
   alternates: { canonical: "https://phonespot.dk/butik" },
   openGraph: { title: "Besøg PhoneSpot – butikker i Slagelse og Vejle", description: "Reparation, refurbished enheder og personlig rådgivning i vores to butikker.", url: "https://phonespot.dk/butik", type: "website" },
 };
 
 const storeList = Object.values(STORES);
+const upcomingList = Object.values(UPCOMING_STORES);
 const organizationJsonLd = {
   "@context": "https://schema.org", "@type": "Organization",
   name: "PhoneSpot", url: "https://phonespot.dk", logo: "https://phonespot.dk/brand/logo.png",
@@ -34,7 +35,7 @@ export default function ButikPage() {
         <header className={styles.header}>
           <span className={styles.eyebrow}>PhoneSpot tæt på dig</span>
           <h1>Kom forbi i Vejle eller Slagelse.</h1>
-          <p className={styles.intro}>Se enhederne, få hjælp til en reparation eller lad os vurdere din brugte elektronik. Her finder du vej til begge butikker.</p>
+          <p className={styles.intro}>Se enhederne, få hjælp til en reparation eller lad os vurdere din brugte elektronik. Her finder du vej til begge butikker{upcomingList.length > 0 && <> – og til {upcomingList.map((s) => `${s.mall}, hvor vi åbner i ${s.opens}`).join(" og ")}</>}.</p>
         </header>
         <section aria-label="Vores butikker" className={styles.section}>
           <div className={styles.grid}>
@@ -53,6 +54,18 @@ export default function ButikPage() {
                   <a href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer" className={styles.secondary}>Find vej</a>
                 </div>
                 <div className={styles.actions}><Link href={`/reparation/booking?store=${store.slug}`} className={styles.textLink}>Book reparation i {store.city}</Link></div>
+              </article>
+            ))}
+            {upcomingList.map((store) => (
+              <article key={store.slug} className={styles.panel}>
+                <span className={styles.eyebrow}>Åbner {store.opens}</span>
+                <h2>{store.name}</h2>
+                <address className={styles.address}>{store.mall}<br />{store.street}<br />{store.zip} {store.city}</address>
+                <p>Reparation, refurbished enheder og vurdering af din brugte elektronik – fra {store.opens.split(" ")[0]} også i {store.mall}.</p>
+                <div className={styles.actions}>
+                  <Link href={`/butik/${store.slug}`} className={styles.button}>Se butik i {store.city.replace(/ N$/, "")}</Link>
+                  <a href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer" className={styles.secondary}>Find vej</a>
+                </div>
               </article>
             ))}
           </div>

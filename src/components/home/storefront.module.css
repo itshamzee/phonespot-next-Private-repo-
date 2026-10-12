@@ -315,6 +315,7 @@
 .surface .topline .storeLocations { display: flex; align-items: center; gap: 15px; margin-left: auto; }
 .surface .topline .storeLocations a { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; }
 .surface .topline .storeLocations svg { width: 13px; height: 13px; }
+.surface .topline .storeLocations .upcomingStore small { font-size: inherit; opacity: .7; }
 .surface .topline .phoneLink { margin-left: 0; margin-right: 0; }
 .surface .topline .dispatchClock { font-size: 10px; white-space: nowrap; }
 .dispatchClock strong { font-variant-numeric: tabular-nums; font-weight: 600; }
@@ -324,5 +325,6 @@
   .surface .topline .dispatchClock { width: 100%; text-align: center; padding-top: 8px; font-size: 10px; }
   .surface .topline .storeLocations { margin-left: 0; gap: 18px; }
   .surface .topline .storeLocations a { min-height: 44px; font-size: 11px; }
+  .surface .topline .storeLocations .upcomingStore { display: none; }
   .surface .topline .phoneLink { margin-left: auto; }
 }

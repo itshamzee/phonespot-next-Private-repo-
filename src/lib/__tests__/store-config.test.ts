@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { STORES, openingHoursJsonLd } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES, openingHoursJsonLd } from "@/lib/store-config";
+import { STORE_IDS } from "@/lib/stores";
 
 describe("store config", () => {
   it("Slagelse street includes the building + unit number (10A, 103)", () => {
@@ -31,5 +32,13 @@ describe("store config", () => {
       { "@type": "OpeningHoursSpecification", dayOfWeek: ["Sunday"], opens: "10:00", closes: "15:00" },
     ]);
     expect(openingHoursJsonLd(STORES.slagelse.hours)[0]).toMatchObject({ opens: "10:00", closes: "19:00" });
+  });
+
+  it("keeps announced stores out of STORES so checkout, booking and mail never offer them", () => {
+    for (const slug of Object.keys(UPCOMING_STORES)) {
+      expect(STORES[slug]).toBeUndefined();
+      expect(STORE_IDS as readonly string[]).not.toContain(slug);
+    }
+    expect(UPCOMING_STORES.esbjerg).toMatchObject({ mall: "Esbjerg Storcenter", street: "Gl. Vardevej 230", zip: "6715" });
   });
 });

@@ -25,4 +25,22 @@ describe("store journeys", () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ slug }) });
     expect(metadata.alternates?.canonical).toBe(`https://phonespot.dk/butik/${slug}`);
   });
+  describe("Esbjerg before opening", () => {
+    it("announces the opening month and never links to booking for a store that is not open", async () => {
+      const { container } = render(await StoreDetailPage({ params: Promise.resolve({ slug: "esbjerg" }) }));
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("PhoneSpot Esbjerg");
+      expect(screen.getByText("Åbner november 2026")).toBeInTheDocument();
+      const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href") ?? "");
+      expect(hrefs.filter((href) => href.startsWith("/reparation/booking"))).toEqual([]);
+      expect(hrefs).toContain("/reparation/indsend");
+      const business = Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map((s) => JSON.parse(s.textContent!)).find((s) => s["@type"] === "ElectronicsRepair");
+      expect(business.address).toMatchObject({ streetAddress: "Gl. Vardevej 230", postalCode: "6715" });
+      expect(business.openingHoursSpecification).toBeUndefined();
+    });
+    it("has its own canonical and opening-month title", async () => {
+      const metadata = await generateMetadata({ params: Promise.resolve({ slug: "esbjerg" }) });
+      expect(metadata.alternates?.canonical).toBe("https://phonespot.dk/butik/esbjerg");
+      expect(String(metadata.title)).toContain("november 2026");
+    });
+  });
 });

@@ -4,11 +4,12 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
-import { STORES, openingHoursJsonLd, type StoreLocationConfig } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES, openingHoursJsonLd, type StoreLocationConfig } from "@/lib/store-config";
 import styles from "@/components/ui/information.module.css";
+import { UpcomingStorePage } from "./upcoming-store-page";
 
 export function generateStaticParams() {
-  return Object.values(STORES).map((store) => ({
+  return [...Object.values(STORES), ...Object.values(UPCOMING_STORES)].map((store) => ({
     slug: store.slug,
   }));
 }
@@ -23,6 +24,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const upcoming = UPCOMING_STORES[slug];
+  if (upcoming) {
+    const title = `${upcoming.name} — åbner i ${upcoming.mall} i ${upcoming.opens}`;
+    const description = `PhoneSpot åbner i ${upcoming.mall}, ${upcoming.street}, ${upcoming.zip} ${upcoming.city}, i ${upcoming.opens}. Telefonreparation med livstidsgaranti, refurbished enheder med 36 mdr. garanti og opkøb af din brugte telefon.`;
+    return {
+      title,
+      description,
+      alternates: { canonical: `https://phonespot.dk/butik/${upcoming.slug}` },
+      openGraph: { title, description, url: `https://phonespot.dk/butik/${upcoming.slug}`, type: "website" },
+    };
+  }
   const store = STORES[slug];
   if (!store) return {};
 
@@ -215,6 +227,8 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
 
 export default async function StoreDetailPage({ params }: { params: Promise<{ slug: string }> }) {
  const { slug } = await params;
+ const upcoming = UPCOMING_STORES[slug];
+ if (upcoming) return <UpcomingStorePage store={upcoming} />;
  const store = STORES[slug];
  if (!store) notFound();
  return <StorePage store={store} />;

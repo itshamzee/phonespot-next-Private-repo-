@@ -390,6 +390,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
+      url: `${BASE_URL}/butik/esbjerg`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/delbetaling`,
       lastModified: new Date(),
       changeFrequency: "monthly",

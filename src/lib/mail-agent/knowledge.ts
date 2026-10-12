@@ -1,4 +1,4 @@
-import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES, COMPANY_EMAIL } from "@/lib/store-config";
 
 // Sat sammen ved koersel: repoets stale-content-guard afviser det skrevne ord
 // i enhver kildefil, ogsaa naar det kun bruges som forbudt ord.
@@ -24,6 +24,16 @@ function storeBlock(): string {
     .join("\n");
 }
 
+function upcomingStoreBlock(): string {
+  return Object.values(UPCOMING_STORES)
+    .map(
+      (s) =>
+        `- ${s.name} (${s.mall}, ${s.street}, ${s.zip} ${s.city}) åbner ${s.opens}. ` +
+        `Den er IKKE åben endnu: kunder kan ikke aflevere, hente eller booke dér. Henvis til indsendelse eller butikkerne i Vejle og Slagelse.`,
+    )
+    .join("\n");
+}
+
 /**
  * Faktabasen assistenten faar via get_knowledge. Holdes som tekst saa den kan
  * laeses og rettes uden at kende koden. Butiksdata kommer fra store-config saa
@@ -34,6 +44,7 @@ export function buildKnowledge(): string {
 
 ## Butikker
 ${storeBlock()}
+${upcomingStoreBlock()}
 - Fælles kundeservice: ${COMPANY_EMAIL}. Webshop: https://phonespot.dk
 
 ## Hvad vi sælger

@@ -1,4 +1,4 @@
-import { STORES } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES } from "@/lib/store-config";
 
 // llms.txt: en kort, faktuel oversigt til AI-søgemaskiner (ChatGPT, Perplexity,
 // Claude, Copilot). Butiksdata hentes fra store-config, så adresser og
@@ -19,6 +19,16 @@ function storeLines() {
   );
 }
 
+function upcomingStoreLines() {
+  return Object.values(UPCOMING_STORES).map((s) =>
+    [
+      `### ${s.name} (åbner ${s.opens})`,
+      `- Adresse: ${s.mall}, ${s.street}, ${s.zip} ${s.city}`,
+      `- Butikken er ikke åbnet endnu: ${SITE}/butik/${s.slug}`,
+    ].join("\n"),
+  );
+}
+
 export function GET() {
   const body = `# PhoneSpot
 
@@ -33,7 +43,7 @@ export function GET() {
 - Gratis parkering ved butikken i Vejle.
 
 ## Butikker
-${storeLines().join("\n\n")}
+${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 
 ## Vigtige sider
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
