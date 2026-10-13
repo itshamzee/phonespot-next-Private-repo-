@@ -24,8 +24,8 @@ describe("Reparationssiden", () => {
     const schemas = [...container.querySelectorAll('script[type="application/ld+json"]')].map(s => JSON.parse(s.textContent!));
     const faq = schemas.find(s => s["@type"] === "FAQPage");
     const details = [...container.querySelectorAll("details")];
-    expect(faq.mainEntity).toHaveLength(7);
-    expect(details).toHaveLength(7);
+    expect(faq.mainEntity).toHaveLength(6);
+    expect(details).toHaveLength(6);
     faq.mainEntity.forEach((q: { name: string; acceptedAnswer: { text: string } }, index: number) => {
       expect(details[index].querySelector("summary")).toHaveTextContent(q.name);
       expect(details[index].querySelector("p")).toHaveTextContent(q.acceptedAnswer.text);

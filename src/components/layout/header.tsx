@@ -18,7 +18,6 @@ const categories = [
   { label: "Bærbare", href: "/baerbare" },
   { label: "Ure", href: "/smartwatches" },
   { label: "Tilbehør", href: "/tilbehoer" },
-  { label: "Reservedele", href: "/reservedele" },
 ];
 const menuLinks = [
   ...categories,
@@ -105,7 +104,7 @@ export function Header() {
       </div>
     </div>
     <div className={styles.navwrap}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      {categories.map(item => <Link key={item.href} href={item.href} className={item.href === "/reservedele" ? styles.optional : undefined}>{item.label}</Link>)}
+      {categories.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>

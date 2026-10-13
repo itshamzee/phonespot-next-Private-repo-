@@ -27,6 +27,7 @@ describe("Header", () => {
     expect(within(nav).getByRole("link", { name: "Køb" })).toHaveAttribute("href", "/#udvalg");
     expect(within(nav).getByRole("link", { name: "Reparation" })).toHaveAttribute("href", "/reparation");
     expect(within(nav).getByRole("link", { name: "Sælg din enhed" })).toHaveAttribute("href", "/saelg-din-enhed");
+    expect(screen.queryByRole("link", { name: "Reservedele" })).toBeNull();
   });
   it("opens the real cart and exposes its item count", () => {
     render(<Header />);
