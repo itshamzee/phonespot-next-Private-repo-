@@ -1,5 +1,8 @@
 import "server-only";
-import type { ApiError, ApiErrorCode, BalancesResponse, Location, MovementInput, MovementResult, Part } from "./api-types";
+import type {
+  ApiError, ApiErrorCode, Availability, BalancesResponse, CreateTransferInput, Location, MovementInput, MovementResult, Part,
+  ReceiveTransferInput, SendTransferInput, Transfer, TransferResult, TransferStatus,
+} from "./api-types";
 import { getLagersystemConfig, type LagersystemConfig } from "./config";
 
 export type ClientErrorCode = ApiErrorCode | "network" | "timeout" | "bad_response";
@@ -58,6 +61,33 @@ export function createLagersystemClient(config: LagersystemConfig, fetchImpl: ty
     async postMovement(input: MovementInput): Promise<MovementResult> {
       return call<MovementResult>("/movements", { method: "POST", body: JSON.stringify(input) });
     },
+    async getAvailability(sharedSku: string): Promise<Availability[]> {
+      return (await call<{ shared_sku: string; availability: Availability[] }>(`/availability?${new URLSearchParams({ sku: sharedSku })}`)).availability;
+    },
+    async listTransfers(q: { location: string; status?: TransferStatus[]; direction?: "in" | "out" | "both" }): Promise<Transfer[]> {
+      const params = new URLSearchParams({ location: q.location });
+      if (q.status?.length) params.set("status", q.status.join(","));
+      if (q.direction) params.set("direction", q.direction);
+      return (await call<{ transfers: Transfer[] }>(`/transfers?${params}`)).transfers;
+    },
+    async getTransfer(id: string): Promise<Transfer> {
+      return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}`)).transfer;
+    },
+    async createTransfer(input: CreateTransferInput): Promise<TransferResult> {
+      return call<TransferResult>("/transfers", { method: "POST", body: JSON.stringify(input) });
+    },
+    async sendTransfer(id: string, input: SendTransferInput): Promise<Transfer> {
+      return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}/send`, { method: "POST", body: JSON.stringify(input) })).transfer;
+    },
+    async receiveTransfer(id: string, input: ReceiveTransferInput): Promise<Transfer> {
+      return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}/receive`, { method: "POST", body: JSON.stringify(input) })).transfer;
+    },
+    async rejectTransfer(id: string, input: { actor_label: string; reason: string }): Promise<Transfer> {
+      return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}/reject`, { method: "POST", body: JSON.stringify(input) })).transfer;
+    },
+    async cancelTransfer(id: string, input: { actor_label: string }): Promise<Transfer> {
+      return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}/cancel`, { method: "POST", body: JSON.stringify(input) })).transfer;
+    },
   };
 }
 
@@ -78,7 +108,7 @@ export function describeLagersystemError(err: unknown): string {
     case "unknown_location": return "Lokationen findes ikke i lagersystemet.";
     case "invalid_body": return `Lagersystemet afviste data: ${err.message}`;
     case "idempotency_conflict": return "Handlingen er allerede bogført med andre værdier. Genindlæs siden og prøv igen.";
-    case "invalid_state": return "Flytningen har ændret status. Genindlæs siden og prøv igen.";
+    case "invalid_state": return "Flytningen har skiftet status i mellemtiden. Genindlæs siden og prøv igen.";
     case "unknown_transfer": return "Flytningen findes ikke.";
     default: return err.retryable ? "Lagersystemet svarer ikke lige nu. Prøv igen om lidt." : "Lagersystemet afviste forespørgslen.";
   }

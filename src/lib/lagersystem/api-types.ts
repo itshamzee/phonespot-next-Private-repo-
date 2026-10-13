@@ -48,14 +48,15 @@ export type MovementInput = {
 };
 export type MovementResult = { movement: Movement; replayed: boolean };
 
-export type TransferCreateInput = {
-  idempotency_key: string; from: string; to: string;
-  lines: { shared_sku: string; qty: number }[];
-  reference?: string; note?: string; actor_label: string;
+export type CreateTransferInput = {
+  idempotency_key: string; from: string; to: string; lines: { shared_sku: string; qty: number }[];
+  reference?: string | null; note?: string | null; actor_label: string;
 };
-export type TransferReceiveInput = {
+export type SendTransferInput = { actor_label: string; lines?: { shared_sku: string; qty_sent: number }[] };
+export type ReceiveTransferInput = {
   actor_label: string;
-  /** Én pr. modtagelse; genbruges ved retry af samme modtagelse. */
+  /** Én pr. modtagelse; genbruges ved retry af samme modtagelse (Bilag A). */
   idempotency_key?: string;
   lines: { shared_sku: string; qty_received: number; qty_written_off?: number; write_off_reason?: string }[];
 };
+export type TransferResult = { transfer: Transfer; replayed?: boolean };
