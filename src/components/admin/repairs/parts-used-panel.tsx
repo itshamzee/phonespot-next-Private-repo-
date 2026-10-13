@@ -82,6 +82,8 @@ export function PartsUsedPanel({
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setError((body as { error?: string }).error ?? "Handlingen fejlede");
+        // 409: sagens tilstand er ændret siden panelet blev hentet — vis den aktuelle.
+        if (res.status === 409) await load();
         return false;
       }
       await load();

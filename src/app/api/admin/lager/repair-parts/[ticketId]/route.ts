@@ -43,7 +43,10 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   const parts = await repo.listForTicket(ticketId);
-  const check = await createSupabasePartsCheckRepo(createAdminClient()).getTicket(ticketId).catch(() => null);
+  const check = await createSupabasePartsCheckRepo(createAdminClient()).getTicket(ticketId).catch((err) => {
+    console.error("[lagertjek] kunne ikke hente lagertjek-status", ticketId, err);
+    return null;
+  });
   return NextResponse.json({
     enabled: true,
     location: locationForStore(ticket.store_id),

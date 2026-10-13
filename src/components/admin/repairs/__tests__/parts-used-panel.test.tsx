@@ -82,4 +82,19 @@ describe("PartsUsedPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Markér som bestilt" }));
     await waitFor(() => expect(f).toHaveBeenCalledWith(`/api/admin/lager/parts-status/${TID}`, expect.objectContaining({ method: "PATCH" })));
   });
+
+  it("reloads the panel after a 409 on Markér som bestilt", async () => {
+    const state = { enabled: true, location: "vejle-hub", parts: [], parts_status: "needs_order",
+      parts_shortage: [{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }] };
+    const f = vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH") return json({ error: "Sagen mangler ikke dele" }, 409);
+      return json(state);
+    });
+    vi.stubGlobal("fetch", f);
+    render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Markér som bestilt" }));
+    expect(await screen.findByText("Sagen mangler ikke dele")).toBeVisible();
+    const gets = () => f.mock.calls.filter((c) => (c[1]?.method ?? "GET") === "GET").length;
+    await waitFor(() => expect(gets()).toBe(2));
+  });
 });

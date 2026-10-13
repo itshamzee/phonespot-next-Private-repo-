@@ -37,10 +37,13 @@ it("runs the check after the response, for the new ticket", async () => {
 });
 
 it("never throws into the customer's request", async () => {
+  const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   s.afterImpl = () => { throw new Error("after() outside request scope"); };
   expect(() => scheduleTicketPartsCheck("t1")).not.toThrow();
   s.afterImpl = (fn) => { s.pending.push(fn); };
   s.check.mockRejectedValue(new Error("db down"));
   scheduleTicketPartsCheck("t2");
   await expect(s.pending[0]()).resolves.toBeUndefined();
+  expect(errSpy).toHaveBeenCalled();
+  errSpy.mockRestore();
 });
