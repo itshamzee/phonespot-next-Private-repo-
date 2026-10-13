@@ -21,6 +21,7 @@ import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { PrintModal } from "@/components/admin/repairs/print-modal";
 import { SmsThread } from "@/components/admin/repairs/sms-thread";
+import { PartsUsedPanel } from "@/components/admin/repairs/parts-used-panel";
 
 /** Er adgangskoden noteret? Selve koden gemmes og vises aldrig her. */
 function passcodeLabel(detail: CaseDetail): string {
@@ -452,6 +453,9 @@ export default function CasePage({ id }: { id: string }) {
           )}
         </div>
       </Card>
+
+      {/* Dele brugt (fælles lagersystem) — skjult når LAGERSYSTEM_* ikke er sat */}
+      <PartsUsedPanel ticketId={id} storeId={normalizeStoreId(t.store_id)} />
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
         <SmsThread
