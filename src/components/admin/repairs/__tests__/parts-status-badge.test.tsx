@@ -12,3 +12,10 @@ it("shows Skal bestilles and Bestilt, nothing for ok, unknown or unchecked", () 
     expect(container).toBeEmptyDOMElement();
   }
 });
+
+it("shows Anmodet and Undervejs", () => {
+  const { rerender } = render(<PartsStatusBadge status="requested" />);
+  expect(screen.getByText("Anmodet")).toBeVisible();
+  rerender(<PartsStatusBadge status="in_transit" />);
+  expect(screen.getByText("Undervejs")).toBeVisible();
+});

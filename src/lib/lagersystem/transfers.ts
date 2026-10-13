@@ -1,5 +1,6 @@
 import type { Availability, Transfer, TransferLine, TransferStatus } from "./api-types";
 import { isPhoneSpotLocation, LOCATION_LABELS } from "./locations";
+import type { PartsStatus, ShortageLine } from "./types";
 
 export const TRANSFER_STATUS_LABELS: Record<TransferStatus, string> = {
   REQUESTED: "Anmodet",
@@ -53,4 +54,22 @@ export function settlement(t: Transfer): Settlement {
 
 export function availabilityElsewhere(av: Availability[], exclude: string): { location: string; label: string; qty: number }[] {
   return av.filter((a) => a.location !== exclude && a.qty > 0).map((a) => ({ location: a.location, label: locationLabel(a.location, a.location_name), qty: a.qty }));
+}
+
+/**
+ * Sagens mærke ud fra dens flytninger (spec §4.4): en manglende del uden levende
+ * anmodning = "Skal bestilles"; ellers Undervejs > Anmodet > ok (alt modtaget).
+ */
+export function ticketStatusFromTransfers(shortageSkus: string[], links: { shared_sku: string; status: TransferStatus }[]): PartsStatus {
+  const alive = links.filter((l) => l.status !== "REJECTED" && l.status !== "CANCELLED");
+  if (shortageSkus.some((sku) => !alive.some((l) => l.shared_sku === sku))) return "needs_order";
+  if (alive.some((l) => l.status === "SENT" || l.status === "PARTIALLY_RECEIVED")) return "in_transit";
+  if (alive.some((l) => l.status === "REQUESTED")) return "requested";
+  return "ok";
+}
+
+/** Anmod om underskuddet, højst hvad den anden lokation har, mindst 1. */
+export function requestQty(line: ShortageLine, availableThere: number): number {
+  const deficit = line.needed - Math.max(0, line.available);
+  return Math.max(1, Math.min(availableThere, deficit));
 }

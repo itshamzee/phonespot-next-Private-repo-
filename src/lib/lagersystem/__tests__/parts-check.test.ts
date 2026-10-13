@@ -113,4 +113,8 @@ describe("applyPartAdded", () => {
     expect(applyPartAdded("unknown", null, "A").changed).toBe(false);
     expect(applyPartAdded("needs_order", [line("B")], "A").changed).toBe(false);
   });
+  it("also clears Anmodet and Undervejs", () => {
+    expect(applyPartAdded("requested", [line("A")], "A").status).toBe("ok");
+    expect(applyPartAdded("in_transit", [line("A")], "A").status).toBe("ok");
+  });
 });

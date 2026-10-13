@@ -65,7 +65,8 @@ export async function checkTicketParts(ticketId: string, deps: CheckDeps): Promi
 
   const ticket = await repo.getTicket(ticketId);
   if (!ticket || (CLOSED_TICKET_STATUSES as readonly string[]).includes(ticket.status)) return "skipped";
-  if (ticket.parts_status === "ordered") return "skipped";
+  // Manuelt bestilt, eller en flytning er i gang: tjekket må ikke overskrive det.
+  if (ticket.parts_status === "ordered" || ticket.parts_status === "requested" || ticket.parts_status === "in_transit") return "skipped";
   const location = locationForStore(ticket.store_id);
   if (!location) return "skipped";
 

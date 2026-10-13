@@ -262,7 +262,7 @@ export default function CaseListPage() {
                                 <Pill>På hold: {row.on_hold_reason.toLowerCase()}</Pill>
                               </span>
                             )}
-                            {(row.parts_status === "needs_order" || row.parts_status === "ordered") && (
+                            {row.parts_status && row.parts_status !== "ok" && row.parts_status !== "unknown" && (
                               <span className="ml-1.5">
                                 <PartsStatusBadge status={row.parts_status} />
                               </span>

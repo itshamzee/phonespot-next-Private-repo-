@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Transfer } from "../api-types";
-import { availabilityElsewhere, formatKr, locationLabel, outstanding, partyFor, settlement } from "../transfers";
+import { availabilityElsewhere, formatKr, locationLabel, outstanding, partyFor, requestQty, settlement, ticketStatusFromTransfers } from "../transfers";
 
 const line = (over = {}) => ({ shared_sku: "S", part_name: "Skærm", qty_requested: 2, qty_sent: 2, qty_received: 0, qty_written_off: 0, write_off_reason: null, unit_cost_ore: 41500, ...over });
 const transfer = (over: Partial<Transfer> = {}): Transfer => ({
@@ -61,4 +61,29 @@ describe("availabilityElsewhere", () => {
 
 it("formatKr is deterministic", () => {
   expect(formatKr(123456)).toBe("1.234,56 kr.");
+});
+
+describe("ticketStatusFromTransfers (badge: Skal bestilles -> Anmodet -> Undervejs)", () => {
+  it("stays needs_order while a missing part has no live request", () => {
+    expect(ticketStatusFromTransfers(["A", "B"], [{ shared_sku: "A", status: "REQUESTED" }])).toBe("needs_order");
+  });
+  it("is requested, then in transit, then ok", () => {
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "REQUESTED" }])).toBe("requested");
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "SENT" }])).toBe("in_transit");
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "PARTIALLY_RECEIVED" }])).toBe("in_transit");
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "RECEIVED" }])).toBe("ok");
+  });
+  it("falls back to needs_order when the request is rejected or cancelled", () => {
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "REJECTED" }])).toBe("needs_order");
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "CANCELLED" }, { shared_sku: "A", status: "REQUESTED" }])).toBe("requested");
+  });
+});
+
+describe("requestQty", () => {
+  const l = { shared_sku: "A", name: "A", needed: 2, available: -1 };
+  it("asks for the deficit, capped by what the other location has, at least 1", () => {
+    expect(requestQty(l, 5)).toBe(2);
+    expect(requestQty(l, 1)).toBe(1);
+    expect(requestQty({ ...l, available: 1 }, 5)).toBe(1);
+  });
 });

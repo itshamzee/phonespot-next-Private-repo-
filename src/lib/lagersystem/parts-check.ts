@@ -113,7 +113,9 @@ export function applyPartAdded(
   shortage: ShortageLine[] | null,
   sku: string,
 ): { status: PartsStatus | null; shortage: ShortageLine[] | null; changed: boolean } {
-  if (status !== "needs_order" && status !== "ordered") return { status, shortage, changed: false };
+  if (status !== "needs_order" && status !== "ordered" && status !== "requested" && status !== "in_transit") {
+    return { status, shortage, changed: false };
+  }
   const before = shortage ?? [];
   const remaining = before.filter((l) => l.shared_sku !== sku);
   if (remaining.length === before.length) return { status, shortage, changed: false };

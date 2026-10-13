@@ -101,6 +101,13 @@ describe("checkTicketParts", () => {
     await run(repo, client(0)).result;
     expect(repo.tickets[0].parts_shortage?.[0].name).toBe("Fra katalog");
   });
+  it("does not overwrite a ticket whose part is requested or on its way", async () => {
+    for (const parts_status of ["requested", "in_transit"] as const) {
+      const repo = memoryPartsCheckRepo({ tickets: [ticket("new", { parts_status })], links });
+      expect(await run(repo, client(0)).result).toBe("skipped");
+      expect(repo.tickets[0].parts_status).toBe(parts_status);
+    }
+  });
 });
 
 describe("shortageKey", () => {
