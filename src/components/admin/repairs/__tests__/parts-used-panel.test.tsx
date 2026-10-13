@@ -180,4 +180,20 @@ describe("PartsUsedPanel", () => {
     });
     expect(await screen.findByText("Defekt del registreret og fjernet fra sagen. Tilføj den nye del herunder.")).toBeVisible();
   });
+
+  it.each([
+    [{ part_removed: false, readded_qty: 0, warning: "Defekt del registreret, men delen kunne ikke fjernes fra sagen. Fjern den under Dele brugt." }, "alert", "Defekt del registreret, men delen kunne ikke fjernes fra sagen. Fjern den under Dele brugt."],
+    [{ part_removed: true, readded_qty: 1, warning: null }, "status", "Defekt del registreret. 1 stk. står stadig på sagen. Tilføj den nye del herunder."],
+  ])("Markér som defekt reports the server outcome (%#)", async (resp, role, text) => {
+    vi.stubGlobal("crypto", { randomUUID: () => "88888888-8888-4888-8888-888888888888" });
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      if (url === "/api/admin/lager/rma") return json({ item: {}, ...resp }, 201);
+      return json({ enabled: true, location: "vejle-hub", reference: "PS-2026-0001", parts: [row({ qty: 2 })] });
+    }));
+    render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Markér Skærm iPhone 13 som defekt" }));
+    fireEvent.change(screen.getByLabelText("Fejlbeskrivelse"), { target: { value: "Ingen billede" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrér" }));
+    expect(await screen.findByRole(role as "alert" | "status")).toHaveTextContent(text);
+  });
 });

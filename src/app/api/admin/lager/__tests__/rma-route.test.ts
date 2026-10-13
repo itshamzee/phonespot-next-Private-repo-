@@ -219,3 +219,70 @@ it("unauthenticated is 401", async () => {
   expect((await post({ location: "vejle-hub", shared_sku: "S", qty: 1, reason: "x" })).status).toBe(401);
   expect((await act("send", { location: "vejle-hub" })).status).toBe(401);
 });
+
+// --- Fix round 1: delvis reklamation og fejl ved fjernelse ---
+
+const activeTakes = (repo: ReturnType<typeof memoryRepo>) => repo.rows.filter((r) => r.movement_type === "TAKE" && !r.voided_at);
+
+it("partial claim (1 of 2): returns the row and re-adds the good unit to the ticket with the same cost", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm iPhone 13", qty: 2, costPriceOre: 41500, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  const res = await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "Død pixel", ticket_id: TV, part_id: added.value.id });
+  expect(res.status).toBe(201);
+  expect(await res.json()).toMatchObject({ part_removed: true, readded_qty: 1, warning: null });
+  expect(repo.rows.some((r) => r.movement_type === "RETURN" && r.reverses_id === added.value.id && r.qty === 2)).toBe(true);
+  const left = activeTakes(repo);
+  expect(left).toHaveLength(1);
+  expect(left[0]).toMatchObject({ shared_sku: "SCR-IP13", part_name: "Skærm iPhone 13", qty: 1, cost_at_time_ore: 41500, location_code: "vejle-hub" });
+  expect(left[0].id).not.toBe(added.value.id);
+});
+
+it("full claim (2 of 2): returns the row and re-adds nothing", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm iPhone 13", qty: 2, costPriceOre: 41500, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  const res = await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 2, reason: "Død pixel", ticket_id: TV, part_id: added.value.id });
+  expect(await res.json()).toMatchObject({ part_removed: true, readded_qty: 0, warning: null });
+  expect(activeTakes(repo)).toHaveLength(0);
+});
+
+it("RMA registered but the part could not be removed: says so with a warning", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm", qty: 1, costPriceOre: null, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  repo.findReturnFor = async () => { throw new Error("db down"); };
+  const res = await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "x", ticket_id: TV, part_id: added.value.id });
+  expect(res.status).toBe(201);
+  expect(await res.json()).toMatchObject({
+    part_removed: false,
+    warning: "Defekt del registreret, men delen kunne ikke fjernes fra sagen. Fjern den under Dele brugt.",
+  });
+  expect(activeTakes(repo)).toHaveLength(1);
+});
+
+it("partial claim where re-adding the good unit fails: warns with the count", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm", qty: 3, costPriceOre: null, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  const realInsert = repo.insert.bind(repo);
+  repo.insert = async (row, now) => { if (row.movement_type === "TAKE") throw new Error("db down"); return realInsert(row, now); };
+  const res = await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "x", ticket_id: TV, part_id: added.value.id });
+  expect(res.status).toBe(201);
+  expect(await res.json()).toMatchObject({
+    part_removed: true,
+    readded_qty: 0,
+    warning: "Defekt del registreret, men de 2 resterende stk. kunne ikke lægges tilbage på sagen. Tilføj dem under Dele brugt.",
+  });
+});
+
+it("a manager sees credit_ore but not the cost price", async () => {
+  s.client!.listRma.mockResolvedValue([item({ status: "CREDITED", credit_ore: 41500 })]);
+  s.staff = asManager("vejle");
+  const body = await (await GET(new NextRequest("https://x/api/admin/lager/rma?location=vejle-hub"))).json();
+  expect(body.items[0]).toMatchObject({ credit_ore: 41500 });
+  expect(body.items[0]).not.toHaveProperty("unit_cost_ore");
+  s.staff = asStore("vejle");
+  const staffBody = await (await GET(new NextRequest("https://x/api/admin/lager/rma?location=vejle-hub"))).json();
+  expect(staffBody.items[0]).not.toHaveProperty("credit_ore");
+});

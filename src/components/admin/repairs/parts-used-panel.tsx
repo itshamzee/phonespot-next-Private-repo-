@@ -47,7 +47,7 @@ export function PartsUsedPanel({
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
   const [defectFor, setDefectFor] = useState<RepairPartRow | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; warning: boolean } | null>(null);
   const [elsewhere, setElsewhere] = useState<Record<string, { location: string; label: string; qty: number }[]>>({});
   useEffect(() => {
     if (!state || !state.enabled || state.parts_status !== "needs_order" || !state.location) return;
@@ -251,11 +251,13 @@ export function PartsUsedPanel({
               maxQty: defectFor.qty,
             }}
             onCancel={() => setDefectFor(null)}
-            onDone={async (message) => { setDefectFor(null); setNotice(message); await load(); }}
+            onDone={async (text, warning = false) => { setDefectFor(null); setNotice({ text, warning }); await load(); }}
           />
         </div>
       )}
-      {notice && <p role="status" className="m-0 mb-3 text-sm text-[#1A3D2E]">{notice}</p>}
+      {notice && (notice.warning
+        ? <p role="alert" className="m-0 mb-3 rounded-[10px] border border-[#F2C9C4] bg-[#FDF1F0] p-3 text-sm text-[#B42318]">{notice.text}</p>
+        : <p role="status" className="m-0 mb-3 text-sm text-[#1A3D2E]">{notice.text}</p>)}
 
       {!state.location ? (
         <p className="m-0 text-sm text-[#7A4A06]">Vælg butik på sagen, før du registrerer dele.</p>

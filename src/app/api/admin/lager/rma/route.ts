@@ -6,11 +6,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient } from "@/lib/lagersystem/client";
 import { forbiddenLocation, lagersystemErrorResponse, NOT_ENABLED } from "@/lib/lagersystem/http";
 import { actorLabel, canUseLocation, PHONESPOT_LOCATION_CODES } from "@/lib/lagersystem/locations";
-import { removePart } from "@/lib/lagersystem/repair-parts";
+import { addPart, removePart } from "@/lib/lagersystem/repair-parts";
 import { isRmaStatus, rmaKeyForTicketPart } from "@/lib/lagersystem/rma";
 import { rmaForStaff } from "@/lib/lagersystem/rma-server";
 import { scheduleSend } from "@/lib/lagersystem/send-after";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
+import type { RepairPartRow } from "@/lib/lagersystem/types";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
   let reference = b.reference || undefined;
   let key = `admin:${b.idempotency_key}`;
   const repo = b.ticket_id ? createSupabaseRepairPartsRepo(createAdminClient()) : null;
+  let claimed: RepairPartRow | null = null;
 
   if (b.ticket_id && repo) {
     const ticket = await repo.getTicket(b.ticket_id);
@@ -78,6 +80,7 @@ export async function POST(req: NextRequest) {
       location = part.location_code;
       sharedSku = part.shared_sku;
       key = rmaKeyForTicketPart(ticket.id, part.id);
+      claimed = part;
     }
   }
   if (!canUseLocation(staff, location)) return forbiddenLocation();
@@ -98,17 +101,46 @@ export async function POST(req: NextRequest) {
     return lagersystemErrorResponse(err);
   }
 
+  // Fra en "Dele brugt"-række: hele rækken returneres (RETURN), og de gode enheder lægges
+  // tilbage på sagen som et nyt udtag, så de ikke bogføres tilbage på lager.
   let part_removed = false;
-  if (b.part_id && b.ticket_id && repo) {
+  let readded_qty = 0;
+  let warning: string | null = null;
+  if (claimed && b.ticket_id && repo) {
     try {
-      const removed = await removePart(repo, { ticketId: b.ticket_id, partId: b.part_id, staff });
+      const removed = await removePart(repo, { ticketId: b.ticket_id, partId: claimed.id, staff });
       if (removed.ok) {
         scheduleSend(removed.value, repo);
         part_removed = true;
       }
     } catch (err) {
-      console.error("[reklamation] kunne ikke fjerne delen fra sagen", b.part_id, err);
+      console.error("[reklamation] kunne ikke fjerne delen fra sagen", claimed.id, err);
+    }
+    const rest = claimed.qty - b.qty;
+    if (!part_removed) {
+      warning = "Defekt del registreret, men delen kunne ikke fjernes fra sagen. Fjern den under Dele brugt.";
+    } else if (rest > 0) {
+      try {
+        const readded = await addPart(repo, {
+          ticketId: b.ticket_id, sharedSku: claimed.shared_sku, partName: claimed.part_name, qty: rest,
+          costPriceOre: claimed.cost_at_time_ore, staff,
+        });
+        if (readded.ok) {
+          scheduleSend(readded.value, repo);
+          readded_qty = rest;
+        } else {
+          console.error("[reklamation] kunne ikke lægge resterende dele tilbage", claimed.id, readded.message);
+        }
+      } catch (err) {
+        console.error("[reklamation] kunne ikke lægge resterende dele tilbage", claimed.id, err);
+      }
+      if (readded_qty === 0) {
+        warning = `Defekt del registreret, men de ${rest} resterende stk. kunne ikke lægges tilbage på sagen. Tilføj dem under Dele brugt.`;
+      }
     }
   }
-  return NextResponse.json({ item: rmaForStaff(staff, result.item), part_removed }, { status: result.replayed ? 200 : 201 });
+  return NextResponse.json(
+    { item: rmaForStaff(staff, result.item), part_removed, readded_qty, warning },
+    { status: result.replayed ? 200 : 201 },
+  );
 }

@@ -62,10 +62,22 @@ function SendForm({ t, onDone }: { t: Transfer; onDone: (err: string | null) => 
 function RejectForm({ t, onDone }: { t: Transfer; onDone: (err: string | null) => void }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   async function submit() {
     if (!reason.trim()) { setError("Angiv en begrundelse"); return; }
-    const err = await postAction(t.id, "reject", { reason: reason.trim() });
-    if (err) setError(err); else onDone(null);
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true);
+    try {
+      const err = await postAction(t.id, "reject", { reason: reason.trim() });
+      if (err) setError(err); else onDone(null);
+    } catch {
+      setError("Lagersystemet svarer ikke lige nu. Prøv igen om lidt.");
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
   }
   return (
     <div className="mt-3 space-y-2 rounded-xl bg-cream p-3">
@@ -74,7 +86,7 @@ function RejectForm({ t, onDone }: { t: Transfer; onDone: (err: string | null) =
         <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} className="mt-1 w-full rounded-lg border border-soft-grey px-3 py-2 text-sm" />
       </label>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <button type="button" onClick={submit} className={primary}>Afvis anmodning</button>
+      <button type="button" disabled={busy} onClick={submit} className={primary}>Afvis anmodning</button>
     </div>
   );
 }
@@ -139,6 +151,32 @@ export function TransfersTab({ locations, canManage = false }: { locations: Loc[
   const [open, setOpen] = useState<Open>(null);
   const [requesting, setRequesting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const cancelInFlight = useRef(false);
+
+  // Skift af lokation/retning: tøm listen straks, så ingen handler på rækker fra den forrige visning.
+  function show(next: { location?: PhoneSpotLocationCode; direction?: "in" | "out" }) {
+    if ((next.location && next.location !== location) || (next.direction && next.direction !== direction)) {
+      setTransfers(null);
+      setOpen(null);
+    }
+    if (next.location) setLocation(next.location);
+    if (next.direction) setDirection(next.direction);
+  }
+
+  async function cancel(id: string) {
+    if (cancelInFlight.current) return;
+    cancelInFlight.current = true;
+    setCancelling(id);
+    try {
+      done("Anmodningen er annulleret")(await postAction(id, "cancel", {}));
+    } catch {
+      setError("Lagersystemet svarer ikke lige nu. Prøv igen om lidt.");
+    } finally {
+      cancelInFlight.current = false;
+      setCancelling(null);
+    }
+  }
 
   useEffect(() => {
     if (!location) return;
@@ -166,14 +204,14 @@ export function TransfersTab({ locations, canManage = false }: { locations: Loc[
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         {locations.map((l) => (
-          <button key={l.code} type="button" aria-pressed={l.code === location} onClick={() => setLocation(l.code)}
+          <button key={l.code} type="button" aria-pressed={l.code === location} onClick={() => show({ location: l.code })}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold ${l.code === location ? "bg-charcoal text-white" : "bg-stone-200 text-stone-700 hover:bg-stone-300"}`}>
             {l.name}
           </button>
         ))}
         <span className="mx-2 h-5 w-px bg-soft-grey" aria-hidden="true" />
         {(["in", "out"] as const).map((d) => (
-          <button key={d} type="button" aria-pressed={direction === d} onClick={() => setDirection(d)}
+          <button key={d} type="button" aria-pressed={direction === d} onClick={() => show({ direction: d })}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold ${direction === d ? "bg-charcoal text-white" : "bg-stone-200 text-stone-700 hover:bg-stone-300"}`}>
             {d === "in" ? "Indgående" : "Udgående"}
           </button>
@@ -184,7 +222,7 @@ export function TransfersTab({ locations, canManage = false }: { locations: Loc[
       </div>
 
       {requesting && location && (
-        <TransferRequestForm to={location} onCancel={() => setRequesting(false)} onDone={(m) => { setRequesting(false); setNotice(m); setDirection("in"); setReloadKey((k) => k + 1); }} />
+        <TransferRequestForm to={location} onCancel={() => setRequesting(false)} onDone={(m) => { setRequesting(false); setNotice(m); show({ direction: "in" }); setReloadKey((k) => k + 1); }} />
       )}
       {notice && <p role="status" className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">{notice}</p>}
       {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
@@ -222,7 +260,7 @@ export function TransfersTab({ locations, canManage = false }: { locations: Loc[
                 <button type="button" className={btn} onClick={() => setOpen({ id: t.id, kind: "receive" })}>Modtaget</button>
               )}
               {t.status === "REQUESTED" && t.requested_by_company === "phonespot" && (
-                <button type="button" className={btn} onClick={async () => done("Anmodningen er annulleret")(await postAction(t.id, "cancel", {}))}>Annullér</button>
+                <button type="button" className={btn} disabled={cancelling !== null} onClick={() => cancel(t.id)}>Annullér</button>
               )}
             </div>
             {open?.id === t.id && open.kind === "send" && <SendForm t={t} onDone={done("Flytningen er sendt")} />}

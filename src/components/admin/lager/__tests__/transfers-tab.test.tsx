@@ -99,4 +99,46 @@ describe("TransfersTab", () => {
     expect(within(cards[1]).queryByRole("button", { name: "Annullér" })).toBeNull();
     expect(within(cards[1]).getByText("Hovedlager Vejle skylder PhoneSpot 830,00 kr. (kostpris)")).toBeVisible();
   });
+
+  it("Afvis anmodning and Annullér are blocked while a request is in flight", async () => {
+    const pending: Array<(r: Response) => void> = [];
+    const f = vi.fn((url: string) => {
+      if (url.startsWith("/api/admin/lager/transfers?")) {
+        return json({ transfers: [t({ id: "a", from: "vejle-hub", to: "phonespot-slagelse", requested_by_company: "phonespot" })] });
+      }
+      return new Promise<Response>((r) => { pending.push(r); });
+    });
+    vi.stubGlobal("fetch", f);
+    render(<TransfersTab locations={locations} />);
+    fireEvent.click(screen.getByRole("button", { name: "Udgående" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Afvis" }));
+    fireEvent.change(screen.getByLabelText("Begrundelse"), { target: { value: "Nej" } });
+    const reject = screen.getByRole("button", { name: "Afvis anmodning" });
+    fireEvent.click(reject);
+    fireEvent.click(reject);
+    await waitFor(() => expect(reject).toBeDisabled());
+    expect(f.mock.calls.filter((c) => String(c[0]).endsWith("/reject"))).toHaveLength(1);
+
+    const cancel = screen.getByRole("button", { name: "Annullér" });
+    fireEvent.click(cancel);
+    fireEvent.click(cancel);
+    await waitFor(() => expect(cancel).toBeDisabled());
+    expect(f.mock.calls.filter((c) => String(c[0]).endsWith("/cancel"))).toHaveLength(1);
+  });
+
+  it("clears the list when location or direction changes, so stale rows are never acted on", async () => {
+    let calls = 0;
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      if (url.startsWith("/api/admin/lager/transfers?")) {
+        calls += 1;
+        return calls === 1 ? json({ transfers: [t({ status: "SENT", lines: [line({ qty_sent: 2 })] })] }) : new Promise<Response>(() => {});
+      }
+      return json({});
+    }));
+    render(<TransfersTab locations={locations} />);
+    expect(await screen.findByText("Esbjerg → Hovedlager Vejle")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Slagelse" }));
+    expect(screen.queryByText("Esbjerg → Hovedlager Vejle")).toBeNull();
+    expect(screen.queryAllByRole("article")).toHaveLength(0);
+  });
 });

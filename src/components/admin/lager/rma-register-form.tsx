@@ -14,7 +14,7 @@ const input = "h-10 w-full rounded-lg border border-[#C9D0C7] bg-white px-3 text
 const label = "mb-1 block text-xs font-semibold text-[#15211B]";
 
 /** "Registrér defekt del" (spec §4.3b). Med `fixed` kommer del, lokation og sagsnummer fra en "Dele brugt"-række. */
-export function RmaRegisterForm({ locations, fixed, onDone, onCancel }: { locations: Loc[]; fixed?: RmaFixed; onDone: (message: string) => void; onCancel: () => void }) {
+export function RmaRegisterForm({ locations, fixed, onDone, onCancel }: { locations: Loc[]; fixed?: RmaFixed; onDone: (message: string, warning?: boolean) => void; onCancel: () => void }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Part[]>([]);
   const [part, setPart] = useState<{ shared_sku: string; name: string } | null>(fixed ? { shared_sku: fixed.shared_sku, name: fixed.part_name } : null);
@@ -74,9 +74,11 @@ export function RmaRegisterForm({ locations, fixed, onDone, onCancel }: { locati
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) { setError((body as { error?: string }).error ?? "Registreringen fejlede"); return; }
-      onDone((body as { part_removed?: boolean }).part_removed
-        ? "Defekt del registreret og fjernet fra sagen. Tilføj den nye del herunder."
-        : "Defekt del registreret");
+      const r = body as { part_removed?: boolean; readded_qty?: number; warning?: string | null };
+      if (r.warning) onDone(r.warning, true);
+      else if (r.part_removed && r.readded_qty) onDone(`Defekt del registreret. ${r.readded_qty} stk. står stadig på sagen. Tilføj den nye del herunder.`);
+      else if (r.part_removed) onDone("Defekt del registreret og fjernet fra sagen. Tilføj den nye del herunder.");
+      else onDone("Defekt del registreret");
     } catch {
       setError("Lagersystemet svarer ikke lige nu. Prøv igen om lidt.");
     } finally {
