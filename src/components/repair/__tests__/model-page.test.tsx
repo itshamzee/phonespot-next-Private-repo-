@@ -20,6 +20,9 @@ vi.mock("@/lib/supabase/repairs", () => ({
   getServicesByModel: async () => data.services,
   getAllModelSlugs: async () => [],
 }));
+vi.mock("@/lib/product/model-accessories", () => ({
+  getModelUpsell: async () => [],
+}));
 vi.mock("@/components/ui/storstrom-insurance-teaser", () => ({
   StorstromInsuranceTeaser: () => null,
 }));
@@ -64,5 +67,79 @@ describe("repair model availability", () => {
     expect(
       screen.queryByRole("button", { name: /Vælg Skærmskift/ }),
     ).not.toBeInTheDocument();
+  });
+  it("lists every quality and price in a crawlable price table", async () => {
+    data.services = [
+      {
+        id: "s2",
+        name: "Skærmskift",
+        price_dkk: 899,
+        slug: "skaermskift-original",
+        estimated_minutes: 30,
+        description: null,
+        warranty_info: "Livstidsgaranti på arbejde og dele",
+        includes: null,
+        quality_tier: "original",
+        service_category: "Skærmskift",
+        info_note: null,
+      },
+      {
+        id: "s1",
+        name: "Skærmskift",
+        price_dkk: 499,
+        slug: "skaermskift",
+        estimated_minutes: 30,
+        description: null,
+        warranty_info: "Livstidsgaranti på arbejde og dele",
+        includes: null,
+        quality_tier: "standard",
+        service_category: "Skærmskift",
+        info_note: null,
+      },
+      {
+        id: "w",
+        name: "Vandskade",
+        price_dkk: 699,
+        slug: "vandskade",
+        estimated_minutes: 45,
+        description: null,
+        warranty_info: "3 måneders garanti",
+        includes: null,
+        quality_tier: null,
+        service_category: "Vandskade",
+        info_note: null,
+      },
+    ];
+    render(await ModelPage({ params }));
+    const table = screen.getByRole("table");
+    const rows = Array.from(table.querySelectorAll("tbody tr")).map((r) =>
+      r.textContent,
+    );
+    expect(rows).toHaveLength(3);
+    // Standard før original inden for samme reparation.
+    expect(rows[0]).toContain("Standard");
+    expect(rows[0]).toContain("499 kr.");
+    expect(rows[1]).toContain("Original");
+    expect(rows[1]).toContain("899 kr.");
+    expect(rows[2]).toContain("iPhone test vandskade");
+    // Vandskade har ikke livstidsgaranti, så linjen må ikke love det på alt.
+    expect(screen.getByText("På de fleste reparationer")).toBeInTheDocument();
+    expect(screen.getByText("30–45 min.")).toBeInTheDocument();
+  });
+  it("lists the stores, mail-in and upcoming stores", async () => {
+    render(await ModelPage({ params }));
+    expect(screen.getByRole("link", { name: "Slagelse" })).toHaveAttribute(
+      "href",
+      "/butik/slagelse",
+    );
+    expect(screen.getByRole("link", { name: "Vejle" })).toHaveAttribute(
+      "href",
+      "/reparation-vejle",
+    );
+    expect(screen.getByRole("link", { name: "Sådan gør du" })).toHaveAttribute(
+      "href",
+      "/reparation/indsend",
+    );
+    expect(screen.getByText(/Åbner november 2026/)).toBeInTheDocument();
   });
 });

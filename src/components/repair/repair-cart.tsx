@@ -681,26 +681,30 @@ export function RepairCart({
                       {includesTemperedGlass ? "Valgt: " : "Tilføj "}
                       beskyttelsesglas
                     </span>
-                    <strong>+99 DKK</strong>
+                    <strong>+{fmtPrice(99)} DKK</strong>
                   </button>
                   {discountPercent > 0 && (
                     <div className={styles.summaryDiscount}>
                       <span>Rabat ({discountPercent}%)</span>
-                      <strong>−{discountAmount} DKK</strong>
+                      <strong>−{fmtPrice(discountAmount)} DKK</strong>
                     </div>
                   )}
                   <div className={styles.total}>
                     {discountPercent > 0 && (
                       <p>
                         <span>Subtotal</span>
-                        <span>{subtotal} DKK</span>
+                        <span>{fmtPrice(subtotal)} DKK</span>
                       </p>
                     )}
                     <div>
                       <span>Total</span>
-                      <strong>{totalPrice} DKK</strong>
+                      <strong>{fmtPrice(totalPrice)} DKK</strong>
                     </div>
-                    <small>Inkl. moms og reservedele</small>
+                    <small>
+                      {showExclMoms
+                        ? "Ekskl. moms · inkl. reservedele. Du betaler " + totalPrice + " DKK inkl. moms"
+                        : "Inkl. moms og reservedele"}
+                    </small>
                   </div>
                   <button
                     type="button"

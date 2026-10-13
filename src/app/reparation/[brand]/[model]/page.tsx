@@ -3,11 +3,17 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORES } from "@/lib/store-config";
+import { STORES, UPCOMING_STORES } from "@/lib/store-config";
 import { DeviceImage } from "@/components/repair/device-image";
 import { RepairCart } from "@/components/repair/repair-cart";
+import { RepairPriceTable } from "@/components/repair/repair-price-table";
+import { RepairStoreFinder } from "@/components/repair/repair-store-finder";
+import { RepairUpsell } from "@/components/repair/repair-upsell";
+import { getModelUpsell } from "@/lib/product/model-accessories";
+import { accessoryModelSlug } from "@/lib/product/accessory-models";
 import { StorstromInsuranceTeaser } from "@/components/ui/storstrom-insurance-teaser";
 import styles from "@/components/repair/repair.module.css";
+import sectionStyles from "@/components/repair/model-sections.module.css";
 import {
   getBrandBySlug,
   getModelBySlug,
@@ -67,12 +73,71 @@ export default async function ModelPricePage({ params }: Props) {
   const model = await getModelBySlug(brand.id, modelSlug);
   if (!model) notFound();
 
-  const services = await getServicesByModel(model.id);
+  const [services, upsell] = await Promise.all([
+    getServicesByModel(model.id),
+    getModelUpsell(model.name),
+  ]);
   const paidServices = services.filter((s) => s.price_dkk > 0);
   const cheapest =
     paidServices.length > 0
       ? Math.min(...paidServices.map((s) => s.price_dkk))
       : null;
+
+  // Tillidslinjen bygger på modellens egne data, så den aldrig lover mere end
+  // reparationerne faktisk har: garanti fra warranty_info, tid fra estimated_minutes.
+  const repairs = services.filter((s) => s.slug !== "diagnostik");
+  const lifetimeCount = repairs.filter((s) =>
+    s.warranty_info?.toLocaleLowerCase("da-DK").includes("livstid"),
+  ).length;
+  const minutes = repairs
+    .map((s) => s.estimated_minutes ?? 0)
+    .filter((m) => m > 0);
+  const trust = [
+    lifetimeCount > 0 && {
+      title: "Livstidsgaranti",
+      text:
+        lifetimeCount === repairs.length
+          ? "På arbejde og dele"
+          : "På de fleste reparationer",
+    },
+    minutes.length > 0 && {
+      title:
+        Math.min(...minutes) === Math.max(...minutes)
+          ? "Ca. " + minutes[0] + " min."
+          : Math.min(...minutes) + "–" + Math.max(...minutes) + " min.",
+      text: "Forventet tid pr. reparation",
+    },
+    {
+      title: "Gratis fejlsøgning",
+      text: "Ved disken i butikken",
+    },
+    {
+      title: "4,7 på Trustpilot",
+      text: "Læs vores anmeldelser",
+      href: "https://dk.trustpilot.com/review/phonespot.dk",
+    },
+  ].filter(Boolean) as { title: string; text: string; href?: string }[];
+
+  const storeCities = Object.values(STORES).map((store) => store.city);
+  const finderStores = Object.values(STORES).map((store) => ({
+    slug: store.slug,
+    name: store.name,
+    city: store.city,
+    street: store.street,
+    zip: store.zip,
+    mall: store.mall,
+    phone: store.phone,
+    href: store.slug === "vejle" ? "/reparation-vejle" : "/butik/" + store.slug,
+    mapsUrl: store.googleMapsUrl,
+    hours: store.hours,
+    coordinates: store.coordinates,
+  }));
+  const upcomingStores = Object.values(UPCOMING_STORES).map((store) => ({
+    slug: store.slug,
+    city: store.city.replace(/\s+[NSØV]$/, ""),
+    mall: store.mall,
+    opens: store.opens,
+  }));
 
   // Reparationerne udføres i begge butikker, så schemaet beskriver ydelsen
   // med begge som udbyder i stedet for at binde modelsiden til én adresse.
@@ -165,12 +230,32 @@ export default async function ModelPricePage({ params }: Props) {
                     ? "Fra " + cheapest.toLocaleString("da-DK") + " kr."
                     : "Priser kommer snart"}
                 </span>
-                <span>Vejle og Slagelse</span>
+                <span>{storeCities.join(" og ")}</span>
               </div>
             </div>
           </div>
+          {services.length > 0 && (
+            <ul className={sectionStyles.trustLine} aria-label="Derfor PhoneSpot">
+              {trust.map((item) => (
+                <li key={item.title}>
+                  <strong>{item.title}</strong>
+                  {item.href ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer">
+                      {item.text}
+                    </a>
+                  ) : (
+                    <span>{item.text}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </header>
-        <section className={styles.section} aria-label="Reparationer og priser">
+        <section
+          id="reparationer"
+          className={styles.section}
+          aria-label="Reparationer og priser"
+        >
           {services.length === 0 ? (
             <div className={styles.empty}>
               <h2>Priser kommer snart</h2>
@@ -208,32 +293,31 @@ export default async function ModelPricePage({ params }: Props) {
             />
           )}
         </section>
-        <section className={styles.help}>
-          <div>
-            <h2>Er du i tvivl om fejlen?</h2>
-            <p>
-              Du behøver ikke kende løsningen på forhånd. Kontakt os eller kom
-              forbi med din {model.name}, så hjælper vi dig videre.
-            </p>
-            <Link href="/kontakt">Få hjælp til reparationen</Link>
-          </div>
-          <div className={styles.storeLinks}>
-            <Link href="/reparation-vejle">
-              <span>
-                <strong>Vejle</strong>
-                <small>Walk-in, priser og garanti</small>
-              </span>
-              <span aria-hidden="true">→</span>
-            </Link>
-            <Link href="/butik/slagelse">
-              <span>
-                <strong>Slagelse</strong>
-                <small>Find vej og åbningstider</small>
-              </span>
-              <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-        </section>
+        <RepairUpsell
+          modelName={model.name}
+          items={upsell}
+          allHref={"/tilbehoer?model=" + accessoryModelSlug(model.name)}
+        />
+        {services.length > 0 && (
+          <RepairPriceTable
+            modelName={model.name}
+            services={services.map((s) => ({
+              id: s.id,
+              name: s.name,
+              slug: s.slug,
+              price_dkk: s.price_dkk,
+              estimated_minutes: s.estimated_minutes,
+              warranty_info: s.warranty_info,
+              quality_tier: s.quality_tier,
+              service_category: s.service_category,
+            }))}
+          />
+        )}
+        <RepairStoreFinder
+          modelName={model.name}
+          stores={finderStores}
+          upcoming={upcomingStores}
+        />
         <section className={styles.faq}>
           <h2>Inden du afleverer.</h2>
           <div>
