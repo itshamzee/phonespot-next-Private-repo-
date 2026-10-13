@@ -52,7 +52,7 @@ export default function B2BLoginPage() {
       }
     }
 
-    router.push("/reservedele");
+    router.push("/b2b/dashboard");
   }
 
   if (pendingApproval) {
@@ -103,7 +103,7 @@ export default function B2BLoginPage() {
           </p>
           <h1 className="font-display text-3xl font-bold text-[#111111]">B2B-login</h1>
           <p className="mt-2 text-sm text-[#86868B]">
-            Log ind for at se engrospriser på reservedele
+            Log ind for at se jeres ordrer og reklamationer
           </p>
         </div>
 
@@ -170,9 +170,9 @@ export default function B2BLoginPage() {
           </form>
 
           <div className="mt-6 border-t border-[#E5E5EA] pt-5 text-center text-sm text-[#86868B]">
-            Ny kunde?{" "}
-            <Link href="/b2b/registrer" className="font-medium text-[#1A3D2E] hover:underline">
-              Registrer dig her
+            Ny erhvervskunde?{" "}
+            <Link href="/erhverv" className="font-medium text-[#1A3D2E] hover:underline">
+              Se erhvervsløsninger
             </Link>
           </div>
         </div>

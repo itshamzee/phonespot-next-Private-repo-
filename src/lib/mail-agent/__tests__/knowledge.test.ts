@@ -4,6 +4,11 @@ import { buildKnowledge, FORBIDDEN_WORDS } from "@/lib/mail-agent/knowledge";
 describe("buildKnowledge", () => {
   const text = buildKnowledge();
 
+  it("says we no longer sell spare parts", () => {
+    expect(text).toContain("Vi sælger ikke reservedele");
+    expect(text).not.toContain("- Reservedele til reparation.");
+  });
+
   it("names both stores with hours and phone", () => {
     expect(text).toContain("PhoneSpot Slagelse");
     expect(text).toContain("PhoneSpot Vejle");

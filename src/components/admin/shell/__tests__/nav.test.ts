@@ -15,9 +15,6 @@ describe("resolveActive", () => {
   });
 
   it("det længste præfiks vinder", () => {
-    expect(at("/admin/reservedele")).toEqual(["varer", "Reservedele"]);
-    expect(at("/admin/reservedele/kategorier")).toEqual(["varer", "Kategorier, reservedele"]);
-    expect(at("/admin/reservedele/abc-123")).toEqual(["varer", "Reservedele"]);
     expect(at("/admin/platform/pos/cashup")).toEqual(["kasse", "Dagsopgørelse"]);
     expect(at("/admin/platform/pos")).toEqual(["kasse", "Kasseapparat"]);
     expect(at("/admin/opkoeb/ko")).toEqual(["opkoeb", "Kø"]);
@@ -36,12 +33,23 @@ describe("resolveActive", () => {
     expect(at("/admin/platform")).toEqual(["overblik", null]);
   });
 
+  it("de gamle reservedelssider ligger under Varer uden eget menupunkt", () => {
+    expect(at("/admin/reservedele")).toEqual(["varer", null]);
+    expect(at("/admin/reservedele/kategorier")).toEqual(["varer", null]);
+    expect(at("/admin/reservedele/abc-123")).toEqual(["varer", null]);
+  });
+
   it("et præfiks matcher kun hele sti-led", () => {
     expect(at("/admin/kunderne")).toEqual([null, null]);
   });
 });
 
 describe("NAV", () => {
+  it("viser ikke reservedelssalg i menuen", () => {
+    const hrefs = NAV.flatMap((a) => (a.children ?? []).map((c) => c.href));
+    expect(hrefs.filter((h) => h.startsWith("/admin/reservedele"))).toEqual([]);
+  });
+
   it("hvert menupunkt peger på en side, der findes", () => {
     const root = join(process.cwd(), "src/app/(admin)");
     const hrefs = NAV.flatMap((a) => [a.href, ...(a.children ?? []).map((c) => c.href)]);

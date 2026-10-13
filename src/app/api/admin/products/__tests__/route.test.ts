@@ -124,7 +124,7 @@ it("opretter reservedel med begge kategorifelter og uden lager når intet er ang
     items: [{ title: "iPhone 13 skærm", sellingPrice: 89900, partCategoryId: "cat", deviceBrand: "Apple", deviceModel: "iPhone 13", images: [] }],
   });
   expect(res.status).toBe(201);
-  expect(s.inserted[0]).toMatchObject({ category: "spare-part", subcategory: "spare-part", part_category_id: "cat", status: "published" });
+  expect(s.inserted[0]).toMatchObject({ category: "spare-part", subcategory: "spare-part", part_category_id: "cat", status: "draft", is_active: false });
   expect(s.stock).toEqual([]);
 });
 

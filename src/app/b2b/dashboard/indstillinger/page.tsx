@@ -340,7 +340,7 @@ export default function IndstillingerPage() {
               {
                 key: "nyeProdukter" as const,
                 label: "Nye produkter",
-                desc: "Nyhedsbrev om nye reservedele og tilbud",
+                desc: "Nyhedsbrev om nyheder og tilbud",
               },
             ] as const
           ).map((pref) => (

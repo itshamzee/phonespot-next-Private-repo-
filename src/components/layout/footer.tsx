@@ -11,7 +11,6 @@ const PRODUCT_LINKS = [
   { label: "iPads", href: "/ipads" },
   { label: "Bærbare", href: "/baerbare" },
   { label: "Smartwatches", href: "/smartwatches" },
-  { label: "Reservedele", href: "/reservedele" },
   { label: "Tilbehør", href: "/tilbehoer" },
 ] as const;
 

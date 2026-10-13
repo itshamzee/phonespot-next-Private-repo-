@@ -22,7 +22,6 @@ const categories: { label: string; name: string; key: string; href: string; icon
 const links: { label: string; href: string; icon: StorefrontIconKind }[] = [
   { label: "Smartphones", href: "/smartphones", icon: "phone" },
   { label: "Tilbehør", href: "/tilbehoer", icon: "cable" },
-  { label: "Reservedele", href: "/reservedele", icon: "repair" },
 ];
 
 function ProductCard({ product }: { product: HomepageProduct }) {

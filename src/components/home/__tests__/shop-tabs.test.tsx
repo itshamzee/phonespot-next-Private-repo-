@@ -7,6 +7,12 @@ const response = (items: ReturnType<typeof product>[]) => ({ ok: true, json: asy
 afterEach(() => vi.unstubAllGlobals());
 
 describe("ShopTabs", () => {
+  it("does not offer spare parts as a shop link", () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    render(<ShopTabs />);
+    expect(screen.queryByRole("link", { name: /Reservedele/ })).toBeNull();
+  });
+
   it("starts with iPhones and exposes loading until the real catalog arrives", async () => {
     let resolve!: (value: unknown) => void;
     vi.stubGlobal("fetch", vi.fn(() => new Promise(r => { resolve = r; })));

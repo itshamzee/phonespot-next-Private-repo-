@@ -80,3 +80,15 @@ it("har stadig tilbehøret med, med rigtig kategori i linket", async () => {
   const acc = items(xml).find((i) => tag(i, "id") === "a1");
   expect(tag(acc!, "link")).toBe("https://phonespot.dk/tilbehoer/covers/cover-til-iphone");
 });
+
+it("tager tilbehør uden subcategory med og udelader reservedele", async () => {
+  s.sku = [
+    ...s.sku,
+    { id: "a2", title: "Oplader", slug: "oplader-usb-c", subcategory: null, category: "accessory", status: "published", is_active: true, images: ["https://x/2.webp"], selling_price: 14900, sale_price: null, brand: "Rixus", ean: null, product_number: "RIX2", description: "Tekst", short_description: "Kort" },
+    { id: "a3", title: "Skærm til iPhone 13", slug: "skaerm-iphone-13", subcategory: "spare-part", category: "accessory", status: "published", is_active: true, images: ["https://x/3.webp"], selling_price: 99900, sale_price: null, brand: "Foo", ean: null, product_number: "SP1", description: "Tekst", short_description: "Kort" },
+  ];
+  const xml = await (await GET()).text();
+  const links = items(xml).map((i) => tag(i, "link"));
+  expect(links.some((l) => l.endsWith("/oplader-usb-c"))).toBe(true);
+  expect(links.some((l) => l.endsWith("/skaerm-iphone-13"))).toBe(false);
+});

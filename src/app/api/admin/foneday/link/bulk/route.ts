@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
           ean: catalog.ean ?? null,
           product_number: catalog.foneday_sku,
           images: catalog.image_url ? [catalog.image_url] : [],
-          status: "published",
-          is_active: true,
+          status: skuSubcategory === "spare-part" ? "draft" : "published",
+          is_active: skuSubcategory !== "spare-part",
           attributes,
         })
         .select()

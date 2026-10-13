@@ -173,8 +173,9 @@ export async function POST(req: NextRequest) {
       barcode: barcode || null,
       ean: ean || null,
       b2b_price: b2b_price != null ? Number(b2b_price) : null,
-      status: status || "published",
-      is_active: true,
+      // Reservedele sælges ikke på webshoppen: altid kladde.
+      status: "draft",
+      is_active: false,
     })
     .select()
     .single();

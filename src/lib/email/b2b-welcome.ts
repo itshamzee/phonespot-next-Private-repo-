@@ -93,12 +93,6 @@ function buildB2BWelcomeHtml(params: B2BWelcomeParams): string {
                 <tr>
                   <td style="padding:8px 0;font-size:14px;color:${BRAND.charcoal};line-height:1.5;">
                     <span style="color:${BRAND.greenLight};font-weight:700;margin-right:8px;">&#10003;</span>
-                    Adgang til reservedele og reparationskomponenter
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:8px 0;font-size:14px;color:${BRAND.charcoal};line-height:1.5;">
-                    <span style="color:${BRAND.greenLight};font-weight:700;margin-right:8px;">&#10003;</span>
                     Prioriteret kundeservice og teknisk support
                   </td>
                 </tr>
@@ -166,7 +160,6 @@ HVAD SKER DER NU?
 
 DINE FORDELE SOM FORHANDLER:
 - Engros-priser paa hele vores sortiment
-- Adgang til reservedele og reparationskomponenter
 - Prioriteret kundeservice og teknisk support
 - Fleksible betalingsbetingelser efter godkendelse
 

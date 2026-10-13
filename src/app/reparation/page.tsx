@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description:
     "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, MacBook-service og mere. Se priser og vælg din reparation.",
   keywords:
-    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle, macbook service, mac reparation, macbook batteriskift, macbook skærmskift, reservedele macbook",
+    "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle, macbook service, mac reparation, macbook batteriskift, macbook skærmskift",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
@@ -66,10 +66,6 @@ const REPAIR_FAQ = [
     question: "Reparerer I også iPad og MacBook?",
     answer:
       "Ja. Vælg Apple og derefter din enhedstype i modelvælgeren. Find din model for at se de tilgængelige reparationer, eller kontakt os for hjælp.",
-  },
-  {
-    question: "Sælger I også reservedele?",
-    answer: "Ja. Se vores reservedele til blandt andet iPhone, iPad, Samsung og MacBook. Find delen til din model, eller kontakt os, hvis du vil have hjælp til reparationen.",
   },
 ];
 
@@ -234,7 +230,7 @@ export default async function ReparationPage() {
           <h2 id="repair-devices-title">Reparation af telefoner, tablets og bærbare</h2>
           <div>
             <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a></article>
-            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><Link href="/reservedele">Se også vores reservedele <StorefrontIcon kind="arrow" /></Link></article>
+            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><a href="#find-din-pris">Find din iPad eller MacBook <StorefrontIcon kind="arrow" /></a></article>
           </div>
           <p className={landing.longerLife}>Når en reparation holder din enhed i brug, får du mere ud af det, du allerede har. Er reparation ikke den rette løsning for dig, kan du også <Link href="/saelg-din-enhed">få din brugte enhed vurderet</Link>.</p>
         </section>

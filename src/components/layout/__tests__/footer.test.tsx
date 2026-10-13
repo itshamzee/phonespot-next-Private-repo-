@@ -20,6 +20,10 @@ describe("Footer", () => {
     render(<Footer />);
     expect(screen.getByRole("link", { name: "Sælg din enhed" })).toHaveAttribute("href", "/saelg-din-enhed");
   });
+  it("no longer links to spare parts", () => {
+    render(<Footer />);
+    expect(screen.queryByRole("link", { name: "Reservedele" })).toBeNull();
+  });
   it("preserves cookie settings and the insurance partner", () => {
     render(<Footer />);
     expect(screen.getByRole("button", { name: /cookie/i })).toBeVisible();
