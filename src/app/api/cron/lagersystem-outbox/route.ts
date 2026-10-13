@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient } from "@/lib/lagersystem/client";
 import { drainOutbox } from "@/lib/lagersystem/outbox";
+import { createSupabasePartsCheckRepo } from "@/lib/lagersystem/parts-check-repo";
+import { recheckUnknownTickets } from "@/lib/lagersystem/parts-check-run";
+import { notifyPartsShortage } from "@/lib/lagersystem/shortage-mail";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
 
 export const runtime = "nodejs";
@@ -31,14 +34,23 @@ async function handle(req: NextRequest) {
   const client = getLagersystemClient();
   if (!client) return NextResponse.json({ skipped: "not_configured" });
 
+  const sb = createAdminClient();
+  let report: Awaited<ReturnType<typeof drainOutbox>>;
   try {
-    const report = await drainOutbox({ repo: createSupabaseRepairPartsRepo(createAdminClient()), client, limit: 50 });
+    report = await drainOutbox({ repo: createSupabaseRepairPartsRepo(sb), client, limit: 50 });
     if (report.failed > 0) console.warn("[lagersystem-outbox] rækker markeret failed", report);
-    return NextResponse.json(report);
   } catch (err) {
     console.error("[lagersystem-outbox] kørsel fejlede", err);
     return NextResponse.json({ error: "drain failed" }, { status: 500 });
   }
+  // Spec §4.4: sager med parts_status 'unknown' tjekkes igen, når lagersystemet svarer.
+  let rechecked: number | null = null;
+  try {
+    rechecked = await recheckUnknownTickets({ repo: createSupabasePartsCheckRepo(sb), client, notify: notifyPartsShortage, limit: 20 });
+  } catch (err) {
+    console.error("[lagersystem-outbox] gentjek af lagerstatus fejlede", err);
+  }
+  return NextResponse.json({ ...report, rechecked });
 }
 
 export const GET = handle;

@@ -23,3 +23,7 @@ it("uses the central inbox and a short id for a ticket without store or number",
 it("never shows negative availability to staff as a confusing number", () => {
   expect(buildShortageMail(ticket, [{ ...lines[0], available: -3 }]).text).toContain("ledigt 0 (saldo i minus)");
 });
+
+it("names the Vejle stock location in plain Danish", () => {
+  expect(buildShortageMail({ ...ticket, store_id: "vejle" }, lines).text).toContain("Lager: Hovedlager Vejle");
+});
