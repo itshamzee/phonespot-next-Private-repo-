@@ -54,3 +54,8 @@ export interface RepairPartsRepo {
   markAttemptFailed(row: RepairPartRow, error: string, now: Date): Promise<void>;
   markFailed(id: string, error: string, now: Date): Promise<void>;
 }
+
+/** repair_tickets.parts_status (spec §4.4). NULL i databasen = ikke tjekket. */
+export type PartsStatus = "ok" | "needs_order" | "ordered" | "unknown";
+export type ShortageLine = { shared_sku: string; name: string; needed: number; available: number };
+export interface ServicePartLink { service_id: string; shared_sku: string; qty: number; part_name: string | null }

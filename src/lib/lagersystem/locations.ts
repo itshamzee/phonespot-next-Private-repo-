@@ -47,3 +47,8 @@ export function canUseLocation(
   if (isOwner(staff)) return true;
   return locationForStore(staffStoreSlug(staff)) === code;
 }
+
+/** Butikker, hvis sager trækker fra lokationen (bruges til "egne åbne sager", spec §4.4). */
+export function storesForLocation(code: PhoneSpotLocationCode): string[] {
+  return Object.entries(STORE_TO_LOCATION).filter(([, loc]) => loc === code).map(([store]) => store);
+}

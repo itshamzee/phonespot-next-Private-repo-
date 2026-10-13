@@ -34,3 +34,13 @@ describe("labels", () => {
     expect(actorLabel({ name: " ", email: null })).toBe("PhoneSpot-admin: ukendt medarbejder");
   });
 });
+
+import { storesForLocation } from "../locations";
+
+describe("storesForLocation", () => {
+  it("is the reverse of locationForStore", () => {
+    expect(storesForLocation("vejle-hub")).toEqual(["vejle"]);
+    expect(storesForLocation("phonespot-slagelse")).toEqual(["slagelse"]);
+    expect(storesForLocation("phonespot-esbjerg")).toEqual(["esbjerg"]);
+  });
+});
