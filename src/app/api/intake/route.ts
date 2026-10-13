@@ -8,6 +8,7 @@ import { sendSms } from "@/lib/gateway-api/client";
 import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { stripe } from "@/lib/stripe/client";
 import { Resend } from "resend";
+import { scheduleTicketPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -138,6 +139,9 @@ export async function POST(request: Request) {
     if (ticketErr) {
       return NextResponse.json({ error: ticketErr.message }, { status: 500 });
     }
+
+    // Lagertjek (spec §4.4) — kører efter svaret, påvirker aldrig indleveringen.
+    scheduleTicketPartsCheck(ticket.id);
 
     // 5. Log initial status
     await supabase.from("repair_status_log").insert({
