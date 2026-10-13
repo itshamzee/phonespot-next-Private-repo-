@@ -15,7 +15,7 @@ const KINDS: Array<{ kind: string; service: RegExp; part: RegExp }> = [
   { kind: "skaerm", service: /sk(æ|ae)rm|display|screen/i, part: /sk(æ|ae)rm|screen|display|lcd|oled/i },
   { kind: "batteri", service: /batteri|battery/i, part: /batter/i },
   { kind: "ladestik", service: /ladestik|opladning|charging|ladeport/i, part: /ladestik|charging|dock|ladeport/i },
-  { kind: "bagglas", service: /bagglas|bagside|back ?glass|bagcover/i, part: /bagglas|bagside|back ?(glass|cover|housing)|bagcover|housing/i },
+  { kind: "bagglas", service: /bagglas|bagside|back ?glass|bagcover/i, part: /bagglas|bagside|back ?(glass|cover|housing)|bagcover/i },
   { kind: "kamera", service: /kamera|camera/i, part: /kamera|camera/i },
   { kind: "hoejtaler", service: /h(ø|oe)jtaler|speaker/i, part: /h(ø|oe)jtaler|speaker/i },
 ];
@@ -103,4 +103,17 @@ export async function validateLinks(
     if (!skuOk.get(l.shared_sku)) errors.push(`Ydelse ${l.service_id}: delen ${l.shared_sku} findes ikke i lagersystemet`);
   }
   return errors;
+}
+
+/** Slår id'er op i bidder, så URL'en holdes kort bag proxyen, og samler resultatet. */
+export async function existingIdsChunked(
+  ids: string[],
+  fetchChunk: (chunk: string[]) => Promise<string[]>,
+  size = 100,
+): Promise<Set<string>> {
+  const found = new Set<string>();
+  for (let i = 0; i < ids.length; i += size) {
+    for (const id of await fetchChunk(ids.slice(i, i + size))) found.add(id);
+  }
+  return found;
 }

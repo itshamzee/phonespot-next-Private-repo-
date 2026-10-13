@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kindOf, normalizeModel, parseApprovedLinks, suggestForService, validateLinks, type PartIn, type ServiceIn } from "../service-part-suggest";
+import { kindOf, normalizeModel, parseApprovedLinks, suggestForService, validateLinks, existingIdsChunked, type PartIn, type ServiceIn } from "../service-part-suggest";
 
 const svc = (over: Partial<ServiceIn> = {}): ServiceIn => ({ id: "s1", name: "Skærmskift", quality_tier: "premium", service_category: null, model: "iPhone 13", brand: "Apple", ...over });
 const part = (over: Partial<PartIn>): PartIn => ({ shared_sku: "X", name: "Skærm", category: "Skærme", quality: null, device_models: ["iPhone 13"], ...over });
@@ -100,5 +100,23 @@ describe("validateLinks", () => {
     expect(errors).toHaveLength(3);
     expect(errors.join(" ")).toMatch(/s2/);
     expect(errors.join(" ")).toMatch(/C/);
+  });
+});
+
+describe("round 2", () => {
+  it("does not match a bare housing part to a back glass service", () => {
+    const cat = [part({ shared_sku: "CH", name: "Camera housing iPhone 13", category: "Kamera" })];
+    expect(suggestForService(svc({ name: "Bagglas", quality_tier: null }), cat).confidence).toBe("ingen");
+    const back = [part({ shared_sku: "BG", name: "Back glass iPhone 13", category: "Bagglas" })];
+    expect(suggestForService(svc({ name: "Bagglas", quality_tier: null }), back).shared_sku).toBe("BG");
+  });
+  it("looks up ids in chunks of 100 and merges the results", async () => {
+    const ids = Array.from({ length: 250 }, (_, i) => "s" + i);
+    const calls: string[][] = [];
+    const found = await existingIdsChunked(ids, async (chunk) => { calls.push(chunk); return chunk.filter((id) => id !== "s150"); });
+    expect(calls.map((c) => c.length)).toEqual([100, 100, 50]);
+    expect(found.size).toBe(249);
+    expect(found.has("s150")).toBe(false);
+    expect(found.has("s249")).toBe(true);
   });
 });

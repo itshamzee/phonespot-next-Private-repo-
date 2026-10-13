@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { getLagersystemClient, LagersystemError } from "../src/lib/lagersystem/client";
-import { parseApprovedLinks, validateLinks } from "./lib/service-part-suggest";
+import { existingIdsChunked, parseApprovedLinks, validateLinks } from "./lib/service-part-suggest";
 
 const fileIdx = process.argv.indexOf("--file");
 const file = fileIdx > -1 ? process.argv[fileIdx + 1] : null;
@@ -23,11 +23,12 @@ async function main() {
   if (!client) { console.error("Sæt LAGERSYSTEM_URL og LAGERSYSTEM_API_KEY i miljøet"); process.exit(1); }
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
   const bad = await validateLinks(links, {
-    existingServiceIds: async (ids) => {
-      const { data, error } = await sb.from("repair_services").select("id").in("id", ids);
-      if (error) throw error;
-      return new Set((data ?? []).map((r) => r.id as string));
-    },
+    existingServiceIds: (ids) =>
+      existingIdsChunked(ids, async (chunk) => {
+        const { data, error } = await sb.from("repair_services").select("id").in("id", chunk);
+        if (error) throw error;
+        return (data ?? []).map((r) => r.id as string);
+      }),
     partExists: async (sku) => {
       try { await client!.getPart(sku); return true; }
       catch (err) { if (err instanceof LagersystemError && err.status === 404) return false; throw err; }
