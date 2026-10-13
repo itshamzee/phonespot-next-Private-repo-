@@ -102,7 +102,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `platform/transfers` | GET POST | none |
 | `platform/valuation` | GET | none |
 
-### `src/app/api/admin/**` (43 files)
+### `src/app/api/admin/**` (45 files)
 
 | Route | Methods | Auth before |
 |---|---|---|
@@ -126,6 +126,8 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/foneday/settings` | GET PUT | none |
 | `admin/foneday/sync` | POST | none |
 | `admin/foxway/import` | POST GET | none |
+| `admin/lager/repair-parts/[ticketId]` | GET POST | `requireStaff` |
+| `admin/lager/repair-parts/[ticketId]/[partId]` | DELETE PATCH | `requireStaff` |
 | `admin/models` | GET POST | none |
 | `admin/models/[id]` | PATCH DELETE | none |
 | `admin/products/create` | POST | none |

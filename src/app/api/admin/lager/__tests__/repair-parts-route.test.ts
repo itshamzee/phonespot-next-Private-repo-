@@ -1,0 +1,84 @@
+// @vitest-environment node
+import { beforeEach, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { memoryRepo } from "@/lib/lagersystem/__tests__/memory-repo";
+
+const TV = "11111111-1111-4111-8111-111111111111";
+const TG = "22222222-2222-4222-8222-222222222222";
+const s = vi.hoisted(() => ({
+  afterFns: [] as Array<() => Promise<void>>,
+  client: null as null | { postMovement: ReturnType<typeof vi.fn> },
+  repo: null as unknown,
+}));
+
+vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { s.afterFns.push(fn); } }));
+vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => ({ id: "staff-1", role: "owner", name: "Maria", email: null }) }));
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
+vi.mock("@/lib/lagersystem/supabase-repo", () => ({ createSupabaseRepairPartsRepo: () => s.repo }));
+vi.mock("@/lib/lagersystem/client", async (orig) => ({
+  ...(await orig<typeof import("@/lib/lagersystem/client")>()),
+  getLagersystemClient: () => s.client,
+}));
+
+import { GET, POST } from "../repair-parts/[ticketId]/route";
+import { DELETE } from "../repair-parts/[ticketId]/[partId]/route";
+
+const ctx = (ticketId: string) => ({ params: Promise.resolve({ ticketId }) });
+const ctx2 = (ticketId: string, partId: string) => ({ params: Promise.resolve({ ticketId, partId }) });
+const post = (ticketId: string, body: unknown) =>
+  POST(new NextRequest(`https://x/api/admin/lager/repair-parts/${ticketId}`, { method: "POST", body: JSON.stringify(body) }), ctx(ticketId));
+const runAfter = async () => { while (s.afterFns.length) await s.afterFns.shift()!(); };
+
+beforeEach(() => {
+  s.afterFns = [];
+  s.repo = memoryRepo([
+    { id: TV, store_id: "vejle", ticket_number: "PS-2026-0001" },
+    { id: TG, store_id: null, ticket_number: null },
+  ]);
+  s.client = {
+    postMovement: vi.fn(async (i: { idempotency_key: string }) => ({ movement: { id: `mv:${i.idempotency_key}` }, replayed: false })),
+  };
+});
+
+it("GET reports the feature as off when the lagersystem is not configured", async () => {
+  s.client = null;
+  const res = await GET(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}`), ctx(TV));
+  expect(await res.json()).toEqual({ enabled: false });
+});
+
+it("POST stores a pending TAKE on vejle-hub and sends it after the response", async () => {
+  const res = await post(TV, { shared_sku: "SCR-IP13-OLED", part_name: "Skærm iPhone 13", qty: 1, cost_price_ore: 41500 });
+  expect(res.status).toBe(201);
+  const { part } = await res.json();
+  expect(part).toMatchObject({ status: "pending", location_code: "vejle-hub" });
+  await runAfter();
+  expect(s.client!.postMovement).toHaveBeenCalledWith(expect.objectContaining({ type: "TAKE", location: "vejle-hub", qty: 1 }));
+  const list = await (await GET(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}`), ctx(TV))).json();
+  expect(list).toMatchObject({ enabled: true, location: "vejle-hub", parts: [{ status: "synced" }] });
+});
+
+it("POST on a Generel ticket is refused with a clear message", async () => {
+  const res = await post(TG, { shared_sku: "S", part_name: "P", qty: 1 });
+  expect(res.status).toBe(409);
+  expect((await res.json()).error).toBe("Vælg butik på sagen, før du registrerer dele");
+});
+
+it("POST validates the body and the ticket id", async () => {
+  expect((await post(TV, { shared_sku: "", part_name: "P", qty: 1 })).status).toBe(400);
+  expect((await post("not-a-uuid", { shared_sku: "S", part_name: "P", qty: 1 })).status).toBe(404);
+});
+
+it("DELETE books a RETURN and sends it once the TAKE is synced", async () => {
+  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 2 })).json();
+  await runAfter();
+  const res = await DELETE(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}/${part.id}`, { method: "DELETE" }), ctx2(TV, part.id));
+  expect(res.status).toBe(200);
+  await runAfter();
+  expect(s.client!.postMovement).toHaveBeenLastCalledWith(expect.objectContaining({ type: "RETURN", qty: 2, location: "vejle-hub" }));
+});
+
+it("writes are refused while the feature is off", async () => {
+  s.client = null;
+  const res = await post(TV, { shared_sku: "S", part_name: "P", qty: 1 });
+  expect(res.status).toBe(404);
+});
