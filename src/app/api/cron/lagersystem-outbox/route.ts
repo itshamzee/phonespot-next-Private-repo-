@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient } from "@/lib/lagersystem/client";
@@ -14,8 +15,17 @@ export const maxDuration = 60;
  * Sender ventende "Dele brugt"-bevægelser; efter 24 t uden held → 'failed'.
  * Auth: Bearer CRON_SECRET.
  */
+const sha = (v: string) => createHash("sha256").update(v).digest();
+
+/** Lukker altid hvis CRON_SECRET mangler; sammenligner i konstant tid. */
+function authorized(req: NextRequest): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  return timingSafeEqual(sha(req.headers.get("authorization") ?? ""), sha(`Bearer ${secret}`));
+}
+
 async function handle(req: NextRequest) {
-  if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!authorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const client = getLagersystemClient();

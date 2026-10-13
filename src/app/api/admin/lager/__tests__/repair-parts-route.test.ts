@@ -9,10 +9,11 @@ const s = vi.hoisted(() => ({
   afterFns: [] as Array<() => Promise<void>>,
   client: null as null | { postMovement: ReturnType<typeof vi.fn> },
   repo: null as unknown,
+  staff: { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null } as Record<string, unknown>,
 }));
 
 vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { s.afterFns.push(fn); } }));
-vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => ({ id: "staff-1", role: "owner", name: "Maria", email: null }) }));
+vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => s.staff }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 vi.mock("@/lib/lagersystem/supabase-repo", () => ({ createSupabaseRepairPartsRepo: () => s.repo }));
 vi.mock("@/lib/lagersystem/client", async (orig) => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/lagersystem/client", async (orig) => ({
 }));
 
 import { GET, POST } from "../repair-parts/[ticketId]/route";
-import { DELETE } from "../repair-parts/[ticketId]/[partId]/route";
+import { DELETE, PATCH } from "../repair-parts/[ticketId]/[partId]/route";
 
 const ctx = (ticketId: string) => ({ params: Promise.resolve({ ticketId }) });
 const ctx2 = (ticketId: string, partId: string) => ({ params: Promise.resolve({ ticketId, partId }) });
@@ -31,6 +32,7 @@ const runAfter = async () => { while (s.afterFns.length) await s.afterFns.shift(
 
 beforeEach(() => {
   s.afterFns = [];
+  s.staff = { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null };
   s.repo = memoryRepo([
     { id: TV, store_id: "vejle", ticket_number: "PS-2026-0001" },
     { id: TG, store_id: null, ticket_number: null },
@@ -80,5 +82,39 @@ it("DELETE books a RETURN and sends it once the TAKE is synced", async () => {
 it("writes are refused while the feature is off", async () => {
   s.client = null;
   const res = await post(TV, { shared_sku: "S", part_name: "P", qty: 1 });
+  expect(res.status).toBe(404);
+});
+
+const asStaff = (slug: string) => { s.staff = { id: "staff-2", role: "staff", name: "Jens", email: null, location_id: "x", location_slug: slug }; };
+const patch = (ticketId: string, partId: string, body: unknown) =>
+  PATCH(new NextRequest(`https://x/api/admin/lager/repair-parts/${ticketId}/${partId}`, { method: "PATCH", body: JSON.stringify(body) }), ctx2(ticketId, partId));
+
+it("staff of another store get 404 on read, add, remove and retry; own store and owner are allowed", async () => {
+  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  await runAfter();
+  asStaff("slagelse");
+  expect((await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).status).toBe(404);
+  expect((await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).status).toBe(404);
+  expect((await DELETE(new NextRequest(`https://x/a/${TV}/${part.id}`, { method: "DELETE" }), ctx2(TV, part.id))).status).toBe(404);
+  expect((await patch(TV, part.id, { action: "retry" })).status).toBe(404);
+  asStaff("vejle");
+  expect((await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).status).toBe(200);
+});
+
+it("a Generel ticket is hidden from a physical-store staff member", async () => {
+  asStaff("vejle");
+  expect((await GET(new NextRequest(`https://x/a/${TG}`), ctx(TG))).status).toBe(404);
+});
+
+it("PATCH retry validates the body and the part-ticket pairing", async () => {
+  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  expect((await patch(TV, part.id, { action: "nope" })).status).toBe(400);
+  expect((await patch(TV, part.id, { action: "retry" })).status).toBe(409);
+  expect((await patch(TG, part.id, { action: "retry" })).status).toBe(404);
+});
+
+it("DELETE of a part that belongs to another ticket is 404", async () => {
+  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  const res = await DELETE(new NextRequest(`https://x/a/${TG}/${part.id}`, { method: "DELETE" }), ctx2(TG, part.id));
   expect(res.status).toBe(404);
 });

@@ -42,3 +42,10 @@ it("reports 500 when the database fails", async () => {
   s.drain.mockRejectedValue(new Error("db down"));
   expect((await GET(req("Bearer sekret"))).status).toBe(500);
 });
+
+it("fails closed when CRON_SECRET is unset", async () => {
+  vi.stubEnv("CRON_SECRET", "");
+  expect((await GET(req("Bearer undefined"))).status).toBe(401);
+  expect((await GET(req("Bearer "))).status).toBe(401);
+  expect(s.drain).not.toHaveBeenCalled();
+});

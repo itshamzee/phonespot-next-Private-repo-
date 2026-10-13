@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { canSee } from "@/lib/auth/store-scope-server";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient } from "@/lib/lagersystem/client";
@@ -10,6 +11,7 @@ import { scheduleSend } from "@/lib/lagersystem/send-after";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
 
 export const runtime = "nodejs";
+
 
 type Ctx = { params: Promise<{ ticketId: string }> };
 const TicketId = z.string().uuid();
@@ -31,6 +33,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const repo = createSupabaseRepairPartsRepo(createAdminClient());
   const ticket = await repo.getTicket(ticketId);
   if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
+  if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   const parts = await repo.listForTicket(ticketId);
   return NextResponse.json({ enabled: true, location: locationForStore(ticket.store_id), parts });
 }
@@ -47,6 +50,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!parsed.success) return NextResponse.json({ error: "Ugyldige data" }, { status: 400 });
 
   const repo = createSupabaseRepairPartsRepo(createAdminClient());
+  const ticket = await repo.getTicket(ticketId);
+  if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
+  if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   const result = await addPart(repo, {
     ticketId,
     sharedSku: parsed.data.shared_sku,
