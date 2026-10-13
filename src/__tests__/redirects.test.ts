@@ -38,4 +38,14 @@ describe("redirects", () => {
     const rs = await load("phonespot.myshopify.com");
     expect(find(rs, "/cart/c/:path*")?.destination).toBe("https://phonespot.myshopify.com/cart/c/:path*");
   });
+
+  it.each(["/b2b", "/b2b/registrer"])("%s sends a 301 to /erhverv", async (source) => {
+    expect(find(await load(), source)).toMatchObject({ destination: "/erhverv", statusCode: 301 });
+  });
+
+  it("keeps the B2B login and dashboard reachable", async () => {
+    const rs = await load();
+    expect(find(rs, "/b2b/login")).toBeUndefined();
+    expect(rs.some((r) => r.source.startsWith("/b2b/dashboard"))).toBe(false);
+  });
 });

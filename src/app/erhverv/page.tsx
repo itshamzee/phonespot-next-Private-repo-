@@ -131,10 +131,6 @@ export default function BusinessRepairPage() {
           </div>
         </section>
 
-        <aside className={styles.reseller} aria-label="Reservedele til forhandlere">
-          <div><h2>Driver du et værksted?</h2><p>Skal du købe reservedele til dine egne reparationer, kan du søge om en forhandlerkonto.</p></div>
-          <Link href="/b2b/registrer">Søg om forhandlerkonto</Link>
-        </aside>
       </div>
     </div>
   );

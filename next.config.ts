@@ -44,6 +44,9 @@ const nextConfig: NextConfig = {
       { source: "/reservedele/:path*", destination: "/reparation", statusCode: 301 },
       { source: "/api/spare-parts", destination: "/reparation", statusCode: 301 },
       { source: "/api/spare-parts/:path*", destination: "/reparation", statusCode: 301 },
+      // B2B-siden var en reservedelsside; login/dashboard bevares til eksisterende kunder.
+      { source: "/b2b", destination: "/erhverv", statusCode: 301 },
+      { source: "/b2b/registrer", destination: "/erhverv", statusCode: 301 },
       // Old Shopify URLs → new pages
       { source: "/collections/:path*", destination: "/iphones", permanent: true },
       { source: "/pages/iphones", destination: "/iphones", permanent: true },

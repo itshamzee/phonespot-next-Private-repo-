@@ -8,4 +8,12 @@ test.describe("reservedele er lukket", () => {
       expect(res.headers()["location"]).toMatch(/\/reparation$/);
     });
   }
+
+  for (const path of ["/b2b", "/b2b/registrer"]) {
+    test(`${path} sender 301 til /erhverv`, async ({ request }) => {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect(res.status()).toBe(301);
+      expect(res.headers()["location"]).toMatch(/\/erhverv$/);
+    });
+  }
 });
