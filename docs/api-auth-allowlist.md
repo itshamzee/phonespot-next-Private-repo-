@@ -142,6 +142,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/search` | GET | none |
 | `admin/services` | GET POST | none |
 | `admin/services/[id]` | PATCH DELETE | none |
+| `admin/services/[id]/parts` | GET POST DELETE | `requireCatalogEditor` (owner/manager) |
 | `admin/settings/company` | GET PUT | inline bearer (already OK) |
 | `admin/spare-parts` | GET POST | none |
 | `admin/spare-parts/[id]` | GET PATCH DELETE | none |
