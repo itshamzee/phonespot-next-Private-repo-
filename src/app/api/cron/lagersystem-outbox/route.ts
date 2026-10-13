@@ -7,6 +7,9 @@ import { createSupabasePartsCheckRepo } from "@/lib/lagersystem/parts-check-repo
 import { recheckUnknownTickets } from "@/lib/lagersystem/parts-check-run";
 import { notifyPartsShortage } from "@/lib/lagersystem/shortage-mail";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
+import { pollRequestedTransfers, syncOpenTicketTransfers } from "@/lib/lagersystem/ticket-transfers";
+import { createSupabaseTicketTransfersRepo } from "@/lib/lagersystem/ticket-transfers-repo";
+import { sendTransferRequestMail } from "@/lib/lagersystem/transfer-mail";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -50,7 +53,23 @@ async function handle(req: NextRequest) {
   } catch (err) {
     console.error("[lagersystem-outbox] gentjek af lagerstatus fejlede", err);
   }
-  return NextResponse.json({ ...report, rechecked });
+  // Spec §3.5 "Besked": anmodninger oprettet andre steder ses kun ved at spørge.
+  // Én mail pr. flytnings-id (lager_transfer_notifications).
+  const links = createSupabaseTicketTransfersRepo(sb);
+  let transfer_mails: number | null = null;
+  try {
+    transfer_mails = await pollRequestedTransfers({ client, links, send: sendTransferRequestMail });
+  } catch (err) {
+    console.error("[lagersystem-outbox] polling af anmodninger fejlede", err);
+  }
+  // Mærket Anmodet/Undervejs følger flytninger, som andre har handlet på.
+  let ticket_transfers_synced: number | null = null;
+  try {
+    ticket_transfers_synced = await syncOpenTicketTransfers({ parts: createSupabasePartsCheckRepo(sb), links, client, limit: 50 });
+  } catch (err) {
+    console.error("[lagersystem-outbox] synk af sagsflytninger fejlede", err);
+  }
+  return NextResponse.json({ ...report, rechecked, transfer_mails, ticket_transfers_synced });
 }
 
 export const GET = handle;
