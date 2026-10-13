@@ -44,4 +44,10 @@ describe("kundevendte flader linker ikke til /reservedele", () => {
   it("the repair FAQ no longer claims we sell spare parts", () => {
     expect(readFileSync(join(ROOT, "src/app/reparation/page.tsx"), "utf8")).not.toContain("Sælger I også reservedele");
   });
+
+  it("no page or post claims we sell spare parts", () => {
+    const CLAIM = /(sælger|fører)(?:(?!ikke)[^.\n]){0,40}reservedel/i;
+    const offenders = files.filter((f) => CLAIM.test(readFileSync(f, "utf8"))).map((f) => relative(ROOT, f));
+    expect(offenders).toEqual([]);
+  });
 });

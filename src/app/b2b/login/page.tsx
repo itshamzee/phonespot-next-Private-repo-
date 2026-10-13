@@ -170,9 +170,9 @@ export default function B2BLoginPage() {
           </form>
 
           <div className="mt-6 border-t border-[#E5E5EA] pt-5 text-center text-sm text-[#86868B]">
-            Ny kunde?{" "}
+            Ny erhvervskunde?{" "}
             <Link href="/erhverv" className="font-medium text-[#1A3D2E] hover:underline">
-              Registrer dig her
+              Se erhvervsløsninger
             </Link>
           </div>
         </div>

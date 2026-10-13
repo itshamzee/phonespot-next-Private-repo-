@@ -200,7 +200,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
             </div>
             <div className={styles.panel}><h2>Åbningstider</h2><dl className={styles.hours}>
               <div><dt>Mandag–fredag</dt><dd>{store.hours.weekdays}</dd></div><div><dt>Lørdag</dt><dd>{store.hours.saturday}</dd></div><div><dt>Søndag</dt><dd>{store.hours.sunday}</dd></div>
-            </dl>{store.mall && <p>Åbningstiderne kan variere på helligdage i {store.mall}.</p>}<p>Du er velkommen uden tidsbestilling. Kontakt os gerne inden besøget, hvis du søger en bestemt enhed eller reservedel.</p></div>
+            </dl>{store.mall && <p>Åbningstiderne kan variere på helligdage i {store.mall}.</p>}<p>Du er velkommen uden tidsbestilling. Kontakt os gerne inden besøget, hvis du søger en bestemt enhed.</p></div>
           </div>
         </section>
         <section className={styles.services} aria-label="Hjælp i butikken">
