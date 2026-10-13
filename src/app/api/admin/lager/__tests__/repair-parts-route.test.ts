@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { LagersystemError } from "@/lib/lagersystem/client";
 import { memoryRepo } from "@/lib/lagersystem/__tests__/memory-repo";
 
 const TV = "11111111-1111-4111-8111-111111111111";
 const TG = "22222222-2222-4222-8222-222222222222";
 const s = vi.hoisted(() => ({
   afterFns: [] as Array<() => Promise<void>>,
-  client: null as null | { postMovement: ReturnType<typeof vi.fn> },
+  client: null as null | { postMovement: ReturnType<typeof vi.fn>; getPart: ReturnType<typeof vi.fn> },
   repo: null as unknown,
   staff: { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null } as Record<string, unknown>,
 }));
@@ -38,6 +39,7 @@ beforeEach(() => {
     { id: TG, store_id: null, ticket_number: null },
   ]);
   s.client = {
+    getPart: vi.fn(async (sku: string) => ({ shared_sku: sku, name: "Skærm iPhone 13", cost_price_ore: 41500 })),
     postMovement: vi.fn(async (i: { idempotency_key: string }) => ({ movement: { id: `mv:${i.idempotency_key}` }, replayed: false })),
   };
 });
@@ -49,7 +51,7 @@ it("GET reports the feature as off when the lagersystem is not configured", asyn
 });
 
 it("POST stores a pending TAKE on vejle-hub and sends it after the response", async () => {
-  const res = await post(TV, { shared_sku: "SCR-IP13-OLED", part_name: "Skærm iPhone 13", qty: 1, cost_price_ore: 41500 });
+  const res = await post(TV, { shared_sku: "SCR-IP13-OLED", qty: 1 });
   expect(res.status).toBe(201);
   const { part } = await res.json();
   expect(part).toMatchObject({ status: "pending", location_code: "vejle-hub" });
@@ -60,18 +62,18 @@ it("POST stores a pending TAKE on vejle-hub and sends it after the response", as
 });
 
 it("POST on a Generel ticket is refused with a clear message", async () => {
-  const res = await post(TG, { shared_sku: "S", part_name: "P", qty: 1 });
+  const res = await post(TG, { shared_sku: "S", qty: 1 });
   expect(res.status).toBe(409);
   expect((await res.json()).error).toBe("Vælg butik på sagen, før du registrerer dele");
 });
 
 it("POST validates the body and the ticket id", async () => {
-  expect((await post(TV, { shared_sku: "", part_name: "P", qty: 1 })).status).toBe(400);
-  expect((await post("not-a-uuid", { shared_sku: "S", part_name: "P", qty: 1 })).status).toBe(404);
+  expect((await post(TV, { shared_sku: "", qty: 1 })).status).toBe(400);
+  expect((await post("not-a-uuid", { shared_sku: "S", qty: 1 })).status).toBe(404);
 });
 
 it("DELETE books a RETURN and sends it once the TAKE is synced", async () => {
-  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 2 })).json();
+  const { part } = await (await post(TV, { shared_sku: "S", qty: 2 })).json();
   await runAfter();
   const res = await DELETE(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}/${part.id}`, { method: "DELETE" }), ctx2(TV, part.id));
   expect(res.status).toBe(200);
@@ -81,7 +83,7 @@ it("DELETE books a RETURN and sends it once the TAKE is synced", async () => {
 
 it("writes are refused while the feature is off", async () => {
   s.client = null;
-  const res = await post(TV, { shared_sku: "S", part_name: "P", qty: 1 });
+  const res = await post(TV, { shared_sku: "S", qty: 1 });
   expect(res.status).toBe(404);
 });
 
@@ -90,11 +92,11 @@ const patch = (ticketId: string, partId: string, body: unknown) =>
   PATCH(new NextRequest(`https://x/api/admin/lager/repair-parts/${ticketId}/${partId}`, { method: "PATCH", body: JSON.stringify(body) }), ctx2(ticketId, partId));
 
 it("staff of another store get 404 on read, add, remove and retry; own store and owner are allowed", async () => {
-  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  const { part } = await (await post(TV, { shared_sku: "S", qty: 1 })).json();
   await runAfter();
   asStaff("slagelse");
   expect((await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).status).toBe(404);
-  expect((await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).status).toBe(404);
+  expect((await post(TV, { shared_sku: "S", qty: 1 })).status).toBe(404);
   expect((await DELETE(new NextRequest(`https://x/a/${TV}/${part.id}`, { method: "DELETE" }), ctx2(TV, part.id))).status).toBe(404);
   expect((await patch(TV, part.id, { action: "retry" })).status).toBe(404);
   asStaff("vejle");
@@ -107,14 +109,30 @@ it("a Generel ticket is hidden from a physical-store staff member", async () => 
 });
 
 it("PATCH retry validates the body and the part-ticket pairing", async () => {
-  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  const { part } = await (await post(TV, { shared_sku: "S", qty: 1 })).json();
   expect((await patch(TV, part.id, { action: "nope" })).status).toBe(400);
   expect((await patch(TV, part.id, { action: "retry" })).status).toBe(409);
   expect((await patch(TG, part.id, { action: "retry" })).status).toBe(404);
 });
 
 it("DELETE of a part that belongs to another ticket is 404", async () => {
-  const { part } = await (await post(TV, { shared_sku: "S", part_name: "P", qty: 1 })).json();
+  const { part } = await (await post(TV, { shared_sku: "S", qty: 1 })).json();
   const res = await DELETE(new NextRequest(`https://x/a/${TG}/${part.id}`, { method: "DELETE" }), ctx2(TG, part.id));
   expect(res.status).toBe(404);
+});
+
+it("POST ignores a client-supplied name and cost: both come from the lagersystem", async () => {
+  const res = await post(TV, { shared_sku: "SCR", qty: 1, part_name: "Gratis del", cost_price_ore: 1 });
+  expect(res.status).toBe(201);
+  expect(s.client!.getPart).toHaveBeenCalledWith("SCR");
+  const { part } = await res.json();
+  expect(part).toMatchObject({ part_name: "Skærm iPhone 13", cost_at_time_ore: 41500 });
+});
+
+it("POST answers 404 for a part the lagersystem does not know, and stores nothing", async () => {
+  s.client!.getPart.mockRejectedValue(new LagersystemError(404, "unknown_part", "no"));
+  const res = await post(TV, { shared_sku: "NOPE", qty: 1 });
+  expect(res.status).toBe(404);
+  const list = await (await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).json();
+  expect(list.parts).toEqual([]);
 });

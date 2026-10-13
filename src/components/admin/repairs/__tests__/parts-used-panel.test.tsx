@@ -46,7 +46,7 @@ describe("PartsUsedPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tilføj" }));
     await waitFor(() => expect(f).toHaveBeenCalledWith(`/api/admin/lager/repair-parts/${TID}`, expect.objectContaining({ method: "POST" })));
     const body = JSON.parse((f.mock.calls.find((c) => c[1]?.method === "POST")![1] as RequestInit).body as string);
-    expect(body).toEqual({ shared_sku: "SCR-IP13-OLED", part_name: "Skærm iPhone 13", qty: 2, cost_price_ore: 41500 });
+    expect(body).toEqual({ shared_sku: "SCR-IP13-OLED", qty: 2 });
   });
 
   it("removes an active part with DELETE", async () => {

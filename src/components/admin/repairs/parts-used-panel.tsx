@@ -80,7 +80,7 @@ export function PartsUsedPanel({ ticketId, storeId }: { ticketId: string; storeI
     if (!selected) return;
     const ok = await mutate(base, {
       method: "POST",
-      body: JSON.stringify({ shared_sku: selected.shared_sku, part_name: selected.name, qty, cost_price_ore: selected.cost_price_ore }),
+      body: JSON.stringify({ shared_sku: selected.shared_sku, qty }),
     });
     if (ok) { setSelected(null); setQuery(""); setResults([]); setQty(1); }
   }

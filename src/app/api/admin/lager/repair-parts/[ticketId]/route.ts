@@ -3,8 +3,8 @@ import { z } from "zod";
 import { canSee } from "@/lib/auth/store-scope-server";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getLagersystemClient } from "@/lib/lagersystem/client";
-import { NOT_ENABLED } from "@/lib/lagersystem/http";
+import { getLagersystemClient, LagersystemError } from "@/lib/lagersystem/client";
+import { lagersystemErrorResponse, NOT_ENABLED } from "@/lib/lagersystem/http";
 import { locationForStore } from "@/lib/lagersystem/locations";
 import { addPart } from "@/lib/lagersystem/repair-parts";
 import { scheduleSend } from "@/lib/lagersystem/send-after";
@@ -17,9 +17,7 @@ type Ctx = { params: Promise<{ ticketId: string }> };
 const TicketId = z.string().uuid();
 const AddBody = z.object({
   shared_sku: z.string().trim().min(1).max(100),
-  part_name: z.string().trim().min(1).max(300),
   qty: z.number().int().min(1).max(100),
-  cost_price_ore: z.number().int().min(0).nullable().optional(),
 });
 
 /** GET — dele på sagen + hvilken lokation sagen trækker fra. */
@@ -42,7 +40,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 export async function POST(req: NextRequest, { params }: Ctx) {
   const staff = await requireStaff(req);
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!getLagersystemClient()) return NextResponse.json(NOT_ENABLED, { status: 404 });
+  const client = getLagersystemClient();
+  if (!client) return NextResponse.json(NOT_ENABLED, { status: 404 });
 
   const { ticketId } = await params;
   if (!TicketId.safeParse(ticketId).success) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
@@ -53,12 +52,22 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const ticket = await repo.getTicket(ticketId);
   if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
+  // Navn og kostpris kommer fra lagersystemet, aldrig fra klienten.
+  let part;
+  try {
+    part = await client.getPart(parsed.data.shared_sku);
+  } catch (err) {
+    if (err instanceof LagersystemError && err.status === 404) {
+      return NextResponse.json({ error: "Delen findes ikke i lagersystemet" }, { status: 404 });
+    }
+    return lagersystemErrorResponse(err);
+  }
   const result = await addPart(repo, {
     ticketId,
     sharedSku: parsed.data.shared_sku,
-    partName: parsed.data.part_name,
+    partName: part.name,
     qty: parsed.data.qty,
-    costPriceOre: parsed.data.cost_price_ore ?? null,
+    costPriceOre: part.cost_price_ore ?? null,
     staff,
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
