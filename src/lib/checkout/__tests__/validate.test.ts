@@ -8,6 +8,7 @@ const s = vi.hoisted(() => ({
   stock: 1,
   error: false,
   always: false,
+  active: true,
   devices: [] as Record<string, unknown>[],
 }));
 vi.mock("next/headers", () => ({
@@ -30,7 +31,7 @@ vi.mock("@/lib/supabase/client", () => ({
             : [
                 {
                   id: "sku",
-                  is_active: true,
+                  is_active: s.active,
                   selling_price: 100,
                   always_in_stock: s.always,
                   total_stock: s.stock,
@@ -68,6 +69,7 @@ beforeEach(() => {
   s.stock = 1;
   s.error = false;
   s.always = false;
+  s.active = true;
   s.devices = [
     {
       id: "device",
@@ -156,4 +158,11 @@ it("missing inventory is not treated as an available product", async () => {
 it("non-numeric inventory fails closed", async () => {
   s.stock = NaN;
   expect((await validateCart([sku()])).valid).toBe(false);
+});
+it("rejects a deactivated spare part even when it is always in stock", async () => {
+  s.active = false;
+  s.always = true;
+  const r = await validateCart([sku()]);
+  expect(r.valid).toBe(false);
+  expect(r.items[0].available).toBe(false);
 });
