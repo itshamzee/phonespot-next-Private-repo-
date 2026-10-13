@@ -1,3 +1,4 @@
+import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SkuProduct, ProductTemplate, Device } from "@/lib/supabase/platform-types";
@@ -235,16 +236,15 @@ function buildDeviceItem(group: DeviceGroup): string | null {
 export async function GET() {
   const supabase = createAdminClient();
 
-  // Fetch accessories (sku_products with category='accessory', not spare-parts)
+  // Fetch accessories. Reservedele filtreres i JS (withoutSpareParts): PostgREST `neq` smider også rækker med subcategory NULL.
   const { data: skuProducts, error: skuError } = await supabase
     .from("sku_products")
     .select(
-      "id, title, slug, subcategory, brand, selling_price, sale_price, images, ean, product_number, description, short_description, status, is_active, always_in_stock, created_at, updated_at"
+      "id, title, slug, category, subcategory, brand, selling_price, sale_price, images, ean, product_number, description, short_description, status, is_active, always_in_stock, created_at, updated_at"
     )
     .eq("status", "published")
     .eq("is_active", true)
     .eq("category", "accessory")
-    .neq("subcategory", "spare-part")
     .order("created_at", { ascending: false });
 
   if (skuError) {
@@ -285,7 +285,7 @@ export async function GET() {
 
   // Build accessory items
   const accessoryItems: string[] = [];
-  for (const product of skuProducts ?? []) {
+  for (const product of withoutSpareParts(skuProducts ?? [])) {
     const item = buildAccessoryItem(product as unknown as SkuProduct);
     if (item) accessoryItems.push(item);
   }
