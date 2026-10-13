@@ -64,7 +64,7 @@ export default function B2BHeaderBar() {
             Log ind
           </Link>
           <Link
-            href="/b2b/registrer"
+            href="/erhverv"
             className="rounded-full bg-[#1A3D2E] px-3.5 py-1 text-[11px] font-semibold text-white transition-opacity hover:opacity-90"
           >
             Bliv forhandler
