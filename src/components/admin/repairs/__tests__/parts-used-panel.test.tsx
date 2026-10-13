@@ -94,7 +94,68 @@ describe("PartsUsedPanel", () => {
     render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
     fireEvent.click(await screen.findByRole("button", { name: "Markér som bestilt" }));
     expect(await screen.findByText("Sagen mangler ikke dele")).toBeVisible();
-    const gets = () => f.mock.calls.filter((c) => (c[1]?.method ?? "GET") === "GET").length;
+    const gets = () => f.mock.calls.filter((c) => (c[1]?.method ?? "GET") === "GET" && String(c[0]).startsWith("/api/admin/lager/repair-parts")).length;
     await waitFor(() => expect(gets()).toBe(2));
+  });
+
+  it("lists where the missing part exists elsewhere and requests it to the ticket's store", async () => {
+    const f = vi.fn((url: string, init?: RequestInit) => {
+      if (url.startsWith("/api/admin/lager/availability")) {
+        return json({ shared_sku: "SCR-IP13", availability: [{ location: "phonespot-esbjerg", label: "Esbjerg", qty: 2 }, { location: "vejle-hub", label: "Hovedlager Vejle", qty: 1 }] });
+      }
+      if ((init?.method ?? "GET") === "GET") {
+        return json({ enabled: true, location: "phonespot-slagelse", parts: [], parts_status: "needs_order", transfers: [],
+          parts_shortage: [{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }] });
+      }
+      return json({ transfer: { id: "tr1" } }, 201);
+    });
+    vi.stubGlobal("fetch", f);
+    render(<PartsUsedPanel ticketId={TID} storeId="slagelse" />);
+    expect(await screen.findByText("Findes andre steder: Esbjerg: 2, Hovedlager Vejle: 1")).toBeVisible();
+    expect(f).toHaveBeenCalledWith("/api/admin/lager/availability?sku=SCR-IP13&exclude=phonespot-slagelse", expect.anything());
+    fireEvent.click(screen.getByRole("button", { name: "Anmod fra Esbjerg" }));
+    await waitFor(() => expect(f).toHaveBeenCalledWith(`/api/admin/lager/repair-transfers/${TID}`, expect.objectContaining({ method: "POST" })));
+    const post = f.mock.calls.find((c) => c[0] === `/api/admin/lager/repair-transfers/${TID}`)!;
+    expect(JSON.parse((post[1] as RequestInit).body as string)).toEqual({ shared_sku: "SCR-IP13", from: "phonespot-esbjerg" });
+  });
+
+  it("says when no other location has the part", async () => {
+    vi.stubGlobal("fetch", vi.fn((url: string) => url.startsWith("/api/admin/lager/availability")
+      ? json({ shared_sku: "X", availability: [] })
+      : json({ enabled: true, location: "vejle-hub", parts: [], transfers: [], parts_status: "needs_order", parts_shortage: [{ shared_sku: "X", name: "Del X", needed: 1, available: 0 }] })));
+    render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
+    expect(await screen.findByText("Findes ikke andre steder. Bestil hos leverandøren.")).toBeVisible();
+  });
+
+  it("shows Anmodet and Undervejs with where the part comes from", async () => {
+    const state = (parts_status: string, status: string) => ({ enabled: true, location: "phonespot-slagelse", parts: [], parts_status,
+      parts_shortage: [{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }],
+      transfers: [{ transfer_id: "tr1", ticket_id: TID, shared_sku: "SCR-IP13", from_location: "phonespot-esbjerg", qty: 1, status }] });
+    api(state("requested", "REQUESTED") as never);
+    const { unmount } = render(<PartsUsedPanel ticketId={TID} storeId="slagelse" />);
+    expect(await screen.findByText("Anmodet")).toBeVisible();
+    expect(screen.getByText("1 × Skærm iPhone 13 fra Esbjerg: Anmodet")).toBeVisible();
+    unmount();
+    api(state("in_transit", "SENT") as never);
+    render(<PartsUsedPanel ticketId={TID} storeId="slagelse" />);
+    expect(await screen.findByText("Undervejs")).toBeVisible();
+    expect(screen.getByText("1 × Skærm iPhone 13 fra Esbjerg: Sendt")).toBeVisible();
+  });
+
+  it("shows a friendly message when the part is already requested for the ticket", async () => {
+    const f = vi.fn((url: string, init?: RequestInit) => {
+      if (url.startsWith("/api/admin/lager/availability")) {
+        return json({ shared_sku: "SCR-IP13", availability: [{ location: "phonespot-esbjerg", label: "Esbjerg", qty: 2 }] });
+      }
+      if ((init?.method ?? "GET") === "GET") {
+        return json({ enabled: true, location: "phonespot-slagelse", parts: [], parts_status: "needs_order", transfers: [],
+          parts_shortage: [{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }] });
+      }
+      return json({ error: "Delen er allerede anmodet til sagen" }, 409);
+    });
+    vi.stubGlobal("fetch", f);
+    render(<PartsUsedPanel ticketId={TID} storeId="slagelse" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Anmod fra Esbjerg" }));
+    expect(await screen.findByText("Delen er allerede anmodet til sagen")).toBeVisible();
   });
 });

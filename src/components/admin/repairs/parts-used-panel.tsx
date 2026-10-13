@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Part } from "@/lib/lagersystem/api-types";
+import { locationLabel, TRANSFER_STATUS_LABELS } from "@/lib/lagersystem/transfers";
+import type { TicketTransferLink } from "@/lib/lagersystem/ticket-transfers";
 import { LOCATION_LABELS, type PhoneSpotLocationCode } from "@/lib/lagersystem/locations";
 import type { PartsStatus, RepairPartRow, ShortageLine } from "@/lib/lagersystem/types";
 import { Btn, Card } from "@/components/admin/repairs/ui";
@@ -14,6 +16,7 @@ type PanelState =
       parts: RepairPartRow[];
       parts_status?: PartsStatus | null;
       parts_shortage?: ShortageLine[] | null;
+      transfers?: TicketTransferLink[];
     };
 
 const STATUS_LABEL: Record<RepairPartRow["status"], string> = {
@@ -41,6 +44,18 @@ export function PartsUsedPanel({
   const [selected, setSelected] = useState<Part | null>(null);
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [elsewhere, setElsewhere] = useState<Record<string, { location: string; label: string; qty: number }[]>>({});
+  useEffect(() => {
+    if (!state || !state.enabled || state.parts_status !== "needs_order" || !state.location) return;
+    const ctrl = new AbortController();
+    for (const line of state.parts_shortage ?? []) {
+      fetch(`/api/admin/lager/availability?sku=${encodeURIComponent(line.shared_sku)}&exclude=${state.location}`, { signal: ctrl.signal, cache: "no-store" })
+        .then((r) => r.json())
+        .then((b) => setElsewhere((cur) => ({ ...cur, [line.shared_sku]: b.availability ?? [] })))
+        .catch(() => {});
+    }
+    return () => ctrl.abort();
+  }, [state]);
 
   const load = useCallback(async () => {
     try {
@@ -141,10 +156,33 @@ export function PartsUsedPanel({
       {state.parts_status === "needs_order" && (
         <div className="mb-4 rounded-[10px] border border-[#F5D9B0] bg-[#FFF4E5] p-3.5 text-sm text-[#7A4A06]">
           <p className="m-0 font-semibold">Skal bestilles</p>
-          <ul className="m-0 mt-1 list-none space-y-0.5 p-0">
-            {(state.parts_shortage ?? []).map((l) => (
-              <li key={l.shared_sku}>{l.name}: skal bruge {l.needed}, ledigt {Math.max(0, l.available)}</li>
-            ))}
+          <ul className="m-0 mt-1 list-none space-y-2 p-0">
+            {(state.parts_shortage ?? []).map((l) => {
+              const av = elsewhere[l.shared_sku];
+              return (
+                <li key={l.shared_sku}>
+                  <p>{l.name}: skal bruge {l.needed}, ledigt {Math.max(0, l.available)}</p>
+                  {av && av.length === 0 && <p className="text-xs text-[#7A4A06]">Findes ikke andre steder. Bestil hos leverandøren.</p>}
+                  {av && av.length > 0 && (
+                    <>
+                      <p className="text-xs text-[#7A4A06]">Findes andre steder: {av.map((a) => `${a.label}: ${a.qty}`).join(", ")}</p>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        {av.map((a) => (
+                          <Btn
+                            key={a.location}
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => mutate(`/api/admin/lager/repair-transfers/${ticketId}`, { method: "POST", body: JSON.stringify({ shared_sku: l.shared_sku, from: a.location }) })}
+                          >
+                            Anmod fra {a.label}
+                          </Btn>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <Btn
             size="sm"
@@ -158,6 +196,18 @@ export function PartsUsedPanel({
       )}
       {state.parts_status === "ordered" && (
         <p className="m-0 mb-4 text-sm text-[#5E6A63]">Delen er bestilt hjem. Mærket forsvinder, når delen registreres her.</p>
+      )}
+      {(state.parts_status === "requested" || state.parts_status === "in_transit") && (
+        <div className="mb-4 rounded-[10px] border border-[#E2E5E0] bg-[#F5F6F4] p-3.5 text-sm text-[#15211B]">
+          <p className="m-0 font-semibold">{state.parts_status === "requested" ? "Anmodet" : "Undervejs"}</p>
+          <ul className="m-0 mt-1 list-none space-y-0.5 p-0">
+            {(state.transfers ?? []).map((tr) => {
+              const name = (state.parts_shortage ?? []).find((l) => l.shared_sku === tr.shared_sku)?.name ?? tr.shared_sku;
+              return <li key={tr.transfer_id}>{tr.qty} × {name} fra {locationLabel(tr.from_location)}: {TRANSFER_STATUS_LABELS[tr.status]}</li>;
+            })}
+          </ul>
+          <p className="m-0 mt-2 text-xs text-[#5E6A63]">Mærket forsvinder, når delen registreres under Dele brugt.</p>
+        </div>
       )}
 
       {active.length === 0 ? (
