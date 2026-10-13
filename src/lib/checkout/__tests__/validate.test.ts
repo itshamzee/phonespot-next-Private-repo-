@@ -9,6 +9,8 @@ const s = vi.hoisted(() => ({
   error: false,
   always: false,
   active: true,
+  category: null as string | null,
+  subcategory: null as string | null,
   devices: [] as Record<string, unknown>[],
 }));
 vi.mock("next/headers", () => ({
@@ -35,6 +37,8 @@ vi.mock("@/lib/supabase/client", () => ({
                   selling_price: 100,
                   always_in_stock: s.always,
                   total_stock: s.stock,
+                  category: s.category,
+                  subcategory: s.subcategory,
                 },
               ];
       const q = {
@@ -70,6 +74,8 @@ beforeEach(() => {
   s.error = false;
   s.always = false;
   s.active = true;
+  s.category = null;
+  s.subcategory = null;
   s.devices = [
     {
       id: "device",
@@ -165,4 +171,19 @@ it("rejects a deactivated spare part even when it is always in stock", async () 
   const r = await validateCart([sku()]);
   expect(r.valid).toBe(false);
   expect(r.items[0].available).toBe(false);
+});
+it.each([
+  { category: "accessory", subcategory: "spare-part" },
+  { category: "spare-part", subcategory: null },
+])("afviser aktiv, publiceret reservedel selv med always_in_stock %j", async (p) => {
+  s.always = true;
+  s.category = p.category;
+  s.subcategory = p.subcategory;
+  const r = await validateCart([sku()]);
+  expect(r.valid).toBe(false);
+  expect(r.items[0].available).toBe(false);
+});
+it("tilbehør med subcategory null er upåvirket", async () => {
+  s.category = "accessory";
+  expect((await validateCart([sku()])).valid).toBe(true);
 });

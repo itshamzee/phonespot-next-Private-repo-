@@ -192,8 +192,9 @@ export function buildSparePartRow(input: SparePartInput): SkuProductRow {
     compatible_models: [],
     attributes: {},
     always_in_stock: input.alwaysInStock ?? false,
-    status: input.status ?? "published",
-    is_active: true,
+    // Reservedele sælges ikke på webshoppen (spec 2026-10-13 §4.1): altid kladde.
+    status: "draft",
+    is_active: false,
     part_category_id: text(input.partCategoryId),
     quality_tier_id: text(input.qualityTierId),
     warranty_months: input.warrantyMonths ?? null,

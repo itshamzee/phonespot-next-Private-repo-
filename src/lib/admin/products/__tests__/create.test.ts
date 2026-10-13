@@ -117,9 +117,14 @@ describe("buildSparePartRow", () => {
       device_brand: "Apple",
       device_model: "iPhone 13",
       slug: "iphone-13-skaerm",
-      status: "published",
-      is_active: true,
+      status: "draft",
+      is_active: false,
     });
+  });
+
+  it("opretter aldrig en købbar reservedel, heller ikke hvis status angives", () => {
+    const row = buildSparePartRow({ title: "X", sellingPrice: 100, images: [], status: "published" });
+    expect(row).toMatchObject({ status: "draft", is_active: false });
   });
 });
 
