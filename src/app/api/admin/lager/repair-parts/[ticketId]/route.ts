@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { canSee } from "@/lib/auth/store-scope-server";
 import { requireStaff } from "@/lib/auth/require-staff";
+import { isOwner } from "@/lib/auth/store-scope";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient, LagersystemError } from "@/lib/lagersystem/client";
 import { lagersystemErrorResponse, NOT_ENABLED } from "@/lib/lagersystem/http";
@@ -12,6 +13,13 @@ import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
 
 export const runtime = "nodejs";
 
+
+/** Kostpris er kun for ejeren. */
+function forStaff<T extends { cost_at_time_ore?: unknown }>(staff: Parameters<typeof isOwner>[0], part: T): T | Omit<T, "cost_at_time_ore"> {
+  if (isOwner(staff)) return part;
+  const { cost_at_time_ore: _cost, ...rest } = part;
+  return rest;
+}
 
 type Ctx = { params: Promise<{ ticketId: string }> };
 const TicketId = z.string().uuid();
@@ -33,7 +41,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   const parts = await repo.listForTicket(ticketId);
-  return NextResponse.json({ enabled: true, location: locationForStore(ticket.store_id), parts });
+  return NextResponse.json({ enabled: true, location: locationForStore(ticket.store_id), parts: parts.map((p) => forStaff(staff, p)) });
 }
 
 /** POST — registrér en brugt del (TAKE). Gemmes lokalt først, sendes via after(). */
@@ -72,5 +80,5 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
   scheduleSend(result.value, repo);
-  return NextResponse.json({ part: result.value }, { status: 201 });
+  return NextResponse.json({ part: forStaff(staff, result.value) }, { status: 201 });
 }

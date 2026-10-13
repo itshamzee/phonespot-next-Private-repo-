@@ -63,3 +63,10 @@ it("404 while off, 401 without staff", async () => {
   s.staff = null;
   expect((await bal("?location=vejle-hub")).status).toBe(401);
 });
+
+it("balances: q is capped at 100 characters before the part search", async () => {
+  s.client!.searchParts.mockResolvedValue([]);
+  await bal(`?location=vejle-hub&q=${"a".repeat(300)}`);
+  expect(s.client!.searchParts).toHaveBeenCalledTimes(1);
+  expect((s.client!.searchParts.mock.calls[0][0] as string).length).toBe(100);
+});

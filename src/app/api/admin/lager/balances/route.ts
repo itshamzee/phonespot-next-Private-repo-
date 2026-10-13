@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!isPhoneSpotLocation(location)) return NextResponse.json({ error: "Ukendt lokation" }, { status: 400 });
   if (!canUseLocation(staff, location)) return forbiddenLocation();
   try {
-    return NextResponse.json(await buildStockView(client, location, req.nextUrl.searchParams.get("q") ?? ""));
+    return NextResponse.json(await buildStockView(client, location, (req.nextUrl.searchParams.get("q") ?? "").slice(0, 100)));
   } catch (err) {
     return lagersystemErrorResponse(err);
   }

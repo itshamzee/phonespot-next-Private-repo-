@@ -136,3 +136,17 @@ it("POST answers 404 for a part the lagersystem does not know, and stores nothin
   const list = await (await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).json();
   expect(list.parts).toEqual([]);
 });
+
+it("cost_at_time_ore is hidden from non-owner staff, in GET and in the POST response; the owner sees it", async () => {
+  const owner = await (await post(TV, { shared_sku: "S", qty: 1 })).json();
+  expect(owner.part.cost_at_time_ore).toBe(41500);
+  asStaff("vejle");
+  const staffPost = await (await post(TV, { shared_sku: "S", qty: 1 })).json();
+  expect(staffPost.part).not.toHaveProperty("cost_at_time_ore");
+  const staffList = await (await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).json();
+  expect(staffList.parts.length).toBeGreaterThan(0);
+  for (const p of staffList.parts) expect(p).not.toHaveProperty("cost_at_time_ore");
+  s.staff = { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null };
+  const ownerList = await (await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).json();
+  expect(ownerList.parts[0].cost_at_time_ore).toBe(41500);
+});
