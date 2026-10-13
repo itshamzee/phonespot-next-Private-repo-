@@ -1,7 +1,7 @@
 import "server-only";
 import type {
   ApiError, ApiErrorCode, Availability, BalancesResponse, CreateTransferInput, Location, MovementInput, MovementResult, Part,
-  ReceiveTransferInput, SendTransferInput, Transfer, TransferResult, TransferStatus,
+  ReceiveTransferInput, RmaCreateInput, RmaItem, RmaResolveInput, RmaStatus, SendTransferInput, Transfer, TransferResult, TransferStatus,
 } from "./api-types";
 import { getLagersystemConfig, type LagersystemConfig } from "./config";
 
@@ -88,6 +88,22 @@ export function createLagersystemClient(config: LagersystemConfig, fetchImpl: ty
     async cancelTransfer(id: string, input: { actor_label: string }): Promise<Transfer> {
       return (await call<{ transfer: Transfer }>(`/transfers/${encodeURIComponent(id)}/cancel`, { method: "POST", body: JSON.stringify(input) })).transfer;
     },
+    async listRma(q: { location: string; status?: RmaStatus[]; company?: string; supplier?: string }): Promise<RmaItem[]> {
+      const params = new URLSearchParams({ location: q.location });
+      if (q.status?.length) params.set("status", q.status.join(","));
+      if (q.company) params.set("company", q.company);
+      if (q.supplier) params.set("supplier", q.supplier);
+      return (await call<{ items: RmaItem[] }>(`/rma?${params}`)).items;
+    },
+    async createRma(input: RmaCreateInput): Promise<{ item: RmaItem; replayed: boolean }> {
+      return call<{ item: RmaItem; replayed: boolean }>("/rma", { method: "POST", body: JSON.stringify(input) });
+    },
+    async sendRma(id: string, input: { actor_label: string; supplier_ref?: string }): Promise<RmaItem> {
+      return (await call<{ item: RmaItem }>(`/rma/${encodeURIComponent(id)}/send`, { method: "POST", body: JSON.stringify(input) })).item;
+    },
+    async resolveRma(id: string, input: RmaResolveInput): Promise<RmaItem> {
+      return (await call<{ item: RmaItem }>(`/rma/${encodeURIComponent(id)}/resolve`, { method: "POST", body: JSON.stringify(input) })).item;
+    },
   };
 }
 
@@ -110,6 +126,7 @@ export function describeLagersystemError(err: unknown): string {
     case "idempotency_conflict": return "Handlingen er allerede bogført med andre værdier. Genindlæs siden og prøv igen.";
     case "invalid_state": return "Flytningen har skiftet status i mellemtiden. Genindlæs siden og prøv igen.";
     case "unknown_transfer": return "Flytningen findes ikke.";
+    case "unknown_rma": return "Reklamationen findes ikke.";
     default: return err.retryable ? "Lagersystemet svarer ikke lige nu. Prøv igen om lidt." : "Lagersystemet afviste forespørgslen.";
   }
 }

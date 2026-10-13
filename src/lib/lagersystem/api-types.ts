@@ -31,7 +31,7 @@ export type Availability = { location: string; location_name: string; qty: numbe
 
 export type ApiErrorCode =
   | "unauthorized" | "forbidden_location" | "unknown_part" | "unknown_location"
-  | "invalid_body" | "idempotency_conflict" | "invalid_state" | "unknown_transfer" | "internal";
+  | "invalid_body" | "idempotency_conflict" | "invalid_state" | "unknown_transfer" | "unknown_rma" | "internal";
 export type ApiError = { error: { code: ApiErrorCode; message: string } };
 
 export type MovementInput = {
@@ -60,3 +60,20 @@ export type ReceiveTransferInput = {
   lines: { shared_sku: string; qty_received: number; qty_written_off?: number; write_off_reason?: string }[];
 };
 export type TransferResult = { transfer: Transfer; replayed?: boolean };
+
+// Reklamationer til leverandør (spec §3.6, Bilag A /rma).
+export type RmaStatus = "REGISTERED" | "SENT" | "CREDITED" | "REPLACED" | "REJECTED";
+export type RmaItem = {
+  id: string; shared_sku: string; part_name: string; qty: number; location: string;
+  found_by_company: string; found_by_label: string; supplier: string | null; reason: string;
+  reference: string | null; status: RmaStatus; supplier_ref: string | null;
+  resolution_note: string | null; credit_ore: number | null; unit_cost_ore: number | null;
+  created_at: string; sent_at: string | null; resolved_at: string | null;
+};
+export type RmaCreateInput = {
+  idempotency_key: string; location: string; shared_sku: string; qty: number; reason: string;
+  supplier?: string; reference?: string; actor_label: string;
+};
+export type RmaResolveInput = {
+  actor_label: string; outcome: "CREDITED" | "REPLACED" | "REJECTED"; credit_ore?: number; note?: string;
+};
