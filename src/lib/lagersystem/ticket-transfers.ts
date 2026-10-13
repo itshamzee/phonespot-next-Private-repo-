@@ -1,5 +1,5 @@
 import type { Transfer, TransferStatus } from "./api-types";
-import type { LagersystemClient } from "./client";
+import { LagersystemError, type LagersystemClient } from "./client";
 import { actorLabel, isPhoneSpotLocation, locationForStore, PHONESPOT_LOCATION_CODES } from "./locations";
 import { checkTicketParts, type CheckDeps, type PartsCheckRepo } from "./parts-check-run";
 import type { ServiceResult, StaffRef } from "./repair-parts";
@@ -149,6 +149,8 @@ export async function syncOpenTicketTransfers(deps: {
       await syncTicketsForTransfer(await deps.client.getTransfer(id), deps);
     } catch (err) {
       console.error("[flytninger] kunne ikke synkronisere", id, err);
+      // Lagersystemet svarer ikke: stop, så cronens øvrige trin når at køre inden for 60 s.
+      if (err instanceof LagersystemError && err.status === 0) break;
     }
   }
   return ids.length;

@@ -60,6 +60,11 @@ describe("checkTicketParts", () => {
     expect(await run(repo, client(1)).result).toBe("ok");
   });
 
+  it("a cancelled ticket on the same location does not count as demand", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("new"), ticket("gone", { status: "annulleret" })], links });
+    expect(await run(repo, client(1)).result).toBe("ok");
+  });
+
   it("counts a part already used on another ticket as gone from demand", async () => {
     const repo = memoryPartsCheckRepo({ tickets: [ticket("new"), ticket("old")], links, taken: [{ ticket_id: "old", shared_sku: "SCR-IP13", qty: 1 }] });
     expect(await run(repo, client(1)).result).toBe("ok");

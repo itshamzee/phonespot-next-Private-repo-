@@ -97,6 +97,25 @@ describe("drainOutbox", () => {
     expect(client.postMovement.mock.calls.map((c) => c[0].type)).toEqual(["TAKE", "RETURN"]);
   });
 
+  it("stops at the first network error so the cron's later steps still run", async () => {
+    const repo = memoryRepo();
+    await repo.insert(take("a"), T0);
+    await repo.insert(take("b"), at(1));
+    await repo.insert(take("c"), at(2));
+    const client = { postMovement: failing(new LagersystemError(0, "network", "timeout")) };
+    expect(await drainOutbox({ repo, client, now: () => at(60_000) })).toEqual({ synced: 0, retry: 1, failed: 0, waiting: 0 });
+    expect(client.postMovement).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps going after an upstream (non-network) error", async () => {
+    const repo = memoryRepo();
+    await repo.insert(take("a"), T0);
+    await repo.insert(take("b"), at(1));
+    const client = { postMovement: failing(new LagersystemError(503, "bad_response", "busy")) };
+    await drainOutbox({ repo, client, now: () => at(60_000) });
+    expect(client.postMovement).toHaveBeenCalledTimes(2);
+  });
+
   it("skips rows attempted in the last 30 seconds", async () => {
     const repo = memoryRepo();
     const row = (await repo.insert(take(), T0)) as never;

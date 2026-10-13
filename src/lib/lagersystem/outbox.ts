@@ -17,7 +17,11 @@ export interface OutboxDeps {
  * `replayed: true` fra lagersystemet, så after() og cron kan godt ramme
  * samme række samtidig.
  */
-export async function sendRepairPart(row: RepairPartRow, { repo, client, now }: OutboxDeps): Promise<SendOutcome> {
+export async function sendRepairPart(
+  row: RepairPartRow,
+  { repo, client, now }: OutboxDeps,
+  unreachable?: Set<string>,
+): Promise<SendOutcome> {
   if (row.status !== "pending") return row.status === "synced" ? "synced" : "failed";
 
   if (row.movement_type === "RETURN") {
@@ -43,6 +47,7 @@ export async function sendRepairPart(row: RepairPartRow, { repo, client, now }: 
     return "synced";
   } catch (err) {
     const e = err instanceof LagersystemError ? err : new LagersystemError(0, "network", err instanceof Error ? err.message : String(err));
+    if (e.status === 0) unreachable?.add(row.id);
     const message = `${e.code} (${e.status}): ${e.message}`;
     const expired = now.getTime() - new Date(row.pending_since).getTime() >= FAIL_AFTER_MS;
     if (!e.retryable || expired) {
@@ -68,6 +73,11 @@ export async function drainOutbox({
 }): Promise<Record<SendOutcome, number>> {
   const report: Record<SendOutcome, number> = { synced: 0, retry: 0, failed: 0, waiting: 0 };
   const rows = await repo.listDue(limit, now());
-  for (const row of rows) report[await sendRepairPart(row, { repo, client, now: now() })]++;
+  const unreachable = new Set<string>();
+  for (const row of rows) {
+    report[await sendRepairPart(row, { repo, client, now: now() }, unreachable)]++;
+    // Lagersystemet svarer ikke (netværk/timeout): stop, så cronens øvrige trin når at køre inden for 60 s.
+    if (unreachable.has(row.id)) break;
+  }
   return report;
 }

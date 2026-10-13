@@ -1,7 +1,7 @@
 import type { PartsStatus, ServicePartLink, ShortageLine } from "./types";
 
 /** Sager i disse statusser trækker ikke længere på lageret. */
-export const CLOSED_TICKET_STATUSES = ["faerdig", "afhentet", "reklamation_loest"] as const;
+export const CLOSED_TICKET_STATUSES = ["faerdig", "afhentet", "reklamation_loest", "annulleret"] as const;
 /** En forudbetalt online-booking, der ikke er betalt efter 2 timer, regnes som opgivet. */
 export const ABANDONED_CHECKOUT_MS = 2 * 60 * 60 * 1000;
 

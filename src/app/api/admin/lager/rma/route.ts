@@ -9,7 +9,7 @@ import { actorLabel, canUseLocation, PHONESPOT_LOCATION_CODES } from "@/lib/lage
 import { addPart, removePart } from "@/lib/lagersystem/repair-parts";
 import { isRmaStatus, rmaKeyForTicketPart } from "@/lib/lagersystem/rma";
 import { rmaForStaff } from "@/lib/lagersystem/rma-server";
-import { scheduleSend } from "@/lib/lagersystem/send-after";
+import { scheduleSendsThenPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
 import type { RepairPartRow } from "@/lib/lagersystem/types";
 
@@ -106,11 +106,12 @@ export async function POST(req: NextRequest) {
   let part_removed = false;
   let readded_qty = 0;
   let warning: string | null = null;
+  const toSend: RepairPartRow[] = [];
   if (claimed && b.ticket_id && repo) {
     try {
       const removed = await removePart(repo, { ticketId: b.ticket_id, partId: claimed.id, staff });
       if (removed.ok) {
-        scheduleSend(removed.value, repo);
+        toSend.push(removed.value);
         part_removed = true;
       }
     } catch (err) {
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
           costPriceOre: claimed.cost_at_time_ore, staff,
         });
         if (readded.ok) {
-          scheduleSend(readded.value, repo);
+          toSend.push(readded.value);
           readded_qty = rest;
         } else {
           console.error("[reklamation] kunne ikke lægge resterende dele tilbage", claimed.id, readded.message);
@@ -139,6 +140,8 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+  // Den defekte del er væk fra lageret: gentjek sagen, når RETURN/genudtag er sendt (ellers ingen "Skal bestilles").
+  if (part_removed && b.ticket_id && repo) scheduleSendsThenPartsCheck(b.ticket_id, toSend, repo);
   return NextResponse.json(
     { item: rmaForStaff(staff, result.item), part_removed, readded_qty, warning },
     { status: result.replayed ? 200 : 201 },

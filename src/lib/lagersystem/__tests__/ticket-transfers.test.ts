@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import type { Transfer } from "../api-types";
+import { LagersystemError } from "../client";
 import type { TicketForCheck } from "../parts-check-run";
 import { notifyNewTransferOnce, pollRequestedTransfers, requestPartForTicket, syncOpenTicketTransfers, syncTicketsForTransfer } from "../ticket-transfers";
 import { memoryPartsCheckRepo } from "./memory-parts-check-repo";
@@ -173,6 +174,23 @@ describe("syncTicketsForTransfer", () => {
     expect(await syncOpenTicketTransfers({ ...deps(parts, memoryTicketTransfersRepo([link]), c) })).toBe(1);
     expect(c.getTransfer).toHaveBeenCalledWith("tr1");
     expect(parts.tickets[0].parts_status).toBe("in_transit");
+  });
+
+  it("stops at the first network error", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested", ...booked(["svc-screen"]) })], links: svcLinks });
+    const links = memoryTicketTransfersRepo([link, { ...link, transfer_id: "tr2" }, { ...link, transfer_id: "tr3" }]);
+    const c = { ...stock({}), getTransfer: vi.fn(async () => { throw new LagersystemError(0, "network", "timeout"); }) };
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await syncOpenTicketTransfers({ ...deps(parts, links, c as never) });
+    expect(c.getTransfer).toHaveBeenCalledTimes(1);
+  });
+  it("continues after a non-network error", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested", ...booked(["svc-screen"]) })], links: svcLinks });
+    const links = memoryTicketTransfersRepo([link, { ...link, transfer_id: "tr2" }]);
+    const c = { ...stock({}), getTransfer: vi.fn(async () => { throw new LagersystemError(200, "bad_response", "x"); }) };
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await syncOpenTicketTransfers({ ...deps(parts, links, c as never) });
+    expect(c.getTransfer).toHaveBeenCalledTimes(2);
   });
 });
 

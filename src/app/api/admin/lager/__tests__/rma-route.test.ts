@@ -13,12 +13,18 @@ const s = vi.hoisted(() => ({
   client: null as null | Record<string, ReturnType<typeof vi.fn>>,
   repo: null as unknown,
   staff: {} as Record<string, unknown>,
+  order: [] as string[],
+  check: vi.fn(),
 }));
 vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { s.afterFns.push(fn); } }));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => s.staff }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 vi.mock("@/lib/lagersystem/supabase-repo", () => ({ createSupabaseRepairPartsRepo: () => s.repo }));
 vi.mock("@/lib/lagersystem/client", async (orig) => ({ ...(await orig<typeof import("@/lib/lagersystem/client")>()), getLagersystemClient: () => s.client }));
+
+vi.mock("@/lib/lagersystem/parts-check-repo", () => ({ createSupabasePartsCheckRepo: () => ({ partsRepo: true }) }));
+vi.mock("@/lib/lagersystem/parts-check-run", () => ({ checkTicketParts: s.check }));
+vi.mock("@/lib/lagersystem/shortage-mail", () => ({ notifyPartsShortage: vi.fn() }));
 
 import { GET, POST } from "../rma/route";
 import { POST as ACTION } from "../rma/[id]/[action]/route";
@@ -36,6 +42,8 @@ const act = (action: string, body: Record<string, unknown>, id = "rma1") =>
 
 beforeEach(() => {
   s.afterFns = [];
+  s.order = [];
+  s.check.mockReset().mockImplementation(async () => { s.order.push("check"); return "ok"; });
   s.staff = owner;
   s.repo = memoryRepo([{ id: TV, store_id: "vejle", ticket_number: "PS-2026-0001" }, { id: TS, store_id: "slagelse", ticket_number: "PS-2026-0002" }]);
   s.client = {
@@ -43,6 +51,10 @@ beforeEach(() => {
     createRma: vi.fn(async () => ({ item: item(), replayed: false })),
     sendRma: vi.fn(async () => item({ status: "SENT" })),
     resolveRma: vi.fn(async () => item({ status: "CREDITED", credit_ore: 41500 })),
+    postMovement: vi.fn(async (m: { type: string; idempotency_key: string }) => {
+      s.order.push(m.type);
+      return { movement: { id: `mv:${m.idempotency_key}` }, replayed: false };
+    }),
   };
 });
 
@@ -285,4 +297,42 @@ it("a manager sees credit_ore but not the cost price", async () => {
   s.staff = asStore("vejle");
   const staffBody = await (await GET(new NextRequest("https://x/api/admin/lager/rma?location=vejle-hub"))).json();
   expect(staffBody.items[0]).not.toHaveProperty("credit_ore");
+});
+
+// --- Slutgennemgang: lagertjek efter reklamation ---
+
+it("re-runs the parts check for the ticket after the RETURN and the re-added TAKE were sent", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm iPhone 13", qty: 2, costPriceOre: 41500, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  await repo.markSynced(added.value.id, "mv-orig", new Date()); // det oprindelige udtag er sendt
+  await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "Død pixel", ticket_id: TV, part_id: added.value.id });
+  expect(s.check).not.toHaveBeenCalled(); // først efter svaret
+  for (const fn of s.afterFns) await fn();
+  expect(s.check).toHaveBeenCalledTimes(1);
+  expect(s.check).toHaveBeenCalledWith(TV, expect.objectContaining({ repo: { partsRepo: true }, client: s.client }));
+  expect(s.order).toEqual(["RETURN", "TAKE", "check"]);
+});
+
+it("a failing parts check never fails the response", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm", qty: 1, costPriceOre: null, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  s.check.mockRejectedValue(new Error("down"));
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  const res = await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "x", ticket_id: TV, part_id: added.value.id });
+  expect(res.status).toBe(201);
+  await expect(Promise.all(s.afterFns.map((f) => f()))).resolves.toBeDefined();
+});
+
+it("does not re-run the check when the RMA itself fails, or for a free-standing defect", async () => {
+  const repo = s.repo as ReturnType<typeof memoryRepo>;
+  const added = await addPart(repo, { ticketId: TV, sharedSku: "SCR-IP13", partName: "Skærm", qty: 1, costPriceOre: null, staff: owner });
+  if (!added.ok) throw new Error("setup");
+  s.afterFns = [];
+  s.client!.createRma.mockRejectedValueOnce(new LagersystemError(503, "bad_response", "busy"));
+  expect((await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "x", ticket_id: TV, part_id: added.value.id })).status).toBe(502);
+  await post({ location: "vejle-hub", shared_sku: "SCR-IP13", qty: 1, reason: "x" });
+  for (const fn of s.afterFns) await fn();
+  expect(s.check).not.toHaveBeenCalled();
 });
