@@ -52,3 +52,25 @@ export function canUseLocation(
 export function storesForLocation(code: PhoneSpotLocationCode): string[] {
   return Object.entries(STORE_TO_LOCATION).filter(([, loc]) => loc === code).map(([store]) => store);
 }
+
+/** Lagerredigering (modtag, tæl, nedskriv/afskriv) er for ejer og leder, som sku_stock RLS. */
+export function canManageStock(staff: { role: string }): boolean {
+  return staff.role === "owner" || staff.role === "manager";
+}
+
+/** Ejeren, eller en medarbejder hvis butik har en lagersystem-lokation. Webshop/ingen butik: nej (fail closed). */
+export function hasLagerAccess(staff: { role: string; location_slug: string | null }): boolean {
+  return isOwner(staff) || locationForStore(staffStoreSlug(staff)) !== null;
+}
+
+/**
+ * Spec §3.5 "Anmode": til-lokationen skal være Hovedlager Vejle eller anmoderens
+ * egen butik. Også brugt til "Annullér" (kun anmoderens side).
+ */
+export function canRequestTo(
+  staff: { role: string; location_slug: string | null },
+  to: string,
+): to is PhoneSpotLocationCode {
+  if (to === "vejle-hub") return hasLagerAccess(staff);
+  return canUseLocation(staff, to);
+}

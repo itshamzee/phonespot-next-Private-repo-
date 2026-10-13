@@ -126,6 +126,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/foneday/settings` | GET PUT | none |
 | `admin/foneday/sync` | POST | none |
 | `admin/foxway/import` | POST GET | none |
+| `admin/lager/availability` | GET | `requireStaff` |
 | `admin/lager/balances` | GET | `requireStaff` |
 | `admin/lager/locations` | GET | `requireStaff` |
 | `admin/lager/movements` | POST | `requireStaff` |
@@ -133,6 +134,9 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/lager/parts-status/[ticketId]` | PATCH | `requireStaff` |
 | `admin/lager/repair-parts/[ticketId]` | GET POST | `requireStaff` |
 | `admin/lager/repair-parts/[ticketId]/[partId]` | DELETE PATCH | `requireStaff` |
+| `admin/lager/repair-transfers/[ticketId]` | POST | `requireStaff` |
+| `admin/lager/transfers` | GET POST | `requireStaff` |
+| `admin/lager/transfers/[id]/[action]` | POST | `requireStaff` |
 | `admin/models` | GET POST | none |
 | `admin/models/[id]` | PATCH DELETE | none |
 | `admin/products/create` | POST | none |

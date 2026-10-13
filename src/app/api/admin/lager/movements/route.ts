@@ -4,7 +4,7 @@ import { requireStaff } from "@/lib/auth/require-staff";
 import type { MovementInput } from "@/lib/lagersystem/api-types";
 import { getLagersystemClient } from "@/lib/lagersystem/client";
 import { forbiddenLocation, lagersystemErrorResponse, NOT_ENABLED } from "@/lib/lagersystem/http";
-import { actorLabel, canUseLocation, PHONESPOT_LOCATION_CODES } from "@/lib/lagersystem/locations";
+import { actorLabel, canManageStock, canUseLocation, PHONESPOT_LOCATION_CODES } from "@/lib/lagersystem/locations";
 
 export const runtime = "nodejs";
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
   const b = parsed.data;
   // Lagerredigering er for ejer/leder (som sku_stock RLS); alle ansatte må kun udtage.
-  const canManage = staff.role === "owner" || staff.role === "manager";
+  const canManage = canManageStock(staff);
   if (b.type !== "TAKE" && !canManage) {
     return NextResponse.json({ error: "Kun ejer eller leder kan modtage, tælle og nedskrive varer." }, { status: 403 });
   }

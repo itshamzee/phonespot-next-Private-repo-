@@ -12,6 +12,7 @@ import { clearShortageForPart } from "@/lib/lagersystem/parts-status";
 import { addPart } from "@/lib/lagersystem/repair-parts";
 import { scheduleSend } from "@/lib/lagersystem/send-after";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
+import { createSupabaseTicketTransfersRepo } from "@/lib/lagersystem/ticket-transfers-repo";
 
 export const runtime = "nodejs";
 
@@ -53,6 +54,10 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     parts: parts.map((p) => forStaff(staff, p)),
     parts_status: check?.parts_status ?? null,
     parts_shortage: check?.parts_shortage ?? null,
+    transfers: await createSupabaseTicketTransfersRepo(createAdminClient()).listForTicket(ticketId).catch((err) => {
+      console.error("[flytninger] kunne ikke hente sagens flytninger", ticketId, err);
+      return [];
+    }),
   });
 }
 

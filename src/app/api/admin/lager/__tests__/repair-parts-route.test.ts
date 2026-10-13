@@ -20,6 +20,7 @@ vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => s.staff }
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 vi.mock("@/lib/lagersystem/parts-check-repo", () => ({ createSupabasePartsCheckRepo: () => s.partsRepo }));
 vi.mock("@/lib/lagersystem/supabase-repo", () => ({ createSupabaseRepairPartsRepo: () => s.repo }));
+vi.mock("@/lib/lagersystem/ticket-transfers-repo", () => ({ createSupabaseTicketTransfersRepo: () => ({ listForTicket: async () => [] }) }));
 vi.mock("@/lib/lagersystem/client", async (orig) => ({
   ...(await orig<typeof import("@/lib/lagersystem/client")>()),
   getLagersystemClient: () => s.client,
