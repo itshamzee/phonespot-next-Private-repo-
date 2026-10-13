@@ -18,7 +18,7 @@ const Body = z
     note: z.string().trim().max(200).optional(),
     reference: z.string().trim().max(200).optional(),
     supplier: z.string().trim().max(100).optional(),
-    cost_price_ore: z.number().int().min(0).optional(),
+    cost_price_ore: z.number().int().min(0).max(10_000_000).optional(),
   })
   .superRefine((b, ctx) => {
     if (b.type !== "COUNT" && b.qty < 1) ctx.addIssue({ code: "custom", path: ["qty"], message: "Antal skal være mindst 1" });
@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Ugyldige data" }, { status: 400 });
   }
   const b = parsed.data;
+  // Lagerredigering er for ejer/leder (som sku_stock RLS); alle ansatte må kun udtage.
+  const canManage = staff.role === "owner" || staff.role === "manager";
+  if (b.type !== "TAKE" && !canManage) {
+    return NextResponse.json({ error: "Kun ejer eller leder kan modtage, tælle og nedskrive varer." }, { status: 403 });
+  }
   if (!canUseLocation(staff, b.location)) return forbiddenLocation();
   const reference = [b.note, b.reference].filter(Boolean).join(" · ") || null;
   const input: MovementInput = {
@@ -54,7 +59,7 @@ export async function POST(req: NextRequest) {
     actor_label: actorLabel(staff),
     reference,
     ...(b.type === "RECEIVE" && b.supplier ? { supplier: b.supplier } : {}),
-    ...(b.type === "RECEIVE" && b.cost_price_ore !== undefined ? { cost_price_ore: b.cost_price_ore } : {}),
+    ...(b.type === "RECEIVE" && canManage && b.cost_price_ore !== undefined ? { cost_price_ore: b.cost_price_ore } : {}),
   };
 
   try {

@@ -18,7 +18,7 @@ describe("MovementForm", () => {
     const f = respond(201, { movement: { balance_after: 9 }, replayed: false });
     vi.stubGlobal("fetch", f);
     const onDone = vi.fn();
-    render(<MovementForm location="vejle-hub" part={part} onDone={onDone} onCancel={() => {}} />);
+    render(<MovementForm canManage location="vejle-hub" part={part} onDone={onDone} onCancel={() => {}} />);
     fireEvent.change(screen.getByLabelText("Antal modtaget"), { target: { value: "5" } });
     fireEvent.change(screen.getByLabelText("Leverandør (valgfri)"), { target: { value: "Foneday" } });
     fireEvent.change(screen.getByLabelText("Kostpris pr. stk. i kr. (valgfri)"), { target: { value: "415,50" } });
@@ -34,7 +34,7 @@ describe("MovementForm", () => {
   it("allows counting zero", async () => {
     const f = respond(201, { movement: { balance_after: 0 }, replayed: false });
     vi.stubGlobal("fetch", f);
-    render(<MovementForm location="vejle-hub" part={part} onDone={() => {}} onCancel={() => {}} />);
+    render(<MovementForm canManage location="vejle-hub" part={part} onDone={() => {}} onCancel={() => {}} />);
     fireEvent.change(screen.getByLabelText("Handling"), { target: { value: "COUNT" } });
     fireEvent.change(screen.getByLabelText("Optalt antal"), { target: { value: "0" } });
     fireEvent.click(screen.getByRole("button", { name: "Bogfør" }));
@@ -45,7 +45,7 @@ describe("MovementForm", () => {
   it("requires a purpose for a take, without calling the server", async () => {
     const f = respond(201, {});
     vi.stubGlobal("fetch", f);
-    render(<MovementForm location="phonespot-slagelse" part={part} onDone={() => {}} onCancel={() => {}} />);
+    render(<MovementForm canManage location="phonespot-slagelse" part={part} onDone={() => {}} onCancel={() => {}} />);
     fireEvent.change(screen.getByLabelText("Handling"), { target: { value: "TAKE" } });
     fireEvent.click(screen.getByRole("button", { name: "Bogfør" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Udfyld formål");
@@ -55,7 +55,7 @@ describe("MovementForm", () => {
   it("shows the server's error, keeps the key on an unchanged retry, and uses a new key after an edit", async () => {
     const f = respond(502, { error: "Lagersystemet svarer ikke lige nu. Prøv igen om lidt." });
     vi.stubGlobal("fetch", f);
-    render(<MovementForm location="vejle-hub" part={part} onDone={() => {}} onCancel={() => {}} />);
+    render(<MovementForm canManage location="vejle-hub" part={part} onDone={() => {}} onCancel={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: "Bogfør" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Lagersystemet svarer ikke lige nu.");
     fireEvent.click(screen.getByRole("button", { name: "Bogfør" }));
@@ -66,4 +66,12 @@ describe("MovementForm", () => {
     await waitFor(() => expect(f).toHaveBeenCalledTimes(3));
     expect(sent(f, 2).idempotency_key).not.toBe(sent(f, 0).idempotency_key);
   });
+});
+
+it("without canManage only Udtag is offered and cost is never sent", async () => {
+  const f = respond(201, { movement: { balance_after: 1 }, replayed: false });
+  vi.stubGlobal("fetch", f);
+  render(<MovementForm location="vejle-hub" part={part} onDone={() => {}} onCancel={() => {}} />);
+  expect(screen.getByLabelText("Antal udtaget")).toBeVisible();
+  expect(screen.queryByText("Modtag varer")).toBeNull();
 });

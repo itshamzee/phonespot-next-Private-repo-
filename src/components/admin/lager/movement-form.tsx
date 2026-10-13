@@ -25,15 +25,18 @@ const label = "mb-1 block text-xs font-semibold text-charcoal";
 export function MovementForm({
   location,
   part,
+  canManage = false,
   onDone,
   onCancel,
 }: {
+  /** Ejer/leder: må også modtage, tælle og nedskrive. Øvrige ansatte kan kun udtage. */
+  canManage?: boolean;
   location: PhoneSpotLocationCode;
   part: { shared_sku: string; name: string | null };
   onDone: (message: string) => void;
   onCancel: () => void;
 }) {
-  const [type, setType] = useState<AdminMovementType>("RECEIVE");
+  const [type, setType] = useState<AdminMovementType>(canManage ? "RECEIVE" : "TAKE");
   const [qty, setQty] = useState("1");
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
@@ -46,6 +49,7 @@ export function MovementForm({
   const [error, setError] = useState<string | null>(null);
 
   const edit = <T,>(set: (v: T) => void) => (v: T) => { set(v); setKey(crypto.randomUUID()); };
+  const allowedTypes = (Object.keys(TYPE_LABELS) as AdminMovementType[]).filter((t) => canManage || t === "TAKE");
   const noteLabel = NOTE_LABELS[type];
 
   async function submit(e: FormEvent) {
@@ -58,7 +62,7 @@ export function MovementForm({
       return;
     }
     if (noteLabel && !note.trim()) { setError(`Udfyld ${noteLabel.toLowerCase()}`); return; }
-    const cost = type === "RECEIVE" && costKr.trim() ? Math.round(Number(costKr.trim().replace(",", ".")) * 100) : undefined;
+    const cost = canManage && type === "RECEIVE" && costKr.trim() ? Math.round(Number(costKr.trim().replace(",", ".")) * 100) : undefined;
     if (cost !== undefined && (!Number.isFinite(cost) || cost < 0)) { setError("Kostprisen er ugyldig"); return; }
 
     setBusy(true);
@@ -95,8 +99,9 @@ export function MovementForm({
       <div>
         <label htmlFor="mv-type" className={label}>Handling</label>
         <select id="mv-type" value={type} onChange={(e) => edit(setType)(e.target.value as AdminMovementType)} className={input}>
-          {(Object.keys(TYPE_LABELS) as AdminMovementType[]).map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
+          {allowedTypes.map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
         </select>
+        {!canManage && <p className="mt-1 text-xs text-gray">Kun ejer eller leder kan modtage, tælle og nedskrive varer.</p>}
       </div>
       <div>
         <label htmlFor="mv-qty" className={label}>{QTY_LABELS[type]}</label>

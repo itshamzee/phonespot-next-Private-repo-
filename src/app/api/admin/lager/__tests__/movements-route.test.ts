@@ -75,12 +75,12 @@ it("401 without staff", async () => {
 });
 
 it("store scope: staff may only book on their own store location; owner anywhere", async () => {
-  asStaff("staff", "vejle");
+  asStaff("manager", "vejle");
   expect((await post({ type: "RECEIVE", qty: 1, location: "vejle-hub" })).status).toBe(201);
   const denied = await post({ type: "RECEIVE", qty: 1, location: "phonespot-slagelse" });
   expect(denied.status).toBe(403);
   expect((await denied.json()).error).toBe("Du har ikke adgang til denne butik.");
-  asStaff("staff", "slagelse");
+  asStaff("manager", "slagelse");
   expect((await post({ type: "RECEIVE", qty: 1, location: "phonespot-slagelse" })).status).toBe(201);
   expect((await post({ type: "RECEIVE", qty: 1, location: "vejle-hub" })).status).toBe(403);
   asStaff("owner", null);
@@ -89,9 +89,41 @@ it("store scope: staff may only book on their own store location; owner anywhere
 
 it("store scope: webshop staff and staff without a store are refused, and nothing is sent", async () => {
   s.client!.postMovement.mockClear();
-  asStaff("staff", "webshop");
+  asStaff("manager", "webshop");
   expect((await post({ type: "RECEIVE", qty: 1 })).status).toBe(403);
-  asStaff("staff", null);
+  asStaff("manager", null);
   expect((await post({ type: "RECEIVE", qty: 1 })).status).toBe(403);
   expect(s.client!.postMovement).not.toHaveBeenCalled();
+});
+
+it("role gate: staff/employee may only TAKE; RECEIVE, COUNT and WRITE_OFF give 403 and send nothing", async () => {
+  for (const role of ["staff", "employee"]) {
+    asStaff(role, "vejle");
+    s.client!.postMovement.mockClear();
+    for (const body of [{ type: "RECEIVE", qty: 1 }, { type: "COUNT", qty: 1 }, { type: "WRITE_OFF", qty: 1, note: "x" }]) {
+      const res = await post(body);
+      expect(res.status).toBe(403);
+      expect((await res.json()).error).toBe("Kun ejer eller leder kan modtage, tælle og nedskrive varer.");
+    }
+    expect(s.client!.postMovement).not.toHaveBeenCalled();
+    expect((await post({ type: "TAKE", qty: 1, note: "Demo" })).status).toBe(201);
+  }
+});
+
+it("role gate: manager may book on own location only; owner anywhere", async () => {
+  asStaff("manager", "vejle");
+  for (const body of [{ type: "RECEIVE", qty: 1 }, { type: "COUNT", qty: 1 }, { type: "WRITE_OFF", qty: 1, note: "x" }]) {
+    expect((await post(body)).status).toBe(201);
+  }
+  expect((await post({ type: "RECEIVE", qty: 1, location: "phonespot-slagelse" })).status).toBe(403);
+  asStaff("owner", null);
+  expect((await post({ type: "WRITE_OFF", qty: 1, note: "x", location: "phonespot-slagelse" })).status).toBe(201);
+});
+
+it("cost_price_ore: forwarded for manager/owner, capped at 10 000 000 øre", async () => {
+  asStaff("manager", "vejle");
+  await post({ type: "RECEIVE", qty: 1, cost_price_ore: 100 });
+  expect(s.client!.postMovement).toHaveBeenLastCalledWith(expect.objectContaining({ cost_price_ore: 100 }));
+  expect((await post({ type: "RECEIVE", qty: 1, cost_price_ore: 10_000_001 })).status).toBe(400);
+  expect((await post({ type: "RECEIVE", qty: 1, cost_price_ore: 10_000_000 })).status).toBe(201);
 });

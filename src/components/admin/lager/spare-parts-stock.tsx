@@ -17,6 +17,21 @@ export function SparePartsStock() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<StockRow | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  // Ukendt rolle behandles som ansat: kun Udtag, indtil /api/admin/me har svaret.
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/me", { cache: "no-store" });
+        if (!res.ok) return;
+        const me = (await res.json()) as { role?: string };
+        setCanManage(me.role === "owner" || me.role === "manager");
+      } catch {
+        /* forbliver false */
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -122,6 +137,7 @@ export function SparePartsStock() {
                         <MovementForm
                           location={location}
                           part={r}
+                          canManage={canManage}
                           onCancel={() => setOpen(null)}
                           onDone={(message) => { setNotice(message); setOpen(null); setReloadKey((k) => k + 1); }}
                         />

@@ -47,3 +47,35 @@ it("shows the error when the lagersystem is down", async () => {
   render(<SparePartsStock />);
   expect(await screen.findByRole("alert")).toHaveTextContent("Lagersystemet svarer ikke lige nu.");
 });
+
+function apiWithRole(role: string | null) {
+  const f = api();
+  vi.stubGlobal("fetch", vi.fn((url: string) =>
+    url === "/api/admin/me" ? (role ? json({ role }) : json({ error: "x" }, 401)) : f(url)));
+}
+
+it("employees can only take stock: no receive, count or write-off, with an explanation", async () => {
+  apiWithRole("staff");
+  render(<SparePartsStock />);
+  fireEvent.click(await screen.findByRole("button", { name: "Bogfør på Batteri iPhone 12" }));
+  await waitFor(() => expect(screen.getByText(/Kun ejer eller leder kan modtage, tælle og nedskrive/)).toBeVisible());
+  const options = within(screen.getByLabelText("Handling")).getAllByRole("option").map((o) => o.textContent);
+  expect(options).toEqual(["Udtag"]);
+});
+
+it("managers and owners get all four actions", async () => {
+  for (const role of ["manager", "owner"]) {
+    apiWithRole(role);
+    const { unmount } = render(<SparePartsStock />);
+    fireEvent.click(await screen.findByRole("button", { name: "Bogfør på Batteri iPhone 12" }));
+    await waitFor(() => expect(within(screen.getByLabelText("Handling")).getAllByRole("option")).toHaveLength(4));
+    unmount();
+  }
+});
+
+it("an unknown role is treated as employee", async () => {
+  apiWithRole(null);
+  render(<SparePartsStock />);
+  fireEvent.click(await screen.findByRole("button", { name: "Bogfør på Batteri iPhone 12" }));
+  expect(within(screen.getByLabelText("Handling")).getAllByRole("option")).toHaveLength(1);
+});
