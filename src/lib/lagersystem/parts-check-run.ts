@@ -28,7 +28,10 @@ export interface PartsCheckRepo {
   /** true = denne kørsel ejer mailen for netop denne mangel (atomisk). */
   claimNotification(id: string, key: string): Promise<boolean>;
   releaseNotification(id: string, key: string): Promise<void>;
-  listUnknownOpen(limit: number): Promise<string[]>;
+  /** Åbne sager der skal tjekkes igen: 'unknown', samt 'needs_order' hvor mailen aldrig blev afsendt (nøgle null). */
+  listRecheckOpen(limit: number): Promise<string[]>;
+  /** Nulstiller mail-nøglen, så en senere identisk mangel mailer igen. */
+  clearNotification(id: string): Promise<void>;
   /** needs_order -> ordered; false hvis sagen ikke manglede dele. */
   setOrdered(id: string): Promise<boolean>;
 }
@@ -39,6 +42,8 @@ export interface CheckDeps {
   client: Pick<LagersystemClient, "getBalances" | "getPart">;
   notify: Notify;
   now?: Date;
+  /** Delt pr. kørsel: lokation -> saldi, eller null hvis lagersystemet ikke svarede. */
+  balanceCache?: Map<string, Map<string, number> | null>;
 }
 export type CheckOutcome = "skipped" | "no_links" | PartsStatus;
 
@@ -68,22 +73,27 @@ export async function checkTicketParts(ticketId: string, deps: CheckDeps): Promi
   const needs = aggregateNeeds(serviceIds, serviceIds.length ? await repo.getLinks(serviceIds) : []);
   if (needs.size === 0) {
     if (ticket.parts_status !== null) await repo.saveStatus(ticket.id, null, null, now);
+    if (ticket.parts_notified_key !== null) await repo.clearNotification(ticket.id);
     return "no_links";
   }
 
-  let balances: Map<string, number> | null = null;
-  try {
-    const res = await client.getBalances(location);
-    balances = new Map(res.balances.map((b) => [b.shared_sku, b.qty]));
-  } catch (err) {
-    console.warn("[lagertjek] lagersystemet svarede ikke", ticket.id, err instanceof Error ? err.message : err);
+  let balances: Map<string, number> | null;
+  if (deps.balanceCache?.has(location)) {
+    balances = deps.balanceCache.get(location) ?? null;
+  } else {
+    try {
+      const res = await client.getBalances(location);
+      balances = new Map(res.balances.map((b) => [b.shared_sku, b.qty]));
+    } catch (err) {
+      balances = null;
+      console.warn("[lagertjek] lagersystemet svarede ikke", ticket.id, err instanceof Error ? err.message : err);
+    }
+    deps.balanceCache?.set(location, balances);
   }
 
   let otherDemand = new Map<string, number>();
-  let ownTaken = new Map<string, number>();
-  const skus = [...needs.keys()];
-  const taken = await repo.getTaken(skus);
-  ownTaken = takenByTicket(taken, ticket.id);
+  const taken = await repo.getTaken([...needs.keys()]);
+  const ownTaken = takenByTicket(taken, ticket.id);
   if (balances) {
     const others = await repo.getOtherOpenTickets(storesForLocation(location), ticket.id);
     const otherServiceIds = [...new Set(others.flatMap(serviceIdsForTicket))];
@@ -100,6 +110,8 @@ export async function checkTicketParts(ticketId: string, deps: CheckDeps): Promi
   const result = computePartsStatus({ needs, balances, otherDemand, ownTaken });
   await repo.saveStatus(ticket.id, result.status, result.status === "needs_order" ? result.shortage : null, now);
 
+  if (result.status === "ok" && ticket.parts_notified_key !== null) await repo.clearNotification(ticket.id);
+
   if (result.status === "needs_order") {
     const key = shortageKey(result.shortage);
     if (await repo.claimNotification(ticket.id, key)) {
@@ -107,21 +119,34 @@ export async function checkTicketParts(ticketId: string, deps: CheckDeps): Promi
         await notify(ticket, result.shortage);
       } catch (err) {
         console.error("[lagertjek] mail til personalet fejlede", ticket.id, err);
-        await repo.releaseNotification(ticket.id, key);
+        try {
+          await repo.releaseNotification(ticket.id, key);
+        } catch (releaseErr) {
+          console.error("[lagertjek] kunne ikke frigive mail-nøglen", ticket.id, releaseErr);
+        }
       }
     }
   }
   return result.status ?? "no_links";
 }
 
+/**
+ * Gentjek af sager med ukendt status og sager hvis mangel-mail aldrig gik afsted.
+ * Saldi hentes højst én gang pr. lokation pr. kørsel, og kørslen stopper ved
+ * første ubesvarede kald, så et nede lagersystem ikke æder routens tidsbudget.
+ */
 export async function recheckUnknownTickets(deps: CheckDeps & { limit?: number }): Promise<number> {
-  const ids = await deps.repo.listUnknownOpen(deps.limit ?? 20);
+  const ids = await deps.repo.listRecheckOpen(deps.limit ?? 20);
+  const balanceCache = deps.balanceCache ?? new Map<string, Map<string, number> | null>();
+  let done = 0;
   for (const id of ids) {
     try {
-      await checkTicketParts(id, deps);
+      await checkTicketParts(id, { ...deps, balanceCache });
     } catch (err) {
       console.error("[lagertjek] gentjek fejlede", id, err);
     }
+    done++;
+    if ([...balanceCache.values()].some((v) => v === null)) break;
   }
-  return ids.length;
+  return done;
 }

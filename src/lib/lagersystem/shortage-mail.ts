@@ -6,7 +6,7 @@ import type { ShortageLine } from "./types";
 
 type TicketForMail = { id: string; ticket_number: string | null; device_model: string; customer_name: string; store_id: string | null };
 
-export function buildShortageMail(t: TicketForMail, lines: ShortageLine[]): { to: string; subject: string; text: string } {
+export function buildShortageMail(t: TicketForMail, lines: ShortageLine[]): { to: string; bcc?: string[]; subject: string; text: string } {
   const ref = t.ticket_number ?? t.id.slice(0, 8);
   const location = locationForStore(t.store_id);
   const store = storeLabel(normalizeStoreId(t.store_id));
@@ -28,7 +28,8 @@ export function buildShortageMail(t: TicketForMail, lines: ShortageLine[]): { to
     "",
     "Kunden har ikke fået besked om dette.",
   ].join("\n");
-  return { to: getStaffRecipients(t.store_id).to, subject: `Del skal bestilles: ${t.device_model} (${ref})`, text };
+  const { to, bcc } = getStaffRecipients(t.store_id);
+  return { to, ...(bcc ? { bcc } : {}), subject: `Del skal bestilles: ${t.device_model} (${ref})`, text };
 }
 
 export async function notifyPartsShortage(t: TicketForMail, lines: ShortageLine[]): Promise<void> {

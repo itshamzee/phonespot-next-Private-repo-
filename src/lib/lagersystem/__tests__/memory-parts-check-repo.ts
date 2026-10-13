@@ -22,7 +22,8 @@ export function memoryPartsCheckRepo(init: { tickets: TicketForCheck[]; links: S
     async saveStatus(id, status, shortage) { Object.assign(find(id), { parts_status: status, parts_shortage: shortage }); repo.saves++; },
     async claimNotification(id, key) { const t = find(id); if (t.parts_notified_key === key) return false; t.parts_notified_key = key; return true; },
     async releaseNotification(id, key) { const t = find(id); if (t.parts_notified_key === key) t.parts_notified_key = null; },
-    async listUnknownOpen(limit) { return tickets.filter((t) => t.parts_status === "unknown" && !closed(t.status)).slice(0, limit).map((t) => t.id); },
+    async clearNotification(id) { find(id).parts_notified_key = null; },
+    async listRecheckOpen(limit) { return tickets.filter((t) => (t.parts_status === "unknown" || (t.parts_status === "needs_order" && t.parts_notified_key === null)) && !closed(t.status)).slice(0, limit).map((t) => t.id); },
     async setOrdered(id) { const t = find(id); if (t.parts_status !== "needs_order") return false; t.parts_status = "ordered"; return true; },
   };
   return repo;

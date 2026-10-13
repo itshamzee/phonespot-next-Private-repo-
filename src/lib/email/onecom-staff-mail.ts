@@ -30,7 +30,7 @@ export function pickSenderMailbox(boxes: MailboxConfig[], to: string): MailboxCo
 }
 
 export async function sendStaffMail(
-  msg: { to: string; subject: string; text: string },
+  msg: { to: string; bcc?: string[]; subject: string; text: string },
   deps: StaffMailDeps = defaultDeps,
 ): Promise<void> {
   const box = pickSenderMailbox(deps.mailboxes(), msg.to);
@@ -38,6 +38,7 @@ export async function sendStaffMail(
   await deps.transport(box).sendMail({
     from: { name: box.displayName, address: box.address },
     to: msg.to,
+    ...(msg.bcc?.length ? { bcc: msg.bcc } : {}),
     subject: msg.subject,
     text: msg.text,
   });

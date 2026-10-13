@@ -14,6 +14,11 @@ it("goes to the store's mailbox with the ticket, the missing parts and a link", 
   expect(m.text).toContain("Kunden har ikke fået besked");
 });
 
+it("copies the central inbox on a store mail, like other staff alerts", () => {
+  expect(buildShortageMail(ticket, lines).bcc).toEqual(["info@phonespot.dk"]);
+  expect(buildShortageMail({ ...ticket, store_id: null }, lines).bcc).toBeUndefined();
+});
+
 it("uses the central inbox and a short id for a ticket without store or number", () => {
   const m = buildShortageMail({ ...ticket, store_id: null, ticket_number: null }, lines);
   expect(m.to).toBe("info@phonespot.dk");

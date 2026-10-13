@@ -119,4 +119,57 @@ describe("recheckUnknownTickets", () => {
     expect(await recheckUnknownTickets({ repo, client: client(5), notify: vi.fn(async () => {}), now: T0 })).toBe(1);
     expect(repo.tickets[0].parts_status).toBe("ok");
   });
+
+  it("retries a mail whose send failed, on the next recheck, and mails once", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("new")], links });
+    await checkTicketParts("new", { repo, client: client(0), notify: vi.fn(async () => { throw new Error("smtp"); }), now: T0 });
+    expect(repo.tickets[0].parts_status).toBe("needs_order");
+    const notify = vi.fn(async () => {});
+    expect(await recheckUnknownTickets({ repo, client: client(0), notify, now: T0 })).toBe(1);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(await recheckUnknownTickets({ repo, client: client(0), notify, now: T0 })).toBe(0);
+    expect(notify).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops after the first failed balance fetch when the lagersystem is down", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("a", { parts_status: "unknown" }), ticket("b", { parts_status: "unknown" }), ticket("c", { parts_status: "unknown" })], links });
+    const c = client("down");
+    expect(await recheckUnknownTickets({ repo, client: c, notify: vi.fn(async () => {}), now: T0 })).toBe(1);
+    expect(c.getBalances).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares one balance fetch per location across tickets when the lagersystem is up", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("a", { parts_status: "unknown" }), ticket("b", { parts_status: "unknown" })], links });
+    const c = client(5);
+    expect(await recheckUnknownTickets({ repo, client: c, notify: vi.fn(async () => {}), now: T0 })).toBe(2);
+    expect(c.getBalances).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears the mail key on ok and no_links but keeps it on unknown", async () => {
+    const key = "k";
+    const ok = memoryPartsCheckRepo({ tickets: [ticket("new", { parts_status: "needs_order", parts_notified_key: key })], links });
+    await checkTicketParts("new", { repo: ok, client: client(5), notify: vi.fn(async () => {}), now: T0 });
+    expect(ok.tickets[0].parts_notified_key).toBeNull();
+    const none = memoryPartsCheckRepo({ tickets: [ticket("new", { parts_status: "needs_order", parts_notified_key: key })], links: [] });
+    await checkTicketParts("new", { repo: none, client: client(5), notify: vi.fn(async () => {}), now: T0 });
+    expect(none.tickets[0].parts_notified_key).toBeNull();
+    const down = memoryPartsCheckRepo({ tickets: [ticket("new", { parts_status: "needs_order", parts_notified_key: key })], links });
+    await checkTicketParts("new", { repo: down, client: client("down"), notify: vi.fn(async () => {}), now: T0 });
+    expect(down.tickets[0].parts_notified_key).toBe(key);
+  });
+
+  it("mails again when the same shortage returns after a resolved check", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("new")], links });
+    const notify = vi.fn(async () => {});
+    await checkTicketParts("new", { repo, client: client(0), notify, now: T0 });
+    await checkTicketParts("new", { repo, client: client(5), notify, now: T0 });
+    await checkTicketParts("new", { repo, client: client(0), notify, now: T0 });
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not throw when releasing the claim fails", async () => {
+    const repo = memoryPartsCheckRepo({ tickets: [ticket("new")], links });
+    repo.releaseNotification = async () => { throw new Error("db"); };
+    await expect(checkTicketParts("new", { repo, client: client(0), notify: vi.fn(async () => { throw new Error("smtp"); }), now: T0 })).resolves.toBe("needs_order");
+  });
 });

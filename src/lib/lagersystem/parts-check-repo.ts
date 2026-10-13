@@ -69,15 +69,19 @@ export function createSupabasePartsCheckRepo(sb: SupabaseClient): PartsCheckRepo
       const { error } = await sb.from("repair_tickets").update({ parts_notified_key: null }).eq("id", id).eq("parts_notified_key", key);
       if (error) fail("releaseNotification", error);
     },
-    async listUnknownOpen(limit) {
+    async clearNotification(id) {
+      const { error } = await sb.from("repair_tickets").update({ parts_notified_key: null }).eq("id", id);
+      if (error) fail("clearNotification", error);
+    },
+    async listRecheckOpen(limit) {
       const { data, error } = await sb
         .from("repair_tickets")
         .select("id")
-        .eq("parts_status", "unknown")
+        .or("parts_status.eq.unknown,and(parts_status.eq.needs_order,parts_notified_key.is.null)")
         .not("status", "in", CLOSED)
         .order("parts_checked_at", { ascending: true })
         .limit(limit);
-      if (error) fail("listUnknownOpen", error);
+      if (error) fail("listRecheckOpen", error);
       return ((data as { id: string }[]) ?? []).map((r) => r.id);
     },
     async setOrdered(id) {
