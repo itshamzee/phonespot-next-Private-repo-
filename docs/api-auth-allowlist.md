@@ -135,6 +135,8 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/lager/repair-parts/[ticketId]` | GET POST | `requireStaff` |
 | `admin/lager/repair-parts/[ticketId]/[partId]` | DELETE PATCH | `requireStaff` |
 | `admin/lager/repair-transfers/[ticketId]` | POST | `requireStaff` |
+| `admin/lager/rma` | GET POST | `requireStaff` + `canUseLocation`/`canSee` |
+| `admin/lager/rma/[id]/[action]` | POST | `requireStaff` + `canUseLocation` (+ `canManageStock` for REPLACED/kreditbeløb) |
 | `admin/lager/transfers` | GET POST | `requireStaff` |
 | `admin/lager/transfers/[id]/[action]` | POST | `requireStaff` |
 | `admin/models` | GET POST | none |
