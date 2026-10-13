@@ -47,14 +47,11 @@ export const config = {
 /**
  * Routes that sit under a gated prefix but are genuinely public.
  *
- * Method-scoped on purpose: the public /reservedele filter sidebar reads these
- * two listings, but POST on the same paths creates catalogue rows and stays
- * gated.
+ * Empty since 2026-10-13: the only entries served the public /reservedele
+ * filter sidebar, and /reservedele now 301s to /reparation. Keep the
+ * mechanism — it is method-scoped and documented in docs/api-auth-allowlist.md.
  */
-const PUBLIC_ROUTES: Record<string, readonly string[]> = {
-  "/api/admin/spare-parts/categories": ["GET", "HEAD"],
-  "/api/admin/spare-parts/quality-tiers": ["GET", "HEAD"],
-};
+const PUBLIC_ROUTES: Record<string, readonly string[]> = {};
 
 function isPublic(pathname: string, method: string): boolean {
   const normalised =

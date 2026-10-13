@@ -57,18 +57,9 @@ be touched:
 
 ## 2. Allowlist — inside the gated prefixes, but public by design
 
-Determined by grepping every `fetch("/api/admin/…")` / `fetch("/api/platform/…")` call
-site outside `src/app/(admin)/**`, `src/components/admin/**` and
-`src/components/platform/**`. Exactly one storefront component hits the gated prefixes:
-
-| Method + path | Called by | Why it must stay public |
-|---|---|---|
-| `GET /api/admin/spare-parts/categories` | `src/components/spare-parts/spare-parts-filters.tsx:257` | Renders the filter sidebar on the public `/reservedele*` pages |
-| `GET /api/admin/spare-parts/quality-tiers` | `src/components/spare-parts/spare-parts-filters.tsx:258` | Same sidebar (quality-tier chips) |
-
-Both are read-only listings of catalogue metadata (name, slug, SEO copy, badge
-colours, warranty months). No PII, no cost prices. **`POST` on the same two paths
-stays gated** — the allowlist is method-scoped, not path-scoped.
+None since 2026-10-13. The two `GET /api/admin/spare-parts/*` listings served the public
+`/reservedele` filter sidebar; that page now 301s to `/reparation`, so they are gated like
+every other admin route.
 
 Everything else under the two prefixes is admin-only: verified that no file under
 `src/app/**` outside `src/app/(admin)/**` imports `src/components/platform/**` or
@@ -147,9 +138,9 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/settings/company` | GET PUT | inline bearer (already OK) |
 | `admin/spare-parts` | GET POST | none |
 | `admin/spare-parts/[id]` | GET PATCH DELETE | none |
-| `admin/spare-parts/categories` | GET POST | none — **GET allowlisted** |
+| `admin/spare-parts/categories` | GET POST | none |
 | `admin/spare-parts/categories/[id]` | PATCH DELETE | none |
-| `admin/spare-parts/quality-tiers` | GET POST | none — **GET allowlisted** |
+| `admin/spare-parts/quality-tiers` | GET POST | none |
 | `admin/spare-parts/quality-tiers/[id]` | PATCH DELETE | none |
 | `admin/spot` | POST | none |
 | `admin/spot/[id]` | PATCH DELETE | none |

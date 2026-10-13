@@ -181,23 +181,8 @@ describe("allowlist", () => {
   it.each([
     "/api/admin/spare-parts/categories",
     "/api/admin/spare-parts/quality-tiers",
-    "/api/admin/spare-parts/categories/",
-  ])("GET %s stays public for the /reservedele filter sidebar", async (path) => {
+  ])("GET %s is gated now that /reservedele is closed", async (path) => {
     const res = await middleware(req(path));
-    expect(res.status).toBe(200);
-    expect(res.headers.get("x-middleware-next")).toBe("1");
-  });
-
-  it.each([
-    "/api/admin/spare-parts/categories",
-    "/api/admin/spare-parts/quality-tiers",
-  ])("POST %s is still gated", async (path) => {
-    const res = await middleware(req(path, { method: "POST" }));
-    expect(res.status).toBe(401);
-  });
-
-  it("does not leak the allowlist to sibling paths", async () => {
-    const res = await middleware(req("/api/admin/spare-parts/categories/some-id"));
     expect(res.status).toBe(401);
   });
 });
