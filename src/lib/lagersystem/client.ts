@@ -1,3 +1,4 @@
+import "server-only";
 import type { ApiError, ApiErrorCode, BalancesResponse, Location, MovementInput, MovementResult, Part } from "./api-types";
 import { getLagersystemConfig, type LagersystemConfig } from "./config";
 
@@ -78,7 +79,7 @@ export function describeLagersystemError(err: unknown): string {
     case "invalid_body": return `Lagersystemet afviste data: ${err.message}`;
     case "idempotency_conflict": return "Handlingen er allerede bogført med andre værdier. Genindlæs siden og prøv igen.";
     case "invalid_state": return "Flytningen har ændret status. Genindlæs siden og prøv igen.";
-    case "unknown_transfer": return "Flytningen findes ikke";
+    case "unknown_transfer": return "Flytningen findes ikke.";
     default: return err.retryable ? "Lagersystemet svarer ikke lige nu. Prøv igen om lidt." : "Lagersystemet afviste forespørgslen.";
   }
 }

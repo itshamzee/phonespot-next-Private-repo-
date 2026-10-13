@@ -1,3 +1,4 @@
+import "server-only";
 export type LagersystemConfig = { url: string; apiKey: string };
 
 /** null = funktionen er slået fra (spec §4.2: hemmeligheder kun i Vercel prod). */

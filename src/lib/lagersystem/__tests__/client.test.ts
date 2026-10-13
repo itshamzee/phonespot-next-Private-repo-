@@ -71,12 +71,21 @@ describe("client", () => {
     expect(describeLagersystemError(inv)).toMatch(/status/i);
     const unk = await createLagersystemClient(cfg, vi.fn(async () => json(404, { error: { code: "unknown_transfer", message: "x" } }))).listLocations().catch((e) => e);
     expect(unk.retryable).toBe(false);
-    expect(describeLagersystemError(unk)).toBe("Flytningen findes ikke");
+    expect(describeLagersystemError(unk)).toBe("Flytningen findes ikke.");
   });
 
   it("encodes the sku in /parts/:sku", async () => {
     const f = vi.fn(async () => json(200, { part: { shared_sku: "A/B" } }));
     await createLagersystemClient(cfg, f).getPart("A/B");
     expect((f.mock.calls[0] as unknown as [string])[0]).toBe("https://lager.test/api/v1/parts/A%2FB");
+  });
+});
+
+describe("server-only guard", () => {
+  it("client.ts and config.ts import server-only", async () => {
+    const { readFileSync } = await import("node:fs");
+    for (const f of ["client.ts", "config.ts"]) {
+      expect(readFileSync(new URL(`../${f}`, import.meta.url), "utf8")).toMatch(/^import "server-only";/);
+    }
   });
 });
