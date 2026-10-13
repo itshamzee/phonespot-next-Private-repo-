@@ -40,10 +40,15 @@ export function createSupabaseRepairPartsRepo(sb: SupabaseClient): RepairPartsRe
       const { error } = await sb.from(TABLE).update({ voided_at: now.toISOString() }).eq("id", id).is("voided_at", null);
       if (error) fail("voidPart", error);
     },
+    async voidFailedPart(id, now) {
+      const { data, error } = await sb.from(TABLE).update({ voided_at: now.toISOString() }).eq("id", id).eq("status", "failed").is("voided_at", null).select("id");
+      if (error) fail("voidFailedPart", error);
+      return Array.isArray(data) ? data.length > 0 : data != null;
+    },
     async resetForRetry(id, now) {
       const { data, error } = await sb
         .from(TABLE)
-        .update({ status: "pending", pending_since: now.toISOString(), last_attempt_at: null, last_error: null })
+        .update({ status: "pending", attempts: 0, pending_since: now.toISOString(), last_attempt_at: null, last_error: null })
         .eq("id", id)
         .eq("status", "failed")
         .select("*")

@@ -23,7 +23,7 @@ export async function sendRepairPart(row: RepairPartRow, { repo, client, now }: 
   if (row.movement_type === "RETURN") {
     const take = row.reverses_id ? await repo.getPart(row.reverses_id) : null;
     if (!take || take.status === "failed") {
-      await repo.markFailed(row.id, "Udtaget blev aldrig bogført i lagersystemet, så returneringen er ikke sendt", now);
+      await repo.markFailed(row.id, "Udtaget blev aldrig bogført – intet at returnere", now);
       return "failed";
     }
     if (take.status !== "synced") return "waiting";

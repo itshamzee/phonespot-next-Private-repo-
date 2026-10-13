@@ -123,3 +123,27 @@ describe("pending-only guard", () => {
     expect(repo2.rows[0]).toMatchObject({ status: "failed", movement_id: null });
   });
 });
+
+describe("RETURN never outruns its TAKE", () => {
+  it("waits while the TAKE is pending in back-off, even if the RETURN is due", async () => {
+    const repo = memoryRepo();
+    const row = (await repo.insert(take(), T0)) as never;
+    await repo.markAttemptFailed(row, "x", at(50_000));
+    await repo.insert(ret(), at(1));
+    const client = { postMovement: ok() };
+    const report = await drainOutbox({ repo, client, now: () => at(60_000) });
+    expect(report).toEqual({ synced: 0, retry: 0, failed: 0, waiting: 1 });
+    expect(client.postMovement).not.toHaveBeenCalled();
+  });
+
+  it("fails the RETURN with a Danish reason when the TAKE failed, and never sends it", async () => {
+    const repo = memoryRepo();
+    await repo.insert(take(), T0);
+    await repo.insert(ret(), at(1));
+    await repo.markFailed("t1", "x", at(2));
+    const client = { postMovement: ok() };
+    expect(await drainOutbox({ repo, client, now: () => at(60_000) })).toMatchObject({ failed: 1, synced: 0 });
+    expect(repo.rows[1]).toMatchObject({ status: "failed", last_error: "Udtaget blev aldrig bogført – intet at returnere" });
+    expect(client.postMovement).not.toHaveBeenCalled();
+  });
+});

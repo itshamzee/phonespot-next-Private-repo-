@@ -22,10 +22,16 @@ export function memoryRepo(tickets: TicketRef[] = []) {
       return full;
     },
     async voidPart(id, now) { const r = byId(id); if (!r.voided_at) r.voided_at = now.toISOString(); },
+    async voidFailedPart(id, now) {
+      const r = rows.find((x) => x.id === id);
+      if (!r || r.status !== "failed" || r.voided_at) return false;
+      r.voided_at = now.toISOString();
+      return true;
+    },
     async resetForRetry(id, now) {
       const r = rows.find((x) => x.id === id && x.status === "failed");
       if (!r) return null;
-      Object.assign(r, { status: "pending", pending_since: now.toISOString(), last_attempt_at: null, last_error: null });
+      Object.assign(r, { status: "pending", attempts: 0, pending_since: now.toISOString(), last_attempt_at: null, last_error: null });
       return r;
     },
     async listDue(limit, now) {

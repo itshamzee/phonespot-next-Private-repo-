@@ -100,3 +100,58 @@ describe("retryPart", () => {
     expect(r.ok && r.value).toMatchObject({ status: "pending", pending_since: later.toISOString(), last_error: null });
   });
 });
+
+describe("fix round 1", () => {
+  it.each([
+    { sharedSku: " " }, { partName: "" }, { costPriceOre: -1 }, { costPriceOre: 1.5 }, { costPriceOre: Number.NaN },
+  ])("addPart rejects %o with 400", async (bad) => {
+    expect(await addPart(memoryRepo(tickets), { ...base, ticketId: "tv", ...bad })).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("addPart accepts a null and a zero cost", async () => {
+    expect((await addPart(memoryRepo(tickets), { ...base, ticketId: "tv", costPriceOre: null })).ok).toBe(true);
+    expect((await addPart(memoryRepo(tickets), { ...base, ticketId: "tv", costPriceOre: 0 })).ok).toBe(true);
+  });
+
+  it("retryPart rejects a voided row", async () => {
+    const repo = memoryRepo(tickets);
+    const added = await addPart(repo, { ...base, ticketId: "tv" });
+    if (!added.ok) throw new Error("setup");
+    await repo.markFailed(added.value.id, "x", T0);
+    await repo.voidPart(added.value.id, T0);
+    expect(await retryPart(repo, { ticketId: "tv", partId: added.value.id })).toMatchObject({ ok: false, status: 409 });
+  });
+
+  it("retry resets attempts to 0", async () => {
+    const repo = memoryRepo(tickets);
+    const added = await addPart(repo, { ...base, ticketId: "tv" });
+    if (!added.ok) throw new Error("setup");
+    await repo.markAttemptFailed(added.value, "x", T0);
+    await repo.markFailed(added.value.id, "x", T0);
+    const r = await retryPart(repo, { ticketId: "tv", partId: added.value.id, now: T0 });
+    expect(r.ok && r.value.attempts).toBe(0);
+  });
+
+  it("removing a still-pending TAKE queues a RETURN that waits for the TAKE", async () => {
+    const repo = memoryRepo(tickets);
+    const added = await addPart(repo, { ...base, ticketId: "tv" });
+    if (!added.ok) throw new Error("setup");
+    const r = await removePart(repo, { ticketId: "tv", partId: added.value.id, staff, newId, now: T0 });
+    expect(r.ok && r.value).toMatchObject({ movement_type: "RETURN", status: "pending" });
+  });
+
+  it("remove-vs-retry race: a TAKE retried meanwhile is not voided; it gets a RETURN", async () => {
+    const repo = memoryRepo(tickets);
+    const added = await addPart(repo, { ...base, ticketId: "tv" });
+    if (!added.ok) throw new Error("setup");
+    await repo.markFailed(added.value.id, "x", T0);
+    const real = repo.voidFailedPart;
+    repo.voidFailedPart = async (id, now) => {
+      await repo.resetForRetry(id, now); // retry slips in between read and void
+      return real(id, now);
+    };
+    const r = await removePart(repo, { ticketId: "tv", partId: added.value.id, staff, newId, now: T0 });
+    expect(r.ok && r.value.movement_type).toBe("RETURN");
+    expect(repo.rows.filter((x) => x.movement_type === "RETURN")).toHaveLength(1);
+  });
+});

@@ -41,3 +41,16 @@ it("markSynced only applies while the row is pending", async () => {
   await createSupabaseRepairPartsRepo(sb).markSynced("x", "m", new Date());
   expect(calls).toContainEqual(["eq", "status", "pending"]);
 });
+
+it("voidFailedPart is guarded on failed status and unvoided", async () => {
+  const { sb, calls } = fakeSb({ data: [{ id: "x" }], error: null });
+  expect(await createSupabaseRepairPartsRepo(sb).voidFailedPart("x", new Date())).toBe(true);
+  expect(calls).toContainEqual(["eq", "status", "failed"]);
+  expect(calls).toContainEqual(["is", "voided_at", null]);
+});
+
+it("resetForRetry zeroes attempts", async () => {
+  const { sb, calls } = fakeSb({ data: null, error: null });
+  await createSupabaseRepairPartsRepo(sb).resetForRetry("x", new Date());
+  expect(calls.find((c) => c[0] === "update")?.[1]).toMatchObject({ attempts: 0 });
+});
