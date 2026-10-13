@@ -43,3 +43,15 @@ it("says the lagersystem is not connected when the flag is off", async () => {
   render(<ServicePartsEditor serviceId="svc-1" />);
   expect(await screen.findByText("Lagersystemet er ikke forbundet, så dele kan ikke kobles endnu.")).toBeVisible();
 });
+
+it("shows the error when the first load is refused", async () => {
+  vi.stubGlobal("fetch", vi.fn(() => json({ error: "Kun managere og ejere kan redigere reparationskataloget" }, 403)));
+  render(<ServicePartsEditor serviceId="svc-1" />);
+  expect(await screen.findByText("Kun managere og ejere kan redigere reparationskataloget")).toBeVisible();
+});
+
+it("shows an error when the load throws", async () => {
+  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))));
+  render(<ServicePartsEditor serviceId="svc-1" />);
+  expect(await screen.findByText("Kunne ikke hente koblede dele")).toBeVisible();
+});

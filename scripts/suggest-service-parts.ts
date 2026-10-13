@@ -1,7 +1,7 @@
 /**
  * Foreslår koblinger reparationsydelse -> del ud fra model og kvalitet (spec §4.4).
  *   LAGERSYSTEM_URL=… LAGERSYSTEM_API_KEY=… npx tsx --env-file=.env.local scripts/suggest-service-parts.ts --out <mappe>
- * Kør fra hovedcheckoutet. Skriver service-part-forslag.csv til ejerens godkendelse:
+ * Kør fra hovedcheckoutet. Skriver service-part-forslag.csv (semikolon + BOM, åbner direkte i dansk Excel) til ejerens godkendelse:
  * ret/udfyld kolonnen approve ("ja"), og kør derefter apply-service-part-links.ts.
  * Ydelser, der allerede har en kobling, springes over.
  */
@@ -48,7 +48,7 @@ async function main() {
     for (const s of services) rows.push(suggestForService(s, catalog));
   }
   mkdirSync(out!, { recursive: true });
-  writeFileSync(join(out!, "service-part-forslag.csv"), Papa.unparse(rows), "utf8");
+  writeFileSync(join(out!, "service-part-forslag.csv"), "﻿" + Papa.unparse(rows, { delimiter: ";" }), "utf8");
   const count = (c: string) => rows.filter((r) => r.confidence === c).length;
   console.log(`Skrev ${rows.length} forslag: høj ${count("høj")}, middel ${count("middel")}, lav ${count("lav")}, ingen ${count("ingen")}.`);
 }

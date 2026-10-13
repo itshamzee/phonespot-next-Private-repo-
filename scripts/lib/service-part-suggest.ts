@@ -15,7 +15,7 @@ const KINDS: Array<{ kind: string; service: RegExp; part: RegExp }> = [
   { kind: "skaerm", service: /sk(æ|ae)rm|display|screen/i, part: /sk(æ|ae)rm|screen|display|lcd|oled/i },
   { kind: "batteri", service: /batteri|battery/i, part: /batter/i },
   { kind: "ladestik", service: /ladestik|opladning|charging|ladeport/i, part: /ladestik|charging|dock|ladeport/i },
-  { kind: "bagglas", service: /bagglas|bagside|back ?glass|bagcover/i, part: /bagglas|bagside|back|bagcover|housing/i },
+  { kind: "bagglas", service: /bagglas|bagside|back ?glass|bagcover/i, part: /bagglas|bagside|back ?(glass|cover|housing)|bagcover|housing/i },
   { kind: "kamera", service: /kamera|camera/i, part: /kamera|camera/i },
   { kind: "hoejtaler", service: /h(ø|oe)jtaler|speaker/i, part: /h(ø|oe)jtaler|speaker/i },
 ];
@@ -49,7 +49,8 @@ export function suggestForService(s: ServiceIn, catalog: PartIn[]): Suggestion {
   const pick = (p: PartIn, confidence: Suggestion["confidence"]): Suggestion => ({
     ...base, shared_sku: p.shared_sku, part_name: p.name, part_quality: p.quality ?? "", confidence, approve: confidence === "høj" ? "ja" : "",
   });
-  if (byQuality.length === 1) return pick(byQuality[0], "høj");
+  // Uden kvalitet på ydelsen er et enkelt match kun middel: kvaliteten er ikke afgjort.
+  if (byQuality.length === 1) return pick(byQuality[0], s.quality_tier ? "høj" : "middel");
   if (byQuality.length > 1) return pick(byQuality[0], "middel");
   if (fits.length === 1) return pick(fits[0], "middel");
   return pick(fits[0], "lav");
@@ -59,7 +60,14 @@ export function parseApprovedLinks(csv: string): {
   links: { service_id: string; shared_sku: string; part_name: string; qty: number }[];
   errors: string[];
 } {
-  const parsed = Papa.parse<Record<string, string>>(csv, { header: true, skipEmptyLines: true });
+  // Dansk Excel gemmer med semikolon og BOM; vores eget forslag skrives på samme måde.
+  const text = csv.replace(/^﻿/, "");
+  const parsed = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: true,
+    delimitersToGuess: [";", ","],
+    transformHeader: (h) => h.replace(/^﻿/, "").trim(),
+  });
   const links: { service_id: string; shared_sku: string; part_name: string; qty: number }[] = [];
   const errors: string[] = [];
   parsed.data.forEach((row, i) => {
@@ -73,4 +81,26 @@ export function parseApprovedLinks(csv: string): {
     links.push({ service_id, shared_sku, part_name: (row.part_name ?? "").trim() || shared_sku, qty });
   });
   return { links, errors };
+}
+
+export type ValidateDeps = {
+  existingServiceIds: (ids: string[]) => Promise<Set<string>>;
+  partExists: (sku: string) => Promise<boolean>;
+};
+
+/** Forhåndstjek før skrivning: ydelsen findes, delen findes i lagersystemet, navnet er udfyldt. */
+export async function validateLinks(
+  links: { service_id: string; shared_sku: string; part_name: string; qty: number }[],
+  deps: ValidateDeps,
+): Promise<string[]> {
+  const errors: string[] = [];
+  const known = await deps.existingServiceIds([...new Set(links.map((l) => l.service_id))]);
+  const skuOk = new Map<string, boolean>();
+  for (const l of links) {
+    if (!known.has(l.service_id)) errors.push(`Ydelse ${l.service_id} findes ikke`);
+    if (!l.part_name.trim()) errors.push(`Ydelse ${l.service_id}: part_name er tomt`);
+    if (!skuOk.has(l.shared_sku)) skuOk.set(l.shared_sku, await deps.partExists(l.shared_sku));
+    if (!skuOk.get(l.shared_sku)) errors.push(`Ydelse ${l.service_id}: delen ${l.shared_sku} findes ikke i lagersystemet`);
+  }
+  return errors;
 }

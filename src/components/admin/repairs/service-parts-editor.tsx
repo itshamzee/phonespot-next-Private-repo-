@@ -16,9 +16,17 @@ export function ServicePartsEditor({ serviceId }: { serviceId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch(base, { cache: "no-store" });
-    if (!res.ok) { setError("Kunne ikke hente koblede dele"); return; }
-    setState((await res.json()) as State);
+    try {
+      const res = await fetch(base, { cache: "no-store" });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        setError((b as { error?: string }).error ?? "Kunne ikke hente koblede dele");
+        return;
+      }
+      setState((await res.json()) as State);
+    } catch {
+      setError("Kunne ikke hente koblede dele");
+    }
   }, [base]);
   useEffect(() => { void load(); }, [load]);
 
@@ -52,7 +60,7 @@ export function ServicePartsEditor({ serviceId }: { serviceId: string }) {
     }
   }
 
-  if (!state) return null;
+  if (!state) return error ? <p role="alert" className="text-sm text-red-700">{error}</p> : null;
   if (!state.enabled) return <p className="text-sm text-gray">Lagersystemet er ikke forbundet, så dele kan ikke kobles endnu.</p>;
 
   return (
