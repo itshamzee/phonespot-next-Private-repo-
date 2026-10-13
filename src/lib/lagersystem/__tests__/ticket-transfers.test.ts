@@ -78,23 +78,99 @@ describe("requestPartForTicket: one live request per part", () => {
 
 describe("syncTicketsForTransfer", () => {
   const link = { transfer_id: "tr1", ticket_id: "t1", shared_sku: "SCR-IP13", from_location: "phonespot-esbjerg", qty: 1, status: "REQUESTED" as const };
-  it("moves the badge to Undervejs when sent and back to Skal bestilles when rejected", async () => {
-    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested" })], links: [] });
-    const links = memoryTicketTransfersRepo([link]);
-    await syncTicketsForTransfer(tr({ status: "SENT" }), { parts, links, now: T0 });
+  // Sagen har skærmskift koblet til SCR-IP13, så lagertjekket kan køre for alvor.
+  const svcLinks = [
+    { service_id: "svc-screen", shared_sku: "SCR-IP13", qty: 1, part_name: "Skærm iPhone 13" },
+    { service_id: "svc-battery", shared_sku: "BAT-IP13", qty: 1, part_name: "Batteri iPhone 13" },
+  ];
+  const booked = (services: string[]) => ({ booking_details: { selected_services: services.map((id) => ({ id, name: id, price_dkk: 1 })) } }) as Partial<TicketForCheck>;
+  const stock = (qty: Record<string, number>) => ({
+    getBalances: vi.fn(async (location: string) => ({ location, as_of: T0.toISOString(), balances: Object.entries(qty).map(([shared_sku, q]) => ({ shared_sku, qty: q, updated_at: "t" })) })),
+    getPart: vi.fn(async (sku: string) => ({ shared_sku: sku, name: sku, category: null, quality: null, device_models: [], cost_price_ore: null, active: true })),
+    getTransfer: vi.fn(async () => tr({ status: "SENT" })),
+  });
+  const deps = (parts: ReturnType<typeof memoryPartsCheckRepo>, links: ReturnType<typeof memoryTicketTransfersRepo>, c: ReturnType<typeof stock>, notify = vi.fn(async () => {})) =>
+    ({ parts, links, client: c as never, notify, now: T0 });
+  const received = (qty_received: number, qty_written_off = 0) => tr({
+    status: "RECEIVED",
+    lines: [{ shared_sku: "SCR-IP13", part_name: "Skærm iPhone 13", qty_requested: 1, qty_sent: 1, qty_received, qty_written_off, write_off_reason: qty_written_off ? "Knækket" : null, unit_cost_ore: 41500 }],
+  });
+
+  it("moves the badge to Undervejs when sent, without a stock check", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested", ...booked(["svc-screen"]) })], links: svcLinks });
+    const c = stock({});
+    await syncTicketsForTransfer(tr({ status: "SENT" }), deps(parts, memoryTicketTransfersRepo([link]), c));
     expect(parts.tickets[0].parts_status).toBe("in_transit");
-    await syncTicketsForTransfer(tr({ status: "REJECTED" }), { parts, links, now: T0 });
+    expect(c.getBalances).not.toHaveBeenCalled();
+  });
+
+  it("RECEIVED with nothing received (all written off) runs the stock check and ends Skal bestilles again", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "in_transit", ...booked(["svc-screen"]) })], links: svcLinks });
+    const c = stock({ "SCR-IP13": 0 });
+    await syncTicketsForTransfer(received(0, 1), deps(parts, memoryTicketTransfersRepo([{ ...link, status: "SENT" }]), c));
+    expect(c.getBalances).toHaveBeenCalledWith("phonespot-slagelse");
+    expect(parts.tickets[0].parts_status).toBe("needs_order");
+    expect(parts.tickets[0].parts_shortage).toEqual([{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }]);
+  });
+
+  it("RECEIVED with the full quantity and stock present is ok, from the stock check", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "in_transit", ...booked(["svc-screen"]) })], links: svcLinks });
+    const c = stock({ "SCR-IP13": 1 });
+    await syncTicketsForTransfer(received(1), deps(parts, memoryTicketTransfersRepo([{ ...link, status: "SENT" }]), c));
+    expect(parts.tickets[0].parts_status).toBe("ok");
+    expect(parts.tickets[0].parts_shortage).toBeNull();
+  });
+
+  it("RECEIVED never forces ok: if the stock is gone again (other tickets took it), it is Skal bestilles", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "in_transit", ...booked(["svc-screen"]) })], links: svcLinks });
+    await syncTicketsForTransfer(received(1), deps(parts, memoryTicketTransfersRepo([{ ...link, status: "SENT" }]), stock({ "SCR-IP13": 0 })));
     expect(parts.tickets[0].parts_status).toBe("needs_order");
   });
-  it("never resurrects a ticket whose part was already used (status ok)", async () => {
-    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "ok", parts_shortage: null })], links: [] });
-    await syncTicketsForTransfer(tr({ status: "REJECTED" }), { parts, links: memoryTicketTransfersRepo([link]), now: T0 });
-    expect(parts.tickets[0].parts_status).toBe("ok");
+
+  it("rejected or cancelled goes back to the stock check", async () => {
+    for (const status of ["REJECTED", "CANCELLED"] as const) {
+      const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested", ...booked(["svc-screen"]) })], links: svcLinks });
+      await syncTicketsForTransfer(tr({ status }), deps(parts, memoryTicketTransfersRepo([link]), stock({ "SCR-IP13": 0 })));
+      expect(parts.tickets[0].parts_status).toBe("needs_order");
+    }
   });
+
+  it("keeps Anmodet while another transfer for the ticket is still live", async () => {
+    const both = [
+      { shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 },
+      { shared_sku: "BAT-IP13", name: "Batteri iPhone 13", needed: 1, available: 0 },
+    ];
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "in_transit", parts_shortage: both, ...booked(["svc-screen", "svc-battery"]) })], links: svcLinks });
+    const links = memoryTicketTransfersRepo([{ ...link, status: "SENT" }, { ...link, transfer_id: "tr2", shared_sku: "BAT-IP13" }]);
+    await syncTicketsForTransfer(received(1), deps(parts, links, stock({ "SCR-IP13": 1, "BAT-IP13": 0 })));
+    expect(parts.tickets[0].parts_status).toBe("requested");
+    expect(parts.tickets[0].parts_shortage).toEqual([{ shared_sku: "BAT-IP13", name: "Batteri iPhone 13", needed: 1, available: 0 }]);
+  });
+
+  it("a live transfer stays Anmodet/Undervejs even when the lagersystem is down during the check", async () => {
+    const both = [
+      { shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 },
+      { shared_sku: "BAT-IP13", name: "Batteri iPhone 13", needed: 1, available: 0 },
+    ];
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "in_transit", parts_shortage: both, ...booked(["svc-screen", "svc-battery"]) })], links: svcLinks });
+    const links = memoryTicketTransfersRepo([{ ...link, status: "SENT" }, { ...link, transfer_id: "tr2", shared_sku: "BAT-IP13", status: "SENT" }]);
+    const down = { ...stock({}), getBalances: vi.fn(async () => { throw new Error("down"); }) };
+    await syncTicketsForTransfer(received(1), deps(parts, links, down as never));
+    expect(parts.tickets[0].parts_status).toBe("in_transit");
+  });
+
+  it("never resurrects a ticket whose part was already used (status ok)", async () => {
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "ok", parts_shortage: null, ...booked(["svc-screen"]) })], links: svcLinks });
+    const c = stock({ "SCR-IP13": 0 });
+    await syncTicketsForTransfer(tr({ status: "REJECTED" }), deps(parts, memoryTicketTransfersRepo([link]), c));
+    expect(parts.tickets[0].parts_status).toBe("ok");
+    expect(c.getBalances).not.toHaveBeenCalled();
+  });
+
   it("syncOpenTicketTransfers fetches each open transfer once", async () => {
-    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested" })], links: [] });
-    const c = client();
-    expect(await syncOpenTicketTransfers({ parts, links: memoryTicketTransfersRepo([link]), client: c as never, now: T0 })).toBe(1);
+    const parts = memoryPartsCheckRepo({ tickets: [ticket({ parts_status: "requested", ...booked(["svc-screen"]) })], links: svcLinks });
+    const c = stock({});
+    expect(await syncOpenTicketTransfers({ ...deps(parts, memoryTicketTransfersRepo([link]), c) })).toBe(1);
     expect(c.getTransfer).toHaveBeenCalledWith("tr1");
     expect(parts.tickets[0].parts_status).toBe("in_transit");
   });

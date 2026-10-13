@@ -1,10 +1,11 @@
 import type { Transfer, TransferStatus } from "./api-types";
 import type { LagersystemClient } from "./client";
 import { actorLabel, isPhoneSpotLocation, locationForStore, PHONESPOT_LOCATION_CODES } from "./locations";
-import type { PartsCheckRepo } from "./parts-check-run";
+import { checkTicketParts, type CheckDeps, type PartsCheckRepo } from "./parts-check-run";
 import type { ServiceResult, StaffRef } from "./repair-parts";
 import { buildTransferRequestMail } from "./transfer-mail";
-import { locationLabel, requestQty, ticketStatusFromTransfers } from "./transfers";
+import { isLiveTransfer, locationLabel, requestQty, ticketStatusFromTransfers } from "./transfers";
+import type { PartsStatus } from "./types";
 
 export interface TicketTransferLink {
   transfer_id: string; ticket_id: string; shared_sku: string; from_location: string; qty: number; status: TransferStatus;
@@ -20,13 +21,69 @@ export interface TicketTransfersRepo {
 
 const LIVE_TICKET_STATES = new Set(["needs_order", "requested", "in_transit"]);
 
-async function recomputeTicket(ticketId: string, deps: { parts: PartsCheckRepo; links: TicketTransfersRepo; now: Date }): Promise<boolean> {
+/** Det almindelige lagertjek (som ved booking), til når en flytning er afsluttet. */
+export type StockCheckDeps = Pick<CheckDeps, "client" | "notify">;
+
+function liveState(live: TicketTransferLink[]): PartsStatus {
+  return live.some((l) => l.status === "SENT" || l.status === "PARTIALLY_RECEIVED") ? "in_transit" : "requested";
+}
+
+/**
+ * Sagens mærke efter en ændring i dens flytninger.
+ * - Ingen flytning afsluttet for en manglende del: mærket følger de levende flytninger.
+ * - En flytning er afsluttet (RECEIVED/REJECTED/CANCELLED): sagen slippes og det
+ *   almindelige lagertjek køres igen, så den kun bliver ok, hvis lageret nu dækker
+ *   behovet (review fix 1: RECEIVED kan være 0 modtaget eller alt afskrevet).
+ *   Er en anden flytning på sagen stadig i gang, beholdes Anmodet/Undervejs for
+ *   de dele, den dækker.
+ * ok/ordered/unknown/NULL røres aldrig.
+ */
+async function recomputeTicket(
+  ticketId: string,
+  deps: { parts: PartsCheckRepo; links: TicketTransfersRepo; now: Date; check?: StockCheckDeps },
+): Promise<boolean> {
   const t = await deps.parts.getTicket(ticketId);
-  if (!t || !t.parts_status || !LIVE_TICKET_STATES.has(t.parts_status)) return false; // ok/ordered/unknown røres ikke
+  if (!t || !t.parts_status || !LIVE_TICKET_STATES.has(t.parts_status)) return false;
+  const links = await deps.links.listForTicket(ticketId);
+  const live = links.filter((l) => isLiveTransfer(l.status));
   const shortageSkus = (t.parts_shortage ?? []).map((l) => l.shared_sku);
-  const next = ticketStatusFromTransfers(shortageSkus, await deps.links.listForTicket(ticketId));
-  if (next === t.parts_status) return false;
-  await deps.parts.saveStatus(ticketId, next, next === "ok" ? null : t.parts_shortage, deps.now);
+  const covered = (sku: string) => live.some((l) => l.shared_sku === sku);
+  const ended =
+    shortageSkus.some((sku) => !covered(sku) && links.some((l) => l.shared_sku === sku && !isLiveTransfer(l.status))) ||
+    (t.parts_status !== "needs_order" && live.length === 0);
+
+  if (!ended) {
+    const next = shortageSkus.length === 0 ? liveState(live) : ticketStatusFromTransfers(shortageSkus, live);
+    if (next === t.parts_status) return false;
+    await deps.parts.saveStatus(ticketId, next, t.parts_shortage, deps.now);
+    return true;
+  }
+
+  if (!deps.check) {
+    // Uden adgang til lagertjekket: aldrig ok, kun tilbage til Skal bestilles (cron retter senere).
+    const next = live.length > 0 && shortageSkus.every(covered) ? liveState(live) : "needs_order";
+    if (next === t.parts_status) return false;
+    await deps.parts.saveStatus(ticketId, next, t.parts_shortage, deps.now);
+    return true;
+  }
+
+  // Slip sagen (checkTicketParts springer requested/in_transit over) og kør lagertjekket.
+  if (t.parts_status !== "needs_order") await deps.parts.saveStatus(ticketId, "needs_order", t.parts_shortage, deps.now);
+  const outcome = await checkTicketParts(ticketId, { repo: deps.parts, ...deps.check, now: deps.now });
+  if (live.length === 0) return true;
+
+  // En anden flytning er stadig i gang: læg dens mærke over lagertjekkets resultat.
+  const after = await deps.parts.getTicket(ticketId);
+  if (!after) return true;
+  if (outcome === "needs_order") {
+    const missing = (after.parts_shortage ?? []).map((l) => l.shared_sku);
+    if (missing.every(covered)) await deps.parts.saveStatus(ticketId, liveState(live), after.parts_shortage, deps.now);
+  } else if (outcome === "unknown" || outcome === "skipped") {
+    await deps.parts.saveStatus(ticketId, liveState(live), t.parts_shortage, deps.now);
+  } else {
+    // ok/no_links: lageret dækker alt; den levende flytning vises stadig, indtil den er afsluttet.
+    await deps.parts.saveStatus(ticketId, liveState(live), after.parts_shortage, deps.now);
+  }
   return true;
 }
 
@@ -70,19 +127,21 @@ export async function requestPartForTicket(
 
 export async function syncTicketsForTransfer(
   transfer: Transfer,
-  deps: { parts: PartsCheckRepo; links: TicketTransfersRepo; now?: Date },
+  deps: { parts: PartsCheckRepo; links: TicketTransfersRepo; now?: Date } & StockCheckDeps,
 ): Promise<number> {
   const rows = await deps.links.setStatus(transfer.id, transfer.status);
   let changed = 0;
   for (const ticketId of new Set(rows.map((r) => r.ticket_id))) {
-    if (await recomputeTicket(ticketId, { parts: deps.parts, links: deps.links, now: deps.now ?? new Date() })) changed++;
+    const check = { client: deps.client, notify: deps.notify };
+    if (await recomputeTicket(ticketId, { parts: deps.parts, links: deps.links, now: deps.now ?? new Date(), check })) changed++;
   }
   return changed;
 }
 
 /** Cron: flytninger, andre har handlet på, opdaterer sagernes mærke. */
 export async function syncOpenTicketTransfers(deps: {
-  parts: PartsCheckRepo; links: TicketTransfersRepo; client: Pick<LagersystemClient, "getTransfer">; now?: Date; limit?: number;
+  parts: PartsCheckRepo; links: TicketTransfersRepo; client: Pick<LagersystemClient, "getTransfer" | "getBalances" | "getPart">;
+  notify: CheckDeps["notify"]; now?: Date; limit?: number;
 }): Promise<number> {
   const ids = [...new Set((await deps.links.listOpen(deps.limit ?? 50)).map((l) => l.transfer_id))];
   for (const id of ids) {

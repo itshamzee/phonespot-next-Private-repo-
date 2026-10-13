@@ -56,12 +56,18 @@ export function availabilityElsewhere(av: Availability[], exclude: string): { lo
   return av.filter((a) => a.location !== exclude && a.qty > 0).map((a) => ({ location: a.location, label: locationLabel(a.location, a.location_name), qty: a.qty }));
 }
 
+/** Flytninger, der stadig er i gang. RECEIVED, REJECTED og CANCELLED er afsluttede. */
+export const LIVE_TRANSFER_STATUSES: readonly TransferStatus[] = ["REQUESTED", "SENT", "PARTIALLY_RECEIVED"];
+export const isLiveTransfer = (status: TransferStatus): boolean => LIVE_TRANSFER_STATUSES.includes(status);
+
 /**
- * Sagens mærke ud fra dens flytninger (spec §4.4): en manglende del uden levende
- * anmodning = "Skal bestilles"; ellers Undervejs > Anmodet > ok (alt modtaget).
+ * Sagens mærke ud fra dens levende flytninger (spec §4.4): en manglende del uden
+ * levende anmodning = "Skal bestilles"; ellers Undervejs > Anmodet. En modtaget
+ * flytning giver aldrig "ok" i sig selv (alt kan være afskrevet, eller 0 sendt):
+ * kun lagertjekket må sige ok. "ok" her betyder blot: intet mangler, intet i gang.
  */
 export function ticketStatusFromTransfers(shortageSkus: string[], links: { shared_sku: string; status: TransferStatus }[]): PartsStatus {
-  const alive = links.filter((l) => l.status !== "REJECTED" && l.status !== "CANCELLED");
+  const alive = links.filter((l) => isLiveTransfer(l.status));
   if (shortageSkus.some((sku) => !alive.some((l) => l.shared_sku === sku))) return "needs_order";
   if (alive.some((l) => l.status === "SENT" || l.status === "PARTIALLY_RECEIVED")) return "in_transit";
   if (alive.some((l) => l.status === "REQUESTED")) return "requested";

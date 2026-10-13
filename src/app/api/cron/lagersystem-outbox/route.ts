@@ -65,7 +65,7 @@ async function handle(req: NextRequest) {
   // Mærket Anmodet/Undervejs følger flytninger, som andre har handlet på.
   let ticket_transfers_synced: number | null = null;
   try {
-    ticket_transfers_synced = await syncOpenTicketTransfers({ parts: createSupabasePartsCheckRepo(sb), links, client, limit: 50 });
+    ticket_transfers_synced = await syncOpenTicketTransfers({ parts: createSupabasePartsCheckRepo(sb), links, client, notify: notifyPartsShortage, limit: 50 });
   } catch (err) {
     console.error("[lagersystem-outbox] synk af sagsflytninger fejlede", err);
   }

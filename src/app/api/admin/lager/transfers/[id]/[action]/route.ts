@@ -10,6 +10,7 @@ import { actorLabel, canManageStock, canRequestTo, canUseLocation } from "@/lib/
 import { createSupabasePartsCheckRepo } from "@/lib/lagersystem/parts-check-repo";
 import { syncTicketsForTransfer } from "@/lib/lagersystem/ticket-transfers";
 import { createSupabaseTicketTransfersRepo } from "@/lib/lagersystem/ticket-transfers-repo";
+import { notifyPartsShortage } from "@/lib/lagersystem/shortage-mail";
 
 export const runtime = "nodejs";
 type Ctx = { params: Promise<{ id: string; action: string }> };
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const transfer = await run();
     try {
       const sb = createAdminClient();
-      await syncTicketsForTransfer(transfer, { parts: createSupabasePartsCheckRepo(sb), links: createSupabaseTicketTransfersRepo(sb) });
+      await syncTicketsForTransfer(transfer, { parts: createSupabasePartsCheckRepo(sb), links: createSupabaseTicketTransfersRepo(sb), client, notify: notifyPartsShortage });
     } catch (err) {
       console.error("[flytninger] kunne ikke opdatere sager", id, err);
     }

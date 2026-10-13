@@ -67,11 +67,13 @@ describe("ticketStatusFromTransfers (badge: Skal bestilles -> Anmodet -> Underve
   it("stays needs_order while a missing part has no live request", () => {
     expect(ticketStatusFromTransfers(["A", "B"], [{ shared_sku: "A", status: "REQUESTED" }])).toBe("needs_order");
   });
-  it("is requested, then in transit, then ok", () => {
+  it("is requested, then in transit", () => {
     expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "REQUESTED" }])).toBe("requested");
     expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "SENT" }])).toBe("in_transit");
     expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "PARTIALLY_RECEIVED" }])).toBe("in_transit");
-    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "RECEIVED" }])).toBe("ok");
+  });
+  it("never says ok because a transfer was received; only the stock check may (review fix 1)", () => {
+    expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "RECEIVED" }])).toBe("needs_order");
   });
   it("falls back to needs_order when the request is rejected or cancelled", () => {
     expect(ticketStatusFromTransfers(["A"], [{ shared_sku: "A", status: "REJECTED" }])).toBe("needs_order");
