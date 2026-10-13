@@ -14,5 +14,6 @@ export default async function SparePartsStockPage({ searchParams }: { searchPara
     );
   }
   const { fane } = await searchParams;
-  return <SparePartsStock initialTab={fane === "flytninger" ? "flytninger" : "saldi"} />;
+  const initialTab = fane === "flytninger" || fane === "reklamationer" ? fane : "saldi";
+  return <SparePartsStock initialTab={initialTab} />;
 }

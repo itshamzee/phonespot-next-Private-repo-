@@ -9,8 +9,8 @@ describe("rma helpers", () => {
     expect(isRmaStatus("sent")).toBe(false);
   });
   it("shows who found the defect (spec §3.6 label)", () => {
-    expect(foundByText({ found_by_label: "Fixon" })).toBe("Fundet af Fixon");
-    expect(foundByText({ found_by_label: "PhoneSpot Vejle" })).toBe("Fundet af PhoneSpot Vejle");
+    expect(foundByText({ found_by_label: "Fixon" })).toBe("Fundet af: Fixon");
+    expect(foundByText({ found_by_label: "PhoneSpot Vejle" })).toBe("Fundet af: PhoneSpot Vejle");
   });
   it("allows send only from REGISTERED, and resolve from REGISTERED or SENT", () => {
     expect(rmaActions("REGISTERED")).toEqual({ send: true, resolve: true });

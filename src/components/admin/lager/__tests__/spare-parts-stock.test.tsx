@@ -85,3 +85,20 @@ it("opens on the Flytninger tab when asked", async () => {
   render(<SparePartsStock initialTab="flytninger" />);
   expect(await screen.findByRole("tab", { name: "Flytninger", selected: true })).toBeVisible();
 });
+
+it("Reklamationer tab: passes the role on, so only owner/manager can pick Erstattet", async () => {
+  const rma = { id: "r1", shared_sku: "A", part_name: "Batteri iPhone 12", qty: 1, location: "vejle-hub", found_by_company: "fixon", found_by_label: "Fixon",
+    supplier: null, reason: "Dør", reference: null, status: "SENT", supplier_ref: null, resolution_note: null, created_at: "2026-10-13T10:00:00Z", sent_at: null, resolved_at: null };
+  for (const [role, sees] of [["staff", false], ["manager", true]] as const) {
+    const f = api();
+    vi.stubGlobal("fetch", vi.fn((url: string) =>
+      url === "/api/admin/me" ? json({ role }) : url.startsWith("/api/admin/lager/rma?") ? json({ items: [rma] }) : f(url)));
+    const { unmount } = render(<SparePartsStock initialTab="reklamationer" />);
+    expect(await screen.findByRole("tab", { name: "Reklamationer", selected: true })).toBeVisible();
+    expect(await screen.findByText("Fundet af: Fixon")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Afslut" }));
+    if (sees) expect(await screen.findByLabelText("Erstattet")).toBeVisible();
+    else expect(screen.queryByLabelText("Erstattet")).toBeNull();
+    unmount();
+  }
+});

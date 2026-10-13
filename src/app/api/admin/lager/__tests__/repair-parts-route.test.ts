@@ -163,3 +163,8 @@ it("adding the missing part clears Skal bestilles and GET reports it", async () 
   const list = await (await GET(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}`), ctx(TV))).json();
   expect(list).toMatchObject({ parts_status: "ok", parts_shortage: null });
 });
+
+it("GET returns the ticket number as reference for the claim form", async () => {
+  const list = await (await GET(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}`), ctx(TV))).json();
+  expect(list).toMatchObject({ enabled: true, reference: "PS-2026-0001" });
+});

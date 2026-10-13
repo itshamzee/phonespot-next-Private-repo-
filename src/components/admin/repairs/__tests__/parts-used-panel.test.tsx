@@ -158,4 +158,26 @@ describe("PartsUsedPanel", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Anmod fra Esbjerg" }));
     expect(await screen.findByText("Delen er allerede anmodet til sagen")).toBeVisible();
   });
+
+  it("Markér som defekt opens the claim form with the ticket number and removes the part on success", async () => {
+    vi.stubGlobal("crypto", { randomUUID: () => "88888888-8888-4888-8888-888888888888" });
+    const f = vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/admin/lager/rma") return json({ item: {}, part_removed: true }, 201);
+      return json({ enabled: true, location: "vejle-hub", reference: "PS-2026-0001", parts: [row({ qty: 2 })] });
+    });
+    vi.stubGlobal("fetch", f);
+    render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Markér Skærm iPhone 13 som defekt" }));
+    expect(screen.getByText("Sagsnummer: PS-2026-0001")).toBeVisible();
+    expect(screen.getByText("Lokation: Hovedlager Vejle")).toBeVisible();
+    fireEvent.change(screen.getByLabelText("Fejlbeskrivelse"), { target: { value: "Ingen billede" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrér" }));
+    await waitFor(() => expect(f).toHaveBeenCalledWith("/api/admin/lager/rma", expect.objectContaining({ method: "POST" })));
+    const body = JSON.parse((f.mock.calls.find((c) => c[0] === "/api/admin/lager/rma")![1] as RequestInit).body as string);
+    expect(body).toEqual({
+      idempotency_key: "88888888-8888-4888-8888-888888888888", location: "vejle-hub", shared_sku: "SCR-IP13-OLED", qty: 1,
+      reason: "Ingen billede", ticket_id: TID, part_id: "p1",
+    });
+    expect(await screen.findByText("Defekt del registreret og fjernet fra sagen. Tilføj den nye del herunder.")).toBeVisible();
+  });
 });

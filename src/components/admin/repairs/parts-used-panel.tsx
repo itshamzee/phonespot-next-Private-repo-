@@ -4,15 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Part } from "@/lib/lagersystem/api-types";
 import { locationLabel, TRANSFER_STATUS_LABELS } from "@/lib/lagersystem/transfers";
 import type { TicketTransferLink } from "@/lib/lagersystem/ticket-transfers";
-import { LOCATION_LABELS, type PhoneSpotLocationCode } from "@/lib/lagersystem/locations";
+import { isPhoneSpotLocation, LOCATION_LABELS, type PhoneSpotLocationCode } from "@/lib/lagersystem/locations";
 import type { PartsStatus, RepairPartRow, ShortageLine } from "@/lib/lagersystem/types";
 import { Btn, Card } from "@/components/admin/repairs/ui";
+import { RmaRegisterForm } from "@/components/admin/lager/rma-register-form";
 
 type PanelState =
   | { enabled: false }
   | {
       enabled: true;
       location: PhoneSpotLocationCode | null;
+      reference?: string | null;
       parts: RepairPartRow[];
       parts_status?: PartsStatus | null;
       parts_shortage?: ShortageLine[] | null;
@@ -44,6 +46,8 @@ export function PartsUsedPanel({
   const [selected, setSelected] = useState<Part | null>(null);
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [defectFor, setDefectFor] = useState<RepairPartRow | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [elsewhere, setElsewhere] = useState<Record<string, { location: string; label: string; qty: number }[]>>({});
   useEffect(() => {
     if (!state || !state.enabled || state.parts_status !== "needs_order" || !state.location) return;
@@ -220,13 +224,38 @@ export function PartsUsedPanel({
                 <p className="m-0 font-semibold text-[#15211B]">{p.qty} × {p.part_name}</p>
                 <p className="m-0 text-xs text-[#5E6A63]">{p.shared_sku} · {STATUS_LABEL[p.status]}</p>
               </div>
-              <Btn size="sm" disabled={busy} aria-label={`Fjern ${p.part_name}`} onClick={() => mutate(`${base}/${p.id}`, { method: "DELETE" })}>
-                Fjern
-              </Btn>
+              <div className="flex gap-2">
+                <Btn size="sm" disabled={busy || defectFor !== null} aria-label={`Markér ${p.part_name} som defekt`} onClick={() => { setNotice(null); setDefectFor(p); }}>
+                  Markér som defekt
+                </Btn>
+                <Btn size="sm" disabled={busy || defectFor !== null} aria-label={`Fjern ${p.part_name}`} onClick={() => mutate(`${base}/${p.id}`, { method: "DELETE" })}>
+                  Fjern
+                </Btn>
+              </div>
             </li>
           ))}
         </ul>
       )}
+
+      {defectFor && isPhoneSpotLocation(defectFor.location_code) && (
+        <div className="mb-4">
+          <RmaRegisterForm
+            locations={[]}
+            fixed={{
+              ticketId,
+              partId: defectFor.id,
+              reference: state.reference ?? null,
+              location: defectFor.location_code,
+              shared_sku: defectFor.shared_sku,
+              part_name: defectFor.part_name,
+              maxQty: defectFor.qty,
+            }}
+            onCancel={() => setDefectFor(null)}
+            onDone={async (message) => { setDefectFor(null); setNotice(message); await load(); }}
+          />
+        </div>
+      )}
+      {notice && <p role="status" className="m-0 mb-3 text-sm text-[#1A3D2E]">{notice}</p>}
 
       {!state.location ? (
         <p className="m-0 text-sm text-[#7A4A06]">Vælg butik på sagen, før du registrerer dele.</p>

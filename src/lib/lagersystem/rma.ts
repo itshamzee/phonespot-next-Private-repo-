@@ -15,9 +15,9 @@ export function isRmaStatus(v: unknown): v is RmaStatus {
   return typeof v === "string" && v in RMA_STATUS_LABELS;
 }
 
-/** Spec §3.6: alle lister viser "Fundet af …" (firma, og for PhoneSpot butikken). */
+/** Spec §3.6: alle lister viser "Fundet af: …" (firma, og for PhoneSpot butikken). */
 export function foundByText(item: Pick<RmaItem, "found_by_label">): string {
-  return `Fundet af ${item.found_by_label}`;
+  return `Fundet af: ${item.found_by_label}`;
 }
 
 /** REGISTERED → SENT → afsluttet; REGISTERED kan også afsluttes direkte. */

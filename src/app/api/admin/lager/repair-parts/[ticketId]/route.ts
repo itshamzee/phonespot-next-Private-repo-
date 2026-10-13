@@ -51,6 +51,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   return NextResponse.json({
     enabled: true,
     location: locationForStore(ticket.store_id),
+    reference: ticket.ticket_number ?? null,
     parts: parts.map((p) => forStaff(staff, p)),
     parts_status: check?.parts_status ?? null,
     parts_shortage: check?.parts_shortage ?? null,
