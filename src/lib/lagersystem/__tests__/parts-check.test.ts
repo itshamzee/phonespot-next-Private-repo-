@@ -41,6 +41,7 @@ describe("countsAsOpenDemand", () => {
     expect(countsAsOpenDemand({ id: "x", stripe_session_id: "cs_1", paid: false, created_at: NOW.toISOString() }, NOW)).toBe(true);
     expect(countsAsOpenDemand({ id: "x", stripe_session_id: "cs_1", paid: true, created_at: old }, NOW)).toBe(true);
     expect(countsAsOpenDemand({ id: "x", stripe_session_id: null, paid: false, created_at: old }, NOW)).toBe(true);
+    expect(countsAsOpenDemand({ id: "x", stripe_session_id: "cs_1", paid: false, created_at: "not-a-date" }, NOW)).toBe(true);
   });
 });
 
@@ -80,6 +81,13 @@ describe("computePartsStatus", () => {
   it("is ok without asking the lagersystem when the ticket already used its parts", () => {
     expect(computePartsStatus({ needs: needs(), balances: null, otherDemand: new Map(), ownTaken: new Map([["SCR-IP13", 1]]) }))
       .toEqual({ status: "ok", shortage: [] });
+  });
+  it("only counts what a partly used part still needs (need 2, taken 1)", () => {
+    const n = new Map([["SCR-IP13", { qty: 2, name: "Skærm" }]]);
+    expect(computePartsStatus({ needs: n, balances: new Map([["SCR-IP13", 1]]), otherDemand: new Map(), ownTaken: new Map([["SCR-IP13", 1]]) }))
+      .toEqual({ status: "ok", shortage: [] });
+    expect(computePartsStatus({ needs: n, balances: new Map([["SCR-IP13", 0]]), otherDemand: new Map(), ownTaken: new Map([["SCR-IP13", 1]]) }))
+      .toEqual({ status: "needs_order", shortage: [{ shared_sku: "SCR-IP13", name: "Skærm", needed: 1, available: 0 }] });
   });
   it("is null (not checked) when no service has linked parts", () => {
     expect(computePartsStatus({ needs: new Map(), balances: new Map(), otherDemand: new Map(), ownTaken: new Map() }))

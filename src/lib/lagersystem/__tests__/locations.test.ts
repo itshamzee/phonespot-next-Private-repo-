@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actorLabel, isPhoneSpotLocation, LOCATION_LABELS, locationForStore } from "../locations";
+import { actorLabel, isPhoneSpotLocation, LOCATION_LABELS, locationForStore, storesForLocation } from "../locations";
 
 describe("locationForStore", () => {
   it("maps each store to its lagersystem location", () => {
@@ -35,7 +35,6 @@ describe("labels", () => {
   });
 });
 
-import { storesForLocation } from "../locations";
 
 describe("storesForLocation", () => {
   it("is the reverse of locationForStore", () => {

@@ -46,7 +46,9 @@ export function aggregateNeeds(serviceIds: string[], links: ServicePartLink[]): 
 
 export function countsAsOpenDemand(t: OpenTicketShape, now: Date): boolean {
   if (t.stripe_session_id && !t.paid && t.created_at) {
-    return now.getTime() - new Date(t.created_at).getTime() < ABANDONED_CHECKOUT_MS;
+    const created = new Date(t.created_at).getTime();
+    if (Number.isNaN(created)) return true; // ulæselig dato: hellere for meget behov end for lidt
+    return now.getTime() - created < ABANDONED_CHECKOUT_MS;
   }
   return true;
 }
@@ -57,7 +59,10 @@ export function takenByTicket(taken: TakenRow[], ticketId: string): Map<string, 
   return out;
 }
 
-/** Hvad andre åbne sager på samme lokation stadig skal bruge (dele, de allerede har taget, er trukket fra saldoen). */
+/**
+ * Hvad andre åbne sager på samme lokation stadig skal bruge (dele, de allerede har taget, er trukket fra saldoen).
+ * OBS: kalderen skal selv udelade den sag, der tjekkes (tickets må ikke indeholde den), ellers tælles den dobbelt.
+ */
 export function aggregateOpenDemand(
   tickets: OpenTicketShape[],
   links: ServicePartLink[],
