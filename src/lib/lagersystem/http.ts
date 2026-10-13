@@ -12,3 +12,8 @@ export function lagersystemErrorResponse(err: unknown): NextResponse {
   const status = err.status === 0 || err.status >= 500 ? 502 : err.status;
   return NextResponse.json({ error: describeLagersystemError(err), code: err.code }, { status });
 }
+
+/** Lokation uden for medarbejderens butik (ikke et række-id, så 403 og ikke 404). */
+export function forbiddenLocation(): NextResponse {
+  return NextResponse.json({ error: "Du har ikke adgang til denne butik." }, { status: 403 });
+}
