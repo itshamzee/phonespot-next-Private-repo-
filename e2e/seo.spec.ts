@@ -55,7 +55,7 @@ test.describe("SEO", () => {
   });
 
   test("real routes still return 200 after the 404 fix", async ({ request }) => {
-    for (const path of ["/", "/iphones", "/tilbehoer", "/blog", "/reservedele"]) {
+    for (const path of ["/", "/iphones", "/tilbehoer", "/blog"]) {
       const response = await request.get(path, { maxRedirects: 0 });
       expect(response.status(), `expected 200 for ${path}`).toBe(200);
     }

@@ -26,20 +26,24 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    // Shopify checkout URLs must go to the .myshopify.com domain,
-    // not the custom domain served by Next.js.
-    if (!shopifyDomain) return [];
+    // Shopify checkout URLs must go to the .myshopify.com domain, not the custom
+    // domain served by Next.js — only relevant when a Shopify domain is set.
+    // Every other redirect applies unconditionally (before 2026-10-13 they were
+    // all skipped when the env var was missing).
+    const shopifyRedirects = shopifyDomain
+      ? [
+          { source: "/cart/c/:path*", destination: `https://${shopifyDomain}/cart/c/:path*`, permanent: false },
+          { source: "/checkouts/:path*", destination: `https://${shopifyDomain}/checkouts/:path*`, permanent: false },
+        ]
+      : [];
     return [
-      {
-        source: "/cart/c/:path*",
-        destination: `https://${shopifyDomain}/cart/c/:path*`,
-        permanent: false,
-      },
-      {
-        source: "/checkouts/:path*",
-        destination: `https://${shopifyDomain}/checkouts/:path*`,
-        permanent: false,
-      },
+      ...shopifyRedirects,
+      // Reservedele sælges ikke længere (spec 2026-10-13 §4.1). 301 som aftalt;
+      // målet skiftes til reservedelswebshoppen, når den findes.
+      { source: "/reservedele", destination: "/reparation", statusCode: 301 },
+      { source: "/reservedele/:path*", destination: "/reparation", statusCode: 301 },
+      { source: "/api/spare-parts", destination: "/reparation", statusCode: 301 },
+      { source: "/api/spare-parts/:path*", destination: "/reparation", statusCode: 301 },
       // Old Shopify URLs → new pages
       { source: "/collections/:path*", destination: "/iphones", permanent: true },
       { source: "/pages/iphones", destination: "/iphones", permanent: true },
@@ -55,10 +59,10 @@ const nextConfig: NextConfig = {
       { source: "/blog/panserglas-guide", destination: "/blog/beskyttelsesglas-guide", permanent: true },
       { source: "/search", destination: "/soeg", permanent: true },
       // Old reservedele URLs
-      { source: "/ipad-6-reservedele", destination: "/reservedele", permanent: true },
-      { source: "/iphone-12-pro-max-reservedele", destination: "/reservedele", permanent: true },
-      { source: "/iphone-13-mini-reservedele", destination: "/reservedele", permanent: true },
-      { source: "/iphone-14-reservedele", destination: "/reservedele", permanent: true },
+      { source: "/ipad-6-reservedele", destination: "/reparation", permanent: true },
+      { source: "/iphone-12-pro-max-reservedele", destination: "/reparation", permanent: true },
+      { source: "/iphone-13-mini-reservedele", destination: "/reparation", permanent: true },
+      { source: "/iphone-14-reservedele", destination: "/reparation", permanent: true },
       { source: "/iphone-11-pro", destination: "/iphones/apple-iphone-11-pro", permanent: true },
       // Old tilbehør sub-paths that 5xx
       { source: "/tilbehoer/iphone/:slug*", destination: "/tilbehoer", permanent: true },
