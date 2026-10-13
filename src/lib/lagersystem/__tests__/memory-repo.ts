@@ -36,12 +36,15 @@ export function memoryRepo(tickets: TicketRef[] = []) {
         .slice(0, limit);
     },
     async markSynced(id, movementId, now) {
+      if (byId(id).status !== "pending") return;
       Object.assign(byId(id), { status: "synced", movement_id: movementId, synced_at: now.toISOString(), last_attempt_at: now.toISOString(), last_error: null });
     },
     async markAttemptFailed(row, error, now) {
+      if (byId(row.id).status !== "pending") return;
       Object.assign(byId(row.id), { attempts: row.attempts + 1, last_error: error, last_attempt_at: now.toISOString() });
     },
     async markFailed(id, error, now) {
+      if (byId(id).status !== "pending") return;
       Object.assign(byId(id), { status: "failed", last_error: error, last_attempt_at: now.toISOString() });
     },
   };

@@ -46,6 +46,8 @@ export interface RepairPartsRepo {
   resetForRetry(id: string, now: Date): Promise<RepairPartRow | null>;
   /** Pending-rækker, ældste først, ikke forsøgt de sidste 30 sekunder. */
   listDue(limit: number, now: Date): Promise<RepairPartRow[]>;
+  // markSynced, markAttemptFailed og markFailed virker KUN mens status='pending' (no-op ellers),
+  // s� en sen samtidig afsender (after() vs cron) aldrig kan vende en afsluttet r�kke tilbage.
   markSynced(id: string, movementId: string, now: Date): Promise<void>;
   markAttemptFailed(row: RepairPartRow, error: string, now: Date): Promise<void>;
   markFailed(id: string, error: string, now: Date): Promise<void>;

@@ -106,3 +106,20 @@ describe("drainOutbox", () => {
     expect(await drainOutbox({ repo, client, now: () => at(90_000) })).toEqual({ synced: 1, retry: 0, failed: 0, waiting: 0 });
   });
 });
+
+describe("pending-only guard", () => {
+  it("a late sender cannot flip a synced or failed row back", async () => {
+    const repo = memoryRepo();
+    const row = (await repo.insert(take(), T0)) as never;
+    await repo.markSynced("t1", "m1", at(1));
+    await repo.markAttemptFailed(row, "late", at(2));
+    await repo.markFailed("t1", "late", at(3));
+    expect(repo.rows[0]).toMatchObject({ status: "synced", movement_id: "m1", last_error: null, attempts: 0 });
+
+    const repo2 = memoryRepo();
+    await repo2.insert(take(), T0);
+    await repo2.markFailed("t1", "x", at(1));
+    await repo2.markSynced("t1", "m2", at(2));
+    expect(repo2.rows[0]).toMatchObject({ status: "failed", movement_id: null });
+  });
+});
