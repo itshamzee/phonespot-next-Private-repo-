@@ -79,3 +79,9 @@ it("an unknown role is treated as employee", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Bogfør på Batteri iPhone 12" }));
   expect(within(screen.getByLabelText("Handling")).getAllByRole("option")).toHaveLength(1);
 });
+
+it("opens on the Flytninger tab when asked", async () => {
+  api();
+  render(<SparePartsStock initialTab="flytninger" />);
+  expect(await screen.findByRole("tab", { name: "Flytninger", selected: true })).toBeVisible();
+});

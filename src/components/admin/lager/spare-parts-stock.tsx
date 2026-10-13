@@ -4,10 +4,12 @@ import { Fragment, useEffect, useState } from "react";
 import type { PhoneSpotLocationCode } from "@/lib/lagersystem/locations";
 import type { StockRow, StockView } from "@/lib/lagersystem/stock-view";
 import { MovementForm } from "./movement-form";
+import { TransfersTab } from "./transfers-tab";
 
 type Loc = { code: PhoneSpotLocationCode; name: string };
 
-export function SparePartsStock() {
+export function SparePartsStock({ initialTab = "saldi" }: { initialTab?: "saldi" | "flytninger" } = {}) {
+  const [tab, setTab] = useState<"saldi" | "flytninger">(initialTab);
   const [locations, setLocations] = useState<Loc[] | null>(null);
   const [location, setLocation] = useState<PhoneSpotLocationCode | null>(null);
   const [query, setQuery] = useState("");
@@ -74,6 +76,18 @@ export function SparePartsStock() {
         <p className="mt-1 text-sm text-gray">Saldi kommer direkte fra det fælles lagersystem. Alt, du bogfører her, gælder med det samme for alle tre firmaer.</p>
       </header>
 
+      <div role="tablist" aria-label="Lagervisning" className="flex gap-6 border-b border-soft-grey">
+        {(["saldi", "flytninger"] as const).map((k) => (
+          <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)}
+            className={`-mb-px border-b-2 pb-2 text-sm font-semibold ${tab === k ? "border-charcoal text-charcoal" : "border-transparent text-gray hover:text-charcoal"}`}>
+            {k === "saldi" ? "Saldi" : "Flytninger"}
+          </button>
+        ))}
+      </div>
+      {tab === "flytninger" && locations && <TransfersTab locations={locations} canManage={canManage} />}
+
+      {tab === "saldi" && (
+      <>
       {locations && (
         <div className="flex flex-wrap gap-2" role="group" aria-label="Lokation">
           {locations.map((l) => (
@@ -154,6 +168,8 @@ export function SparePartsStock() {
           )}
           {loading && <p className="sr-only">Henter saldi</p>}
         </div>
+      )}
+      </>
       )}
     </div>
   );

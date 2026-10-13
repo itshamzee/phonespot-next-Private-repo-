@@ -4,7 +4,7 @@ import { SparePartsStock } from "@/components/admin/lager/spare-parts-stock";
 export const dynamic = "force-dynamic";
 
 /** Spec §4.3. Data hentes via de beskyttede /api/admin/lager-ruter, ikke her. */
-export default function SparePartsStockPage() {
+export default async function SparePartsStockPage({ searchParams }: { searchParams: Promise<{ fane?: string }> }) {
   if (!isLagersystemEnabled()) {
     return (
       <div className="mx-auto max-w-2xl rounded-2xl border border-soft-grey bg-white p-6">
@@ -13,5 +13,6 @@ export default function SparePartsStockPage() {
       </div>
     );
   }
-  return <SparePartsStock />;
+  const { fane } = await searchParams;
+  return <SparePartsStock initialTab={fane === "flytninger" ? "flytninger" : "saldi"} />;
 }
