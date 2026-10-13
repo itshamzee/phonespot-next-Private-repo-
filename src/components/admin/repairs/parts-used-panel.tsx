@@ -1,14 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Part } from "@/lib/lagersystem/api-types";
 import { LOCATION_LABELS, type PhoneSpotLocationCode } from "@/lib/lagersystem/locations";
-import type { RepairPartRow } from "@/lib/lagersystem/types";
+import type { PartsStatus, RepairPartRow, ShortageLine } from "@/lib/lagersystem/types";
 import { Btn, Card } from "@/components/admin/repairs/ui";
 
 type PanelState =
   | { enabled: false }
-  | { enabled: true; location: PhoneSpotLocationCode | null; parts: RepairPartRow[] };
+  | {
+      enabled: true;
+      location: PhoneSpotLocationCode | null;
+      parts: RepairPartRow[];
+      parts_status?: PartsStatus | null;
+      parts_shortage?: ShortageLine[] | null;
+    };
 
 const STATUS_LABEL: Record<RepairPartRow["status"], string> = {
   pending: "Afventer lager",
@@ -16,7 +22,17 @@ const STATUS_LABEL: Record<RepairPartRow["status"], string> = {
   failed: "Ikke bogført",
 };
 
-export function PartsUsedPanel({ ticketId, storeId }: { ticketId: string; storeId: string | null }) {
+export function PartsUsedPanel({
+  ticketId,
+  storeId,
+  onPartsStatusChange,
+}: {
+  ticketId: string;
+  storeId: string | null;
+  onPartsStatusChange?: (status: PartsStatus | null) => void;
+}) {
+  const onStatusRef = useRef(onPartsStatusChange);
+  onStatusRef.current = onPartsStatusChange;
   const base = `/api/admin/lager/repair-parts/${ticketId}`;
   const [state, setState] = useState<PanelState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +46,9 @@ export function PartsUsedPanel({ ticketId, storeId }: { ticketId: string; storeI
     try {
       const res = await fetch(base, { cache: "no-store" });
       if (!res.ok) { setError("Kunne ikke hente dele på sagen"); return; }
-      setState((await res.json()) as PanelState);
+      const body = (await res.json()) as PanelState;
+      setState(body);
+      if (body.enabled) onStatusRef.current?.(body.parts_status ?? null);
     } catch {
       setError("Kunne ikke hente dele på sagen");
     }
@@ -116,6 +134,28 @@ export function PartsUsedPanel({ ticketId, storeId }: { ticketId: string; storeI
             ))}
           </ul>
         </div>
+      )}
+
+      {state.parts_status === "needs_order" && (
+        <div className="mb-4 rounded-[10px] border border-[#F5D9B0] bg-[#FFF4E5] p-3.5 text-sm text-[#7A4A06]">
+          <p className="m-0 font-semibold">Skal bestilles</p>
+          <ul className="m-0 mt-1 list-none space-y-0.5 p-0">
+            {(state.parts_shortage ?? []).map((l) => (
+              <li key={l.shared_sku}>{l.name}: skal bruge {l.needed}, ledigt {Math.max(0, l.available)}</li>
+            ))}
+          </ul>
+          <Btn
+            size="sm"
+            className="mt-3"
+            disabled={busy}
+            onClick={() => mutate(`/api/admin/lager/parts-status/${ticketId}`, { method: "PATCH", body: JSON.stringify({ action: "ordered" }) })}
+          >
+            Markér som bestilt
+          </Btn>
+        </div>
+      )}
+      {state.parts_status === "ordered" && (
+        <p className="m-0 mb-4 text-sm text-[#5E6A63]">Delen er bestilt hjem. Mærket forsvinder, når delen registreres her.</p>
       )}
 
       {active.length === 0 ? (

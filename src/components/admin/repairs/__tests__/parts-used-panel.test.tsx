@@ -9,7 +9,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 });
 const json = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status }));
 
-function api(state: { enabled: boolean; location?: string | null; parts?: unknown[] }) {
+function api(state: Record<string, unknown>) {
   const f = vi.fn((url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
     if (url.startsWith("/api/admin/lager/parts")) return json({ parts: [{ shared_sku: "SCR-IP13-OLED", name: "Skærm iPhone 13", quality: "OLED", cost_price_ore: 41500 }] });
@@ -69,5 +69,17 @@ describe("PartsUsedPanel", () => {
     render(<PartsUsedPanel ticketId={TID} storeId="vejle" />);
     expect(await screen.findByText("Ingen dele registreret.")).toBeVisible();
     expect(screen.queryByText(/blev ikke bogført/)).toBeNull();
+  });
+
+  it("shows what must be ordered and marks the ticket as ordered", async () => {
+    const onChange = vi.fn();
+    const f = api({ enabled: true, location: "vejle-hub", parts: [], parts_status: "needs_order",
+      parts_shortage: [{ shared_sku: "SCR-IP13", name: "Skærm iPhone 13", needed: 1, available: 0 }] });
+    render(<PartsUsedPanel ticketId={TID} storeId="vejle" onPartsStatusChange={onChange} />);
+    expect(await screen.findByText("Skal bestilles")).toBeVisible();
+    expect(screen.getByText("Skærm iPhone 13: skal bruge 1, ledigt 0")).toBeVisible();
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith("needs_order"));
+    fireEvent.click(screen.getByRole("button", { name: "Markér som bestilt" }));
+    await waitFor(() => expect(f).toHaveBeenCalledWith(`/api/admin/lager/parts-status/${TID}`, expect.objectContaining({ method: "PATCH" })));
   });
 });

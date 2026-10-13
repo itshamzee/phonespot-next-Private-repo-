@@ -130,6 +130,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/lager/locations` | GET | `requireStaff` |
 | `admin/lager/movements` | POST | `requireStaff` |
 | `admin/lager/parts` | GET | `requireStaff` |
+| `admin/lager/parts-status/[ticketId]` | PATCH | `requireStaff` |
 | `admin/lager/repair-parts/[ticketId]` | GET POST | `requireStaff` |
 | `admin/lager/repair-parts/[ticketId]/[partId]` | DELETE PATCH | `requireStaff` |
 | `admin/models` | GET POST | none |

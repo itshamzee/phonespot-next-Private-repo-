@@ -3,6 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { LagersystemError } from "@/lib/lagersystem/client";
 import { memoryRepo } from "@/lib/lagersystem/__tests__/memory-repo";
+import { memoryPartsCheckRepo } from "@/lib/lagersystem/__tests__/memory-parts-check-repo";
 
 const TV = "11111111-1111-4111-8111-111111111111";
 const TG = "22222222-2222-4222-8222-222222222222";
@@ -10,12 +11,14 @@ const s = vi.hoisted(() => ({
   afterFns: [] as Array<() => Promise<void>>,
   client: null as null | { postMovement: ReturnType<typeof vi.fn>; getPart: ReturnType<typeof vi.fn> },
   repo: null as unknown,
+  partsRepo: null as unknown,
   staff: { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null } as Record<string, unknown>,
 }));
 
 vi.mock("next/server", async (orig) => ({ ...(await orig<typeof import("next/server")>()), after: (fn: () => Promise<void>) => { s.afterFns.push(fn); } }));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: async () => s.staff }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
+vi.mock("@/lib/lagersystem/parts-check-repo", () => ({ createSupabasePartsCheckRepo: () => s.partsRepo }));
 vi.mock("@/lib/lagersystem/supabase-repo", () => ({ createSupabaseRepairPartsRepo: () => s.repo }));
 vi.mock("@/lib/lagersystem/client", async (orig) => ({
   ...(await orig<typeof import("@/lib/lagersystem/client")>()),
@@ -38,6 +41,9 @@ beforeEach(() => {
     { id: TV, store_id: "vejle", ticket_number: "PS-2026-0001" },
     { id: TG, store_id: null, ticket_number: null },
   ]);
+  s.partsRepo = memoryPartsCheckRepo({ tickets: [{ id: TV, store_id: "vejle", status: "modtaget", parts_status: "needs_order",
+    parts_shortage: [{ shared_sku: "SCR-IP13-OLED", name: "Skærm", needed: 1, available: 0 }], parts_notified_key: "k",
+    ticket_number: "PS-2026-0001", device_model: "iPhone 13", customer_name: "K", booking_details: null, services: null }], links: [] });
   s.client = {
     getPart: vi.fn(async (sku: string) => ({ shared_sku: sku, name: "Skærm iPhone 13", cost_price_ore: 41500 })),
     postMovement: vi.fn(async (i: { idempotency_key: string }) => ({ movement: { id: `mv:${i.idempotency_key}` }, replayed: false })),
@@ -149,4 +155,10 @@ it("cost_at_time_ore is hidden from non-owner staff, in GET and in the POST resp
   s.staff = { id: "staff-1", role: "owner", name: "Maria", email: null, location_id: null, location_slug: null };
   const ownerList = await (await GET(new NextRequest(`https://x/a/${TV}`), ctx(TV))).json();
   expect(ownerList.parts[0].cost_at_time_ore).toBe(41500);
+});
+
+it("adding the missing part clears Skal bestilles and GET reports it", async () => {
+  await post(TV, { shared_sku: "SCR-IP13-OLED", part_name: "Skærm iPhone 13", qty: 1 });
+  const list = await (await GET(new NextRequest(`https://x/api/admin/lager/repair-parts/${TV}`), ctx(TV))).json();
+  expect(list).toMatchObject({ parts_status: "ok", parts_shortage: null });
 });

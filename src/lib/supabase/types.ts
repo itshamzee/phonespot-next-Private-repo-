@@ -94,6 +94,9 @@ export interface RepairTicket {
   ticket_number: string | null;
   store_location_id: string | null;
   store_id: string | null;
+  /** Lagertjek ved booking (spec §4.4). Mangler i ældre rækker/mocks, derfor valgfri. */
+  parts_status?: "ok" | "needs_order" | "ordered" | "unknown" | null;
+  parts_shortage?: { shared_sku: string; name: string; needed: number; available: number }[] | null;
   created_at: string;
   updated_at: string;
 }

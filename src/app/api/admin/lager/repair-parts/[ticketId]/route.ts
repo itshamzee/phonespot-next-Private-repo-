@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getLagersystemClient, LagersystemError } from "@/lib/lagersystem/client";
 import { lagersystemErrorResponse, NOT_ENABLED } from "@/lib/lagersystem/http";
 import { locationForStore } from "@/lib/lagersystem/locations";
+import { createSupabasePartsCheckRepo } from "@/lib/lagersystem/parts-check-repo";
+import { clearShortageForPart } from "@/lib/lagersystem/parts-status";
 import { addPart } from "@/lib/lagersystem/repair-parts";
 import { scheduleSend } from "@/lib/lagersystem/send-after";
 import { createSupabaseRepairPartsRepo } from "@/lib/lagersystem/supabase-repo";
@@ -41,7 +43,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   if (!ticket) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   if (!canSee(staff, ticket.store_id)) return NextResponse.json({ error: "Sagen findes ikke" }, { status: 404 });
   const parts = await repo.listForTicket(ticketId);
-  return NextResponse.json({ enabled: true, location: locationForStore(ticket.store_id), parts: parts.map((p) => forStaff(staff, p)) });
+  const check = await createSupabasePartsCheckRepo(createAdminClient()).getTicket(ticketId).catch(() => null);
+  return NextResponse.json({
+    enabled: true,
+    location: locationForStore(ticket.store_id),
+    parts: parts.map((p) => forStaff(staff, p)),
+    parts_status: check?.parts_status ?? null,
+    parts_shortage: check?.parts_shortage ?? null,
+  });
 }
 
 /** POST — registrér en brugt del (TAKE). Gemmes lokalt først, sendes via after(). */
@@ -80,5 +89,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
   scheduleSend(result.value, repo);
+  try {
+    await clearShortageForPart(createSupabasePartsCheckRepo(createAdminClient()), ticketId, result.value.shared_sku);
+  } catch (err) {
+    console.error("[lagertjek] kunne ikke rydde Skal bestilles", ticketId, err);
+  }
   return NextResponse.json({ part: forStaff(staff, result.value) }, { status: 201 });
 }
