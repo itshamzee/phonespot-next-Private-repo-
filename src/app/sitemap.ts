@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
-import { SPARE_PART_CATEGORIES } from "@/lib/spare-parts";
+import { isSparePart } from "@/lib/spare-part-filter";
 import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
@@ -220,6 +220,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     for (const p of allSkuProducts) {
+      if (isSparePart(p)) continue;
       if (p.slug) {
         productPages.push({
           url: `${BASE_URL}/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.category ?? "covers"}/${p.slug}`,
@@ -231,35 +232,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // Silently continue if product queries fail
-  }
-
-  // ---- Spare parts pages ---------------------------------------------------
-
-  const sparePartPages: MetadataRoute.Sitemap = [
-    {
-      url: `${BASE_URL}/reservedele`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-  ];
-
-  for (const cat of SPARE_PART_CATEGORIES) {
-    sparePartPages.push({
-      url: `${BASE_URL}/reservedele/${cat.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.7,
-    });
-
-    for (const model of cat.models) {
-      sparePartPages.push({
-        url: `${BASE_URL}/reservedele/${cat.slug}/${model.slug}`,
-        lastModified: new Date(),
-        changeFrequency: "daily",
-        priority: 0.6,
-      });
-    }
   }
 
   // ---- Blog & guide pages (Task 4 will populate dynamically) ----------------
@@ -442,5 +414,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const spotPages = await spotSitemapEntries(BASE_URL);
 
-  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...sparePartPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages, ...spotPages];
+  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages, ...spotPages];
 }

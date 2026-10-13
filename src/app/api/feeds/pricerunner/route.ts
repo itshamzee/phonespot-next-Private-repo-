@@ -1,3 +1,4 @@
+import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { isNewGrade } from "@/lib/grades";
@@ -81,7 +82,7 @@ export async function GET() {
     const { data: skuProducts } = await supabase
       .from("sku_products")
       .select(
-        "id, title, description, short_description, ean, product_number, selling_price, sale_price, brand, category, slug, images",
+        "id, title, description, short_description, ean, product_number, selling_price, sale_price, brand, category, subcategory, slug, images",
       )
       .eq("status", "published");
 
@@ -213,7 +214,7 @@ export async function GET() {
     }
 
     // Accessories — one item per SKU
-    for (const sku of skuProducts ?? []) {
+    for (const sku of withoutSpareParts(skuProducts ?? [])) {
       if (!sku.slug) continue;
       if (!sku.images?.length) continue;
 

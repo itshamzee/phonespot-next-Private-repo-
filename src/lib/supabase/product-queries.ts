@@ -1,3 +1,4 @@
+import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { createAdminClient } from "./admin";
 import type { ProductTemplate, SkuProduct } from "./platform-types";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
@@ -248,6 +249,6 @@ export async function searchProducts(query: string): Promise<{
 
   return {
     templates: templatesRes.data || [],
-    skuProducts: skuRes.data || [],
+    skuProducts: withoutSpareParts(skuRes.data || []),
   };
 }

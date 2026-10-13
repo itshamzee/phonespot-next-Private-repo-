@@ -19,3 +19,15 @@ it.each(["product_templates", "sku_products"])("propagates a %s database error t
 it("preserves an actual zero-result response", async () => {
   await expect(searchProducts("ukendt")).resolves.toEqual({ templates: [], skuProducts: [] });
 });
+it("never returns spare parts, even if one is still published", async () => {
+  fixture.responses.sku_products = {
+    data: [
+      { id: "a", category: "accessory", subcategory: null },
+      { id: "b", category: "accessory", subcategory: "spare-part" },
+      { id: "c", category: "spare-part", subcategory: null },
+    ],
+    error: null,
+  };
+  const result = await searchProducts("skærm");
+  expect(result.skuProducts.map((p) => (p as { id: string }).id)).toEqual(["a"]);
+});
