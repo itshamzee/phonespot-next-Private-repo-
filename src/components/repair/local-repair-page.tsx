@@ -7,6 +7,8 @@ import {
   SITE_URL,
   type LocalRepairTown,
 } from "@/lib/local-repair-towns";
+import { OpenNowStatus } from "@/components/repair/open-now-status";
+import { MobileContactBar } from "@/components/repair/mobile-contact-bar";
 import type { RepairPriceSummary } from "@/lib/supabase/repairs";
 
 export const LOCAL_PRICE_MODELS = [
@@ -131,6 +133,7 @@ export function LocalRepairPage({ town, prices }: Props) {
       <JsonLd data={businessJsonLd} />
       <JsonLd data={faqJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
+      <MobileContactBar phone={store.phone} bookingHref={bookingHref} storeName={store.name} />
 
       {/* Breadcrumb */}
       <nav aria-label="Brødkrumme" className="border-b border-[#E5E5EA] bg-white">
@@ -166,7 +169,9 @@ export function LocalRepairPage({ town, prices }: Props) {
             {town.heroLead}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-3">
+          <OpenNowStatus hours={store.hours} tone="dark" className="mt-6" />
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={bookingHref}
               className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
@@ -279,6 +284,7 @@ export function LocalRepairPage({ town, prices }: Props) {
               </div>
               <div>
                 <p className="text-sm font-bold text-[#111111]">Åbningstider</p>
+                <OpenNowStatus hours={store.hours} className="mt-1 !text-xs" />
                 <div className="mt-1 space-y-1 text-sm text-[#6E6E73]">
                   <p className="flex justify-between gap-3">
                     <span>Man–Fre</span>
@@ -398,8 +404,10 @@ export function LocalRepairPage({ town, prices }: Props) {
               <Link href="/reparation" className="font-semibold text-[#1A3D2E] hover:underline">
                 Se priser på alle modeller
               </Link>
-              . Du kan også få en gratis hurtig diagnose ved disken i butikken. En
-              fuld diagnose, fx ved fejl på printet, koster 249 kr.
+              .
+            </p>
+            <p className="mt-2 text-sm text-[#6E6E73]">
+              Gratis hurtigt tjek ved disken. Fuld diagnose 249 kr.
             </p>
           </div>
         </section>

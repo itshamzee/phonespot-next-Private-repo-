@@ -88,6 +88,18 @@ export const STORES: Record<string, StoreLocationConfig> = {
   },
 };
 
+/**
+ * Google-anmeldelseslink pr. butik, brugt i SMS'en "anmeldelse" når en
+ * reparation er afhentet. Tom streng = ingen anmodning sendes.
+ * TODO(ejer): indsæt de rigtige links (Google Business Profile > "Få flere
+ * anmeldelser" > kopiér link, formen https://g.page/r/.../review) for hver butik.
+ * Må aldrig kobles til rabat eller anden belønning (forbudt hos Google).
+ */
+export const GOOGLE_REVIEW_URLS: Record<string, string> = {
+  vejle: "",
+  slagelse: "",
+};
+
 export interface UpcomingStoreConfig extends StoreLocationConfig {
   /** Shown as "Åbner {opens}" — a month, not a date, until one is confirmed. */
   opens: string;
@@ -162,4 +174,10 @@ export function openingHoursJsonLd(hours: StoreLocationConfig["hours"]) {
     { "@type": "OpeningHoursSpecification", dayOfWeek: ["Saturday"], ...span(hours.saturday) },
     { "@type": "OpeningHoursSpecification", dayOfWeek: ["Sunday"], ...span(hours.sunday) },
   ];
+}
+
+/** Butikkens Google-anmeldelseslink, eller null hvis det endnu ikke er sat. */
+export function googleReviewUrl(storeId?: string | null): string | null {
+  const url = GOOGLE_REVIEW_URLS[storeForId(storeId).slug]?.trim();
+  return url ? url : null;
 }

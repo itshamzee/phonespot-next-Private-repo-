@@ -47,3 +47,20 @@ describe("repair SMS templates", () => {
     expect(sms).not.toMatch(/Aabent|Loerdag/);
   });
 });
+
+describe("anmeldelse SMS", () => {
+  it("sends nothing while the store has no review link", () => {
+    expect(getSmsTemplate("anmeldelse", { ...base, storeId: "vejle" })).toBeNull();
+  });
+
+  it("names the city, the device and the link", () => {
+    const sms = getSmsTemplate("anmeldelse", {
+      ...base,
+      storeId: "vejle",
+      reviewUrl: "https://g.page/r/test/review",
+    })!;
+    expect(sms).toBe(
+      "Tak fordi du valgte PhoneSpot Vejle. Var du tilfreds med reparationen af din iPhone 13, vil vi blive glade for en anmeldelse. Det tager 30 sekunder: https://g.page/r/test/review",
+    );
+  });
+});

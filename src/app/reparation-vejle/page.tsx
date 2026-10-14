@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
+import { OpenNowStatus } from "@/components/repair/open-now-status";
+import { MobileContactBar } from "@/components/repair/mobile-contact-bar";
 import { STORES } from "@/lib/store-config";
 import { getRepairPriceSummaries } from "@/lib/supabase/repairs";
 
@@ -240,6 +242,11 @@ export default async function ReparationVejlePage() {
     <>
       <JsonLd data={localBusinessJsonLd} />
       <JsonLd data={faqJsonLd} />
+      <MobileContactBar
+        phone={store.phone}
+        bookingHref={`/reparation/booking?store=${store.slug}`}
+        storeName={store.name}
+      />
 
       {/* Hero */}
       <section className="bg-[#1A3D2E] py-20 md:py-28">
@@ -256,7 +263,9 @@ export default async function ReparationVejlePage() {
             Gratis parkering lige ved døren.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <OpenNowStatus hours={store.hours} tone="dark" className="mt-6" />
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/reparation/booking"
               className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
@@ -352,6 +361,7 @@ export default async function ReparationVejlePage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-[#111111]">Åbningstider</p>
+                <OpenNowStatus hours={store.hours} className="mt-1 !text-xs" />
                 <div className="mt-2 space-y-1 text-xs">
                   <div className="flex justify-between gap-2">
                     <span className="text-[#6E6E73]">Man–Fre</span>
@@ -488,8 +498,11 @@ export default async function ReparationVejlePage() {
               Din model er ikke på listen?{" "}
               <Link href="/reparation" className="font-semibold text-[#1A3D2E] hover:underline">
                 Se priser på alle modeller
-              </Link>{" "}
-              — eller kom forbi til en gratis diagnose i butikken.
+              </Link>
+              .
+            </p>
+            <p className="mt-2 text-center text-sm text-[#6E6E73]">
+              Gratis hurtigt tjek ved disken. Fuld diagnose 249 kr.
             </p>
           </div>
         </section>

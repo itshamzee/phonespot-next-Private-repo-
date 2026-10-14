@@ -1,4 +1,4 @@
-import { storeForId } from "@/lib/store-config";
+import { googleReviewUrl, storeForId } from "@/lib/store-config";
 
 interface SmsTemplateData {
   customerName: string;
@@ -12,6 +12,8 @@ interface SmsTemplateData {
   price?: number;
   estimatedDate?: string;
   /** Indlevering af flere enheder: "modtaget" nævner alle sagsnumre i én besked. */
+  /** Overstyrer butikkens Google-anmeldelseslink (bruges af "anmeldelse"). */
+  reviewUrl?: string | null;
   group?: { ticketNumber: string; deviceName: string }[];
 }
 
@@ -38,6 +40,12 @@ export function getSmsTemplate(
       return `Tak ${customerName}! Vi går i gang med din ${deviceName}.${estimatedDate ? ` Forventet færdig: ${estimatedDate}.` : ""}${trackingUrl ? ` Følg status: ${trackingUrl}` : ""} - ${store.name}`;
     case "faerdig":
       return `Hej ${customerName}, din ${deviceName} er klar til afhentning i ${store.mall ?? store.city}. Åbent: Hverdage ${store.hours.weekdays}, Lørdag ${store.hours.saturday}. - ${store.name}`;
+    case "anmeldelse": {
+      // Uden et link ville kunden få en tom opfordring; send ingenting.
+      const link = (data.reviewUrl ?? googleReviewUrl(storeId))?.trim();
+      if (!link) return null;
+      return `Tak fordi du valgte PhoneSpot ${store.city}. Var du tilfreds med reparationen af din ${deviceName}, vil vi blive glade for en anmeldelse. Det tager 30 sekunder: ${link}`;
+    }
     default:
       return null;
   }

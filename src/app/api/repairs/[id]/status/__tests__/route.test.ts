@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 const send = vi.fn();
 const sendSms = vi.fn();
@@ -31,6 +31,7 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 import { PATCH } from "../route";
+import { GOOGLE_REVIEW_URLS } from "@/lib/store-config";
 
 function call(status: string, extra: Record<string, unknown> = {}) {
   return PATCH(
@@ -104,5 +105,33 @@ describe("PATCH /api/repairs/[id]/status notifications", () => {
     ticket.customer_phone = "20123456";
     await call("afhentet");
     expect(sendSms).not.toHaveBeenCalled();
+  });
+
+  describe("anmeldelsesanmodning ved afhentet", () => {
+    afterEach(() => {
+      GOOGLE_REVIEW_URLS.vejle = "";
+    });
+
+    it("sends the review SMS on the transition to afhentet when the store has a link", async () => {
+      GOOGLE_REVIEW_URLS.vejle = "https://g.page/r/vejle/review";
+      ticket.customer_phone = "20123456";
+      ticket.status = "faerdig";
+      sendSms.mockResolvedValue({ success: true, messageId: "m2" });
+      await call("afhentet");
+      expect(sendSms).toHaveBeenCalledTimes(1);
+      expect(sendSms.mock.calls[0][1]).toContain("PhoneSpot Vejle");
+      expect(sendSms.mock.calls[0][1]).toContain("iPhone 13");
+      expect(sendSms.mock.calls[0][1]).toContain("https://g.page/r/vejle/review");
+    });
+
+    it("respects skip_sms and does not repeat when already afhentet", async () => {
+      GOOGLE_REVIEW_URLS.vejle = "https://g.page/r/vejle/review";
+      ticket.customer_phone = "20123456";
+      ticket.status = "faerdig";
+      await call("afhentet", { skip_sms: true });
+      ticket.status = "afhentet";
+      await call("afhentet");
+      expect(sendSms).not.toHaveBeenCalled();
+    });
   });
 });

@@ -201,9 +201,15 @@ export async function PATCH(
     const customerPhone = ticket.customer_phone;
     if (customerPhone && !skipSms) {
       try {
-        const smsMessage = getSmsTemplate(status, {
+        // Afhentet udløser anmeldelsesanmodningen (kun hvis butikkens link er
+        // sat, og kun ved selve overgangen, så gentagne kald ikke sender igen).
+        const smsStatus = status === "afhentet" ? (oldStatus === "afhentet" ? "" : "anmeldelse") : status;
+        const smsMessage = !smsStatus ? null : getSmsTemplate(smsStatus, {
           customerName: ticket.customer_name,
-          deviceName: `${ticket.device_type} ${ticket.device_model}`.trim(),
+          deviceName: (smsStatus === "anmeldelse"
+            ? (ticket.device_model || ticket.device_type || "enhed")
+            : `${ticket.device_type} ${ticket.device_model}`
+          ).trim(),
           ticketId: id,
           ticketNumber: ticket.ticket_number,
           storeId: ticket.store_id,
