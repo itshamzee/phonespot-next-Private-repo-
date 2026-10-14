@@ -10,9 +10,13 @@ const s = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from(table: string) {
-      const rows = table === "devices" ? s.devices : table === "product_templates" ? s.templates : s.sku;
+      const rows =
+        table === "devices" ? s.devices
+        : table === "product_templates" ? s.templates
+        : table === "sku_stock" ? []
+        : s.sku;
       const q: Record<string, unknown> = {};
-      for (const m of ["select", "eq", "neq", "in", "order"]) q[m] = () => q;
+      for (const m of ["select", "eq", "neq", "in", "order", "range"]) q[m] = () => q;
       q.then = (resolve: (v: unknown) => unknown) => Promise.resolve({ data: rows, error: null }).then(resolve);
       return q;
     },
@@ -22,6 +26,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 import { GET } from "../route";
 
 const items = (xml: string) => [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
+const path = (item: string) => tag(item, "link").split("?")[0];
 const tag = (item: string, name: string) => item.match(new RegExp(`<g:${name}>([\\s\\S]*?)</g:${name}>`))?.[1]?.trim() ?? "";
 
 beforeEach(() => {
@@ -44,8 +49,9 @@ it("sender én vare pr. model og stand, ikke pr. eksemplar", async () => {
   const xml = await (await GET()).text();
   const devices = items(xml).filter((i) => tag(i, "link").includes("/refurbished/"));
   expect(devices).toHaveLength(3);
-  const links = devices.map((i) => tag(i, "link"));
-  expect(new Set(links).size).toBe(2);
+  // Én landingsside pr. model, men hver stand linker med sin egen ?grade=
+  expect(new Set(devices.map(path)).size).toBe(2);
+  expect(new Set(devices.map((i) => tag(i, "link"))).size).toBe(3);
 });
 
 it("tager den laveste pris blandt eksemplarerne i samme stand", async () => {
@@ -57,22 +63,22 @@ it("tager den laveste pris blandt eksemplarerne i samme stand", async () => {
 
 it("binder samme landingsside sammen med item_group_id", async () => {
   const xml = await (await GET()).text();
-  const t1 = items(xml).filter((i) => tag(i, "link").endsWith("/apple-iphone-15"));
+  const t1 = items(xml).filter((i) => path(i).endsWith("/apple-iphone-15"));
   expect(t1.every((i) => tag(i, "item_group_id") === "t1")).toBe(true);
 });
 
 it("giver bærbare deres egen Google-kategori", async () => {
   const xml = await (await GET()).text();
-  const laptop = items(xml).find((i) => tag(i, "link").endsWith("/hp-elitebook"));
+  const laptop = items(xml).find((i) => path(i).endsWith("/hp-elitebook"));
   expect(tag(laptop!, "google_product_category")).toMatch(/Laptops/);
-  const phone = items(xml).find((i) => tag(i, "link").endsWith("/apple-iphone-15"));
+  const phone = items(xml).find((i) => path(i).endsWith("/apple-iphone-15"));
   expect(tag(phone!, "google_product_category")).toMatch(/Mobile Phones/);
 });
 
 it("springer modeller uden billede over", async () => {
   s.templates = [{ ...s.templates[0], images: [] }, s.templates[1]];
   const xml = await (await GET()).text();
-  expect(items(xml).some((i) => tag(i, "link").endsWith("/apple-iphone-15"))).toBe(false);
+  expect(items(xml).some((i) => path(i).endsWith("/apple-iphone-15"))).toBe(false);
 });
 
 it("har stadig tilbehøret med, med rigtig kategori i linket", async () => {
