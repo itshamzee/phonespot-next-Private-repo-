@@ -20,6 +20,8 @@ const SERVICE_LINKS = [
   { label: "Garanti", href: "/garanti" },
   { label: "Delbetaling", href: "/delbetaling" },
   { label: "Reparation", href: "/reparation" },
+  { label: "Reparation Vejle", href: "/reparation-vejle" },
+  { label: "Reparation Slagelse", href: "/reparation-slagelse" },
   { label: "Erhverv", href: "/erhverv" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },

@@ -50,7 +50,7 @@ const REPAIR_FAQ = [
   {
     question: "Hvilken garanti gælder for reparationen?",
     answer:
-      "Se garantioplysningerne ved den konkrete reparation og vores reparationsbetingelser. Vi hjælper dig gerne med at afklare, hvad der gælder for den valgte reservedel og reparation.",
+      "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele. Opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning. Behandling af vandskade har 3 måneders garanti, og for laptops, konsoller og diagnose gælder vilkårene ved den enkelte reparation. Se også vores reparationsbetingelser.",
   },
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
@@ -69,53 +69,46 @@ const REPAIR_FAQ = [
   },
 ];
 
-const REPAIR_SERVICE_JSONLD = {
+const REPAIR_SERVICE_JSONLD = [STORES.vejle, STORES.slagelse].map((store) => ({
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  name: STORE.name,
-  description:
-    "Reparation af smartphones, tablets og bærbare i Slagelse og Vejle. Find din model for priser på skærmskift, batteriskift og andre reparationer.",
-  url: "https://phonespot.dk/reparation",
-  telephone: STORE.phone,
-  email: STORE.email,
+  "@type": "ElectronicsRepair",
+  name: store.name,
+  description: `Reparation af smartphones og tablets i ${store.city} med livstidsgaranti på arbejde og dele. Find din model for priser på skærmskift, batteriskift og andre reparationer.`,
+  url: `https://phonespot.dk/reparation-${store.slug}`,
+  image: "https://phonespot.dk/images/store/butik-indvendig.jpg",
+  telephone: store.phone,
+  email: store.email,
   address: {
     "@type": "PostalAddress",
-    streetAddress: STORE.street,
-    addressLocality: STORE.city,
-    postalCode: STORE.zip,
-    addressCountry: STORE.countryCode,
+    streetAddress: store.street,
+    addressLocality: store.city,
+    postalCode: store.zip,
+    addressCountry: store.countryCode,
   },
   geo: {
     "@type": "GeoCoordinates",
-    latitude: STORE.coordinates.lat,
-    longitude: STORE.coordinates.lng,
+    latitude: store.coordinates.lat,
+    longitude: store.coordinates.lng,
   },
-  openingHoursSpecification: openingHoursJsonLd(STORE.hours),
+  openingHoursSpecification: openingHoursJsonLd(store.hours),
   priceRange: "$$",
+  sameAs: [
+    "https://dk.trustpilot.com/review/phonespot.dk",
+    "https://www.facebook.com/phonespot.dk/",
+  ],
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "Reparationer",
     itemListElement: [
-      {
-        "@type": "OfferCatalog",
-        name: "Skærmskift",
-        description:
-          "Professionel udskiftning af skærm på smartphones og tablets",
-      },
-      {
-        "@type": "OfferCatalog",
-        name: "Batteriskift",
-        description: "Udskiftning af batteri på telefoner, tablets og bærbare",
-      },
-      {
-        "@type": "OfferCatalog",
-        name: "Behandling af vandskader",
-        description:
-          "Professionel rensning og reparation af vandskadede enheder",
-      },
-    ],
+      ["Skærmskift", "Professionel udskiftning af skærm på smartphones og tablets"],
+      ["Batteriskift", "Udskiftning af batteri på telefoner og tablets"],
+      ["Behandling af vandskader", "Rensning og behandling af vandskadede enheder"],
+    ].map(([name, description]) => ({
+      "@type": "Offer",
+      itemOffered: { "@type": "Service", name, description },
+    })),
   },
-};
+}));
 
 // ---------------------------------------------------------------------------
 // Page
@@ -129,7 +122,9 @@ export default async function ReparationPage() {
 
   return (
     <div className={`${styles.shell} ${landing.page}`}>
-      <JsonLd data={REPAIR_SERVICE_JSONLD} />
+      {REPAIR_SERVICE_JSONLD.map((data) => (
+        <JsonLd key={data.name} data={data} />
+      ))}
       <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
         { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
         { "@type": "ListItem", position: 2, name: "Reparation", item: "https://phonespot.dk/reparation" },

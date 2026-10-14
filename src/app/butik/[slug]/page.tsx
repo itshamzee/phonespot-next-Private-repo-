@@ -42,14 +42,14 @@ export async function generateMetadata({
     return {
       title: "PhoneSpot Vejle — Brugt elektronik og iPhone-reparation | Løversysselvej",
       description:
-        "Besøg PhoneSpot Vejle på Løversysselvej 3B. iPhone-reparation og refurbished enheder med 36 måneders garanti, sælg din enhed. Åbent man-fre 10-17:30, weekend 10-15.",
+        "Besøg PhoneSpot Vejle på Løversysselvej 3B. iPhone-reparation med livstidsgaranti på arbejde og dele, refurbished enheder med 36 måneders garanti og opkøb af din brugte enhed. Åbent man-fre 10-17:30, weekend 10-15.",
       alternates: {
         canonical: "https://phonespot.dk/butik/vejle",
       },
       openGraph: {
         title: "PhoneSpot Vejle — Brugt elektronik og iPhone-reparation",
         description:
-          "Professionel iPhone-reparation og brugt elektronik i Vejle. 36 mdr. garanti, Klarna-delbetaling. Løversysselvej 3B.",
+          "Professionel iPhone-reparation med livstidsgaranti og refurbished elektronik med 36 mdr. garanti i Vejle. Klarna-delbetaling. Løversysselvej 3B.",
         url: "https://phonespot.dk/butik/vejle",
         type: "website",
       },
@@ -57,7 +57,7 @@ export async function generateMetadata({
   }
 
   const title = `${store.name} — besøg os${store.mall ? ` i ${store.mall}` : ""}`;
-  const description = `Besøg ${store.name}${store.mall ? ` i ${store.mall}` : ""}, ${store.city}. Reparation, personlig rådgivning og refurbished elektronik med 36 mdr. garanti.`;
+  const description = `Besøg ${store.name}${store.mall ? ` i ${store.mall}` : ""}, ${store.city}. Reparation med livstidsgaranti på arbejde og dele, personlig rådgivning og refurbished elektronik med 36 mdr. garanti.`;
 
   return {
     title,

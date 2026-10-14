@@ -31,7 +31,7 @@ describe("Reparationssiden", () => {
       expect(details[index].querySelector("p")).toHaveTextContent(q.acceptedAnswer.text);
     });
     expect(schemas.find(s => s["@type"] === "BreadcrumbList").itemListElement[1].item).toBe("https://phonespot.dk/reparation");
-    expect(schemas.find(s => s["@type"] === "LocalBusiness").openingHoursSpecification.some((h: { dayOfWeek: string[] }) => h.dayOfWeek.includes("Sunday"))).toBe(true);
+    expect(schemas.find(s => s["@type"] === "ElectronicsRepair" && s.name === "PhoneSpot Slagelse").openingHoursSpecification.some((h: { dayOfWeek: string[] }) => h.dayOfWeek.includes("Sunday"))).toBe(true);
     expect(screen.getByRole("link", { name: /Vejle.*Løversysselvej/ })).toHaveAttribute("href", "/reparation-vejle");
     expect(screen.getByRole("link", { name: /Slagelse.*VestsjællandsCentret/ })).toHaveAttribute("href", "/reparation-slagelse");
     expect(screen.getByRole("link", { name: "Se elektronikforsikring" })).toHaveAttribute("href", "/forsikring");

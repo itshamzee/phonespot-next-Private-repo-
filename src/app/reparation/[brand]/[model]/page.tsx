@@ -127,7 +127,7 @@ export default async function ModelPricePage({ params }: Props) {
     zip: store.zip,
     mall: store.mall,
     phone: store.phone,
-    href: store.slug === "vejle" ? "/reparation-vejle" : "/butik/" + store.slug,
+    href: store.slug === "vejle" ? "/reparation-vejle" : "/reparation-slagelse",
     mapsUrl: store.googleMapsUrl,
     hours: store.hours,
     coordinates: store.coordinates,
@@ -145,7 +145,7 @@ export default async function ModelPricePage({ params }: Props) {
     "@type": "ElectronicsRepair",
     name: store.name,
     telephone: store.phone,
-    url: store.slug === "vejle" ? "https://phonespot.dk/reparation-vejle" : `https://phonespot.dk/butik/${store.slug}`,
+    url: store.slug === "vejle" ? "https://phonespot.dk/reparation-vejle" : "https://phonespot.dk/reparation-slagelse",
     address: {
       "@type": "PostalAddress",
       streetAddress: store.street,
@@ -333,7 +333,7 @@ export default async function ModelPricePage({ params }: Props) {
             <details>
               <summary>Hvad gælder for garanti?</summary>
               <p>
-                Se garantioplysningerne ved den konkrete service og{" "}
+                Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele, og vandskade har 3 måneders garanti. Se også{" "}
                 <Link className={styles.textLink} href="/handelsbetingelser">
                   vores reparationsbetingelser
                 </Link>

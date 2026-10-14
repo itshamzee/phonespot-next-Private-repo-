@@ -66,8 +66,12 @@ const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "ElectronicsRepair",
   name: store.name,
-  image: "https://phonespot.dk/brand/logo.png",
+  image: "https://phonespot.dk/images/store/butik-indvendig.jpg",
   url: "https://phonespot.dk/reparation-vejle",
+  sameAs: [
+    "https://dk.trustpilot.com/review/phonespot.dk",
+    "https://www.facebook.com/phonespot.dk/",
+  ],
   telephone: store.phone,
   email: store.email,
   address: {
@@ -108,24 +112,36 @@ const localBusinessJsonLd = {
     name: "Reparationer i Vejle",
     itemListElement: [
       {
-        "@type": "OfferCatalog",
-        name: "Skærmskift",
-        description: "Udskiftning af knust eller defekt skærm på iPhone og Samsung",
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Skærmskift",
+          description: "Udskiftning af knust eller defekt skærm på iPhone og Samsung",
+        },
       },
       {
-        "@type": "OfferCatalog",
-        name: "Batteriskift",
-        description: "Udskiftning af batteri med nedsat kapacitet",
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Batteriskift",
+          description: "Udskiftning af batteri med nedsat kapacitet",
+        },
       },
       {
-        "@type": "OfferCatalog",
-        name: "Reparation af opladerstik",
-        description: "Reparation af defekte Lightning- og USB-C-porte",
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Reparation af opladerstik",
+          description: "Reparation af defekte Lightning- og USB-C-porte",
+        },
       },
       {
-        "@type": "OfferCatalog",
-        name: "Behandling af vandskader",
-        description: "Professionel rensning og reparation af vandskadede enheder",
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Behandling af vandskader",
+          description: "Professionel rensning og reparation af vandskadede enheder",
+        },
       },
     ],
   },
@@ -245,12 +261,16 @@ const FAQS = [
   {
     question: "Hvilke mærker reparerer I i Vejle?",
     answer:
-      "Vi reparerer alle større mærker: Apple (iPhone, iPad, MacBook), Samsung, Huawei, OnePlus, Google Pixel og flere. Se alle mærker og priser på vores reparationsside.",
+      "Vi reparerer iPhone, iPad, MacBook og Samsung, og vi reparerer de fleste andre mærker. Ring og hør, om vi kan hjælpe med din model. Se priser på de mest almindelige modeller på vores reparationsside.",
   },
 ];
 
 export default async function ReparationVejlePage() {
   const prices = await getRepairPriceSummaries(PRICE_MODELS);
+  const screenPrices = prices
+    .map((row) => row.screenFrom)
+    .filter((value): value is number => value !== null);
+  const fromPrice = screenPrices.length > 0 ? Math.min(...screenPrices) : null;
 
   return (
     <>
@@ -304,6 +324,17 @@ export default async function ReparationVejlePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Svar først */}
+      <section className="border-b border-[#E5E5EA] bg-white">
+        <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
+          PhoneSpot Vejle på Løversysselvej 3B reparerer iPhone, Samsung og iPad
+          uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30
+          minutter, og du får livstidsgaranti på arbejde og dele.
+          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}.`}{" "}
+          Gratis parkering ved døren.
+        </p>
       </section>
 
       {/* Store info */}
@@ -598,7 +629,7 @@ export default async function ReparationVejlePage() {
               {
                 title: "Professionelle teknikere",
                 description:
-                  "Vores teknikere er certificerede og erfarne. Vi bruger reservedele af høj kvalitet, der matcher de originale specifikationer.",
+                  "Reparationen udføres i butikken af vores egne teknikere. Du vælger selv kvaliteten på reservedelen, og vi oplyser prisen, inden vi går i gang.",
               },
               {
                 title: "Faste priser",
@@ -731,6 +762,13 @@ export default async function ReparationVejlePage() {
             og{" "}
             <Link href="/reparation-fredericia" className="font-semibold text-[#1A3D2E] hover:underline">
               Reparation Fredericia
+            </Link>
+            .
+          </p>
+          <p className="mt-3">
+            Bor du på Sjælland? Vi har også en butik i{" "}
+            <Link href="/reparation-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+              Reparation Slagelse
             </Link>
             .
           </p>

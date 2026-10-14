@@ -63,8 +63,12 @@ export function LocalRepairPage({ town, prices }: Props) {
     "@context": "https://schema.org",
     "@type": "ElectronicsRepair",
     name: store.name,
-    image: `${SITE_URL}/brand/logo.png`,
+    image: `${SITE_URL}${isVejle ? "/images/store/butik-indvendig.jpg" : "/images/store/vestsj%C3%A6llandscentret.jpg"}`,
     url: pageUrl,
+    sameAs: [
+      "https://dk.trustpilot.com/review/phonespot.dk",
+      "https://www.facebook.com/phonespot.dk/",
+    ],
     telephone: store.phone,
     email: store.email,
     address: {
@@ -83,6 +87,11 @@ export function LocalRepairPage({ town, prices }: Props) {
     areaServed: { "@type": "City", name: town.name },
     priceRange: "$$",
   };
+
+  const screenPrices = prices
+    .map((row) => row.screenFrom)
+    .filter((value): value is number => value !== null);
+  const fromPrice = screenPrices.length > 0 ? Math.min(...screenPrices) : null;
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -183,6 +192,19 @@ export function LocalRepairPage({ town, prices }: Props) {
         </div>
       </section>
 
+      {/* Svar først */}
+      {isHomeTown && (
+        <section className="border-b border-[#E5E5EA] bg-white">
+          <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
+            {store.name} ligger i {store.mall ?? store.city}, {store.street}, og
+            reparerer iPhone, Samsung og iPad uden tidsbestilling. 90% af skærm- og
+            batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde
+            og dele.
+            {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}.`}
+          </p>
+        </section>
+      )}
+
       {/* Town-specific intro */}
       <section className="bg-white py-14">
         <div className="mx-auto max-w-3xl space-y-5 px-4">
@@ -193,6 +215,23 @@ export function LocalRepairPage({ town, prices }: Props) {
           ))}
         </div>
       </section>
+
+      {town.extraSections && town.extraSections.length > 0 && (
+        <section className="bg-[#F7F7F8] py-14">
+          <div className="mx-auto max-w-3xl space-y-8 px-4">
+            {town.extraSections.map((section) => (
+              <div key={section.heading}>
+                <h2 className="font-display text-xl font-bold text-[#111111]">
+                  {section.heading}
+                </h2>
+                <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
+                  {section.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* How to get here */}
       <section
@@ -464,6 +503,31 @@ export function LocalRepairPage({ town, prices }: Props) {
               , eller læs om{" "}
               <Link href="/butik/slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
                 butikken i Slagelse
+              </Link>
+              .
+            </p>
+          )}
+          {!isVejle && (
+            <p className="mt-3">
+              Også i Vejle:{" "}
+              <Link href="/reparation-vejle" className="font-semibold text-[#1A3D2E] hover:underline">
+                Reparation Vejle
+              </Link>{" "}
+              på Løversysselvej 3B, og for kunder fra Jylland{" "}
+              <Link href="/reparation-kolding" className="font-semibold text-[#1A3D2E] hover:underline">
+                Kolding
+              </Link>
+              ,{" "}
+              <Link href="/reparation-fredericia" className="font-semibold text-[#1A3D2E] hover:underline">
+                Fredericia
+              </Link>
+              ,{" "}
+              <Link href="/reparation-horsens" className="font-semibold text-[#1A3D2E] hover:underline">
+                Horsens
+              </Link>{" "}
+              og{" "}
+              <Link href="/reparation-hedensted" className="font-semibold text-[#1A3D2E] hover:underline">
+                Hedensted
               </Link>
               .
             </p>

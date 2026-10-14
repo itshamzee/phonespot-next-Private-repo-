@@ -47,7 +47,13 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 
 ## Vigtige sider
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
-- [Reparation i Vejle](${SITE}/reparation-vejle): walk-in, prisoversigt og garantivilkår
+- [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
+- [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
+- [Reparation Hedensted](${SITE}/reparation-hedensted): værkstedet i Vejle, ca. 15 min ad E45 fra Hedensted, livstidsgaranti, gratis parkering
+- [Reparation Horsens](${SITE}/reparation-horsens): værkstedet i Vejle, ca. 25 min ad E45 fra Horsens, livstidsgaranti, gratis parkering
+- [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
+- [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
+- [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [iPhone-reparation](${SITE}/reparation/iphone): alle iPhone-modeller med priser
 - [Samsung-reparation](${SITE}/reparation/samsung): alle Galaxy-modeller med priser
 - [Book reparation](${SITE}/reparation/booking)
