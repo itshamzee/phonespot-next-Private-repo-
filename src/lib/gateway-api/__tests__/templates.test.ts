@@ -50,7 +50,7 @@ describe("repair SMS templates", () => {
 
 describe("anmeldelse SMS", () => {
   it("sends nothing while the store has no review link", () => {
-    expect(getSmsTemplate("anmeldelse", { ...base, storeId: "vejle" })).toBeNull();
+    expect(getSmsTemplate("anmeldelse", { ...base, storeId: "vejle", reviewUrl: "" })).toBeNull();
   });
 
   it("names the city, the device and the link", () => {

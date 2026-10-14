@@ -91,13 +91,13 @@ export const STORES: Record<string, StoreLocationConfig> = {
 /**
  * Google-anmeldelseslink pr. butik, brugt i SMS'en "anmeldelse" når en
  * reparation er afhentet. Tom streng = ingen anmodning sendes.
- * TODO(ejer): indsæt de rigtige links (Google Business Profile > "Få flere
- * anmeldelser" > kopiér link, formen https://g.page/r/.../review) for hver butik.
+ * Links fra Google Business Profile > "Få flere
+ * anmeldelser" (sat 2026-10-15).
  * Må aldrig kobles til rabat eller anden belønning (forbudt hos Google).
  */
 export const GOOGLE_REVIEW_URLS: Record<string, string> = {
-  vejle: "",
-  slagelse: "",
+  vejle: "https://g.page/r/CTgFSwlcffcGEAE/review",
+  slagelse: "https://g.page/r/Cbc4IBW5zl20EAE/review",
 };
 
 export interface UpcomingStoreConfig extends StoreLocationConfig {

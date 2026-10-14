@@ -101,7 +101,8 @@ describe("PATCH /api/repairs/[id]/status notifications", () => {
     expect(sendSms).not.toHaveBeenCalled();
   });
 
-  it("afhentet (Faerdig og betalt) never sends an SMS", async () => {
+  it("afhentet (Faerdig og betalt) sends no SMS without a review link", async () => {
+    GOOGLE_REVIEW_URLS.vejle = "";
     ticket.customer_phone = "20123456";
     await call("afhentet");
     expect(sendSms).not.toHaveBeenCalled();
