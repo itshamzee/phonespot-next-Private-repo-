@@ -222,6 +222,15 @@ export function DeviceDetail({
       availableGrades[0]?.grade ??
       "A",
   );
+  // Feedet linker med ?grade=<stand>. Læses efter mount (siden forbliver ISR-
+  // cachet) og forvælger standen, hvis den findes på lager.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("grade");
+    if (wanted && availableGrades.some((g) => g.grade === wanted && g.available > 0)) {
+      setSelectedGrade(wanted);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedStorage, setSelectedStorage] = useState<string>(
     template.storage_options[0] ?? "",
   );

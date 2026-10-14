@@ -1,3 +1,4 @@
+import { accessoryAvailability } from "@/lib/accessory-availability";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -355,10 +356,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
       "@type": "Offer",
       priceCurrency: "DKK",
       price: (price / 100).toFixed(2),
-      availability:
-        (stockQuantity ?? 0) > 0 ? "https://schema.org/InStock"
-          : product.always_in_stock ? "https://schema.org/BackOrder"
-          : stockQuantity === null ? undefined : "https://schema.org/OutOfStock",
+      availability: accessoryAvailability(stockQuantity, product.always_in_stock).schema,
       itemCondition: ITEM_CONDITION.NEW,
       seller: { "@type": "Organization", name: "PhoneSpot" },
       url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,

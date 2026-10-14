@@ -122,7 +122,7 @@ describe('accessory purchase boundary',()=>{
  it('allows explicit orderability without claiming physical stock',()=>{
   render(<AccessoryDetail product={makeProduct({always_in_stock:true})} stockQuantity={null}/>);
   expect(screen.queryByText(/^På lager$/)).not.toBeInTheDocument();
-  expect(screen.getAllByText('Kan bestilles').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('På lager hos leverandør – sendes 1–3 hverdage').length).toBeGreaterThan(0);
   fireEvent.click(screen.getAllByRole('button',{name:'Tilføj til kurv'})[0]);
   expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'1',price:39900,quantity:1}));
  });

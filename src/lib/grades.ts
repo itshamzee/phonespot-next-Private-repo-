@@ -35,3 +35,18 @@ export const GRADE_SHORT_LABEL: Record<DeviceGrade, string> = {
   B: "God stand",
   C: "Brugt stand",
 };
+
+/**
+ * Standen, som produktsiden viser for en enhed. Nogle fabriksnye enheder er
+ * registreret som grade A med "fabriksny" i condition_notes; siden behandler
+ * dem som N, og det samme skal feed og JSON-LD gøre.
+ */
+export function effectiveGrade(device: {
+  grade: string | null | undefined;
+  condition_notes?: string | null;
+}): string {
+  if (device.grade === "A" && device.condition_notes?.toLowerCase().includes("fabriksny")) {
+    return "N";
+  }
+  return device.grade ?? "A";
+}

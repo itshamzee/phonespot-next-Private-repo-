@@ -332,6 +332,18 @@ export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
   other: "holdere",
 };
 
+/**
+ * Den kanoniske produkt-URL-sti for et tilbehør. Bruges af sitemap og
+ * Google Shopping-feedet, så de aldrig peger på forskellige URL'er.
+ */
+export function accessoryProductPath(p: {
+  subcategory?: string | null;
+  category?: string | null;
+  slug: string;
+}): string {
+  return `/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.category ?? "covers"}/${p.slug}`;
+}
+
 export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   covers: ["cover"],
   skaermbeskyttelse: ["screen_protector"],

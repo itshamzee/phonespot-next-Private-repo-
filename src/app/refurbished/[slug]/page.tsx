@@ -16,7 +16,8 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ProductGridCard } from "@/components/product/product-grid-card";
-import { devicesToItemCondition } from "@/lib/seo/item-condition";
+import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
+import { effectiveGrade } from "@/lib/grades";
 import { getDeviceFaq } from "@/lib/product/device-faq";
 
 export const revalidate = 60;
@@ -165,6 +166,37 @@ export default async function RefurbishedProductPage({ params }: Props) {
   // lib/seo/item-condition.ts for the full mixed-grade rule.
   const itemCondition = devicesToItemCondition(availableDevices);
 
+  // Én Offer pr. stand med eget pris og itemCondition. Feedet linker med
+  // ?grade=<stand> og bruger samme pris (laveste pris i standen).
+  const gradeMinPrices = new Map<string, number>();
+  for (const d of availableDevices) {
+    if (!d.selling_price) continue;
+    const g = effectiveGrade(d);
+    const cur = gradeMinPrices.get(g);
+    if (cur === undefined || d.selling_price < cur) gradeMinPrices.set(g, d.selling_price);
+  }
+  const pageUrl = `https://phonespot.dk/refurbished/${slug}`;
+  const seller = { "@type": "Organization", name: "PhoneSpot" };
+  const offers =
+    gradeMinPrices.size > 0
+      ? [...gradeMinPrices.entries()].map(([g, price]) => ({
+          "@type": "Offer",
+          priceCurrency: "DKK",
+          price: (price / 100).toFixed(0),
+          availability: "https://schema.org/InStock",
+          itemCondition: gradeToItemCondition(g),
+          url: `${pageUrl}?grade=${g}`,
+          seller,
+        }))
+      : {
+          "@type": "Offer",
+          priceCurrency: "DKK",
+          price: ((minPrice ?? 0) / 100).toFixed(0),
+          availability: "https://schema.org/OutOfStock",
+          itemCondition,
+          seller,
+        };
+
   const productJsonLd = minPrice
     ? {
         "@context": "https://schema.org",
@@ -173,17 +205,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
         description: template.description ?? undefined,
         image: template.images,
         brand: { "@type": "Brand", name: template.brand },
-        offers: {
-          "@type": "Offer",
-          priceCurrency: "DKK",
-          price: (minPrice / 100).toFixed(0),
-          availability:
-            availableDevices.length > 0
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-          itemCondition,
-          seller: { "@type": "Organization", name: "PhoneSpot" },
-        },
+        offers,
       }
     : null;
 

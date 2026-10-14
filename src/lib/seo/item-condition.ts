@@ -12,6 +12,8 @@
  * "condition" field says otherwise.
  */
 
+import { effectiveGrade } from "@/lib/grades";
+
 export const ITEM_CONDITION = {
   NEW: "https://schema.org/NewCondition",
   REFURBISHED: "https://schema.org/RefurbishedCondition",
@@ -46,7 +48,9 @@ export function gradeToItemCondition(grade: GradeLike): ItemCondition {
  * claim, consistent with the page's fallback price being keyed off
  * base_price_a (grade A).
  */
-export function devicesToItemCondition(devices: { grade?: GradeLike }[]): ItemCondition {
+export function devicesToItemCondition(
+  devices: { grade?: GradeLike; condition_notes?: string | null }[],
+): ItemCondition {
   if (devices.length === 0) return ITEM_CONDITION.REFURBISHED;
-  return devices.every((d) => d.grade === "N") ? ITEM_CONDITION.NEW : ITEM_CONDITION.REFURBISHED;
+  return devices.every((d) => effectiveGrade({ grade: d.grade, condition_notes: d.condition_notes }) === "N") ? ITEM_CONDITION.NEW : ITEM_CONDITION.REFURBISHED;
 }

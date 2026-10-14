@@ -1,5 +1,6 @@
 "use client";
 
+import { accessoryAvailability } from "@/lib/accessory-availability";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -485,8 +486,7 @@ export function AccessoryDetail({
   const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
-  const canBuy = (stockQuantity ?? 0) > 0 || product.always_in_stock;
-  const stockLabel = (stockQuantity ?? 0) > 0 ? "På lager" : product.always_in_stock ? "Kan bestilles" : stockQuantity == null ? "Lagerstatus ukendt" : "Udsolgt";
+  const { canBuy, label: stockLabel } = accessoryAvailability(stockQuantity, product.always_in_stock);
 
   // Compute effective price from selected variant options
   let effectivePrice = product.sale_price ?? product.selling_price;
