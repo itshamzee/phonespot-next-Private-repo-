@@ -19,6 +19,7 @@ const BAR_HEIGHT = "3.5rem";
  */
 export function MobileContactBar({ phone, bookingHref, storeName }: Props) {
   useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
     const mq = window.matchMedia("(max-width: 767px)");
     const apply = () => {
       document.body.style.paddingBottom = mq.matches

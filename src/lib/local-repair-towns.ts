@@ -90,7 +90,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Skal jeg betale for at få tjekket fejlen?",
         answer:
-          "Nej, vi laver en hurtig diagnose gratis ved disken i butikken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
+          "Nej, vi laver en gratis hurtigt tjek ved disken i butikken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
       },
     ],
   },
@@ -207,7 +207,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Hvad hvis fejlen ikke er en skærm eller et batteri?",
         answer:
-          "Kom forbi, så laver vi en hurtig diagnose gratis ved disken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
+          "Kom forbi, så laver vi en gratis hurtigt tjek ved disken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
       },
       {
         question: "Hvilken garanti får jeg på reparationen?",
@@ -274,7 +274,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Skal jeg betale for at få tjekket fejlen?",
         answer:
-          "Nej, vi laver en hurtig diagnose gratis ved disken i butikken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
+          "Nej, vi laver en gratis hurtigt tjek ved disken i butikken. Kræver fejlen en fuld diagnose, fx fejl på printet, koster den 249 kr., og det aftaler vi med dig først.",
       },
     ],
   },
