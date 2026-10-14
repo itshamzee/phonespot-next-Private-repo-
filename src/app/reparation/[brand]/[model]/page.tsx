@@ -20,6 +20,7 @@ import {
   getServicesByModel,
   getAllModelSlugs,
 } from "@/lib/supabase/repairs";
+import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 
 export const revalidate = 3600;
 
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!model) return {};
 
   const cheapest = (await getServicesByModel(model.id))
-    .filter((s) => s.price_dkk > 0)
+    .filter((s) => countsTowardFromPrice(s))
     .sort((a, b) => a.price_dkk - b.price_dkk)[0];
 
   // Helt nye modeller oprettes uden services, så siden kan indekseres fra
@@ -56,8 +57,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${model.name} reparation i Vejle og Slagelse — Fra ${cheapest.price_dkk} DKK | PhoneSpot`,
-    description: `${model.name} reparation i Vejle og Slagelse. Skærmskift, batteriskift og mere fra ${cheapest.price_dkk} DKK. Se priser og oplysninger om hver reparation hos PhoneSpot.`,
+    title: `${model.name} reparation i Vejle og Slagelse — fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. | PhoneSpot`,
+    description: `${model.name} reparation i Vejle og Slagelse. Skærmskift, batteriskift og mere fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. Se priser og oplysninger om hver reparation hos PhoneSpot.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
     },
@@ -77,7 +78,7 @@ export default async function ModelPricePage({ params }: Props) {
     getServicesByModel(model.id),
     getModelUpsell(model.name),
   ]);
-  const paidServices = services.filter((s) => s.price_dkk > 0);
+  const paidServices = services.filter((s) => countsTowardFromPrice(s));
   const cheapest =
     paidServices.length > 0
       ? Math.min(...paidServices.map((s) => s.price_dkk))

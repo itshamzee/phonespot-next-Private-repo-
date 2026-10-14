@@ -9,7 +9,7 @@ import hub from "@/components/repair/brand-hub.module.css";
 
 export const SITE = "https://phonespot.dk";
 
-export const formatKr = (value: number) => `${value.toLocaleString("da-DK")} kr.`;
+export const formatKr = (value: number) => `${value.toLocaleString("da-DK")} kr`;
 
 export function Breadcrumb({ trail }: { trail: { name: string; href?: string }[] }) {
   return (

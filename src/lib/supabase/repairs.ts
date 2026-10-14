@@ -1,4 +1,5 @@
 import { createServerClient } from "./client";
+import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 import type { RepairBrand, RepairModel, RepairService } from "./types";
 
 export async function getActiveBrands(): Promise<RepairBrand[]> {
@@ -189,7 +190,7 @@ export async function getBrandHubData(brandId: string): Promise<BrandHubData> {
   const cat = new Map<string, { from: number; models: Set<string> }>();
   let fromPrice: number | null = null;
   const models: HubModel[] = rows.map(({ repair_services, ...model }) => {
-    const priced = (repair_services ?? []).filter((s) => s.active && s.price_dkk > 0);
+    const priced = (repair_services ?? []).filter((s) => s.active && countsTowardFromPrice(s));
     const cheapest = priced.length ? Math.min(...priced.map((s) => s.price_dkk)) : null;
     if (cheapest !== null && (fromPrice === null || cheapest < fromPrice)) fromPrice = cheapest;
     for (const s of priced) {
