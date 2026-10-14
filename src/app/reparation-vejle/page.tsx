@@ -147,53 +147,6 @@ const localBusinessJsonLd = {
   },
 };
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "Hvor ligger PhoneSpot Vejle?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "PhoneSpot Vejle ligger på Løversysselvej 3B, 7100 Vejle. Der er gratis parkering direkte foran butikken.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Kan jeg komme forbi uden tidsbestilling?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Ja, vi tager imod reparationer uden tidsbestilling. 90% af alle skærmskift og batteriskift er klar inden for 30 minutter. Du er altid velkommen til at kigge forbi uden forudgående aftale.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Er der parkering ved butikken?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Ja, der er gratis parkering direkte foran butikken på Løversysselvej 3B. Du kan parkere lige ved siden af indgangen.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Hvad koster iPhone-skærmskift i Vejle?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Prisen afhænger af iPhone-modellen og den skærmkvalitet, du vælger. Se prisoversigten på siden her eller den fulde prisliste på vores reparationsside. Priserne er faste og inkluderer moms, reservedele og garanti.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Hvad er jeres garanti på reparationer?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: WARRANTY_ANSWER,
-      },
-    },
-  ],
-};
-
 const SERVICES = [
   {
     title: "Skærmskift",
@@ -264,6 +217,17 @@ const FAQS = [
       "Vi reparerer iPhone, iPad, MacBook og Samsung, og vi reparerer de fleste andre mærker. Ring og hør, om vi kan hjælpe med din model. Se priser på de mest almindelige modeller på vores reparationsside.",
   },
 ];
+
+// Generated from the visible FAQ so the schema never drifts from the page.
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: { "@type": "Answer", text: faq.answer },
+  })),
+};
 
 export default async function ReparationVejlePage() {
   const prices = await getRepairPriceSummaries(PRICE_MODELS);

@@ -217,6 +217,7 @@ export default async function ReparationPage() {
             <div className={styles.storeLinks}>
               {[STORES.vejle, STORES.slagelse].map(store => <Link key={store.slug} href={`/reparation-${store.slug}`}><span><strong>{store.city}</strong><small>{store.street}, {store.zip} {store.city}</small><small>Priser, garanti og walk-in</small></span><StorefrontIcon kind="arrow" /></Link>)}
             </div>
+            <Link className={landing.contactLink} href="/reparation/priser">Priser, garanti og åbningstider samlet <StorefrontIcon kind="arrow" /></Link>
             <Link className={landing.contactLink} href="/reparation/indsend">Bor du langt væk? Send ind med gratis fragtlabel <StorefrontIcon kind="arrow" /></Link>
             <Link className={landing.contactLink} href="/kontakt">Få hjælp til din reparation <StorefrontIcon kind="arrow" /></Link>
           </div>

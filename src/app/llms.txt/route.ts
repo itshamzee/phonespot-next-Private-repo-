@@ -1,4 +1,5 @@
 import { STORES, UPCOMING_STORES } from "@/lib/store-config";
+import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 // llms.txt: en kort, faktuel oversigt til AI-søgemaskiner (ChatGPT, Perplexity,
 // Claude, Copilot). Butiksdata hentes fra store-config, så adresser og
@@ -46,6 +47,7 @@ export function GET() {
 ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 
 ## Vigtige sider
+- [Reparationspriser og fakta](${SITE}/reparation/priser): priser på skærm- og batteriskift, garanti, ventetid, adresser og åbningstider samlet på én side
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
 - [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
 - [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
@@ -65,7 +67,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Blog og guides](${SITE}/blog)
 
 ## Anmeldelser og profiler
-- Trustpilot: https://dk.trustpilot.com/review/phonespot.dk
+- Trustpilot: ${TRUSTPILOT_SCORE_LABEL_DA} ud af 5 — https://dk.trustpilot.com/review/phonespot.dk
 - Facebook: https://www.facebook.com/phonespot.dk/
 `;
   return new Response(body, {
