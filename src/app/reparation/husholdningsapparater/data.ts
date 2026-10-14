@@ -98,6 +98,6 @@ export const FAQS: HubFaq[] = [
   {
     question: "Hvilke batterier bruger I?",
     answer:
-      "Vi bruger kompatible batterier med dokumenteret sikkerhedstest efter IEC 62133. Vi skriver altid på tilbuddet, hvilket batteri du får.",
+      "Vi bruger kompatible batterier af god kvalitet og skriver altid på tilbuddet, hvilket batteri du får.",
   },
 ];

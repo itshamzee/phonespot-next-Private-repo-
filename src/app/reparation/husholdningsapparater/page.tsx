@@ -188,8 +188,8 @@ export default function HouseholdAppliancesPage() {
             <li><a href="#controllere">Controllere</a></li>
           </ul>
           <div className={s.actions}>
-            <Link href="/reparation/booking" className={s.primary}>Book tid</Link>
-            <a href={TEL} className={s.secondary}>Ring {PHONE}</a>
+            <a href={TEL} className={s.primary}>Ring {PHONE}</a>
+            <Link href="/kontakt" className={s.secondary}>Skriv til os</Link>
           </div>
         </header>
 
@@ -225,9 +225,8 @@ export default function HouseholdAppliancesPage() {
           <PriceTable group={COFFEE_PRICES} label="Kaffemaskiner" />
           <p className={s.note}>
             Vi siger det ærligt, hvis en ny maskine kan betale sig: koster reparationen mere end
-            omkring 40 procent af nyprisen, anbefaler vi at købe en ny. Efter hver reparation måler
-            vi isolation og lækstrøm. Maskiner, der stadig er under producentens garanti, skal du
-            vende tilbage til De&apos;Longhi eller Nespresso med.
+            omkring 40 procent af nyprisen, anbefaler vi at købe en ny. Er maskinen stadig under
+            producentens garanti, så kontakt De&apos;Longhi eller Nespresso først.
           </p>
         </ApplianceSection>
 
@@ -245,8 +244,8 @@ export default function HouseholdAppliancesPage() {
         <ApplianceSection id="sadan-foregaar-det" title="Sådan foregår det">
           <ol className={s.steps}>
             <li>
-              <strong>Kom forbi, eller book tid</strong>
-              <p>Du behøver ikke bestille tid i Vejle eller Slagelse. Vil du være sikker, kan du booke online.</p>
+              <strong>Kom forbi, ring eller skriv</strong>
+              <p>Du behøver ikke bestille tid i Vejle eller Slagelse. Vil du være sikker på, at vi har delen, så ring eller skriv først.</p>
             </li>
             <li>
               <strong>Gratis hurtigt tjek ved disken</strong>
@@ -262,8 +261,8 @@ export default function HouseholdAppliancesPage() {
         <ApplianceSection id="batterier" title="Batterier og sikkerhed">
           <div className={hub.body}>
             <p>
-              Vi bruger kompatible batterier med dokumenteret sikkerhedstest efter IEC 62133. Vi
-              skriver altid, hvilket batteri du får. Er et batteri oppustet eller varmt, så stop med
+              Vi bruger kompatible batterier af god kvalitet, og vi skriver altid, hvilket batteri
+              du får. Er et batteri oppustet eller varmt, så stop med
               at lade det og kom forbi.
             </p>
             <p>Reparationen har 12 måneders garanti på dele og arbejde.</p>
@@ -295,8 +294,8 @@ export default function HouseholdAppliancesPage() {
           <h2 id="cta-titel">Er apparatet gået i stykker?</h2>
           <p>Kom forbi i Vejle eller Slagelse. Du får en fast pris, før vi går i gang.</p>
           <div className={s.actions}>
-            <Link href="/reparation/booking" className={s.primary}>Book tid</Link>
-            <a href={TEL} className={s.secondary}>Ring {PHONE}</a>
+            <a href={TEL} className={s.primary}>Ring {PHONE}</a>
+            <Link href="/kontakt" className={s.secondary}>Skriv til os</Link>
           </div>
         </section>
       </div>
