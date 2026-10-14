@@ -307,7 +307,8 @@ export default async function ReparationVejlePage() {
           uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30
           minutter, og du får livstidsgaranti på arbejde og dele.
           {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}{" "}
-          Gratis parkering ved døren.
+          Gratis parkering ved døren.{" "}
+          <Link href="/reparation/husholdningsapparater" className="font-semibold text-[#1A3D2E] underline underline-offset-4">Vi reparerer også Dyson, robotstøvsugere og kaffemaskiner.</Link>
         </p>
       </section>
 
