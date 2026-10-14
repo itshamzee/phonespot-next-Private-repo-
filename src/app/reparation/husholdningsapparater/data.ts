@@ -69,7 +69,7 @@ export const FAQS: HubFaq[] = [
   {
     question: "Skal jeg bestille tid?",
     answer:
-      "Nej. Du kan komme forbi uden tidsbestilling i Vejle eller Slagelse, eller du kan booke online, hvis du vil være sikker på at blive taget imod.",
+      "Nej. Du kan komme forbi uden tidsbestilling i Vejle eller Slagelse, eller du kan ringe eller skrive først, hvis du vil være sikker på, at vi har delen.",
   },
   {
     question: "Hvad koster det at få tjekket apparatet?",
