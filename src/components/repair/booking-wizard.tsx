@@ -1599,7 +1599,7 @@ export function BookingWizard() {
                     <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
                   </svg>
                   <span className="text-[11px] text-gray">
-                    Se garanti ved den valgte reparation
+                    Livstidsgaranti på arbejde og dele (telefon og tablet)
                   </span>
                 </div>
               </div>
@@ -2009,7 +2009,8 @@ export function BookingWizard() {
                 Oplysninger om din reparation
               </p>
               <p className="text-xs text-gray">
-                Se garantioplysningerne ved hver reparation og vores
+                Livstidsgaranti på arbejde og dele ved telefon- og
+                tabletreparationer (vandskade: 3 måneder). Se vores
                 reparationsbetingelser.
               </p>
             </div>

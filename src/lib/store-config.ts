@@ -26,6 +26,11 @@ export interface StoreLocationConfig {
   coordinates: { lat: number; lng: number };
 }
 
+// TODO(lokal SEO): Begge butikker bruger i dag samme telefonnummer
+// (+45 61 10 00 48). Google Business Profile og lokal søgning forventer et
+// separat, lokalt nummer pr. lokation (NAP-konsistens). Når Vejle og Slagelse
+// får hvert sit nummer, opdateres `phone` her, og de kommer automatisk med i
+// JSON-LD, sidefod og llms.txt. Ret IKKE nummeret, før de nye numre er oprettet.
 export const STORES: Record<string, StoreLocationConfig> = {
   slagelse: {
     slug: "slagelse",

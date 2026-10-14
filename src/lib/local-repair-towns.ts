@@ -26,6 +26,8 @@ export type LocalRepairTown = {
   };
   /** Korte omegnsbyer, der nævnes naturligt på siden. */
   nearbyLine?: string;
+  /** Ekstra tekstsektioner (fx iPad, MacBook, vandskade) uden egne URL'er. */
+  extraSections?: { heading: string; text: string }[];
   mailIn: { heading: string; text: string };
   faqs: LocalRepairFaq[];
 };
@@ -281,16 +283,32 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     name: "Slagelse",
     storeSlug: "slagelse",
     path: "/reparation-slagelse",
-    metaTitle: "Mobilreparation i Slagelse – livstidsgaranti | PhoneSpot",
+    metaTitle: "iPhone- og mobilreparation i Slagelse | PhoneSpot",
     metaDescription:
-      "iPhone- og Samsung-reparation i Slagelse med livstidsgaranti. 90% af skærm- og batteriskift er klar på 30 min. Walk-in i VestsjællandsCentret.",
-    h1: "Mobilreparation i Slagelse — mens du venter",
+      "iPhone- og Samsung-reparation i Slagelse med livstidsgaranti. Også iPad og vandskade. Skærm- og batteriskift klar på 30 min. Walk-in i VestsjællandsCentret",
+    h1: "iPhone- og mobilreparation i Slagelse — mens du venter",
     heroLead:
       "Kom forbi PhoneSpot i VestsjællandsCentret uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde og dele.",
     intro: [
       "PhoneSpot Slagelse ligger i VestsjællandsCentret. Du kan komme forbi med din iPhone, Samsung eller tablet uden at bestille tid, og vi tjekker fejlen gratis ved disken, før vi giver dig en fast pris.",
       "Vi skifter skærme, batterier og opladerstik, og du vælger selv skærmkvaliteten: budget, OEM eller original. 90% af skærm- og batteriskift er klar på 30 minutter, så du kan gøre andre ærinder i centret, mens du venter.",
     ],
+    extraSections: [
+      {
+        heading: "iPad-reparation i Slagelse",
+        text: "Knust glas eller et batteri, der ikke holder? Vi reparerer iPad i butikken i VestsjællandsCentret. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele. Ring eller kig forbi, så finder vi ud af, hvad der skal til på netop din model.",
+      },
+      {
+        heading: "MacBook og computer",
+        text: "Vi hjælper også med MacBook og andre computere, fx ved batteri, skærm eller fejl, der ikke vil forsvinde. Kom forbi med computeren, så kigger vi på den ved disken. Vilkår og pris aftaler vi med dig, før vi begynder.",
+      },
+      {
+        heading: "Vandskade",
+        text: "Har telefonen været i vand, så kom forbi hurtigst muligt og sluk den, til den er tjekket. Vi renser og behandler enheden. Behandling af vandskade har 3 måneders garanti. Kræver fejlen en fuld diagnose, koster den 249 kr., og det aftaler vi med dig først.",
+      },
+    ],
+    nearbyLine:
+      "Vi tager også imod kunder fra Korsør, Skælskør, Sorø, Ringsted og Kalundborg.",
     travel: {
       headline: "I centret",
       caption: "VestsjællandsCentret 10A, 103 i Slagelse",

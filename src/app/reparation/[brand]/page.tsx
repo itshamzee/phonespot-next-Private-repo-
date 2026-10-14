@@ -121,9 +121,9 @@ export default async function BrandPage({ params }: Props) {
           <div>
             <h2>Brug for hjælp til at vælge?</h2>
             <p>
-              Vi hjælper med at finde din model og den rette reparation. Garanti
-              og forventet tidsforbrug står ved den enkelte service, når det er
-              oplyst.
+              Vi hjælper med at finde din model og den rette reparation. Telefon- og
+              tabletreparationer har livstidsgaranti på arbejde og dele. Forventet
+              tidsforbrug står ved den enkelte service, når det er oplyst.
             </p>
             <Link href="/kontakt">Kontakt os</Link>
           </div>

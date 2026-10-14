@@ -72,7 +72,7 @@ export default function ButikPage() {
         </section>
         <section className={styles.services} aria-label="Det kan vi hjælpe med">
           <div><h2>Køb en enhed</h2><p>Se og prøv refurbished enheder. Vi hjælper dig med at finde model og stand.</p><Link href="/iphones" className={styles.textLink}>Se vores iPhones →</Link></div>
-          <div><h2>Få den repareret</h2><p>Find din model og se priser, forventet tid og vilkår for den konkrete reparation.</p><Link href="/reparation" className={styles.textLink}>Se reparationer →</Link></div>
+          <div><h2>Få den repareret</h2><p>Find din model og se priser og forventet tid. Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele.</p><Link href="/reparation" className={styles.textLink}>Se reparationer →</Link></div>
           <div><h2>Sælg din enhed</h2><p>Fortæl os om din enhed og få en personlig vurdering. Tilbuddet afhænger af model og stand.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Få en vurdering →</Link></div>
         </section>
         <section className={styles.section}>

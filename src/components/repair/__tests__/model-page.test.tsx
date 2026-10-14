@@ -130,7 +130,7 @@ describe("repair model availability", () => {
     render(await ModelPage({ params }));
     expect(screen.getByRole("link", { name: "Slagelse" })).toHaveAttribute(
       "href",
-      "/butik/slagelse",
+      "/reparation-slagelse",
     );
     expect(screen.getByRole("link", { name: "Vejle" })).toHaveAttribute(
       "href",

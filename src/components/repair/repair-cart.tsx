@@ -600,7 +600,7 @@ export function RepairCart({
             </p>
           )}
           <p className={styles.hint}>
-            Se garantioplysningerne ved den enkelte reparation.{" "}
+            Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer. Vandskade har 3 måneders garanti.{" "}
             <Link href="/handelsbetingelser" className={styles.textLink}>
               Læs reparationsbetingelserne
             </Link>

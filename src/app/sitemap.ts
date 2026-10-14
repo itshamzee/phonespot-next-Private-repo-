@@ -12,6 +12,10 @@ import { fetchActiveSpotSkus } from "@/lib/spot/queries";
 
 const BASE_URL = "https://phonespot.dk";
 
+// Fast dato for statiske sider. Opdateres, når sidernes indhold ændres
+// væsentligt, så lastmod ikke skifter ved hvert build.
+const STATIC_LAST_MODIFIED = new Date("2026-10-14");
+
 // ---------------------------------------------------------------------------
 // Spot (Beskyttelsesglas) sitemap entries
 // ---------------------------------------------------------------------------
@@ -21,15 +25,15 @@ async function spotSitemapEntries(base: string): Promise<MetadataRoute.Sitemap> 
   const covered = new Set(skus.flatMap((s) => s.compatible_models));
 
   const entries: MetadataRoute.Sitemap = [
-    { url: `${base}/beskyttelsesglas`,          lastModified: new Date(), changeFrequency: "weekly",  priority: 0.9 },
-    { url: `${base}/beskyttelsesglas/vejle`,    lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/beskyttelsesglas/slagelse`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/beskyttelsesglas`,          lastModified: STATIC_LAST_MODIFIED, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${base}/beskyttelsesglas/vejle`,    lastModified: STATIC_LAST_MODIFIED, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/beskyttelsesglas/slagelse`, lastModified: STATIC_LAST_MODIFIED, changeFrequency: "monthly", priority: 0.8 },
   ];
 
   for (const tile of SPOT_HUB_TILES) {
     entries.push({
       url: `${base}/beskyttelsesglas/${tile.id}`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.8,
     });
@@ -45,7 +49,7 @@ async function spotSitemapEntries(base: string): Promise<MetadataRoute.Sitemap> 
     if (!tile) continue;
     entries.push({
       url: `${base}/beskyttelsesglas/${tile.id}/${device.slug}`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.7,
     });
@@ -60,128 +64,128 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/erhverv`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 1.0,
     },
     // /soeg er disallowed i robots.txt og hører ikke hjemme i sitemap.
     {
       url: `${BASE_URL}/faq`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${BASE_URL}/kontakt`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${BASE_URL}/hvorfor-phonespot`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${BASE_URL}/reparation`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/kvalitet`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/om-os`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/reklamation`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${BASE_URL}/prismatch`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${BASE_URL}/garanti`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/forsikring`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/smartwatches`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/baerbare`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/baerbare/lenovo`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/baerbare/apple`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/baerbare/hp`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/baerbare/studiecomputer`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/privatlivspolitik`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "yearly",
       priority: 0.2,
     },
     {
       url: `${BASE_URL}/handelsbetingelser`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "yearly",
       priority: 0.2,
     },
     {
       url: `${BASE_URL}/cookies`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "yearly",
       priority: 0.2,
     },
@@ -194,7 +198,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const collectionPages: MetadataRoute.Sitemap = collectionSlugs.map(
     (slug) => ({
       url: `${BASE_URL}/${slug}`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily" as const,
       priority: 0.8,
     }),
@@ -240,7 +244,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/blog`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
@@ -257,13 +261,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const comparisonPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/sammenlign`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     },
     ...COMPARISONS.map((c) => ({
       url: `${BASE_URL}/sammenlign/${c.slug}`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
@@ -273,7 +277,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const modelPages: MetadataRoute.Sitemap = MODEL_PAGES.map((m) => ({
     url: `${BASE_URL}/refurbished/${m.slug}`,
-    lastModified: new Date(),
+    lastModified: STATIC_LAST_MODIFIED,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
@@ -283,7 +287,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const repairBrands = await getActiveBrands();
   const repairBrandPages: MetadataRoute.Sitemap = repairBrands.map((brand) => ({
     url: `${BASE_URL}/reparation/${brand.slug}`,
-    lastModified: new Date(),
+    lastModified: STATIC_LAST_MODIFIED,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
@@ -291,7 +295,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const repairModelSlugs = await getAllModelSlugs();
   const repairModelPages: MetadataRoute.Sitemap = repairModelSlugs.map(({ brand, model }) => ({
     url: `${BASE_URL}/reparation/${brand}/${model}`,
-    lastModified: new Date(),
+    lastModified: STATIC_LAST_MODIFIED,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
@@ -304,7 +308,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const locationRepairPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/reparation-vejle`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
@@ -316,13 +320,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       "/reparation-fredericia",
     ].map((path) => ({
       url: `${BASE_URL}${path}`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
     {
       url: `${BASE_URL}/reparation/indsend`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
@@ -333,67 +337,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const servicePages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/saelg-din-enhed`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/tilbehoer`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/butik`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/butik/slagelse`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/butik/vejle`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/butik/esbjerg`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
       url: `${BASE_URL}/delbetaling`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${BASE_URL}/reparation-vejle`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
       url: `${BASE_URL}/iphones-vejle`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/baerbare-vejle`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/iphone-18-tilbehoer`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
@@ -404,7 +402,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const feedPages: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/feeds/google-shopping`,
-      lastModified: new Date(),
+      lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily" as const,
       priority: 0.1,
     },
