@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FormField } from "@/components/ui/form-field";
+import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -55,6 +56,14 @@ export function RepairForm() {
         throw new Error(data.error || "Noget gik galt");
       }
 
+      const created = await res.json().catch(() => ({}));
+      trackRepairBooking({
+        store: normalizeTrackStore(formData.store_id, "indsend"),
+        brand: formData.device_type,
+        model: formData.device_model,
+        service: formData.service_type,
+        eventId: created?.ticketId ? `repair_${created.ticketId}` : undefined,
+      });
       setStatus("success");
       setFormData({
         customer_name: "",

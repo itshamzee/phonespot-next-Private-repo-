@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { COMPANY_EMAIL, STORES } from "@/lib/store-config";
+import { getAttribution, trackLead } from "@/lib/tracking/events";
 import styles from "./business-repair.module.css";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -62,10 +63,12 @@ export function RepairInquiryForm() {
             location: value("location"),
             region,
             device_count: Number(value("device_count")),
+            attribution: getAttribution(),
           },
         }),
       });
       if (!response.ok) throw new Error("Inquiry failed");
+      trackLead({ leadType: "business_repair", store: inJutland ? "vejle" : "slagelse" });
       setStatus("success");
     } catch {
       setStatus("error");

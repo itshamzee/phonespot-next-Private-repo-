@@ -7,6 +7,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { formatOere } from "@/lib/cart/utils";
 import { trackPurchase } from "@/lib/tracking/fbq";
 import { trackAdsPurchase } from "@/lib/tracking/gtag-ads";
+import { trackGa4Purchase } from "@/lib/tracking/events";
 
 interface OrderItem {
   id: string;
@@ -55,6 +56,18 @@ export function ConfirmationView({ order }: { order: Order }) {
       orderId: order.id,
       orderNumber: order.order_number,
       value: order.total / 100,
+    });
+
+    trackGa4Purchase({
+      transactionId: order.order_number,
+      value: order.total / 100,
+      shipping: order.shipping_cost / 100,
+      items: order.order_items.map((i) => ({
+        item_id: i.id,
+        item_name: i.title,
+        price: i.unit_price / 100,
+        quantity: i.quantity,
+      })),
     });
 
     void clearCart();

@@ -15,6 +15,7 @@ import { STORES } from "@/lib/store-config";
 import Link from "next/link";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
+import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -804,6 +805,17 @@ export function BookingWizard() {
       const data = await res.json();
       if (res.ok) {
         setSubmitResult({ success: true, ticketId: data.ticketId, ticketNumber: data.ticketNumber });
+        {
+          const p = buildPayload();
+          trackRepairBooking({
+            store: normalizeTrackStore(p.store_id),
+            brand: p.device_type,
+            model: p.device_model,
+            service: p.service_type,
+            value: p.total_price_dkk,
+            eventId: data.ticketId ? `repair_${data.ticketId}` : undefined,
+          });
+        }
       } else {
         setSubmitResult({ success: false, error: data.error });
       }
