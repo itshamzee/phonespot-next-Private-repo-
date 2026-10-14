@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { normalizeStoreId } from "@/lib/stores";
+import { getAttribution, normalizeTrackStore, trackLead } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { customerFacingError } from "@/lib/customer-facing-error";
 
@@ -903,6 +904,7 @@ export function SellDeviceWizard() {
             preferredStore: contact.preferredStore,
             preferredContact: contact.preferredContact,
             comment: contact.comment,
+            attribution: getAttribution(),
           },
         }),
       });
@@ -912,6 +914,13 @@ export function SellDeviceWizard() {
         throw new Error(data.error || "Noget gik galt");
       }
 
+      trackLead({
+        leadType: "buyback",
+        store:
+          contact.deliveryMethod === "Aflever i butik"
+            ? normalizeTrackStore(contact.preferredStore)
+            : "indsend",
+      });
       setStatus("success");
     } catch (err) {
       setStatus("error");

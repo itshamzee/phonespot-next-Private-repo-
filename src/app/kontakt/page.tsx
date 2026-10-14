@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { FormField } from "@/components/ui/form-field";
 import { normalizeStoreId } from "@/lib/stores";
+import { getAttribution, normalizeTrackStore, trackLead } from "@/lib/tracking/events";
 import { COMPANY_EMAIL, STORES } from "@/lib/store-config";
 import styles from "@/components/ui/information.module.css";
 
@@ -25,6 +26,7 @@ export default function KontaktPage() {
     if (sending.current) return;
     sending.current = true;
     setStatus("submitting");
+    const attribution = getAttribution();
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -32,9 +34,11 @@ export default function KontaktPage() {
         body: JSON.stringify({
           name: formData.name, email: formData.email, subject: formData.subject,
           message: formData.message, store_id: normalizeStoreId(formData.store),
+          ...(Object.keys(attribution).length > 0 ? { metadata: { attribution } } : {}),
         }),
       });
       if (!res.ok) throw new Error("Contact request failed");
+      trackLead({ leadType: "contact_form", store: normalizeTrackStore(formData.store) });
       setStatus("success");
       setFormData(emptyForm);
     } catch {

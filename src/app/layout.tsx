@@ -6,6 +6,7 @@ import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import { LayoutShell } from "@/components/layout/public-shell";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
+import { GlobalClickTracker } from "@/components/tracking/global-click-tracker";
 import "./globals.css";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
@@ -110,6 +111,8 @@ export default function RootLayout({
         />
         {/* Trustpilot invitations load from TrackingScripts after consent. */}
         <TrackingScripts />
+        {/* Delegeret klik-tracking: tel:, ruter, WhatsApp/Messenger + UTM-bevarelse. */}
+        <GlobalClickTracker />
         {/* Vercel Analytics — first-party traffic dashboard at vercel.com/<project>/analytics */}
         <VercelAnalytics />
       </body>

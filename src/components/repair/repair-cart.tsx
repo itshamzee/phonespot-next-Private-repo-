@@ -6,6 +6,7 @@ import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import Link from "next/link";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
+import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
 
@@ -357,6 +358,17 @@ export function RepairCart({
         });
       } else {
         setSubmitResult({ success: true, ticketId: data.ticketId, ticketNumber: data.ticketNumber });
+        {
+          const p = buildPayload();
+          trackRepairBooking({
+            store: normalizeTrackStore(p.store_id),
+            brand: p.device_type,
+            model: p.device_model,
+            service: p.service_type,
+            value: p.total_price_dkk,
+            eventId: data.ticketId ? `repair_${data.ticketId}` : undefined,
+          });
+        }
       }
     } catch {
       setSubmitResult({ success: false, error: "Netværksfejl. Prøv igen." });

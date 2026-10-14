@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe/client";
 import { normalizeStoreId } from "@/lib/stores";
 import { STORES } from "@/lib/store-config";
 import { formatDanishDate } from "@/lib/email/repair-confirmation";
+import { RepairBookingTracker } from "@/components/tracking/repair-booking-tracker";
 import { TEMPERED_GLASS_PRICE_DKK, parseTicketIdList } from "@/lib/repair/booking-devices";
 
 export const metadata: Metadata = {
@@ -90,6 +91,17 @@ export default async function BekraeftelsePage({
   return (
     <div className="flex min-h-[60vh] items-center justify-center bg-[#fafaf8] px-4 py-12 font-body">
       <div className="w-full max-w-2xl rounded-2xl border border-[#dce1db] bg-white p-6 md:p-10">
+        {/* Stripe-betalte reparationer lander her; "betal i butikken" tracker i klienten ved submit. */}
+        {paid && ticket && ticketId && (
+          <RepairBookingTracker
+            dedupeKey={ticketId}
+            store={mailIn ? "indsend" : (storeSlug ?? "webshop")}
+            brand={ticket.device_type ?? undefined}
+            model={ticket.device_model ?? undefined}
+            service={tickets.flatMap((t) => (detailsOf(t).selected_services ?? []).map((s) => s.name)).join(", ") || undefined}
+            value={total ?? undefined}
+          />
+        )}
         <div className="mb-6 flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-eco">
             <svg
