@@ -311,7 +311,7 @@ export default async function ReparationVejlePage() {
             {[
               { title: "Livstidsgaranti", desc: "På arbejde og dele" },
               { title: "30 minutter", desc: "90% klar mens du venter" },
-              { title: "Gratis diagnose", desc: "I butikken, uden tidsbestilling" },
+              { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
               { title: "Gratis parkering", desc: "Lige ved døren" },
             ].map(({ title, desc }) => (
               <div
@@ -332,7 +332,7 @@ export default async function ReparationVejlePage() {
           PhoneSpot Vejle på Løversysselvej 3B reparerer iPhone, Samsung og iPad
           uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30
           minutter, og du får livstidsgaranti på arbejde og dele.
-          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}.`}{" "}
+          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}{" "}
           Gratis parkering ved døren.
         </p>
       </section>
@@ -637,7 +637,7 @@ export default async function ReparationVejlePage() {
                   "Ingen skjulte gebyrer. Prisen er fast og inkluderer moms, reservedele og garanti. Vi oplyser prisen, inden reparationen påbegyndes.",
               },
               {
-                title: "Gratis diagnose i butikken",
+                title: "Gratis hurtigt tjek ved disken",
                 description:
                   "Kig forbi uden tidsbestilling. Vi tjekker fejlen gratis ved disken og giver dig en fast pris, før vi går i gang.",
               },

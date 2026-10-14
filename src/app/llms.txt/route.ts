@@ -38,7 +38,7 @@ export function GET() {
 - Walk-in uden tidsbestilling i begge butikker. 90% af alle skærm- og batteriskift er klar på 30 minutter.
 - Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer: opstår den samme fejl igen på den udskiftede del, repareres den uden beregning. Nye skader (fald, tryk, væske) er ikke dækket. Behandling af vandskade har 3 måneders garanti.
 - Kunden vælger selv skærmkvalitet (budget, OEM eller original), og prisen er fast og oplyst før reparationen.
-- Gratis diagnose ved disken i butikken. En fuld diagnose (fx printfejl) koster 249 kr.
+- Gratis hurtigt tjek ved disken i butikken. En fuld diagnose (fx printfejl) koster 249 kr.
 - Gratis indsendelse: kunder uden for Vejle og Slagelse kan sende enheden ind.
 - Gratis parkering ved butikken i Vejle.
 

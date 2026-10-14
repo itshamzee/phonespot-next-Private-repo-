@@ -116,7 +116,7 @@ export function LocalRepairPage({ town, prices }: Props) {
   const heroTiles = [
     { title: "Livstidsgaranti", desc: "På arbejde og dele" },
     { title: "30 minutter", desc: "90% klar mens du venter" },
-    { title: "Gratis diagnose", desc: "I butikken, uden tidsbestilling" },
+    { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
     isVejle
       ? { title: "Gratis parkering", desc: "Ved butikken i Vejle" }
       : { title: "Gratis fragtlabel", desc: "Hvis du sender ind" },
@@ -200,7 +200,7 @@ export function LocalRepairPage({ town, prices }: Props) {
             reparerer iPhone, Samsung og iPad uden tidsbestilling. 90% af skærm- og
             batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde
             og dele.
-            {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}.`}
+            {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
           </p>
         </section>
       )}
