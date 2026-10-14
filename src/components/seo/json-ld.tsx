@@ -7,14 +7,22 @@ type JsonLdProps = {
 /**
  * Renders structured data as a JSON-LD script tag for SEO.
  *
- * Safety: dangerouslySetInnerHTML is used here with static, build-time-only
- * data (never user input), so there is no XSS risk.
+ * Safety: data can include database values (brand/model names), so "<", ">"
+ * and "&" are escaped as unicode — a value containing "</script>" cannot end
+ * the tag. The JSON stays valid for crawlers.
  */
+export function serializeJsonLd(data: Record<string, unknown>): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
 export function JsonLd({ data }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );
 }
