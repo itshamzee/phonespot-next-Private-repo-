@@ -4,12 +4,24 @@ import { notFound } from "next/navigation";
 import {
   getAllBrandSlugs,
   getBrandBySlug,
-  getModelsByBrand,
-  getCheapestPrice,
+  getBrandHubData,
 } from "@/lib/supabase/repairs";
 import { JsonLd } from "@/components/seo/json-ld";
-import { STORE } from "@/lib/store-config";
+import {
+  Breadcrumb,
+  CityLinks,
+  CommonRepairs,
+  FaqSection,
+  SITE,
+  breadcrumbJsonLd,
+  faqJsonLd,
+  formatKr,
+  hubStyles as hub,
+  serviceJsonLd,
+} from "@/components/repair/brand-hub";
 import { ModelGrid, type ModelCardData } from "./model-grid";
+import { getHubContent, hasLifetimeWarranty } from "@/lib/repairs/brand-hub-content";
+import { fitTitle } from "@/lib/repairs/hub-meta";
 import styles from "@/components/repair/repair.module.css";
 
 export const revalidate = 3600;
@@ -26,11 +38,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const brand = await getBrandBySlug(brandSlug);
   if (!brand) return {};
 
+  const { fromPrice } = await getBrandHubData(brand.id);
+  const content = getHubContent(brand.slug, brand.name, brand.device_type);
+  const price = fromPrice ? ` fra ${formatKr(fromPrice)}` : "";
+  const title = fitTitle([
+    `${content.label}-reparation – skærm og batteri${price} | PhoneSpot`,
+    `${content.label}-reparation${price} | PhoneSpot`,
+    `${content.label}-reparation | PhoneSpot`,
+  ]);
+  const warranty = hasLifetimeWarranty(brand.device_type)
+    ? "Livstidsgaranti på arbejde og dele."
+    : "Fast pris før vi går i gang.";
+  const description = `${content.label}-reparation i Vejle og Slagelse${price ? `:${price}` : ""}. ${warranty} Kom forbi uden tid eller send ind med gratis fragtlabel.`;
+
   return {
-    title: `${brand.name}-reparation i Vejle og Slagelse — se priser | PhoneSpot`,
-    description: `Professionel ${brand.name}-reparation i Vejle og Slagelse. Se priser på skærmskift, batteriskift og mere for alle ${brand.name}-modeller. Se priser og oplysninger om den enkelte reparation.`,
-    alternates: {
-      canonical: `https://phonespot.dk/reparation/${brand.slug}`,
+    title,
+    description: description.length <= 160 ? description : `${content.label}-reparation i Vejle og Slagelse${price ? `:${price}` : ""}. ${warranty}`,
+    alternates: { canonical: `${SITE}/reparation/${brand.slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE}/reparation/${brand.slug}`,
+      type: "website",
     },
   };
 }
@@ -40,90 +69,64 @@ export default async function BrandPage({ params }: Props) {
   const brand = await getBrandBySlug(brandSlug);
   if (!brand) notFound();
 
-  const models = await getModelsByBrand(brand.id);
+  const { models, categories, fromPrice } = await getBrandHubData(brand.id);
+  const content = getHubContent(brand.slug, brand.name, brand.device_type);
+  const url = `${SITE}/reparation/${brand.slug}`;
 
-  const modelCards: ModelCardData[] = await Promise.all(
-    models.map(async (model) => ({
-      slug: model.slug,
-      name: model.name,
-      series: model.series,
-      cheapestPrice: await getCheapestPrice(model.id),
-      brandSlug: brand.slug,
-      imageUrl: model.image_url,
-      deviceType: brand.device_type,
-    })),
-  );
+  const modelCards: ModelCardData[] = models.map((model) => ({
+    slug: model.slug,
+    name: model.name,
+    series: model.series,
+    cheapestPrice: model.cheapest,
+    brandSlug: brand.slug,
+    imageUrl: model.image_url,
+    deviceType: brand.device_type,
+  }));
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: `${brand.name} Reparation - ${STORE.name}`,
-    url: `https://phonespot.dk/reparation/${brand.slug}`,
-    description: `Professionel ${brand.name}-reparation i ${STORE.city}. Se priser og oplysninger om den enkelte reparation.`,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: STORE.street,
-      addressLocality: STORE.city,
-      postalCode: STORE.zip,
-      addressCountry: STORE.countryCode,
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: STORE.coordinates.lat,
-      longitude: STORE.coordinates.lng,
-    },
-    hasOfferCatalog: {
-      "@type": "OfferCatalog",
-      name: `${brand.name} Reparationer`,
-      itemListElement: modelCards
-        .filter((m) => m.cheapestPrice != null && m.cheapestPrice > 0)
-        .map((m) => ({
-          "@type": "Offer",
-          itemOffered: {
-            "@type": "Service",
-            name: `${m.name} Reparation`,
-          },
-          priceCurrency: "DKK",
-          price: m.cheapestPrice,
-        })),
-    },
-  };
+  const trail = [
+    { name: "Reparation", href: "/reparation" },
+    { name: brand.name, href: `/reparation/${brand.slug}` },
+  ];
 
   return (
     <div className={styles.shell}>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd(trail)} />
+      <JsonLd
+        data={serviceJsonLd({
+          name: `${content.label}-reparation`,
+          url,
+          description: content.answer(fromPrice ? formatKr(fromPrice) : null),
+          categories,
+        })}
+      />
+      <JsonLd data={faqJsonLd(content.faqs)} />
       <div className={styles.container}>
-        <nav className={styles.breadcrumb} aria-label="Brødkrumme">
-          <ol>
-            <li>
-              <Link href="/">Forside</Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li>
-              <Link href="/reparation">Reparation</Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page">{brand.name}</li>
-          </ol>
-        </nav>
+        <Breadcrumb trail={[{ name: "Reparation", href: "/reparation" }, { name: brand.name }]} />
         <header className={styles.header}>
           <span className={styles.eyebrow}>Reparation · {brand.name}</span>
-          <h1>Vælg din {brand.name}-model.</h1>
-          <p>
-            Find din model og se priser på de reparationer, vi tilbyder. Du
-            vælger reparation og aflevering i næste trin.
-          </p>
+          <h1>{content.label}-reparation i Vejle og Slagelse.</h1>
+          <p className={hub.answer}>{content.answer(fromPrice ? formatKr(fromPrice) : null)}</p>
+          <div className={hub.body}>
+            {content.body.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
         </header>
-        <section className={styles.section} aria-label="Vælg model">
+        <CommonRepairs categories={categories} notes={content.categoryNotes} label={content.label} />
+        <section id="find-din-model" className={styles.section} aria-labelledby="find-model">
+          <h2 id="find-model">Find din model</h2>
           <ModelGrid models={modelCards} brandName={brand.name} />
         </section>
+        <CityLinks label={content.label} note={content.cityNote} />
+        <FaqSection title={`Spørgsmål om ${content.label}-reparation`} faqs={content.faqs} />
         <section className={styles.help}>
           <div>
             <h2>Brug for hjælp til at vælge?</h2>
             <p>
-              Vi hjælper med at finde din model og den rette reparation. Telefon- og
-              tabletreparationer har livstidsgaranti på arbejde og dele. Forventet
-              tidsforbrug står ved den enkelte service, når det er oplyst.
+              Vi hjælper med at finde din model og den rette reparation.{" "}
+              {hasLifetimeWarranty(brand.device_type)
+                ? "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele."
+                : "Vilkårene aftales ved den enkelte reparation."}
             </p>
             <Link href="/kontakt">Kontakt os</Link>
           </div>

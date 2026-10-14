@@ -1,3 +1,4 @@
+import { CityCategorySections } from "@/components/repair/city-category-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -640,6 +641,8 @@ export default async function ReparationVejlePage() {
         </div>
       </section>
 
+      <CityCategorySections store="vejle" />
+
       {/* SEO text */}
       <section className="bg-[#F7F7F8] py-16">
         <div className="mx-auto max-w-3xl space-y-10 px-4">
@@ -653,18 +656,6 @@ export default async function ReparationVejlePage() {
               opladningsporte og meget mere — og 90% af reparationerne er klar
               inden for 30 minutter. Du vælger selv skærmkvaliteten, fra budget
               til original, og du får livstidsgaranti på arbejde og dele.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="font-display text-xl font-bold text-[#111111]">
-              Samsung-reparation i Vejle
-            </h2>
-            <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
-              Vi reparerer alle Samsung Galaxy-modeller inkl. S-serien, A-serien,
-              Fold og Flip. Skærmskift og batteriskift udføres, mens du venter —
-              typisk på under 30 minutter. Se aktuelle priser på vores
-              reparationsside.
             </p>
           </div>
 

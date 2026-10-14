@@ -313,6 +313,11 @@ export default async function ModelPricePage({ params }: Props) {
             }))}
           />
         )}
+        <p className="py-6 text-sm">
+          <Link href={"/reparation/" + brand.slug} className="font-semibold text-[#1A3D2E] underline underline-offset-4">
+            Se alle {brand.name}-reparationer
+          </Link>
+        </p>
         <RepairStoreFinder
           modelName={model.name}
           stores={finderStores}

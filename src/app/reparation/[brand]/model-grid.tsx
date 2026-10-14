@@ -44,7 +44,7 @@ function ModelCard({
       <span className={styles.modelPrice}>
         {model.cheapestPrice != null && model.cheapestPrice > 0
           ? `Fra ${model.cheapestPrice.toLocaleString("da-DK")} kr.`
-          : "Priser kommer snart"}
+          : "Fast pris efter tjek ved disken"}
       </span>
       <span className={styles.modelCta}>
         Se reparationer <span aria-hidden="true">→</span>

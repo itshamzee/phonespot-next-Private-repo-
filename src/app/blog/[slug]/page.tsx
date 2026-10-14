@@ -1,3 +1,4 @@
+import { RepairCta } from "@/components/blog/repair-cta";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -170,6 +171,7 @@ function createHeading(level: 2 | 3) {
 
 const mdxComponents = {
   Callout,
+  RepairCta,
   KeyTakeaway,
   ComparisonBox,
   h2: createHeading(2),

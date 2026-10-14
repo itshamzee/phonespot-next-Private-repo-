@@ -162,3 +162,49 @@ export async function getRepairPriceSummaries(
     return summary.screenFrom || summary.battery ? [summary] : [];
   });
 }
+
+export type CategoryPrice = { category: string; from: number; modelCount: number };
+export type HubModel = RepairModel & { cheapest: number | null };
+export type BrandHubData = {
+  models: HubModel[];
+  categories: CategoryPrice[];
+  fromPrice: number | null;
+};
+
+// Én forespørgsel pr. mærke til hub-siderne: modeller med billigste pris samt
+// fra-pris pr. reparationstype på tværs af mærkets modeller. Alle tal kommer
+// direkte fra prislisten; modeller uden pris får cheapest = null.
+export async function getBrandHubData(brandId: string): Promise<BrandHubData> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("repair_models")
+    .select("*, repair_services(price_dkk, service_category, active)")
+    .eq("brand_id", brandId)
+    .eq("active", true)
+    .order("sort_order");
+  type Row = RepairModel & {
+    repair_services: Pick<RepairService, "price_dkk" | "service_category" | "active">[] | null;
+  };
+  const rows = ((data as unknown as Row[] | null) ?? []);
+  const cat = new Map<string, { from: number; models: Set<string> }>();
+  let fromPrice: number | null = null;
+  const models: HubModel[] = rows.map(({ repair_services, ...model }) => {
+    const priced = (repair_services ?? []).filter((s) => s.active && s.price_dkk > 0);
+    const cheapest = priced.length ? Math.min(...priced.map((s) => s.price_dkk)) : null;
+    if (cheapest !== null && (fromPrice === null || cheapest < fromPrice)) fromPrice = cheapest;
+    for (const s of priced) {
+      if (!s.service_category) continue;
+      const entry = cat.get(s.service_category) ?? { from: s.price_dkk, models: new Set<string>() };
+      entry.from = Math.min(entry.from, s.price_dkk);
+      entry.models.add(model.id);
+      cat.set(s.service_category, entry);
+    }
+    return { ...(model as RepairModel), cheapest };
+  });
+  const categories = Array.from(cat, ([category, v]) => ({
+    category,
+    from: v.from,
+    modelCount: v.models.size,
+  })).sort((a, b) => b.modelCount - a.modelCount || a.from - b.from);
+  return { models, categories, fromPrice };
+}

@@ -58,6 +58,10 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [iPhone-reparation](${SITE}/reparation/iphone): alle iPhone-modeller med priser
 - [Samsung-reparation](${SITE}/reparation/samsung): alle Galaxy-modeller med priser
+- [iPad-reparation](${SITE}/reparation/ipad): alle iPad-modeller med priser
+- [MacBook-reparation](${SITE}/reparation/macbook): MacBook Air og Pro, vilkår aftales ved den enkelte reparation
+- [Android-reparation](${SITE}/reparation/android): Samsung, Google Pixel, OnePlus og flere mærker
+- [Tablet-reparation](${SITE}/reparation/tablet): iPad, Samsung Galaxy Tab og andre tablets, livstidsgaranti på arbejde og dele
 - [Book reparation](${SITE}/reparation/booking)
 - [Refurbished iPhones](${SITE}/iphones): med 36 måneders garanti
 - [Garanti](${SITE}/garanti): garanti på refurbished enheder

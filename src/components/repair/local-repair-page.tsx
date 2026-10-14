@@ -8,6 +8,7 @@ import {
   type LocalRepairTown,
 } from "@/lib/local-repair-towns";
 import { OpenNowStatus } from "@/components/repair/open-now-status";
+import { CityCategorySections } from "@/components/repair/city-category-sections";
 import { MobileContactBar } from "@/components/repair/mobile-contact-bar";
 import type { RepairPriceSummary } from "@/lib/supabase/repairs";
 
@@ -236,6 +237,10 @@ export function LocalRepairPage({ town, prices }: Props) {
             ))}
           </div>
         </section>
+      )}
+
+      {isHomeTown && (store.slug === "vejle" || store.slug === "slagelse") && (
+        <CityCategorySections store={store.slug} />
       )}
 
       {/* How to get here */}
