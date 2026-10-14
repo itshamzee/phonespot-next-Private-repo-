@@ -15,7 +15,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   const effectivePrice=isOnSale ? sale_price : price;
   const href=slug ? `/tilbehoer/${category}/${slug}` : null;
   const canBuy=availability === "in_stock" || availability === "orderable";
-  const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Kan bestilles" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
+  const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Sendes 1–3 hverdage" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
   function add() {
     if (!canBuy || added) return;
     addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null,...(spotKind ? {spotKind,...(isOnSale ? {unitPrice:price} : {})} : {})});
