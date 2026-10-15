@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = getHubContent(brand.slug, brand.name, brand.device_type);
   const price = fromPrice ? ` fra ${formatKr(fromPrice)}` : "";
   const title = fitTitle([
-    `${content.label}-reparation – skærm og batteri${price} | PhoneSpot`,
+    `${content.label}-reparation i Vejle og Slagelse${price} | PhoneSpot`,
     `${content.label}-reparation${price} | PhoneSpot`,
     `${content.label}-reparation | PhoneSpot`,
   ]);
