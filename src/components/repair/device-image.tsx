@@ -20,6 +20,7 @@ const BRAND_COLORS: Record<string, { primary: string; secondary: string }> = {
   "apple-watch": { primary: "#1d1d1f", secondary: "#e3c8a0" },
   playstation: { primary: "#003791", secondary: "#00246a" },
   nintendo: { primary: "#e60012", secondary: "#484848" },
+  xbox: { primary: "#107c10", secondary: "#0b5a0b" },
 };
 
 function PhoneSilhouette({ primary, secondary }: { primary: string; secondary: string }) {
@@ -98,6 +99,17 @@ function ConsoleSilhouette({ primary, secondary }: { primary: string; secondary:
   );
 }
 
+function ApplianceSilhouette({ primary, secondary }: { primary: string; secondary: string }) {
+  return (
+    <svg viewBox="0 0 220 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
+      <rect x="70" y="12" width="80" height="116" rx="14" fill={primary} />
+      <rect x="82" y="26" width="56" height="30" rx="6" fill="white" opacity="0.12" />
+      <circle cx="110" cy="84" r="16" fill="white" opacity="0.1" />
+      <rect x="92" y="112" width="36" height="6" rx="3" fill={secondary} opacity="0.35" />
+    </svg>
+  );
+}
+
 type DeviceImageProps = {
   brandSlug: string;
   deviceType: DeviceType;
@@ -132,6 +144,7 @@ export function DeviceImage({
     laptop: LaptopSilhouette,
     watch: WatchSilhouette,
     console: ConsoleSilhouette,
+    appliance: ApplianceSilhouette,
   }[deviceType];
 
   return (

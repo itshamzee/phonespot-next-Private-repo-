@@ -408,6 +408,9 @@ export function BookingWizard() {
 
   /* ---- active device shorthand ---- */
   const activeDevice = deviceBookings[activeDeviceIndex];
+  const activeDeviceType = brands.find((b) => b.id === activeDevice?.brandId)?.device_type;
+  const activeAllowsGlass =
+    activeDeviceType !== "appliance" && activeDeviceType !== "console";
   const activeModels = activeDevice
     ? (modelsMap.get(activeDevice.id) ?? [])
     : [];
@@ -1312,7 +1315,8 @@ export function BookingWizard() {
                   </div>
                 )}
 
-                {/* Tempered glass upsell */}
+                {/* Tempered glass upsell (kun telefon/tablet) */}
+                {activeAllowsGlass && (
                 <div
                   className={`rounded-xl border-2 p-4 transition-all ${
                     activeDevice.includesTemperedGlass
@@ -1364,6 +1368,7 @@ export function BookingWizard() {
                     </span>
                   </button>
                 </div>
+                )}
               </>
             )}
 
@@ -1611,7 +1616,7 @@ export function BookingWizard() {
                     <path d="M8 1l5.5 2.3v3.7c0 3.2-2.3 5.9-5.5 7.3C2.8 12.9.5 10.2.5 7V3.3L8 1z" />
                   </svg>
                   <span className="text-[11px] text-gray">
-                    Livstidsgaranti på arbejde og dele (telefon og tablet)
+                    Garanti på arbejde og dele: livstid på telefon og tablet, 12 måneder på apparater
                   </span>
                 </div>
               </div>
@@ -2022,8 +2027,8 @@ export function BookingWizard() {
               </p>
               <p className="text-xs text-gray">
                 Livstidsgaranti på arbejde og dele ved telefon- og
-                tabletreparationer (vandskade: 3 måneder). Se vores
-                reparationsbetingelser.
+                tabletreparationer (vandskade: 3 måneder) og 12 måneders
+                garanti på apparater. Se vores reparationsbetingelser.
               </p>
             </div>
           </div>

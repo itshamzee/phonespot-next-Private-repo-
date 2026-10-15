@@ -325,12 +325,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     })),
     {
-      url: `${BASE_URL}/reparation/husholdningsapparater`,
-      lastModified: new Date("2026-10-15"),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    },
-    {
       url: `${BASE_URL}/reparation/priser`,
       lastModified: new Date("2026-10-15"),
       changeFrequency: "weekly" as const,

@@ -308,7 +308,7 @@ export default async function ReparationVejlePage() {
           minutter, og du får livstidsgaranti på arbejde og dele.
           {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}{" "}
           Gratis parkering ved døren.{" "}
-          <Link href="/reparation/husholdningsapparater" className="font-semibold text-[#1A3D2E] underline underline-offset-4">Vi reparerer også Dyson, robotstøvsugere og kaffemaskiner.</Link>
+          <Link href="/reparation/dyson" className="font-semibold text-[#1A3D2E] underline underline-offset-4">Vi reparerer også Dyson, Roborock, iRobot, Nespresso og De&apos;Longhi.</Link>
         </p>
       </section>
 

@@ -4,6 +4,7 @@ import { useState, useMemo, useId, useRef, useEffect } from "react";
 import { focusWithoutScroll, revealTop } from "@/lib/reveal";
 import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import Link from "next/link";
+import type { DeviceType } from "@/lib/supabase/types";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
@@ -34,6 +35,8 @@ interface RepairCartProps {
   brandName: string;
   modelSlug: string;
   modelName: string;
+  /** Styrer telefon-specifikke valg (beskyttelsesglas) og garantitekst. */
+  deviceType?: DeviceType;
 }
 
 /* ------------------------------------------------------------------ */
@@ -219,7 +222,9 @@ export function RepairCart({
   services,
   brandName,
   modelName,
+  deviceType,
 }: RepairCartProps) {
+  const allowsGlass = deviceType !== "appliance" && deviceType !== "console";
   /* State */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [includesTemperedGlass, setIncludesTemperedGlass] = useState(false);
@@ -612,7 +617,11 @@ export function RepairCart({
             </p>
           )}
           <p className={styles.hint}>
-            Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer. Vandskade har 3 måneders garanti.{" "}
+            {deviceType === "appliance"
+              ? "12 måneders garanti på dele og arbejde."
+              : deviceType === "console"
+                ? "Garantivilkår oplyses ved den enkelte reparation, før vi går i gang."
+                : "Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer. Vandskade har 3 måneders garanti."}{" "}
             <Link href="/handelsbetingelser" className={styles.textLink}>
               Læs reparationsbetingelserne
             </Link>
@@ -683,6 +692,7 @@ export function RepairCart({
                       </li>
                     ))}
                   </ul>
+                  {allowsGlass && (
                   <button
                     type="button"
                     className={styles.glassOption}
@@ -695,6 +705,7 @@ export function RepairCart({
                     </span>
                     <strong>+{fmtPrice(99)} DKK</strong>
                   </button>
+                  )}
                   {discountPercent > 0 && (
                     <div className={styles.summaryDiscount}>
                       <span>Rabat ({discountPercent}%)</span>

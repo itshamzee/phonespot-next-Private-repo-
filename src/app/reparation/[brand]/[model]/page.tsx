@@ -33,6 +33,20 @@ export async function generateStaticParams() {
   return slugs.map(({ brand, model }) => ({ brand, model }));
 }
 
+const isPhoneLike = (deviceType: string) =>
+  deviceType === "smartphone" || deviceType === "tablet" || deviceType === "watch";
+
+/** Titel- og tekstvarianter, så konsol og apparat aldrig lover skærm/batteri. */
+function metaCopy(deviceType: string): { topics: string; soon: string } {
+  if (isPhoneLike(deviceType)) {
+    return { topics: "Skærmskift, batteriskift og mere", soon: "skærmskift og batteriskift" };
+  }
+  if (deviceType === "appliance") {
+    return { topics: "Fejlsøgning, batteri og reparation", soon: "reparation" };
+  }
+  return { topics: "Reparation og fejlsøgning", soon: "reparation" };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { brand: brandSlug, model: modelSlug } = await params;
   const brand = await getBrandBySlug(brandSlug);
@@ -46,10 +60,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Helt nye modeller oprettes uden services, så siden kan indekseres fra
   // lanceringsdagen — titlen må ikke love en pris, der ikke findes endnu.
+  const copy = metaCopy(brand.device_type);
   if (!cheapest) {
     return {
-      title: `${model.name} Reparation — Skærmskift & Batteriskift | PhoneSpot`,
-      description: `${model.name} reparation hos PhoneSpot i Vejle og Slagelse. Priser på skærmskift og batteriskift offentliggøres snart — kontakt os for en vurdering allerede i dag.`,
+      title: isPhoneLike(brand.device_type)
+        ? `${model.name} Reparation — Skærmskift & Batteriskift | PhoneSpot`
+        : `${model.name} reparation i Vejle og Slagelse | PhoneSpot`,
+      description: `${model.name} reparation hos PhoneSpot i Vejle og Slagelse. Priser på ${copy.soon} offentliggøres snart — kontakt os for en vurdering allerede i dag.`,
       alternates: {
         canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
       },
@@ -58,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${model.name} reparation i Vejle og Slagelse — fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. | PhoneSpot`,
-    description: `${model.name} reparation i Vejle og Slagelse. Skærmskift, batteriskift og mere fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. Se priser og oplysninger om hver reparation hos PhoneSpot.`,
+    description: `${model.name} reparation i Vejle og Slagelse. ${copy.topics} fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. Se priser og oplysninger om hver reparation hos PhoneSpot.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
     },
@@ -93,7 +110,17 @@ export default async function ModelPricePage({ params }: Props) {
   const minutes = repairs
     .map((s) => s.estimated_minutes ?? 0)
     .filter((m) => m > 0);
+  const twelveMonthCount = repairs.filter((s) =>
+    s.warranty_info?.toLocaleLowerCase("da-DK").includes("12 måneders garanti"),
+  ).length;
   const trust = [
+    twelveMonthCount > 0 && {
+      title: "12 mdr. garanti",
+      text:
+        twelveMonthCount === repairs.length
+          ? "På dele og arbejde"
+          : "På de fleste reparationer",
+    },
     lifetimeCount > 0 && {
       title: "Livstidsgaranti",
       text:
@@ -165,7 +192,7 @@ export default async function ModelPricePage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Service",
     name: `${model.name} reparation`,
-    serviceType: "Mobilreparation",
+    serviceType: brand.device_type === "appliance" ? "Reparation af husholdningsapparater" : brand.device_type === "console" ? "Konsolreparation" : "Mobilreparation",
     provider: providers,
     areaServed: [STORES.vejle.city, STORES.slagelse.city],
     // Uden services ville kataloget være tomt — udelad det, så schemaet
@@ -291,6 +318,7 @@ export default async function ModelPricePage({ params }: Props) {
               brandName={brand.name}
               modelSlug={model.slug}
               modelName={model.name}
+              deviceType={brand.device_type}
             />
           )}
         </section>
@@ -339,25 +367,33 @@ export default async function ModelPricePage({ params }: Props) {
             <details>
               <summary>Hvad gælder for garanti?</summary>
               <p>
-                Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele, og vandskade har 3 måneders garanti. Se også{" "}
+                {brand.device_type === "appliance"
+                  ? "Reparation af husholdningsapparater har 12 måneders garanti på dele og arbejde."
+                  : brand.device_type === "console"
+                    ? "Garantivilkårene oplyses ved den enkelte reparation, før vi går i gang."
+                    : "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele, og vandskade har 3 måneders garanti."}{" "}Se også{" "}
                 <Link className={styles.textLink} href="/handelsbetingelser">
                   vores reparationsbetingelser
                 </Link>
                 .
               </p>
             </details>
-            <details>
-              <summary>Skal jeg tage backup?</summary>
-              <p>
-                Vi anbefaler, at du tager en backup af dine data inden
-                reparationen.
-              </p>
-            </details>
+            {brand.device_type !== "appliance" && (
+              <details>
+                <summary>Skal jeg tage backup?</summary>
+                <p>
+                  Vi anbefaler, at du tager en backup af dine data inden
+                  reparationen.
+                </p>
+              </details>
+            )}
           </div>
         </section>
-        <div className={styles.section}>
-          <StorstromInsuranceTeaser variant="repair" />
-        </div>
+        {brand.device_type !== "appliance" && (
+          <div className={styles.section}>
+            <StorstromInsuranceTeaser variant="repair" />
+          </div>
+        )}
       </div>
     </div>
   );

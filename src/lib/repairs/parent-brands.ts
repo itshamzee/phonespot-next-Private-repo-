@@ -20,7 +20,7 @@ export const PARENT_BRAND_MAP: Record<string, string> = {
   motorola: "motorola",
 };
 
-export const PARENT_BRAND_META: Record<string, { name: string; logo: string }> = {
+export const PARENT_BRAND_META: Record<string, { name: string; logo?: string }> = {
   apple: { name: "Apple", logo: "/images/brands/apple.svg" },
   samsung: { name: "Samsung", logo: "/images/brands/samsung.svg" },
   google: { name: "Google", logo: "/images/brands/google.svg" },
@@ -29,6 +29,15 @@ export const PARENT_BRAND_META: Record<string, { name: string; logo: string }> =
   sony: { name: "Sony", logo: "/images/brands/sony.svg" },
   xiaomi: { name: "Xiaomi", logo: "/images/brands/xiaomi.svg" },
   motorola: { name: "Motorola", logo: "/images/brands/motorola.svg" },
+  playstation: { name: "PlayStation", logo: "/images/brands/playstation.svg" },
+  nintendo: { name: "Nintendo", logo: "/images/brands/nintendo.svg" },
+  xbox: { name: "Xbox", logo: "/images/brands/xbox.svg" },
+  // Apparat-mærker har ingen logofil: de bruger apparat-ikonet i mærkevælgeren.
+  dyson: { name: "Dyson" },
+  roborock: { name: "Roborock" },
+  irobot: { name: "iRobot" },
+  nespresso: { name: "Nespresso" },
+  delonghi: { name: "De'Longhi" },
 };
 
 export const PARENT_BRAND_ORDER = [
@@ -40,6 +49,14 @@ export const PARENT_BRAND_ORDER = [
   "xiaomi",
   "sony",
   "motorola",
+  "playstation",
+  "nintendo",
+  "xbox",
+  "dyson",
+  "roborock",
+  "irobot",
+  "nespresso",
+  "delonghi",
 ];
 
 export function parentBrandKey(brandSlug: string): string {
