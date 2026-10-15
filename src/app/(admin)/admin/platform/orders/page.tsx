@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { webshopOrderType } from "@/lib/pos/sales-history";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrderList } from "@/components/admin/orders/order-list";
 import { staffScopeForPage } from "@/lib/auth/store-scope-page";
@@ -13,11 +15,14 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   const status     = typeof params.status   === "string" ? params.status   : undefined;
-  const type       = typeof params.type     === "string" ? params.type     : undefined;
+  const type = webshopOrderType(typeof params.type === "string" ? params.type : undefined);
   const from       = typeof params.from     === "string" ? params.from     : undefined;
   const to         = typeof params.to       === "string" ? params.to       : undefined;
   const locationId = typeof params.location === "string" ? params.location : undefined;
   const page       = Math.max(1, parseInt(typeof params.page === "string" ? params.page : "1", 10));
+
+  // Gamle links (?type=pos) hører nu hjemme i Kasse > Salgshistorik.
+  if (params.type === "pos") redirect("/admin/kasse/salg");
 
   const supabase = createAdminClient();
 
@@ -41,7 +46,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
   );
 
   if (status)     query = query.eq("status", status);
-  if (type)       query = query.eq("type", type);
+  query = query.eq("type", type);
   if (locationId) query = query.eq("location_id", locationId);
   if (from)       query = query.gte("created_at", from);
   if (to)         query = query.lte("created_at", to + "T23:59:59Z");
@@ -59,10 +64,10 @@ export default async function OrdersPage({ searchParams }: PageProps) {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h2 className="font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-          Ordrer
+          Webshop-ordrer
         </h2>
         <p className="mt-0.5 text-sm text-charcoal/35">
-          Overblik over alle online- og POS-ordrer
+          Overblik over webshoppens ordrer. Kassesalg findes under Kasse &gt; Salgshistorik.
         </p>
       </div>
 
@@ -70,6 +75,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
         initialOrders={initialOrders}
         initialTotal={initialTotal}
         initialPage={page}
+        initialType={type}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrderDetail } from "@/components/admin/orders/order-detail";
 import { staffScopeForPage } from "@/lib/auth/store-scope-page";
@@ -41,6 +41,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   if (error || !order) {
     notFound();
+  }
+
+  // Kassesalg og kreditnotaer vises i Kasse > Salgshistorik, ikke som webshop-ordrer.
+  if (order.type === "pos" || order.type === "credit_note") {
+    redirect(`/admin/kasse/salg/${id}`);
   }
 
   // En ordre fra en anden butik (eller en ren webshop-ordre, hvis man er butiksmedarbejder) findes ikke for dig.

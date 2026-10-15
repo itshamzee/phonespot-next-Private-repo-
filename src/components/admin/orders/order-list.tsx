@@ -28,9 +28,12 @@ interface OrderListProps {
   initialOrders: Order[];
   initialTotal: number;
   initialPage: number;
+  /** Kanal-filter fra serveren; "online" som standard (aldrig "pos"). */
+  initialType?: string;
 }
 
 const PER_PAGE = 25;
+export const DEFAULT_ORDER_TYPE = "online";
 
 /* ── Status tab config ────────────────────────────────────────────── */
 const STATUS_TABS = [
@@ -241,7 +244,7 @@ function BulkActionBar({
 }
 
 /* ════════════════════════════════════════════════════════════════════ */
-export function OrderList({ initialOrders, initialTotal, initialPage }: OrderListProps) {
+export function OrderList({ initialOrders, initialTotal, initialPage, initialType = DEFAULT_ORDER_TYPE }: OrderListProps) {
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>(Array.isArray(initialOrders) ? initialOrders : []);
@@ -252,7 +255,8 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
   /* Filters */
   const [activeTab, setActiveTab] = useState("");
   const [search, setSearch]       = useState("");
-  const [type, setType]           = useState("");
+  // Kassesalg (type "pos") hører til i Kasse > Salgshistorik, aldrig her.
+  const [type, setType]           = useState(initialType);
   const [from, setFrom]           = useState("");
   const [to, setTo]               = useState("");
   const [locationId, setLocationId] = useState("");
@@ -396,9 +400,7 @@ export function OrderList({ initialOrders, initialTotal, initialPage }: OrderLis
             Kanal
           </label>
           <select value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
-            <option value="">Alle</option>
-            <option value="online">Online</option>
-            <option value="pos">POS</option>
+            <option value="online">Webshop</option>
             <option value="draft">Kladde</option>
             <option value="shopify">Shopify</option>
           </select>

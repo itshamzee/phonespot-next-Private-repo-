@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const head = { count: "exact", head: true } as const;
 
   const [orders, repairs, newRepairs, inquiries, buyback] = await Promise.all([
-    applyLocationScope(supabase.from("orders").select("id", head).eq("status", "pending"), scope, index),
+    applyLocationScope(supabase.from("orders").select("id", head).eq("status", "pending").eq("type", "online"), scope, index),
     // Menu-tallet er åbne sager (alt undtagen afhentet og løst reklamation)
     applyStoreScope(
       supabase.from("repair_tickets").select("id", head).not("status", "in", "(afhentet,reklamation_loest)"),
