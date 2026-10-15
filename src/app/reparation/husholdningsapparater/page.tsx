@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -15,7 +14,10 @@ import { fitTitle } from "@/lib/repairs/hub-meta";
 import { STORES } from "@/lib/store-config";
 import styles from "@/components/repair/repair.module.css";
 import s from "./appliances.module.css";
+import { QuoteForm, QuoteLink } from "./quote-form";
 import {
+  BRANDS,
+  CATEGORIES,
   COFFEE_PRICES,
   CONTROLLER_PRICES,
   DYSON_PRICES,
@@ -23,6 +25,8 @@ import {
   HERO_ANSWER,
   OTHER_VACUUM_PRICES,
   ROBOT_PRICES,
+  type ApplianceCategory,
+  type ApplianceCategoryId,
   type PriceGroup,
 } from "./data";
 
@@ -47,20 +51,18 @@ export const metadata: Metadata = {
   openGraph: { title: TITLE, description: DESCRIPTION, url: PAGE_URL, type: "website" },
 };
 
-type SectionImage = { src: string; alt: string; width: number; height: number };
-
-/** Valgfrit billede pr. sektion. Uden `image` vises ingenting. */
+/** Sektion med overskrift til venstre og indhold til højre. `quote` giver en lille "Få en fast pris"-knap. */
 function ApplianceSection({
   id,
   title,
   intro,
-  image,
+  quote,
   children,
 }: {
   id: string;
   title: string;
   intro?: string;
-  image?: SectionImage;
+  quote?: ApplianceCategoryId;
   children: ReactNode;
 }) {
   return (
@@ -68,23 +70,61 @@ function ApplianceSection({
       <div>
         <h2 id={`${id}-titel`}>{title}</h2>
         {intro && <p>{intro}</p>}
-      </div>
-      <div>
-        {image && (
-          <figure className={s.figure}>
-            <Image
-              src={image.src}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              sizes="(max-width: 800px) 100vw, 640px"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </figure>
+        {quote && (
+          <QuoteLink category={quote} className={s.smallButton}>
+            Få en fast pris
+          </QuoteLink>
         )}
-        {children}
       </div>
+      <div>{children}</div>
     </section>
+  );
+}
+
+function CategoryTile({ cat, large }: { cat: ApplianceCategory; large?: boolean }) {
+  return (
+    <div className={`${s.tile} ${large ? s.tileLarge : ""}`}>
+      {cat.image ? (
+        <Image
+          src={cat.image}
+          alt={cat.alt}
+          width={600}
+          height={600}
+          sizes={large ? "(max-width: 800px) 90vw, 520px" : "(max-width: 800px) 132px, 180px"}
+          className={s.tileImage}
+          priority={cat.id === "stovsugere"}
+        />
+      ) : (
+        <span className={s.tileText} aria-hidden="true">
+          Nespresso
+          <br />
+          De&apos;Longhi
+        </span>
+      )}
+    </div>
+  );
+}
+
+function CategoryCard({ cat, large }: { cat: ApplianceCategory; large?: boolean }) {
+  return (
+    <article className={large ? s.feature : s.catRow} aria-labelledby={`kat-${cat.id}`}>
+      <CategoryTile cat={cat} large={large} />
+      <div className={s.catCopy}>
+        <h3 id={`kat-${cat.id}`}>{cat.name}</h3>
+        <p>{cat.faults}</p>
+        <p className={s.from}>
+          Fra <strong>{kr(cat.from)}</strong>
+        </p>
+        <div className={s.catLinks}>
+          <QuoteLink category={cat.id} className={s.smallButton}>
+            Få en fast pris
+          </QuoteLink>
+          <a href={`#${cat.id}`} className={s.secondary}>
+            Se priser
+          </a>
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -181,21 +221,38 @@ export default function HouseholdAppliancesPage() {
           <span className={styles.eyebrow}>Reparation · Husholdningsapparater</span>
           <h1>Reparation af husholdningsapparater.</h1>
           <p className={hub.answer}>{HERO_ANSWER}</p>
-          <ul className={s.index}>
-            <li><a href="#stovsugere">Ledningsfri støvsugere</a></li>
-            <li><a href="#robotstovsugere">Robotstøvsugere</a></li>
-            <li><a href="#kaffemaskiner">Kaffemaskiner</a></li>
-            <li><a href="#controllere">Controllere</a></li>
-          </ul>
           <div className={s.actions}>
-            <a href={TEL} className={s.primary}>Ring {PHONE}</a>
-            <Link href="/kontakt" className={s.secondary}>Skriv til os</Link>
+            <QuoteLink className={s.primary}>Få en fast pris</QuoteLink>
+            <a href={TEL} className={s.secondary}>Ring {PHONE}</a>
           </div>
         </header>
+
+        <section className={s.cats} aria-labelledby="kategorier-titel">
+          <h2 id="kategorier-titel" className={s.sectionTitle}>Det reparerer vi</h2>
+          <div className={s.catGrid}>
+            <CategoryCard cat={CATEGORIES[0]} large />
+            <div className={s.catList}>
+              {CATEGORIES.slice(1).map((cat) => (
+                <CategoryCard key={cat.id} cat={cat} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={s.brands} aria-labelledby="maerker-titel">
+          <h2 id="maerker-titel">Vi reparerer de store mærker</h2>
+          <ul className={s.brandList}>
+            {BRANDS.map((brand) => (
+              <li key={brand}>{brand}</li>
+            ))}
+          </ul>
+          <p>Står dit mærke ikke her? Skriv eller ring, så hører vi, om vi kan hjælpe.</p>
+        </section>
 
         <ApplianceSection
           id="stovsugere"
           title="Ledningsfri støvsugere"
+          quote="stovsugere"
           intro="Reparation af Dyson-støvsugere i V-serien fra V6 til V15. Shark og Samsung Jet tager vi også imod."
         >
           <PriceTable group={DYSON_PRICES} label="Dyson" />
@@ -212,6 +269,7 @@ export default function HouseholdAppliancesPage() {
         <ApplianceSection
           id="robotstovsugere"
           title="Robotstøvsugere"
+          quote="robotstovsugere"
           intro="Batteri og hjulmodul til Roborock og iRobot Roomba."
         >
           <PriceTable group={ROBOT_PRICES} label="Robotstøvsugere" />
@@ -220,6 +278,7 @@ export default function HouseholdAppliancesPage() {
         <ApplianceSection
           id="kaffemaskiner"
           title="Kaffemaskiner"
+          quote="kaffemaskiner"
           intro="Nespresso Vertuo og Original samt De'Longhi ECAM."
         >
           <PriceTable group={COFFEE_PRICES} label="Kaffemaskiner" />
@@ -233,6 +292,7 @@ export default function HouseholdAppliancesPage() {
         <ApplianceSection
           id="controllere"
           title="Controllere"
+          quote="controllere"
           intro="PlayStation 5 og Xbox Series, hvor drift og porte er de typiske fejl."
         >
           <PriceTable group={CONTROLLER_PRICES} label="Controllere" />
@@ -240,6 +300,20 @@ export default function HouseholdAppliancesPage() {
             Nintendo reparerer Joy-Con-drift gratis i EU. Kontakt Nintendo først.
           </p>
         </ApplianceSection>
+
+        <section id="tilbud" className={s.quote} aria-labelledby="tilbud-titel">
+          <div className={s.quoteIntro}>
+            <h2 id="tilbud-titel">Få en fast pris</h2>
+            <p>
+              Fortæl, hvad der er galt, så vender vi tilbage med en fast pris. Du binder dig ikke til noget, og
+              du kan også bare kigge forbi i Vejle eller Slagelse.
+            </p>
+            <p>
+              Foretrækker du at tale med os, så ring på <a href={TEL}>{PHONE}</a>.
+            </p>
+          </div>
+          <QuoteForm />
+        </section>
 
         <ApplianceSection id="sadan-foregaar-det" title="Sådan foregår det">
           <ol className={s.steps}>
@@ -294,8 +368,8 @@ export default function HouseholdAppliancesPage() {
           <h2 id="cta-titel">Er apparatet gået i stykker?</h2>
           <p>Kom forbi i Vejle eller Slagelse. Du får en fast pris, før vi går i gang.</p>
           <div className={s.actions}>
-            <a href={TEL} className={s.primary}>Ring {PHONE}</a>
-            <Link href="/kontakt" className={s.secondary}>Skriv til os</Link>
+            <QuoteLink className={s.primary}>Få en fast pris</QuoteLink>
+            <a href={TEL} className={s.secondary}>Ring {PHONE}</a>
           </div>
         </section>
       </div>

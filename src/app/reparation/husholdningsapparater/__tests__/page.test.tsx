@@ -28,7 +28,34 @@ describe("/reparation/husholdningsapparater", () => {
     expect(text).toContain("VestsjællandsCentret 10A, 103");
     expect(text).not.toContain("Ikke endnu");
     expect(text).not.toContain("Airwrap");
-    expect(container.querySelectorAll("figure").length).toBe(0);
+    const imgs = Array.from(container.querySelectorAll("img"));
+    expect(imgs.length).toBeGreaterThanOrEqual(3);
+    for (const img of imgs) expect((img.getAttribute("alt") ?? "").trim().length).toBeGreaterThan(0);
+    const alts = imgs.map((i) => i.getAttribute("alt"));
+    expect(alts).toContain("Ledningsfri støvsuger");
+    expect(alts).toContain("Robotstøvsuger");
+    expect(alts.join(" ")).not.toMatch(/dyson|roborock|irobot|playstation/i);
+  });
+
+  it("shows categories with from-prices, quote links, brands and the form anchor", () => {
+    const { container } = render(<Page />);
+    const text = container.textContent!;
+    expect(text).toContain("Fra 349 kr.");
+    expect(text).toContain("Fra 509 kr.");
+    expect(text).toContain("Fra 259 kr.");
+    expect(text).toContain("Fra 349 kr.");
+    expect(container.querySelector("#tilbud")).not.toBeNull();
+    expect(container.querySelectorAll('a[href="#tilbud"]').length).toBeGreaterThanOrEqual(8);
+    for (const id of ["stovsugere", "robotstovsugere", "kaffemaskiner", "controllere"]) {
+      expect(container.querySelector(`a[href="#${id}"]`)).not.toBeNull();
+      expect(container.querySelector(`section#${id}`)).not.toBeNull();
+    }
+    expect(text).toContain("Vi reparerer de store mærker");
+    for (const brand of ["Dyson", "Shark", "Samsung", "Roborock", "iRobot", "Nespresso", "De'Longhi", "PlayStation", "Xbox"]) {
+      expect(text).toContain(brand);
+    }
+    expect(text).toContain("Står dit mærke ikke her? Skriv eller ring, så hører vi, om vi kan hjælpe.");
+    expect(text).not.toMatch(/Ecovacs/);
   });
 
   it("has a 40-60 word answer-first paragraph", () => {

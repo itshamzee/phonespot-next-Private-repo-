@@ -101,3 +101,60 @@ export const FAQS: HubFaq[] = [
       "Vi bruger kompatible batterier af god kvalitet og skriver altid på tilbuddet, hvilket batteri du får.",
   },
 ];
+
+/** Laveste faste reparationspris i en gruppe. Diagnose er ikke en reparation. */
+export function fromPrice(group: PriceGroup): number {
+  const prices = group.rows
+    .filter((r) => r.price !== null && !r.label.toLowerCase().startsWith("diagnose"))
+    .map((r) => r.price as number);
+  return Math.min(...prices);
+}
+
+export type ApplianceCategoryId = "stovsugere" | "robotstovsugere" | "kaffemaskiner" | "controllere";
+
+export type ApplianceCategory = {
+  id: ApplianceCategoryId;
+  name: string;
+  /** Lille ental til alt-tekst og formularens apparatvalg. */
+  alt: string;
+  faults: string;
+  from: number;
+  image: string | null;
+};
+
+export const CATEGORIES: ApplianceCategory[] = [
+  {
+    id: "stovsugere",
+    name: "Ledningsfri støvsugere",
+    alt: "Ledningsfri støvsuger",
+    faults: "Batteri der ikke holder, aftrækker der svigter og ladeproblemer.",
+    from: fromPrice(DYSON_PRICES),
+    image: "/images/reparation/apparater/ledningsfri-stoevsuger.webp",
+  },
+  {
+    id: "robotstovsugere",
+    name: "Robotstøvsugere",
+    alt: "Robotstøvsuger",
+    faults: "Svagt batteri og hjul, der sidder fast eller ikke drejer.",
+    from: fromPrice(ROBOT_PRICES),
+    image: "/images/reparation/apparater/robotstoevsuger.webp",
+  },
+  {
+    id: "kaffemaskiner",
+    name: "Kaffemaskiner",
+    alt: "Kaffemaskine",
+    faults: "Utætheder, kalk og maskiner, der ikke varmer vand op.",
+    from: fromPrice(COFFEE_PRICES),
+    image: null,
+  },
+  {
+    id: "controllere",
+    name: "Controllere",
+    alt: "Spillecontroller",
+    faults: "Stick-drift, defekt USB-C-port og batteri der er brugt op.",
+    from: fromPrice(CONTROLLER_PRICES),
+    image: "/images/reparation/apparater/controller.jpg",
+  },
+];
+
+export const BRANDS = ["Dyson", "Shark", "Samsung", "Roborock", "iRobot", "Nespresso", "De'Longhi", "PlayStation", "Xbox"];

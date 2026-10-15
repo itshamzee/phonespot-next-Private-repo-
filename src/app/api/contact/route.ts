@@ -12,7 +12,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { name, email, phone, subject, message, source, metadata, store_id } = body;
 
-  if (!name || !email || !message) {
+  // E-mail er valgfri, hvis kunden har oplyst telefon (fx apparat-formularen).
+  if (!name || !message || (!email && !phone)) {
     return NextResponse.json({ error: "Udfyld alle felter" }, { status: 400 });
   }
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     .from("contact_inquiries")
     .insert({
       name: name.trim(),
-      email: email.trim(),
+      email: (email ?? "").trim(),
       phone: phone?.trim() || null,
       subject: subject?.trim() || null,
       message: message.trim(),
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     await resend.emails.send({
       from: "PhoneSpot Kontakt <noreply@phonespot.dk>",
       ...getStaffRecipients(storeId),
-      replyTo: email,
+      ...(email ? { replyTo: email } : {}),
       subject: `Kontakt${storeLabel(storeId) === "Generel" ? "" : ` (${storeLabel(storeId)})`}: ${subject || "Generel henvendelse"}`,
       text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}Butik: ${storeLabel(storeId)}\n\n${message}`,
     });

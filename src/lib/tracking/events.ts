@@ -139,21 +139,28 @@ export function trackRepairBooking(input: RepairBookingInput): string {
   return eventId;
 }
 
-export type LeadType = "contact_form" | "buyback" | "business_repair";
+export type LeadType = "contact_form" | "buyback" | "business_repair" | "appliance_repair";
 
-export function trackLead(input: { leadType: LeadType; store?: TrackStore; value?: number }): string {
+export function trackLead(input: {
+  leadType: LeadType;
+  store?: TrackStore;
+  value?: number;
+  /** Fx apparatkategori, så leads kan opdeles i GA4. */
+  category?: string;
+}): string {
   const eventId = newEventId("lead");
   const currency = input.value !== undefined ? "DKK" : undefined;
   sendGtag("generate_lead", {
     lead_type: input.leadType,
     store: input.store,
+    category: input.category,
     value: input.value,
     currency,
     event_id: eventId,
   });
   sendMeta(
     "Lead",
-    { content_category: input.leadType, store: input.store, value: input.value, currency },
+    { content_category: input.leadType, content_name: input.category, store: input.store, value: input.value, currency },
     eventId,
   );
   return eventId;
