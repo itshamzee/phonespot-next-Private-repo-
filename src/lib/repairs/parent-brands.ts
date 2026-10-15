@@ -30,14 +30,13 @@ export const PARENT_BRAND_META: Record<string, { name: string; logo?: string }> 
   xiaomi: { name: "Xiaomi", logo: "/images/brands/xiaomi.svg" },
   motorola: { name: "Motorola", logo: "/images/brands/motorola.svg" },
   playstation: { name: "PlayStation", logo: "/images/brands/playstation.svg" },
-  nintendo: { name: "Nintendo", logo: "/images/brands/nintendo.svg" },
-  xbox: { name: "Xbox", logo: "/images/brands/xbox.svg" },
-  // Apparat-mærker har ingen logofil: de bruger apparat-ikonet i mærkevælgeren.
-  dyson: { name: "Dyson" },
-  roborock: { name: "Roborock" },
-  irobot: { name: "iRobot" },
-  nespresso: { name: "Nespresso" },
-  delonghi: { name: "De'Longhi" },
+  nintendo: { name: "Nintendo", logo: "/images/brands/nintendo.png" },
+  xbox: { name: "Xbox", logo: "/images/brands/xbox.png" },
+  dyson: { name: "Dyson", logo: "/images/brands/dyson.png" },
+  roborock: { name: "Roborock", logo: "/images/brands/roborock.png" },
+  irobot: { name: "iRobot", logo: "/images/brands/irobot.png" },
+  nespresso: { name: "Nespresso", logo: "/images/brands/nespresso.png" },
+  delonghi: { name: "De'Longhi", logo: "/images/brands/delonghi.png" },
 };
 
 export const PARENT_BRAND_ORDER = [
