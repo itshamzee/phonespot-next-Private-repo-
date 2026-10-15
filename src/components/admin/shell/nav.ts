@@ -65,6 +65,7 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/kasse", label: "Kasseapparat", match: ["/admin/platform/pos"] },
       { href: "/admin/platform/pos/cashup", label: "Dagsopgørelse" },
+      { href: "/admin/kasse/salg", label: "Salgshistorik" },
       { href: "/admin/platform/orders", label: "Webshop-ordrer", countKey: "orders" },
       { href: "/admin/platform/draft-orders", label: "Fakturakladder" },
       { href: "/admin/platform/abandoned-checkouts", label: "Forladte kurve" },

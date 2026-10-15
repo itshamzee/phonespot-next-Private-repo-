@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatOere } from "@/lib/cart/utils";
@@ -30,7 +30,9 @@ function ReturnPageInner() {
   const locationId = params.get("location_id") ?? "";
   const registerId = params.get("register_id") ?? "";
 
-  const [query, setQuery] = useState("");
+  // ?q=<bonnr.> kommer fra Salgshistorik: forudfyld og find salget med det samme.
+  const initialQuery = params.get("q") ?? "";
+  const [query, setQuery] = useState(initialQuery);
   const [order, setOrder] = useState<ReturnableOrder | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
   const [restock, setRestock] = useState<Record<string, boolean>>({});
@@ -63,6 +65,12 @@ function ReturnPageInner() {
       setError(err instanceof Error ? err.message : "Salget blev ikke fundet");
     }
   }
+
+  useEffect(() => {
+    if (initialQuery.length >= 3) void find();
+    // Kun ved første visning.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const preview = useMemo<{ note: CreditNote | null; problem: string | null }>(() => {
     if (!order) return { note: null, problem: null };

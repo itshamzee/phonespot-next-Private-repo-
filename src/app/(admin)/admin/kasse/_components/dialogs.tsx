@@ -763,6 +763,14 @@ export function DoneDialog({ sale, onNew }: { sale: DoneSale; onNew: () => void 
             {status}
           </p>
         )}
+        <a
+          href={`/admin/kasse/salg/${sale.orderId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block text-sm text-[#1A3D2E] hover:text-[#2D6B45]"
+        >
+          Se salget i salgshistorik
+        </a>
       </div>
 
       <button type="button" autoFocus className={`${btnPrimary} mt-5 w-full`} onClick={onNew}>

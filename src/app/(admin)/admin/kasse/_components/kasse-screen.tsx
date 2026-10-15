@@ -745,7 +745,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           </span>
         )}
         <div className="flex-1" />
-        <Link href={`/admin/platform/orders?type=pos${locationId ? `&location=${locationId}` : ""}`} className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
+        <Link href="/admin/kasse/salg" className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
           Salgshistorik
         </Link>
         <Link href={`/admin/platform/pos/retur?${sessionQs}`} className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
