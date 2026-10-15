@@ -23,6 +23,7 @@ import type {
   CreateRepairCaseResponse,
   NewCaseItemInput,
   RemoveCaseItemResponse,
+  UpdateCaseItemResponse,
   SwapPartResponse,
 } from "@/lib/repairs/new-case-types";
 
@@ -301,12 +302,30 @@ export async function removeCaseItem(
   ticketId: string,
   itemId: string,
   staff: StaffIdentity,
+  reason: string | null = null,
   db: Db = createServerClient(),
 ): Promise<RemoveCaseItemResponse> {
   const { data, error } = await db.rpc("repair_case_remove_item", {
-    p: { ticket_id: ticketId, item_id: itemId, staff_id: staff.id },
+    p: { ticket_id: ticketId, item_id: itemId, staff_id: staff.id, reason },
   });
   if (error || !data) throw caseRpcError("Linjen kunne ikke fjernes", error ?? { message: "tomt svar" });
+  return shapeLinesResult(data as LinesResult, staff.role);
+}
+
+/** Ret stykprisen på en linje (også når delen er brugt). Afvigelse fra listeprisen kræver en begrundelse. */
+export async function updateCaseItemPrice(
+  ticketId: string,
+  itemId: string,
+  unitPriceOere: number,
+  reason: string | null,
+  staff: StaffIdentity,
+  db: Db = createServerClient(),
+): Promise<UpdateCaseItemResponse> {
+  if (!Number.isInteger(unitPriceOere) || unitPriceOere < 0) throw new CaseError("invalid_price", "Ugyldig pris", 400);
+  const { data, error } = await db.rpc("repair_case_update_item", {
+    p: { ticket_id: ticketId, item_id: itemId, staff_id: staff.id, unit_price_oere: unitPriceOere, reason },
+  });
+  if (error || !data) throw caseRpcError("Prisen kunne ikke rettes", error ?? { message: "tomt svar" });
   return shapeLinesResult(data as LinesResult, staff.role);
 }
 

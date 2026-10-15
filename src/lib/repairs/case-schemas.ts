@@ -118,6 +118,14 @@ export const createCaseGroupSchema = z.object({
 export type CreateCaseGroupBody = z.infer<typeof createCaseGroupSchema>;
 
 export const addItemSchema = z.object({ item: itemSchema });
+/** Ret stykprisen på en linje. En pris der afviger fra listeprisen kræver en begrundelse (afgøres i databasen). */
+export const updateItemSchema = z.object({
+  unit_price_oere: oere,
+  reason: optText(NEW_CASE_LIMITS.priceReason),
+});
+export type UpdateItemBody = z.infer<typeof updateItemSchema>;
+/** Fjern en linje; begrundelsen er påkrævet i databasen når delen allerede er brugt. */
+export const removeItemSchema = z.object({ reason: optText(300) });
 export const swapPartSchema = z.object({ sku_product_id: uuid });
 export const cancelSchema = z.object({ reason: z.string().trim().min(1, "Skriv hvorfor sagen annulleres").max(300) });
 

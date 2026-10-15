@@ -65,7 +65,10 @@ export const CASE_ERROR_CATALOG: Record<string, Entry> = {
   description_required: { status: 400, message: () => "Skriv en tekst til linjen" },
   invalid_item_kind: { status: 400, message: () => "Ugyldig linje" },
   ticket_not_found: { status: 404, message: () => "Sagen findes ikke" },
-  ticket_paid: { status: 409, message: () => "Sagen er betalt og kan ikke ændres" },
+  ticket_paid: {
+    status: 409,
+    message: () => "Sagen er betalt og kan ikke ændres her. Ret den ved at refundere eller returnere i kassen.",
+  },
   ticket_closed: { status: 409, message: (x) => `Sagen er ${x === "annulleret" ? "annulleret" : "afsluttet"} og kan ikke ændres` },
   legacy_ticket: {
     status: 409,
@@ -74,6 +77,12 @@ export const CASE_ERROR_CATALOG: Record<string, Entry> = {
   item_not_found: { status: 404, message: () => "Linjen findes ikke på sagen" },
   item_sold: { status: 409, message: () => "Linjen er allerede solgt i kassen" },
   item_consumed: { status: 409, message: () => "Delen er allerede brugt i reparationen" },
+  item_released: { status: 409, message: () => "Linjen er frigivet og kan ikke ændres" },
+  item_not_priced: { status: 400, message: (x) => `${d(x, "Delen")} er en del uden egen pris. Ret prisen på reparationen i stedet.` },
+  remove_reason_required: {
+    status: 400,
+    message: () => "Skriv hvorfor linjen fjernes. Delen er allerede brugt, og lageret gives ikke tilbage.",
+  },
   not_a_repair_item: { status: 400, message: () => "Vælg reparationen eller delen, der skal skiftes" },
   cancel_reason_required: { status: 400, message: () => "Skriv hvorfor sagen annulleres" },
   already_cancelled: { status: 409, message: () => "Sagen er allerede annulleret" },

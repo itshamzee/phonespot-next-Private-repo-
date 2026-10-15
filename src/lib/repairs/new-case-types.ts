@@ -424,6 +424,10 @@ export type AddCaseItemResponse = { lines: CaseItemView[]; backorders: CaseBacko
 /** DELETE /api/admin/repairs/:id/items/:itemId */
 export type RemoveCaseItemResponse = { lines: CaseItemView[]; backorders: CaseBackorder[]; total_oere: number };
 
+/** PATCH /api/admin/repairs/:id/items/:itemId (ret prisen) */
+export type UpdateCaseItemRequest = { unit_price_oere: number; reason?: string | null };
+export type UpdateCaseItemResponse = { lines: CaseItemView[]; backorders: CaseBackorder[]; total_oere: number };
+
 /** POST /api/admin/repairs/:id/items/:itemId/swap-part (itemId = reparationslinjen eller dellinjen) */
 export type SwapPartRequest = { sku_product_id: string };
 export type SwapPartResponse = { lines: CaseItemView[]; backorders: CaseBackorder[]; total_oere: number };
