@@ -40,6 +40,8 @@ const nextConfig: NextConfig = {
       ...shopifyRedirects,
       // Reservedele sælges ikke længere (spec 2026-10-13 §4.1). 301 som aftalt;
       // målet skiftes til reservedelswebshoppen, når den findes.
+      // Apparater og Xbox bookes pr. model i kataloget (/reparation/[mærke]/[model]).
+      { source: "/reparation/husholdningsapparater", destination: "/reparation", statusCode: 308 },
       { source: "/reservedele", destination: "/reparation", statusCode: 301 },
       { source: "/reservedele/:path*", destination: "/reparation", statusCode: 301 },
       { source: "/api/spare-parts", destination: "/reparation", statusCode: 301 },

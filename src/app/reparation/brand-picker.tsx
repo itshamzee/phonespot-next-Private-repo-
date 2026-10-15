@@ -24,6 +24,7 @@ const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   laptop: "Bærbar",
   watch: "Smartwatch",
   console: "Konsol",
+  appliance: "Husholdningsapparat",
 };
 
 const DEVICE_TYPE_ICONS: Record<DeviceType, React.ReactNode> = {
@@ -87,6 +88,19 @@ const DEVICE_TYPE_ICONS: Record<DeviceType, React.ReactNode> = {
       <circle cx="8" cy="12" r="2" />
       <circle cx="16" cy="12" r="1" />
       <circle cx="18" cy="10" r="1" />
+    </svg>
+  ),
+  appliance: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="h-6 w-6"
+    >
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <line x1="9" y1="6" x2="15" y2="6" />
+      <circle cx="12" cy="14" r="3" />
     </svg>
   ),
 };

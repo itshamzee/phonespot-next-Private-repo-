@@ -1,4 +1,5 @@
 import type { DeviceType } from "@/lib/supabase/types";
+import { APPLIANCE_HUB_CONTENT, APPLIANCE_WARRANTY_FAQ } from "./appliance-hub-content";
 
 export type HubFaq = { question: string; answer: string };
 
@@ -17,6 +18,7 @@ export type BrandHubContent = {
 };
 
 export const WARRANTY_PHONE_TABLET = "livstidsgaranti på arbejde og dele";
+export const WARRANTY_APPLIANCE = "12 måneders garanti på dele og arbejde";
 export const WARRANTY_OTHER = "vilkår aftales ved den enkelte reparation";
 
 export function hasLifetimeWarranty(deviceType: DeviceType): boolean {
@@ -284,15 +286,17 @@ export const BRAND_HUB_CONTENT: Record<string, BrandHubContent> = {
       },
     ],
   },
+  ...APPLIANCE_HUB_CONTENT,
 };
 
 /** Generisk indhold til mærker uden egen tekst (Huawei, Sony, Xiaomi m.fl.). */
 export function genericHubContent(name: string, deviceType: DeviceType): BrandHubContent {
   const lifetime = hasLifetimeWarranty(deviceType);
+  const appliance = deviceType === "appliance";
   return {
     label: name,
     answer: (p) =>
-      `Vi reparerer ${name} i Vejle og Slagelse${p ? `, fra ${p}` : ""}. Du får en fast pris, før vi går i gang. ${lifetime ? "Du får livstidsgaranti på arbejde og dele." : "Vilkår aftales ved den enkelte reparation."} Du kan komme forbi uden tid eller sende enheden ind.`,
+      `Vi reparerer ${name} i Vejle og Slagelse${p ? `, fra ${p}` : ""}. Du får en fast pris, før vi går i gang. ${lifetime ? "Du får livstidsgaranti på arbejde og dele." : appliance ? "Du får 12 måneders garanti på dele og arbejde." : "Vilkår aftales ved den enkelte reparation."} Du kan komme forbi uden tid eller sende enheden ind.`,
     body: [
       `Find din ${name}-model nedenfor for at se priser. Står din model ikke på listen, så ring til os, så hører vi, om vi kan hjælpe.`,
     ],
@@ -311,7 +315,9 @@ export function genericHubContent(name: string, deviceType: DeviceType): BrandHu
       },
       lifetime
         ? LIFETIME_FAQ
-        : {
+        : appliance
+          ? APPLIANCE_WARRANTY_FAQ
+          : {
             question: "Hvilken garanti får jeg?",
             answer:
               "Vilkårene aftales ved den enkelte reparation, og du får dem, før vi går i gang.",

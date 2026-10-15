@@ -56,7 +56,8 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
-- [Reparation af husholdningsapparater](${SITE}/reparation/husholdningsapparater): Dyson-støvsugere, robotstøvsugere, kaffemaskiner og controllere i Vejle og Slagelse, fast pris før start, 12 måneders garanti på dele og arbejde, uafhængigt værksted
+- [Dyson-reparation](${SITE}/reparation/dyson): Dyson-støvsugere med fast pris pr. model, 12 måneders garanti på dele og arbejde, uafhængigt værksted
+- [Xbox-reparation](${SITE}/reparation/xbox): Xbox-konsoller og controllere i Vejle og Slagelse
 - [iPhone-reparation](${SITE}/reparation/iphone): alle iPhone-modeller med priser
 - [Samsung-reparation](${SITE}/reparation/samsung): alle Galaxy-modeller med priser
 - [iPad-reparation](${SITE}/reparation/ipad): alle iPad-modeller med priser

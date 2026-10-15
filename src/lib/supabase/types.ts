@@ -1,4 +1,4 @@
-export type DeviceType = "smartphone" | "tablet" | "laptop" | "watch" | "console";
+export type DeviceType = "smartphone" | "tablet" | "laptop" | "watch" | "console" | "appliance";
 
 export interface RepairBrand {
   id: string;

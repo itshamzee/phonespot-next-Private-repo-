@@ -48,7 +48,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ]);
   const warranty = hasLifetimeWarranty(brand.device_type)
     ? "Livstidsgaranti på arbejde og dele."
-    : "Fast pris før vi går i gang.";
+    : brand.device_type === "appliance"
+      ? "12 måneders garanti på dele og arbejde."
+      : "Fast pris før vi går i gang.";
   const description = `${content.label}-reparation i Vejle og Slagelse${price ? `:${price}` : ""}. ${warranty} Kom forbi uden tid eller send ind med gratis fragtlabel.`;
 
   return {
@@ -126,7 +128,9 @@ export default async function BrandPage({ params }: Props) {
               Vi hjælper med at finde din model og den rette reparation.{" "}
               {hasLifetimeWarranty(brand.device_type)
                 ? "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele."
-                : "Vilkårene aftales ved den enkelte reparation."}
+                : brand.device_type === "appliance"
+                  ? "Apparatreparationer har 12 måneders garanti på dele og arbejde."
+                  : "Vilkårene aftales ved den enkelte reparation."}
             </p>
             <Link href="/kontakt">Kontakt os</Link>
           </div>
