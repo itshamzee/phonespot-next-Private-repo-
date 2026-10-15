@@ -489,31 +489,33 @@ export function RepairCart({
     <div className={styles.cart}>
       <div className={styles.cartLayout}>
         <div className={styles.servicesColumn}>
-          <fieldset className={styles.colors}>
-            <legend>
-              Enhedens farve <span>(valgfri)</span>
-            </legend>
-            <div>
-              {DEVICE_COLORS.map((c) => (
-                <button
-                  type="button"
-                  key={c.name}
-                  aria-pressed={selectedColor === c.name}
-                  onClick={() =>
-                    setSelectedColor(selectedColor === c.name ? "" : c.name)
-                  }
-                >
-                  <span
-                    style={{
-                      background: c.hex,
-                      border: c.border ? "1px solid #c8d0c9" : undefined,
-                    }}
-                  />
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          {deviceType !== "appliance" && (
+            <fieldset className={styles.colors}>  
+              <legend>  
+                Enhedens farve <span>(valgfri)</span>  
+              </legend>  
+              <div>  
+                {DEVICE_COLORS.map((c) => (  
+                  <button  
+                    type="button"  
+                    key={c.name}  
+                    aria-pressed={selectedColor === c.name}  
+                    onClick={() =>  
+                      setSelectedColor(selectedColor === c.name ? "" : c.name)  
+                    }  
+                  >  
+                    <span  
+                      style={{  
+                        background: c.hex,  
+                        border: c.border ? "1px solid #c8d0c9" : undefined,  
+                      }}  
+                    />  
+                    {c.name}  
+                  </button>  
+                ))}  
+              </div>  
+            </fieldset>
+          )}
           <div className={styles.serviceHeading}>
             <h2>Vælg reparation</h2>
             <button
