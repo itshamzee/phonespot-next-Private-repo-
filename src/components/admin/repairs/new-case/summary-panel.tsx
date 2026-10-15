@@ -1,7 +1,9 @@
 "use client";
 
-import { formatKr } from "@/lib/repairs/case-money";
-import { LOCATION_LABELS, type LocationSlug, type PanelLine } from "./logic";
+import { useState } from "react";
+import { PriceOverrideForm } from "@/components/admin/repairs/price-override";
+import { formatKr, formatKrShort } from "@/lib/repairs/case-money";
+import { LOCATION_LABELS, type LocationSlug, type PanelLine, type PriceOverride } from "./logic";
 import { focusRing } from "./section-card";
 
 /** En enhed i panelet. Med mere end én enhed vises hver for sig med egen delsum og depositum-besked. */
@@ -21,6 +23,8 @@ type Props = {
   /** Samlet beløb for alle enheder. */
   total_oere: number;
   onRemoveLine: (deviceKey: string, line: PanelLine) => void;
+  /** Sæt (eller nulstil med null) personalets pris på en linje. */
+  onPriceLine: (deviceKey: string, line: PanelLine, override: PriceOverride | null) => void;
   sendSms: boolean;
   onSendSms: (v: boolean) => void;
   print: boolean;
@@ -36,23 +40,70 @@ type Props = {
   onSubmit: () => void;
 };
 
-function LineList({ lines, onRemove, suffix }: { lines: PanelLine[]; onRemove: (l: PanelLine) => void; suffix: string }) {
+function LineList({
+  lines,
+  onRemove,
+  onPrice,
+  suffix,
+}: {
+  lines: PanelLine[];
+  onRemove: (l: PanelLine) => void;
+  onPrice: (l: PanelLine, override: PriceOverride | null) => void;
+  suffix: string;
+}) {
+  const [editing, setEditing] = useState<string | null>(null);
   return (
     <ul className="m-0 flex list-none flex-col p-0">
-      {lines.map((l) => (
-        <li key={l.key} className="flex items-start justify-between gap-3 border-b border-[#EEF0EC] py-3">
-          <span className="min-w-0">
-            {l.label}
-            {l.note && <span className={`block text-[13px] ${l.noteTone === "warn" ? "text-[#9A5B0A]" : "text-[#5E6A63]"}`}>{l.note}</span>}
-          </span>
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="tabular-nums">{formatKr(l.amount_oere).replace(" kr.", "")}</span>
-            <button type="button" aria-label={`Fjern ${l.label}${suffix}`} onClick={() => onRemove(l)} className={`h-6 w-6 rounded-md text-[#5E6A63] hover:bg-[#F5F6F4] ${focusRing}`}>
-              x
-            </button>
-          </span>
-        </li>
-      ))}
+      {lines.map((l) => {
+        const canPrice = l.list_unit_oere != null && l.unit_oere != null;
+        return (
+          <li key={l.key} className="border-b border-[#EEF0EC] py-3">
+            <div className="flex items-start justify-between gap-3">
+              <span className="min-w-0">
+                {l.label}
+                {l.note && <span className={`block text-[13px] ${l.noteTone === "warn" ? "text-[#9A5B0A]" : "text-[#5E6A63]"}`}>{l.note}</span>}
+                {l.override && (
+                  <span className="block text-[13px] text-[#5E6A63]">
+                    Listepris {formatKrShort(l.list_unit_oere ?? 0)}. {l.override.reason}
+                  </span>
+                )}
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {canPrice ? (
+                  <button
+                    type="button"
+                    aria-label={`Ret pris: ${l.label}${suffix}`}
+                    aria-expanded={editing === l.key}
+                    onClick={() => setEditing(editing === l.key ? null : l.key)}
+                    className={`rounded-md px-1.5 tabular-nums underline decoration-dotted underline-offset-4 hover:bg-[#F5F6F4] ${focusRing}`}
+                  >
+                    {formatKr(l.amount_oere).replace(" kr.", "")}
+                  </button>
+                ) : (
+                  <span className="tabular-nums">{formatKr(l.amount_oere).replace(" kr.", "")}</span>
+                )}
+                <button type="button" aria-label={`Fjern ${l.label}${suffix}`} onClick={() => onRemove(l)} className={`h-6 w-6 rounded-md text-[#5E6A63] hover:bg-[#F5F6F4] ${focusRing}`}>
+                  x
+                </button>
+              </span>
+            </div>
+            {canPrice && editing === l.key && (
+              <PriceOverrideForm
+                name={l.label}
+                listOere={l.list_unit_oere ?? 0}
+                currentOere={l.unit_oere ?? 0}
+                currentReason={l.override?.reason}
+                submitLabel="Brug prisen"
+                onSubmit={(oere, reason) => {
+                  onPrice(l, oere === l.list_unit_oere || !reason ? null : { unit_oere: oere, reason });
+                  setEditing(null);
+                }}
+                onCancel={() => setEditing(null)}
+              />
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -108,7 +159,7 @@ export function SummaryPanel(p: Props) {
               {dev.lines.length === 0 ? (
                 <p className="m-0 py-2 text-[#5E6A63]">Ingen opgaver endnu.</p>
               ) : (
-                <LineList lines={dev.lines} onRemove={(l) => p.onRemoveLine(dev.key, l)} suffix={`, enhed ${i + 1}`} />
+                <LineList lines={dev.lines} onRemove={(l) => p.onRemoveLine(dev.key, l)} onPrice={(l, o) => p.onPriceLine(dev.key, l, o)} suffix={`, enhed ${i + 1}`} />
               )}
               {dev.depositHint && (
                 <div role="note" className="mt-2 rounded-[10px] bg-[#FBEFD9] px-3 py-2.5 text-[13px] text-[#7A4A06]">
@@ -120,7 +171,7 @@ export function SummaryPanel(p: Props) {
         ) : (
           <>
             {(single?.lines.length ?? 0) === 0 && <p className="m-0 py-3 text-[#5E6A63]">Ingen opgaver endnu.</p>}
-            {single && <LineList lines={single.lines} onRemove={(l) => p.onRemoveLine(single.key, l)} suffix="" />}
+            {single && <LineList lines={single.lines} onRemove={(l) => p.onRemoveLine(single.key, l)} onPrice={(l, o) => p.onPriceLine(single.key, l, o)} suffix="" />}
           </>
         )}
         <div className="mt-auto flex justify-between pb-2 pt-3 text-lg font-bold">

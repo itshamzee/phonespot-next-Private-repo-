@@ -90,6 +90,9 @@ export type AddonLine = {
   note?: string | null;
 };
 
+/** En pris sat af personalet i stedet for listeprisen (pr. stk., øre) med begrundelse. */
+export type PriceOverride = { unit_oere: number; reason: string };
+
 export type PanelLine = {
   key: string;
   label: string;
@@ -98,12 +101,26 @@ export type PanelLine = {
   amount_oere: number;
   kind: "repair" | "free" | "addon";
   state: StockState | null;
+  /** Listepris pr. stk. i øre. Mangler på "anden opgave" (ingen listepris). */
+  list_unit_oere?: number;
+  /** Gældende pris pr. stk. i øre (listepris eller personalets pris). */
+  unit_oere?: number;
+  qty?: number;
+  /** Personalets afvigende pris og begrundelse, hvis sat. */
+  override?: PriceOverride | null;
 };
+
+/** Gældende override for en linje, kun hvis den faktisk afviger fra listeprisen. */
+export function activeOverride(overrides: Record<string, PriceOverride> | undefined, key: string, listOere: number): PriceOverride | null {
+  const o = overrides?.[key];
+  return o && o.unit_oere !== listOere ? o : null;
+}
 
 export function repairLines(
   categories: ServiceCategory[],
   selected: Record<string, string>,
   location: LocationSlug,
+  overrides?: Record<string, PriceOverride>,
 ): PanelLine[] {
   const lines: PanelLine[] = [];
   for (const cat of categories) {
@@ -116,14 +133,20 @@ export function repairLines(
     let note: string | null = null;
     if (info.state === "movable") note = "Del flyttes fra anden butik";
     else if (info.state === "backorder") note = "Del skal bestilles";
+    const list = Math.round(svc.price_dkk * 100);
+    const ov = activeOverride(overrides, `svc:${svc.id}`, list);
     lines.push({
       key: `svc:${svc.id}`,
       label,
       note,
       noteTone: "warn",
-      amount_oere: Math.round(svc.price_dkk * 100),
+      amount_oere: ov ? ov.unit_oere : list,
       kind: "repair",
       state: info.state,
+      list_unit_oere: list,
+      unit_oere: ov ? ov.unit_oere : list,
+      qty: 1,
+      override: ov,
     });
   }
   return lines;
@@ -135,8 +158,9 @@ export function buildPanelLines(args: {
   free: FreeTask[];
   addons: AddonLine[];
   location: LocationSlug;
+  overrides?: Record<string, PriceOverride>;
 }): PanelLine[] {
-  const lines = repairLines(args.categories, args.selected, args.location);
+  const lines = repairLines(args.categories, args.selected, args.location, args.overrides);
   for (const f of args.free) {
     lines.push({
       key: `free:${f.id}`,
@@ -149,14 +173,20 @@ export function buildPanelLines(args: {
     });
   }
   for (const a of args.addons) {
+    const ov = activeOverride(args.overrides, `addon:${a.key}`, a.price_oere);
+    const unit = ov ? ov.unit_oere : a.price_oere;
     lines.push({
       key: `addon:${a.key}`,
       label: a.title,
       note: `Tilkøb · ${a.qty} stk.`,
       noteTone: "muted",
-      amount_oere: a.price_oere * a.qty,
+      amount_oere: unit * a.qty,
       kind: "addon",
       state: null,
+      list_unit_oere: a.price_oere,
+      unit_oere: unit,
+      qty: a.qty,
+      override: ov,
     });
   }
   return lines;
@@ -365,6 +395,8 @@ export type BuildArgs = {
   selected: Record<string, string>;
   free: FreeTask[];
   addons: AddonLine[];
+  /** Personalets egne priser pr. linjenøgle (`svc:<id>` eller `addon:<key>`). */
+  overrides?: Record<string, PriceOverride>;
   checklist: ChecklistItem[];
   photos: string[];
   notes: string;
@@ -377,14 +409,19 @@ export function buildRequest(a: BuildArgs): CreateRepairCaseRequest {
   const items: NewCaseItemInput[] = [];
   for (const cat of a.categories) {
     const id = a.selected[cat.name];
-    if (id) items.push({ kind: "repair", repair_service_id: id });
+    if (!id) continue;
+    const svc = cat.services.find((s) => s.id === id);
+    const ov = svc ? activeOverride(a.overrides, `svc:${id}`, Math.round(svc.price_dkk * 100)) : null;
+    items.push(ov ? { kind: "repair", repair_service_id: id, unit_price_oere: ov.unit_oere, price_reason: ov.reason } : { kind: "repair", repair_service_id: id });
   }
   for (const f of a.free) {
     items.push({ kind: "free_text", description: f.description, qty: 1, unit_price_oere: Math.round(f.price_dkk * 100) });
   }
   for (const ad of a.addons) {
-    if (ad.kind === "device" && ad.device_id) items.push({ kind: "device", device_id: ad.device_id });
-    else if (ad.sku_product_id) items.push({ kind: "product", sku_product_id: ad.sku_product_id, qty: ad.qty });
+    const ov = activeOverride(a.overrides, `addon:${ad.key}`, ad.price_oere);
+    const price = ov ? { unit_price_oere: ov.unit_oere, price_reason: ov.reason } : {};
+    if (ad.kind === "device" && ad.device_id) items.push({ kind: "device", device_id: ad.device_id, ...price });
+    else if (ad.sku_product_id) items.push({ kind: "product", sku_product_id: ad.sku_product_id, qty: ad.qty, ...price });
   }
   const src = a.existing;
   const d = a.draft;

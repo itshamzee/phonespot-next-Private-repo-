@@ -24,10 +24,11 @@ import {
   newKey,
   previousSection,
   removeLineFrom,
+  setLineOverride,
   type DeviceDraft,
   type DeviceSectionId,
 } from "./devices";
-import { EMPTY_CUSTOMER, customerValid, formatPhoneDk, type CustomerDraft, type ExistingCustomer, type LocationSlug, type PanelLine } from "./logic";
+import { EMPTY_CUSTOMER, customerValid, formatPhoneDk, type CustomerDraft, type ExistingCustomer, type LocationSlug, type PanelLine, type PriceOverride } from "./logic";
 import { GroupSuccessScreen } from "./group-success-screen";
 import { SectionCard } from "./section-card";
 import { SuccessScreen } from "./success-screen";
@@ -183,6 +184,12 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
     patchDevice(deviceKey, removeLineFrom(devices[i], views[i].categories, line));
   }
 
+  function setLinePrice(deviceKey: string, line: PanelLine, override: PriceOverride | null) {
+    const i = devices.findIndex((d) => d.key === deviceKey);
+    if (i < 0) return;
+    patchDevice(deviceKey, setLineOverride(devices[i], line.key, override));
+  }
+
   const submit = useCallback(async () => {
     if (!canSubmit || inFlight.current) return;
     inFlight.current = true;
@@ -331,6 +338,7 @@ function NewCaseForm({ onReset }: { onReset: () => void }) {
         devices={panelDevices}
         total_oere={total}
         onRemoveLine={removeLine}
+        onPriceLine={setLinePrice}
         sendSms={sendSms}
         onSendSms={setSendSms}
         print={print}

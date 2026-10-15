@@ -25,6 +25,7 @@ import {
   type FreeTask,
   type LocationSlug,
   type PanelLine,
+  type PriceOverride,
   type ServiceCategory,
 } from "./logic";
 
@@ -46,6 +47,8 @@ export type DeviceDraft = {
   viewingState: string | null;
   free: FreeTask[];
   addons: AddonLine[];
+  /** Personalets egne priser pr. linjenøgle. */
+  overrides: Record<string, PriceOverride>;
   issue: string;
   checklist: ChecklistItem[];
   promisedOverride: string | null;
@@ -65,6 +68,7 @@ export function newDraft(key: string): DeviceDraft {
     viewingState: null,
     free: [],
     addons: [],
+    overrides: {},
     issue: "",
     checklist: INITIAL_CHECKLIST,
     promisedOverride: null,
@@ -94,7 +98,7 @@ export function deriveDevice(d: DeviceDraft, location: LocationSlug | null, disp
   const svcUsable = d.svc && d.model && d.svc.key.startsWith(`${d.model.id}|`) ? d.svc : null;
   const svcLoading = svcKey !== null && d.svc?.key !== svcKey;
   const categories = svcUsable?.data?.categories ?? [];
-  const lines = buildPanelLines({ categories, selected: d.selected, free: d.free, addons: d.addons, location: displayLocation });
+  const lines = buildPanelLines({ categories, selected: d.selected, free: d.free, addons: d.addons, location: displayLocation, overrides: d.overrides });
   const backorder = hasBackorder(lines);
 
   let maxMinutes: number | null = null;
@@ -133,6 +137,7 @@ function perDevice(d: DeviceDraft, v: DeviceView): Omit<BuildArgs, keyof Shared>
     selected: d.selected,
     free: d.free,
     addons: d.addons,
+    overrides: d.overrides,
     checklist: d.checklist,
     photos: d.photos,
     notes: d.notes,
@@ -169,15 +174,25 @@ export function newKey(): string {
 
 /** Fjern en linje fra en enheds tilstand (reparation, anden opgave eller tilkøb). */
 export function removeLineFrom(d: DeviceDraft, categories: ServiceCategory[], line: PanelLine): Partial<DeviceDraft> {
+  const overrides = { ...d.overrides };
+  delete overrides[line.key];
   if (line.kind === "repair") {
     const cat = categories.find((c) => c.services.some((s) => `svc:${s.id}` === line.key));
     if (!cat) return {};
     const next = { ...d.selected };
     delete next[cat.name];
-    return { selected: next };
+    return { selected: next, overrides };
   }
   if (line.kind === "free") return { free: d.free.filter((x) => `free:${x.id}` !== line.key) };
-  return { addons: d.addons.filter((x) => `addon:${x.key}` !== line.key) };
+  return { addons: d.addons.filter((x) => `addon:${x.key}` !== line.key), overrides };
+}
+
+/** Sæt (eller fjern med null) personalets pris på en linje. */
+export function setLineOverride(d: DeviceDraft, lineKey: string, override: PriceOverride | null): Partial<DeviceDraft> {
+  const overrides = { ...d.overrides };
+  if (override) overrides[lineKey] = override;
+  else delete overrides[lineKey];
+  return { overrides };
 }
 
 /** Sektionen foran den givne (til Esc). Første sektion på første enhed er kunden. */
