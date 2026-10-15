@@ -91,6 +91,7 @@ export default function CasePage({ id }: { id: string }) {
             comments: detail.comments,
             quotes: detail.quotes,
             deposits: detail.deposits,
+            activity: detail.activity,
           })
         : [],
     [detail],

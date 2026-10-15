@@ -9,6 +9,7 @@ import { getCaseDeposits, type CaseDeposit } from "@/lib/pos/deposits";
 import { withSignedRepairPhotos } from "@/lib/repairs/photo-storage";
 import { caseLines, computeCaseTotals, type CaseLine, type CaseTotals } from "@/lib/repairs/case-money";
 import { loadCaseItems, loadCaseItemViews } from "@/lib/repairs/case-items";
+import { TIMELINE_ACTIONS, type CaseActivity } from "@/lib/repairs/case-timeline";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import type {
@@ -33,6 +34,8 @@ export type CaseDetail = {
   lines: CaseLine[];
   /** Sagens linjer (Ny sag) med lagerstatus. Tom for ældre sager. */
   items: CaseItemView[];
+  /** Linjehandlinger (tilføjet, fjernet, pris rettet) til tidslinjen. Tom i `light`. */
+  activity: CaseActivity[];
   totals: CaseTotals;
   warranty: string | null;
   history: { tickets: number | null; orders: number | null } | null;
@@ -96,6 +99,8 @@ export async function loadCaseDetail(
     history = h;
   }
 
+  const activity = light ? [] : await loadActivity(supabase, id);
+
   let group: CaseDetail["group"] = null;
   if (raw.intake_group_id) {
     const { data: sib } = await supabase
@@ -124,6 +129,7 @@ export async function loadCaseDetail(
     deposits_ok: depositsResult.ok,
     lines,
     items: itemViews,
+    activity,
     totals,
     warranty,
     history,
@@ -165,4 +171,34 @@ async function loadHistory(supabase: SupabaseClient, ticket: RepairTicket): Prom
     tickets: tickets && !tickets.error ? (tickets.count ?? 0) : null,
     orders: orders && !orders.error ? (orders.count ?? 0) : null,
   };
+}
+
+/** Linjehandlinger fra activity_log med medarbejdernavn. Fejl her skjuler kun tidslinjeposterne. */
+async function loadActivity(supabase: SupabaseClient, ticketId: string): Promise<CaseActivity[]> {
+  const { data, error } = await supabase
+    .from("activity_log")
+    .select("id, action, actor_id, details, created_at")
+    .eq("entity_type", "repair_ticket")
+    .eq("entity_id", ticketId)
+    .in("action", [...TIMELINE_ACTIONS])
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) {
+    console.error("[admin/repairs] activity failed:", ticketId, error.message);
+    return [];
+  }
+  const rows = (data ?? []) as { id: string; action: string; actor_id: string | null; details: Record<string, unknown> | null; created_at: string }[];
+  const actorIds = Array.from(new Set(rows.map((r) => r.actor_id).filter((v): v is string => Boolean(v))));
+  const names = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: staff } = await supabase.from("staff").select("id, name").in("id", actorIds);
+    for (const s of (staff ?? []) as { id: string; name: string | null }[]) if (s.name) names.set(s.id, s.name);
+  }
+  return rows.map((r) => ({
+    id: r.id,
+    action: r.action,
+    created_at: r.created_at,
+    details: r.details,
+    actor_name: r.actor_id ? (names.get(r.actor_id) ?? null) : null,
+  }));
 }

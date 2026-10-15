@@ -59,19 +59,91 @@ describe("CaseItemsEditor", () => {
     expect(within(rows[3]).getByText("Ikke optalt")).toBeInTheDocument();
   });
 
-  it("removes a line through the DELETE endpoint after confirmation and reloads", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+  it("removes a line through the DELETE endpoint with a reason and reloads", async () => {
     const { fetchMock, onChanged } = setup([item({})]);
     fireEvent.click(screen.getByRole("button", { name: "Fjern Skærmskift" }));
+    fireEvent.change(screen.getByLabelText("Begrundelse for at fjerne linjen"), { target: { value: "Aftalt med kunden" } });
+    fireEvent.click(screen.getByRole("button", { name: "Fjern linjen" }));
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(fetchMock).toHaveBeenCalledWith("/api/admin/repairs/t1/items/i1", expect.objectContaining({ method: "DELETE" }));
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/api/admin/repairs/t1/items/i1");
+    expect(call[1]?.method).toBe("DELETE");
+    expect(JSON.parse(String(call[1]?.body))).toEqual({ reason: "Aftalt med kunden" });
   });
 
-  it("does not remove when the confirmation is declined", () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("fills the reason from a quick chip", async () => {
+    const { fetchMock, onChanged } = setup([item({})]);
+    fireEvent.click(screen.getByRole("button", { name: "Fjern Skærmskift" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tilføjet ved en fejl" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fjern linjen" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ reason: "Tilføjet ved en fejl" });
+  });
+
+  it("does not remove without a reason, and not when cancelled", () => {
     const { fetchMock } = setup([item({})]);
     fireEvent.click(screen.getByRole("button", { name: "Fjern Skærmskift" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fjern linjen" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Skriv hvorfor linjen fjernes");
+    fireEvent.click(screen.getByRole("button", { name: "Annuller" }));
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Begrundelse for at fjerne linjen")).toBeNull();
+  });
+
+  it("warns that stock is not returned when a used part is removed", () => {
+    setup([item({ id: "p1", kind: "part", parent_item_id: "i1", description: "Skærm", stock_status: "consumed", list_price_oere: 0, unit_price_oere: 0, total_oere: 0 })]);
+    fireEvent.click(screen.getByRole("button", { name: "Fjern Skærm" }));
+    expect(screen.getByText(/lageret gives ikke tilbage/)).toBeInTheDocument();
+  });
+
+  it("edits the price: shows the list price, requires a reason and PATCHes øre + reason", async () => {
+    const { fetchMock, onChanged } = setup([item({ list_price_oere: 119_900, unit_price_oere: 119_900, total_oere: 119_900 })]);
+    fireEvent.click(screen.getByRole("button", { name: "Ret pris: Skærmskift" }));
+    expect(screen.getByText(/Listepris 1\.199 kr\./)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Ny pris (kr.)"), { target: { value: "999,50" } });
+    fireEvent.click(screen.getByRole("button", { name: "Gem pris" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Skriv en begrundelse");
+    expect(fetchMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Aftalt pris med kunden" }));
+    fireEvent.click(screen.getByRole("button", { name: "Gem pris" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/api/admin/repairs/t1/items/i1");
+    expect(call[1]?.method).toBe("PATCH");
+    expect(JSON.parse(String(call[1]?.body))).toEqual({ unit_price_oere: 99_950, reason: "Aftalt pris med kunden" });
+  });
+
+  it("shows list price next to a deviating price, and sends no reason when set back to the list price", async () => {
+    const { fetchMock, onChanged } = setup([item({ list_price_oere: 119_900, unit_price_oere: 99_900, total_oere: 99_900, price_reason: "Kulance" })]);
+    expect(screen.getByText("Afvigende pris: Kulance")).toBeInTheDocument();
+    expect(screen.getAllByText(/Listepris 1\.199 kr\./).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Ret pris: Skærmskift" }));
+    fireEvent.change(screen.getByLabelText("Ny pris (kr.)"), { target: { value: "1199" } });
+    fireEvent.click(screen.getByRole("button", { name: "Gem pris" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ unit_price_oere: 119_900, reason: null });
+  });
+
+  it("allows a price change on a finished repair (used part) but not on part lines or sold lines", () => {
+    setup([
+      item({ id: "r", stock_status: "none" }),
+      item({ id: "p", kind: "part", parent_item_id: "r", description: "Skærm", stock_status: "consumed", list_price_oere: 0, unit_price_oere: 0, total_oere: 0 }),
+      item({ id: "d", kind: "product", description: "Cover", stock_status: "sold" }),
+    ]);
+    expect(screen.getByRole("button", { name: "Ret pris: Skærmskift" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ret pris: Skærm" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ret pris: Cover" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Fjern Cover" })).toBeNull();
+  });
+
+  it("free text lines change price without a reason", async () => {
+    const { fetchMock, onChanged } = setup([item({ id: "f", kind: "free_text", description: "Rens", stock_status: "none", list_price_oere: 10_000, unit_price_oere: 10_000, total_oere: 10_000 })]);
+    fireEvent.click(screen.getByRole("button", { name: "Ret pris: Rens" }));
+    expect(screen.queryByLabelText("Begrundelse for prisen")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Ny pris (kr.)"), { target: { value: "150" } });
+    fireEvent.click(screen.getByRole("button", { name: "Gem pris" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ unit_price_oere: 15_000, reason: null });
   });
 
   it("adds a free-text line via the items endpoint", async () => {
@@ -86,11 +158,12 @@ describe("CaseItemsEditor", () => {
     expect(JSON.parse(String(call?.[1]?.body))).toEqual({ item: { kind: "free_text", description: "Rensning", unit_price_oere: 10_000, qty: 1 } });
   });
 
-  it("locks consumed and sold lines, and everything on a closed case", () => {
-    setup([item({ stock_status: "consumed" })]);
+  it("locks sold lines, and everything on a closed case", () => {
+    setup([item({ stock_status: "sold" })]);
     expect(screen.queryByRole("button", { name: "Fjern Skærmskift" })).toBeNull();
     cleanup();
     setup([item({})], true);
     expect(screen.queryByRole("button", { name: "Tilføj linje" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ret pris: Skærmskift" })).toBeNull();
   });
 });

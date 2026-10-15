@@ -5,7 +5,9 @@ import { Btn, Pill, apiError } from "@/components/admin/repairs/ui";
 import { fetchModelServices, fetchUpsell, searchDevices } from "@/components/admin/repairs/new-case/api";
 import { stockInfo, type LocationSlug } from "@/components/admin/repairs/new-case/logic";
 import { TierCard } from "@/components/admin/repairs/new-case/repair-section";
+import { PriceOverrideForm, ReasonChips } from "@/components/admin/repairs/price-override";
 import { formatKr, formatKrShort, type CaseLine } from "@/lib/repairs/case-money";
+import { REMOVE_REASON_CHIPS } from "@/lib/repairs/price-input";
 import {
   REPAIR_QUALITY_LABELS,
   type CaseItemView,
@@ -40,13 +42,14 @@ const STATUS_LABEL: Record<ItemStockStatus, { text: string; tone: "grey" | "gree
   sold: { text: "Solgt", tone: "green" },
 };
 
-const LOCKED: ItemStockStatus[] = ["consumed", "sold", "released"];
+/** Solgte (returneres i kassen) og frigivne linjer er låst. Brugte dele kan stadig rettes og fjernes fra regningen. */
+const LOCKED: ItemStockStatus[] = ["sold", "released"];
 
 export function stockStatusLabel(status: ItemStockStatus) {
   return STATUS_LABEL[status];
 }
 
-/** Kan linjen ændres? Brugte, solgte og frigivne linjer er låst. */
+/** Kan linjen ændres? Solgte og frigivne linjer er låst. */
 export function itemEditable(item: CaseItemView): boolean {
   return !LOCKED.includes(item.stock_status);
 }
@@ -58,6 +61,8 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
   const [mode, setMode] = useState<Mode>("repair");
   const [busy, setBusy] = useState<string | null>(null);
   const [swapFor, setSwapFor] = useState<string | null>(null);
+  const [priceFor, setPriceFor] = useState<string | null>(null);
+  const [removeFor, setRemoveFor] = useState<string | null>(null);
 
   const editable = !closed && Boolean(items);
 
@@ -86,9 +91,20 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
   const addItem = (item: NewCaseItemInput, key: string) =>
     call(`/api/admin/repairs/${ticketId}/items`, "POST", { item }, "Linjen blev ikke tilføjet. Prøv igen.", key);
 
-  async function removeItem(item: CaseItemView) {
-    if (!window.confirm(`Fjern "${item.description}" fra sagen? ${item.stock_status === "reserved" ? "Den reserverede del frigives." : ""}`.trim())) return;
-    await call(`/api/admin/repairs/${ticketId}/items/${item.id}`, "DELETE", undefined, "Linjen blev ikke fjernet. Prøv igen.", `rm-${item.id}`);
+  async function removeItem(item: CaseItemView, reason: string) {
+    const ok = await call(`/api/admin/repairs/${ticketId}/items/${item.id}`, "DELETE", { reason }, "Linjen blev ikke fjernet. Prøv igen.", `rm-${item.id}`);
+    if (ok) setRemoveFor(null);
+  }
+
+  async function changePrice(item: CaseItemView, unitOere: number, reason: string | null) {
+    const ok = await call(
+      `/api/admin/repairs/${ticketId}/items/${item.id}`,
+      "PATCH",
+      { unit_price_oere: unitOere, reason },
+      "Prisen blev ikke rettet. Prøv igen.",
+      `price-${item.id}`,
+    );
+    if (ok) setPriceFor(null);
   }
 
   async function swapPart(item: CaseItemView, skuId: string) {
@@ -110,7 +126,7 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
                 <th className="w-16 py-2 font-semibold">Antal</th>
                 <th className="w-32 py-2 text-right font-semibold">Pris</th>
                 {editable && (
-                  <th className="w-40 py-2 text-right font-semibold">
+                  <th className="w-56 py-2 text-right font-semibold">
                     <span className="sr-only">Handlinger</span>
                   </th>
                 )}
@@ -121,13 +137,34 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
                 ? items.map((it) => {
                     const st = STATUS_LABEL[it.stock_status];
                     const canEdit = editable && itemEditable(it);
-                    const canSwap = canEdit && (it.kind === "repair" || it.kind === "part") && Boolean(modelId);
+                    const canSwap = canEdit && it.stock_status !== "consumed" && (it.kind === "repair" || it.kind === "part") && Boolean(modelId);
+                    const canPrice = canEdit && it.kind !== "part";
+                    const priced = it.list_price_oere !== it.unit_price_oere;
                     return (
                       <tr key={it.id} className={`border-b border-[#EEF0EC] align-top ${it.stock_status === "released" ? "text-[#8A948E] line-through" : ""}`}>
                         <td className="py-3">
                           {[it.kind === "repair" ? deviceModel : null, it.description].filter(Boolean).join(" · ")}
                           {it.quality_label && <span className="text-[#5E6A63]"> ({it.quality_label})</span>}
                           {it.price_reason && <span className="block text-xs text-[#5E6A63]">Afvigende pris: {it.price_reason}</span>}
+                          {priceFor === it.id && (
+                            <PriceOverrideForm
+                              name={it.description}
+                              listOere={it.kind === "free_text" ? null : it.list_price_oere}
+                              currentOere={it.unit_price_oere}
+                              currentReason={it.price_reason}
+                              busy={busy === `price-${it.id}`}
+                              onSubmit={(oere, reason) => changePrice(it, oere, reason)}
+                              onCancel={() => setPriceFor(null)}
+                            />
+                          )}
+                          {removeFor === it.id && (
+                            <RemovePanel
+                              item={it}
+                              busy={busy === `rm-${it.id}`}
+                              onConfirm={(reason) => removeItem(it, reason)}
+                              onCancel={() => setRemoveFor(null)}
+                            />
+                          )}
                           {swapFor === it.id && (
                             <SwapPicker
                               modelId={modelId}
@@ -141,7 +178,12 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
                         </td>
                         <td className="py-3">{st ? <Pill tone={st.tone}>{st.text}</Pill> : <span className="text-[#5E6A63]">Ikke optalt</span>}</td>
                         <td className="py-3">{it.qty}</td>
-                        <td className="py-3 text-right tabular-nums">{formatKr(it.total_oere)}</td>
+                        <td className="py-3 text-right tabular-nums">
+                          {formatKr(it.total_oere)}
+                          {priced && it.kind !== "free_text" && it.kind !== "part" && (
+                            <span className="block text-xs text-[#5E6A63]">Listepris {formatKrShort(it.list_price_oere * it.qty)}</span>
+                          )}
+                        </td>
                         {editable && (
                           <td className="py-3 text-right">
                             <span className="inline-flex gap-1.5">
@@ -150,8 +192,28 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
                                   Skift del
                                 </Btn>
                               )}
+                              {canPrice && (
+                                <Btn
+                                  size="sm"
+                                  aria-label={`Ret pris: ${it.description}`}
+                                  onClick={() => {
+                                    setRemoveFor(null);
+                                    setPriceFor(priceFor === it.id ? null : it.id);
+                                  }}
+                                >
+                                  Ret pris
+                                </Btn>
+                              )}
                               {canEdit && (
-                                <Btn size="sm" aria-label={`Fjern ${it.description}`} disabled={busy === `rm-${it.id}`} onClick={() => removeItem(it)}>
+                                <Btn
+                                  size="sm"
+                                  aria-label={`Fjern ${it.description}`}
+                                  disabled={busy === `rm-${it.id}`}
+                                  onClick={() => {
+                                    setPriceFor(null);
+                                    setRemoveFor(removeFor === it.id ? null : it.id);
+                                  }}
+                                >
                                   Fjern
                                 </Btn>
                               )}
@@ -193,6 +255,67 @@ export default function CaseItemsEditor({ ticketId, store, modelId, deviceModel,
         </div>
       )}
     </div>
+  );
+}
+
+/* ------------------------------- Fjern -------------------------------- */
+
+function RemovePanel({
+  item,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  item: CaseItemView;
+  busy: boolean;
+  onConfirm: (reason: string) => void;
+  onCancel: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [touched, setTouched] = useState(false);
+  const used = item.stock_status === "consumed";
+  return (
+    <form
+      role="group"
+      aria-label={`Fjern ${item.description}`}
+      className="mt-2 flex flex-col gap-3 rounded-lg border border-[#E2E5E0] bg-[#FAFBF9] p-3 no-underline"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setTouched(true);
+        if (reason.trim()) onConfirm(reason.trim());
+      }}
+    >
+      <p className="m-0 text-sm text-[#15211B]">
+        Fjern &quot;{item.description}&quot; fra sagen? {item.stock_status === "reserved" && "Den reserverede del frigives. "}
+        {used && "Delen er allerede brugt, så lageret gives ikke tilbage. "}
+        Fjernelsen skrives i sagens historik.
+      </p>
+      <label className="flex flex-col gap-1 text-[13px] text-[#5E6A63]">
+        Begrundelse
+        <input
+          aria-label="Begrundelse for at fjerne linjen"
+          className="h-10 w-full rounded-lg border border-[#C9D0C7] bg-white px-3 text-sm text-[#15211B]"
+          maxLength={300}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          autoFocus
+        />
+      </label>
+      <ReasonChips chips={REMOVE_REASON_CHIPS} onPick={setReason} />
+      {touched && !reason.trim() && (
+        <p role="alert" className="m-0 text-sm text-[#B42318]">
+          Skriv hvorfor linjen fjernes
+        </p>
+      )}
+      <div className="flex gap-2">
+        <Btn type="submit" variant="primary" size="sm" disabled={busy}>
+          Fjern linjen
+        </Btn>
+        <Btn size="sm" onClick={onCancel}>
+          Annuller
+        </Btn>
+      </div>
+    </form>
   );
 }
 
