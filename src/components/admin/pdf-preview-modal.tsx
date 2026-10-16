@@ -288,6 +288,11 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
           </fieldset>
 
           {/* Services */}
+          {type === "intake-receipt" ? (
+            <p className="m-0 text-sm text-gray">
+              Linjer, rabat, depositum og rest hentes fra sagen, så beviset passer med sagssiden. Ret priser på sagen.
+            </p>
+          ) : (
           <fieldset className="space-y-3">
             <legend className="text-xs font-semibold uppercase tracking-wide text-charcoal/40">
               Reparationer
@@ -337,6 +342,7 @@ export function PDFPreviewModal({ type, data, onClose }: PDFPreviewModalProps) {
               </span>
             </div>
           </fieldset>
+          )}
 
             </>
           )}

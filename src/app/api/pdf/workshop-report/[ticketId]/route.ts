@@ -1,4 +1,5 @@
 import { requireTicketAccess } from "@/lib/repairs/ticket-access";
+import { loadReceiptMoney } from "@/lib/repairs/receipt";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { renderToBuffer } from "@react-pdf/renderer";
@@ -48,7 +49,12 @@ export async function GET(
     device = data;
   }
 
-  const services = (ticket.services ?? []) as { name: string; price_dkk: number }[];
+  // Samme linjer som sagssiden (også produkter/enheder, ikke kun ticket.services).
+  const money = await loadReceiptMoney(supabase, ticketId, ticket);
+  const services = money.lines.map((l) => ({
+    name: l.qty > 1 ? `${l.name} x ${l.qty}` : l.name,
+    price_dkk: l.total_oere / 100,
+  }));
   const internalNotes = ((ticket.internal_notes ?? []) as { text: string }[])
     .map((n) => n.text)
     .join("\n");
