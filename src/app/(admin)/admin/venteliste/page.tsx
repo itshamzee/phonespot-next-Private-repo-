@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { createBrowserClient } from "@/lib/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -50,18 +49,19 @@ export default function AdminVentelistePage() {
   const [filter, setFilter] = useState<NotifyStatus | "alle">("waiting");
   const [search, setSearch] = useState("");
 
-  const supabase = createBrowserClient();
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("notify_requests")
-        .select("id, customer_email, template_id, grade_preference, status, created_at, product_templates(display_name, slug)")
-        .order("created_at", { ascending: false });
+      let data: NotifyRow[] = [];
+      try {
+        const res = await fetch("/api/admin/notify-requests", { cache: "no-store" });
+        if (res.ok) data = ((await res.json()).requests as NotifyRow[]) ?? [];
+      } catch {
+        /* tom liste */
+      }
       if (!cancelled) {
-        setRows((data as unknown as NotifyRow[]) ?? []);
+        setRows(data);
         setLoading(false);
       }
     })();

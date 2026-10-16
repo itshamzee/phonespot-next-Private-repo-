@@ -94,11 +94,18 @@ export default function RabatkoderPage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Direct DB update via supabase client
-    await supabase
-      .from("discount_codes")
-      .update({ is_active: !currentlyActive })
-      .eq("id", id);
+    const res = await fetch("/api/discount-codes", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, is_active: !currentlyActive }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Fejl ved opdatering");
+    }
 
     await loadCodes();
   }

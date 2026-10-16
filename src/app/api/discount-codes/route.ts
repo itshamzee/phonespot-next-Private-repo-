@@ -140,3 +140,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Fejl ved oprettelse" }, { status: 500 });
   }
 }
+
+/**
+ * PATCH /api/discount-codes
+ * Slå en rabatkode til/fra. Manager/owner only.
+ * Body: { id, is_active }
+ * Erstatter en direkte browser-opdatering af discount_codes, som RLS blokerer.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = createServerClient();
+
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.slice(7));
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: staff } = await supabase
+      .from("staff")
+      .select("id, role")
+      .eq("auth_id", user.id)
+      .single();
+    if (!staff || !["manager", "owner"].includes(staff.role)) {
+      return NextResponse.json({ error: "Kun managere og ejere kan ændre rabatkoder" }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.id !== "string" || typeof body.is_active !== "boolean") {
+      return NextResponse.json({ error: "id og is_active kræves" }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from("discount_codes")
+      .update({ is_active: body.is_active })
+      .eq("id", body.id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    return NextResponse.json({ code: data });
+  } catch (err) {
+    console.error("Discount code update error:", err);
+    return NextResponse.json({ error: "Fejl ved opdatering" }, { status: 500 });
+  }
+}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 
 interface OrderData {
@@ -38,7 +37,6 @@ function formatDKK(ore: number): string {
 
 export default function FakturaPage() {
   const { id } = useParams<{ id: string }>();
-  const supabase = createBrowserClient();
   const [order, setOrder] = useState<OrderData | null>(null);
   const [items, setItems] = useState<
     Array<{
@@ -56,22 +54,22 @@ export default function FakturaPage() {
   }, [id]);
 
   async function loadOrder() {
-    const { data, error } = await supabase
-      .from("orders")
-      .select(`
-        id, order_number, status, total, subtotal, discount_amount, shipping_cost,
-        brugtmoms_total, created_at, confirmed_at, shipping_address, shipping_method, notes,
-        customer:customers(name, email, phone),
-        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, purchase_price, vat_scheme, upgrade_details)
-      `)
-      .eq("id", id)
-      .single();
+    let payload: { order: any; devices: any[]; skus: any[] } | null = null;
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/print-data`, { cache: "no-store" });
+      if (res.ok) payload = await res.json();
+    } catch {
+      /* ordre ikke fundet */
+    }
 
-    if (error || !data) {
+    if (!payload?.order) {
       setLoading(false);
       return;
     }
 
+    const data = payload.order;
+    const deviceMap = new Map<string, any>(payload.devices.map((d) => [d.id, d]));
+    const skuMap = new Map<string, any>(payload.skus.map((s) => [s.id, s]));
     setOrder(data as any);
 
     // Resolve item names
@@ -86,11 +84,7 @@ export default function FakturaPage() {
 
     for (const item of orderItems) {
       if (item.item_type === "device" && item.device_id) {
-        const { data: dev } = await supabase
-          .from("devices")
-          .select("template:product_templates(brand, model, storage), color, grade")
-          .eq("id", item.device_id)
-          .single();
+        const dev = deviceMap.get(item.device_id);
         const t = (dev as any)?.template;
         const name = t
           ? `${t.brand} ${t.model}${t.storage ? ` ${t.storage}` : ""}${dev?.color ? ` (${dev.color})` : ""}${dev?.grade ? ` — ${dev.grade}` : ""}`
@@ -103,11 +97,7 @@ export default function FakturaPage() {
           upgrades: item.upgrade_details ?? null,
         });
       } else if (item.sku_product_id) {
-        const { data: sku } = await supabase
-          .from("sku_products")
-          .select("title")
-          .eq("id", item.sku_product_id)
-          .single();
+        const sku = skuMap.get(item.sku_product_id);
         resolvedItems.push({
           name: sku?.title || "Tilbehor",
           qty: item.quantity,

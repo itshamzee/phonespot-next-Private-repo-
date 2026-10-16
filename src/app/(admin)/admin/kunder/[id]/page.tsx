@@ -80,11 +80,9 @@ export default function CustomerDetailPage({
           .select("*")
           .eq("customer_id", id)
           .order("created_at", { ascending: false }),
-        supabase
-          .from("orders")
-          .select("id, order_number, status, payment_status, type, total, created_at")
-          .eq("customer_id", id)
-          .order("created_at", { ascending: false }),
+        fetch(`/api/admin/customers/${id}/orders`, { cache: "no-store" })
+          .then(async (r) => ({ data: r.ok ? ((await r.json()).orders as Order[]) : null }))
+          .catch(() => ({ data: null as Order[] | null })),
       ]);
 
       if (customerRes.data) {
