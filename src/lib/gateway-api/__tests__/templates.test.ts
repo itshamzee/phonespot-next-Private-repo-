@@ -60,7 +60,7 @@ describe("anmeldelse SMS", () => {
       reviewUrl: "https://g.page/r/test/review",
     })!;
     expect(sms).toBe(
-      "Tak fordi du valgte PhoneSpot Vejle. Var du tilfreds med reparationen af din iPhone 13, vil vi blive glade for en anmeldelse. Det tager 30 sekunder: https://g.page/r/test/review",
+      "Tak fordi du valgte PhoneSpot Vejle. Vi vil gerne høre, hvordan det gik med din iPhone 13. Skriv en anmeldelse her, det tager 30 sekunder: https://g.page/r/test/review",
     );
   });
 });

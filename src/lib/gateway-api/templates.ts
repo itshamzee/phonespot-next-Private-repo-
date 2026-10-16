@@ -44,7 +44,7 @@ export function getSmsTemplate(
       // Uden et link ville kunden få en tom opfordring; send ingenting.
       const link = (data.reviewUrl ?? googleReviewUrl(storeId))?.trim();
       if (!link) return null;
-      return `Tak fordi du valgte PhoneSpot ${store.city}. Var du tilfreds med reparationen af din ${deviceName}, vil vi blive glade for en anmeldelse. Det tager 30 sekunder: ${link}`;
+      return `Tak fordi du valgte PhoneSpot ${store.city}. Vi vil gerne høre, hvordan det gik med din ${deviceName}. Skriv en anmeldelse her, det tager 30 sekunder: ${link}`;
     }
     default:
       return null;
