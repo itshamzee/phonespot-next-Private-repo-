@@ -466,7 +466,7 @@ function ServicesTable({ money, label }: { money: ReceiptMoney; label: string })
         return (
           <View key={i} style={styles.tableRow} wrap={false}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.tableServiceName}>{l.name}</Text>
+              <Text style={{ fontSize: 10 }}>{l.name}</Text>
               {note ? <Text style={styles.tableNote}>{note}</Text> : null}
             </View>
             <Text style={styles.tableQty}>{l.qty}</Text>
@@ -606,7 +606,7 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
               opfordres til at tage backup før indlevering.
             </Text>
             <Text style={styles.termsText}>
-              4. Prisen er et estimat og kan aendre sig efter diagnosticering.
+              4. Prisen er et estimat og kan ændre sig efter diagnosticering.
             </Text>
           </View>
         </View>
