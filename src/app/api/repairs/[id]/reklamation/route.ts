@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import { canAccessStore } from "@/lib/auth/store-scope";
+import { scheduleTicketPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 
 // Ikke dækket af middleware-matcheren — personale-tjekket ligger i ruten.
 
@@ -73,6 +74,9 @@ export async function POST(
     console.error("[repairs] reklamation insert failed:", id, insertError);
     return NextResponse.json({ error: "Kunne ikke oprette reklamationssagen" }, { status: 500 });
   }
+
+  // Lagertjek (spec §4.4). En reklamationssag har ingen ydelser, så tjekket er normalt tomt.
+  scheduleTicketPartsCheck(created.id);
 
   await supabase.from("repair_status_log").insert({
     ticket_id: created.id,

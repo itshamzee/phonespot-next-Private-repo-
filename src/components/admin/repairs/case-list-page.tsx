@@ -19,6 +19,7 @@ import { STATUS_LABELS } from "@/lib/repairs/status-labels";
 import type { RepairStatus } from "@/lib/supabase/types";
 import { focusWithoutScroll } from "@/lib/reveal";
 import { Btn, BtnLink, Pill, apiError } from "@/components/admin/repairs/ui";
+import { PartsStatusBadge } from "@/components/admin/repairs/parts-status-badge";
 import { useCaseListKeys, type ListKeyAction } from "@/components/admin/repairs/list-keys";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { SidePanel } from "@/components/admin/repairs/side-panel";
@@ -259,6 +260,11 @@ export default function CaseListPage() {
                             {row.on_hold_reason && (
                               <span className="ml-1.5">
                                 <Pill>På hold: {row.on_hold_reason.toLowerCase()}</Pill>
+                              </span>
+                            )}
+                            {row.parts_status && row.parts_status !== "ok" && row.parts_status !== "unknown" && (
+                              <span className="ml-1.5">
+                                <PartsStatusBadge status={row.parts_status} />
                               </span>
                             )}
                             {row.is_web_booking && (
