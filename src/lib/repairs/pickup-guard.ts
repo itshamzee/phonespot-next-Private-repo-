@@ -30,7 +30,7 @@ export async function loadCaseRestOere(
   );
   return computeCaseTotals(lines, deposits, {
     paid: false,
-    booking: ticket.booking_details as Parameters<typeof computeCaseTotals>[2]["booking"],
+    booking: ticket.booking_details as NonNullable<Parameters<typeof computeCaseTotals>[2]>["booking"],
   }).rest_oere;
 }
 
