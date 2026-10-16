@@ -8,6 +8,7 @@ import { getSmsTemplate } from "@/lib/gateway-api/templates";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
 import type { RepairStatus } from "@/lib/supabase/types";
 import { consumeRepairParts } from "@/lib/repairs/case-create";
+import { loadCaseRestOere, unpaidPickupMessage, unpaidPickupNote, UNPAID_REASON_MAX } from "@/lib/repairs/pickup-guard";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -126,6 +127,22 @@ export async function PATCH(
       return NextResponse.json({ error: "Sagen er annulleret og kan ikke ændres" }, { status: 409 });
     }
 
+    // Afhentet med penge udestående kræver en begrundelse (fx faktura/erhverv, kulance).
+    let pickupNote: string | null = null;
+    if (status === "afhentet" && oldStatus !== "afhentet" && !ticket.paid) {
+      const rest = await loadCaseRestOere(supabase, ticket);
+      if (rest > 0) {
+        const reason = typeof body.unpaid_reason === "string" ? body.unpaid_reason.trim().slice(0, UNPAID_REASON_MAX) : "";
+        if (!reason) {
+          return NextResponse.json(
+            { error: unpaidPickupMessage(rest), code: "unpaid_pickup", rest_oere: rest },
+            { status: 409 },
+          );
+        }
+        pickupNote = unpaidPickupNote(rest, reason);
+      }
+    }
+
     // Update ticket status
     const { error: updateError } = await supabase
       .from("repair_tickets")
@@ -146,7 +163,7 @@ export async function PATCH(
       ticket_id: id,
       old_status: oldStatus,
       new_status: status,
-      note: note ?? (skipSms && status === "faerdig" ? "Uden SMS til kunden" : null),
+      note: pickupNote ?? note ?? (skipSms && status === "faerdig" ? "Uden SMS til kunden" : null),
     });
 
     // Statusændringen er gemt. Beskeder til kunden er en bivirkning: fejler de,

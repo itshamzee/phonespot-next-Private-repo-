@@ -30,6 +30,10 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
+vi.mock("@/lib/repairs/pickup-guard", async (orig) => ({
+  ...(await orig<typeof import("@/lib/repairs/pickup-guard")>()),
+  loadCaseRestOere: async () => 0,
+}));
 import { PATCH } from "../route";
 import { GOOGLE_REVIEW_URLS } from "@/lib/store-config";
 

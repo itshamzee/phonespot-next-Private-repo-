@@ -69,6 +69,7 @@ describe("meldKlarBody", () => {
     expect(meldKlarBody("klar", false)).toEqual({ status: "faerdig" });
     expect(meldKlarBody("klar", true)).toEqual({ status: "faerdig", skip_sms: true });
     expect(meldKlarBody("betalt", true)).toEqual({ status: "afhentet" });
+    expect(meldKlarBody("betalt", false, "  Faktura  ")).toEqual({ status: "afhentet", unpaid_reason: "Faktura" });
   });
 });
 
@@ -94,15 +95,32 @@ describe("MeldKlarDialog", () => {
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({ status: "faerdig", skip_sms: true });
   });
 
-  it("Faerdig og betalt needs a payment confirmation when the case is unpaid", async () => {
+  it("unpaid pickup warns with the amount, links to the till and needs a reason", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
-    render(<MeldKlarDialog target={target} onClose={() => {}} onDone={() => {}} />);
+    render(<MeldKlarDialog target={{ ...target, rest_oere: 99_900 }} onClose={() => {}} onDone={() => {}} />);
     fireEvent.click(screen.getByLabelText(/Færdig og betalt/));
+    expect(screen.getByRole("alert")).toHaveTextContent("999 kr. står til betaling");
+    expect(screen.getByRole("link", { name: "Gå til kassen" })).toHaveAttribute("href", "/admin/kasse?sag=t1");
     const submit = screen.getByRole("button", { name: "Afslut sagen" });
     expect(submit).toBeDisabled();
-    fireEvent.click(screen.getByLabelText(/betalingen er modtaget/));
+    fireEvent.click(screen.getByLabelText("Afhentet uden betaling"));
+    expect(submit).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Begrundelse/), { target: { value: "Faktura til erhverv" } });
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+      status: "afhentet",
+      unpaid_reason: "Faktura til erhverv",
+    });
+  });
+
+  it("no warning when nothing is outstanding", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+    render(<MeldKlarDialog target={{ ...target, rest_oere: 0 }} onClose={() => {}} onDone={() => {}} />);
+    fireEvent.click(screen.getByLabelText(/Færdig og betalt/));
+    expect(screen.queryByText(/Gå til kassen/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Afslut sagen" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({ status: "afhentet" });
   });

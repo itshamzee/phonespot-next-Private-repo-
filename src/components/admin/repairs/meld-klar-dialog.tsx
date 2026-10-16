@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { focusWithoutScroll } from "@/lib/reveal";
 import { Btn, apiError, btnClass } from "@/components/admin/repairs/ui";
+import { formatKrShort } from "@/lib/repairs/case-money";
 
 export type MeldKlarChoice = "klar" | "betalt";
 
@@ -19,8 +20,14 @@ export type MeldKlarTarget = {
 };
 
 /** Kroppen til status-ruten for et valg i dialogen. */
-export function meldKlarBody(choice: MeldKlarChoice, skipSms: boolean): { status: string; skip_sms?: boolean } {
-  return choice === "klar" ? { status: "faerdig", ...(skipSms ? { skip_sms: true } : {}) } : { status: "afhentet" };
+export function meldKlarBody(
+  choice: MeldKlarChoice,
+  skipSms: boolean,
+  unpaidReason?: string,
+): { status: string; skip_sms?: boolean; unpaid_reason?: string } {
+  if (choice === "klar") return { status: "faerdig", ...(skipSms ? { skip_sms: true } : {}) };
+  const reason = unpaidReason?.trim();
+  return { status: "afhentet", ...(reason ? { unpaid_reason: reason } : {}) };
 }
 
 export function MeldKlarDialog({
@@ -34,7 +41,8 @@ export function MeldKlarDialog({
 }) {
   const [choice, setChoice] = useState<MeldKlarChoice>(target.status === "faerdig" ? "betalt" : "klar");
   const [skipSms, setSkipSms] = useState(false);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [withoutPayment, setWithoutPayment] = useState(false);
+  const [unpaidReason, setUnpaidReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -47,8 +55,9 @@ export function MeldKlarDialog({
   }, []);
 
   const hasPhone = Boolean(target.customer_phone.trim());
-  const needsPaymentConfirm = choice === "betalt" && !target.paid && !(target.rest_oere === 0);
-  const canSubmit = !busy && (!needsPaymentConfirm || paymentConfirmed);
+  const unpaidPickup = choice === "betalt" && !target.paid && !(target.rest_oere === 0);
+  const canSubmit = !busy && (!unpaidPickup || (withoutPayment && unpaidReason.trim().length >= 3));
+  const restText = typeof target.rest_oere === "number" && target.rest_oere > 0 ? formatKrShort(target.rest_oere) : null;
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Escape") {
@@ -81,7 +90,7 @@ export function MeldKlarDialog({
       const res = await fetch(`/api/repairs/${target.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(meldKlarBody(choice, skipSms)),
+        body: JSON.stringify(meldKlarBody(choice, skipSms, unpaidReason)),
       });
       if (!res.ok) {
         setError(await apiError(res, "Sagen blev ikke opdateret. Prøv igen."));
@@ -89,7 +98,7 @@ export function MeldKlarDialog({
         return;
       }
       const data = (await res.json().catch(() => ({}))) as { warning?: string };
-      onDone({ status: meldKlarBody(choice, skipSms).status, warning: data.warning });
+      onDone({ status: meldKlarBody(choice, skipSms, unpaidReason).status, warning: data.warning });
     } catch {
       setError("Sagen blev ikke opdateret, fordi forbindelsen fejlede. Tjek nettet og prøv igen.");
       setBusy(false);
@@ -153,21 +162,35 @@ export function MeldKlarDialog({
               <p className="m-0 text-sm text-[#7A4A06]">Sagen har intet telefonnummer, så der sendes ingen SMS.</p>
             ))}
 
-          {needsPaymentConfirm && (
-            <div className="flex flex-col gap-2 rounded-lg bg-[#FBEFD9] p-3 text-sm text-[#7A4A06]">
-              <span>Sagen er ikke markeret som betalt.</span>
+          {unpaidPickup && (
+            <div role="alert" className="flex flex-col gap-2 rounded-lg bg-[#FBEFD9] p-3 text-sm text-[#7A4A06]">
+              <span className="font-semibold">
+                Sagen er ikke betalt{restText ? `: ${restText} står til betaling` : ""}.
+              </span>
+              <Link href={`/admin/kasse?sag=${target.id}`} className="font-semibold text-[#1A3D2E] underline">
+                Gå til kassen
+              </Link>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={paymentConfirmed}
-                  onChange={(e) => setPaymentConfirmed(e.target.checked)}
+                  checked={withoutPayment}
+                  onChange={(e) => setWithoutPayment(e.target.checked)}
                   className="accent-[#2F8F55]"
                 />
-                Jeg bekræfter, at betalingen er modtaget
+                Afhentet uden betaling
               </label>
-              <Link href={`/admin/kasse?sag=${target.id}`} className="font-semibold text-[#1A3D2E] underline">
-                Betal i kassen i stedet
-              </Link>
+              {withoutPayment && (
+                <label className="flex flex-col gap-1">
+                  Begrundelse (gemmes på sagen)
+                  <input
+                    value={unpaidReason}
+                    maxLength={200}
+                    onChange={(e) => setUnpaidReason(e.target.value)}
+                    placeholder="Fx faktura til erhverv eller kulance"
+                    className="h-10 rounded-lg border border-[#C9D0C7] bg-white px-3 text-[#15211B]"
+                  />
+                </label>
+              )}
             </div>
           )}
 
