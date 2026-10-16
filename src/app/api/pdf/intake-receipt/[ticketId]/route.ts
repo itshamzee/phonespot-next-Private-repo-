@@ -7,6 +7,7 @@ import { IntakeReceiptDocument } from "@/lib/pdf/intake-receipt";
 import type { ChecklistItem } from "@/lib/supabase/types";
 import type { IntakeReceiptDevice } from "@/lib/pdf/intake-receipt";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadReceiptMoney } from "@/lib/repairs/receipt";
 
 type ChecklistRows = { label: string; status: "ok" | "fejl" | "ikke_relevant"; note: string; photo_url: string | null }[];
 
@@ -17,7 +18,7 @@ async function loadGroupDevices(
 ): Promise<IntakeReceiptDevice[]> {
   const { data: rows } = await supabase
     .from("repair_tickets")
-    .select("id, ticket_number, device_model, device_type, device_id, intake_checklist, services")
+    .select("*")
     .eq("intake_group_id", groupId)
     .order("ticket_number", { ascending: true });
   const tickets = (rows ?? []) as {
@@ -28,13 +29,18 @@ async function loadGroupDevices(
     device_id: string | null;
     intake_checklist: ChecklistRows | null;
     services: { name: string; price_dkk: number }[] | null;
+    paid?: boolean | null;
+    booking_details?: unknown;
   }[];
   const ids = tickets.map((t) => t.device_id).filter((v): v is string => Boolean(v));
   const { data: devs } = ids.length
     ? await supabase.from("customer_devices").select("id, brand, model, serial_number, color").in("id", ids)
     : { data: [] };
   const byId = new Map(((devs ?? []) as { id: string; brand: string; model: string; serial_number: string | null; color: string | null }[]).map((d) => [d.id, d]));
-  return tickets.map((t) => {
+  const moneys = await Promise.all(
+    tickets.map((t) => loadReceiptMoney(supabase, t.id, t as unknown as Parameters<typeof loadReceiptMoney>[2])),
+  );
+  return tickets.map((t, i) => {
     const d = t.device_id ? byId.get(t.device_id) : undefined;
     return {
       ticketId: t.id,
@@ -44,7 +50,7 @@ async function loadGroupDevices(
       serialNumber: d?.serial_number ?? undefined,
       deviceColor: d?.color ?? undefined,
       checklist: (t.intake_checklist ?? []) as ChecklistItem[],
-      services: t.services ?? [],
+      money: moneys[i],
     };
   });
 }
@@ -97,10 +103,8 @@ export async function GET(
     wantsGroup && ticket.intake_group_id ? await loadGroupDevices(supabase, ticket.intake_group_id as string) : null;
   const devices = groupDevices && groupDevices.length > 1 ? groupDevices : undefined;
 
-  const services = (ticket.services ?? []) as { name: string; price_dkk: number }[];
-  const totalPrice = devices
-    ? devices.reduce((sum, d) => sum + d.services.reduce((x, s) => x + s.price_dkk, 0), 0)
-    :  services.reduce((sum: number, s: { price_dkk: number }) => sum + s.price_dkk, 0);
+  // Linjer og beløb fra samme kilde som sagssiden (nye sager, ældre booking-sager, rabat, depositum).
+  const money = await loadReceiptMoney(supabase, ticketId, ticket);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
@@ -120,8 +124,7 @@ export async function GET(
         serialNumber: device?.serial_number ?? undefined,
         deviceColor: device?.color ?? undefined,
         checklist: (ticket.intake_checklist ?? []) as { label: string; status: "ok" | "fejl" | "ikke_relevant"; note: string; photo_url: string | null }[],
-        services,
-        totalPrice,
+        money,
         devices,
       },
     }) as any,
@@ -136,11 +139,17 @@ export async function GET(
   });
 }
 
+/**
+ * Forhåndsvisningen retter kunde-, enheds- og checklistefelter. Linjer, rabat, depositum og rest
+ * hentes ALTID fra sagen (aldrig fra klienten), så beviset matcher sagssiden.
+ */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ ticketId: string }> },
 ) {
   const { ticketId } = await params;
+  const access = await requireTicketAccess(request, ticketId);
+  if (!access.ok) return access.response;
 
   let body: {
     ticketNumber?: string;
@@ -153,20 +162,9 @@ export async function POST(
     deviceModel: string;
     serialNumber?: string;
     deviceColor?: string;
-    services: { name: string; price: number }[];
-    internalNotes?: string;
     checklist?: { label: string; status: string }[];
-    /** Indlevering med flere enheder: alle enheder (én sag hver). */
-    devices?: {
-      ticketId: string;
-      ticketNumber?: string;
-      deviceBrand: string;
-      deviceModel: string;
-      serialNumber?: string;
-      deviceColor?: string;
-      services: { name: string; price: number }[];
-      checklist?: { label: string; status: string }[];
-    }[];
+    /** Indlevering med flere enheder (kun antallet bruges; enhederne hentes fra sagerne). */
+    devices?: { ticketId: string }[];
   };
 
   try {
@@ -175,33 +173,24 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const services = (body.services ?? []).map((s) => ({
-    name: s.name,
-    price_dkk: s.price,
-  }));
-  const groupDevices: IntakeReceiptDevice[] | undefined =
-    Array.isArray(body.devices) && body.devices.length > 1
-      ? body.devices.slice(0, 10).map((d) => ({
-          ticketId: d.ticketId,
-          ticketNumber: d.ticketNumber || undefined,
-          deviceBrand: d.deviceBrand,
-          deviceModel: d.deviceModel,
-          serialNumber: d.serialNumber || undefined,
-          deviceColor: d.deviceColor || undefined,
-          checklist: (d.checklist ?? []) as ChecklistItem[],
-          services: (d.services ?? []).map((s) => ({ name: s.name, price_dkk: s.price })),
-        }))
-      : undefined;
-  const totalPrice = groupDevices
-    ? groupDevices.reduce((sum, d) => sum + d.services.reduce((x, s) => x + s.price_dkk, 0), 0)
-    : services.reduce((sum, s) => sum + s.price_dkk, 0);
+  const supabase = createServerClient();
+  const { data: ticket } = await supabase.from("repair_tickets").select("*").eq("id", ticketId).maybeSingle();
+  if (!ticket) {
+    return NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 });
+  }
+
+  const money = await loadReceiptMoney(supabase, ticketId, ticket);
+  const wantsGroup = Array.isArray(body.devices) && body.devices.length > 1;
+  const groupDevices =
+    wantsGroup && ticket.intake_group_id ? await loadGroupDevices(supabase, ticket.intake_group_id as string) : null;
+  const devices = groupDevices && groupDevices.length > 1 ? groupDevices : undefined;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
     React.createElement(IntakeReceiptDocument, {
       data: {
         ticketId,
-        ticketNumber: body.ticketNumber || undefined,
+        ticketNumber: body.ticketNumber || ticket.ticket_number || undefined,
         createdAt: new Date().toISOString(),
         customerName: body.customerName,
         customerPhone: body.customerPhone,
@@ -214,9 +203,8 @@ export async function POST(
         serialNumber: body.serialNumber,
         deviceColor: body.deviceColor,
         checklist: (body.checklist ?? []) as ChecklistItem[],
-        services,
-        totalPrice,
-        devices: groupDevices,
+        money,
+        devices,
       },
     }) as any,
   );

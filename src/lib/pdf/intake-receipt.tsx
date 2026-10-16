@@ -7,6 +7,8 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { ChecklistItem } from "@/lib/supabase/types";
+import { formatKrShort } from "@/lib/repairs/case-money";
+import { agreedPriceNote, sumReceiptMoney, type ReceiptMoney } from "@/lib/repairs/receipt-shape";
 
 const colors = {
   charcoal: "#2D2D2D",
@@ -226,6 +228,32 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     color: colors.charcoal,
   },
+  tableQty: {
+    width: 34,
+    textAlign: "right",
+    fontSize: 10,
+  },
+  tableNote: {
+    fontSize: 7.5,
+    color: colors.gray,
+    marginTop: 1,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  summaryLabel: {
+    flex: 1,
+    fontSize: 10,
+    color: colors.gray,
+  },
+  summaryValue: {
+    width: 80,
+    textAlign: "right",
+    fontSize: 10,
+    color: colors.gray,
+  },
   totalValue: {
     width: 80,
     textAlign: "right",
@@ -294,8 +322,8 @@ interface IntakeReceiptData {
   serialNumber?: string;
   deviceColor?: string;
   checklist: ChecklistItem[];
-  services: { name: string; price_dkk: number }[];
-  totalPrice: number;
+  /** Linjer og beløb fra sagen (lib/repairs/receipt.ts). */
+  money: ReceiptMoney;
   /**
    * Indlevering med flere enheder: ét bevis med alle enheder (én sag hver). Med mindst to
    * enheder bruges listen; felterne ovenfor beskriver så den første. Ellers det normale bevis.
@@ -311,7 +339,7 @@ export interface IntakeReceiptDevice {
   serialNumber?: string;
   deviceColor?: string;
   checklist: ChecklistItem[];
-  services: { name: string; price_dkk: number }[];
+  money: ReceiptMoney;
 }
 
 function checklistStatusText(status: string): string {
@@ -403,24 +431,67 @@ function ChecklistBlock({ checklist }: { checklist: ChecklistItem[] }) {
   );
 }
 
-function ServicesTable({ services, label, total }: { services: { name: string; price_dkk: number }[]; label: string; total: number }) {
+function SummaryRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <View style={styles.summaryRow}>
+      <Text style={[styles.summaryLabel, strong ? { fontFamily: "Helvetica-Bold", color: colors.charcoal } : {}]}>{label}</Text>
+      <Text style={[styles.summaryValue, strong ? { fontFamily: "Helvetica-Bold", color: colors.charcoal } : {}]}>{value}</Text>
+    </View>
+  );
+}
+
+/** Rabat, depositum og rest under totalen. Rest vises kun når depositum kendes. */
+function SummaryRows({ m }: { m: Omit<ReceiptMoney, "lines"> }) {
+  return (
+    <>
+      {m.discount_oere > 0 ? <SummaryRow label="Rabat" value={`-${formatKrShort(m.discount_oere)}`} /> : null}
+      {m.deposits_ok && m.deposits_oere > 0 ? <SummaryRow label="Depositum betalt" value={`-${formatKrShort(m.deposits_oere)}`} /> : null}
+      {m.deposits_ok ? <SummaryRow label="Rest at betale" value={formatKrShort(m.rest_oere)} strong /> : null}
+    </>
+  );
+}
+
+function ServicesTable({ money, label }: { money: ReceiptMoney; label: string }) {
+  const showSubtotal = money.discount_oere > 0;
   return (
     <View style={styles.servicesSection}>
       <Text style={styles.cardTitle}>Reparationer</Text>
       <View style={styles.tableHeader}>
         <Text style={[styles.tableHeaderText, { flex: 1 }]}>Ydelse</Text>
+        <Text style={[styles.tableHeaderText, { width: 34, textAlign: "right" }]}>Antal</Text>
         <Text style={[styles.tableHeaderText, { width: 80, textAlign: "right" }]}>Pris</Text>
       </View>
-      {services.map((s, i) => (
-        <View key={i} style={styles.tableRow}>
-          <Text style={styles.tableServiceName}>{s.name}</Text>
-          <Text style={styles.tableServicePrice}>{s.price_dkk} DKK</Text>
+      {money.lines.map((l, i) => {
+        const note = l.sold ? "Betalt i kassen" : agreedPriceNote(l);
+        return (
+          <View key={i} style={styles.tableRow} wrap={false}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tableServiceName}>{l.name}</Text>
+              {note ? <Text style={styles.tableNote}>{note}</Text> : null}
+            </View>
+            <Text style={styles.tableQty}>{l.qty}</Text>
+            <Text style={styles.tableServicePrice}>{formatKrShort(l.total_oere)}</Text>
+          </View>
+        );
+      })}
+      {showSubtotal ? (
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableServiceName, { color: colors.gray }]}>Subtotal</Text>
+          <Text style={styles.tableServicePrice}>{formatKrShort(money.subtotal_oere)}</Text>
         </View>
-      ))}
+      ) : null}
+      {showSubtotal ? (
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableServiceName, { color: colors.gray }]}>Rabat</Text>
+          <Text style={styles.tableServicePrice}>-{formatKrShort(money.discount_oere)}</Text>
+        </View>
+      ) : null}
       <View style={styles.totalRow}>
         <Text style={styles.totalLabel}>{label}</Text>
-        <Text style={styles.totalValue}>{total} DKK</Text>
+        <Text style={styles.totalValue}>{formatKrShort(money.total_oere)}</Text>
       </View>
+      {money.deposits_ok && money.deposits_oere > 0 ? <SummaryRow label="Depositum betalt" value={`-${formatKrShort(money.deposits_oere)}`} /> : null}
+      {money.deposits_ok ? <SummaryRow label="Rest at betale" value={formatKrShort(money.rest_oere)} strong /> : null}
     </View>
   );
 }
@@ -430,6 +501,7 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
   const shortId = group
     ? group.map((d) => d.ticketNumber || `#${d.ticketId.slice(0, 8).toUpperCase()}`).join(" · ")
     : data.ticketNumber || `#${data.ticketId.slice(0, 8).toUpperCase()}`;
+  const groupTotals = sumReceiptMoney(group ? group.map((d) => d.money) : [data.money]);
   const dateStr = new Date(data.createdAt).toLocaleDateString("da-DK", {
     day: "numeric",
     month: "long",
@@ -499,19 +571,22 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
                   </Text>
                   <DeviceCard dev={dev} />
                   <ChecklistBlock checklist={dev.checklist} />
-                  <ServicesTable services={dev.services} label="Delsum" total={dev.services.reduce((sum, x) => sum + x.price_dkk, 0)} />
+                  <ServicesTable money={dev.money} label="Delsum" />
                 </View>
               ))}
-              <View style={[styles.totalRow, { marginBottom: 16, borderRadius: 4 }]}>
-                <Text style={styles.totalLabel}>Estimeret total, alle enheder</Text>
-                <Text style={styles.totalValue}>{data.totalPrice} DKK</Text>
+              <View style={{ marginBottom: 16 }}>
+                <View style={[styles.totalRow, { borderRadius: 4 }]}>
+                  <Text style={styles.totalLabel}>Estimeret total, alle enheder</Text>
+                  <Text style={styles.totalValue}>{formatKrShort(groupTotals.total_oere)}</Text>
+                </View>
+                <SummaryRows m={groupTotals} />
               </View>
             </>
           ) : (
             <>
               <DeviceCard dev={data} />
               <ChecklistBlock checklist={data.checklist} />
-              <ServicesTable services={data.services} label="Estimeret total" total={data.totalPrice} />
+              <ServicesTable money={data.money} label="Estimeret total" />
             </>
           )}
 
