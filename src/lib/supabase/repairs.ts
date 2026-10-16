@@ -1,5 +1,6 @@
 import { createServerClient } from "./client";
 import { countsTowardFromPrice } from "@/lib/repairs/from-price";
+import type { PriceListBrand } from "@/lib/repairs/price-list";
 import type { RepairBrand, RepairModel, RepairService } from "./types";
 
 export async function getActiveBrands(): Promise<RepairBrand[]> {
@@ -162,6 +163,47 @@ export async function getRepairPriceSummaries(
     };
     return summary.screenFrom || summary.battery ? [summary] : [];
   });
+}
+
+// Hele prislisten i én forespørgsel: aktive mærker → aktive modeller → aktive
+// ydelser med pris, sorteret som på sitet. Ingen fast modelliste, så nye
+// modeller (fx iPhone 17) kommer med, så snart de har priser i databasen.
+export async function getFullPriceList(): Promise<PriceListBrand[]> {
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("repair_brands")
+    .select(
+      "slug, name, sort_order, repair_models(slug, name, sort_order, active, repair_services(name, price_dkk, service_category, quality_tier, sort_order, active))",
+    )
+    .eq("active", true)
+    .order("sort_order");
+  if (error) throw error;
+
+  type ServiceRow = Pick<RepairService, "name" | "price_dkk" | "service_category" | "quality_tier" | "sort_order" | "active">;
+  type ModelRow = Pick<RepairModel, "slug" | "name" | "sort_order" | "active"> & { repair_services: ServiceRow[] | null };
+  type BrandRow = Pick<RepairBrand, "slug" | "name" | "sort_order"> & { repair_models: ModelRow[] | null };
+  const bySort = (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order;
+
+  return ((data as unknown as BrandRow[] | null) ?? []).map((brand) => ({
+    slug: brand.slug,
+    name: brand.name,
+    models: (brand.repair_models ?? [])
+      .filter((m) => m.active)
+      .sort(bySort)
+      .map((m) => ({
+        slug: m.slug,
+        name: m.name,
+        services: (m.repair_services ?? [])
+          .filter((s) => s.active && s.price_dkk > 0)
+          .sort(bySort)
+          .map((s) => ({
+            name: s.name,
+            category: s.service_category,
+            qualityTier: s.quality_tier,
+            price: s.price_dkk,
+          })),
+      })),
+  }));
 }
 
 export type CategoryPrice = { category: string; from: number; modelCount: number };

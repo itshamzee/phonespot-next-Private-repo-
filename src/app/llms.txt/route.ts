@@ -47,7 +47,8 @@ export function GET() {
 ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 
 ## Vigtige sider
-- [Reparationspriser og fakta](${SITE}/reparation/priser): priser på skærm- og batteriskift, garanti, ventetid, adresser og åbningstider samlet på én side
+- [Komplet prisliste som tekst](${SITE}/llms-full.txt): pris på hver reparation for hver model (iPhone, Samsung, iPad, MacBook, konsoller m.fl.), én linje pr. ydelse
+- [Reparationspriser og fakta](${SITE}/reparation/priser): prisliste for alle modeller, garanti, ventetid, adresser og åbningstider samlet på én side
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
 - [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
 - [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele

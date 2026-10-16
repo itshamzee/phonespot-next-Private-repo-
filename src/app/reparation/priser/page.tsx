@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORES, openingHoursJsonLd } from "@/lib/store-config";
-import { getRepairPriceSummaries, type RepairPriceSummary } from "@/lib/supabase/repairs";
+import { getFullPriceList, getRepairPriceSummaries, type RepairPriceSummary } from "@/lib/supabase/repairs";
+import { columnsForBrand, summarizeModel } from "@/lib/repairs/price-list";
 import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 // Prices come straight from the repair price list in the database; the page
@@ -109,7 +110,13 @@ function buildFaqs(screen: string | null, battery: string | null) {
 }
 
 export default async function RepairFactsPage() {
-  const prices: RepairPriceSummary[] = await getRepairPriceSummaries(PRICE_FACT_MODELS);
+  const [prices, fullList]: [RepairPriceSummary[], Awaited<ReturnType<typeof getFullPriceList>>] = await Promise.all([
+    getRepairPriceSummaries(PRICE_FACT_MODELS),
+    getFullPriceList(),
+  ]);
+  const brandsWithPrices = fullList
+    .map((brand) => ({ ...brand, models: brand.models.filter((m) => m.services.length > 0) }))
+    .filter((brand) => brand.models.length > 0);
   const screenRange = rangeText(range(prices.map((p) => p.screenFrom)));
   const batteryRange = rangeText(range(prices.map((p) => p.battery)));
   const updated = formatDate(new Date());
@@ -219,7 +226,7 @@ export default async function RepairFactsPage() {
             {prices.length > 0 && (
               <div className="mt-8 overflow-x-auto">
                 <table className="w-full min-w-[480px] text-left text-sm">
-                  <caption className="sr-only">Priser på skærm- og batteriskift pr. model</caption>
+                  <caption className="sr-only">Priser på skærm- og batteriskift på de mest solgte modeller</caption>
                   <thead>
                     <tr className="border-b border-[#E5E5EA] text-[#6E6E73]">
                       <th scope="col" className="py-2 pr-4 font-semibold">Model</th>
@@ -249,14 +256,89 @@ export default async function RepairFactsPage() {
               </div>
             )}
             <p className="mt-4 text-sm text-[#6E6E73]">
-              Find priser på alle modeller og reparationer på{" "}
-              <Link href="/reparation" className="font-semibold text-[#1A3D2E] hover:underline">
-                reparationssiden
-              </Link>
-              .
+              Tabellen viser de mest solgte modeller. Alle modeller og priser står i prislisten herunder.
             </p>
           </div>
         </section>
+
+        {brandsWithPrices.length > 0 && (
+          <section aria-labelledby="alle-priser" className="border-t border-[#E5E5EA]">
+            <div className="mx-auto max-w-5xl px-4 py-12">
+              <h2 id="alle-priser" className="font-display text-2xl font-bold tracking-tight text-[#111111]">
+                Prisliste: alle modeller
+              </h2>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#444449]">
+                Laveste pris pr. reparation for hver model. Skærmskift findes i flere kvaliteter, og
+                prisen for hver kvalitet står på modellens side. Priserne er faste og inkluderer moms,
+                reservedel og garanti.
+              </p>
+              <nav aria-label="Mærker i prislisten" className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                {brandsWithPrices.map((brand) => (
+                  <a key={brand.slug} href={`#priser-${brand.slug}`} className="font-semibold text-[#1A3D2E] hover:underline">
+                    {brand.name}
+                  </a>
+                ))}
+              </nav>
+
+              {brandsWithPrices.map((brand) => {
+                const columns = columnsForBrand(brand);
+                const showOriginal = brand.models.some((m) => summarizeModel(m.services).screenOriginal !== null);
+                return (
+                  <div key={brand.slug} id={`priser-${brand.slug}`} className="mt-12 scroll-mt-24">
+                    <h3 className="text-lg font-bold text-[#111111]">
+                      <Link href={`/reparation/${brand.slug}`} className="hover:text-[#1A3D2E] hover:underline">
+                        {brand.name}
+                      </Link>
+                    </h3>
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-left text-sm">
+                        <caption className="sr-only">Reparationspriser for {brand.name}</caption>
+                        <thead>
+                          <tr className="border-b border-[#E5E5EA] text-[#6E6E73]">
+                            <th scope="col" className="py-2 pr-4 font-semibold">Model</th>
+                            {columns.map((c) => (
+                              <th key={c} scope="col" className="py-2 pr-4 font-semibold">
+                                {c === "Skærmskift" ? "Skærmskift fra" : c}
+                              </th>
+                            ))}
+                            {showOriginal && <th scope="col" className="py-2 pr-4 font-semibold">Original skærm</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {brand.models.map((model) => {
+                            const summary = summarizeModel(model.services);
+                            return (
+                              <tr key={model.slug} className="border-b border-[#F0F0F2]">
+                                <th scope="row" className="py-2.5 pr-4 font-medium text-[#111111]">
+                                  <Link
+                                    href={`/reparation/${brand.slug}/${model.slug}`}
+                                    className="hover:text-[#1A3D2E] hover:underline"
+                                  >
+                                    {model.name}
+                                  </Link>
+                                </th>
+                                {columns.map((c) => (
+                                  <td key={c} className="py-2.5 pr-4 tabular-nums text-[#444449]">
+                                    {summary.byCategory[c] !== undefined ? formatKr(summary.byCategory[c]!) : "–"}
+                                  </td>
+                                ))}
+                                {showOriginal && (
+                                  <td className="py-2.5 pr-4 tabular-nums text-[#444449]">
+                                    {summary.screenOriginal ? formatKr(summary.screenOriginal) : "–"}
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section aria-labelledby="garanti" className="border-t border-[#E5E5EA] bg-[#F7F7F8]">
           <div className="mx-auto max-w-3xl px-4 py-12">
