@@ -4,6 +4,8 @@ import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
 import { storeForId } from "@/lib/store-config";
 import { ticketLabel } from "@/lib/repairs/ticket-label";
+import { applyQuotePrice } from "@/lib/repairs/quote-price";
+import { toCaseError, caseErrorResponse } from "@/lib/repairs/case-errors";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,7 +19,7 @@ export async function POST(
   const body = await request.json();
   const { price_dkk, estimated_days, notes } = body;
 
-  if (!price_dkk || typeof price_dkk !== "number") {
+  if (!price_dkk || typeof price_dkk !== "number" || !Number.isFinite(price_dkk) || price_dkk <= 0) {
     return NextResponse.json(
       { error: "Pris er påkrævet" },
       { status: 400 },
@@ -44,6 +46,10 @@ export async function POST(
     // Sign the quote with the store the ticket belongs to — a Vejle customer
     // was previously given Slagelse's address to turn up at.
     const store = storeForId(ticket.store_id);
+
+    // Tilbudsprisen er sagens pris: har sagen linjer, rettes de så totalen (kassen, SMS) rammer tilbuddet.
+    // Sker før tilbuddet gemmes, så en blokering ikke efterlader et tilbud uden pris på sagen.
+    await applyQuotePrice(supabase, id, Math.round(price_dkk * 100), access.staff);
 
     // Create quote
     const { data: quote, error: quoteError } = await supabase
@@ -128,6 +134,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, quoteId: quote.id, ...(warning ? { warning } : {}) });
   } catch (err) {
+    if (toCaseError(err)) return caseErrorResponse(err, "Tilbuddet kunne ikke oprettes");
     console.error("Quote error:", err);
     return NextResponse.json(
       { error: "Noget gik galt. Prøv igen senere." },

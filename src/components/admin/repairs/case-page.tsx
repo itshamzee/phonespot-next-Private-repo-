@@ -295,7 +295,14 @@ export default function CasePage({ id }: { id: string }) {
           )
         )}
         {status === "modtaget" && (
-          <Btn size="sm" onClick={() => setQuoteOpen((v) => !v)}>
+          <Btn
+            size="sm"
+            onClick={() => {
+              // Tilbudsprisen er sagens pris: start fra sagens nuværende total.
+              if (!quoteOpen && !quote.price && totals.total_oere > 0) setQuote((q) => ({ ...q, price: String(totals.total_oere / 100) }));
+              setQuoteOpen((v) => !v);
+            }}
+          >
             {quoteOpen ? "Annuller tilbud" : "Send tilbud"}
           </Btn>
         )}
@@ -344,7 +351,7 @@ export default function CasePage({ id }: { id: string }) {
         >
           <label className="flex flex-col gap-1 text-sm">
             Pris (kr.)
-            <input required type="number" min="1" value={quote.price} onChange={(e) => setQuote({ ...quote, price: e.target.value })} className="h-10 rounded-lg border border-[#C9D0C7] px-3" />
+            <input required type="number" min="1" step="0.01" value={quote.price} onChange={(e) => setQuote({ ...quote, price: e.target.value })} className="h-10 rounded-lg border border-[#C9D0C7] px-3" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Estimerede hverdage
@@ -354,6 +361,9 @@ export default function CasePage({ id }: { id: string }) {
             Note til kunden
             <input value={quote.notes} onChange={(e) => setQuote({ ...quote, notes: e.target.value })} className="h-10 rounded-lg border border-[#C9D0C7] px-3" />
           </label>
+          <p className="m-0 text-[13px] text-[#5E6A63] sm:col-span-3">
+            Tilbuddet bliver sagens pris. Afviger det fra sagens nuværende pris, rettes linjerne på sagen, så kassen, SMS og mail viser det samme beløb.
+          </p>
           <div className="sm:col-span-3">
             <Btn type="submit" variant="primary" disabled={busy === "quote"}>
               {busy === "quote" ? "Sender..." : "Send tilbud til kunde"}
