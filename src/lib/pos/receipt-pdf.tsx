@@ -173,13 +173,41 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
+/** Rough number of wrapped lines for 8pt text in a column of ~30 characters. */
+function lineCount(text: string, charsPerLine = 30): number {
+  return Math.max(1, Math.ceil(text.length / charsPerLine));
+}
+
+/**
+ * Page height in points. @react-pdf/layout 4.x loops forever on a page without
+ * a height (size: { width }), which hung every Kasse sale, so the receipt gets
+ * an explicit height estimated generously from its content.
+ */
+export function receiptHeight(receipt: PosReceiptProps): number {
+  const credit = !!receipt.isCreditNote;
+  let h = 24 + 60 + 4 * 14; // padding, header, dividers
+  h += 13 * (3 + (credit && receipt.originalReceiptNumber ? 1 : 0) + (receipt.customerName ? 1 : 0));
+  for (const item of receipt.items) {
+    h += 11 * lineCount(`${item.name}${item.grade ? ` (${item.grade})` : ""}`) + 2;
+    if (Math.abs(item.quantity) > 1) h += 11;
+  }
+  if (receipt.discountAmount !== 0) h += 26;
+  h += 20 + 12; // total, VAT line
+  h += 16;
+  for (const p of receipt.payments) h += 11 * lineCount(`${p.label}${p.reference ? ` (${p.reference})` : ""}`) + 2;
+  if (credit && receipt.creditReason) h += 10 * lineCount(receipt.creditReason, 45) + 6;
+  h += 3 * 26; // brugtmoms, warranty and deposit notices
+  h += 40; // footer
+  return Math.ceil(h * 1.1);
+}
+
 export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
   const credit = !!receipt.isCreditNote;
   const vatAmount = receipt.vatTotal ?? 0;
 
   return (
     <Document>
-      <Page size={{ width: RECEIPT_WIDTH }} style={styles.page}>
+      <Page size={{ width: RECEIPT_WIDTH, height: receiptHeight(receipt) }} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.storeName}>PhoneSpot</Text>
