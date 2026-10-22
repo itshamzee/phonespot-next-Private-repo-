@@ -18,7 +18,7 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  *   payments: Array<{ type: kontant|kort_terminal|mobilepay|klarna|faktura|tilgodebevis|gavekort,
  *                     amountOere, reference? }>,    // must sum to the total
  *   locationId, registerId, customerId?,
- *   discountAmount?: number (oere), discountReason?: "Fejl"|"Kundeservice"|"Tilbud"|"Andet",
+ *   discountAmount?: number (oere), discountReason?: "Fejl"|"Kundeservice"|"Tilbud"|"Partner"|"Andet",
  *   notes?,
  *   terminalReference?   // only with an integrated terminal: lets the Kasse cancel a pending charge
  * }

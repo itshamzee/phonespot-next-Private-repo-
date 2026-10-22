@@ -31,7 +31,7 @@ export type RefundType = (typeof REFUND_TYPES)[number];
 /** Payment types that require a reference (voucher / gift card code). */
 export const REFERENCE_REQUIRED_TYPES: readonly PaymentType[] = ["tilgodebevis", "gavekort"];
 
-export const DISCOUNT_REASONS = ["Fejl", "Kundeservice", "Tilbud", "Andet"] as const;
+export const DISCOUNT_REASONS = ["Fejl", "Kundeservice", "Tilbud", "Partner", "Andet"] as const;
 export type DiscountReason = (typeof DISCOUNT_REASONS)[number];
 
 export const RETURN_REASONS = ["Fortrudt", "Defekt", "Forkert vare", "Andet"] as const;

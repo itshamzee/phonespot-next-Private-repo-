@@ -26,6 +26,7 @@ vi.mock("@/lib/pos/receipt-data", () => ({
 
 import { POST as salePOST } from "../sale/route";
 import { POST as returnPOST } from "../return/route";
+import { DISCOUNT_REASONS } from "@/lib/pos/constants";
 
 const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const staff = { id: U(1), role: "employee", name: "Test", email: "t@phonespot.dk" };
@@ -76,6 +77,22 @@ describe("POST /api/pos/sale", () => {
     expect(noReason.status).toBe(400);
     expect((await noReason.json()).error).toMatch(/årsag/);
     expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts the discount reasons the DB allows, including 'Partner', and rejects unknown ones", async () => {
+    expect(DISCOUNT_REASONS).toEqual(["Fejl", "Kundeservice", "Tilbud", "Partner", "Andet"]);
+    requireStaffMock.mockResolvedValue(staff);
+    const unknown = await salePOST(req("/api/pos/sale", { ...saleBody, discountReason: "Studie" }));
+    expect(unknown.status).toBe(400);
+    expect(rpcMock).not.toHaveBeenCalled();
+
+    rpcMock.mockResolvedValue({
+      data: { order_id: U(31), order_number: "V1-000002", receipt_number: "V1-000002", total: 90000, vat_total: 0, brugtmoms_total: 0 },
+      error: null,
+    });
+    const partner = await salePOST(req("/api/pos/sale", { ...saleBody, discountReason: "Partner" }));
+    expect(partner.status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_discount_amount: 1000, p_discount_reason: "Partner" });
   });
 
   it("calls one atomic RPC with split payments, the staff id and the register, and ignores stripePaymentId", async () => {
