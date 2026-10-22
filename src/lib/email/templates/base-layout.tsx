@@ -105,7 +105,7 @@ export default function BaseLayout({
                       {sig.cvr && <div style={sigCvr}>CVR: {sig.cvr}</div>}
                       {sig.trustpilotUrl && (
                         <div style={{ paddingTop: "8px" }}>
-                          <Link href={sig.trustpilotUrl} style={sigTrustpilotButton}>&#9733; Bedøm os på Trustpilot</Link>
+                          <Link href={sig.trustpilotUrl} style={sigTrustpilotLink}>Bedøm os på Trustpilot</Link>
                         </div>
                       )}
                     </td>
@@ -272,15 +272,11 @@ const sigCvr = {
   paddingTop: "6px",
 } as const;
 
-const sigTrustpilotButton = {
-  display: "inline-block",
-  backgroundColor: "#00b67a",
-  color: "#ffffff",
+// Plain text link only: no stars, ratings or Trustpilot colours (Trustpilot brand guidelines).
+const sigTrustpilotLink = {
+  color: sigGreen,
   fontSize: "12px",
-  fontWeight: "bold" as const,
-  textDecoration: "none" as const,
-  padding: "6px 12px",
-  borderRadius: "4px",
+  textDecoration: "underline" as const,
 } as const;
 
 const footerStyle = {
