@@ -11,12 +11,20 @@ export interface Signature {
   name: string;
   title: string | null;
   company: string;
+  /** Main line shown as "Tlf." — the store's number or the company number. */
   phone: string;
+  /** Personal number shown as "Mobil" when a staff member signs. */
+  mobile: string | null;
   email: string;
   website: string;
   cvr: string | null;
   trustpilotUrl: string | null;
+  /** Round portrait next to the details (staff_profiles.avatar_url). */
+  photoUrl: string | null;
+  logoUrl: string;
 }
+
+export const SIGNATURE_LOGO_URL = "https://phonespot.dk/brand/logos/phonespot-wordmark-green.png";
 
 const DEFAULT_COMPANY: Pick<CompanySettings, "company_name" | "phone" | "email" | "website" | "cvr" | "trustpilot_url"> = {
   company_name: "PhoneSpot",
@@ -38,7 +46,7 @@ export function websiteLabel(url: string): string {
 
 export function buildSignature(opts: {
   mailbox: string | null;
-  staff: Pick<StaffProfile, "display_name" | "title" | "phone"> | null;
+  staff: (Pick<StaffProfile, "display_name" | "title" | "phone"> & { avatar_url?: string | null }) | null;
   company: Partial<CompanySettings> | null;
 }): Signature {
   const company = { ...DEFAULT_COMPANY, ...(opts.company ?? {}) };
@@ -50,26 +58,33 @@ export function buildSignature(opts: {
     website: company.website ?? DEFAULT_COMPANY.website!,
     cvr: company.cvr ?? null,
     trustpilotUrl: company.trustpilot_url ?? null,
+    logoUrl: SIGNATURE_LOGO_URL,
   };
 
   if (opts.staff) {
+    const phone = store?.phone || company.phone || DEFAULT_COMPANY.phone!;
+    const own = opts.staff.phone?.trim() || null;
     return {
       ...base,
       name: opts.staff.display_name,
       title: opts.staff.title || null,
-      phone: opts.staff.phone || store?.phone || company.phone || DEFAULT_COMPANY.phone!,
+      phone,
+      mobile: own && own.replace(/\s+/g, "") !== phone.replace(/\s+/g, "") ? own : null,
       email: mailbox ?? company.email ?? COMPANY_EMAIL,
+      photoUrl: opts.staff.avatar_url || null,
     };
   }
   if (store) {
-    return { ...base, name: store.name, title: null, phone: store.phone, email: store.email };
+    return { ...base, name: store.name, title: null, phone: store.phone, mobile: null, email: store.email, photoUrl: null };
   }
   return {
     ...base,
     name: `${base.company} kundeservice`,
     title: null,
     phone: company.phone ?? DEFAULT_COMPANY.phone!,
+    mobile: null,
     email: mailbox ?? company.email ?? COMPANY_EMAIL,
+    photoUrl: null,
   };
 }
 
@@ -78,7 +93,7 @@ export async function resolveSignature(sb: SupabaseClient, mailbox: string | nul
   const [{ data: company }, { data: staff }] = await Promise.all([
     sb.from("company_settings").select("*").maybeSingle(),
     mailbox
-      ? sb.from("staff_profiles").select("display_name, title, phone").eq("mailbox", mailbox.toLowerCase()).eq("is_active", true).limit(1).maybeSingle()
+      ? sb.from("staff_profiles").select("display_name, title, phone, avatar_url").eq("mailbox", mailbox.toLowerCase()).eq("is_active", true).limit(1).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   return buildSignature({ mailbox, staff: (staff as StaffProfile | null) ?? null, company: (company as CompanySettings | null) ?? null });
@@ -91,7 +106,8 @@ export function signatureText(sig: Signature): string {
     sig.title,
     sig.company.toUpperCase(),
     "",
-    `Telefon ${displayPhone(sig.phone)}`,
+    `Tlf. ${displayPhone(sig.phone)}`,
+    sig.mobile ? `Mobil ${displayPhone(sig.mobile)}` : null,
     `Mail ${sig.email}`,
     `Web ${websiteLabel(sig.website)}`,
     sig.cvr ? `CVR ${sig.cvr}` : null,

@@ -6,7 +6,7 @@ const company = { company_name: "PhoneSpot", phone: "+45 61 10 00 48", email: "i
 describe("buildSignature", () => {
   it("signs personally when a staff profile is bound to the mailbox", () => {
     const s = buildSignature({ mailbox: "ha@phonespot.dk", staff: { display_name: "Hamza", title: "", phone: "+45 50 45 33 71" }, company });
-    expect(s).toMatchObject({ name: "Hamza", title: null, phone: "+45 50 45 33 71", email: "ha@phonespot.dk", cvr: "38688766" });
+    expect(s).toMatchObject({ name: "Hamza", title: null, phone: "+45 61 10 00 48", mobile: "+45 50 45 33 71", email: "ha@phonespot.dk", cvr: "38688766" });
   });
 
   it("signs as the store for a store mailbox", () => {
@@ -23,11 +23,24 @@ describe("buildSignature", () => {
   });
 });
 
+describe("buildSignature photo", () => {
+  it("uses the staff avatar as portrait and the green logo", () => {
+    const s = buildSignature({ mailbox: "ha@phonespot.dk", staff: { display_name: "Hamza", title: "", phone: "+45 50 45 33 71", avatar_url: "https://phonespot.dk/email/hamza.jpg" }, company });
+    expect(s.photoUrl).toBe("https://phonespot.dk/email/hamza.jpg");
+    expect(s.logoUrl).toContain("phonespot-wordmark-green.png");
+  });
+
+  it("has no mobile line for a store mailbox", () => {
+    expect(buildSignature({ mailbox: "slagelse@phonespot.dk", staff: null, company }).mobile).toBeNull();
+  });
+});
+
 describe("signatureText", () => {
   it("renders the plain-text twin without emojis", () => {
     const t = signatureText(buildSignature({ mailbox: "ha@phonespot.dk", staff: { display_name: "Hamza", title: "", phone: "+45 50 45 33 71" }, company }));
     expect(t).toContain("Hamza\nPHONESPOT");
-    expect(t).toContain("Telefon 50 45 33 71");
+    expect(t).toContain("Tlf. 61 10 00 48");
+    expect(t).toContain("Mobil 50 45 33 71");
     expect(t).toContain("Mail ha@phonespot.dk");
     expect(t).toContain("CVR 38688766");
     expect(t).toContain("Skriv en anmeldelse: https://dk.trustpilot.com/evaluate/phonespot.dk");

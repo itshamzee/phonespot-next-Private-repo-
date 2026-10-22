@@ -1,6 +1,6 @@
 // src/lib/email/templates/base-layout.tsx
 import {
-  Html, Head, Body, Container, Section, Text, Hr, Link,
+  Html, Head, Body, Container, Section, Text, Link,
 } from "@react-email/components";
 import type { StaffProfile, CompanySettings } from "@/lib/supabase/email-types";
 import { STORES } from "@/lib/store-config";
@@ -17,8 +17,6 @@ interface BaseLayoutProps {
 }
 
 const headerBg = "#3A3D38";
-const accentGreen = "#5A8C6F";
-const textColor = "#333333";
 const mutedText = "#888888";
 
 export default function BaseLayout({
@@ -64,37 +62,56 @@ export default function BaseLayout({
             {children}
           </Section>
 
-          {/* Signature */}
+          {/* Signature: same look as the one.com webmail signature */}
           {sig && (
             <Section style={signatureSection}>
-              <Hr style={signatureDivider} />
-              <Text style={sigNameStyle}>{sig.name}</Text>
-              {sig.title && <Text style={sigTitleStyle}>{sig.title}</Text>}
-              <Text style={sigCompanyName}>{sig.company.toUpperCase()}</Text>
-              <Text style={sigContactStyle}>
-                <span style={sigLabel}>Telefon</span>
-                <Link href={`tel:${sig.phone.replace(/\s+/g, "")}`} style={sigLink}>{displayPhone(sig.phone)}</Link>
-              </Text>
-              <Text style={sigContactStyle}>
-                <span style={sigLabel}>Mail</span>
-                <Link href={`mailto:${sig.email}`} style={sigLink}>{sig.email}</Link>
-              </Text>
-              <Text style={sigContactStyle}>
-                <span style={sigLabel}>Web</span>
-                <Link href={sig.website} style={sigLink}>{websiteLabel(sig.website)}</Link>
-              </Text>
-              {sig.cvr && (
-                <Text style={sigContactStyle}>
-                  <span style={sigLabel}>CVR</span>
-                  {sig.cvr}
-                </Text>
-              )}
-              {sig.trustpilotUrl && (
-                <Text style={sigTrustpilot}>
-                  Bedøm os på Trustpilot{" · "}
-                  <Link href={sig.trustpilotUrl} style={sigTrustpilotLink}>Skriv en anmeldelse</Link>
-                </Text>
-              )}
+              <table cellPadding={0} cellSpacing={0} role="presentation" style={sigTable}>
+                <tbody>
+                  <tr>
+                    <td colSpan={2} style={sigLogoCell}>
+                      <Link href={sig.website}>
+                        <img src={sig.logoUrl} alt={sig.company} width={180} style={sigLogo} />
+                      </Link>
+                    </td>
+                  </tr>
+                  <tr>
+                    {sig.photoUrl && (
+                      <td valign="top" style={sigPhotoCell}>
+                        <img src={sig.photoUrl} alt={sig.name} width={80} height={80} style={sigPhoto} />
+                      </td>
+                    )}
+                    <td valign="top" style={sigDetailsCell}>
+                      <div style={sigNameStyle}>{sig.name}</div>
+                      {sig.title && <div style={sigTitleStyle}>{sig.title}</div>}
+                      <div style={sigCompanyName}>{sig.company.toUpperCase()}</div>
+                      <table cellPadding={0} cellSpacing={0} role="presentation" style={sigRows}>
+                        <tbody>
+                          <SigRow label="Tlf.">
+                            <Link href={`tel:${sig.phone.replace(/\s+/g, "")}`} style={sigLink}>{displayPhone(sig.phone)}</Link>
+                          </SigRow>
+                          {sig.mobile && (
+                            <SigRow label="Mobil">
+                              <Link href={`tel:${sig.mobile.replace(/\s+/g, "")}`} style={sigLink}>{displayPhone(sig.mobile)}</Link>
+                            </SigRow>
+                          )}
+                          <SigRow label="Mail">
+                            <Link href={`mailto:${sig.email}`} style={sigMailLink}>{sig.email}</Link>
+                          </SigRow>
+                          <SigRow label="Web">
+                            <Link href={sig.website} style={sigLink}>{websiteLabel(sig.website)}</Link>
+                          </SigRow>
+                        </tbody>
+                      </table>
+                      {sig.cvr && <div style={sigCvr}>CVR: {sig.cvr}</div>}
+                      {sig.trustpilotUrl && (
+                        <div style={{ paddingTop: "8px" }}>
+                          <Link href={sig.trustpilotUrl} style={sigTrustpilotButton}>&#9733; Bedøm os på Trustpilot</Link>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </Section>
           )}
 
@@ -159,60 +176,111 @@ const signatureSection = {
   padding: "0 32px 24px 32px",
 } as const;
 
-const signatureDivider = {
-  borderTop: `2px solid ${headerBg}`,
-  marginBottom: "16px",
+function SigRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <tr>
+      <td style={sigLabel}>{label}</td>
+      <td style={sigValue}>{children}</td>
+    </tr>
+  );
+}
+
+const sigGreen = "#2e7d4f";
+
+const sigTable = {
+  borderCollapse: "collapse" as const,
+  fontFamily: "Arial, Helvetica, sans-serif",
+  color: "#1d1d1f",
+} as const;
+
+const sigLogoCell = {
+  padding: "0 0 8px 0",
+  borderBottom: `2px solid ${sigGreen}`,
+} as const;
+
+const sigLogo = {
+  display: "block",
+  border: "0",
+  width: "180px",
+  height: "auto",
+} as const;
+
+const sigPhotoCell = {
+  padding: "12px 14px 0 0",
+  width: "80px",
+} as const;
+
+const sigPhoto = {
+  display: "block",
+  border: "0",
+  width: "80px",
+  height: "80px",
+  borderRadius: "40px",
+} as const;
+
+const sigDetailsCell = {
+  padding: "12px 0 0 0",
 } as const;
 
 const sigNameStyle = {
   fontWeight: "bold" as const,
   fontSize: "15px",
-  color: headerBg,
-  margin: "0",
+  color: "#1d1d1f",
 } as const;
 
 const sigTitleStyle = {
   fontSize: "12px",
   color: mutedText,
-  margin: "2px 0 0 0",
+  paddingTop: "2px",
 } as const;
 
 const sigCompanyName = {
   fontSize: "11px",
   fontWeight: "bold" as const,
-  color: accentGreen,
-  letterSpacing: "2px",
-  margin: "4px 0 10px 0",
+  color: sigGreen,
+  letterSpacing: "1.5px",
+  padding: "2px 0 8px 0",
 } as const;
 
-const sigContactStyle = {
+const sigRows = {
+  borderCollapse: "collapse" as const,
   fontSize: "12px",
-  color: textColor,
-  margin: "0 0 3px 0",
-  lineHeight: "1.4",
 } as const;
 
 const sigLabel = {
-  display: "inline-block",
-  width: "58px",
-  color: mutedText,
+  color: "#6e6e73",
+  padding: "1px 12px 1px 0",
+} as const;
+
+const sigValue = {
+  padding: "1px 0",
 } as const;
 
 const sigLink = {
-  color: textColor,
+  color: "#1d1d1f",
   textDecoration: "none" as const,
 } as const;
 
-const sigTrustpilot = {
-  fontSize: "12px",
-  color: mutedText,
-  margin: "12px 0 0 0",
+const sigMailLink = {
+  color: sigGreen,
+  textDecoration: "none" as const,
 } as const;
 
-const sigTrustpilotLink = {
-  color: accentGreen,
+const sigCvr = {
+  fontSize: "10px",
+  color: "#8e8e93",
+  paddingTop: "6px",
+} as const;
+
+const sigTrustpilotButton = {
+  display: "inline-block",
+  backgroundColor: "#00b67a",
+  color: "#ffffff",
+  fontSize: "12px",
   fontWeight: "bold" as const,
-  textDecoration: "underline" as const,
+  textDecoration: "none" as const,
+  padding: "6px 12px",
+  borderRadius: "4px",
 } as const;
 
 const footerStyle = {
