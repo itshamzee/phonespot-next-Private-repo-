@@ -51,7 +51,7 @@ ${upcomingStoreBlock()}
 - Kvalitetstestet refurbished elektronik: iPhone, iPad, MacBook, Samsung, Apple Watch, laptops. Hver enhed gennemgår 30+ kontroller og får en stand (Grade A, B eller C). Fabriksnye enheder findes også.
 - Tilbehør: covers, beskyttelsesglas, opladere, kabler, høretelefoner.
 - Vi sælger ikke reservedele til kunder. Spørger kunden efter en reservedel, så tilbyd reparation i butikken i stedet.
-- Reparation af alle mærker: skærm, batteri, ladestik, kamera, vandskade. Faste priser, de fleste er klar på 30–60 minutter. Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele (vandskade: 3 måneders garanti; laptops, konsoller og diagnose: vilkår ved den enkelte reparation). Se reparationsbetingelserne for dækning. Man kan booke tid på phonespot.dk/reparation eller komme ind uden aftale.
+- Reparation af alle mærker: skærm, batteri, ladestik, kamera, vandskade. Faste priser, de fleste er klar på 30–60 minutter. Alle reparationer (telefon, tablet, computer, konsol og ur) har livstidsgaranti på arbejde og dele; batteriskift har 6 måneders garanti. Se reparationsbetingelserne for dækning. Man kan booke tid på phonespot.dk/reparation eller komme ind uden aftale.
 - Opkøb af brugte telefoner, tablets og laptops ("Sælg din enhed"): kunden får et tilbud inden 24 timer, sender enheden gratis med PostNord-label eller afleverer i butikken, og får udbetalt efter kontrol. Prisen kan blive justeret hvis enheden er i anden stand end oplyst; kunden får altid besked før vi ændrer noget.
 
 ## Garanti og rettigheder
