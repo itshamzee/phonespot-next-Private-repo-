@@ -1,6 +1,7 @@
 // GatewayAPI kræver "Token <token>" (Bearer afvises). trim(): env-værdien har haft et afsluttende linjeskift.
 const GATEWAY_API_TOKEN = (process.env.GATEWAYAPI_TOKEN ?? "").trim();
-const GATEWAY_API_URL = "https://gatewayapi.com/rest/mtsms";
+// Kontoen ligger på EU-platformen; tokens fra gatewayapi.eu afvises af gatewayapi.com.
+const GATEWAY_API_URL = "https://gatewayapi.eu/rest/mtsms";
 const SENDER_NAME = "PhoneSpot";
 
 interface SendSmsResult {

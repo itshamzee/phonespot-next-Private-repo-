@@ -203,10 +203,10 @@ function DNSGuide() {
       <Step number={5} title="GatewayAPI SMS Opsætning">
         <p>SMS kræver ingen DNS. Opsæt via environment variable:</p>
         <div className="mt-2 rounded-lg bg-stone-50 p-3 font-mono text-xs">
-          <p><span className="text-green-eco">GATEWAY_API_TOKEN</span>=dit-token-fra-gatewayapi.com</p>
+          <p><span className="text-green-eco">GATEWAY_API_TOKEN</span>=dit-token-fra-gatewayapi.eu</p>
         </div>
         <p className="mt-1">
-          Hent dit token fra <span className="font-medium text-charcoal">gatewayapi.com</span> → API Keys.
+          Hent dit token fra <span className="font-medium text-charcoal">gatewayapi.eu</span> → API Keys.
           Afsendernavn er sat til &quot;PhoneSpot&quot; i koden.
         </p>
       </Step>

@@ -1,5 +1,5 @@
 // GatewayAPI.com SMS client for Denmark
-// Docs: https://gatewayapi.com/docs/rest.html
+// Docs: https://gatewayapi.com/docs/apis/rest/ (kontoen ligger på EU-platformen gatewayapi.eu)
 
 const GATEWAY_API_TOKEN = process.env.GATEWAYAPI_TOKEN?.trim();
 const SENDER_NAME = "PhoneSpot";
@@ -22,7 +22,7 @@ export async function sendSms({ to, message }: SendSmsOptions): Promise<{ succes
   // Ensure phone number has country code
   const recipient = to.startsWith("+") ? to.replace("+", "") : to.startsWith("45") ? to : `45${to}`;
 
-  const res = await fetch("https://gatewayapi.com/rest/mtsms", {
+  const res = await fetch("https://gatewayapi.eu/rest/mtsms", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
