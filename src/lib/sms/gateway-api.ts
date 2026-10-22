@@ -1,7 +1,7 @@
 // GatewayAPI.com SMS client for Denmark
 // Docs: https://gatewayapi.com/docs/rest.html
 
-const GATEWAY_API_TOKEN = process.env.GATEWAYAPI_TOKEN;
+const GATEWAY_API_TOKEN = process.env.GATEWAYAPI_TOKEN?.trim();
 const SENDER_NAME = "PhoneSpot";
 
 interface SendSmsOptions {
@@ -26,7 +26,7 @@ export async function sendSms({ to, message }: SendSmsOptions): Promise<{ succes
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${GATEWAY_API_TOKEN}`,
+      Authorization: `Token ${GATEWAY_API_TOKEN}`,
     },
     body: JSON.stringify({
       sender: SENDER_NAME,

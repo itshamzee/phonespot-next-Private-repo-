@@ -1,4 +1,5 @@
-const GATEWAY_API_TOKEN = process.env.GATEWAYAPI_TOKEN ?? "";
+// GatewayAPI kræver "Token <token>" (Bearer afvises). trim(): env-værdien har haft et afsluttende linjeskift.
+const GATEWAY_API_TOKEN = (process.env.GATEWAYAPI_TOKEN ?? "").trim();
 const GATEWAY_API_URL = "https://gatewayapi.com/rest/mtsms";
 const SENDER_NAME = "PhoneSpot";
 
@@ -19,7 +20,7 @@ export async function sendSms(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${GATEWAY_API_TOKEN}`,
+        Authorization: `Token ${GATEWAY_API_TOKEN}`,
       },
       body: JSON.stringify({
         sender: SENDER_NAME,
