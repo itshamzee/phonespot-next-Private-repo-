@@ -32,7 +32,6 @@ import {
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import styles from "./device-detail.module.css";
 import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
 import { customerFacingError } from "@/lib/customer-facing-error";
@@ -892,7 +891,7 @@ export function DeviceDetail({
             rel="noopener noreferrer"
             className={styles.rating}
           >
-            {TRUSTPILOT_SCORE_LABEL_DA}/5 på Trustpilot{" "}
+            Læs anmeldelser på Trustpilot{" "}
             <span aria-hidden="true">↗</span>
           </a>
         </div>

@@ -28,7 +28,7 @@ describe("/reparation/priser", () => {
     expect(text).toContain("90 % af skærm- og batteriskift er klar på 30 minutter");
     expect(text).toContain("Løversysselvej 3B");
     expect(text).toContain("VestsjællandsCentret 10A, 103");
-    expect(text).toContain("4,7");
+    expect(text).not.toMatch(/\d,\d ud af 5/);
     expect(text).toMatch(/Priser opdateret:/);
     expect(text).not.toMatch(/36 m(dr|åneder)/);
   });

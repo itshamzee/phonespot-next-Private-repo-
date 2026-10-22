@@ -66,6 +66,6 @@ describe("Header", () => {
   it("scopes the guarantee to devices and uses the approved Danish rating", () => {
     render(<Header />);
     expect(screen.getByText("36 måneders garanti på enheder")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Trustpilot 4,7 / 5" })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
+    expect(screen.getByRole("link", { name: "Anmeldelser på Trustpilot" })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
 });

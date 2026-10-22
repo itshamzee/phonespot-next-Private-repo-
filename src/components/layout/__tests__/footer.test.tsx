@@ -11,10 +11,10 @@ describe("Footer", () => {
     expect(screen.getByRole("link", { name: "Vejle" })).toHaveAttribute("href", "/butik/vejle");
     expect(screen.getByRole("link", { name: "Slagelse" })).toHaveAttribute("href", "/butik/slagelse");
   });
-  it("states the device guarantee and the Danish Trustpilot rating", () => {
+  it("states the device guarantee and links to Trustpilot without a score", () => {
     render(<Footer />);
     expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
-    expect(screen.getByRole("link", { name: /Trustpilot — 4,7 stjerner/ })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
+    expect(screen.getByRole("link", { name: "Anmeldelser på Trustpilot" })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
   it("links to selling an existing device from the footer", () => {
     render(<Footer />);

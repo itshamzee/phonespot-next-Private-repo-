@@ -14,7 +14,6 @@ import { DeviceDetail } from "@/components/product/device-detail";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
-import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
 import { effectiveGrade } from "@/lib/grades";
@@ -326,20 +325,6 @@ export default async function RefurbishedProductPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="border-y border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4">
-          <h2 className="mb-6 font-body text-3xl font-semibold tracking-[-0.035em]">
-            Anmeldelser på Trustpilot
-          </h2>
-          <Suspense
-            fallback={
-              <p className="text-sm text-[#566159]">Henter anmeldelser…</p>
-            }
-          >
-            <TrustpilotReviews />
-          </Suspense>
-        </div>
-      </section>
       <Suspense fallback={null}>
         <RelatedProducts category={template.category} excludeId={template.id} />
       </Suspense>

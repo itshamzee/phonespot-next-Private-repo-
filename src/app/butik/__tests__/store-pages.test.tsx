@@ -3,7 +3,6 @@ import { cleanup, render, screen } from "@testing-library/react";
 import StoreDetailPage, { generateMetadata } from "../[slug]/page";
 
 // Review retrieval is an unrelated async server/network boundary.
-vi.mock("@/components/trustpilot/trustpilot-reviews", () => ({ TrustpilotReviews: () => null }));
 
 afterEach(cleanup);
 

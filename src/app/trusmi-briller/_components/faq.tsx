@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import { STORES } from "@/lib/store-config";
 
 interface QA {
@@ -32,7 +31,7 @@ const FAQ: ReadonlyArray<QA> = [
   },
   {
     q: "Følger der garanti med?",
-    a: `Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen, og du betaler selv returfragten ved fortrydelse. Ved fejl har du særskilt 2 års reklamationsret efter købeloven. Kontakt os, så hjælper vi med reklamationen. Vi er certificeret af e-mærket og har ${TRUSTPILOT_SCORE_LABEL_DA} ★ på Trustpilot.`,
+    a: `Ved onlinekøb har du 14 dages fortrydelsesret fra modtagelsen, og du betaler selv returfragten ved fortrydelse. Ved fejl har du særskilt 2 års reklamationsret efter købeloven. Kontakt os, så hjælper vi med reklamationen. Vi er certificeret af e-mærket.`,
   },
   {
     q: "Kan jeg betale i rater?",

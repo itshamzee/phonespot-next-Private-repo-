@@ -140,8 +140,8 @@ export default async function ModelPricePage({ params }: Props) {
       text: "Ved disken i butikken",
     },
     {
-      title: "4,7 på Trustpilot",
-      text: "Læs vores anmeldelser",
+      title: "Anmeldelser",
+      text: "Læs dem på Trustpilot",
       href: "https://dk.trustpilot.com/review/phonespot.dk",
     },
   ].filter(Boolean) as { title: string; text: string; href?: string }[];

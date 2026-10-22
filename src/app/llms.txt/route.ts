@@ -1,5 +1,4 @@
 import { STORES, UPCOMING_STORES } from "@/lib/store-config";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 // llms.txt: en kort, faktuel oversigt til AI-søgemaskiner (ChatGPT, Perplexity,
 // Claude, Copilot). Butiksdata hentes fra store-config, så adresser og
@@ -74,7 +73,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Blog og guides](${SITE}/blog)
 
 ## Anmeldelser og profiler
-- Trustpilot: ${TRUSTPILOT_SCORE_LABEL_DA} ud af 5 — https://dk.trustpilot.com/review/phonespot.dk
+- Trustpilot: https://dk.trustpilot.com/review/phonespot.dk
 - Facebook: https://www.facebook.com/phonespot.dk/
 `;
   return new Response(body, {

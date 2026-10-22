@@ -3,7 +3,6 @@ import Link from "next/link";
 import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
 import styles from "./footer.module.css";
 import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 const PRODUCT_LINKS = [
   { label: "iPhones", href: "/iphones" },
@@ -41,40 +40,15 @@ const LEGAL_LINKS = [
   { label: "Cookies", href: "/cookies" },
 ] as const;
 
-function TrustpilotBadge() {
+function TrustpilotLink() {
   return (
     <a
       href="https://dk.trustpilot.com/review/phonespot.dk"
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-80"
-      aria-label={`Se PhoneSpot på Trustpilot — ${TRUSTPILOT_SCORE_LABEL_DA} stjerner`}
+      className="text-[12px] font-semibold text-white/80 transition-opacity hover:opacity-80"
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#00b67a]" fill="currentColor" aria-hidden="true">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-      </svg>
-      <div className="flex flex-col leading-tight">
-        <span className="text-[11px] font-semibold text-white">Trustpilot</span>
-        <div className="flex items-center gap-1">
-          <div className="flex">
-            {[1, 2, 3, 4].map((i) => (
-              <svg key={i} viewBox="0 0 24 24" className="h-3 w-3 text-[#00b67a]" fill="currentColor" aria-hidden="true">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            ))}
-            <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden="true">
-              <defs>
-                <linearGradient id="footer-half-star">
-                  <stop offset="70%" stopColor="#00b67a" />
-                  <stop offset="70%" stopColor="#4a4d48" />
-                </linearGradient>
-              </defs>
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#footer-half-star)" />
-            </svg>
-          </div>
-          <span className="text-[11px] font-semibold text-white/70">{TRUSTPILOT_SCORE_LABEL_DA}</span>
-        </div>
-      </div>
+      Anmeldelser på Trustpilot
     </a>
   );
 }
@@ -111,7 +85,7 @@ export function Footer() {
           ))}
         </div>
         <div className={styles.trust}>
-          <TrustpilotBadge />
+          <TrustpilotLink />
           <a href="https://www.emaerket.dk" target="_blank" rel="noopener noreferrer" aria-label="Certificeret af e-mærket"><Image src="/emaerket.png" alt="Certificeret af e-mærket" width={32} height={32} /></a>
           <a href="https://www.facebook.com/phonespot.dk/" target="_blank" rel="noopener noreferrer" aria-label="PhoneSpot på Facebook" className={styles.facebook}><FacebookIcon /> Facebook</a>
           <Link href="/forsikring" className={styles.partner} aria-label="Elektronikforsikring i samarbejde med Storstrøm Forsikring"><span>I samarbejde med</span><Image src="/brand/partners/storstrom-forsikring-white.svg" alt="Storstrøm Forsikring" width={92} height={27} /></Link>

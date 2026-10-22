@@ -9,8 +9,6 @@ vi.mock('@/lib/supabase/accessories',()=>({getAccessoryBySlug:async()=>null}));
 vi.mock('@/lib/supabase/client',()=>({createServerClient:()=>({from:()=>{const q:Record<string,unknown>={};for(const m of ['select','eq','limit','in','neq','ilike'])q[m]=()=>q;q.then=(r:(x:unknown)=>unknown)=>Promise.resolve(r({data:[],error:null}));return q;}})}));
 vi.mock('@/components/product/accessory-detail',()=>({AccessoryDetail:()=>null}));
 vi.mock('@/components/product/device-detail',()=>({DeviceDetail:()=>null}));
-vi.mock('@/components/trustpilot/trustpilot-reviews',()=>({TrustpilotReviews:()=>null}));
-vi.mock('@/components/trustpilot/trustpilot-stars',()=>({TrustpilotStars:()=>null}));
 import AccessoryPage from '@/app/tilbehoer/[category]/[slug]/page';
 import RefurbishedPage from '@/app/refurbished/[slug]/page';
 import GenericPage from '@/app/[collection]/[product]/page';

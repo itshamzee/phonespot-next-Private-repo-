@@ -39,8 +39,10 @@ function walk(dir: string): string[] {
 }
 
 const FORBIDDEN: Array<{ name: string; pattern: RegExp }> = [
-  // Live Trustpilot score is 4.8 — 4.4 is years stale
-  { name: "stale Trustpilot 4.4", pattern: /Trustpilot 4\.4|4\.4 \/ 5 på Trustpilot|4,4 ★/ },
+  // Trustpilot cease-and-desist 2026-10-22: no self-rendered TrustScore, stars
+  // or review count anywhere — only an official TrustBox may show them.
+  // Plain text links to the profile are fine.
+  { name: "self-rendered Trustpilot score", pattern: /\d[.,]\d\s*(\/\s*5\s*)?(★\s*)?(stjerner\s*)?på Trustpilot|Trustpilot.{0,20}\d[.,]\d|Trustpilot-score|TRUSTPILOT_SCORE|getTrustpilotSummary/i },
   // Vejle opened April 2026 — any coming-soon copy is misinformation
   { name: "Vejle coming-soon copy", pattern: /åbner april 2026|Åbner snart|Adresse oplyses snart/i },
   // Click&collect emails carried invented addresses (real: store-config.ts)

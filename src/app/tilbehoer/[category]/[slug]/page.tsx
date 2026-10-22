@@ -1,6 +1,5 @@
 import { accessoryAvailability } from "@/lib/accessory-availability";
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
@@ -12,7 +11,6 @@ import { getCategoryConfig, TILBEHOER_DEVICES, DEVICE_BRANDS } from "@/lib/tilbe
 import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@/components/product/accessory-detail";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
-import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { extractColor, getColorLabel, getColorCss, type ColorSibling } from "@/lib/product-color-siblings";
 import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
@@ -431,27 +429,6 @@ export default async function AccessoryDetailPage({ params }: Props) {
           colorSiblings={colorSiblings}
           highlights={highlights}
         />
-
-        {/* Trustpilot reviews — async server component via Suspense */}
-        <div className="mt-12">
-          <h2 className="mb-6 font-body text-xl font-bold text-charcoal">
-            Anmeldelser fra vores kunder
-          </h2>
-          <Suspense
-            fallback={
-              <div className="grid gap-6 md:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-40 rounded-2xl border border-sand bg-white animate-pulse"
-                  />
-                ))}
-              </div>
-            }
-          >
-            <TrustpilotReviews />
-          </Suspense>
-        </div>
 
         {/* Trust bar — "accessory" swaps the 36-month device warranty claim
             for the statutory 2-year reklamationsret (this is a sku_product,

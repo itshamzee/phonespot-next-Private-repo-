@@ -5,7 +5,6 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { FadeIn } from "@/components/ui/fade-in";
 import { StoreLocation } from "@/components/ui/store-location";
-import { TRUSTPILOT_SCORE_LABEL } from "@/lib/trustpilot/constants";
 
 export const metadata: Metadata = {
   title: "Om PhoneSpot | Danmarks specialist i refurbished elektronik",
@@ -42,11 +41,6 @@ const STATS = [
     value: "36 mdr.",
     label: "Garanti på enheder",
     description: "Samme garanti som ved køb af nyt",
-  },
-  {
-    value: `${TRUSTPILOT_SCORE_LABEL}/5`,
-    label: "Trustpilot-score",
-    description: "Baseret på ægte kundeanmeldelser",
   },
 ];
 
@@ -284,7 +278,7 @@ export default function OmOsPage() {
 
       {/* ── Stats Bar ── */}
       <SectionWrapper background="sand">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
           {STATS.map((stat, i) => (
             <FadeIn key={stat.label} delay={i * 0.1}>
               <div className="text-center">

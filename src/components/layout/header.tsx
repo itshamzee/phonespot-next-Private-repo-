@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 import { STORE } from "@/lib/store-config";
 import { DispatchCountdown } from "./dispatch-countdown";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
@@ -83,7 +82,7 @@ export function Header() {
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m7 3 3 5-2 2a15 15 0 0 0 6 6l2-2 5 3v3c0 1-1 2-2 2C10 21 3 14 2 5c0-1 1-2 2-2h3Z" /></svg>
         {STORE.phone.replace("+45 ", "")}
       </a>
-      <a className={styles.ratingLink} href="https://dk.trustpilot.com/review/phonespot.dk" target="_blank" rel="noopener noreferrer">Trustpilot {TRUSTPILOT_SCORE_LABEL_DA} / 5</a>
+      <a className={styles.ratingLink} href="https://dk.trustpilot.com/review/phonespot.dk" target="_blank" rel="noopener noreferrer">Anmeldelser på Trustpilot</a>
     </div></div>
     <div className={`${styles.brandrow} ${styles.wrap}`}>
       <button type="button" ref={menuButton} className={styles["mobile-menu"]} aria-label="Åbn menu" aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={() => setMobileOpen(true)}><StorefrontIcon kind="menu" /></button>

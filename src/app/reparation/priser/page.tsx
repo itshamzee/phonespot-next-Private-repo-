@@ -4,7 +4,6 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { STORES, openingHoursJsonLd } from "@/lib/store-config";
 import { getFullPriceList, getRepairPriceSummaries, type RepairPriceSummary } from "@/lib/supabase/repairs";
 import { columnsForBrand, summarizeModel } from "@/lib/repairs/price-list";
-import { TRUSTPILOT_SCORE_LABEL_DA } from "@/lib/trustpilot/constants";
 
 // Prices come straight from the repair price list in the database; the page
 // is regenerated hourly, so "Priser opdateret" is the date they were read.
@@ -409,7 +408,7 @@ export default async function RepairFactsPage() {
               Anmeldelser
             </h2>
             <p className="mt-4 text-base leading-relaxed text-[#444449]">
-              PhoneSpot har {TRUSTPILOT_SCORE_LABEL_DA} ud af 5 på{" "}
+              Læs, hvad vores kunder skriver om os på{" "}
               <a href={TRUSTPILOT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#1A3D2E] hover:underline">
                 Trustpilot
               </a>

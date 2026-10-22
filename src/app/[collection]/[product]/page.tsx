@@ -25,8 +25,6 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGridCard } from "@/components/product/product-grid-card";
-import { TrustpilotStars } from "@/components/trustpilot/trustpilot-stars";
-import { TrustpilotReviews } from "@/components/trustpilot/trustpilot-reviews";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ITEM_CONDITION, devicesToItemCondition } from "@/lib/seo/item-condition";
@@ -472,18 +470,6 @@ export default async function ProductPage({
           <ProductDetails product={templateProduct} batteryHealth={templateBatteryHealth} />
         </SectionWrapper>
 
-        {/* ── 5. Trustpilot anmeldelser ── */}
-        <SectionWrapper>
-          <Heading as="h2" size="md" className="text-center">
-            Trustpilot-anmeldelser
-          </Heading>
-          <div className="mt-8">
-            <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
-              <TrustpilotReviews />
-            </Suspense>
-          </div>
-        </SectionWrapper>
-
         {/* ── 5. Relaterede produkter ── */}
         {related.length > 0 && (
           <SectionWrapper background="sand">
@@ -625,9 +611,6 @@ export default async function ProductPage({
             variant={skuVariant}
           />
           <div className="flex flex-col gap-4">
-            <Suspense fallback={null}>
-              <TrustpilotStars />
-            </Suspense>
             <ProductInfo product={product} collectionSlug={collectionSlug} variant={skuVariant} />
           </div>
         </div>
@@ -654,18 +637,6 @@ export default async function ProductPage({
           Om dette produkt
         </Heading>
         <ProductDetails product={product} variant={skuVariant} accessorySpecs={accessorySpecs} />
-      </SectionWrapper>
-
-      {/* ── 4. Trustpilot Reviews ── */}
-      <SectionWrapper>
-        <Heading as="h2" size="md" className="text-center">
-          Trustpilot-anmeldelser
-        </Heading>
-        <div className="mt-8">
-          <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-sand" />}>
-            <TrustpilotReviews />
-          </Suspense>
-        </div>
       </SectionWrapper>
 
       {/* ── 5. Accessory upsell (phones/smartphones only) ── */}
