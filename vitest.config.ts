@@ -12,5 +12,10 @@ export default defineConfig({
     // test runner/API and were being collected (and failing) by mistake.
     exclude: [...configDefaults.exclude, "e2e/**"],
   },
-  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./src/test/server-only-stub.ts"),
+    },
+  },
 });

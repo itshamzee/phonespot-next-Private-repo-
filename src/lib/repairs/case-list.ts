@@ -4,6 +4,7 @@
  * præcis de samme regler, og de kan testes uden database.
  */
 import { ticketLabel } from "@/lib/repairs/ticket-label";
+import type { PartsStatus } from "@/lib/lagersystem/types";
 import type { RepairStatus } from "@/lib/supabase/types";
 
 /* ------------------------------------------------------------------ */
@@ -55,6 +56,8 @@ export type CaseListTicket = {
   assigned_to?: string | null;
   /** Fælles id for sager fra samme indlevering med flere enheder (migrationen 20261005170000). */
   intake_group_id?: string | null;
+  /** Lagertjek (migrationen 20261013120000); mangler i ældre svar. */
+  parts_status?: PartsStatus | null;
   /** Indlejret fra customer_devices (kun til søgning). */
   customer_devices?: { serial_number?: string | null; color?: string | null } | null;
   repair_quotes?: { estimated_days?: number | null; created_at?: string | null }[] | null;
@@ -290,6 +293,7 @@ export type CaseRow = {
   store_id: string | null;
   assigned_to: string | null;
   is_web_booking: boolean;
+  parts_status: PartsStatus | null;
   created_at: string;
   /** Sagsnumre på de andre sager fra samme indlevering ("Del af indlevering med ..."). */
   group_with?: { id: string; label: string }[];
@@ -329,6 +333,7 @@ export function toCaseRow(t: CaseListTicket): CaseRow {
     store_id: t.store_id ?? null,
     assigned_to: t.assigned_to?.trim() || null,
     is_web_booking: isWebBooking(t),
+    parts_status: t.parts_status ?? null,
     created_at: t.created_at,
   };
 }
