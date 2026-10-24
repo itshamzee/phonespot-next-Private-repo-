@@ -4,14 +4,14 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
-  title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
+  title: "Refurbished iPhones i Vejle | PhoneSpot Vejle",
   description:
-    "Køb kvalitetstestede refurbished iPhones i Vejle. Fra 999 kr med 36 mdr. garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
+    "Køb kvalitetstestede refurbished iPhones i Vejle med 36 mdr. garanti. Afhent i butikken eller få leveret. PhoneSpot Vejle, Løversysselvej 3B.",
   alternates: { canonical: "https://phonespot.dk/iphones-vejle" },
   openGraph: {
-    title: "Refurbished iPhones i Vejle — Fra 999 kr | PhoneSpot Vejle",
+    title: "Refurbished iPhones i Vejle | PhoneSpot Vejle",
     description:
-      "Kvalitetstestede refurbished iPhones fra 999 kr med 36 mdr. garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
+      "Kvalitetstestede refurbished iPhones med 36 mdr. garanti. Afhent i PhoneSpot Vejle på Løversysselvej 3B.",
     url: "https://phonespot.dk/iphones-vejle",
     type: "website",
   },
@@ -67,7 +67,7 @@ const localBusinessJsonLd = {
       {
         "@type": "OfferCatalog",
         name: "iPhone 13",
-        description: "Refurbished iPhone 13 med 36 mdr. garanti fra 999 kr",
+        description: "Refurbished iPhone 13 med 36 mdr. garanti",
       },
       {
         "@type": "OfferCatalog",
@@ -92,7 +92,7 @@ const faqJsonLd = {
       name: "Hvad er en refurbished iPhone?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
+        text: "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny.",
       },
     },
     {
@@ -108,7 +108,7 @@ const faqJsonLd = {
       name: "Hvilken garanti får jeg på en refurbished iPhone?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
+        text: "Alle refurbished iPhones sælges med 36 måneders garanti.",
       },
     },
     {
@@ -116,7 +116,7 @@ const faqJsonLd = {
       name: "Hvad koster en refurbished iPhone i Vejle?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Priserne starter fra 999 kr. afhængigt af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
+        text: "Prisen afhænger af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
       },
     },
   ],
@@ -126,32 +126,26 @@ const IPHONE_MODELS = [
   {
     model: "iPhone 13",
     description: "5G, A15 Bionic, dobbelt kamera — vores bedst sælgende model.",
-    from: "999",
   },
   {
     model: "iPhone 13 Pro",
     description: "ProMotion-skærm, tredobbelt kamera, 120 Hz opdateringsfrekvens.",
-    from: "1.299",
   },
   {
     model: "iPhone 14",
     description: "Registrering af ulykker, forbedret frontkamera, A15-chip.",
-    from: "1.499",
   },
   {
     model: "iPhone 14 Pro",
     description: "Dynamic Island, 48 MP-kamera, Always-On Display.",
-    from: "1.999",
   },
   {
     model: "iPhone 15",
     description: "USB-C, A16 Bionic, 48 MP-kamera og Dynamic Island.",
-    from: "2.299",
   },
   {
     model: "iPhone 15 Pro",
     description: "Titandesign, A17 Pro-chip, USB 3-hastighed.",
-    from: "2.999",
   },
 ];
 
@@ -159,12 +153,12 @@ const USP_ITEMS = [
   {
     title: "36 mdr. garanti",
     description:
-      "Alle vores refurbished iPhones leveres med 36 måneders garanti — tre gange mere end standard.",
+      "Alle vores refurbished iPhones leveres med 36 måneders garanti.",
   },
   {
-    title: "30+ kvalitetstests",
+    title: "Gennemgået før salg",
     description:
-      "Hver enhed gennemgår minimum 30 kvalitetstests: batteri, skærm, kamera, højttaler, Face ID og mere.",
+      "Hver enhed er testet og renset, før den sælges. Vi tjekker blandt andet batteri, skærm, kamera og højttaler.",
   },
   {
     title: "Afhent i Vejle",
@@ -204,7 +198,7 @@ export default function IphonesVejlePage() {
             Refurbished iPhones i Vejle
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
-            Køb en kvalitetstestet refurbished iPhone fra 999 kr med 36
+            Køb en kvalitetstestet refurbished iPhone med 36
             måneders garanti. Afhent i vores butik i Vejle eller få leveret
             direkte til døren.
           </p>
@@ -312,9 +306,6 @@ export default function IphonesVejlePage() {
                 <p className="mt-1 text-sm leading-relaxed text-[#6E6E73]">
                   {item.description}
                 </p>
-                <p className="mt-3 text-sm font-semibold text-[#1A3D2E]">
-                  Fra {item.from} kr
-                </p>
               </div>
             ))}
           </div>
@@ -413,7 +404,7 @@ export default function IphonesVejlePage() {
               {
                 question: "Hvad er en refurbished iPhone?",
                 answer:
-                  "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny. Alle vores iPhones gennemgår 30+ kvalitetstests inden salg.",
+                  "En refurbished iPhone er en brugt iPhone, der er grundigt testet, renset og i nogle tilfælde repareret, så den fungerer som ny.",
               },
               {
                 question: "Kan jeg hente min refurbished iPhone i Vejle?",
@@ -423,12 +414,12 @@ export default function IphonesVejlePage() {
               {
                 question: "Hvilken garanti får jeg?",
                 answer:
-                  "Alle refurbished iPhones sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
+                  "Alle refurbished iPhones sælges med 36 måneders garanti.",
               },
               {
                 question: "Hvad koster en refurbished iPhone?",
                 answer:
-                  "Priserne starter fra 999 kr. afhængigt af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
+                  "Prisen afhænger af model, lagerkapacitet og stand. Se aktuelle priser og lagerstatus i vores iPhone-katalog.",
               },
               {
                 question: "Kan jeg returnere en refurbished iPhone?",

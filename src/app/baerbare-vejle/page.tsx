@@ -105,7 +105,7 @@ const faqJsonLd = {
       name: "Hvilken garanti får jeg på en refurbished bærbar?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
+        text: "Alle refurbished bærbare sælges med 36 måneders garanti.",
       },
     },
     {
@@ -176,7 +176,7 @@ const USP_ITEMS = [
   {
     title: "36 mdr. garanti",
     description:
-      "Alle vores refurbished bærbare leveres med 36 måneders garanti — tre gange mere end standard.",
+      "Alle vores refurbished bærbare leveres med 36 måneders garanti.",
   },
   {
     title: "Grundigt testet",
@@ -495,7 +495,7 @@ export default function BaerbareVejlePage() {
               {
                 question: "Hvilken garanti får jeg på en refurbished bærbar?",
                 answer:
-                  "Alle refurbished bærbare sælges med 36 måneders garanti. Det er tre gange så lang garanti, som de fleste andre forhandlere tilbyder.",
+                  "Alle refurbished bærbare sælges med 36 måneders garanti.",
               },
               {
                 question: "Hvad koster en refurbished bærbar i Vejle?",

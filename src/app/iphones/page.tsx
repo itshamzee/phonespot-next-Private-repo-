@@ -46,7 +46,7 @@ export default async function IphonesPage() {
       guideIntro="Modelnavne fortæller ikke hele historien. Tag udgangspunkt i de funktioner, du bruger hver dag, og sammenlign derefter de konkrete enheder."
       choices={CHOICES}
       faqs={FAQS}
-      serviceLink={{ href: "/reparation/iphone", label: "Se iPhone-reparationer", body: "Har din nuværende iPhone brug for en reparation, kan du se mulighederne og vælge model." }}
+     
     />
   </>;
 }

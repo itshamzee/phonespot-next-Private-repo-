@@ -47,15 +47,6 @@ export function HubPageClient() {
       <TilbehoerLayout heroTitle="Alt tilbehør" heroDescription="Se udvalget, eller afgræns efter kategori, model og pris." activeCategory="" headingLevel="h2" />
     </div>
     <div className={styles.landing}>
-      <section className={styles.repair} aria-labelledby="accessories-repair-title">
-        <div className={styles.repairImage}><Image src="/images/repair/telefon-med-smadret-skaerm.jpg" alt="Telefon med knust skærm og adskilt display" fill sizes="(max-width: 640px) 90vw, 560px" /></div>
-        <div className={styles.repairCopy}>
-          <p className={styles.eyebrow}>Reparation i Vejle og Slagelse</p>
-          <h2 id="accessories-repair-title">Er skaden allerede sket?</h2>
-          <p>Et beskyttelsesglas løser ikke en ødelagt skærm. Find din model og se mulighederne for reparation.</p>
-          <Link href="/reparation" className={styles.button}>Find din reparation <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
       <div className={styles.trust}><TrustBar variant="accessory" /></div>
     </div>
   </>;
