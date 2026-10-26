@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { countWebBookings, STALE_AFTER_DAYS, type WebBookings } from "@/lib/admin/overview/web-bookings";
 import { linkClass } from "./parts";
+import { ArchiveBookingButton } from "./archive-booking-button";
 
 /**
  * "Nye reparationsanmodninger" øverst på Overblik: alle web-bookinger, ingen har
@@ -44,7 +45,7 @@ export function WebBookingsPanel({ data }: { data: WebBookings }) {
             {g.items.map((b) => (
               <div
                 key={b.id}
-                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-[#EEF0EC] px-5 py-3 text-[14px] md:grid-cols-[150px_minmax(0,1fr)_130px_100px_120px] ${
+                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-[#EEF0EC] px-5 py-3 text-[14px] md:grid-cols-[140px_minmax(0,1fr)_120px_90px_auto] ${
                   g.kind === "idag" ? "bg-[#FFFBF2]" : ""
                 }`}
               >
@@ -67,17 +68,18 @@ export function WebBookingsPanel({ data }: { data: WebBookings }) {
                 </div>
                 <div className="order-4 text-[#5E6A63] md:order-none">{b.label}</div>
                 <div className="order-5 md:order-none">{b.store}</div>
-                <div className="order-2 flex justify-end md:order-none">
+                <div className="order-2 flex items-center justify-end gap-2 md:order-none">
                   <Link
                     href={`/admin/reparationer/${b.id}`}
                     className={
                       g.kind === "idag"
-                        ? "rounded-lg bg-[#1A3D2E] px-4 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#2D6B45]"
-                        : "rounded-lg border border-[#E2E5E0] px-3 py-2 text-[13px] text-[#15211B] no-underline hover:bg-[#F5F6F4]"
+                        ? "inline-flex min-h-11 items-center rounded-lg bg-[#1A3D2E] px-4 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#2D6B45] md:min-h-0"
+                        : "inline-flex min-h-11 items-center rounded-lg border border-[#E2E5E0] px-3 py-2 text-[13px] text-[#15211B] no-underline hover:bg-[#F5F6F4] md:min-h-0"
                     }
                   >
                     {g.kind === "idag" ? "Modtag" : "Åbn sag"}
                   </Link>
+                  <ArchiveBookingButton id={b.id} label={b.customer} />
                 </div>
               </div>
             ))}

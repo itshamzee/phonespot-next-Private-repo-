@@ -5,6 +5,7 @@ import { formatKr, readyLabel } from "@/lib/admin/overview/format";
 import { OVERBLIK_PERIODS } from "@/lib/admin/overview/period";
 import { Empty, KpiCard, KpiGrid, linkClass, PageHeading, Panel, PanelGrid, PeriodToggle, Row } from "./parts";
 import { WebBookingsPanel } from "./web-bookings-panel";
+import { WebshopOrdersPanel } from "./webshop-orders-panel";
 
 /** Overblik for én butik: hilsen, nye reparationsanmodninger, fire nøgletal og to paneler. */
 export function StoreOverviewView({ data }: { data: StoreOverview }) {
@@ -27,13 +28,18 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
   const deltaNote =
     delta === null ? undefined : `${delta > 0 ? "+" : delta < 0 ? "−" : ""}${Math.abs(delta)} % ${data.range.compareLabel}`;
 
+  const isWebshop = scope === "webshop";
+  const bookings = data.webBookings;
+  // Webshoppen håndterer ordrer først; reparationsanmodninger vises kun, hvis der er nogen.
+  const showBookingsLate = isWebshop && (bookings.groups.length > 0 || bookings.stale > 0);
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeading aside={<PeriodToggle periods={OVERBLIK_PERIODS} current={data.period} basePath="/admin" />}>
         {heading}
       </PageHeading>
 
-      <WebBookingsPanel data={data.webBookings} />
+      {isWebshop ? <WebshopOrdersPanel data={data.webshopOrders} /> : <WebBookingsPanel data={bookings} />}
 
       <KpiGrid>
         <KpiCard
@@ -63,6 +69,8 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
       <p className="m-0 -mt-3 text-[12px] text-[#5E6A63]">
         Profit er omsætning ekskl. moms (brugtmoms fratrukket) minus kostpris. Depositum indgår ikke, før det er afregnet.
       </p>
+
+      {showBookingsLate ? <WebBookingsPanel data={bookings} /> : null}
 
       <PanelGrid>
         <Panel

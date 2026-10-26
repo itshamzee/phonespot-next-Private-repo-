@@ -21,6 +21,7 @@ import type { RepairStatus } from "@/lib/supabase/types";
 import { focusWithoutScroll } from "@/lib/reveal";
 import { Btn, BtnLink, Pill, apiError } from "@/components/admin/repairs/ui";
 import { useCaseListKeys, type ListKeyAction } from "@/components/admin/repairs/list-keys";
+import { ArchiveBookingButton } from "@/components/admin/overview/archive-booking-button";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { SidePanel } from "@/components/admin/repairs/side-panel";
 
@@ -32,7 +33,7 @@ type ListResponse = {
   pageSize: number;
 };
 
-const COLS = "grid grid-cols-[120px_minmax(0,1fr)_220px_110px_120px] gap-3";
+const COLS = "grid grid-cols-[104px_minmax(0,1fr)_minmax(0,170px)_88px_96px] gap-3";
 const EMPTY_COUNTS: CaseCounts = { igang: 0, klar: 0, afventer: 0, web: 0, alle: 0 };
 
 export default function CaseListPage() {
@@ -224,7 +225,7 @@ export default function CaseListPage() {
                 {debounced.trim() ? `Ingen sager matcher "${debounced.trim()}" i denne fane.` : "Ingen sager i denne fane."}
               </p>
             ) : (
-              <div ref={listRef} role="grid" aria-label="Sager" className="min-w-[780px] text-sm">
+              <div ref={listRef} role="grid" aria-label="Sager" className="min-w-[620px] text-sm">
                 <div role="row" className={`${COLS} px-2 pb-2 text-[13px] font-semibold text-[#5E6A63]`}>
                   <span role="columnheader">#</span>
                   <span role="columnheader">Opgave</span>
@@ -298,9 +299,20 @@ export default function CaseListPage() {
                           </span>
                           <span role="gridcell">
                             {closed ? null : row.is_web_booking ? (
-                              <BtnLink href={`/admin/reparationer/${row.id}`} size="sm" className="w-full" onClick={(e) => e.stopPropagation()}>
-                                Åbn
-                              </BtnLink>
+                              <span className="flex flex-col gap-1.5">
+                                <BtnLink href={`/admin/reparationer/${row.id}`} size="sm" className="w-full" onClick={(e) => e.stopPropagation()}>
+                                  Åbn
+                                </BtnLink>
+                                <ArchiveBookingButton
+                                  id={row.id}
+                                  label={row.customer_name}
+                                  className="!justify-start"
+                                  onDone={() => {
+                                    if (selectedId === row.id) setSelectedId(null);
+                                    setReload((n) => n + 1);
+                                  }}
+                                />
+                              </span>
                             ) : (
                               <Btn
                                 variant="ready"

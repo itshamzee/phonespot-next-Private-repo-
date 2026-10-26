@@ -17,6 +17,12 @@ import { computeKpis, groupByStore, pctChange, type Kpis, type OverviewOrder } f
 import { calendarDaysSince, formatClock, ticketLabel } from "./format";
 import { periodRange, type PeriodKey, type PeriodRange } from "./period";
 import { splitWebBookings, type WebBookingRaw, type WebBookings } from "./web-bookings";
+import {
+  EMPTY_WEBSHOP_ORDERS,
+  shapeWebshopOrders,
+  type WebshopOrderRaw,
+  type WebshopOrders,
+} from "./webshop-orders";
 
 /**
  * Data til Overblik (én butik) og Alle butikker (ejeren). Hver forespørgsel
@@ -62,6 +68,8 @@ export type StoreOverview = {
   cash: CashInfo;
   ready: { items: ReadyCase[]; total: number };
   webBookings: WebBookings;
+  /** Betalte, endnu ikke ekspederede online-ordrer; kun udfyldt for Webshop. */
+  webshopOrders: WebshopOrders;
   transfers: TransferLine[];
 };
 
@@ -294,6 +302,33 @@ async function loadWebBookings(supabase: Supabase, scope: StoreScope, today: str
   return splitWebBookings((data ?? []) as WebBookingRaw[], today, now);
 }
 
+/**
+ * Online-ordrer webshoppen skal behandle: betalt, men endnu ikke pakket/sendt/afhentet.
+ * Afbrudte og ubetalte checkouts (pending/abandoned/cancelled) er ikke nye ordrer.
+ * Kun for Webshop-visningen; andre scopes forespørger ikke.
+ */
+export const WEBSHOP_ORDER_LIMIT = 50;
+
+async function loadWebshopOrders(supabase: Supabase, scope: StoreScope, index: LocationIndex, now: Date): Promise<WebshopOrders> {
+  if (scope !== "webshop") return EMPTY_WEBSHOP_ORDERS;
+  const q = supabase
+    .from("orders")
+    .select(
+      "id, order_number, shipping_method, total, created_at, confirmed_at, customer:customers(name), order_items(quantity)",
+      { count: "exact" },
+    )
+    .eq("type", "online")
+    .eq("status", "confirmed")
+    .eq("payment_status", "paid")
+    .eq("fulfillment_status", "unfulfilled");
+  const { data, count, error } = await applyLocationScope(q, scope, index)
+    .order("created_at", { ascending: true })
+    .limit(WEBSHOP_ORDER_LIMIT);
+  if (error) throw new Error(error.message);
+  const rows = (data ?? []) as unknown as WebshopOrderRaw[];
+  return shapeWebshopOrders(rows, count ?? rows.length, now);
+}
+
 async function countOpenCases(supabase: Supabase, scope: StoreScope): Promise<Record<string, number>> {
   const counts: Record<string, number> = { vejle: 0, slagelse: 0, webshop: 0 };
   if (scope === "ingen") return counts;
@@ -402,6 +437,7 @@ function emptyStore(scope: StoreScope, period: PeriodKey, range: PeriodRange): S
     cash: { state: "none", detail: "Ingen kasse" },
     ready: { items: [], total: 0 },
     webBookings: { groups: [], stale: 0 },
+    webshopOrders: EMPTY_WEBSHOP_ORDERS,
     transfers: [],
   };
 }
@@ -411,13 +447,14 @@ async function loadStoreOverview(scope: ScopeSlug, period: PeriodKey, now: Date)
   const index = await loadLocationIndex();
   const range = periodRange(period, now);
 
-  const [orders, prevOrders, cash, ready, webBookings, transfers] = await Promise.all([
+  const [orders, prevOrders, cash, ready, webBookings, transfers, webshopOrders] = await Promise.all([
     loadOrders(supabase, scope, index, range.startIso, range.endIso),
     loadOrders(supabase, scope, index, range.prevStartIso, range.prevEndIso),
     loadCash(supabase, scope, index, false),
     loadReadyTickets(supabase, scope),
     loadWebBookings(supabase, scope, range.today, now),
     loadTransfers(supabase, scope, index),
+    loadWebshopOrders(supabase, scope, index, now),
   ]);
 
   const kpis = computeKpis(orders);
@@ -437,6 +474,7 @@ async function loadStoreOverview(scope: ScopeSlug, period: PeriodKey, now: Date)
     cash: describeCash(cash, cash.registers.map((r) => r.id)),
     ready: { items: readyCases.slice(0, 5), total: readyCases.length },
     webBookings,
+    webshopOrders,
     transfers: transferLines(transfers, scope),
   };
 }

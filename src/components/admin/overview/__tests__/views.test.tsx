@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { StoreOverviewView } from "../store-overview";
 import { AllStoresOverviewView } from "../all-stores-overview";
@@ -49,6 +51,7 @@ const store: StoreOverview = {
       ],
     },
   ] },
+  webshopOrders: { items: [], total: 0 },
   transfers: [
     { id: "x1", text: "På vej fra Slagelse · iPhone 14 Pro 128 GB", action: "Modtag" },
     { id: "x2", text: "Slagelse beder om · 2× USB-C kabel 1 m", action: "Send" },
@@ -134,6 +137,41 @@ describe("Overblik for en butik", () => {
     render(<StoreOverviewView data={{ ...store, scope: "webshop", cash: { state: "none", detail: "Ingen kasse" } }} />);
     expect(screen.queryByText("Kassen")).toBeNull();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Hej Webshop");
+  });
+
+  it("webshop viser nye webshop-ordrer før reparationsanmodninger", () => {
+    const webshopOrders = {
+      total: 3,
+      items: [
+        { id: "o1", number: "#PS-1001", customer: "Jens Hansen", items: 2, total: 129_900, shipping: "Hent i Slagelse", pickup: true, age: "5 dage", days: 5, overdue: true },
+        { id: "o2", number: "#PS-1002", customer: "Mette Poulsen", items: 1, total: 49_900, shipping: "DAO", pickup: false, age: "i dag", days: 0, overdue: false },
+      ],
+    };
+    render(<StoreOverviewView data={{ ...store, scope: "webshop", cash: { state: "none", detail: "Ingen kasse" }, webshopOrders }} />);
+    const heads = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    expect(heads.indexOf("Nye webshop-ordrer")).toBe(0);
+    expect(heads.indexOf("Nye webshop-ordrer")).toBeLessThan(heads.indexOf("Nye reparationsanmodninger"));
+    expect(screen.getByText("3 venter på at blive pakket")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "#PS-1001" }).getAttribute("href")).toBe("/admin/platform/orders/o1");
+    expect(screen.getAllByRole("link", { name: "Pak ordre" })).toHaveLength(2);
+    expect(screen.getByText("5 dage").className).toContain("#9A5B0A");
+    expect(screen.getByText("i dag").className).not.toContain("#9A5B0A");
+    expect(screen.getByText("Hent i Slagelse")).toBeTruthy();
+    expect(screen.getByText("2 varer · 1.299 kr.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Alle webshop-ordrer" }).getAttribute("href")).toBe("/admin/platform/orders");
+  });
+
+  it("webshop uden bookinger skjuler reparationspanelet og viser tom ordretilstand", () => {
+    render(<StoreOverviewView data={{ ...store, scope: "webshop", webBookings: { groups: [], stale: 0 } }} />);
+    expect(screen.getByText("Ingen ordrer venter. Nye betalte ordrer vises her.")).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Nye reparationsanmodninger" })).toBeNull();
+  });
+
+  it("vejle viser stadig bookinger først og ingen webshop-ordrer", () => {
+    render(<StoreOverviewView data={store} />);
+    const heads = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    expect(heads[0]).toBe("Nye reparationsanmodninger");
+    expect(heads).not.toContain("Nye webshop-ordrer");
   });
 
   it("medarbejder uden butik får en forklaring i stedet for tal", () => {

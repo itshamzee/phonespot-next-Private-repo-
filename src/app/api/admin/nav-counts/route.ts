@@ -12,7 +12,8 @@ import {
 
 /**
  * GET /api/admin/nav-counts — tallene i sidemenuen og notifikationerne, afgrænset til
- * personalets butik. `repairs` er åbne sager; `newRepairs` er sager, der ikke er modtaget endnu;
+ * personalets butik. `orders` er betalte online-ordrer, der venter på at blive pakket/afhentet
+ * (ikke afbrudte checkouts). `repairs` er åbne sager; `newRepairs` er sager, der ikke er modtaget endnu;
  * `webBookings` er de af dem, der kom fra hjemmesidens booking. `latestWebBooking` er den nyeste
  * af dem, så admin kan vise en besked, når en ny lander.
  */
@@ -29,7 +30,16 @@ export async function GET(request: Request) {
   const recent = `booking_details->>preferred_date.gte.${cutoff},and(booking_details->>preferred_date.is.null,created_at.gte.${cutoff})`;
 
   const [orders, repairs, newRepairs, webBookings, latest, inquiries, buyback] = await Promise.all([
-    applyLocationScope(supabase.from("orders").select("id", head).eq("status", "pending").eq("type", "online"), scope, index),
+    applyLocationScope(supabase
+        .from("orders")
+        .select("id", head)
+        .eq("type", "online")
+        .eq("status", "confirmed")
+        .eq("payment_status", "paid")
+        .eq("fulfillment_status", "unfulfilled"),
+      scope,
+      index,
+    ),
     // Menu-tallet er åbne sager (alt undtagen afhentet og løst reklamation)
     applyStoreScope(
       supabase.from("repair_tickets").select("id", head).not("status", "in", "(afhentet,reklamation_loest)"),
