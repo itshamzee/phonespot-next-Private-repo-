@@ -4,8 +4,9 @@ import type { StoreOverview } from "@/lib/admin/overview/load";
 import { formatKr, readyLabel } from "@/lib/admin/overview/format";
 import { OVERBLIK_PERIODS } from "@/lib/admin/overview/period";
 import { Empty, KpiCard, KpiGrid, linkClass, PageHeading, Panel, PanelGrid, PeriodToggle, Row } from "./parts";
+import { WebBookingsPanel } from "./web-bookings-panel";
 
-/** Overblik for én butik: hilsen, periode, fire nøgletal og tre paneler. */
+/** Overblik for én butik: hilsen, nye reparationsanmodninger, fire nøgletal og to paneler. */
 export function StoreOverviewView({ data }: { data: StoreOverview }) {
   const { kpis, cash, scope } = data;
   const hasCash = cash.state !== "none" || scope === "vejle" || scope === "slagelse";
@@ -31,6 +32,8 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
       <PageHeading aside={<PeriodToggle periods={OVERBLIK_PERIODS} current={data.period} basePath="/admin" />}>
         {heading}
       </PageHeading>
+
+      <WebBookingsPanel data={data.webBookings} />
 
       <KpiGrid>
         <KpiCard
@@ -81,26 +84,6 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
                 <Link href={`/admin/reparationer/${c.id}`} className="text-inherit no-underline hover:underline">
                   <b>{c.label}</b> {c.title}
                 </Link>
-              </Row>
-            ))
-          )}
-        </Panel>
-
-        <Panel title="Kommer i dag" aside={<span className="text-[13px] text-[#5E6A63]">Web-bookinger</span>}>
-          {data.arriving.length === 0 ? (
-            <Empty>Ingen bookinger i dag.</Empty>
-          ) : (
-            data.arriving.map((a) => (
-              <Row
-                key={a.id}
-                aside={
-                  <Link href={`/admin/reparationer/${a.id}`} className={linkClass}>
-                    Modtag
-                  </Link>
-                }
-              >
-                {a.time ? `${a.time} · ` : ""}
-                {a.title}
               </Row>
             ))
           )}

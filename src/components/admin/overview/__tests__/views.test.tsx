@@ -31,7 +31,24 @@ const store: StoreOverview = {
       { id: "t2", label: "#1203", title: "iPhone 13 · batteri", days: 0, overdue: false },
     ],
   },
-  arriving: [{ id: "t3", time: "12.00–14.00", title: "iPhone 15 · skærm (OEM)" }],
+  webBookings: { stale: 0, groups: [
+    {
+      key: "2026-10-04",
+      kind: "idag",
+      label: "I dag",
+      items: [
+        { id: "t3", label: "PS-2026-0121", customer: "Henrik Due", title: "iPhone 15 · skærm (OEM)", price: "1.599 kr.", store: "Vejle", time: "12.00–14.00", isNew: true },
+      ],
+    },
+    {
+      key: "2026-10-06",
+      kind: "senere",
+      label: "Tirsdag 6. okt.",
+      items: [
+        { id: "t4", label: "PS-2026-0122", customer: "Mathias Larsen", title: "Pixel 9 Pro XL · Skærmskift", price: null, store: "Vejle", time: "16.00–18.00", isNew: false },
+      ],
+    },
+  ] },
   transfers: [
     { id: "x1", text: "På vej fra Slagelse · iPhone 14 Pro 128 GB", action: "Modtag" },
     { id: "x2", text: "Slagelse beder om · 2× USB-C kabel 1 m", action: "Send" },
@@ -54,6 +71,7 @@ const all: AllOverview = {
   ],
   vat: { vatStandard: 842_000, brugtmoms: 311_000, deposits: 150_000 },
   attention: [{ key: "ready", text: "4 sager klar til afhentning i over 5 dage", href: "/admin/reparationer" }],
+  webBookings: { groups: [], stale: 0 },
 };
 
 afterEach(cleanup);
@@ -69,7 +87,7 @@ describe("Overblik for en butik", () => {
     expect(screen.getByText("36 % af omsætning")).toBeTruthy();
     expect(screen.getByText("Åben")).toBeTruthy();
     expect(screen.getByText("Kasse 1 · åbnet 10.02 af Mikkel")).toBeTruthy();
-    for (const title of ["Klar til afhentning", "Kommer i dag", "Overførsler"]) {
+    for (const title of ["Nye reparationsanmodninger", "Klar til afhentning", "Overførsler"]) {
       expect(screen.getByRole("heading", { name: title })).toBeTruthy();
     }
   });
@@ -91,10 +109,25 @@ describe("Overblik for en butik", () => {
   });
 
   it("tomme paneler får en rolig besked, ikke et hul", () => {
-    render(<StoreOverviewView data={{ ...store, ready: { items: [], total: 0 }, arriving: [], transfers: [] }} />);
+    render(<StoreOverviewView data={{ ...store, ready: { items: [], total: 0 }, webBookings: { groups: [], stale: 0 }, transfers: [] }} />);
     expect(screen.getByText("Ingen sager venter på afhentning.")).toBeTruthy();
-    expect(screen.getByText("Ingen bookinger i dag.")).toBeTruthy();
+    expect(screen.getByText(/Nye bookinger fra hjemmesiden vises her/)).toBeTruthy();
     expect(screen.getByText("Ingen overførsler på vej.")).toBeTruthy();
+  });
+
+  it("viser også bookinger til senere dage, ikke kun i dag", () => {
+    render(<StoreOverviewView data={store} />);
+    expect(screen.getByText("2 er ikke modtaget endnu")).toBeTruthy();
+    expect(screen.getByText("Tirsdag 6. okt.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Mathias Larsen" }).getAttribute("href")).toBe("/admin/reparationer/t4");
+    expect(screen.getByText("Ny")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Se alle i Sagsstyring" }).getAttribute("href")).toBe("/admin/reparationer?fane=web");
+  });
+
+  it("samler gamle bookinger i én linje i stedet for at vise dem alle", () => {
+    render(<StoreOverviewView data={{ ...store, webBookings: { ...store.webBookings, stale: 79 } }} />);
+    expect(screen.getByText(/79 ældre bookinger \(over 14 dage\)/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Ryd op i Sagsstyring" }).getAttribute("href")).toBe("/admin/reparationer?fane=web");
   });
 
   it("webshoppen har ingen kassekort", () => {

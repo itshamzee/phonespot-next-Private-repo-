@@ -9,8 +9,11 @@ import { Topbar } from "@/components/admin/shell/topbar";
 import { SaveBarProvider } from "@/components/admin/shell/save-bar";
 import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
+import { NewBookingToast, type LatestWebBooking } from "@/components/admin/shell/new-booking-toast";
 
-const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, inquiries: 0, buyback: 0 };
+const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, webBookings: 0, inquiries: 0, buyback: 0 };
+/** Menu-tallene hentes igen så ofte, mens fanen er synlig, så en ny booking dukker op uden at skifte side. */
+const COUNTS_POLL_MS = 60_000;
 
 /* ------------------------------------------------------------------ */
 /*  Layout Component                                                   */
@@ -190,6 +193,7 @@ function AuthedShell({
   const settledScope = useRef<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
+  const [latestBooking, setLatestBooking] = useState<LatestWebBooking | null | undefined>(undefined);
 
   useEffect(() => {
     // Lukker menuen når man navigerer (mobil).
@@ -207,14 +211,28 @@ function AuthedShell({
   useEffect(() => {
     if (scopeLoading) return;
     let cancelled = false;
-    fetch("/api/admin/nav-counts")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((counts: NavCounts | null) => {
-        if (!cancelled && counts) setNavCounts({ ...EMPTY_COUNTS, ...counts });
-      })
-      .catch(() => {});
+    const load = () => {
+      if (document.visibilityState === "hidden") return;
+      fetch("/api/admin/nav-counts")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((res: (NavCounts & { latestWebBooking?: LatestWebBooking | null }) | null) => {
+          if (cancelled || !res) return;
+          const { latestWebBooking, ...counts } = res;
+          setNavCounts({ ...EMPTY_COUNTS, ...counts });
+          setLatestBooking(latestWebBooking ?? null);
+        })
+        .catch(() => {});
+    };
+    load();
+    const timer = setInterval(load, COUNTS_POLL_MS);
+    const onVisible = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", load);
     return () => {
       cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", load);
     };
   }, [pathname, scope, scopeLoading]);
 
@@ -236,6 +254,7 @@ function AuthedShell({
 
         {/* Real-time new-order toast watcher */}
         <NewOrdersWatcher />
+        <NewBookingToast latest={latestBooking} />
       </div>
     </SaveBarProvider>
   );

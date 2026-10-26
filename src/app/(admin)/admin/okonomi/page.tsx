@@ -25,5 +25,5 @@ export default async function AdminOkonomiPage({
   const data = await loadOverview({ scope: "alle", isOwner: true }, period);
   if (data.kind !== "alle") redirect("/admin");
 
-  return <AllStoresOverviewView data={data} title="Økonomi" periods={OKONOMI_PERIODS} basePath="/admin/okonomi" />;
+  return <AllStoresOverviewView data={data} title="Økonomi" periods={OKONOMI_PERIODS} basePath="/admin/okonomi" showBookings={false} />;
 }

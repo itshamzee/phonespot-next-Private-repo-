@@ -4,6 +4,7 @@ import { formatKr, formatShortDate } from "@/lib/admin/overview/format";
 import { PERIOD_PHRASE, type PeriodKey } from "@/lib/admin/overview/period";
 import { copenhagenDateString } from "@/lib/pos/copenhagen";
 import { Empty, linkClass, PageHeading, Panel, PanelGrid, PeriodToggle, Row } from "./parts";
+import { WebBookingsPanel } from "./web-bookings-panel";
 
 const COLS = "grid grid-cols-[1fr_repeat(5,120px)] gap-3";
 
@@ -30,15 +31,20 @@ export function AllStoresOverviewView({
   title = "Alle butikker",
   periods,
   basePath,
+  showBookings = true,
 }: {
   data: AllOverview;
   title?: string;
+  /** Økonomi genbruger visningen og skal ikke vise bookinger. */
+  showBookings?: boolean;
   periods: PeriodKey[];
   basePath: string;
 }) {
   return (
     <div className="flex flex-col gap-5">
       <PageHeading aside={<PeriodToggle periods={periods} current={data.period} basePath={basePath} />}>{title}</PageHeading>
+
+      {showBookings ? <WebBookingsPanel data={data.webBookings} /> : null}
 
       <section className="min-w-0 rounded-xl border border-[#E2E5E0] bg-white px-5 py-[18px]">
         <h2 className="m-0 mb-3 text-[17px] font-bold">Pr. butik</h2>

@@ -9,8 +9,11 @@
  * en page.tsx (testen i __tests__/nav.test.ts tjekker det).
  */
 
-/** repairs = åbne sager i butikken (menu-tallet); newRepairs = ikke-modtagne, til notifikationer. */
-export type CountKey = "orders" | "repairs" | "newRepairs" | "inquiries" | "buyback";
+/**
+ * repairs = åbne sager i butikken; newRepairs = ikke-modtagne, til notifikationer;
+ * webBookings = nye reparationsanmodninger fra hjemmesiden (Sagsstyrings menu-tal).
+ */
+export type CountKey = "orders" | "repairs" | "newRepairs" | "webBookings" | "inquiries" | "buyback";
 
 export interface NavChild {
   href: string;
@@ -30,6 +33,8 @@ export interface NavArea {
   icon: string[];
   match?: string[];
   countKey?: CountKey;
+  /** Ord efter tallet i menuen, fx "nye", så det ikke forveksles med en total. */
+  countSuffix?: string;
   children?: NavChild[];
   /** Vises nederst i menuen, adskilt fra resten. */
   pinned?: boolean;
@@ -49,7 +54,8 @@ export const NAV: NavArea[] = [
     key: "sagsstyring",
     label: "Sagsstyring",
     href: "/admin/reparationer",
-    countKey: "repairs",
+    countKey: "webBookings",
+    countSuffix: "nye",
     icon: ["M9 6h11M9 12h11M9 18h11", "m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"],
     children: [
       { href: "/admin/reparationer", label: "Sager" },

@@ -13,12 +13,21 @@ import type { RepairStatus } from "@/lib/supabase/types";
 export type CaseTab = "igang" | "klar" | "afventer" | "web" | "alle";
 
 export const CASE_TABS: { id: CaseTab; label: string }[] = [
+  { id: "web", label: "Nye fra web" },
   { id: "igang", label: "Igangværende" },
   { id: "klar", label: "Klar til kunde" },
   { id: "afventer", label: "Afventer del" },
-  { id: "web", label: "Web-bookinger" },
   { id: "alle", label: "Alle" },
 ];
+
+/**
+ * Hvilken fane listen åbner på: `?fane=` i adressen vinder; ellers "Nye fra web", når
+ * der ligger nye reparationsanmodninger, så de ikke gemmer sig bag Igangværende.
+ */
+export function initialCaseTab(param: string | null, webCount: number): CaseTab {
+  if (isCaseTab(param)) return param;
+  return webCount > 0 ? "web" : "igang";
+}
 
 export type CaseCounts = Record<CaseTab, number>;
 

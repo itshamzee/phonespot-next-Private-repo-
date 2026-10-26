@@ -8,7 +8,7 @@ import { notificationItems } from "../notifications";
 const owner: AdminMe = { id: "o", name: "Ejer", email: "o@phonespot.dk", role: "owner", isOwner: true, ownSlug: null, scope: "alle" };
 const vejle: AdminMe = { id: "v", name: "Mikkel", email: "v@phonespot.dk", role: "employee", isOwner: false, ownSlug: "vejle", scope: "vejle" };
 
-const counts: NavCounts = { orders: 2, repairs: 3, newRepairs: 1, inquiries: 4, buyback: 0 };
+const counts: NavCounts = { orders: 2, repairs: 3, newRepairs: 5, webBookings: 2, inquiries: 4, buyback: 0 };
 
 function renderSidebar(me: AdminMe, pathname = "/admin") {
   return render(
@@ -24,7 +24,7 @@ describe("Sidebar", () => {
   it("medarbejdere ser alle punkter undtagen Økonomi", () => {
     renderSidebar(vejle);
     const nav = screen.getByRole("navigation", { name: "Hovedmenu" });
-    const labels = within(nav).getAllByRole("link").map((a) => a.textContent?.replace(/\d+$/, ""));
+    const labels = within(nav).getAllByRole("link").map((a) => a.textContent?.replace(/\d+( nye)?$/, ""));
     expect(labels).toEqual(["Overblik", "Sagsstyring", "Kasse", "Kunder", "Varer", "Opkøb", "Statistik"]);
     expect(screen.queryByText("Økonomi")).toBeNull();
     expect(screen.getByText("Indstillinger")).toBeTruthy();
@@ -48,14 +48,23 @@ describe("Sidebar", () => {
     expect(href("Indstillinger")).toBe("/admin/indstillinger");
   });
 
-  it("viser åbne sager som tal ved Sagsstyring, og flytter det til Sager når området er åbent", () => {
+  it("viser nye reparationsanmodninger ved Sagsstyring, og flytter tallet til Sager når området er åbent", () => {
     renderSidebar(vejle, "/admin/kunder");
-    expect(screen.getByRole("link", { name: /^Sagsstyring/ }).textContent).toContain("3");
+    expect(screen.getByRole("link", { name: /^Sagsstyring/ }).textContent).toBe("Sagsstyring2 nye");
     cleanup();
     renderSidebar(vejle, "/admin/reparationer/abc");
     const sager = screen.getByRole("link", { name: /^Sager/ });
     expect(sager.getAttribute("aria-current")).toBe("page");
-    expect(sager.textContent).toContain("3");
+    expect(sager.textContent).toContain("2");
+  });
+
+  it("Sagsstyring har intet tal, når der ingen nye anmodninger er", () => {
+    render(
+      <StoreScopeProvider initialMe={vejle}>
+        <Sidebar pathname="/admin/kunder" counts={{ ...counts, webBookings: 0 }} open onNavigate={() => {}} />
+      </StoreScopeProvider>,
+    );
+    expect(screen.getByRole("link", { name: /^Sagsstyring/ }).textContent).toBe("Sagsstyring");
   });
 
   it("Medarbejdere under Indstillinger er kun synligt for ejeren", () => {
@@ -75,7 +84,8 @@ describe("topbar-hjælpere", () => {
   });
 
   it("notifikationer viser kun det, der venter", () => {
-    expect(notificationItems(counts).map((i) => i.key)).toEqual(["orders", "repairs", "inquiries"]);
-    expect(notificationItems({ orders: 0, repairs: 9, newRepairs: 0, inquiries: 0, buyback: 0 })).toEqual([]);
+    expect(notificationItems(counts).map((i) => i.key)).toEqual(["orders", "webBookings", "inquiries"]);
+    expect(notificationItems(counts)[1]).toMatchObject({ text: "2 nye reparationsanmodninger", href: "/admin/reparationer?fane=web", count: 2 });
+    expect(notificationItems({ orders: 0, repairs: 9, newRepairs: 3, webBookings: 0, inquiries: 0, buyback: 0 })).toEqual([]);
   });
 });

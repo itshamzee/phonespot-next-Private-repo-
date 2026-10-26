@@ -14,8 +14,9 @@ import {
 } from "@/lib/auth/store-scope";
 import { finalDifference } from "@/lib/pos/cash-session";
 import { computeKpis, groupByStore, pctChange, type Kpis, type OverviewOrder } from "./kpi";
-import { calendarDaysSince, formatClock, formatTimeWindow, ticketLabel } from "./format";
+import { calendarDaysSince, formatClock, ticketLabel } from "./format";
 import { periodRange, type PeriodKey, type PeriodRange } from "./period";
+import { splitWebBookings, type WebBookingRaw, type WebBookings } from "./web-bookings";
 
 /**
  * Data til Overblik (én butik) og Alle butikker (ejeren). Hver forespørgsel
@@ -48,7 +49,6 @@ export type CashState = "open" | "closed" | "none";
 export type CashInfo = { state: CashState; detail: string };
 
 export type ReadyCase = { id: string; label: string; title: string; days: number; overdue: boolean };
-export type ArrivalLine = { id: string; time: string | null; title: string };
 export type TransferLine = { id: string; text: string; action: "Modtag" | "Send" | null };
 
 export type StoreOverview = {
@@ -61,7 +61,7 @@ export type StoreOverview = {
   revenueDeltaPct: number | null;
   cash: CashInfo;
   ready: { items: ReadyCase[]; total: number };
-  arriving: ArrivalLine[];
+  webBookings: WebBookings;
   transfers: TransferLine[];
 };
 
@@ -96,6 +96,7 @@ export type AllOverview = {
   sessions: SessionLine[];
   vat: { vatStandard: number; brugtmoms: number; deposits: number };
   attention: AttentionLine[];
+  webBookings: WebBookings;
 };
 
 export type OverviewPayload = StoreOverview | AllOverview;
@@ -281,23 +282,16 @@ async function loadReadyTickets(supabase: Supabase, scope: StoreScope): Promise<
     .sort((a, b) => a.readyAt.localeCompare(b.readyAt));
 }
 
-async function loadArrivals(supabase: Supabase, scope: StoreScope, today: string): Promise<ArrivalLine[]> {
-  if (scope === "ingen") return [];
+/** Web-bookinger ingen har modtaget endnu, uanset dato, grupperet efter den dag kunden kommer. */
+async function loadWebBookings(supabase: Supabase, scope: StoreScope, today: string, now: Date): Promise<WebBookings> {
+  if (scope === "ingen") return { groups: [], stale: 0 };
   const q = supabase
     .from("repair_tickets")
-    .select("id, ticket_number, device_model, service_type, services, updated_at, store_id, booking_details")
+    .select("id, ticket_number, customer_name, device_model, service_type, store_id, created_at, booking_details")
     .eq("status", "modtaget")
-    .eq("booking_details->>preferred_date", today);
-  const { data } = await applyStoreScope(q, scope).limit(50);
-  return ((data ?? []) as TicketRow[])
-    .map((t) => ({
-      id: t.id,
-      time: formatTimeWindow(t.booking_details?.preferred_time),
-      title: ticketTitle(t),
-      sort: t.booking_details?.preferred_time ?? "99",
-    }))
-    .sort((a, b) => a.sort.localeCompare(b.sort))
-    .map(({ id, time, title }) => ({ id, time, title }));
+    .not("booking_details", "is", null);
+  const { data } = await applyStoreScope(q, scope).order("created_at", { ascending: false }).limit(500);
+  return splitWebBookings((data ?? []) as WebBookingRaw[], today, now);
 }
 
 async function countOpenCases(supabase: Supabase, scope: StoreScope): Promise<Record<string, number>> {
@@ -407,7 +401,7 @@ function emptyStore(scope: StoreScope, period: PeriodKey, range: PeriodRange): S
     revenueDeltaPct: null,
     cash: { state: "none", detail: "Ingen kasse" },
     ready: { items: [], total: 0 },
-    arriving: [],
+    webBookings: { groups: [], stale: 0 },
     transfers: [],
   };
 }
@@ -417,12 +411,12 @@ async function loadStoreOverview(scope: ScopeSlug, period: PeriodKey, now: Date)
   const index = await loadLocationIndex();
   const range = periodRange(period, now);
 
-  const [orders, prevOrders, cash, ready, arriving, transfers] = await Promise.all([
+  const [orders, prevOrders, cash, ready, webBookings, transfers] = await Promise.all([
     loadOrders(supabase, scope, index, range.startIso, range.endIso),
     loadOrders(supabase, scope, index, range.prevStartIso, range.prevEndIso),
     loadCash(supabase, scope, index, false),
     loadReadyTickets(supabase, scope),
-    loadArrivals(supabase, scope, range.today),
+    loadWebBookings(supabase, scope, range.today, now),
     loadTransfers(supabase, scope, index),
   ]);
 
@@ -442,7 +436,7 @@ async function loadStoreOverview(scope: ScopeSlug, period: PeriodKey, now: Date)
     revenueDeltaPct: pctChange(kpis.revenue, prev.revenue),
     cash: describeCash(cash, cash.registers.map((r) => r.id)),
     ready: { items: readyCases.slice(0, 5), total: readyCases.length },
-    arriving,
+    webBookings,
     transfers: transferLines(transfers, scope),
   };
 }
@@ -483,13 +477,14 @@ async function loadAllOverview(period: PeriodKey, now: Date): Promise<AllOvervie
   const index = await loadLocationIndex();
   const range = periodRange(period, now);
 
-  const [orders, cash, openCases, ready, transfers, lowStock] = await Promise.all([
+  const [orders, cash, openCases, ready, transfers, lowStock, webBookings] = await Promise.all([
     loadOrders(supabase, "alle", index, range.startIso, range.endIso),
     loadCash(supabase, "alle", index, true),
     countOpenCases(supabase, "alle"),
     loadReadyTickets(supabase, "alle"),
     loadTransfers(supabase, "alle", index),
     loadLowStock(supabase, index),
+    loadWebBookings(supabase, "alle", range.today, now),
   ]);
 
   const grouped = groupByStore(orders, (id) => slugForLocationId(index, id));
@@ -576,6 +571,7 @@ async function loadAllOverview(period: PeriodKey, now: Date): Promise<AllOvervie
     sessions,
     vat: { vatStandard: total.vatStandard, brugtmoms: total.brugtmoms, deposits: total.deposits },
     attention,
+    webBookings,
   };
 }
 

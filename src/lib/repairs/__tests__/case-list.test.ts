@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   addBusinessDays,
+  CASE_TABS,
+  initialCaseTab,
   classifyTab,
   compareRows,
   groupRows,
@@ -166,5 +168,22 @@ describe("attachGroups", () => {
   it("is wired into buildCaseList", () => {
     const res = buildCaseList([a, b], parseListParams(new URL("http://x/api?tab=alle")));
     expect(res.rows.find((r) => r.id === "a")?.group_with?.[0].id).toBe("b");
+  });
+});
+
+describe("initialCaseTab", () => {
+  it("åbner på Nye fra web, når der ligger nye reparationsanmodninger", () => {
+    expect(initialCaseTab(null, 3)).toBe("web");
+    expect(initialCaseTab(null, 0)).toBe("igang");
+  });
+
+  it("en fane i adressen vinder", () => {
+    expect(initialCaseTab("klar", 3)).toBe("klar");
+    expect(initialCaseTab("web", 0)).toBe("web");
+    expect(initialCaseTab("noget-andet", 0)).toBe("igang");
+  });
+
+  it("Nye fra web står først", () => {
+    expect(CASE_TABS[0]).toEqual({ id: "web", label: "Nye fra web" });
   });
 });

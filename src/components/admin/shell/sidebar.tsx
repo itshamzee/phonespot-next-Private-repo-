@@ -16,15 +16,16 @@ function Icon({ paths }: { paths: string[] }) {
   );
 }
 
-function Count({ value, muted = false }: { value: number; muted?: boolean }) {
+function Count({ value, muted = false, suffix }: { value: number; muted?: boolean; suffix?: string }) {
   if (value <= 0) return null;
   return (
     <span
-      className={`ml-auto min-w-5 rounded-[10px] px-2 text-center text-[12px] font-semibold leading-[20px] tabular-nums ${
+      className={`ml-auto min-w-5 whitespace-nowrap rounded-[10px] px-2 text-center text-[12px] font-semibold leading-[20px] tabular-nums ${
         muted ? "bg-[#E9ECE7] text-[#3D4842]" : "bg-[#1A3D2E] text-white"
       }`}
     >
       {value > 99 ? "99+" : value}
+      {suffix ? ` ${suffix}` : null}
     </span>
   );
 }
@@ -77,7 +78,7 @@ export function Sidebar({
         >
           <Icon paths={area.icon} />
           {area.label}
-          {!expanded && <Count value={areaCount(area, counts)} />}
+          {!expanded && <Count value={areaCount(area, counts)} suffix={area.countSuffix} />}
         </Link>
         {expanded && (
           <ul className="mb-1 mt-0.5 flex flex-col">

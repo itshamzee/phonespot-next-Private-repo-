@@ -9,6 +9,7 @@ import {
   dateKey,
   formatPhone,
   groupRows,
+  initialCaseTab,
   isClosed,
   pickupCell,
   type CaseCounts,
@@ -49,6 +50,16 @@ export default function CaseListPage() {
   const [meldKlarId, setMeldKlarId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  // Fanen vælges automatisk én gang: fra ?fane= i adressen, ellers "Nye fra web" hvis der er nye.
+  const tabSettled = useRef(false);
+
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("fane");
+    if (!param) return;
+    tabSettled.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTab(initialCaseTab(param, 0));
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -73,6 +84,11 @@ export default function CaseListPage() {
         setData(json);
         setError(null);
         setLoading(false);
+        if (!tabSettled.current) {
+          tabSettled.current = true;
+          const first = initialCaseTab(null, json.counts.web);
+          if (first !== tab) setTab(first);
+        }
       })
       .catch((err: unknown) => {
         if (ctrl.signal.aborted) return;
@@ -116,6 +132,7 @@ export default function CaseListPage() {
   useCaseListKeys({ enabled: !meldKlarId, ids, selectedId, onAction: onKey });
 
   function changeTab(next: CaseTab) {
+    tabSettled.current = true;
     setTab(next);
     setPage(1);
     setSelectedId(null);

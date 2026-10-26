@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/client";
 import { normalizeStoreId, storeLabel } from "@/lib/stores";
 import { getStaffRecipients } from "@/lib/email/staff-routing";
+import { adminCaseUrl, staffRepairHtml, staffRepairSubject } from "@/lib/email/staff-repair-alert";
 import { sendRepairConfirmation } from "@/lib/email/repair-confirmation";
 import { priceFromCatalog } from "@/lib/repair/catalog-pricing";
 import {
@@ -118,29 +119,38 @@ async function handleMultiDeviceBooking(
       ...d.selected_services.map((svc) => `  ${svc.name}: ${svc.price_dkk} DKK`),
       ...(d.includes_tempered_glass ? [`  Beskyttelsesglas: ${TEMPERED_GLASS_PRICE_DKK} DKK`] : []),
     ]);
+    const multiUrl = adminCaseUrl(first.id);
+    const multiText = [
+      `Ny reparationsanmodning modtaget (${priced.devices.length} enheder, én sag pr. enhed):`,
+      "",
+      `Butik: ${storeLabel(storeId)}`,
+      `Kunde: ${body.customer_name}`,
+      `Email: ${body.customer_email}`,
+      `Telefon: ${body.customer_phone}`,
+      `Beskrivelse: ${issue}`,
+      ...lines,
+      "",
+      ...(discountPercent > 0 ? [`Rabat: ${discountPercent}% (-${priced.discount} DKK, fordelt på sagerne)`] : []),
+      `Total for hele bookingen: ${priced.total} DKK`,
+      ...(body.delivery_method ? [`Levering: ${body.delivery_method}`] : []),
+      ...(body.preferred_date
+        ? [`Ønsket dato: ${formatDanishDate(body.preferred_date)}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}`]
+        : []),
+      "",
+      `Booking-ID: ${group.booking_group_id}`,
+      `Åbn sagen i admin: ${multiUrl}`,
+    ].join("\n");
     const { error: staffEmailError } = await resend.emails.send({
       from: "PhoneSpot System <noreply@phonespot.dk>",
       ...getStaffRecipients(storeId),
-      subject: `Ny reparationssag${storeId ? ` (${storeLabel(storeId)})` : ""}: ${priced.devices.length} enheder`,
-      text: [
-        `Ny reparationsanmodning modtaget (${priced.devices.length} enheder, én sag pr. enhed):`,
-        "",
-        `Butik: ${storeLabel(storeId)}`,
-        `Kunde: ${body.customer_name}`,
-        `Email: ${body.customer_email}`,
-        `Telefon: ${body.customer_phone}`,
-        `Beskrivelse: ${issue}`,
-        ...lines,
-        "",
-        ...(discountPercent > 0 ? [`Rabat: ${discountPercent}% (-${priced.discount} DKK, fordelt på sagerne)`] : []),
-        `Total for hele bookingen: ${priced.total} DKK`,
-        ...(body.delivery_method ? [`Levering: ${body.delivery_method}`] : []),
-        ...(body.preferred_date
-          ? [`Ønsket dato: ${formatDanishDate(body.preferred_date)}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}`]
-          : []),
-        "",
-        `Booking-ID: ${group.booking_group_id}`,
-      ].join("\n"),
+      subject: staffRepairSubject({
+        storeLabel: storeId ? storeLabel(storeId) : null,
+        what: `${priced.devices.length} enheder`,
+        date: body.preferred_date,
+        time: body.preferred_time,
+      }),
+      text: multiText,
+      html: staffRepairHtml(multiText, multiUrl),
     });
     if (staffEmailError) console.error("[repairs] staff email failed:", first.id, staffEmailError);
 
@@ -282,25 +292,33 @@ export async function POST(request: Request) {
     }).catch((err) => console.error("[repairs] customer confirmation threw:", err));
 
     // Send notification email to staff
+    const caseUrl = adminCaseUrl(ticket.id);
+    const staffText = [
+      "Ny reparationsanmodning modtaget:",
+      "",
+      `Butik: ${storeLabel(storeId)}`,
+      `Kunde: ${body.customer_name}`,
+      `Email: ${body.customer_email}`,
+      `Telefon: ${body.customer_phone}`,
+      `Enhed: ${body.device_type} — ${body.device_model}`,
+      `Service: ${body.service_type}`,
+      `Beskrivelse: ${body.issue_description}`,
+      ...bookingLines,
+      "",
+      `Sagsnummer: ${ticket.ticket_number ?? ticket.id}`,
+      `Åbn sagen i admin: ${caseUrl}`,
+    ].join("\n");
     const { error: staffEmailError } = await resend.emails.send({
       from: "PhoneSpot System <noreply@phonespot.dk>",
       ...getStaffRecipients(storeId),
-      subject: `Ny reparationssag${storeId ? ` (${storeLabel(storeId)})` : ""}: ${body.device_type} ${body.device_model}`,
-      text: [
-        "Ny reparationsanmodning modtaget:",
-        "",
-        `Butik: ${storeLabel(storeId)}`,
-        `Kunde: ${body.customer_name}`,
-        `Email: ${body.customer_email}`,
-        `Telefon: ${body.customer_phone}`,
-        `Enhed: ${body.device_type} — ${body.device_model}`,
-        `Service: ${body.service_type}`,
-        `Beskrivelse: ${body.issue_description}`,
-        ...bookingLines,
-        "",
-        `Sagsnummer: ${ticket.ticket_number ?? ticket.id}`,
-        `Sags-ID: ${ticket.id}`,
-      ].join("\n"),
+      subject: staffRepairSubject({
+        storeLabel: storeId ? storeLabel(storeId) : null,
+        what: `${body.device_type} ${body.device_model}`.trim(),
+        date: bookingDetails?.preferred_date,
+        time: bookingDetails?.preferred_time,
+      }),
+      text: staffText,
+      html: staffRepairHtml(staffText, caseUrl),
     });
     if (staffEmailError) console.error("[repairs] staff email failed:", ticket.id, staffEmailError);
 

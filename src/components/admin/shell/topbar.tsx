@@ -70,7 +70,8 @@ export function Topbar({
         </svg>
       </button>
 
-      <Link href="/admin" className={`shrink-0 ${unsaved ? "hidden sm:block" : ""}`} aria-label="PhoneSpot admin, til overblik">
+      {/* På en telefon er der ikke plads til både logo, butiksvælger og klokken; klokken med tallet vinder. */}
+      <Link href="/admin" className="hidden shrink-0 sm:block" aria-label="PhoneSpot admin, til overblik">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/logos/phonespot-wordmark-green.png" alt="PhoneSpot" className="h-auto w-[104px] sm:w-[124px]" />
       </Link>
