@@ -35,7 +35,7 @@ export async function generateMetadata({
   const url = `https://phonespot.dk/blog/${post.frontmatter.slug}`;
 
   return {
-    title: `${post.frontmatter.title} | PhoneSpot Blog`,
+    title: post.frontmatter.seoTitle ?? `${post.frontmatter.title} | PhoneSpot Blog`,
     description: post.frontmatter.description,
     keywords: post.frontmatter.keywords,
     alternates: { canonical: url },

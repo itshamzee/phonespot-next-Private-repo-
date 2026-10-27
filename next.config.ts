@@ -62,6 +62,9 @@ const nextConfig: NextConfig = {
       { source: "/blogs/:path*", destination: "/blog", permanent: true },
       // Renamed post: "panserglas" is a banned trademark term in customer-facing copy
       { source: "/blog/panserglas-guide", destination: "/blog/beskyttelsesglas-guide", permanent: true },
+      // 2026-10-27: blogindlægget konkurrerede med /reparation-slagelse om "mobil reparation slagelse"
+      // og havde forældede priser og et forkert telefonnummer. Samlet på bysiden.
+      { source: "/blog/telefon-reparation-slagelse", destination: "/reparation-slagelse", permanent: true },
       { source: "/search", destination: "/soeg", permanent: true },
       // Old reservedele URLs
       { source: "/ipad-6-reservedele", destination: "/reparation", permanent: true },

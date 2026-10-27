@@ -14,6 +14,8 @@ export type BlogFrontmatter = {
   keywords: string;
   category: "guide" | "sammenligning" | "nyhed";
   coverImage?: string;
+  /** Valgfri <title> til søgeresultatet (højst 60 tegn). H1 bruger stadig `title`. */
+  seoTitle?: string;
 };
 
 export type BlogPost = {
