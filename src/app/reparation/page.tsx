@@ -9,21 +9,21 @@ import styles from "@/components/repair/repair.module.css";
 import { RepairMethodVideo } from "@/components/repair/repair-method-video";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import landing from "@/components/repair/repair-landing.module.css";
+import { REPAIR_WARRANTY_ANSWER } from "@/lib/repairs/warranty-copy";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Reparation af iPhone, Samsung, iPad og MacBook | PhoneSpot",
+  title: "Mobil- og telefonreparation i Vejle og Slagelse | PhoneSpot",
   description:
-    "Professionel reparation af iPhones, iPads, MacBooks, Samsung og mere i Slagelse og Vejle. Skærmskift, batteriskift, MacBook-service og mere. Se priser og vælg din reparation.",
+    "Reparation af iPhone, Samsung, iPad og MacBook i Vejle og Slagelse. Find din model og se faste priser på skærm og batteri. Livstidsgaranti på arbejde og dele.",
   keywords:
     "iphone reparation, ipad reparation, samsung reparation, skærmskift, batteriskift, reparation slagelse, macbook reparation, telefon reparation slagelse, reparation vestsjællandscentret, reparation vejle, telefon reparation vejle, macbook service, mac reparation, macbook batteriskift, macbook skærmskift",
   alternates: {
     canonical: "https://phonespot.dk/reparation",
   },
   openGraph: {
-    title:
-      "Reparation af iPhone, Samsung, iPad og MacBook | PhoneSpot Slagelse & Vejle",
+    title: "Mobil- og telefonreparation i Vejle og Slagelse | PhoneSpot",
     description:
       "Reparation af telefoner, tablets og bærbare i Vejle og Slagelse. Find din model, se priser og book skærmskift, batteriskift eller anden reparation.",
     url: "https://phonespot.dk/reparation",
@@ -49,8 +49,7 @@ const REPAIR_FAQ = [
   },
   {
     question: "Hvilken garanti gælder for reparationen?",
-    answer:
-      "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele. Opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning. Behandling af vandskade har 3 måneders garanti, og for laptops, konsoller og diagnose gælder vilkårene ved den enkelte reparation. Se også vores reparationsbetingelser.",
+    answer: `${REPAIR_WARRANTY_ANSWER} Se også vores reparationsbetingelser.`,
   },
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
@@ -73,7 +72,7 @@ const REPAIR_SERVICE_JSONLD = [STORES.vejle, STORES.slagelse].map((store) => ({
   "@context": "https://schema.org",
   "@type": "ElectronicsRepair",
   name: store.name,
-  description: `Reparation af smartphones og tablets i ${store.city} med livstidsgaranti på arbejde og dele. Find din model for priser på skærmskift, batteriskift og andre reparationer.`,
+  description: `Mobil-, tablet- og MacBook-reparation i ${store.city} med livstidsgaranti på arbejde og dele (6 måneder på batteriskift). Find din model for priser på skærmskift, batteriskift og andre reparationer.`,
   url: `https://phonespot.dk/reparation-${store.slug}`,
   image: "https://phonespot.dk/images/store/butik-indvendig.jpg",
   telephone: store.phone,
@@ -153,8 +152,8 @@ export default async function ReparationPage() {
         <section className={landing.hero} aria-labelledby="repair-title">
           <div className={landing.heroCopy}>
             <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
-            <h1 id="repair-title">Reparation.<br />Tilbage til hverdagen.</h1>
-            <p>Reparation af iPhone, Samsung, iPad og MacBook. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder.</p>
+            <h1 id="repair-title">Mobilreparation.<br />Tilbage til hverdagen.</h1>
+            <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder.</p>
             <div className={landing.actions}>
               <a href="#find-din-pris">Find model og pris <StorefrontIcon kind="arrow" /></a>
               <a href="#reparationsforloeb">Sådan foregår det</a>

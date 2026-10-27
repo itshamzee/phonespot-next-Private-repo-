@@ -10,7 +10,7 @@
 .page :is(a,button):focus-visible { outline: 3px solid #65866f; outline-offset: 4px; }
 .hero { display: grid; grid-template-columns: 1fr 1fr; background: #1a3d2e; color: white; border-radius: 12px; overflow: hidden; }
 .heroCopy { padding: 44px; align-self: center; }
-.heroCopy h1 { font-size: clamp(34px, 3.9vw, 52px); font-weight: 550; line-height: 1.06; letter-spacing: -1.9px; margin: 0 0 24px; }
+.heroCopy h1 { font-size: clamp(34px, 3.9vw, 52px); font-weight: 550; line-height: 1.06; letter-spacing: -1.9px; margin: 0 0 24px; hyphens: auto; overflow-wrap: break-word; }
 .heroCopy p { color: #d7e1d8; font-size: 15px; line-height: 1.7; max-width: 430px; margin-bottom: 26px; }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 24px; }
 .actions a { font-size: 13px; min-height: 46px; display: inline-flex; align-items: center; gap: 20px; }

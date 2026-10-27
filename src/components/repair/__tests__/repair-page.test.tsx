@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/repairs", () => ({
 describe("Reparationssiden", () => {
   it("bevarer søgning og sender kunden til den valgte models reparationer", async () => {
     render(await ReparationPage());
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Reparation.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mobilreparation.");
     expect(screen.getByRole("link", { name: "Find model og pris" })).toHaveAttribute("href", "#find-din-pris");
     fireEvent.change(screen.getByRole("textbox", { name: "Søg efter model" }), { target: { value: "iPhone 15" } });
     expect(screen.getByRole("link", { name: /iPhone 15 iPhone/ })).toHaveAttribute("href", "/reparation/iphone/iphone-15");
