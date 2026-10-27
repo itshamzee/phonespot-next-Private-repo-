@@ -21,6 +21,7 @@ import {
   getAllModelSlugs,
 } from "@/lib/supabase/repairs";
 import { countsTowardFromPrice } from "@/lib/repairs/from-price";
+import { fitTitle } from "@/lib/repairs/hub-meta";
 
 export const revalidate = 3600;
 
@@ -73,8 +74,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  // Titler over ca. 60 tegn bliver klippet i Google, så den lokale del og
+  // prisen forsvinder. Vælg den længste variant, der kan stå fuldt ud.
+  const from = `fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr.`;
   return {
-    title: `${model.name} reparation i Vejle og Slagelse — fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. | PhoneSpot`,
+    title: fitTitle([
+      `${model.name} reparation i Vejle og Slagelse — ${from} | PhoneSpot`,
+      `${model.name} reparation i Vejle og Slagelse — ${from}`,
+      `${model.name} reparation ${from} | PhoneSpot`,
+    ]),
     description: `${model.name} reparation i Vejle og Slagelse. ${copy.topics} fra ${cheapest.price_dkk.toLocaleString("da-DK")} kr. Se priser og oplysninger om hver reparation hos PhoneSpot.`,
     alternates: {
       canonical: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
