@@ -4,9 +4,11 @@ import { STORES, openingHoursJsonLd } from "@/lib/store-config";
 import {
   LOCAL_REPAIR_TOWNS,
   SATELLITE_TOWN_KEYS,
+  SLAGELSE_SATELLITE_TOWN_KEYS,
   SITE_URL,
   type LocalRepairTown,
 } from "@/lib/local-repair-towns";
+import { REPAIR_WARRANTY_SHORT, REPAIR_WARRANTY_TERMS } from "@/lib/repairs/warranty-copy";
 import { OpenNowStatus } from "@/components/repair/open-now-status";
 import { CityCategorySections } from "@/components/repair/city-category-sections";
 import { MobileContactBar } from "@/components/repair/mobile-contact-bar";
@@ -24,24 +26,6 @@ export const LOCAL_PRICE_MODELS = [
   { brand: "samsung", model: "galaxy-a55" },
 ];
 
-const WARRANTY_TERMS = [
-  {
-    title: "Det dækker",
-    text: "Fejl på den del, vi har skiftet, og på vores arbejde. Opstår den samme fejl igen, reparerer vi den uden beregning, så længe du ejer enheden.",
-  },
-  {
-    title: "Det dækker ikke",
-    text: "Nye skader som fald, slag, tryk og væske, eller hvis enheden efterfølgende er åbnet af andre. Et batteris naturlige kapacitetsfald over tid er ikke en fejl.",
-  },
-  {
-    title: "Særlige reparationer",
-    text: "Behandling af vandskade har 3 måneders garanti. For laptops, konsoller og diagnose gælder vilkårene ved den enkelte reparation.",
-  },
-  {
-    title: "Ved indsendelse",
-    text: "Garantien er den samme, uanset om du afleverer enheden i butikken eller sender den ind med en gratis fragtlabel.",
-  },
-];
 
 const formatKr = (value: number | null) =>
   value === null ? "—" : `${value.toLocaleString("da-DK")} kr.`;
@@ -117,7 +101,7 @@ export function LocalRepairPage({ town, prices }: Props) {
   };
 
   const heroTiles = [
-    { title: "Livstidsgaranti", desc: "På arbejde og dele" },
+    { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
     { title: "30 minutter", desc: "90% klar mens du venter" },
     { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
     isVejle
@@ -128,6 +112,9 @@ export function LocalRepairPage({ town, prices }: Props) {
   const satellites = SATELLITE_TOWN_KEYS.map((key) => LOCAL_REPAIR_TOWNS[key]).filter(
     (t) => t.path !== town.path,
   );
+  const slagelseSatellites = SLAGELSE_SATELLITE_TOWN_KEYS.map(
+    (key) => LOCAL_REPAIR_TOWNS[key],
+  ).filter((t) => t.path !== town.path);
 
   return (
     <>
@@ -198,19 +185,20 @@ export function LocalRepairPage({ town, prices }: Props) {
         </div>
       </section>
 
-      {/* Svar først */}
-      {isHomeTown && (
-        <section className="border-b border-[#E5E5EA] bg-white">
-          <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
-            {store.name} ligger i {store.mall ?? store.city}, {store.street}, og
-            reparerer iPhone, Samsung og iPad uden tidsbestilling. 90% af skærm- og
-            batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde
-            og dele.
-            {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}{" "}
+      {/* Svar først: adresse, ventetid, fra-pris og garanti i de første 40-60 ord */}
+      <section className="border-b border-[#E5E5EA] bg-white">
+        <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
+          {isHomeTown
+            ? `${store.name}, ${store.street}, ${store.zip} ${store.city}, reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter.`
+            : `Fra ${town.name} er der ${town.travel.headline.toLowerCase()} til ${store.name}, ${store.street}, ${store.zip} ${store.city}. Kom uden tidsbestilling: 90% af skærm- og batteriskift er klar på 30 minutter.`}
+          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
+          {` Du får ${REPAIR_WARRANTY_SHORT}`}
+          {isHomeTown ? ". " : ", og du kan også sende enheden ind med en gratis fragtlabel."}
+          {isHomeTown && (
             <Link href="/reparation/dyson" className="font-semibold text-[#1A3D2E] underline underline-offset-4">Vi reparerer også Dyson, Roborock, iRobot, Nespresso og De&apos;Longhi.</Link>
-          </p>
-        </section>
-      )}
+          )}
+        </p>
+      </section>
 
       {/* Town-specific intro */}
       <section className="bg-white py-14">
@@ -433,12 +421,13 @@ export function LocalRepairPage({ town, prices }: Props) {
               Livstidsgaranti på arbejde og dele
             </h2>
             <p className="mt-3 max-w-xl text-base text-[#6E6E73]">
-              Gælder telefon- og tabletreparationer. Her er vilkårene i klart sprog.
+              Gælder reparation af telefon, tablet, computer og konsol. Her er
+              vilkårene i klart sprog.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {WARRANTY_TERMS.map((term) => (
+            {REPAIR_WARRANTY_TERMS.map((term) => (
               <div key={term.title} className="rounded-2xl border border-[#E5E5EA] bg-white p-6">
                 <p className="font-display text-base font-bold text-[#111111]">{term.title}</p>
                 <p className="mt-2 text-sm leading-relaxed text-[#6E6E73]">{term.text}</p>
@@ -508,8 +497,17 @@ export function LocalRepairPage({ town, prices }: Props) {
               .
             </p>
           )}
-          {!isVejle && (
+          {!isVejle && !isHomeTown && (
             <p>
+              Priser, åbningstider og alle reparationer i butikken finder du på{" "}
+              <Link href="/reparation-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+                Reparation i Slagelse
+              </Link>
+              .
+            </p>
+          )}
+          {!isVejle && (
+            <p className={isHomeTown ? undefined : "mt-3"}>
               Se alle{" "}
               <Link href="/reparation" className="font-semibold text-[#1A3D2E] hover:underline">
                 reparationer og priser
@@ -518,6 +516,20 @@ export function LocalRepairPage({ town, prices }: Props) {
               <Link href="/butik/slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
                 butikken i Slagelse
               </Link>
+              .
+            </p>
+          )}
+          {!isVejle && isHomeTown && slagelseSatellites.length > 0 && (
+            <p className="mt-3">
+              Kommer du fra en anden by på Sjælland?{" "}
+              {slagelseSatellites.map((t, i) => (
+                <span key={t.path}>
+                  {i > 0 && (i === slagelseSatellites.length - 1 ? " og " : ", ")}
+                  <Link href={t.path} className="font-semibold text-[#1A3D2E] hover:underline">
+                    Reparation for {t.name}
+                  </Link>
+                </span>
+              ))}
               .
             </p>
           )}
@@ -556,7 +568,7 @@ export function LocalRepairPage({ town, prices }: Props) {
             Klar til at få repareret din enhed?
           </h2>
           <p className="mt-4 text-base text-white/75">
-            Kom forbi {store.street},{store.zip} {store.city}, eller send
+            Kom forbi {store.street}, {store.zip} {store.city}, eller send
             enheden ind med en gratis fragtlabel.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">

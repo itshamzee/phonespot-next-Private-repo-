@@ -19,6 +19,7 @@ import KoldingPage, { metadata as koldingMetadata } from "../../reparation-koldi
 import SlagelsePage, { metadata as slagelseMetadata } from "../../reparation-slagelse/page";
 import FredericiaPage, { metadata as frederMetadata } from "../../reparation-fredericia/page";
 import HedenstedPage, { metadata as hedenstedMetadata } from "../../reparation-hedensted/page";
+import NaestvedPage, { metadata as naestvedMetadata } from "../../reparation-naestved/page";
 
 afterEach(cleanup);
 
@@ -56,6 +57,7 @@ describe("local repair town pages", () => {
     [frederMetadata, "/reparation-fredericia"],
     [slagelseMetadata, "/reparation-slagelse"],
     [hedenstedMetadata, "/reparation-hedensted"],
+    [naestvedMetadata, "/reparation-naestved"],
   ])("has its own canonical and length-safe metadata (%#)", (meta, path) => {
     expect(meta.alternates?.canonical).toBe(`https://phonespot.dk${path}`);
     expect(String(meta.title).length).toBeLessThanOrEqual(60);
@@ -87,5 +89,41 @@ describe("local repair town pages", () => {
     const business = jsonLd(container).find((b) => b["@type"] === "ElectronicsRepair");
     expect(business.name).toBe("PhoneSpot Vejle");
     expect(business.areaServed).toMatchObject({ name: "Hedensted" });
+  });
+
+  it("renders Næstved as an honest Slagelse satellite (no store in Næstved, mail-in offered)", async () => {
+    const { container } = render(await NaestvedPage());
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mobilreparation til dig i Næstved");
+    expect(container.textContent).toMatch(/Vi har ikke en butik i Næstved/);
+    expect(container.textContent).not.toMatch(/gratis parkering/i);
+    const business = jsonLd(container).find((b) => b["@type"] === "ElectronicsRepair");
+    expect(business.name).toBe("PhoneSpot Slagelse");
+    expect(business.areaServed).toMatchObject({ name: "Næstved" });
+    const book = screen.getAllByRole("link", { name: "Book og kom forbi i Slagelse" });
+    for (const link of book) expect(link).toHaveAttribute("href", "/reparation/booking?store=slagelse");
+    expect(screen.getByRole("link", { name: "Reparation i Slagelse" })).toHaveAttribute("href", "/reparation-slagelse");
+  });
+
+  it("links Slagelse to its satellite towns and states the battery warranty", async () => {
+    const { container } = render(await SlagelsePage());
+    expect(screen.getByRole("link", { name: "Reparation for Næstved" })).toHaveAttribute("href", "/reparation-naestved");
+    expect(container.textContent).toMatch(/6 måneder på batteriskift/);
+  });
+
+  it("opens every town page with an answer-first paragraph naming the address", async () => {
+    for (const [Page, street] of [
+      [HorsensPage, "Løversysselvej 3B"],
+      [NaestvedPage, "VestsjællandsCentret 10A, 103"],
+      [SlagelsePage, "VestsjællandsCentret 10A, 103"],
+    ] as const) {
+      const { container } = render(await Page());
+      const first = container.querySelector("section.border-b p");
+      expect(first?.textContent).toContain(street);
+      expect(first?.textContent).toMatch(/livstidsgaranti/);
+      const words = (first?.textContent ?? "").trim().split(/\s+/).length;
+      expect(words).toBeGreaterThanOrEqual(30);
+      expect(words).toBeLessThanOrEqual(75);
+      cleanup();
+    }
   });
 });

@@ -9,17 +9,19 @@ type Entry = {
 const TEXT = {
   vejle: {
     android:
-      "Samsung Galaxy, Google Pixel og OnePlus repareres på værkstedet i Vejle. Skærmskift og batteriskift er ofte klar på 30 minutter, når delen er på lager, og du får livstidsgaranti på arbejde og dele.",
+      "Samsung Galaxy, Google Pixel og OnePlus repareres på værkstedet i Vejle. Skærmskift og batteriskift er ofte klar på 30 minutter, når delen er på lager, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     tablet:
-      "iPad, Samsung Galaxy Tab og andre tablets: knust glas, svagt batteri eller en tablet, der ikke vil lade. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele.",
+      "iPad, Samsung Galaxy Tab og andre tablets: knust glas, svagt batteri eller en tablet, der ikke vil lade. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     macbook:
-      "MacBook Air og MacBook Pro: batteri, skærm, tastatur og ladestik. Kom forbi ved disken, så kigger vi på maskinen. Vilkår og pris aftaler vi, før vi begynder.",
+      "Computerreparation i Vejle handler hos os mest om MacBook Air og MacBook Pro: batteri, skærm, tastatur og ladestik, og rensning af maskiner, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
   },
   slagelse: {
     android:
-      "Samsung Galaxy, Google Pixel og OnePlus repareres i VestsjællandsCentret. Skærmskift og batteriskift er ofte klar på 30 minutter, når delen er på lager, og du får livstidsgaranti på arbejde og dele.",
-    tablet: undefined,
-    macbook: undefined,
+      "Samsung Galaxy, Google Pixel og OnePlus repareres i VestsjællandsCentret. Skærmskift og batteriskift er ofte klar på 30 minutter, når delen er på lager, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
+    tablet:
+      "Knust glas eller et batteri, der ikke holder? Vi reparerer iPad og andre tablets i butikken i VestsjællandsCentret. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
+    macbook:
+      "Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
   },
 } as const;
 
@@ -44,9 +46,12 @@ export function CityCategorySections({ store }: { store: "vejle" | "slagelse" })
       ],
     },
     {
-      heading: `MacBook i ${city}`,
+      heading: `Computer og MacBook i ${city}`,
       text: t.macbook,
-      links: [{ href: "/reparation/macbook", label: "MacBook-reparation" }],
+      links: [
+        { href: "/reparation/macbook", label: "MacBook-reparation" },
+        { href: "/blog/hvad-koster-macbook-reparation", label: "Hvad koster MacBook-reparation?" },
+      ],
     },
   ];
 

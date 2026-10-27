@@ -1,4 +1,5 @@
 import { STORES, UPCOMING_STORES } from "@/lib/store-config";
+import { REPAIR_WARRANTY_ANSWER } from "@/lib/repairs/warranty-copy";
 
 // llms.txt: en kort, faktuel oversigt til AI-søgemaskiner (ChatGPT, Perplexity,
 // Claude, Copilot). Butiksdata hentes fra store-config, så adresser og
@@ -32,11 +33,11 @@ function upcomingStoreLines() {
 export function GET() {
   const body = `# PhoneSpot
 
-> PhoneSpot er en dansk forhandler af refurbished elektronik og et reparationsværksted for telefoner og tablets med fysiske butikker i Vejle og Slagelse. Vi reparerer iPhone, Samsung, iPad og andre mærker mens du venter, og sælger kvalitetstestede refurbished iPhones, iPads og MacBooks med 36 måneders garanti.
+> PhoneSpot er en dansk forhandler af refurbished elektronik og et reparationsværksted for telefoner, tablets og computere med fysiske butikker i Vejle og Slagelse. Vi reparerer iPhone, Samsung, iPad, MacBook og andre mærker mens du venter, og sælger kvalitetstestede refurbished iPhones, iPads og MacBooks med 36 måneders garanti.
 
 ## Reparation — fakta
 - Walk-in uden tidsbestilling i begge butikker. 90% af alle skærm- og batteriskift er klar på 30 minutter.
-- Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer: opstår den samme fejl igen på den udskiftede del, repareres den uden beregning. Nye skader (fald, tryk, væske) er ikke dækket. Behandling af vandskade har 3 måneders garanti.
+- ${REPAIR_WARRANTY_ANSWER}
 - Kunden vælger selv skærmkvalitet (budget, OEM eller original), og prisen er fast og oplyst før reparationen.
 - Gratis hurtigt tjek ved disken i butikken. En fuld diagnose (fx printfejl) koster 249 kr.
 - Gratis indsendelse: kunder uden for Vejle og Slagelse kan sende enheden ind.
@@ -55,6 +56,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Reparation Horsens](${SITE}/reparation-horsens): værkstedet i Vejle, ca. 25 min ad E45 fra Horsens, livstidsgaranti, gratis parkering
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
+- [Reparation for Næstved](${SITE}/reparation-naestved): ingen butik i Næstved; butikken i VestsjællandsCentret, Slagelse, ligger ca. 30 min ad rute 22, åbent alle ugens dage, eller send ind med gratis fragtlabel
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [Dyson-reparation](${SITE}/reparation/dyson): Dyson-støvsugere med fast pris pr. model, 12 måneders garanti på dele og arbejde, uafhængigt værksted
 - [Xbox-reparation](${SITE}/reparation/xbox): Xbox-konsoller og controllere i Vejle og Slagelse

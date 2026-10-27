@@ -318,6 +318,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       "/reparation-horsens",
       "/reparation-kolding",
       "/reparation-fredericia",
+      "/reparation-naestved",
     ].map((path) => ({
       url: `${BASE_URL}${path}`,
       lastModified: STATIC_LAST_MODIFIED,
