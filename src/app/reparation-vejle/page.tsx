@@ -4,7 +4,8 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { OpenNowStatus } from "@/components/repair/open-now-status";
 import { MobileContactBar } from "@/components/repair/mobile-contact-bar";
-import { STORES } from "@/lib/store-config";
+import { STORES, openingHoursJsonLd } from "@/lib/store-config";
+import { REPAIR_WARRANTY_ANSWER, REPAIR_WARRANTY_SHORT } from "@/lib/repairs/warranty-copy";
 import { getRepairPriceSummaries } from "@/lib/supabase/repairs";
 
 export const revalidate = 3600;
@@ -12,7 +13,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
   description:
-    "iPhone- og Samsung-reparation i Vejle med livstidsgaranti på arbejde og dele. 90% af skærm- og batteriskift er klar på 30 minutter. Walk-in og gratis parkering på Løversysselvej 3B.",
+    "iPhone-, Samsung- og MacBook-reparation i Vejle. 90% af skærm- og batteriskift klar på 30 min. Livstidsgaranti på arbejde og dele. Gratis parkering ved døren.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
     title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
@@ -25,11 +26,8 @@ export const metadata: Metadata = {
 
 const store = STORES.vejle;
 
-// Svarer til warranty_info på telefonreparationerne i repair_services
-// ("Livstidsgaranti på arbejde og dele"). Vandskade har 3 måneder, og
-// diagnose/laptop/konsol har ingen fast tekst — derfor nævnes de særskilt.
-const WARRANTY_ANSWER =
-  "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele. Opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning, så længe du ejer enheden. Garantien dækker ikke nye skader som fald, tryk eller væske. Behandling af vandskade har 3 måneders garanti.";
+// Fælles garantitekst for bysiderne (ejerbeslutning 2026-10-16).
+const WARRANTY_ANSWER = REPAIR_WARRANTY_ANSWER;
 
 const WARRANTY_TERMS = [
   {
@@ -41,8 +39,8 @@ const WARRANTY_TERMS = [
     text: "Nye skader som fald, slag, tryk og væske, eller hvis enheden efterfølgende er åbnet af andre. Et batteris naturlige kapacitetsfald over tid er ikke en fejl.",
   },
   {
-    title: "Særlige reparationer",
-    text: "Behandling af vandskade har 3 måneders garanti. For laptops, konsoller og diagnose gælder vilkårene ved den enkelte reparation.",
+    title: "Batteri og vandskade",
+    text: "Batteriskift har 6 måneders garanti. Behandling af vandskade har 3 måneders garanti.",
   },
   {
     title: "Sådan bruger du den",
@@ -89,26 +87,7 @@ const localBusinessJsonLd = {
     latitude: store.coordinates.lat,
     longitude: store.coordinates.lng,
   },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "10:00",
-      closes: "17:30",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "10:00",
-      closes: "15:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Sunday",
-      opens: "10:00",
-      closes: "15:00",
-    },
-  ],
+  openingHoursSpecification: openingHoursJsonLd(store.hours),
   priceRange: "$$",
   hasOfferCatalog: {
     "@type": "OfferCatalog",
@@ -144,6 +123,14 @@ const localBusinessJsonLd = {
           "@type": "Service",
           name: "Behandling af vandskader",
           description: "Professionel rensning og reparation af vandskadede enheder",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "MacBook- og computerreparation",
+          description: "Batteri, skærm, tastatur, ladestik og rensning af MacBook Air og MacBook Pro",
         },
       },
     ],
@@ -215,6 +202,11 @@ const FAQS = [
       "Nej. Kom forbi butikken, så tjekker vi fejlen gratis ved disken og giver dig en fast pris, før vi går i gang. Kræver fejlen en fuld diagnose — fx ved vandskade eller fejl på printet — koster den 249 kr., og det aftaler vi med dig først.",
   },
   {
+    question: "Reparerer I computere og MacBook i Vejle?",
+    answer:
+      "Ja. Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi Løversysselvej 3B, så vurderer vi den ved disken og giver dig en pris, før vi går i gang.",
+  },
+  {
     question: "Hvilke mærker reparerer I i Vejle?",
     answer:
       "Vi reparerer iPhone, iPad, MacBook og Samsung, og vi reparerer de fleste andre mærker. Ring og hør, om vi kan hjælpe med din model. Se priser på de mest almindelige modeller på vores reparationsside.",
@@ -260,8 +252,8 @@ export default async function ReparationVejlePage() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
             Kom forbi uden tidsbestilling. 90% af alle skærm- og batteriskift er
-            klar på 30 minutter, og du får livstidsgaranti på arbejde og dele.
-            Gratis parkering lige ved døren.
+            klar på 30 minutter, og du får livstidsgaranti på arbejde og dele
+            (6 måneder på batteriskift). Gratis parkering lige ved døren.
           </p>
 
           <OpenNowStatus hours={store.hours} tone="dark" className="mt-6" />
@@ -283,7 +275,7 @@ export default async function ReparationVejlePage() {
 
           <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { title: "Livstidsgaranti", desc: "På arbejde og dele" },
+              { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
               { title: "30 minutter", desc: "90% klar mens du venter" },
               { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
               { title: "Gratis parkering", desc: "Lige ved døren" },
@@ -303,11 +295,11 @@ export default async function ReparationVejlePage() {
       {/* Svar først */}
       <section className="border-b border-[#E5E5EA] bg-white">
         <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
-          PhoneSpot Vejle på Løversysselvej 3B reparerer iPhone, Samsung og iPad
-          uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30
-          minutter, og du får livstidsgaranti på arbejde og dele.
-          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}{" "}
-          Gratis parkering ved døren.{" "}
+          PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer iPhone,
+          Samsung, iPad og MacBook uden tidsbestilling. 90% af skærm- og
+          batteriskift er klar på 30 minutter.
+          {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
+          {` Du får ${REPAIR_WARRANTY_SHORT}.`} Gratis parkering ved døren.{" "}
           <Link href="/reparation/dyson" className="font-semibold text-[#1A3D2E] underline underline-offset-4">Vi reparerer også Dyson, Roborock, iRobot, Nespresso og De&apos;Longhi.</Link>
         </p>
       </section>
@@ -598,7 +590,7 @@ export default async function ReparationVejlePage() {
               {
                 title: "Livstidsgaranti",
                 description:
-                  "Livstidsgaranti på arbejde og dele ved telefon- og tabletreparationer. Opstår samme fejl igen, reparerer vi uden beregning.",
+                  "Livstidsgaranti på arbejde og dele. Opstår samme fejl igen, reparerer vi uden beregning. Batteriskift har 6 måneders garanti.",
               },
               {
                 title: "Hurtig service",
