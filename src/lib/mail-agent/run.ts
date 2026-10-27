@@ -323,6 +323,19 @@ async function processMail(
   report.processed++;
 }
 
+/** UIDs of recent mail in this mailbox that failed and was never finished. */
+async function failedUids(sb: SupabaseClient, mailbox: string): Promise<number[]> {
+  const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const { data } = await sb
+    .from("mail_inbound")
+    .select("imap_uid")
+    .eq("mailbox", mailbox)
+    .is("processed_at", null)
+    .not("error", "is", null)
+    .gte("created_at", since);
+  return (data ?? []).map((r) => r.imap_uid as number).filter((u) => Number.isInteger(u) && u > 0);
+}
+
 function isStopWorthy(message: string): boolean {
   // Auth, rate limit, or an empty credit balance: the whole run will fail the
   // same way, so stop early instead of burning a call per mail.
@@ -361,7 +374,7 @@ export async function runMailAgent(
 
     let mails: InboundMail[] = [];
     try {
-      mails = await fetchUnseen(box, remaining);
+      mails = await fetchUnseen(box, remaining, opts.dryRun ? [] : await failedUids(sb, box.address));
     } catch (err) {
       report.errors.push({ mailbox: box.address, messageId: "-", error: `IMAP: ${(err as Error).message}` });
       continue;

@@ -66,14 +66,27 @@ export async function withImap<T>(box: MailboxConfig, fn: (client: ImapFlow) => 
   }
 }
 
-/** Unseen mail in INBOX, oldest first. Does not change any flags. */
-export async function fetchUnseen(box: MailboxConfig, limit: number): Promise<InboundMail[]> {
+/** Unseen and retry UIDs merged, deduplicated, oldest first, capped at `limit`. */
+export function chooseUids(unseen: number[], retry: number[], limit: number): number[] {
+  return [...new Set([...unseen, ...retry])].sort((a, b) => a - b).slice(0, limit);
+}
+
+/**
+ * Unseen mail in INBOX, oldest first, plus `retryUids`: mail that failed on an
+ * earlier run but has since been marked read (e.g. opened in Thunderbird), so
+ * an outage does not lose it for good. Does not change any flags.
+ */
+export async function fetchUnseen(box: MailboxConfig, limit: number, retryUids: number[] = []): Promise<InboundMail[]> {
   return withImap(box, async (client) => {
     const lock = await client.getMailboxLock("INBOX");
     try {
-      const uids = (await client.search({ seen: false }, { uid: true })) as number[] | false;
-      if (!uids || uids.length === 0) return [];
-      const chosen = [...uids].sort((a, b) => a - b).slice(0, limit);
+      const unseen = (await client.search({ seen: false }, { uid: true })) as number[] | false;
+      // Retry UIDs that are still in INBOX; moved or deleted mail drops out here.
+      const retry = retryUids.length
+        ? (((await client.search({ uid: retryUids.join(",") }, { uid: true })) as number[] | false) || [])
+        : [];
+      const chosen = chooseUids(unseen || [], retry, limit);
+      if (chosen.length === 0) return [];
       const out: InboundMail[] = [];
       for await (const msg of client.fetch(chosen, { uid: true, source: true }, { uid: true })) {
         if (!msg.source) continue;

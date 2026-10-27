@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseInbound, preferredBody } from "@/lib/mail-agent/imap";
+import { chooseUids, parseInbound, preferredBody } from "@/lib/mail-agent/imap";
 
 describe("preferredBody", () => {
   it("prefers text and strips html otherwise", () => {
@@ -52,5 +52,13 @@ describe("parseInbound", () => {
   it("flags newsletters via List-Unsubscribe", () => {
     const parsed = { from: { value: [{ address: "news@x.dk" }] }, subject: "Tilbud", text: "", headers: new Map([["list-unsubscribe", "<mailto:x>"]]) } as never;
     expect(parseInbound({ mailbox: "info@phonespot.dk", uid: 1, parsed }).listUnsubscribe).toBe(true);
+  });
+});
+
+describe("chooseUids", () => {
+  it("merges unseen and retry uids, dedupes, sorts oldest first and caps", () => {
+    expect(chooseUids([30, 10], [20, 10], 15)).toEqual([10, 20, 30]);
+    expect(chooseUids([5, 4, 3], [1, 2], 3)).toEqual([1, 2, 3]);
+    expect(chooseUids([], [], 15)).toEqual([]);
   });
 });
