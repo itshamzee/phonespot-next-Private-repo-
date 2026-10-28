@@ -181,3 +181,14 @@ export function googleReviewUrl(storeId?: string | null): string | null {
   const url = GOOGLE_REVIEW_URLS[storeForId(storeId).slug]?.trim();
   return url ? url : null;
 }
+
+/**
+ * Anmeldelseslinket i SMS'en: phonespot.dk/anmeld/<butik>, som videresender til
+ * Google. GatewayAPI afviser links, der ikke er whitelistet (0x1903), og
+ * godkender ikke forkortede links som g.page, så SMS'er linker kun til eget domæne.
+ */
+export function smsReviewUrl(storeId?: string | null): string | null {
+  if (!googleReviewUrl(storeId)) return null;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
+  return `${base}/anmeld/${storeForId(storeId).slug}`;
+}

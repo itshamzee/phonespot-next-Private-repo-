@@ -63,4 +63,10 @@ describe("anmeldelse SMS", () => {
       "Tak fordi du valgte PhoneSpot Vejle. Vi vil gerne høre, hvordan det gik med din iPhone 13. Skriv en anmeldelse her, det tager 30 sekunder: https://g.page/r/test/review",
     );
   });
+
+  it("links via phonespot.dk, the only domain whitelisted at GatewayAPI", () => {
+    const sms = getSmsTemplate("anmeldelse", { ...base, storeId: "vejle" })!;
+    expect(sms).toContain("https://phonespot.dk/anmeld/vejle");
+    expect(sms).not.toContain("g.page");
+  });
 });

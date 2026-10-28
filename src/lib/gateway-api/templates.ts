@@ -1,4 +1,4 @@
-import { googleReviewUrl, storeForId } from "@/lib/store-config";
+import { smsReviewUrl, storeForId } from "@/lib/store-config";
 
 interface SmsTemplateData {
   customerName: string;
@@ -42,7 +42,7 @@ export function getSmsTemplate(
       return `Hej ${customerName}, din ${deviceName} er klar til afhentning i ${store.mall ?? store.city}. Åbent: Hverdage ${store.hours.weekdays}, Lørdag ${store.hours.saturday}. - ${store.name}`;
     case "anmeldelse": {
       // Uden et link ville kunden få en tom opfordring; send ingenting.
-      const link = (data.reviewUrl ?? googleReviewUrl(storeId))?.trim();
+      const link = (data.reviewUrl ?? smsReviewUrl(storeId))?.trim();
       if (!link) return null;
       return `Tak fordi du valgte PhoneSpot ${store.city}. Vi vil gerne høre, hvordan det gik med din ${deviceName}. Skriv en anmeldelse her, det tager 30 sekunder: ${link}`;
     }
