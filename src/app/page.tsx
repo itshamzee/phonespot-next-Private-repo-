@@ -4,6 +4,7 @@ import { StorefrontHero } from "@/components/home/storefront-hero";
 import { StorefrontSections } from "@/components/home/storefront-sections";
 import styles from "@/components/home/storefront.module.css";
 import { getHomepageProducts } from "@/lib/home/homepage-products";
+import { LagersalgHomeStrip } from "@/components/lagersalg/lagersalg-links";
 
 // The first product tab is rendered on the server; refresh it every 5 minutes.
 export const revalidate = 300;
@@ -29,6 +30,7 @@ export default async function HomePage() {
     <div className={`${styles.wrap} ${styles.intro}`}>
       <StorefrontHero />
       <ShopTabs initialProducts={initialProducts} />
+      <LagersalgHomeStrip />
       <StorefrontSections />
     </div>
   </div>;

@@ -17,6 +17,7 @@ export const revalidate = 60;
 import type { Product } from "@/lib/shopify/types";
 import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import { DeviceDetail } from "@/components/product/device-detail";
+import { LagersalgModelLink } from "@/components/lagersalg/lagersalg-links";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";
 import { ProductDetails } from "@/components/product/product-details";
@@ -384,6 +385,8 @@ export default async function ProductPage({
             relatedInStock={relatedInStock}
           />
         </section>
+
+        <LagersalgModelLink model={template.model} />
 
         {/* ── 2. Hvad betyder standen? ── */}
         <SectionWrapper background="sand" id="hvad-betyder-standen">
