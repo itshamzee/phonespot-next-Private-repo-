@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Chip } from "@/components/admin/ui";
 import { removeBackgroundFromBlob, uploadImageBlob } from "@/lib/images/remove-background-client";
 import { composeStudioPhoto } from "@/lib/images/studio-photo-client";
-import { cutoutFromLightbox } from "@/lib/images/lightbox";
+import { lightboxPhoto } from "@/lib/images/lightbox";
 import { downscale, toWebp } from "./image-utils";
 
 type Variant = { url: string | null; status: string | null; failed?: boolean };
@@ -76,19 +76,21 @@ export function PhotoPicker({ name, onChange }: { name: string; onChange: (url: 
     setAi({ url: null, status: null });
     choose("plain", null);
     try {
-      let cut: Blob;
+      let studio: Blob;
       if (mode === "lightbox") {
+        // Ingen fritlægning: baggrunden lysnes til hvid, og varen beskæres og centreres.
         setPlain({ url: null, status: "Behandler billede" });
-        cut = await cutoutFromLightbox(file);
+        studio = await lightboxPhoto(file);
+        cutRef.current = studio;
       } else {
         setPlain({ url: null, status: "Forbereder billede" });
         const small = await downscale(file, 1280);
-        cut = await removeBackgroundFromBlob(small, (s) => setPlain({ url: null, status: s }));
+        const cut = await removeBackgroundFromBlob(small, (s) => setPlain({ url: null, status: s }));
+        cutRef.current = cut;
+        studio = await composeStudioPhoto(cut);
       }
       if (run !== runRef.current) return;
-      cutRef.current = cut;
       setPlain({ url: null, status: "Gemmer billede" });
-      const studio = await composeStudioPhoto(cut);
       const url = await uploadImageBlob(studio, `${name}.webp`, "accessories");
       if (run !== runRef.current) return;
       setPlain({ url, status: null });

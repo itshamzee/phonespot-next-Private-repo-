@@ -17,7 +17,10 @@ export function ModelsPicker({
   selected: string[];
   onChange: (slugs: string[]) => void;
 }) {
-  const [brand, setBrand] = useState<DeviceBrand>("apple");
+  // Åbn på mærket for den valgte model (fx Samsung, når AI'en har valgt Galaxy A32).
+  const [brand, setBrand] = useState<DeviceBrand>(
+    () => TILBEHOER_DEVICES.find((d) => d.slug === selected[0])?.brand ?? "apple",
+  );
   const [query, setQuery] = useState("");
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 

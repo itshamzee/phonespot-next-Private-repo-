@@ -8,6 +8,7 @@ import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { findCandidates } from "@/lib/accessory-intake/candidates";
 import { suggestPriceKr } from "@/lib/accessory-intake/pricing";
 import { sanitizeIdentified } from "@/lib/accessory-intake/sanitize";
+import { matchModelText } from "@/lib/accessory-intake/model-text";
 import type { Identified, MatchCandidate } from "@/lib/accessory-intake/types";
 
 /**
@@ -58,6 +59,7 @@ Regler:
 - Tilbehør har 2 års reklamationsret. Skriv aldrig om garanti i måneder.
 - Ingen emojis, ingen udråbstegn, ingen superlativer. Rolig, konkret dansk.
 - Skriv aldrig "original emballage" eller "original kasse".
+- Kort modeltekst som A32, A52s, S20, S21 FE, Note 10 betyder Samsung Galaxy. "5G", "4G" og "LTE" ignoreres, når slug vælges (Galaxy A32 5G = samsung-a32).
 - Modeller vælges som slugs fra listen herunder. Står der "iPhone 12/12 Pro", vælg begge. Står modellen ikke på listen, lad models være tom og skriv navnet i unknownModelText.
 
 Modelliste (slug: navn):
@@ -81,7 +83,7 @@ export async function POST(request: Request) {
     const client = new Anthropic();
     const response = await client.messages.parse(
       {
-        model: "claude-sonnet-5-5",
+        model: "claude-haiku-5-5",
         max_tokens: 1500,
         output_config: { format: zodOutputFormat(outputSchema) },
         system: SYSTEM,
@@ -99,6 +101,11 @@ export async function POST(request: Request) {
     );
     if (response.stop_reason === "refusal" || !response.parsed_output) throw new Error("Intet svar");
     identified = sanitizeIdentified(response.parsed_output as Identified, VALID_SLUGS);
+    // AI'en læste modellen, men fandt ikke slug'en (fx "A32 5G"): slå teksten op selv.
+    if (identified.models.length === 0 && identified.unknownModelText) {
+      const models = matchModelText(identified.unknownModelText);
+      if (models.length) identified = { ...identified, models, modelConfidence: "medium", unknownModelText: null };
+    }
   } catch (err) {
     console.error("[identify] AI fejlede:", err instanceof Error ? err.message : err);
     return fallback("AI kunne ikke læse billedet. Udfyld selv.");
