@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { TILBEHOER_DEVICES, SPOT_HUB_TILES } from "@/lib/tilbehoer-config";
+import { PUBLIC_TILBEHOER_DEVICES, SPOT_HUB_TILES } from "@/lib/tilbehoer-config";
 
 function brandKeyFor(deviceSlug: string, deviceBrand: string): string {
   // ipad-* → ipad tile; iphone-* → iphone tile; otherwise brand's tile
@@ -18,7 +18,7 @@ export function SmartSearch({ models }: { models: string[] }) {
   const matches = useMemo(() => {
     if (q.trim().length < 2) return [];
     const term = q.toLowerCase();
-    return TILBEHOER_DEVICES
+    return PUBLIC_TILBEHOER_DEVICES
       .filter(d => models.includes(d.slug))
       .filter(d => d.label.toLowerCase().includes(term) || d.slug.includes(term))
       .slice(0, 8);

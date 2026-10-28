@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import {
   TILBEHOER_CATEGORIES,
   TILBEHOER_DEVICES,
+  PUBLIC_TILBEHOER_DEVICES,
   DEVICE_BRANDS,
   type DeviceBrand,
 } from "@/lib/tilbehoer-config";
@@ -209,7 +210,7 @@ export function TilbehoerSidebar({ activeCategory }: TilbehoerSidebarProps) {
               {!devicesCollapsed && (
                 <div className="mt-3 space-y-4">
                   {DEVICE_BRANDS.map(({ slug: brandSlug, label: brandLabel }) => {
-                    const brandDevices = TILBEHOER_DEVICES.filter(
+                    const brandDevices = PUBLIC_TILBEHOER_DEVICES.filter(
                       (d) => d.brand === brandSlug,
                     );
                     if (brandDevices.length === 0) return null;

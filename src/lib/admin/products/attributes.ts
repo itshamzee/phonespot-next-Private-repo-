@@ -36,9 +36,15 @@ export const TYPE_ATTRIBUTES: Record<string, AttributeField[]> = {
     { key: "color", label: "Farve", type: "text" },
     // Med på /covers-udsalg (lagerrydning). Sættes automatisk af hurtig-oprettelsen.
     { key: "udsalg", label: "Covers-udsalg", type: "select", options: ["Ja"] },
+    { key: "genuine", label: "Ægte mærkevare", type: "select", options: ["Ja"] },
+    { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },
   ],
   screen_protector: [
     { key: "protector_type", label: "Type", type: "select", options: ["Hærdet glas", "Film", "Privacy", "Edge to Edge"] },
+    // Lagerrydning fra hurtig-optagelsen (vises på /beskyttelsesglas, ikke på /covers-udsalg).
+    { key: "udsalg", label: "Udsalg", type: "select", options: ["Ja"] },
+    { key: "genuine", label: "Ægte mærkevare", type: "select", options: ["Ja"] },
+    { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },
   ],
   cable: [
     { key: "connector_type", label: "Stik", type: "select", options: ["USB-C", "Lightning", "Micro-USB", "USB-A", "USB-C til Lightning", "USB-C til USB-C"] },

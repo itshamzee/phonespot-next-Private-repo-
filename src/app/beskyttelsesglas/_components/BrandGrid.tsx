@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SPOT_HUB_TILES, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import { SPOT_HUB_TILES, PUBLIC_TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 
 type BrandMeta = { accent: string; wordmark: string };
 
@@ -13,7 +13,7 @@ const BRAND_META: Record<string, BrandMeta> = {
 };
 
 function countFor(tile: typeof SPOT_HUB_TILES[number]): number {
-  return TILBEHOER_DEVICES.filter((d) => {
+  return PUBLIC_TILBEHOER_DEVICES.filter((d) => {
     if (tile.modelPrefix) return d.brand === tile.brand && d.slug.startsWith(tile.modelPrefix);
     return d.brand === tile.brand;
   }).length;

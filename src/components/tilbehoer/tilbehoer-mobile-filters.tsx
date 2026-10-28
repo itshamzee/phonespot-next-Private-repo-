@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   TILBEHOER_CATEGORIES,
   TILBEHOER_DEVICES,
+  PUBLIC_TILBEHOER_DEVICES,
   DEVICE_BRANDS,
   type DeviceBrand,
 } from "@/lib/tilbehoer-config";
@@ -279,7 +280,7 @@ export function TilbehoerMobileFilters({
               <AccordionSection heading="Enhed" defaultOpen={!!activeModel}>
                 <div className="space-y-4">
                   {DEVICE_BRANDS.map(({ slug: brandSlug, label: brandLabel }) => {
-                    const brandDevices = TILBEHOER_DEVICES.filter(
+                    const brandDevices = PUBLIC_TILBEHOER_DEVICES.filter(
                       (d) => d.brand === brandSlug,
                     );
                     if (brandDevices.length === 0) return null;

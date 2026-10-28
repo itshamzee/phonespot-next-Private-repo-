@@ -8,7 +8,7 @@ import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
 import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
-import { SPOT_HUB_TILES, TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
+import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
 import { fetchActiveSpotSkus } from "@/lib/spot/queries";
 
 const BASE_URL = "https://phonespot.dk";
@@ -40,7 +40,7 @@ async function spotSitemapEntries(base: string): Promise<MetadataRoute.Sitemap> 
     });
   }
 
-  for (const device of TILBEHOER_DEVICES) {
+  for (const device of PUBLIC_TILBEHOER_DEVICES) {
     if (!covered.has(device.slug)) continue;
     const tile = SPOT_HUB_TILES.find(
       (t) =>

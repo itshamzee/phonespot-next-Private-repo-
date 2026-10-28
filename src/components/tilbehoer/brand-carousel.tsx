@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { DEVICE_BRANDS, TILBEHOER_DEVICES, type DeviceBrand } from "@/lib/tilbehoer-config";
+import { DEVICE_BRANDS, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, type DeviceBrand } from "@/lib/tilbehoer-config";
 import styles from "./accessories-landing.module.css";
 
 // Only offer brands that have models in the existing compatibility selector.
-const brands = DEVICE_BRANDS.filter(brand => TILBEHOER_DEVICES.some(device => device.brand === brand.slug));
+const brands = DEVICE_BRANDS.filter(brand => PUBLIC_TILBEHOER_DEVICES.some(device => device.brand === brand.slug));
 
 export function BrandCarousel() {
   const rail = useRef<HTMLDivElement>(null);
@@ -52,7 +52,7 @@ export function BrandCarousel() {
         <label htmlFor="brand-model">Vælg din {brandLabel}-model</label>
         <select id="brand-model" value={model} onChange={event => setModel(event.target.value)}>
           <option value="">Vælg model</option>
-          {TILBEHOER_DEVICES.filter(device => device.brand === selectedBrand).map(device => <option key={device.slug} value={device.slug}>{device.label}</option>)}
+          {PUBLIC_TILBEHOER_DEVICES.filter(device => device.brand === selectedBrand).map(device => <option key={device.slug} value={device.slug}>{device.label}</option>)}
         </select>
         {modelLabel ? <Link className={styles.button} href={`/tilbehoer?model=${encodeURIComponent(modelLabel)}#tilbehoersudvalg`} aria-label={`Se tilbehør til ${modelLabel}`}>Se tilbehør <span aria-hidden="true">→</span></Link> : <button className={styles.button} type="button" disabled>Se tilbehør <span aria-hidden="true">→</span></button>}
       </div>}

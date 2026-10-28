@@ -19,6 +19,8 @@ export interface TilbehoerDevice {
   slug: string;
   label: string;
   brand: DeviceBrand;
+  /** Ældre model fra lagerrydningen: med i admin og /covers-udsalg, ikke i de offentlige filtre. */
+  legacy?: boolean;
 }
 
 export const DEVICE_BRANDS: { slug: DeviceBrand; label: string }[] = [
@@ -228,6 +230,9 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "iphone-xr", label: "iPhone XR", brand: "apple" },
   { slug: "iphone-se", label: "iPhone SE", brand: "apple" },
   { slug: "iphone-8-plus", label: "iPhone 7/8 Plus", brand: "apple" },
+  { slug: "iphone-6-6s-plus", label: "iPhone 6/6s Plus", brand: "apple", legacy: true },
+  { slug: "iphone-6-6s", label: "iPhone 6/6s", brand: "apple", legacy: true },
+  { slug: "iphone-se-2016", label: "iPhone SE (2016)", brand: "apple", legacy: true },
   // Apple - iPads
   { slug: "ipad-pro-13", label: "iPad Pro 13\"", brand: "apple" },
   { slug: "ipad-pro-11", label: "iPad Pro 11\"", brand: "apple" },
@@ -262,6 +267,26 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "samsung-s22-ultra", label: "Galaxy S22 Ultra", brand: "samsung" },
   { slug: "samsung-s22", label: "Galaxy S22", brand: "samsung" },
   { slug: "samsung-s21-fe", label: "Galaxy S21 FE", brand: "samsung" },
+  { slug: "samsung-s23-plus", label: "Galaxy S23+", brand: "samsung", legacy: true },
+  { slug: "samsung-s22-plus", label: "Galaxy S22+", brand: "samsung", legacy: true },
+  { slug: "samsung-s21-ultra", label: "Galaxy S21 Ultra", brand: "samsung", legacy: true },
+  { slug: "samsung-s21-plus", label: "Galaxy S21+", brand: "samsung", legacy: true },
+  { slug: "samsung-s21", label: "Galaxy S21", brand: "samsung", legacy: true },
+  { slug: "samsung-s20-ultra", label: "Galaxy S20 Ultra", brand: "samsung", legacy: true },
+  { slug: "samsung-s20-plus", label: "Galaxy S20+", brand: "samsung", legacy: true },
+  { slug: "samsung-s20", label: "Galaxy S20", brand: "samsung", legacy: true },
+  { slug: "samsung-s20-fe", label: "Galaxy S20 FE", brand: "samsung", legacy: true },
+  { slug: "samsung-s10-plus", label: "Galaxy S10+", brand: "samsung", legacy: true },
+  { slug: "samsung-s10", label: "Galaxy S10", brand: "samsung", legacy: true },
+  { slug: "samsung-s10e", label: "Galaxy S10e", brand: "samsung", legacy: true },
+  { slug: "samsung-s9-plus", label: "Galaxy S9+", brand: "samsung", legacy: true },
+  { slug: "samsung-s9", label: "Galaxy S9", brand: "samsung", legacy: true },
+  { slug: "samsung-s8-plus", label: "Galaxy S8+", brand: "samsung", legacy: true },
+  { slug: "samsung-s8", label: "Galaxy S8", brand: "samsung", legacy: true },
+  { slug: "samsung-note-20-ultra", label: "Galaxy Note 20 Ultra", brand: "samsung", legacy: true },
+  { slug: "samsung-note-20", label: "Galaxy Note 20", brand: "samsung", legacy: true },
+  { slug: "samsung-note-10-plus", label: "Galaxy Note 10+", brand: "samsung", legacy: true },
+  { slug: "samsung-note-10", label: "Galaxy Note 10", brand: "samsung", legacy: true },
   // Samsung - A-serie
   { slug: "samsung-a56", label: "Galaxy A56", brand: "samsung" },
   { slug: "samsung-a36", label: "Galaxy A36", brand: "samsung" },
@@ -272,6 +297,17 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "samsung-a35", label: "Galaxy A35", brand: "samsung" },
   { slug: "samsung-a25", label: "Galaxy A25", brand: "samsung" },
   { slug: "samsung-a15", label: "Galaxy A15", brand: "samsung" },
+  { slug: "samsung-a53", label: "Galaxy A53", brand: "samsung", legacy: true },
+  { slug: "samsung-a52", label: "Galaxy A52", brand: "samsung", legacy: true },
+  { slug: "samsung-a51", label: "Galaxy A51", brand: "samsung", legacy: true },
+  { slug: "samsung-a34", label: "Galaxy A34", brand: "samsung", legacy: true },
+  { slug: "samsung-a33", label: "Galaxy A33", brand: "samsung", legacy: true },
+  { slug: "samsung-a32", label: "Galaxy A32", brand: "samsung", legacy: true },
+  { slug: "samsung-a23", label: "Galaxy A23", brand: "samsung", legacy: true },
+  { slug: "samsung-a22", label: "Galaxy A22", brand: "samsung", legacy: true },
+  { slug: "samsung-a14", label: "Galaxy A14", brand: "samsung", legacy: true },
+  { slug: "samsung-a13", label: "Galaxy A13", brand: "samsung", legacy: true },
+  { slug: "samsung-a12", label: "Galaxy A12", brand: "samsung", legacy: true },
   // Samsung - Tabs
   { slug: "samsung-tab-s9", label: "Galaxy Tab S9", brand: "samsung" },
   { slug: "samsung-tab-s8", label: "Galaxy Tab S8", brand: "samsung" },
@@ -291,6 +327,10 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "google-pixel-8-pro", label: "Pixel 8 Pro", brand: "google" },
   { slug: "google-pixel-8", label: "Pixel 8", brand: "google" },
 ];
+
+/** Modeller til de offentlige filtre og oversigter (uden ældre lagerrydnings-modeller). */
+export const PUBLIC_TILBEHOER_DEVICES = TILBEHOER_DEVICES.filter((d) => !d.legacy);
+
 
 export const TILBEHOER_ROUTES: TilbehoerRoute[] = [
   ...TILBEHOER_CATEGORIES.map((cat) => ({
