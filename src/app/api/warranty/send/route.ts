@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const { data: staff } = await supabase
       .from("staff")
       .select("role")
+      .neq("role", "intern") // praktikanter: kun hurtig-optagelsen
       .eq("auth_id", user.id)
       .single();
 

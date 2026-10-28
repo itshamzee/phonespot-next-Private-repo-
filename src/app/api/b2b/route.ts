@@ -125,6 +125,7 @@ export async function GET(request: NextRequest) {
     const { data: staff } = await supabase
       .from("staff")
       .select("id")
+      .neq("role", "intern") // praktikanter: kun hurtig-optagelsen
       .eq("auth_id", user.id)
       .single();
     if (!staff) {

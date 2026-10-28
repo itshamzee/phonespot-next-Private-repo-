@@ -10,7 +10,9 @@ const s = vi.hoisted(() => ({
   role: "owner",
 }));
 
-vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: vi.fn(async () => ({ id: "st", role: s.role })) }));
+vi.mock("@/lib/auth/require-staff", () => ({
+  requireStaff: vi.fn(async () => ({ id: "st", role: s.role, location_slug: s.role === "intern" ? "vejle" : null })),
+}));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({
@@ -67,6 +69,15 @@ beforeEach(() => {
   s.stock = [];
   s.insertError = null;
   s.role = "owner";
+});
+
+it("praktikant kan ikke lægge lager i en anden butik eller sætte høj pris", async () => {
+  s.role = "intern";
+  const item = { title: "Cover", subcategory: "cover", models: ["iphone-13"], mode: "universal", sellingPrice: 5900, images: ["https://cdn/x.jpg"] };
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { stores: { slagelse: 2 } } }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, sellingPrice: 99900, stock: { stores: { vejle: 2 } } }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { online: 5 } }] })).status).toBe(403);
+  expect(s.inserted).toEqual([]);
 });
 
 it("praktikant kan ikke oprette reservedele", async () => {

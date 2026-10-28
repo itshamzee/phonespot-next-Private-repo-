@@ -1,5 +1,7 @@
 import { requireStaff } from "@/lib/auth/require-staff";
 import { INTERN_ROLE } from "@/lib/auth/intern-access";
+import { canAccessStore } from "@/lib/auth/store-scope";
+import type { StaffIdentity } from "@/lib/auth/require-staff";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -158,6 +160,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ugyldige felter", issues: parsed.error.issues.slice(0, 5) }, { status: 400 });
   }
   const body = parsed.data;
+  if (staff.role === INTERN_ROLE && body.type === "accessory") {
+    const denied = internCreateError(staff, body.items);
+    if (denied) return NextResponse.json({ error: denied }, { status: 403 });
+  }
 
   // 1. Byg rækker rent (kaster med dansk fejltekst ved forkerte værdier).
   const planned: { row: SkuProductRow; stock?: StockSpec }[] = [];
@@ -233,4 +239,21 @@ export async function POST(req: NextRequest) {
     url: publicUrl(row),
   }));
   return NextResponse.json({ created, count: created.length }, { status: 201 });
+}
+
+/** Hurtig-optagelsens rammer for praktikanter: lav pris, kun egen butik, intet online-/altid-på-lager. */
+function internCreateError(
+  staff: StaffIdentity,
+  items: z.infer<typeof accessoryItem>[],
+): string | null {
+  if (items.length > 1) return "Opret én vare ad gangen";
+  for (const item of items) {
+    if (item.sellingPrice > 50_000) return "Prisen er for høj til hurtig-optagelsen";
+    if (item.alwaysInStock) return "Praktikanter kan ikke sætte varer altid på lager";
+    if (item.stock?.online) return "Praktikanter kan kun lægge varer på lager i butikken";
+    for (const store of Object.keys(item.stock?.stores ?? {})) {
+      if (!canAccessStore(staff, store)) return "Du har ikke adgang til lageret i den butik";
+    }
+  }
+  return null;
 }
