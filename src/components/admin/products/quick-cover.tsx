@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Chip, Field, Input, Notice, PageHeader, Panel, Textarea } from "@/components/admin/ui";
+import { Button, Chip, Field, Input, Notice, Panel, Textarea } from "@/components/admin/ui";
 import { ModelsPicker } from "@/components/admin/products/create/models-picker";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { ean13Svg, isValidEan13 } from "@/lib/barcode/ean13";
@@ -92,6 +92,30 @@ function printLabel(ean: string, title: string, priceKr: number) {
   }, 150);
 }
 
+/** Antal med store −/+ knapper, så det er nemt at ramme på en telefon. */
+function QtyStepper({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+  const n = Math.max(0, Math.floor(Number(value) || 0));
+  const btn =
+    "flex h-12 w-14 shrink-0 items-center justify-center rounded-lg border border-sand bg-white text-[22px] font-medium text-charcoal active:bg-cream";
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" aria-label="Færre" className={btn} onClick={() => onChange(String(Math.max(1, n - 1)))}>
+        −
+      </button>
+      <Input
+        id={id}
+        inputMode="numeric"
+        className="h-12 text-center !text-[18px] font-semibold"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+      />
+      <button type="button" aria-label="Flere" className={btn} onClick={() => onChange(String(n + 1))}>
+        +
+      </button>
+    </div>
+  );
+}
+
 function AiHint() {
   return <span className="ml-1 text-[12px] font-normal text-charcoal/60">Udfyldt af AI, tjek</span>;
 }
@@ -131,10 +155,6 @@ export function QuickCover() {
   const eanRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const readInput = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (step === "scan") eanRef.current?.focus();
-  }, [step]);
 
   useEffect(() => () => void scannerRef.current?.stop().catch(() => {}), []);
 
@@ -237,7 +257,7 @@ export function QuickCover() {
       scannerRef.current = { stop: () => scanner.stop().then(() => scanner.clear()) };
       await scanner.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 280, height: 140 } },
+        { fps: 10, qrbox: (w: number, h: number) => ({ width: Math.round(Math.min(w * 0.85, 420)), height: Math.round(Math.min(h * 0.35, 200)) }) },
         (text) => {
           void scannerRef.current?.stop().catch(() => {});
           scannerRef.current = null;
@@ -259,10 +279,6 @@ export function QuickCover() {
     setScanning(false);
   }
 
-  function startWithoutBarcode() {
-    setEan("");
-    setStep("identify");
-  }
 
   function applyIdentified(i: Identified | null, priceKr: number) {
     setIdentified(i);
@@ -416,68 +432,110 @@ export function QuickCover() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4 px-4 py-4">
-      <PageHeader
-        title="Hurtig tilbehørsoptagelse"
-        description="Scan eller tag et foto. AI udfylder varen, du tjekker, taster antal og gemmer."
-        backHref="/admin/produkter"
-        backLabel="Produkter"
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-[20px] font-semibold leading-tight text-charcoal">Opret tilbehør</h1>
+        <div className="flex gap-1.5">
+          <Chip size="sm" selected={store === "vejle"} onToggle={() => setStore("vejle")}>Vejle</Chip>
+          <Chip size="sm" selected={store === "slagelse"} onToggle={() => setStore("slagelse")}>Slagelse</Chip>
+        </div>
+      </div>
+
+      <input
+        ref={readInput}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          void identify(e.target.files?.[0]);
+          e.target.value = "";
+        }}
       />
 
-      <Panel className="flex items-center justify-between gap-3 p-3">
-        <span className="text-[14px] text-charcoal/70">Lager i</span>
-        <div className="flex gap-2">
-          <Chip selected={store === "vejle"} onToggle={() => setStore("vejle")}>Vejle</Chip>
-          <Chip selected={store === "slagelse"} onToggle={() => setStore("slagelse")}>Slagelse</Chip>
+      {/* Stregkodescanner i fuld skærm, så kameraet ikke skæres af på telefonen. */}
+      <div className={scanning ? "fixed inset-0 z-[100] flex flex-col bg-black" : "hidden"}>
+        <p className="px-4 pb-2 pt-[max(16px,env(safe-area-inset-top))] text-center text-[15px] text-white/80">
+          Hold stregkoden inden for rammen
+        </p>
+        <div className="flex flex-1 items-center justify-center overflow-hidden">
+          <div id="quick-cover-scanner" className="w-full" />
         </div>
-      </Panel>
+        <div className="px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
+          <button
+            type="button"
+            onClick={() => void stopCamera()}
+            className="h-14 w-full rounded-xl bg-white text-[16px] font-semibold text-charcoal active:bg-cream"
+          >
+            Luk scanner
+          </button>
+        </div>
+      </div>
 
       {error && <Notice tone="danger">{error}</Notice>}
 
       {step === "scan" && (
-        <Panel className="space-y-4 p-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void lookup(ean);
-            }}
-          >
-            <Field label="Stregkode" hint="Scan med en stregkodelæser, kameraet eller skriv koden.">
-              {(id) => (
-                <div className="flex gap-2">
-                  <Input
-                    id={id}
-                    ref={eanRef}
-                    autoComplete="off"
-                    autoCapitalize="characters"
-                    value={ean}
-                    onChange={(e) => setEan(e.target.value.replace(/[^A-Za-z0-9-]/g, ""))}
-                    placeholder="5701234567890"
-                  />
-                  <Button variant="primary" type="submit" loading={busy === "Slår stregkoden op"} className="shrink-0">Find</Button>
-                </div>
-              )}
-            </Field>
-          </form>
-          <div id="quick-cover-scanner" className={scanning ? "overflow-hidden rounded-lg" : "hidden"} />
-          <div className="grid grid-cols-2 gap-2">
-            {scanning ? (
-              <Button variant="secondary" onClick={() => void stopCamera()}>Stop kamera</Button>
-            ) : (
-              <Button variant="secondary" onClick={() => void startCamera()}>Scan med kamera</Button>
-            )}
-            <Button variant="secondary" onClick={startWithoutBarcode}>Ingen stregkode</Button>
-          </div>
-        </Panel>
+        <div className="space-y-4">
+          {busy === "AI læser varen" ? (
+            <Panel className="flex flex-col items-center gap-3 p-8 text-center">
+              <span className="h-8 w-8 animate-spin rounded-full border-2 border-sand border-t-[#1A3D2E]" />
+              <p className="text-[16px] font-semibold text-charcoal">AI læser varen</p>
+              <p className="text-[13px] text-charcoal/60">Det tager 5-15 sekunder.</p>
+            </Panel>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setEan("");
+                readInput.current?.click();
+              }}
+              className="flex w-full flex-col items-center gap-2 rounded-2xl bg-[#1A3D2E] px-6 py-10 text-white shadow-sm active:scale-[0.99]"
+            >
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6} aria-hidden>
+                <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.2-1.8A1.5 1.5 0 0 1 9.5 3.5h5a1.5 1.5 0 0 1 1.2.7L16.9 6h1.6A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
+                <circle cx="12" cy="12.5" r="3.5" />
+              </svg>
+              <span className="text-[18px] font-semibold">Tag billede af varen</span>
+              <span className="text-[13px] text-white/75">AI læser pakken og udfylder resten</span>
+            </button>
+          )}
+
+          <Button variant="secondary" className="h-12 w-full text-[15px]" onClick={() => void startCamera()} disabled={busy != null}>
+            Har den stregkode? Scan den
+          </Button>
+
+          <details className="rounded-lg border border-sand bg-white px-4 py-3">
+            <summary className="cursor-pointer text-[14px] text-charcoal/70">Skriv stregkode eller brug håndscanner</summary>
+            <form
+              className="mt-3 flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void lookup(ean);
+              }}
+            >
+              <Input
+                ref={eanRef}
+                aria-label="Stregkode"
+                autoComplete="off"
+                autoCapitalize="characters"
+                className="h-12"
+                value={ean}
+                onChange={(e) => setEan(e.target.value.replace(/[^A-Za-z0-9-]/g, ""))}
+                placeholder="5701234567890"
+              />
+              <Button variant="primary" type="submit" loading={busy === "Slår stregkoden op"} className="h-12 shrink-0">Find</Button>
+            </form>
+          </details>
+        </div>
       )}
 
       {step === "existing" && found && (
         <Panel className="space-y-4 p-4">
           <Notice tone="info">Den har du allerede oprettet. Skriv, hvor mange du lægger på lager.</Notice>
           <Field label="Antal">
-            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
+            {(id) => <QtyStepper id={id} value={quantity} onChange={setQuantity} />}
           </Field>
           <MatchCard product={found} qty={qty} saleKr={saleKrFor(found)} busy={busy === `stock-${found.id}`} onAdd={(p) => void addStock(p)} />
-          <Button variant="secondary" className="w-full" onClick={() => reset()}>Annuller</Button>
+          <Button variant="secondary" className="h-12 w-full" onClick={() => reset()}>Annuller</Button>
         </Panel>
       )}
 
@@ -493,23 +551,12 @@ export function QuickCover() {
           <p className="text-[14px] text-charcoal">
             Tag et billede af pakkens forside, så modellen kan læses. Ligger varen løst, så fotografér selve varen.
           </p>
-          <input
-            ref={readInput}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              void identify(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <Button variant="primary" className="w-full" onClick={() => readInput.current?.click()} loading={busy === "AI læser varen"}>
+          <Button variant="primary" className="h-14 w-full text-[16px]" onClick={() => readInput.current?.click()} loading={busy === "AI læser varen"}>
             {busy === "AI læser varen" ? "AI læser varen" : "Tag billede"}
           </Button>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={() => reset()}>Annuller</Button>
-            <Button variant="secondary" onClick={() => setStep("new")}>Udfyld selv</Button>
+            <Button variant="secondary" className="h-12" onClick={() => reset()}>Annuller</Button>
+            <Button variant="secondary" className="h-12" onClick={() => setStep("new")}>Udfyld selv</Button>
           </div>
         </Panel>
       )}
@@ -522,12 +569,12 @@ export function QuickCover() {
               : "Ligner en vare, du allerede har oprettet. Er det en af disse?"}
           </Notice>
           <Field label="Antal">
-            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
+            {(id) => <QtyStepper id={id} value={quantity} onChange={setQuantity} />}
           </Field>
           {candidates.map((c) => (
             <MatchCard key={c.id} product={c} qty={qty} saleKr={saleKrFor(c)} busy={busy === `stock-${c.id}`} onAdd={(p) => void addStock(p)} />
           ))}
-          <Button variant="secondary" className="w-full" onClick={() => setStep("new")}>Nej, det er en ny vare</Button>
+          <Button variant="secondary" className="h-12 w-full" onClick={() => setStep("new")}>Nej, det er en ny vare</Button>
         </Panel>
       )}
 
@@ -646,7 +693,7 @@ export function QuickCover() {
           </Field>
 
           <Field label="Antal på lager">
-            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
+            {(id) => <QtyStepper id={id} value={quantity} onChange={setQuantity} />}
           </Field>
 
           <Field label="Produktbillede" required hint="Tag varen ud af pakken og fotografér den lige forfra på en rolig baggrund.">
@@ -671,13 +718,21 @@ export function QuickCover() {
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={() => reset()}>Annuller</Button>
-            <Button variant="primary" onClick={() => void createProduct()} disabled={missing.length > 0 || qty < 1} loading={busy === "Opretter vare"}>
-              Gem vare
-            </Button>
+          <div className="sticky bottom-0 -mx-4 -mb-4 space-y-1.5 rounded-b-xl border-t border-sand bg-white/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+            {missing.length > 0 && <p className="text-[13px] text-charcoal/60">Mangler: {missing.join(", ")}</p>}
+            <div className="grid grid-cols-[1fr_2fr] gap-2">
+              <Button variant="secondary" className="h-12" onClick={() => reset()}>Annuller</Button>
+              <Button
+                variant="primary"
+                className="h-12 text-[15px]"
+                onClick={() => void createProduct()}
+                disabled={missing.length > 0 || qty < 1}
+                loading={busy === "Opretter vare"}
+              >
+                Gem vare{finalTitle ? ` · ${price} kr.` : ""}
+              </Button>
+            </div>
           </div>
-          {missing.length > 0 && <p className="text-[13px] text-charcoal/60">Mangler: {missing.join(", ")}</p>}
         </Panel>
       )}
 
@@ -691,15 +746,15 @@ export function QuickCover() {
           )}
           <div className="grid grid-cols-2 gap-2">
             {isValidEan13(done.ean) && (
-              <Button variant="secondary" onClick={() => printLabel(done.ean, done.title, done.priceKr)}>Print etiket</Button>
+              <Button variant="secondary" className="h-12" onClick={() => printLabel(done.ean, done.title, done.priceKr)}>Print etiket</Button>
             )}
             {done.url && (
-              <Link href={done.url} target="_blank" className="flex h-10 items-center justify-center rounded-lg border border-sand text-[14px]">
+              <Link href={done.url} target="_blank" className="flex h-12 items-center justify-center rounded-lg border border-sand text-[14px]">
                 Se på webshoppen
               </Link>
             )}
           </div>
-          <Button variant="primary" className="w-full" onClick={() => reset()}>Næste vare</Button>
+          <Button variant="primary" className="h-14 w-full text-[16px]" onClick={() => reset()}>Næste vare</Button>
           <button type="button" className="w-full text-[13px] text-charcoal/60 underline" onClick={() => reset(false)}>
             Ny kasse (nulstil type og pris)
           </button>

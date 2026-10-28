@@ -64,7 +64,7 @@ export function ModelsPicker({
           ))}
         </div>
         <div className="ml-auto w-full sm:w-56">
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Søg model" className="h-8 !text-[14px]" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Søg model, fx 13 mini" className="h-11 !text-[16px] sm:h-8 sm:!text-[14px]" />
         </div>
       </div>
 

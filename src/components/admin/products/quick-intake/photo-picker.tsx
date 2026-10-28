@@ -76,15 +76,15 @@ export function PhotoPicker({
       type="button"
       disabled={!v.url}
       onClick={() => choose(which, v.url)}
-      className={`flex flex-col items-center gap-1 rounded-lg border-2 p-1 text-[12px] text-charcoal/70 ${
+      className={`flex flex-1 flex-col items-center gap-1 rounded-lg border-2 p-1 text-[12px] text-charcoal/70 ${
         chosen === which && v.url ? "border-[#1A3D2E]" : "border-transparent"
       }`}
     >
       {v.url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={v.url} alt={label} className="h-32 w-32 rounded-md bg-cream object-contain" />
+        <img src={v.url} alt={label} className="aspect-square w-full rounded-md bg-cream object-contain" />
       ) : (
-        <span className="flex h-32 w-32 items-center justify-center rounded-md bg-cream px-2 text-center">
+        <span className="flex aspect-square w-full items-center justify-center rounded-md bg-cream px-2 text-center">
           {v.status ?? (v.failed ? "Ikke tilgængelig" : "")}
         </span>
       )}
@@ -112,11 +112,11 @@ export function PhotoPicker({
         </div>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => input.current?.click()} loading={busy}>
+        <Button variant={plain.url ? "secondary" : "primary"} className="h-12 flex-1 text-[15px]" onClick={() => input.current?.click()} loading={busy}>
           {plain.url ? "Tag nyt billede" : busy ? plain.status : "Tag billede af varen"}
         </Button>
         {reuse && !plain.url && !busy && (
-          <Button variant="secondary" onClick={() => void handle(reuse)}>Brug samme foto</Button>
+          <Button variant="secondary" className="h-12 flex-1" onClick={() => void handle(reuse)}>Brug samme foto</Button>
         )}
       </div>
       {error && <p className="text-[13px] text-red-700">{error}</p>}
