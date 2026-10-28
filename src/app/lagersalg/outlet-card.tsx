@@ -53,7 +53,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={eager ? "high" : "auto"}
-      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+      className="h-full w-full object-cover mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]"
     />
   ) : (
     <span className="text-xs text-charcoal/50">Billede kommer</span>
@@ -61,7 +61,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
 
   return (
     <article className="group flex h-full flex-col">
-      <div className="relative aspect-square overflow-hidden rounded-[12px] border border-sand bg-white">
+      <div className="relative aspect-square overflow-hidden rounded-[8px] border border-[#d1ded4] bg-[#f2f6f3]">
         {href ? (
           <Link href={href} className="flex h-full w-full items-center justify-center" tabIndex={-1} aria-hidden>
             {photo}
@@ -111,7 +111,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
             onClick={add}
             disabled={!canBuy}
             aria-live="polite"
-            className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3D2E] ${
+            className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[5px] text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3D2E] ${
               added
                 ? "bg-[#EAF2ED] text-[#1A3D2E]"
                 : canBuy

@@ -16,6 +16,8 @@ import {
 } from "./outlet-filter";
 import { OutletCard } from "./outlet-card";
 import { ColorDot } from "./color-dot";
+import { StorefrontIcon } from "@/components/ui/storefront-icon";
+import collection from "@/components/product/device-collection.module.css";
 
 const PAGE_SIZE = 24;
 const MODEL_PREVIEW = 8;
@@ -77,6 +79,9 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
     if (window.location.pathname !== path) window.history.replaceState(window.history.state, "", path);
   }, [filters.models]);
 
+  const heroPool = singleModel ? results : items;
+  const heroPhotos = heroPool.flatMap((i) => (i.imageUrl ? [i.imageUrl] : [])).slice(0, 3);
+  const heroBrands = facetOptions(items, EMPTY_FILTERS).brands.map((b) => b.label);
   const minOre = (singleModel ? results : items).reduce((m, i) => Math.min(m, i.priceOre), Infinity);
   const minKr = Number.isFinite(minOre) ? minOre / 100 : null;
 
@@ -99,6 +104,9 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
         models={allModels}
         singleModelLabel={singleModel?.label ?? null}
         minKr={minKr}
+        total={singleModel ? results.length : items.length}
+        photos={heroPhotos}
+        brands={heroBrands}
         onPickModel={pickModel}
         onSearch={(query) => {
           update({ query });
@@ -109,7 +117,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
       {/* Hurtigvalg af model: den vigtigste beslutning, så den står før alt andet. */}
       {allModels.length > 1 && (
         <nav aria-label="Vælg model" className="border-b border-sand bg-white">
-          <div ref={chipRowRef} className="mx-auto flex max-w-[1280px] gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-9 [&::-webkit-scrollbar]:hidden">
+          <div ref={chipRowRef} className="mx-auto flex max-w-[1320px] gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
             <ModelChip label="Alle modeller" active={filters.models.length === 0} onClick={() => pickModel(null)} />
             {allModels.map((m) => (
               <ModelChip
@@ -126,11 +134,11 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
 
       {/* Mobil: fast bar med filter og sortering. */}
       <div className="sticky top-0 z-30 border-b border-sand bg-white/95 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-[1280px] items-center gap-2 px-4 py-2.5 sm:px-9">
+        <div className="mx-auto flex max-w-[1320px] items-center gap-2 px-4 py-2.5 sm:px-6">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] border border-charcoal/20 text-[14px] font-semibold text-charcoal"
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[5px] border border-charcoal/20 text-[14px] font-semibold text-charcoal"
           >
             <FilterIcon />
             Filtrer
@@ -142,7 +150,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
         </div>
       </div>
 
-      <div ref={resultsRef} className="mx-auto max-w-[1280px] scroll-mt-16 px-4 pb-16 pt-5 sm:px-9 lg:scroll-mt-4 lg:pt-8">
+      <div ref={resultsRef} className="mx-auto max-w-[1320px] scroll-mt-16 px-4 pb-16 pt-5 sm:px-6 lg:scroll-mt-4 lg:pt-8">
         <div className="lg:grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-10">
           <aside aria-label="Filtre" className="hidden lg:block">
             <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pb-6 pr-2">
@@ -193,7 +201,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
             )}
 
             {singleModel && (
-              <p className="mt-3 rounded-[10px] bg-[#F7F7F8] px-3.5 py-2.5 text-[13px] leading-5 text-charcoal/75">
+              <p className="mt-3 rounded-[5px] bg-[#F7F7F8] px-3.5 py-2.5 text-[13px] leading-5 text-charcoal/75">
                 Alle covers her er lavet til {singleModel.label}. Du kan se din model under Indstillinger på telefonen, hvis du er i tvivl.
               </p>
             )}
@@ -215,7 +223,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
                     <button
                       type="button"
                       onClick={() => setShown((n) => n + PAGE_SIZE)}
-                      className="h-11 rounded-[10px] border border-charcoal/25 px-6 text-[14px] font-semibold text-charcoal hover:border-charcoal"
+                      className="h-11 rounded-[5px] border border-charcoal/25 px-6 text-[14px] font-semibold text-charcoal hover:border-charcoal"
                     >
                       Vis flere covers
                     </button>
@@ -229,10 +237,10 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
                   Fjern et filter, eller se hele udvalget af covers uden for lagersalget.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
-                  <button type="button" onClick={reset} className="h-11 rounded-[10px] bg-[#1A3D2E] px-5 text-[14px] font-semibold text-white hover:bg-[#244f3c]">
+                  <button type="button" onClick={reset} className="h-11 rounded-[5px] bg-[#1A3D2E] px-5 text-[14px] font-semibold text-white hover:bg-[#244f3c]">
                     Nulstil filtre
                   </button>
-                  <Link href="/tilbehoer/covers" className="flex h-11 items-center rounded-[10px] border border-charcoal/25 px-5 text-[14px] font-semibold text-charcoal">
+                  <Link href="/tilbehoer/covers" className="flex h-11 items-center rounded-[5px] border border-charcoal/25 px-5 text-[14px] font-semibold text-charcoal">
                     Se alle covers
                   </Link>
                 </div>
@@ -261,12 +269,18 @@ function Hero({
   models,
   singleModelLabel,
   minKr,
+  total,
+  photos,
+  brands,
   onPickModel,
   onSearch,
 }: {
   models: FacetOption[];
   singleModelLabel: string | null;
   minKr: number | null;
+  total: number;
+  photos: string[];
+  brands: string[];
   onPickModel: (slug: string) => void;
   onSearch: (query: string) => void;
 }) {
@@ -285,124 +299,165 @@ function Hero({
     else if (query.trim()) onSearch(query.trim());
   }
 
+  // Samme hero som kategorisiderne (Smartphones, iPhones): genbruger deres stylesheet.
   return (
-    <section className="bg-[#1A3D2E] text-white">
-      <div className="mx-auto max-w-[1280px] px-4 pb-6 pt-6 sm:px-9 md:pb-10 md:pt-10">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:items-end lg:gap-12">
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#A9C8B4]">PhoneSpot Outlet</p>
-            <h1 className="mt-2 font-display text-[38px] font-bold leading-[0.95] tracking-tight sm:text-[52px] md:text-[60px]">
-              {singleModelLabel ? `Covers til ${singleModelLabel}` : "Store fund. Små priser."}
-            </h1>
-            <p className="mt-3 max-w-[34rem] text-[15px] leading-relaxed text-white/80 md:text-[16px]">
+    <div className={collection.collection} data-category="smartphone">
+      <div className={collection.wrap}>
+        <nav aria-label="Brødkrumme" className={collection.breadcrumb}>
+          <Link href="/">Forside</Link>
+          <span aria-hidden="true">/</span>
+          <Link href="/tilbehoer">Tilbehør</Link>
+          <span aria-hidden="true">/</span>
+          {singleModelLabel ? <Link href="/lagersalg">Lagersalg</Link> : <span>Lagersalg</span>}
+          {singleModelLabel && (
+            <>
+              <span aria-hidden="true">/</span>
+              <span>{singleModelLabel}</span>
+            </>
+          )}
+        </nav>
+        <section className={collection.hero} aria-labelledby="outlet-title">
+          <div className={collection.heroCopy}>
+            <p className={collection.eyebrow}>PhoneSpot Outlet</p>
+            <h1 id="outlet-title">{singleModelLabel ? `Covers til ${singleModelLabel}` : "Store fund. Små priser."}</h1>
+            <p className={collection.intro}>
               {singleModelLabel
                 ? `Nye covers lavet til ${singleModelLabel}${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle.`
                 : `Gør et kup på mobilcovers til outletpriser${minKr ? ` fra ${minKr} kr.` : "."} Find nemt et cover, der passer til din telefon.`}
             </p>
-          </div>
-
-          <form
-            role="search"
-            className="relative"
-            onSubmit={(e) => {
-              e.preventDefault();
-              choose(matches.length ? highlight : -1);
-            }}
-          >
-            <label htmlFor="outlet-search" className="sr-only">
-              Søg efter din telefonmodel
-            </label>
-            <svg aria-hidden className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-charcoal/45" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-            </svg>
-            <input
-              id="outlet-search"
-              type="search"
-              autoComplete="off"
-              enterKeyHint="search"
-              role="combobox"
-              aria-expanded={listOpen}
-              aria-controls="outlet-suggestions"
-              aria-autocomplete="list"
-              aria-activedescendant={listOpen && matches[highlight] ? `outlet-opt-${matches[highlight].value}` : undefined}
-              placeholder="Søg efter din telefonmodel..."
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setOpen(true);
-                setHighlight(0);
-              }}
-              onFocus={() => setOpen(true)}
-              onBlur={() => setTimeout(() => setOpen(false), 120)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setOpen(false);
-                if (!matches.length) return;
-                if (e.key === "ArrowDown") {
+            <div className={collection.heroActions}>
+              <form
+                role="search"
+                className="relative w-full max-w-[470px]"
+                onSubmit={(e) => {
                   e.preventDefault();
-                  setHighlight((h) => Math.min(matches.length - 1, h + 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setHighlight((h) => Math.max(0, h - 1));
-                }
-              }}
-              className="h-14 w-full rounded-[12px] border-0 bg-white pl-12 pr-28 text-[16px] text-charcoal placeholder:text-charcoal/45 focus:outline-none focus:ring-4 focus:ring-[#A9C8B4]/50"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 h-10 -translate-y-1/2 rounded-[10px] bg-[#1A3D2E] px-4 text-[14px] font-semibold text-white hover:bg-[#244f3c]"
-            >
-              Søg
-            </button>
-            {listOpen && (
-              <ul
-                id="outlet-suggestions"
-                role="listbox"
-                className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[12px] bg-white text-charcoal shadow-[0_12px_32px_rgba(17,17,17,0.18)]"
+                  choose(matches.length ? highlight : -1);
+                }}
               >
-                {matches.length ? (
-                  matches.map((m, i) => (
-                    <li
-                      key={m.value}
-                      id={`outlet-opt-${m.value}`}
-                      role="option"
-                      aria-selected={i === highlight}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => choose(i)}
-                      onMouseEnter={() => setHighlight(i)}
-                      className={`flex cursor-pointer items-center justify-between px-4 py-3 text-[15px] ${i === highlight ? "bg-[#EAF2ED]" : ""}`}
-                    >
-                      <span className="font-medium">{m.label}</span>
-                      <span className="text-[13px] text-charcoal/60">
-                        {m.count} {m.count === 1 ? "cover" : "covers"}
-                      </span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="px-4 py-3 text-[14px] text-charcoal/65">
-                    Ingen covers til &quot;{query.trim()}&quot; på lagersalg lige nu.{" "}
-                    <Link href="/tilbehoer/covers" className="font-medium text-[#1A3D2E] underline underline-offset-4">
-                      Se alle covers
-                    </Link>
-                  </li>
+                <label htmlFor="outlet-search" className="sr-only">
+                  Søg efter din telefonmodel
+                </label>
+                <svg aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#526358]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                </svg>
+                <input
+                  id="outlet-search"
+                  type="search"
+                  autoComplete="off"
+                  enterKeyHint="search"
+                  role="combobox"
+                  aria-expanded={listOpen}
+                  aria-controls="outlet-suggestions"
+                  aria-autocomplete="list"
+                  aria-activedescendant={listOpen && matches[highlight] ? `outlet-opt-${matches[highlight].value}` : undefined}
+                  placeholder="Søg efter din telefonmodel..."
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setOpen(true);
+                    setHighlight(0);
+                  }}
+                  onFocus={() => setOpen(true)}
+                  onBlur={() => setTimeout(() => setOpen(false), 120)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setOpen(false);
+                    if (!matches.length) return;
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setHighlight((h) => Math.min(matches.length - 1, h + 1));
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setHighlight((h) => Math.max(0, h - 1));
+                    }
+                  }}
+                  className="h-12 w-full rounded-[5px] border border-[#d1ded4] bg-white pl-10 pr-[76px] text-[16px] text-charcoal placeholder:text-[#7a857d] focus:border-[#1a3d2e] focus:outline-none focus:ring-2 focus:ring-[#1a3d2e]/15 md:text-[14px]"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1 flex h-10 items-center rounded-[4px] bg-[#1a3d2e] px-4 text-[13px] font-semibold text-white hover:bg-[#2a503b]"
+                >
+                  Søg
+                </button>
+                {listOpen && (
+                  <ul
+                    id="outlet-suggestions"
+                    role="listbox"
+                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[8px] border border-[#d1ded4] bg-white text-charcoal shadow-[0_16px_32px_-16px_rgba(26,61,46,0.35)]"
+                  >
+                    {matches.length ? (
+                      matches.map((m, i) => (
+                        <li
+                          key={m.value}
+                          id={`outlet-opt-${m.value}`}
+                          role="option"
+                          aria-selected={i === highlight}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => choose(i)}
+                          onMouseEnter={() => setHighlight(i)}
+                          className={`flex cursor-pointer items-center justify-between px-4 py-3 text-[14px] ${i === highlight ? "bg-[#f2f6f3]" : ""}`}
+                        >
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-[12px] text-[#526358]">
+                            {m.count} {m.count === 1 ? "cover" : "covers"}
+                          </span>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-3 text-[13px] text-[#526358]">
+                        Ingen covers til &quot;{query.trim()}&quot; på lagersalg lige nu.{" "}
+                        <Link href="/tilbehoer/covers" className="font-semibold text-[#1a3d2e] underline underline-offset-4">
+                          Se alle covers
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
                 )}
-              </ul>
-            )}
-          </form>
+              </form>
+              <span>
+                {total} {total === 1 ? "cover" : "covers"} i udvalget
+              </span>
+            </div>
+          </div>
+          <figure className={collection.heroVisual}>
+            <div aria-hidden className="flex items-end justify-center md:-space-x-7">
+              {photos.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  className={`h-[104px] w-[74px] rounded-[8px] border border-[#d1ded4] bg-white object-cover shadow-[0_14px_28px_-16px_rgba(26,61,46,0.5)] md:h-[220px] md:w-[156px] ${
+                    i === 0 ? "md:-rotate-6 md:translate-y-3" : i === 2 ? "md:rotate-6 md:translate-y-3" : "md:relative md:z-10"
+                  } ${i > 0 ? "hidden md:block" : ""}`}
+                />
+              ))}
+            </div>
+            {brands.length > 0 && <figcaption>Covers til {brands.join(" og ")}</figcaption>}
+          </figure>
+        </section>
+        <div className={collection.assurance}>
+          <Link href="/handelsbetingelser">
+            <StorefrontIcon kind="check" />
+            <span>
+              Gratis levering <span>til pakkeshop</span>
+            </span>
+          </Link>
+          <Link href="/garanti">
+            <StorefrontIcon kind="check" />
+            <span>
+              2 års reklamationsret <span>på tilbehør</span>
+            </span>
+          </Link>
+          <Link href="/butik">
+            <StorefrontIcon kind="pin" />
+            <span>
+              Hent i butik <span>i Vejle og Slagelse</span>
+            </span>
+          </Link>
         </div>
-
-        <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-white/75 md:mt-8">
-          {["Gratis levering til pakkeshop", "Hent i Vejle eller Slagelse", "2 års reklamationsret"].map((t) => (
-            <li key={t} className="flex items-center gap-1.5">
-              <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 text-[#A9C8B4]" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="m3.5 8.5 3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {t}
-            </li>
-          ))}
-        </ul>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -412,7 +467,7 @@ function ModelChip({ label, count, active, onClick }: { label: string; count?: n
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border px-3.5 text-[14px] transition-colors ${
+      className={`flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-3.5 text-[14px] transition-colors ${
         active ? "border-[#1A3D2E] bg-[#1A3D2E] font-semibold text-white" : "border-sand bg-white text-charcoal hover:border-charcoal/35"
       }`}
     >
@@ -429,7 +484,7 @@ function SortSelect({ value, onChange, className = "" }: { value: OutletSort; on
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as OutletSort)}
-        className="h-11 w-full appearance-none rounded-[10px] border border-charcoal/20 bg-white pl-3.5 pr-9 text-[14px] font-medium text-charcoal focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/15"
+        className="h-11 w-full appearance-none rounded-[5px] border border-charcoal/20 bg-white pl-3.5 pr-9 text-[14px] font-medium text-charcoal focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/15"
       >
         {(Object.keys(SORT_LABELS) as OutletSort[]).map((s) => (
           <option key={s} value={s}>
@@ -610,7 +665,7 @@ function FilterDrawer({
           <h2 id="outlet-drawer-title" className="text-[17px] font-semibold text-charcoal">
             Filtrer og sortér
           </h2>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Luk" className="-mr-2 flex h-11 w-11 items-center justify-center rounded-[10px] text-charcoal">
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Luk" className="-mr-2 flex h-11 w-11 items-center justify-center rounded-[5px] text-charcoal">
             <svg aria-hidden viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
               <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
             </svg>
@@ -642,11 +697,11 @@ function FilterDrawer({
             type="button"
             onClick={onReset}
             disabled={activeCount === 0}
-            className="h-12 flex-1 rounded-[10px] border border-charcoal/25 text-[15px] font-semibold text-charcoal disabled:opacity-40"
+            className="h-12 flex-1 rounded-[5px] border border-charcoal/25 text-[15px] font-semibold text-charcoal disabled:opacity-40"
           >
             Nulstil
           </button>
-          <button type="button" onClick={onClose} className="h-12 flex-[2] rounded-[10px] bg-[#1A3D2E] text-[15px] font-semibold text-white">
+          <button type="button" onClick={onClose} className="h-12 flex-[2] rounded-[5px] bg-[#1A3D2E] text-[15px] font-semibold text-white">
             Vis {resultCount} {resultCount === 1 ? "produkt" : "produkter"}
           </button>
         </div>
