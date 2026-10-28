@@ -55,7 +55,9 @@ const BRAND_LABEL: Record<string, string> = {
 
 function coverTitle(type: CoverType, modelLabel: string, color: string): string {
   const noun = COVER_TYPES.find((t) => t.value === type)?.noun ?? "Cover";
-  return `${noun} til ${modelLabel}${color ? `, ${color.toLowerCase()}` : ""}`;
+  // "Gennemsigtigt cover ..., gennemsigtig" siger det samme to gange
+  const showColor = color && !(type === "Clear" && color === "Gennemsigtig");
+  return `${noun} til ${modelLabel}${showColor ? `, ${color.toLowerCase()}` : ""}`;
 }
 
 /** Mobilfotos er 12 MP; fritlægningen er lige så god og langt hurtigere ved ca. 1600 px. */

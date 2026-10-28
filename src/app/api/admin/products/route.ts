@@ -213,6 +213,7 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath(body.type === "accessory" ? "/tilbehoer" : "/reservedele", "layout");
+  if (body.type === "accessory") revalidatePath("/covers-udsalg", "layout");
 
   const created: CreatedProduct[] = inserted.map((row) => ({
     id: row.id,
