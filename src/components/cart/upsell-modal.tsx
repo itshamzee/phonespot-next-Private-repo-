@@ -12,7 +12,7 @@ const UPSELL_PRODUCTS = [
     description: "Skærmbeskyttelse med hårdhed 9H, der dækker hele skærmen",
     price: 15900, // øre
     displayPrice: 159,
-    image: "/images/beskyttelsesglas.png",
+    image: "/images/beskyttelsesglas.webp",
   },
   {
     id: "979b3baf-96a8-4b80-b284-74941229dd2b",
@@ -21,7 +21,7 @@ const UPSELL_PRODUCTS = [
     description: "Skærmbeskyttelse med privatlivsfilter — kun du kan se skærmen",
     price: 24900, // øre
     displayPrice: 249,
-    image: "/images/privacy-glas.png",
+    image: "/images/privacy-glas.webp",
     popular: true,
   },
 ];

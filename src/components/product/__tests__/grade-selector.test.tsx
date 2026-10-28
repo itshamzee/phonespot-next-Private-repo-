@@ -27,8 +27,8 @@ describe("GradeSelector", () => {
         onChange={() => {}}
       />,
     );
-    // A ("Perfekt") is sold out and must not be advertised.
-    expect(screen.queryByText("Perfekt")).not.toBeInTheDocument();
+    // A ("Som ny") is sold out and must not be advertised.
+    expect(screen.queryByText("Som ny")).not.toBeInTheDocument();
     expect(screen.queryByText(/Udsolgt/i)).not.toBeInTheDocument();
     expect(screen.getByText("God")).toBeInTheDocument();
   });

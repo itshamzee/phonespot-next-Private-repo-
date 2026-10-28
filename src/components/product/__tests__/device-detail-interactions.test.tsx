@@ -110,7 +110,7 @@ describe("DeviceDetail interactions", () => {
         }),
       ),
     );
-    fireEvent.click(screen.getByRole("button", { name: /Perfekt/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Som ny/ }));
     expect(screen.getByRole("button", { name: "Sort" })).toHaveAttribute(
       "aria-pressed",
       "true",

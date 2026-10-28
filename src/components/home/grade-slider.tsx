@@ -13,14 +13,14 @@ const GRADES = [
   },
   {
     grade: "B",
-    title: "Meget god",
+    title: "God stand",
     desc: "Skærmen er perfekt. Kabinettet kan have lette brugsridser.",
     image: "/quality/grade-b.png",
     color: "bg-green-light",
   },
   {
     grade: "C",
-    title: "OK stand",
+    title: "Brugt stand",
     desc: "Lette skærmridser og synlige brugsspor. Det mest budgetvenlige valg.",
     image: "/quality/grade-c.png",
     color: "bg-gray",

@@ -1,6 +1,10 @@
 /**
  * Meta Pixel (fbq) helper — fires events only when the pixel is loaded
  * and the user has given marketing consent via Cookiebot.
+ *
+ * The view/cart/checkout helpers also send the matching GA4 ecommerce event
+ * (view_item, add_to_cart, begin_checkout). GA4 had no funnel events after the
+ * September relaunch, so checkout drop-off could not be measured.
  */
 
 type FbqParams = Record<string, string | number | string[]>;
@@ -8,6 +12,12 @@ type FbqParams = Record<string, string | number | string[]>;
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+  }
+}
+
+function ga4(eventName: string, params: Record<string, unknown>) {
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", eventName, params);
   }
 }
 
@@ -36,6 +46,11 @@ export function trackViewContent(product: {
     currency: "DKK",
     content_category: product.category ?? "",
   });
+  ga4("view_item", {
+    currency: "DKK",
+    value: product.price,
+    items: [{ item_id: product.id, item_name: product.name, item_category: product.category, price: product.price }],
+  });
 }
 
 /** Add to cart */
@@ -51,6 +66,11 @@ export function trackAddToCart(product: {
     value: product.price,
     currency: "DKK",
   });
+  ga4("add_to_cart", {
+    currency: "DKK",
+    value: product.price,
+    items: [{ item_id: product.id, item_name: product.name, price: product.price, quantity: 1 }],
+  });
 }
 
 /** Checkout started */
@@ -63,6 +83,7 @@ export function trackInitiateCheckout(cart: {
     currency: "DKK",
     num_items: cart.numItems,
   });
+  ga4("begin_checkout", { currency: "DKK", value: cart.value });
 }
 
 /** Purchase completed */

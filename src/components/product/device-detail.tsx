@@ -30,6 +30,7 @@ import {
   resolveCartColor,
 } from "@/lib/product/variant-match";
 import { KlarnaBanner } from "@/components/ui/klarna-banner";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { InsuranceLead } from "@/components/insurance/insurance-lead";
 import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 import styles from "./device-detail.module.css";
@@ -216,11 +217,25 @@ export function DeviceDetail({
     };
   });
 
-  const [selectedGrade, setSelectedGrade] = useState<string>(
+  const initialGrade =
     availableGrades.find((g) => g.available > 0)?.grade ??
-      availableGrades[0]?.grade ??
-      "A",
-  );
+    availableGrades[0]?.grade ??
+    "A";
+  // Start on the cheapest unit in stock in that grade, so the first render
+  // (server HTML, what Google and slow phones see) shows a buyable variant
+  // instead of the template's first storage/colour, which may be sold out.
+  const initialUnit = listedDevices
+    .filter((d) => {
+      const isNewByNote =
+        d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny") === true;
+      return (isNewByNote ? "N" : (d.grade as string)) === initialGrade;
+    })
+    .reduce<PublicDevice | null>(
+      (best, d) =>
+        !best || (d.selling_price ?? Infinity) < (best.selling_price ?? Infinity) ? d : best,
+      null,
+    );
+  const [selectedGrade, setSelectedGrade] = useState<string>(initialGrade);
   // Feedet linker med ?grade=<stand>. Læses efter mount (siden forbliver ISR-
   // cachet) og forvælger standen, hvis den findes på lager.
   useEffect(() => {
@@ -231,10 +246,14 @@ export function DeviceDetail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [selectedStorage, setSelectedStorage] = useState<string>(
-    template.storage_options[0] ?? "",
+    initialUnit?.storage && template.storage_options.includes(initialUnit.storage)
+      ? initialUnit.storage
+      : (template.storage_options[0] ?? ""),
   );
   const [selectedColor, setSelectedColor] = useState<string>(
-    template.colors[0] ?? "",
+    initialUnit?.color && template.colors.includes(initialUnit.color)
+      ? initialUnit.color
+      : (template.colors[0] ?? ""),
   );
   const [selectedUpgrades, setSelectedUpgrades] = useState<{
     ram: string | null;
@@ -870,8 +889,15 @@ export function DeviceDetail({
                 }
               />
             )}
+            {inStock && price != null && (
+              <p className={styles.small}>
+                {price >= FREE_SHIPPING_THRESHOLD
+                  ? "Fri fragt til pakkeshop eller døren, 2–4 hverdage"
+                  : "Gratis pakkeshop, levering til døren 39 kr."}
+              </p>
+            )}
             <p className={styles.small}>
-              14 dages returret · Kort, MobilePay og Klarna
+              14 dages fortrydelsesret · Kort, MobilePay og Klarna
             </p>
           </div>
           {price != null && (

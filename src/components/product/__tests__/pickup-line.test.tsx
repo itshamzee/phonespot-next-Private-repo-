@@ -16,10 +16,10 @@ describe("PickupLine", () => {
     expect(screen.getByText(/Slagelse/)).toBeInTheDocument();
   });
 
-  it("falls back to delivery copy and never claims pickup when no shop holds stock", () => {
+  it("offers pickup in 2–4 days, never same day, when no shop holds stock", () => {
     render(<PickupLine stockByStore={[]} />);
-    expect(screen.queryByText(/hentes/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/levering/i)).toBeInTheDocument();
+    expect(screen.getByText(/2–4 hverdage/)).toBeInTheDocument();
+    expect(screen.queryByText(/i dag/i)).not.toBeInTheDocument();
   });
 });
 

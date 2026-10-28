@@ -112,8 +112,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .eq("id", id)
       .single();
 
-    if (fullOrder?.shipping_method?.startsWith("click_collect_") && fullOrder?.customer?.email) {
-      const store = fullOrder.shipping_method === "click_collect_vejle" ? STORES.vejle : STORES.slagelse;
+    // Checkout stores pickup as "pickup_<store>"; older orders used "click_collect_<store>".
+    const method: string = fullOrder?.shipping_method ?? "";
+    if ((method.startsWith("click_collect_") || method.startsWith("pickup_")) && fullOrder?.customer?.email) {
+      const store = method.endsWith("vejle") ? STORES.vejle : STORES.slagelse;
       // BRAND.stores carries the same store's display-formatted hours string
       // used in the rest of the email templates — match on name, not index.
       const brandStore = BRAND.stores.find((s) => s.name === store.name) ?? BRAND.stores[0];

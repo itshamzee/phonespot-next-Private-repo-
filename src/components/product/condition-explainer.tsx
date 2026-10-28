@@ -31,7 +31,7 @@ const PHONE_GRADES: GradeData[] = [
   },
   {
     grade: "B",
-    title: "Meget god",
+    title: "God stand",
     subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
@@ -44,7 +44,7 @@ const PHONE_GRADES: GradeData[] = [
   },
   {
     grade: "C",
-    title: "OK stand",
+    title: "Brugt stand",
     subtitle: "Stand C",
     color: "border-gray",
     bullets: [
@@ -74,7 +74,7 @@ const WATCH_GRADES: GradeData[] = [
   },
   {
     grade: "B",
-    title: "Meget god",
+    title: "God stand",
     subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
@@ -87,7 +87,7 @@ const WATCH_GRADES: GradeData[] = [
   },
   {
     grade: "C",
-    title: "OK stand",
+    title: "Brugt stand",
     subtitle: "Stand C",
     color: "border-gray",
     bullets: [
@@ -117,7 +117,7 @@ const IPAD_GRADES: GradeData[] = [
   },
   {
     grade: "B",
-    title: "Meget god",
+    title: "God stand",
     subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
@@ -130,7 +130,7 @@ const IPAD_GRADES: GradeData[] = [
   },
   {
     grade: "C",
-    title: "OK stand",
+    title: "Brugt stand",
     subtitle: "Stand C",
     color: "border-gray",
     bullets: [
@@ -160,7 +160,7 @@ const LAPTOP_GRADES: GradeData[] = [
   },
   {
     grade: "B",
-    title: "Meget god",
+    title: "God stand",
     subtitle: "Stand B",
     color: "border-green-light",
     bullets: [
@@ -173,7 +173,7 @@ const LAPTOP_GRADES: GradeData[] = [
   },
   {
     grade: "C",
-    title: "OK stand",
+    title: "Brugt stand",
     subtitle: "Stand C",
     color: "border-gray",
     bullets: [

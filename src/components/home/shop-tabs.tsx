@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { StorefrontIcon, type StorefrontIconKind } from "@/components/ui/storefront-icon";
 import styles from "./storefront.module.css";
 
-type HomepageProduct = {
-  id: string; slug: string; title: string; image: string | null;
-  minPrice: number | null; compareAtPrice: number | null; deviceCount: number;
-  brand: string; category: string; inStock: boolean; href: string;
-  specifications: Record<string, string>;
-  locations: { name: string; type: string; count: number }[];
-};
+import type { HomepageProduct } from "@/lib/home/homepage-products";
 
 const categories: { label: string; name: string; key: string; href: string; icon: StorefrontIconKind }[] = [
   { label: "iPhones", name: "iPhones", key: "iphones", href: "/iphones", icon: "phone" },
@@ -58,15 +52,30 @@ function ProductCard({ product }: { product: HomepageProduct }) {
   </article>;
 }
 
-export function ShopTabs() {
-  const [activeKey, setActiveKey] = useState("iphones");
-  const [products, setProducts] = useState<HomepageProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+const INITIAL_TAB = "iphones";
+
+function usableProducts(data: HomepageProduct[]): HomepageProduct[] {
+  return data.filter(item => item.slug?.trim() && item.href?.startsWith("/") && !item.href.startsWith("//")).slice(0, 3);
+}
+
+/** `initialProducts` is the first tab, rendered on the server by the homepage. */
+export function ShopTabs({ initialProducts }: { initialProducts?: HomepageProduct[] } = {}) {
+  const [activeKey, setActiveKey] = useState(INITIAL_TAB);
+  const [products, setProducts] = useState<HomepageProduct[]>(() => usableProducts(initialProducts ?? []));
+  const [loading, setLoading] = useState(!initialProducts?.length);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // Skip only the very first fetch when the server already sent the first tab;
+  // coming back to that tab later must load it again.
+  const skipFirstFetch = useRef(Boolean(initialProducts?.length));
   const category = categories.find(item => item.key === activeKey)!;
 
   useEffect(() => {
+    // The server already rendered the first tab; only fetch on a tab switch or retry.
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     const controller = new AbortController();
     let current = true;
     async function load() {
@@ -78,7 +87,7 @@ export function ShopTabs() {
         if (!response.ok) throw new Error("Catalog request failed");
         const data: HomepageProduct[] = await response.json();
         if (!Array.isArray(data)) throw new Error("Invalid catalog response");
-        if (current) setProducts(data.filter(item => item.slug?.trim() && item.href?.startsWith("/") && !item.href.startsWith("//")).slice(0, 3));
+        if (current) setProducts(usableProducts(data));
       } catch {
         if (current) setError(true);
       } finally {
@@ -88,6 +97,7 @@ export function ShopTabs() {
     void load();
     // Also guard state after cancellation: some fetch adapters still resolve aborted requests.
     return () => { current = false; controller.abort(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey, attempt]);
 
   return <section className={styles.shop} id="udvalg">

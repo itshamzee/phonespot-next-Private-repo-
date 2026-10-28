@@ -97,8 +97,10 @@ export function InsuranceLead({
           </p>
           <p className="text-xs text-[#6E6E73]">{INSURANCE.shortLine}</p>
         </div>
+        {/* "Hør mere", not "Ja": a bare "Ja" next to the insurance name read
+            as if insurance were included in the price. */}
         <span className="ml-auto shrink-0 rounded-lg bg-[#1A3D2E] px-3 py-1.5 text-xs font-semibold text-white">
-          Ja
+          Hør mere
         </span>
       </button>
     );

@@ -6,8 +6,8 @@ describe("ConditionExplainer", () => {
   it("renders all three grades", () => {
     render(<ConditionExplainer />);
     expect(screen.getByText("Som ny")).toBeInTheDocument();
-    expect(screen.getByText("Meget god")).toBeInTheDocument();
-    expect(screen.getByText("OK stand")).toBeInTheDocument();
+    expect(screen.getByText("God stand")).toBeInTheDocument();
+    expect(screen.getByText("Brugt stand")).toBeInTheDocument();
   });
 
   it("renders compact variant", () => {

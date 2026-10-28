@@ -62,8 +62,8 @@ function nameClause(list: Store[]): string {
  * Local-pickup line shown directly under the buy button. Truthfulness over
  * sales pitch: only names a store that actually holds the unit right now,
  * only says "i dag" for a store that's currently open, and falls back to
- * plain delivery copy when no shop has stock — never implying a pickup
- * option that can't be honoured.
+ * "klar om 2–4 hverdage" when no shop holds the unit (central stock is
+ * transferred on request) — never a same-day claim it can't honour.
  *
  * `now` defaults to "unknown" (not `new Date()`) on the initial render. This
  * component lives inside a "use client" tree (`DeviceDetail`), so it renders
@@ -91,9 +91,11 @@ export function PickupLine({ stockByStore, now }: PickupLineProps) {
     .map((s) => STORES[s.slug as StoreId]);
 
   if (stores.length === 0) {
+    // Central stock is sent to the shop on request, so pickup is still
+    // possible, just not today. Checkout offers the same option.
     return (
-      <p className="text-[11px] text-charcoal/45">
-        Ikke på lager i butik lige nu — levering 1–2 hverdage.
+      <p className="text-[13px] text-charcoal/70">
+        Hent gratis i Vejle eller Slagelse, klar om 2–4 hverdage.
       </p>
     );
   }
@@ -103,8 +105,8 @@ export function PickupLine({ stockByStore, now }: PickupLineProps) {
     // know whether the shop is open, so name it without an "i dag" claim
     // rather than guess and risk a hydration mismatch.
     return (
-      <p className="text-[11px] text-charcoal/45">
-        Kan hentes i {nameClause(stores)}. Ellers levering 1–2 hverdage.
+      <p className="text-[13px] text-charcoal/70">
+        Kan hentes gratis i {nameClause(stores)}.
       </p>
     );
   }
@@ -113,14 +115,13 @@ export function PickupLine({ stockByStore, now }: PickupLineProps) {
   const closedStores = stores.filter((store) => !isOpenNow(store.hours, liveNow));
 
   return (
-    <p className="text-[11px] text-charcoal/45">
-      {openStores.length > 0 && <>Kan hentes i {nameClause(openStores)} i dag. </>}
+    <p className="text-[13px] text-charcoal/70">
+      {openStores.length > 0 && <>Kan hentes gratis i {nameClause(openStores)} i dag. </>}
       {closedStores.length > 0 && (
         <>
-          Kan hentes i {nameClause(closedStores)} ved næste åbningstid.{" "}
+          Kan hentes gratis i {nameClause(closedStores)} ved næste åbningstid.
         </>
       )}
-      Ellers levering 1–2 hverdage.
     </p>
   );
 }

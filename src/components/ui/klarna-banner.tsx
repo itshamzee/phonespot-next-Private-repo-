@@ -10,8 +10,10 @@ function formatInstallment(amount: number, currency: string) {
   return new Intl.NumberFormat("da-DK", {
     style: "currency",
     currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    // Whole kroner when the split is even, otherwise øre: rounding 2.699 kr.
+    // up to "3 × 900 kr." showed a total of 2.700 kr.
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
@@ -23,7 +25,7 @@ export function KlarnaBanner({
   const total = parseFloat(priceAmount);
   if (!total || total <= 0) return null;
 
-  const installment = Math.ceil(total / 3);
+  const installment = Math.round((total / 3) * 100) / 100;
 
   return (
     <div

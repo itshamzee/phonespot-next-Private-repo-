@@ -27,7 +27,7 @@ export function OrderStatusActions({
 
   const labelUrl = `/api/admin/shipping/label?order_id=${orderId}`;
 
-  const isClickCollect = shippingMethod?.startsWith("click_collect_");
+  const isClickCollect = shippingMethod?.startsWith("click_collect_") || shippingMethod?.startsWith("pickup_");
 
   async function patchStatus(status: string) {
     setLoading(status);

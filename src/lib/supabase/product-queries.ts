@@ -92,6 +92,13 @@ export async function getPublishedTemplates(
   if (filters?.minPrice) results = results.filter(t => (t.min_price ?? 0) >= filters.minPrice!);
   if (filters?.maxPrice) results = results.filter(t => (t.min_price ?? Infinity) <= filters.maxPrice!);
 
+  // Models without a photo go last (stable, so name order holds within each
+  // group): a listing that opens on "Billede kommer snart" cards looks broken.
+  results = [
+    ...results.filter(t => (t.images?.length ?? 0) > 0),
+    ...results.filter(t => (t.images?.length ?? 0) === 0),
+  ];
+
   return results;
 }
 

@@ -35,7 +35,7 @@ const GRADE_META: Record<
     badge: "P",
   },
   A: {
-    label: "Perfekt",
+    label: "Som ny",
     description: "Ingen synlige brugsspor",
     tooltip:
       "Stand A: Enheden er i perfekt stand uden synlige ridser eller mærker. Fremstår som ny. Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden.",

@@ -3,6 +3,10 @@ import { ShopTabs } from "@/components/home/shop-tabs";
 import { StorefrontHero } from "@/components/home/storefront-hero";
 import { StorefrontSections } from "@/components/home/storefront-sections";
 import styles from "@/components/home/storefront.module.css";
+import { getHomepageProducts } from "@/lib/home/homepage-products";
+
+// The first product tab is rendered on the server; refresh it every 5 minutes.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Refurbished iPhones, computere og reparation | PhoneSpot",
@@ -19,11 +23,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const initialProducts = await getHomepageProducts("iphones", 8).catch(() => []);
   return <div className={styles.surface}>
     <div className={`${styles.wrap} ${styles.intro}`}>
       <StorefrontHero />
-      <ShopTabs />
+      <ShopTabs initialProducts={initialProducts} />
       <StorefrontSections />
     </div>
   </div>;

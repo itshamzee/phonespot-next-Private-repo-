@@ -184,10 +184,9 @@ export async function createCheckoutSession(
         order_number: params.orderNumber,
       },
     },
-    shipping_address_collection: {
-      allowed_countries: ["DK"],
-    },
-    phone_number_collection: { enabled: true },
+    // No shipping_address_collection / phone_number_collection: /kasse has
+    // already collected both (and pickup orders need no address at all), and
+    // nothing reads Stripe's copy. Asking twice cost completed payments.
   });
 
   if (!session.url) {

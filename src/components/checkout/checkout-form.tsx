@@ -9,6 +9,7 @@ import { getShippingOption } from "@/lib/shipping";
 import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 import { PrePurchaseInfo } from "@/components/checkout/pre-purchase-info";
 import { trackInitiateCheckout } from "@/lib/tracking/fbq";
+import { STORES } from "@/lib/store-config";
 
 interface CustomerInfo {
   name: string;
@@ -101,6 +102,12 @@ export function CheckoutForm() {
     !!shippingMethod &&
     getShippingOption(shippingMethod as ShippingMethodId)?.requires_pickup_point === true;
 
+  // Pickup in a shop needs no address from the customer; the order carries the
+  // shop's address so dropship and transfer paperwork point at the shop.
+  const pickupStore = shippingMethod?.startsWith("pickup_")
+    ? Object.values(STORES).find((st) => `pickup_${st.slug}` === shippingMethod) ?? null
+    : null;
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
@@ -134,7 +141,18 @@ export function CheckoutForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cartState.items,
-          customer,
+          customer: pickupStore
+            ? {
+                ...customer,
+                address: {
+                  line1: pickupStore.street,
+                  line2: `Afhentes i butikken i ${pickupStore.city}`,
+                  city: pickupStore.city,
+                  postal_code: pickupStore.zip,
+                  country: "DK",
+                },
+              }
+            : customer,
           discountCode: cartState.discount?.code ?? undefined,
           shippingMethod,
           pickupPoint: pickupPoint ?? undefined,
@@ -243,6 +261,16 @@ export function CheckoutForm() {
           Leveringsadresse
         </h2>
 
+        {pickupStore ? (
+          <p className="rounded-xl bg-warm-white px-4 py-3 text-sm text-charcoal">
+            Du henter i butikken i {pickupStore.city}, {pickupStore.street}. Du skal ikke udfylde en adresse.
+          </p>
+        ) : (
+        <>
+        <p className="text-sm text-gray-500">
+          Henter du i butikken i Vejle eller Slagelse? Vælg afhentning nedenfor, så skal du ikke udfylde adresse.
+        </p>
+
         {/* Address line 1 */}
         <div>
           <label
@@ -327,6 +355,8 @@ export function CheckoutForm() {
 
         {/* Country (hidden, always DK) */}
         <input type="hidden" name="country" value="DK" />
+        </>
+        )}
       </section>
 
       {/* ---------------------------------------------------------------- */}

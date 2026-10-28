@@ -45,19 +45,17 @@ function getPickupMethods(
       skuItems.length === 0 ||
       skuItems.every((s) => storeProductIds.includes(s.skuProductId));
 
-    const canPickup = allDevicesAtStore && allSkusAtStore;
+    // Pickup is always offered: stock held centrally ("Online") is sent to the
+    // shop first. Disabling it hid the shops' main advantage for ~95 % of units.
+    const readyNow = allDevicesAtStore && allSkusAtStore;
 
     return {
       id: `pickup_${store.id}`,
       label: `Hent i ${store.name} (gratis)`,
-      description: canPickup
+      description: readyNow
         ? `${store.address} — klar til afhentning`
-        : `Ikke tilgængelig — ikke alle varer er på lager i ${store.name}`,
+        : `${store.address} — klar om 2-4 hverdage, du får besked på mail`,
       cost: 0,
-      disabled: !canPickup,
-      disabledReason: canPickup
-        ? undefined
-        : `Ikke alle varer er på lager i ${store.name}`,
     };
   });
 }
