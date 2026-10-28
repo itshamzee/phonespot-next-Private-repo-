@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 const { openCart, push } = vi.hoisted(() => ({ openCart: vi.fn(), push: vi.fn() }));
 vi.mock("@/components/cart/cart-context", () => ({ useCart: () => ({ totals: { itemCount: 2 }, openCart }) }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: () => "/" }));
 import { Header } from "../header";
 
 describe("Header", () => {
@@ -58,7 +58,7 @@ describe("Header", () => {
   it("closes the mobile menu when a destination is selected", () => {
     render(<Header />);
     fireEvent.click(screen.getByRole("button", { name: "Åbn menu" }));
-    const destination = within(screen.getByRole("dialog")).getByRole("link", { name: "Beskyttelsesglas" });
+    const destination = within(screen.getByRole("dialog")).getByRole("link", { name: "Kontakt" });
     destination.addEventListener("click", event => event.preventDefault());
     fireEvent.click(destination);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

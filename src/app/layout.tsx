@@ -5,6 +5,7 @@ import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { barlowCondensed, dmSans } from "@/lib/fonts";
 import { JsonLd, ORGANIZATION_JSONLD } from "@/components/seo/json-ld";
 import { LayoutShell } from "@/components/layout/public-shell";
+import { getMegaMenu } from "@/lib/navigation/mega-menu-data";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
 import { GlobalClickTracker } from "@/components/tracking/global-click-tracker";
 import "./globals.css";
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -103,7 +104,7 @@ export default function RootLayout({
           `}
         </Script>
         <JsonLd data={ORGANIZATION_JSONLD} />
-        <LayoutShell>{children}</LayoutShell>
+        <LayoutShell menu={await getMegaMenu()}>{children}</LayoutShell>
         {/* e-maerket verification widget — not gated (trust badge, not tracking) */}
         <Script
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"

@@ -9,18 +9,10 @@ import { STORE } from "@/lib/store-config";
 import { DispatchCountdown } from "./dispatch-countdown";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import styles from "@/components/home/storefront.module.css";
+import type { MegaMenu } from "@/lib/navigation/mega-menu";
+import { MegaNav, NAV_CATEGORIES, SALE_TEXT, TILBEHOER_PANEL } from "./mega-nav";
 
-const categories = [
-  { label: "iPhones", href: "/iphones" },
-  { label: "Smartphones", href: "/smartphones" },
-  { label: "iPads", href: "/ipads" },
-  { label: "Bærbare", href: "/baerbare" },
-  { label: "Ure", href: "/smartwatches" },
-  { label: "Tilbehør", href: "/tilbehoer" },
-  { label: "Lagersalg", href: "/lagersalg" },
-];
 const menuLinks = [
-  ...categories,
   { label: "Beskyttelsesglas", href: "/beskyttelsesglas" },
   { label: "Reparation", href: "/reparation" },
   { label: "Sælg din enhed", href: "/saelg-din-enhed" },
@@ -33,7 +25,7 @@ const menuLinks = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-export function Header() {
+export function Header({ menu = null }: { menu?: MegaMenu | null }) {
   const { totals, openCart } = useCart();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -103,10 +95,8 @@ export function Header() {
         </button>
       </div>
     </div>
-    <div className={styles.navwrap}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      {categories.map(item => item.href === "/lagersalg"
-        ? <Link key={item.href} href={item.href} className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-[#2D6B45]" />{item.label}</Link>
-        : <Link key={item.href} href={item.href}>{item.label}</Link>)}
+    <div className={`${styles.navwrap} relative z-40`}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
+      <MegaNav menu={menu} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-[0_24px_40px_-24px_rgba(17,17,17,0.25)]" />
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>
@@ -121,7 +111,25 @@ export function Header() {
       <div className={styles["menu-backdrop"]} onClick={() => setMobileOpen(false)} aria-hidden="true" />
       <div ref={menuPanel} className={styles["menu-panel"]} role="dialog" aria-modal="true" aria-label="Menu" id="mobile-navigation">
         <button type="button" ref={menuClose} className={styles["menu-close"]} onClick={() => setMobileOpen(false)} aria-label="Luk menu">Luk<StorefrontIcon kind="close" /></button>
-        <nav aria-label="Mobilmenu">{menuLinks.map(item => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>)}</nav>
+        <nav aria-label="Mobilmenu">
+          {NAV_CATEGORIES.map(item => {
+            const panel = item.href === "/tilbehoer" ? TILBEHOER_PANEL : menu?.[item.href as keyof MegaMenu];
+            const links = panel?.groups.flatMap(g => g.links) ?? [];
+            const sale = item.href === "/lagersalg" ? SALE_TEXT : "";
+            if (!links.length) return <Link key={item.href} href={item.href} className={`!text-[17px] font-medium ${sale}`} onClick={() => setMobileOpen(false)}>{item.label}</Link>;
+            return <details key={item.href} className="group border-b border-[#e5e5ea]">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between py-3 !text-[17px] font-medium [&::-webkit-details-marker]:hidden">
+                {item.label}
+                <svg aria-hidden viewBox="0 0 16 16" className="!h-4 !w-4 transition-transform group-open:rotate-180"><path d="m4 6 4 4 4-4" /></svg>
+              </summary>
+              <div className="flex flex-col pb-2 pl-3">
+                {links.slice(0, 10).map(l => <Link key={l.href} href={l.href} className={`!min-h-11 !border-0 !py-2.5 text-[15px] ${l.href === "/lagersalg" ? SALE_TEXT : "text-[#333]"}`} onClick={() => setMobileOpen(false)}>{l.label}</Link>)}
+                <Link href={panel!.allHref} className="!min-h-11 !border-0 !py-2.5 text-[15px] font-semibold text-[#1a3d2e]" onClick={() => setMobileOpen(false)}>{panel!.allLabel}</Link>
+              </div>
+            </details>;
+          })}
+          {menuLinks.map(item => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>)}
+        </nav>
       </div>
     </>}
   </header>;
