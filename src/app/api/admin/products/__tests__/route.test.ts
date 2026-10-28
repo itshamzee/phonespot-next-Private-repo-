@@ -77,6 +77,8 @@ it("praktikant kan ikke lægge lager i en anden butik eller sætte høj pris", a
   expect((await post({ type: "accessory", items: [{ ...item, stock: { stores: { slagelse: 2 } } }] })).status).toBe(403);
   expect((await post({ type: "accessory", items: [{ ...item, sellingPrice: 99900, stock: { stores: { vejle: 2 } } }] })).status).toBe(403);
   expect((await post({ type: "accessory", items: [{ ...item, stock: { online: 5 } }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, salePrice: 100 }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, mode: "per-model", models: ["iphone-13", "iphone-14"] }] })).status).toBe(403);
   expect(s.inserted).toEqual([]);
 });
 

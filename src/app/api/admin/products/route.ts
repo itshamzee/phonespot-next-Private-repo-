@@ -249,6 +249,8 @@ function internCreateError(
   if (items.length > 1) return "Opret én vare ad gangen";
   for (const item of items) {
     if (item.sellingPrice > 50_000) return "Prisen er for høj til hurtig-optagelsen";
+    if (item.salePrice != null) return "Praktikanter kan ikke sætte en tilbudspris";
+    if (item.mode !== "universal" || item.models.length > 10) return "Opret én vare ad gangen";
     if (item.alwaysInStock) return "Praktikanter kan ikke sætte varer altid på lager";
     if (item.stock?.online) return "Praktikanter kan kun lægge varer på lager i butikken";
     for (const store of Object.keys(item.stock?.stores ?? {})) {
