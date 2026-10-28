@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireStaff } from "@/lib/auth/require-staff";
+import { canAccessStore } from "@/lib/auth/store-scope";
 import { adjustStock } from "@/lib/pos/sessions";
 
 /**
@@ -10,7 +11,8 @@ import { adjustStock } from "@/lib/pos/sessions";
  *
  * GET  ?ean=…  → varen med den stregkode og antal pr. butik, eller { product: null }
  * POST { productId, store, quantity } → lægger antal på lager i butikken
- *       (pos_adjust_stock, årsag "receive", så reguleringen er logget med medarbejder)
+ *       (pos_adjust_stock, årsag "receive", så reguleringen er logget med medarbejder).
+ *       Kun tilbehør, og kun i en butik medarbejderen har adgang til (ejeren: alle).
  */
 
 const STORES = ["vejle", "slagelse"] as const;
@@ -34,6 +36,7 @@ export async function GET(request: Request) {
     .from("sku_products")
     .select("id, title, slug, subcategory, selling_price, images, status, compatible_models")
     .or(`ean.eq.${ean},barcode.eq.${ean}`)
+    .eq("category", "accessory")
     .neq("status", "archived")
     .order("created_at", { ascending: false })
     .limit(1);
@@ -67,8 +70,15 @@ export async function POST(request: Request) {
   const parsed = postSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Ugyldigt antal eller butik" }, { status: 400 });
   const { productId, store, quantity } = parsed.data;
+  if (!canAccessStore(staff, store)) {
+    return NextResponse.json({ error: "Du har ikke adgang til lageret i den butik" }, { status: 403 });
+  }
 
   const db = createAdminClient();
+  const { data: product } = await db.from("sku_products").select("category").eq("id", productId).maybeSingle();
+  if (product?.category !== "accessory") {
+    return NextResponse.json({ error: "Kun tilbehør kan lægges på lager her" }, { status: 400 });
+  }
   const location = (await storeLocations(db)).find((l) => l.name.toLowerCase() === store);
   if (!location) return NextResponse.json({ error: "Butikken findes ikke" }, { status: 404 });
 
