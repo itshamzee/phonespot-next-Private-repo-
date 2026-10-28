@@ -5,22 +5,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { canAccessStore } from "@/lib/auth/store-scope";
 import { adjustStock } from "@/lib/pos/sessions";
+import { storeLocations } from "@/lib/accessory-intake/candidates";
 
 /**
  * Hurtig lageroptagelse med stregkode (/admin/produkter/hurtig-cover).
  *
  * GET  ?ean=…  → varen med den stregkode og antal pr. butik, eller { product: null }
- * POST { productId, store, quantity } → lægger antal på lager i butikken
+ * POST { productId, store, quantity, publish? } → lægger antal på lager i butikken
  *       (pos_adjust_stock, årsag "receive", så reguleringen er logget med medarbejder).
  *       Kun tilbehør, og kun i en butik medarbejderen har adgang til (ejeren: alle).
+ *       publish { priceKr } udgiver en kladde: et cover kommer på udsalg til priceKr,
+ *       andre typer udgives til den pris, de har. En publiceret vare får aldrig ny pris herfra.
  */
 
 const STORES = ["vejle", "slagelse"] as const;
-
-async function storeLocations(db: ReturnType<typeof createAdminClient>) {
-  const { data } = await db.from("locations").select("id, name, type").eq("type", "store");
-  return (data ?? []) as { id: string; name: string; type: string }[];
-}
 
 export async function GET(request: Request) {
   const staff = await requireStaff(request);
@@ -36,7 +34,7 @@ export async function GET(request: Request) {
   const db = createAdminClient();
   const { data: products, error } = await db
     .from("sku_products")
-    .select("id, title, slug, subcategory, selling_price, images, status, compatible_models")
+    .select("id, title, slug, subcategory, brand, selling_price, images, status, compatible_models, attributes")
     .or(`ean.eq.${ean},barcode.eq.${ean}`)
     .eq("category", "accessory")
     .neq("status", "archived")
@@ -63,6 +61,7 @@ const postSchema = z.object({
   productId: z.string().uuid(),
   store: z.enum(STORES),
   quantity: z.number().int().min(1).max(1000),
+  publish: z.object({ priceKr: z.number().int().min(10).max(2000).optional() }).optional(),
 });
 
 export async function POST(request: Request) {
@@ -71,13 +70,17 @@ export async function POST(request: Request) {
 
   const parsed = postSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Ugyldigt antal eller butik" }, { status: 400 });
-  const { productId, store, quantity } = parsed.data;
+  const { productId, store, quantity, publish } = parsed.data;
   if (!canAccessStore(staff, store)) {
     return NextResponse.json({ error: "Du har ikke adgang til lageret i den butik" }, { status: 403 });
   }
 
   const db = createAdminClient();
-  const { data: product } = await db.from("sku_products").select("category").eq("id", productId).maybeSingle();
+  const { data: product } = await db
+    .from("sku_products")
+    .select("category, status, subcategory, selling_price, attributes")
+    .eq("id", productId)
+    .maybeSingle();
   if (product?.category !== "accessory") {
     return NextResponse.json({ error: "Kun tilbehør kan lægges på lager her" }, { status: 400 });
   }
@@ -93,9 +96,22 @@ export async function POST(request: Request) {
       note: "Hurtig optagelse",
       staffId: staff.id,
     });
+    let published = false;
+    let priceOere: number = product.selling_price ?? 0;
+    if (publish && product.status === "draft") {
+      const update: Record<string, unknown> = { status: "published" };
+      if (product.subcategory === "cover" && publish.priceKr) {
+        priceOere = publish.priceKr * 100;
+        update.selling_price = priceOere;
+        update.attributes = { ...((product.attributes as Record<string, string> | null) ?? {}), udsalg: "Ja" };
+      }
+      const { error } = await db.from("sku_products").update(update).eq("id", productId);
+      if (error) throw new Error("Varen blev lagt på lager, men kunne ikke udgives");
+      published = true;
+    }
     revalidatePath("/tilbehoer", "layout");
     revalidatePath("/covers-udsalg");
-    return NextResponse.json({ quantity: result.quantity });
+    return NextResponse.json({ quantity: result.quantity, published, priceKr: Math.round(priceOere / 100) });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Lageret blev ikke opdateret" },
