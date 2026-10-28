@@ -51,3 +51,6 @@ scripts/fix-orphan-tags.mjs
 scripts/inspect-store.mjs
 scripts/set-iphone-sold-out.mjs
 scripts/
+
+# Local API credentials for marketing/SEO scripts
+.secrets/

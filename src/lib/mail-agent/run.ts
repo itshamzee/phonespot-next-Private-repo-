@@ -325,7 +325,7 @@ async function processMail(
 
 /** UIDs of recent mail in this mailbox that failed and was never finished. */
 async function failedUids(sb: SupabaseClient, mailbox: string): Promise<number[]> {
-  const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
   const { data } = await sb
     .from("mail_inbound")
     .select("imap_uid")
