@@ -1,4 +1,6 @@
 // GatewayAPI kræver "Token <token>" (Bearer afvises). trim(): env-værdien har haft et afsluttende linjeskift.
+import { deliveryCallbackUrl, normalizeMsisdn } from "./delivery";
+
 const GATEWAY_API_TOKEN = (process.env.GATEWAYAPI_TOKEN ?? "").trim();
 // Kontoen ligger på EU-platformen; tokens fra gatewayapi.eu afvises af gatewayapi.com.
 const GATEWAY_API_URL = "https://gatewayapi.eu/rest/mtsms";
@@ -14,7 +16,7 @@ export async function sendSms(
   phone: string,
   message: string,
 ): Promise<SendSmsResult> {
-  const normalized = phone.replace(/\s+/g, "").replace(/^(\+45)?/, "45");
+  const normalized = normalizeMsisdn(phone);
 
   try {
     const res = await fetch(GATEWAY_API_URL, {
@@ -27,6 +29,8 @@ export async function sendSms(
         sender: SENDER_NAME,
         message,
         recipients: [{ msisdn: Number(normalized) }],
+        // Leveringsrapport til sms_log (DELIVERED/UNDELIVERABLE …).
+        callback_url: deliveryCallbackUrl(),
       }),
     });
 

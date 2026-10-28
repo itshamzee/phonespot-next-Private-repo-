@@ -33,6 +33,7 @@ be touched:
 | `POST /api/webhooks/shipmondo` | shared-secret / signature check |
 | `POST /api/webhooks/resend-inbound` | Svix signature |
 | `POST /api/webhooks/shopify` | HMAC |
+| `POST /api/webhooks/gatewayapi` | HMAC-nøgle i URL (afledt af GATEWAYAPI_TOKEN) |
 | `GET /api/feeds/partner` | `PARTNER_FEED_TOKEN` |
 | `/api/cron/*`, `GET /api/seo/sync` | `CRON_SECRET` bearer |
 | `/api/customers*`, `/api/trade-in/*` (staff subset) | `requireStaff()` in-route |
