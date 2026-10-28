@@ -134,7 +134,6 @@ export function QuickCover() {
 
   // Aflæsning
   const [identified, setIdentified] = useState<Identified | null>(null);
-  const [readPhoto, setReadPhoto] = useState<Blob | null>(null);
 
   // Formular til ny vare. Butik og pris huskes mellem varer ("Næste").
   const [productType, setProductType] = useState<IntakeProductType>("cover");
@@ -194,7 +193,6 @@ export function QuickCover() {
     setCandidates([]);
     setLiveCandidates([]);
     setIdentified(null);
-    setReadPhoto(null);
     setError(null);
     setAiNote(null);
     setPhoto(null);
@@ -308,7 +306,6 @@ export function QuickCover() {
     void preloadBackgroundRemoval();
     try {
       const small = await downscale(file, 1280);
-      setReadPhoto(small);
       const res = await fetch("/api/admin/accessories/identify", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -696,9 +693,9 @@ export function QuickCover() {
             {(id) => <QtyStepper id={id} value={quantity} onChange={setQuantity} />}
           </Field>
 
-          <Field label="Produktbillede" required hint="Tag varen ud af pakken og fotografér den lige forfra på en rolig baggrund.">
+          <Field label="Produktbillede" required hint="Tag varen ud af pakken og fotografér den lige forfra i lysboksen.">
             {() => (
-              <PhotoPicker key={photoKey} name={`tilbehoer-${ean || Date.now()}`} reuse={readPhoto} onChange={setPhoto} />
+              <PhotoPicker key={photoKey} name={`tilbehoer-${ean || Date.now()}`} onChange={setPhoto} />
             )}
           </Field>
 
