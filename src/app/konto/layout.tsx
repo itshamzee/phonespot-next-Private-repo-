@@ -198,6 +198,10 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
               {loggingIn ? "Logger ind..." : "Log ind"}
             </button>
           </form>
+          <p className="mt-6 text-center text-xs text-[#6E6E73]">
+            Har du handlet uden at oprette en adgangskode?{" "}
+            <a href="/glemt-adgangskode" className="text-[#1A3D2E] hover:underline">Få et login-link på mail</a>
+          </p>
         </div>
       </div>
     );
