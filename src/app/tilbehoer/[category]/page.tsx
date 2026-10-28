@@ -5,6 +5,7 @@ import { TilbehoerCategoryClient } from "@/components/tilbehoer/tilbehoer-catego
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumb } from "@/components/tilbehoer/breadcrumb";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CoversSaleBanner } from "@/components/tilbehoer/covers-sale-banner";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -102,6 +103,7 @@ export default async function TilbehoerCategoryPage({
         />
       </div>
 
+      {category === "covers" && <CoversSaleBanner />}
       <TilbehoerCategoryClient category={config} initialCount={initialCount} />
     </>
   );

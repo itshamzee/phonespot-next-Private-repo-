@@ -64,13 +64,8 @@ export function preloadBackgroundRemoval(): Promise<void> {
   return warmPromise;
 }
 
-export async function removeBackgroundAndUpload(url: string, folder: string, onProgress: BackgroundProgress = () => {}): Promise<string> {
-  onProgress("Henter billede");
-  const source = await fetch(url).then((r) => {
-    if (!r.ok) throw new Error("download");
-    return r.blob();
-  });
-
+/** Fjerner baggrunden fra et billede, der allerede er i browseren (fx et kamerafoto). */
+export async function removeBackgroundFromBlob(source: Blob, onProgress: BackgroundProgress = () => {}): Promise<Blob> {
   const { removeBackground } = await lib();
   const run = async () => {
     const cfg = await config();
@@ -83,25 +78,39 @@ export async function removeBackgroundAndUpload(url: string, folder: string, onP
     });
   };
 
-  let cut: Blob;
   try {
-    cut = await run();
+    return await run();
   } catch (err) {
     // Grafikkortet kan svigte midt i (drivere, lav hukommelse) — tag CPU-vejen én gang
     if (gpuBroken || (await config()).device !== "gpu") throw err;
     gpuBroken = true;
     onProgress("Fjerner baggrund");
-    cut = await run();
+    return run();
   }
+}
 
-  onProgress("Gemmer");
-  const ext = cut.type === "image/png" ? "png" : "webp";
-  const name = (url.split("/").pop() ?? "billede").replace(/\.\w+$/, "") + `-fritlagt.${ext}`;
+/** Uploader et billede til den offentlige katalog-bucket og returnerer URL'en. */
+export async function uploadImageBlob(blob: Blob, name: string, folder: string): Promise<string> {
   const formData = new FormData();
-  formData.append("file", new File([cut], name, { type: cut.type || "image/webp" }));
+  formData.append("file", new File([blob], name, { type: blob.type || "image/webp" }));
   formData.append("folder", folder);
   const res = await fetch("/api/platform/images/upload", { method: "POST", body: formData });
   if (!res.ok) throw new Error("upload");
   const data = await res.json();
   return data.url as string;
+}
+
+export async function removeBackgroundAndUpload(url: string, folder: string, onProgress: BackgroundProgress = () => {}): Promise<string> {
+  onProgress("Henter billede");
+  const source = await fetch(url).then((r) => {
+    if (!r.ok) throw new Error("download");
+    return r.blob();
+  });
+
+  const cut = await removeBackgroundFromBlob(source, onProgress);
+
+  onProgress("Gemmer");
+  const ext = cut.type === "image/png" ? "png" : "webp";
+  const name = (url.split("/").pop() ?? "billede").replace(/\.\w+$/, "") + `-fritlagt.${ext}`;
+  return uploadImageBlob(cut, name, folder);
 }

@@ -235,9 +235,14 @@ export function AccessoryList() {
         title="Tilbehør"
         description="Alt tilbehør på webshoppen og i butikkerne. Klik på en række for at rette."
         actions={
-          <Link href="/admin/produkter/ny?type=accessory" className="inline-flex h-10 items-center rounded-lg bg-green-eco px-4 text-[14px] font-medium text-white hover:bg-green-light">
-            Opret produkt
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/admin/produkter/hurtig-cover" className="inline-flex h-10 items-center rounded-lg border border-sand bg-white px-4 text-[14px] font-medium text-charcoal hover:bg-cream">
+              Hurtig cover-optagelse
+            </Link>
+            <Link href="/admin/produkter/ny?type=accessory" className="inline-flex h-10 items-center rounded-lg bg-green-eco px-4 text-[14px] font-medium text-white hover:bg-green-light">
+              Opret produkt
+            </Link>
+          </div>
         }
       />
 

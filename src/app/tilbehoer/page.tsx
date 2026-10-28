@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { HubPageClient } from "@/components/tilbehoer/hub-page-client";
+import { CoversSaleBanner } from "@/components/tilbehoer/covers-sale-banner";
 
 export const revalidate = 60;
 
@@ -30,6 +31,7 @@ export default function TilbehoerPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
+      <CoversSaleBanner />
       <HubPageClient />
     </>
   );

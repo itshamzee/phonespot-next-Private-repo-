@@ -1,13 +1,13 @@
 import { accessoryAvailability } from "@/lib/accessory-availability";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
 import { getAccessoryBySlug } from "@/lib/supabase/accessories";
 import { createServerClient } from "@/lib/supabase/client";
 import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import type { SkuProduct } from "@/lib/supabase/platform-types";
-import { getCategoryConfig, TILBEHOER_DEVICES, DEVICE_BRANDS } from "@/lib/tilbehoer-config";
+import { getCategoryConfig, TILBEHOER_DEVICES, DEVICE_BRANDS, ACCESSORY_CATEGORY_TO_SLUG, accessoryProductPath } from "@/lib/tilbehoer-config";
 import { AccessoryDetail, type CrossSellProduct, type CompatibleDevice } from "@/components/product/accessory-detail";
 import { JsonLd } from "@/components/seo/json-ld";
 import { TrustBar } from "@/components/ui/trust-bar";
@@ -59,6 +59,17 @@ async function resolveProduct(slug: string): Promise<SkuProduct | null> {
   };
 }
 
+/**
+ * The one URL a product lives on. The same slug answered under every category
+ * (/tilbehoer/opladere/<cover>) with itself as canonical, so each product could
+ * be indexed several times. Products whose category we know get a fixed path.
+ */
+function canonicalPath(product: SkuProduct, category: string, slug: string): string {
+  return product.slug && ACCESSORY_CATEGORY_TO_SLUG[product.subcategory ?? ""]
+    ? accessoryProductPath({ subcategory: product.subcategory, slug: product.slug })
+    : `/tilbehoer/${category}/${slug}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, category } = await params;
   const product = await resolveProduct(slug);
@@ -107,11 +118,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `https://phonespot.dk/tilbehoer/${category}/${slug}` },
+    alternates: { canonical: `https://phonespot.dk${canonicalPath(product, category, slug)}` },
     openGraph: {
       title,
       description,
-      url: `https://phonespot.dk/tilbehoer/${category}/${slug}`,
+      url: `https://phonespot.dk${canonicalPath(product, category, slug)}`,
       images: product.images[0] ? [{ url: product.images[0] }] : [],
       type: "website",
     },
@@ -123,6 +134,9 @@ export default async function AccessoryDetailPage({ params }: Props) {
 
   const product = await resolveProduct(slug);
   if (!product) notFound();
+
+  const canonical = canonicalPath(product, category, slug);
+  if (canonical !== `/tilbehoer/${category}/${slug}`) permanentRedirect(canonical);
 
   const catConfig = getCategoryConfig(category);
   const supabase = createServerClient();

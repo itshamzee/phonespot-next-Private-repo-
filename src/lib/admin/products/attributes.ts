@@ -33,6 +33,9 @@ export const ACCESSORY_SUBCATEGORIES: AccessorySubcategory[] = [
 export const TYPE_ATTRIBUTES: Record<string, AttributeField[]> = {
   cover: [
     { key: "case_type", label: "Covertype", type: "select", options: ["Wallet", "Slim", "Rugged", "Clear", "Flip", "Bumper", "Book"] },
+    { key: "color", label: "Farve", type: "text" },
+    // Med på /covers-udsalg (lagerrydning). Sættes automatisk af hurtig-oprettelsen.
+    { key: "udsalg", label: "Covers-udsalg", type: "select", options: ["Ja"] },
   ],
   screen_protector: [
     { key: "protector_type", label: "Type", type: "select", options: ["Hærdet glas", "Film", "Privacy", "Edge to Edge"] },
