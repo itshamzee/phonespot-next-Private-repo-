@@ -7,6 +7,7 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 import { FREE_SHIPPING_THRESHOLD, getShippingPrice } from "@/lib/shipping";
@@ -39,6 +40,15 @@ function resolveShippingCost(subtotal: number): number {
 // Context
 // ---------------------------------------------------------------------------
 
+/** What was just added, shown at the top of the add-to-cart sheet. */
+export interface UpsellContext {
+  title: string;
+  image: string | null;
+  price: number;
+  /** Device model ("iPhone 13"); the sheet suggests accessories that fit it. */
+  model?: string;
+}
+
 interface CartContextValue {
   cartState: CartState;
   totals: CartTotals;
@@ -46,7 +56,8 @@ interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   showUpsell: boolean;
-  openUpsell: () => void;
+  upsellContext: UpsellContext | null;
+  openUpsell: (context?: UpsellContext) => void;
   closeUpsell: () => void;
   addDevice: (item: CartDeviceItem) => Promise<void>;
   addSku: (item: CartSkuItem) => void;
@@ -67,6 +78,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartState, dispatch] = useReducer(cartReducer, undefined, () => loadCart());
   const [isOpen, setIsOpen] = useReducerToggle(false);
   const [showUpsell, setShowUpsell] = useReducerToggle(false);
+  const [upsellContext, setUpsellContext] = useState<UpsellContext | null>(null);
 
   // Persist to localStorage on every state change
   useEffect(() => {
@@ -118,7 +130,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ------------------------------------------------------------------
   const openCart = useCallback(() => setIsOpen(true), [setIsOpen]);
   const closeCart = useCallback(() => setIsOpen(false), [setIsOpen]);
-  const openUpsell = useCallback(() => setShowUpsell(true), [setShowUpsell]);
+  const openUpsell = useCallback((context?: UpsellContext) => {
+    setUpsellContext(context ?? null);
+    setShowUpsell(true);
+  }, [setShowUpsell]);
   const closeUpsell = useCallback(() => setShowUpsell(false), [setShowUpsell]);
 
   // ------------------------------------------------------------------
@@ -220,6 +235,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openCart,
       closeCart,
       showUpsell,
+      upsellContext,
       openUpsell,
       closeUpsell,
       addDevice,
@@ -237,6 +253,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openCart,
       closeCart,
       showUpsell,
+      upsellContext,
       openUpsell,
       closeUpsell,
       addDevice,

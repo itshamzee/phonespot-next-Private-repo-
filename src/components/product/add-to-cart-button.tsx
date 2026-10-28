@@ -45,7 +45,7 @@ export function AddToCartButton({
       addSku(sku);
 
       if (showUpsellOnAdd) {
-        openUpsell();
+        openUpsell({ title: sku.title, image: sku.image, price: sku.price });
       } else {
         openCart();
       }

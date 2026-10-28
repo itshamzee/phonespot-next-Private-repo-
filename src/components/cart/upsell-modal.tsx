@@ -3,248 +3,241 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
+import type { PublicAccessory } from "@/lib/product/public-accessory";
+import { pickUpsell } from "@/lib/product/pick-upsell";
 
-const UPSELL_PRODUCTS = [
+/**
+ * Add-to-cart sheet: confirms what was added and suggests accessories that fit
+ * the model, each with its own add button (bottom sheet on mobile, side panel
+ * on desktop). Without a model, or when nothing fits, it falls back to the two
+ * universal screen protectors.
+ */
+
+interface Suggestion {
+  id: string;
+  title: string;
+  subtitle: string;
+  price: number; // øre
+  image: string | null;
+}
+
+const FALLBACK: Suggestion[] = [
   {
     id: "0a718861-eae0-4c83-8cea-70d114a89fea",
     title: "Hærdet glas",
-    subtitle: "Kant til kant",
-    description: "Skærmbeskyttelse med hårdhed 9H, der dækker hele skærmen",
-    price: 15900, // øre
-    displayPrice: 159,
+    subtitle: "Kant til kant, hårdhed 9H",
+    price: 15900,
     image: "/images/beskyttelsesglas.webp",
   },
   {
     id: "979b3baf-96a8-4b80-b284-74941229dd2b",
     title: "Glas med privatlivsfilter",
-    subtitle: "Beskyttelse mod indkig",
-    description: "Skærmbeskyttelse med privatlivsfilter — kun du kan se skærmen",
-    price: 24900, // øre
-    displayPrice: 249,
+    subtitle: "Kun du kan se skærmen",
+    price: 24900,
     image: "/images/privacy-glas.webp",
-    popular: true,
   },
 ];
 
+const SUBTITLE: Record<string, string> = {
+  covers: "Cover",
+  beskyttelsesglas: "Beskyttelsesglas",
+};
+
+const SUGGESTION_LIMIT = 4;
+
+function formatKr(oere: number): string {
+  const kr = oere / 100;
+  return `${kr.toLocaleString("da-DK", { minimumFractionDigits: Number.isInteger(kr) ? 0 : 2, maximumFractionDigits: 2 })} kr.`;
+}
+
+function toSuggestion(a: PublicAccessory): Suggestion {
+  return {
+    id: a.id,
+    title: a.name,
+    subtitle: SUBTITLE[a.category] ?? "Tilbehør",
+    price: a.sale_price ?? a.price,
+    image: a.image_url,
+  };
+}
+
 export function UpsellModal() {
-  const { showUpsell, closeUpsell, openCart, addSku } = useCart();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { showUpsell, upsellContext, closeUpsell, openCart, addSku, cartState } = useCart();
+  const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null);
+  const model = upsellContext?.model;
 
-  // Reset selection when modal opens
+  // Load suggestions for the model each time the sheet opens.
   useEffect(() => {
-    if (showUpsell) setSelectedId(null);
-  }, [showUpsell]);
+    if (!showUpsell) return;
+    if (!model) {
+      setSuggestions(FALLBACK);
+      return;
+    }
+    setSuggestions(null);
+    const controller = new AbortController();
+    fetch(`/api/accessories?model=${encodeURIComponent(model)}`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: unknown) => {
+        const fitting = Array.isArray(data) ? pickUpsell(data as PublicAccessory[], SUGGESTION_LIMIT) : [];
+        setSuggestions(fitting.length > 0 ? fitting.map(toSuggestion) : FALLBACK);
+      })
+      .catch((err: unknown) => {
+        if ((err as { name?: string })?.name !== "AbortError") setSuggestions(FALLBACK);
+      });
+    return () => controller.abort();
+  }, [showUpsell, model]);
 
-  const handleSkip = () => {
+  const inCart = new Set(
+    cartState.items.flatMap((item) => (item.type === "sku_product" ? [item.skuProductId] : [])),
+  );
+
+  const goToCart = () => {
     closeUpsell();
     openCart();
   };
 
-  const handleAdd = () => {
-    const selected = UPSELL_PRODUCTS.find((p) => p.id === selectedId);
-    if (!selected) return;
-
+  const handleAdd = (s: Suggestion) => {
+    if (inCart.has(s.id)) return;
     addSku({
       type: "sku_product",
-      skuProductId: selected.id,
-      title: selected.title,
-      price: selected.price,
+      skuProductId: s.id,
+      title: s.title,
+      price: s.price,
       quantity: 1,
-      image: selected.image,
+      image: s.image,
     });
-
-    closeUpsell();
-    openCart();
   };
 
-  // Prevent body scrolling when modal is open
+  // Prevent body scrolling while the sheet is open
   useEffect(() => {
-    if (showUpsell) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = showUpsell ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [showUpsell]);
 
-  // Close on Escape key
+  // Escape closes the sheet and shows the cart
   useEffect(() => {
+    if (!showUpsell) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         closeUpsell();
         openCart();
       }
     }
-    if (showUpsell) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
+    document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showUpsell, closeUpsell, openCart]);
 
   if (!showUpsell) return null;
 
-  const selected = UPSELL_PRODUCTS.find((p) => p.id === selectedId);
-
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-warm-white">
-      {/* Header with logo */}
-      <div className="flex items-center justify-between border-b border-sand px-4 sm:px-5 py-4">
-        <button
-          type="button"
-          onClick={handleSkip}
-          aria-label="Luk og fortsæt"
-          className="text-charcoal transition-colors hover:text-green-eco"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="h-6 w-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-            />
-          </svg>
-        </button>
-
-        {/* Center logo */}
-        <Image
-          src="/brand/logos/phonespot-wordmark-dark.png"
-          alt="PhoneSpot"
-          width={146}
-          height={28}
-          className="h-7 w-[120px] sm:w-[146px]"
-        />
-
-        {/* Spacer to balance the back button */}
-        <div className="w-6" />
-      </div>
-
-      {/* Content — centered vertically */}
-      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 sm:px-5 py-6">
-        <h2 className="mb-6 font-display text-xl font-bold text-charcoal md:text-2xl">
-          Beskyt din skærm
-        </h2>
-
-        <div className="flex w-full max-w-3xl flex-col gap-4 md:flex-row md:gap-6">
-          {UPSELL_PRODUCTS.map((product) => {
-            const isSelected = selectedId === product.id;
-            return (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => setSelectedId(isSelected ? null : product.id)}
-                className={`relative flex gap-4 rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all md:flex-1 md:flex-col md:items-center md:gap-5 md:p-8 ${
-                  isSelected
-                    ? "border-green-eco ring-1 ring-green-eco/20"
-                    : "border-sand hover:border-charcoal/20"
-                }`}
-              >
-                {/* Popular badge */}
-                {"popular" in product && product.popular && (
-                  <span className="absolute -top-2.5 right-4 rounded-full bg-green-eco px-3 py-0.5 text-xs font-semibold text-white">
-                    Populær
-                  </span>
-                )}
-
-                {/* Selection indicator */}
-                <div className="absolute top-4 right-4 md:top-5 md:right-5">
-                  <div
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors md:h-7 md:w-7 ${
-                      isSelected
-                        ? "border-green-eco bg-green-eco"
-                        : "border-charcoal/20"
-                    }`}
-                  >
-                    {isSelected && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={3}
-                        stroke="currentColor"
-                        className="h-3.5 w-3.5 text-white"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m4.5 12.75 6 6 9-13.5"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-
-                {/* Product image */}
-                <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-sand/30 md:h-48 md:w-48 md:rounded-2xl">
-                  <Image
-                    src={product.image}
-                    alt={product.title}
-                    fill
-                    className="object-contain p-1 md:p-3"
-                    sizes="(min-width: 768px) 192px, 96px"
-                  />
-                </div>
-
-                {/* Product info */}
-                <div className="flex flex-1 flex-col justify-center gap-1 pr-8 md:items-center md:gap-2 md:pr-0 md:text-center">
-                  <h3 className="font-display text-base font-bold text-charcoal md:text-xl">
-                    {product.title}
-                  </h3>
-                  <p className="text-xs font-medium text-charcoal/50 md:text-sm">
-                    {product.subtitle}
-                  </p>
-                  <p className="text-sm text-charcoal/70 md:text-base">
-                    {product.description}
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-green-eco md:mt-2 md:text-2xl">
-                    {product.displayPrice} kr
-                  </p>
-                  <p className="text-xs font-semibold text-green-eco md:text-sm">
-                    Inkl. gratis montering
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="border-t border-sand px-4 sm:px-5 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          {selected ? (
-            <button
-              type="button"
-              onClick={handleAdd}
-              className="w-full rounded-full bg-green-eco py-3.5 font-semibold text-white transition-colors hover:bg-green-light"
-            >
-              Tilføj {selected.title} — {selected.displayPrice} kr
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="w-full rounded-full bg-green-eco/40 py-3.5 font-semibold text-white cursor-not-allowed"
-            >
-              Vælg en skærmbeskyttelse
-            </button>
-          )}
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40" aria-hidden="true" onClick={closeUpsell} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upsell-title"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col rounded-t-2xl bg-white shadow-xl md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-md md:rounded-none"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[#E5E5EA] px-4 py-4 sm:px-5">
+          <h2 id="upsell-title" className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-[#111111]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5 text-[#1A3D2E]" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
+            Lagt i kurven
+          </h2>
           <button
             type="button"
-            onClick={handleSkip}
-            className="w-full py-2.5 text-center text-sm font-medium text-charcoal/60 transition-colors hover:text-charcoal"
+            onClick={closeUpsell}
+            aria-label="Luk og fortsæt med at handle"
+            className="text-[#86868B] transition-colors hover:text-[#111111]"
           >
-            Nej tak, fortsæt uden
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+          {/* What was just added */}
+          {upsellContext && (
+            <div className="flex items-center gap-3 rounded-xl bg-[#F7F7F8] p-3">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white">
+                {upsellContext.image && (
+                  <Image src={upsellContext.image} alt="" fill className="object-contain p-1" sizes="64px" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-[#111111]">{upsellContext.title}</p>
+                <p className="text-sm text-[#86868B]">{formatKr(upsellContext.price)}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Suggestions */}
+          <h3 className="mb-2 mt-5 text-sm font-semibold text-[#111111]">
+            {model ? `Passer til din ${model}` : "Beskyt din skærm"}
+          </h3>
+          {suggestions === null ? (
+            <div className="space-y-2" aria-busy="true">
+              {Array.from({ length: 3 }, (_, i) => (
+                <div key={i} className="h-[76px] animate-pulse rounded-xl bg-[#F7F7F8]" />
+              ))}
+            </div>
+          ) : (
+            <ul className="divide-y divide-[#E5E5EA]">
+              {suggestions.map((s) => {
+                const added = inCart.has(s.id);
+                return (
+                  <li key={s.id} className="flex items-center gap-3 py-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">
+                      {s.image && <Image src={s.image} alt="" fill className="object-contain p-1" sizes="56px" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-medium text-[#111111]">{s.title}</p>
+                      <p className="text-xs text-[#86868B]">
+                        {s.subtitle} · <span className="font-semibold text-[#111111]">{formatKr(s.price)}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAdd(s)}
+                      disabled={added}
+                      aria-label={added ? `${s.title} er lagt i kurven` : `Tilføj ${s.title}`}
+                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                        added
+                          ? "bg-[#E8F0EC] text-[#1A3D2E]"
+                          : "border border-[#1A3D2E] text-[#1A3D2E] hover:bg-[#1A3D2E] hover:text-white"
+                      }`}
+                    >
+                      {added ? "Tilføjet" : "Tilføj"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 border-t border-[#E5E5EA] px-4 py-4 sm:px-5">
+          <button
+            type="button"
+            onClick={goToCart}
+            className="w-full rounded-full bg-[#1A3D2E] py-3.5 font-semibold text-white transition-colors hover:bg-[#244f3c]"
+          >
+            Gå til kurven
+          </button>
+          <button
+            type="button"
+            onClick={closeUpsell}
+            className="w-full py-2 text-center text-sm font-medium text-[#86868B] transition-colors hover:text-[#111111]"
+          >
+            Fortsæt med at handle
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

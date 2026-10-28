@@ -641,7 +641,12 @@ export function DeviceDetail({
 
       // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
-        openUpsell();
+        openUpsell({
+          title: template.display_name,
+          image: template.images[0] ?? null,
+          price: unitPrice,
+          model: template.model,
+        });
       } else {
         openCart();
       }

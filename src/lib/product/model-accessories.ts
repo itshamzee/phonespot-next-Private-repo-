@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
 import { ACCESSORY_CATEGORY_TO_SLUG, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { accessoryModelLabels, accessoryModelSlug, accessorySpotKind } from "@/lib/product/accessory-models";
+import { pickUpsell } from "@/lib/product/pick-upsell";
 
 export const PUBLIC_ACCESSORY_COLUMNS =
   "id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active, store_stock, online_stock";
@@ -68,27 +69,7 @@ export async function findAccessoryIdsForModel(supabase: SupabaseClient, model: 
   return ids;
 }
 
-/**
- * Vælger op til `limit` varer til mersalg: skiftevis cover og beskyttelsesglas,
- * så kunden ser begge typer, og kun varer der kan købes nu. Rækkefølgen inden
- * for en kategori er: på lager i butik, på lager online, kan bestilles.
- */
-export function pickUpsell(items: PublicAccessory[], limit = 3): PublicAccessory[] {
-  const rank = (a: PublicAccessory) =>
-    (a.store_stock ?? 0) > 0 ? 0 : a.availability === "in_stock" ? 1 : 2;
-  const buyable = items
-    .filter(a => a.availability === "in_stock" || a.availability === "orderable")
-    .sort((a, b) => rank(a) - rank(b));
-  const queues = ["covers", "beskyttelsesglas"].map(category => buyable.filter(a => a.category === category));
-  const picked: PublicAccessory[] = [];
-  while (picked.length < limit && queues.some(q => q.length > 0)) {
-    for (const queue of queues) {
-      const next = queue.shift();
-      if (next && picked.length < limit) picked.push(next);
-    }
-  }
-  return picked;
-}
+export { pickUpsell };
 
 /** Tilbehør til en reparationsmodel. En fejl må ikke vælte reparationssiden, så den giver en tom liste. */
 export async function getModelUpsell(modelName: string, limit = 3): Promise<PublicAccessory[]> {
