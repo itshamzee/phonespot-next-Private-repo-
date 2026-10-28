@@ -26,9 +26,11 @@ export async function GET(request: Request) {
   const staff = await requireStaff(request);
   if (!staff) return NextResponse.json({ error: "Kun medarbejdere" }, { status: 401 });
 
-  const ean = new URL(request.url).searchParams.get("ean")?.replace(/\D/g, "") ?? "";
-  if (ean.length < 8 || ean.length > 14) {
-    return NextResponse.json({ error: "Stregkoden skal være 8-14 cifre" }, { status: 400 });
+  // EAN-cifre eller leverandørkoder som "RIX02646" (Code 128). Kun bogstaver,
+  // cifre og bindestreg, så værdien er sikker i PostgREST-filteret nedenfor.
+  const ean = new URL(request.url).searchParams.get("ean")?.trim() ?? "";
+  if (!/^[A-Za-z0-9-]{4,32}$/.test(ean)) {
+    return NextResponse.json({ error: "Stregkoden kan ikke læses. Prøv igen." }, { status: 400 });
   }
 
   const db = createAdminClient();

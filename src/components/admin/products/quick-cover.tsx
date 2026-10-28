@@ -157,16 +157,16 @@ export function QuickCover() {
   }
 
   async function lookup(code: string) {
-    const clean = code.replace(/\D/g, "");
-    if (clean.length < 8) {
-      setError("Stregkoden skal være mindst 8 cifre");
+    const clean = code.trim().replace(/[^A-Za-z0-9-]/g, "");
+    if (clean.length < 4) {
+      setError("Stregkoden er for kort");
       return;
     }
     setEan(clean);
     setError(null);
     setBusy("Slår stregkoden op");
     try {
-      const res = await fetch(`/api/admin/accessories/by-ean?ean=${clean}`);
+      const res = await fetch(`/api/admin/accessories/by-ean?ean=${encodeURIComponent(clean)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Opslaget fejlede");
       if (data.product) {
@@ -367,10 +367,10 @@ export function QuickCover() {
                   <Input
                     id={id}
                     ref={eanRef}
-                    inputMode="numeric"
                     autoComplete="off"
+                    autoCapitalize="characters"
                     value={ean}
-                    onChange={(e) => setEan(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setEan(e.target.value.replace(/[^A-Za-z0-9-]/g, ""))}
                     placeholder="5701234567890"
                   />
                   <Button type="submit" loading={busy === "Slår stregkoden op"} className="shrink-0">Find</Button>
