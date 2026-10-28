@@ -9,6 +9,11 @@ const bodySchema = z.object({ email: z.string().trim().toLowerCase().email() });
 const lastSent = new Map<string, number>();
 const THROTTLE_MS = 2 * 60 * 1000;
 
+/** Escaper %, _ og \ så ilike matcher bogstaveligt. */
+function likeExact(value: string) {
+  return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
 /**
  * POST /api/konto/login-link  { email }
  * "Glemt adgangskode": sender et login-link til en kunde, der findes i customers.
@@ -30,15 +35,17 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient();
     const { data: customers } = await supabase
       .from("customers")
-      .select("id, name, auth_id")
-      .ilike("email", email)
+      .select("id, name, email, auth_id")
+      .ilike("email", likeExact(email))
       .order("created_at", { ascending: true })
       .limit(5);
-    const customer = customers?.find((c) => c.auth_id) ?? customers?.[0];
+    // Eksakt match: ilike bruges kun for store/små bogstaver, aldrig som mønster.
+    const exact = (customers ?? []).filter((c) => c.email?.trim().toLowerCase() === email);
+    const customer = exact.find((c) => c.auth_id) ?? exact[0];
     if (!customer) return ok;
 
-    const { data: staff } = await supabase.from("staff").select("id").ilike("email", email).maybeSingle();
-    if (staff) return ok;
+    const { data: staff } = await supabase.from("staff").select("email").ilike("email", likeExact(email)).limit(5);
+    if ((staff ?? []).some((s) => s.email?.trim().toLowerCase() === email)) return ok;
 
     // Opret auth-brugeren hvis den mangler (fejler stille, hvis den findes).
     await supabase.auth.admin.createUser({ email, email_confirm: true });
