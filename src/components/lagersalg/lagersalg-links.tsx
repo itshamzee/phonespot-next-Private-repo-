@@ -6,11 +6,11 @@ import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 /** Forsiden viser først båndet, når lagersalget har et reelt udvalg. */
 export const HOME_STRIP_MIN = 20;
 
-/** Gul pris som på lagersalgssiden (sidens eneste accent til lagersalgspriser). */
-function Price({ kr }: { kr: number }) {
+function Price({ kr, onDark = false }: { kr: number; onDark?: boolean }) {
   return (
-    <span className="shrink-0 rounded-md bg-[#FFE27A] px-3 py-1.5 font-display text-xl font-bold leading-none text-charcoal">
-      fra {kr} kr.
+    <span className={`shrink-0 text-right leading-none ${onDark ? "text-white" : "text-[#1A3D2E]"}`}>
+      <span className={`block text-xs ${onDark ? "text-white/70" : "text-charcoal/55"}`}>fra</span>
+      <span className="font-display text-3xl font-bold tracking-tight">{kr} kr.</span>
     </span>
   );
 }
@@ -63,7 +63,7 @@ export async function LagersalgHomeStrip() {
           {rows.length} nye covers til {models} modeller. Find covers til din telefon.
         </span>
       </span>
-      <Price kr={min} />
+      <Price kr={min} onDark />
     </Link>
   );
 }

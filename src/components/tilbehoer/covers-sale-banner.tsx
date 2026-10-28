@@ -33,7 +33,10 @@ export async function CoversSaleBanner() {
           <span className="block font-display text-2xl font-bold leading-tight tracking-tight md:text-3xl">Covers på lagersalg</span>
           <span className="mt-1 block text-sm text-white/75">{count} nye covers til iPhone og Samsung. Find din model.</span>
         </span>
-        <span className="rounded-md bg-[#FFE27A] px-3 py-1.5 font-display text-xl font-bold text-charcoal">fra {minKr} kr.</span>
+        <span className="shrink-0 text-right leading-none">
+          <span className="block text-xs text-white/70">fra</span>
+          <span className="font-display text-3xl font-bold tracking-tight">{minKr} kr.</span>
+        </span>
       </Link>
     </div>
   );

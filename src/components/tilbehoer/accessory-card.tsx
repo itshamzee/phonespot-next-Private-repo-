@@ -44,7 +44,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
           <p className="text-xl font-bold text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>
           {isOnSale && <s className="text-sm text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
-        {saving != null && <p className="mt-1 text-xs text-charcoal/65">Vejl. pris {listPriceKr} kr. <span className="ml-1 rounded bg-[#FFE27A] px-1.5 py-0.5 font-semibold text-charcoal">Spar {saving} %</span></p>}
+        {saving != null && <p className="mt-1 text-xs text-charcoal/55">Vejl. pris {listPriceKr} kr.</p>}
         <p className="mt-2 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
         <button type="button" disabled={!canBuy || added} onClick={add} className="mt-4 min-h-11 w-full rounded-lg bg-[#1A3D2E] px-3 py-3 text-sm font-semibold text-white hover:bg-[#244f3c] disabled:cursor-not-allowed disabled:bg-sand disabled:text-charcoal/55">{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
         <div className="mt-3 min-h-5 text-center text-xs font-medium text-charcoal/70">{href && <Link href={href} className="underline underline-offset-4">Se detaljer og kompatibilitet</Link>}</div>

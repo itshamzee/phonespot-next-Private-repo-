@@ -6,6 +6,7 @@ import { parseListPriceKr } from "@/lib/product/list-price";
 import { AccessoryCard } from "@/components/tilbehoer/accessory-card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumb } from "@/components/tilbehoer/breadcrumb";
+import { LagersalgFinder, type FinderModel } from "./lagersalg-finder";
 
 /**
  * Lagersalg: covers fra lageret i Vejle, markeret med attributten udsalg = "Ja"
@@ -56,41 +57,23 @@ export function coversForModel(rows: Row[], slug: string): Row[] {
   return rows.filter((r) => modelSlugs(r).includes(slug));
 }
 
-type ModelEntry = { device: TilbehoerDevice; count: number; fromKr: number };
-
-/** Modeller med covers på lager, grupperet pr. mærke i listens rækkefølge (nyeste først). */
-function modelIndex(rows: Row[]): { brand: string; models: ModelEntry[] }[] {
-  const stats = new Map<string, { count: number; min: number }>();
-  for (const row of rows) {
-    for (const slug of modelSlugs(row)) {
-      const s = stats.get(slug) ?? { count: 0, min: Infinity };
-      stats.set(slug, { count: s.count + 1, min: Math.min(s.min, priceOf(row)) });
-    }
-  }
-  return DEVICE_BRANDS.map((b) => ({
-    brand: b.label,
-    models: TILBEHOER_DEVICES.filter((d) => d.brand === b.slug && stats.has(d.slug)).map((device) => {
-      const s = stats.get(device.slug)!;
-      return { device, count: s.count, fromKr: s.min / 100 };
-    }),
-  })).filter((g) => g.models.length > 0);
-}
-
-/** Gul hyldeetiket med pris: sidens eneste accentfarve, kun brugt til lagersalgspriser. */
-function PriceTag({ kr }: { kr: number }) {
-  return (
-    <span className="relative inline-flex items-baseline gap-1.5 rounded-md bg-[#FFE27A] py-2 pl-7 pr-4 text-charcoal shadow-[0_1px_0_rgba(17,17,17,0.08)]">
-      <span aria-hidden className="absolute left-2.5 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-white ring-1 ring-charcoal/15" />
-      <span className="text-sm font-medium">fra</span>
-      <span className="font-display text-3xl font-bold leading-none tracking-tight md:text-4xl">{kr} kr.</span>
-    </span>
-  );
+/** Modeller med covers på lager i listens rækkefølge (nyeste først) til modelvælgeren. */
+function finderModels(rows: Row[]): FinderModel[] {
+  const counts = new Map<string, number>();
+  for (const row of rows) for (const slug of modelSlugs(row)) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  const brandLabel = new Map(DEVICE_BRANDS.map((b) => [b.slug as string, b.label]));
+  return TILBEHOER_DEVICES.filter((d) => counts.has(d.slug)).map((d) => ({
+    slug: d.slug,
+    label: d.label,
+    brand: d.brand,
+    brandLabel: brandLabel.get(d.brand) ?? d.brand,
+    count: counts.get(d.slug)!,
+  }));
 }
 
 export async function CoversSaleView({ selected }: { selected: TilbehoerDevice | null }) {
   const rows = await getSaleCovers();
-  const index = modelIndex(rows);
-  const modelCount = index.reduce((n, g) => n + g.models.length, 0);
+  const models = finderModels(rows);
   const shown = selected ? coversForModel(rows, selected.slug) : rows;
   const min = lowestKr(shown.length ? shown : rows);
   const pageUrl = selected ? `${SALE_URL}/${selected.slug}` : SALE_URL;
@@ -135,81 +118,34 @@ export async function CoversSaleView({ selected }: { selected: TilbehoerDevice |
         />
       </div>
 
-      <section className="mx-auto max-w-[1280px] px-5 pb-10 pt-8 sm:px-9 md:pb-14 md:pt-14">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-[15px] font-medium text-[#1A3D2E]">
-              {selected ? (
-                <Link href="/lagersalg" className="underline-offset-4 hover:underline">Lagersalg</Link>
-              ) : (
-                "Direkte fra vores lager i Vejle"
-              )}
-            </p>
-            <h1 className="mt-3 font-display text-[44px] font-bold leading-[0.95] tracking-tight text-charcoal sm:text-6xl md:text-[84px]">
-              {selected ? `Covers til ${selected.label}` : "Covers på lagersalg"}
+      <section className="mx-auto max-w-[1280px] px-5 pb-5 pt-3 sm:px-9 md:pb-8 md:pt-10">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
+          <div>
+            <h1 className="font-display text-[40px] font-bold leading-[0.95] tracking-tight text-charcoal sm:text-[56px] md:text-[64px]">
+              {selected ? `Covers til ${selected.label}` : "Lagersalg"}
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-charcoal/70 md:text-lg">
+            <p className="mt-3 max-w-md text-[15px] leading-relaxed text-charcoal/70 md:text-base">
               {selected
-                ? `Nye covers lavet til ${selected.label}, så knapper, kamera og stik sidder, hvor de skal. Faste lave priser, så længe lageret rækker.`
-                : `Nye covers til iPhone og Samsung, som vi rydder ud af lageret. ${rows.length > 0 ? `${rows.length} covers til ${modelCount} modeller` : "Udvalget fyldes op i løbet af dagen"}, faste lave priser, så længe lageret rækker.`}
+                ? `Nye covers lavet til ${selected.label}${min ? ` fra ${min} kr.` : "."} Fra vores lager i Vejle, så længe lageret rækker.`
+                : `Nye covers til iPhone og Samsung${min ? ` fra ${min} kr.` : ""}, direkte fra vores lager i Vejle. Så længe lageret rækker.`}
             </p>
           </div>
-          {min ? <PriceTag kr={min} /> : null}
+          {models.length > 0 && <LagersalgFinder models={models} selected={selected?.slug ?? null} />}
         </div>
-        <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-2 border-t border-sand pt-5 text-sm text-charcoal/70">
-          <li>Gratis levering til pakkeshop</li>
-          <li>Hent gratis i Vejle eller Slagelse</li>
-          <li>14 dages fortrydelsesret</li>
-          <li>2 års reklamationsret</li>
-        </ul>
       </section>
 
-      {!selected && index.length > 0 && (
-        <nav aria-labelledby="find-model" className="bg-[#F7F7F8]">
-          <div className="mx-auto max-w-[1280px] px-5 py-10 sm:px-9 md:py-14">
-            <h2 id="find-model" className="text-xl font-semibold text-charcoal md:text-2xl">Find din telefon</h2>
-            <div className={`mt-6 grid gap-10 ${index.length > 1 ? "lg:grid-cols-2" : ""}`}>
-              {index.map((group) => (
-                <div key={group.brand}>
-                  <h3 className="text-sm font-medium text-charcoal/55">{group.brand}</h3>
-                  {/* Ét mærke: listen løber i to kolonner, så den ikke fylder en halv side. */}
-                  <ul className={`mt-2 grid border-t border-sand ${index.length === 1 ? "md:grid-cols-2 md:gap-x-12" : ""}`}>
-                    {group.models.map(({ device, count, fromKr }) => (
-                      <li key={device.slug} className="border-b border-sand">
-                        <Link
-                          href={`/lagersalg/${device.slug}`}
-                          className="group flex items-baseline justify-between gap-4 py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3D2E]"
-                        >
-                          <span className="font-display text-2xl font-semibold leading-tight tracking-tight text-charcoal group-hover:text-[#1A3D2E] md:text-[28px]">
-                            {device.label}
-                          </span>
-                          <span className="shrink-0 text-right text-sm text-charcoal/65">
-                            {count} {count === 1 ? "cover" : "covers"}
-                            <span className="ml-3 font-semibold text-charcoal">fra {fromKr} kr.</span>
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </nav>
-      )}
-
-      <section className="mx-auto max-w-[1280px] px-5 pb-16 pt-10 sm:px-9 md:pt-14">
+      <section className="mx-auto max-w-[1280px] px-5 pb-16 pt-2 sm:px-9 md:pt-4">
         {cards.length > 0 ? (
           <>
-            <div className="mb-6 flex items-baseline justify-between gap-4">
-              <h2 className="text-xl font-semibold text-charcoal md:text-2xl">
-                {selected ? `${cards.length} ${cards.length === 1 ? "cover" : "covers"} til ${selected.label}` : "Alle covers på lagersalg"}
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-sand pb-3">
+              <h2 className="text-[15px] font-semibold text-charcoal">
+                {cards.length} {cards.length === 1 ? "cover" : "covers"}{selected ? ` til ${selected.label}` : " på lagersalg"}
               </h2>
-              {selected && (
-                <Link href="/lagersalg" className="shrink-0 text-sm text-charcoal/70 underline underline-offset-4">
-                  Andre modeller
-                </Link>
-              )}
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-charcoal/60 md:text-sm">
+                <li>Gratis levering til pakkeshop</li>
+                <li>Hent i Vejle eller Slagelse</li>
+                <li>2 års reklamationsret</li>
+              </ul>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
               {cards.map((p) => (

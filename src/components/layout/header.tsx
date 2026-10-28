@@ -105,7 +105,7 @@ export function Header() {
     </div>
     <div className={styles.navwrap}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
       {categories.map(item => item.href === "/lagersalg"
-        ? <Link key={item.href} href={item.href} className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-[#F5C518]" />{item.label}</Link>
+        ? <Link key={item.href} href={item.href} className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-[#2D6B45]" />{item.label}</Link>
         : <Link key={item.href} href={item.href}>{item.label}</Link>)}
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
