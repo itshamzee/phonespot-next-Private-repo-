@@ -6,9 +6,9 @@ export const revalidate = 60;
 export async function generateMetadata(): Promise<Metadata> {
   const rows = await getSaleCovers();
   const min = lowestKr(rows);
-  const title = min ? `Covers-udsalg: covers fra ${min} kr. | PhoneSpot` : "Covers-udsalg | PhoneSpot";
+  const title = min ? `Covers på lagersalg fra ${min} kr. | PhoneSpot` : "Covers på lagersalg | PhoneSpot";
   const description =
-    "Lagerrydning af covers til iPhone og Samsung. Faste lave priser, gratis levering til pakkeshop, eller hent i Vejle og Slagelse.";
+    "Nye covers til iPhone og Samsung på lagersalg fra vores lager i Vejle. Find din model, faste lave priser, gratis levering til pakkeshop eller hent i Vejle og Slagelse.";
   return {
     title,
     description,
@@ -19,6 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function CoversUdsalgPage() {
+export default function LagersalgPage() {
   return <CoversSaleView selected={null} />;
 }

@@ -20,7 +20,7 @@ import { blobToBase64, downscale } from "./quick-intake/image-utils";
  * scan stregkode (kendt vare: læg antal på lager) eller tag et foto af pakken
  * eller varen → AI udfylder type, mærke, model(ler), farve og tekst og leder
  * efter dubletter → praktikanten tjekker, tager et produktfoto, taster antal og
- * gemmer. Covers kommer på /covers-udsalg, glas på /beskyttelsesglas.
+ * gemmer. Covers kommer på /lagersalg, glas på /beskyttelsesglas.
  */
 
 type Store = "vejle" | "slagelse";

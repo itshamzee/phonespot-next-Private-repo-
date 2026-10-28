@@ -5,7 +5,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   TILBEHOER_CATEGORIES,
-  TILBEHOER_DEVICES,
   PUBLIC_TILBEHOER_DEVICES,
   DEVICE_BRANDS,
   type DeviceBrand,

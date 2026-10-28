@@ -1,4 +1,4 @@
-import { getSaleCovers, coversForModel, MIN_INDEXABLE } from "@/app/covers-udsalg/sale-view";
+import { getSaleCovers, coversForModel, MIN_INDEXABLE } from "@/app/lagersalg/sale-view";
 import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
@@ -410,7 +410,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/covers-udsalg`,
+      url: `${BASE_URL}/lagersalg`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily" as const,
       priority: 0.8,
@@ -432,12 +432,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const spotPages = await spotSitemapEntries(BASE_URL);
 
-  // ---- Covers-udsalg pr. model (kun modeller med et reelt udvalg) ---------
+  // ---- Lagersalg pr. model (kun modeller med et reelt udvalg) ---------
   const saleCovers = await getSaleCovers();
   const coverSalePages: MetadataRoute.Sitemap = TILBEHOER_DEVICES
     .filter((d) => coversForModel(saleCovers, d.slug).length >= MIN_INDEXABLE)
     .map((d) => ({
-      url: `${BASE_URL}/covers-udsalg/${d.slug}`,
+      url: `${BASE_URL}/lagersalg/${d.slug}`,
       changeFrequency: "daily" as const,
       priority: 0.7,
     }));

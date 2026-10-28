@@ -6,7 +6,6 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import {
   TILBEHOER_CATEGORIES,
-  TILBEHOER_DEVICES,
   PUBLIC_TILBEHOER_DEVICES,
   DEVICE_BRANDS,
   type DeviceBrand,

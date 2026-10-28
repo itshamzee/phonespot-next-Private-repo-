@@ -3,8 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
-type AccessoryCardProps = Omit<PublicAccessory, "created_at">;
-export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind}: AccessoryCardProps) {
+import { listPriceSaving } from "@/lib/product/list-price";
+type AccessoryCardProps = Omit<PublicAccessory, "created_at"> & {
+  /** Dokumenteret vejledende pris i kr. (kun ægte mærkevarer på lagersalg). */
+  listPriceKr?: number | null;
+};
+export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind,listPriceKr}: AccessoryCardProps) {
   const [added,setAdded]=useState(false);
   const confirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -13,6 +17,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   const {addSku,openCart}=useCart();
   const isOnSale=sale_price != null && sale_price < price;
   const effectivePrice=isOnSale ? sale_price : price;
+  const saving=listPriceSaving(listPriceKr ?? null, effectivePrice);
   const href=slug ? `/tilbehoer/${category}/${slug}` : null;
   const canBuy=availability === "in_stock" || availability === "orderable";
   const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Sendes 1–3 hverdage" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
@@ -39,6 +44,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
           <p className="text-xl font-bold text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>
           {isOnSale && <s className="text-sm text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
+        {saving != null && <p className="mt-1 text-xs text-charcoal/65">Vejl. pris {listPriceKr} kr. <span className="ml-1 rounded bg-[#FFE27A] px-1.5 py-0.5 font-semibold text-charcoal">Spar {saving} %</span></p>}
         <p className="mt-2 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
         <button type="button" disabled={!canBuy || added} onClick={add} className="mt-4 min-h-11 w-full rounded-lg bg-[#1A3D2E] px-3 py-3 text-sm font-semibold text-white hover:bg-[#244f3c] disabled:cursor-not-allowed disabled:bg-sand disabled:text-charcoal/55">{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
         <div className="mt-3 min-h-5 text-center text-xs font-medium text-charcoal/70">{href && <Link href={href} className="underline underline-offset-4">Se detaljer og kompatibilitet</Link>}</div>

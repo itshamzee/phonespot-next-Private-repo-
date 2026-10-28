@@ -16,9 +16,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const min = lowestKr(rows);
   const url = `${SALE_URL}/${device.slug}`;
   const title = min
-    ? `${device.label} cover fra ${min} kr. | Covers-udsalg | PhoneSpot`
-    : `${device.label} cover | Covers-udsalg | PhoneSpot`;
-  const description = `Covers til ${device.label} på lagerrydning${min ? ` fra ${min} kr.` : ""}. Gratis levering til pakkeshop, eller hent i Vejle og Slagelse. 2 års reklamationsret.`;
+    ? `${device.label} cover fra ${min} kr. | Lagersalg | PhoneSpot`
+    : `${device.label} cover | Lagersalg | PhoneSpot`;
+  const description = `Nye covers til ${device.label} på lagersalg${min ? ` fra ${min} kr.` : ""}. Gratis levering til pakkeshop, eller hent i Vejle og Slagelse. 2 års reklamationsret.`;
   return {
     title,
     description,
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CoversUdsalgModelPage({ params }: Props) {
+export default async function LagersalgModelPage({ params }: Props) {
   const { model } = await params;
   const device = getDeviceConfig(model);
   if (!device) notFound();

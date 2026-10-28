@@ -12,6 +12,7 @@ const INTERNAL_ATTRIBUTE_KEYS = new Set([
   "udsalg",
   "genuine",
   "ai_read_text",
+  "vejl_pris",
 ]);
 
 export function isPublicAttribute(key: string): boolean {

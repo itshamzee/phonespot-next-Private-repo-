@@ -34,14 +34,16 @@ export const TYPE_ATTRIBUTES: Record<string, AttributeField[]> = {
   cover: [
     { key: "case_type", label: "Covertype", type: "select", options: ["Wallet", "Slim", "Rugged", "Clear", "Flip", "Bumper", "Book"] },
     { key: "color", label: "Farve", type: "text" },
-    // Med på /covers-udsalg (lagerrydning). Sættes automatisk af hurtig-oprettelsen.
-    { key: "udsalg", label: "Covers-udsalg", type: "select", options: ["Ja"] },
+    // Med på /lagersalg. Sættes automatisk af hurtig-oprettelsen.
+    { key: "udsalg", label: "Lagersalg", type: "select", options: ["Ja"] },
     { key: "genuine", label: "Ægte mærkevare", type: "select", options: ["Ja"] },
+    // Kun ægte mærkevarer: producentens dokumenterede vejledende pris i kr. (vises som "Vejl. pris").
+    { key: "vejl_pris", label: "Vejl. udsalgspris (kr.)", type: "text" },
     { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },
   ],
   screen_protector: [
     { key: "protector_type", label: "Type", type: "select", options: ["Hærdet glas", "Film", "Privacy", "Edge to Edge"] },
-    // Lagerrydning fra hurtig-optagelsen (vises på /beskyttelsesglas, ikke på /covers-udsalg).
+    // Lagerrydning fra hurtig-optagelsen (vises på /beskyttelsesglas, ikke på /lagersalg).
     { key: "udsalg", label: "Udsalg", type: "select", options: ["Ja"] },
     { key: "genuine", label: "Ægte mærkevare", type: "select", options: ["Ja"] },
     { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },

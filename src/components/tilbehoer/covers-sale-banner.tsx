@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-/** Henviser til /covers-udsalg, men kun når der faktisk er covers på udsalg. */
+/** Henviser til /lagersalg, men kun når der faktisk er covers på lagersalg. */
 export async function CoversSaleBanner() {
   let count = 0;
   let minKr: number | null = null;
@@ -26,11 +26,14 @@ export async function CoversSaleBanner() {
   return (
     <div className="mx-auto max-w-[1280px] px-5 pt-4 sm:px-9">
       <Link
-        href="/covers-udsalg"
-        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-2xl bg-[#1A3D2E] px-5 py-4 text-white transition-colors hover:bg-[#244f3c]"
+        href="/lagersalg"
+        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-2xl bg-[#1A3D2E] px-5 py-5 text-white transition-colors hover:bg-[#244f3c] md:px-7"
       >
-        <span className="text-base font-semibold md:text-lg">Covers-udsalg: lagerrydning fra {minKr} kr.</span>
-        <span className="text-sm text-white/80 underline underline-offset-4">Se covers til din telefon</span>
+        <span>
+          <span className="block font-display text-2xl font-bold leading-tight tracking-tight md:text-3xl">Covers på lagersalg</span>
+          <span className="mt-1 block text-sm text-white/75">{count} nye covers til iPhone og Samsung. Find din model.</span>
+        </span>
+        <span className="rounded-md bg-[#FFE27A] px-3 py-1.5 font-display text-xl font-bold text-charcoal">fra {minKr} kr.</span>
       </Link>
     </div>
   );

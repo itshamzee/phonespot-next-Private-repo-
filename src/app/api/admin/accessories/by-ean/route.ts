@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       published = true;
     }
     revalidatePath("/tilbehoer", "layout");
-    revalidatePath("/covers-udsalg");
+    revalidatePath("/lagersalg", "layout");
     return NextResponse.json({ quantity: result.quantity, published, priceKr: Math.round(priceOere / 100) });
   } catch (err) {
     return NextResponse.json(

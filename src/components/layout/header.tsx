@@ -17,6 +17,7 @@ const categories = [
   { label: "Bærbare", href: "/baerbare" },
   { label: "Ure", href: "/smartwatches" },
   { label: "Tilbehør", href: "/tilbehoer" },
+  { label: "Lagersalg", href: "/lagersalg" },
 ];
 const menuLinks = [
   ...categories,
@@ -103,7 +104,9 @@ export function Header() {
       </div>
     </div>
     <div className={styles.navwrap}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      {categories.map(item => <Link key={item.href} href={item.href}>{item.label}</Link>)}
+      {categories.map(item => item.href === "/lagersalg"
+        ? <Link key={item.href} href={item.href} className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-[#F5C518]" />{item.label}</Link>
+        : <Link key={item.href} href={item.href}>{item.label}</Link>)}
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>

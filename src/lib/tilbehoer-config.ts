@@ -19,7 +19,7 @@ export interface TilbehoerDevice {
   slug: string;
   label: string;
   brand: DeviceBrand;
-  /** Ældre model fra lagerrydningen: med i admin og /covers-udsalg, ikke i de offentlige filtre. */
+  /** Ældre model fra lagerrydningen: med i admin og /lagersalg, ikke i de offentlige filtre. */
   legacy?: boolean;
 }
 
@@ -264,6 +264,7 @@ export const TILBEHOER_DEVICES: TilbehoerDevice[] = [
   { slug: "samsung-s24-fe", label: "Galaxy S24 FE", brand: "samsung" },
   { slug: "samsung-s23-ultra", label: "Galaxy S23 Ultra", brand: "samsung" },
   { slug: "samsung-s23", label: "Galaxy S23", brand: "samsung" },
+  { slug: "samsung-s23-fe", label: "Galaxy S23 FE", brand: "samsung", legacy: true },
   { slug: "samsung-s22-ultra", label: "Galaxy S22 Ultra", brand: "samsung" },
   { slug: "samsung-s22", label: "Galaxy S22", brand: "samsung" },
   { slug: "samsung-s21-fe", label: "Galaxy S21 FE", brand: "samsung" },
