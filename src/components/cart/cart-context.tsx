@@ -9,6 +9,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { FREE_SHIPPING_THRESHOLD, getShippingPrice } from "@/lib/shipping";
 import type {
   CartState,
   CartTotals,
@@ -25,11 +26,13 @@ import { cartReducer } from "@/lib/cart/reducer";
 // Shipping cost (flat rate, free above threshold)
 // ---------------------------------------------------------------------------
 
-const SHIPPING_COST_OERE = 4900; // 49 DKK in øre (DAO standard)
-const FREE_SHIPPING_THRESHOLD_OERE = 50000; // 500 DKK in øre
+// Estimate before a method is chosen: home delivery from lib/shipping (the
+// old 49 kr. was the retired DAO price), nothing for an empty cart.
+const SHIPPING_COST_OERE = getShippingPrice("postnord") ?? 3900;
 
 function resolveShippingCost(subtotal: number): number {
-  return subtotal >= FREE_SHIPPING_THRESHOLD_OERE ? 0 : SHIPPING_COST_OERE;
+  if (subtotal <= 0) return 0;
+  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST_OERE;
 }
 
 // ---------------------------------------------------------------------------
