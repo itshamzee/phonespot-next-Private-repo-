@@ -26,6 +26,6 @@ export function sanitizeIdentified(raw: Identified, validSlugs: Set<string>): Id
     features: raw.features.map(cleanText).filter(Boolean),
     color: raw.color ? cleanText(raw.color) || null : null,
     supplierCodes: raw.supplierCodes.filter((c) => /^[A-Za-z0-9-]{4,32}$/.test(c)),
-    readText: raw.readText.slice(0, 500),
+    readText: cleanText(raw.readText).slice(0, 500),
   };
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/admin/ui";
+import { suggestPriceKr } from "@/lib/accessory-intake/pricing";
+import type { IntakeCaseType } from "@/lib/accessory-intake/types";
 
 export interface MatchProduct {
   id: string;
@@ -9,7 +11,20 @@ export interface MatchProduct {
   selling_price: number;
   status: string;
   subcategory?: string | null;
+  brand?: string | null;
+  attributes?: Record<string, string> | null;
   stock: Record<string, number>;
+}
+
+/** Udsalgspris for en eksisterende kladde: prisforslaget efter mærke og covertype. */
+export function saleKrFor(p: MatchProduct): number {
+  const caseType = (p.attributes?.case_type ?? null) as IntakeCaseType | null;
+  return suggestPriceKr({
+    productType: p.subcategory === "cover" ? (caseType === "Flip" || caseType === "Wallet" ? "flip_cover" : "cover") : "other",
+    brand: p.brand ?? null,
+    isGenuineBrandProduct: false,
+    caseType,
+  });
 }
 
 /** Knaptekst efter varens status: kladder udgives, publicerede varer får kun lager. */

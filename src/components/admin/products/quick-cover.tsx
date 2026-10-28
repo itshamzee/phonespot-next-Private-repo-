@@ -7,10 +7,11 @@ import { ModelsPicker } from "@/components/admin/products/create/models-picker";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { ean13Svg, isValidEan13 } from "@/lib/barcode/ean13";
 import { preloadBackgroundRemoval } from "@/lib/images/remove-background-client";
-import { PRICE_CHIPS, suggestPriceKr } from "@/lib/accessory-intake/pricing";
+import { PRICE_CHIPS } from "@/lib/accessory-intake/pricing";
 import { subcategoryFor } from "@/lib/accessory-intake/match";
+import { aiTextIsStale } from "@/lib/accessory-intake/ai-text";
 import type { Identified, IntakeCaseType, IntakeProductType, MatchCandidate } from "@/lib/accessory-intake/types";
-import { MatchCard, type MatchProduct } from "./quick-intake/match-card";
+import { MatchCard, saleKrFor, type MatchProduct } from "./quick-intake/match-card";
 import { PhotoPicker } from "./quick-intake/photo-picker";
 import { blobToBase64, downscale } from "./quick-intake/image-utils";
 
@@ -101,6 +102,7 @@ export function QuickCover() {
   const [step, setStep] = useState<Step>("scan");
   const [found, setFound] = useState<MatchProduct | null>(null);
   const [candidates, setCandidates] = useState<MatchCandidate[]>([]);
+  const [liveCandidates, setLiveCandidates] = useState<MatchCandidate[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aiNote, setAiNote] = useState<string | null>(null);
@@ -136,16 +138,41 @@ export function QuickCover() {
 
   useEffect(() => () => void scannerRef.current?.stop().catch(() => {}), []);
 
+  // Dubletsøgning igen, når praktikanten selv har valgt model (fx et løst cover).
+  const manualModels = step === "new" && models.length > 0 && (!identified || aiTextIsStale(identified.models, models));
+  useEffect(() => {
+    if (!manualModels) {
+      setLiveCandidates([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => {
+      fetch("/api/admin/accessories/candidates", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ productType, brand: identified?.brand ?? null, caseType: caseType ?? null, color: color || null, models }),
+        signal: ctrl.signal,
+      })
+        .then((r) => (r.ok ? r.json() : { candidates: [] }))
+        .then((d) => setLiveCandidates(d.candidates ?? []))
+        .catch(() => {});
+    }, 400);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [manualModels, models, productType, caseType, color, identified]);
+
   const qty = Math.max(0, Math.floor(Number(quantity) || 0));
   const isCase = productType === "cover" || productType === "flip_cover";
   const autoTitle = templateTitle(productType, isCase ? caseType : null, models, color);
   const finalTitle = (titleTouched ? title : title || autoTitle).trim();
-  const saleKr = identified ? suggestPriceKr(identified) : price;
 
   function reset(keepSetup = true) {
     setEan("");
     setFound(null);
     setCandidates([]);
+    setLiveCandidates([]);
     setIdentified(null);
     setReadPhoto(null);
     setError(null);
@@ -298,7 +325,7 @@ export function QuickCover() {
           productId: product.id,
           store,
           quantity: qty,
-          ...(product.status === "draft" ? { publish: { priceKr: saleKr } } : {}),
+          ...(product.status === "draft" ? { publish: { priceKr: saleKrFor(product) } } : {}),
         }),
       });
       const data = await res.json();
@@ -449,7 +476,7 @@ export function QuickCover() {
           <Field label="Antal">
             {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
           </Field>
-          <MatchCard product={found} qty={qty} saleKr={79} busy={busy === `stock-${found.id}`} onAdd={(p) => void addStock(p)} />
+          <MatchCard product={found} qty={qty} saleKr={saleKrFor(found)} busy={busy === `stock-${found.id}`} onAdd={(p) => void addStock(p)} />
           <Button variant="secondary" className="w-full" onClick={() => reset()}>Annuller</Button>
         </Panel>
       )}
@@ -498,7 +525,7 @@ export function QuickCover() {
             {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
           </Field>
           {candidates.map((c) => (
-            <MatchCard key={c.id} product={c} qty={qty} saleKr={saleKr} busy={busy === `stock-${c.id}`} onAdd={(p) => void addStock(p)} />
+            <MatchCard key={c.id} product={c} qty={qty} saleKr={saleKrFor(c)} busy={busy === `stock-${c.id}`} onAdd={(p) => void addStock(p)} />
           ))}
           <Button variant="secondary" className="w-full" onClick={() => setStep("new")}>Nej, det er en ny vare</Button>
         </Panel>
@@ -521,6 +548,7 @@ export function QuickCover() {
                     selected={productType === t.value}
                     onToggle={() => {
                       setProductType(t.value);
+                      if (identified && !titleTouched && t.value !== identified.productType) setTitle("");
                       if (t.value === "flip_cover") setCaseType("Flip");
                       if (t.value === "cover" && (caseType === "Flip" || caseType === "Wallet" || !caseType)) setCaseType("Slim");
                       if (t.value === "screen_protector") setPrice(49);
@@ -551,6 +579,11 @@ export function QuickCover() {
                   onChange={(slugs) => {
                     setModels(slugs);
                     setModelConfirmed(slugs.length > 0);
+                    // AI'ens tekst nævner den model, den læste; ved en anden model bruges skabelonen.
+                    if (identified && aiTextIsStale(identified.models, slugs)) {
+                      if (!titleTouched) setTitle("");
+                      if (description === identified.descriptionDa) setDescription("");
+                    }
                   }}
                 />
               </div>
@@ -621,6 +654,15 @@ export function QuickCover() {
               <PhotoPicker key={photoKey} name={`tilbehoer-${ean || Date.now()}`} reuse={readPhoto} onChange={setPhoto} />
             )}
           </Field>
+
+          {liveCandidates.length > 0 && (
+            <div className="space-y-3">
+              <Notice tone="info">Ligner en vare, du allerede har oprettet. Er det en af disse?</Notice>
+              {liveCandidates.map((c) => (
+                <MatchCard key={c.id} product={c} qty={qty} saleKr={saleKrFor(c)} busy={busy === `stock-${c.id}`} onAdd={(p) => void addStock(p)} />
+              ))}
+            </div>
+          )}
 
           {finalTitle && (
             <p className="rounded-lg bg-cream px-3 py-2 text-[14px] text-charcoal">

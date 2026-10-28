@@ -1,5 +1,6 @@
 "use client";
 
+import { isPublicAttribute } from "@/lib/product/internal-attributes";
 import { accessoryAvailability } from "@/lib/accessory-availability";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
@@ -92,7 +93,6 @@ const CASE_TYPE_LABELS: Record<string, string> = {
   bumper: "Kantcover",
 };
 
-const HIDDEN_ATTRS = new Set(["_source", "source", "id"]);
 
 function attributeLabel(key: string): string {
   const label = ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " ");
@@ -506,7 +506,7 @@ export function AccessoryDetail({
   // Attributes to display (excluding internal ones)
   const attributeEntries = product.attributes
     ? Object.entries(product.attributes).filter(
-        ([k, v]) => !HIDDEN_ATTRS.has(k) && v !== null && v !== undefined && v !== "",
+        ([k, v]) => isPublicAttribute(k) && v !== null && v !== undefined && v !== "",
       )
     : [];
 

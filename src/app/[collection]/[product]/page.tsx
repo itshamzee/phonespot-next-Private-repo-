@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isPublicAttribute } from "@/lib/product/internal-attributes";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -547,7 +548,7 @@ export default async function ProductPage({
   const accessorySpecs = Object.entries(skuProduct.attributes ?? {})
     .filter(
       ([key, value]) =>
-        !["_source", "source", "id"].includes(key) && value !== null && value !== undefined && value !== "",
+        isPublicAttribute(key) && value !== null && value !== undefined && value !== "",
     )
     .map(([key, value]) => ({
       label: ACCESSORY_ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " "),
