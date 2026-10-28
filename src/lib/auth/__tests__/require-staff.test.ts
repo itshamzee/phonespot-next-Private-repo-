@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
+    auth: { getUser: async () => ({ data: { user: { id: "u1" } }, error: null }) },
     from: (table: string) => {
       if (table === "staff") {
         const chain = {
@@ -38,7 +39,7 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 vi.mock("@/lib/supabase/server", () => ({ createRequestAuthClient: () => null }));
 
-import { lookupStaffByAuthId } from "../require-staff";
+import { lookupStaffByAuthId, requireStaff } from "../require-staff";
 
 beforeEach(() => {
   state.staffRow = null;
@@ -85,5 +86,26 @@ describe("lookupStaffByAuthId", () => {
     state.staffRow = { id: "s1", role: "employee", name: "M", email: "m@phonespot.dk", location_id: "L9" };
     state.locationResults = [{ data: { id: "L9", name: "Lager", type: "warehouse", slug: null }, error: null }];
     expect((await lookupStaffByAuthId("a"))?.location_slug).toBeNull();
+  });
+});
+
+describe("requireStaff for praktikanter", () => {
+  const bearer = (url: string, method = "GET") =>
+    new Request(url, { method, headers: { authorization: "Bearer t" } });
+
+  it("afviser en praktikant uden for hurtig-optagelsen", async () => {
+    state.staffRow = { id: "s2", role: "intern", name: "Leon", email: "leon@phonespot.dk", location_id: null };
+    expect(await requireStaff(bearer("http://x/api/admin/orders"))).toBeNull();
+    expect(await requireStaff(bearer("http://internal/"))).toBeNull();
+  });
+
+  it("tillader en praktikant i hurtig-optagelsen", async () => {
+    state.staffRow = { id: "s2", role: "intern", name: "Leon", email: "leon@phonespot.dk", location_id: null };
+    expect(await requireStaff(bearer("http://x/api/admin/accessories/identify", "POST"))).toMatchObject({ id: "s2", role: "intern" });
+  });
+
+  it("påvirker ikke almindelige medarbejdere", async () => {
+    state.staffRow = { id: "s1", role: "employee", name: "Mette", email: "m@phonespot.dk", location_id: null };
+    expect(await requireStaff(bearer("http://x/api/admin/orders"))).toMatchObject({ id: "s1" });
   });
 });

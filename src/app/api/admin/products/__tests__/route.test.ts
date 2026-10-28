@@ -7,7 +7,10 @@ const s = vi.hoisted(() => ({
   inserted: [] as Record<string, unknown>[],
   stock: [] as Record<string, unknown>[],
   insertError: null as null | { message: string },
+  role: "owner",
 }));
+
+vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: vi.fn(async () => ({ id: "st", role: s.role })) }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/supabase/admin", () => ({
@@ -63,6 +66,14 @@ beforeEach(() => {
   s.inserted = [];
   s.stock = [];
   s.insertError = null;
+  s.role = "owner";
+});
+
+it("praktikant kan ikke oprette reservedele", async () => {
+  s.role = "intern";
+  const res = await post({ type: "spare-part", items: [{ title: "Skærm", sellingPrice: 10000 }] });
+  expect(res.status).toBe(403);
+  expect(s.inserted).toEqual([]);
 });
 
 it("opretter tilbehør pr. model som published, aktivt og med kompatible modeller og lager", async () => {

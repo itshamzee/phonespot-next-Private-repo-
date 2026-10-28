@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { lookupStaffByAuthId, requireStaff } from "@/lib/auth/require-staff";
+import { lookupStaffByAuthId, requireStaff, staffMayUse } from "@/lib/auth/require-staff";
 
 /**
  * Staff gate for /api/admin/** and /api/platform/**.
@@ -92,7 +92,7 @@ export async function middleware(request: NextRequest) {
     if (!user) return deny(401);
 
     const staff = await lookupStaffByAuthId(user.id);
-    if (!staff) return deny(403);
+    if (!staff || !staffMayUse(staff, request)) return deny(403);
 
     return response;
   } catch {

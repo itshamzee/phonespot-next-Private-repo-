@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createRequestAuthClient } from "@/lib/supabase/server";
 import { deriveLocationSlug, type ScopeSlug } from "@/lib/auth/store-scope";
+import { INTERN_ROLE, internMayAccess } from "@/lib/auth/intern-access";
 
 export type StaffIdentity = {
   id: string;
@@ -120,10 +121,15 @@ export async function requireStaff(
   request: NextRequest | Request,
 ): Promise<StaffIdentity | null> {
   try {
-    const viaBearer = await staffFromBearer(request);
-    if (viaBearer) return viaBearer;
-    return await staffFromCookies(request);
+    const staff = (await staffFromBearer(request)) ?? (await staffFromCookies(request));
+    return staff && staffMayUse(staff, request) ? staff : null;
   } catch {
     return null;
   }
+}
+
+/** Praktikanter (rolle "intern") må kun kalde hurtig-optagelsens ruter. */
+export function staffMayUse(staff: StaffIdentity, request: NextRequest | Request): boolean {
+  if (staff.role !== INTERN_ROLE) return true;
+  return internMayAccess(new URL(request.url).pathname, request.method);
 }

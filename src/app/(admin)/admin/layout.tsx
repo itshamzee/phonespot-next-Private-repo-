@@ -10,6 +10,7 @@ import { SaveBarProvider } from "@/components/admin/shell/save-bar";
 import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { NewBookingToast, type LatestWebBooking } from "@/components/admin/shell/new-booking-toast";
+import { INTERN_HOME, INTERN_ROLE, internMayOpenPage } from "@/lib/auth/intern-access";
 
 const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, webBookings: 0, inquiries: 0, buyback: 0 };
 /** Menu-tallene hentes igen så ofte, mens fanen er synlig, så en ny booking dukker op uden at skifte side. */
@@ -189,7 +190,8 @@ function AuthedShell({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const { scope, loading: scopeLoading } = useStoreScope();
+  const { scope, loading: scopeLoading, me } = useStoreScope();
+  const isIntern = me?.role === INTERN_ROLE;
   const settledScope = useRef<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [navCounts, setNavCounts] = useState<NavCounts>(EMPTY_COUNTS);
@@ -208,8 +210,13 @@ function AuthedShell({
     settledScope.current = scope;
   }, [scope, scopeLoading, router]);
 
+  // Praktikanter har kun adgang til hurtig-optagelsen.
   useEffect(() => {
-    if (scopeLoading) return;
+    if (isIntern && !internMayOpenPage(pathname)) router.replace(INTERN_HOME);
+  }, [isIntern, pathname, router]);
+
+  useEffect(() => {
+    if (scopeLoading || isIntern) return;
     let cancelled = false;
     const load = () => {
       if (document.visibilityState === "hidden") return;
@@ -234,7 +241,21 @@ function AuthedShell({
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", load);
     };
-  }, [pathname, scope, scopeLoading]);
+  }, [pathname, scope, scopeLoading, isIntern]);
+
+  if (isIntern) {
+    return (
+      <div className="min-h-dvh bg-[#F5F6F4] font-body text-[#15211B]">
+        <header className="flex h-14 items-center justify-between border-b border-sand bg-white px-4">
+          <img src="/brand/logos/phonespot-wordmark-dark.png" alt="PhoneSpot" className="h-auto w-[120px]" />
+          <button type="button" onClick={onLogout} className="text-[13px] text-charcoal/70 underline">
+            Log ud
+          </button>
+        </header>
+        <main>{internMayOpenPage(pathname) ? children : null}</main>
+      </div>
+    );
+  }
 
   return (
     <SaveBarProvider>

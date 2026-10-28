@@ -1,3 +1,5 @@
+import { requireStaff } from "@/lib/auth/require-staff";
+import { INTERN_ROLE } from "@/lib/auth/intern-access";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -142,7 +144,16 @@ function publicUrl(row: { slug: string; category: string; subcategory: string })
 }
 
 export async function POST(req: NextRequest) {
-  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  const raw = await req.json().catch(() => null);
+
+  // Praktikanter må kun oprette tilbehør (hurtig-optagelsen).
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Kun medarbejdere" }, { status: 401 });
+  if (staff.role === INTERN_ROLE && raw?.type !== "accessory") {
+    return NextResponse.json({ error: "Du kan kun oprette tilbehør" }, { status: 403 });
+  }
+
+  const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json({ error: "Ugyldige felter", issues: parsed.error.issues.slice(0, 5) }, { status: 400 });
   }
