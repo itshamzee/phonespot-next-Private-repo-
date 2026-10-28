@@ -107,7 +107,7 @@ export const NAV: NavArea[] = [
       { href: "/admin/varer/overforsler", label: "Overførsler" },
       { href: "/admin/platform/products", label: "Produkter", match: ["/admin/platform/sku"] },
       { href: "/admin/tilbehoer", label: "Tilbehør", match: ["/admin/spot"] },
-      { href: "/admin/produkter/hurtig-cover", label: "Hurtig cover-optagelse", match: ["/admin/tilfoej-cover"] },
+      { href: "/admin/produkter/hurtig-cover", label: "Hurtig tilbehørsoptagelse", match: ["/admin/tilfoej-cover"] },
       { href: "/admin/varer/reparationer", label: "Reparationer" },
       { href: "/admin/platform/stock", label: "Enheder på lager" },
       { href: "/admin/platform/intake", label: "Registrér enhed" },

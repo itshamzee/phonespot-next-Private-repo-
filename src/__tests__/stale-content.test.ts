@@ -28,6 +28,11 @@ const SKIP = [
   // Claude-prompten til dansk produkttekst nævner ordet for at forbyde det
   // ("Skriv aldrig ordet ..."); det vises aldrig for en kunde.
   /[\\/]api[\\/]admin[\\/]products[\\/]copywrite[\\/]route\.ts$/,
+  // AI-optagelsen: prompten forbyder ordet, og filteret (med test) erstatter det,
+  // hvis AI'en alligevel skriver det. Vises aldrig for en kunde.
+  /[\\/]api[\\/]admin[\\/]accessories[\\/]identify[\\/]route\.ts$/,
+  /[\\/]lib[\\/]accessory-intake[\\/]sanitize\.ts$/,
+  /[\\/]lib[\\/]accessory-intake[\\/]__tests__[\\/]helpers\.test\.ts$/,
 ];
 
 function walk(dir: string): string[] {

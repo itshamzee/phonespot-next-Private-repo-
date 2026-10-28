@@ -32,7 +32,7 @@ const GROUPS: { key: Group; label: string }[] = [
 
 const SHORTCUTS: Hit[] = [
   { id: "ny-produkt", label: "Opret produkt", link: "/admin/produkter/ny" },
-  { id: "hurtig-cover", label: "Hurtig cover-optagelse", link: "/admin/produkter/hurtig-cover" },
+  { id: "hurtig-cover", label: "Hurtig tilbehørsoptagelse", link: "/admin/produkter/hurtig-cover" },
   { id: "ordrer", label: "Alle ordrer", link: "/admin/platform/orders" },
   { id: "indlevering", label: "Ny sag", link: "/admin/reparationer/ny" },
   { id: "registrer", label: "Registrér enhed til salg", link: "/admin/platform/intake" },

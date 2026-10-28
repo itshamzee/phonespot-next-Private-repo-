@@ -2,76 +2,61 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Chip, Field, Input, Notice, PageHeader, Panel, Select } from "@/components/admin/ui";
+import { Button, Chip, Field, Input, Notice, PageHeader, Panel, Textarea } from "@/components/admin/ui";
+import { ModelsPicker } from "@/components/admin/products/create/models-picker";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { ean13Svg, isValidEan13 } from "@/lib/barcode/ean13";
-import {
-  preloadBackgroundRemoval,
-  removeBackgroundFromBlob,
-  uploadImageBlob,
-} from "@/lib/images/remove-background-client";
-import { composeStudioPhoto } from "@/lib/images/studio-photo-client";
+import { preloadBackgroundRemoval } from "@/lib/images/remove-background-client";
+import { PRICE_CHIPS, suggestPriceKr } from "@/lib/accessory-intake/pricing";
+import { subcategoryFor } from "@/lib/accessory-intake/match";
+import type { Identified, IntakeCaseType, IntakeProductType, MatchCandidate } from "@/lib/accessory-intake/types";
+import { MatchCard, type MatchProduct } from "./quick-intake/match-card";
+import { PhotoPicker } from "./quick-intake/photo-picker";
+import { blobToBase64, downscale } from "./quick-intake/image-utils";
 
 /**
- * Hurtig optagelse af løse covers fra lageret i Vejle, bygget til mobilen:
- * scan (eller lav) stregkode → kendt vare: læg antal på lager · ny vare: vælg
- * model, type, farve og pris, tag et foto, som fritlægges og sættes på en
- * ensartet baggrund → gem. Varen kommer på /covers-udsalg med det samme.
+ * Hurtig optagelse af tilbehør fra lageret i Vejle, bygget til mobilen:
+ * scan stregkode (kendt vare: læg antal på lager) eller tag et foto af pakken
+ * eller varen → AI udfylder type, mærke, model(ler), farve og tekst og leder
+ * efter dubletter → praktikanten tjekker, tager et produktfoto, taster antal og
+ * gemmer. Covers kommer på /covers-udsalg, glas på /beskyttelsesglas.
  */
 
 type Store = "vejle" | "slagelse";
+type Step = "scan" | "existing" | "identify" | "match" | "new" | "done";
 
-interface FoundProduct {
-  id: string;
-  title: string;
-  slug: string | null;
-  selling_price: number;
-  images: string[] | null;
-  status: string;
-  stock: Record<string, number>;
-}
+const PRODUCT_TYPES: { value: IntakeProductType; label: string }[] = [
+  { value: "cover", label: "Cover" },
+  { value: "flip_cover", label: "Flip/pung" },
+  { value: "screen_protector", label: "Glas" },
+  { value: "other", label: "Andet" },
+];
 
-const COVER_TYPES = [
+const CASE_TYPES: { value: IntakeCaseType; label: string; noun: string }[] = [
   { value: "Clear", label: "Gennemsigtigt", noun: "Gennemsigtigt cover" },
   { value: "Slim", label: "Silikone", noun: "Silikonecover" },
   { value: "Rugged", label: "Stødsikkert", noun: "Stødsikkert cover" },
+  { value: "Bumper", label: "Bumper", noun: "Bumper" },
   { value: "Wallet", label: "Pung", noun: "Pungcover" },
   { value: "Flip", label: "Flip", noun: "Flipcover" },
-  { value: "Bumper", label: "Bumper", noun: "Bumper" },
-] as const;
-type CoverType = (typeof COVER_TYPES)[number]["value"];
+];
 
-const COLORS = ["Gennemsigtig", "Sort", "Hvid", "Blå", "Rød", "Pink", "Grøn", "Lilla", "Brun"];
-const PRICES = [49, 59, 79, 99];
+const BASE_COLORS = ["Gennemsigtig", "Sort", "Hvid", "Blå", "Rød", "Lyserød", "Grøn", "Lilla", "Brun"];
 
-const BRAND_LABEL: Record<string, string> = {
-  apple: "Apple",
-  samsung: "Samsung",
-  google: "Google",
-  oneplus: "OnePlus",
-  huawei: "Huawei",
-  xiaomi: "Xiaomi",
-};
+const labelOf = (slug: string) => TILBEHOER_DEVICES.find((d) => d.slug === slug)?.label ?? slug;
 
-function coverTitle(type: CoverType, modelLabel: string, color: string): string {
-  const noun = COVER_TYPES.find((t) => t.value === type)?.noun ?? "Cover";
-  // "Gennemsigtigt cover ..., gennemsigtig" siger det samme to gange
-  const showColor = color && !(type === "Clear" && color === "Gennemsigtig");
-  return `${noun} til ${modelLabel}${showColor ? `, ${color.toLowerCase()}` : ""}`;
-}
-
-/** Mobilfotos er 12 MP; fritlægningen er lige så god og langt hurtigere ved ca. 1600 px. */
-async function downscale(file: Blob, max = 1600): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("canvas"))), "image/jpeg", 0.92),
-  );
+/** Skabelontitel, når AI ikke har skrevet en (eller ikke virker). */
+function templateTitle(type: IntakeProductType, caseType: IntakeCaseType | null, models: string[], color: string): string {
+  const modelText = models.map(labelOf).join(" / ");
+  if (!modelText) return "";
+  const noun =
+    type === "screen_protector"
+      ? "Beskyttelsesglas"
+      : type === "other"
+        ? "Tilbehør"
+        : (CASE_TYPES.find((t) => t.value === caseType)?.noun ?? "Cover");
+  const showColor = color && type !== "screen_protector" && !(caseType === "Clear" && color === "Gennemsigtig");
+  return `${noun} til ${modelText}${showColor ? `, ${color.toLowerCase()}` : ""}`;
 }
 
 /** Udskriver en 62 × 29 mm etiket med stregkode, navn og pris. */
@@ -106,30 +91,44 @@ function printLabel(ean: string, title: string, priceKr: number) {
   }, 150);
 }
 
+function AiHint() {
+  return <span className="ml-1 text-[12px] font-normal text-charcoal/60">Udfyldt af AI, tjek</span>;
+}
+
 export function QuickCover() {
   const [store, setStore] = useState<Store>("vejle");
   const [ean, setEan] = useState("");
-  const [eanGenerated, setEanGenerated] = useState(false);
-  const [step, setStep] = useState<"scan" | "existing" | "new" | "done">("scan");
-  const [found, setFound] = useState<FoundProduct | null>(null);
+  const [step, setStep] = useState<Step>("scan");
+  const [found, setFound] = useState<MatchProduct | null>(null);
+  const [candidates, setCandidates] = useState<MatchCandidate[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
 
-  // New-product form. Model, type and price are kept between covers so a box
-  // of the same kind goes fast.
-  const [model, setModel] = useState("");
-  const [type, setType] = useState<CoverType>("Clear");
-  const [color, setColor] = useState("Gennemsigtig");
+  // Aflæsning
+  const [identified, setIdentified] = useState<Identified | null>(null);
+  const [readPhoto, setReadPhoto] = useState<Blob | null>(null);
+
+  // Formular til ny vare. Butik og pris huskes mellem varer ("Næste").
+  const [productType, setProductType] = useState<IntakeProductType>("cover");
+  const [models, setModels] = useState<string[]>([]);
+  const [modelConfirmed, setModelConfirmed] = useState(false);
+  const [caseType, setCaseType] = useState<IntakeCaseType | null>("Slim");
+  const [color, setColor] = useState("");
+  const [colors, setColors] = useState(BASE_COLORS);
   const [price, setPrice] = useState(59);
+  const [title, setTitle] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
+  const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [photo, setPhoto] = useState<string | null>(null);
-  const [photoStatus, setPhotoStatus] = useState<string | null>(null);
+  const [photoKey, setPhotoKey] = useState(0);
   const [done, setDone] = useState<{ title: string; url: string | null; ean: string; quantity: number; priceKr: number } | null>(null);
 
   const eanRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
-  const photoInput = useRef<HTMLInputElement>(null);
+  const readInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (step === "scan") eanRef.current?.focus();
@@ -137,22 +136,32 @@ export function QuickCover() {
 
   useEffect(() => () => void scannerRef.current?.stop().catch(() => {}), []);
 
-  const modelLabel = TILBEHOER_DEVICES.find((d) => d.slug === model)?.label ?? "";
-  const title = modelLabel ? coverTitle(type, modelLabel, color) : "";
   const qty = Math.max(0, Math.floor(Number(quantity) || 0));
+  const isCase = productType === "cover" || productType === "flip_cover";
+  const autoTitle = templateTitle(productType, isCase ? caseType : null, models, color);
+  const finalTitle = (titleTouched ? title : title || autoTitle).trim();
+  const saleKr = identified ? suggestPriceKr(identified) : price;
 
   function reset(keepSetup = true) {
     setEan("");
-    setEanGenerated(false);
     setFound(null);
+    setCandidates([]);
+    setIdentified(null);
+    setReadPhoto(null);
     setError(null);
+    setAiNote(null);
     setPhoto(null);
-    setPhotoStatus(null);
+    setPhotoKey((k) => k + 1);
     setQuantity("1");
+    setModels([]);
+    setModelConfirmed(false);
+    setColor("");
+    setTitle("");
+    setTitleTouched(false);
+    setDescription("");
     if (!keepSetup) {
-      setModel("");
-      setType("Clear");
-      setColor("Gennemsigtig");
+      setProductType("cover");
+      setCaseType("Slim");
       setPrice(59);
     }
     setStep("scan");
@@ -175,30 +184,10 @@ export function QuickCover() {
         setFound(data.product);
         setStep("existing");
       } else {
-        setFound(null);
-        setStep("new");
-        void preloadBackgroundRemoval();
+        setStep("identify");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Opslaget fejlede. Prøv igen.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function generateEan() {
-    setError(null);
-    setBusy("Laver stregkode");
-    try {
-      const res = await fetch("/api/admin/accessories/generate-ean", { method: "POST" });
-      const data = await res.json();
-      if (!data?.ean) throw new Error();
-      setEan(data.ean);
-      setEanGenerated(true);
-      setStep("new");
-      void preloadBackgroundRemoval();
-    } catch {
-      setError("Kunne ikke lave en stregkode. Prøv igen.");
     } finally {
       setBusy(null);
     }
@@ -243,19 +232,78 @@ export function QuickCover() {
     setScanning(false);
   }
 
-  async function addStock(productId: string) {
+  function startWithoutBarcode() {
+    setEan("");
+    setStep("identify");
+  }
+
+  function applyIdentified(i: Identified | null, priceKr: number) {
+    setIdentified(i);
+    setPrice(priceKr);
+    if (!i) {
+      setModelConfirmed(false);
+      return;
+    }
+    setProductType(i.productType);
+    setModels(i.models);
+    setModelConfirmed(i.models.length > 0 && i.modelConfidence !== "low");
+    setCaseType(i.caseType ?? (i.productType === "flip_cover" ? "Flip" : null));
+    if (i.color) {
+      setColor(i.color);
+      setColors((list) => (list.includes(i.color!) ? list : [...list, i.color!]));
+    }
+    setTitle(i.titleDa);
+    setTitleTouched(false);
+    setDescription(i.descriptionDa);
+  }
+
+  async function identify(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setAiNote(null);
+    setBusy("AI læser varen");
+    void preloadBackgroundRemoval();
+    try {
+      const small = await downscale(file, 1280);
+      setReadPhoto(small);
+      const res = await fetch("/api/admin/accessories/identify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ image: await blobToBase64(small), mediaType: "image/jpeg" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Aflæsningen fejlede");
+      applyIdentified(data.identified, data.priceKr ?? 59);
+      if (data.aiError) setAiNote(data.aiError);
+      const list: MatchCandidate[] = data.exact ? [data.exact] : (data.candidates ?? []);
+      setCandidates(list);
+      setStep(list.length > 0 ? "match" : "new");
+    } catch (err) {
+      setAiNote(err instanceof Error ? err.message : "AI kunne ikke læse billedet. Udfyld selv.");
+      setStep("new");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function addStock(product: MatchProduct) {
     if (qty < 1) return;
     setError(null);
-    setBusy("Lægger på lager");
+    setBusy(`stock-${product.id}`);
     try {
       const res = await fetch("/api/admin/accessories/by-ean", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ productId, store, quantity: qty }),
+        body: JSON.stringify({
+          productId: product.id,
+          store,
+          quantity: qty,
+          ...(product.status === "draft" ? { publish: { priceKr: saleKr } } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Lageret blev ikke opdateret");
-      setDone({ title: found?.title ?? "Varen", url: null, ean, quantity: data.quantity, priceKr: (found?.selling_price ?? 0) / 100 });
+      setDone({ title: product.title, url: null, ean, quantity: data.quantity, priceKr: data.priceKr ?? product.selling_price / 100 });
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Lageret blev ikke opdateret");
@@ -264,31 +312,29 @@ export function QuickCover() {
     }
   }
 
-  async function handlePhoto(file: File | undefined) {
-    if (!file) return;
-    setError(null);
-    setPhoto(null);
-    try {
-      setPhotoStatus("Forbereder billede");
-      const small = await downscale(file);
-      const cut = await removeBackgroundFromBlob(small, setPhotoStatus);
-      setPhotoStatus("Laver produktbillede");
-      const studio = await composeStudioPhoto(cut);
-      setPhotoStatus("Gemmer billede");
-      const url = await uploadImageBlob(studio, `cover-${ean || Date.now()}.webp`, "accessories");
-      setPhoto(url);
-      setPhotoStatus(null);
-    } catch {
-      setPhotoStatus(null);
-      setError("Billedet kunne ikke behandles. Prøv igen med varen på en rolig baggrund.");
-    }
-  }
-
   async function createProduct() {
-    if (!model || !photo || qty < 1) return;
+    if (models.length === 0 || !modelConfirmed || !photo || qty < 1 || !finalTitle) return;
     setError(null);
-    setBusy("Opretter cover");
+    setBusy("Opretter vare");
     try {
+      let code = ean;
+      if (!code) {
+        const res = await fetch("/api/admin/accessories/generate-ean", { method: "POST" });
+        const data = await res.json();
+        if (!data?.ean) throw new Error("Kunne ikke lave en stregkode. Prøv igen.");
+        code = data.ean;
+      }
+      const subcategory = subcategoryFor(productType);
+      const modelText = models.map(labelOf).join(", ");
+      const genuine = identified?.isGenuineBrandProduct ? { genuine: "Ja" } : {};
+      const readText = identified?.readText ? { ai_read_text: identified.readText.slice(0, 500) } : {};
+      const attributes =
+        subcategory === "cover"
+          ? { ...(caseType ? { case_type: caseType } : {}), ...(color ? { color } : {}), udsalg: "Ja", ...genuine, ...readText }
+          : subcategory === "screen_protector"
+            ? { udsalg: "Ja", ...genuine, ...readText }
+            : {};
+      const text = description.trim() || `${finalTitle}. Passer til ${modelText}. Sendes fra Vejle, eller hent det gratis i butikken i Vejle eller Slagelse.`;
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -296,51 +342,56 @@ export function QuickCover() {
           type: "accessory",
           items: [
             {
-              title,
-              subcategory: "cover",
-              brand: null,
-              models: [model],
+              title: finalTitle,
+              subcategory,
+              brand: identified?.brand ?? null,
+              models,
               mode: "universal",
               sellingPrice: price * 100,
               salePrice: null,
               costPrice: null,
-              ean: ean || null,
+              ean: code,
               images: [photo],
-              shortDescription: `Passer til ${modelLabel}. Lagerrydning fra vores lager i Vejle.`,
-              description: `${title}. Coveret er lavet til ${modelLabel}, så knapper, kamera og stik sidder, hvor de skal. Sendes fra Vejle, eller hent det gratis i butikken i Vejle eller Slagelse.`,
+              shortDescription: `Passer til ${modelText}. Lagerrydning fra vores lager i Vejle.`,
+              description: text,
               highlights: [
-                `Passer til ${modelLabel}`,
+                `Passer til ${modelText}`,
+                ...(identified?.features ?? []).slice(0, 2),
                 "Gratis levering til pakkeshop",
-                "Hent gratis i Vejle eller Slagelse",
                 "14 dages fortrydelsesret og 2 års reklamationsret",
               ],
-              attributes: { case_type: type, udsalg: "Ja", ...(color ? { color } : {}) },
+              attributes,
               alwaysInStock: false,
-              status: "published",
+              status: productType === "other" ? "draft" : "published",
               stock: { stores: { [store]: qty } },
             },
           ],
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Coveret blev ikke oprettet");
+      if (!res.ok) throw new Error(data?.error ?? "Varen blev ikke oprettet");
       const created = data.created?.[0];
-      setDone({ title, url: created?.url ?? null, ean, quantity: qty, priceKr: price });
+      setDone({ title: finalTitle, url: productType === "other" ? null : (created?.url ?? null), ean: code, quantity: qty, priceKr: price });
       setStep("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Coveret blev ikke oprettet");
+      setError(err instanceof Error ? err.message : "Varen blev ikke oprettet");
     } finally {
       setBusy(null);
     }
   }
 
-  const brands = [...new Set(TILBEHOER_DEVICES.map((d) => d.brand))];
+  const missing = [
+    models.length === 0 && "model",
+    models.length > 0 && !modelConfirmed && "bekræft model",
+    !photo && "billede",
+    !finalTitle && "titel",
+  ].filter(Boolean);
 
   return (
     <div className="mx-auto max-w-xl space-y-4 px-4 py-4">
       <PageHeader
-        title="Hurtig cover-optagelse"
-        description="Scan, tag et billede og gem. Coveret kommer på covers-udsalget med det samme."
+        title="Hurtig tilbehørsoptagelse"
+        description="Scan eller tag et foto. AI udfylder varen, du tjekker, taster antal og gemmer."
         backHref="/admin/produkter"
         backLabel="Produkter"
       />
@@ -363,7 +414,7 @@ export function QuickCover() {
               void lookup(ean);
             }}
           >
-            <Field label="Stregkode" hint="Scan med en stregkodelæser, kameraet eller skriv cifrene.">
+            <Field label="Stregkode" hint="Scan med en stregkodelæser, kameraet eller skriv koden.">
               {(id) => (
                 <div className="flex gap-2">
                   <Input
@@ -375,7 +426,7 @@ export function QuickCover() {
                     onChange={(e) => setEan(e.target.value.replace(/[^A-Za-z0-9-]/g, ""))}
                     placeholder="5701234567890"
                   />
-                  <Button type="submit" loading={busy === "Slår stregkoden op"} className="shrink-0">Find</Button>
+                  <Button variant="primary" type="submit" loading={busy === "Slår stregkoden op"} className="shrink-0">Find</Button>
                 </div>
               )}
             </Field>
@@ -387,148 +438,204 @@ export function QuickCover() {
             ) : (
               <Button variant="secondary" onClick={() => void startCamera()}>Scan med kamera</Button>
             )}
-            <Button variant="secondary" onClick={() => void generateEan()} loading={busy === "Laver stregkode"}>
-              Ingen stregkode
-            </Button>
+            <Button variant="secondary" onClick={startWithoutBarcode}>Ingen stregkode</Button>
           </div>
         </Panel>
       )}
 
       {step === "existing" && found && (
         <Panel className="space-y-4 p-4">
-          <div className="flex items-center gap-3">
-            {found.images?.[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={found.images[0]} alt="" className="h-16 w-16 rounded-lg bg-cream object-contain" />
-            ) : (
-              <div className="h-16 w-16 rounded-lg bg-cream" />
-            )}
-            <div className="min-w-0">
-              <p className="font-semibold text-charcoal">{found.title}</p>
-              <p className="text-[13px] text-charcoal/60">
-                {(found.selling_price / 100).toLocaleString("da-DK")} kr. · Vejle {found.stock.vejle ?? 0} · Slagelse {found.stock.slagelse ?? 0}
-              </p>
-            </div>
-          </div>
-          <Notice tone="info">Stregkoden findes allerede. Skriv, hvor mange du lægger på lager.</Notice>
+          <Notice tone="info">Den har du allerede oprettet. Skriv, hvor mange du lægger på lager.</Notice>
           <Field label="Antal">
             {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
           </Field>
+          <MatchCard product={found} qty={qty} saleKr={79} busy={busy === `stock-${found.id}`} onAdd={(p) => void addStock(p)} />
+          <Button variant="secondary" className="w-full" onClick={() => reset()}>Annuller</Button>
+        </Panel>
+      )}
+
+      {step === "identify" && (
+        <Panel className="space-y-4 p-4">
+          <p className="text-[13px] text-charcoal/60">
+            {ean ? (
+              <>Ny stregkode <span className="font-mono text-charcoal">{ean}</span></>
+            ) : (
+              "Ingen stregkode. Systemet laver en, når varen gemmes."
+            )}
+          </p>
+          <p className="text-[14px] text-charcoal">
+            Tag et billede af pakkens forside, så modellen kan læses. Ligger varen løst, så fotografér selve varen.
+          </p>
+          <input
+            ref={readInput}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              void identify(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <Button variant="primary" className="w-full" onClick={() => readInput.current?.click()} loading={busy === "AI læser varen"}>
+            {busy === "AI læser varen" ? "AI læser varen" : "Tag billede"}
+          </Button>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" onClick={() => reset()}>Annuller</Button>
-            <Button onClick={() => void addStock(found.id)} disabled={qty < 1} loading={busy === "Lægger på lager"}>
-              Læg {qty || ""} på lager
-            </Button>
+            <Button variant="secondary" onClick={() => setStep("new")}>Udfyld selv</Button>
           </div>
+        </Panel>
+      )}
+
+      {step === "match" && (
+        <Panel className="space-y-4 p-4">
+          <Notice tone="info">
+            {candidates[0]?.score >= 10
+              ? "Den har du allerede oprettet. Vil du lægge flere på lager?"
+              : "Ligner en vare, du allerede har oprettet. Er det en af disse?"}
+          </Notice>
+          <Field label="Antal">
+            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
+          </Field>
+          {candidates.map((c) => (
+            <MatchCard key={c.id} product={c} qty={qty} saleKr={saleKr} busy={busy === `stock-${c.id}`} onAdd={(p) => void addStock(p)} />
+          ))}
+          <Button variant="secondary" className="w-full" onClick={() => setStep("new")}>Nej, det er en ny vare</Button>
         </Panel>
       )}
 
       {step === "new" && (
         <Panel className="space-y-5 p-4">
+          {aiNote && <Notice tone="warning">{aiNote}</Notice>}
           <p className="text-[13px] text-charcoal/60">
-            Stregkode <span className="font-mono text-charcoal">{ean}</span>
-            {eanGenerated ? " (lavet af systemet, print en etiket bagefter)" : ""}
+            {ean ? <>Stregkode <span className="font-mono text-charcoal">{ean}</span></> : "Stregkode laves ved gem (print etiket bagefter)"}
+            {identified?.readText ? <> · Læst: “{identified.readText.slice(0, 80)}”</> : null}
           </p>
 
+          <Field label="Varetype">
+            {() => (
+              <div className="flex flex-wrap gap-2">
+                {PRODUCT_TYPES.map((t) => (
+                  <Chip
+                    key={t.value}
+                    selected={productType === t.value}
+                    onToggle={() => {
+                      setProductType(t.value);
+                      if (t.value === "flip_cover") setCaseType("Flip");
+                      if (t.value === "cover" && (caseType === "Flip" || caseType === "Wallet" || !caseType)) setCaseType("Slim");
+                      if (t.value === "screen_protector") setPrice(49);
+                    }}
+                  >
+                    {t.label}
+                  </Chip>
+                ))}
+              </div>
+            )}
+          </Field>
+
           <Field label="Passer til" required>
-            {(id) => (
-              <Select id={id} value={model} onChange={(e) => setModel(e.target.value)}>
-                <option value="">Vælg model</option>
-                {brands.map((brand) => (
-                  <optgroup key={brand} label={BRAND_LABEL[brand] ?? brand}>
-                    {TILBEHOER_DEVICES.filter((d) => d.brand === brand).map((d) => (
-                      <option key={d.slug} value={d.slug}>{d.label}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </Select>
-            )}
-          </Field>
-
-          <Field label="Type">
             {() => (
-              <div className="flex flex-wrap gap-2">
-                {COVER_TYPES.map((t) => (
-                  <Chip key={t.value} selected={type === t.value} onToggle={() => setType(t.value)}>{t.label}</Chip>
-                ))}
+              <div className="space-y-2">
+                {identified && models.length > 0 && <AiHint />}
+                {models.length > 0 && !modelConfirmed && (
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-900">
+                    <span>AI er usikker på modellen ({models.map(labelOf).join(", ")}). Tjek den.</span>
+                    <Button size="sm" variant="secondary" onClick={() => setModelConfirmed(true)}>Den er rigtig</Button>
+                  </div>
+                )}
+                {identified?.unknownModelText && models.length === 0 && (
+                  <p className="text-[13px] text-charcoal/60">AI læste “{identified.unknownModelText}”, som ikke er i listen. Vælg den nærmeste.</p>
+                )}
+                <ModelsPicker
+                  selected={models}
+                  onChange={(slugs) => {
+                    setModels(slugs);
+                    setModelConfirmed(slugs.length > 0);
+                  }}
+                />
               </div>
             )}
           </Field>
 
-          <Field label="Farve">
-            {() => (
-              <div className="flex flex-wrap gap-2">
-                {COLORS.map((c) => (
-                  <Chip key={c} size="sm" selected={color === c} onToggle={() => setColor(color === c ? "" : c)}>{c}</Chip>
-                ))}
-              </div>
-            )}
-          </Field>
+          {isCase && (
+            <Field label="Covertype">
+              {() => (
+                <div className="flex flex-wrap gap-2">
+                  {CASE_TYPES.map((t) => (
+                    <Chip key={t.value} selected={caseType === t.value} onToggle={() => setCaseType(t.value)}>{t.label}</Chip>
+                  ))}
+                </div>
+              )}
+            </Field>
+          )}
+
+          {productType !== "screen_protector" && (
+            <Field label="Farve">
+              {() => (
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((c) => (
+                    <Chip key={c} size="sm" selected={color === c} onToggle={() => setColor(color === c ? "" : c)}>{c}</Chip>
+                  ))}
+                </div>
+              )}
+            </Field>
+          )}
 
           <Field label="Pris">
             {() => (
               <div className="flex flex-wrap gap-2">
-                {PRICES.map((p) => (
+                {PRICE_CHIPS.map((p) => (
                   <Chip key={p} selected={price === p} onToggle={() => setPrice(p)}>{p} kr.</Chip>
                 ))}
               </div>
             )}
           </Field>
 
-          <Field label="Antal på lager">
-            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
-          </Field>
-
-          <Field label="Billede" required hint="Læg coveret på et bord med rolig baggrund og fotografér det lige forfra.">
-            {() => (
-              <div className="space-y-2">
-                <input
-                  ref={photoInput}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
+          <Field label="Titel" required>
+            {(id) => (
+              <div className="space-y-1">
+                {identified && !titleTouched && title && <AiHint />}
+                <Input
+                  id={id}
+                  value={titleTouched ? title : title || autoTitle}
                   onChange={(e) => {
-                    void handlePhoto(e.target.files?.[0]);
-                    e.target.value = "";
+                    setTitle(e.target.value);
+                    setTitleTouched(true);
                   }}
+                  placeholder="Vælg model, så foreslås en titel"
                 />
-                {photo ? (
-                  <div className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={photo} alt="Produktbillede" className="h-32 w-32 rounded-lg border border-sand object-contain" />
-                    <Button variant="secondary" onClick={() => photoInput.current?.click()}>Tag nyt</Button>
-                  </div>
-                ) : (
-                  <Button variant="secondary" onClick={() => photoInput.current?.click()} loading={photoStatus != null} className="w-full">
-                    {photoStatus ?? "Tag billede"}
-                  </Button>
-                )}
               </div>
             )}
           </Field>
 
-          {title && (
+          <Field label="Beskrivelse" hint="Kun det, der står på pakken eller kan ses.">
+            {(id) => <Textarea id={id} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />}
+          </Field>
+
+          <Field label="Antal på lager">
+            {(id) => <Input id={id} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value.replace(/\D/g, ""))} />}
+          </Field>
+
+          <Field label="Produktbillede" required hint="Tag varen ud af pakken og fotografér den lige forfra på en rolig baggrund.">
+            {() => (
+              <PhotoPicker key={photoKey} name={`tilbehoer-${ean || Date.now()}`} reuse={readPhoto} onChange={setPhoto} />
+            )}
+          </Field>
+
+          {finalTitle && (
             <p className="rounded-lg bg-cream px-3 py-2 text-[14px] text-charcoal">
-              {title} · <strong>{price} kr.</strong>
+              {finalTitle} · <strong>{price} kr.</strong>
+              {productType === "other" ? " · gemmes som kladde" : ""}
             </p>
           )}
 
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" onClick={() => reset()}>Annuller</Button>
-            <Button
-              onClick={() => void createProduct()}
-              disabled={!model || !photo || qty < 1}
-              loading={busy === "Opretter cover"}
-            >
-              Gem cover
+            <Button variant="primary" onClick={() => void createProduct()} disabled={missing.length > 0 || qty < 1} loading={busy === "Opretter vare"}>
+              Gem vare
             </Button>
           </div>
-          {(!model || !photo) && (
-            <p className="text-[13px] text-charcoal/60">
-              Mangler: {[!model && "model", !photo && "billede"].filter(Boolean).join(" og ")}
-            </p>
-          )}
+          {missing.length > 0 && <p className="text-[13px] text-charcoal/60">Mangler: {missing.join(", ")}</p>}
         </Panel>
       )}
 
@@ -538,11 +645,7 @@ export function QuickCover() {
             {done.title} · {done.quantity} på lager i {store === "vejle" ? "Vejle" : "Slagelse"}
           </Notice>
           {isValidEan13(done.ean) && (
-            <div
-              className="mx-auto w-56"
-              aria-label={`Stregkode ${done.ean}`}
-              dangerouslySetInnerHTML={{ __html: ean13Svg(done.ean) }}
-            />
+            <div className="mx-auto w-56" aria-label={`Stregkode ${done.ean}`} dangerouslySetInnerHTML={{ __html: ean13Svg(done.ean) }} />
           )}
           <div className="grid grid-cols-2 gap-2">
             {isValidEan13(done.ean) && (
@@ -554,9 +657,9 @@ export function QuickCover() {
               </Link>
             )}
           </div>
-          <Button className="w-full" onClick={() => reset()}>Næste cover</Button>
+          <Button variant="primary" className="w-full" onClick={() => reset()}>Næste vare</Button>
           <button type="button" className="w-full text-[13px] text-charcoal/60 underline" onClick={() => reset(false)}>
-            Ny kasse (nulstil model, type og pris)
+            Ny kasse (nulstil type og pris)
           </button>
         </Panel>
       )}
