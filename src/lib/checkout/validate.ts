@@ -2,6 +2,7 @@ import { readReservationOwner } from "@/lib/cart/reservation-owner";
 import { createServerClient } from "@/lib/supabase/client";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 import { isSparePart } from "@/lib/spare-part-filter";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { resolveUpgrades, type AllowedUpgrade } from "./upgrades";
 
 export interface ValidatedItem {
@@ -12,6 +13,8 @@ export interface ValidatedItem {
   /** devices.source for device-linjer — 'foxway' for dropship-enheder. */
   deviceSource?: string | null;
   reservationId?: string;
+  /** Lagersalgsvare (3 for 2) - afgjort af databasen, aldrig af klienten. */
+  lagersalg?: boolean;
 }
 
 export interface ValidationResult {
@@ -115,7 +118,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       requested.set(item.skuProductId, Number.isSafeInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(total) ? total : NaN);
     }
     const { data, error } = await supabase.from("checkout_sku_inventory")
-      .select("id, selling_price, sale_price, is_active, always_in_stock, total_stock, category, subcategory")
+      .select("id, selling_price, sale_price, is_active, always_in_stock, total_stock, category, subcategory, attributes")
       .in("id", [...requested.keys()]);
     const skuMap = new Map((error ? [] : data ?? []).map(s => [s.id, s]));
     for (const item of skus) {
@@ -125,7 +128,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       const available = !!db?.is_active && !isSparePart(db) && Number.isSafeInteger(demand) && demand > 0 &&
         (!!db.always_in_stock || (Number.isSafeInteger(stock) && stock >= demand));
       const message = "Produktets lager eller antal kunne ikke bekræftes";
-      validated.push({ item, serverPrice: db?.sale_price ?? db?.selling_price ?? 0, available, ...(available ? {} : {error: message}) });
+      validated.push({ item, serverPrice: db?.sale_price ?? db?.selling_price ?? 0, available, lagersalg: !!db && isLagersalg(db as { subcategory: string | null; attributes: Record<string, string> | null }), ...(available ? {} : {error: message}) });
       if (!available) errors.push(item.title + ": " + message);
     }
   }

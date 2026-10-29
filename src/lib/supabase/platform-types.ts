@@ -216,6 +216,8 @@ export interface Order {
   tracking_number: string | null;
   subtotal: number;
   discount_amount: number;
+  /** Lagersalg 3 for 2-rabat i øre. */
+  bundle_discount_amount?: number;
   shipping_cost: number;
   total: number;
   brugtmoms_total: number;

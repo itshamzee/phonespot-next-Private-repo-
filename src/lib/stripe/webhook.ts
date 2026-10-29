@@ -38,7 +38,7 @@ export async function handleCheckoutCompleted(
     .from("orders")
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
-       subtotal, discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at,
+       subtotal, discount_amount, bundle_discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at,
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade, upgrade_details)`,
     )
     .eq("id", orderId)
@@ -224,7 +224,7 @@ export async function handleCheckoutCompleted(
           (sum, i) => sum + i.unit_price * i.quantity,
           0,
         ),
-        discountAmount: order.discount_amount ?? 0,
+        discountAmount: (order.discount_amount ?? 0) + (order.bundle_discount_amount ?? 0),
         shippingCost: order.shipping_cost ?? 0,
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
@@ -234,6 +234,8 @@ export async function handleCheckoutCompleted(
       console.error("[webhook] failed to send confirmation email:", emailErr);
     }
   }
+
+  const totalDiscount = (order.discount_amount ?? 0) + (order.bundle_discount_amount ?? 0);
 
   // 12. Send push notification to staff (Pushover — cashregister sound)
   try {
@@ -245,7 +247,7 @@ export async function handleCheckoutCompleted(
       itemCount: orderItems.length,
       itemSummary: itemNames.join("\n") || undefined,
       shippingKr: order.shipping_cost ? fmtKr(order.shipping_cost) : undefined,
-      discountKr: order.discount_amount ? fmtKr(order.discount_amount) : undefined,
+      discountKr: totalDiscount ? fmtKr(totalDiscount) : undefined,
     });
   } catch (notifyErr) {
     console.error("[webhook] pushover notification failed:", notifyErr);

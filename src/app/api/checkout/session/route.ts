@@ -64,14 +64,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Calculate server-side totals
-    const serverItems = validation.items.map((vi) => ({
-      ...vi.item,
-      price: vi.serverPrice,
-    })) as CartItem[];
+    // lagersalg-flaget kommer fra databasen (vi.lagersalg); klientens flag kasseres.
+    const serverItems = validation.items.map((vi) => {
+      const { lagersalg: _clientFlag, ...rest } = vi.item as CartItem & { lagersalg?: true };
+      void _clientFlag;
+      return {
+        ...rest,
+        price: vi.serverPrice,
+        ...(vi.item.type === "sku_product" && vi.lagersalg ? { lagersalg: true as const } : {}),
+      };
+    }) as CartItem[];
     const subtotal = calcSubtotal(serverItems);
 
     // 3b. Compute bundle discounts server-side (never trust client-computed discount amounts)
-    const bundleDiscountAmount = calcBundleDiscounts(serverItems).total;
+    const bundle = calcBundleDiscounts(serverItems);
+    const bundleDiscountAmount = bundle.total;
     console.log("[checkout/session] bundleDiscountAmount:", bundleDiscountAmount, "øre");
 
     // 4. Validate discount code if provided
@@ -152,6 +159,7 @@ export async function POST(req: NextRequest) {
       discountAmount,
       bundleDiscountAmount,
       total,
+      bundleByKey: bundle.byKey,
       stripeCheckoutSessionId: "pending",
       foxwayPending: hasFoxwayDevice(validation.items),
     });

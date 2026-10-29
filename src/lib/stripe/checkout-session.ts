@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { stripe } from "./client";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { ValidatedItem } from "@/lib/checkout/validate";
 import type { DiscountApplication, CartItem } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
@@ -15,7 +16,7 @@ export interface CreateCheckoutSessionParams {
   shippingCost: number;
   subtotal: number;
   discountAmount: number;
-  /** Total Spot bundle discount (3-for-2 + Lens combo) in øre. */
+  /** Lagersalg 3 for 2-rabat i øre (beregnet på serveren). */
   bundleDiscountAmount: number;
   total: number;
 }
@@ -107,47 +108,40 @@ function buildLineItems(
   return lineItems;
 }
 
-async function buildDiscountCoupons(
+/**
+ * Stripe Checkout tager kun en kupon pr. session, saa rabatkode og 3 for 2
+ * laegges sammen i et beloeb. Procentkoder er allerede omregnet til beloeb af
+ * ruten (`discountAmount`), saa `percent_off` bruges aldrig.
+ */
+export async function buildDiscountCoupons(
   discount: DiscountApplication | null,
+  discountAmount: number,
   bundleDiscountAmount: number,
 ): Promise<string[]> {
-  const couponIds: string[] = [];
+  const codeAmount = discount && discount.type !== "free_shipping" ? discountAmount : 0;
+  const amountOff = codeAmount + bundleDiscountAmount;
+  if (amountOff <= 0) return [];
 
-  // Promo-code coupon
-  if (discount && discount.type !== "free_shipping") {
-    let amount_off: number | undefined;
-    let percent_off: number | undefined;
+  const hasCode = codeAmount > 0 && !!discount;
+  const hasBundle = bundleDiscountAmount > 0;
+  const bundleLabel = THREE_FOR_TWO_LABEL;
+  const name = hasCode && hasBundle
+    ? `Rabatkode: ${discount!.code} + ${bundleLabel}`
+    : hasCode
+      ? `Rabatkode: ${discount!.code}`
+      : bundleLabel;
 
-    if (discount.type === "fixed") {
-      amount_off = discount.discountAmount;
-    } else if (discount.type === "percentage") {
-      percent_off = discount.value;
-    }
-
-    const coupon = await stripe.coupons.create({
-      ...(amount_off !== undefined ? { amount_off, currency: "dkk" } : {}),
-      ...(percent_off !== undefined ? { percent_off } : {}),
-      duration: "once",
-      name: `Rabatkode: ${discount.code}`,
-      metadata: { discount_code: discount.code },
-    });
-    couponIds.push(coupon.id);
-  }
-
-  // Spot bundle-discount coupon (3-for-2 + Lens combo)
-  // Only create when there is an actual bundle discount to apply.
-  if (bundleDiscountAmount > 0) {
-    const bundleCoupon = await stripe.coupons.create({
-      amount_off: bundleDiscountAmount,
-      currency: "dkk",
-      duration: "once",
-      name: "Spot bundle rabat",
-      metadata: { bundle_discount: "true" },
-    });
-    couponIds.push(bundleCoupon.id);
-  }
-
-  return couponIds;
+  const coupon = await stripe.coupons.create({
+    amount_off: amountOff,
+    currency: "dkk",
+    duration: "once",
+    name,
+    metadata: {
+      ...(hasCode ? { discount_code: discount!.code } : {}),
+      ...(hasBundle ? { bundle_discount: "lagersalg_3for2" } : {}),
+    },
+  });
+  return [coupon.id];
 }
 
 export async function createCheckoutSession(
@@ -157,7 +151,7 @@ export async function createCheckoutSession(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
 
   const lineItems = buildLineItems(params.items, params.shippingCost, baseUrl);
-  const discountIds = await buildDiscountCoupons(params.discount, params.bundleDiscountAmount);
+  const discountIds = await buildDiscountCoupons(params.discount, params.discountAmount, params.bundleDiscountAmount);
 
   const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60; // 30 minutes
 

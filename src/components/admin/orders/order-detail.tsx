@@ -11,6 +11,7 @@ import { FoxwayDropshipCard } from "./foxway-dropship-card";
 import Link from "next/link";
 import { formatDKK, formatDate } from "@/lib/platform/format";
 import type { Order } from "@/lib/supabase/platform-types";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 
 const SHIPPING_METHOD_LABELS: Record<string, string> = {
   postnord_myparcel: "PostNord MyParcel",
@@ -240,6 +241,7 @@ export function OrderDetail({ order, activity, warranties = [], payments = [] }:
   }, 0);
   const shippingCost: number = order.shipping_cost ?? 0;
   const discountAmount: number = order.discount_amount ?? 0;
+  const bundleDiscountAmount: number = order.bundle_discount_amount ?? 0;
   const total: number = order.total ?? order.total_amount ?? 0;
 
   const foxwayItems = items.filter(
@@ -400,6 +402,12 @@ export function OrderDetail({ order, activity, warranties = [], payments = [] }:
                   <div className="flex justify-between text-green-700">
                     <span>Rabat</span>
                     <span>−{formatDKK(discountAmount)}</span>
+                  </div>
+                )}
+                {bundleDiscountAmount > 0 && (
+                  <div className="flex justify-between text-green-700">
+                    <span>{THREE_FOR_TWO_LABEL}</span>
+                    <span>−{formatDKK(bundleDiscountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between border-t border-sand/50 pt-2 font-bold text-charcoal">

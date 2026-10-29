@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { readReservationOwner } from "@/lib/cart/reservation-owner";
 import { randomBytes } from "crypto";
 import type { ValidatedItem } from "./validate";
-import type { DiscountApplication } from "@/lib/cart/types";
+import { cartItemKey, type DiscountApplication } from "@/lib/cart/types";
 
 export interface CustomerInfo {
   name: string;
@@ -28,8 +28,10 @@ export interface CreateOrderParams {
   shippingCost: number;
   subtotal: number;
   discountAmount: number;
-  /** Total Spot bundle discount (3-for-2 + Lens combo) in øre. */
+  /** Lagersalg 3 for 2-rabat i øre. */
   bundleDiscountAmount: number;
+  /** Pr. kurvlinje (cartItemKey): rabat og antal gratis enheder fra 3 for 2. */
+  bundleByKey: Record<string, { discount_oere: number; freeUnits: number }>;
   total: number;
   stripeCheckoutSessionId: string;
   /** Ordren indeholder Foxway-enheder og skal bestilles hos leverandøren. */
@@ -40,6 +42,66 @@ export interface CreatedOrder {
   id: string;
   orderNumber: string;
   withdrawalToken: string;
+}
+
+type OrderItemRow = Record<string, unknown> & {
+  item_type: "device" | "sku_product";
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  discount_amount: number;
+};
+type BundleByKey = Record<string, { discount_oere: number; freeUnits: number }>;
+
+/**
+ * Bygger ordrelinjerne. Gratis enheder fra 3 for 2 bogfoeres som egen linje,
+ * saa en delvis returnering refunderer det rigtige beloeb.
+ */
+export function toOrderItemRows(orderId: string, items: ValidatedItem[], bundleByKey: BundleByKey): OrderItemRow[] {
+  return items.filter((vi) => vi.available).flatMap((vi): OrderItemRow[] => {
+    const item = vi.item;
+    if (item.type === "device") {
+      const upgradeSum = item.upgrades?.reduce((n, u) => n + u.price, 0) ?? 0;
+      return [{
+        order_id: orderId,
+        item_type: "device" as const,
+        device_id: item.deviceId,
+        reservation_id: vi.reservationId ?? null,
+        sku_product_id: null,
+        quantity: 1,
+        unit_price: vi.serverPrice + upgradeSum,
+        total_price: vi.serverPrice + upgradeSum,
+        discount_amount: 0,
+        purchase_price: null,
+        upgrade_details: item.upgrades?.length
+          ? item.upgrades.map((u) => ({
+              option_id: u.optionId,
+              kind: u.kind,
+              label: u.label,
+              price_oere: u.price,
+            }))
+          : null,
+      }];
+    }
+    const bundle = bundleByKey[cartItemKey(item)];
+    const freeUnits = Math.min(bundle?.freeUnits ?? 0, item.quantity);
+    const row = (quantity: number, discount: number) => ({
+      order_id: orderId,
+      item_type: "sku_product" as const,
+      device_id: null,
+      sku_product_id: item.skuProductId,
+      quantity,
+      unit_price: vi.serverPrice,
+      total_price: vi.serverPrice * quantity,
+      discount_amount: discount,
+      purchase_price: null,
+      upgrade_details: null,
+    });
+    if (freeUnits <= 0) return [row(item.quantity, 0)];
+    const freeRow = row(freeUnits, vi.serverPrice * freeUnits);
+    if (freeUnits === item.quantity) return [freeRow];
+    return [row(item.quantity - freeUnits, 0), freeRow];
+  });
 }
 
 export async function createOrder(params: CreateOrderParams): Promise<CreatedOrder> {
@@ -108,43 +170,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
 
   if (orderError || !order) throw new Error(`Failed to create order: ${orderError?.message}`);
 
-  const orderItems = params.items.filter((vi) => vi.available).map((vi) => {
-    const item = vi.item;
-    if (item.type === "device") {
-      const upgradeSum = item.upgrades?.reduce((n, u) => n + u.price, 0) ?? 0;
-      return {
-        order_id: order.id,
-        item_type: "device" as const,
-        device_id: item.deviceId,
-        reservation_id: vi.reservationId ?? null,
-        sku_product_id: null,
-        quantity: 1,
-        unit_price: vi.serverPrice + upgradeSum,
-        total_price: vi.serverPrice + upgradeSum,
-        purchase_price: null,
-        upgrade_details: item.upgrades?.length
-          ? item.upgrades.map((u) => ({
-              option_id: u.optionId,
-              kind: u.kind,
-              label: u.label,
-              price_oere: u.price,
-            }))
-          : null,
-      };
-    } else {
-      return {
-        order_id: order.id,
-        item_type: "sku_product" as const,
-        device_id: null,
-        sku_product_id: item.skuProductId,
-        quantity: item.quantity,
-        unit_price: vi.serverPrice,
-        total_price: vi.serverPrice * item.quantity,
-        purchase_price: null,
-        upgrade_details: null,
-      };
-    }
-  });
+  const orderItems = toOrderItemRows(order.id, params.items, params.bundleByKey);
 
   const { error: itemsError } = await supabase.rpc("attach_checkout_order_items", {
     p_order_id: order.id,
