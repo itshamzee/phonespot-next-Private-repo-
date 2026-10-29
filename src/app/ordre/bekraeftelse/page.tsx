@@ -7,6 +7,7 @@ interface RawOrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  discount_amount: number | null;
   item_type: "device" | "sku_product";
   upgrade_details: Array<{ label: string; price_oere: number }> | null;
   device: {
@@ -24,6 +25,7 @@ interface RawOrder {
   status: string;
   subtotal: number;
   discount_amount: number;
+  bundle_discount_amount: number | null;
   shipping_cost: number;
   total: number;
   created_at: string;
@@ -56,6 +58,7 @@ export default async function OrderConfirmationPage({
       status,
       subtotal,
       discount_amount,
+      bundle_discount_amount,
       shipping_cost,
       total,
       created_at,
@@ -65,6 +68,7 @@ export default async function OrderConfirmationPage({
         quantity,
         unit_price,
         total_price,
+        discount_amount,
         item_type,
         upgrade_details,
         device:devices!device_id (
@@ -93,6 +97,7 @@ export default async function OrderConfirmationPage({
     status: raw.status,
     subtotal: raw.subtotal,
     discount_amount: raw.discount_amount,
+    bundle_discount_amount: raw.bundle_discount_amount ?? 0,
     shipping_cost: raw.shipping_cost,
     total: raw.total,
     customer_name: raw.customer?.name ?? "",
@@ -113,6 +118,7 @@ export default async function OrderConfirmationPage({
         quantity: item.quantity,
         unit_price: item.unit_price,
         line_total: item.total_price,
+        line_discount: item.discount_amount ?? 0,
         item_type: item.item_type,
         grade: isDevice ? item.device?.grade ?? null : null,
         color: isDevice ? item.device?.color ?? null : null,

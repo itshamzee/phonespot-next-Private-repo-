@@ -98,3 +98,40 @@ describe("sendOrderConfirmation — order-aware guarantee wording", () => {
     expect(html).toContain("2 års reklamationsret");
   });
 });
+
+describe("sendOrderConfirmation — lagersalg 3 for 2", () => {
+  const cover = (id: string, discountAmount = 0): OrderConfirmationItem => ({
+    id,
+    itemType: "sku_product",
+    deviceId: null,
+    skuProductId: `sku_${id}`,
+    quantity: 1,
+    unitPrice: 5900,
+    totalPrice: 5900,
+    discountAmount,
+    title: `Cover ${id}`,
+    category: "cover",
+  });
+
+  it("viser den gratis linje som Gratis (3 for 2) og 3 for 2 som egen totallinje", async () => {
+    sendMock.mockClear();
+    await sendOrderConfirmation({
+      ...baseParams([cover("a"), cover("b"), cover("c", 5900)]),
+      subtotal: 17700,
+      discountAmount: 0,
+      bundleDiscountAmount: 5900,
+      total: 11800,
+    });
+    const html = (sendMock.mock.calls[0]![0] as { html: string }).html;
+    expect(html).toContain("Gratis (3 for 2)");
+    expect(html).toMatch(/<s>59\s?kr\.<\/s>/);
+    expect(html).toContain("Lagersalg 3 for 2");
+    // Rabat-linjen (rabatkode) vises ikke når der kun er 3 for 2.
+    expect(html).not.toMatch(/>\s*Rabat\s*</);
+  });
+
+  it("markerer ikke en linje med delvis rabat som gratis", async () => {
+    const html = await sentHtml([cover("a", 1000)]);
+    expect(html).not.toContain("Gratis (3 for 2)");
+  });
+});

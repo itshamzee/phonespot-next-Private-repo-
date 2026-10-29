@@ -5,6 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere } from "@/lib/cart/utils";
+import {
+  THREE_FOR_TWO_FREE_LABEL,
+  THREE_FOR_TWO_LABEL,
+  isFreeBundleLine,
+} from "@/lib/lagersalg/three-for-two";
 import { trackPurchase } from "@/lib/tracking/fbq";
 import { trackAdsPurchase } from "@/lib/tracking/gtag-ads";
 import { trackGa4Purchase } from "@/lib/tracking/events";
@@ -16,6 +21,8 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   line_total: number;
+  /** Linjerabat i øre (3 for 2: hele linjeprisen på den gratis linje). */
+  line_discount?: number;
   item_type: "device" | "sku_product";
   grade: string | null;
   color: string | null;
@@ -29,6 +36,7 @@ interface Order {
   status: string;
   subtotal: number;
   discount_amount: number;
+  bundle_discount_amount?: number;
   shipping_cost: number;
   total: number;
   customer_name: string;
@@ -178,9 +186,18 @@ export function ConfirmationView({ order }: { order: Order }) {
                 ))}
               </div>
 
-              <span className="shrink-0 text-sm font-semibold text-charcoal">
-                {formatOere(item.line_total)}
-              </span>
+              {isFreeBundleLine({ totalOere: item.line_total, discountOere: item.line_discount }) ? (
+                <span className="flex shrink-0 flex-col items-end text-sm">
+                  <span className="font-semibold text-green-eco">{THREE_FOR_TWO_FREE_LABEL}</span>
+                  <span className="text-xs text-gray-400 line-through">
+                    {formatOere(item.line_total)}
+                  </span>
+                </span>
+              ) : (
+                <span className="shrink-0 text-sm font-semibold text-charcoal">
+                  {formatOere(item.line_total)}
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -195,6 +212,13 @@ export function ConfirmationView({ order }: { order: Order }) {
             <div className="flex justify-between text-green-eco">
               <span>Rabat</span>
               <span>−{formatOere(order.discount_amount)}</span>
+            </div>
+          )}
+
+          {(order.bundle_discount_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-green-eco">
+              <span>{THREE_FOR_TWO_LABEL}</span>
+              <span>−{formatOere(order.bundle_discount_amount ?? 0)}</span>
             </div>
           )}
 

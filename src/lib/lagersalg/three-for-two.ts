@@ -14,6 +14,16 @@ export type ThreeForTwoResult = {
 };
 
 export const THREE_FOR_TWO_LABEL = "Lagersalg 3 for 2";
+/** Vises i stedet for prisen på en ordrelinje der er gratis via 3 for 2. */
+export const THREE_FOR_TWO_FREE_LABEL = "Gratis (3 for 2)";
+
+/**
+ * En gemt ordrelinje er gratis (3 for 2) når hele linjeprisen er trukket fra
+ * som linjerabat. De gratis enheder ligger altid på deres egen linje.
+ */
+export function isFreeBundleLine(line: { totalOere: number; discountOere: number | null | undefined }): boolean {
+  return line.totalOere > 0 && (line.discountOere ?? 0) >= line.totalOere;
+}
 
 // Blandt alle lagersalgsenheder i kurven er de floor(n/3) billigste gratis.
 export function threeForTwo(lines: ThreeForTwoLine[]): ThreeForTwoResult {

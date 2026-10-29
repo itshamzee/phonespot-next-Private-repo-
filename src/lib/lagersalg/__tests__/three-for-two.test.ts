@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { threeForTwo } from "../three-for-two";
+import { threeForTwo, isFreeBundleLine } from "../three-for-two";
 import { isLagersalg } from "../is-lagersalg";
 
 const L = (key: string, unitPriceOere: number, quantity = 1, lagersalg = true) => ({ key, unitPriceOere, quantity, lagersalg });
@@ -46,5 +46,18 @@ describe("threeForTwo", () => {
     // 4 enheder: 100, 100, 100, 10 → én gratis = den til 10
     const r = threeForTwo([L("a", 10000, 3), L("b", 1000)]);
     expect(r.byKey).toEqual({ b: { discountOere: 1000, freeUnits: 1 } });
+  });
+});
+
+describe("isFreeBundleLine", () => {
+  it("er gratis når linjerabatten dækker hele linjeprisen", () => {
+    expect(isFreeBundleLine({ totalOere: 5900, discountOere: 5900 })).toBe(true);
+  });
+  it("er ikke gratis ved delvis eller ingen rabat", () => {
+    expect(isFreeBundleLine({ totalOere: 5900, discountOere: 1000 })).toBe(false);
+    expect(isFreeBundleLine({ totalOere: 5900, discountOere: null })).toBe(false);
+  });
+  it("en 0 kr.-linje er ikke markeret som 3 for 2", () => {
+    expect(isFreeBundleLine({ totalOere: 0, discountOere: 0 })).toBe(false);
   });
 });

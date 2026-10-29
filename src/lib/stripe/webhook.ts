@@ -39,7 +39,7 @@ export async function handleCheckoutCompleted(
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
        subtotal, discount_amount, bundle_discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at,
-       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, battery_upgrade, upgrade_details)`,
+       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, discount_amount, battery_upgrade, upgrade_details)`,
     )
     .eq("id", orderId)
     .single();
@@ -56,6 +56,7 @@ export async function handleCheckoutCompleted(
     sku_product_id: string | null;
     quantity: number;
     unit_price: number;
+    discount_amount?: number | null;
     battery_upgrade?: boolean;
     upgrade_details?: Array<{ label: string; price_oere: number }> | null;
   }> = (order as any).order_items ?? [];
@@ -146,6 +147,7 @@ export async function handleCheckoutCompleted(
     quantity: number;
     unitPrice: number;
     totalPrice: number;
+    discountAmount: number;
     title: string;
     image?: string;
     batteryUpgrade?: boolean;
@@ -198,6 +200,7 @@ export async function handleCheckoutCompleted(
       quantity: item.quantity,
       unitPrice: item.unit_price,
       totalPrice: item.unit_price * item.quantity,
+      discountAmount: item.discount_amount ?? 0,
       title: title || (item.item_type === "device" ? "Brugt enhed" : "Produkt"),
       image,
       batteryUpgrade: item.battery_upgrade ?? false,
@@ -224,7 +227,8 @@ export async function handleCheckoutCompleted(
           (sum, i) => sum + i.unit_price * i.quantity,
           0,
         ),
-        discountAmount: (order.discount_amount ?? 0) + (order.bundle_discount_amount ?? 0),
+        discountAmount: order.discount_amount ?? 0,
+        bundleDiscountAmount: order.bundle_discount_amount ?? 0,
         shippingCost: order.shipping_cost ?? 0,
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
@@ -244,7 +248,7 @@ export async function handleCheckoutCompleted(
       customerName: customer?.name || "Ukendt kunde",
       customerEmail: customer?.email,
       totalKr: fmtKr(order.total),
-      itemCount: orderItems.length,
+      itemCount: orderItems.reduce((n, i) => n + i.quantity, 0),
       itemSummary: itemNames.join("\n") || undefined,
       shippingKr: order.shipping_cost ? fmtKr(order.shipping_cost) : undefined,
       discountKr: totalDiscount ? fmtKr(totalDiscount) : undefined,
