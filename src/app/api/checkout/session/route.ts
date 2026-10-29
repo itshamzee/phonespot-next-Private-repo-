@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCart, hasFoxwayDevice } from "@/lib/checkout/validate";
+import { validateCart, hasFoxwayDevice, toServerItems } from "@/lib/checkout/validate";
 import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
@@ -64,16 +64,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Calculate server-side totals
-    // lagersalg-flaget kommer fra databasen (vi.lagersalg); klientens flag kasseres.
-    const serverItems = validation.items.map((vi) => {
-      const { lagersalg: _clientFlag, ...rest } = vi.item as CartItem & { lagersalg?: true };
-      void _clientFlag;
-      return {
-        ...rest,
-        price: vi.serverPrice,
-        ...(vi.item.type === "sku_product" && vi.lagersalg ? { lagersalg: true as const } : {}),
-      };
-    }) as CartItem[];
+    const serverItems = toServerItems(validation.items);
     const subtotal = calcSubtotal(serverItems);
 
     // 3b. Compute bundle discounts server-side (never trust client-computed discount amounts)

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
-import { validateCart } from "../validate";
+import { validateCart, toServerItems, type ValidatedItem } from "../validate";
+import { calcBundleDiscounts } from "@/lib/cart/utils";
 import type { CartItem } from "@/lib/cart/types";
 const s = vi.hoisted(() => ({
   owner: "a".repeat(64),
@@ -210,4 +211,21 @@ it("beskyttelsesglas er aldrig lagersalg", async () => {
   s.subcategory = "screen_protector";
   s.attributes = { udsalg: "Ja" };
   expect((await validateCart([sku()])).items[0].lagersalg).toBeFalsy();
+});
+
+const forgedLine = (n: number, lagersalg: boolean): ValidatedItem => ({
+  item: { ...sku(1, `v${n}`), lagersalg: true } as CartItem,
+  serverPrice: 5900,
+  available: true,
+  lagersalg,
+});
+it("toServerItems fjerner forfalsket klient-flag, så 3 for 2 giver 0 rabat", () => {
+  const out = toServerItems([forgedLine(1, false), forgedLine(2, false), forgedLine(3, false)]);
+  expect(out.every((i) => !("lagersalg" in i))).toBe(true);
+  expect(calcBundleDiscounts(out).total).toBe(0);
+});
+it("toServerItems sætter lagersalg fra databasen", () => {
+  const out = toServerItems([forgedLine(1, true), forgedLine(2, true), forgedLine(3, true)]);
+  expect(out.every((i) => (i as { lagersalg?: true }).lagersalg === true)).toBe(true);
+  expect(calcBundleDiscounts(out).total).toBe(5900);
 });

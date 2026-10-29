@@ -54,8 +54,8 @@ type OrderItemRow = Record<string, unknown> & {
 type BundleByKey = Record<string, { discount_oere: number; freeUnits: number }>;
 
 /**
- * Bygger ordrelinjerne. Gratis enheder fra 3 for 2 bogfoeres som egen linje,
- * saa en delvis returnering refunderer det rigtige beloeb.
+ * Bygger ordrelinjerne. Gratis enheder fra 3 for 2 bogføres som egen linje,
+ * så en delvis returnering refunderer det rigtige beløb.
  */
 export function toOrderItemRows(orderId: string, items: ValidatedItem[], bundleByKey: BundleByKey): OrderItemRow[] {
   return items.filter((vi) => vi.available).flatMap((vi): OrderItemRow[] => {
@@ -98,7 +98,7 @@ export function toOrderItemRows(orderId: string, items: ValidatedItem[], bundleB
       upgrade_details: null,
     });
     if (freeUnits <= 0) return [row(item.quantity, 0)];
-    const freeRow = row(freeUnits, vi.serverPrice * freeUnits);
+    const freeRow = row(freeUnits, bundle.discount_oere);
     if (freeUnits === item.quantity) return [freeRow];
     return [row(item.quantity - freeUnits, 0), freeRow];
   });

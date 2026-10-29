@@ -140,3 +140,19 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
 export function hasFoxwayDevice(items: ValidatedItem[]): boolean {
   return items.some((vi) => vi.available && vi.deviceSource === "foxway");
 }
+
+/**
+ * Kurvlinjer til serverens prisregning: serverpris, og `lagersalg` kun når
+ * databasen siger det. Klientens eget `lagersalg`-flag kasseres altid.
+ */
+export function toServerItems(validated: ValidatedItem[]): CartItem[] {
+  return validated.map((vi) => {
+    const { lagersalg: _clientFlag, ...rest } = vi.item as CartItem & { lagersalg?: true };
+    void _clientFlag;
+    return {
+      ...rest,
+      price: vi.serverPrice,
+      ...(vi.item.type === "sku_product" && vi.lagersalg ? { lagersalg: true as const } : {}),
+    };
+  }) as CartItem[];
+}

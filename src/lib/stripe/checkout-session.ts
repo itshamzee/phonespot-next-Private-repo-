@@ -109,9 +109,9 @@ function buildLineItems(
 }
 
 /**
- * Stripe Checkout tager kun en kupon pr. session, saa rabatkode og 3 for 2
- * laegges sammen i et beloeb. Procentkoder er allerede omregnet til beloeb af
- * ruten (`discountAmount`), saa `percent_off` bruges aldrig.
+ * Stripe Checkout tager kun én kupon pr. session, så rabatkode og 3 for 2
+ * lægges sammen i ét beløb. Procentkoder er allerede omregnet til beløb af
+ * ruten (`discountAmount`), så `percent_off` bruges aldrig.
  */
 export async function buildDiscountCoupons(
   discount: DiscountApplication | null,
