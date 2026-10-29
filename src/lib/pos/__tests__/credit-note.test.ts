@@ -114,4 +114,18 @@ describe("buildCreditNote", () => {
     expect(note.brugtmomsTotal).toBe(-2000);
     expect(note.lines.map((l) => l.restock)).toEqual([false, true]);
   });
+
+  it("refunderer 0 for den gratis lagersalgslinje og fuld pris for en betalt", () => {
+    // to covers a 59 kr.; linje "c" er den gratis (rabat 5900 bogfoert paa linjen)
+    const cover = (id: string, discountAmount: number, vatAmount: number): OriginalLine => ({
+      id, itemType: "sku_product", deviceId: null, skuProductId: "s-cover", description: "Cover",
+      quantity: 1, unitPrice: 5900, totalPrice: 5900, discountAmount, vatAmount,
+      vatScheme: "regular", purchasePrice: 1000,
+    });
+    const both = [cover("a", 0, 1180), cover("c", 5900, 0)];
+    const free = buildCreditNote(both, none, [{ orderItemId: "c", quantity: 1, restock: true }]);
+    const paid = buildCreditNote(both, none, [{ orderItemId: "a", quantity: 1, restock: true }]);
+    expect(free.refundAmount + 0).toBe(0); // +0 normaliserer -0 (refundAmount = -total)
+    expect(paid.refundAmount).toBe(5900);
+  });
 });
