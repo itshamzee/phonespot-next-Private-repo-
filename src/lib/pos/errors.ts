@@ -110,6 +110,9 @@ const CATALOG: Record<string, Entry> = {
     status: 409,
     message: () => "Delen er reserveret i den anden butik. Sælg den fra den butiks kasse.",
   },
+  box_already_open: { status: 409, message: () => "Der er allerede en åben kasse i butikken" },
+  box_not_open: { status: 409, message: () => "Kassen er allerede lukket" },
+  box_closed: { status: 409, message: () => "Kassen er lukket. Åbn en ny kasse i optagelsen" },
   stock_below_reserved: {
     status: 409,
     message: (d) => `${d ?? "Noget"} af lageret er reserveret til reparationssager. Fjern reservationen først.`,

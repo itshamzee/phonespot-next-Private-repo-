@@ -14,6 +14,13 @@ describe("internMayAccess", () => {
     expect(internMayAccess("/api/admin/me", "GET")).toBe(true);
   });
 
+  it("praktikanter må åbne og lukke kasser", () => {
+    expect(internMayAccess("/api/admin/lagersalg/boxes", "GET")).toBe(true);
+    expect(internMayAccess("/api/admin/lagersalg/boxes", "POST")).toBe(true);
+    expect(internMayAccess("/api/admin/lagersalg/boxes", "DELETE")).toBe(false);
+    expect(internMayAccess("/api/admin/lagersalg", "POST")).toBe(false);
+  });
+
   it("afviser alt andet", () => {
     expect(internMayAccess("/api/admin/products", "GET")).toBe(false);
     expect(internMayAccess("/api/admin/products/123", "DELETE")).toBe(false);

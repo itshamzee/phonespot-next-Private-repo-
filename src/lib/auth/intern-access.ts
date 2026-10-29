@@ -16,6 +16,8 @@ const ALLOWED: Record<string, readonly string[]> = {
   // Kun oprettelse af tilbehør; ruten afviser andre typer for praktikanter.
   "/api/admin/products": ["POST"],
   "/api/platform/images/upload": ["POST"],
+  // Åbn/luk lagersalgskasser fra optagelsen.
+  "/api/admin/lagersalg/boxes": ["GET", "POST"],
 };
 
 export function internMayAccess(pathname: string, method: string): boolean {

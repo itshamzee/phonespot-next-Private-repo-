@@ -6,6 +6,8 @@ import { requireStaff } from "@/lib/auth/require-staff";
 import { canAccessStore } from "@/lib/auth/store-scope";
 import { adjustStock } from "@/lib/pos/sessions";
 import { storeLocations } from "@/lib/accessory-intake/candidates";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { addToBox, currentOpenBox } from "@/lib/lagersalg/boxes";
 
 /**
  * Hurtig lageroptagelse med stregkode (/admin/produkter/hurtig-cover).
@@ -87,6 +89,26 @@ export async function POST(request: Request) {
   const location = (await storeLocations(db)).find((l) => l.name.toLowerCase() === store);
   if (!location) return NextResponse.json({ error: "Butikken findes ikke" }, { status: 404 });
 
+  // En lagersalgsvare (også en kladde, der udgives til udsalg nu) skal i butikkens åbne kasse.
+  // Tjekket kommer før lagerreguleringen, så intet gemmes halvt.
+  const willBeUdsalg = product.subcategory === "cover" && !!publish?.priceKr && product.status === "draft";
+  const lagersalg = isLagersalg({
+    subcategory: product.subcategory,
+    attributes: willBeUdsalg
+      ? { ...((product.attributes as Record<string, string> | null) ?? {}), udsalg: "Ja" }
+      : (product.attributes as Record<string, string> | null),
+  });
+  let box: Awaited<ReturnType<typeof currentOpenBox>> = null;
+  if (lagersalg) {
+    box = await currentOpenBox(db, location.id);
+    if (!box) {
+      return NextResponse.json(
+        { error: "Åbn en kasse i optagelsen, før varen kan lægges på lager" },
+        { status: 409 },
+      );
+    }
+  }
+
   try {
     const result = await adjustStock({
       productId,
@@ -109,9 +131,15 @@ export async function POST(request: Request) {
       if (error) throw new Error("Varen blev lagt på lager, men kunne ikke udgives");
       published = true;
     }
+    if (box) await addToBox(db, productId, box.id, quantity);
     revalidatePath("/tilbehoer", "layout");
     revalidatePath("/lagersalg", "layout");
-    return NextResponse.json({ quantity: result.quantity, published, priceKr: Math.round(priceOere / 100) });
+    return NextResponse.json({
+      quantity: result.quantity,
+      published,
+      priceKr: Math.round(priceOere / 100),
+      boxNumber: box?.number ?? null,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Lageret blev ikke opdateret" },

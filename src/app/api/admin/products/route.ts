@@ -17,6 +17,8 @@ import {
 } from "@/lib/admin/products/create";
 import { modelsForProduct } from "@/lib/admin/products/update";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { addToBox, currentOpenBox } from "@/lib/lagersalg/boxes";
 
 /**
  * POST /api/admin/products — ét opret-endpoint for alt der bor i sku_products.
@@ -137,6 +139,7 @@ export interface CreatedProduct {
   slug: string;
   title: string;
   url: string;
+  boxNumber?: number | null;
 }
 
 function publicUrl(row: { slug: string; category: string; subcategory: string }): string {
@@ -205,6 +208,8 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Lager. Rækkefølgen fra insert svarer til planned.
+  const boxNumbers = new Map<string, number>();
+  const warnings: string[] = [];
   const needsStock = planned.some((p) => p.stock && (p.stock.online || Object.keys(p.stock.stores ?? {}).length));
   if (needsStock) {
     const { data: locations } = await supabase.from("locations").select("id, name, type");
@@ -229,6 +234,40 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 5. Lagersalgsvarer med butikslager lægges i butikkens åbne kasse. Mangler kassen,
+  // oprettes varen alligevel (en masseimport må ikke blokeres), og svaret får en advarsel.
+  if (needsStock && body.type === "accessory") {
+    const { data: locations } = await supabase.from("locations").select("id, name, type");
+    const openByStore = new Map<string, Awaited<ReturnType<typeof currentOpenBox>>>();
+    const warned = new Set<string>();
+    for (const [i, product] of inserted.entries()) {
+      const plan = planned[i];
+      if (!plan || !isLagersalg(plan.row)) continue;
+      for (const [store, qty] of Object.entries(plan.stock?.stores ?? {})) {
+        if (!qty || qty <= 0) continue;
+        const location = ((locations ?? []) as LocationRow[]).find(
+          (l) => l.type === "store" && l.name?.toLowerCase() === store.toLowerCase(),
+        );
+        if (!location) continue;
+        try {
+          if (!openByStore.has(location.id)) openByStore.set(location.id, await currentOpenBox(supabase, location.id));
+          const box = openByStore.get(location.id);
+          if (box) {
+            await addToBox(supabase, product.id, box.id, Math.round(qty));
+            boxNumbers.set(product.id, box.number);
+            continue;
+          }
+        } catch {
+          // Faldt kassen ud (fx lukket midt i importen), behandles varen som uden kasse.
+        }
+        if (!warned.has(store)) {
+          warned.add(store);
+          warnings.push(`Ingen åben kasse i ${store}: varen er oprettet uden kasse`);
+        }
+      }
+    }
+  }
+
   revalidatePath(body.type === "accessory" ? "/tilbehoer" : "/reservedele", "layout");
   if (body.type === "accessory") revalidatePath("/lagersalg", "layout");
 
@@ -237,8 +276,12 @@ export async function POST(req: NextRequest) {
     slug: row.slug,
     title: row.title,
     url: publicUrl(row),
+    boxNumber: boxNumbers.get(row.id) ?? null,
   }));
-  return NextResponse.json({ created, count: created.length }, { status: 201 });
+  return NextResponse.json(
+    { created, count: created.length, ...(warnings.length ? { warnings } : {}) },
+    { status: 201 },
+  );
 }
 
 /** Hurtig-optagelsens rammer for praktikanter: lav pris, kun egen butik, intet online-/altid-på-lager. */
