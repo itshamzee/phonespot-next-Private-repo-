@@ -10,7 +10,7 @@ export default defineConfig({
     globals: true,
     // e2e/** holds Playwright specs, not Vitest specs — they use a different
     // test runner/API and were being collected (and failing) by mistake.
-    exclude: [...configDefaults.exclude, "e2e/**"],
+    exclude: [...configDefaults.exclude, "e2e/**", "**/.claude/**"],
   },
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
 });
