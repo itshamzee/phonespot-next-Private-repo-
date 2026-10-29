@@ -290,11 +290,14 @@ export type SaleDetail = {
   locationName: string | null;
   staffName: string | null;
   customer: { id: string; name: string | null; phone: string | null; email: string | null } | null;
-  lines: Array<{ id: string; name: string; quantity: number; unitPrice: number; lineTotal: number; caseNumber: string | null; caseId: string | null }>;
+  /** lineTotal er brutto (stykpris × antal); lineDiscount er linjerabatten (manuel rabat + 3 for 2). */
+  lines: Array<{ id: string; name: string; quantity: number; unitPrice: number; lineTotal: number; lineDiscount: number; caseNumber: string | null; caseId: string | null }>;
   payments: Array<{ label: string; amount: number; reference: string | null }>;
   subtotal: number;
   discountAmount: number;
   discountReason: string | null;
+  /** Lagersalg 3 for 2 (orders.bundle_discount_amount). */
+  bundleDiscountAmount: number;
   total: number;
   vatTotal: number;
   notes: string | null;
@@ -314,7 +317,7 @@ export async function loadSaleDetail(id: string): Promise<SaleDetail | null> {
   const { data: o } = (await db
     .from("orders")
     .select(
-      "id, order_number, receipt_number, type, created_at, confirmed_at, subtotal, discount_amount, discount_reason, total, vat_total, notes, location_id, staff_id, customer_id, repair_ticket_id, original_order_id, credit_reason, payment_method, register_id",
+      "id, order_number, receipt_number, type, created_at, confirmed_at, subtotal, discount_amount, bundle_discount_amount, discount_reason, total, vat_total, notes, location_id, staff_id, customer_id, repair_ticket_id, original_order_id, credit_reason, payment_method, register_id",
     )
     .eq("id", id)
     .maybeSingle()) as { data: any };
@@ -323,7 +326,7 @@ export async function loadSaleDetail(id: string): Promise<SaleDetail | null> {
   const [items, pays, credits, loc, staff, customer, original] = await Promise.all([
     db
       .from("order_items")
-      .select("id, item_type, quantity, unit_price, total_price, description, repair_ticket_id, device_id, sku_product_id")
+      .select("id, item_type, quantity, unit_price, total_price, discount_amount, description, repair_ticket_id, device_id, sku_product_id")
       .eq("order_id", id),
     db.from("order_payments").select("type, amount_oere, reference").eq("order_id", id).order("created_at", { ascending: true }),
     db.from("orders").select("id, order_number, receipt_number, created_at, confirmed_at, total").eq("type", "credit_note").eq("original_order_id", id),
@@ -383,6 +386,7 @@ export async function loadSaleDetail(id: string): Promise<SaleDetail | null> {
       quantity: i.quantity,
       unitPrice: i.unit_price,
       lineTotal: i.total_price,
+      lineDiscount: i.discount_amount ?? 0,
       caseId: i.repair_ticket_id ?? null,
       caseNumber: i.repair_ticket_id ? (ticketLabels.get(i.repair_ticket_id) ?? null) : null,
     })),
@@ -390,6 +394,7 @@ export async function loadSaleDetail(id: string): Promise<SaleDetail | null> {
     subtotal: o.subtotal,
     discountAmount: o.discount_amount ?? 0,
     discountReason: o.discount_reason,
+    bundleDiscountAmount: o.bundle_discount_amount ?? 0,
     total: o.total,
     vatTotal: o.vat_total ?? 0,
     notes: o.notes,

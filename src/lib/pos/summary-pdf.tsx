@@ -2,6 +2,7 @@ import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-p
 import { createElement } from "react";
 import type { DailySummary } from "./daily-summary";
 import { PAYMENT_LABELS } from "./constants";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontFamily: "Helvetica", fontSize: 9, color: "#1b1b1b" },
@@ -47,6 +48,9 @@ export function DailySummaryPDF({ summary: s }: { summary: DailySummary }) {
         {Object.entries(s.discountByReason).map(([reason, amount]) => (
           <Line key={reason} label={`  heraf ${reason}`} value={`${kr(amount)} kr`} />
         ))}
+        {s.bundleTotal > 0 && (
+          <Line label={THREE_FOR_TWO_LABEL} value={`${kr(s.bundleTotal)} kr`} />
+        )}
 
         <Text style={styles.h2}>Moms</Text>
         <Line label="Salg med 25 % moms (inkl. moms)" value={`${kr(s.regularGross)} kr`} />

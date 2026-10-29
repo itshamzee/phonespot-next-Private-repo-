@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import {
+  THREE_FOR_TWO_FREE_LABEL,
+  THREE_FOR_TWO_LABEL,
+  isFreeBundleLine,
+} from "@/lib/lagersalg/three-for-two";
 
 interface OrderData {
   id: string;
@@ -10,6 +15,8 @@ interface OrderData {
   total: number;
   subtotal: number;
   discount_amount: number;
+  /** Lagersalg 3 for 2 (øre). */
+  bundle_discount_amount: number | null;
   shipping_cost: number;
   brugtmoms_total: number;
   created_at: string;
@@ -25,6 +32,8 @@ interface OrderData {
     sku_product_id: string | null;
     quantity: number;
     unit_price: number;
+    total_price: number | null;
+    discount_amount: number | null;
     purchase_price: number | null;
     vat_scheme: string | null;
     upgrade_details: Array<{ label: string; price_oere: number }> | null;
@@ -43,6 +52,8 @@ export default function FakturaPage() {
       name: string;
       qty: number;
       price: number;
+      /** Gratis via 3 for 2 — prisen vises som 0 med den fulde pris overstreget. */
+      freeBundle: boolean;
       vat: string;
       upgrades: Array<{ label: string; price_oere: number }> | null;
     }>
@@ -77,6 +88,8 @@ export default function FakturaPage() {
       name: string;
       qty: number;
       price: number;
+      /** Gratis via 3 for 2 — prisen vises som 0 med den fulde pris overstreget. */
+      freeBundle: boolean;
       vat: string;
       upgrades: Array<{ label: string; price_oere: number }> | null;
     }> = [];
@@ -93,6 +106,7 @@ export default function FakturaPage() {
           name,
           qty: item.quantity,
           price: item.unit_price,
+          freeBundle: false,
           vat: item.vat_scheme === "brugtmoms" ? "Brugtmoms" : "Momsfri",
           upgrades: item.upgrade_details ?? null,
         });
@@ -102,6 +116,10 @@ export default function FakturaPage() {
           name: sku?.title || "Tilbehor",
           qty: item.quantity,
           price: item.unit_price * item.quantity,
+          freeBundle: isFreeBundleLine({
+            totalOere: item.total_price ?? item.unit_price * item.quantity,
+            discountOere: item.discount_amount,
+          }),
           vat: "25% moms",
           upgrades: null,
         });
@@ -195,7 +213,17 @@ export default function FakturaPage() {
                 </td>
                 <td style={{ textAlign: "center", padding: "10px 0" }}>{item.qty}</td>
                 <td style={{ textAlign: "right", padding: "10px 0", fontSize: 12, color: "#999" }}>{item.vat}</td>
-                <td style={{ textAlign: "right", padding: "10px 0", fontWeight: "bold" }}>{formatDKK(item.price)}</td>
+                <td style={{ textAlign: "right", padding: "10px 0", fontWeight: "bold" }}>
+                  {item.freeBundle ? (
+                    // Fuld pris overstreget (indgår i subtotalen) — trækkes fra i 3 for 2-linjen nedenfor.
+                    <>
+                      <s style={{ color: "#999", fontWeight: "normal" }}>{formatDKK(item.price)}</s>
+                      <div style={{ fontSize: 11, color: "#5A8C6F" }}>{THREE_FOR_TWO_FREE_LABEL}</div>
+                    </>
+                  ) : (
+                    formatDKK(item.price)
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -212,6 +240,12 @@ export default function FakturaPage() {
               <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 13, color: "#5A8C6F" }}>
                 <span>Rabat</span>
                 <span>-{formatDKK(order.discount_amount)}</span>
+              </div>
+            )}
+            {(order.bundle_discount_amount ?? 0) > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 13, color: "#5A8C6F" }}>
+                <span>{THREE_FOR_TWO_LABEL}</span>
+                <span>-{formatDKK(order.bundle_discount_amount ?? 0)}</span>
               </div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 13 }}>

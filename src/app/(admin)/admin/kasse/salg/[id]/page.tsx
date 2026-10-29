@@ -8,6 +8,11 @@ import { uuidSchema } from "@/lib/pos/schemas";
 import { loadSaleDetail } from "@/lib/pos/sales-history-data";
 import { REFUND_LABELS, returUrl } from "@/lib/pos/sales-history";
 import { formatSaleDate } from "../_components/sales-list";
+import {
+  THREE_FOR_TWO_FREE_LABEL,
+  THREE_FOR_TWO_LABEL,
+  isFreeBundleLine,
+} from "@/lib/lagersalg/three-for-two";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Salg" };
@@ -87,12 +92,33 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
                 </td>
                 <td className="py-2.5 text-right tabular-nums">{Math.abs(l.quantity)}</td>
                 <td className="py-2.5 text-right tabular-nums">{formatOere(l.unitPrice)}</td>
-                <td className="py-2.5 text-right font-medium tabular-nums">{formatOere(l.lineTotal)}</td>
+                <td className="py-2.5 text-right font-medium tabular-nums">
+                  {isFreeBundleLine({ totalOere: l.lineTotal, discountOere: l.lineDiscount }) ? (
+                    <>
+                      <s className="font-normal text-charcoal/40">{formatOere(l.lineTotal)}</s>
+                      <span className="block text-xs text-[#1A3D2E]">{THREE_FOR_TWO_FREE_LABEL}</span>
+                    </>
+                  ) : (
+                    formatOere(l.lineTotal)
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
         <dl className="mt-4 space-y-1 text-sm">
+          {(sale.discountAmount > 0 || sale.bundleDiscountAmount > 0) && (
+            <div className="flex justify-between text-charcoal/60">
+              <dt>Subtotal</dt>
+              <dd className="tabular-nums">{formatOere(sale.subtotal)}</dd>
+            </div>
+          )}
+          {sale.bundleDiscountAmount > 0 && (
+            <div className="flex justify-between text-charcoal/60">
+              <dt>{THREE_FOR_TWO_LABEL}</dt>
+              <dd className="tabular-nums">-{formatOere(sale.bundleDiscountAmount)}</dd>
+            </div>
+          )}
           {sale.discountAmount > 0 && (
             <div className="flex justify-between text-charcoal/60">
               <dt>Rabat{sale.discountReason ? ` (${sale.discountReason})` : ""}</dt>

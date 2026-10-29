@@ -221,11 +221,11 @@ function buildItemsTable(items: OrderConfirmationItem[]): string {
       return emailItemRow({
         title,
         quantity: item.quantity,
-        price: free ? 0 : item.totalPrice,
+        price: item.totalPrice,
         image: item.image,
         priceHtml: free
           ? `<span style="color:${BRAND.greenLight};font-weight:600;">${THREE_FOR_TWO_FREE_LABEL}</span><br />` +
-            `<span style="color:#AAAAAA;font-size:12px;">${formatOere(0)} <s>${formatOere(item.totalPrice)}</s></span>`
+            `<span style="color:#AAAAAA;font-size:12px;"><s>${formatOere(item.totalPrice)}</s></span>`
           : undefined,
       });
     })

@@ -102,6 +102,35 @@ describe("aggregateDailySummary", () => {
     expect(s.discountByReason).toEqual({ Tilbud: 10000 });
   });
 
+  it("holder lagersalg 3 for 2 som egen sum uden for rabatterne", () => {
+    expect(s.bundleTotal).toBe(0);
+    const withBundle = aggregateDailySummary(
+      [
+        {
+          ...base,
+          id: "b1",
+          order_number: "PSP-9",
+          receipt_number: "V1-000009",
+          receipt_no: 9,
+          type: "pos",
+          total: 11800,
+          vat_total: 2360,
+          bundle_discount_amount: 5900,
+          order_items: [
+            { item_type: "sku_product", quantity: 2, total_price: 11800, discount_amount: 0, vat_scheme: "regular" },
+            { item_type: "sku_product", quantity: 1, total_price: 5900, discount_amount: 5900, vat_scheme: "regular" },
+          ],
+          order_payments: [{ type: "kontant", amount_oere: 11800 }],
+        },
+      ],
+      [],
+      meta,
+    );
+    expect(withBundle.bundleTotal).toBe(5900);
+    expect(withBundle.discountTotal).toBe(0);
+    expect(withBundle.discountByReason).toEqual({});
+  });
+
   it("nets payments per type with received/refunded and handles legacy sales", () => {
     const by = Object.fromEntries(s.payments.map((p) => [p.type, p]));
     expect(by.kontant).toMatchObject({ received: 50000, refunded: 25000, net: 25000 });
