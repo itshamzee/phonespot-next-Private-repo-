@@ -608,6 +608,11 @@ export function AccessoryDetail({
               </span>
             )}
             <p className="mt-1 text-xs text-charcoal/50">Inkl. moms</p>
+            {lagersalg && (
+              <p className="mt-2 text-sm text-charcoal/70">
+                Lagersalg: 3 for 2 på tværs af lagersalget. 14 dages fortrydelsesret, ikke omfattet af 30 dages returret.
+              </p>
+            )}
           </div>
 
           {/* Key functions — short list, full version in #funktioner */}

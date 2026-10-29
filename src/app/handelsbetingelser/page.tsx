@@ -232,6 +232,11 @@ export default function HandelsbetingelserPage() {
             Den udvidede returret er en frivillig ordning og begrænser ikke dine rettigheder
             efter forbrugeraftaleloven eller købeloven.
           </p>
+          <p className="mt-3">
+            Varer mærket lagersalg er ikke omfattet af den udvidede returret. Her gælder den
+            lovpligtige fortrydelsesret på 14 dage ved køb online. Ved køb i butikken tages
+            lagersalgsvarer ikke retur; reklamationsretten efter købeloven gælder uændret.
+          </p>
         </div>
 
         {/* 8. Standardfortrydelsesformular */}

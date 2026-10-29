@@ -180,7 +180,7 @@ export const TILBEHOER_CATEGORIES: TilbehoerCategory[] = [
       },
       {
         q: "Kan jeg returnere outlet-varer?",
-        a: "Ja — alle vores produkter inkl. outlet-varer er dækket af 14 dages returret i henhold til dansk forbrugerret.",
+        a: "Ved køb online har du 14 dages fortrydelsesret efter forbrugeraftaleloven. Lagersalgs- og outletvarer er ikke omfattet af vores 30 dages returret, og i butikken tages de ikke retur. Reklamationsretten på 2 år gælder altid.",
       },
       {
         q: "Skiftes outlet-sortimentet?",
