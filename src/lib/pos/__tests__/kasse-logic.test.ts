@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   activeCaseTicketId,
   bundleForLines,
+  mergeSkuLine,
   cartTotals,
   caseBlockedReason,
   casePaymentLines,
@@ -406,5 +407,35 @@ describe("case own lines and stock status", () => {
     expect(caseStockSummary(ctx({ lines: back })).suggestDeposit).toBe(false); // ctx() has a deposit
     expect(caseStockSummary(ctx({ deposits: [], paid: true, lines: back })).suggestDeposit).toBe(false);
     expect(caseStockSummary(ctx({ deposits: [], lines: [item({ stock_status: "reserved" })] })).suggestDeposit).toBe(false);
+  });
+});
+
+describe("mergeSkuLine", () => {
+  const sku = { id: "cover-1", title: "Cover", priceOere: 5900, lagersalg: true };
+
+  it("tilføjer en ny linje første gang", () => {
+    const out = mergeSkuLine([], sku, "k1");
+    expect(out).toEqual([
+      { key: "k1", type: "sku_product", skuProductId: "cover-1", name: "Cover", price: 5900, quantity: 1, lagersalg: true },
+    ]);
+  });
+
+  it("lægger +1 på den eksisterende linje og opdaterer pris og lagersalg (genscan efter bundle_mismatch)", () => {
+    const stale: CartLine[] = [
+      { key: "k1", type: "sku_product", skuProductId: "cover-1", name: "Cover", price: 7900, quantity: 2, lagersalg: false },
+    ];
+    const out = mergeSkuLine(stale, sku, "k2");
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ key: "k1", quantity: 3, price: 5900, lagersalg: true });
+  });
+
+  it("rører ikke en linje der hører til en reparationssag", () => {
+    const caseLine: CartLine[] = [
+      { key: "c1", type: "sku_product", skuProductId: "cover-1", name: "Cover", price: 7900, quantity: 1, repairTicketItemId: "rti-1" },
+    ];
+    const out = mergeSkuLine(caseLine, sku, "k2");
+    expect(out).toHaveLength(2);
+    expect(out[0]).toBe(caseLine[0]);
+    expect(out[1]).toMatchObject({ key: "k2", price: 5900, quantity: 1 });
   });
 });

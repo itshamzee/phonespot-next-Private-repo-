@@ -66,6 +66,31 @@ export type CartView = {
   applied: AppliedDepositLine[];
 };
 
+/**
+ * Adds one unit of a scanned/tapped product. An existing (non-case) line for the
+ * same product gets +1 AND the scanned product's current price and lagersalg flag,
+ * so re-scanning after a bundle_mismatch ("Opdater kurven og prøv igen") refreshes
+ * the line instead of keeping the stale values.
+ */
+export function mergeSkuLine(
+  lines: CartLine[],
+  sku: { id: string; title: string; priceOere: number; lagersalg: boolean },
+  newKey: string,
+): CartLine[] {
+  const existing = lines.find((l) => l.type === "sku_product" && l.skuProductId === sku.id && !l.repairTicketItemId);
+  if (existing) {
+    return lines.map((l) =>
+      l === existing && l.type === "sku_product"
+        ? { ...l, quantity: l.quantity + 1, price: sku.priceOere, lagersalg: sku.lagersalg }
+        : l,
+    );
+  }
+  return [
+    ...lines,
+    { key: newKey, type: "sku_product", skuProductId: sku.id, name: sku.title, price: sku.priceOere, quantity: 1, lagersalg: sku.lagersalg },
+  ];
+}
+
 export function lineTotal(l: CartLine): number {
   switch (l.type) {
     case "sku_product":

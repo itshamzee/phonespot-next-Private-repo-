@@ -18,6 +18,7 @@ import {
   casePaymentLines,
   checkPayments,
   discountableBase,
+  mergeSkuLine,
   paymentsNeedCustomer,
   parseKasseParams,
   planAppliedDeposits,
@@ -376,14 +377,8 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   /* ----- Cart editing ----- */
 
   function addSku(s: { id: string; title: string; priceOere: number; lagersalg: boolean }) {
-    setLines((prev) => {
-      const existing = prev.find((l) => l.type === "sku_product" && l.skuProductId === s.id && !l.repairTicketItemId);
-      if (existing) return prev.map((l) => (l === existing && l.type === "sku_product" ? { ...l, quantity: l.quantity + 1 } : l));
-      return [
-        ...prev,
-        { key: crypto.randomUUID(), type: "sku_product", skuProductId: s.id, name: s.title, price: s.priceOere, quantity: 1, lagersalg: s.lagersalg },
-      ];
-    });
+    // Re-scan refreshes price + lagersalg on an existing line (fix after bundle_mismatch).
+    setLines((prev) => mergeSkuLine(prev, s, crypto.randomUUID()));
     clearScan();
   }
 
