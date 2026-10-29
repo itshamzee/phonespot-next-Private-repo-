@@ -5,7 +5,7 @@ const cart=vi.hoisted(()=>({addSku:vi.fn(),openCart:vi.fn()}));
 vi.mock('@/components/cart/cart-context',()=>({useCart:()=>cart}));
 beforeEach(()=>vi.clearAllMocks());
 afterEach(()=>vi.useRealTimers());
-const product={id:'cover',name:'Cover',slug:'cover',category:'covers',brand:'Brand',price:19900,sale_price:14900,image_url:'/cover.png',store_stock:3,online_stock:5,availability:'in_stock' as const};
+const product={id:'cover',name:'Cover',slug:'cover',category:'covers',brand:'Brand',price:19900,sale_price:14900,image_url:'/cover.png',store_stock:3,online_stock:5,availability:'in_stock' as const,lagersalg:false};
 it('shows the glass compatibility and preserves its kind and original price in the cart',()=>{
  render(<AccessoryCard {...product} category="beskyttelsesglas" compatible_models={['iPhone 17 Pro']} spotKind="privacy"/>);
  expect(screen.getByText('Passer til iPhone 17 Pro')).toBeInTheDocument();
@@ -40,4 +40,8 @@ it('briefly confirms one addition, then allows another, and cancels confirmation
  const button=screen.getByRole('button',{name:'Tilføj til kurv'});expect(button).toBeEnabled();
  fireEvent.click(button);expect(cart.addSku).toHaveBeenCalledTimes(2);
  view.unmount();expect(vi.getTimerCount()).toBe(0);
+});
+it('flags lagersalgsvarer in the cart so 3 for 2 can be shown',()=>{
+ render(<AccessoryCard {...product} lagersalg={true}/>);fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
+ expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'cover',lagersalg:true}));
 });

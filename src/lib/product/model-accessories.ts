@@ -4,15 +4,17 @@ import type { PublicAccessory } from "@/lib/product/public-accessory";
 import { ACCESSORY_CATEGORY_TO_SLUG, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { accessoryModelLabels, accessoryModelSlug, accessorySpotKind } from "@/lib/product/accessory-models";
 import { pickUpsell } from "@/lib/product/pick-upsell";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 export const PUBLIC_ACCESSORY_COLUMNS =
-  "id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active, store_stock, online_stock";
+  "id, title, slug, subcategory, brand, selling_price, always_in_stock, sale_price, images, compatible_models, variant_label, status, created_at, is_active, store_stock, online_stock, attributes";
 
 type InventoryRow = {
   id: string; title: string; slug: string | null; subcategory: string | null; brand: string | null;
   selling_price: number; always_in_stock: boolean | null; sale_price: number | null; images: unknown;
   compatible_models: unknown; variant_label: string | null; created_at: string;
   store_stock: number; online_stock: number;
+  attributes?: Record<string, string> | null;
 };
 
 export function toPublicAccessory(p: InventoryRow): PublicAccessory {
@@ -25,6 +27,7 @@ export function toPublicAccessory(p: InventoryRow): PublicAccessory {
     image_url: Array.isArray(p.images) ? p.images[0] ?? null : null,
     compatible_models: accessoryModelLabels(p.compatible_models),
     spotKind: accessorySpotKind(p),
+    lagersalg: isLagersalg({ subcategory: p.subcategory, attributes: p.attributes }),
     created_at: p.created_at,
     store_stock: store,
     online_stock: online,

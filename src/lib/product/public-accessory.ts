@@ -6,5 +6,7 @@ export interface PublicAccessory {
   store_stock: number | null; online_stock: number | null; availability: AccessoryAvailability;
   compatible_models?: string[];
   spotKind?: import("@/lib/spot/types").SpotVariantKind;
+  /** Lagersalgsvare (3 for 2) — udledt på serveren via isLagersalg, da udsalg-attributten ikke er offentlig. */
+  lagersalg: boolean;
 }
 export interface AccessoryStockRow { product_id: string; quantity: number; location: { type: string } | null }

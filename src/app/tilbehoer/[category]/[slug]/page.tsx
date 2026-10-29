@@ -2,6 +2,7 @@ import { accessoryAvailability } from "@/lib/accessory-availability";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { getSkuProductBySlug } from "@/lib/supabase/product-queries";
 import { getAccessoryBySlug } from "@/lib/supabase/accessories";
 import { createServerClient } from "@/lib/supabase/client";
@@ -442,6 +443,7 @@ export default async function AccessoryDetailPage({ params }: Props) {
           category={category}
           colorSiblings={colorSiblings}
           highlights={highlights}
+          lagersalg={isLagersalg({ subcategory: product.subcategory, attributes: product.attributes as Record<string, string> | undefined })}
         />
 
         {/* Trust bar — "accessory" swaps the 36-month device warranty claim

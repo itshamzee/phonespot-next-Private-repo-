@@ -34,6 +34,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
       price: item.priceOre,
       quantity: 1,
       image: item.imageUrl,
+      lagersalg: true,
     });
     openCart();
     setAdded(true);

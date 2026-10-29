@@ -71,10 +71,7 @@ export async function POST(req: NextRequest) {
     const subtotal = calcSubtotal(serverItems);
 
     // 3b. Compute bundle discounts server-side (never trust client-computed discount amounts)
-    const bundleDiscountAmount = calcBundleDiscounts(serverItems).reduce(
-      (sum, r) => sum + r.discount_oere,
-      0,
-    );
+    const bundleDiscountAmount = calcBundleDiscounts(serverItems).total;
     console.log("[checkout/session] bundleDiscountAmount:", bundleDiscountAmount, "øre");
 
     // 4. Validate discount code if provided

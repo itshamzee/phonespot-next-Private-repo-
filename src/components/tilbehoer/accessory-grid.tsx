@@ -251,6 +251,7 @@ export function AccessoryGrid({
           availability={product.availability}
           compatible_models={product.compatible_models}
           spotKind={product.spotKind}
+          lagersalg={product.lagersalg}
         />
       ))}
     </div>

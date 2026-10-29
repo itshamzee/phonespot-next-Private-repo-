@@ -133,11 +133,10 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
   const { removeItem, updateSkuQuantity, cartState } = useCart();
   const key = cartItemKey(item);
 
-  // Spot bundle discount (3-for-2 / lens combo)
-  const bundleResults = calcBundleDiscounts(cartState.items);
-  const bundleResult = bundleResults.find((r) => r.skuProductId === item.skuProductId);
+  // Lagersalg 3 for 2: gratis stk. på denne linje
+  const bundleResult = calcBundleDiscounts(cartState.items).byKey[key];
   const discountOere = bundleResult?.discount_oere ?? 0;
-  const discountReason = bundleResult?.reason ?? null;
+  const freeUnits = bundleResult?.freeUnits ?? 0;
 
   function handleQtyChange(newQty: number) {
     if (newQty <= 0) {
@@ -161,10 +160,8 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
             <p className="mt-0.5 text-xs text-charcoal/50">{item.variantLabel}</p>
           )}
 
-          {discountOere > 0 && discountReason && (
-            <span className="mt-1 inline-flex items-center rounded bg-[#E8F4ED] px-1.5 py-0.5 text-xs font-semibold text-[#1A3D2E]">
-              {discountReason}
-            </span>
+          {freeUnits > 0 && (
+            <p className="mt-1 text-xs font-medium text-[#1A3D2E]">{freeUnits} stk. gratis (3 for 2)</p>
           )}
         </div>
 
