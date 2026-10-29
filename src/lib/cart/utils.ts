@@ -1,5 +1,6 @@
 import { cartItemKey, type CartItem, type CartSkuItem, type CartState, type CartTotals, type DiscountApplication } from "./types";
 import { threeForTwo, type ThreeForTwoLine } from "@/lib/lagersalg/three-for-two";
+import { FREE_SHIPPING_THRESHOLD, getShippingPrice } from "@/lib/shipping";
 
 export function lineTotal(item: CartItem): number {
   if (item.type === "device") {
@@ -84,6 +85,29 @@ export function calcTotals(state: CartState, shippingCost: number): CartTotals {
     total,
     itemCount,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Fragt (estimat før metode er valgt)
+// ---------------------------------------------------------------------------
+
+// Estimat før en metode er valgt: levering til døren fra lib/shipping.
+const SHIPPING_COST_OERE = getShippingPrice("postnord") ?? 3900;
+
+/**
+ * Fragt ud fra beløbet EFTER rabatkode og 3 for 2 — samme regel som
+ * checkout-serveren (api/checkout/session), så kurv, checkout og Stripe er enige.
+ */
+export function resolveShippingCost(netSubtotal: number): number {
+  if (netSubtotal <= 0) return 0;
+  return netSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST_OERE;
+}
+
+/** Kurvens totaler med fragt afgjort på nettobeløbet (efter alle rabatter). */
+export function calcCartTotals(state: CartState): CartTotals {
+  const base = calcTotals(state, 0);
+  const net = base.subtotal - base.discountAmount - base.bundleDiscountAmount;
+  return calcTotals(state, resolveShippingCost(net));
 }
 
 export function formatOere(oere: number): string {

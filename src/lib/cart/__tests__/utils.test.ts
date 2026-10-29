@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { calcTotals, calcBundleDiscounts } from "../utils";
+import { calcTotals, calcBundleDiscounts, calcCartTotals, resolveShippingCost } from "../utils";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { cartItemKey, type CartState, type CartSkuItem } from "../types";
 
 const iphone: CartSkuItem = {
@@ -77,5 +78,43 @@ describe("calcTotals med lagersalg 3 for 2", () => {
     const r = calcBundleDiscounts([a, b, cover("y", 9900)]);
     expect(r.byKey[cartItemKey(a)]?.discount_oere).toBe(5900);
     expect(r.byKey[cartItemKey(b)]).toBeUndefined();
+  });
+});
+
+describe("calcCartTotals — fri fragt på nettobeløbet (som checkout-serveren)", () => {
+  const sixCovers = (): CartState => ({
+    items: ["a", "b", "c", "d", "e", "f"].map((id) => cover(id, 9900)),
+    discount: null,
+  });
+
+  it("seks lagersalgscovers à 99 kr. (brutto 594, netto 396) giver IKKE fri fragt", () => {
+    const t = calcCartTotals(sixCovers());
+    expect(t.subtotal).toBe(59400);
+    expect(t.bundleDiscountAmount).toBe(19800);
+    const net = t.subtotal - t.discountAmount - t.bundleDiscountAmount;
+    expect(net).toBe(39600);
+    // Forudsætning: tærsklen ligger mellem netto og brutto.
+    expect(FREE_SHIPPING_THRESHOLD).toBeGreaterThan(net);
+    expect(FREE_SHIPPING_THRESHOLD).toBeLessThanOrEqual(t.subtotal);
+    expect(t.shippingCost).toBe(resolveShippingCost(net));
+    expect(t.shippingCost).toBeGreaterThan(0);
+    expect(t.total).toBe(net + t.shippingCost);
+  });
+
+  it("giver fri fragt når nettobeløbet når tærsklen", () => {
+    const t = calcCartTotals({ items: [cover("x", FREE_SHIPPING_THRESHOLD)], discount: null });
+    expect(t.shippingCost).toBe(0);
+  });
+
+  it("rabatkoden trækkes fra før fragten afgøres", () => {
+    const t = calcCartTotals({
+      items: [{ ...cover("x", FREE_SHIPPING_THRESHOLD), lagersalg: undefined }],
+      discount: { code: "TI", type: "percentage", value: 10, discountAmount: 0 },
+    });
+    expect(t.shippingCost).toBeGreaterThan(0);
+  });
+
+  it("tom kurv har ingen fragt", () => {
+    expect(calcCartTotals({ items: [], discount: null }).shippingCost).toBe(0);
   });
 });

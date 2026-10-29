@@ -10,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { FREE_SHIPPING_THRESHOLD, getShippingPrice } from "@/lib/shipping";
 import type {
   CartState,
   CartTotals,
@@ -20,21 +19,8 @@ import type {
 } from "@/lib/cart/types";
 import { cartItemKey } from "@/lib/cart/types";
 import { loadCart, saveCart, clearCartStorage } from "@/lib/cart/storage";
-import { calcTotals } from "@/lib/cart/utils";
+import { calcCartTotals } from "@/lib/cart/utils";
 import { cartReducer } from "@/lib/cart/reducer";
-
-// ---------------------------------------------------------------------------
-// Shipping cost (flat rate, free above threshold)
-// ---------------------------------------------------------------------------
-
-// Estimate before a method is chosen: home delivery from lib/shipping (the
-// old 49 kr. was the retired DAO price), nothing for an empty cart.
-const SHIPPING_COST_OERE = getShippingPrice("postnord") ?? 3900;
-
-function resolveShippingCost(subtotal: number): number {
-  if (subtotal <= 0) return 0;
-  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST_OERE;
-}
 
 // ---------------------------------------------------------------------------
 // Context
@@ -118,12 +104,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ------------------------------------------------------------------
   // Derived totals
   // ------------------------------------------------------------------
-  const totals = useMemo<CartTotals>(() => {
-    const subtotal = cartState.items.reduce((sum, item) => {
-      return sum + (item.type === "device" ? item.price : item.price * item.quantity);
-    }, 0);
-    return calcTotals(cartState, resolveShippingCost(subtotal));
-  }, [cartState]);
+  // Fragt afgøres på nettobeløbet efter rabatkode og 3 for 2 (som serveren).
+  const totals = useMemo<CartTotals>(() => calcCartTotals(cartState), [cartState]);
 
   // ------------------------------------------------------------------
   // Drawer / upsell toggles
