@@ -101,6 +101,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
         <div className="mt-auto pt-3">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <span className="text-[19px] font-bold tracking-tight text-charcoal sm:text-[21px]">{kr(item.priceOre)}</span>
+            <span className="text-[12px] font-semibold text-[#1A3D2E]">3 for 2</span>
             {saving != null && <span className="text-[12px] text-charcoal/55">Vejl. pris {item.listPriceKr} kr.</span>}
           </div>
           <p className={`mt-1 flex items-center gap-1.5 text-[12px] ${canBuy ? "text-charcoal/70" : "text-charcoal/50"}`}>
