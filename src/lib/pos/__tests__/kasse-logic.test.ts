@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   activeCaseTicketId,
+  bundleForLines,
   cartTotals,
   caseBlockedReason,
   casePaymentLines,
@@ -19,6 +20,7 @@ import {
   type PaymentChoice,
 } from "../kasse-logic";
 import { parseCaseReference } from "../case-lookup";
+import { standardVat } from "../calc";
 import { saleBodySchema } from "../schemas";
 import { rankTopSellers } from "../quick-tiles";
 
@@ -176,6 +178,103 @@ describe("totals and discount", () => {
     const applied = planAppliedDeposits(lines, c, 10_000);
     const t = cartTotals(lines, applied, 10_000);
     expect(t.total).toBe(169_800 - 10_000 - 50_000);
+  });
+});
+
+describe("lagersalg 3 for 2", () => {
+  const lines: CartLine[] = [
+    { key: "d", type: "device", deviceId: U(1), name: "iPhone", price: 300000, vatScheme: "brugtmoms" },
+    { key: "a", type: "sku_product", skuProductId: U(2), name: "Cover", price: 5900, quantity: 2, lagersalg: true },
+    { key: "b", type: "sku_product", skuProductId: U(3), name: "Cover", price: 7900, quantity: 1, lagersalg: true },
+    { key: "g", type: "sku_product", skuProductId: U(4), name: "Glas", price: 9900, quantity: 1 },
+  ];
+
+  it("trækker 3 for 2 fra lagersalgslinjer og rører ikke enhedens brugtmoms", () => {
+    const t = cartTotals(lines, [], 0);
+    expect(t.bundleDiscount).toBe(5900);
+    expect(t.bundleUnitsToNextFree).toBeNull();
+    expect(t.total).toBe(300000 + 11800 + 7900 + 9900 - 5900);
+    expect(t.vat).toBe(standardVat(11800 - 5900) + standardVat(7900) + standardVat(9900));
+  });
+
+  it("bundleForLines bruger linjens nøgle", () => {
+    expect(bundleForLines(lines).byKey).toEqual({ a: { discountOere: 5900, freeUnits: 1 } });
+  });
+
+  it("sender bundleDiscountOere pr. sku-linje til salget, gratis enheder som egen linje", () => {
+    const items = toSaleItems(lines, []);
+    expect(items.filter((i) => i.type === "sku_product" && i.skuProductId === U(2))).toEqual([
+      { type: "sku_product", skuProductId: U(2), quantity: 1 },
+      { type: "sku_product", skuProductId: U(2), quantity: 1, bundleDiscountOere: 5900 },
+    ]);
+    expect(items.find((i) => i.type === "sku_product" && i.skuProductId === U(3))).not.toHaveProperty("bundleDiscountOere");
+    expect(items.find((i) => i.type === "sku_product" && i.skuProductId === U(4))).not.toHaveProperty("bundleDiscountOere");
+  });
+
+  it("en linje der er helt gratis forbliver én linje med hele rabatten", () => {
+    const l: CartLine[] = [
+      { key: "x", type: "sku_product", skuProductId: U(5), name: "Dyr", price: 9000, quantity: 2, lagersalg: true },
+      { key: "y", type: "sku_product", skuProductId: U(6), name: "Billig", price: 1000, quantity: 1, lagersalg: true },
+    ];
+    expect(toSaleItems(l, [])).toEqual([
+      { type: "sku_product", skuProductId: U(5), quantity: 2 },
+      { type: "sku_product", skuProductId: U(6), quantity: 1, bundleDiscountOere: 1000 },
+    ]);
+  });
+
+  it("manuel rabat fordeles på beløbet efter 3 for 2", () => {
+    const t = cartTotals(lines, [], 1000);
+    expect(t.discount).toBe(1000);
+    expect(t.bundleDiscount).toBe(5900);
+    expect(t.total).toBe(300000 + 11800 + 7900 + 9900 - 5900 - 1000);
+  });
+
+  it("rabatloftet er beløbet efter 3 for 2", () => {
+    expect(discountableBase(lines)).toBe(300000 + 11800 + 7900 + 9900 - 5900);
+  });
+
+  it("viser hvor mange lagersalgsvarer der mangler til næste gratis", () => {
+    const l: CartLine[] = [{ key: "a", type: "sku_product", skuProductId: U(2), name: "Cover", price: 5900, quantity: 2, lagersalg: true }];
+    expect(cartTotals(l, [], 0).bundleUnitsToNextFree).toBe(1);
+    expect(cartTotals(l, [], 0).bundleDiscount).toBe(0);
+  });
+
+  it("varer solgt fra en reparationssag indgår aldrig i 3 for 2", () => {
+    const l: CartLine[] = [
+      { key: "a", type: "sku_product", skuProductId: U(2), name: "Cover", price: 5900, quantity: 2, lagersalg: true },
+      { key: "r", type: "sku_product", skuProductId: U(3), name: "Cover", price: 4900, quantity: 1, lagersalg: true, repairTicketItemId: U(9) },
+    ];
+    expect(cartTotals(l, [], 0).bundleDiscount).toBe(0);
+    expect(toSaleItems(l, [])).toEqual([
+      { type: "sku_product", skuProductId: U(2), quantity: 2 },
+      { type: "sku_product", skuProductId: U(3), quantity: 1, repairTicketItemId: U(9) },
+    ]);
+  });
+
+  it("depositum-modregning holder totalen på 0 eller derover efter 3 for 2 og fuld rabat", () => {
+    const c = ctx();
+    const l: CartLine[] = [
+      ...casePaymentLines(c),
+      { key: "a", type: "sku_product", skuProductId: U(2), name: "Cover", price: 5900, quantity: 3, lagersalg: true },
+    ];
+    const max = discountableBase(l);
+    expect(max).toBe(169_800 + 11_800);
+    const applied = planAppliedDeposits(l, c, max);
+    const t = cartTotals(l, applied, max);
+    expect(t.total).toBe(0);
+  });
+
+  it("salgsskemaet accepterer bundleDiscountOere", () => {
+    const parsed = saleBodySchema.safeParse({
+      items: toSaleItems(lines, []),
+      payments: [],
+      locationId: U(30),
+      registerId: U(31),
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.items).toContainEqual({ type: "sku_product", skuProductId: U(2), quantity: 1, bundleDiscountOere: 5900 });
+    }
   });
 });
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 /**
  * GET /api/pos/lookup?q=<barcode|imei|search>&location_id=<id>
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     // Search SKU products by title, EAN, or product number (partial match)
     const { data: skuProducts } = await supabase
       .from("sku_products")
-      .select("id, title, ean, product_number, selling_price, sale_price, category, images")
+      .select("id, title, ean, product_number, selling_price, sale_price, category, images, subcategory, attributes")
       .eq("is_active", true)
       .eq("repair_only", false) // reservedele til reparationer vises ikke i kassens søgning
       .or(`ean.eq.${query},product_number.eq.${query},title.ilike.%${query}%`)
@@ -70,7 +71,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       devices: devices ?? [],
-      skuProducts: skuProducts ?? [],
+      // attributes is internal: only the derived lagersalg flag (3 for 2) goes to the Kasse.
+      skuProducts: (skuProducts ?? []).map(({ attributes, ...p }) => ({
+        ...p,
+        lagersalg: isLagersalg({ subcategory: p.subcategory, attributes: attributes as Record<string, string> | null }),
+      })),
     });
   } catch (err) {
     console.error("POS lookup error:", err);

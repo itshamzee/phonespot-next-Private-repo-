@@ -5,6 +5,7 @@ import {
   View,
   StyleSheet,
 } from "@react-pdf/renderer";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 
 /**
  * POS Receipt PDF — brugtmoms-compliant.
@@ -115,6 +116,8 @@ const styles = StyleSheet.create({
   },
 });
 
+export const LAGERSALG_RETURN_NOTICE = "Lagersalgsvarer tages ikke retur. Reklamationsretten gælder ved fejl.";
+
 type ReceiptItem = {
   name: string;
   grade?: string;
@@ -126,6 +129,8 @@ type ReceiptItem = {
   vatScheme: "brugtmoms" | "regular";
   /** Repair-case lines: no reklamationsret notice, deposit notice instead. */
   kind?: "deposit" | "deposit_applied" | "repair_service";
+  /** Lagersalgsvare (udsalg): no return, reklamationsret still applies. */
+  lagersalg?: boolean;
 };
 
 export type ReceiptPayment = { label: string; amount: number; reference?: string | null };
@@ -141,6 +146,8 @@ export type PosReceiptProps = {
   subtotal: number; // oere
   discountAmount: number; // oere (negative on credit notes)
   discountReason?: string | null;
+  /** Lagersalg 3 for 2, oere (shown as its own row when not 0). */
+  bundleDiscountAmount: number;
   total: number; // oere (negative on credit notes)
   payments: ReceiptPayment[];
   /** Fallback label for legacy sales without payment lines. */
@@ -148,6 +155,8 @@ export type PosReceiptProps = {
   customerName?: string;
   hasBrugtmomsItems: boolean;
   hasRegularVatItems: boolean;
+  /** Any lagersalgsvare on the sale: prints the no-return notice (not on credit notes). */
+  hasLagersalgItems: boolean;
   /** Standard 25 % VAT included in the total (stored on the order). */
   vatTotal?: number;
   isCreditNote?: boolean;
@@ -192,11 +201,13 @@ export function receiptHeight(receipt: PosReceiptProps): number {
     if (Math.abs(item.quantity) > 1) h += 11;
   }
   if (receipt.discountAmount !== 0) h += 26;
+  if (receipt.bundleDiscountAmount !== 0) h += 26;
   h += 20 + 12; // total, VAT line
   h += 16;
   for (const p of receipt.payments) h += 11 * lineCount(`${p.label}${p.reference ? ` (${p.reference})` : ""}`) + 2;
   if (credit && receipt.creditReason) h += 10 * lineCount(receipt.creditReason, 45) + 6;
   h += 3 * 26; // brugtmoms, warranty and deposit notices
+  if (!credit && receipt.hasLagersalgItems) h += 26;
   h += 40; // footer
   return Math.ceil(h * 1.1);
 }
@@ -258,19 +269,25 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
         <View style={styles.divider} />
 
         {/* Totals */}
+        {(receipt.discountAmount !== 0 || receipt.bundleDiscountAmount !== 0) && (
+          <View style={styles.itemRow}>
+            <Text style={styles.itemName}>Subtotal</Text>
+            <Text style={styles.itemPrice}>{formatPrice(receipt.subtotal)}</Text>
+          </View>
+        )}
+        {receipt.bundleDiscountAmount !== 0 && (
+          <View style={styles.itemRow}>
+            <Text style={styles.itemName}>{THREE_FOR_TWO_LABEL}</Text>
+            <Text style={styles.itemPrice}>{formatPrice(-receipt.bundleDiscountAmount)}</Text>
+          </View>
+        )}
         {receipt.discountAmount !== 0 && (
-          <>
-            <View style={styles.itemRow}>
-              <Text style={styles.itemName}>Subtotal</Text>
-              <Text style={styles.itemPrice}>{formatPrice(receipt.subtotal)}</Text>
-            </View>
-            <View style={styles.itemRow}>
-              <Text style={styles.itemName}>
-                Rabat{receipt.discountReason ? ` (${receipt.discountReason})` : ""}
-              </Text>
-              <Text style={styles.itemPrice}>{formatPrice(-receipt.discountAmount)}</Text>
-            </View>
-          </>
+          <View style={styles.itemRow}>
+            <Text style={styles.itemName}>
+              Rabat{receipt.discountReason ? ` (${receipt.discountReason})` : ""}
+            </Text>
+            <Text style={styles.itemPrice}>{formatPrice(-receipt.discountAmount)}</Text>
+          </View>
         )}
 
         <View style={styles.totalRow}>
@@ -334,6 +351,11 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
           ) : receipt.items.some((item) => item.vatScheme === "regular" && !item.isDevice && !item.kind) ? (
             <Text style={styles.warrantyNotice}>2 års reklamationsret efter købeloven.</Text>
           ) : null)}
+
+        {/* Lagersalg: sold as clearance, no return right; reklamationsret still applies. */}
+        {!credit && receipt.hasLagersalgItems && (
+          <Text style={styles.warrantyNotice}>{LAGERSALG_RETURN_NOTICE}</Text>
+        )}
 
         {/* Deposit: a prepayment on a repair case. VAT is included above (due on receipt). */}
         {!credit && receipt.items.some((item) => item.kind === "deposit") && (

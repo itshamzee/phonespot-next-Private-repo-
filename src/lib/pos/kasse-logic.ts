@@ -13,12 +13,23 @@ import { planDepositApplication, type DepositApplication } from "./deposit-math"
 import { isIntegratedTerminal, type PaymentTerminalKind, type PaymentType } from "./constants";
 import type { SaleItem } from "./schemas";
 import type { CaseLine } from "@/lib/repairs/case-money";
+import { threeForTwo, type ThreeForTwoLine, type ThreeForTwoResult } from "@/lib/lagersalg/three-for-two";
 
 export const DEFAULT_DEPOSIT_SUGGESTION_OERE = 50_000;
 
 export type CartLine =
   | { key: string; type: "device"; deviceId: string; name: string; detail?: string; price: number; vatScheme: "brugtmoms" | "regular"; repairTicketItemId?: string }
-  | { key: string; type: "sku_product"; skuProductId: string; name: string; price: number; quantity: number; repairTicketItemId?: string }
+  | {
+      key: string;
+      type: "sku_product";
+      skuProductId: string;
+      name: string;
+      price: number;
+      quantity: number;
+      repairTicketItemId?: string;
+      /** Lagersalgsvare (udsalg "Ja", not glass): takes part in 3 for 2. The server re-checks it. */
+      lagersalg?: boolean;
+    }
   | { key: string; type: "free_text"; name: string; price: number; quantity: number }
   | { key: string; type: "deposit"; ticketId: string; ticketNumber: string; name: string; price: number }
   | { key: string; type: "repair_service"; ticketId: string; ticketNumber: string; name: string; detail?: string; price: number };
@@ -80,9 +91,31 @@ export function activeCaseTicketId(lines: CartLine[]): string | null {
   return l && l.type === "repair_service" ? l.ticketId : null;
 }
 
-/** Discount cap: deposit lines are not discountable (same rule as the database function). */
+/**
+ * Lagersalg 3 for 2 over the cart's sku lines, keyed by line.key. A product sold from a repair
+ * case keeps the price agreed on the case and never takes part.
+ */
+export function bundleForLines(lines: CartLine[]): ThreeForTwoResult {
+  const input: ThreeForTwoLine[] = [];
+  for (const l of lines) {
+    if (l.type !== "sku_product") continue;
+    input.push({
+      key: l.key,
+      unitPriceOere: l.price,
+      quantity: l.quantity,
+      lagersalg: l.lagersalg === true && !l.repairTicketItemId,
+    });
+  }
+  return threeForTwo(input);
+}
+
+/**
+ * Discount cap: deposit lines are not discountable, and the manual discount is taken from what is
+ * left after 3 for 2 (same rule as the database function).
+ */
 export function discountableBase(lines: CartLine[]): number {
-  return lines.filter((l) => l.type !== "deposit").reduce((s, l) => s + lineTotal(l), 0);
+  const gross = lines.filter((l) => l.type !== "deposit").reduce((s, l) => s + lineTotal(l), 0);
+  return gross - bundleForLines(lines).totalOere;
 }
 
 /**
@@ -99,7 +132,9 @@ export function planAppliedDeposits(
   const ticketId = activeCaseTicketId(lines);
   if (!ticketId || ticketId !== c.id) return [];
   const repair = repairTotal(lines);
-  const others = lines.filter((l) => l.type !== "repair_service").reduce((s, l) => s + lineTotal(l), 0);
+  // Other lines count after 3 for 2, so the deduction never pushes the total below zero.
+  const others =
+    lines.filter((l) => l.type !== "repair_service").reduce((s, l) => s + lineTotal(l), 0) - bundleForLines(lines).totalOere;
   const due = Math.min(repair, Math.max(0, repair + others - Math.max(0, discountOere)));
   const plan: DepositApplication[] = planDepositApplication(
     c.deposits.map((d) => ({ id: d.id, remainingOere: d.remaining_oere, paidAt: d.paid_at })),
@@ -121,7 +156,12 @@ export function planAppliedDeposits(
 
 export type CartTotals = {
   subtotal: number;
+  /** Manual discount. */
   discount: number;
+  /** Lagersalg 3 for 2. */
+  bundleDiscount: number;
+  /** 1 or 2 when that many more lagersalgsvarer make the cheapest free, else null. */
+  bundleUnitsToNextFree: number | null;
   total: number;
   /** Standard 25 % VAT contained in regular lines (a negative applied deposit reduces it). */
   vat: number;
@@ -130,6 +170,7 @@ export type CartTotals = {
 };
 
 export function cartTotals(lines: CartLine[], applied: AppliedDepositLine[], discountOere: number): CartTotals {
+  const bundle = bundleForLines(lines);
   const all = [
     ...lines.map((l) => ({
       kind: l.type,
@@ -137,6 +178,7 @@ export function cartTotals(lines: CartLine[], applied: AppliedDepositLine[], dis
       quantity: l.type === "sku_product" || l.type === "free_text" ? l.quantity : 1,
       costPrice: null,
       vatScheme: (l.type === "device" ? l.vatScheme : "regular") as "brugtmoms" | "regular",
+      bundleDiscount: l.type === "sku_product" ? (bundle.byKey[l.key]?.discountOere ?? 0) : 0,
     })),
     ...applied.map((a) => ({
       kind: "deposit_applied" as const,
@@ -150,6 +192,8 @@ export function cartTotals(lines: CartLine[], applied: AppliedDepositLine[], dis
   return {
     subtotal: t.subtotal,
     discount: t.discount,
+    bundleDiscount: t.bundleDiscount,
+    bundleUnitsToNextFree: bundle.unitsToNextFree,
     total: t.total,
     vat: t.vatTotal,
     appliedTotal: applied.reduce((s, a) => s + a.price, 0),
@@ -157,30 +201,52 @@ export function cartTotals(lines: CartLine[], applied: AppliedDepositLine[], dis
   };
 }
 
-/** Body items for POST /api/pos/sale. Applied deposits become deposit_applied lines. */
+/**
+ * Body items for POST /api/pos/sale. Applied deposits become deposit_applied lines.
+ * Units made free by 3 for 2 are sent as their own sku line carrying the whole
+ * bundleDiscountOere, so a later partial return refunds the paid and the free
+ * units correctly. The server recomputes the discount and rejects a mismatch.
+ */
 export function toSaleItems(lines: CartLine[], applied: AppliedDepositLine[]): SaleItem[] {
-  const items: SaleItem[] = lines.map((l): SaleItem => {
+  const bundle = bundleForLines(lines);
+  const items: SaleItem[] = lines.flatMap((l): SaleItem[] => {
     switch (l.type) {
       case "device":
-        return { type: "device", deviceId: l.deviceId, ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}) };
-      case "sku_product":
-        return {
-          type: "sku_product",
-          skuProductId: l.skuProductId,
-          quantity: l.quantity,
-          ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}),
-        };
+        return [{ type: "device", deviceId: l.deviceId, ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}) }];
+      case "sku_product": {
+        const free = bundle.byKey[l.key];
+        if (free && free.freeUnits > 0 && !l.repairTicketItemId) {
+          const freeLine: SaleItem = {
+            type: "sku_product",
+            skuProductId: l.skuProductId,
+            quantity: free.freeUnits,
+            bundleDiscountOere: free.discountOere,
+          };
+          if (free.freeUnits >= l.quantity) return [freeLine];
+          return [{ type: "sku_product", skuProductId: l.skuProductId, quantity: l.quantity - free.freeUnits }, freeLine];
+        }
+        return [
+          {
+            type: "sku_product",
+            skuProductId: l.skuProductId,
+            quantity: l.quantity,
+            ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}),
+          },
+        ];
+      }
       case "free_text":
-        return { type: "free_text", description: l.name.slice(0, 200), unitPriceOere: l.price, quantity: l.quantity };
+        return [{ type: "free_text", description: l.name.slice(0, 200), unitPriceOere: l.price, quantity: l.quantity }];
       case "deposit":
-        return { type: "deposit", repairTicketId: l.ticketId, description: l.name.slice(0, 200), unitPriceOere: l.price };
+        return [{ type: "deposit", repairTicketId: l.ticketId, description: l.name.slice(0, 200), unitPriceOere: l.price }];
       case "repair_service":
-        return {
-          type: "repair_service",
-          repairTicketId: l.ticketId,
-          description: l.name.slice(0, 200),
-          unitPriceOere: l.price,
-        };
+        return [
+          {
+            type: "repair_service",
+            repairTicketId: l.ticketId,
+            description: l.name.slice(0, 200),
+            unitPriceOere: l.price,
+          },
+        ];
     }
   });
   for (const a of applied) items.push({ type: "deposit_applied", depositItemId: a.depositItemId, amountOere: a.price });

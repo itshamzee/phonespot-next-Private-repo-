@@ -72,6 +72,7 @@ type LookupSku = {
   selling_price: number;
   sale_price: number | null;
   category: string | null;
+  lagersalg: boolean;
 };
 type Lookup = { devices: LookupDevice[]; skuProducts: LookupSku[] };
 
@@ -374,11 +375,14 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
 
   /* ----- Cart editing ----- */
 
-  function addSku(s: { id: string; title: string; priceOere: number }) {
+  function addSku(s: { id: string; title: string; priceOere: number; lagersalg: boolean }) {
     setLines((prev) => {
-      const existing = prev.find((l) => l.type === "sku_product" && l.skuProductId === s.id);
+      const existing = prev.find((l) => l.type === "sku_product" && l.skuProductId === s.id && !l.repairTicketItemId);
       if (existing) return prev.map((l) => (l === existing && l.type === "sku_product" ? { ...l, quantity: l.quantity + 1 } : l));
-      return [...prev, { key: crypto.randomUUID(), type: "sku_product", skuProductId: s.id, name: s.title, price: s.priceOere, quantity: 1 }];
+      return [
+        ...prev,
+        { key: crypto.randomUUID(), type: "sku_product", skuProductId: s.id, name: s.title, price: s.priceOere, quantity: 1, lagersalg: s.lagersalg },
+      ];
     });
     clearScan();
   }
@@ -519,7 +523,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           vatScheme: exactDevice.vat_scheme,
         });
       } else if (exactSku) {
-        addSku({ id: exactSku.id, title: exactSku.title, priceOere: effectiveSkuPrice(exactSku) });
+        addSku({ id: exactSku.id, title: exactSku.title, priceOere: effectiveSkuPrice(exactSku), lagersalg: exactSku.lagersalg === true });
       } else {
         setLookup(data);
         if (devs.length === 0 && skus.length === 0) setCaseHitError("Ingen varer fundet");
@@ -882,7 +886,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                       key={s.id}
                       type="button"
                       className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
-                      onClick={() => addSku({ id: s.id, title: s.title, priceOere: effectiveSkuPrice(s) })}
+                      onClick={() => addSku({ id: s.id, title: s.title, priceOere: effectiveSkuPrice(s), lagersalg: s.lagersalg === true })}
                     >
                       <span>
                         <b>{s.title}</b>
