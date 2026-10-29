@@ -244,6 +244,12 @@ function ReturnPageInner() {
             {preview.problem && <p className="mt-2 text-xs text-red-500">{preview.problem}</p>}
           </div>
 
+          {order.lines.some((l) => l.lagersalg && (qty[l.id] ?? 0) > 0) && (
+            <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+              Lagersalgsvare: tages ikke retur. Fortsæt kun ved reklamation eller kulance, og skriv årsagen.
+            </div>
+          )}
+
           {preview.note && (
             <div className={card}>
               <p className="font-display text-lg font-bold text-charcoal">Tilbagebetal {formatOere(refundAmount)}</p>
