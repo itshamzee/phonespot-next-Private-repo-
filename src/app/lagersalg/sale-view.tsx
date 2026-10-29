@@ -25,7 +25,7 @@ export async function getSaleCovers(): Promise<Row[]> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("checkout_sku_inventory")
-      .select(`${PUBLIC_ACCESSORY_COLUMNS}, attributes`)
+      .select(PUBLIC_ACCESSORY_COLUMNS)
       .eq("status", "published")
       .eq("is_active", true)
       .eq("category", "accessory")

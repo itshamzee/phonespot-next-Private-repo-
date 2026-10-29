@@ -24,6 +24,8 @@ export interface CrossSellProduct {
   images: string[];
   category: string | null;
   subcategory?: string | null;
+  /** Lagersalgsvare (3 for 2), beregnet på serveren. */
+  lagersalg?: boolean;
 }
 
 export interface CompatibleDevice {
@@ -229,6 +231,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
       image: product.images[0] ?? null,
       price,
       quantity: 1,
+      ...(product.lagersalg ? { lagersalg: true as const } : {}),
     });
     openCart();
   }

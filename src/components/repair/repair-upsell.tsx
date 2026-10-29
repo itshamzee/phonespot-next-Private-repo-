@@ -73,6 +73,7 @@ function UpsellRow({ item }: { item: PublicAccessory }) {
       ...(item.spotKind
         ? { spotKind: item.spotKind, ...(isOnSale ? { unitPrice: item.price } : {}) }
         : {}),
+      ...(item.lagersalg ? { lagersalg: true as const } : {}),
     });
     openCart();
     setAdded(true);

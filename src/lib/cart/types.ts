@@ -37,11 +37,11 @@ export interface CartSkuItem {
   title: string;
   image: string | null;
   price: number;
-  /** Full (non-discounted) unit price in øre. Only set for Spot items where price reflects a sale. */
+  /** Full (non-discounted) unit price in øre. Kun til visning — påvirker ikke længere totaler. */
   unitPrice?: number;
   quantity: number;
   variantLabel?: string; // e.g. "Farve: Sort" — shown in cart line item
-  /** Present on Spot beskyttelsesglas items to enable bundle-pricing rules. */
+  /** Spot-varianttype. Kun til visning — påvirker ikke længere totaler. */
   spotKind?: "glass" | "privacy" | "lens" | "plateau";
   /** Original retail price in øre — for strikethrough display when price is discounted. */
   retailPrice?: number;

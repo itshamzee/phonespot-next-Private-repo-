@@ -243,13 +243,19 @@ export default async function AccessoryDetailPage({ params }: Props) {
     if (ids.size > 0) {
       const { data } = await supabase
         .from("sku_products")
-        .select("id, title, slug, selling_price, sale_price, images, category, subcategory, status")
+        .select("id, title, slug, selling_price, sale_price, images, category, subcategory, status, attributes")
         .in("id", [...ids].slice(0, 60))
         .eq("status", "published")
         .eq("is_active", true)
         .neq("category", "spare-part")
         .limit(60);
-      const rows = ((data ?? []) as CrossSellProduct[]).filter((p) => p.slug && p.images?.length);
+      // attributes er interne; kun det afledte lagersalg-flag sendes videre til klienten.
+      const rows = ((data ?? []) as Array<CrossSellProduct & { attributes?: Record<string, string> | null }>)
+        .filter((p) => p.slug && p.images?.length)
+        .map(({ attributes, ...p }): CrossSellProduct => ({
+          ...p,
+          lagersalg: isLagersalg({ subcategory: p.subcategory ?? null, attributes }),
+        }));
       const other = rows.filter((p) => p.subcategory !== product.subcategory);
       const same = rows.filter((p) => p.subcategory === product.subcategory);
       crossSellProducts = [...other, ...same].slice(0, 8);
