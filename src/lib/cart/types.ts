@@ -37,16 +37,18 @@ export interface CartSkuItem {
   title: string;
   image: string | null;
   price: number;
-  /** Full (non-discounted) unit price in øre. Only set for Spot items where price reflects a sale. */
+  /** Full (non-discounted) unit price in øre. Kun til visning — påvirker ikke længere totaler. */
   unitPrice?: number;
   quantity: number;
   variantLabel?: string; // e.g. "Farve: Sort" — shown in cart line item
-  /** Present on Spot beskyttelsesglas items to enable bundle-pricing rules. */
+  /** Spot-varianttype. Kun til visning — påvirker ikke længere totaler. */
   spotKind?: "glass" | "privacy" | "lens" | "plateau";
   /** Original retail price in øre — for strikethrough display when price is discounted. */
   retailPrice?: number;
   /** Cached at add-to-cart for display (iPhone web flow). */
   batteryHealth?: number;
+  /** Lagersalgsvare (3 for 2). Sat ved læg-i-kurv, kun til visning — serveren regner selv. */
+  lagersalg?: true;
 }
 
 export type CartItem = CartDeviceItem | CartSkuItem;
@@ -73,8 +75,10 @@ export interface CartState {
 export interface CartTotals {
   subtotal: number;
   discountAmount: number;
-  /** Spot 3-for-2 + Lens combo savings. */
+  /** Lagersalg 3 for 2-besparelse. */
   bundleDiscountAmount: number;
+  /** Antal lagersalgsvarer der mangler til næste gratis (1 eller 2), ellers null. */
+  bundleUnitsToNextFree: number | null;
   shippingCost: number;
   total: number;
   itemCount: number;

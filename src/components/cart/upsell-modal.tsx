@@ -19,6 +19,7 @@ interface Suggestion {
   subtitle: string;
   price: number; // øre
   image: string | null;
+  lagersalg?: boolean;
 }
 
 const FALLBACK: Suggestion[] = [
@@ -50,13 +51,14 @@ function formatKr(oere: number): string {
   return `${kr.toLocaleString("da-DK", { minimumFractionDigits: Number.isInteger(kr) ? 0 : 2, maximumFractionDigits: 2 })} kr.`;
 }
 
-function toSuggestion(a: PublicAccessory): Suggestion {
+export function toSuggestion(a: PublicAccessory): Suggestion {
   return {
     id: a.id,
     title: a.name,
     subtitle: SUBTITLE[a.category] ?? "Tilbehør",
     price: a.sale_price ?? a.price,
     image: a.image_url,
+    ...(a.lagersalg ? { lagersalg: true } : {}),
   };
 }
 
@@ -104,6 +106,7 @@ export function UpsellModal() {
       price: s.price,
       quantity: 1,
       image: s.image,
+      ...(s.lagersalg ? { lagersalg: true as const } : {}),
     });
   };
 

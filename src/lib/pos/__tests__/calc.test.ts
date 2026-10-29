@@ -140,3 +140,23 @@ describe("legacyPaymentMethod", () => {
     expect(legacyPaymentMethod([])).toBeNull();
   });
 });
+
+describe("computeSaleTotals with 3 for 2", () => {
+  it("trækker pakkerabatten fra linjen før moms", () => {
+    const t = computeSaleTotals([
+      { kind: "sku_product", unitPrice: 5900, quantity: 3, costPrice: null, vatScheme: "regular", bundleDiscount: 5900 },
+    ]);
+    expect(t.lines[0].net).toBe(11800);
+    expect(t.lines[0].vat).toBe(standardVat(11800));
+    expect(t.vatTotal).toBe(standardVat(11800));
+    expect(t.bundleDiscount).toBe(5900);
+    expect(t.discount).toBe(0);
+    expect(t.total).toBe(11800);
+  });
+
+  it("manuel rabat kan ikke overstige beløbet efter pakkerabat", () => {
+    expect(() =>
+      computeSaleTotals([{ kind: "sku_product", unitPrice: 5900, quantity: 3, costPrice: null, vatScheme: "regular", bundleDiscount: 5900 }], 11801),
+    ).toThrow("discount_exceeds_total");
+  });
+});

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND } from "@/lib/email/brand";
+import {
+  THREE_FOR_TWO_FREE_LABEL,
+  THREE_FOR_TWO_LABEL,
+  isFreeBundleLine,
+} from "@/lib/lagersalg/three-for-two";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +26,11 @@ export async function GET(req: NextRequest) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(`
-      id, order_number, status, total, subtotal, shipping_cost, discount_amount,
+      id, order_number, status, total, subtotal, shipping_cost, discount_amount, bundle_discount_amount,
       shipping_method, shipping_address, tracking_number, tracking_url,
       notes, created_at, confirmed_at,
       customer:customers(name, email, phone),
-      order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price, battery_upgrade)
+      order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price, discount_amount, battery_upgrade)
     `)
     .eq("id", orderId)
     .single();
@@ -50,6 +55,8 @@ export async function GET(req: NextRequest) {
     quantity: number;
     unitPrice: number;
     totalPrice: number;
+    /** Gratis via lagersalg 3 for 2 (linjerabat = hele linjeprisen). */
+    freeBundle: boolean;
     batteryUpgrade: boolean;
   }
 
@@ -85,6 +92,7 @@ export async function GET(req: NextRequest) {
         quantity: 1,
         unitPrice: item.unit_price,
         totalPrice: item.total_price || item.unit_price,
+        freeBundle: false,
         batteryUpgrade: !!item.battery_upgrade,
       });
     } else if (item.item_type === "sku_product" && item.sku_product_id) {
@@ -101,6 +109,10 @@ export async function GET(req: NextRequest) {
         quantity: item.quantity,
         unitPrice: item.unit_price,
         totalPrice: item.total_price || item.unit_price * item.quantity,
+        freeBundle: isFreeBundleLine({
+          totalOere: item.total_price || item.unit_price * item.quantity,
+          discountOere: item.discount_amount,
+        }),
         batteryUpgrade: !!item.battery_upgrade,
       });
     }
@@ -154,7 +166,9 @@ export async function GET(req: NextRequest) {
             ${formatKr(item.unitPrice)}
           </td>
           <td style="padding:12px 16px;text-align:right;vertical-align:middle;color:#111;font-weight:600;font-size:14px;white-space:nowrap;">
-            ${formatKr(item.totalPrice)}
+            ${item.freeBundle
+              ? `<s style="color:#9ca3af;font-weight:400;">${formatKr(item.totalPrice)}</s><div style="color:#16a34a;font-size:12px;">${THREE_FOR_TWO_FREE_LABEL}</div>`
+              : formatKr(item.totalPrice)}
           </td>
         </tr>`;
     })
@@ -188,6 +202,15 @@ export async function GET(req: NextRequest) {
       <tr>
         <td style="padding:6px 16px;color:#6b7280;font-size:13px;">Rabat</td>
         <td style="padding:6px 16px;text-align:right;color:#dc2626;font-size:13px;font-weight:500;">-${formatKr(order.discount_amount)}</td>
+      </tr>`);
+  }
+
+  const bundleDiscount = (order as { bundle_discount_amount?: number | null }).bundle_discount_amount ?? 0;
+  if (bundleDiscount > 0) {
+    summaryRows.push(`
+      <tr>
+        <td style="padding:6px 16px;color:#6b7280;font-size:13px;">${THREE_FOR_TWO_LABEL}</td>
+        <td style="padding:6px 16px;text-align:right;color:#dc2626;font-size:13px;font-weight:500;">-${formatKr(bundleDiscount)}</td>
       </tr>`);
   }
 

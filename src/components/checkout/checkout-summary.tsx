@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal } from "@/lib/cart/utils";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 
 export function CheckoutSummary() {
   const { cartState, totals } = useCart();
@@ -114,7 +115,7 @@ export function CheckoutSummary() {
 
         {bundleDiscountAmount > 0 && (
           <div className="flex items-center justify-between text-green-eco">
-            <span>Spot-pakkerabat</span>
+            <span>{THREE_FOR_TWO_LABEL}</span>
             <span>−{formatOere(bundleDiscountAmount)}</span>
           </div>
         )}

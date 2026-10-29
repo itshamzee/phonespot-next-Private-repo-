@@ -75,11 +75,13 @@ export type SaleLineInput = {
   /** Purchase/cost price per unit (devices: purchase_price, accessories: cost_price). */
   costPrice: number | null;
   vatScheme: "brugtmoms" | "regular";
+  /** Lagersalg 3 for 2: amount taken off this line before the manual discount (default 0). */
+  bundleDiscount?: number;
 };
 
 export type SaleLineResult = SaleLineInput & {
   total: number; // unit * quantity, before discount
-  discount: number; // allocated discount
+  discount: number; // allocated manual discount + this line's 3 for 2 discount
   net: number; // total - discount
   vat: number; // brugtmoms (scheme brugtmoms) or standard VAT (regular)
 };
@@ -87,7 +89,10 @@ export type SaleLineResult = SaleLineInput & {
 export type SaleTotals = {
   lines: SaleLineResult[];
   subtotal: number;
+  /** Manual discount (the cashier's, with a reason). */
   discount: number;
+  /** Lagersalg 3 for 2, summed over the lines. */
+  bundleDiscount: number;
   total: number;
   /** Standard VAT included in regular lines. */
   vatTotal: number;
@@ -101,33 +106,42 @@ export function isDepositKind(kind: SaleLineInput["kind"]): boolean {
 }
 
 /**
- * Totals for a cart. Discount is distributed over all lines except deposit
- * lines (a deposit is a prepayment, not discountable), THEN VAT is computed per
- * line on the discounted amount. An applied deposit is a negative line.
+ * Totals for a cart. The 3 for 2 discount comes off its own line first; the
+ * manual discount is then distributed over what is left of all lines except
+ * deposit lines (a deposit is a prepayment, not discountable), THEN VAT is
+ * computed per line on the net amount. An applied deposit is a negative line.
+ * Same order as pos_create_sale.
  */
 export function computeSaleTotals(lines: SaleLineInput[], discount = 0): SaleTotals {
   const totals = lines.map((l) => l.unitPrice * l.quantity);
-  const discountable = lines.map((l, i) => (isDepositKind(l.kind) ? 0 : totals[i]));
+  const bundles = lines.map((l) => l.bundleDiscount ?? 0);
+  bundles.forEach((b, i) => {
+    if (b !== 0 && (!Number.isInteger(b) || b < 0 || b > totals[i])) throw new Error("invalid_bundle_discount");
+  });
+  const discountable = lines.map((l, i) => (isDepositKind(l.kind) ? 0 : totals[i]) - bundles[i]);
   const discountableBase = discountable.reduce((s, t) => s + t, 0);
   if (discount < 0) throw new Error("discount_negative");
   if (discount > discountableBase) throw new Error("discount_exceeds_total");
   const alloc = distributeDiscount(discountable, discount);
 
   const result = lines.map<SaleLineResult>((l, i) => {
-    const net = totals[i] - alloc[i];
+    const lineDiscount = alloc[i] + bundles[i];
+    const net = totals[i] - lineDiscount;
     const vat =
       l.vatScheme === "brugtmoms"
         ? brugtmomsVat(net, (l.costPrice ?? 0) * l.quantity)
         : standardVat(net);
-    return { ...l, total: totals[i], discount: alloc[i], net, vat };
+    return { ...l, total: totals[i], discount: lineDiscount, net, vat };
   });
 
   const subtotal = totals.reduce((s, t) => s + t, 0);
+  const bundleDiscount = bundles.reduce((s, b) => s + b, 0);
   return {
     lines: result,
     subtotal,
     discount,
-    total: subtotal - discount,
+    bundleDiscount,
+    total: subtotal - discount - bundleDiscount,
     vatTotal: result.filter((l) => l.vatScheme === "regular").reduce((s, l) => s + l.vat, 0),
     brugtmomsTotal: result.filter((l) => l.vatScheme === "brugtmoms").reduce((s, l) => s + l.vat, 0),
   };

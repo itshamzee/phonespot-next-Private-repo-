@@ -6,6 +6,7 @@ import type { PaymentTerminalKind, PaymentType } from "@/lib/pos/constants";
 import { PAYMENT_LABELS, isIntegratedTerminal } from "@/lib/pos/constants";
 import type { AppliedDepositLine, CartLine, CartTotals, CaseStockSummary, PaymentChoice } from "@/lib/pos/kasse-logic";
 import { lineTotal } from "@/lib/pos/kasse-logic";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { CustomerPick } from "./dialogs";
 import { fmt, fmtKr, shortDate } from "./format";
 
@@ -217,6 +218,17 @@ export function CartPanel(p: Props) {
           )}
         </div>
         {p.discountOere > 0 && p.discountReason && <div className="-mt-1 text-xs text-[#5E6A63]">Årsag: {p.discountReason}</div>}
+        {p.totals.bundleDiscount > 0 && (
+          <div className="flex justify-between py-1.5 text-[#5E6A63]">
+            <span>{THREE_FOR_TWO_LABEL}</span>
+            <span className="tabular-nums">{fmt(-p.totals.bundleDiscount)}</span>
+          </div>
+        )}
+        {(p.totals.bundleUnitsToNextFree === 1 || p.totals.bundleUnitsToNextFree === 2) && (
+          <div className="-mt-1 text-xs text-[#5E6A63]">
+            {p.totals.bundleUnitsToNextFree} {p.totals.bundleUnitsToNextFree === 1 ? "lagersalgsvare" : "lagersalgsvarer"} mere, så er den billigste gratis
+          </div>
+        )}
         <div className="flex justify-between py-1.5 text-[#5E6A63]">
           <span>Heraf moms</span>
           <span className="tabular-nums">{fmt(p.totals.vat)}</span>

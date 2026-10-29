@@ -5,7 +5,7 @@ import type { PublicAccessory } from "@/lib/product/public-accessory";
 
 const item = (id: string, category: string, extra: Partial<PublicAccessory> = {}): PublicAccessory => ({
   id, name: id, slug: id, category, brand: null, price: 19900, sale_price: null, image_url: null,
-  created_at: "", store_stock: 0, online_stock: 0, availability: "orderable", ...extra,
+  created_at: "", store_stock: 0, online_stock: 0, availability: "orderable", lagersalg: false, ...extra,
 });
 
 describe("pickUpsell", () => {

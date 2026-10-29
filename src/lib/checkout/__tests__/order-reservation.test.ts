@@ -89,6 +89,7 @@ const params = {
   discount: null,
   discountCodeId: null,
   shippingMethod: "pickup",
+  bundleByKey: {},
   shippingCost: 0,
   subtotal: 30000,
   discountAmount: 0,

@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/client";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 export type QuickTile = {
   id: string;
@@ -6,6 +7,8 @@ export type QuickTile = {
   /** Effective selling price (sale price when lower), oere. */
   priceOere: number;
   category: string | null;
+  /** Lagersalgsvare: takes part in 3 for 2 (re-checked on the server). */
+  lagersalg: boolean;
   sold?: number;
 };
 
@@ -36,6 +39,8 @@ type SkuRow = {
   selling_price: number;
   sale_price: number | null;
   category: string | null;
+  subcategory?: string | null;
+  attributes?: Record<string, string> | null;
   is_active?: boolean | null;
 };
 
@@ -44,7 +49,14 @@ export function effectivePrice(p: { selling_price: number; sale_price: number | 
 }
 
 function toTile(p: SkuRow, sold?: number): QuickTile {
-  return { id: p.id, title: p.title, priceOere: effectivePrice(p), category: p.category, sold };
+  return {
+    id: p.id,
+    title: p.title,
+    priceOere: effectivePrice(p),
+    category: p.category,
+    lagersalg: isLagersalg({ subcategory: p.subcategory ?? null, attributes: p.attributes }),
+    sold,
+  };
 }
 
 function one<T>(v: T | T[] | null | undefined): T | null {
@@ -75,7 +87,7 @@ export async function topSellingTiles(locationId: string, days = TOP_SELLER_DAYS
 
   const { data: products } = await supabase
     .from("sku_products")
-    .select("id, title, selling_price, sale_price, category, is_active")
+    .select("id, title, selling_price, sale_price, category, subcategory, attributes, is_active")
     .in(
       "id",
       top.map((t) => t.id),
@@ -116,7 +128,7 @@ export async function categoryTiles(locationId: string, category: string, limit 
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("sku_stock")
-    .select("product_id, sku_products!inner ( id, title, selling_price, sale_price, category, is_active )")
+    .select("product_id, sku_products!inner ( id, title, selling_price, sale_price, category, subcategory, attributes, is_active )")
     .eq("location_id", locationId)
     .gt("quantity", 0)
     .eq("sku_products.category", category)

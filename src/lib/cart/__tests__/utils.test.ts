@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { calcTotals } from "../utils";
-import type { CartState, CartSkuItem } from "../types";
+import { calcTotals, calcBundleDiscounts, calcCartTotals, resolveShippingCost } from "../utils";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { cartItemKey, type CartState, type CartSkuItem } from "../types";
 
 const iphone: CartSkuItem = {
   type: "sku_product",
@@ -42,5 +43,78 @@ describe("calcTotals", () => {
     const t = calcTotals(state, 4900);
     expect(t.shippingCost).toBe(0);
     expect(t.total).toBe(15900 * 2);
+  });
+});
+
+const cover = (id: string, price: number, quantity = 1): CartSkuItem =>
+  ({ type: "sku_product", skuProductId: id, title: id, image: null, price, quantity, lagersalg: true });
+
+describe("calcTotals med lagersalg 3 for 2", () => {
+  it("trækker den billigste af tre fra totalen", () => {
+    const state: CartState = { items: [cover("a", 7900), cover("b", 5900), cover("c", 9900)], discount: null };
+    const t = calcTotals(state, 0);
+    expect(t.bundleDiscountAmount).toBe(5900);
+    expect(t.total).toBe(7900 + 9900);
+    expect(t.bundleUnitsToNextFree).toBeNull();
+  });
+  it("siger hvor mange der mangler ved to", () => {
+    const t = calcTotals({ items: [cover("a", 5900), cover("b", 5900)], discount: null }, 0);
+    expect(t.bundleDiscountAmount).toBe(0);
+    expect(t.bundleUnitsToNextFree).toBe(1);
+  });
+  it("stakker med en rabatkode regnet på subtotalen", () => {
+    const state: CartState = {
+      items: [cover("a", 10000), cover("b", 10000), cover("c", 10000)],
+      discount: { code: "TI", type: "percentage", value: 10, discountAmount: 0 },
+    };
+    const t = calcTotals(state, 0);
+    expect(t.discountAmount).toBe(3000);
+    expect(t.bundleDiscountAmount).toBe(10000);
+    expect(t.total).toBe(30000 - 3000 - 10000);
+  });
+  it("adskiller to varianter af samme produkt", () => {
+    const a = { ...cover("x", 5900), variantLabel: "Farve: Sort" };
+    const b = { ...cover("x", 7900), variantLabel: "Farve: Blå" };
+    const r = calcBundleDiscounts([a, b, cover("y", 9900)]);
+    expect(r.byKey[cartItemKey(a)]?.discount_oere).toBe(5900);
+    expect(r.byKey[cartItemKey(b)]).toBeUndefined();
+  });
+});
+
+describe("calcCartTotals — fri fragt på nettobeløbet (som checkout-serveren)", () => {
+  const sixCovers = (): CartState => ({
+    items: ["a", "b", "c", "d", "e", "f"].map((id) => cover(id, 9900)),
+    discount: null,
+  });
+
+  it("seks lagersalgscovers à 99 kr. (brutto 594, netto 396) giver IKKE fri fragt", () => {
+    const t = calcCartTotals(sixCovers());
+    expect(t.subtotal).toBe(59400);
+    expect(t.bundleDiscountAmount).toBe(19800);
+    const net = t.subtotal - t.discountAmount - t.bundleDiscountAmount;
+    expect(net).toBe(39600);
+    // Forudsætning: tærsklen ligger mellem netto og brutto.
+    expect(FREE_SHIPPING_THRESHOLD).toBeGreaterThan(net);
+    expect(FREE_SHIPPING_THRESHOLD).toBeLessThanOrEqual(t.subtotal);
+    expect(t.shippingCost).toBe(resolveShippingCost(net));
+    expect(t.shippingCost).toBeGreaterThan(0);
+    expect(t.total).toBe(net + t.shippingCost);
+  });
+
+  it("giver fri fragt når nettobeløbet når tærsklen", () => {
+    const t = calcCartTotals({ items: [cover("x", FREE_SHIPPING_THRESHOLD)], discount: null });
+    expect(t.shippingCost).toBe(0);
+  });
+
+  it("rabatkoden trækkes fra før fragten afgøres", () => {
+    const t = calcCartTotals({
+      items: [{ ...cover("x", FREE_SHIPPING_THRESHOLD), lagersalg: undefined }],
+      discount: { code: "TI", type: "percentage", value: 10, discountAmount: 0 },
+    });
+    expect(t.shippingCost).toBeGreaterThan(0);
+  });
+
+  it("tom kurv har ingen fragt", () => {
+    expect(calcCartTotals({ items: [], discount: null }).shippingCost).toBe(0);
   });
 });

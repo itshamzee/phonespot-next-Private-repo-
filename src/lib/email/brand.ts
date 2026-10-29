@@ -308,6 +308,8 @@ export interface EmailItemRowInput {
   /** Price in øre (integer, e.g. 149900 = 1 499,00 kr.) */
   price: number;
   image?: string;
+  /** Erstatter prisfeltet (allerede escapet HTML), fx "Gratis (3 for 2)" med overstreget pris. */
+  priceHtml?: string;
 }
 
 function formatOereLocal(oere: number): string {
@@ -322,7 +324,7 @@ function formatOereLocal(oere: number): string {
 
 export function emailItemRow(item: EmailItemRowInput): string {
   const qtyLabel = item.quantity > 1 ? ` &times;${item.quantity}` : "";
-  const priceLabel = formatOereLocal(item.price);
+  const priceLabel = item.priceHtml ?? formatOereLocal(item.price);
 
   const thumbnailCell = item.image
     ? `

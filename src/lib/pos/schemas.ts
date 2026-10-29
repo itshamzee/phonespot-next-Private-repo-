@@ -28,6 +28,8 @@ export const saleItemSchema = z.discriminatedUnion("type", [
     quantity: z.number().int().min(1).max(1000),
     // A product sold from a repair case: consumes the case reservation and marks the case item sold.
     repairTicketItemId: uuid.optional(),
+    // Lagersalg 3 for 2 taken off this line. Recomputed and checked on the server (bundle_mismatch).
+    bundleDiscountOere: oere.min(0).optional(),
   }),
   z.object({
     type: z.literal("free_text"),

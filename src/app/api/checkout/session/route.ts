@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCart, hasFoxwayDevice } from "@/lib/checkout/validate";
+import { validateCart, hasFoxwayDevice, toServerItems } from "@/lib/checkout/validate";
 import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
@@ -64,17 +64,12 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Calculate server-side totals
-    const serverItems = validation.items.map((vi) => ({
-      ...vi.item,
-      price: vi.serverPrice,
-    })) as CartItem[];
+    const serverItems = toServerItems(validation.items);
     const subtotal = calcSubtotal(serverItems);
 
     // 3b. Compute bundle discounts server-side (never trust client-computed discount amounts)
-    const bundleDiscountAmount = calcBundleDiscounts(serverItems).reduce(
-      (sum, r) => sum + r.discount_oere,
-      0,
-    );
+    const bundle = calcBundleDiscounts(serverItems);
+    const bundleDiscountAmount = bundle.total;
     console.log("[checkout/session] bundleDiscountAmount:", bundleDiscountAmount, "øre");
 
     // 4. Validate discount code if provided
@@ -155,6 +150,7 @@ export async function POST(req: NextRequest) {
       discountAmount,
       bundleDiscountAmount,
       total,
+      bundleByKey: bundle.byKey,
       stripeCheckoutSessionId: "pending",
       foxwayPending: hasFoxwayDevice(validation.items),
     });

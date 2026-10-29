@@ -45,7 +45,7 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
   let ordersQuery = supabase
     .from("orders")
     .select(
-      `id, order_number, receipt_number, receipt_no, type, total, discount_amount, discount_reason,
+      `id, order_number, receipt_number, receipt_no, type, total, discount_amount, discount_reason, bundle_discount_amount,
        vat_total, brugtmoms_total, confirmed_at, payment_method, register_id,
        order_items ( item_type, quantity, total_price, discount_amount, vat_scheme, vat_amount ),
        order_payments ( type, amount_oere )`,

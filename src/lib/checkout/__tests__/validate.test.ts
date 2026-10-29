@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
-import { validateCart } from "../validate";
+import { validateCart, toServerItems, type ValidatedItem } from "../validate";
+import { calcBundleDiscounts } from "@/lib/cart/utils";
 import type { CartItem } from "@/lib/cart/types";
 const s = vi.hoisted(() => ({
   owner: "a".repeat(64),
@@ -11,6 +12,8 @@ const s = vi.hoisted(() => ({
   active: true,
   category: null as string | null,
   subcategory: null as string | null,
+  attributes: null as Record<string, string> | null,
+  sale: null as number | null,
   devices: [] as Record<string, unknown>[],
 }));
 vi.mock("next/headers", () => ({
@@ -35,6 +38,8 @@ vi.mock("@/lib/supabase/client", () => ({
                   id: "sku",
                   is_active: s.active,
                   selling_price: 100,
+                  sale_price: s.sale,
+                  attributes: s.attributes,
                   always_in_stock: s.always,
                   total_stock: s.stock,
                   category: s.category,
@@ -76,6 +81,8 @@ beforeEach(() => {
   s.active = true;
   s.category = null;
   s.subcategory = null;
+  s.attributes = null;
+  s.sale = null;
   s.devices = [
     {
       id: "device",
@@ -186,4 +193,39 @@ it.each([
 it("tilbehør med subcategory null er upåvirket", async () => {
   s.category = "accessory";
   expect((await validateCart([sku()])).valid).toBe(true);
+});
+it("markerer lagersalgsvarer fra databasen, ikke fra klienten", async () => {
+  s.subcategory = "cover";
+  s.attributes = { udsalg: "Ja" };
+  s.sale = 5900;
+  const r = await validateCart([sku()]);
+  expect(r.items[0].lagersalg).toBe(true);
+  expect(r.items[0].serverPrice).toBe(5900);
+});
+it("ignorerer klientens lagersalg-flag for varer der ikke er lagersalg", async () => {
+  const forged = { ...sku(), lagersalg: true } as CartItem;
+  const r = await validateCart([forged]);
+  expect(r.items[0].lagersalg).toBeFalsy();
+});
+it("beskyttelsesglas er aldrig lagersalg", async () => {
+  s.subcategory = "screen_protector";
+  s.attributes = { udsalg: "Ja" };
+  expect((await validateCart([sku()])).items[0].lagersalg).toBeFalsy();
+});
+
+const forgedLine = (n: number, lagersalg: boolean): ValidatedItem => ({
+  item: { ...sku(1, `v${n}`), lagersalg: true } as CartItem,
+  serverPrice: 5900,
+  available: true,
+  lagersalg,
+});
+it("toServerItems fjerner forfalsket klient-flag, så 3 for 2 giver 0 rabat", () => {
+  const out = toServerItems([forgedLine(1, false), forgedLine(2, false), forgedLine(3, false)]);
+  expect(out.every((i) => !("lagersalg" in i))).toBe(true);
+  expect(calcBundleDiscounts(out).total).toBe(0);
+});
+it("toServerItems sætter lagersalg fra databasen", () => {
+  const out = toServerItems([forgedLine(1, true), forgedLine(2, true), forgedLine(3, true)]);
+  expect(out.every((i) => (i as { lagersalg?: true }).lagersalg === true)).toBe(true);
+  expect(calcBundleDiscounts(out).total).toBe(5900);
 });

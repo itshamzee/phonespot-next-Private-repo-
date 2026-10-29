@@ -8,7 +8,7 @@ type AccessoryCardProps = Omit<PublicAccessory, "created_at"> & {
   /** Dokumenteret vejledende pris i kr. (kun ægte mærkevarer på lagersalg). */
   listPriceKr?: number | null;
 };
-export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind,listPriceKr}: AccessoryCardProps) {
+export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,store_stock,availability,brand,compatible_models,spotKind,lagersalg,listPriceKr}: AccessoryCardProps) {
   const [added,setAdded]=useState(false);
   const confirmationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -23,7 +23,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   const stockLabel=availability === "in_stock" ? (store_stock ?? 0)>0 ? "På lager i butik" : "På lager" : availability === "orderable" ? "Sendes 1–3 hverdage" : availability === "out_of_stock" ? "Udsolgt" : "Lagerstatus ukendt";
   function add() {
     if (!canBuy || added) return;
-    addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null,...(spotKind ? {spotKind,...(isOnSale ? {unitPrice:price} : {})} : {})});
+    addSku({type:"sku_product",skuProductId:id,title:name,price:effectivePrice,quantity:1,image:image_url ?? null,...(spotKind ? {spotKind,...(isOnSale ? {unitPrice:price} : {})} : {}),...(lagersalg ? {lagersalg:true as const} : {})});
     openCart();setAdded(true);
     confirmationTimer.current = setTimeout(() => {
       setAdded(false);

@@ -8,6 +8,7 @@ import { posJson } from "@/lib/pos/client";
 import { PAYMENT_LABELS } from "@/lib/pos/constants";
 import { copenhagenDateString } from "@/lib/pos/copenhagen";
 import type { DailySummary } from "@/lib/pos/daily-summary";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { RegisterInfo } from "@/lib/pos/sessions";
 
 const card = "rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm";
@@ -134,6 +135,9 @@ function CashupPageInner() {
               {Object.entries(summary.discountByReason).map(([reason, amount]) => (
                 <Row key={reason} label={`  heraf ${reason}`} value={formatOere(amount)} />
               ))}
+              {summary.bundleTotal > 0 && (
+                <Row label={THREE_FOR_TWO_LABEL} value={formatOere(summary.bundleTotal)} />
+              )}
               <Row label="Enheder / tilbehør" value={`${summary.deviceCount} / ${summary.skuCount}`} />
             </div>
 

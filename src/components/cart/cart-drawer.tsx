@@ -8,6 +8,7 @@ import { CartUpsell } from "@/components/cart/cart-upsell";
 import { CartEmailCapture } from "@/components/cart/cart-email-capture";
 import { formatOere } from "@/lib/cart/utils";
 import { cartItemKey } from "@/lib/cart/types";
+import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { CartDeviceItem } from "@/lib/cart/types";
 
 // ---------------------------------------------------------------------------
@@ -178,6 +179,12 @@ export function CartDrawer() {
                 </div>
               )}
 
+              {totals.bundleUnitsToNextFree != null && totals.bundleUnitsToNextFree > 0 && (
+                <p className="mb-3 text-sm font-medium text-[#1A3D2E]">
+                  {`Læg ${totals.bundleUnitsToNextFree} ${totals.bundleUnitsToNextFree === 1 ? "lagersalgsvare" : "lagersalgsvarer"} mere i kurven, så er den billigste gratis`}
+                </p>
+              )}
+
               {/* Subtotal / total rows */}
               <div className="space-y-1.5 mb-4">
                 <div className="flex items-center justify-between">
@@ -188,7 +195,7 @@ export function CartDrawer() {
                 </div>
                 {totals.bundleDiscountAmount > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#1A3D2E]">Spot-pakkerabat</span>
+                    <span className="text-sm text-[#1A3D2E]">{THREE_FOR_TWO_LABEL}</span>
                     <span className="text-sm font-medium text-[#1A3D2E]">
                       -{formatOere(totals.bundleDiscountAmount)}
                     </span>
@@ -215,6 +222,12 @@ export function CartDrawer() {
                   </span>
                 </div>
               </div>
+
+              {cartState.items.some((i) => i.type === "sku_product" && i.lagersalg) && (
+                <p className="mb-4 text-xs text-[#86868B]">
+                  Lagersalgsvarer: 14 dages fortrydelsesret, ikke omfattet af 30 dages returret.
+                </p>
+              )}
 
               <Link
                 href="/kasse"

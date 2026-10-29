@@ -24,6 +24,8 @@ export interface CrossSellProduct {
   images: string[];
   category: string | null;
   subcategory?: string | null;
+  /** Lagersalgsvare (3 for 2), beregnet på serveren. */
+  lagersalg?: boolean;
 }
 
 export interface CompatibleDevice {
@@ -41,6 +43,8 @@ type AccessoryDetailProps = {
   colorSiblings?: ColorSibling[];
   /** Salgsargumenter fra sku_products.specifications.highlights ("Titel: tekst" eller ren tekst). */
   highlights?: string[];
+  /** Lagersalgsvare (3 for 2), beregnet på serveren — udsalg-attributten er ikke offentlig. */
+  lagersalg?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -153,6 +157,7 @@ function AddToCartButton({
   disabled = false,
   fullWidth = true,
   label = "Tilføj til kurv",
+  lagersalg = false,
 }: {
   product: PublicSkuProduct;
   effectivePrice: number;
@@ -161,6 +166,7 @@ function AddToCartButton({
   disabled?: boolean;
   fullWidth?: boolean;
   label?: string;
+  lagersalg?: boolean;
 }) {
   const { addSku, openCart } = useCart();
   const [added, setAdded] = useState(false);
@@ -181,6 +187,7 @@ function AddToCartButton({
       quantity: 1,
       variantLabel,
       ...(product.spotKind ? { spotKind: product.spotKind, ...(effectivePrice < product.selling_price ? { unitPrice: product.selling_price } : {}) } : {}),
+      ...(lagersalg ? { lagersalg: true as const } : {}),
     });
     setAdded(true);
     openCart();
@@ -224,6 +231,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
       image: product.images[0] ?? null,
       price,
       quantity: 1,
+      ...(product.lagersalg ? { lagersalg: true as const } : {}),
     });
     openCart();
   }
@@ -286,6 +294,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
 // ---------------------------------------------------------------------------
 
 function StickyMobileCta({
+  lagersalg = false,
   product,
   effectivePrice,
   selectedVariants,
@@ -301,6 +310,7 @@ function StickyMobileCta({
   ctaRef: React.RefObject<HTMLDivElement | null>;
   canBuy: boolean;
   stockLabel: string;
+  lagersalg?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -338,6 +348,7 @@ function StickyMobileCta({
           effectivePrice={effectivePrice}
           selectedVariants={selectedVariants}
           variantImage={variantImageOverride}
+          lagersalg={lagersalg}
           fullWidth={false}
           disabled={!canBuy}
           label={canBuy ? "Tilføj til kurv" : stockLabel}
@@ -481,6 +492,7 @@ export function AccessoryDetail({
   category,
   colorSiblings = [],
   highlights = [],
+  lagersalg = false,
 }: AccessoryDetailProps) {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [variantImageOverride, setVariantImageOverride] = useState<string | null>(null);
@@ -596,6 +608,11 @@ export function AccessoryDetail({
               </span>
             )}
             <p className="mt-1 text-xs text-charcoal/50">Inkl. moms</p>
+            {lagersalg && (
+              <p className="mt-2 text-sm text-charcoal/70">
+                Lagersalg: 3 for 2 på tværs af lagersalget. 14 dages fortrydelsesret, ikke omfattet af 30 dages returret.
+              </p>
+            )}
           </div>
 
           {/* Key functions — short list, full version in #funktioner */}
@@ -775,6 +792,7 @@ export function AccessoryDetail({
               effectivePrice={effectivePrice}
               selectedVariants={selectedVariants}
               variantImage={variantImageOverride}
+              lagersalg={lagersalg}
               disabled={!canBuy}
               label={canBuy ? "Tilføj til kurv" : stockLabel}
             />
@@ -889,6 +907,7 @@ export function AccessoryDetail({
         ctaRef={ctaRef}
         canBuy={canBuy}
         stockLabel={stockLabel}
+        lagersalg={lagersalg}
       />
     </div>
   );

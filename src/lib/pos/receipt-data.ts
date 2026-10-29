@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { createServerClient } from "@/lib/supabase/client";
 import { PosReceiptPDF, type PosReceiptProps } from "./receipt-pdf";
 import { PAYMENT_LABELS, isPaymentType } from "./constants";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 type OrderItemRow = {
   item_type: string;
@@ -35,7 +36,7 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
     .select(
       `id, order_number, type, receipt_number, confirmed_at, created_at, subtotal, discount_amount,
        discount_reason, total, vat_total, payment_method, register_id, location_id, staff_id,
-       customer_id, original_order_id, credit_reason,
+       customer_id, original_order_id, credit_reason, bundle_discount_amount,
        order_items ( item_type, device_id, sku_product_id, quantity, unit_price, total_price, vat_scheme, description ),
        order_payments ( type, amount_oere, reference )`,
     )
@@ -64,15 +65,16 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
 
   const items = (order.order_items ?? []) as OrderItemRow[];
 
-  // Names/grades for devices and legacy lines without a stored description.
+  // Names/grades for devices; title (legacy lines without a stored description) and the
+  // lagersalg flag (return notice) for every product line.
   const deviceIds = items.map((i) => i.device_id).filter((x): x is string => !!x);
-  const skuIds = items.filter((i) => !i.description).map((i) => i.sku_product_id).filter((x): x is string => !!x);
+  const skuIds = [...new Set(items.map((i) => i.sku_product_id).filter((x): x is string => !!x))];
   const [devices, skus] = await Promise.all([
     deviceIds.length
       ? supabase.from("devices").select("id, grade, product_templates ( display_name )").in("id", deviceIds)
       : Promise.resolve({ data: [] as unknown[] }),
     skuIds.length
-      ? supabase.from("sku_products").select("id, title").in("id", skuIds)
+      ? supabase.from("sku_products").select("id, title, subcategory, attributes").in("id", skuIds)
       : Promise.resolve({ data: [] as unknown[] }),
   ]);
   const deviceMap = new Map(
@@ -83,13 +85,17 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
       },
     ),
   );
-  const skuMap = new Map(((skus.data ?? []) as Array<{ id: string; title: string }>).map((s) => [s.id, s.title]));
+  const skuMap = new Map(
+    (
+      (skus.data ?? []) as Array<{ id: string; title: string; subcategory: string | null; attributes: Record<string, string> | null }>
+    ).map((s) => [s.id, { title: s.title, lagersalg: isLagersalg(s) }]),
+  );
 
   const receiptItems = items.map((i) => {
     const dev = i.device_id ? deviceMap.get(i.device_id) : undefined;
     const name =
       i.description ??
-      (i.device_id ? dev?.name : i.sku_product_id ? skuMap.get(i.sku_product_id) : null) ??
+      (i.device_id ? dev?.name : i.sku_product_id ? skuMap.get(i.sku_product_id)?.title : null) ??
       (i.item_type === "deposit"
         ? "Depositum"
         : i.item_type === "deposit_applied"
@@ -106,6 +112,7 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
       unitPrice: i.unit_price,
       lineTotal: i.total_price,
       vatScheme: (i.vat_scheme ?? "regular") as "brugtmoms" | "regular",
+      lagersalg: i.sku_product_id ? (skuMap.get(i.sku_product_id)?.lagersalg ?? false) : false,
     };
   });
 
@@ -128,12 +135,14 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
     subtotal: order.subtotal,
     discountAmount: order.discount_amount,
     discountReason: order.discount_reason,
+    bundleDiscountAmount: order.bundle_discount_amount ?? 0,
     total: order.total,
     payments,
     legacyPaymentLabel: order.payment_method ? (LEGACY_LABELS[order.payment_method] ?? order.payment_method) : undefined,
     customerName: customer.data?.name,
     hasBrugtmomsItems: receiptItems.some((r) => r.vatScheme === "brugtmoms"),
     hasRegularVatItems: receiptItems.some((r) => r.vatScheme === "regular"),
+    hasLagersalgItems: receiptItems.some((r) => r.lagersalg),
     vatTotal: order.vat_total ?? 0,
     isCreditNote: order.type === "credit_note",
     originalReceiptNumber: original.data ? (original.data.receipt_number ?? original.data.order_number) : null,

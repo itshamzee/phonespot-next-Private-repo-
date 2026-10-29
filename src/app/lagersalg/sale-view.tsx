@@ -4,6 +4,7 @@ import { PUBLIC_ACCESSORY_COLUMNS, toPublicAccessory } from "@/lib/product/model
 import { TILBEHOER_DEVICES, type TilbehoerDevice } from "@/lib/tilbehoer-config";
 import { parseListPriceKr } from "@/lib/product/list-price";
 import { JsonLd } from "@/components/seo/json-ld";
+import { LagersalgTerms } from "@/components/lagersalg/lagersalg-terms";
 import { OutletShop } from "./outlet-shop";
 import { caseTypeLabel, type OutletItem } from "./outlet-filter";
 
@@ -25,7 +26,7 @@ export async function getSaleCovers(): Promise<Row[]> {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("checkout_sku_inventory")
-      .select(`${PUBLIC_ACCESSORY_COLUMNS}, attributes`)
+      .select(PUBLIC_ACCESSORY_COLUMNS)
       .eq("status", "published")
       .eq("is_active", true)
       .eq("category", "accessory")
@@ -139,6 +140,8 @@ export async function CoversSaleView({ selected }: { selected: TilbehoerDevice |
           </p>
         </section>
       )}
+
+      <LagersalgTerms />
 
       {modelLinks.length > 0 && (
         <nav aria-label="Lagersalg efter model" className="border-t border-sand bg-[#F7F7F8]">

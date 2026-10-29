@@ -20,6 +20,8 @@ export type SummaryOrder = {
   total: number;
   discount_amount: number;
   discount_reason: string | null;
+  /** Lagersalg 3 for 2 (orders.bundle_discount_amount); holdes adskilt fra den manuelle rabat. */
+  bundle_discount_amount?: number | null;
   vat_total: number | null;
   brugtmoms_total: number | null;
   confirmed_at: string | null;
@@ -66,6 +68,8 @@ export type DailySummary = {
   netTotal: number;
   discountTotal: number;
   discountByReason: Record<string, number>;
+  /** Lagersalg 3 for 2 givet på salg (ikke en del af discountTotal/discountByReason). */
+  bundleTotal: number;
   payments: PaymentBreakdown[];
   /** Standard 25 % VAT contained in net sales (credit notes subtract). */
   vatStandard: number;
@@ -110,6 +114,7 @@ export function aggregateDailySummary(
   let grossSales = 0;
   let refunds = 0;
   let discountTotal = 0;
+  let bundleTotal = 0;
   const discountByReason: Record<string, number> = {};
   const pay = new Map<PaymentType, PaymentBreakdown>();
   let vatStandard = 0;
@@ -139,6 +144,7 @@ export function aggregateDailySummary(
         const key = o.discount_reason ?? "Ukendt";
         discountByReason[key] = (discountByReason[key] ?? 0) + o.discount_amount;
       }
+      bundleTotal += o.bundle_discount_amount ?? 0;
     }
     if (o.receipt_no == null) legacyOrderCount += 1;
 
@@ -203,6 +209,7 @@ export function aggregateDailySummary(
     netTotal,
     discountTotal,
     discountByReason,
+    bundleTotal,
     payments,
     vatStandard,
     brugtmoms,

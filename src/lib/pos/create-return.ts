@@ -4,6 +4,7 @@ import { renderReceiptPdf } from "./receipt-data";
 import type { OriginalLine, ReturnedSoFar } from "./credit-note";
 import type { PaymentLineInput } from "./calc";
 import { depositRemaining } from "./deposit-math";
+import { isLagersalg } from "../lagersalg/is-lagersalg";
 
 export type CreateReturnInput = {
   originalOrderId: string;
@@ -91,7 +92,7 @@ export type ReturnableOrder = {
   total: number;
   locationId: string | null;
   customerName: string | null;
-  lines: Array<OriginalLine & { returned: ReturnedSoFar; remaining: number; deviceStatus: string | null }>;
+  lines: Array<OriginalLine & { returned: ReturnedSoFar; remaining: number; deviceStatus: string | null; lagersalg: boolean }>;
 };
 
 type ItemRow = {
@@ -108,7 +109,10 @@ type ItemRow = {
   vat_scheme: "brugtmoms" | "regular" | null;
   purchase_price: number | null;
   original_order_item_id?: string | null;
+  sku_products?: SkuEmbed | SkuEmbed[] | null;
 };
+
+type SkuEmbed = { subcategory: string | null; attributes: Record<string, string> | null };
 
 /** Sums what earlier credit notes already took back, per original line (positive numbers). */
 export function sumReturned(creditItems: ItemRow[]): Record<string, ReturnedSoFar> {
@@ -142,7 +146,7 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
   const { data: items } = await supabase
     .from("order_items")
     .select(
-      "id, item_type, device_id, sku_product_id, description, quantity, unit_price, total_price, discount_amount, vat_amount, vat_scheme, purchase_price",
+      "id, item_type, device_id, sku_product_id, description, quantity, unit_price, total_price, discount_amount, vat_amount, vat_scheme, purchase_price, sku_products ( subcategory, attributes )",
     )
     .eq("order_id", order.id);
   const rows = (items ?? []) as ItemRow[];
@@ -223,6 +227,10 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
         returned: so,
         remaining: r.quantity - so.quantity,
         deviceStatus: r.device_id ? (statusById.get(r.device_id) ?? null) : null,
+        lagersalg: (() => {
+          const sku = Array.isArray(r.sku_products) ? r.sku_products[0] : r.sku_products;
+          return sku ? isLagersalg(sku) : false;
+        })(),
       };
     }),
   };

@@ -13,8 +13,19 @@ const requireStaffMock = vi.fn();
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: (...a: unknown[]) => requireStaffMock(...a) }));
 
 const rpcMock = vi.fn();
-const fromMock = vi.fn(() => {
-  throw new Error("from() must not be used by sale/return");
+// The only direct read allowed is the 3 for 2 price lookup on sku_products
+// (create-sale recomputes the lagersalg discount from the database). Nothing
+// else may be read or written outside the RPC.
+const fromMock = vi.fn((table: string) => {
+  if (table !== "sku_products") throw new Error("from() must not be used by sale/return");
+  return {
+    select: () => ({
+      in: async (_col: string, ids: string[]) => ({
+        data: ids.map((id) => ({ id, selling_price: 10000, sale_price: null, subcategory: null, attributes: null })),
+        error: null,
+      }),
+    }),
+  };
 });
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({ rpc: rpcMock, from: fromMock }),
@@ -129,7 +140,8 @@ describe("POST /api/pos/sale", () => {
       { type: "deposit", repair_ticket_id: U(12), description: "Depositum", unit_price_oere: 20000 },
     ]);
     expect(JSON.stringify(args)).not.toContain("pi_should_be_ignored");
-    expect(fromMock).not.toHaveBeenCalled();
+    // Only the read-only 3 for 2 price lookup touches a table directly.
+    expect(fromMock.mock.calls.map((c) => c[0])).toEqual(["sku_products"]);
   });
 
   it("surfaces a database business error instead of swallowing it (stock / reservation lock)", async () => {

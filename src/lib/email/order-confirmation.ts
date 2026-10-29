@@ -10,6 +10,11 @@ import {
   uspsForOrder,
 } from "@/lib/email/brand";
 import { STORES } from "@/lib/store-config";
+import {
+  THREE_FOR_TWO_FREE_LABEL,
+  THREE_FOR_TWO_LABEL,
+  isFreeBundleLine,
+} from "@/lib/lagersalg/three-for-two";
 
 const SLAGELSE_ADDRESS = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
 
@@ -20,7 +25,10 @@ export interface OrderConfirmationItem {
   skuProductId: string | null;
   quantity: number;
   unitPrice: number;
+  /** Brutto linjepris (unitPrice × quantity), før linjerabat. */
   totalPrice: number;
+  /** order_items.discount_amount — 3 for 2: hele linjeprisen på den gratis linje. */
+  discountAmount?: number;
   title?: string;
   image?: string;
   /** Set to true when this order_item had the battery upgrade. */
@@ -44,7 +52,10 @@ export interface SendOrderConfirmationParams {
   };
   items: OrderConfirmationItem[];
   subtotal: number;
+  /** Kun rabatkoden (orders.discount_amount). */
   discountAmount: number;
+  /** Lagersalg 3 for 2 (orders.bundle_discount_amount), vises som egen linje. */
+  bundleDiscountAmount?: number;
   shippingCost: number;
   total: number;
   withdrawalToken: string;
@@ -203,11 +214,19 @@ function buildItemsTable(items: OrderConfirmationItem[]): string {
         return upgradeItemRow(item, hasImages);
       }
 
+      const free = isFreeBundleLine({
+        totalOere: item.totalPrice,
+        discountOere: item.discountAmount,
+      });
       return emailItemRow({
         title,
         quantity: item.quantity,
         price: item.totalPrice,
         image: item.image,
+        priceHtml: free
+          ? `<span style="color:${BRAND.greenLight};font-weight:600;">${THREE_FOR_TWO_FREE_LABEL}</span><br />` +
+            `<span style="color:#AAAAAA;font-size:12px;"><s>${formatOere(item.totalPrice)}</s></span>`
+          : undefined,
       });
     })
     .join("\n");
@@ -245,6 +264,19 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
          </tr>`
       : "";
 
+  const bundleDiscount = params.bundleDiscountAmount ?? 0;
+  const bundleRow =
+    bundleDiscount > 0
+      ? `<tr>
+           <td style="padding:6px 0;font-size:14px;color:${BRAND.greenLight};">
+             ${THREE_FOR_TWO_LABEL}
+           </td>
+           <td style="padding:6px 0;font-size:14px;color:${BRAND.greenLight};text-align:right;white-space:nowrap;">
+             &minus;${formatOere(bundleDiscount)}
+           </td>
+         </tr>`
+      : "";
+
   return `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
       <tr>
@@ -254,6 +286,7 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
         </td>
       </tr>
       ${discountRow}
+      ${bundleRow}
       <tr>
         <td style="padding:6px 0;font-size:14px;color:#666;">
           Fragt${params.shippingMethod ? ` <span style="color:#AAAAAA;">(${params.shippingMethod})</span>` : ""}
