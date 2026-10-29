@@ -33,7 +33,12 @@ describe("store journeys", () => {
       expect(hrefs.filter((href) => href.startsWith("/reparation/booking"))).toEqual([]);
       expect(hrefs).toContain("/reparation/indsend");
       const business = Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map((s) => JSON.parse(s.textContent!)).find((s) => s["@type"] === "ElectronicsRepair");
-      expect(business.address).toMatchObject({ streetAddress: "Gl. Vardevej 230", postalCode: "6715" });
+      // Only the town is public until the address is announced.
+      expect(business.address).toMatchObject({ addressLocality: "Esbjerg" });
+      expect(business.address.streetAddress).toBeUndefined();
+      expect(business.address.postalCode).toBeUndefined();
+      expect(business.geo).toBeUndefined();
+      expect(container.textContent).not.toMatch(/Storcenter|Vardevej|6715/);
       expect(business.openingHoursSpecification).toBeUndefined();
     });
     it("has its own canonical and opening-month title", async () => {

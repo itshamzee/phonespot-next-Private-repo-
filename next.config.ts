@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
       // målet skiftes til reservedelswebshoppen, når den findes.
       // Apparater og Xbox bookes pr. model i kataloget (/reparation/[mærke]/[model]).
       { source: "/reparation/husholdningsapparater", destination: "/reparation", statusCode: 308 },
+      // Esbjerg-nyheden fik nyt slug 2026-10-29, da lokationen ikke er offentlig.
+      { source: "/blog/phonespot-aabner-i-esbjerg-storcenter", destination: "/blog/phonespot-aabner-i-esbjerg", statusCode: 301 },
       { source: "/covers-udsalg", destination: "/lagersalg", statusCode: 308 },
       { source: "/covers-udsalg/:model", destination: "/lagersalg/:model", statusCode: 308 },
       { source: "/reservedele", destination: "/reparation", statusCode: 301 },

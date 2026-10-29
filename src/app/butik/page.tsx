@@ -7,7 +7,7 @@ import styles from "@/components/ui/information.module.css";
 
 export const metadata: Metadata = {
   title: "Besøg PhoneSpot – butikker i Slagelse og Vejle, snart Esbjerg",
-  description: "Find adresse og åbningstider for PhoneSpot i Slagelse og Vejle – og snart i Esbjerg Storcenter. Besøg os for reparation, refurbished enheder og vurdering af din brugte elektronik.",
+  description: "Find adresse og åbningstider for PhoneSpot i Slagelse og Vejle – og snart i Esbjerg. Besøg os for reparation, refurbished enheder og vurdering af din brugte elektronik.",
   alternates: { canonical: "https://phonespot.dk/butik" },
   openGraph: { title: "Besøg PhoneSpot – butikker i Slagelse og Vejle", description: "Reparation, refurbished enheder og personlig rådgivning i vores to butikker.", url: "https://phonespot.dk/butik", type: "website" },
 };
@@ -35,7 +35,7 @@ export default function ButikPage() {
         <header className={styles.header}>
           <span className={styles.eyebrow}>PhoneSpot tæt på dig</span>
           <h1>Kom forbi i Vejle eller Slagelse.</h1>
-          <p className={styles.intro}>Se enhederne, få hjælp til en reparation eller lad os vurdere din brugte elektronik. Her finder du vej til begge butikker{upcomingList.length > 0 && <> – og til {upcomingList.map((s) => `${s.mall}, hvor vi åbner i ${s.opens}`).join(" og ")}</>}.</p>
+          <p className={styles.intro}>Se enhederne, få hjælp til en reparation eller lad os vurdere din brugte elektronik. Her finder du vej til begge butikker{upcomingList.length > 0 && <> – og til {upcomingList.map((s) => `${s.city}, hvor vi åbner i ${s.opens}`).join(" og ")}</>}.</p>
         </header>
         <section aria-label="Vores butikker" className={styles.section}>
           <div className={styles.grid}>
@@ -60,11 +60,11 @@ export default function ButikPage() {
               <article key={store.slug} className={styles.panel}>
                 <span className={styles.eyebrow}>Åbner {store.opens}</span>
                 <h2>{store.name}</h2>
-                <address className={styles.address}>{store.mall}<br />{store.street}<br />{store.zip} {store.city}</address>
-                <p>Reparation, refurbished enheder og vurdering af din brugte elektronik – fra {store.opens.split(" ")[0]} også i {store.mall}.</p>
+                <address className={styles.address}>{store.street ? <>{store.mall && <>{store.mall}<br /></>}{store.street}<br />{store.zip} {store.city}</> : <>{store.city}<br />Adressen offentliggøres, når åbningsdatoen er på plads</>}</address>
+                <p>Reparation, refurbished enheder og vurdering af din brugte elektronik – fra {store.opens.split(" ")[0]} også i {store.city}.</p>
                 <div className={styles.actions}>
                   <Link href={`/butik/${store.slug}`} className={styles.button}>Se butik i {store.city.replace(/ N$/, "")}</Link>
-                  <a href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer" className={styles.secondary}>Find vej</a>
+                  {store.googleMapsUrl && <a href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer" className={styles.secondary}>Find vej</a>}
                 </div>
               </article>
             ))}

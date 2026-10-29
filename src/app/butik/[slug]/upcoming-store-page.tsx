@@ -4,13 +4,15 @@ import { FaqAccordion } from "@/components/ui/faq-accordion";
 import type { UpcomingStoreConfig } from "@/lib/store-config";
 import styles from "@/components/ui/information.module.css";
 
-export const ESBJERG_BLOG_PATH = "/blog/phonespot-aabner-i-esbjerg-storcenter";
+export const ESBJERG_BLOG_PATH = "/blog/phonespot-aabner-i-esbjerg";
 
 /** "Esbjerg N" is the postal district; copy reads better with the town name. */
 const townOf = (store: UpcomingStoreConfig) => store.city.replace(/ [NSØV]$/, "");
 
 function getUpcomingFAQs(store: UpcomingStoreConfig): Array<{ question: string; answer: string }> {
-  const where = `${store.mall ? `${store.mall}, ` : ""}${store.street}, ${store.zip} ${store.city}`;
+  const where = store.street
+    ? `Du finder os i ${store.mall ? `${store.mall}, ` : ""}${store.street}, ${store.zip} ${store.city}.`
+    : `Butikken kommer til at ligge i ${townOf(store)}. Den præcise adresse offentliggør vi her på siden, når åbningsdatoen er på plads.`;
   return [
     {
       question: `Hvornår åbner PhoneSpot i ${townOf(store)}?`,
@@ -18,7 +20,7 @@ function getUpcomingFAQs(store: UpcomingStoreConfig): Array<{ question: string; 
     },
     {
       question: "Hvor ligger butikken?",
-      answer: `Du finder os i ${where}. Der er gratis parkering ved centret.`,
+      answer: where,
     },
     {
       question: "Hvad kan jeg få hjælp til i butikken?",
@@ -50,18 +52,17 @@ function buildJsonLd(store: UpcomingStoreConfig): Record<string, unknown> {
     url: `https://phonespot.dk/butik/${store.slug}`,
     telephone: store.phone,
     email: store.email,
+    // Only the town until the address is announced.
     address: {
       "@type": "PostalAddress",
-      streetAddress: store.street,
+      ...(store.street ? { streetAddress: store.street } : {}),
       addressLocality: store.city,
-      postalCode: store.zip,
+      ...(store.zip ? { postalCode: store.zip } : {}),
       addressCountry: store.countryCode,
     },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: store.coordinates.lat,
-      longitude: store.coordinates.lng,
-    },
+    ...(store.coordinates
+      ? { geo: { "@type": "GeoCoordinates", latitude: store.coordinates.lat, longitude: store.coordinates.lng } }
+      : {}),
     priceRange: "$$",
   };
 }
@@ -78,20 +79,25 @@ export function UpcomingStorePage({ store }: { store: UpcomingStoreConfig }) {
         <header className={styles.header}>
           <span className={styles.eyebrow}>Åbner {store.opens}</span>
           <h1>{store.name}</h1>
-          <p className={styles.intro}>Vi åbner i {store.mall} i {store.opens}. Her kan du få repareret din telefon, købe refurbished elektronik med garanti og sælge din brugte enhed – samme sted.</p>
+          <p className={styles.intro}>Vi åbner i {town} i {store.opens}. Her kan du få repareret din telefon, købe refurbished elektronik med garanti og sælge din brugte enhed – samme sted.</p>
         </header>
         <section className={styles.section} aria-label={`Butikken i ${town}`}>
           <div className={styles.grid}>
             <div className={styles.panel}>
               <h2>Her finder du os</h2>
-              <address className={styles.address}>{store.company}<br />{store.mall}<br />{store.street}<br />{store.zip} {store.city}</address>
+              {store.street ? (
+                <address className={styles.address}>{store.company}<br />{store.mall && <>{store.mall}<br /></>}{store.street}<br />{store.zip} {store.city}</address>
+              ) : (
+                <address className={styles.address}>{store.company}<br />{store.city}</address>
+              )}
+              {!store.street && <p>Den præcise adresse offentliggør vi, når åbningsdatoen er på plads.</p>}
               <a className={styles.textLink} href={`tel:${store.phone.replace(/\s/g, "")}`}>{store.phone}</a><br />
               <a className={styles.textLink} href={`mailto:${store.email}`}>{store.email}</a>
-              <div className={styles.actions}><a className={styles.button} href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer">Find vej</a><Link className={styles.secondary} href={ESBJERG_BLOG_PATH}>Læs nyheden</Link></div>
+              <div className={styles.actions}>{store.googleMapsUrl && <a className={styles.button} href={store.googleMapsUrl} target="_blank" rel="noopener noreferrer">Find vej</a>}<Link className={store.googleMapsUrl ? styles.secondary : styles.button} href={ESBJERG_BLOG_PATH}>Læs nyheden</Link></div>
             </div>
             <div className={styles.panel}><h2>Forventede åbningstider</h2><dl className={styles.hours}>
               <div><dt>Mandag–fredag</dt><dd>{store.hours.weekdays}</dd></div><div><dt>Lørdag</dt><dd>{store.hours.saturday}</dd></div><div><dt>Søndag</dt><dd>{store.hours.sunday}</dd></div>
-            </dl><p>Vi følger {store.mall}s åbningstider. Åbningsdato og endelige tider kommer her, så snart de er på plads.</p></div>
+            </dl><p>Åbningsdato og endelige tider kommer her, så snart de er på plads.</p></div>
           </div>
         </section>
         <section className={styles.notice} aria-label="Indtil vi åbner">
@@ -104,10 +110,12 @@ export function UpcomingStorePage({ store }: { store: UpcomingStoreConfig }) {
           <div><h2>Reparation</h2><p>Skærmskift, batteriskift og andre reparationer. Pris, tid og garanti fremgår ved den valgte service.</p><Link href="/reparation" className={styles.textLink}>Se modeller og priser →</Link></div>
           <div><h2>Sælg din enhed</h2><p>Vi vurderer din enhed ud fra model og stand. Send en forespørgsel allerede nu.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Få en vurdering →</Link></div>
         </section>
-        <section className={styles.section}><div className={styles.grid}>
-          <div><h2>Find vej til {store.mall}</h2><p className={styles.intro}>{store.mall} ligger i den nordlige del af {town} ved Gl. Vardevej. Der er gratis parkering ved centret, så du kan kombinere dit besøg med en tur i centret.</p><div className={styles.actions}><a href={store.googleMapsUrl} className={styles.textLink} target="_blank" rel="noopener noreferrer">Åbn rutevejledning →</a></div></div>
-          <iframe src={store.googleMapsEmbed} title={`Google Maps – ${store.mall}`} className={styles.map} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" />
-        </div></section>
+        {store.googleMapsUrl && store.googleMapsEmbed && (
+          <section className={styles.section}><div className={styles.grid}>
+            <div><h2>Find vej til {store.mall ?? store.name}</h2><div className={styles.actions}><a href={store.googleMapsUrl} className={styles.textLink} target="_blank" rel="noopener noreferrer">Åbn rutevejledning →</a></div></div>
+            <iframe src={store.googleMapsEmbed} title={`Google Maps – ${store.mall ?? store.name}`} className={styles.map} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" />
+          </div></section>
+        )}
         <div className={styles.reading}>
           <section><h2>Telefonreparation i {town}</h2><p>Vi reparerer skærme, batterier, opladningsporte og kameraer på iPhone, Samsung, iPad og andre mærker. Du vælger selv skærmkvalitet, og prisen er fast og oplyst, før vi går i gang. Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele.</p><Link href="/reparation" className={styles.textLink}>Se priser på reparation →</Link></section>
           <section><h2>Refurbished iPhones i {town}</h2><p>Vores refurbished enheder er testet og renset, og de har 36 måneders garanti. I butikken kan du se og prøve dem, før du vælger – og læse om stand og batteri på den enkelte enhed.</p><div className={styles.actions}><Link href="/kvalitet" className={styles.textLink}>Sådan vurderer vi kvalitet →</Link><Link href="/garanti" className={styles.textLink}>Læs garantivilkårene →</Link></div></section>

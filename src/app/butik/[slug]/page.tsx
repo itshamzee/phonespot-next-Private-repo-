@@ -27,8 +27,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const upcoming = UPCOMING_STORES[slug];
   if (upcoming) {
-    const title = `${upcoming.name} — åbner i ${upcoming.mall} i ${upcoming.opens}`;
-    const description = `PhoneSpot åbner i ${upcoming.mall}, ${upcoming.street}, ${upcoming.zip} ${upcoming.city}, i ${upcoming.opens}. Telefonreparation med livstidsgaranti, refurbished enheder med 36 mdr. garanti og opkøb af din brugte telefon.`;
+    const where = upcoming.street
+      ? `${upcoming.mall ? `${upcoming.mall}, ` : ""}${upcoming.street}, ${upcoming.zip} ${upcoming.city}`
+      : upcoming.city;
+    const title = `${upcoming.name} — åbner i ${upcoming.opens}`;
+    const description = `PhoneSpot åbner i ${where} i ${upcoming.opens}. Telefonreparation med livstidsgaranti, refurbished enheder med 36 mdr. garanti og opkøb af din brugte telefon.`;
     return {
       title,
       description,

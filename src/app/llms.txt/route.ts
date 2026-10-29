@@ -25,7 +25,7 @@ function upcomingStoreLines() {
   return Object.values(UPCOMING_STORES).map((s) =>
     [
       `### ${s.name} (åbner ${s.opens})`,
-      `- Adresse: ${s.mall}, ${s.street}, ${s.zip} ${s.city}`,
+      s.street ? `- Adresse: ${s.mall ? `${s.mall}, ` : ""}${s.street}, ${s.zip} ${s.city}` : `- By: ${s.city} (adressen offentliggøres ved åbning)`,
       `- Butikken er ikke åbnet endnu: ${SITE}/butik/${s.slug}`,
     ].join("\n"),
   );

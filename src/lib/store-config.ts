@@ -100,7 +100,19 @@ export const GOOGLE_REVIEW_URLS: Record<string, string> = {
   slagelse: "https://g.page/r/Cbc4IBW5zl20EAE/review",
 };
 
-export interface UpcomingStoreConfig extends StoreLocationConfig {
+/**
+ * An announced store. The address fields are null until the owner announces
+ * the location: until then only the town is public, so nothing that renders
+ * a store may print a street, postcode, mall or map for it.
+ */
+export interface UpcomingStoreConfig
+  extends Omit<StoreLocationConfig, "mall" | "street" | "zip" | "googleMapsUrl" | "googleMapsEmbed" | "coordinates"> {
+  mall: string | null;
+  street: string | null;
+  zip: string | null;
+  googleMapsUrl: string | null;
+  googleMapsEmbed: string | null;
+  coordinates: { lat: number; lng: number } | null;
   /** Shown as "Åbner {opens}" — a month, not a date, until one is confirmed. */
   opens: string;
 }
@@ -117,24 +129,26 @@ export const UPCOMING_STORES: Record<string, UpcomingStoreConfig> = {
     slug: "esbjerg",
     name: "PhoneSpot Esbjerg",
     company: "PhoneSpot ApS",
-    mall: "Esbjerg Storcenter",
-    street: "Gl. Vardevej 230",
-    city: "Esbjerg N",
-    zip: "6715",
+    // Location deliberately not public yet (owner decision 2026-10-29): only
+    // the town is announced. Fill in mall/street/zip/maps when it is.
+    mall: null,
+    street: null,
+    city: "Esbjerg",
+    zip: null,
     country: "Danmark",
     countryCode: "DK",
     phone: "+45 61 10 00 48",
     email: COMPANY_EMAIL_ADDRESS,
     shopifyLocationId: null,
-    // Expected to follow the centre's hours.
+    // Expected hours; confirmed when the store opens.
     hours: {
       weekdays: "10:00 – 19:00",
       saturday: "10:00 – 16:00",
       sunday: "10:00 – 16:00",
     },
-    googleMapsUrl: "https://maps.google.com/?q=Esbjerg+Storcenter,+Gl.+Vardevej+230,+6715+Esbjerg+N",
-    googleMapsEmbed: "https://www.google.com/maps?q=Esbjerg+Storcenter,+Gl.+Vardevej+230,+6715+Esbjerg+N&output=embed",
-    coordinates: { lat: 55.5082, lng: 8.4479 },
+    googleMapsUrl: null,
+    googleMapsEmbed: null,
+    coordinates: null,
     opens: "november 2026",
   },
 };

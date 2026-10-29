@@ -39,6 +39,7 @@ describe("store config", () => {
       expect(STORES[slug]).toBeUndefined();
       expect(STORE_IDS as readonly string[]).not.toContain(slug);
     }
-    expect(UPCOMING_STORES.esbjerg).toMatchObject({ mall: "Esbjerg Storcenter", street: "Gl. Vardevej 230", zip: "6715" });
+    // Location is not public yet (owner decision 2026-10-29): only the town.
+    expect(UPCOMING_STORES.esbjerg).toMatchObject({ city: "Esbjerg", mall: null, street: null, zip: null, googleMapsUrl: null });
   });
 });

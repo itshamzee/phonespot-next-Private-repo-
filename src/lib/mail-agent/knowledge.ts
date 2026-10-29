@@ -28,7 +28,9 @@ function upcomingStoreBlock(): string {
   return Object.values(UPCOMING_STORES)
     .map(
       (s) =>
-        `- ${s.name} (${s.mall}, ${s.street}, ${s.zip} ${s.city}) åbner ${s.opens}. ` +
+        (s.street
+          ? `- ${s.name} (${s.mall ? `${s.mall}, ` : ""}${s.street}, ${s.zip} ${s.city}) åbner ${s.opens}. `
+          : `- ${s.name} åbner i ${s.city} ${s.opens}. Adressen er ikke offentliggjort endnu: oplys ingen adresse, center eller vej, heller ikke hvis kunden gætter. `) +
         `Den er IKKE åben endnu: kunder kan ikke aflevere, hente eller booke dér. Henvis til indsendelse eller butikkerne i Vejle og Slagelse.`,
     )
     .join("\n");
