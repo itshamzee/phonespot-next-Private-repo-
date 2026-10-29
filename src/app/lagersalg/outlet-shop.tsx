@@ -318,12 +318,12 @@ function Hero({
         </nav>
         <section className={collection.hero} aria-labelledby="outlet-title">
           <div className={collection.heroCopy}>
-            <p className={collection.eyebrow}>PhoneSpot Outlet</p>
-            <h1 id="outlet-title">{singleModelLabel ? `Covers til ${singleModelLabel}` : "Store fund. Små priser."}</h1>
+            <p className={collection.eyebrow}>Lagersalg · 3 for 2</p>
+            <h1 id="outlet-title">{singleModelLabel ? `Covers til ${singleModelLabel}. 3 for 2.` : "3 for 2 på hele lagersalget."}</h1>
             <p className={collection.intro}>
               {singleModelLabel
-                ? `Nye covers lavet til ${singleModelLabel}${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle.`
-                : `Gør et kup på mobilcovers til outletpriser${minKr ? ` fra ${minKr} kr.` : "."} Find nemt et cover, der passer til din telefon.`}
+                ? `Nye covers lavet til ${singleModelLabel}${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle. Læg tre i kurven, så er den billigste gratis.`
+                : `Læg tre lagersalgsvarer i kurven, så er den billigste gratis. Det gælder på tværs af modeller. Covers til outletpriser${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle.`}
             </p>
             <div className={collection.heroActions}>
               <form
@@ -443,10 +443,10 @@ function Hero({
               Gratis levering <span>til pakkeshop</span>
             </span>
           </Link>
-          <Link href="/garanti">
+          <Link href="#lagersalg-terms-heading">
             <StorefrontIcon kind="check" />
             <span>
-              2 års reklamationsret <span>på tilbehør</span>
+              3 for 2 <span>den billigste er gratis</span>
             </span>
           </Link>
           <Link href="/butik">

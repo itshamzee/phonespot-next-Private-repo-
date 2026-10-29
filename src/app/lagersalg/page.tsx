@@ -6,9 +6,9 @@ export const revalidate = 60;
 export async function generateMetadata(): Promise<Metadata> {
   const rows = await getSaleCovers();
   const min = lowestKr(rows);
-  const title = min ? `Covers på lagersalg fra ${min} kr. | PhoneSpot` : "Covers på lagersalg | PhoneSpot";
+  const title = min ? `Lagersalg: 3 for 2 på covers fra ${min} kr. | PhoneSpot` : "Lagersalg: 3 for 2 på covers | PhoneSpot";
   const description =
-    "Nye covers til iPhone og Samsung på lagersalg fra vores lager i Vejle. Find din model, faste lave priser, gratis levering til pakkeshop eller hent i Vejle og Slagelse.";
+    "3 for 2 på hele lagersalget: læg tre covers i kurven, så er den billigste gratis. Nye covers til iPhone og Samsung fra vores lager i Vejle, gratis levering til pakkeshop eller hent i Vejle og Slagelse.";
   return {
     title,
     description,
