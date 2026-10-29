@@ -337,7 +337,7 @@ function getProductData(product: Product, batteryHealth?: number): ProductSpecs 
       { icon: "check", title: "Test med 30 kontrolpunkter", detail: "Kvalitetssikret" },
       { icon: "shield", title: "36 mdr. garanti", detail: "Fuld dækning" },
       { icon: "truck", title: "1-2 dage", detail: "Hurtig levering" },
-      { icon: "return", title: "14 dage", detail: "Fuld returret" },
+      { icon: "return", title: "30 dage", detail: "Fuld returret" },
     ],
     specs: [
       { label: "Type", value: product.productType || "Elektronik" },

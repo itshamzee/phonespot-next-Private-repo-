@@ -153,7 +153,7 @@ export default async function ReparationPage() {
           <div className={landing.heroCopy}>
             <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
             <h1 id="repair-title">Mobilreparation.<br />Tilbage til hverdagen.</h1>
-            <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder.</p>
+            <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder. Alle priser står på siden, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).</p>
             <div className={landing.actions}>
               <a href="#find-din-pris">Find model og pris <StorefrontIcon kind="arrow" /></a>
               <a href="#reparationsforloeb">Sådan foregår det</a>

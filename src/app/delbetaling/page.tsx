@@ -188,7 +188,7 @@ const FAQ = [
   {
     question: "Kan jeg stadig returnere mit produkt?",
     answer:
-      "Ja, du har stadig 14 dages fuld fortrydelsesret. Hvis du returnerer produktet, refunderer Klarna automatisk de betalte rater, og eventuelle resterende rater annulleres.",
+      "Ja, du har stadig 30 dages returret på enheder (og den lovpligtige fortrydelsesret på 14 dage). Hvis du returnerer produktet, refunderer Klarna automatisk de betalte rater, og eventuelle resterende rater annulleres.",
   },
   {
     question: "Hvad sker der, hvis jeg ikke betaler en rate?",
@@ -409,7 +409,7 @@ export default function DelbetalingPage() {
               <span className="font-semibold text-[#111111]">
                 36 måneders garanti
               </span>
-              , grundig kvalitetstest og 14 dages returret.
+              , grundig kvalitetstest og 30 dages returret.
             </p>
             <div className="mt-10 grid gap-6 sm:grid-cols-3">
               {[

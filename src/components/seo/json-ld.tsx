@@ -1,4 +1,4 @@
-import { STORE } from "@/lib/store-config";
+import { STORES } from "@/lib/store-config";
 
 type JsonLdProps = {
   data: Record<string, unknown>;
@@ -27,16 +27,30 @@ export function JsonLd({ data }: JsonLdProps) {
   );
 }
 
+/** Udvidet returret: 30 dage (oven på den lovpligtige fortrydelsesret på 14 dage). */
+export const RETURN_DAYS = 30;
+
+export const MERCHANT_RETURN_POLICY_JSONLD: Record<string, unknown> = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "DK",
+  returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+  merchantReturnDays: RETURN_DAYS,
+  returnMethod: ["https://schema.org/ReturnByMail", "https://schema.org/ReturnInStore"],
+};
+
 export const ORGANIZATION_JSONLD: Record<string, unknown> = {
   "@context": "https://schema.org",
-  "@type": ["Organization", "LocalBusiness"],
+  "@type": ["Organization", "OnlineStore"],
   name: "PhoneSpot",
+  legalName: "PhoneSpot ApS",
+  vatID: "DK38688766",
   url: "https://phonespot.dk",
   logo: "https://phonespot.dk/brand/logo.png",
   image: "https://phonespot.dk/brand/logo.png",
   description:
-    "Refurbished elektronik og reparation af telefoner og tablets med butikker i Vejle og Slagelse. Refurbished iPhones, iPads og MacBooks med 36 måneders garanti; reparation mens du venter med livstidsgaranti på arbejde og dele.",
+    "Dansk forhandler af brugte og refurbished iPhones, iPads og bærbare med 36 måneders garanti og eget reparationsværksted i Vejle og Slagelse. Batteri min. 90 % ved levering, oplyst delstatus, 30 dages returret og livstidsgaranti på reparation af telefon og tablet.",
   telephone: "+45 61 10 00 48",
+  email: "info@phonespot.dk",
   areaServed: { "@type": "Country", name: "Danmark" },
   // Samler PhoneSpot som én entitet på tværs af profiler — søgemaskiner og
   // AI-søgning (bl.a. via Bing) bruger sameAs til at koble omtale og anmeldelser.
@@ -44,13 +58,27 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
     "https://dk.trustpilot.com/review/phonespot.dk",
     "https://www.facebook.com/phonespot.dk/",
   ],
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: STORE.street,
-    addressLocality: STORE.city,
-    postalCode: STORE.zip,
-    addressCountry: STORE.countryCode,
-  },
+  // Begge butikker som selvstændige lokationer (før stod kun Slagelse).
+  department: Object.values(STORES).map((s) => ({
+    "@type": ["ElectronicsStore", "LocalBusiness"],
+    name: s.name,
+    telephone: s.phone,
+    email: s.email,
+    hasMap: s.googleMapsUrl,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: s.street,
+      addressLocality: s.city,
+      postalCode: s.zip,
+      addressCountry: s.countryCode,
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: s.coordinates.lat,
+      longitude: s.coordinates.lng,
+    },
+  })),
+  hasMerchantReturnPolicy: MERCHANT_RETURN_POLICY_JSONLD,
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer service",

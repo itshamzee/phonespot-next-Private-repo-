@@ -6,8 +6,8 @@ import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Refurbished smartphones med 36 måneders garanti | PhoneSpot",
-  description: "Find refurbished Android-telefoner hos PhoneSpot. Se det aktuelle udvalg fra Samsung, OnePlus og andre mærker med 36 måneders garanti på enheder.",
+  title: "Brugte Android-telefoner med 36 mdr. garanti | PhoneSpot",
+  description: "Køb en brugt Android-telefon, testet og istandsat hos PhoneSpot. Se det aktuelle udvalg fra Samsung, OnePlus og andre mærker med 36 måneders garanti på enheder.",
   alternates: { canonical: "https://phonespot.dk/smartphones" },
   openGraph: { title: "Refurbished smartphones | PhoneSpot", description: "Samsung, OnePlus og andre Android-telefoner. Find din næste kvalitetstestede smartphone hos PhoneSpot.", url: "https://phonespot.dk/smartphones" },
 };
@@ -31,6 +31,6 @@ export default async function SmartphonesPage() {
   return <>
     <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" }, { "@type": "ListItem", position: 2, name: "Refurbished smartphones", item: "https://phonespot.dk/smartphones" }] }} />
     <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
-    <DeviceCollection collection="smartphone" templates={templates} title="Refurbished smartphones" intro="Mest til Android? Find din næste telefon fra Samsung, OnePlus eller et andet mærke i udvalget. Kvalitetstestet og klar til en ny hverdag hos dig." collectionHeading="Aktuelle smartphones" guideTitle="Sådan vælger du smartphone" guideIntro="Tag udgangspunkt i de funktioner, der betyder mest i din hverdag. Vælg derefter blandt de konkrete modeller og enheder på lager." choices={CHOICES} faqs={FAQS} />
+    <DeviceCollection collection="smartphone" templates={templates} title="Brugte smartphones fra Samsung og flere mærker" intro="Mest til Android? Find din næste telefon fra Samsung, OnePlus eller et andet mærke i udvalget. Kvalitetstestet og klar til en ny hverdag hos dig." collectionHeading="Aktuelle smartphones" guideTitle="Sådan vælger du smartphone" guideIntro="Tag udgangspunkt i de funktioner, der betyder mest i din hverdag. Vælg derefter blandt de konkrete modeller og enheder på lager." choices={CHOICES} faqs={FAQS} />
   </>;
 }

@@ -47,11 +47,11 @@ export function getDeviceFaq(displayName: string, category = "iphone"): FaqItem[
     },
     {
       q: "Hvad hvis jeg ikke er tilfreds?",
-      a: "Du har 14 dages fuld fortrydelsesret. Returner enheden i oprindelig stand, og vi refunderer det fulde beløb inkl. fragt. Ingen spørgsmål stillet.",
+      a: "Du har 30 dages returret på enheder. Returner enheden i oprindelig stand, og vi refunderer det fulde beløb inkl. fragt. Ingen spørgsmål stillet.",
     },
     {
       q: "Kan jeg returnere enheden?",
-      a: "Ja, du har altid 14 dages fuld returret fra den dag, du modtager din ordre. Enheden skal returneres i samme stand, som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
+      a: "Ja, du har 30 dages returret fra den dag, du modtager din enhed. Enheden skal returneres i samme stand, som du modtog den. Kontakt os, og vi sender dig en returetiket. Pengene refunderes inden for 3-5 hverdage.",
     },
   ];
 }

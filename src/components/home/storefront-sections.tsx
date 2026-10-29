@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORES } from "@/lib/store-config";
+import { PHONESPOT_ONE_LINER, PHONESPOT_PROMISES } from "@/lib/promises";
 import styles from "./storefront.module.css";
 import editorial from "./home-editorial.module.css";
 
@@ -12,15 +13,26 @@ const accessories = [
 ];
 
 const questions = [
-  { question: "Hvad betyder refurbished?", answer: "En refurbished enhed har været brugt før. Hos PhoneSpot bliver den inspiceret, testet, rengjort og klargjort til en ny ejer. Du vælger model og stand og kan se oplysningerne om den konkrete enhed før køb.", href: "/kvalitet", label: "Læs om vores kvalitetskontrol" },
+  { question: "Hvad betyder refurbished?", answer: "En refurbished enhed er en brugt enhed, der er klargjort igen. Hos PhoneSpot bliver den inspiceret, testet, rengjort og klargjort til en ny ejer. Du vælger model og stand og kan se oplysningerne om den konkrete enhed før køb.", href: "/kvalitet", label: "Læs om vores kvalitetskontrol" },
   { question: "Hvad betyder stand A, B og C?", answer: "Standen beskriver enhedens kosmetiske udseende. A har ingen synlige brugsspor, B har lette brugsspor, og C har synlige brugsspor. Batteriet vurderes separat. Læs altid beskrivelsen af den konkrete enhed.", href: "/kvalitet#stand", label: "Se forskellen på graderne" },
-  { question: "Hvordan er batteriets stand?", answer: "Batteriets sundhed måles individuelt. Se den oplyste batterikapacitet på produktsiden. Stand A, B eller C fortæller om udseendet og er ikke en batteriprocent. Kontakt os, hvis du mangler oplysninger om en bestemt enhed.", href: "/kvalitet#batteri", label: "Læs om batteriet" },
-  { question: "Hvad med garantien?", answer: "Refurbished enheder leveres med 36 måneders garanti efter vores garantivilkår. Tilbehør har 2 års reklamationsret. Du har desuden 14 dages fortrydelsesret ved køb online.", href: "/garanti", label: "Læs garantivilkårene" },
+  { question: "Hvordan er batteriets stand?", answer: "Alle enheder har mindst 90 % batterikapacitet ved levering. Er den lavere, skifter vi batteriet uden beregning. Stand A, B eller C fortæller om udseendet og er ikke en batteriprocent.", href: "/kvalitet#batteri", label: "Læs om batteriet" },
+  { question: "Hvad med garantien?", answer: "Refurbished enheder leveres med 36 måneders garanti efter vores garantivilkår. Tilbehør har 2 års reklamationsret. Du har desuden 30 dages returret på enheder.", href: "/garanti", label: "Læs garantivilkårene" },
   { question: "Matcher I prisen hos andre?", answer: "Vi tilbyder prismatch på sammenlignelige refurbished enheder hos danske konkurrenter. Model og kosmetisk stand skal matche, og varen skal være på lager hos konkurrenten. Send os et link, så vi kan vurdere prisen efter vores betingelser.", href: "/prismatch", label: "Se betingelserne for prismatch" },
 ];
 
 export function StorefrontSections() {
   return <>
+    <section className={editorial.promises} aria-labelledby="home-promises-title">
+      <div className={editorial.promisesCopy}>
+        <span className={styles.eyebrow}>Seks løfter</span>
+        <h2 id="home-promises-title">Værkstedet, der står<br /> bag telefonen.</h2>
+        <p>{PHONESPOT_ONE_LINER} Vi reparerer selv, og derfor kan vi love mere om den telefon, du køber.</p>
+        <Link className={styles.textlink} href="/garanti#loefter">Læs løfterne i detaljer<StorefrontIcon kind="arrow" /></Link>
+      </div>
+      <ol className={editorial.promiseList}>
+        {PHONESPOT_PROMISES.map(item => <li key={item.title}><strong>{item.title}</strong><span>{item.detail}</span></li>)}
+      </ol>
+    </section>
     <section className={editorial.accessories} aria-labelledby="home-accessories-title">
       <div className={editorial.accessoryCopy}>
         <span className={styles.eyebrow}>Til hverdagens enheder</span>

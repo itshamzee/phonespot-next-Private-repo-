@@ -10,12 +10,12 @@ import { LagersalgHomeStrip } from "@/components/lagersalg/lagersalg-links";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Refurbished iPhones, computere og reparation | PhoneSpot",
-  description: "Køb kvalitetstestede iPhones, iPads og bærbare med 36 måneders garanti. Få din enhed repareret, eller sælg den til os. Online og i Vejle og Slagelse.",
+  title: "Brugte iPhones med garanti og reparation | PhoneSpot",
+  description: "Køb en brugt iPhone, iPad eller bærbar med 36 måneders garanti, batteri min. 90 % og 30 dages returret. Reparation og opkøb i Vejle og Slagelse.",
   alternates: { canonical: "https://phonespot.dk" },
   openGraph: {
-    title: "Refurbished elektronik og reparation | PhoneSpot",
-    description: "Kvalitetstestede enheder med 36 måneders garanti. Find din næste enhed, få hjælp til reparation, eller sælg din brugte elektronik.",
+    title: "Brugte iPhones med garanti og reparation | PhoneSpot",
+    description: "Brugte og refurbished enheder med 36 måneders garanti. Find din næste enhed, få hjælp til reparation, eller sælg din brugte elektronik.",
     url: "https://phonespot.dk",
     type: "website",
     locale: "da_DK",

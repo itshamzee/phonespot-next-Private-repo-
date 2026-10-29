@@ -80,7 +80,7 @@ describe("uspsForOrder", () => {
     expect(withDevice).toEqual(BRAND.usps);
     expect(withoutDevice).toEqual([
       "2 års reklamationsret",
-      "14 dages returret",
+      "30 dages returret",
       "Hurtig levering",
       "Gratis afhentning i butik",
     ]);

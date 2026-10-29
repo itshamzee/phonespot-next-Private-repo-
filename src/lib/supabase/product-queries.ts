@@ -123,7 +123,7 @@ export async function getTemplateBySlug(slug: string): Promise<ProductTemplate |
 // `source` beholdes bevidst: device-detail.tsx bruger den til leverings-/
 // afhentningslinjen for dropship-enheder.
 const AVAILABLE_DEVICE_COLUMNS =
-  "id, template_id, status, grade, condition_notes, selling_price, storage, color, battery_health, battery_replaced, source, location:locations(id, name, type)";
+  "id, template_id, status, grade, condition_notes, selling_price, storage, color, battery_health, battery_replaced, screen_replaced, replaced_parts_original, source, location:locations(id, name, type)";
 
 export async function getAvailableDevices(templateId: string) {
   const supabase = createAdminClient();

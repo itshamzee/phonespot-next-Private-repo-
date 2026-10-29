@@ -25,6 +25,10 @@ export const deviceIntakeSchema = z.object({
 export const deviceUpdateSchema = z.object({
   grade: z.enum(["N", "P", "A", "B", "C"]).optional(),
   battery_health: z.number().int().min(0).max(100).optional(),
+  // Delstatus (løfte 1). null = ikke registreret.
+  battery_replaced: z.boolean().nullable().optional(),
+  screen_replaced: z.boolean().nullable().optional(),
+  replaced_parts_original: z.boolean().nullable().optional(),
   condition_notes: z.string().optional(),
   storage: z.string().optional(),
   color: z.string().optional(),

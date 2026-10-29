@@ -97,6 +97,8 @@ export interface Device {
    * grade is a cosmetic classification and battery facts are per-unit.
    */
   battery_replaced: boolean | null;
+  screen_replaced: boolean | null;
+  replaced_parts_original: boolean | null;
   storage: string | null;
   color: string | null;
   condition_notes: string | null;

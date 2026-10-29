@@ -71,7 +71,7 @@ export default function QualityPage() {
         <div className={styles.reading}>
           <section><h2>Garanti og hjælp efter købet</h2><p>Enheder har 36 måneders garanti. Tilbehør har 2 års reklamationsret. Dækning, undtagelser og fremgangsmåden ved en fejl fremgår af vores garantivilkår.</p><div className={styles.actions}><Link href="/garanti" className={styles.textLink}>Læs garantien →</Link><Link href="/handelsbetingelser" className={styles.textLink}>Returpolitik →</Link></div></section>
           <section><h2>Spørgsmål om kvalitet</h2><FaqAccordion items={QUALITY_FAQ} /></section>
-          <section><h2>Find din næste enhed</h2><div className={styles.actions}><Link href="/iphones" className={styles.button}>Se iPhones</Link><Link href="/ipads" className={styles.secondary}>Se iPads</Link><Link href="/baerbare" className={styles.secondary}>Se bærbare</Link></div><div className={styles.actions}><Link href="/blog/refurbished-vs-brugt-guide" className={styles.textLink}>Læs guiden til refurbished →</Link></div></section>
+          <section><h2>Find din næste enhed</h2><div className={styles.actions}><Link href="/iphones" className={styles.button}>Se iPhones</Link><Link href="/ipads" className={styles.secondary}>Se iPads</Link><Link href="/baerbare" className={styles.secondary}>Se bærbare</Link></div><div className={styles.actions}><Link href="/blog/koeb-brugt-iphone" className={styles.textLink}>Læs guiden til refurbished →</Link></div></section>
         </div>
       </div>
     </div>

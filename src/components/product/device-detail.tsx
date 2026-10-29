@@ -65,6 +65,8 @@ export type PublicDevice = Pick<
   | "color"
   | "battery_health"
   | "battery_replaced"
+  | "screen_replaced"
+  | "replaced_parts_original"
   | "source"
 >;
 
@@ -114,19 +116,52 @@ const GRADE_DETAILS: Record<string, { label: string; cosmetic: string }> = {
   C: { label: "Brugt stand", cosmetic: "Synlige brugsspor — ridser og mærker" },
 };
 
+/** Løfte 2 (ejerbeslutning 2026-10-29): min. 90 % ved levering, ellers nyt batteri. */
+export const BATTERY_FLOOR_PCT = 90;
+
 /**
  * The battery statement is always about ONE physical unit — never a grade.
- * `battery_health` is a measured fact recorded per device; when it's
- * unknown (null), nothing is said about the battery at all rather than
- * showing an invented floor. `battery_replaced` is only ever mentioned when
- * explicitly true for that same unit.
+ * `battery_health` is a measured fact recorded per device. When it's unknown
+ * (null) or below the floor, we state the delivery promise instead of a
+ * number: the unit gets a new battery before it ships if it measures under
+ * BATTERY_FLOOR_PCT. `battery_replaced` is only mentioned when explicitly
+ * true for that same unit.
  */
 export function buildBatteryLine(
   unit: Pick<Device, "battery_health" | "battery_replaced"> | null,
 ): string | null {
-  if (!unit || unit.battery_health == null) return null;
+  if (!unit) return null;
+  if (unit.battery_health == null || unit.battery_health < BATTERY_FLOOR_PCT) {
+    return `Batteri: min. ${BATTERY_FLOOR_PCT} % ved levering — ellers skifter vi det`;
+  }
   const base = `Batteri: ${unit.battery_health}% — målt på denne enhed`;
   return unit.battery_replaced === true ? `${base}. Nyt batteri isat.` : base;
+}
+
+/**
+ * Delstatus (løfte 1): om skærm og batteri er originale eller skiftet. Kun
+ * registrerede fakta for netop denne enhed — null siges aldrig som "original".
+ */
+export function buildPartsLine(
+  unit: Pick<Device, "screen_replaced" | "battery_replaced" | "replaced_parts_original"> | null,
+): string | null {
+  if (!unit) return null;
+  const part = (v: boolean | null) => (v == null ? null : v ? "skiftet" : "original");
+  const screen = part(unit.screen_replaced);
+  const battery = part(unit.battery_replaced);
+  if (screen == null && battery == null) {
+    return "Delstatus: spørg os, så oplyser vi, om skærm og batteri er originale, før du køber";
+  }
+  const bits = [
+    screen && `skærm ${screen}`,
+    battery && `batteri ${battery}`,
+  ].filter(Boolean).join(", ");
+  const anyReplaced = unit.screen_replaced === true || unit.battery_replaced === true;
+  const origin =
+    anyReplaced && unit.replaced_parts_original != null
+      ? unit.replaced_parts_original ? " (originale dele)" : " (kompatible dele)"
+      : "";
+  return `Delstatus: ${bits}${origin}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -469,6 +504,7 @@ export function DeviceDetail({
   // Per-unit battery statement for the specific device that would actually
   // be added to cart at the displayed price — never a grade-level promise.
   const batteryLine = buildBatteryLine(bestMatch);
+  const partsLine = buildPartsLine(bestMatch);
 
   // When the selected grade is sold out, surface other grades of the SAME model
   // that DO have stock so the customer has a one-click path forward instead of a
@@ -753,6 +789,7 @@ export function DeviceDetail({
               {batteryLine && (
                 <p className="font-medium text-charcoal">{batteryLine}</p>
               )}
+              {partsLine && <p>{partsLine}</p>}
             </div>
           )}
           {deviceType === "laptop" && upgradeOptions.length > 0 && (
@@ -902,7 +939,7 @@ export function DeviceDetail({
               </p>
             )}
             <p className={styles.small}>
-              14 dages fortrydelsesret · Kort, MobilePay og Klarna
+              30 dages returret · Kort, MobilePay og Klarna
             </p>
           </div>
           {price != null && (
@@ -1009,7 +1046,7 @@ export function DeviceDetail({
                 batterimåling gælder den konkrete enhed, du vælger.
               </p>
               <p className="mt-3">
-                Du har 14 dages returret. Se vilkår for garanti, levering og
+                Du har 30 dages returret. Se vilkår for garanti, levering og
                 returnering før dit køb.
               </p>
               <Link href="/handelsbetingelser" className={styles.textLink}>

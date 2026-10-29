@@ -91,7 +91,9 @@ describe("Grade copy never promises a battery percentage — cosmetic only", () 
     // legitimately state "100% kapacitet" for a brand-NEW device (an
     // objective, ungraded fact) — that's not the claim this test guards
     // against, so a bare "NN% kapacitet" alone must not trip it.
-    const gradeTiedClaim = /nyt batteri|min\.\s?\d{2,3}\s?%|(?:Grade|stand) [ABC][^.]{0,80}?\d{2,3}\s?%\s*(kapacitet|batteri)/i;
+    // "min. 90 % ved levering" is the uniform delivery promise for every
+    // unit (ejerbeslutning 2026-10-29), not a grade-tied claim.
+    const gradeTiedClaim = /nyt batteri|min\.\s?\d{2,3}\s?%(?! ved levering)|(?:Grade|stand) [ABC][^.]{0,80}?\d{2,3}\s?%\s*(kapacitet|batteri)/i;
     const files = [
       "src/app/iphones/page.tsx",
       "src/app/ipads/page.tsx",
@@ -133,9 +135,9 @@ describe("garanti/page.tsx warranty floors — left alone, and read as a post-sa
     const answer = match![1];
     // Must tie the floor to the warranty PERIOD/degradation, not to purchase.
     expect(answer).toMatch(/garantiperiode/i);
-    // Must not claim these numbers as what the battery measures at sale —
-    // that fact now lives per-unit on the product page.
-    expect(answer).toMatch(/købstidspunktet/i);
+    // The at-sale fact is the uniform 90 % delivery floor, stated separately
+    // from the per-grade degradation thresholds.
+    expect(answer).toMatch(/90 % batterikapacitet ved levering/i);
   });
 });
 
@@ -149,7 +151,7 @@ describe("buildBatteryLine — per-unit battery statement, never invented", () =
   // Minimal Device fixture — only battery_health/battery_replaced matter to
   // buildBatteryLine, but the full shape keeps this test resilient to
   // Device gaining more required fields later.
-  function makeUnit(overrides: { battery_health: number | null; battery_replaced?: boolean | null }) {
+  function makeUnit(overrides: { battery_health: number | null; battery_replaced?: boolean | null; screen_replaced?: boolean | null; replaced_parts_original?: boolean | null }) {
     return {
       id: "d1",
       serial_number: null,
@@ -180,15 +182,31 @@ describe("buildBatteryLine — per-unit battery statement, never invented", () =
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
       battery_replaced: null,
+      screen_replaced: null,
+      replaced_parts_original: null,
       ...overrides,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   }
 
-  it("states nothing about the battery when battery_health is unknown — never an invented floor", async () => {
+  it("states the 90 % delivery promise — not a measured number — when battery_health is unknown or below the floor", async () => {
     const { buildBatteryLine } = await import("../components/product/device-detail");
-    expect(buildBatteryLine(makeUnit({ battery_health: null }))).toBeNull();
+    for (const health of [null, 88]) {
+      const line = buildBatteryLine(makeUnit({ battery_health: health }));
+      expect(line).toMatch(/min\. 90 % ved levering/);
+      expect(line).not.toMatch(/målt på denne enhed/i);
+    }
     expect(buildBatteryLine(null)).toBeNull();
+  });
+
+  it("states part status only from recorded facts — unknown is never called original", async () => {
+    const { buildPartsLine } = await import("../components/product/device-detail");
+    const unknown = buildPartsLine(makeUnit({ battery_health: 95, screen_replaced: null, battery_replaced: null }));
+    expect(unknown).toMatch(/spørg os/i);
+    expect(unknown).not.toMatch(/original/);
+
+    const mixed = buildPartsLine(makeUnit({ battery_health: 95, screen_replaced: true, battery_replaced: false, replaced_parts_original: false }));
+    expect(mixed).toBe("Delstatus: skærm skiftet, batteri original (kompatible dele)");
   });
 
   it("states the exact measured value for the unit, labelled as measured for that unit — the HP EliteBook case (Grade P, 97%)", async () => {
@@ -276,11 +294,13 @@ describe("buildBatteryLine vs. live inventory — never disagrees with the unit'
       for (const d of devices ?? []) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const line = buildBatteryLine(d as any);
-        if (d.battery_health == null) {
-          if (line !== null) {
+        // Unknown or below the 90 % floor: the line must state the delivery
+        // promise (ejerbeslutning 2026-10-29), never a measured number.
+        if (d.battery_health == null || d.battery_health < 90) {
+          if (line === null || !/min\. 90 % ved levering/.test(line) || /målt/i.test(line)) {
             violations.push(
-              `device ${d.id} (template ${d.template_id}): battery_health is unknown but a ` +
-                `battery line was produced: "${line}"`,
+              `device ${d.id} (template ${d.template_id}): battery_health=${d.battery_health} but ` +
+                `the 90 % delivery promise was not stated: "${line}"`,
             );
           }
           continue;

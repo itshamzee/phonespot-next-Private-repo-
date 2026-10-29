@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Hvorfor PhoneSpot? | PhoneSpot",
+  title: "Hvorfor købe brugt iPhone hos PhoneSpot? 36 mdr. garanti",
   description:
     "PhoneSpot gør elektronik i høj kvalitet tilgængeligt og bæredygtigt. Kvalitetstestede enheder med 36 måneders garanti og dansk kundeservice.",
   alternates: { canonical: "https://phonespot.dk/hvorfor-phonespot" },

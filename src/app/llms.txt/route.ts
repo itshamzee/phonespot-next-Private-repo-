@@ -1,5 +1,6 @@
 import { STORES, UPCOMING_STORES } from "@/lib/store-config";
 import { REPAIR_WARRANTY_ANSWER } from "@/lib/repairs/warranty-copy";
+import { PHONESPOT_ONE_LINER, PHONESPOT_PROMISES } from "@/lib/promises";
 
 // llms.txt: en kort, faktuel oversigt til AI-søgemaskiner (ChatGPT, Perplexity,
 // Claude, Copilot). Butiksdata hentes fra store-config, så adresser og
@@ -33,7 +34,18 @@ function upcomingStoreLines() {
 export function GET() {
   const body = `# PhoneSpot
 
-> PhoneSpot er en dansk forhandler af refurbished elektronik og et reparationsværksted for telefoner, tablets og computere med fysiske butikker i Vejle og Slagelse. Vi reparerer iPhone, Samsung, iPad, MacBook og andre mærker mens du venter, og sælger kvalitetstestede refurbished iPhones, iPads og MacBooks med 36 måneders garanti.
+> ${PHONESPOT_ONE_LINER} Vi reparerer iPhone, Samsung, iPad, MacBook og andre mærker mens du venter, køber brugte enheder op og sælger brugte, istandsatte iPhones, iPads og MacBooks.
+
+## Køb brugt iPhone — fakta
+- Brugte og refurbished iPhones, iPads, MacBooks, Android-telefoner og smartwatches, testet og istandsat på eget værksted.
+- 36 måneders garanti på enheder. Tilbehør har 2 års reklamationsret.
+- 30 dages returret på enheder (ud over den lovpligtige fortrydelsesret på 14 dage).
+- Kosmetisk stand A, B eller C. Batteri min. 90 % ved levering; under 90 % skiftes batteriet uden beregning.
+- Køb online med levering, eller se og afhent enheden i Vejle eller Slagelse.
+- Brugte iPhones: ${SITE}/iphones · Android: ${SITE}/smartphones · Guide: ${SITE}/blog/koeb-brugt-iphone
+
+## PhoneSpots 6 løfter
+${PHONESPOT_PROMISES.map((p, i) => `${i + 1}. ${p.title}: ${p.detail}`).join("\n")}
 
 ## Reparation — fakta
 - Walk-in uden tidsbestilling i begge butikker. 90% af alle skærm- og batteriskift er klar på 30 minutter.

@@ -42,7 +42,7 @@ const STEPS = [
     number: "3",
     title: "Vi matcher prisen",
     description:
-      "Vi verificerer prisen og matcher den. Så enkelt er det. Du får den bedste pris — med PhoneSpots 36 måneders garanti, 30+ kvalitetstests og 14 dages returret oveni.",
+      "Vi verificerer prisen og matcher den. Så enkelt er det. Du får den bedste pris — med PhoneSpots 36 måneders garanti, batteri min. 90 % og 30 dages returret oveni.",
   },
 ];
 
@@ -76,7 +76,7 @@ export default function PrismatchPage() {
               priser på kvalitetstestet refurbished elektronik. Men finder du
               alligevel en lavere pris hos en dansk konkurrent? Så matcher vi
               den &mdash; uden tøven. Du får stadig vores 36 måneders garanti,
-              30+ kvalitetstests og 14 dages returret.
+              batteri min. 90 % og 30 dages returret.
             </p>
           </FadeIn>
         </div>
@@ -182,7 +182,7 @@ export default function PrismatchPage() {
                 Og i de sjældne tilfælde, hvor en konkurrent har en lavere pris,
                 matcher vi den gerne. For hos PhoneSpot får du ikke bare den
                 bedste pris &mdash; du får også 36 måneders garanti, over 30
-                individuelle kvalitetstests og 14 dages fuld returret. Det er
+                individuelle kvalitetstests og 30 dages fuld returret. Det er
                 tryghed, du ikke finder andre steder.
               </p>
               <div className="mt-6 flex flex-wrap gap-4 text-sm font-medium text-[#1A3D2E]">
@@ -238,7 +238,7 @@ export default function PrismatchPage() {
                       d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                     />
                   </svg>
-                  14 dages returret
+                  30 dages returret
                 </span>
               </div>
             </div>

@@ -157,8 +157,8 @@ export async function GET() {
         shortDesc ??
         longDesc ??
         (isNew
-          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret.`
-          : `${title} — refurbished iPhone hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`);
+          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 30 dages returret.`
+          : `${title} — refurbished iPhone hos PhoneSpot. 36 mdr. garanti, gratis fragt, 30 dages returret, batteri min. 90 %.`);
 
       // Link to template page (color/storage/grade selection happens in UI)
       const link = `${SITE_URL}/refurbished/${template.slug}`;

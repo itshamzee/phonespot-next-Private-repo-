@@ -45,6 +45,8 @@ function unit(id: string, overrides: Partial<PublicDevice> = {}): PublicDevice {
     color: "Sort",
     battery_health: 95,
     battery_replaced: false,
+    screen_replaced: null,
+    replaced_parts_original: null,
     source: "manual",
     ...overrides,
   };

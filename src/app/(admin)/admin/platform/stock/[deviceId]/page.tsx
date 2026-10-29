@@ -20,6 +20,9 @@ interface DeviceDetail {
   imei: string | null;
   grade: "N" | "P" | "A" | "B" | "C" | null;
   battery_health: number | null;
+  battery_replaced: boolean | null;
+  screen_replaced: boolean | null;
+  replaced_parts_original: boolean | null;
   condition_notes: string | null;
   storage: string | null;
   color: string | null;
@@ -160,6 +163,10 @@ export default function DeviceDetailPage() {
   // Editable form state
   const [grade, setGrade] = useState<string>("");
   const [batteryHealth, setBatteryHealth] = useState<string>("");
+  // Delstatus: "" = ikke registreret, "true"/"false" = registreret.
+  const [screenReplaced, setScreenReplaced] = useState<string>("");
+  const [batteryReplaced, setBatteryReplaced] = useState<string>("");
+  const [partsOriginal, setPartsOriginal] = useState<string>("");
   const [conditionNotes, setConditionNotes] = useState<string>("");
   const [sellingPriceInput, setSellingPriceInput] = useState<string>("");
   const [status, setStatus] = useState<string>("");
@@ -211,6 +218,9 @@ export default function DeviceDetailPage() {
       // Populate form
       setGrade(dev.grade ?? "");
       setBatteryHealth(dev.battery_health != null ? String(dev.battery_health) : "");
+      setScreenReplaced(dev.screen_replaced == null ? "" : String(dev.screen_replaced));
+      setBatteryReplaced(dev.battery_replaced == null ? "" : String(dev.battery_replaced));
+      setPartsOriginal(dev.replaced_parts_original == null ? "" : String(dev.replaced_parts_original));
       setConditionNotes(dev.condition_notes ?? "");
       setSellingPriceInput(
         dev.selling_price != null
@@ -262,6 +272,10 @@ export default function DeviceDetailPage() {
       const body: Record<string, unknown> = {};
       if (grade) body.grade = grade;
       if (batteryHealth !== "") body.battery_health = parseInt(batteryHealth, 10);
+      const triState = (v: string) => (v === "" ? null : v === "true");
+      body.screen_replaced = triState(screenReplaced);
+      body.battery_replaced = triState(batteryReplaced);
+      body.replaced_parts_original = triState(partsOriginal);
       if (conditionNotes !== "") body.condition_notes = conditionNotes;
       if (status) body.status = status;
       if (locationId) body.location_id = locationId;
@@ -586,6 +600,31 @@ export default function DeviceDetailPage() {
                   placeholder="85"
                   className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 transition hover:border-stone-300 focus:border-green-eco/50 focus:outline-none"
                 />
+              </div>
+
+              {/* Delstatus (løfte 1) */}
+              <div className="sm:col-span-2">
+                <p className="mb-1.5 text-sm font-semibold text-stone-700">Delstatus</p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {([
+                    ["Skærm", screenReplaced, setScreenReplaced, "Original", "Skiftet"],
+                    ["Batteri", batteryReplaced, setBatteryReplaced, "Original", "Skiftet"],
+                    ["Skiftede dele", partsOriginal, setPartsOriginal, "Kompatible", "Originale"],
+                  ] as const).map(([label, value, set, no, yes]) => (
+                    <label key={label} className="block text-xs text-stone-500">
+                      {label}
+                      <select
+                        value={value}
+                        onChange={(e) => set(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 focus:border-green-eco/50 focus:outline-none"
+                      >
+                        <option value="">Ikke registreret</option>
+                        <option value="false">{no}</option>
+                        <option value="true">{yes}</option>
+                      </select>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {/* Selling price */}

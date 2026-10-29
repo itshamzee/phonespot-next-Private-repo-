@@ -11,7 +11,7 @@ import styles from "@/components/sell-device/sell-device.module.css";
 export const metadata: Metadata = {
   title: "Sælg brugt elektronik – iPhone, Samsung og MacBook | PhoneSpot",
   description:
-    "Sælg din brugte iPhone, Samsung, iPad, MacBook eller smartwatch. Få en vurdering hos PhoneSpot i Vejle og Slagelse, eller send din enhed efter aftale.",
+    "Sælg din brugte iPhone, Samsung, iPad, MacBook eller smartwatch. Fast pris, udbetaling inden 2 hverdage og gratis retur, hvis du afviser. Vejle, Slagelse eller med post.",
   alternates: { canonical: "https://phonespot.dk/saelg-din-enhed" },
   openGraph: {
     title: "Sælg din brugte elektronik | PhoneSpot",
@@ -57,7 +57,7 @@ const questions = [
   {
     question: "Hvornår aftaler vi pris og betaling?",
     answer:
-      "Formularen er en anmodning om vurdering. Vi gennemgår oplysningerne og kontakter dig om et eventuelt tilbud. Pris, betaling og aflevering aftales som del af handlen; du beslutter selv, om du vil gå videre med tilbuddet.",
+      "Formularen er en anmodning om vurdering. Du får et tilbud, og siger du ja, holder prisen, medmindre enheden afviger fra din beskrivelse. Vi udbetaler inden 2 hverdage, efter vi har modtaget og tjekket enheden. Afviser du tilbuddet efter vores tjek, sender vi enheden gratis retur.",
   },
   {
     question: "Hvorfor sælge en enhed, der stadig virker?",
@@ -118,6 +118,13 @@ export default function SaelgDinEnhedPage() {
                 <StorefrontIcon kind="pin" />
                 <span>
                   Aflever i Vejle eller Slagelse, eller send efter aftale.
+                </span>
+              </div>
+              <div>
+                <StorefrontIcon kind="check" />
+                <span>
+                  Fast pris, udbetaling inden 2 hverdage, gratis retur hvis du
+                  afviser.
                 </span>
               </div>
               <p className={styles.note}>

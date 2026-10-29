@@ -176,8 +176,8 @@ export async function GET() {
         shortDesc ??
         longDesc ??
         (isNew
-          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret.`
-          : `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 14 dages returret, testet i 30+ punkter.`);
+          ? `${title} — fabriksny, forseglet original emballage, hos PhoneSpot. 36 mdr. garanti, gratis fragt, 30 dages returret.`
+          : `${title} — refurbished hos PhoneSpot. 36 mdr. garanti, gratis fragt, 30 dages returret, batteri min. 90 %.`);
 
       // Resolve EAN: per-variant first, then template-wide fallback.
       const gtinsByVariant = (template.default_attributes?.gtins_by_variant ?? null) as

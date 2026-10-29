@@ -56,7 +56,7 @@ export const BRAND = {
   // USPs
   usps: [
     "36 mdr. garanti",
-    "14 dages returret",
+    "30 dages returret",
     "30+ kvalitetstests",
     "Gratis afhentning i butik",
   ],

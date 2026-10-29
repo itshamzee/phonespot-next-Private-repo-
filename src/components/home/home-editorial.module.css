@@ -36,13 +36,26 @@
 .answer a { display: inline-flex; align-items: center; gap: 10px; color: #1a3d2e; font-size: 13px; font-weight: 550; min-height: 44px; margin-bottom: 10px; }
 .answer a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .answer a svg { width: 16px; height: 16px; }
+.promises { display: grid; grid-template-columns: 1fr 1.6fr; gap: 70px; padding: 20px 0 64px; }
+.promisesCopy h2 { margin: 0 0 18px; color: #1a3d2e; font-size: clamp(29px, 2.8vw, 39px); font-weight: 550; line-height: 1.1; letter-spacing: -1.3px; text-wrap: balance; }
+.promisesCopy p { margin: 0 0 18px; max-width: 380px; color: #586158; font-size: 15px; line-height: 1.8; }
+.promiseList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 44px; margin: 0; padding: 0; list-style: none; counter-reset: promise; }
+.promiseList li { counter-increment: promise; padding: 18px 0 22px; border-top: 1px solid #dce1d9; }
+.promiseList li::before { content: counter(promise, decimal-leading-zero); display: block; margin-bottom: 8px; color: #8a948a; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+.promiseList strong { display: block; margin-bottom: 6px; color: #1a3d2e; font-size: 16px; font-weight: 550; letter-spacing: -.3px; }
+.promiseList span { display: block; color: #596456; font-size: 14px; line-height: 1.7; }
 @media (max-width: 1100px) {
+  .promises { gap: 40px; }
   .accessories { padding: 26px; gap: 24px; }
   .accessoryLinks { gap: 14px; }
   .accessoryImage { height: 155px; padding-inline: 6px; }
   .quality { gap: 40px; }
 }
 @media (max-width: 760px) {
+  .promises { grid-template-columns: 1fr; gap: 20px; padding: 8px 0 40px; }
+  .promisesCopy h2 br { display: none; }
+  .promisesCopy h2 { font-size: 31px; }
+  .promiseList { grid-template-columns: 1fr; }
   .accessories { grid-template-columns: 1fr; gap: 14px; padding: 25px 22px; margin-bottom: 30px; }
   .accessoryCopy h2 br { display: none; }
   .accessoryCopy h2 { font-size: 30px; margin-bottom: 12px; }

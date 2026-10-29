@@ -213,6 +213,27 @@ export default function HandelsbetingelserPage() {
           </p>
         </div>
 
+        {/* 7a. Udvidet returret på enheder */}
+        <div>
+          <h2>7a. Udvidet returret på enheder (30 dage)</h2>
+          <p className="mt-3">
+            Ud over den lovpligtige fortrydelsesret giver vi 30 dages returret på enheder
+            (telefoner, tablets, bærbare og smartwatches). Fristen løber fra den dag, du modtager
+            enheden. Tilbehør og reservedele er omfattet af den almindelige fortrydelsesret på 14
+            dage.
+          </p>
+          <p className="mt-3">
+            Du bruger returretten på samme måde som fortrydelsesretten: giv os besked inden
+            fristen, og returnér enheden i den stand, du modtog den, med tilbehør. Du kan også
+            aflevere den i vores butik i Vejle eller Slagelse. Vi refunderer beløbet senest 14
+            dage efter, at vi har modtaget enheden.
+          </p>
+          <p className="mt-3">
+            Den udvidede returret er en frivillig ordning og begrænser ikke dine rettigheder
+            efter forbrugeraftaleloven eller købeloven.
+          </p>
+        </div>
+
         {/* 8. Standardfortrydelsesformular */}
         <div>
           <h2>8. Standardfortrydelsesformular</h2>

@@ -64,7 +64,7 @@ export const baseTrustItems: TrustItem[] = [
     ),
   },
   {
-    label: "14 dages returret",
+    label: "30 dages returret",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

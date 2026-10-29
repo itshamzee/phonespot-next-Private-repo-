@@ -87,7 +87,8 @@ const nextConfig: NextConfig = {
       { source: "/services/login_with_shop", destination: "/", permanent: true },
       // Dead internal URLs that were linked from the homepage/mega-menu until 2026-08
       { source: "/salg", destination: "/saelg-din-enhed", permanent: true },
-      { source: "/refurbished", destination: "/smartphones", permanent: true },
+      { source: "/refurbished", destination: "/iphones", permanent: true },
+      { source: "/blog/refurbished-vs-brugt-guide", destination: "/blog/koeb-brugt-iphone", permanent: true },
       // Legacy tempered-glass URLs → new Spot URLs
       { source: "/tilbehoer/skaermbeskyttelse", destination: "/beskyttelsesglas", permanent: true },
       { source: "/tilbehoer/skaermbeskyttelse/:model", destination: "/beskyttelsesglas/apple/:model", permanent: true },

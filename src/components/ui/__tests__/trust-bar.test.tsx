@@ -7,7 +7,7 @@ describe("TrustBar", () => {
     render(<TrustBar />);
     expect(screen.getByText("e-mærket")).toBeInTheDocument();
     expect(screen.getByText("36 mdr. garanti")).toBeInTheDocument();
-    expect(screen.getByText("14 dages returret")).toBeInTheDocument();
+    expect(screen.getByText("30 dages returret")).toBeInTheDocument();
     expect(screen.getByText("Hurtig levering")).toBeInTheDocument();
   });
 
@@ -19,7 +19,7 @@ describe("TrustBar", () => {
     expect(screen.queryByText("36 mdr. garanti")).not.toBeInTheDocument();
     expect(screen.getByText("2 års reklamationsret")).toBeInTheDocument();
     expect(screen.getByText("e-mærket")).toBeInTheDocument();
-    expect(screen.getByText("14 dages returret")).toBeInTheDocument();
+    expect(screen.getByText("30 dages returret")).toBeInTheDocument();
   });
 
   // Regression guard: which item becomes "2 års reklamationsret" under

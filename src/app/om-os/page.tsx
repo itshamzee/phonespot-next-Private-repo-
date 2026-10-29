@@ -7,9 +7,9 @@ import { FadeIn } from "@/components/ui/fade-in";
 import { StoreLocation } from "@/components/ui/store-location";
 
 export const metadata: Metadata = {
-  title: "Om PhoneSpot | Danmarks specialist i refurbished elektronik",
+  title: "Om PhoneSpot – brugte iPhones og reparation i Vejle og Slagelse",
   description:
-    "PhoneSpot er Danmarks specialist i kvalitetstestede refurbished iPhones, iPads og bærbare. Lær os at kende — vores mission, værdier og løfter til dig.",
+    "PhoneSpot er en dansk forhandler af brugte og refurbished iPhones, iPads og bærbare med eget reparationsværksted i Vejle og Slagelse. Lær os og vores 6 løfter at kende.",
   alternates: {
     canonical: "https://phonespot.dk/om-os",
   },
@@ -78,7 +78,7 @@ const COMMITMENTS = [
   {
     title: "Hurtig levering",
     description:
-      "Bestil i dag, modtag i morgen. Vi sender alle ordrer med hurtig levering på 1-2 hverdage. Og med 14 dages fuld fortrydelsesret kan du altid sende den retur.",
+      "Bestil i dag, modtag i morgen. Vi sender alle ordrer med hurtig levering på 1-2 hverdage. Og med 30 dages returret på enheder kan du altid sende den retur.",
     icon: "truck",
   },
 ];
@@ -251,7 +251,8 @@ export default function OmOsPage() {
                 Vi giver elektronik i høj kvalitet nyt liv
               </Heading>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[#86868B]">
-                PhoneSpot er Danmarks specialist i refurbished elektronik. Vi
+                PhoneSpot er en dansk forhandler af brugte og refurbished
+                iPhones, iPads og bærbare med eget reparationsværksted. Vi
                 tror på, at kvalitetsteknologi ikke behøver at koste en formue —
                 og at det smarteste køb også er det mest bæredygtige. Hver enhed,
                 vi sælger, er testet, verificeret og dækket af 36 måneders
@@ -561,9 +562,9 @@ export default function OmOsPage() {
                 "Samme garantiperiode som ved køb af nyt. Dækker fabrikationsfejl og funktionelle mangler. Vi håndterer alt.",
             },
             {
-              title: "14 dages fortrydelsesret",
+              title: "30 dages returret",
               description:
-                "Ikke tilfreds? Returner enheden inden 14 dage og få dine penge tilbage. Ingen spørgsmål, ingen skjulte gebyrer.",
+                "Ikke tilfreds? Returner enheden inden 30 dage og få dine penge tilbage. Ingen spørgsmål, ingen skjulte gebyrer.",
             },
             {
               title: "Sikker betaling",
@@ -679,7 +680,7 @@ export default function OmOsPage() {
               </Heading>
               <p className="mt-4 text-[#86868B]">
                 Udforsk vores udvalg af kvalitetstestede refurbished iPhones,
-                iPads og bærbare. 36 måneders garanti på enheder og 14 dages fortrydelsesret.
+                iPads og bærbare. 36 måneders garanti og 30 dages returret på enheder.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link
