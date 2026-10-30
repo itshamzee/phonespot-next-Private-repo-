@@ -228,3 +228,17 @@ it("fejl i kasse-tilføjelse giver en tydelig advarsel og beholder varen", async
   expect(body.created[0].boxNumber).toBeNull();
   expect(body.warnings[0]).toContain("kunne ikke lægges i kasse");
 });
+
+it("butiksmedarbejder kan oprette med formularens fulde lagerpayload, men ikke i andre butikker eller webshop", async () => {
+  s.role = "staff";
+  s.slug = "vejle";
+  const item = { title: "Cover", subcategory: "cover", models: ["iphone-13"], mode: "universal", sellingPrice: 5900, images: [] };
+  const ok = await post({ type: "accessory", items: [{ ...item, stock: { stores: { vejle: 2, slagelse: 0 }, online: 0 } }] });
+  expect(ok.status).toBe(201);
+  expect(s.stock).toEqual([{ product_id: "id-0", location_id: "vejle", quantity: 2 }]);
+
+  s.inserted = [];
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { stores: { vejle: 0, slagelse: 2 } } }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { online: 1 } }] })).status).toBe(403);
+  expect(s.inserted).toEqual([]);
+});

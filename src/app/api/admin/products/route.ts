@@ -163,12 +163,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ugyldige felter", issues: parsed.error.issues.slice(0, 5) }, { status: 400 });
   }
   const body = parsed.data;
-  // Butiksafgrænsning: alle andre end ejeren må kun lægge lager i egne butikker.
+  // Butiksafgrænsning: alle andre end ejeren må kun lægge lager i egne butikker. Formularerne
+  // sender altid alle butikker ({ vejle: 0, slagelse: 0 }), så kun antal > 0 tæller.
   for (const item of body.items) {
-    for (const store of Object.keys(item.stock?.stores ?? {})) {
+    const stores = Object.entries(item.stock?.stores ?? {}).filter(([, q]) => (q ?? 0) > 0);
+    for (const [store] of stores) {
       if (!canAccessStore(staff, store)) {
         return NextResponse.json({ error: "Du har ikke adgang til lageret i den butik" }, { status: 403 });
       }
+    }
+    if ((item.stock?.online ?? 0) > 0 && !canAccessStore(staff, "webshop")) {
+      return NextResponse.json({ error: "Du har ikke adgang til webshop-lageret" }, { status: 403 });
     }
   }
   if (staff.role === INTERN_ROLE && body.type === "accessory") {
