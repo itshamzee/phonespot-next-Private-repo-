@@ -6,6 +6,9 @@ import {
   THREE_FOR_TWO_LABEL,
   isFreeBundleLine,
 } from "@/lib/lagersalg/three-for-two";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { boxesLabel } from "@/lib/lagersalg/boxes";
+import { boxesForOrderSkus } from "@/lib/lagersalg/order-boxes";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +31,7 @@ export async function GET(req: NextRequest) {
     .select(`
       id, order_number, status, total, subtotal, shipping_cost, discount_amount, bundle_discount_amount,
       shipping_method, shipping_address, tracking_number, tracking_url,
-      notes, created_at, confirmed_at,
+      notes, created_at, confirmed_at, location_id,
       customer:customers(name, email, phone),
       order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price, discount_amount, battery_upgrade)
     `)
@@ -58,6 +61,9 @@ export async function GET(req: NextRequest) {
     /** Gratis via lagersalg 3 for 2 (linjerabat = hele linjeprisen). */
     freeBundle: boolean;
     batteryUpgrade: boolean;
+    skuId: string | null;
+    boxes: number[];
+    lagersalg: boolean;
   }
 
   const resolvedItems: ResolvedItem[] = [];
@@ -94,11 +100,14 @@ export async function GET(req: NextRequest) {
         totalPrice: item.total_price || item.unit_price,
         freeBundle: false,
         batteryUpgrade: !!item.battery_upgrade,
+        skuId: null,
+        boxes: [],
+        lagersalg: false,
       });
     } else if (item.item_type === "sku_product" && item.sku_product_id) {
       const { data: sku } = await supabase
         .from("sku_products")
-        .select("title, images")
+        .select("title, images, subcategory, attributes")
         .eq("id", item.sku_product_id)
         .single();
 
@@ -114,8 +123,24 @@ export async function GET(req: NextRequest) {
           discountOere: item.discount_amount,
         }),
         batteryUpgrade: !!item.battery_upgrade,
+        skuId: item.sku_product_id,
+        boxes: [],
+        lagersalg: isLagersalg({
+          subcategory: (sku as any)?.subcategory ?? null,
+          attributes: (sku as any)?.attributes ?? null,
+        }),
       });
     }
+  }
+
+  // Kassen er plukoplysning for lagersalgsvarer, i den butik ordren plukkes fra.
+  const lagersalgIds = [...new Set(resolvedItems.filter((r) => r.lagersalg && r.skuId).map((r) => r.skuId as string))];
+  if (lagersalgIds.length > 0) {
+    const { boxes } = await boxesForOrderSkus(supabase, {
+      orderLocationId: (order as { location_id?: string | null }).location_id ?? null,
+      skus: lagersalgIds.map((id) => ({ id, subcategory: null, attributes: { udsalg: "Ja" } })),
+    });
+    for (const r of resolvedItems) if (r.skuId) r.boxes = boxes[r.skuId] ?? [];
   }
 
   // ── Format helpers ────────────────────────────────────────────────────────
@@ -151,6 +176,9 @@ export async function GET(req: NextRequest) {
 
       return `
         <tr style="background:${bgColor};">
+          <td style="padding:12px 8px 12px 16px;vertical-align:middle;font-size:13px;white-space:nowrap;${item.lagersalg ? (item.boxes.length > 0 ? "font-weight:700;color:#111;" : "color:#9ca3af;") : ""}">
+            ${item.lagersalg ? boxesLabel(item.boxes) : ""}
+          </td>
           <td style="padding:12px 16px;vertical-align:middle;width:64px;">
             ${imgCell}
           </td>
@@ -310,6 +338,7 @@ export async function GET(req: NextRequest) {
     <table style="width:100%;margin-bottom:0;">
       <thead>
         <tr style="border-bottom:2px solid #1A3D2E;">
+          <th style="padding:10px 8px 10px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1A3D2E;">Kasse</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1A3D2E;" colspan="2">Produkt</th>
           <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1A3D2E;">Antal</th>
           <th style="padding:10px 8px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1A3D2E;">Enhedspris</th>
@@ -317,7 +346,7 @@ export async function GET(req: NextRequest) {
         </tr>
       </thead>
       <tbody>
-        ${productRows || `<tr><td colspan="5" style="padding:24px 16px;text-align:center;color:#9ca3af;font-style:italic;">Ingen varer fundet</td></tr>`}
+        ${productRows || `<tr><td colspan="6" style="padding:24px 16px;text-align:center;color:#9ca3af;font-style:italic;">Ingen varer fundet</td></tr>`}
       </tbody>
     </table>
 

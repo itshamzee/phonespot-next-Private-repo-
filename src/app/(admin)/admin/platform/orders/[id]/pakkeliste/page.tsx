@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { boxesLabel } from "@/lib/lagersalg/boxes";
 
 interface OrderData {
   id: string;
@@ -29,6 +30,8 @@ interface PackingItem {
   qty: number;
   barcode: string | null;
   batteryUpgrade: boolean;
+  boxes: number[];
+  lagersalg: boolean;
 }
 
 export default function PakkelistePage() {
@@ -42,7 +45,7 @@ export default function PakkelistePage() {
   }, [id]);
 
   async function loadOrder() {
-    let payload: { order: any; devices: any[]; skus: any[] } | null = null;
+    let payload: { order: any; devices: any[]; skus: any[]; boxes?: Record<string, number[]> } | null = null;
     try {
       const res = await fetch(`/api/admin/orders/${id}/print-data`, { cache: "no-store" });
       if (res.ok) payload = await res.json();
@@ -77,6 +80,8 @@ export default function PakkelistePage() {
           qty: item.quantity,
           barcode: dev?.barcode || null,
           batteryUpgrade: !!item.battery_upgrade,
+          boxes: [],
+          lagersalg: false,
         });
       } else if (item.sku_product_id) {
         const sku = skuMap.get(item.sku_product_id);
@@ -85,6 +90,8 @@ export default function PakkelistePage() {
           qty: item.quantity,
           barcode: sku?.sku || null,
           batteryUpgrade: !!item.battery_upgrade,
+          boxes: payload.boxes?.[item.sku_product_id] ?? [],
+          lagersalg: !!sku?.lagersalg,
         });
       }
     }
@@ -173,6 +180,7 @@ export default function PakkelistePage() {
         <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #1a1a2e" }}>
+              <th style={{ textAlign: "left", padding: "8px 8px 8px 0", fontSize: 12, fontWeight: "bold", color: "#1a1a2e", width: 90 }}>Kasse</th>
               <th style={{ textAlign: "center", padding: "8px 0", fontSize: 12, fontWeight: "bold", color: "#1a1a2e", width: 40 }}>&#10003;</th>
               <th style={{ textAlign: "center", padding: "8px 0", fontSize: 12, fontWeight: "bold", color: "#1a1a2e", width: 50 }}>Antal</th>
               <th style={{ textAlign: "left", padding: "8px 0", fontSize: 12, fontWeight: "bold", color: "#1a1a2e" }}>Produkt</th>
@@ -182,6 +190,9 @@ export default function PakkelistePage() {
           <tbody>
             {items.map((item, i) => (
               <tr key={i} style={{ borderBottom: "1px solid #ddd" }}>
+                <td style={{ padding: "12px 8px 12px 0", fontSize: 13, verticalAlign: "middle", fontWeight: item.lagersalg && item.boxes.length > 0 ? 700 : undefined, color: item.lagersalg && item.boxes.length === 0 ? "#9ca3af" : undefined }}>
+                  {item.lagersalg ? boxesLabel(item.boxes) : ""}
+                </td>
                 <td style={{ textAlign: "center", padding: "12px 0", verticalAlign: "middle" }}>
                   <div style={{
                     width: 20,
