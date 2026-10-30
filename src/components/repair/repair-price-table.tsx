@@ -1,4 +1,5 @@
 import styles from "./model-sections.module.css";
+import { QUALITY_LABEL, QUALITY_ORDER } from "./service-label";
 
 type PriceRow = {
   id: string;
@@ -11,13 +12,7 @@ type PriceRow = {
   service_category: string | null;
 };
 
-const QUALITY: Record<string, string> = {
-  standard: "Standard",
-  premium: "Premium",
-  original: "Original",
-};
-
-const QUALITY_ORDER = ["standard", "premium", "original"];
+const QUALITY: Record<string, string> = QUALITY_LABEL;
 
 /**
  * Hele prislisten som almindelig HTML-tabel. Kurven viser kun "fra"-priser,
@@ -44,8 +39,8 @@ export function RepairPriceTable({
     const kb = order.get(b.service_category || b.name)!;
     if (ka !== kb) return ka - kb;
     return (
-      QUALITY_ORDER.indexOf(a.quality_tier ?? "") -
-      QUALITY_ORDER.indexOf(b.quality_tier ?? "")
+      QUALITY_ORDER.indexOf(a.quality_tier as (typeof QUALITY_ORDER)[number]) -
+      QUALITY_ORDER.indexOf(b.quality_tier as (typeof QUALITY_ORDER)[number])
     );
   });
 

@@ -71,21 +71,22 @@ afterEach(() => vi.unstubAllGlobals());
 describe("repair service selection", () => {
   it("exposes selected quality and exact service terms, replacing a sibling without losing the total", () => {
     setup();
-    fireEvent.click(screen.getByRole("button", { name: /^Skærmskift / }));
+    // Kvaliteterne er synlige uden klik: pris og forskel står på hvert kort.
     const standard = screen.getByRole("button", {
       name: /^Vælg Skærmskift standard/,
     });
+    expect(screen.getByText("Mest valgt")).toBeInTheDocument();
     expect(standard).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(standard);
     expect(standard).toHaveAttribute("aria-pressed", "true");
     expect(screen.getAllByText(common.warranty_info).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /^Vælg Batteriskift/ }));
-    expect(screen.getAllByText("1618 DKK").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("1.618 kr.").length).toBeGreaterThan(0);
     fireEvent.click(
       screen.getByRole("button", { name: /^Vælg Skærmskift premium/ }),
     );
     expect(standard).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getAllByText("1888 DKK").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("1.888 kr.").length).toBeGreaterThan(0);
   });
   it("keeps the selected quality visible when all service names are identical", () => {
     render(
@@ -101,19 +102,29 @@ describe("repair service selection", () => {
         modelSlug="iphone-17-pro"
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /^Skærmskift / }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Vælg Skærmskift til 1599 kr." }),
+      screen.getByRole("button", { name: "Vælg Skærmskift til 1.599 kr." }),
     );
     expect(
       within(
         screen.getByRole("complementary", { name: "Din reparationsoversigt" }),
-      ).getByText("Skærmskift (Premium)"),
+      ).getByText("Skærmskift (OEM)"),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { expanded: true }));
-    expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(
-      "Valgt: Skærmskift (Premium)",
-    );
+    expect(screen.getByText("Valgt: Skærmskift (OEM)")).toBeInTheDocument();
+  });
+  it("offers tempered glass in the summary and adds it to the total once a repair is chosen", () => {
+    setup();
+    const aside = screen.getByRole("complementary", { name: "Din reparationsoversigt" });
+    const glass = within(aside).getByRole("button", { name: "Tilføj for 99 kr." });
+    expect(glass).toHaveAttribute("aria-disabled", "true");
+    expect(within(aside).getByText("Vælg en reparation først.")).toBeInTheDocument();
+    fireEvent.click(glass);
+    expect(glass).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(screen.getByRole("button", { name: /^Vælg Skærmskift premium/ }));
+    expect(within(aside).getByText("Anbefales ved skærmskift")).toBeInTheDocument();
+    fireEvent.click(within(aside).getByRole("button", { name: "Tilføj for 99 kr." }));
+    expect(within(aside).getByRole("button", { name: "Tilføjet" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(aside).getAllByText("1.698 kr.").length).toBeGreaterThan(0);
   });
   it("shows unavailable prices as contact options and does not invent time estimates", () => {
     setup();

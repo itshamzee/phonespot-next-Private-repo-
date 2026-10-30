@@ -116,8 +116,8 @@ describe("repair model availability", () => {
       r.textContent,
     );
     expect(rows).toHaveLength(3);
-    // Standard før original inden for samme reparation.
-    expect(rows[0]).toContain("Standard");
+    // Budget før original inden for samme reparation.
+    expect(rows[0]).toContain("Budget");
     expect(rows[0]).toContain("499 kr.");
     expect(rows[1]).toContain("Original");
     expect(rows[1]).toContain("899 kr.");

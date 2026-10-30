@@ -6,7 +6,7 @@ import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import Link from "next/link";
 import type { DeviceType } from "@/lib/supabase/types";
 import styles from "./repair.module.css";
-import { repairServiceLabel } from "./service-label";
+import { QUALITY_BLURB, QUALITY_ORDER, qualityLabel, repairServiceLabel } from "./service-label";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
@@ -218,6 +218,10 @@ const DEVICE_COLORS = [
   { name: "Gul", hex: "#e0c040" },
 ];
 
+/** Beskyttelsesglas sat på sammen med reparationen. Normalprisen i butikken er 199 kr. */
+const GLASS_PRICE = 99;
+const GLASS_SHOP_PRICE = 199;
+
 export function RepairCart({
   services,
   brandName,
@@ -230,9 +234,6 @@ export function RepairCart({
   const [includesTemperedGlass, setIncludesTemperedGlass] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const successRef = useRef<HTMLDivElement>(null);
-  // Flere kvalitetsgrupper kan være åbne samtidig: lukkede vi den forrige,
-  // ville indholdet over kundens finger forsvinde og siden hoppe.
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set());
   const [selectedColor, setSelectedColor] = useState("");
   const [showExclMoms, setShowExclMoms] = useState(false);
 
@@ -266,6 +267,9 @@ export function RepairCart({
   /* Price formatter respecting moms toggle (display only — actual payment always inkl. moms) */
   const fmtPrice = (dkk: number) =>
     showExclMoms ? Math.round(dkk * 0.8) : dkk;
+  // Samme tusindtalsformat som prislisten (1.899 kr.), så siden ikke skriver
+  // prisen på to måder.
+  const fmt = (dkk: number) => fmtPrice(dkk).toLocaleString("da-DK");
 
   /* Derived values */
   const selectedServices = services.filter((s) => selectedIds.has(s.id));
@@ -283,7 +287,7 @@ export function RepairCart({
   }, [services]);
   const subtotal =
     selectedServices.reduce((sum, s) => sum + s.price_dkk, 0) +
-    (includesTemperedGlass ? 99 : 0);
+    (includesTemperedGlass ? GLASS_PRICE : 0);
   const discountPercent =
     selectedIds.size >= 3 ? 15 : selectedIds.size >= 2 ? 10 : 0;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
@@ -460,18 +464,18 @@ export function RepairCart({
           {selectedServices.map((s) => (
             <div key={s.id} className="mt-1 flex justify-between text-gray">
               <span>{repairServiceLabel(s)}</span>
-              <span>{fmtPrice(s.price_dkk)} DKK</span>
+              <span>{fmt(s.price_dkk)} kr.</span>
             </div>
           ))}
           {includesTemperedGlass && (
             <div className="mt-1 flex justify-between text-gray">
               <span>Beskyttelsesglas</span>
-              <span>99 DKK</span>
+              <span>{fmt(GLASS_PRICE)} kr.</span>
             </div>
           )}
           <div className="mt-2 flex justify-between border-t border-soft-grey pt-2 font-bold">
             <span>Total</span>
-            <span className="text-green-eco">{totalPrice} DKK</span>
+            <span className="text-green-eco">{fmt(totalPrice)} kr.</span>
           </div>
         </div>
         <p className="mt-6 text-xs text-gray">
@@ -490,30 +494,54 @@ export function RepairCart({
       <div className={styles.cartLayout}>
         <div className={styles.servicesColumn}>
           {deviceType !== "appliance" && (
-            <fieldset className={styles.colors}>  
-              <legend>  
-                Enhedens farve <span>(valgfri)</span>  
-              </legend>  
-              <div>  
-                {DEVICE_COLORS.map((c) => (  
-                  <button  
-                    type="button"  
-                    key={c.name}  
-                    aria-pressed={selectedColor === c.name}  
-                    onClick={() =>  
-                      setSelectedColor(selectedColor === c.name ? "" : c.name)  
-                    }  
-                  >  
-                    <span  
-                      style={{  
-                        background: c.hex,  
-                        border: c.border ? "1px solid #c8d0c9" : undefined,  
-                      }}  
-                    />  
-                    {c.name}  
-                  </button>  
-                ))}  
-              </div>  
+            <fieldset className={styles.colors}>
+  
+              <legend>
+  
+                Enhedens farve <span>(valgfri)</span>
+  
+              </legend>
+  
+              <div>
+  
+                {DEVICE_COLORS.map((c) => (
+  
+                  <button
+  
+                    type="button"
+  
+                    key={c.name}
+  
+                    aria-pressed={selectedColor === c.name}
+  
+                    onClick={() =>
+  
+                      setSelectedColor(selectedColor === c.name ? "" : c.name)
+  
+                    }
+  
+                  >
+  
+                    <span
+  
+                      style={{
+  
+                        background: c.hex,
+  
+                        border: c.border ? "1px solid #c8d0c9" : undefined,
+  
+                      }}
+  
+                    />
+  
+                    {c.name}
+  
+                  </button>
+  
+                ))}
+  
+              </div>
+  
             </fieldset>
           )}
           <div className={styles.serviceHeading}>
@@ -532,12 +560,8 @@ export function RepairCart({
             Vælg en reparation og eventuelt kvalitet på reservedelen.
           </p>
           <div className={styles.serviceRows}>
-            {grouped.map(([category, items], index) => {
+            {grouped.map(([category, items]) => {
               const selected = items.find((item) => selectedIds.has(item.id));
-              const isOpen = expandedCategories.has(category);
-              const prices = items
-                .filter((item) => item.price_dkk > 0)
-                .map((item) => item.price_dkk);
               if (items.length === 1)
                 return (
                   <ServiceOption
@@ -545,64 +569,18 @@ export function RepairCart({
                     service={items[0]}
                     selected={!!selected}
                     onToggle={toggleService}
-                    formatPrice={fmtPrice}
+                    formatPrice={fmt}
                   />
                 );
               return (
-                <section key={category} className={styles.serviceCategory}>
-                  <h3>
-                    <button
-                      type="button"
-                      className={styles.categoryToggle}
-                      aria-expanded={isOpen}
-                      aria-controls={"quality-" + index}
-                      onClick={() =>
-                        setExpandedCategories((prev) => {
-                          const next = new Set(prev);
-                          if (isOpen) next.delete(category);
-                          else next.add(category);
-                          return next;
-                        })
-                      }
-                    >
-                      <ServiceIcon slug={items[0].slug} />
-                      <span>
-                        <strong>
-                          {category === "Skaerm" ? "Skærm" : category}
-                        </strong>{" "}
-                        <small>
-                          {selected
-                            ? "Valgt: " + repairServiceLabel(selected)
-                            : items.length + " kvaliteter"}
-                        </small>
-                      </span>
-                      <span className={styles.rowPrice}>
-                        {selected
-                          ? fmtPrice(selected.price_dkk) + " kr."
-                          : prices.length
-                            ? "Fra " + fmtPrice(Math.min(...prices)) + " kr."
-                            : "Pris på forespørgsel"}
-                        <small>
-                          {isOpen ? "Luk valg −" : "Vælg kvalitet +"}
-                        </small>
-                      </span>
-                    </button>
-                  </h3>
-                  {isOpen && (
-                    <div id={"quality-" + index}>
-                      {items.map((service) => (
-                        <ServiceOption
-                          key={service.id}
-                          service={service}
-                          selected={selectedIds.has(service.id)}
-                          onToggle={toggleService}
-                          formatPrice={fmtPrice}
-                          tier
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
+                <TierGroup
+                  key={category}
+                  category={category}
+                  items={items}
+                  selected={selected}
+                  onToggle={toggleService}
+                  formatPrice={fmt}
+                />
               );
             })}
           </div>
@@ -673,17 +651,28 @@ export function RepairCart({
               <h2>{modelName}</h2>
               {selectedColor && <p className={styles.hint}>{selectedColor}</p>}
               {selectedServices.length === 0 ? (
-                <p className={styles.intro}>
-                  Vælg reparationer fra listen. Her ser du dine valg og den
-                  samlede pris.
-                </p>
+                <>
+                  <p className={styles.intro}>
+                    Vælg reparationer fra listen. Her ser du dine valg og den
+                    samlede pris.
+                  </p>
+                  {allowsGlass && (
+                    <GlassUpsell
+                      active={includesTemperedGlass}
+                      disabled
+                      recommended={false}
+                      onToggle={() => setIncludesTemperedGlass((v) => !v)}
+                      formatPrice={fmt}
+                    />
+                  )}
+                </>
               ) : (
                 <>
                   <ul className={styles.summaryRows}>
                     {selectedServices.map((service) => (
                       <li key={service.id}>
                         <span>{repairServiceLabel(service)}</span>
-                        <strong>{fmtPrice(service.price_dkk)} DKK</strong>
+                        <strong>{fmt(service.price_dkk)} kr.</strong>
                         <button
                           type="button"
                           aria-label={"Fjern " + repairServiceLabel(service)}
@@ -695,39 +684,36 @@ export function RepairCart({
                     ))}
                   </ul>
                   {allowsGlass && (
-                  <button
-                    type="button"
-                    className={styles.glassOption}
-                    aria-pressed={includesTemperedGlass}
-                    onClick={() => setIncludesTemperedGlass((v) => !v)}
-                  >
-                    <span>
-                      {includesTemperedGlass ? "Valgt: " : "Tilføj "}
-                      beskyttelsesglas
-                    </span>
-                    <strong>+{fmtPrice(99)} DKK</strong>
-                  </button>
+                    <GlassUpsell
+                      active={includesTemperedGlass}
+                      disabled={false}
+                      recommended={selectedServices.some((service) =>
+                        /sk(\u00e6|ae)rm/i.test(service.service_category || service.name),
+                      )}
+                      onToggle={() => setIncludesTemperedGlass((v) => !v)}
+                      formatPrice={fmt}
+                    />
                   )}
                   {discountPercent > 0 && (
                     <div className={styles.summaryDiscount}>
                       <span>Rabat ({discountPercent}%)</span>
-                      <strong>−{fmtPrice(discountAmount)} DKK</strong>
+                      <strong>−{fmt(discountAmount)} kr.</strong>
                     </div>
                   )}
                   <div className={styles.total}>
                     {discountPercent > 0 && (
                       <p>
                         <span>Subtotal</span>
-                        <span>{fmtPrice(subtotal)} DKK</span>
+                        <span>{fmt(subtotal)} kr.</span>
                       </p>
                     )}
                     <div>
                       <span>Total</span>
-                      <strong>{fmtPrice(totalPrice)} DKK</strong>
+                      <strong>{fmt(totalPrice)} kr.</strong>
                     </div>
                     <small>
                       {showExclMoms
-                        ? "Ekskl. moms · inkl. reservedele. Du betaler " + totalPrice + " DKK inkl. moms"
+                        ? "Ekskl. moms · inkl. reservedele. Du betaler " + totalPrice.toLocaleString("da-DK") + " kr. inkl. moms"
                         : "Inkl. moms og reservedele"}
                     </small>
                   </div>
@@ -753,7 +739,7 @@ export function RepairCart({
           <span>
             {selectedServices.length} reparation
             {selectedServices.length > 1 ? "er" : ""}
-            <strong>{totalPrice} DKK</strong>
+            <strong>{fmt(totalPrice)} kr.</strong>
           </span>
           <button
             type="button"
@@ -768,33 +754,198 @@ export function RepairCart({
   );
 }
 
+type PriceFormatter = (price: number) => string;
+
+/**
+ * Reparation med flere kvaliteter (Budget, OEM, Original) vist som tre
+ * synlige valg i stedet for en lukket række. Kunden ser pris og forskel
+ * uden at klikke, og OEM markeres som det valg, flest tager.
+ */
+function TierGroup({
+  category,
+  items,
+  selected,
+  onToggle,
+  formatPrice,
+}: {
+  category: string;
+  items: ServiceItem[];
+  selected: ServiceItem | undefined;
+  onToggle: (id: string) => void;
+  formatPrice: PriceFormatter;
+}) {
+  const headingId = useId();
+  const sorted = [...items].sort(
+    (a, b) =>
+      QUALITY_ORDER.indexOf(a.quality_tier as (typeof QUALITY_ORDER)[number]) -
+      QUALITY_ORDER.indexOf(b.quality_tier as (typeof QUALITY_ORDER)[number]),
+  );
+  const prices = sorted.filter((s) => s.price_dkk > 0).map((s) => s.price_dkk);
+  const title = category === "Skaerm" ? "Skærm" : category;
+  const recommended =
+    sorted.length >= 3
+      ? (sorted.find((s) => s.quality_tier === "premium") ?? null)
+      : null;
+  const detail = selected ?? recommended ?? sorted[0];
+  return (
+    <section className={styles.tierGroup} aria-labelledby={headingId}>
+      <div className={styles.tierHeader}>
+        <ServiceIcon slug={sorted[0].slug} />
+        <div className={styles.serviceName}>
+          <h3 id={headingId}>{title}</h3>
+          <small>
+            {selected
+              ? "Valgt: " + repairServiceLabel(selected)
+              : "Vælg kvalitet på reservedelen"}
+          </small>
+        </div>
+        <span className={styles.rowPrice}>
+          {selected
+            ? formatPrice(selected.price_dkk) + " kr."
+            : prices.length
+              ? "Fra " + formatPrice(Math.min(...prices)) + " kr."
+              : "Pris på forespørgsel"}
+        </span>
+      </div>
+      <div
+        className={styles.tierGrid}
+        role="group"
+        aria-label={"Kvalitet på " + title.toLocaleLowerCase("da-DK")}
+      >
+        {sorted.map((service) => {
+          const label = qualityLabel(service) ?? service.name;
+          const blurb =
+            service.info_note ||
+            service.description ||
+            (service.quality_tier ? QUALITY_BLURB[service.quality_tier] : "");
+          const isSelected = selected?.id === service.id;
+          if (service.price_dkk <= 0)
+            return (
+              <Link
+                key={service.id}
+                className={styles.tierCard}
+                href="/kontakt"
+                aria-label={"Kontakt os om " + service.name}
+              >
+                <span className={styles.tierName}>{label}</span>
+                <strong className={styles.tierPrice}>Pris på forespørgsel</strong>
+                <span className={styles.tierBlurb}>{blurb}</span>
+                <span className={styles.tierAction}>Kontakt os</span>
+              </Link>
+            );
+          return (
+            <button
+              key={service.id}
+              type="button"
+              className={styles.tierCard}
+              aria-pressed={isSelected}
+              aria-label={
+                "Vælg " +
+                service.name +
+                " til " +
+                formatPrice(service.price_dkk) +
+                " kr."
+              }
+              onClick={() => onToggle(service.id)}
+            >
+              {recommended?.id === service.id && (
+                <span className={styles.tierTag}>Mest valgt</span>
+              )}
+              <span className={styles.tierName}>{label}</span>
+              <strong className={styles.tierPrice}>
+                {formatPrice(service.price_dkk)} kr.
+              </strong>
+              <span className={styles.tierBlurb}>{blurb}</span>
+              <span className={styles.tierAction} aria-hidden="true">
+                {isSelected ? "Valgt" : "Vælg"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className={styles.tierFoot}>
+        {detail.estimated_minutes != null && detail.estimated_minutes > 0 && (
+          <span>Forventet tid: ca. {detail.estimated_minutes} min.</span>
+        )}
+        {detail.warranty_info && <span>{detail.warranty_info}</span>}
+        {detail.includes && (
+          <details className={styles.serviceDetails}>
+            <summary>Hvad er inkluderet?</summary>
+            <p>{detail.includes}</p>
+          </details>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Glas-tilvalget som et synligt banner i oversigten. Prisen sammen med
+ * reparationen er lavere end glasset i butikken, så det er det, der sælges.
+ */
+function GlassUpsell({
+  active,
+  disabled,
+  recommended,
+  onToggle,
+  formatPrice,
+}: {
+  active: boolean;
+  disabled: boolean;
+  recommended: boolean;
+  onToggle: () => void;
+  formatPrice: PriceFormatter;
+}) {
+  return (
+    <div className={styles.glassCard} data-active={active}>
+      <div className={styles.glassPhoto}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/beskyttelsesglas.webp" alt="" loading="lazy" />
+      </div>
+      <div className={styles.glassBody}>
+        {recommended && (
+          <span className={styles.glassTag}>Anbefales ved skærmskift</span>
+        )}
+        <h3>{recommended ? "Beskyt den nye skærm" : "Beskyt skærmen"}</h3>
+        <p>Beskyttelsesglas sat på med det samme, når reparationen er færdig.</p>
+        <p className={styles.glassPrice}>
+          <strong>{formatPrice(GLASS_PRICE)} kr.</strong> sammen med reparationen
+          <span>Normalt {formatPrice(GLASS_SHOP_PRICE)} kr. i butikken</span>
+        </p>
+        <button
+          type="button"
+          className={styles.glassBtn}
+          aria-pressed={active}
+          aria-disabled={disabled || undefined}
+          onClick={() => {
+            if (!disabled) onToggle();
+          }}
+        >
+          {active ? "Tilføjet" : "Tilføj for " + formatPrice(GLASS_PRICE) + " kr."}
+        </button>
+        {disabled && !active && <small>Vælg en reparation først.</small>}
+      </div>
+    </div>
+  );
+}
+
 function ServiceOption({
   service,
   selected,
   onToggle,
   formatPrice,
-  tier = false,
 }: {
   service: ServiceItem;
   selected: boolean;
   onToggle: (id: string) => void;
-  formatPrice: (price: number) => number;
-  tier?: boolean;
+  formatPrice: PriceFormatter;
 }) {
-  const tierName =
-    service.quality_tier === "original"
-      ? "Original"
-      : service.quality_tier === "premium"
-        ? "Premium"
-        : service.quality_tier === "standard"
-          ? "Standard"
-          : service.name;
   return (
     <div className={styles.serviceOption} data-selected={selected}>
       <div className={styles.serviceOptionTop}>
-        {!tier && <ServiceIcon slug={service.slug} />}
+        <ServiceIcon slug={service.slug} />
         <div className={styles.serviceName}>
-          <h3>{tier ? tierName : service.name}</h3>
+          <h3>{service.name}</h3>
           {service.estimated_minutes != null &&
             service.estimated_minutes > 0 && (
               <small>Forventet tid: ca. {service.estimated_minutes} min.</small>
@@ -827,8 +978,9 @@ function ServiceOption({
           </Link>
         )}
       </div>
-      {service.description && <p>{service.description}</p>}
-      {service.info_note && <p>{service.info_note}</p>}
+      {(service.description || service.info_note) && (
+        <p>{service.description || service.info_note}</p>
+      )}
       {(service.includes || service.warranty_info) && (
         <details className={styles.serviceDetails}>
           <summary>Hvad er inkluderet?</summary>
@@ -906,6 +1058,7 @@ function BookingForm({
 }: BookingFormProps) {
   const fmtPrice = (dkk: number) =>
     showExclMoms ? Math.round(dkk * 0.8) : dkk;
+  const fmt = (dkk: number) => fmtPrice(dkk).toLocaleString("da-DK");
   const availableDates = getAvailableDates(6);
   const formId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -947,30 +1100,30 @@ function BookingForm({
         {selectedServices.map((s) => (
           <div key={s.id} className="flex justify-between text-sm">
             <span className="text-charcoal">{repairServiceLabel(s)}</span>
-            <span className="font-bold">{fmtPrice(s.price_dkk)} DKK</span>
+            <span className="font-bold">{fmt(s.price_dkk)} kr.</span>
           </div>
         ))}
         {includesTemperedGlass && (
           <div className="flex justify-between text-sm">
             <span className="text-charcoal">Beskyttelsesglas</span>
-            <span className="font-bold">99 DKK</span>
+            <span className="font-bold">{fmt(GLASS_PRICE)} kr.</span>
           </div>
         )}
         {discountPercent > 0 && (
           <div className="flex justify-between text-sm text-green-eco">
             <span>Rabat ({discountPercent}%)</span>
-            <span>-{discountAmount} DKK</span>
+            <span>−{fmt(discountAmount)} kr.</span>
           </div>
         )}
         {discountPercent > 0 && (
           <div className="flex justify-between text-sm text-gray">
             <span>Før rabat</span>
-            <span className="line-through">{subtotal} DKK</span>
+            <span className="line-through">{fmt(subtotal)} kr.</span>
           </div>
         )}
         <div className="mt-2 flex justify-between border-t border-soft-grey pt-2 font-bold">
           <span>Total</span>
-          <span className="text-green-eco">{totalPrice} DKK</span>
+          <span className="text-green-eco">{fmt(totalPrice)} kr.</span>
         </div>
       </div>
 
@@ -1302,7 +1455,7 @@ function BookingForm({
           disabled={!canSubmit || isSubmitting}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco py-3.5 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? "Sender..." : `Betal nu — ${totalPrice} DKK`}
+          {isSubmitting ? "Sender..." : `Betal nu — ${fmt(totalPrice)} kr.`}
         </button>
         <button
           type="button"

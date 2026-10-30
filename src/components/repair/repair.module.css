@@ -1225,3 +1225,283 @@
     color: #1a3d2e;
   }
 }
+
+/* ---------- Kvalitetsvælger (Budget / OEM / Original) ---------- */
+.tierGroup {
+  padding: 22px;
+}
+.tierHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tierHeader h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+.tierHeader small {
+  color: #626a65;
+  font-size: 12px;
+  display: block;
+  margin-top: 5px;
+}
+.tierHeader .rowPrice {
+  font-size: 17px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.tierGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.tierCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-height: 150px;
+  padding: 16px 14px 14px;
+  text-align: left;
+  border: 1.5px solid #d6ddd5;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tierCard:hover {
+    border-color: #9fb3a3;
+  }
+}
+.tierCard:active {
+  transform: scale(0.98);
+}
+.tierCard[aria-pressed="true"] {
+  border-color: #1a3d2e;
+  background: #edf3ed;
+  box-shadow: inset 0 0 0 1px #1a3d2e;
+}
+.tierTag {
+  position: absolute;
+  top: -11px;
+  left: 12px;
+  background: #1a3d2e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.tierName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b4540;
+}
+.tierPrice {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.tierBlurb {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #626a65;
+  flex: 1;
+}
+.tierAction {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a3d2e;
+  border: 1px solid #b8c8ba;
+  border-radius: 5px;
+  padding: 5px 10px;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.tierCard[aria-pressed="true"] .tierAction {
+  background: #1a3d2e;
+  color: #fff;
+  border-color: #1a3d2e;
+}
+.tierFoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: #626a65;
+}
+.tierFoot .serviceDetails {
+  margin-top: 0;
+  flex-basis: 100%;
+}
+
+/* ---------- Glas-banner i oversigten ---------- */
+.glassCard {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid #cad7ca;
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 150ms ease;
+}
+.glassCard[data-active="true"] {
+  border-color: #1a3d2e;
+}
+.glassPhoto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: #f4f6f2;
+  overflow: hidden;
+}
+.glassPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.glassBody {
+  min-width: 0;
+}
+.glassBody h3 {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.glassBody > p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #626a65;
+  margin: 6px 0 0;
+}
+.glassTag {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  color: #1a3d2e;
+  background: #e3ede4;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.glassPrice {
+  color: #242726 !important;
+  margin-top: 10px !important;
+}
+.glassPrice strong {
+  font-size: 17px;
+  font-weight: 700;
+}
+.glassPrice span {
+  display: block;
+  color: #626a65;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.glassBtn {
+  margin-top: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1.5px solid #1a3d2e;
+  color: #1a3d2e;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.glassBtn:active {
+  transform: scale(0.97);
+}
+.glassBtn[aria-pressed="true"] {
+  background: #1a3d2e;
+  color: #fff;
+}
+.glassBtn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: default;
+}
+.glassBtn[aria-disabled="true"]:active {
+  transform: none;
+}
+.glassBody small {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #626a65;
+}
+.chooseService span,
+.primaryButton {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.chooseService:active span,
+.primaryButton:active {
+  transform: scale(0.97);
+}
+@media (max-width: 1050px) {
+  .tierGroup {
+    padding: 18px;
+  }
+}
+@media (max-width: 640px) {
+  .tierGrid {
+    grid-template-columns: 1fr;
+  }
+  .tierCard {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "tag tag"
+      "name price"
+      "blurb blurb"
+      "action action";
+    align-items: center;
+  }
+  .tierName { grid-area: name; }
+  .tierPrice { grid-area: price; }
+  .tierBlurb { grid-area: blurb; }
+  .tierAction { grid-area: action; justify-self: start; }
+  .tierTag {
+    position: static;
+    grid-area: tag;
+    margin-bottom: 2px;
+    justify-self: start;
+  }
+}
+@media (max-width: 400px) {
+  .tierGroup {
+    padding: 16px 12px;
+  }
+  .glassCard {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+}
