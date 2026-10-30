@@ -93,19 +93,48 @@ export function normalizeSearch(text: string): string {
   return text.toLowerCase().replace(/galaxy/g, "").replace(/[^a-z0-9æøå+]/g, "");
 }
 
+/** Tasker passer til en bærbar, ikke til en telefonmodel: de matcher aldrig model eller mærke. */
+const modelsOf = (i: OutletItem) => (i.kind === "bag" ? [] : i.models);
+
+/** Varetyper der hører til en telefon- eller iPad-model. */
+export const MODEL_KINDS: OutletKind[] = ["cover", "ipad"];
+
+/**
+ * De filtre der faktisk gælder: med præcis én valgt model er siden "Covers til
+ * {model}", så kun covers og iPad-covers vises, uanset hvad der ellers er tagget
+ * med modellen. Fravælges modellen, falder begrænsningen væk af sig selv.
+ */
+export function scopeToModel(f: OutletFilters): OutletFilters {
+  if (f.models.length !== 1) return f;
+  const kinds = f.kinds.filter((k) => (MODEL_KINDS as string[]).includes(k));
+  return { ...f, kinds: kinds.length ? kinds : [...MODEL_KINDS], sizes: [] };
+}
+
+/**
+ * Nyt modelvalg. Ender det på én model, beholdes kun de valgte varetyper hvor
+ * modellen faktisk findes (fx iPhone 15 valgt under "iPad" eller "Tasker"
+ * nulstiller varetypen i stedet for at give nul resultater).
+ */
+export function selectModels(items: OutletItem[], f: OutletFilters, models: string[]): OutletFilters {
+  if (models.length !== 1) return { ...f, models };
+  const available = new Set<string>(items.filter((i) => modelsOf(i).some((m) => m.slug === models[0])).map((i) => i.kind));
+  const kinds = f.kinds.filter((k) => (MODEL_KINDS as string[]).includes(k) && available.has(k));
+  return { ...f, models, kinds, sizes: [] };
+}
+
 type Group = "kinds" | "sizes" | "brands" | "models" | "types" | "colors" | "prices";
 
 function matches(item: OutletItem, f: OutletFilters, skip?: Group): boolean {
   if (skip !== "kinds" && f.kinds.length && !f.kinds.includes(item.kind)) return false;
   if (skip !== "sizes" && f.sizes.length && !(item.laptopSize && f.sizes.includes(item.laptopSize))) return false;
-  if (skip !== "brands" && f.brands.length && !item.models.some((m) => f.brands.includes(m.brand))) return false;
-  if (skip !== "models" && f.models.length && !item.models.some((m) => f.models.includes(m.slug))) return false;
+  if (skip !== "brands" && f.brands.length && !modelsOf(item).some((m) => f.brands.includes(m.brand))) return false;
+  if (skip !== "models" && f.models.length && !modelsOf(item).some((m) => f.models.includes(m.slug))) return false;
   if (skip !== "types" && f.types.length && !f.types.includes(item.type)) return false;
   if (skip !== "colors" && f.colors.length && !(item.color && f.colors.includes(item.color))) return false;
   if (skip !== "prices" && f.prices.length && !f.prices.includes(item.priceOre)) return false;
   const q = normalizeSearch(f.query);
   if (q) {
-    const fields = [item.name, item.color ?? "", item.type, item.laptopSize ?? "", ...item.models.map((m) => m.label)];
+    const fields = [item.name, item.color ?? "", item.type, item.laptopSize ?? "", ...modelsOf(item).map((m) => m.label)];
     if (!fields.some((field) => normalizeSearch(field).includes(q))) return false;
   }
   return true;
@@ -130,17 +159,16 @@ function tally<T>(rows: OutletItem[], keys: (item: OutletItem) => T[]): Map<T, n
   return counts;
 }
 
-/**
- * Valgmuligheder pr. filtergruppe med antal, regnet under de andre gruppers
- * aktive filtre. Kun værdier der findes i data kommer med; en valgt værdi
- * bliver stående, også når den giver 0, så den kan fravælges igen.
- */
-const modelsOf = (i: OutletItem) => (i.kind === "bag" ? [] : i.models);
 const sizeRank = (size: string) => {
   const i = LAPTOP_SIZES.indexOf(size);
   return i === -1 ? LAPTOP_SIZES.length : i;
 };
 
+/**
+ * Valgmuligheder pr. filtergruppe med antal, regnet under de andre gruppers
+ * aktive filtre. Kun værdier der findes i data kommer med; en valgt værdi
+ * bliver stående, også når den giver 0, så den kan fravælges igen.
+ */
 export function facetOptions(items: OutletItem[], f: OutletFilters) {
   const pool = (skip: Group) => items.filter((item) => matches(item, f, skip));
   const keep = <T,>(counts: Map<T, number>, selected: T[]) => {

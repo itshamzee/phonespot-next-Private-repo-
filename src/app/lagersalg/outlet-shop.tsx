@@ -10,6 +10,8 @@ import {
   applyOutletFilters,
   facetOptions,
   normalizeSearch,
+  scopeToModel,
+  selectModels,
   type FacetOption,
   type OutletFilters,
   type OutletItem,
@@ -43,8 +45,10 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
   const [shown, setShown] = useState(PAGE_SIZE);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const results = useMemo(() => applyOutletFilters(items, filters), [items, filters]);
-  const facets = useMemo(() => facetOptions(items, filters), [items, filters]);
+  // Én valgt model begrænser til covers (scopeToModel); filters er brugerens egne valg.
+  const effective = useMemo(() => scopeToModel(filters), [filters]);
+  const results = useMemo(() => applyOutletFilters(items, effective), [items, effective]);
+  const facets = useMemo(() => facetOptions(items, effective), [items, effective]);
   const activeCount = activeFilterCount(filters);
   const allModels = useMemo(() => facetOptions(items, EMPTY_FILTERS).models, [items]);
   const singleModel = filters.models.length === 1 ? allModels.find((m) => m.value === filters.models[0]) ?? null : null;
@@ -53,19 +57,24 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
   // Modelrækken viser kun modeller i den valgte varetype; tasker vælges på bærbar-størrelse i stedet.
   const kindModels = useMemo(() => (kind ? facetOptions(items, { ...EMPTY_FILTERS, kinds: [kind] }).models : allModels), [items, kind, allModels]);
   const bagSizes = useMemo(() => facetOptions(items, { ...EMPTY_FILTERS, kinds: ["bag"] }).sizes, [items]);
-  const secondRow = kind === "bag" ? bagSizes.length > 1 : kindModels.length > 1;
+  // Modeller hører til covers: tasker vælges på størrelse, "Andet" har ingen modelrække.
+  const showModelRow = kind !== "bag" && kind !== "other" && kindModels.length > 1;
+  const secondRow = kind === "bag" ? bagSizes.length > 1 : showModelRow;
 
   function update(patch: Partial<OutletFilters>) {
     setFilters((f) => ({ ...f, ...patch }));
     setShown(PAGE_SIZE);
   }
-  const toggleIn = (key: ListKey, value: string) => update({ [key]: toggle(filters[key], value) } as Partial<OutletFilters>);
+  const toggleIn = (key: ListKey, value: string) =>
+    key === "models"
+      ? update(selectModels(items, filters, toggle(filters.models, value)))
+      : update({ [key]: toggle(filters[key], value) } as Partial<OutletFilters>);
   const togglePrice = (value: number) => update({ prices: toggle(filters.prices, value) });
   const reset = () => update({ ...EMPTY_FILTERS, sort: filters.sort });
 
   function pickKind(next: OutletKind | null) {
-    if (next === "bag") {
-      update({ kinds: ["bag"], sizes: [], models: [], brands: [] });
+    if (next === "bag" || next === "other") {
+      update({ kinds: [next], sizes: [], models: [], brands: [] });
       return;
     }
     const inKind = next ? facetOptions(items, { ...EMPTY_FILTERS, kinds: [next] }).models.map((m) => m.value) : null;
@@ -79,7 +88,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
   const pickSize = (size: string | null) => update({ sizes: size ? [size] : [] });
 
   function pickModel(slug: string | null) {
-    update({ models: slug ? [slug] : [], query: "" });
+    update({ ...selectModels(items, filters, slug ? [slug] : []), query: "" });
     requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
@@ -179,7 +188,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
       )}
 
       {/* Hurtigvalg af model: den vigtigste beslutning for covers, så den står før filtrene. */}
-      {kind !== "bag" && kindModels.length > 1 && (
+      {showModelRow && (
         <nav aria-label="Vælg model" className="border-b border-sand bg-white">
           <div ref={chipRowRef} className="mx-auto flex max-w-[1320px] gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
             <ModelChip label="Alle modeller" active={filters.models.length === 0} onClick={() => pickModel(null)} />
