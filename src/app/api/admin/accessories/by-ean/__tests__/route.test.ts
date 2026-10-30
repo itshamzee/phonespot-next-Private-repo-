@@ -116,4 +116,15 @@ describe("POST /api/admin/accessories/by-ean med kasser", () => {
     expect(adjustStock).not.toHaveBeenCalled();
     expect(boxes.addToBox).not.toHaveBeenCalled();
   });
+
+  it("giver 409 med klar besked når kassen lukkes mellem tjek og tilføjelse", async () => {
+    boxes.addToBox.mockRejectedValueOnce({ message: "pos:box_closed" });
+    state.product = { category: "accessory", status: "published", subcategory: "cover", selling_price: 7900, attributes: { udsalg: "Ja" } };
+    const res = await POST(post({ productId: ID, store: "vejle", quantity: 3 }));
+    const data = await res.json();
+    expect(res.status).toBe(409);
+    expect(data.error).toBe("Varen er lagt på lager, men kassen blev lukket imens. Læg den i den nye kasse.");
+    expect(data).toMatchObject({ quantity: 5, boxNumber: null });
+    expect(adjustStock).toHaveBeenCalled();
+  });
 });

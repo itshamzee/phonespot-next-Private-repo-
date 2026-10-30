@@ -76,7 +76,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ opened: await openBox(db, location.id, staff.id) });
     }
     // Kassen skal høre til den butik, medarbejderen har adgang til.
-    const { data: box } = await db.from("sale_boxes").select("id, location_id").eq("id", input.boxId).maybeSingle();
+    const { data: box, error: boxError } = await db
+      .from("sale_boxes")
+      .select("id, location_id")
+      .eq("id", input.boxId)
+      .maybeSingle();
+    if (boxError) throw new Error(boxError.message);
     if (!box || box.location_id !== location.id) {
       return NextResponse.json({ error: "Kassen findes ikke" }, { status: 404 });
     }

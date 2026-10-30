@@ -8,10 +8,11 @@ const s = vi.hoisted(() => ({
   stock: [] as Record<string, unknown>[],
   insertError: null as null | { message: string },
   role: "owner",
+  slug: null as string | null,
 }));
 
 vi.mock("@/lib/auth/require-staff", () => ({
-  requireStaff: vi.fn(async () => ({ id: "st", role: s.role, location_slug: s.role === "intern" ? "vejle" : null })),
+  requireStaff: vi.fn(async () => ({ id: "st", role: s.role, location_slug: s.slug ?? (s.role === "intern" ? "vejle" : null) })),
 }));
 
 const boxes = vi.hoisted(() => ({
@@ -78,6 +79,7 @@ beforeEach(() => {
   s.stock = [];
   s.insertError = null;
   s.role = "owner";
+  s.slug = null;
   boxes.addToBox.mockClear();
   boxes.open = { id: "box-1", locationId: "vejle", number: 2, status: "open" };
 });
@@ -196,7 +198,7 @@ it("opretter lagersalgsvaren uden kasse med en advarsel når ingen kasse er åbe
   expect(res.status).toBe(201);
   expect(boxes.addToBox).not.toHaveBeenCalled();
   expect(body.created[0].boxNumber).toBeNull();
-  expect(body.warnings).toEqual(["Ingen åben kasse i vejle: varen er oprettet uden kasse"]);
+  expect(body.warnings).toEqual(["Ingen åben kasse i Vejle: varen er oprettet uden kasse"]);
   expect(s.stock).toEqual([{ product_id: "id-0", location_id: "vejle", quantity: 3 }]);
 });
 
@@ -206,4 +208,23 @@ it("rører ikke kasser for varer uden udsalg", async () => {
   expect(boxes.addToBox).not.toHaveBeenCalled();
   expect(body.created[0].boxNumber).toBeNull();
   expect(body.warnings).toBeUndefined();
+});
+
+it("almindelig medarbejder i Slagelse kan ikke lægge lager i Vejles kasse", async () => {
+  s.role = "staff";
+  s.slug = "slagelse";
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  expect(res.status).toBe(403);
+  expect(s.inserted).toEqual([]);
+  expect(s.stock).toEqual([]);
+  expect(boxes.addToBox).not.toHaveBeenCalled();
+});
+
+it("fejl i kasse-tilføjelse giver en tydelig advarsel og beholder varen", async () => {
+  boxes.addToBox.mockRejectedValueOnce(new Error("boom"));
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  const body = await res.json();
+  expect(res.status).toBe(201);
+  expect(body.created[0].boxNumber).toBeNull();
+  expect(body.warnings[0]).toContain("kunne ikke lægges i kasse");
 });

@@ -163,6 +163,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ugyldige felter", issues: parsed.error.issues.slice(0, 5) }, { status: 400 });
   }
   const body = parsed.data;
+  // Butiksafgrænsning: alle andre end ejeren må kun lægge lager i egne butikker.
+  for (const item of body.items) {
+    for (const store of Object.keys(item.stock?.stores ?? {})) {
+      if (!canAccessStore(staff, store)) {
+        return NextResponse.json({ error: "Du har ikke adgang til lageret i den butik" }, { status: 403 });
+      }
+    }
+  }
   if (staff.role === INTERN_ROLE && body.type === "accessory") {
     const denied = internCreateError(staff, body.items);
     if (denied) return NextResponse.json({ error: denied }, { status: 403 });
@@ -210,14 +218,16 @@ export async function POST(req: NextRequest) {
   // 4. Lager. Rækkefølgen fra insert svarer til planned.
   const boxNumbers = new Map<string, number>();
   const warnings: string[] = [];
+  let locations: LocationRow[] = [];
   const needsStock = planned.some((p) => p.stock && (p.stock.online || Object.keys(p.stock.stores ?? {}).length));
   if (needsStock) {
-    const { data: locations } = await supabase.from("locations").select("id, name, type");
+    const { data: locationData } = await supabase.from("locations").select("id, name, type");
+    locations = (locationData ?? []) as LocationRow[];
     const stockRows: { product_id: string; location_id: string; quantity: number }[] = [];
     inserted.forEach((product, i) => {
       const spec = planned[i]?.stock;
       if (!spec) return;
-      for (const r of resolveStockRows((locations ?? []) as LocationRow[], spec)) {
+      for (const r of resolveStockRows(locations, spec)) {
         stockRows.push({ product_id: product.id, ...r });
       }
     });
@@ -237,7 +247,6 @@ export async function POST(req: NextRequest) {
   // 5. Lagersalgsvarer med butikslager lægges i butikkens åbne kasse. Mangler kassen,
   // oprettes varen alligevel (en masseimport må ikke blokeres), og svaret får en advarsel.
   if (needsStock && body.type === "accessory") {
-    const { data: locations } = await supabase.from("locations").select("id, name, type");
     const openByStore = new Map<string, Awaited<ReturnType<typeof currentOpenBox>>>();
     const warned = new Set<string>();
     for (const [i, product] of inserted.entries()) {
@@ -245,10 +254,11 @@ export async function POST(req: NextRequest) {
       if (!plan || !isLagersalg(plan.row)) continue;
       for (const [store, qty] of Object.entries(plan.stock?.stores ?? {})) {
         if (!qty || qty <= 0) continue;
-        const location = ((locations ?? []) as LocationRow[]).find(
+        const location = locations.find(
           (l) => l.type === "store" && l.name?.toLowerCase() === store.toLowerCase(),
         );
         if (!location) continue;
+        let failed = false;
         try {
           if (!openByStore.has(location.id)) openByStore.set(location.id, await currentOpenBox(supabase, location.id));
           const box = openByStore.get(location.id);
@@ -258,11 +268,16 @@ export async function POST(req: NextRequest) {
             continue;
           }
         } catch {
-          // Faldt kassen ud (fx lukket midt i importen), behandles varen som uden kasse.
+          // Faldt kassen ud (fx lukket midt i importen), må importen ikke blokeres.
+          failed = true;
         }
-        if (!warned.has(store)) {
-          warned.add(store);
-          warnings.push(`Ingen åben kasse i ${store}: varen er oprettet uden kasse`);
+        const label = location.name ?? store;
+        const text = failed
+          ? `Varen kunne ikke lægges i kasse i ${label}: ${product.title} er oprettet uden kasse`
+          : `Ingen åben kasse i ${label}: varen er oprettet uden kasse`;
+        if (failed || !warned.has(label)) {
+          warned.add(label);
+          warnings.push(text);
         }
       }
     }

@@ -7,6 +7,7 @@ import { canAccessStore } from "@/lib/auth/store-scope";
 import { adjustStock } from "@/lib/pos/sessions";
 import { storeLocations } from "@/lib/accessory-intake/candidates";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { toPosError } from "@/lib/pos/errors";
 import { addToBox, currentOpenBox } from "@/lib/lagersalg/boxes";
 
 /**
@@ -131,9 +132,31 @@ export async function POST(request: Request) {
       if (error) throw new Error("Varen blev lagt på lager, men kunne ikke udgives");
       published = true;
     }
-    if (box) await addToBox(db, productId, box.id, quantity);
     revalidatePath("/tilbehoer", "layout");
     revalidatePath("/lagersalg", "layout");
+    if (box) {
+      try {
+        await addToBox(db, productId, box.id, quantity);
+      } catch (boxErr) {
+        // Lageret er allerede registreret; kassen kan være lukket imens.
+        const pos = toPosError(boxErr);
+        if (!pos) throw boxErr;
+        return NextResponse.json(
+          {
+            error:
+              pos.code === "box_closed"
+                ? "Varen er lagt på lager, men kassen blev lukket imens. Læg den i den nye kasse."
+                : pos.message,
+            code: pos.code,
+            quantity: result.quantity,
+            published,
+            priceKr: Math.round(priceOere / 100),
+            boxNumber: null,
+          },
+          { status: pos.status },
+        );
+      }
+    }
     return NextResponse.json({
       quantity: result.quantity,
       published,
