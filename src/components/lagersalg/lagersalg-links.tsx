@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { coversForModel, getSaleCovers, lowestKr } from "@/app/lagersalg/sale-view";
+import { coversForModel, getSaleItems, lowestKr, onlyCovers } from "@/app/lagersalg/sale-view";
 import { accessoryModelSlug } from "@/lib/product/accessory-models";
 import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
@@ -7,7 +7,7 @@ import { StorefrontIcon } from "@/components/ui/storefront-icon";
 /** Forsiden viser først båndet, når lagersalget har et reelt udvalg. */
 export const HOME_STRIP_MIN = 20;
 
-type Covers = Awaited<ReturnType<typeof getSaleCovers>>;
+type Covers = Awaited<ReturnType<typeof getSaleItems>>;
 
 function photos(rows: Covers, n: number): { src: string; alt: string }[] {
   const out: { src: string; alt: string }[] = [];
@@ -43,7 +43,7 @@ export async function LagersalgModelLink({ model }: { model: string | null | und
   const slug = accessoryModelSlug(model);
   const device = TILBEHOER_DEVICES.find((d) => d.slug === slug);
   if (!device) return null;
-  const rows = coversForModel(await getSaleCovers(), slug);
+  const rows = coversForModel(await getSaleItems(), slug);
   const min = lowestKr(rows);
   if (!rows.length || !min) return null;
 
@@ -76,7 +76,7 @@ export async function LagersalgModelLink({ model }: { model: string | null | und
 
 /** Kort på forsiden i samme opbygning som Reparation og Sælg din enhed, når der er nok covers. */
 export async function LagersalgHomeStrip() {
-  const rows = await getSaleCovers();
+  const rows = onlyCovers(await getSaleItems());
   const min = lowestKr(rows);
   if (rows.length < HOME_STRIP_MIN || !min) return null;
   const models = new Set(rows.flatMap((r) => (Array.isArray(r.compatible_models) ? r.compatible_models : []))).size;

@@ -9,7 +9,7 @@ import { ColorDot } from "./color-dot";
 
 const kr = (ore: number) => `${(ore / 100).toLocaleString("da-DK")} kr.`;
 
-/** Produktkort til lagersalget: model først, så kunden ser at coveret passer, og læg i kurv direkte fra listen. */
+/** Produktkort til lagersalget: model (eller bærbar-størrelse for tasker) først, så kunden ser at varen passer, og læg i kurv direkte fra listen. */
 export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: boolean }) {
   const { addSku, openCart } = useCart();
   const [added, setAdded] = useState(false);
@@ -21,7 +21,14 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
   const href = item.slug ? `/tilbehoer/${item.category}/${item.slug}` : null;
   const canBuy = item.stock > 0 || item.orderable;
   const saving = listPriceSaving(item.listPriceKr, item.priceOre);
-  const fitsLabel = item.models.map((m) => m.label).join(", ");
+  // Tasker passer til en bærbar af en given størrelse, ikke til en telefonmodel.
+  const fitsLabel =
+    item.kind === "bag"
+      ? item.laptopSize
+        ? `bærbar op til ${item.laptopSize}`
+        : ""
+      : item.models.map((m) => m.label).join(", ");
+  const typeText = item.kind === "bag" ? item.bagType ?? item.type : item.type;
   const stockLabel =
     item.stock > 0 ? (item.stock === 1 ? "1 stk. på lager" : "På lager") : item.orderable ? "Sendes 1-3 hverdage" : "Udsolgt";
 
@@ -95,7 +102,7 @@ export function OutletCard({ item, eager = false }: { item: OutletItem; eager?: 
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-[12px] text-charcoal/60 sm:text-[13px]">
           {item.color && <ColorDot color={item.color} />}
-          <span>{item.color ? `${item.type}, ${item.color.toLowerCase()}` : item.type}</span>
+          <span>{item.color ? `${typeText}, ${item.color.toLowerCase()}` : typeText}</span>
         </p>
 
         <div className="mt-auto pt-3">

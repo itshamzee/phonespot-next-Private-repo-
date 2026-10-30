@@ -1,4 +1,4 @@
-import { getSaleCovers, coversForModel, MIN_INDEXABLE } from "@/app/lagersalg/sale-view";
+import { getSaleItems, coversForModel, MIN_INDEXABLE } from "@/app/lagersalg/sale-view";
 import type { MetadataRoute } from "next";
 
 import { COLLECTION_MAP } from "@/lib/collections";
@@ -433,7 +433,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const spotPages = await spotSitemapEntries(BASE_URL);
 
   // ---- Lagersalg pr. model (kun modeller med et reelt udvalg) ---------
-  const saleCovers = await getSaleCovers();
+  const saleCovers = await getSaleItems();
   const coverSalePages: MetadataRoute.Sitemap = TILBEHOER_DEVICES
     .filter((d) => coversForModel(saleCovers, d.slug).length >= MIN_INDEXABLE)
     .map((d) => ({
