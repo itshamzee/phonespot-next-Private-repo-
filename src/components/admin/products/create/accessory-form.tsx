@@ -11,6 +11,7 @@ import { ModelsPicker } from "./models-picker";
 import { WebshopPreview, type ReadinessCheck } from "./webshop-preview";
 import { SupplierImport, type SupplierImportResult } from "./supplier-import";
 import { parseKrToOere } from "./money";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import type { SupplierProduct } from "@/lib/admin/products/supplier-paste";
 
 /** EUR → DKK til kostpris-forslag. Ikke en valutakurs-tjeneste; personalet retter selv. */
@@ -29,6 +30,8 @@ interface Created {
 export interface EditableProduct {
   product: Record<string, unknown> & { id: string };
   stock: Record<string, number>;
+  /** Lagersalgskasser pr. butik og nummer (kun antal > 0). */
+  boxes?: Record<string, Record<string, number>>;
   models: string[];
   url: string | null;
 }
@@ -54,6 +57,8 @@ interface FormState {
   online: string;
   vejle: string;
   slagelse: string;
+  /** Vejle-kasser: kassenummer -> antal (tekst). */
+  boxes: Record<string, string>;
   status: "published" | "draft";
   metaTitle: string;
   metaDescription: string;
@@ -79,6 +84,7 @@ const initial: FormState = {
   online: "",
   vejle: "",
   slagelse: "",
+  boxes: {},
   status: "published",
   metaTitle: "",
   metaDescription: "",
@@ -94,7 +100,7 @@ function str(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-function fromProduct({ product, stock, models }: EditableProduct): FormState {
+function fromProduct({ product, stock, models, boxes }: EditableProduct): FormState {
   const subcategory = str(product.subcategory) || "other";
   const typed = new Set((TYPE_ATTRIBUTES[subcategory] ?? []).map((f) => f.key));
   const attributes = Object.fromEntries(
@@ -124,6 +130,7 @@ function fromProduct({ product, stock, models }: EditableProduct): FormState {
     online: qty(stock.online),
     vejle: qty(stock.vejle),
     slagelse: qty(stock.slagelse),
+    boxes: Object.fromEntries(Object.entries(boxes?.vejle ?? {}).map(([n, q]) => [n, String(q)])),
     status: product.status === "published" ? "published" : "draft",
     metaTitle: str(product.meta_title),
     metaDescription: str(product.meta_description),
@@ -157,6 +164,8 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
   const perModel = !isEdit && form.mode === "per-model" && form.models.length > 0;
   const knownCategory = ACCESSORY_SUBCATEGORIES.some((c) => c.value === form.subcategory);
   const stockTotal = [form.online, form.vejle, form.slagelse].reduce((n, v) => n + (Number(v) || 0), 0);
+  const showBoxes = isEdit && isLagersalg({ subcategory: form.subcategory, attributes: form.attributes });
+  const boxesChanged = JSON.stringify(form.boxes) !== JSON.stringify(baseline.boxes);
   const attributeFields = TYPE_ATTRIBUTES[form.subcategory] ?? [];
 
   const previewTitle = useMemo(() => {
@@ -294,6 +303,16 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
                 online: Number(form.online) || 0,
                 stores: { vejle: Number(form.vejle) || 0, slagelse: Number(form.slagelse) || 0 },
               },
+          boxes:
+            showBoxes && boxesChanged
+              ? {
+                  vejle: Object.fromEntries(
+                    Object.entries(form.boxes)
+                      .filter(([n]) => Number(n) > 0)
+                      .map(([n, q]) => [String(Number(n)), Math.max(0, Math.floor(Number(q) || 0))]),
+                  ),
+                }
+              : undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -542,6 +561,9 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
               </Field>
             </FieldRow>
           )}
+          {showBoxes && (
+            <BoxesEditor boxes={form.boxes} onChange={(b) => set("boxes", b)} />
+          )}
           {perModel && !form.alwaysInStock && stockTotal > 0 && (
             <p className="text-[13px] text-gray">Lagertallene gælder for hvert af de {form.models.length} produkter.</p>
           )}
@@ -650,6 +672,35 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
           }}
           checks={checks}
         />
+      </div>
+    </div>
+  );
+}
+
+/** Kasser (Vejle): nummer + antal pr. kasse. Tomt antal eller 0 fjerner varen fra kassen. */
+function BoxesEditor({ boxes, onChange }: { boxes: Record<string, string>; onChange: (b: Record<string, string>) => void }) {
+  const [newNo, setNewNo] = useState("");
+  const entries = Object.entries(boxes).sort((a, b) => Number(a[0]) - Number(b[0]));
+  const add = () => {
+    const n = String(Math.floor(Number(newNo)));
+    if (!(Number(n) > 0) || n in boxes) return;
+    onChange({ ...boxes, [n]: "1" });
+    setNewNo("");
+  };
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-medium text-charcoal">Kasser (Vejle)</p>
+      {entries.length === 0 && <p className="text-[13px] text-gray">Varen ligger ikke i en kasse.</p>}
+      {entries.map(([n, q]) => (
+        <div key={n} className="flex items-center gap-3">
+          <span className="w-24 text-[14px] text-charcoal">{`Kasse ${n.padStart(2, "0")}`}</span>
+          <Input aria-label={`Antal i kasse ${n}`} inputMode="numeric" value={q} onChange={(e) => onChange({ ...boxes, [n]: e.target.value })} placeholder="0" className="w-24" />
+          <span className="text-[13px] text-gray">stk.</span>
+        </div>
+      ))}
+      <div className="flex items-center gap-3">
+        <Input aria-label="Kassenummer" inputMode="numeric" value={newNo} onChange={(e) => setNewNo(e.target.value)} placeholder="Nr." className="w-24" />
+        <Button variant="secondary" onClick={add} disabled={!(Number(newNo) > 0)}>Tilføj kasse</Button>
       </div>
     </div>
   );

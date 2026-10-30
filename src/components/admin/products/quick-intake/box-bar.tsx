@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Notice } from "@/components/admin/ui";
 import { boxLabel, type SaleBox } from "@/lib/lagersalg/boxes";
@@ -103,6 +104,10 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
           </Button>
         )}
       </div>
+
+      <Link href="/admin/produkter/kasser" className="inline-block text-[13px] text-gray underline hover:text-charcoal">
+        Kasseoversigt
+      </Link>
 
       {confirming && open && following != null && (
         <div className="space-y-2">
