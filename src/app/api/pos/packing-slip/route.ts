@@ -9,6 +9,12 @@ import {
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { boxesLabel } from "@/lib/lagersalg/boxes";
 import { boxesForOrderSkus } from "@/lib/lagersalg/order-boxes";
+import {
+  canSee,
+  requireStaffScope,
+  resolveLocationSlug,
+  unauthorizedResponse,
+} from "@/lib/auth/store-scope-server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +22,12 @@ export const dynamic = "force-dynamic";
  * GET /api/pos/packing-slip?order_id=xxx
  * Returns a professional branded HTML packing slip optimized for A4 printing.
  * Open this URL in a browser and use window.print() to print.
+ * Ordrer i andre butikker svarer 404 (som print-data).
  */
 export async function GET(req: NextRequest) {
+  const ctx = await requireStaffScope(req);
+  if (!ctx) return unauthorizedResponse();
+
   const orderId = req.nextUrl.searchParams.get("order_id");
   if (!orderId) {
     return NextResponse.json({ error: "order_id required" }, { status: 400 });
@@ -40,6 +50,11 @@ export async function GET(req: NextRequest) {
 
   if (error || !order) {
     return new Response(`Ordre ikke fundet (${error?.message || "unknown"})`, { status: 404 });
+  }
+
+  const orderLocationId = (order as { location_id?: string | null }).location_id ?? null;
+  if (!canSee(ctx.staff, await resolveLocationSlug(orderLocationId))) {
+    return new Response("Ordre ikke fundet", { status: 404 });
   }
 
   const customer = order.customer as any;
@@ -65,6 +80,14 @@ export async function GET(req: NextRequest) {
     boxes: number[];
     lagersalg: boolean;
   }
+
+  type SkuRow = {
+    title: string | null;
+    images: string[] | null;
+    subcategory: string | null;
+    attributes: Record<string, string> | null;
+  };
+  const skuRows = new Map<string, SkuRow>();
 
   const resolvedItems: ResolvedItem[] = [];
 
@@ -105,11 +128,13 @@ export async function GET(req: NextRequest) {
         lagersalg: false,
       });
     } else if (item.item_type === "sku_product" && item.sku_product_id) {
-      const { data: sku } = await supabase
+      const { data } = await supabase
         .from("sku_products")
         .select("title, images, subcategory, attributes")
         .eq("id", item.sku_product_id)
         .single();
+      const sku = data as SkuRow | null;
+      if (sku) skuRows.set(item.sku_product_id, sku);
 
       resolvedItems.push({
         name: sku?.title || "Tilbehør",
@@ -126,8 +151,8 @@ export async function GET(req: NextRequest) {
         skuId: item.sku_product_id,
         boxes: [],
         lagersalg: isLagersalg({
-          subcategory: (sku as any)?.subcategory ?? null,
-          attributes: (sku as any)?.attributes ?? null,
+          subcategory: sku?.subcategory ?? null,
+          attributes: sku?.attributes ?? null,
         }),
       });
     }
@@ -137,8 +162,13 @@ export async function GET(req: NextRequest) {
   const lagersalgIds = [...new Set(resolvedItems.filter((r) => r.lagersalg && r.skuId).map((r) => r.skuId as string))];
   if (lagersalgIds.length > 0) {
     const { boxes } = await boxesForOrderSkus(supabase, {
-      orderLocationId: (order as { location_id?: string | null }).location_id ?? null,
-      skus: lagersalgIds.map((id) => ({ id, subcategory: null, attributes: { udsalg: "Ja" } })),
+      orderId: order.id,
+      orderLocationId,
+      skus: lagersalgIds.map((id) => ({
+        id,
+        subcategory: skuRows.get(id)?.subcategory ?? null,
+        attributes: skuRows.get(id)?.attributes ?? null,
+      })),
     });
     for (const r of resolvedItems) if (r.skuId) r.boxes = boxes[r.skuId] ?? [];
   }

@@ -64,14 +64,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     subcategory: string | null;
     attributes: Record<string, string> | null;
   }>;
-  const { boxes, lagersalg } = await boxesForOrderSkus(supabase as never, {
+  const { boxes, lagersalg } = await boxesForOrderSkus(supabase, {
+    orderId: id,
     orderLocationId: location_id,
     skus: skuRows,
   });
-  const publicSkus = skuRows.map(({ attributes: _attributes, ...rest }) => ({
-    ...rest,
-    lagersalg: lagersalg[rest.id] ?? false,
-  }));
+  const publicSkus = skuRows.map((row) => {
+    const rest: Record<string, unknown> = { ...row };
+    delete rest.attributes;
+    return { ...rest, lagersalg: lagersalg[row.id] ?? false };
+  });
 
   return NextResponse.json(
     { order: publicOrder, devices: devices.data ?? [], skus: publicSkus, boxes },

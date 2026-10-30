@@ -6,6 +6,7 @@ vi.mock("@/lib/auth/store-scope-server", () => ({
   canSee: () => true,
   resolveLocationSlug: async () => null,
   unauthorizedResponse: () => new Response("no", { status: 401 }),
+  loadLocationIndex: async () => ({ idBySlug: { vejle: "L-v", slagelse: "L-s" }, slugById: {} }),
 }));
 vi.mock("@/lib/accessory-intake/candidates", () => ({
   storeLocations: async () => [
@@ -13,8 +14,12 @@ vi.mock("@/lib/accessory-intake/candidates", () => ({
     { id: "L-s", name: "Slagelse", type: "store" },
   ],
 }));
-const boxNumbersFor = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/lagersalg/boxes", () => ({ boxNumbersFor }));
+const { boxNumbersFor, picksForOrder } = vi.hoisted(() => ({ boxNumbersFor: vi.fn(), picksForOrder: vi.fn() }));
+vi.mock("@/lib/lagersalg/boxes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/lagersalg/boxes")>()),
+  boxNumbersFor,
+  picksForOrder,
+}));
 
 const order = {
   id: "o1",
@@ -43,9 +48,11 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 import { GET } from "../[id]/print-data/route";
+import { boxesLabel } from "@/lib/lagersalg/boxes";
 
 describe("GET /api/admin/orders/[id]/print-data", () => {
   it("svarer kassenumre pr. sku for ordrens location, Vejle når ordren ingen har", async () => {
+    picksForOrder.mockResolvedValue(new Map());
     boxNumbersFor.mockResolvedValue(new Map([["A", [1, 3]]]));
     const res = await GET(new Request("http://x/api/admin/orders/o1/print-data") as never, {
       params: Promise.resolve({ id: "o1" }),
@@ -55,5 +62,20 @@ describe("GET /api/admin/orders/[id]/print-data", () => {
     expect(body.skus[0].lagersalg).toBe(true);
     expect(body.skus[0]).not.toHaveProperty("attributes");
     expect(boxNumbersFor).toHaveBeenCalledWith(expect.anything(), ["A"], "L-v");
+  });
+
+  it("Kasse 01 overlever at salget har trukket kassebeholdningen ned", async () => {
+    picksForOrder.mockReset();
+    boxNumbersFor.mockReset();
+    picksForOrder.mockResolvedValue(new Map([["A", [1]]]));
+    boxNumbersFor.mockResolvedValue(new Map()); // kassen er tom efter salget
+    const res = await GET(new Request("http://x/api/admin/orders/o1/print-data") as never, {
+      params: Promise.resolve({ id: "o1" }),
+    });
+    const body = await res.json();
+    expect(picksForOrder).toHaveBeenCalledWith(expect.anything(), "o1");
+    expect(body.boxes).toEqual({ A: [1] });
+    expect(boxesLabel(body.boxes.A)).toBe("Kasse 01");
+    expect(boxNumbersFor).not.toHaveBeenCalled();
   });
 });

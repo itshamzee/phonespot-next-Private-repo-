@@ -120,3 +120,29 @@ export async function boxNumbersFor(
   for (const list of out.values()) list.sort((a, b) => a - b);
   return out;
 }
+
+/**
+ * Kassenumre (stigende, unikke) pr. produkt som ordren faktisk blev plukket fra. Gemmes af
+ * sale_box_consume ved salget, så pakkelisten ikke afhænger af kassebeholdningen bagefter
+ * (den er allerede trukket ned, når pakkeren åbner ordren).
+ */
+export async function picksForOrder(db: Db, orderId: string): Promise<Map<string, number[]>> {
+  const out = new Map<string, number[]>();
+  const { data, error } = await db
+    .from("sale_box_picks")
+    .select("product_id, sale_boxes!inner(number)")
+    .eq("order_id", orderId);
+  if (error) throw new Error(`picksForOrder: ${error.message}`);
+  for (const row of (data ?? []) as unknown as {
+    product_id: string;
+    sale_boxes: { number: number } | { number: number }[];
+  }[]) {
+    const box = Array.isArray(row.sale_boxes) ? row.sale_boxes[0] : row.sale_boxes;
+    if (!box) continue;
+    const list = out.get(row.product_id) ?? [];
+    if (!list.includes(box.number)) list.push(box.number);
+    out.set(row.product_id, list);
+  }
+  for (const list of out.values()) list.sort((a, b) => a - b);
+  return out;
+}
