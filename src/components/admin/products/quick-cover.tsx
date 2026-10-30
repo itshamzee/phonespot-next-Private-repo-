@@ -17,6 +17,8 @@ import { MatchCard, saleKrFor, type MatchProduct } from "./quick-intake/match-ca
 import { PhotoPicker } from "./quick-intake/photo-picker";
 import { blobToBase64, downscale } from "./quick-intake/image-utils";
 import { BoxBar } from "./quick-intake/box-bar";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
+import { INTERN_ROLE } from "@/lib/auth/intern-access";
 import { printLabel } from "./quick-intake/label";
 
 /**
@@ -114,6 +116,7 @@ function AiHint() {
 }
 
 export function QuickCover() {
+  const { me } = useStoreScope();
   const [store, setStore] = useState<Store>("vejle");
   const [ean, setEan] = useState("");
   const [step, setStep] = useState<Step>("scan");
@@ -478,7 +481,7 @@ export function QuickCover() {
         </div>
       </div>
 
-      <BoxBar store={store} onBoxChange={setOpenBox} />
+      <BoxBar store={store} onBoxChange={setOpenBox} showOverviewLink={me != null && me.role !== INTERN_ROLE} />
 
       <input
         ref={readInput}

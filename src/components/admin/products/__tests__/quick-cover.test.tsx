@@ -11,6 +11,7 @@ vi.mock("@/components/admin/products/quick-intake/photo-picker", () => ({
 }));
 
 import { QuickCover } from "../quick-cover";
+import { StoreScopeProvider, type AdminMe } from "@/components/admin/shell/store-scope-context";
 import { labelHtml } from "../quick-intake/label";
 
 const LOC = "00000000-0000-4000-8000-000000000030";
@@ -221,5 +222,36 @@ describe("labelHtml", () => {
     const html = labelHtml("5701234567899", "Beskyttelsesglas til iPhone 15", 49, null, { lagersalg: false });
     expect(html).not.toContain("returret");
     expect(html).toContain("49 kr.");
+  });
+});
+
+describe("kasseoversigt-link", () => {
+  const me = (role: string): AdminMe => ({
+    id: "st",
+    name: null,
+    email: null,
+    role,
+    isOwner: false,
+    ownSlug: "vejle",
+    scope: "vejle",
+  });
+
+  it("vises ikke for praktikanter, som ikke kan åbne siden", async () => {
+    render(
+      <StoreScopeProvider initialMe={me("intern")}>
+        <QuickCover />
+      </StoreScopeProvider>,
+    );
+    await screen.findByText("Ingen åben kasse");
+    expect(screen.queryByText("Kasseoversigt")).toBeNull();
+  });
+
+  it("vises for butiksmedarbejdere", async () => {
+    render(
+      <StoreScopeProvider initialMe={me("staff")}>
+        <QuickCover />
+      </StoreScopeProvider>,
+    );
+    expect(await screen.findByText("Kasseoversigt")).toBeTruthy();
   });
 });

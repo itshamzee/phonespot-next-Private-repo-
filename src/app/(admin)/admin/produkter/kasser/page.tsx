@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BoxBar } from "@/components/admin/products/quick-intake/box-bar";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { Button, DataTable, Notice, PageHeader, Segmented, Tag, type Column } from "@/components/admin/ui";
 import { boxLabel, type SaleBox } from "@/lib/lagersalg/boxes";
 
@@ -15,7 +16,15 @@ interface Row {
 }
 
 export default function KasserPage() {
+  const { loading: scopeLoading, ownSlug } = useStoreScope();
+  // Butiksmedarbejdere starter i egen butik; ejeren (ingen egen butik) starter i Vejle.
   const [store, setStore] = useState<Store>("vejle");
+  const [storeReady, setStoreReady] = useState(false);
+  useEffect(() => {
+    if (scopeLoading || storeReady) return;
+    if (ownSlug === "vejle" || ownSlug === "slagelse") setStore(ownSlug);
+    setStoreReady(true);
+  }, [scopeLoading, ownSlug, storeReady]);
   const [rows, setRows] = useState<Row[]>([]);
   const [unboxed, setUnboxed] = useState(0);
   const [open, setOpen] = useState<SaleBox | null>(null);
@@ -44,11 +53,12 @@ export default function KasserPage() {
   }, [store]);
 
   useEffect(() => {
+    if (!storeReady) return;
     setLoading(true);
     setConfirming(false);
     setDone(null);
     void load();
-  }, [load]);
+  }, [load, storeReady]);
 
   async function assign() {
     setBusy(true);
@@ -101,13 +111,15 @@ export default function KasserPage() {
           { value: "slagelse", label: "Slagelse" },
         ]}
       />
-      <BoxBar
-        store={store}
-        onBoxChange={(b) => {
-          setOpen(b);
-          void load();
-        }}
-      />
+      {storeReady && (
+        <BoxBar
+          store={store}
+          onBoxChange={(b) => {
+            setOpen(b);
+            void load();
+          }}
+        />
+      )}
 
       {error && <Notice tone="danger">{error}</Notice>}
       {done && <Notice tone="success">{done}</Notice>}

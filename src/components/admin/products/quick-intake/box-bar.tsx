@@ -15,7 +15,16 @@ const boxNo = (n: number) => boxLabel(n).replace(/^Kasse /, "");
  * lægges i den åbne kasse. "Luk kasse" lukker den og åbner straks den næste,
  * så der altid er præcis én åben. En lukket kasse kan kun tømmes, ikke fyldes.
  */
-export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box: SaleBox | null) => void }) {
+export function BoxBar({
+  store,
+  onBoxChange,
+  showOverviewLink = true,
+}: {
+  store: Store;
+  onBoxChange: (box: SaleBox | null) => void;
+  /** Praktikanter kan ikke åbne kasseoversigten, så linket skjules for dem. */
+  showOverviewLink?: boolean;
+}) {
   const [open, setOpen] = useState<SaleBox | null>(null);
   const [nextNumber, setNextNumber] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,9 +114,11 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
         )}
       </div>
 
-      <Link href="/admin/produkter/kasser" className="inline-block text-[13px] text-gray underline hover:text-charcoal">
-        Kasseoversigt
-      </Link>
+      {showOverviewLink && (
+        <Link href="/admin/produkter/kasser" className="inline-block text-[13px] text-gray underline hover:text-charcoal">
+          Kasseoversigt
+        </Link>
+      )}
 
       {confirming && open && following != null && (
         <div className="space-y-2">
