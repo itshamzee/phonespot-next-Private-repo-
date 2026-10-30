@@ -13,7 +13,8 @@ export function labelHtml(
   boxNumber: number | null,
   { lagersalg = true }: { lagersalg?: boolean } = {},
 ): string {
-  const safeTitle = title.replace(/[<>&"]/g, "");
+  // Escapes i stedet for at fjerne tegn, så tommetegn (14", iPad Pro 13") står på etiketten.
+  const safeTitle = title.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
   const box = boxNumber != null ? `<span>${boxLabel(boxNumber)}</span>` : "";
   const terms = lagersalg || box ? `<div class="row terms"><span>${lagersalg ? "Lagersalg · ingen returret" : ""}</span>${box}</div>` : "";
   return `<!doctype html><html><head><meta charset="utf-8"><style>

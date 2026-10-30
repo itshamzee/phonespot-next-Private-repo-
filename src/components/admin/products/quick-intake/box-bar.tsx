@@ -6,6 +6,9 @@ import { boxLabel, type SaleBox } from "@/lib/lagersalg/boxes";
 
 type Store = "vejle" | "slagelse";
 
+/** "04" ud af "Kasse 04", så nummerformatet kun bor i boxLabel. */
+const boxNo = (n: number) => boxLabel(n).replace(/^Kasse /, "");
+
 /**
  * Den aktive lagersalgskasse i butikken. Alt, der optages (undtagen glas),
  * lægges i den åbne kasse. "Luk kasse" lukker den og åbner straks den næste,
@@ -18,6 +21,7 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const onChange = useRef(onBoxChange);
   onChange.current = onBoxChange;
   const seq = useRef(0);
@@ -29,11 +33,13 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
       const data = await res.json();
       if (run !== seq.current) return;
       if (!res.ok) throw new Error(data?.error ?? "Kasserne kunne ikke hentes. Prøv igen.");
+      setLoadFailed(false);
       setOpen(data.open ?? null);
       setNextNumber(data.nextNumber ?? null);
       onChange.current(data.open ?? null);
     } catch (err) {
       if (run !== seq.current) return;
+      setLoadFailed(true);
       setError(err instanceof Error ? err.message : "Kasserne kunne ikke hentes. Prøv igen.");
     } finally {
       if (run === seq.current) setLoading(false);
@@ -93,14 +99,14 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
         )}
         {!loading && !open && nextNumber != null && (
           <Button variant="primary" className="h-11 shrink-0 px-4 text-[14px]" onClick={() => void act({ action: "open" })} loading={busy}>
-            {`Åbn kasse ${String(nextNumber).padStart(2, "0")}`}
+            {`Åbn ${boxLabel(nextNumber).toLowerCase()}`}
           </Button>
         )}
       </div>
 
       {confirming && open && following != null && (
         <div className="space-y-2">
-          <Notice tone="warning" title={`Luk ${boxLabel(open.number).toLowerCase()} og åbn ${String(following).padStart(2, "0")}?`}>
+          <Notice tone="warning" title={`Luk ${boxLabel(open.number).toLowerCase()} og åbn ${boxNo(following)}?`}>
             En lukket kasse kan kun tømmes, ikke fyldes. Nye varer lægges i den nye kasse.
           </Notice>
           <div className="grid grid-cols-[2fr_1fr] gap-2">
@@ -110,7 +116,7 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
               onClick={() => void act({ action: "close", boxId: open.id })}
               loading={busy}
             >
-              {`Luk ${boxLabel(open.number).toLowerCase()} og åbn ${String(following).padStart(2, "0")}`}
+              {`Luk ${boxLabel(open.number).toLowerCase()} og åbn ${boxNo(following)}`}
             </Button>
             <Button variant="secondary" className="h-12" onClick={() => setConfirming(false)} disabled={busy}>
               Fortryd
@@ -119,7 +125,28 @@ export function BoxBar({ store, onBoxChange }: { store: Store; onBoxChange: (box
         </div>
       )}
 
-      {error && <Notice tone="danger">{error}</Notice>}
+      {error && (
+        <Notice
+          tone="danger"
+          action={
+            loadFailed ? (
+              <Button
+                variant="secondary"
+                className="h-11 shrink-0"
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  void load();
+                }}
+              >
+                Prøv igen
+              </Button>
+            ) : undefined
+          }
+        >
+          {error}
+        </Notice>
+      )}
     </div>
   );
 }

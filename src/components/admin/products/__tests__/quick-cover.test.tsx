@@ -28,6 +28,9 @@ const BOX4 = "00000000-0000-4000-8000-000000000004";
 const api = vi.hoisted(() => ({
   open: null as null | Record<string, unknown>,
   nextNumber: 1,
+  product: null as null | Record<string, unknown>,
+  stockPost: { status: 200, data: {} as unknown },
+  create: { status: 200, data: {} as unknown },
   calls: [] as Array<{ url: string; method: string; body: unknown }>,
 }));
 
@@ -39,6 +42,9 @@ beforeEach(() => {
   api.open = null;
   api.nextNumber = 1;
   api.calls = [];
+  api.product = null;
+  api.stockPost = { status: 200, data: {} };
+  api.create = { status: 200, data: { created: [{ url: "/tilbehoer/outlet/x", boxNumber: null }] } };
   vi.stubGlobal(
     "fetch",
     vi.fn((input: string, init?: RequestInit) => {
@@ -58,7 +64,11 @@ beforeEach(() => {
         api.nextNumber += 1;
         return json({ opened: api.open });
       }
-      if (url.startsWith("/api/admin/accessories/by-ean")) return json({ product: null });
+      if (url.startsWith("/api/admin/accessories/by-ean")) {
+        if (method === "POST") return json(api.stockPost.data, api.stockPost.status);
+        return json({ product: api.product });
+      }
+      if (url === "/api/admin/products" && method === "POST") return json(api.create.data, api.create.status);
       if (url.startsWith("/api/admin/accessories/candidates")) return json({ candidates: [] });
       return json({ error: "ukendt" }, 404);
     }),
@@ -97,6 +107,75 @@ describe("QuickCover: kasser", () => {
   });
 });
 
+async function toNewStep() {
+  fireEvent.change(screen.getByLabelText("Stregkode"), { target: { value: "5701234567899" } });
+  fireEvent.click(screen.getByRole("button", { name: "Find" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Udfyld selv" }));
+}
+
+async function fillBag() {
+  await toNewStep();
+  fireEvent.click(screen.getByRole("button", { name: "Taske" }));
+  fireEvent.click(screen.getByRole("button", { name: '14"' }));
+  fireEvent.click(screen.getByRole("button", { name: "Testfoto" }));
+}
+
+describe("QuickCover: gem med advarsel", () => {
+  it("lager gemt, men kassen lukket imens: done-trin med advarsel, ingen fejl", async () => {
+    const msg = "Varen er lagt på lager, men kassen blev lukket imens. Læg den i den nye kasse.";
+    api.product = {
+      id: "p1",
+      title: "Silikonecover til iPhone 15, sort",
+      images: null,
+      selling_price: 5900,
+      status: "published",
+      subcategory: "cover",
+      attributes: { udsalg: "Ja" },
+      stock: { vejle: 0, slagelse: 0 },
+    };
+    api.stockPost = { status: 409, data: { error: msg, code: "box_closed", quantity: 3, priceKr: 59, boxNumber: null } };
+    render(<QuickCover />);
+    fireEvent.change(screen.getByLabelText("Stregkode"), { target: { value: "5701234567899" } });
+    fireEvent.click(screen.getByRole("button", { name: "Find" }));
+    fireEvent.click(await screen.findByRole("button", { name: /på lager/ }));
+
+    expect(await screen.findByText(/3 på lager i Vejle/)).toBeTruthy();
+    expect(screen.getByText(msg)).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("oprettet med kasse og advarsel viser Lagt i Kasse 01 og advarslen", async () => {
+    api.create = {
+      status: 200,
+      data: { created: [{ url: "/tilbehoer/outlet/x", boxNumber: 1 }], warnings: ["Tjek kassen, før du lægger varen i den."] },
+    };
+    render(<QuickCover />);
+    await fillBag();
+    fireEvent.click(screen.getByRole("button", { name: /Gem vare/ }));
+
+    expect(await screen.findByText(/Lagt i Kasse 01/)).toBeTruthy();
+    expect(screen.getByText("Tjek kassen, før du lægger varen i den.")).toBeTruthy();
+  });
+});
+
+describe("QuickCover: priser", () => {
+  it("taske starter på 149 kr., og Anden pris sendes i øre", async () => {
+    render(<QuickCover />);
+    await fillBag();
+    expect(screen.getByRole("button", { name: "149 kr." }).getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.change(screen.getByLabelText("Anden pris"), { target: { value: "189" } });
+    expect(screen.getByRole("button", { name: "189 kr." }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: /Gem vare/ }));
+
+    await waitFor(() => expect(api.calls.some((c) => c.url === "/api/admin/products")).toBe(true));
+    const body = api.calls.find((c) => c.url === "/api/admin/products")!.body as { items: Array<Record<string, unknown>> };
+    expect(body.items[0].sellingPrice).toBe(18900);
+    expect(body.items[0].subcategory).toBe("bag");
+    expect(body.items[0].models).toEqual([]);
+  });
+});
+
 describe("QuickCover: taske", () => {
   it("kræver laptopstørrelse for en taske", async () => {
     render(<QuickCover />);
@@ -130,6 +209,14 @@ describe("labelHtml", () => {
     expect(html).toContain("Lagersalg · ingen returret");
     expect(html).not.toContain("Kasse");
   });
+  it("bevarer tommetegn i titlen og escaper html", () => {
+    const html = labelHtml("5701234567899", 'Sleeve til bærbar 14", sort <b>', 99, 1);
+    expect(html).toContain("14&quot;");
+    expect(html).not.toContain("<b>");
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    expect(doc.querySelector(".title")?.textContent).toBe('Sleeve til bærbar 14", sort <b>');
+  });
+
   it("glas er ikke lagersalg og får ingen returlinje", () => {
     const html = labelHtml("5701234567899", "Beskyttelsesglas til iPhone 15", 49, null, { lagersalg: false });
     expect(html).not.toContain("returret");

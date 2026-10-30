@@ -8,6 +8,8 @@ export const KNOWN_BRANDS = [
 const GENUINE_BRANDS = ["apple", "samsung"];
 
 export const PRICE_CHIPS = [49, 59, 79, 99, 129];
+/** Computertasker og sleeves ligger i et højere prisleje. */
+export const PRICE_CHIPS_BAG = [99, 149, 199, 249, 299];
 
 /** Prisforslag i kr. efter mærke og type (spec: AI-tilbehørsoptagelse, Pris). */
 export function suggestPriceKr(i: Pick<Identified, "productType" | "brand" | "isGenuineBrandProduct" | "caseType">): number {

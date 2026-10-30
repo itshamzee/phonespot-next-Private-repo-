@@ -9,7 +9,7 @@ import { ean13Svg, isValidEan13 } from "@/lib/barcode/ean13";
 import { boxLabel, type SaleBox } from "@/lib/lagersalg/boxes";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { preloadBackgroundRemoval } from "@/lib/images/remove-background-client";
-import { PRICE_CHIPS } from "@/lib/accessory-intake/pricing";
+import { PRICE_CHIPS, PRICE_CHIPS_BAG } from "@/lib/accessory-intake/pricing";
 import { subcategoryFor } from "@/lib/accessory-intake/match";
 import { aiTextIsStale } from "@/lib/accessory-intake/ai-text";
 import type { Identified, IntakeCaseType, IntakeProductType, MatchCandidate } from "@/lib/accessory-intake/types";
@@ -44,6 +44,9 @@ const LAPTOP_SIZES = ['13"', '14"', '15"/15,6"', '16"', '17"'];
 const BAG_TYPES = ["Sleeve", "Skuldertaske", "Rygsæk"];
 
 const isIpad = (d: TilbehoerDevice) => d.slug.startsWith("ipad-");
+
+/** Startpris pr. varetype (kr.). */
+const defaultPriceFor = (t: IntakeProductType) => (t === "bag" ? 149 : t === "screen_protector" ? 49 : 59);
 
 const CASE_TYPES: { value: IntakeCaseType; label: string; noun: string }[] = [
   { value: "Clear", label: "Gennemsigtigt", noun: "Gennemsigtigt cover" },
@@ -133,6 +136,8 @@ export function QuickCover() {
   const [color, setColor] = useState("");
   const [colors, setColors] = useState(BASE_COLORS);
   const [price, setPrice] = useState(59);
+  // "Anden pris": fri pris i hele kroner (min. 10 kr.), når ingen chip passer.
+  const [priceText, setPriceText] = useState("");
   const [title, setTitle] = useState("");
   const [titleTouched, setTitleTouched] = useState(false);
   const [description, setDescription] = useState("");
@@ -187,6 +192,7 @@ export function QuickCover() {
   const qty = Math.max(0, Math.floor(Number(quantity) || 0));
   const isCase = productType === "cover" || productType === "flip_cover" || productType === "ipad_cover";
   const isBag = productType === "bag";
+  const priceChips = isBag ? PRICE_CHIPS_BAG : PRICE_CHIPS;
   const autoTitle = templateTitle(productType, isCase ? caseType : null, models, color, { size: laptopSize, bagType });
   const finalTitle = (titleTouched ? title : title || autoTitle).trim();
 
@@ -208,11 +214,12 @@ export function QuickCover() {
     setTitleTouched(false);
     setDescription("");
     setLaptopSize(null);
+    setPriceText("");
     if (!keepSetup) {
       setProductType("cover");
       setCaseType("Slim");
       setBagType("Sleeve");
-      setPrice(59);
+      setPrice(defaultPriceFor("cover"));
     }
     setStep("scan");
   }
@@ -285,7 +292,8 @@ export function QuickCover() {
 
   function applyIdentified(i: Identified | null, priceKr: number) {
     setIdentified(i);
-    setPrice(priceKr);
+    setPrice(i?.productType === "bag" ? defaultPriceFor("bag") : priceKr);
+    setPriceText("");
     if (!i) {
       setModelConfirmed(false);
       return;
@@ -450,7 +458,9 @@ export function QuickCover() {
     }
   }
 
+  const priceInvalid = priceText !== "" && Number(priceText) < 10;
   const missing = [
+    priceInvalid && "pris (mindst 10 kr.)",
     isBag && !laptopSize && "størrelse",
     !isBag && models.length === 0 && "model",
     !isBag && models.length > 0 && !modelConfirmed && "bekræft model",
@@ -629,7 +639,10 @@ export function QuickCover() {
                       if (t.value === "flip_cover") setCaseType("Flip");
                       if (t.value === "cover" && (caseType === "Flip" || caseType === "Wallet" || !caseType)) setCaseType("Slim");
                       if (t.value === "ipad_cover" && !caseType) setCaseType("Slim");
-                      if (t.value === "screen_protector") setPrice(49);
+                      if (t.value === "screen_protector" || t.value === "bag" || productType === "bag") {
+                        setPrice(defaultPriceFor(t.value));
+                        setPriceText("");
+                      }
                       // iPad-covers passer kun til iPads; tasker har ingen modeller, kun størrelse.
                       if (t.value === "ipad_cover") {
                         const ipads = models.filter((m) => m.startsWith("ipad-"));
@@ -731,10 +744,40 @@ export function QuickCover() {
 
           <Field label="Pris">
             {() => (
-              <div className="flex flex-wrap gap-2">
-                {PRICE_CHIPS.map((p) => (
-                  <Chip key={p} selected={price === p} onToggle={() => setPrice(p)}>{p} kr.</Chip>
-                ))}
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {priceChips.map((p) => (
+                    <Chip
+                      key={p}
+                      selected={price === p}
+                      onToggle={() => {
+                        setPrice(p);
+                        setPriceText("");
+                      }}
+                    >
+                      {p} kr.
+                    </Chip>
+                  ))}
+                  {!priceChips.includes(price) && (
+                    <Chip selected onToggle={() => {}}>{price} kr.</Chip>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    aria-label="Anden pris"
+                    inputMode="numeric"
+                    className="h-12 w-32"
+                    placeholder="Anden pris"
+                    value={priceText}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 5);
+                      setPriceText(v);
+                      const n = Number(v);
+                      if (n >= 10) setPrice(n);
+                    }}
+                  />
+                  <span className="text-[14px] text-charcoal/60">kr.</span>
+                </div>
               </div>
             )}
           </Field>
