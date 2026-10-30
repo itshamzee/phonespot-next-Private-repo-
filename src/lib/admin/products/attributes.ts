@@ -28,6 +28,7 @@ export const ACCESSORY_SUBCATEGORIES: AccessorySubcategory[] = [
   { value: "audio", label: "Lyd", hint: "Høretelefoner og højttalere" },
   { value: "powerbank", label: "Powerbank", hint: "Batteripakker" },
   { value: "other", label: "Holdere og andet", hint: "Holdere, standere og øvrigt" },
+  { value: "bag", label: "Taske", hint: "Computertasker og sleeves" },
 ];
 
 export const TYPE_ATTRIBUTES: Record<string, AttributeField[]> = {
@@ -64,7 +65,20 @@ export const TYPE_ATTRIBUTES: Record<string, AttributeField[]> = {
     { key: "audio_type", label: "Type", type: "select", options: ["In-ear", "Over-ear", "On-ear", "Højttaler", "AUX-kabel"] },
     { key: "wireless", label: "Trådløs", type: "select", options: ["Ja", "Nej"] },
   ],
-  other: [],
+  bag: [
+    { key: "laptop_size", label: "Størrelse", type: "select", options: ['13"', '14"', '15"/15,6"', '16"', '17"'] },
+    { key: "bag_type", label: "Type", type: "select", options: ["Sleeve", "Skuldertaske", "Rygsæk"] },
+    { key: "color", label: "Farve", type: "text" },
+    // Med på /lagersalg. Sættes automatisk af hurtig-oprettelsen.
+    { key: "udsalg", label: "Lagersalg", type: "select", options: ["Ja"] },
+    { key: "genuine", label: "Ægte mærkevare", type: "select", options: ["Ja"] },
+    { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },
+  ],
+  other: [
+    // "Andet" fra hurtig-optagelsen kommer på /lagersalg.
+    { key: "udsalg", label: "Lagersalg", type: "select", options: ["Ja"] },
+    { key: "ai_read_text", label: "Tekst læst af AI", type: "text" },
+  ],
 };
 
 /** Kategorier hvor et produkt typisk passer til én bestemt model (og derfor oprettes pr. model). */

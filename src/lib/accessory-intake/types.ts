@@ -1,6 +1,6 @@
 /** Fælles typer for AI-tilbehørsoptagelsen (/admin/produkter/hurtig-cover). */
 
-export type IntakeProductType = "cover" | "flip_cover" | "screen_protector" | "other";
+export type IntakeProductType = "cover" | "flip_cover" | "ipad_cover" | "screen_protector" | "bag" | "other";
 export type IntakeCaseType = "Clear" | "Slim" | "Rugged" | "Wallet" | "Flip" | "Bumper";
 
 /** Det AI'en læste af et foto af pakken eller varen. */

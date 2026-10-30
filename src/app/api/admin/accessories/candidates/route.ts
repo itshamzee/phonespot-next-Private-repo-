@@ -13,7 +13,7 @@ import { findCandidates } from "@/lib/accessory-intake/candidates";
 const VALID_SLUGS = new Set(TILBEHOER_DEVICES.map((d) => d.slug));
 
 const bodySchema = z.object({
-  productType: z.enum(["cover", "flip_cover", "screen_protector", "other"]),
+  productType: z.enum(["cover", "flip_cover", "ipad_cover", "screen_protector", "bag", "other"]),
   brand: z.string().max(80).nullable().optional(),
   caseType: z.enum(["Clear", "Slim", "Rugged", "Wallet", "Flip", "Bumper"]).nullable().optional(),
   color: z.string().max(40).nullable().optional(),

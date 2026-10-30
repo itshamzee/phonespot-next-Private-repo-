@@ -27,8 +27,8 @@ const bodySchema = z.object({
 
 const outputSchema = z.object({
   productType: z
-    .enum(["cover", "flip_cover", "screen_protector", "other"])
-    .describe("cover = bagcovers og bumpers; flip_cover = flip-, bog- og pungcovers; screen_protector = beskyttelsesglas og skærmfilm; other = alt andet (urremme, kabler, holdere)"),
+    .enum(["cover", "flip_cover", "ipad_cover", "screen_protector", "bag", "other"])
+    .describe("cover = bagcovers og bumpers; flip_cover = flip-, bog- og pungcovers; ipad_cover = covers til iPad; screen_protector = beskyttelsesglas og skærmfilm; bag = computertasker og sleeves; other = alt andet (urremme, kabler, holdere)"),
   brand: z.string().nullable().describe("Mærket trykt på pakken eller varen, fx Apple, Samsung, NovaNL, Rixus, Celly, Swissten. null hvis intet mærke kan ses."),
   isGenuineBrandProduct: z.boolean().describe("true kun hvis varen er telefonproducentens eget produkt (fx Apple Silicone Case, Samsung Silicone Cover)."),
   models: z.array(z.string()).describe("Slugs fra modellisten, som varen passer til. Flere hvis pakken nævner flere (fx 12/12 Pro). Tom hvis usikker."),

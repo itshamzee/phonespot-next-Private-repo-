@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Chip, Field, Input, Notice, Panel, Textarea } from "@/components/admin/ui";
 import { ModelsPicker } from "@/components/admin/products/create/models-picker";
-import { TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
+import { TILBEHOER_DEVICES, type TilbehoerDevice } from "@/lib/tilbehoer-config";
 import { ean13Svg, isValidEan13 } from "@/lib/barcode/ean13";
+import { boxLabel, type SaleBox } from "@/lib/lagersalg/boxes";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { preloadBackgroundRemoval } from "@/lib/images/remove-background-client";
 import { PRICE_CHIPS } from "@/lib/accessory-intake/pricing";
 import { subcategoryFor } from "@/lib/accessory-intake/match";
@@ -14,13 +16,16 @@ import type { Identified, IntakeCaseType, IntakeProductType, MatchCandidate } fr
 import { MatchCard, saleKrFor, type MatchProduct } from "./quick-intake/match-card";
 import { PhotoPicker } from "./quick-intake/photo-picker";
 import { blobToBase64, downscale } from "./quick-intake/image-utils";
+import { BoxBar } from "./quick-intake/box-bar";
+import { printLabel } from "./quick-intake/label";
 
 /**
  * Hurtig optagelse af tilbehør fra lageret i Vejle, bygget til mobilen:
  * scan stregkode (kendt vare: læg antal på lager) eller tag et foto af pakken
  * eller varen → AI udfylder type, mærke, model(ler), farve og tekst og leder
  * efter dubletter → praktikanten tjekker, tager et produktfoto, taster antal og
- * gemmer. Covers kommer på /lagersalg, glas på /beskyttelsesglas.
+ * gemmer. Covers, tasker og andet kommer på /lagersalg og lægges i butikkens
+ * åbne kasse; glas kommer på /beskyttelsesglas og får ingen kasse.
  */
 
 type Store = "vejle" | "slagelse";
@@ -29,9 +34,16 @@ type Step = "scan" | "existing" | "identify" | "match" | "new" | "done";
 const PRODUCT_TYPES: { value: IntakeProductType; label: string }[] = [
   { value: "cover", label: "Cover" },
   { value: "flip_cover", label: "Flip/pung" },
+  { value: "ipad_cover", label: "iPad-cover" },
   { value: "screen_protector", label: "Glas" },
+  { value: "bag", label: "Taske" },
   { value: "other", label: "Andet" },
 ];
+
+const LAPTOP_SIZES = ['13"', '14"', '15"/15,6"', '16"', '17"'];
+const BAG_TYPES = ["Sleeve", "Skuldertaske", "Rygsæk"];
+
+const isIpad = (d: TilbehoerDevice) => d.slug.startsWith("ipad-");
 
 const CASE_TYPES: { value: IntakeCaseType; label: string; noun: string }[] = [
   { value: "Clear", label: "Gennemsigtigt", noun: "Gennemsigtigt cover" },
@@ -47,7 +59,17 @@ const BASE_COLORS = ["Gennemsigtig", "Sort", "Hvid", "Blå", "Rød", "Lyserød",
 const labelOf = (slug: string) => TILBEHOER_DEVICES.find((d) => d.slug === slug)?.label ?? slug;
 
 /** Skabelontitel, når AI ikke har skrevet en (eller ikke virker). */
-function templateTitle(type: IntakeProductType, caseType: IntakeCaseType | null, models: string[], color: string): string {
+function templateTitle(
+  type: IntakeProductType,
+  caseType: IntakeCaseType | null,
+  models: string[],
+  color: string,
+  bag?: { size: string | null; bagType: string },
+): string {
+  if (type === "bag") {
+    if (!bag?.size) return "";
+    return `${bag.bagType} til bærbar ${bag.size}${color ? `, ${color.toLowerCase()}` : ""}`;
+  }
   const modelText = models.map(labelOf).join(" / ");
   if (!modelText) return "";
   const noun =
@@ -58,38 +80,6 @@ function templateTitle(type: IntakeProductType, caseType: IntakeCaseType | null,
         : (CASE_TYPES.find((t) => t.value === caseType)?.noun ?? "Cover");
   const showColor = color && type !== "screen_protector" && !(caseType === "Clear" && color === "Gennemsigtig");
   return `${noun} til ${modelText}${showColor ? `, ${color.toLowerCase()}` : ""}`;
-}
-
-/** Udskriver en 62 × 29 mm etiket med stregkode, navn og pris. */
-function printLabel(ean: string, title: string, priceKr: number) {
-  if (!isValidEan13(ean)) return;
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  document.body.appendChild(iframe);
-  const doc = iframe.contentDocument!;
-  const safeTitle = title.replace(/[<>&"]/g, "");
-  doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8"><style>
-    @page { size: 62mm 29mm; margin: 0; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { width: 62mm; height: 29mm; padding: 1.5mm 2.5mm; font-family: Arial, sans-serif; display: flex; flex-direction: column; justify-content: space-between; }
-    .row { display: flex; justify-content: space-between; align-items: baseline; gap: 2mm; }
-    .title { font-size: 8px; line-height: 1.15; max-height: 2.4em; overflow: hidden; }
-    .price { font-size: 13px; font-weight: 700; white-space: nowrap; }
-    svg { width: 100%; height: 15mm; }
-  </style></head><body>
-    <div class="row"><div class="title">${safeTitle}</div><div class="price">${priceKr} kr.</div></div>
-    ${ean13Svg(ean)}
-  </body></html>`);
-  doc.close();
-  setTimeout(() => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    setTimeout(() => iframe.remove(), 1000);
-  }, 150);
 }
 
 /** Antal med store −/+ knapper, så det er nemt at ramme på en telefon. */
@@ -149,7 +139,19 @@ export function QuickCover() {
   const [quantity, setQuantity] = useState("1");
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoKey, setPhotoKey] = useState(0);
-  const [done, setDone] = useState<{ title: string; url: string | null; ean: string; quantity: number; priceKr: number } | null>(null);
+  const [laptopSize, setLaptopSize] = useState<string | null>(null);
+  const [bagType, setBagType] = useState("Sleeve");
+  const [openBox, setOpenBox] = useState<SaleBox | null>(null);
+  const [done, setDone] = useState<{
+    title: string;
+    url: string | null;
+    ean: string;
+    quantity: number;
+    priceKr: number;
+    boxNumber: number | null;
+    lagersalg: boolean;
+    warnings: string[];
+  } | null>(null);
 
   const eanRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
@@ -183,8 +185,9 @@ export function QuickCover() {
   }, [manualModels, models, productType, caseType, color, identified]);
 
   const qty = Math.max(0, Math.floor(Number(quantity) || 0));
-  const isCase = productType === "cover" || productType === "flip_cover";
-  const autoTitle = templateTitle(productType, isCase ? caseType : null, models, color);
+  const isCase = productType === "cover" || productType === "flip_cover" || productType === "ipad_cover";
+  const isBag = productType === "bag";
+  const autoTitle = templateTitle(productType, isCase ? caseType : null, models, color, { size: laptopSize, bagType });
   const finalTitle = (titleTouched ? title : title || autoTitle).trim();
 
   function reset(keepSetup = true) {
@@ -204,9 +207,11 @@ export function QuickCover() {
     setTitle("");
     setTitleTouched(false);
     setDescription("");
+    setLaptopSize(null);
     if (!keepSetup) {
       setProductType("cover");
       setCaseType("Slim");
+      setBagType("Sleeve");
       setPrice(59);
     }
     setStep("scan");
@@ -342,8 +347,20 @@ export function QuickCover() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error ?? "Lageret blev ikke opdateret");
-      setDone({ title: product.title, url: null, ean, quantity: data.quantity, priceKr: data.priceKr ?? product.selling_price / 100 });
+      // Lageret kan være gemt, selv om kassen blev lukket imens (409 med quantity): vis advarsel, ikke fejl.
+      const savedAnyway = !res.ok && typeof data?.quantity === "number";
+      if (!res.ok && !savedAnyway) throw new Error(data?.error ?? "Lageret blev ikke opdateret");
+      const boxNumber: number | null = data.boxNumber ?? null;
+      setDone({
+        title: product.title,
+        url: null,
+        ean,
+        quantity: data.quantity,
+        priceKr: data.priceKr ?? product.selling_price / 100,
+        boxNumber,
+        lagersalg: boxNumber != null || isLagersalg({ subcategory: product.subcategory ?? null, attributes: product.attributes }),
+        warnings: savedAnyway && data.error ? [data.error] : [],
+      });
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Lageret blev ikke opdateret");
@@ -353,7 +370,8 @@ export function QuickCover() {
   }
 
   async function createProduct() {
-    if (models.length === 0 || !modelConfirmed || !photo || qty < 1 || !finalTitle) return;
+    if (isBag ? !laptopSize : models.length === 0 || !modelConfirmed) return;
+    if (!photo || qty < 1 || !finalTitle) return;
     setError(null);
     setBusy("Opretter vare");
     try {
@@ -373,8 +391,11 @@ export function QuickCover() {
           ? { ...(caseType ? { case_type: caseType } : {}), ...(color ? { color } : {}), udsalg: "Ja", ...genuine, ...readText }
           : subcategory === "screen_protector"
             ? { udsalg: "Ja", ...genuine, ...readText }
-            : {};
-      const text = description.trim() || `${finalTitle}. Passer til ${modelText}. Sendes fra Vejle, eller hent det gratis i butikken i Vejle eller Slagelse.`;
+            : subcategory === "bag"
+              ? { laptop_size: laptopSize!, bag_type: bagType, udsalg: "Ja", ...(color ? { color } : {}), ...genuine, ...readText }
+              : { udsalg: "Ja", ...readText };
+      const fits = isBag ? `bærbare op til ${laptopSize}` : modelText;
+      const text = description.trim() || `${finalTitle}. Passer til ${fits}. Sendes fra Vejle, eller hent det gratis i butikken i Vejle eller Slagelse.`;
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -385,24 +406,24 @@ export function QuickCover() {
               title: finalTitle,
               subcategory,
               brand: identified?.brand ?? null,
-              models,
+              models: isBag ? [] : models,
               mode: "universal",
               sellingPrice: price * 100,
               salePrice: null,
               costPrice: null,
               ean: code,
               images: [photo],
-              shortDescription: `Passer til ${modelText}. Lagerrydning fra vores lager i Vejle.`,
+              shortDescription: `Passer til ${fits}. Lagerrydning fra vores lager i Vejle.`,
               description: text,
               highlights: [
-                `Passer til ${modelText}`,
+                `Passer til ${fits}`,
                 ...(identified?.features ?? []).slice(0, 2),
                 "Gratis levering til pakkeshop",
-                "14 dages fortrydelsesret og 2 års reklamationsret",
+                "14 dages fortrydelsesret ved køb online, 2 års reklamationsret",
               ],
               attributes,
               alwaysInStock: false,
-              status: productType === "other" ? "draft" : "published",
+              status: "published",
               stock: { stores: { [store]: qty } },
             },
           ],
@@ -411,7 +432,16 @@ export function QuickCover() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Varen blev ikke oprettet");
       const created = data.created?.[0];
-      setDone({ title: finalTitle, url: productType === "other" ? null : (created?.url ?? null), ean: code, quantity: qty, priceKr: price });
+      setDone({
+        title: finalTitle,
+        url: created?.url ?? null,
+        ean: code,
+        quantity: qty,
+        priceKr: price,
+        boxNumber: created?.boxNumber ?? null,
+        lagersalg: subcategory !== "screen_protector",
+        warnings: Array.isArray(data.warnings) ? data.warnings : [],
+      });
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Varen blev ikke oprettet");
@@ -421,8 +451,9 @@ export function QuickCover() {
   }
 
   const missing = [
-    models.length === 0 && "model",
-    models.length > 0 && !modelConfirmed && "bekræft model",
+    isBag && !laptopSize && "størrelse",
+    !isBag && models.length === 0 && "model",
+    !isBag && models.length > 0 && !modelConfirmed && "bekræft model",
     !photo && "billede",
     !finalTitle && "titel",
   ].filter(Boolean);
@@ -436,6 +467,8 @@ export function QuickCover() {
           <Chip size="sm" selected={store === "slagelse"} onToggle={() => setStore("slagelse")}>Slagelse</Chip>
         </div>
       </div>
+
+      <BoxBar store={store} onBoxChange={setOpenBox} />
 
       <input
         ref={readInput}
@@ -595,7 +628,20 @@ export function QuickCover() {
                       if (identified && !titleTouched && t.value !== identified.productType) setTitle("");
                       if (t.value === "flip_cover") setCaseType("Flip");
                       if (t.value === "cover" && (caseType === "Flip" || caseType === "Wallet" || !caseType)) setCaseType("Slim");
+                      if (t.value === "ipad_cover" && !caseType) setCaseType("Slim");
                       if (t.value === "screen_protector") setPrice(49);
+                      // iPad-covers passer kun til iPads; tasker har ingen modeller, kun størrelse.
+                      if (t.value === "ipad_cover") {
+                        const ipads = models.filter((m) => m.startsWith("ipad-"));
+                        if (ipads.length !== models.length) {
+                          setModels(ipads);
+                          setModelConfirmed(ipads.length > 0 && modelConfirmed);
+                        }
+                      }
+                      if (t.value === "bag" && models.length > 0) {
+                        setModels([]);
+                        setModelConfirmed(false);
+                      }
                     }}
                   >
                     {t.label}
@@ -605,6 +651,28 @@ export function QuickCover() {
             )}
           </Field>
 
+          {isBag ? (
+            <>
+              <Field label="Størrelse" required>
+                {() => (
+                  <div className="flex flex-wrap gap-2">
+                    {LAPTOP_SIZES.map((s) => (
+                      <Chip key={s} selected={laptopSize === s} onToggle={() => setLaptopSize(laptopSize === s ? null : s)}>{s}</Chip>
+                    ))}
+                  </div>
+                )}
+              </Field>
+              <Field label="Type">
+                {() => (
+                  <div className="flex flex-wrap gap-2">
+                    {BAG_TYPES.map((b) => (
+                      <Chip key={b} selected={bagType === b} onToggle={() => setBagType(b)}>{b}</Chip>
+                    ))}
+                  </div>
+                )}
+              </Field>
+            </>
+          ) : (
           <Field label="Passer til" required>
             {() => (
               <div className="space-y-2">
@@ -619,6 +687,8 @@ export function QuickCover() {
                   <p className="text-[13px] text-charcoal/60">AI læste “{identified.unknownModelText}”, som ikke er i listen. Vælg den nærmeste.</p>
                 )}
                 <ModelsPicker
+                  key={productType === "ipad_cover" ? "ipad" : "alle"}
+                  only={productType === "ipad_cover" ? isIpad : undefined}
                   selected={models}
                   onChange={(slugs) => {
                     setModels(slugs);
@@ -633,6 +703,7 @@ export function QuickCover() {
               </div>
             )}
           </Field>
+          )}
 
           {isCase && (
             <Field label="Covertype">
@@ -711,7 +782,7 @@ export function QuickCover() {
           {finalTitle && (
             <p className="rounded-lg bg-cream px-3 py-2 text-[14px] text-charcoal">
               {finalTitle} · <strong>{price} kr.</strong>
-              {productType === "other" ? " · gemmes som kladde" : ""}
+              {productType !== "screen_protector" && (openBox ? ` · lægges i ${boxLabel(openBox.number)}` : " · ingen åben kasse")}
             </p>
           )}
 
@@ -737,13 +808,17 @@ export function QuickCover() {
         <Panel className="space-y-4 p-4">
           <Notice tone="success" title="Gemt">
             {done.title} · {done.quantity} på lager i {store === "vejle" ? "Vejle" : "Slagelse"}
+            {done.boxNumber != null && <> · Lagt i {boxLabel(done.boxNumber)}</>}
           </Notice>
+          {done.warnings.map((w) => (
+            <Notice key={w} tone="warning">{w}</Notice>
+          ))}
           {isValidEan13(done.ean) && (
             <div className="mx-auto w-56" aria-label={`Stregkode ${done.ean}`} dangerouslySetInnerHTML={{ __html: ean13Svg(done.ean) }} />
           )}
           <div className="grid grid-cols-2 gap-2">
             {isValidEan13(done.ean) && (
-              <Button variant="secondary" className="h-12" onClick={() => printLabel(done.ean, done.title, done.priceKr)}>Print etiket</Button>
+              <Button variant="secondary" className="h-12" onClick={() => printLabel(done.ean, done.title, done.priceKr, done.boxNumber, { lagersalg: done.lagersalg })}>Print etiket</Button>
             )}
             {done.url && (
               <Link href={done.url} target="_blank" className="flex h-12 items-center justify-center rounded-lg border border-sand text-[14px]">
@@ -753,7 +828,7 @@ export function QuickCover() {
           </div>
           <Button variant="primary" className="h-14 w-full text-[16px]" onClick={() => reset()}>Næste vare</Button>
           <button type="button" className="w-full text-[13px] text-charcoal/60 underline" onClick={() => reset(false)}>
-            Ny kasse (nulstil type og pris)
+            Nulstil type og pris
           </button>
         </Panel>
       )}

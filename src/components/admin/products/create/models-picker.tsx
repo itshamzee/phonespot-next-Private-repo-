@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DEVICE_BRANDS, TILBEHOER_DEVICES, type DeviceBrand } from "@/lib/tilbehoer-config";
+import { DEVICE_BRANDS, TILBEHOER_DEVICES, type DeviceBrand, type TilbehoerDevice } from "@/lib/tilbehoer-config";
 import { Chip, Input } from "@/components/admin/ui";
 
 /** Udleder en serie af modellens label: "iPhone 17 Pro Max" → "iPhone 17", "Galaxy S25 Ultra" → "Galaxy S25". */
@@ -13,21 +13,25 @@ function seriesOf(label: string): string {
 export function ModelsPicker({
   selected,
   onChange,
+  only,
 }: {
   selected: string[];
   onChange: (slugs: string[]) => void;
+  /** Begræns listen, fx kun iPads til iPad-covers. Mærker uden modeller skjules. */
+  only?: (d: TilbehoerDevice) => boolean;
 }) {
+  const pool = useMemo(() => (only ? TILBEHOER_DEVICES.filter(only) : TILBEHOER_DEVICES), [only]);
   // Åbn på mærket for den valgte model (fx Samsung, når AI'en har valgt Galaxy A32).
   const [brand, setBrand] = useState<DeviceBrand>(
-    () => TILBEHOER_DEVICES.find((d) => d.slug === selected[0])?.brand ?? "apple",
+    () => pool.find((d) => d.slug === selected[0])?.brand ?? pool[0]?.brand ?? "apple",
   );
   const [query, setQuery] = useState("");
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
   const devices = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return TILBEHOER_DEVICES.filter((d) => (q ? d.label.toLowerCase().includes(q) : d.brand === brand));
-  }, [brand, query]);
+    return pool.filter((d) => (q ? d.label.toLowerCase().includes(q) : d.brand === brand));
+  }, [pool, brand, query]);
 
   const series = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -46,7 +50,7 @@ export function ModelsPicker({
     onChange(allIn ? selected.filter((s) => !slugs.includes(s)) : [...new Set([...selected, ...slugs])]);
   };
 
-  const brandsWithDevices = DEVICE_BRANDS.filter((b) => TILBEHOER_DEVICES.some((d) => d.brand === b.slug));
+  const brandsWithDevices = DEVICE_BRANDS.filter((b) => pool.some((d) => d.brand === b.slug));
 
   return (
     <div className="flex flex-col gap-3">
