@@ -1,7 +1,7 @@
 import type { Identified, IntakeProductType, MatchCandidate } from "./types";
 
-export function subcategoryFor(t: IntakeProductType): "cover" | "screen_protector" | "other" {
-  if (t === "cover" || t === "flip_cover") return "cover";
+export function subcategoryFor(t: IntakeProductType): "cover" | "screen_protector" | "bag" | "other" {
+  if (t === "cover" || t === "flip_cover" || t === "ipad_cover") return "cover";
   return t;
 }
 

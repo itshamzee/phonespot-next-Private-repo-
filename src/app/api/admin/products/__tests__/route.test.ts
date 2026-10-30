@@ -8,10 +8,20 @@ const s = vi.hoisted(() => ({
   stock: [] as Record<string, unknown>[],
   insertError: null as null | { message: string },
   role: "owner",
+  slug: null as string | null,
 }));
 
 vi.mock("@/lib/auth/require-staff", () => ({
-  requireStaff: vi.fn(async () => ({ id: "st", role: s.role, location_slug: s.role === "intern" ? "vejle" : null })),
+  requireStaff: vi.fn(async () => ({ id: "st", role: s.role, location_slug: s.slug ?? (s.role === "intern" ? "vejle" : null) })),
+}));
+
+const boxes = vi.hoisted(() => ({
+  open: { id: "box-1", locationId: "vejle", number: 2, status: "open" } as null | Record<string, unknown>,
+  addToBox: vi.fn(async () => 2),
+}));
+vi.mock("@/lib/lagersalg/boxes", () => ({
+  currentOpenBox: vi.fn(async () => boxes.open),
+  addToBox: boxes.addToBox,
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -69,6 +79,9 @@ beforeEach(() => {
   s.stock = [];
   s.insertError = null;
   s.role = "owner";
+  s.slug = null;
+  boxes.addToBox.mockClear();
+  boxes.open = { id: "box-1", locationId: "vejle", number: 2, status: "open" };
 });
 
 it("praktikant kan ikke lægge lager i en anden butik eller sætte høj pris", async () => {
@@ -156,4 +169,76 @@ it("melder databasefejl som 500", async () => {
   s.insertError = { message: "duplicate key" };
   const res = await post({ type: "accessory", items: [{ title: "Kabel", subcategory: "cable", sellingPrice: 100, images: [] }] });
   expect(res.status).toBe(500);
+});
+
+const lagersalgItem = {
+  title: "Cover udsalg",
+  subcategory: "cover",
+  models: [],
+  mode: "universal",
+  sellingPrice: 7900,
+  images: ["https://cdn/x.jpg"],
+  attributes: { udsalg: "Ja" },
+  stock: { stores: { vejle: 3 } },
+};
+
+it("lægger en ny lagersalgsvare i butikkens åbne kasse", async () => {
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  const body = await res.json();
+  expect(res.status).toBe(201);
+  expect(boxes.addToBox).toHaveBeenCalledWith(expect.anything(), "id-0", "box-1", 3);
+  expect(body.created[0].boxNumber).toBe(2);
+  expect(body.warnings).toBeUndefined();
+});
+
+it("opretter lagersalgsvaren uden kasse med en advarsel når ingen kasse er åben", async () => {
+  boxes.open = null;
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  const body = await res.json();
+  expect(res.status).toBe(201);
+  expect(boxes.addToBox).not.toHaveBeenCalled();
+  expect(body.created[0].boxNumber).toBeNull();
+  expect(body.warnings).toEqual(["Ingen åben kasse i Vejle: varen er oprettet uden kasse"]);
+  expect(s.stock).toEqual([{ product_id: "id-0", location_id: "vejle", quantity: 3 }]);
+});
+
+it("rører ikke kasser for varer uden udsalg", async () => {
+  const res = await post({ type: "accessory", items: [{ ...lagersalgItem, attributes: {} }] });
+  const body = await res.json();
+  expect(boxes.addToBox).not.toHaveBeenCalled();
+  expect(body.created[0].boxNumber).toBeNull();
+  expect(body.warnings).toBeUndefined();
+});
+
+it("almindelig medarbejder i Slagelse kan ikke lægge lager i Vejles kasse", async () => {
+  s.role = "staff";
+  s.slug = "slagelse";
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  expect(res.status).toBe(403);
+  expect(s.inserted).toEqual([]);
+  expect(s.stock).toEqual([]);
+  expect(boxes.addToBox).not.toHaveBeenCalled();
+});
+
+it("fejl i kasse-tilføjelse giver en tydelig advarsel og beholder varen", async () => {
+  boxes.addToBox.mockRejectedValueOnce(new Error("boom"));
+  const res = await post({ type: "accessory", items: [lagersalgItem] });
+  const body = await res.json();
+  expect(res.status).toBe(201);
+  expect(body.created[0].boxNumber).toBeNull();
+  expect(body.warnings[0]).toContain("kunne ikke lægges i kasse");
+});
+
+it("butiksmedarbejder kan oprette med formularens fulde lagerpayload, men ikke i andre butikker eller webshop", async () => {
+  s.role = "staff";
+  s.slug = "vejle";
+  const item = { title: "Cover", subcategory: "cover", models: ["iphone-13"], mode: "universal", sellingPrice: 5900, images: [] };
+  const ok = await post({ type: "accessory", items: [{ ...item, stock: { stores: { vejle: 2, slagelse: 0 }, online: 0 } }] });
+  expect(ok.status).toBe(201);
+  expect(s.stock).toEqual([{ product_id: "id-0", location_id: "vejle", quantity: 2 }]);
+
+  s.inserted = [];
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { stores: { vejle: 0, slagelse: 2 } } }] })).status).toBe(403);
+  expect((await post({ type: "accessory", items: [{ ...item, stock: { online: 1 } }] })).status).toBe(403);
+  expect(s.inserted).toEqual([]);
 });

@@ -8,6 +8,24 @@ import { DEVICE_BRANDS, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 
 export type OutletModel = { slug: string; label: string; brand: string };
 
+/** Varetype på lagersalget: telefoncovers, iPad-covers, tasker og alt andet. */
+export type OutletKind = "cover" | "ipad" | "bag" | "other";
+
+export const KIND_LABELS: Record<OutletKind, string> = { cover: "Covers", ipad: "iPad", bag: "Tasker", other: "Andet" };
+const KIND_ORDER: OutletKind[] = ["cover", "ipad", "bag", "other"];
+
+/** Bærbar-størrelserne i samme rækkefølge som attributten laptop_size i admin. */
+export const LAPTOP_SIZES = ['13"', '14"', '15"/15,6"', '16"', '17"'];
+
+/** Et cover kun til iPads er et iPad-cover; et cover der også passer til en telefon er et telefoncover. */
+export function kindOf(row: { subcategory: string | null; models: string[] }): OutletKind {
+  if (row.subcategory === "bag") return "bag";
+  if (row.subcategory === "cover") {
+    return row.models.length > 0 && row.models.every((m) => m.startsWith("ipad-")) ? "ipad" : "cover";
+  }
+  return "other";
+}
+
 export type OutletItem = {
   id: string;
   name: string;
@@ -23,6 +41,11 @@ export type OutletItem = {
   /** Kan bestilles uden lager (always_in_stock). */
   orderable: boolean;
   models: OutletModel[];
+  kind: OutletKind;
+  /** Tasker: største bærbar der passer (attribut laptop_size). */
+  laptopSize: string | null;
+  /** Tasker: Sleeve, Skuldertaske eller Rygsæk (attribut bag_type). */
+  bagType: string | null;
   color: string | null;
   type: string;
   listPriceKr: number | null;
@@ -33,6 +56,8 @@ export type OutletSort = "relevance" | "price-asc" | "price-desc";
 
 export type OutletFilters = {
   query: string;
+  kinds: string[];
+  sizes: string[];
   brands: string[];
   models: string[];
   types: string[];
@@ -41,7 +66,7 @@ export type OutletFilters = {
   sort: OutletSort;
 };
 
-export const EMPTY_FILTERS: OutletFilters = { query: "", brands: [], models: [], types: [], colors: [], prices: [], sort: "relevance" };
+export const EMPTY_FILTERS: OutletFilters = { query: "", kinds: [], sizes: [], brands: [], models: [], types: [], colors: [], prices: [], sort: "relevance" };
 
 export const SORT_LABELS: Record<OutletSort, string> = {
   relevance: "Relevans",
@@ -68,17 +93,48 @@ export function normalizeSearch(text: string): string {
   return text.toLowerCase().replace(/galaxy/g, "").replace(/[^a-z0-9æøå+]/g, "");
 }
 
-type Group = "brands" | "models" | "types" | "colors" | "prices";
+/** Tasker passer til en bærbar, ikke til en telefonmodel: de matcher aldrig model eller mærke. */
+const modelsOf = (i: OutletItem) => (i.kind === "bag" ? [] : i.models);
+
+/** Varetyper der hører til en telefon- eller iPad-model. */
+export const MODEL_KINDS: OutletKind[] = ["cover", "ipad"];
+
+/**
+ * De filtre der faktisk gælder: med præcis én valgt model er siden "Covers til
+ * {model}", så kun covers og iPad-covers vises, uanset hvad der ellers er tagget
+ * med modellen. Fravælges modellen, falder begrænsningen væk af sig selv.
+ */
+export function scopeToModel(f: OutletFilters): OutletFilters {
+  if (f.models.length !== 1) return f;
+  const kinds = f.kinds.filter((k) => (MODEL_KINDS as string[]).includes(k));
+  return { ...f, kinds: kinds.length ? kinds : [...MODEL_KINDS], sizes: [] };
+}
+
+/**
+ * Nyt modelvalg. Ender det på én model, beholdes kun de valgte varetyper hvor
+ * modellen faktisk findes (fx iPhone 15 valgt under "iPad" eller "Tasker"
+ * nulstiller varetypen i stedet for at give nul resultater).
+ */
+export function selectModels(items: OutletItem[], f: OutletFilters, models: string[]): OutletFilters {
+  if (models.length !== 1) return { ...f, models };
+  const available = new Set<string>(items.filter((i) => modelsOf(i).some((m) => m.slug === models[0])).map((i) => i.kind));
+  const kinds = f.kinds.filter((k) => (MODEL_KINDS as string[]).includes(k) && available.has(k));
+  return { ...f, models, kinds, sizes: [] };
+}
+
+type Group = "kinds" | "sizes" | "brands" | "models" | "types" | "colors" | "prices";
 
 function matches(item: OutletItem, f: OutletFilters, skip?: Group): boolean {
-  if (skip !== "brands" && f.brands.length && !item.models.some((m) => f.brands.includes(m.brand))) return false;
-  if (skip !== "models" && f.models.length && !item.models.some((m) => f.models.includes(m.slug))) return false;
+  if (skip !== "kinds" && f.kinds.length && !f.kinds.includes(item.kind)) return false;
+  if (skip !== "sizes" && f.sizes.length && !(item.laptopSize && f.sizes.includes(item.laptopSize))) return false;
+  if (skip !== "brands" && f.brands.length && !modelsOf(item).some((m) => f.brands.includes(m.brand))) return false;
+  if (skip !== "models" && f.models.length && !modelsOf(item).some((m) => f.models.includes(m.slug))) return false;
   if (skip !== "types" && f.types.length && !f.types.includes(item.type)) return false;
   if (skip !== "colors" && f.colors.length && !(item.color && f.colors.includes(item.color))) return false;
   if (skip !== "prices" && f.prices.length && !f.prices.includes(item.priceOre)) return false;
   const q = normalizeSearch(f.query);
   if (q) {
-    const fields = [item.name, item.color ?? "", item.type, ...item.models.map((m) => m.label)];
+    const fields = [item.name, item.color ?? "", item.type, item.laptopSize ?? "", ...modelsOf(item).map((m) => m.label)];
     if (!fields.some((field) => normalizeSearch(field).includes(q))) return false;
   }
   return true;
@@ -103,6 +159,11 @@ function tally<T>(rows: OutletItem[], keys: (item: OutletItem) => T[]): Map<T, n
   return counts;
 }
 
+const sizeRank = (size: string) => {
+  const i = LAPTOP_SIZES.indexOf(size);
+  return i === -1 ? LAPTOP_SIZES.length : i;
+};
+
 /**
  * Valgmuligheder pr. filtergruppe med antal, regnet under de andre gruppers
  * aktive filtre. Kun værdier der findes i data kommer med; en valgt værdi
@@ -115,14 +176,23 @@ export function facetOptions(items: OutletItem[], f: OutletFilters) {
     return counts;
   };
 
-  const brandCounts = keep(tally(pool("brands"), (i) => i.models.map((m) => m.brand)), f.brands);
+  const kindCounts = keep(tally(pool("kinds"), (i) => [i.kind as string]), f.kinds);
+  const kinds = KIND_ORDER.filter((k) => kindCounts.has(k)).map((k) => ({ value: k as string, label: KIND_LABELS[k], count: kindCounts.get(k) ?? 0 }));
+
+  const sizeCounts = keep(tally(pool("sizes").filter((i) => i.kind === "bag"), (i) => (i.laptopSize ? [i.laptopSize] : [])), f.sizes);
+  const sizes = [...sizeCounts]
+    .sort((a, b) => sizeRank(a[0]) - sizeRank(b[0]) || a[0].localeCompare(b[0], "da"))
+    .map(([value, count]) => ({ value, label: value, count }));
+
+  // Tasker passer til en bærbar, ikke til en telefonmodel: de tæller ikke med i mærke og model.
+  const brandCounts = keep(tally(pool("brands"), (i) => modelsOf(i).map((m) => m.brand)), f.brands);
   const brands = [...brandCounts]
     .sort((a, b) => BRAND_ORDER.indexOf(a[0]) - BRAND_ORDER.indexOf(b[0]))
     .map(([value, count]) => ({ value, label: BRAND_LABEL.get(value) ?? value, count }));
 
   const modelPool = pool("models");
-  const modelLabels = new Map(items.flatMap((i) => i.models.map((m) => [m.slug, m.label] as const)));
-  const modelCounts = keep(tally(modelPool, (i) => i.models.filter((m) => !f.brands.length || f.brands.includes(m.brand)).map((m) => m.slug)), f.models);
+  const modelLabels = new Map(items.flatMap((i) => modelsOf(i).map((m) => [m.slug, m.label] as const)));
+  const modelCounts = keep(tally(modelPool, (i) => modelsOf(i).filter((m) => !f.brands.length || f.brands.includes(m.brand)).map((m) => m.slug)), f.models);
   const models = [...modelCounts]
     .sort((a, b) => (MODEL_ORDER.get(a[0]) ?? 999) - (MODEL_ORDER.get(b[0]) ?? 999))
     .map(([value, count]) => ({ value, label: modelLabels.get(value) ?? value, count }));
@@ -136,9 +206,9 @@ export function facetOptions(items: OutletItem[], f: OutletFilters) {
     .sort((a, b) => a[0] - b[0])
     .map(([value, count]) => ({ value, label: `${(value / 100).toLocaleString("da-DK")} kr.`, count }));
 
-  return { brands, models, types, colors, prices };
+  return { kinds, sizes, brands, models, types, colors, prices };
 }
 
 export function activeFilterCount(f: OutletFilters): number {
-  return f.brands.length + f.models.length + f.types.length + f.colors.length + f.prices.length;
+  return f.kinds.length + f.sizes.length + f.brands.length + f.models.length + f.types.length + f.colors.length + f.prices.length;
 }

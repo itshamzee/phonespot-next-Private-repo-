@@ -236,6 +236,9 @@ export function AccessoryList() {
         description="Alt tilbehør på webshoppen og i butikkerne. Klik på en række for at rette."
         actions={
           <div className="flex gap-2">
+            <Link href="/admin/produkter/kasser" className="inline-flex h-10 items-center rounded-lg border border-sand bg-white px-4 text-[14px] font-medium text-charcoal hover:bg-cream">
+              Kasser
+            </Link>
             <Link href="/admin/produkter/hurtig-cover" className="inline-flex h-10 items-center rounded-lg border border-sand bg-white px-4 text-[14px] font-medium text-charcoal hover:bg-cream">
               Hurtig tilbehørsoptagelse
             </Link>

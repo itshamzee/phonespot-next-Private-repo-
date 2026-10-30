@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OrderStatusBadge } from "./order-status-badge";
 import { OrderStatusActions } from "./order-status-actions";
@@ -11,6 +11,7 @@ import { FoxwayDropshipCard } from "./foxway-dropship-card";
 import Link from "next/link";
 import { formatDKK, formatDate } from "@/lib/platform/format";
 import type { Order } from "@/lib/supabase/platform-types";
+import { boxesLabel } from "@/lib/lagersalg/boxes";
 import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 
 const SHIPPING_METHOD_LABELS: Record<string, string> = {
@@ -176,6 +177,35 @@ export function OrderDetail({ order, activity, warranties = [], payments = [] }:
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Kassenumre for lagersalgsvarer (plukoplysning) fra den scopede print-data-rute.
+  const [pick, setPick] = useState<{ boxes: Record<string, number[]>; lagersalg: Record<string, boolean> }>({
+    boxes: {},
+    lagersalg: {},
+  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/orders/${order.id}/print-data`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          skus?: Array<{ id: string; lagersalg: boolean }>;
+          boxes?: Record<string, number[]>;
+        };
+        if (cancelled) return;
+        setPick({
+          boxes: data.boxes ?? {},
+          lagersalg: Object.fromEntries((data.skus ?? []).map((s) => [s.id, !!s.lagersalg])),
+        });
+      } catch {
+        /* kassenumre er kun en hjælp */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [order.id]);
 
   // Delete state — only enabled for unpaid pending/cancelled/abandoned orders.
   const [deleting, setDeleting] = useState(false);
@@ -362,6 +392,11 @@ export function OrderDetail({ order, activity, warranties = [], payments = [] }:
                       >
                         <td className="px-5 py-3 text-charcoal">
                           <span>{name}</span>
+                          {!isDevice && item.sku_product_id && pick.lagersalg[item.sku_product_id] && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray">
+                              {boxesLabel(pick.boxes[item.sku_product_id] ?? [])}
+                            </span>
+                          )}
                           {item.battery_upgrade && (
                             <span className="ml-2 inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-orange-700">
                               Nyt batteri

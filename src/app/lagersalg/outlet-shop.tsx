@@ -5,13 +5,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   EMPTY_FILTERS,
   SORT_LABELS,
+  KIND_LABELS,
   activeFilterCount,
   applyOutletFilters,
   facetOptions,
   normalizeSearch,
+  scopeToModel,
+  selectModels,
   type FacetOption,
   type OutletFilters,
   type OutletItem,
+  type OutletKind,
   type OutletSort,
 } from "./outlet-filter";
 import { OutletCard } from "./outlet-card";
@@ -22,7 +26,7 @@ import collection from "@/components/product/device-collection.module.css";
 const PAGE_SIZE = 24;
 const MODEL_PREVIEW = 8;
 
-type ListKey = "brands" | "models" | "types" | "colors";
+type ListKey = "kinds" | "sizes" | "brands" | "models" | "types" | "colors";
 
 function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -41,22 +45,50 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
   const [shown, setShown] = useState(PAGE_SIZE);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const results = useMemo(() => applyOutletFilters(items, filters), [items, filters]);
-  const facets = useMemo(() => facetOptions(items, filters), [items, filters]);
+  // Én valgt model begrænser til covers (scopeToModel); filters er brugerens egne valg.
+  const effective = useMemo(() => scopeToModel(filters), [filters]);
+  const results = useMemo(() => applyOutletFilters(items, effective), [items, effective]);
+  const facets = useMemo(() => facetOptions(items, effective), [items, effective]);
   const activeCount = activeFilterCount(filters);
   const allModels = useMemo(() => facetOptions(items, EMPTY_FILTERS).models, [items]);
   const singleModel = filters.models.length === 1 ? allModels.find((m) => m.value === filters.models[0]) ?? null : null;
+  const allKinds = useMemo(() => facetOptions(items, EMPTY_FILTERS).kinds, [items]);
+  const kind = filters.kinds.length === 1 ? (filters.kinds[0] as OutletKind) : null;
+  // Modelrækken viser kun modeller i den valgte varetype; tasker vælges på bærbar-størrelse i stedet.
+  const kindModels = useMemo(() => (kind ? facetOptions(items, { ...EMPTY_FILTERS, kinds: [kind] }).models : allModels), [items, kind, allModels]);
+  const bagSizes = useMemo(() => facetOptions(items, { ...EMPTY_FILTERS, kinds: ["bag"] }).sizes, [items]);
+  // Modeller hører til covers: tasker vælges på størrelse, "Andet" har ingen modelrække.
+  const showModelRow = kind !== "bag" && kind !== "other" && kindModels.length > 1;
+  const secondRow = kind === "bag" ? bagSizes.length > 1 : showModelRow;
 
   function update(patch: Partial<OutletFilters>) {
     setFilters((f) => ({ ...f, ...patch }));
     setShown(PAGE_SIZE);
   }
-  const toggleIn = (key: ListKey, value: string) => update({ [key]: toggle(filters[key], value) } as Partial<OutletFilters>);
+  const toggleIn = (key: ListKey, value: string) =>
+    key === "models"
+      ? update(selectModels(items, filters, toggle(filters.models, value)))
+      : update({ [key]: toggle(filters[key], value) } as Partial<OutletFilters>);
   const togglePrice = (value: number) => update({ prices: toggle(filters.prices, value) });
   const reset = () => update({ ...EMPTY_FILTERS, sort: filters.sort });
 
+  function pickKind(next: OutletKind | null) {
+    if (next === "bag" || next === "other") {
+      update({ kinds: [next], sizes: [], models: [], brands: [] });
+      return;
+    }
+    const inKind = next ? facetOptions(items, { ...EMPTY_FILTERS, kinds: [next] }).models.map((m) => m.value) : null;
+    update({
+      kinds: next ? [next] : [],
+      sizes: [],
+      models: inKind ? filters.models.filter((m) => inKind.includes(m)) : filters.models,
+    });
+  }
+
+  const pickSize = (size: string | null) => update({ sizes: size ? [size] : [] });
+
   function pickModel(slug: string | null) {
-    update({ models: slug ? [slug] : [], query: "" });
+    update({ ...selectModels(items, filters, slug ? [slug] : []), query: "" });
     requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
@@ -86,6 +118,8 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
   const minKr = Number.isFinite(minOre) ? minOre / 100 : null;
 
   const chips: { key: string; label: string; remove: () => void }[] = [
+    ...filters.kinds.map((v) => ({ key: `k-${v}`, label: KIND_LABELS[v as OutletKind] ?? v, remove: () => pickKind(null) })),
+    ...filters.sizes.map((v) => ({ key: `s-${v}`, label: `Op til ${v}`, remove: () => toggleIn("sizes", v) })),
     ...filters.brands.map((v) => ({ key: `b-${v}`, label: facets.brands.find((o) => o.value === v)?.label ?? v, remove: () => toggleIn("brands", v) })),
     ...filters.models.map((v) => ({ key: `m-${v}`, label: allModels.find((o) => o.value === v)?.label ?? v, remove: () => toggleIn("models", v) })),
     ...filters.types.map((v) => ({ key: `t-${v}`, label: v, remove: () => toggleIn("types", v) })),
@@ -93,6 +127,14 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
     ...filters.prices.map((v) => ({ key: `p-${v}`, label: `${v / 100} kr.`, remove: () => togglePrice(v) })),
     ...(filters.query ? [{ key: "q", label: `"${filters.query}"`, remove: () => update({ query: "" }) }] : []),
   ];
+
+  // Overskriften følger varetypen: covers til en model, tasker, ellers varer.
+  const noun = (n: number) =>
+    singleModel || kind === "cover" || kind === "ipad"
+      ? n === 1 ? "cover" : "covers"
+      : kind === "bag"
+        ? n === 1 ? "taske" : "tasker"
+        : n === 1 ? "vare" : "varer";
 
   const panel = (
     <FilterPanel facets={facets} filters={filters} onToggle={toggleIn} onTogglePrice={togglePrice} />
@@ -105,6 +147,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
         singleModelLabel={singleModel?.label ?? null}
         minKr={minKr}
         total={singleModel ? results.length : items.length}
+        totalNoun={singleModel ? (n) => (n === 1 ? "cover" : "covers") : (n) => (n === 1 ? "vare" : "varer")}
         photos={heroPhotos}
         brands={heroBrands}
         onPickModel={pickModel}
@@ -114,12 +157,42 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
         }}
       />
 
-      {/* Hurtigvalg af model: den vigtigste beslutning, så den står før alt andet. */}
-      {allModels.length > 1 && (
+      {/* Varetype først: covers, iPad, tasker eller andet. */}
+      {allKinds.length > 1 && (
+        <nav aria-label="Vælg varetype" className={`bg-white ${secondRow ? "" : "border-b border-sand"}`}>
+          <div className={`mx-auto flex max-w-[1320px] gap-2 overflow-x-auto px-4 pt-3 ${secondRow ? "" : "pb-3"} [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden`}>
+            <ModelChip label="Alle" active={filters.kinds.length === 0} onClick={() => pickKind(null)} />
+            {allKinds.map((k) => (
+              <ModelChip key={k.value} label={k.label} count={k.count} active={kind === k.value} onClick={() => pickKind(k.value as OutletKind)} />
+            ))}
+          </div>
+        </nav>
+      )}
+
+      {/* Tasker: vælg efter bærbarens størrelse i stedet for telefonmodel. */}
+      {kind === "bag" && bagSizes.length > 1 && (
+        <nav aria-label="Vælg størrelse" className="border-b border-sand bg-white">
+          <div className="mx-auto flex max-w-[1320px] gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+            <ModelChip label="Alle størrelser" active={filters.sizes.length === 0} onClick={() => pickSize(null)} />
+            {bagSizes.map((o) => (
+              <ModelChip
+                key={o.value}
+                label={`Op til ${o.label}`}
+                count={o.count}
+                active={filters.sizes.length === 1 && filters.sizes[0] === o.value}
+                onClick={() => pickSize(o.value)}
+              />
+            ))}
+          </div>
+        </nav>
+      )}
+
+      {/* Hurtigvalg af model: den vigtigste beslutning for covers, så den står før filtrene. */}
+      {showModelRow && (
         <nav aria-label="Vælg model" className="border-b border-sand bg-white">
           <div ref={chipRowRef} className="mx-auto flex max-w-[1320px] gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
             <ModelChip label="Alle modeller" active={filters.models.length === 0} onClick={() => pickModel(null)} />
-            {allModels.map((m) => (
+            {kindModels.map((m) => (
               <ModelChip
                 key={m.value}
                 label={m.label}
@@ -169,7 +242,7 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
           <section aria-labelledby="outlet-results">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 id="outlet-results" className="text-[15px] font-semibold text-charcoal" aria-live="polite">
-                {results.length} {results.length === 1 ? "cover" : "covers"}
+                {results.length} {noun(results.length)}
                 {singleModel ? ` til ${singleModel.label}` : ""}
               </h2>
               <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} className="hidden w-52 lg:block" />
@@ -225,14 +298,14 @@ export function OutletShop({ items, initialModel }: { items: OutletItem[]; initi
                       onClick={() => setShown((n) => n + PAGE_SIZE)}
                       className="h-11 rounded-[5px] border border-charcoal/25 px-6 text-[14px] font-semibold text-charcoal hover:border-charcoal"
                     >
-                      Vis flere covers
+                      Vis flere
                     </button>
                   </div>
                 )}
               </>
             ) : (
               <div className="mt-6 rounded-[12px] border border-dashed border-charcoal/20 px-6 py-12 text-center">
-                <p className="text-[17px] font-semibold text-charcoal">Ingen covers matcher dit valg</p>
+                <p className="text-[17px] font-semibold text-charcoal">Ingen varer matcher dit valg</p>
                 <p className="mx-auto mt-2 max-w-sm text-[14px] text-charcoal/65">
                   Fjern et filter, eller se hele udvalget af covers uden for lagersalget.
                 </p>
@@ -270,6 +343,7 @@ function Hero({
   singleModelLabel,
   minKr,
   total,
+  totalNoun,
   photos,
   brands,
   onPickModel,
@@ -279,6 +353,7 @@ function Hero({
   singleModelLabel: string | null;
   minKr: number | null;
   total: number;
+  totalNoun: (n: number) => string;
   photos: string[];
   brands: string[];
   onPickModel: (slug: string) => void;
@@ -323,7 +398,7 @@ function Hero({
             <p className={collection.intro}>
               {singleModelLabel
                 ? `Nye covers lavet til ${singleModelLabel}${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle. Læg tre i kurven, så er den billigste gratis.`
-                : `Læg tre lagersalgsvarer i kurven, så er den billigste gratis. Det gælder på tværs af modeller. Covers til outletpriser${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle.`}
+                : `Læg tre lagersalgsvarer i kurven, så er den billigste gratis. Det gælder på tværs af modeller. Covers, tasker, iPad-covers og andet tilbehør til outletpriser${minKr ? ` fra ${minKr} kr.` : ""}, direkte fra vores lager i Vejle.`}
             </p>
             <div className={collection.heroActions}>
               <form
@@ -415,7 +490,7 @@ function Hero({
                 )}
               </form>
               <span>
-                {total} {total === 1 ? "cover" : "covers"} i udvalget
+                {total} {totalNoun(total)} i udvalget
               </span>
             </div>
           </div>

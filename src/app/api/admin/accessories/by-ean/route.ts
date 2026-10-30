@@ -6,6 +6,9 @@ import { requireStaff } from "@/lib/auth/require-staff";
 import { canAccessStore } from "@/lib/auth/store-scope";
 import { adjustStock } from "@/lib/pos/sessions";
 import { storeLocations } from "@/lib/accessory-intake/candidates";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { toPosError } from "@/lib/pos/errors";
+import { addToBox, currentOpenBox } from "@/lib/lagersalg/boxes";
 
 /**
  * Hurtig lageroptagelse med stregkode (/admin/produkter/hurtig-cover).
@@ -87,6 +90,26 @@ export async function POST(request: Request) {
   const location = (await storeLocations(db)).find((l) => l.name.toLowerCase() === store);
   if (!location) return NextResponse.json({ error: "Butikken findes ikke" }, { status: 404 });
 
+  // En lagersalgsvare (også en kladde, der udgives til udsalg nu) skal i butikkens åbne kasse.
+  // Tjekket kommer før lagerreguleringen, så intet gemmes halvt.
+  const willBeUdsalg = product.subcategory === "cover" && !!publish?.priceKr && product.status === "draft";
+  const lagersalg = isLagersalg({
+    subcategory: product.subcategory,
+    attributes: willBeUdsalg
+      ? { ...((product.attributes as Record<string, string> | null) ?? {}), udsalg: "Ja" }
+      : (product.attributes as Record<string, string> | null),
+  });
+  let box: Awaited<ReturnType<typeof currentOpenBox>> = null;
+  if (lagersalg) {
+    box = await currentOpenBox(db, location.id);
+    if (!box) {
+      return NextResponse.json(
+        { error: "Åbn en kasse i optagelsen, før varen kan lægges på lager" },
+        { status: 409 },
+      );
+    }
+  }
+
   try {
     const result = await adjustStock({
       productId,
@@ -111,7 +134,35 @@ export async function POST(request: Request) {
     }
     revalidatePath("/tilbehoer", "layout");
     revalidatePath("/lagersalg", "layout");
-    return NextResponse.json({ quantity: result.quantity, published, priceKr: Math.round(priceOere / 100) });
+    if (box) {
+      try {
+        await addToBox(db, productId, box.id, quantity);
+      } catch (boxErr) {
+        // Lageret er allerede registreret; kassen kan være lukket imens.
+        const pos = toPosError(boxErr);
+        if (!pos) throw boxErr;
+        return NextResponse.json(
+          {
+            error:
+              pos.code === "box_closed"
+                ? "Varen er lagt på lager, men kassen blev lukket imens. Læg den i den nye kasse."
+                : pos.message,
+            code: pos.code,
+            quantity: result.quantity,
+            published,
+            priceKr: Math.round(priceOere / 100),
+            boxNumber: null,
+          },
+          { status: pos.status },
+        );
+      }
+    }
+    return NextResponse.json({
+      quantity: result.quantity,
+      published,
+      priceKr: Math.round(priceOere / 100),
+      boxNumber: box?.number ?? null,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Lageret blev ikke opdateret" },

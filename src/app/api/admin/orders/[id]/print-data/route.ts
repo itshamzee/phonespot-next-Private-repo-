@@ -6,6 +6,7 @@ import {
   resolveLocationSlug,
   unauthorizedResponse,
 } from "@/lib/auth/store-scope-server";
+import { boxesForOrderSkus } from "@/lib/lagersalg/order-boxes";
 
 /**
  * GET /api/admin/orders/[id]/print-data — ordren med linjer og kunde samt de enheder og
@@ -53,12 +54,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .in("id", deviceIds)
       : Promise.resolve({ data: [] as unknown[] }),
     skuIds.length
-      ? supabase.from("sku_products").select("id, title, sku").in("id", skuIds)
+      ? supabase.from("sku_products").select("id, title, sku, subcategory, attributes").in("id", skuIds)
       : Promise.resolve({ data: [] as unknown[] }),
   ]);
 
+  // attributes forlader aldrig serveren; kun de afledte lagersalg-flag og kassenumre.
+  const skuRows = (skus.data ?? []) as Array<{
+    id: string;
+    subcategory: string | null;
+    attributes: Record<string, string> | null;
+  }>;
+  const { boxes, lagersalg } = await boxesForOrderSkus(supabase, {
+    orderId: id,
+    orderLocationId: location_id,
+    skus: skuRows,
+  });
+  const publicSkus = skuRows.map((row) => {
+    const rest: Record<string, unknown> = { ...row };
+    delete rest.attributes;
+    return { ...rest, lagersalg: lagersalg[row.id] ?? false };
+  });
+
   return NextResponse.json(
-    { order: publicOrder, devices: devices.data ?? [], skus: skus.data ?? [] },
+    { order: publicOrder, devices: devices.data ?? [], skus: publicSkus, boxes },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

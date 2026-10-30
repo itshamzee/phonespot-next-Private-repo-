@@ -5,6 +5,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { buildAccessoryUpdate, modelsForProduct, planTemplateLinks, stockUpserts } from "@/lib/admin/products/update";
 import type { LocationRow } from "@/lib/admin/products/create";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
+import { requireStaff } from "@/lib/auth/require-staff";
+import { canAccessStore } from "@/lib/auth/store-scope";
+import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { BoxEditError, boxesForProduct, planProductBoxes } from "@/lib/lagersalg/product-boxes";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -43,6 +47,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
   return NextResponse.json({
     product: rest,
     stock: stockByLocation,
+    // null = læsningen fejlede (≠ "ingen kasser"), så formularen ikke redigerer blindt.
+    boxes: await boxesForProduct(supabase, id).catch(() => null),
     models: modelsForProduct(product.compatible_models, templateNames),
     url: product.status === "published" ? publicUrl(product) : null,
   });
@@ -72,6 +78,8 @@ const putSchema = z.object({
       stores: z.record(z.string(), z.number().int().min(0).nullable().optional()).optional(),
     })
     .optional(),
+  /** Lagersalgskasser pr. butik: { vejle: { "1": 3 } }. Udeladte numre med lager nulstilles. */
+  boxes: z.record(z.string(), z.record(z.string(), z.number().int().min(0))).optional(),
 });
 
 /**
@@ -82,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const parsed = putSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Ugyldige felter", issues: parsed.error.issues.slice(0, 5) }, { status: 400 });
-  const { stock, ...input } = parsed.data;
+  const { stock, boxes, ...input } = parsed.data;
 
   const supabase = createAdminClient();
   const { data: existing, error: readError } = await supabase
@@ -98,6 +106,28 @@ export async function PUT(req: NextRequest, { params }: Params) {
     row = buildAccessoryUpdate(existing, input);
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Ugyldige værdier" }, { status: 400 });
+  }
+
+  // Kasser: kun lagersalg, kun butikker medarbejderen har adgang til. Valideres før noget gemmes.
+  let boxRows: { product_id: string; box_id: string; quantity: number }[] = [];
+  if (boxes && Object.keys(boxes).length > 0) {
+    const staff = await requireStaff(req);
+    if (!staff) return NextResponse.json({ error: "Kun medarbejdere" }, { status: 401 });
+    for (const store of Object.keys(boxes)) {
+      if (store !== "vejle" && store !== "slagelse") return NextResponse.json({ error: "Ugyldig butik" }, { status: 400 });
+      if (!canAccessStore(staff, store)) {
+        return NextResponse.json({ error: "Du har ikke adgang til den butik" }, { status: 403 });
+      }
+    }
+    if (!isLagersalg({ subcategory: row.subcategory as string | null, attributes: row.attributes as Record<string, string> | null })) {
+      return NextResponse.json({ error: "Kun lagersalgsvarer kan ligge i en kasse" }, { status: 400 });
+    }
+    try {
+      boxRows = await planProductBoxes(supabase, id, boxes);
+    } catch (err) {
+      if (err instanceof BoxEditError) return NextResponse.json({ error: err.message }, { status: err.status });
+      return NextResponse.json({ error: "Kasserne kunne ikke læses" }, { status: 503 });
+    }
   }
 
   const { data: saved, error: saveError } = await supabase
@@ -142,6 +172,11 @@ export async function PUT(req: NextRequest, { params }: Params) {
       const { error } = await supabase.from("sku_stock").upsert(rows, { onConflict: "product_id,location_id" });
       if (error) warnings.push("Lageret kunne ikke gemmes.");
     }
+  }
+
+  if (boxRows.length) {
+    const { error } = await supabase.from("sku_box_stock").upsert(boxRows, { onConflict: "product_id,box_id" });
+    if (error) warnings.push("Kasserne kunne ikke gemmes.");
   }
 
   revalidatePath("/tilbehoer", "layout");

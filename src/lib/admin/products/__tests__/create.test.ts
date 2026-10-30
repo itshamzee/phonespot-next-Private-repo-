@@ -91,6 +91,30 @@ describe("buildAccessoryRows", () => {
     expect(row.description).toBeNull();
   });
 
+  it("tager imod en taske fra optagelsen uden modeller", () => {
+    const [row] = buildAccessoryRows({
+      ...base,
+      title: 'Sleeve til bærbar 15"/15,6", sort',
+      subcategory: "bag",
+      models: [],
+      mode: "universal",
+      attributes: { laptop_size: '15"/15,6"', bag_type: "Sleeve", color: "Sort", udsalg: "Ja", genuine: "Ja", ai_read_text: "Laptop sleeve" },
+    });
+    expect(row.compatible_models).toEqual([]);
+    expect(row.attributes).toMatchObject({ laptop_size: '15"/15,6"', bag_type: "Sleeve", udsalg: "Ja" });
+  });
+
+  it("andet fra optagelsen er lagersalg", () => {
+    const [row] = buildAccessoryRows({
+      ...base,
+      title: "Urrem til Apple Watch",
+      subcategory: "other",
+      mode: "universal",
+      attributes: { udsalg: "Ja", ai_read_text: "Strap" },
+    });
+    expect(row.attributes).toEqual({ udsalg: "Ja", ai_read_text: "Strap" });
+  });
+
   it("kan gemmes som kladde", () => {
     const [row] = buildAccessoryRows({ ...base, mode: "universal", status: "draft" });
     expect(row.status).toBe("draft");

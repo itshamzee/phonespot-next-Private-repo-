@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDeviceConfig } from "@/lib/tilbehoer-config";
-import { CoversSaleView, MIN_INDEXABLE, SALE_URL, coversForModel, getSaleCovers, lowestKr } from "../sale-view";
+import { CoversSaleView, MIN_INDEXABLE, SALE_URL, coversForModel, getSaleItems, lowestKr } from "../sale-view";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { model } = await params;
   const device = getDeviceConfig(model);
   if (!device) return { title: "Ikke fundet" };
-  const rows = coversForModel(await getSaleCovers(), device.slug);
+  const rows = coversForModel(await getSaleItems(), device.slug);
   const min = lowestKr(rows);
   const url = `${SALE_URL}/${device.slug}`;
   const title = min

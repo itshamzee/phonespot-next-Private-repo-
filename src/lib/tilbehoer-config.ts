@@ -397,6 +397,7 @@ export const ACCESSORY_CATEGORY_TO_SLUG: Record<string, string> = {
   powerbank: "opladere",
   audio: "lyd",
   other: "holdere",
+  bag: "outlet",
 };
 
 /**
@@ -418,7 +419,7 @@ export const SLUG_TO_ACCESSORY_CATEGORIES: Record<string, string[]> = {
   opladere: ["charger", "cable", "powerbank"],
   lyd: ["audio"],
   holdere: ["other"],
-  outlet: ["cover", "screen_protector", "charger", "cable", "powerbank", "audio", "other"],
+  outlet: ["cover", "screen_protector", "charger", "cable", "powerbank", "audio", "other", "bag"],
 };
 
 export interface SpotHubTile {
