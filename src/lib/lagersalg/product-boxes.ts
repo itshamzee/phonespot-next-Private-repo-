@@ -14,11 +14,12 @@ const first = <T>(v: One<T>): T | null => (Array.isArray(v) ? (v[0] ?? null) : v
 
 /** Kasser med antal > 0 for et produkt: { vejle: { "1": 3 } }. */
 export async function boxesForProduct(db: Db, productId: string): Promise<Record<string, Record<string, number>>> {
-  const { data } = await db
+  const { data, error } = await db
     .from("sku_box_stock")
     .select("quantity, sale_boxes(number, locations(name))")
     .eq("product_id", productId)
     .gt("quantity", 0);
+  if (error) throw new Error(error.message);
   const out: Record<string, Record<string, number>> = {};
   for (const row of (data ?? []) as unknown as {
     quantity: number;

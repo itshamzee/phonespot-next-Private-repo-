@@ -31,7 +31,7 @@ export interface EditableProduct {
   product: Record<string, unknown> & { id: string };
   stock: Record<string, number>;
   /** Lagersalgskasser pr. butik og nummer (kun antal > 0). */
-  boxes?: Record<string, Record<string, number>>;
+  boxes?: Record<string, Record<string, number>> | null;
   models: string[];
   url: string | null;
 }
@@ -164,7 +164,9 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
   const perModel = !isEdit && form.mode === "per-model" && form.models.length > 0;
   const knownCategory = ACCESSORY_SUBCATEGORIES.some((c) => c.value === form.subcategory);
   const stockTotal = [form.online, form.vejle, form.slagelse].reduce((n, v) => n + (Number(v) || 0), 0);
-  const showBoxes = isEdit && isLagersalg({ subcategory: form.subcategory, attributes: form.attributes });
+  const lagersalg = isEdit && isLagersalg({ subcategory: form.subcategory, attributes: form.attributes });
+  const boxesUnavailable = edit?.boxes === null;
+  const showBoxes = lagersalg && !boxesUnavailable;
   const boxesChanged = JSON.stringify(form.boxes) !== JSON.stringify(baseline.boxes);
   const attributeFields = TYPE_ATTRIBUTES[form.subcategory] ?? [];
 
@@ -320,7 +322,9 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
         setError(data?.error ?? "Ændringerne blev ikke gemt. Prøv igen.");
         return;
       }
-      setBaseline(form);
+      const saved = { ...form, boxes: Object.fromEntries(Object.entries(form.boxes).filter(([, q]) => Number(q) > 0)) };
+      setForm(saved);
+      setBaseline(saved);
       setPublicUrl(data.url ?? null);
       setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
       setSavedAt(Date.now());
@@ -560,6 +564,9 @@ export function AccessoryForm({ edit }: { edit?: EditableProduct }) {
                 {(id) => <Input id={id} inputMode="numeric" value={form.slagelse} onChange={(e) => set("slagelse", e.target.value)} placeholder="0" />}
               </Field>
             </FieldRow>
+          )}
+          {lagersalg && boxesUnavailable && (
+            <Notice tone="warning">Kasserne kunne ikke hentes. Genindlæs siden, før du retter kasser.</Notice>
           )}
           {showBoxes && (
             <BoxesEditor boxes={form.boxes} onChange={(b) => set("boxes", b)} />

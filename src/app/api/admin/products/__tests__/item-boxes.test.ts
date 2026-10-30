@@ -6,6 +6,7 @@ const s = vi.hoisted(() => ({
   allowed: true,
   product: {} as Record<string, unknown>,
   boxStock: [] as unknown[],
+  boxError: false,
   current: [] as unknown[],
   upserts: [] as { table: string; rows: unknown }[],
 }));
@@ -22,11 +23,11 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from(table: string) {
       const q: Record<string, unknown> = {};
-      const result = (): { data: unknown; error: null } => {
+      const result = (): { data: unknown; error: { message: string } | null } => {
         if (table === "sku_products") return { data: s.product, error: null };
         if (table === "sale_boxes")
           return { data: [{ id: "b1", number: 1, status: "open" }, { id: "b3", number: 3, status: "closed" }], error: null };
-        if (table === "sku_box_stock") return { data: s.current, error: null };
+        if (table === "sku_box_stock") return s.boxError ? { data: null, error: { message: "boom" } } : { data: s.current, error: null };
         return { data: [], error: null };
       };
       for (const k of ["select", "eq", "gt", "in"]) q[k] = () => q;
@@ -47,6 +48,7 @@ const put = (body: Record<string, unknown>) =>
 
 beforeEach(() => {
   s.allowed = true;
+  s.boxError = false;
   s.upserts = [];
   s.product = { id: "p1", category: "accessory", subcategory: "case", slug: "t", status: "draft", attributes: { udsalg: "Ja" }, specifications: null, compatible_models: [] };
   s.current = [{ box_id: "b1", quantity: 3 }, { box_id: "b3", quantity: 2 }];
@@ -60,6 +62,15 @@ describe("kasser på produktet", () => {
     ];
     const body = await (await GET(new NextRequest("https://x/api/admin/products/p1"), params)).json();
     expect(body.boxes).toEqual({ vejle: { "1": 3, "3": 2 } });
+  });
+
+  it("GET svarer boxes: null og 200 når kasselæsningen fejler", async () => {
+    s.boxError = true;
+    const res = await GET(new NextRequest("https://x/api/admin/products/p1"), params);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.boxes).toBeNull();
+    expect(body.product.id).toBe("p1");
   });
 
   it("PUT sætter angivne kasser og nulstiller udeladte", async () => {

@@ -47,7 +47,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
   return NextResponse.json({
     product: rest,
     stock: stockByLocation,
-    boxes: await boxesForProduct(supabase, id).catch(() => ({})),
+    // null = læsningen fejlede (≠ "ingen kasser"), så formularen ikke redigerer blindt.
+    boxes: await boxesForProduct(supabase, id).catch(() => null),
     models: modelsForProduct(product.compatible_models, templateNames),
     url: product.status === "published" ? publicUrl(product) : null,
   });

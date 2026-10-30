@@ -57,8 +57,8 @@ export async function lagersalgInStock(db: Db, locationId: string) {
 }
 
 /** Lagersalgsvarer på lager i butikken, som ikke ligger i nogen af butikkens kasser. */
-export async function unboxedInStore(db: Db, locationId: string) {
-  const [stock, boxed] = await Promise.all([lagersalgInStock(db, locationId), boxStockInStore(db, locationId)]);
+export async function unboxedInStore(db: Db, locationId: string, boxStock?: { product_id: string }[]) {
+  const [stock, boxed] = await Promise.all([lagersalgInStock(db, locationId), boxStock ?? boxStockInStore(db, locationId)]);
   const inBox = new Set(boxed.map((b) => b.product_id));
   return stock.filter((s) => !inBox.has(s.product_id));
 }

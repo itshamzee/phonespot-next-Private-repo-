@@ -32,7 +32,8 @@ export async function GET(request: Request) {
       .order("number", { ascending: false });
     if (error) throw new Error(error.message);
 
-    const [stock, unboxed] = await Promise.all([boxStockInStore(db, location.id), unboxedInStore(db, location.id)]);
+    const stock = await boxStockInStore(db, location.id);
+    const unboxed = await unboxedInStore(db, location.id, stock);
     const agg = new Map<string, { lines: Set<string>; units: number }>();
     for (const row of stock) {
       const a = agg.get(row.box_id) ?? { lines: new Set<string>(), units: 0 };
