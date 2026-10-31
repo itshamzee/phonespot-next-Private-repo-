@@ -275,15 +275,6 @@ export function DeviceDetail({
       null,
     );
   const [selectedGrade, setSelectedGrade] = useState<string>(initialGrade);
-  // Feedet linker med ?grade=<stand>. Læses efter mount (siden forbliver ISR-
-  // cachet) og forvælger standen, hvis den findes på lager.
-  useEffect(() => {
-    const wanted = new URLSearchParams(window.location.search).get("grade");
-    if (wanted && availableGrades.some((g) => g.grade === wanted && g.available > 0)) {
-      setSelectedGrade(wanted);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [selectedStorage, setSelectedStorage] = useState<string>(
     initialUnit?.storage && template.storage_options.includes(initialUnit.storage)
       ? initialUnit.storage
@@ -294,6 +285,29 @@ export function DeviceDetail({
       ? initialUnit.color
       : (template.colors[0] ?? ""),
   );
+  // Feedet linker med ?grade=<stand>, og for varer med egen variant også
+  // &storage= og &color=. Læses efter mount (siden forbliver ISR-cachet) og
+  // forvælger kun det, der findes på lager i den stand.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get("grade");
+    if (!wanted || !availableGrades.some((g) => g.grade === wanted && g.available > 0)) return;
+    setSelectedGrade(wanted);
+    const inGrade = listedDevices.filter((d) => {
+      const isNewByNote =
+        d.grade === "A" && d.condition_notes?.toLowerCase().includes("fabriksny") === true;
+      return (isNewByNote ? "N" : (d.grade as string)) === wanted;
+    });
+    const storage = params.get("storage");
+    const color = params.get("color");
+    const unit = inGrade.find(
+      (d) => (!storage || d.storage === storage) && (!color || d.color === color),
+    );
+    if (!unit) return;
+    if (storage) setSelectedStorage(storage);
+    if (color) setSelectedColor(color);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedUpgrades, setSelectedUpgrades] = useState<{
     ram: string | null;
     ssd: string | null;

@@ -18,6 +18,12 @@ import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
 import { effectiveGrade } from "@/lib/grades";
 import {
+  deviceUrl,
+  groupDevices,
+  type FeedDevice,
+  type FeedTemplate,
+} from "@/lib/feeds/google-shopping";
+import {
   fallbackDeviceDescription,
   fallbackDeviceTitle,
 } from "@/lib/seo/device-meta";
@@ -180,17 +186,41 @@ export default async function RefurbishedProductPage({ params }: Props) {
   }
   const pageUrl = `https://phonespot.dk/refurbished/${slug}`;
   const seller = { "@type": "Organization", name: "PhoneSpot" };
+  // Samme opdeling som feedet: varianter med egen vare får eget Offer med den
+  // pris og det link, feedet sender, og GTIN, hvor den er kendt.
+  const feedGroups = groupDevices(
+    availableDevices as unknown as FeedDevice[],
+    new Map([[template.id, template as unknown as FeedTemplate]]),
+  );
+  const gradeGtin = new Map(
+    feedGroups.filter((g) => g.gtin && !g.linkVariant).map((g) => [g.grade, g.gtin!]),
+  );
   const offers =
     gradeMinPrices.size > 0
-      ? [...gradeMinPrices.entries()].map(([g, price]) => ({
-          "@type": "Offer",
-          priceCurrency: "DKK",
-          price: (price / 100).toFixed(0),
-          availability: "https://schema.org/InStock",
-          itemCondition: gradeToItemCondition(g),
-          url: `${pageUrl}?grade=${g}`,
-          seller,
-        }))
+      ? [
+          ...[...gradeMinPrices.entries()].map(([g, price]) => ({
+            "@type": "Offer",
+            priceCurrency: "DKK",
+            price: (price / 100).toFixed(0),
+            availability: "https://schema.org/InStock",
+            itemCondition: gradeToItemCondition(g),
+            url: `${pageUrl}?grade=${g}`,
+            ...(gradeGtin.has(g) ? { gtin: gradeGtin.get(g) } : {}),
+            seller,
+          })),
+          ...feedGroups
+            .filter((g) => g.linkVariant)
+            .map((g) => ({
+              "@type": "Offer",
+              priceCurrency: "DKK",
+              price: (g.minPrice / 100).toFixed(0),
+              availability: "https://schema.org/InStock",
+              itemCondition: gradeToItemCondition(g.grade),
+              url: deviceUrl(g),
+              ...(g.gtin ? { gtin: g.gtin } : {}),
+              seller,
+            })),
+        ]
       : {
           "@type": "Offer",
           priceCurrency: "DKK",
