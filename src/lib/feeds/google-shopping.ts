@@ -32,6 +32,14 @@ export function isValidGtin(ean: string | null | undefined): boolean {
   return /^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$/.test(ean.trim());
 }
 
+/** GS1-kontrolciffer for GTIN-8/12/13/14. Afviser alt, der ikke er rene cifre af de længder. */
+export function hasValidGtinCheckDigit(gtin: string | null | undefined): boolean {
+  if (!gtin || !isValidGtin(gtin)) return false;
+  const digits = gtin.trim().padStart(14, "0").split("").map(Number);
+  const sum = digits.slice(0, 13).reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === digits[13];
+}
+
 /** Fjerner HTML-tags og kollapser whitespace; Google tillader max 5000 tegn. */
 export function cleanText(value: string | null | undefined): string {
   return (value ?? "")
@@ -191,15 +199,22 @@ export function sharedGroupIds(rows: AccessoryRow[]): Set<string> {
   return new Set([...counts].filter(([, n]) => n > 1).map(([g]) => g));
 }
 
+/** Samme betingelser som buildAccessoryItem: kun disse varer findes i feedet. */
+export function isPublishableAccessory(product: AccessoryRow): boolean {
+  if (!product.images || product.images.length === 0) return false;
+  if (product.status !== "published" || !product.is_active) return false;
+  return Boolean(product.slug);
+}
+
 export function buildAccessoryItem(
   product: AccessoryRow,
   stockQuantity: number | null,
   title: string = product.title,
   groupIds: Set<string> = new Set(),
 ): string | null {
-  if (!product.images || product.images.length === 0) return null;
-  if (product.status !== "published" || !product.is_active) return null;
-  if (!product.slug) return null;
+  if (!isPublishableAccessory(product)) return null;
+  // Kontrolleret ovenfor; TypeScript kan ikke se det gennem hjælperen.
+  const images = product.images!;
 
   const mapping =
     ACCESSORY_FEED_CATEGORY[product.subcategory ?? "other"] ?? ACCESSORY_FEED_CATEGORY.other;
@@ -214,7 +229,7 @@ export function buildAccessoryItem(
     `      <g:title>${escapeXml(title)}</g:title>`,
     `      <g:description>${escapeXml(accessoryDescription(product))}</g:description>`,
     `      <g:link>${escapeXml(accessoryUrl(product))}</g:link>`,
-    `      <g:image_link>${escapeXml(product.images[0])}</g:image_link>`,
+    `      <g:image_link>${escapeXml(images[0])}</g:image_link>`,
     `      <g:condition>new</g:condition>`,
     `      <g:availability>${availability.feed}</g:availability>`,
     `      <g:price>${formatPrice(product.selling_price)}</g:price>`,
@@ -253,6 +268,7 @@ export interface FeedTemplate {
   description: string | null;
   short_description: string | null;
   images: string[] | null;
+  default_attributes?: Record<string, unknown> | null;
 }
 
 export interface FeedDevice {
@@ -263,9 +279,14 @@ export interface FeedDevice {
   color: string | null;
   selling_price: number | null;
   photos: string[] | null;
+  /** Kun brugt af det lokale lagerfeed. */
+  location_id?: string | null;
+  source?: string | null;
 }
 
 export interface DeviceGroup {
+  /** g:id. Længde højst 50 tegn (Googles grænse). */
+  id: string;
   template: FeedTemplate;
   grade: string;
   minPrice: number;
@@ -273,42 +294,148 @@ export interface DeviceGroup {
   photos: string[];
   storages: Set<string>;
   colors: Set<string>;
+  /** Kun sat, når hele gruppen er én præcis variant med kendt GTIN. */
+  gtin: string | null;
+  /** Variant, som linket skal forvælge, fordi ?grade= alene ville vise en anden pris. */
+  linkVariant: { storage: string | null; color: string | null } | null;
+  devices: FeedDevice[];
 }
+
+/**
+ * EAN'er, leverandøren selv har tildelt brugte enheder. Samme præfiks går igen
+ * på Apple, Dell, HP og Lenovo, så det er ikke producentens GTIN og matcher
+ * ikke Googles produktkatalog. De bliver i gtins_by_variant til internt brug,
+ * men må ikke sendes som g:gtin.
+ */
+export const SUPPLIER_ASSIGNED_GTIN_PREFIXES = ["5707271", "5715251"] as const;
+
+/**
+ * GTIN for præcis denne lagerplads og farve, ellers null.
+ *
+ * default_attributes.gtin bruges bevidst ikke: den hører til én ukendt
+ * konfiguration af modellen. Uden både lagerplads og farve er varianten ikke
+ * entydig, så de skal begge være kendte.
+ */
+export function variantGtin(
+  template: FeedTemplate,
+  storage: string | null | undefined,
+  color: string | null | undefined,
+): string | null {
+  const s = storage?.trim();
+  const c = color?.trim();
+  if (!s || !c) return null;
+  const map = template.default_attributes?.gtins_by_variant as Record<string, unknown> | null | undefined;
+  const raw = map?.[`${s}|${c}`];
+  if (typeof raw !== "string") return null;
+  const gtin = raw.trim();
+  if (!hasValidGtinCheckDigit(gtin)) return null;
+  const bare = gtin.replace(/^0+/, "");
+  if (SUPPLIER_ASSIGNED_GTIN_PREFIXES.some((p) => bare.startsWith(p))) return null;
+  return gtin;
+}
+
+/** Kort, stabil hash (FNV-1a), så id'et holder sig under Googles 50 tegn. */
+function variantHash(storage: string, color: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of `${storage}|${color}`) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+function buildGroup(
+  id: string,
+  template: FeedTemplate,
+  grade: string,
+  devices: FeedDevice[],
+  gtin: string | null,
+  linkVariant: DeviceGroup["linkVariant"],
+): DeviceGroup {
+  const g: DeviceGroup = {
+    id,
+    template,
+    grade,
+    minPrice: Math.min(...devices.map((d) => d.selling_price!)),
+    count: devices.length,
+    photos: devices.find((d) => d.photos?.length)?.photos ?? [],
+    storages: new Set(),
+    colors: new Set(),
+    gtin,
+    linkVariant,
+    devices,
+  };
+  for (const d of devices) {
+    if (d.storage?.trim()) g.storages.add(d.storage.trim());
+    if (d.color?.trim()) g.colors.add(d.color.trim());
+  }
+  return g;
+}
+
+const variantOf = (d: FeedDevice) => ({
+  storage: d.storage?.trim() || null,
+  color: d.color?.trim() || null,
+});
 
 /**
  * Én vare pr. model og stand (effektiv stand, som på siden). Prisen er den
  * laveste i gruppen = produktsidens pris for den stand.
+ *
+ * Varianter med kendt GTIN får deres egen vare. Har standen kun den ene
+ * variant, beholder varen det gamle id; ellers får varianten id
+ * `<model>-<stand>-<hash>`, og resten af standen bliver på det gamle id.
+ * Alle varer i en opdelt stand peger på en bestemt variant, da ?grade= alene
+ * ville vise standens laveste pris og ikke varens egen.
  */
 export function groupDevices(
   devices: FeedDevice[],
   templates: Map<string, FeedTemplate>,
 ): DeviceGroup[] {
-  const groups = new Map<string, DeviceGroup>();
+  const byGrade = new Map<string, { template: FeedTemplate; grade: string; devices: FeedDevice[] }>();
   for (const device of devices) {
     const template = templates.get(device.template_id);
     if (!template || !device.selling_price) continue;
     const grade = effectiveGrade(device);
     const key = `${template.id}-${grade}`;
-    let g = groups.get(key);
-    if (!g) {
-      g = {
-        template,
-        grade,
-        minPrice: device.selling_price,
-        count: 0,
-        photos: [],
-        storages: new Set(),
-        colors: new Set(),
-      };
-      groups.set(key, g);
-    }
-    g.count += 1;
-    if (device.selling_price < g.minPrice) g.minPrice = device.selling_price;
-    if (!g.photos.length && device.photos?.length) g.photos = device.photos;
-    if (device.storage?.trim()) g.storages.add(device.storage.trim());
-    if (device.color?.trim()) g.colors.add(device.color.trim());
+    const entry = byGrade.get(key) ?? { template, grade, devices: [] };
+    entry.devices.push(device);
+    byGrade.set(key, entry);
   }
-  return [...groups.values()];
+
+  const groups: DeviceGroup[] = [];
+  for (const [baseId, { template, grade, devices: units }] of byGrade) {
+    const byVariant = new Map<string, FeedDevice[]>();
+    for (const d of units) {
+      const { storage, color } = variantOf(d);
+      const key = `${storage ?? ""}|${color ?? ""}`;
+      byVariant.set(key, [...(byVariant.get(key) ?? []), d]);
+    }
+    const gtinOf = (d: FeedDevice) => variantGtin(template, d.storage, d.color);
+
+    if (byVariant.size === 1) {
+      groups.push(buildGroup(baseId, template, grade, units, gtinOf(units[0]), null));
+      continue;
+    }
+
+    const rest: FeedDevice[] = [];
+    for (const variantUnits of byVariant.values()) {
+      const gtin = gtinOf(variantUnits[0]);
+      if (!gtin) {
+        rest.push(...variantUnits);
+        continue;
+      }
+      const v = variantOf(variantUnits[0]);
+      groups.push(
+        buildGroup(`${baseId}-${variantHash(v.storage!, v.color!)}`, template, grade, variantUnits, gtin, v),
+      );
+    }
+    if (rest.length > 0) {
+      const wasSplit = rest.length < units.length;
+      const cheapest = rest.reduce((a, b) => (b.selling_price! < a.selling_price! ? b : a));
+      groups.push(buildGroup(baseId, template, grade, rest, null, wasSplit ? variantOf(cheapest) : null));
+    }
+  }
+  return groups;
 }
 
 export function gradeLabelForTitle(grade: string): string {
@@ -357,7 +484,27 @@ export function deviceDescription(group: DeviceGroup, title: string): string {
 
 /** Linket forvælger standen på produktsiden, så prisen matcher feedet. */
 export function deviceUrl(group: DeviceGroup): string {
-  return `${BASE_URL}/refurbished/${group.template.slug}?grade=${encodeURIComponent(group.grade)}`;
+  const params = [`grade=${encodeURIComponent(group.grade)}`];
+  if (group.linkVariant?.storage) params.push(`storage=${encodeURIComponent(group.linkVariant.storage)}`);
+  if (group.linkVariant?.color) params.push(`color=${encodeURIComponent(group.linkVariant.color)}`);
+  return `${BASE_URL}/refurbished/${group.template.slug}?${params.join("&")}`;
+}
+
+/** Eget foto -> farvens billeder (når varen kun har én farve) -> modellens billeder. */
+export function deviceImages(group: DeviceGroup): string[] {
+  if (group.photos.length > 0) return group.photos;
+  const byColor = group.template.default_attributes?.images_by_color as
+    | Record<string, string[]>
+    | null
+    | undefined;
+  const colorImages = group.colors.size === 1 ? byColor?.[[...group.colors][0]] : undefined;
+  if (colorImages?.length) return colorImages;
+  return group.template.images ?? [];
+}
+
+/** Samme betingelser som buildDeviceItem: kun disse varer findes i feedet. */
+export function isPublishableDeviceGroup(group: DeviceGroup): boolean {
+  return Boolean(group.template.slug) && deviceImages(group).length > 0;
 }
 
 export const DEVICE_GOOGLE_CATEGORY: Record<string, string> = {
@@ -371,14 +518,15 @@ export const DEVICE_GOOGLE_CATEGORY: Record<string, string> = {
 
 export function buildDeviceItem(group: DeviceGroup): string | null {
   const { template } = group;
-  const images = group.photos.length > 0 ? group.photos : (template.images ?? []);
-  if (images.length === 0) return null;
-  if (!template.slug) return null;
+  if (!isPublishableDeviceGroup(group)) return null;
+  const images = deviceImages(group);
 
   const title = deviceTitle(group);
+  const storage = group.storages.size === 1 ? [...group.storages][0] : null;
+  const color = group.colors.size === 1 ? [...group.colors][0] : null;
   const lines: string[] = [
     "    <item>",
-    `      <g:id>${escapeXml(`${template.id}-${group.grade}`)}</g:id>`,
+    `      <g:id>${escapeXml(group.id)}</g:id>`,
     `      <g:item_group_id>${escapeXml(template.id)}</g:item_group_id>`,
     `      <g:title>${escapeXml(title)}</g:title>`,
     `      <g:description>${escapeXml(deviceDescription(group, title))}</g:description>`,
@@ -388,8 +536,13 @@ export function buildDeviceItem(group: DeviceGroup): string | null {
     `      <g:availability>in_stock</g:availability>`,
     `      <g:price>${formatPrice(group.minPrice)}</g:price>`,
     `      <g:brand>${escapeXml(template.brand)}</g:brand>`,
-    // Vi har hverken GTIN (ingen ean-kolonne på devices/product_templates) eller MPN på enheder.
-    `      <g:identifier_exists>no</g:identifier_exists>`,
+    // GTIN kommer fra product_templates.default_attributes.gtins_by_variant (se
+    // variantGtin). Uden præcist variantmatch har enheden hverken GTIN eller MPN.
+    group.gtin
+      ? `      <g:gtin>${escapeXml(group.gtin)}</g:gtin>`
+      : `      <g:identifier_exists>no</g:identifier_exists>`,
+    ...(color ? [`      <g:color>${escapeXml(color)}</g:color>`] : []),
+    ...(storage ? [`      <g:size>${escapeXml(storage)}</g:size>`] : []),
     `      <g:google_product_category>${escapeXml(DEVICE_GOOGLE_CATEGORY[template.category?.toLowerCase() ?? ""] ?? "Electronics")}</g:google_product_category>`,
     ...shippingLines(group.minPrice),
     "    </item>",
