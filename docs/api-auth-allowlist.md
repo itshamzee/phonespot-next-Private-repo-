@@ -103,7 +103,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `platform/transfers` | GET POST | none |
 | `platform/valuation` | GET | none |
 
-### `src/app/api/admin/**` (43 files)
+### `src/app/api/admin/**` (45 files)
 
 | Route | Methods | Auth before |
 |---|---|---|
@@ -127,6 +127,19 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/foneday/settings` | GET PUT | none |
 | `admin/foneday/sync` | POST | none |
 | `admin/foxway/import` | POST GET | none |
+| `admin/lager/availability` | GET | `requireStaff` |
+| `admin/lager/balances` | GET | `requireStaff` |
+| `admin/lager/locations` | GET | `requireStaff` |
+| `admin/lager/movements` | POST | `requireStaff` |
+| `admin/lager/parts` | GET | `requireStaff` |
+| `admin/lager/parts-status/[ticketId]` | PATCH | `requireStaff` |
+| `admin/lager/repair-parts/[ticketId]` | GET POST | `requireStaff` |
+| `admin/lager/repair-parts/[ticketId]/[partId]` | DELETE PATCH | `requireStaff` |
+| `admin/lager/repair-transfers/[ticketId]` | POST | `requireStaff` |
+| `admin/lager/rma` | GET POST | `requireStaff` + `canUseLocation`/`canSee` |
+| `admin/lager/rma/[id]/[action]` | POST | `requireStaff` + `canUseLocation` (+ `canManageStock` for REPLACED/kreditbeløb) |
+| `admin/lager/transfers` | GET POST | `requireStaff` |
+| `admin/lager/transfers/[id]/[action]` | POST | `requireStaff` |
 | `admin/models` | GET POST | none |
 | `admin/models/[id]` | PATCH DELETE | none |
 | `admin/products/create` | POST | none |
@@ -136,6 +149,7 @@ Everything else under the two prefixes is admin-only: verified that no file unde
 | `admin/search` | GET | none |
 | `admin/services` | GET POST | none |
 | `admin/services/[id]` | PATCH DELETE | none |
+| `admin/services/[id]/parts` | GET POST DELETE | `requireCatalogEditor` (owner/manager) |
 | `admin/settings/company` | GET PUT | inline bearer (already OK) |
 | `admin/spare-parts` | GET POST | none |
 | `admin/spare-parts/[id]` | GET PATCH DELETE | none |

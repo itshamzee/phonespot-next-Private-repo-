@@ -13,6 +13,7 @@ import {
   parseBookingDevices,
   priceBookingDevices,
 } from "@/lib/repair/booking-devices";
+import { scheduleTicketPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -89,6 +90,9 @@ async function handleMultiDeviceBooking(
       console.error("Supabase insert error (multi-device):", insertError);
       return NextResponse.json({ error: "Kunne ikke oprette reparationssag" }, { status: 500 });
     }
+
+    // Lagertjek (spec §4.4) — kører efter svaret, påvirker aldrig kunden.
+    for (const t of tickets) scheduleTicketPartsCheck(t.id);
 
     const first = tickets[0];
     const customerDevices = priced.devices.map((d) => ({
@@ -244,6 +248,9 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    // Lagertjek (spec §4.4) — kører efter svaret, påvirker aldrig kunden.
+    scheduleTicketPartsCheck(ticket.id);
 
     // Build booking summary lines for emails
     const bookingLines: string[] = [];

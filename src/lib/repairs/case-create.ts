@@ -26,6 +26,7 @@ import type {
   UpdateCaseItemResponse,
   SwapPartResponse,
 } from "@/lib/repairs/new-case-types";
+import { scheduleTicketPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 
 type Db = SupabaseClient;
 
@@ -116,6 +117,8 @@ export async function createRepairCase(
   if (error || !data) throw caseRpcError("Sagen kunne ikke oprettes", error ?? { message: "tomt svar" });
 
   const result = shapeCreateResponse(data as RawCreate, ctx.staff.role);
+  // Lagertjek (spec §4.4) — kører efter svaret og kaster aldrig. Gentaget svar = ingen ny sag.
+  if (!result.replayed) scheduleTicketPartsCheck(result.ticket_id);
   if (body.notify_sms && !result.replayed) {
     const warning = await sendReceivedSms(db, result.ticket_id, body.customer.phone);
     if (warning) result.warnings = [...result.warnings, warning];
@@ -175,6 +178,7 @@ export async function createRepairCaseGroup(
     replayed: Boolean(raw.replayed),
     warnings: raw.warnings ?? [],
   };
+  if (!result.replayed) for (const id of result.ticket_ids) scheduleTicketPartsCheck(id);
   if (body.notify_sms && !result.replayed) {
     const warning = await sendGroupReceivedSms(db, result.ticket_ids, body.customer.phone);
     if (warning) result.warnings = [...result.warnings, warning];
