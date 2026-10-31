@@ -17,6 +17,10 @@ import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
 import { effectiveGrade } from "@/lib/grades";
+import {
+  fallbackDeviceDescription,
+  fallbackDeviceTitle,
+} from "@/lib/seo/device-meta";
 import { getDeviceFaq } from "@/lib/product/device-faq";
 
 export const revalidate = 60;
@@ -37,10 +41,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // description in production. `||` treats "" the same as missing and
   // falls through to the generated fallback.
   const title =
-    template.meta_title || `${template.display_name} - Refurbished | PhoneSpot`;
+    template.meta_title || fallbackDeviceTitle(template.display_name);
   const description =
     template.meta_description ||
-    `Køb refurbished ${template.display_name} med 36 måneders garanti. Testet med 30+ kontroller og klar til brug fra dag et.`;
+    fallbackDeviceDescription(template.display_name, template.category);
 
   return {
     title,
