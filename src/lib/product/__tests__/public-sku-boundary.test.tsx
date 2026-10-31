@@ -21,12 +21,16 @@ function propsFor(node:ReactNode,target:unknown): Record<string,unknown> | undef
   const nested=propsFor(child.props.children,target);if(nested)return nested;
  }
 }
-it.each(['accessory','refurbished','generic'])('does not serialize internal SKU fields at the %s client boundary',async kind=>{
- const page=kind==='accessory'?await AccessoryPage({params:Promise.resolve({category:'covers',slug:'cover'})}):kind==='refurbished'?await RefurbishedPage({params:Promise.resolve({slug:'phone'})}):await GenericPage({params:Promise.resolve({collection:'iphones',product:'phone'})});
+it.each(['accessory','refurbished'])('does not serialize internal SKU fields at the %s client boundary',async kind=>{
+ const page=kind==='accessory'?await AccessoryPage({params:Promise.resolve({category:'covers',slug:'cover'})}):kind==='refurbished'?await RefurbishedPage({params:Promise.resolve({slug:'phone'})}):undefined;
  const props=propsFor(page,kind==='accessory'?AccessoryDetail:DeviceDetail);
  expect(props).toBeDefined();
  const product=kind==='accessory'?props!.product:(props!.accessories as unknown[])[0];
  expect(JSON.stringify(product)).not.toContain('987654'); expect(JSON.stringify(product)).not.toContain('PRIVATE_SUPPLIER');
  expect(product).not.toHaveProperty('cost_price');expect(product).not.toHaveProperty('supplier_id');
  expect(product).toMatchObject({id:'accessory',selling_price:14900,images:['/cover.png'],variants:data.product.variants});
+});
+
+it('redirects device templates on the generic route instead of rendering them',async()=>{
+ await expect(GenericPage({params:Promise.resolve({collection:'iphones',product:'phone'})})).rejects.toThrow('NEXT_REDIRECT');
 });

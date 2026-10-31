@@ -161,7 +161,8 @@ export default async function CollectionPage({
 
         <ProductGrid
           products={products}
-          collectionHandle={slug}
+          // Device templates live at /refurbished/<slug> (single canonical URL).
+          collectionHandle={isDeviceCollection ? "refurbished" : slug}
         />
       </section>
     </>
