@@ -87,6 +87,7 @@ export function Footer() {
         <div className={styles.trust}>
           <TrustpilotLink />
           <a href="https://www.emaerket.dk" target="_blank" rel="noopener noreferrer" aria-label="Certificeret af e-mærket"><Image src="/emaerket.png" alt="Certificeret af e-mærket" width={32} height={32} /></a>
+          <a href="https://www.pricerunner.dk/vr/303791" target="_blank" rel="nofollow noopener"><Image src="/images/pricerunner-bedoem-os.png" alt="Bedøm os på PriceRunner" width={89} height={45} /></a>
           <a href="https://www.facebook.com/phonespot.dk/" target="_blank" rel="noopener noreferrer" aria-label="PhoneSpot på Facebook" className={styles.facebook}><FacebookIcon /> Facebook</a>
           <Link href="/forsikring" className={styles.partner} aria-label="Elektronikforsikring i samarbejde med Storstrøm Forsikring"><span>I samarbejde med</span><Image src="/brand/partners/storstrom-forsikring-white.svg" alt="Storstrøm Forsikring" width={92} height={27} /></Link>
           <div className={styles.payments} aria-label="Betalingsmuligheder">

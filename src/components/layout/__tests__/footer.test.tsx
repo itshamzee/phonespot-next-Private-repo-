@@ -16,6 +16,12 @@ describe("Footer", () => {
     expect(screen.getByText(/Alle refurbished enheder leveres med 36 måneders garanti/i)).toBeDefined();
     expect(screen.getByRole("link", { name: "Anmeldelser på Trustpilot" })).toHaveAttribute("href", "https://dk.trustpilot.com/review/phonespot.dk");
   });
+  it("links to the PriceRunner review page with a nofollow badge", () => {
+    render(<Footer />);
+    const badge = screen.getByRole("link", { name: "Bedøm os på PriceRunner" });
+    expect(badge).toHaveAttribute("href", "https://www.pricerunner.dk/vr/303791");
+    expect(badge.getAttribute("rel")).toContain("nofollow");
+  });
   it("links to selling an existing device from the footer", () => {
     render(<Footer />);
     expect(screen.getByRole("link", { name: "Sælg din enhed" })).toHaveAttribute("href", "/saelg-din-enhed");
