@@ -239,6 +239,16 @@ export default function SaelgDinEnhedPage() {
             </article>
           </div>
         </section>
+        <nav className={styles.deviceLinks} aria-label="Sælg pr. enhed">
+          <p className={styles.eyebrow}>Sælg pr. enhed</p>
+          <ul>
+            <li><Link href="/saelg-din-enhed/iphone">Sælg iPhone</Link></li>
+            <li><Link href="/saelg-din-enhed/samsung">Sælg Samsung Galaxy</Link></li>
+            <li><Link href="/saelg-din-enhed/ipad">Sælg iPad</Link></li>
+            <li><Link href="/saelg-din-enhed/macbook">Sælg MacBook</Link></li>
+            <li><Link href="/saelg-din-enhed/apple-watch">Sælg Apple Watch</Link></li>
+          </ul>
+        </nav>
         <section className={styles.help} aria-labelledby="help-title">
           <div>
             <p className={styles.eyebrow}>Hjælp til dit salg</p>

@@ -64,8 +64,8 @@ const EMPTY_DEVICE: DeviceInfo = {
 };
 const EMPTY_CONDITION: ConditionInfo = { screen: "", back: "", battery: "", allWorking: "", brokenParts: [], cloudLocked: "" };
 
-function makeEntry(): DeviceEntry {
-  return { id: crypto.randomUUID(), device: { ...EMPTY_DEVICE }, condition: { ...EMPTY_CONDITION, brokenParts: [] } };
+function makeEntry(preset?: { deviceType: string; brand?: string }): DeviceEntry {
+  return { id: crypto.randomUUID(), device: { ...EMPTY_DEVICE, ...(preset ?? {}) }, condition: { ...EMPTY_CONDITION, brokenParts: [] } };
 }
 
 /* ---- Device categories with icons ---- */
@@ -734,12 +734,17 @@ function SearchableSelect({
 /*  Main Wizard                                                        */
 /* ------------------------------------------------------------------ */
 
-export function SellDeviceWizard() {
+export function SellDeviceWizard({
+  initialDevice,
+}: {
+  /** Forvælger enhedstype (og evt. mærke) på den første enhed. Uden prop er adfærden uændret. */
+  initialDevice?: { deviceType: string; brand?: string };
+} = {}) {
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [devices, setDevices] = useState<DeviceEntry[]>(() => [makeEntry()]);
+  const [devices, setDevices] = useState<DeviceEntry[]>(() => [makeEntry(initialDevice)]);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const previousStep = useRef(step);
   useEffect(() => {
