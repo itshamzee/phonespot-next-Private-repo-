@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
       : [];
     return [
       ...shopifyRedirects,
+      // www -> apex. Host-specific, so preview/*.vercel.app URLs are untouched.
+      // Query strings are forwarded automatically.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.phonespot.dk" }],
+        destination: "https://phonespot.dk/:path*",
+        statusCode: 301,
+      },
       // Reservedele sælges ikke længere (spec 2026-10-13 §4.1). 301 som aftalt;
       // målet skiftes til reservedelswebshoppen, når den findes.
       // Apparater og Xbox bookes pr. model i kataloget (/reparation/[mærke]/[model]).
@@ -75,7 +83,7 @@ const nextConfig: NextConfig = {
       { source: "/iphone-12-pro-max-reservedele", destination: "/reparation", permanent: true },
       { source: "/iphone-13-mini-reservedele", destination: "/reparation", permanent: true },
       { source: "/iphone-14-reservedele", destination: "/reparation", permanent: true },
-      { source: "/iphone-11-pro", destination: "/iphones/apple-iphone-11-pro", permanent: true },
+      { source: "/iphone-11-pro", destination: "/refurbished/apple-iphone-11-pro", permanent: true },
       // Old tilbehør sub-paths that 5xx
       { source: "/tilbehoer/iphone/:slug*", destination: "/tilbehoer", permanent: true },
       { source: "/tilbehoer/ipad/:slug*", destination: "/tilbehoer", permanent: true },

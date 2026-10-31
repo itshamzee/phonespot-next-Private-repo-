@@ -34,6 +34,16 @@ describe("redirects", () => {
     },
   );
 
+  it("301s www.phonespot.dk to the apex, host-scoped so previews are untouched", async () => {
+    const r = find(await load(), "/:path*") as R & { has?: { type: string; value: string }[] };
+    expect(r).toMatchObject({ destination: "https://phonespot.dk/:path*", statusCode: 301 });
+    expect(r.has).toEqual([{ type: "host", value: "www.phonespot.dk" }]);
+  });
+
+  it("/iphone-11-pro goes straight to the canonical device URL", async () => {
+    expect(find(await load(), "/iphone-11-pro")?.destination).toBe("/refurbished/apple-iphone-11-pro");
+  });
+
   it("keeps the Shopify checkout redirects when a domain is set", async () => {
     const rs = await load("phonespot.myshopify.com");
     expect(find(rs, "/cart/c/:path*")?.destination).toBe("https://phonespot.myshopify.com/cart/c/:path*");
