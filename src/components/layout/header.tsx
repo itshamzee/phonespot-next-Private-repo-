@@ -11,6 +11,7 @@ import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import styles from "@/components/home/storefront.module.css";
 import type { MegaMenu } from "@/lib/navigation/mega-menu";
 import { MegaNav, NAV_CATEGORIES, SALE_TEXT, TILBEHOER_PANEL } from "./mega-nav";
+import { useBlackNovember } from "@/lib/campaign/use-black-november";
 
 const menuLinks = [
   { label: "Beskyttelsesglas", href: "/beskyttelsesglas" },
@@ -25,7 +26,8 @@ const menuLinks = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-export function Header({ menu = null }: { menu?: MegaMenu | null }) {
+export function Header({ menu = null, campaignActive = false }: { menu?: MegaMenu | null; campaignActive?: boolean }) {
+  const blackNovember = useBlackNovember(campaignActive);
   const { totals, openCart } = useCart();
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -96,7 +98,7 @@ export function Header({ menu = null }: { menu?: MegaMenu | null }) {
       </div>
     </div>
     <div className={`${styles.navwrap} relative z-40`}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      <MegaNav menu={menu} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-[0_24px_40px_-24px_rgba(17,17,17,0.25)]" />
+      <MegaNav menu={menu} campaign={blackNovember} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-[0_24px_40px_-24px_rgba(17,17,17,0.25)]" />
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>
@@ -128,6 +130,7 @@ export function Header({ menu = null }: { menu?: MegaMenu | null }) {
               </div>
             </details>;
           })}
+          {blackNovember && <Link href="/black-november" onClick={() => setMobileOpen(false)}>Black November</Link>}
           {menuLinks.map(item => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>)}
         </nav>
       </div>

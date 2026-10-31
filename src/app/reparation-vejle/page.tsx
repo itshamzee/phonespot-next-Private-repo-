@@ -1,3 +1,5 @@
+import { BlackNovemberStrip } from "@/components/campaign/black-november";
+import { isBlackNovember } from "@/lib/campaign/black-november";
 import { CityCategorySections } from "@/components/repair/city-category-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -244,6 +246,9 @@ export default async function ReparationVejlePage() {
       {/* Hero */}
       <section className="bg-[#1A3D2E] py-20 md:py-28">
         <div className="mx-auto max-w-4xl px-4 text-center">
+          <div className="text-left">
+            <BlackNovemberStrip kind="repair" serverActive={isBlackNovember()} />
+          </div>
           <p className="mb-4 text-sm font-semibold tracking-wide text-white/60">
             Telefon- og tabletreparation
           </p>

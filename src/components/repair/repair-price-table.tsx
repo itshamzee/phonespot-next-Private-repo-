@@ -1,5 +1,5 @@
 import styles from "./model-sections.module.css";
-import { QUALITY_LABEL, QUALITY_ORDER } from "./service-label";
+import { QUALITY_LABEL, QUALITY_ORDER, qualityLabel } from "./service-label";
 
 type PriceRow = {
   id: string;
@@ -80,7 +80,7 @@ export function RepairPriceTable({
                     <small>Hurtig fejlsøgning ved disken er gratis</small>
                   )}
                 </th>
-                <td>{s.quality_tier ? QUALITY[s.quality_tier] : "–"}</td>
+                <td>{s.quality_tier ? (qualityLabel(s) ?? QUALITY[s.quality_tier]) : "–"}</td>
                 <td>
                   {s.estimated_minutes && s.estimated_minutes > 0
                     ? "ca. " + s.estimated_minutes + " min."

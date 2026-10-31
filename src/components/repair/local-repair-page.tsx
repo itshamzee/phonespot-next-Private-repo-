@@ -1,3 +1,5 @@
+import { BlackNovemberStrip } from "@/components/campaign/black-november";
+import { isBlackNovember } from "@/lib/campaign/black-november";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORES, openingHoursJsonLd } from "@/lib/store-config";
@@ -122,6 +124,9 @@ export function LocalRepairPage({ town, prices }: Props) {
       <JsonLd data={faqJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
       <MobileContactBar phone={store.phone} bookingHref={bookingHref} storeName={store.name} />
+      <div className="mx-auto max-w-6xl px-4">
+        <BlackNovemberStrip kind="repair" serverActive={isBlackNovember()} />
+      </div>
 
       {/* Breadcrumb */}
       <nav aria-label="Brødkrumme" className="border-b border-[#E5E5EA] bg-white">
