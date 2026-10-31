@@ -146,6 +146,10 @@ export function CityLinks({ label, note }: { label: string; note: string }) {
             Du kan komme forbi uden tid, og bor du længere væk, kan du sende enheden ind med en
             gratis fragtlabel.
           </p>
+          <p>
+            Bor du omkring Næstved? Vi har ingen butik dér, men Slagelse ligger ca. 30 minutter
+            væk. Se <Link href="/reparation-naestved">reparation for Næstved</Link>.
+          </p>
         </div>
         <div className={styles.storeLinks}>
           <Link href="/reparation-vejle">
