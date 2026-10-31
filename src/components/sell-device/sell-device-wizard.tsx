@@ -106,7 +106,7 @@ const DEVICE_CATEGORIES = [
 
 /* ---- Dynamic options per device type ---- */
 const STORAGE_OPTIONS: Record<string, string[]> = {
-  Telefon: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"],
+  Telefon: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB"],
   Tablet: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"],
   Laptop: ["128GB SSD", "256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD"],
   Smartwatch: ["32GB", "64GB"],
@@ -133,10 +133,10 @@ const BACK_OPTIONS: Record<string, string[]> = {
 const BATTERY_OPTIONS = ["God (80%+)", "Okay (60-80%)", "Dårligt (<60%)", "Ved ikke"];
 
 const BROKEN_PARTS: Record<string, string[]> = {
-  Telefon: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Knapper", "Face ID"],
-  Tablet: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Knapper"],
-  Laptop: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Tastatur", "Trackpad", "USB-porte"],
-  Smartwatch: ["Skærm-touch", "Højtaler", "Mikrofon", "Bluetooth", "Opladning", "Knapper"],
+  Telefon: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Knapper", "Face ID", "Tænder ikke", "Andet"],
+  Tablet: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Knapper", "Tænder ikke", "Andet"],
+  Laptop: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Tastatur", "Trackpad", "USB-porte", "Tænder ikke", "Andet"],
+  Smartwatch: ["Skærm-touch", "Højtaler", "Mikrofon", "Bluetooth", "Opladning", "Knapper", "Tænder ikke", "Andet"],
 };
 
 /* ---- Condition SVG icons (replaces emoji) ---- */
@@ -189,14 +189,13 @@ const BRANDS_BY_TYPE: Record<string, BrandEntry[]> = {
       name: "Apple",
       models: [
         "iPhone Duo", "iPhone 18 Pro Max", "iPhone 18 Pro",
-        "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone Air", "iPhone 17",
+        "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone Air", "iPhone 17", "iPhone 17e",
         "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16", "iPhone 16e",
         "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
         "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
         "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13 mini", "iPhone 13",
         "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12 mini", "iPhone 12",
         "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
-        "iPhone XS Max", "iPhone XS", "iPhone XR", "iPhone X",
         "iPhone SE (3. gen)", "iPhone SE (2. gen)",
       ],
     },
@@ -746,10 +745,14 @@ export function SellDeviceWizard({
 
   const [devices, setDevices] = useState<DeviceEntry[]>(() => [makeEntry(initialDevice)]);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const wizardRef = useRef<HTMLDivElement>(null);
   const previousStep = useRef(step);
   useEffect(() => {
     if (previousStep.current !== step) {
-      stepHeadingRef.current?.focus();
+      // Fokus må ikke selv rulle siden: det sendte kunden op til sidens top.
+      // Hvert trin starter i stedet samme sted, med trinviseren øverst.
+      stepHeadingRef.current?.focus({ preventScroll: true });
+      wizardRef.current?.scrollIntoView?.({ block: "start" });
       previousStep.current = step;
     }
   }, [step]);
@@ -821,7 +824,9 @@ export function SellDeviceWizard({
         return devices.every((entry) => {
           const c = entry.condition;
           const d = entry.device;
-          const baseValid = !!(c.screen && c.back && c.battery && c.allWorking);
+          // Vi køber defekte enheder, men skal kende fejlen på forhånd.
+          const faultKnown = c.allWorking !== "Nej" || c.brokenParts.length > 0;
+          const baseValid = !!(c.screen && c.back && c.battery && c.allWorking && faultKnown);
           const needsCloudLock =
             d.deviceType === "Telefon" || d.deviceType === "Tablet";
           if (needsCloudLock) return baseValid && !!c.cloudLocked;
@@ -1009,7 +1014,7 @@ export function SellDeviceWizard({
 
   /* ---- Render ---- */
   return (
-    <div className="rounded-xl border border-soft-grey bg-white p-5 font-body sm:p-7">
+    <div ref={wizardRef} className="scroll-mt-4 rounded-xl border border-soft-grey bg-white p-5 font-body sm:p-7">
       <ProgressBar current={step} />
       <fieldset disabled={status === "submitting"} className="min-w-0">
         {status === "error" && (
@@ -1950,7 +1955,7 @@ export function SellDeviceWizard({
             {step === 0
               ? "Vælg enhedstype, mærke og model for hver enhed for at fortsætte."
               : step === 1
-                ? "Besvar spørgsmålene om stand for hver enhed for at fortsætte."
+                ? "Besvar spørgsmålene om stand for hver enhed, og markér det, der ikke virker, for at fortsætte."
                 : "Vælg levering og udfyld navn, telefon og e-mail for at sende din anmodning."}
           </p>
         )}

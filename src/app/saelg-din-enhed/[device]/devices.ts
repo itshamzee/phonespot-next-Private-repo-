@@ -56,7 +56,7 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
     ],
     coverageHeading: "Hvilke iPhones kan du få vurderet",
     coverage:
-      "Formularen kender iPhone X og alle modeller derfra til de nyeste: almindelige, Plus, mini, Pro og Pro Max samt SE (2. og 3. gen). Står din model ikke på listen, kan du skrive den selv.",
+      "Vi køber iPhone 11 og alle nyere modeller: almindelige, Plus, mini, Pro og Pro Max samt SE (2. og 3. gen). iPhone X, XR og XS køber vi ikke. Har du en defekt iPhone, så oplys fejlen i formularen.",
     faq: [
       {
         question: "Hvordan fjerner jeg Find min iPhone og min Apple-konto?",

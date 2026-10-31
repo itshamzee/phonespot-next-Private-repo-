@@ -235,7 +235,7 @@ export default function SaelgDinEnhedPage() {
             </article>
             <article>
               <h3>En smadret skærm er også værd at beskrive</h3>
-              <p>Du kan bede om en vurdering af en defekt telefon eller computer. Oplys, hvad der er sket, og hvilke funktioner der virker. En skade betyder, at vi skal se nærmere på mulighederne; den er ikke et løfte om opkøb. Vil du hellere beholde enheden, kan du <Link href="/reparation">se mulighederne for reparation</Link>.</p>
+              <p>Du kan bede om en vurdering af en defekt telefon eller computer. Oplys, hvad der er sket, og hvilke funktioner der virker. En skade betyder, at vi skal se nærmere på mulighederne; den er ikke et løfte om opkøb. Læs mere om at <Link href="/saelg-din-enhed/iphone/defekt">sælge en defekt iPhone</Link>. Vil du hellere beholde enheden, kan du <Link href="/reparation">se mulighederne for reparation</Link>.</p>
             </article>
           </div>
         </section>

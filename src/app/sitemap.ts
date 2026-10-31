@@ -5,6 +5,7 @@ import { COLLECTION_MAP } from "@/lib/collections";
 import { isSparePart } from "@/lib/spare-part-filter";
 import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
+import { IPHONE_SELL_PAGES } from "@/app/saelg-din-enhed/iphone/[model]/models";
 import { COMPARISONS } from "@/lib/comparisons";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
@@ -333,6 +334,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    ...IPHONE_SELL_PAGES.map((page) => ({
+      url: `${BASE_URL}/saelg-din-enhed/iphone/${page.slug}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     {
       url: `${BASE_URL}/saelg-din-enhed/samsung`,
       lastModified: STATIC_LAST_MODIFIED,

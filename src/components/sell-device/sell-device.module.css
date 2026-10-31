@@ -414,6 +414,11 @@
 .crossLinks ul { list-style: none; margin: 0; padding: 0; }
 .crossLinks li { padding: 9px 0; font-size: 14px; }
 .crossLinks a { color: #1a3d2e; text-decoration: underline; text-underline-offset: 3px; }
+.breadcrumbItem { display: contents; }
+/* Venstre kolonne bliver stående, mens formularen skifter trin. */
+@media (min-width: 901px) and (min-height: 700px) {
+  .intro { position: sticky; top: 16px; }
+}
 .deviceLinks { margin-top: 36px; padding-top: 22px; border-top: 1px solid #e2e7de; }
 .deviceLinks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 28px; }
 .deviceLinks a { font-size: 14px; color: #1a3d2e; text-decoration: underline; text-underline-offset: 3px; }
