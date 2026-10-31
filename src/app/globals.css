@@ -123,3 +123,35 @@ body {
     font-size: 16px;
   }
 }
+
+/* Ark og baggrunde, der monteres ved åbning, glider ind fra deres kant
+   (drawer-kurve, under 300 ms). Lukning er øjeblikkelig, fordi de afmonteres. */
+.sheet-enter {
+  transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@starting-style {
+  .sheet-enter {
+    transform: translateY(100%);
+  }
+}
+@media (min-width: 768px) {
+  @starting-style {
+    .sheet-enter-side {
+      transform: translateX(100%);
+    }
+  }
+}
+.backdrop-enter {
+  transition: opacity 200ms ease-out;
+}
+@starting-style {
+  .backdrop-enter {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-enter,
+  .backdrop-enter {
+    transition: none;
+  }
+}

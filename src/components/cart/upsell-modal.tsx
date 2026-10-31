@@ -135,12 +135,12 @@ export function UpsellModal() {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/40" aria-hidden="true" onClick={closeUpsell} />
+      <div className="backdrop-enter fixed inset-0 z-50 bg-black/40" aria-hidden="true" onClick={closeUpsell} />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="upsell-title"
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col rounded-t-2xl bg-white shadow-xl md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-md md:rounded-none"
+        className="sheet-enter sheet-enter-side fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col rounded-t-2xl bg-white shadow-xl md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-md md:rounded-none"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E5E5EA] px-4 py-4 sm:px-5">

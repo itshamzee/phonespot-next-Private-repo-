@@ -211,7 +211,7 @@ export function TilbehoerMobileFilters({
       {/* Backdrop */}
       <div
         data-filter-backdrop="true"
-        className="fixed inset-0 z-40 bg-black/40"
+        className="backdrop-enter fixed inset-0 z-40 bg-black/40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -222,7 +222,7 @@ export function TilbehoerMobileFilters({
         role="dialog"
         aria-modal="true"
         aria-label="Filter"
-        className="fixed bottom-0 left-0 right-0 z-50 flex max-h-[80vh] flex-col rounded-t-2xl bg-white shadow-2xl"
+        className="sheet-enter fixed bottom-0 left-0 right-0 z-50 flex max-h-[80vh] flex-col rounded-t-2xl bg-white shadow-2xl"
       >
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">

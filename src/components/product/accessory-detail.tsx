@@ -592,14 +592,14 @@ export function AccessoryDetail({
           <div>
             {hasSale ? (
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-body text-3xl font-bold text-red-600">
+                <span className="font-body text-3xl font-bold tabular-nums text-charcoal">
                   {formatDKK(effectivePrice)}
                 </span>
                 <span className="text-lg text-charcoal/40 line-through">
                   {formatDKK(product.selling_price)}
                 </span>
                 {effectivePrice < product.selling_price && (
-                  <span className="rounded-md bg-red-600/10 px-2 py-0.5 text-[13px] font-semibold text-red-700">
+                  <span className="text-sm font-medium text-[#1A3D2E]">
                     Spar {formatDKK(product.selling_price - effectivePrice)}
                   </span>
                 )}
