@@ -149,30 +149,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/baerbare/lenovo`,
-      lastModified: STATIC_LAST_MODIFIED,
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/baerbare/apple`,
-      lastModified: STATIC_LAST_MODIFIED,
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/baerbare/hp`,
-      lastModified: STATIC_LAST_MODIFIED,
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/baerbare/studiecomputer`,
-      lastModified: STATIC_LAST_MODIFIED,
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
-    {
       url: `${BASE_URL}/privatlivspolitik`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "yearly",

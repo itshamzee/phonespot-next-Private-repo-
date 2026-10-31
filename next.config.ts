@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
       : [];
     return [
       ...shopifyRedirects,
+      // Laptop brand/tier pages no longer exist; blog posts and /baerbare-vejle still link here.
+      { source: "/baerbare/apple", destination: "/baerbare?brand=apple", permanent: true },
+      { source: "/baerbare/:slug(lenovo|hp|studiecomputer)", destination: "/baerbare", permanent: true },
       // www -> apex. Host-specific, so preview/*.vercel.app URLs are untouched.
       // Query strings are forwarded automatically.
       {
