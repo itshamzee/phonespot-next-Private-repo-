@@ -34,7 +34,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "iPhone 15 Pro",
     metaTitle: "Refurbished iPhone 15 Pro | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished iPhone 15 Pro med 36 mdr. garanti. Titaniumdesign, A17 Pro-chip, kamera på 48 MP. Testet med 30+ kontroller.",
+      "Køb refurbished iPhone 15 Pro med 36 mdr. garanti. Titaniumdesign, A17 Pro-chip, kamera på 48 MP. Testet og klar til brug.",
     heroHeading: "Refurbished iPhone 15 Pro",
     collectionHandle: "iphones",
     filterTag: "iphone 15 pro",
@@ -87,7 +87,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "iPhone 14 Pro",
     metaTitle: "Refurbished iPhone 14 Pro | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished iPhone 14 Pro med 36 mdr. garanti. Dynamic Island, kamera på 48 MP, A16 Bionic-chip. Testet med 30+ kontroller.",
+      "Køb refurbished iPhone 14 Pro med 36 mdr. garanti. Dynamic Island, kamera på 48 MP, A16 Bionic-chip. Testet og klar til brug.",
     heroHeading: "Refurbished iPhone 14 Pro",
     collectionHandle: "iphones",
     filterTag: "iphone 14 pro",
@@ -101,7 +101,7 @@ export const MODEL_PAGES: ModelPage[] = [
       { label: "Face ID", value: "Ja" },
     ],
     whyBuy:
-      "iPhone 14 Pro var den første iPhone med Dynamic Island — Apples innovative måde at integrere kameraet i brugerfladen og vise notifikationer, musik og navigation i realtid. Denne funktion alene gør den til et markant spring fremad fra tidligere modeller. Med A16 Bionic-chippen får du fremragende ydelse til alt fra daglig brug til krævende opgaver som videoredigering og gaming. Hovedkameraet på 48 MP var en revolution, da det blev lanceret, og det leverer stadig billeder i en kvalitet, der matcher langt dyrere kameraer. Du kan optage i 4K Cinematic Mode og tage fantastiske natbilleder. Skærmen med Always-On Display viser altid tid, widgets og notifikationer uden at dræne batteriet, takket være den energieffektive 120 Hz ProMotion-teknologi. Rammen i rustfrit stål giver en eksklusiv fornemmelse og er mere modstandsdygtig end aluminium. Med 5G-understøttelse er du klar til fremtidens mobilnetværk. Hos PhoneSpot kan du spare op til 40% sammenlignet med nyprisen på en iPhone 14 Pro, samtidig med at du får vores 36 måneders garanti, som er branchens bedste, og 14 dages fuld returret. Alle enheder gennemgår 30+ individuelle kvalitetstests, så du kan handle med ro i sindet.",
+      "iPhone 14 Pro var den første iPhone med Dynamic Island — Apples innovative måde at integrere kameraet i brugerfladen og vise notifikationer, musik og navigation i realtid. Denne funktion alene gør den til et markant spring fremad fra tidligere modeller. Med A16 Bionic-chippen får du fremragende ydelse til alt fra daglig brug til krævende opgaver som videoredigering og gaming. Hovedkameraet på 48 MP var en revolution, da det blev lanceret, og det leverer stadig billeder i en kvalitet, der matcher langt dyrere kameraer. Du kan optage i 4K Cinematic Mode og tage fantastiske natbilleder. Skærmen med Always-On Display viser altid tid, widgets og notifikationer uden at dræne batteriet, takket være den energieffektive 120 Hz ProMotion-teknologi. Rammen i rustfrit stål giver en eksklusiv fornemmelse og er mere modstandsdygtig end aluminium. Med 5G-understøttelse er du klar til fremtidens mobilnetværk. Hos PhoneSpot kan du spare op til 40% sammenlignet med nyprisen på en iPhone 14 Pro, samtidig med at du får vores 36 måneders garanti, som er branchens bedste, og 30 dages fuld returret. Alle enheder gennemgår 30+ individuelle kvalitetstests, så du kan handle med ro i sindet.",
     gradeExplanation:
       "iPhone 14 Pro har en ramme i rustfrit stål, som er holdbar, men kan samle synlige mærker over tid. Stand A er i næsten ny stand med kun meget svage kosmetiske mærker — rammen skinner stadig. Stand B kan have lette ridser på rammen og minimal slitage på bagsiden, men skærmen er uden synlige mærker. Stand C har mere synlige brugsspor og ridser, men alle funktioner virker perfekt, og du er dækket af vores fulde 36 måneders garanti.",
     faq: [
@@ -140,7 +140,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "iPhone 13 Pro",
     metaTitle: "Refurbished iPhone 13 Pro | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished iPhone 13 Pro med 36 mdr. garanti. A15 Bionic-chip, 120 Hz ProMotion, tredobbelt kamera på 12 MP. Testet med 30+ kontroller.",
+      "Køb refurbished iPhone 13 Pro med 36 mdr. garanti. A15 Bionic-chip, 120 Hz ProMotion, tredobbelt kamera på 12 MP. Testet og klar til brug.",
     heroHeading: "Refurbished iPhone 13 Pro",
     collectionHandle: "iphones",
     filterTag: "iphone 13 pro",
@@ -193,7 +193,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "MacBook Air M2",
     metaTitle: "Refurbished MacBook Air M2 | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished MacBook Air M2 med 36 mdr. garanti. Apple M2-chip, 13,6\" Liquid Retina, op til 18 timers batteritid. Testet med 30+ kontroller.",
+      "Køb refurbished MacBook Air M2 med 36 mdr. garanti. Apple M2-chip, 13,6\" Liquid Retina, op til 18 timers batteritid. Testet og klar til brug.",
     heroHeading: "Refurbished MacBook Air M2",
     collectionHandle: "computere",
     filterTag: "macbook air m2",
@@ -246,7 +246,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "iPad Air",
     metaTitle: "Refurbished iPad Air | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished iPad Air med 36 mdr. garanti. M1/M2-chip, 10,9\" Liquid Retina, Apple Pencil-understøttelse. Testet med 30+ kontroller.",
+      "Køb refurbished iPad Air med 36 mdr. garanti. M1/M2-chip, 10,9\" Liquid Retina, Apple Pencil-understøttelse. Testet og klar til brug.",
     heroHeading: "Refurbished iPad Air",
     collectionHandle: "ipads",
     filterTag: "ipad air",
@@ -299,7 +299,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "Apple Watch SE",
     metaTitle: "Refurbished Apple Watch SE | Fra 1.099 kr. | PhoneSpot",
     metaDescription:
-      "Køb refurbished Apple Watch SE med 36 mdr. garanti. Retina OLED-skærm, pulsmåler, vandtæt til 50m, GPS. Testet med 30+ kontroller. Spar op til 49%.",
+      "Køb refurbished Apple Watch SE med 36 mdr. garanti. Retina OLED-skærm, pulsmåler, vandtæt til 50m, GPS. Testet og klar til brug. Spar op til 49%.",
     heroHeading: "Refurbished Apple Watch SE",
     collectionHandle: "smartwatches",
     filterTag: "apple watch se",
@@ -313,7 +313,7 @@ export const MODEL_PAGES: ModelPage[] = [
       { label: "Kompatibilitet", value: "iPhone 8 eller nyere" },
     ],
     whyBuy:
-      "Apple Watch SE er den smarteste vej ind i Apple Watch-verdenen. Det giver dig alle de vigtigste funktioner — træningsregistrering, pulsovervågning, notifikationer, Apple Pay og GPS — til en markant lavere pris end flagskibsmodellerne. 2. generation (2022) har den samme S8-chip som Series 8, hvilket betyder identisk ydelse til de fleste daglige opgaver. Skærmen er stor nok til komfortabel aflæsning, og med watchOS får du adgang til alle apps i App Store. Faldregistrering og nødopkald gør uret til en sikkerhedsfunktion for hele familien. Med vandtæthed til 50 meter kan du svømme, bade og træne i regnvejr uden bekymringer. Batteriet holder en fuld dag, og opladning tager kun ca. 1,5 timer. Hos PhoneSpot kan du spare op til 49% på et Apple Watch SE sammenlignet med nyprisen — og du får 36 måneders garanti og 14 dages fuld returret. Det er det perfekte smartwatch for dig, der vil have Apple-kvalitet uden at betale toppris.",
+      "Apple Watch SE er den smarteste vej ind i Apple Watch-verdenen. Det giver dig alle de vigtigste funktioner — træningsregistrering, pulsovervågning, notifikationer, Apple Pay og GPS — til en markant lavere pris end flagskibsmodellerne. 2. generation (2022) har den samme S8-chip som Series 8, hvilket betyder identisk ydelse til de fleste daglige opgaver. Skærmen er stor nok til komfortabel aflæsning, og med watchOS får du adgang til alle apps i App Store. Faldregistrering og nødopkald gør uret til en sikkerhedsfunktion for hele familien. Med vandtæthed til 50 meter kan du svømme, bade og træne i regnvejr uden bekymringer. Batteriet holder en fuld dag, og opladning tager kun ca. 1,5 timer. Hos PhoneSpot kan du spare op til 49% på et Apple Watch SE sammenlignet med nyprisen — og du får 36 måneders garanti og 30 dages fuld returret. Det er det perfekte smartwatch for dig, der vil have Apple-kvalitet uden at betale toppris.",
     gradeExplanation:
       "Apple Watch SE har et aluminiumschassis, som er let og holdbart. Stand A er i næsten ny stand med minimale kosmetiske mærker — kassen og glasset ser praktisk talt nye ud. Stand B kan have lette ridser på kassen eller glasset, men skærmen er i god stand, og berøringsfunktionen fungerer perfekt. Stand C kan have synlige brugsspor på kassen, men alle funktioner inklusive pulsmåler, GPS og vandtæthed er testet og verificeret.",
     faq: [
@@ -352,7 +352,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "Apple Watch Series 7",
     metaTitle: "Refurbished Apple Watch Series 7 | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished Apple Watch Series 7 med 36 mdr. garanti. Altid-tændt Retina-skærm, blodiltmåler, EKG, vandtæt. Testet med 30+ kontroller.",
+      "Køb refurbished Apple Watch Series 7 med 36 mdr. garanti. Altid-tændt Retina-skærm, blodiltmåler, EKG, vandtæt. Testet og klar til brug.",
     heroHeading: "Refurbished Apple Watch Series 7",
     collectionHandle: "smartwatches",
     filterTag: "apple watch series 7",
@@ -405,7 +405,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "Apple Watch Series 8",
     metaTitle: "Refurbished Apple Watch Series 8 | Spar op til 40% | PhoneSpot",
     metaDescription:
-      "Køb refurbished Apple Watch Series 8 med 36 mdr. garanti. Temperaturmåler, crashregistrering, EKG, altid-tændt skærm. Testet med 30+ kontroller.",
+      "Køb refurbished Apple Watch Series 8 med 36 mdr. garanti. Temperaturmåler, crashregistrering, EKG, altid-tændt skærm. Testet og klar til brug.",
     heroHeading: "Refurbished Apple Watch Series 8",
     collectionHandle: "smartwatches",
     filterTag: "apple watch series 8",
@@ -419,7 +419,7 @@ export const MODEL_PAGES: ModelPage[] = [
       { label: "Batteri", value: "Op til 18 timer (36 timer i strømsparetilstand)" },
     ],
     whyBuy:
-      "Apple Watch Series 8 er det komplette smartwatch med alle de funktioner, de fleste mennesker har brug for. Den nye temperaturmåler giver indsigt i kroppens temperatur over natten og kan hjælpe med at registrere ægløsning — en funktion, der er unik for Series 8 og nyere. Crashregistrering bruger avancerede bevægelsessensorer til automatisk at ringe efter hjælp i tilfælde af en alvorlig bilulykke. S8-chippen leverer hurtig og responsiv ydelse til alle apps og træning. Den altid-tændte skærm med op til 1.000 nits lysstyrke er fremragende i alle lysforhold. Strømsparetilstanden fordobler batteritiden til op til 36 timer — perfekt til weekendture. Med EKG, SpO2 og kontinuerlig pulsmåling har du et komplet sundhedscenter på håndleddet. Hos PhoneSpot sparer du op til 40% sammenlignet med nyprisen og får 36 måneders garanti plus 14 dages returret.",
+      "Apple Watch Series 8 er det komplette smartwatch med alle de funktioner, de fleste mennesker har brug for. Den nye temperaturmåler giver indsigt i kroppens temperatur over natten og kan hjælpe med at registrere ægløsning — en funktion, der er unik for Series 8 og nyere. Crashregistrering bruger avancerede bevægelsessensorer til automatisk at ringe efter hjælp i tilfælde af en alvorlig bilulykke. S8-chippen leverer hurtig og responsiv ydelse til alle apps og træning. Den altid-tændte skærm med op til 1.000 nits lysstyrke er fremragende i alle lysforhold. Strømsparetilstanden fordobler batteritiden til op til 36 timer — perfekt til weekendture. Med EKG, SpO2 og kontinuerlig pulsmåling har du et komplet sundhedscenter på håndleddet. Hos PhoneSpot sparer du op til 40% sammenlignet med nyprisen og får 36 måneders garanti plus 30 dages returret.",
     gradeExplanation:
       "Apple Watch Series 8 fås i aluminium eller rustfrit stål. Stand A er i næsten ny stand med kun minimale mærker. Stand B kan have lette ridser på kassen eller glasset, men alle funktioner virker perfekt. Stand C har mere tydelige brugsspor, men er fuldt funktionel med garanti.",
     faq: [
@@ -458,7 +458,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "Apple Watch Series 9",
     metaTitle: "Refurbished Apple Watch Series 9 | Spar op til 35% | PhoneSpot",
     metaDescription:
-      "Køb refurbished Apple Watch Series 9 med 36 mdr. garanti. S9 SiP-chip, dobbelttryk, 2000 nits skærm, EKG. Testet med 30+ kontroller.",
+      "Køb refurbished Apple Watch Series 9 med 36 mdr. garanti. S9 SiP-chip, dobbelttryk, 2000 nits skærm, EKG. Testet og klar til brug.",
     heroHeading: "Refurbished Apple Watch Series 9",
     collectionHandle: "smartwatches",
     filterTag: "apple watch series 9",
@@ -511,7 +511,7 @@ export const MODEL_PAGES: ModelPage[] = [
     title: "Apple Watch Ultra",
     metaTitle: "Refurbished Apple Watch Ultra | Spar op til 35% | PhoneSpot",
     metaDescription:
-      "Køb refurbished Apple Watch Ultra med 36 mdr. garanti. 49 mm titaniumkasse, 2000 nits, 36 timers batteritid, dykkercertificeret. Testet med 30+ kontroller.",
+      "Køb refurbished Apple Watch Ultra med 36 mdr. garanti. 49 mm titaniumkasse, 2000 nits, 36 timers batteritid, dykkercertificeret. Testet og klar til brug.",
     heroHeading: "Refurbished Apple Watch Ultra",
     collectionHandle: "smartwatches",
     filterTag: "apple watch ultra",
