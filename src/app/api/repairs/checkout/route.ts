@@ -1,3 +1,4 @@
+import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { stripe } from "@/lib/stripe/client";
@@ -242,7 +243,9 @@ export async function POST(request: NextRequest) {
       const coupon = await stripe.coupons.create({
         percent_off: discountPercent,
         duration: "once",
-        name: `Reparationsrabat ${discountPercent}%`,
+        name: isBlackNovember() && discountPercent === BLACK_NOVEMBER.repairPercent
+          ? `Black November ${discountPercent}%`
+          : `Reparationsrabat ${discountPercent}%`,
         metadata: { repair_ticket_id: firstTicketId },
       });
       discounts.push({ coupon: coupon.id });

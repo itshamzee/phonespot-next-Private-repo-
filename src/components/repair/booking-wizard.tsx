@@ -15,6 +15,11 @@ import { STORES } from "@/lib/store-config";
 import Link from "next/link";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
+import { BLACK_NOVEMBER, repairDiscountPercentFor, volumeRepairPercent } from "@/lib/campaign/black-november";
+import { useBlackNovember } from "@/lib/campaign/use-black-november";
+
+/** Samme prisformat som prissiderne: 1.899 kr. */
+const kr = (n: number) => n.toLocaleString("da-DK") + " kr.";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 
 /* ------------------------------------------------------------------ */
@@ -56,7 +61,9 @@ function getAvailableDates(count: number): string[] {
     const day = d.getDay();
     if (day >= 1 && day <= 6) {
       // Mon-Sat
-      dates.push(d.toISOString().slice(0, 10));
+      dates.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      );
     }
     d.setDate(d.getDate() + 1);
   }
@@ -313,7 +320,7 @@ function DeviceTabs({
         <button
           type="button"
           onClick={onRemove}
-          className="mt-2 text-xs font-semibold text-red-500 hover:underline"
+          className="-mx-2 mt-1 inline-flex min-h-[44px] items-center px-2 text-xs font-semibold text-red-500 hover:underline"
         >
           Fjern enhed {activeDeviceIndex + 1}
         </button>
@@ -326,7 +333,8 @@ function DeviceTabs({
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function BookingWizard() {
+export function BookingWizard({ campaignActive = false }: { campaignActive?: boolean } = {}) {
+  const blackNovember = useBlackNovember(campaignActive);
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createBrowserClient(), []);
 
@@ -441,8 +449,9 @@ export function BookingWizard() {
     );
   }, 0);
 
-  const discountPercent =
-    totalServiceCount >= 3 ? 15 : totalServiceCount >= 2 ? 10 : 0;
+  const discountPercent = repairDiscountPercentFor(totalServiceCount, blackNovember);
+  const discountIsCampaign =
+    blackNovember && volumeRepairPercent(totalServiceCount) <= BLACK_NOVEMBER.repairPercent;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
 
@@ -893,7 +902,7 @@ export function BookingWizard() {
         </h2>
         <p className="mt-3 text-gray">
           Bookingen er gået igennem. Vi har sendt en bekræftelse til{" "}
-          <span className="font-semibold text-charcoal">{customer.email}</span>{" "}
+          <span className="font-semibold text-charcoal [overflow-wrap:anywhere]">{customer.email}</span>{" "}
           — tjek evt. din spam-mappe.
         </p>
         {submitResult.ticketId && (
@@ -1285,7 +1294,7 @@ export function BookingWizard() {
                                   )}
                               </span>
                               <span>
-                                <strong>{s.price_dkk} DKK</strong>
+                                <strong>{kr(s.price_dkk)}</strong>
                                 <small>
                                   {isChecked ? "Valgt −" : "Tilføj +"}
                                 </small>
@@ -1355,7 +1364,7 @@ export function BookingWizard() {
                         )}
                       </div>
                       <div>
-                        <span className="font-bold text-charcoal">
+                        <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
                           Tilføj beskyttelsesglas
                         </span>
                         <p className="text-xs text-gray">
@@ -1364,7 +1373,7 @@ export function BookingWizard() {
                       </div>
                     </div>
                     <span className="font-body font-bold text-green-eco">
-                      {TEMPERED_GLASS_PRICE} DKK
+                      {kr(TEMPERED_GLASS_PRICE)}
                     </span>
                   </button>
                 </div>
@@ -1379,8 +1388,10 @@ export function BookingWizard() {
                   -{discountPercent}%
                 </span>
                 <span className="text-sm font-medium text-charcoal">
-                  Rabat ved {totalServiceCount} reparationer — du sparer{" "}
-                  {discountAmount} DKK!
+                  {discountIsCampaign
+                    ? "Black November: 10 % på alle reparationer"
+                    : `Rabat ved ${totalServiceCount} reparationer`}{" "}
+                  — du sparer {kr(discountAmount)}
                 </span>
               </div>
             )}
@@ -1408,23 +1419,23 @@ export function BookingWizard() {
                       {deviceServices.map((s) => (
                         <div
                           key={s.id}
-                          className="flex justify-between text-sm"
+                          className="flex justify-between gap-3 text-sm"
                         >
-                          <span className="text-charcoal">
+                          <span className="min-w-0 [overflow-wrap:anywhere] text-charcoal">
                             {repairServiceLabel(s)}
                           </span>
-                          <span className="font-bold text-charcoal">
-                            {s.price_dkk} DKK
+                          <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                            {kr(s.price_dkk)}
                           </span>
                         </div>
                       ))}
                       {booking.includesTemperedGlass && (
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between gap-3 text-sm">
                           <span className="text-charcoal">
                             Beskyttelsesglas
                           </span>
-                          <span className="font-bold text-charcoal">
-                            99 DKK
+                          <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                            {kr(TEMPERED_GLASS_PRICE)}
                           </span>
                         </div>
                       )}
@@ -1436,12 +1447,12 @@ export function BookingWizard() {
                   {discountPercent > 0 && (
                     <div className="flex justify-between text-sm text-gray">
                       <span>Subtotal</span>
-                      <span className="line-through">{subtotal} DKK</span>
+                      <span className="line-through">{kr(subtotal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold text-charcoal">
                     <span>Total</span>
-                    <span className="text-green-eco">{totalPrice} DKK</span>
+                    <span className="text-green-eco">{kr(totalPrice)}</span>
                   </div>
                   <p className="mt-1 text-xs text-gray">
                     Inkl. moms og reservedele
@@ -1531,23 +1542,23 @@ export function BookingWizard() {
                           {deviceServices.map((s) => (
                             <div
                               key={s.id}
-                              className="flex justify-between text-sm"
+                              className="flex justify-between gap-3 text-sm"
                             >
-                              <span className="text-charcoal/70">
+                              <span className="min-w-0 [overflow-wrap:anywhere] text-charcoal/70">
                                 {repairServiceLabel(s)}
                               </span>
-                              <span className="font-bold text-charcoal">
-                                {s.price_dkk} kr
+                              <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                                {kr(s.price_dkk)}
                               </span>
                             </div>
                           ))}
                           {booking.includesTemperedGlass && (
-                            <div className="flex justify-between text-sm">
+                            <div className="flex justify-between gap-3 text-sm">
                               <span className="text-charcoal/70">
                                 Beskyttelsesglas
                               </span>
-                              <span className="font-bold text-charcoal">
-                                99 kr
+                              <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                                {kr(TEMPERED_GLASS_PRICE)}
                               </span>
                             </div>
                           )}
@@ -1564,10 +1575,10 @@ export function BookingWizard() {
                 {discountPercent > 0 && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
-                      -{discountPercent}% rabat
+                      {discountIsCampaign ? `Black November -${discountPercent} %` : `-${discountPercent} % rabat`}
                     </span>
                     <span className="text-gray line-through">
-                      {subtotal} kr
+                      {kr(subtotal)}
                     </span>
                   </div>
                 )}
@@ -1576,7 +1587,7 @@ export function BookingWizard() {
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-bold text-gray">Total</span>
                   <span className="font-body text-2xl font-bold text-charcoal">
-                    {totalPrice > 0 ? `${totalPrice} kr` : "—"}
+                    {totalPrice > 0 ? kr(totalPrice) : "—"}
                   </span>
                 </div>
                 {totalPrice > 0 && (
@@ -1648,6 +1659,8 @@ export function BookingWizard() {
               <input
                 id="name"
                 autoComplete="name"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 name="name"
                 type="text"
                 required
@@ -1664,6 +1677,7 @@ export function BookingWizard() {
               <input
                 id="phone"
                 autoComplete="tel"
+                enterKeyHint="next"
                 name="phone"
                 type="tel"
                 required
@@ -1690,6 +1704,10 @@ export function BookingWizard() {
             <input
               id="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               name="email"
               type="email"
               required
@@ -1911,20 +1929,20 @@ export function BookingWizard() {
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {deviceServices.map((s) => (
-                      <li key={s.id} className="flex justify-between text-sm">
-                        <span className="text-charcoal">
+                      <li key={s.id} className="flex justify-between gap-3 text-sm">
+                        <span className="min-w-0 [overflow-wrap:anywhere] text-charcoal">
                           {repairServiceLabel(s)}
                         </span>
-                        <span className="font-bold text-charcoal">
-                          {s.price_dkk} DKK
+                        <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                          {kr(s.price_dkk)}
                         </span>
                       </li>
                     ))}
                     {booking.includesTemperedGlass && (
-                      <li className="flex justify-between text-sm">
+                      <li className="flex justify-between gap-3 text-sm">
                         <span className="text-charcoal">Beskyttelsesglas</span>
-                        <span className="font-bold text-charcoal">
-                          {TEMPERED_GLASS_PRICE} DKK
+                        <span className="shrink-0 whitespace-nowrap font-bold text-charcoal">
+                          {kr(TEMPERED_GLASS_PRICE)}
                         </span>
                       </li>
                     )}
@@ -1938,17 +1956,17 @@ export function BookingWizard() {
                 <>
                   <div className="flex justify-between text-sm text-gray">
                     <span>Subtotal</span>
-                    <span className="line-through">{subtotal} DKK</span>
+                    <span className="line-through">{kr(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-green-eco">
                     <span>Rabat ({discountPercent}%)</span>
-                    <span>-{discountAmount} DKK</span>
+                    <span>−{kr(discountAmount)}</span>
                   </div>
                 </>
               )}
               <div className="mt-1 flex justify-between font-body text-lg font-bold">
                 <span className="text-charcoal">Total</span>
-                <span className="text-green-eco">{totalPrice} DKK</span>
+                <span className="text-green-eco">{kr(totalPrice)}</span>
               </div>
               <p className="mt-1 text-xs text-gray">
                 Inkl. moms og reservedele
@@ -1997,9 +2015,9 @@ export function BookingWizard() {
                   ["Telefon", customer.phone],
                 ] as [string, string][]
               ).map(([label, value]) => (
-                <div key={label} className="flex justify-between">
-                  <dt className="text-gray">{label}</dt>
-                  <dd className="font-medium text-charcoal">{value}</dd>
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="shrink-0 text-gray">{label}</dt>
+                  <dd className="min-w-0 text-right font-medium text-charcoal [overflow-wrap:anywhere]">{value}</dd>
                 </div>
               ))}
               <div>
@@ -2065,7 +2083,7 @@ export function BookingWizard() {
                   Sender...
                 </>
               ) : (
-                <>Betal nu — {totalPrice} DKK</>
+                <>Betal nu — {kr(totalPrice)}</>
               )}
             </button>
             <p className="text-center text-xs text-gray">

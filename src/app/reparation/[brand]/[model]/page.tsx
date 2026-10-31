@@ -22,6 +22,7 @@ import {
 } from "@/lib/supabase/repairs";
 import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 import { fitTitle } from "@/lib/repairs/hub-meta";
+import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
 
 export const revalidate = 3600;
 
@@ -155,6 +156,19 @@ export default async function ModelPricePage({ params }: Props) {
   ].filter(Boolean) as { title: string; text: string; href?: string }[];
 
   const storeCities = Object.values(STORES).map((store) => store.city);
+  const campaignActive = isBlackNovember();
+  // Heroens pris skal matche det, folk kommer for: skærm og batteri, ikke den
+  // billigste softwareydelse.
+  const fromPriceOf = (pattern: RegExp) => {
+    const prices = paidServices
+      .filter((s) => pattern.test(((s.service_category ?? "") + " " + s.slug).toLocaleLowerCase("da-DK")))
+      .map((s) => s.price_dkk);
+    return prices.length ? Math.min(...prices) : null;
+  };
+  const anchorPrices = [
+    { label: "Skærm", price: fromPriceOf(/sk(æ|ae)rm/) },
+    { label: "Batteri", price: fromPriceOf(/batteri/) },
+  ].filter((a): a is { label: string; price: number } => a.price != null);
   const finderStores = Object.values(STORES).map((store) => ({
     slug: store.slug,
     name: store.name,
@@ -261,13 +275,27 @@ export default async function ModelPricePage({ params }: Props) {
                 oplysninger om reservedelen, før du booker.
               </p>
               <div className={styles.priceLine}>
-                <span>
-                  {cheapest
-                    ? "Fra " + cheapest.toLocaleString("da-DK") + " kr."
-                    : "Priser kommer snart"}
-                </span>
+                {anchorPrices.length > 0 ? (
+                  anchorPrices.map((a) => (
+                    <span key={a.label}>
+                      {a.label} fra {a.price.toLocaleString("da-DK")} kr.
+                    </span>
+                  ))
+                ) : (
+                  <span>
+                    {cheapest
+                      ? "Fra " + cheapest.toLocaleString("da-DK") + " kr."
+                      : "Priser kommer snart"}
+                  </span>
+                )}
                 <span>{storeCities.join(" og ")}</span>
               </div>
+              {campaignActive && paidServices.length > 0 && (
+                <p className={styles.heroCampaign}>
+                  <strong>Black November</strong> {BLACK_NOVEMBER.repairPercent} % på alle
+                  reparationer til og med 30. november.
+                </p>
+              )}
             </div>
           </div>
           {services.length > 0 && (
@@ -327,6 +355,7 @@ export default async function ModelPricePage({ params }: Props) {
               modelSlug={model.slug}
               modelName={model.name}
               deviceType={brand.device_type}
+              campaignActive={campaignActive}
             />
           )}
         </section>

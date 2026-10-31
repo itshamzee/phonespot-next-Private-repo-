@@ -7,6 +7,8 @@ import Link from "next/link";
 import type { DeviceType } from "@/lib/supabase/types";
 import styles from "./repair.module.css";
 import { QUALITY_BLURB, QUALITY_ORDER, qualityLabel, repairServiceLabel } from "./service-label";
+import { BLACK_NOVEMBER, repairDiscountPercentFor, volumeRepairPercent } from "@/lib/campaign/black-november";
+import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { STORE_IDS, normalizeStoreId, type StoreId } from "@/lib/stores";
@@ -37,6 +39,8 @@ interface RepairCartProps {
   modelName: string;
   /** Styrer telefon-specifikke valg (beskyttelsesglas) og garantitekst. */
   deviceType?: DeviceType;
+  /** Om Black November kørte, da siden blev bygget. Klienten tjekker selv uret bagefter. */
+  campaignActive?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -49,7 +53,10 @@ function getAvailableDates(count: number): string[] {
   d.setDate(d.getDate() + 1);
   while (dates.length < count) {
     const day = d.getDay();
-    if (day >= 1 && day <= 6) dates.push(d.toISOString().slice(0, 10));
+    if (day >= 1 && day <= 6)
+      dates.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      );
     d.setDate(d.getDate() + 1);
   }
   return dates;
@@ -220,6 +227,12 @@ const DEVICE_COLORS = [
 
 /** Beskyttelsesglas sat på sammen med reparationen. Normalprisen i butikken er 199 kr. */
 const GLASS_PRICE = 99;
+
+/** Skærm, batteri og opladerstik vises som store kort øverst. */
+function isPrimaryRepair(category: string, first: ServiceItem): boolean {
+  const key = (category + " " + first.slug).toLocaleLowerCase("da-DK");
+  return /sk(æ|ae)rm|batteri|oplader/.test(key);
+}
 const GLASS_SHOP_PRICE = 199;
 
 export function RepairCart({
@@ -227,7 +240,9 @@ export function RepairCart({
   brandName,
   modelName,
   deviceType,
+  campaignActive = false,
 }: RepairCartProps) {
+  const blackNovember = useBlackNovember(campaignActive);
   const allowsGlass = deviceType !== "appliance" && deviceType !== "console";
   /* State */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -285,11 +300,19 @@ export function RepairCart({
     }
     return Array.from(map.entries());
   }, [services]);
+  // Skærm, batteri og opladerstik er det, de fleste kommer for. De står øverst
+  // som store kort; resten samles i en kompakt liste.
+  const primaryGroups = grouped.filter(([category, items]) => isPrimaryRepair(category, items[0]));
+  const otherGroups = grouped.filter(([category, items]) => !isPrimaryRepair(category, items[0]));
   const subtotal =
     selectedServices.reduce((sum, s) => sum + s.price_dkk, 0) +
     (includesTemperedGlass ? GLASS_PRICE : 0);
-  const discountPercent =
-    selectedIds.size >= 3 ? 15 : selectedIds.size >= 2 ? 10 : 0;
+  const discountPercent = repairDiscountPercentFor(selectedIds.size, blackNovember);
+  // Teksten siger "Black November", når det er kampagnen og ikke mængderabatten, der giver rabatten.
+  const discountLabel =
+    blackNovember && volumeRepairPercent(selectedIds.size) <= BLACK_NOVEMBER.repairPercent
+      ? `Black November (${discountPercent} %)`
+      : `Rabat (${discountPercent} %)`;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
   const canSubmit = !!(
@@ -440,7 +463,7 @@ export function RepairCart({
         </h2>
         <p className="mt-3 text-sm text-gray">
           Bookingen er gået igennem. Vi har sendt en bekræftelse til{" "}
-          <span className="font-semibold text-charcoal">{customer.email}</span>{" "}
+          <span className="font-semibold text-charcoal [overflow-wrap:anywhere]">{customer.email}</span>{" "}
           — tjek evt. din spam-mappe.
         </p>
         {submitResult.ticketId && (
@@ -462,9 +485,9 @@ export function RepairCart({
         <div className="mt-6 rounded-xl border border-soft-grey bg-white p-4 text-left text-sm">
           <p className="font-bold text-charcoal">{modelName}</p>
           {selectedServices.map((s) => (
-            <div key={s.id} className="mt-1 flex justify-between text-gray">
-              <span>{repairServiceLabel(s)}</span>
-              <span>{fmt(s.price_dkk)} kr.</span>
+            <div key={s.id} className="mt-1 flex justify-between gap-3 text-gray">
+              <span className="min-w-0 [overflow-wrap:anywhere]">{repairServiceLabel(s)}</span>
+              <span className="shrink-0 whitespace-nowrap">{fmt(s.price_dkk)} kr.</span>
             </div>
           ))}
           {includesTemperedGlass && (
@@ -489,61 +512,35 @@ export function RepairCart({
   /*  Main layout                                                      */
   /* ---------------------------------------------------------------- */
 
+  function renderGroup(category: string, items: ServiceItem[], compact: boolean) {
+    const selected = items.find((item) => selectedIds.has(item.id));
+    if (items.length === 1)
+      return (
+        <ServiceOption
+          key={category}
+          service={items[0]}
+          selected={!!selected}
+          onToggle={toggleService}
+          formatPrice={fmt}
+          compact={compact}
+        />
+      );
+    return (
+      <TierGroup
+        key={category}
+        category={category}
+        items={items}
+        selected={selected}
+        onToggle={toggleService}
+        formatPrice={fmt}
+      />
+    );
+  }
+
   return (
     <div className={styles.cart}>
       <div className={styles.cartLayout}>
         <div className={styles.servicesColumn}>
-          {deviceType !== "appliance" && (
-            <fieldset className={styles.colors}>
-  
-              <legend>
-  
-                Enhedens farve <span>(valgfri)</span>
-  
-              </legend>
-  
-              <div>
-  
-                {DEVICE_COLORS.map((c) => (
-  
-                  <button
-  
-                    type="button"
-  
-                    key={c.name}
-  
-                    aria-pressed={selectedColor === c.name}
-  
-                    onClick={() =>
-  
-                      setSelectedColor(selectedColor === c.name ? "" : c.name)
-  
-                    }
-  
-                  >
-  
-                    <span
-  
-                      style={{
-  
-                        background: c.hex,
-  
-                        border: c.border ? "1px solid #c8d0c9" : undefined,
-  
-                      }}
-  
-                    />
-  
-                    {c.name}
-  
-                  </button>
-  
-                ))}
-  
-              </div>
-  
-            </fieldset>
-          )}
           <div className={styles.serviceHeading}>
             <h2>Vælg reparation</h2>
             <button
@@ -559,31 +556,28 @@ export function RepairCart({
           <p className={styles.hint}>
             Vælg en reparation og eventuelt kvalitet på reservedelen.
           </p>
+          {blackNovember && services.some((service) => service.price_dkk > 0) && (
+            <div className={styles.campaignStrip} role="note">
+              <span className={styles.campaignBadge}>Black November</span>
+              <p>
+                <strong>{BLACK_NOVEMBER.repairPercent} % på alle reparationer</strong> hele november.
+                Rabatten trækkes automatisk i din oversigt.
+              </p>
+            </div>
+          )}
           <div className={styles.serviceRows}>
-            {grouped.map(([category, items]) => {
-              const selected = items.find((item) => selectedIds.has(item.id));
-              if (items.length === 1)
-                return (
-                  <ServiceOption
-                    key={category}
-                    service={items[0]}
-                    selected={!!selected}
-                    onToggle={toggleService}
-                    formatPrice={fmt}
-                  />
-                );
-              return (
-                <TierGroup
-                  key={category}
-                  category={category}
-                  items={items}
-                  selected={selected}
-                  onToggle={toggleService}
-                  formatPrice={fmt}
-                />
-              );
-            })}
+            {primaryGroups.map(([category, items]) => renderGroup(category, items, false))}
           </div>
+          {otherGroups.length > 0 && (
+            <>
+              <h3 className={styles.otherHeading}>
+                {primaryGroups.length > 0 ? "Andre reparationer" : "Reparationer"}
+              </h3>
+              <div className={`${styles.serviceRows} ${styles.compactRows}`}>
+                {otherGroups.map(([category, items]) => renderGroup(category, items, true))}
+              </div>
+            </>
+          )}
           {services.length === 0 && (
             <div className={styles.empty}>
               <p>Priser kommer snart for denne model.</p>
@@ -592,8 +586,9 @@ export function RepairCart({
           )}
           {services.length > 1 && (
             <p className={styles.discountNote}>
-              10% rabat ved 2 reparationer · 15% rabat ved 3 eller flere.
-              Rabatten vises i din oversigt.
+              {blackNovember
+                ? "Black November: 10 % på alle reparationer · 15 % ved 3 eller flere. Rabatten vises i din oversigt."
+                : "10 % rabat ved 2 reparationer · 15 % rabat ved 3 eller flere. Rabatten vises i din oversigt."}
             </p>
           )}
           <p className={styles.hint}>
@@ -617,6 +612,7 @@ export function RepairCart({
               selectedServices={selectedServices}
               includesTemperedGlass={includesTemperedGlass}
               discountPercent={discountPercent}
+              discountLabel={discountLabel}
               discountAmount={discountAmount}
               subtotal={subtotal}
               totalPrice={totalPrice}
@@ -643,7 +639,9 @@ export function RepairCart({
               }}
               onSubmitNoPay={handleSubmitNoPay}
               onSubmitAndPay={handleSubmitAndPay}
-              showExclMoms={showExclMoms}
+              showColors={deviceType !== "appliance"}
+              selectedColor={selectedColor}
+              setSelectedColor={setSelectedColor}
             />
           ) : (
             <div className={styles.summary}>
@@ -696,7 +694,7 @@ export function RepairCart({
                   )}
                   {discountPercent > 0 && (
                     <div className={styles.summaryDiscount}>
-                      <span>Rabat ({discountPercent}%)</span>
+                      <span>{discountLabel}</span>
                       <strong>−{fmt(discountAmount)} kr.</strong>
                     </div>
                   )}
@@ -934,14 +932,18 @@ function ServiceOption({
   selected,
   onToggle,
   formatPrice,
+  compact = false,
 }: {
   service: ServiceItem;
   selected: boolean;
   onToggle: (id: string) => void;
   formatPrice: PriceFormatter;
+  /** Kompakt række under "Andre reparationer": beskrivelsen ligger i "Hvad er inkluderet?". */
+  compact?: boolean;
 }) {
+  const text = service.description || service.info_note;
   return (
-    <div className={styles.serviceOption} data-selected={selected}>
+    <div className={styles.serviceOption} data-selected={selected} data-compact={compact || undefined}>
       <div className={styles.serviceOptionTop}>
         <ServiceIcon slug={service.slug} />
         <div className={styles.serviceName}>
@@ -978,12 +980,11 @@ function ServiceOption({
           </Link>
         )}
       </div>
-      {(service.description || service.info_note) && (
-        <p>{service.description || service.info_note}</p>
-      )}
-      {(service.includes || service.warranty_info) && (
+      {!compact && text && <p>{text}</p>}
+      {(service.includes || service.warranty_info || (compact && text)) && (
         <details className={styles.serviceDetails}>
           <summary>Hvad er inkluderet?</summary>
+          {compact && text && <p>{text}</p>}
           {service.includes && <p>{service.includes}</p>}
           {service.warranty_info && <p>{service.warranty_info}</p>}
         </details>
@@ -1001,6 +1002,7 @@ interface BookingFormProps {
   selectedServices: ServiceItem[];
   includesTemperedGlass: boolean;
   discountPercent: number;
+  discountLabel: string;
   discountAmount: number;
   subtotal: number;
   totalPrice: number;
@@ -1027,7 +1029,9 @@ interface BookingFormProps {
   onBack: () => void;
   onSubmitNoPay: () => void;
   onSubmitAndPay: () => void;
-  showExclMoms: boolean;
+  showColors: boolean;
+  selectedColor: string;
+  setSelectedColor: (color: string) => void;
 }
 
 function BookingForm({
@@ -1035,6 +1039,7 @@ function BookingForm({
   selectedServices,
   includesTemperedGlass,
   discountPercent,
+  discountLabel,
   discountAmount,
   subtotal,
   totalPrice,
@@ -1054,11 +1059,12 @@ function BookingForm({
   onBack,
   onSubmitNoPay,
   onSubmitAndPay,
-  showExclMoms,
+  showColors,
+  selectedColor,
+  setSelectedColor,
 }: BookingFormProps) {
-  const fmtPrice = (dkk: number) =>
-    showExclMoms ? Math.round(dkk * 0.8) : dkk;
-  const fmt = (dkk: number) => fmtPrice(dkk).toLocaleString("da-DK");
+  // Formularen viser altid priser inkl. moms — det er det beløb, der betales.
+  const fmt = (dkk: number) => dkk.toLocaleString("da-DK");
   const availableDates = getAvailableDates(6);
   const formId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -1098,9 +1104,9 @@ function BookingForm({
           {modelName}
         </p>
         {selectedServices.map((s) => (
-          <div key={s.id} className="flex justify-between text-sm">
-            <span className="text-charcoal">{repairServiceLabel(s)}</span>
-            <span className="font-bold">{fmt(s.price_dkk)} kr.</span>
+          <div key={s.id} className="flex justify-between gap-3 text-sm">
+            <span className="min-w-0 text-charcoal [overflow-wrap:anywhere]">{repairServiceLabel(s)}</span>
+            <span className="shrink-0 whitespace-nowrap font-bold">{fmt(s.price_dkk)} kr.</span>
           </div>
         ))}
         {includesTemperedGlass && (
@@ -1111,7 +1117,7 @@ function BookingForm({
         )}
         {discountPercent > 0 && (
           <div className="flex justify-between text-sm text-green-eco">
-            <span>Rabat ({discountPercent}%)</span>
+            <span>{discountLabel}</span>
             <span>−{fmt(discountAmount)} kr.</span>
           </div>
         )}
@@ -1126,6 +1132,32 @@ function BookingForm({
           <span className="text-green-eco">{fmt(totalPrice)} kr.</span>
         </div>
       </div>
+
+      {showColors && (
+        <fieldset className={styles.colors}>
+          <legend>
+            Enhedens farve <span>(valgfri)</span>
+          </legend>
+          <div>
+            {DEVICE_COLORS.map((c) => (
+              <button
+                type="button"
+                key={c.name}
+                aria-pressed={selectedColor === c.name}
+                onClick={() => setSelectedColor(selectedColor === c.name ? "" : c.name)}
+              >
+                <span
+                  style={{
+                    background: c.hex,
+                    border: c.border ? "1px solid #c8d0c9" : undefined,
+                  }}
+                />
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       {/* Error message */}
       {submitResult?.error && (
@@ -1149,6 +1181,8 @@ function BookingForm({
           <input
             id={formId + "-name"}
             autoComplete="name"
+            autoCapitalize="words"
+            enterKeyHint="next"
             required
             type="text"
             placeholder="Dit fulde navn"
@@ -1171,6 +1205,10 @@ function BookingForm({
             <input
               id={formId + "-email"}
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               required
               type="email"
               placeholder="din@email.dk"
@@ -1199,6 +1237,7 @@ function BookingForm({
             <input
               id={formId + "-phone"}
               autoComplete="tel"
+              enterKeyHint="done"
               required
               type="tel"
               placeholder="+45 XX XX XX XX"

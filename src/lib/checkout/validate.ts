@@ -4,6 +4,8 @@ import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 import { isSparePart } from "@/lib/spare-part-filter";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { resolveUpgrades, type AllowedUpgrade } from "./upgrades";
+import { blackNovemberDevicePrice, blackNovemberSkuPrice } from "@/lib/campaign/black-november";
+import { effectiveGrade } from "@/lib/grades";
 
 export interface ValidatedItem {
   item: CartItem;
@@ -35,7 +37,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
     const deviceIds = devices.map((d) => d.deviceId);
     const { data: dbDevices, error: deviceError } = await supabase
       .from("devices")
-      .select("id, status, selling_price, reservation_expires_at, source, source_stock, template_id, reservation_id, reservation_owner_hash, reservation_order_id")
+      .select("id, status, grade, condition_notes, selling_price, reservation_expires_at, source, source_stock, template_id, reservation_id, reservation_owner_hash, reservation_order_id")
       .in("id", deviceIds);
     const deviceMap = new Map((deviceError ? [] : dbDevices ?? []).map((d) => [d.id, d]));
 
@@ -67,6 +69,8 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
         errors.push(`${item.title} er ikke tilgængelig`);
         continue;
       }
+      // Black November: 5 % på brugte enheder. Serverprisen er den eneste, der betales.
+      const devicePrice = blackNovemberDevicePrice(db.selling_price, effectiveGrade(db as { grade: string | null; condition_notes?: string | null }));
       if (db.source === "foxway") {
         // Foxway devices: validate stock instead of reservation
         if ((db.source_stock ?? 0) <= 0) {
@@ -81,10 +85,10 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
             errors.push(`${item.title}: ${resolved.error}`);
             continue;
           }
-          validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
+          validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: devicePrice, available: true, deviceSource: db.source ?? null });
           continue;
         }
-        validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null });
+        validated.push({ item, serverPrice: devicePrice, available: true, deviceSource: db.source ?? null });
         continue;
       }
       if (db.status !== "reserved") {
@@ -104,10 +108,10 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
           errors.push(`${item.title}: ${resolved.error}`);
           continue;
         }
-        validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
+        validated.push({ item: { ...item, upgrades: resolved.upgrades }, serverPrice: devicePrice, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
         continue;
       }
-      validated.push({ item, serverPrice: db.selling_price, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
+      validated.push({ item, serverPrice: devicePrice, available: true, deviceSource: db.source ?? null, reservationId: db.reservation_id });
     }
   }
 
@@ -118,7 +122,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       requested.set(item.skuProductId, Number.isSafeInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(total) ? total : NaN);
     }
     const { data, error } = await supabase.from("checkout_sku_inventory")
-      .select("id, selling_price, sale_price, is_active, always_in_stock, total_stock, category, subcategory, attributes")
+      .select("id, title, selling_price, sale_price, is_active, always_in_stock, total_stock, category, subcategory, attributes")
       .in("id", [...requested.keys()]);
     const skuMap = new Map((error ? [] : data ?? []).map(s => [s.id, s]));
     for (const item of skus) {
@@ -128,7 +132,10 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
       const available = !!db?.is_active && !isSparePart(db) && Number.isSafeInteger(demand) && demand > 0 &&
         (!!db.always_in_stock || (Number.isSafeInteger(stock) && stock >= demand));
       const message = "Produktets lager eller antal kunne ikke bekræftes";
-      validated.push({ item, serverPrice: db?.sale_price ?? db?.selling_price ?? 0, available, lagersalg: !!db && isLagersalg(db as { subcategory: string | null; attributes: Record<string, string> | null }), ...(available ? {} : {error: message}) });
+      const listPrice = db?.sale_price ?? db?.selling_price ?? 0;
+      // Black November: covers og glas til højst 199 kr. (ikke bookcovers og lagersalg).
+      const skuPrice = db ? blackNovemberSkuPrice(db as Parameters<typeof blackNovemberSkuPrice>[0], listPrice) : 0;
+      validated.push({ item, serverPrice: skuPrice, available, lagersalg: !!db && isLagersalg(db as { subcategory: string | null; attributes: Record<string, string> | null }), ...(available ? {} : {error: message}) });
       if (!available) errors.push(item.title + ": " + message);
     }
   }

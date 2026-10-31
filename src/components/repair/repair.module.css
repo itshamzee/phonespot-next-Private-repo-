@@ -98,8 +98,10 @@
 .breadcrumb li:last-child {
   color: #242726;
 }
+@media (hover: hover) and (pointer: fine) {
 .breadcrumb a:hover {
   text-decoration: underline;
+}
 }
 .section {
   padding-block: 40px;
@@ -336,9 +338,11 @@
   text-align: left;
   color: #242726;
 }
+@media (hover: hover) and (pointer: fine) {
 .brandCell:hover {
   border-color: #1a3d2e;
   background: #f4f7f2;
+}
 }
 .brandCell img {
   width: 34px;
@@ -409,8 +413,10 @@
   padding: 24px 16px;
   text-align: center;
 }
+@media (hover: hover) and (pointer: fine) {
 .modelCell:hover {
   border-color: #1a3d2e;
+}
 }
 .modelPhoto {
   width: 100%;
@@ -616,7 +622,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 34px;
+  min-height: 44px;
   border: 1px solid #dce1db;
   border-radius: 6px;
   padding: 6px 10px;
@@ -674,8 +680,10 @@
   padding: 22px;
   text-align: left;
 }
+@media (hover: hover) and (pointer: fine) {
 .categoryToggle:hover {
   background: #f4f7f2;
+}
 }
 .categoryToggle strong {
   display: block;
@@ -766,7 +774,7 @@
 .serviceDetails summary {
   color: #1a3d2e;
   cursor: pointer;
-  padding-block: 4px;
+  padding-block: 10px;
 }
 .serviceDetails p {
   color: #626a65;
@@ -902,8 +910,10 @@
   font-weight: 600;
   width: 100%;
 }
+@media (hover: hover) and (pointer: fine) {
 .primaryButton:hover {
   background: #264d3b;
+}
 }
 .summaryHelp {
   font-size: 12px;
@@ -1504,4 +1514,108 @@
     gap: 12px;
     padding: 14px;
   }
+}
+
+/* ---------- Black November på reparationslisten ---------- */
+.campaignStrip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #111311;
+  color: #f4f3ef;
+}
+.campaignStrip p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #c9cdc8;
+}
+.campaignStrip strong {
+  color: #fff;
+  font-weight: 650;
+}
+.campaignBadge {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #111311;
+  background: #7fd69e;
+  border-radius: 999px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+/* ---------- Andre reparationer (kompakt) ---------- */
+.otherHeading {
+  margin: 30px 0 12px;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.compactRows .serviceOption {
+  padding-block: 14px;
+}
+.compactRows .serviceOption .serviceDetails {
+  margin-top: 6px;
+}
+.bookingForm .colors {
+  margin: 20px 0 4px;
+}
+
+/* ---------- Robusthed (lange tal og navne, små mål) ---------- */
+.tierPrice {
+  white-space: nowrap;
+  font-size: clamp(17px, 1.6vw, 21px);
+}
+.tierBlurb {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tierHeader .rowPrice {
+  text-align: right;
+}
+.summaryRows button {
+  width: 44px;
+  height: 44px;
+  margin: -7px -9px -7px 0;
+}
+.serviceHeading button {
+  min-height: 40px;
+}
+@media (max-width: 800px) {
+  .cart {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 480px) {
+  .campaignStrip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+.heroCampaign {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 7px 12px 7px 7px;
+  border-radius: 999px;
+  background: #111311;
+  color: #d9ddd8;
+  font-size: 13px;
+}
+.heroCampaign strong {
+  color: #111311;
+  background: #7fd69e;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11.5px;
+  font-weight: 700;
 }

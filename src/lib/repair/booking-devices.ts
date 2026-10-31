@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { repairDiscountPercent } from "@/lib/campaign/black-november";
 
 // Bookingguiden kan bestille reparation af flere enheder i én booking. Hver
 // enhed bliver sin egen repair_ticket (personalet håndterer dem som hver sin
@@ -170,7 +171,11 @@ export function parseTicketIdList(metadata: Record<string, string> | null | unde
   return metadata?.repair_ticket_id ? [metadata.repair_ticket_id] : [];
 }
 
-/** Rabatreglen fra guiden og prisside-kurven: 10% ved 2 reparationer, 15% ved 3+ (samlet for hele bookingen). */
-export function discountPercentForServiceCount(count: number): number {
-  return count >= 3 ? 15 : count >= 2 ? 10 : 0;
+/**
+ * Rabatreglen fra guiden og prisside-kurven: 10% ved 2 reparationer, 15% ved 3+
+ * (samlet for hele bookingen). I Black November er bunden 10 % fra første
+ * reparation — reglen bor i lib/campaign, så klient og server er enige.
+ */
+export function discountPercentForServiceCount(count: number, now: number = Date.now()): number {
+  return repairDiscountPercent(count, now);
 }

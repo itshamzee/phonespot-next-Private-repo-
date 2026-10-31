@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { BookingWizard } from "@/components/repair/booking-wizard";
+import { isBlackNovember } from "@/lib/campaign/black-november";
 import styles from "@/components/repair/repair.module.css";
 export const metadata: Metadata = {
   title: "Book reparation | PhoneSpot",
@@ -57,7 +58,7 @@ export default async function BookingPage({
               </p>
             }
           >
-            <BookingWizard />
+            <BookingWizard campaignActive={isBlackNovember()} />
           </Suspense>
           <p className={styles.bookingHelp}>
             Brug for hjælp? <Link href="/kontakt">Kontakt os</Link>, eller find

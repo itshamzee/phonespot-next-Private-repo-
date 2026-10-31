@@ -169,7 +169,7 @@ describe("booking presentation preserves existing flow", () => {
     next();
     next();
     expect(
-      screen.getByRole("button", { name: /Betal nu.*499 DKK/ }),
+      screen.getByRole("button", { name: /Betal nu.*499 kr./ }),
     ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Book og betal i butikken" }),
@@ -213,7 +213,7 @@ describe("booking presentation preserves existing flow", () => {
       screen.getByRole("button", { name: /Batteriskift/, pressed: false }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Batteriskift/ }));
-    expect(screen.getAllByText("898 DKK").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("898 kr.").length).toBeGreaterThan(0);
     next();
     fireEvent.click(screen.getByRole("button", { name: "Tilbage" }));
     expect(
@@ -292,23 +292,23 @@ describe("booking presentation preserves existing flow", () => {
     await chooseModel();
     next();
     fireEvent.click(
-      await screen.findByRole("button", { name: /Skærmskift.*1299/ }),
+      await screen.findByRole("button", { name: /Skærmskift.*1.299/ }),
     );
     fireEvent.click(screen.getByRole("button", { name: /Batteriskift/ }));
-    expect(screen.getAllByText("1618 DKK").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /Skærmskift.*1599/ }));
+    expect(screen.getAllByText("1.618 kr.").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Skærmskift.*1.599/ }));
     expect(
-      screen.getByRole("button", { name: /Skærmskift.*1299/ }),
+      screen.getByRole("button", { name: /Skærmskift.*1.299/ }),
     ).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getAllByText("1888 DKK").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /Skærmskift.*1599/ }));
+    expect(screen.getAllByText("1.888 kr.").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Skærmskift.*1.599/ }));
     expect(
-      screen.getByRole("button", { name: /Skærmskift.*1599/ }),
+      screen.getByRole("button", { name: /Skærmskift.*1.599/ }),
     ).toHaveAttribute("aria-pressed", "false");
     expect(
       screen.getByRole("button", { name: /Batteriskift/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getAllByText("499 DKK").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("499 kr.").length).toBeGreaterThan(0);
   });
   it("opens model selection when adding on the repair step, preserving qualities independently per device", async () => {
     fixture.services = [
@@ -335,7 +335,7 @@ describe("booking presentation preserves existing flow", () => {
     await chooseModel();
     next();
     fireEvent.click(
-      await screen.findByRole("button", { name: /Skærmskift.*1299/ }),
+      await screen.findByRole("button", { name: /Skærmskift.*1.299/ }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Tilføj enhed" }));
     expect(screen.getByRole("listitem", { current: "step" })).toHaveTextContent(
@@ -344,15 +344,15 @@ describe("booking presentation preserves existing flow", () => {
     await chooseModel();
     next();
     fireEvent.click(
-      await screen.findByRole("button", { name: /Skærmskift.*1599/ }),
+      await screen.findByRole("button", { name: /Skærmskift.*1.599/ }),
     );
-    expect(screen.getAllByText("2608 DKK").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2.608 kr.").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /^Enhed 1/ }));
     expect(
-      screen.getByRole("button", { name: /Skærmskift.*1299/ }),
+      screen.getByRole("button", { name: /Skærmskift.*1.299/ }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(
-      screen.getByRole("button", { name: /Skærmskift.*1599/ }),
+      screen.getByRole("button", { name: /Skærmskift.*1.599/ }),
     ).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(screen.getByRole("button", { name: "Tilføj enhed" }));
     expect(
