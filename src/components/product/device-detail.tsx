@@ -1,5 +1,6 @@
 "use client";
 
+import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -68,7 +69,10 @@ export type PublicDevice = Pick<
   | "screen_replaced"
   | "replaced_parts_original"
   | "source"
->;
+> & {
+  /** Normalpris, når enheden har Black November-pris i selling_price. */
+  list_price?: number;
+};
 
 type DeviceDetailProps = {
   template: ProductTemplate;
@@ -823,6 +827,13 @@ export function DeviceDetail({
                   Samlet: {formatDKK(price + selectedUpgradeTotal)}
                 </p>
               </div>
+            )}
+            {bestMatch?.list_price && price != null && bestMatch.list_price > price && (
+              <p className={styles.campaignLine}>
+                <span>Black November</span>
+                {BLACK_NOVEMBER.devicePercent} % er trukket fra · før{" "}
+                <s>{formatDKK(bestMatch.list_price)}</s>
+              </p>
             )}
             <p className={styles.small}>
               Inkl. moms · 36 måneders garanti på enheden

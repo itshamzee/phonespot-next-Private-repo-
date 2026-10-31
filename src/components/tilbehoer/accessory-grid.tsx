@@ -41,7 +41,7 @@ const PRICE_RANGE_MAP: Record<string, PriceRange> = {
 
 function SkeletonCard() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-sand bg-white">
+    <div className="flex flex-col overflow-hidden">
       <div className="aspect-square animate-pulse bg-cream" />
       <div className="space-y-2 p-4">
         <div className="h-3 w-16 animate-pulse rounded-full bg-sand" />
@@ -69,6 +69,8 @@ interface AccessoryGridProps {
   priceRanges?: string[]; // e.g. ["0-9999", "10000-29999"]
   inStore?: boolean;
   onCountChange?: (count: number) => void;
+  /** Nulstiller alle filtre fra den tomme tilstand. */
+  onReset?: () => void;
 }
 
 export function AccessoryGrid({
@@ -83,6 +85,7 @@ export function AccessoryGrid({
   priceRanges = [],
   inStore = false,
   onCountChange,
+  onReset,
 }: AccessoryGridProps) {
   const [products, setProducts] = useState<PublicAccessory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +216,7 @@ export function AccessoryGrid({
   if (loading) {
     return (
       <div role="status" aria-label="Henter produkter" className="grid grid-cols-1 gap-5 min-[360px]:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>
@@ -222,13 +225,22 @@ export function AccessoryGrid({
 
   if (displayedProducts.length === 0) {
     return (
-      <div role="status" className="rounded-2xl border-2 border-dashed border-sand bg-cream p-12 text-center">
+      <div role="status" className="rounded-2xl bg-[#f4f5f2] px-6 py-12 text-center">
         <p className="text-lg font-bold text-charcoal">
-          Ingen produkter fundet
+          Ingen produkter matcher dine filtre
         </p>
-        <p className="mt-2 text-sm text-charcoal/50">
-          Prøv at ændre dine filtre
+        <p className="mx-auto mt-2 max-w-md text-sm text-charcoal/70">
+          Prøv at fjerne et filter. Vi kan ofte skaffe det, du leder efter. Spørg i butikken i Vejle eller Slagelse.
         </p>
+        {onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-5 min-h-11 rounded-lg bg-[#1A3D2E] px-5 text-sm font-semibold text-white transition-transform duration-150 ease-out active:scale-[0.97]"
+          >
+            Nulstil filtre
+          </button>
+        )}
       </div>
     );
   }
@@ -252,6 +264,7 @@ export function AccessoryGrid({
           compatible_models={product.compatible_models}
           spotKind={product.spotKind}
           lagersalg={product.lagersalg}
+          black_november={product.black_november}
         />
       ))}
     </div>

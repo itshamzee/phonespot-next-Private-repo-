@@ -1,3 +1,4 @@
+import { blackNovemberDevicePrice } from "@/lib/campaign/black-november";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { isNewGrade, merchantCondition } from "@/lib/grades";
@@ -91,7 +92,7 @@ export async function GET() {
       const color = dev.color ?? "";
       const storage = dev.storage ?? "";
       const grade = dev.grade as string;
-      const price = dev.selling_price as number;
+      const price = blackNovemberDevicePrice(dev.selling_price as number, grade);
 
       const key = `${template.id}|${color}|${storage}|${grade}`;
       const existing = variants.get(key);

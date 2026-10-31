@@ -21,7 +21,7 @@ it('keeps full-price glass eligible for the existing quantity discount',()=>{
 it('adds exactly the actual SKU sale price, quantity and photograph while preserving the detail link',()=>{
  render(<AccessoryCard {...product}/>);fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
  expect(cart.addSku).toHaveBeenCalledWith({type:'sku_product',skuProductId:'cover',title:'Cover',price:14900,quantity:1,image:'/cover.png'});
- expect(screen.getByRole('link',{name:'Se detaljer og kompatibilitet'})).toHaveAttribute('href','/tilbehoer/covers/cover');
+ for (const link of screen.getAllByRole('link',{name:'Cover'})) expect(link).toHaveAttribute('href','/tilbehoer/covers/cover');
 });
 it('keeps unknown stock unavailable without inventing a link or product image',()=>{
  render(<AccessoryCard {...product} slug={null} image_url={null} availability="unknown" store_stock={null} online_stock={null}/>);
@@ -34,7 +34,7 @@ it('briefly confirms one addition, then allows another, and cancels confirmation
  const view=render(<AccessoryCard {...product}/>);
  fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
  const confirmation=screen.getByRole('button',{name:'Tilføjet til kurv'});
- expect(confirmation).toBeDisabled();fireEvent.click(confirmation);
+ expect(confirmation).toHaveAttribute('aria-disabled','true');fireEvent.click(confirmation);
  expect(cart.addSku).toHaveBeenCalledTimes(1);
  act(()=>vi.advanceTimersByTime(1800));
  const button=screen.getByRole('button',{name:'Tilføj til kurv'});expect(button).toBeEnabled();
@@ -44,4 +44,8 @@ it('briefly confirms one addition, then allows another, and cancels confirmation
 it('flags lagersalgsvarer in the cart so 3 for 2 can be shown',()=>{
  render(<AccessoryCard {...product} lagersalg={true}/>);fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
  expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'cover',lagersalg:true}));
+});
+it('marks Black November prices on the card',()=>{
+ render(<AccessoryCard {...product} black_november={true}/>);
+ expect(screen.getAllByText('Black November').length).toBeGreaterThan(0);
 });

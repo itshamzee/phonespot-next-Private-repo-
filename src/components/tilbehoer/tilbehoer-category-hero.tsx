@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface TilbehoerHeroProps {
   title: string;
@@ -31,19 +31,31 @@ function HeroInner({ title, description, productCount, headingLevel: Heading = "
   const searchParams = useSearchParams();
 
   const activeSearch = searchParams.get("search") ?? "";
+  // Feltet styres lokalt, og URL'en opdateres først efter en kort pause med
+  // replace: ellers giver hvert bogstav et nyt punkt i historikken og en ny hentning.
+  const [query, setQuery] = useState(activeSearch);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => setQuery(activeSearch), [activeSearch]);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("side");
-      if (val) {
-        params.set("search", val);
-      } else {
-        params.delete("search");
-      }
-      const qs = params.toString();
-      router.push(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+      setQuery(val);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("side");
+        if (val) {
+          params.set("search", val);
+        } else {
+          params.delete("search");
+        }
+        const qs = params.toString();
+        router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+      }, 250);
     },
     [router, pathname, searchParams],
   );
@@ -76,10 +88,10 @@ function HeroInner({ title, description, productCount, headingLevel: Heading = "
               <input
                 type="search"
                 aria-label="Søg tilbehør"
-                value={activeSearch}
+                value={query}
                 onChange={handleSearchChange}
                 placeholder="Søg tilbehør..."
-                className="w-full rounded-xl border border-sand bg-white/90 py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/30 shadow-sm focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/20 transition-all backdrop-blur-sm"
+                className="w-full rounded-xl border border-sand bg-white/90 py-3 pl-10 pr-4 text-base sm:text-sm text-charcoal placeholder:text-charcoal/30 focus:border-green-eco/50 focus:outline-none focus:ring-2 focus:ring-green-eco/20 transition-[border-color,box-shadow] duration-150"
               />
             </div>
           </div>

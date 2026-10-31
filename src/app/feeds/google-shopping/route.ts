@@ -1,4 +1,5 @@
 import { withoutSpareParts } from "@/lib/spare-part-filter";
+import { withBlackNovemberDevice, withBlackNovemberSku } from "@/lib/campaign/black-november";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -70,7 +71,8 @@ export async function GET() {
   // Lagerstatus pr. tilbehør (samme sum som produktsiden: sku_stock.quantity).
   // Ved fejl behandles lageret som ukendt (null) — så sender feedet kun
   // in_stock for always_in_stock-varer.
-  const accessoryRows = withoutSpareParts(skuProducts ?? []) as unknown as AccessoryRow[];
+  // Black November: covers og glas sendes med kampagneprisen som sale_price.
+  const accessoryRows = withoutSpareParts(skuProducts ?? []).map((p) => withBlackNovemberSku(p)) as unknown as AccessoryRow[];
   const stockByProduct = new Map<string, number>();
   // Pagineret hentning: PostgREST afkorter ved 1000 rækker, og en lang
   // .in()-liste ville sprænge URL-grænsen.
@@ -107,7 +109,7 @@ export async function GET() {
 
   // Build device items — grupperet pr. model og stand
   const deviceItems: string[] = [];
-  for (const group of groupDevices((devices ?? []) as unknown as FeedDevice[], templateMap)) {
+  for (const group of groupDevices(((devices ?? []) as unknown as FeedDevice[]).map((d) => withBlackNovemberDevice(d)), templateMap)) {
     const item = buildDeviceItem(group);
     if (item) deviceItems.push(item);
   }

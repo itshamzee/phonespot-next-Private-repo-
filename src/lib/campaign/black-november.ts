@@ -181,3 +181,50 @@ export function withBlackNovemberAccessory<
   if (campaign >= effective) return row;
   return { ...row, sale_price: campaign, black_november: true };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Datalag: enheder og skabeloner                                      */
+/* ------------------------------------------------------------------ */
+
+type DeviceRow = { selling_price: number | null; grade?: string | null; condition_notes?: string | null };
+
+function deviceGrade(row: DeviceRow): string | null {
+  // Samme regel som lib/grades.effectiveGrade: grade A med "fabriksny" i noterne er ny.
+  if (row.grade === "A" && row.condition_notes?.toLowerCase().includes("fabriksny")) return "N";
+  return row.grade ?? null;
+}
+
+/**
+ * Enhed med kampagnepris i `selling_price` og normalprisen i `list_price`,
+ * så produktsiden kan vise "før"-prisen. Uændret uden for kampagnen.
+ */
+export function withBlackNovemberDevice<T extends DeviceRow>(
+  row: T,
+  now: number = Date.now(),
+): T & { list_price?: number } {
+  if (!row.selling_price) return row;
+  const price = blackNovemberDevicePrice(row.selling_price, deviceGrade(row), now);
+  if (price >= row.selling_price) return row;
+  return { ...row, selling_price: price, list_price: row.selling_price };
+}
+
+type TemplatePrices = {
+  base_price_a?: number | null;
+  base_price_b?: number | null;
+  base_price_c?: number | null;
+  base_price_p?: number | null;
+};
+
+/** Skabelonens standpriser (A/B/C/P) med 5 %. Fabriksny (N) og nypris røres ikke. */
+export function withBlackNovemberTemplate<T extends TemplatePrices>(t: T, now: number = Date.now()): T {
+  if (!isBlackNovember(now)) return t;
+  const cut = (v: number | null | undefined) =>
+    v ? blackNovemberDevicePrice(v, "A", now) : (v ?? null);
+  return {
+    ...t,
+    ...("base_price_a" in t ? { base_price_a: cut(t.base_price_a) } : {}),
+    ...("base_price_b" in t ? { base_price_b: cut(t.base_price_b) } : {}),
+    ...("base_price_c" in t ? { base_price_c: cut(t.base_price_c) } : {}),
+    ...("base_price_p" in t ? { base_price_p: cut(t.base_price_p) } : {}),
+  };
+}

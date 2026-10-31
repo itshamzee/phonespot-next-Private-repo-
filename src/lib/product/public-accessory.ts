@@ -8,5 +8,7 @@ export interface PublicAccessory {
   spotKind?: import("@/lib/spot/types").SpotVariantKind;
   /** Lagersalgsvare (3 for 2) — udledt på serveren via isLagersalg, da udsalg-attributten ikke er offentlig. */
   lagersalg: boolean;
+  /** Prisen er Black November-prisen (covers og glas 199 kr.). */
+  black_november?: true;
 }
 export interface AccessoryStockRow { product_id: string; quantity: number; location: { type: string } | null }

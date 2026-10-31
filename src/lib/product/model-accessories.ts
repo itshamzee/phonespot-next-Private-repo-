@@ -1,3 +1,4 @@
+import { blackNovemberSkuPrice } from "@/lib/campaign/black-november";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
@@ -20,10 +21,18 @@ type InventoryRow = {
 export function toPublicAccessory(p: InventoryRow): PublicAccessory {
   const store = p.store_stock;
   const online = p.online_stock;
+  // Black November: covers og glas højst 199 kr. som salgspris (ikke bookcovers og lagersalg).
+  const listPrice = p.sale_price ?? p.selling_price;
+  const campaignPrice = blackNovemberSkuPrice(
+    { subcategory: p.subcategory, title: p.title, attributes: p.attributes as Record<string, string> | null },
+    listPrice,
+  );
   return {
     id: p.id, name: p.title, slug: p.slug ?? null,
     category: ACCESSORY_CATEGORY_TO_SLUG[p.subcategory ?? ""] ?? p.subcategory ?? "other",
-    brand: p.brand, price: p.selling_price, sale_price: p.sale_price ?? null,
+    brand: p.brand, price: p.selling_price,
+    sale_price: campaignPrice < listPrice ? campaignPrice : (p.sale_price ?? null),
+    ...(campaignPrice < listPrice ? { black_november: true as const } : {}),
     image_url: Array.isArray(p.images) ? p.images[0] ?? null : null,
     compatible_models: accessoryModelLabels(p.compatible_models),
     spotKind: accessorySpotKind(p),

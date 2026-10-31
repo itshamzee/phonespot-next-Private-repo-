@@ -2,6 +2,11 @@ import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { createAdminClient } from "./admin";
 import type { ProductTemplate, SkuProduct } from "./platform-types";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
+import {
+  withBlackNovemberDevice,
+  withBlackNovemberSku,
+  withBlackNovemberTemplate,
+} from "@/lib/campaign/black-november";
 
 interface TemplateWithStock extends ProductTemplate {
   device_count: number;
@@ -50,7 +55,7 @@ export async function getPublishedTemplates(
   // (own vs. Foxway dropship — Task 17) for all templates.
   const { data: deviceStats } = await supabase
     .from("devices")
-    .select("template_id, selling_price, source, location:locations(name, type)")
+    .select("template_id, selling_price, grade, condition_notes, source, location:locations(name, type)")
     .in("template_id", templates.map(t => t.id))
     .eq("status", "listed");
 
@@ -61,7 +66,9 @@ export async function getPublishedTemplates(
     hasOwnStock: boolean;
   }>();
 
-  for (const d of deviceStats || []) {
+  for (const raw of deviceStats || []) {
+    // Black November: fra-prisen på kortene er kampagneprisen.
+    const d = withBlackNovemberDevice(raw);
     const existing = statsMap.get(d.template_id) || { count: 0, minPrice: null, locations: new Map(), hasOwnStock: false };
     existing.count++;
     if (d.selling_price && (existing.minPrice === null || d.selling_price < existing.minPrice)) {
@@ -77,7 +84,8 @@ export async function getPublishedTemplates(
     statsMap.set(d.template_id, existing);
   }
 
-  let results: TemplateWithStock[] = templates.map(t => {
+  let results: TemplateWithStock[] = templates.map(raw => {
+    const t = withBlackNovemberTemplate(raw);
     const stats = statsMap.get(t.id);
     return {
       ...t,
@@ -110,7 +118,7 @@ export async function getTemplateBySlug(slug: string): Promise<ProductTemplate |
     .eq("slug", slug)
     .eq("status", "published")
     .single();
-  return data;
+  return data ? withBlackNovemberTemplate(data) : data;
 }
 
 // Eksplicit kolonneliste — IKKE select("*"). Resultatet sendes videre som
@@ -135,7 +143,7 @@ export async function getAvailableDevices(templateId: string) {
     .not("selling_price", "is", null)
     .gt("selling_price", 0)
     .order("selling_price", { ascending: true });
-  return data || [];
+  return (data || []).map((d) => withBlackNovemberDevice(d));
 }
 
 // RAM/SSD-opgraderingstilvalg tilknyttet en laptop-skabelon (Task 8/12).
@@ -207,7 +215,7 @@ export async function getPublishedSkuProducts(
       .select("*")
       .in("id", links.map(l => l.sku_product_id))
       .eq("status", "published");
-    return data || [];
+    return (data || []).map((p) => withBlackNovemberSku(p));
   }
 
   let query = supabase.from("sku_products").select("*").eq("status", "published");
@@ -215,7 +223,7 @@ export async function getPublishedSkuProducts(
   query = query.neq("subcategory", "spare-part");
 
   const { data } = await query.order("title");
-  return data || [];
+  return (data || []).map((p) => withBlackNovemberSku(p));
 }
 
 export async function getSkuProductBySlug(slug: string): Promise<SkuProduct | null> {
@@ -226,7 +234,7 @@ export async function getSkuProductBySlug(slug: string): Promise<SkuProduct | nu
     .eq("slug", slug)
     .eq("status", "published")
     .single();
-  return data;
+  return data ? withBlackNovemberSku(data) : data;
 }
 
 export async function searchProducts(query: string): Promise<{
@@ -255,7 +263,7 @@ export async function searchProducts(query: string): Promise<{
   if (skuRes.error) throw skuRes.error;
 
   return {
-    templates: templatesRes.data || [],
-    skuProducts: withoutSpareParts(skuRes.data || []),
+    templates: (templatesRes.data || []).map((t) => withBlackNovemberTemplate(t)),
+    skuProducts: withoutSpareParts(skuRes.data || []).map((p) => withBlackNovemberSku(p)),
   };
 }

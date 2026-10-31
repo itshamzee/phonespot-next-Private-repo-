@@ -40,7 +40,7 @@ function ChevronDownIcon({ className }: { className?: string }) {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="font-body text-[11px] font-bold tracking-normal text-charcoal/35">
+    <h3 className="font-body text-sm font-semibold tracking-normal text-charcoal">
       {children}
     </h3>
   );

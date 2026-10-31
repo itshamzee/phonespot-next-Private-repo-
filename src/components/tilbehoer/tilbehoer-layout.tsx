@@ -317,6 +317,7 @@ function TilbehoerLayoutInner({
               priceRanges={priceRanges.length > 0 ? priceRanges : undefined}
               inStore={inStore}
               onCountChange={setFilteredCount}
+              onReset={clearAll}
             />
           </section>
         </div>

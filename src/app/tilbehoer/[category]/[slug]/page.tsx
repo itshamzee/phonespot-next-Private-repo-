@@ -1,3 +1,4 @@
+import { withBlackNovemberSku } from "@/lib/campaign/black-november";
 import { accessoryAvailability } from "@/lib/accessory-availability";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -253,9 +254,10 @@ export default async function AccessoryDetailPage({ params }: Props) {
       const rows = ((data ?? []) as Array<CrossSellProduct & { attributes?: Record<string, string> | null }>)
         .filter((p) => p.slug && p.images?.length)
         .map(({ attributes, ...p }): CrossSellProduct => ({
-          ...p,
+          ...withBlackNovemberSku({ ...p, attributes }),
+          attributes: undefined,
           lagersalg: isLagersalg({ subcategory: p.subcategory ?? null, attributes }),
-        }));
+        }) as CrossSellProduct);
       const other = rows.filter((p) => p.subcategory !== product.subcategory);
       const same = rows.filter((p) => p.subcategory === product.subcategory);
       crossSellProducts = [...other, ...same].slice(0, 8);

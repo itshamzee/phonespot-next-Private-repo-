@@ -1,3 +1,4 @@
+import { withBlackNovemberSku } from "@/lib/campaign/black-november";
 import type { SpotSku } from "./types";
 import { createServerClient } from "@/lib/supabase/client";
 
@@ -49,7 +50,7 @@ export async function fetchActiveSpotSkus(): Promise<SpotSku[]> {
     console.error("fetchActiveSpotSkus failed", error);
     return [];
   }
-  return (data ?? []) as SpotSku[];
+  return ((data ?? []) as SpotSku[]).map((row) => withBlackNovemberSku(row));
 }
 
 /**

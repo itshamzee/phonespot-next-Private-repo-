@@ -1,3 +1,4 @@
+import { blackNovemberDevicePrice, blackNovemberSkuPrice } from "@/lib/campaign/black-november";
 import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
@@ -118,7 +119,7 @@ export async function GET() {
       const color = dev.color ?? "";
       const storage = dev.storage ?? "";
       const grade = dev.grade as string;
-      const price = dev.selling_price as number;
+      const price = blackNovemberDevicePrice(dev.selling_price as number, grade);
 
       const key = `${template.id}|${color}|${storage}|${grade}`;
       const existing = variants.get(key);
@@ -218,10 +219,10 @@ export async function GET() {
       if (!sku.slug) continue;
       if (!sku.images?.length) continue;
 
-      const effectivePrice =
-        sku.sale_price && sku.sale_price < sku.selling_price
-          ? sku.sale_price
-          : sku.selling_price;
+      const effectivePrice = blackNovemberSkuPrice(
+        sku,
+        sku.sale_price && sku.sale_price < sku.selling_price ? sku.sale_price : sku.selling_price,
+      );
       const price = (effectivePrice / 100).toFixed(2);
       const url = `${SITE_URL}/tilbehoer/${sku.category ?? "accessory"}/${sku.slug}`;
       const shortDesc = sku.short_description?.trim() || null;

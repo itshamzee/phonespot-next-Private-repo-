@@ -1,3 +1,4 @@
+import { withBlackNovemberDevice, withBlackNovemberSku } from "@/lib/campaign/black-november";
 import { createServerClient } from "@/lib/supabase/client";
 
 export type HomepageProduct = {
@@ -28,7 +29,7 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    const products = (data ?? []).map((p: any) => ({
+    const products = (data ?? []).map((raw: any) => withBlackNovemberSku(raw)).map((p: any) => ({
       id: p.id,
       slug: p.slug,
       title: p.title,
@@ -102,7 +103,7 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
 
   const { data: deviceStats } = await supabase
     .from("devices")
-    .select("template_id, selling_price, status, location_id, locations(name, type)")
+    .select("template_id, selling_price, grade, condition_notes, status, location_id, locations(name, type)")
     .in("template_id", templateIds)
     .eq("status", "listed");
 
@@ -116,7 +117,8 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
     }
   >();
 
-  for (const d of (deviceStats ?? []) as any[]) {
+  for (const raw of (deviceStats ?? []) as any[]) {
+    const d = withBlackNovemberDevice(raw);
     const existing = statsByTemplate.get(d.template_id) ?? {
       count: 0,
       minPrice: Infinity,
