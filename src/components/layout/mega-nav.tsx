@@ -145,7 +145,7 @@ export function MegaNav({ menu, panelClassName, campaign = false }: { menu: Mega
           <Link
             href="/black-november"
             aria-current={pathname === "/black-november" ? "page" : undefined}
-            className="relative my-auto flex items-center rounded-full bg-[#111311] px-3 py-1 !text-white"
+            className="relative my-auto flex items-center font-semibold !text-[#111311]"
           >
             Black November
           </Link>

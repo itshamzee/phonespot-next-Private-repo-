@@ -830,7 +830,7 @@ export function DeviceDetail({
             )}
             {bestMatch?.list_price && price != null && bestMatch.list_price > price && (
               <p className={styles.campaignLine}>
-                <span>Black November</span>
+                <strong>Black November:</strong>
                 {BLACK_NOVEMBER.devicePercent} % er trukket fra · før{" "}
                 <s>{formatDKK(bestMatch.list_price)}</s>
               </p>

@@ -47,5 +47,5 @@ it('flags lagersalgsvarer in the cart so 3 for 2 can be shown',()=>{
 });
 it('marks Black November prices on the card',()=>{
  render(<AccessoryCard {...product} black_november={true}/>);
- expect(screen.getAllByText('Black November').length).toBeGreaterThan(0);
+ expect(screen.getByText('Black November-pris')).toBeInTheDocument();
 });

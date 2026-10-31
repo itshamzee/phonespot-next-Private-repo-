@@ -558,9 +558,8 @@ export function RepairCart({
           </p>
           {blackNovember && services.some((service) => service.price_dkk > 0) && (
             <div className={styles.campaignStrip} role="note">
-              <span className={styles.campaignBadge}>Black November</span>
               <p>
-                <strong>{BLACK_NOVEMBER.repairPercent} % på alle reparationer</strong> hele november.
+                <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % på alle reparationer hele november.
                 Rabatten trækkes automatisk i din oversigt.
               </p>
             </div>

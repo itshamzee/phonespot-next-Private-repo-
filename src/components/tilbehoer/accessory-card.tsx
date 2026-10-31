@@ -33,7 +33,6 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   // eslint-disable-next-line @next/next/no-img-element
   const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
   const tile="relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
-  const badge=black_november ? <span className="absolute left-3 top-3 rounded-full bg-[#111311] px-2.5 py-1 text-[11px] font-bold text-white">Black November</span> : null;
   // Tilføjet-tilstanden må ikke ligne "udsolgt": den beholder farven og er kun låst for dobbeltklik.
   const buttonClass = added
     ? "bg-[#1A3D2E] text-white"
@@ -42,7 +41,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
       : "cursor-not-allowed bg-sand text-charcoal/55";
   return <article className="flex h-full flex-col font-body">
     {/* Product photographs are shown whole, without substitute device artwork. */}
-    {href ? <Link href={href} className={tile}>{photo}{badge}</Link> : <div className={tile}>{photo}{badge}</div>}
+    {href ? <Link href={href} className={tile}>{photo}</Link> : <div className={tile}>{photo}</div>}
     <div className="flex flex-1 flex-col px-1 pt-3 sm:pt-4">
       <p className="mb-1.5 min-h-4 text-xs text-charcoal/60">{brand}</p>
       <h2 className="min-h-12 text-sm sm:text-base font-semibold leading-5 sm:leading-6 text-charcoal">{href ? <Link href={href}>{name}</Link> : name}</h2>
@@ -52,6 +51,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
           <p className="text-xl font-bold tabular-nums text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>
           {isOnSale && <s className="text-sm tabular-nums text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
+        {black_november && <p className="mt-1 text-xs font-semibold text-charcoal">Black November-pris</p>}
         {saving != null && <p className="mt-1 text-xs text-charcoal/55">Vejl. pris {listPriceKr} kr.</p>}
         <p className="mt-1.5 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
         <button type="button" disabled={!canBuy} aria-disabled={added || undefined} onClick={add} className={`mt-3 min-h-11 w-full rounded-lg px-3 py-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.97] ${buttonClass}`}>{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>

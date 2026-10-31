@@ -33,7 +33,7 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
   return (
     <div className={styles.bar} role="region" aria-label="Black November">
       <div className={styles.barInner}>
-        <span className={styles.tag}>Black November</span>
+        <strong className={styles.name}>Black November</strong>
         <span className={styles.barOffers}>
           <strong>{BLACK_NOVEMBER.repairPercent} %</strong> på reparationer ·{" "}
           <strong>{BLACK_NOVEMBER.devicePercent} %</strong> på brugte enheder · covers og glas{" "}
@@ -56,7 +56,7 @@ export function BlackNovemberBand({ serverActive }: { serverActive: boolean }) {
     <section className={styles.band} aria-labelledby="black-november-band">
       <div className={styles.bandInner}>
         <div>
-          <span className={styles.tag}>Til og med 30. november</span>
+          <p className={styles.bandDate}>Til og med 30. november</p>
           <h2 id="black-november-band" className={styles.bandTitle}>
             Black November.
           </h2>
@@ -109,9 +109,8 @@ export function BlackNovemberStrip({ kind, serverActive = false }: { kind: Strip
   const copy = STRIP_COPY[kind];
   return (
     <div className={styles.strip} role="note">
-      <span className={styles.tag}>Black November</span>
       <span>
-        <strong>{copy.lead}</strong> {copy.text}
+        <strong className={styles.name}>Black November</strong> {copy.lead} {copy.text}
       </span>
       <Link href={BLACK_NOVEMBER.href}>Alle tilbud</Link>
     </div>

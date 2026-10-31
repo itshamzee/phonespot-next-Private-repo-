@@ -292,7 +292,7 @@ export default async function ModelPricePage({ params }: Props) {
               </div>
               {campaignActive && paidServices.length > 0 && (
                 <p className={styles.heroCampaign}>
-                  <strong>Black November</strong> {BLACK_NOVEMBER.repairPercent} % på alle
+                  <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % på alle
                   reparationer til og med 30. november.
                 </p>
               )}
