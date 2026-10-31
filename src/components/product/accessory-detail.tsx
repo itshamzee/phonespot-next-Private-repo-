@@ -173,7 +173,7 @@ function AddToCartButton({
   const [added, setAdded] = useState(false);
 
   function handleAddToCart() {
-    if (disabled) return;
+    if (disabled || added) return;
     // Build variant label for cart display (e.g. "Farve: Sort, Størrelse: L")
     const variantParts = Object.entries(selectedVariants ?? {}).filter(([, v]) => v);
     const variantLabel = variantParts.length > 0
@@ -199,15 +199,16 @@ function AddToCartButton({
     <button
       type="button"
       onClick={handleAddToCart}
-      disabled={disabled || added}
-      className={`flex items-center justify-center gap-2 rounded-lg bg-[#1A3D2E] px-6 py-3.5 text-base font-bold text-white transition-all hover:bg-green-eco/90 active:scale-[0.98] disabled:opacity-60 ${
+      disabled={disabled}
+      aria-disabled={added || undefined}
+      className={`flex items-center justify-center gap-2 rounded-lg bg-[#1A3D2E] px-6 py-3.5 text-base font-bold text-white transition-[background-color,transform] duration-150 ease-out hover:bg-green-eco/90 active:scale-[0.98] disabled:opacity-60 ${
         fullWidth ? "w-full" : ""
       }`}
     >
       {added ? (
         <>
           <CheckIcon className="h-5 w-5" />
-          Lagt i kurv!
+          Lagt i kurv
         </>
       ) : (
         label
@@ -712,7 +713,7 @@ export function AccessoryDetail({
                             }));
                             setVariantImageOverride(newValue ? opt.image : null);
                           }}
-                          className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 object-cover transition-all ${
+                          className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 object-cover transition-[border-color] duration-150 ${
                             isSelected
                               ? "border-green-eco shadow-sm ring-2 ring-green-eco/20"
                               : "border-sand hover:border-charcoal/30"
@@ -744,7 +745,7 @@ export function AccessoryDetail({
                           // Clear image override when selecting non-image variant
                           if (isColor) setVariantImageOverride(null);
                         }}
-                        className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                        className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-[border-color,background-color] duration-150 ${
                           isSelected
                             ? "border-green-eco bg-green-eco text-white"
                             : "border-sand bg-white text-charcoal hover:border-green-eco/50"

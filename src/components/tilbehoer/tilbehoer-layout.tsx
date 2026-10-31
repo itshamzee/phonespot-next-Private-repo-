@@ -272,7 +272,7 @@ function TilbehoerLayoutInner({
                   aria-label="Sortér produkter"
                   value={sort}
                   onChange={(e) => updateParam("sort", e.target.value)}
-                  className="rounded-xl border border-sand bg-white px-3 py-2 text-sm text-charcoal shadow-sm focus:border-green-eco/40 focus:outline-none focus:ring-2 focus:ring-green-eco/15 transition-all"
+                  className="rounded-xl border border-sand bg-white px-3 py-2 text-base sm:text-sm text-charcoal focus:border-green-eco/40 focus:outline-none focus:ring-2 focus:ring-green-eco/15 transition-[border-color,box-shadow] duration-150"
                 >
                   {SORT_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>

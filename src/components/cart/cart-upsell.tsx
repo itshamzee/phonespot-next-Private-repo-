@@ -12,7 +12,7 @@ export function CartUpsell() {
 
       <Link
         href="/tilbehoer"
-        className="flex items-center gap-3 rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] p-3 transition-all hover:border-[#1A3D2E]/30 hover:shadow-sm"
+        className="flex items-center gap-3 rounded-xl border border-[#E5E5EA] bg-[#F7F7F8] p-3 transition-[border-color] duration-150 hover:border-[#1A3D2E]/30"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1A3D2E]/10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5 text-[#1A3D2E]">
@@ -30,7 +30,7 @@ export function CartUpsell() {
 
       <Link
         href="/reparation"
-        className="flex items-center gap-3 rounded-xl border border-[#E5E5EA] bg-white p-3 transition-all hover:border-[#1A3D2E]/30 hover:shadow-sm"
+        className="flex items-center gap-3 rounded-xl border border-[#E5E5EA] bg-white p-3 transition-[border-color] duration-150 hover:border-[#1A3D2E]/30"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1A3D2E]/10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5 text-[#1A3D2E]">

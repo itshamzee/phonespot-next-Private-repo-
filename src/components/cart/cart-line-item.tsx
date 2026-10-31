@@ -169,7 +169,7 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-sand text-charcoal transition-[background-color,transform] duration-100 ease-out hover:bg-cream active:scale-[0.94] after:absolute after:-inset-1 after:content-['']"
               onClick={() => handleQtyChange(item.quantity - 1)}
               aria-label="Fjern en"
             >
@@ -180,7 +180,7 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
             <span className="w-6 text-center text-sm font-medium text-charcoal">{item.quantity}</span>
             <button
               type="button"
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-sand text-charcoal transition-colors hover:bg-cream disabled:opacity-40"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-sand text-charcoal transition-[background-color,transform] duration-100 ease-out hover:bg-cream active:scale-[0.94] disabled:opacity-40 after:absolute after:-inset-1 after:content-['']"
               onClick={() => handleQtyChange(Math.min(10, item.quantity + 1))}
               aria-label="Tilføj en"
               disabled={item.quantity >= 10}

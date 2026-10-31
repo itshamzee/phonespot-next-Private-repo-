@@ -103,6 +103,16 @@ body {
 
 /* Global minimum font size for readability */
 @layer base {
+  /* Ingen grå tap-flash og ingen 300 ms-forsinkelse på knapper (mobil). */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
   body {
     font-size: 17px;
     line-height: 1.65;

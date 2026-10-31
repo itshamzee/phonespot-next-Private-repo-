@@ -62,14 +62,14 @@ export function CheckoutSummary() {
                 </div>
 
                 {/* Details */}
-                <div className="flex flex-1 flex-col justify-between gap-1">
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-1">
                   <p className="text-sm font-medium leading-tight text-charcoal">
                     {item.title}
                   </p>
 
                   {item.type === "device" && (
                     <p className="text-xs text-gray">
-                      Stand {item.grade} · {item.color} · {item.storage}
+                      {[`Stand ${item.grade}`, item.color, item.storage].filter(Boolean).join(" · ")}
                     </p>
                   )}
 

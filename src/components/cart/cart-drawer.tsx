@@ -86,7 +86,7 @@ export function CartDrawer() {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-200 ease-out ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={closeCart}
@@ -95,9 +95,12 @@ export function CartDrawer() {
 
       {/* Drawer panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-white shadow-xl transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-white shadow-xl transition-[transform,visibility] motion-reduce:transition-none ${
+          isOpen
+            ? "visible translate-x-0 duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+            : "invisible translate-x-full duration-200 ease-out"
         }`}
+        inert={!isOpen}
         role="dialog"
         aria-modal="true"
         aria-label="Indkøbskurv"
@@ -110,7 +113,7 @@ export function CartDrawer() {
             </h2>
             <button
               type="button"
-              className="text-[#86868B] transition-colors hover:text-[#111111]"
+              className="-m-2 p-2.5 text-[#86868B] transition-colors hover:text-[#111111]"
               onClick={closeCart}
               aria-label="Luk kurv"
             >
@@ -132,7 +135,7 @@ export function CartDrawer() {
           </div>
 
           {/* Items */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-5">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5">
             {items.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <p className="text-sm text-[#86868B]">Din kurv er tom</p>
@@ -151,17 +154,20 @@ export function CartDrawer() {
                 ))}
               </div>
             )}
+            {/* Mersalg og e-mail ligger i den scrollende del, så "Gå til kassen" altid kan nås på små skærme. */}
+            {items.length > 0 && (
+              <div className="-mx-4 sm:-mx-5">
+                <CartUpsell />
+              </div>
+            )}
+            <div className="-mx-4 sm:-mx-5">
+              <CartEmailCapture />
+            </div>
           </div>
-
-          {/* Upsell */}
-          {items.length > 0 && <CartUpsell />}
-
-          {/* Email capture for abandoned cart recovery */}
-          <CartEmailCapture />
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-[#E5E5EA] px-4 sm:px-5 py-5">
+            <div className="border-t border-[#E5E5EA] px-4 sm:px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
               {/* Discount badge */}
               {cartState.discount && (
                 <div className="mb-3 flex items-center justify-between rounded-lg bg-[#F7F7F8] px-3 py-2">

@@ -207,7 +207,7 @@ export function CheckoutForm() {
             autoComplete="name"
             value={customer.name}
             onChange={(e) => setField("name", e.target.value)}
-            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             placeholder="Jens Jensen"
           />
         </div>
@@ -227,7 +227,7 @@ export function CheckoutForm() {
             autoComplete="email"
             value={customer.email}
             onChange={(e) => setField("email", e.target.value)}
-            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             placeholder="jens@eksempel.dk"
           />
         </div>
@@ -247,7 +247,7 @@ export function CheckoutForm() {
             autoComplete="tel"
             value={customer.phone}
             onChange={(e) => setField("phone", e.target.value)}
-            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             placeholder="+45 12 34 56 78"
           />
         </div>
@@ -286,7 +286,7 @@ export function CheckoutForm() {
             autoComplete="address-line1"
             value={customer.address.line1}
             onChange={(e) => setAddressField("line1", e.target.value)}
-            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             placeholder="Eksempelgade 42"
           />
         </div>
@@ -305,7 +305,7 @@ export function CheckoutForm() {
             autoComplete="address-line2"
             value={customer.address.line2}
             onChange={(e) => setAddressField("line2", e.target.value)}
-            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+            className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             placeholder="Lejlighed, etage…"
           />
         </div>
@@ -327,7 +327,7 @@ export function CheckoutForm() {
               autoComplete="postal-code"
               value={customer.address.postal_code}
               onChange={(e) => setAddressField("postal_code", e.target.value)}
-              className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+              className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
               placeholder="4200"
             />
           </div>
@@ -347,7 +347,7 @@ export function CheckoutForm() {
               autoComplete="address-level2"
               value={customer.address.city}
               onChange={(e) => setAddressField("city", e.target.value)}
-              className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+              className="w-full rounded-lg border border-sand bg-warm-white px-4 py-2.5 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
               placeholder="Slagelse"
             />
           </div>
@@ -419,7 +419,13 @@ export function CheckoutForm() {
                 }
               }}
               placeholder="KODE"
-              className="flex-1 rounded-lg border border-sand bg-warm-white px-4 py-2.5 font-mono text-sm uppercase text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="off"
+              enterKeyHint="go"
+              aria-label="Rabatkode"
+              className="flex-1 rounded-lg border border-sand bg-warm-white px-4 py-2.5 font-mono text-base sm:text-sm uppercase text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
             />
             <button
               type="button"
