@@ -130,7 +130,7 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
               </div>
             </details>;
           })}
-          {blackNovember && <Link href="/black-november" onClick={() => setMobileOpen(false)}>Black November</Link>}
+          {blackNovember && <Link href="/black-november" className={"!min-h-11 !border-0 !py-2.5 text-[15px] " + SALE_TEXT} onClick={() => setMobileOpen(false)}>Black November</Link>}
           {menuLinks.map(item => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>)}
         </nav>
       </div>
