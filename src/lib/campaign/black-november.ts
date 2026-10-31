@@ -140,8 +140,13 @@ export function isCampaignCover(row: CampaignSkuSource): boolean {
 
 /** Om varen er omfattet af 199 kr.-tilbuddet (uafhængigt af dato). */
 export function isCampaignAccessory(row: CampaignSkuSource): boolean {
+  // Glas er aldrig lagersalg, så det kræver ingen attributter.
+  if (isCampaignGlass(row)) return true;
+  // Covers: uden attributter (eller et lagersalg-flag fra serveren) kan vi ikke
+  // udelukke lagersalg og pungcovers — så giver vi ikke kampagnepris (fail closed).
+  if (row.attributes === undefined && row.lagersalg == null) return false;
   if (isLagersalgRow(row)) return false;
-  return isCampaignGlass(row) || isCampaignCover(row);
+  return isCampaignCover(row);
 }
 
 /**

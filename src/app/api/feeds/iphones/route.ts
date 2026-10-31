@@ -1,3 +1,4 @@
+import { effectiveGrade } from "@/lib/grades";
 import { blackNovemberDevicePrice } from "@/lib/campaign/black-november";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
@@ -38,7 +39,7 @@ export async function GET() {
       .from("devices")
       .select(
         `
-        id, grade, storage, color, selling_price,
+        id, grade, condition_notes, storage, color, selling_price,
         template:product_templates!template_id (
           id, display_name, brand, category, slug,
           description, short_description, images, default_attributes
@@ -92,7 +93,7 @@ export async function GET() {
       const color = dev.color ?? "";
       const storage = dev.storage ?? "";
       const grade = dev.grade as string;
-      const price = blackNovemberDevicePrice(dev.selling_price as number, grade);
+      const price = blackNovemberDevicePrice(dev.selling_price as number, effectiveGrade(dev as { grade: string | null; condition_notes?: string | null }));
 
       const key = `${template.id}|${color}|${storage}|${grade}`;
       const existing = variants.get(key);

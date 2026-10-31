@@ -70,6 +70,9 @@ describe("covers and glass", () => {
     expect(isCampaignAccessory(lagersalg)).toBe(false);
     expect(isCampaignAccessory({ ...cover, lagersalg: true })).toBe(false);
     expect(isCampaignAccessory(charger)).toBe(false);
+    // Uden attributter kan lagersalg ikke udelukkes: covers får ikke kampagnepris.
+    expect(isCampaignAccessory({ category: "accessory", subcategory: "cover", title: "Cover" })).toBe(false);
+    expect(isCampaignAccessory({ subcategory: "screen_protector", title: "Glas" })).toBe(true);
     // Glas er aldrig lagersalg, heller ikke med udsalg-attributten.
     expect(isCampaignAccessory({ ...glass, attributes: { udsalg: "Ja" } })).toBe(true);
   });

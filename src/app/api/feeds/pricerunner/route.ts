@@ -1,3 +1,4 @@
+import { effectiveGrade } from "@/lib/grades";
 import { blackNovemberDevicePrice, blackNovemberSkuPrice } from "@/lib/campaign/black-november";
 import { withoutSpareParts } from "@/lib/spare-part-filter";
 import { NextResponse } from "next/server";
@@ -70,7 +71,7 @@ export async function GET() {
       .from("devices")
       .select(
         `
-        id, grade, storage, color, selling_price,
+        id, grade, condition_notes, storage, color, selling_price,
         template:product_templates!template_id (
           id, display_name, brand, category, slug,
           description, short_description, images, default_attributes
@@ -83,7 +84,7 @@ export async function GET() {
     const { data: skuProducts } = await supabase
       .from("sku_products")
       .select(
-        "id, title, description, short_description, ean, product_number, selling_price, sale_price, brand, category, subcategory, slug, images",
+        "id, title, description, short_description, ean, product_number, selling_price, sale_price, brand, category, subcategory, slug, images, attributes",
       )
       .eq("status", "published");
 
@@ -119,7 +120,7 @@ export async function GET() {
       const color = dev.color ?? "";
       const storage = dev.storage ?? "";
       const grade = dev.grade as string;
-      const price = blackNovemberDevicePrice(dev.selling_price as number, grade);
+      const price = blackNovemberDevicePrice(dev.selling_price as number, effectiveGrade(dev as { grade: string | null; condition_notes?: string | null }));
 
       const key = `${template.id}|${color}|${storage}|${grade}`;
       const existing = variants.get(key);

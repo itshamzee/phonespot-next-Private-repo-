@@ -21,7 +21,7 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
   if (tab === "accessories") {
     const { data } = await supabase
       .from("sku_products")
-      .select("id, slug, title, brand, category, subcategory, selling_price, sale_price, images, status, is_active")
+      .select("id, slug, title, brand, category, subcategory, selling_price, sale_price, images, status, is_active, attributes")
       .eq("category", "accessory")
       .eq("status", "published")
       .eq("is_active", true)
