@@ -410,7 +410,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
               <Button
                 href="https://dk.trustpilot.com/evaluate/phonespot.dk"
                 style={{
-                  backgroundColor: "#00b67a",
+                  backgroundColor: "#1A3D2E",
                   color:           "#ffffff",
                   padding:         "12px 28px",
                   borderRadius:    "8px",
@@ -496,8 +496,8 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                   f&nbsp;Facebook
                 </Link>
                 <Link href={BRAND.trustpilot} style={{
-                  backgroundColor: "#00B67A",
-                  color:           "#ffffff",
+                  backgroundColor: "transparent",
+                  color:           "#1A3D2E",
                   padding:         "5px 12px",
                   borderRadius:    "4px",
                   fontSize:        "12px",
@@ -505,7 +505,7 @@ export default function OfferAcceptanceEmail(props: OfferAcceptanceEmailProps) {
                   textDecoration:  "none",
                   fontFamily:      font,
                 }}>
-                  &#9733;&nbsp;Trustpilot
+                  Anmeldelser på Trustpilot
                 </Link>
               </Column>
             </Row>

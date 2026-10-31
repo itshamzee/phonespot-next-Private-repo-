@@ -454,8 +454,8 @@ export default function RefundConfirmationEmail({
                   href={BRAND.trustpilot}
                   style={{
                     display: "inline-block",
-                    backgroundColor: "#00B67A",
-                    color: "#ffffff",
+                    backgroundColor: "transparent",
+                    color: "#1A3D2E",
                     textDecoration: "none",
                     padding: "5px 12px",
                     borderRadius: "4px",
@@ -463,7 +463,7 @@ export default function RefundConfirmationEmail({
                     fontWeight: "600",
                   }}
                 >
-                  &#9733; Trustpilot
+                  Anmeldelser på Trustpilot
                 </Link>
               </Column>
             </Row>

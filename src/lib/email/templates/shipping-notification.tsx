@@ -185,7 +185,7 @@ export default function ShippingNotificationEmail({
               </Link>
               {"  "}
               <Link href={BRAND.trustpilot} style={trustpilotBadgeStyle}>
-                &#9733; Trustpilot
+                Anmeldelser på Trustpilot
               </Link>
             </Text>
             <Text style={footerLegalStyle}>
@@ -481,8 +481,8 @@ const facebookBadgeStyle = {
 
 const trustpilotBadgeStyle = {
   display: "inline-block",
-  backgroundColor: "#00B67A",
-  color: "#ffffff",
+  backgroundColor: "transparent",
+  color: "#1A3D2E",
   borderRadius: "4px",
   padding: "5px 10px",
   fontSize: "12px",

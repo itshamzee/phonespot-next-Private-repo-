@@ -415,8 +415,8 @@ export default function AbandonedCartEmail({
                   f&nbsp;Facebook
                 </Link>
                 <Link href={BRAND.trustpilot} style={{
-                  backgroundColor: "#00B67A",
-                  color:           "#ffffff",
+                  backgroundColor: "transparent",
+                  color:           "#1A3D2E",
                   padding:         "5px 12px",
                   borderRadius:    "4px",
                   fontSize:        "12px",
@@ -424,7 +424,7 @@ export default function AbandonedCartEmail({
                   textDecoration:  "none",
                   fontFamily:      font,
                 }}>
-                  &#9733;&nbsp;Trustpilot
+                  Anmeldelser på Trustpilot
                 </Link>
               </Column>
             </Row>

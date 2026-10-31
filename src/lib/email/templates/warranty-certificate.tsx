@@ -407,7 +407,7 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
               <Button
                 href="https://dk.trustpilot.com/evaluate/phonespot.dk"
                 style={{
-                  backgroundColor: "#00b67a",
+                  backgroundColor: "#1A3D2E",
                   color: "#ffffff",
                   padding: "12px 28px",
                   borderRadius: "8px",
@@ -520,8 +520,8 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
                   href={BRAND.trustpilot}
                   style={{
                     display: "inline-block",
-                    backgroundColor: "#00B67A",
-                    color: "#ffffff",
+                    backgroundColor: "transparent",
+                    color: "#1A3D2E",
                     textDecoration: "none",
                     padding: "5px 12px",
                     borderRadius: "4px",
@@ -529,7 +529,7 @@ export function WarrantyCertificateEmail(props: WarrantyEmailProps) {
                     fontWeight: "600",
                   }}
                 >
-                  &#9733; Trustpilot
+                  Anmeldelser på Trustpilot
                 </Link>
               </Column>
             </Row>

@@ -245,8 +245,8 @@ export function emailFooter(usps: readonly string[] = BRAND.usps): string {
               <a href="${BRAND.trustpilot}" style="text-decoration:none;">
                 <table cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="background:#00B67A;border-radius:4px;padding:5px 10px;font-size:12px;color:#ffffff;font-weight:600;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-                      &#9733; Trustpilot
+                    <td style="font-size:12px;color:#1A3D2E;text-decoration:underline;font-weight:600;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                      Anmeldelser på Trustpilot
                     </td>
                   </tr>
                 </table>
