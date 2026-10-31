@@ -20,8 +20,8 @@ import {
  * ikke står her, kommer ikke med, selv om den findes i tabellen locations.
  */
 export const GOOGLE_BUSINESS_PROFILE_STORE_CODES: Readonly<Record<string, string>> = {
-  vejle: "vejle",
-  slagelse: "slagelse",
+  vejle: "00545249190807764033",
+  slagelse: "10327216793157305746",
 };
 
 /** Leverandørlinjer er ikke fysiske enheder i en butik og tæller aldrig som butikslager. */
