@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
       // Laptop brand/tier pages no longer exist; blog posts and /baerbare-vejle still link here.
       { source: "/baerbare/apple", destination: "/baerbare?brand=apple", permanent: true },
       { source: "/baerbare/:slug(lenovo|hp|studiecomputer)", destination: "/baerbare", permanent: true },
+      // Old model landing slugs from the sitemap; no route has served them.
+      { source: "/refurbished/:model(iphone-15-pro|iphone-14-pro|iphone-13-pro)", destination: "/refurbished/apple-:model", permanent: true },
+      { source: "/refurbished/macbook-air-m2", destination: "/baerbare?brand=apple", permanent: true },
+      { source: "/refurbished/ipad-air", destination: "/ipads", permanent: true },
+      { source: "/refurbished/:model(apple-watch-se|apple-watch-series-7|apple-watch-series-8|apple-watch-series-9)", destination: "/smartwatches", permanent: true },
       // www -> apex. Host-specific, so preview/*.vercel.app URLs are untouched.
       // Query strings are forwarded automatically.
       {

@@ -6,7 +6,6 @@ import { isSparePart } from "@/lib/spare-part-filter";
 import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
 import { COMPARISONS } from "@/lib/comparisons";
-import { MODEL_PAGES } from "@/lib/model-pages";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
 import { fetchActiveSpotSkus } from "@/lib/spot/queries";
@@ -256,15 +255,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  // ---- Model landing pages ---------------------------------------------------
-
-  const modelPages: MetadataRoute.Sitemap = MODEL_PAGES.map((m) => ({
-    url: `${BASE_URL}/refurbished/${m.slug}`,
-    lastModified: STATIC_LAST_MODIFIED,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
-
   // ---- Repair pages -----------------------------------------------------------
 
   const repairBrands = await getActiveBrands();
@@ -454,5 +444,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...blogPages, ...comparisonPages, ...modelPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages, ...spotPages, ...coverSalePages];
+  return [...staticPages, ...servicePages, ...collectionPages, ...productPages, ...blogPages, ...comparisonPages, ...repairBrandPages, ...repairModelPages, ...locationRepairPages, ...feedPages, ...spotPages, ...coverSalePages];
 }

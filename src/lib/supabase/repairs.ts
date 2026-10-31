@@ -39,13 +39,22 @@ export async function getModelsByBrand(brandId: string): Promise<RepairModel[]> 
   return (data as RepairModel[]) ?? [];
 }
 
+// Route params keep "+" percent-encoded, so slugs such as "galaxy-s24+" would never match.
+function decodeSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 export async function getModelBySlug(brandId: string, modelSlug: string): Promise<RepairModel | null> {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("repair_models")
     .select("*")
     .eq("brand_id", brandId)
-    .eq("slug", modelSlug)
+    .eq("slug", decodeSlug(modelSlug))
     .eq("active", true)
     .maybeSingle();
   if (error) throw error;
