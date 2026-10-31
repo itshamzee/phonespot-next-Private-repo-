@@ -1,0 +1,669 @@
+{
+  "_meta": {
+    "created": "2026-10-31",
+    "source": "MediaMarkt Tyskland. EAN, produktnavn og produkt-URL står i samme produktpost i sidens søgedata, hentet 2026-10-31. Produktsiden blev genåbnet for 1 kode, derefter svarede sitet 403, så de øvrige 62 er ikke genåbnet.",
+    "cross_check": "20 koder slået op i upcitemdb: 5 fundet, alle med samme model, lagerplads og farve. 15 ikke fundet. Ingen modstrid.",
+    "selection": "Apple har flere EAN'er for samme model, lagerplads og farve (ét pr. salgsområde). Valgt: MediaMarkts standardlisting med tysk farvenavn og Dual SIM. Listings fra andre præfikser end Apples (0194/0195), demo- og refurbished-listings er fravalgt.",
+    "note": "Danske farvenavne er oversat til Apples navn. color_note står, hvor oversættelsen bygger på udelukkelse. Kontrolciffer er valideret for alle."
+  },
+  "variants": [
+    {
+      "template_slug": "apple-iphone-12-pro-max",
+      "storage": "256GB",
+      "color": "Pacific Blå",
+      "gtin": "0194252023587",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-12-pro-max-256gb-pacific-blue-256-gb-pazifikblau-dual-sim-123694490.html",
+      "source_title": "APPLE IPHONE 12 PRO MAX 256GB PACIFIC BLUE 256 GB Pazifikblau Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-12-pro",
+      "storage": "128GB",
+      "color": "Graphite",
+      "gtin": "0194252037690",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-12-pro-128gb-graphite-128-gb-graphit-dual-sim-108231587.html",
+      "source_title": "APPLE iPhone 12 Pro 128 GB Graphit Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-13-mini",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0194252689714",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-mini-128gb-midnight-128-gb-mitternacht-dual-sim-108019285.html",
+      "source_title": "APPLE IPHONE 13 MINI 128GB MIDNIGHT 128 GB Mitternacht Dual SIM",
+      "color_note": "Apple kalder farven Midnight (Mitternacht). Modellen har ingen anden mørk farve."
+    },
+    {
+      "template_slug": "apple-iphone-13-pro-max",
+      "storage": "128GB",
+      "color": "Alpine Grøn",
+      "gtin": "0194253124443",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-13-pro-max-17-cm-67-zoll-dual-sim-ios-15-5g-128-gb-grun-128-gb-verde-95773789.html",
+      "source_title": "APPLE iPhone 13 Pro Max 128 GB Alpingrün"
+    },
+    {
+      "template_slug": "apple-iphone-13-pro",
+      "storage": "128GB",
+      "color": "Graphite Sort",
+      "gtin": "0194252715611",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-13-pro-mach-die-nacht-zum-tag-das-iphone-13-pro-ist-fur-wenig-licht-gemacht-die-weitwinkelkamera-hat-eine-grossere-blende-und-einen-grosseren-sensor-und-sie-nutzt-den-lidar-scanner-fur-nachtmodus-portrats-das-ultraweitwinkel-objektiv-bekommt-eine-grossere-blende-einen-schnelleren-sensor-und-einen-autofok-96866830.html",
+      "source_title": "APPLE iPhone 13 Pro 128 GB Graphit Dual SIM",
+      "other_gtins_same_variant": [
+        "0194252715529"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Blå",
+      "gtin": "0194252708361",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-128gb-blue-128-gb-blau-dual-sim-108019308.html",
+      "source_title": "APPLE iPhone 13 128 GB Blau Dual SIM",
+      "other_gtins_same_variant": [
+        "0194252708170"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Grøn",
+      "gtin": "0194253129011",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-128gb-grun-128-gb-grun-dual-sim-108019268.html",
+      "source_title": "APPLE iPhone 13 128 GB Grün Dual SIM",
+      "other_gtins_same_variant": [
+        "0194253128762"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Hvid",
+      "gtin": "0194252707555",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-128gb-starlight-128-gb-polarstern-dual-sim-108019288.html",
+      "source_title": "APPLE iPhone 13 128 GB Polarstern Dual SIM",
+      "color_note": "Apple kalder farven Starlight (Polarstern). Modellen har ingen anden lys farve."
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Pink",
+      "gtin": "0194252707739",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-13-128-gb-61-rosa-ita-mlph3ql-a-128-gb-dual-sim-95772217.html",
+      "source_title": "APPLE iPhone 13 128 GB Rosé Dual SIM",
+      "other_gtins_same_variant": [
+        "0194252903865"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Red",
+      "gtin": "0194252708095",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-128gb-productred-128-gb-product-red-dual-sim-108019208.html",
+      "source_title": "APPLE iPhone 13 128 GB Rot Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0194252707289",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-128gb-midnight-128-gb-mitternacht-dual-sim-108019366.html",
+      "source_title": "APPLE iPhone 13 128 GB Mitternacht Dual SIM",
+      "color_note": "Apple kalder farven Midnight (Mitternacht). Modellen har ingen anden mørk farve."
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "256GB",
+      "color": "Grøn",
+      "gtin": "0194253129295",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-256-gb-grun-dual-sim-143935336.html",
+      "source_title": "APPLE iPhone 13 256 GB Grün Dual SIM",
+      "other_gtins_same_variant": [
+        "0194253129202"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "256GB",
+      "color": "Hvid",
+      "gtin": "0194252708903",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-256gb-256-gb-lightblue-dual-sim-108019207.html",
+      "source_title": "APPLE IPHONE 13 256GB 256 GB Polarstern Dual SIM",
+      "color_note": "Apple kalder farven Starlight (Polarstern). Modellen har ingen anden lys farve."
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "256GB",
+      "color": "Pink",
+      "gtin": "0194252709177",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-13-256-gb-pink-256-gb-rose-dual-sim-134930379.html",
+      "source_title": "APPLE iPhone 13 256 GB Rosé Dual SIM",
+      "other_gtins_same_variant": [
+        "0194252709085",
+        "0194252709078"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-13",
+      "storage": "256GB",
+      "color": "Sort",
+      "gtin": "0194252708637",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-13-256gb-midnight-256-gb-mitternacht-dual-sim-108019163.html",
+      "source_title": "APPLE iPhone 13 256 GB Mitternacht Dual SIM",
+      "color_note": "Apple kalder farven Midnight (Mitternacht). Modellen har ingen anden mørk farve."
+    },
+    {
+      "template_slug": "apple-iphone-14-plus",
+      "storage": "128GB",
+      "color": "Lilla",
+      "gtin": "0194253373933",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-plus-128gb-purple-128-gb-violett-dual-sim-121698750.html",
+      "source_title": "APPLE iPhone 14 Plus 128 GB Violett Dual SIM",
+      "other_gtins_same_variant": [
+        "0194253373834",
+        "0194253373827"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-14-pro-max",
+      "storage": "128GB",
+      "color": "Dyblilla",
+      "gtin": "0194253380634",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-pro-max-128gb-deep-purple-128-gb-dunkellila-dual-sim-108252594.html",
+      "source_title": "APPLE iPhone 14 Pro Max 128 GB Dunkellila Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-14-pro-max",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0194253379843",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-pro-max-128gb-space-black-128-gb-space-schwarz-dual-sim-108252826.html",
+      "source_title": "APPLE IPHONE 14 PRO MAX 128GB SPACE BLACK 128 GB Space Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0194253379935"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-14-pro",
+      "storage": "128GB",
+      "color": "Guld",
+      "gtin": "0194253401827",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-pro-128gb-gold-eu-128-gb-gold-dual-sim-145326994.html",
+      "source_title": "APPLE iPhone 14 Pro 128 GB Gold Dual SIM",
+      "other_gtins_same_variant": [
+        "0194253401728",
+        "0194253401629"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-14-pro",
+      "storage": "128GB",
+      "color": "Hvid",
+      "gtin": "0194253401407",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-14-pro-128-gb-61-zoll-silber-ita-mq023qla-128-gb-argento-dual-sim-142498196.html",
+      "source_title": "APPLE IPHONE 14 PRO 128GB SILVER 128 GB Silber Dual SIM",
+      "color_note": "Apple kalder farven Silver. Modellen har ingen anden lys farve.",
+      "other_gtins_same_variant": [
+        "0194253401391"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-14-pro",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0194253401070",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-pro-12800-gb-schwarz-dual-sim-142459935.html",
+      "source_title": "APPLE iPhone 14 Pro 128 GB Space Schwarz Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-14",
+      "storage": "128GB",
+      "color": "Blå",
+      "gtin": "0194253409571",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-14-128gb-blue-128-gb-blau-dual-sim-108253737.html",
+      "source_title": "APPLE IPHONE 14 128GB BLUE 128 GB Blau Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15-plus",
+      "storage": "128GB",
+      "color": "Blå",
+      "gtin": "0195949041143",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-plus-128gb-blue-128-gb-blau-dual-sim-130975266.html",
+      "source_title": "APPLE iPhone 15 Plus 128 GB Blau Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949041204",
+        "0195949041198"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15-pro-max",
+      "storage": "256GB",
+      "color": "Naturlig Titanium",
+      "gtin": "0195949048616",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-pro-max-256gb-natural-titanium-256-gb-titan-natur-dual-sim-134569712.html",
+      "source_title": "APPLE IPHONE 15 PRO MAX 256GB NATURAL TITANIUM 256 GB Titan Natur Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15-pro",
+      "storage": "128GB",
+      "color": "Hvid Titanium",
+      "gtin": "0195949018756",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-pro-128gb-white-titanium-128-gb-titan-weiss-dual-sim-133446685.html",
+      "source_title": "APPLE iPhone 15 Pro 128 GB Titan Weiß Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949018695",
+        "0195949018688",
+        "0195949018671",
+        "0195949018633"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15-pro",
+      "storage": "128GB",
+      "color": "Naturlig Titanium",
+      "gtin": "0195949018930",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-pro-128gb-natural-titanium-128-gb-titan-natur-dual-sim-133446687.html",
+      "source_title": "APPLE IPHONE 15 PRO 128GB NATURAL TITANIUM 128 GB Titan Natur Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15-pro",
+      "storage": "128GB",
+      "color": "Sort Titanium",
+      "gtin": "0195949018572",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-pro-128gb-black-titanium-128-gb-titan-schwarz-dual-sim-134383371.html",
+      "source_title": "APPLE iPhone 15 Pro 128 GB Titan Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949018510",
+        "0195949018497"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15-pro",
+      "storage": "256GB",
+      "color": "Sort Titanium",
+      "gtin": "0195949019296",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-pro-256gb-black-titanium-256-gb-titan-schwarz-dual-sim-134569747.html",
+      "source_title": "APPLE IPHONE 15 PRO 256GB BLACK TITANIUM 256 GB Titan Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949019227",
+        "0195949019272",
+        "0195949019210"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "128GB",
+      "color": "Blå",
+      "gtin": "0195949036606",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-128gb-blue-128-gb-blau-dual-sim-130974928.html",
+      "source_title": "APPLE IPHONE 15 128GB BLUE 128 GB Blau Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949036484",
+        "0195949036583",
+        "0195949036521",
+        "0195949035036"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "128GB",
+      "color": "Grøn",
+      "gtin": "0195949036781",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-128gb-green-128-gb-grun-dual-sim-130974927.html",
+      "source_title": "APPLE IPHONE 15 128GB GREEN 128 GB Grün Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "128GB",
+      "color": "Gul",
+      "gtin": "0195949036422",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-128gb-yellow-128-gb-gelb-dual-sim-124050611.html",
+      "source_title": "APPLE iPhone 15 128 GB Gelb Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949036347",
+        "0195949036361",
+        "0195949036354"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "128GB",
+      "color": "Lyserød",
+      "gtin": "0195949036248",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-128gb-pink-128-gb-pink-dual-sim-126337894.html",
+      "source_title": "APPLE IPHONE 15 128GB PINK 128 GB Pink Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949036217"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0195949036064",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-128gb-black-128-gb-schwarz-dual-sim-126337886.html",
+      "source_title": "APPLE IPHONE 15 128GB BLACK 128 GB Schwarz Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "256GB",
+      "color": "Blå",
+      "gtin": "0195949037504",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-256gb-blue-256-gb-blau-dual-sim-130975260.html",
+      "source_title": "APPLE IPHONE 15 256GB BLUE 256 GB Blau Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "256GB",
+      "color": "Grøn",
+      "gtin": "0195949037689",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-256gb-green-256-gb-grun-dual-sim-130975261.html",
+      "source_title": "APPLE IPHONE 15 256GB GREEN 256 GB Grün Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-15",
+      "storage": "256GB",
+      "color": "Sort",
+      "gtin": "0195949036941",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-15-256-gb-schwarz-dual-sim-146322784.html",
+      "source_title": "APPLE iPhone  15 iPhone 15 256 GB Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949035050"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-plus",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0195949722264",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-plus-128-gb-schwarz-dual-sim-146803302.html",
+      "source_title": "APPLE iPhone 16 Plus 128 GB Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949722196"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro-max",
+      "storage": "256GB",
+      "color": "Hvid Titanium",
+      "gtin": "0195949806001",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-max-256gb-white-titanium-256-gb-titan-weiss-dual-sim-147646299.html",
+      "source_title": "APPLE IPHONE 16 PRO MAX 256GB WHITE TITANIUM 256 GB Titan Weiß Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949805936",
+        "0195949805882",
+        "0195949805981"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "128GB",
+      "color": "Hvid Titanium",
+      "gtin": "0195949771392",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-128-gb-weiss-dual-sim-145607287.html",
+      "source_title": "APPLE IPHONE 16 PRO 128GB WHITE TITANIUM 128 GB Titan Weiß Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949771323",
+        "0195949771378",
+        "0195949771279"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "256GB",
+      "color": "Hvid Titanium",
+      "gtin": "0195949772153",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-256-gb-weiss-dual-sim-145402237.html",
+      "source_title": "APPLE IPHONE 16 PRO 256GB WHITE TITANIUM 256 GB Titan Weiß Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-16-pro-max",
+      "storage": "256GB",
+      "color": "Naturlig Titanium",
+      "gtin": "0195949806384",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-max-256-gb-graues-silber-dual-sim-147051682.html",
+      "source_title": "APPLE iPhone 16 Pro Max 256 GB Titan Natur Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949806315"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "128GB",
+      "color": "Naturlig Titanium",
+      "gtin": "0195949771774",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-apple-iphone-16-pro-128gb-natural-titanium-smartphone-128-gb-graues-silber-dual-sim-147052588.html",
+      "source_title": "APPLE IPHONE 16 PRO 128GB NATURAL TITANIUM 128 GB Titan Natur Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949771705"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "256GB",
+      "color": "Naturlig Titanium",
+      "gtin": "0195949772535",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-256-gb-graues-silber-dual-sim-145402355.html",
+      "source_title": "APPLE IPHONE 16 PRO 256GB NATURAL TITANIUM 256 GB Titan Natur Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-16-pro-max",
+      "storage": "256GB",
+      "color": "Sort Titanium",
+      "gtin": "0195949805813",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-max-256-gb-schwarz-dual-sim-145496697.html",
+      "source_title": "APPLE IPHONE 16 PRO MAX 256GB BLACK TITANIUM 256 GB Titan Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949805691",
+        "0195949805745",
+        "0195949805752",
+        "0195949805790"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "128GB",
+      "color": "Sort Titanium",
+      "gtin": "0195949771200",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-128-gb-schwarz-dual-sim-145607125.html",
+      "source_title": "APPLE IPHONE 16 PRO 128GB BLACK TITANIUM 128 GB Titan Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949771088",
+        "0195949771187"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "256GB",
+      "color": "Sort Titanium",
+      "gtin": "0195949771965",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-256-gb-schwarz-dual-sim-145404514.html",
+      "source_title": "APPLE IPHONE 16 PRO 256GB BLACK TITANIUM 256 GB Titan Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949771934"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro-max",
+      "storage": "256GB",
+      "color": "Ørken Titanium",
+      "gtin": "0195949806193",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-max-256-gb-titan-wustensand-dual-sim-148976155.html",
+      "source_title": "APPLE iPhone 16 Pro Max 256 GB Titan Wüstensand Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949806124",
+        "0195949806070"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "128GB",
+      "color": "Ørken Titanium",
+      "gtin": "0195949771583",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-128-gb-beige-dual-sim-145402270.html",
+      "source_title": "APPLE IPHONE 16 PRO 128GB DESERT TITANIUM 128 GB Titan Wüstensand Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949771514"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16-pro",
+      "storage": "256GB",
+      "color": "Ørken Titanium",
+      "gtin": "0195949772344",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-pro-256-gb-beige-dual-sim-145656504.html",
+      "source_title": "APPLE IPHONE 16 PRO 256GB DESERT TITANIUM 256 GB Titan Wüstensand Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-16e",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0195950050578",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16e-128-gb-black-dual-sim-153533567.html",
+      "source_title": "APPLE iPhone 16e 128 GB Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950051155"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16",
+      "storage": "128GB",
+      "color": "Grønblå",
+      "gtin": "0195949822681",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-128-gb-grun-dual-sim-145400604.html",
+      "source_title": "APPLE IPHONE 16 128GB TEAL 128 GB Blaugrün Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-16",
+      "storage": "128GB",
+      "color": "Hvid",
+      "gtin": "0195949822148",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-128-gb-weiss-dual-sim-146315329.html",
+      "source_title": "APPLE IPHONE 16 128GB WHITE 128 GB Weiß Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949822070"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16",
+      "storage": "128GB",
+      "color": "Lyserød",
+      "gtin": "0195949822322",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-128-gb-rosa-dual-sim-146203825.html",
+      "source_title": "APPLE IPHONE 16 128GB PINK 128 GB Pink Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949822209"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16",
+      "storage": "128GB",
+      "color": "Sort",
+      "gtin": "0195949821967",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-128-gb-schwarz-dual-sim-145655712.html",
+      "source_title": "APPLE IPHONE 16 128GB BLACK 128 GB Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195949822384"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-16",
+      "storage": "128GB",
+      "color": "Ultramarin",
+      "gtin": "0195949822506",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-16-128-gb-blau-dual-sim-146315334.html",
+      "source_title": "APPLE IPHONE 16 128GB ULTRAMARINE 128 GB Ultramarin Dual SIM"
+    },
+    {
+      "template_slug": "apple-iphone-17-air",
+      "storage": "512GB",
+      "color": "Space Black",
+      "gtin": "0195950623468",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-air-5g-512-gb-space-schwarz-dual-sim-3013610.html",
+      "source_title": "APPLE iPhone Air 5G 512 GB Space Schwarz"
+    },
+    {
+      "template_slug": "apple-iphone-17-pro-max",
+      "storage": "256GB",
+      "color": "Dybblå",
+      "gtin": "0195950639292",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-max-256-gb-tiefblau-dual-sim-161651566.html",
+      "source_title": "APPLE IPHONE 17 PRO MAX 256 GB Tiefblau Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950639216"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17-pro",
+      "storage": "256GB",
+      "color": "Dybblå",
+      "gtin": "0195950627497",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-256-gb-tiefblau-256-mb-blau-dual-sim-166856437.html",
+      "source_title": "APPLE iPhone 17 Pro 256 GB Tiefblau 256 GB Blau Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950627640"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17-pro-max",
+      "storage": "256GB",
+      "color": "Kosmisk orange",
+      "gtin": "0195950638967",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-max-256-gb-orange-dual-sim-167967304.html",
+      "source_title": "APPLE iPhone 17 Pro Max 256 GB Orange Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950639049",
+        "0195950639094",
+        "0195950639018"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17-pro",
+      "storage": "256GB",
+      "color": "Kosmisk orange",
+      "gtin": "0195950627442",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-256-gb-cosmic-orange-dual-sim-161651859.html",
+      "source_title": "APPLE IPHONE 17 PRO 256 GB Cosmic Orange Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950627367"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17-pro-max",
+      "storage": "256GB",
+      "color": "Sølv",
+      "gtin": "0195950638899",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-max-256-gb-silber-dual-sim-161651664.html",
+      "source_title": "APPLE IPHONE 17 PRO MAX 256 GB Silber Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950637151",
+        "0195950638813"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17-pro",
+      "storage": "256GB",
+      "color": "Sølv",
+      "gtin": "0195950627244",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-pro-256-gb-silber-dual-sim-161651671.html",
+      "source_title": "APPLE IPHONE 17 PRO 256 GB Silber Dual SIM",
+      "other_gtins_same_variant": [
+        "0195950626162",
+        "0195950627169",
+        "0195950627091"
+      ]
+    },
+    {
+      "template_slug": "apple-iphone-17",
+      "storage": "256GB",
+      "color": "Sort",
+      "gtin": "0195950643589",
+      "source_url": "https://www.mediamarkt.de/de/product/_apple-iphone-17-256-gb-schwarz-dual-sim-161650970.html",
+      "source_title": "APPLE IPHONE 17 256 GB Schwarz Dual SIM",
+      "other_gtins_same_variant": [
+        "0195951030593",
+        "0195950642803",
+        "0195950643503"
+      ]
+    }
+  ]
+}
