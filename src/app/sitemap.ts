@@ -356,6 +356,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${BASE_URL}/saelg-din-enhed/iphone`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/samsung`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/ipad`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/macbook`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/apple-watch`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/tilbehoer`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "daily",
