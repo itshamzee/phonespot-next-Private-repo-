@@ -86,11 +86,16 @@ const FAQ = [
   },
 ] as const;
 
-export default async function BlackNovemberPage() {
+/** Kampagnens tilstand ved denne rendering (siden fornyes hvert 5. minut). */
+function campaignState() {
   const now = Date.now();
   const active = isBlackNovember(now);
   const upcoming = !active && now < BLACK_NOVEMBER.startsAt;
-  const ended = !active && !upcoming;
+  return { active, upcoming, ended: !active && !upcoming };
+}
+
+export default async function BlackNovemberPage() {
+  const { active, upcoming, ended } = campaignState();
   const covers = await campaignCovers();
   const stores = [STORES.vejle, STORES.slagelse];
 

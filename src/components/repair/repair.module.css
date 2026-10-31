@@ -1531,7 +1531,7 @@
   margin: 0;
   font-size: 13.5px;
   line-height: 1.5;
-  color: #c9cdc8;
+  color: #c9cdc8 !important;
 }
 .campaignStrip strong {
   color: #fff;
@@ -1608,7 +1608,7 @@
   padding: 7px 12px 7px 7px;
   border-radius: 999px;
   background: #111311;
-  color: #d9ddd8;
+  color: #d9ddd8 !important;
   font-size: 13px;
 }
 .heroCampaign strong {

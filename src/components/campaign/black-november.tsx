@@ -39,7 +39,7 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
           <strong>{BLACK_NOVEMBER.devicePercent} %</strong> på brugte enheder · covers og glas{" "}
           <strong>{BLACK_NOVEMBER.accessoryPriceKr} kr.</strong>
         </span>
-        <span className={styles.barShort}>Spar på reparation, enheder og tilbehør</span>
+        <span className={styles.barShort}>Tilbud hele november</span>
         <Link className={styles.barLink} href={BLACK_NOVEMBER.href}>
           Se tilbuddene
         </Link>

@@ -34,8 +34,13 @@ function HeroInner({ title, description, productCount, headingLevel: Heading = "
   // Feltet styres lokalt, og URL'en opdateres først efter en kort pause med
   // replace: ellers giver hvert bogstav et nyt punkt i historikken og en ny hentning.
   const [query, setQuery] = useState(activeSearch);
+  const [syncedSearch, setSyncedSearch] = useState(activeSearch);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => setQuery(activeSearch), [activeSearch]);
+  // Ændres søgningen udefra (fx "Nulstil filtre"), følger feltet med.
+  if (syncedSearch !== activeSearch) {
+    setSyncedSearch(activeSearch);
+    setQuery(activeSearch);
+  }
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
