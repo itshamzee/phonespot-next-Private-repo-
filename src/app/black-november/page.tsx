@@ -5,6 +5,7 @@ import { STORES } from "@/lib/store-config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BLACK_NOVEMBER, isBlackNovember, isCampaignCover } from "@/lib/campaign/black-november";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { BlackNovemberTape } from "@/components/campaign/black-november";
 import styles from "./black-november.module.css";
 
 // Siden skifter tilstand ved midnat 1. og 1. december; frisk hvert 5. minut.
@@ -129,6 +130,8 @@ export default async function BlackNovemberPage() {
       <JsonLd data={breadcrumbJsonLd} />
 
       <section className={styles.hero} aria-labelledby="bn-title">
+        <BlackNovemberTape className="-left-10 -right-10 top-6 -rotate-[8deg]" />
+        <BlackNovemberTape className="-left-10 -right-10 bottom-5 rotate-[2deg]" />
         <div className={styles.wrap}>
           <p className={styles.status}>
             <span className={styles.tag}>{status}</span>
