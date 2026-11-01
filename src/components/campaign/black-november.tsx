@@ -14,7 +14,7 @@ export function BlackNovemberTape({ className = "" }: { className?: string }) {
       aria-hidden="true"
       className={`pointer-events-none absolute overflow-hidden whitespace-nowrap bg-[#FFD54A] py-1.5 text-[13px] leading-none text-black ${className}`}
     >
-      {Array.from({ length: 14 }, (_, i) => (
+      {Array.from({ length: 60 }, (_, i) => (
         <span key={i} className="mr-3">
           <strong className="font-bold">BLACK</strong> NOVEMBER
         </span>
@@ -85,11 +85,11 @@ export function BlackNovemberBand({ serverActive }: { serverActive: boolean }) {
   return (
     <section aria-labelledby="black-november-band" className="my-4">
       <article className="relative isolate grid overflow-hidden rounded-[10px] bg-black text-white md:min-h-[420px] md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-center">
-        <BlackNovemberTape className="-left-10 -right-10 top-5 -rotate-[9deg]" />
+        <BlackNovemberTape className="-left-10 -right-10 top-8 -rotate-[3deg]" />
         <BlackNovemberTape className="-left-10 -right-10 bottom-4 rotate-[2deg]" />
         <PercentBadge className="right-5 top-[58%] hidden h-14 w-14 text-2xl md:flex" />
         <PercentBadge className="bottom-14 left-5 h-9 w-9 text-sm" />
-        <div className="relative z-10 px-6 pb-4 pt-20 md:px-[38px] md:py-20">
+        <div className="relative z-10 px-6 pb-4 pt-24 md:px-[38px] md:py-24">
           <CampaignTitle id="black-november-band" />
           <p className="mb-5 mt-5 max-w-[380px] text-[13px] leading-[1.65] text-white/75">
             I butikkerne i Vejle og Slagelse og her på siden.

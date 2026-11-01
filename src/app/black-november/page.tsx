@@ -130,7 +130,7 @@ export default async function BlackNovemberPage() {
       <JsonLd data={breadcrumbJsonLd} />
 
       <section className={styles.hero} aria-labelledby="bn-title">
-        <BlackNovemberTape className="-left-10 -right-10 top-6 -rotate-[8deg]" />
+        <BlackNovemberTape className="-left-10 -right-10 top-9 -rotate-[2deg]" />
         <BlackNovemberTape className="-left-10 -right-10 bottom-5 rotate-[2deg]" />
         <div className={styles.wrap}>
           <p className={styles.status}>
@@ -138,7 +138,8 @@ export default async function BlackNovemberPage() {
             <span>Vejle · Slagelse · phonespot.dk</span>
           </p>
           <h1 id="bn-title" className={styles.title}>
-            Black November.
+            <span className={styles.titleBlack}>BLACK</span>
+            <span className={styles.titleNovember}>NOVEMBER</span>
           </h1>
           <p className={styles.lead}>
             {ended
