@@ -53,9 +53,9 @@ export function BlackNovemberSlider({ serverActive }: { serverActive: boolean })
   useEffect(() => {
     if (!active || paused) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), SLIDE_MS);
-    return () => window.clearInterval(timer);
-  }, [active, paused]);
+    const timer = window.setTimeout(() => setIndex((i) => (i + 1) % SLIDES.length), SLIDE_MS);
+    return () => window.clearTimeout(timer);
+  }, [active, paused, index]);
 
   if (!active) return null;
   const light = SLIDES[index].light;
