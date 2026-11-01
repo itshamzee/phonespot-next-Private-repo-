@@ -7,7 +7,7 @@ import Link from "next/link";
 import type { DeviceType } from "@/lib/supabase/types";
 import styles from "./repair.module.css";
 import { QUALITY_BLURB, QUALITY_ORDER, qualityLabel, repairServiceLabel } from "./service-label";
-import { repairDiscountPercentFor } from "@/lib/campaign/black-november";
+import { BLACK_NOVEMBER, repairDiscountPercentFor, volumeRepairPercent } from "@/lib/campaign/black-november";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
@@ -308,7 +308,11 @@ export function RepairCart({
     selectedServices.reduce((sum, s) => sum + s.price_dkk, 0) +
     (includesTemperedGlass ? GLASS_PRICE : 0);
   const discountPercent = repairDiscountPercentFor(selectedIds.size, blackNovember);
-  const discountLabel = `Rabat (${discountPercent} %)`;
+  // Teksten siger "Black November", når det er kampagnen og ikke mængderabatten, der giver rabatten.
+  const discountLabel =
+    blackNovember && volumeRepairPercent(selectedIds.size) <= BLACK_NOVEMBER.repairPercent
+      ? `Black November (${discountPercent} %)`
+      : `Rabat (${discountPercent} %)`;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
   const canSubmit = !!(
@@ -552,6 +556,14 @@ export function RepairCart({
           <p className={styles.hint}>
             Vælg en reparation og eventuelt kvalitet på reservedelen.
           </p>
+          {blackNovember && services.some((service) => service.price_dkk > 0) && (
+            <div className={styles.campaignStrip} role="note">
+              <p>
+                <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % på alle reparationer hele november.
+                Rabatten trækkes automatisk i din oversigt.
+              </p>
+            </div>
+          )}
           <div className={styles.serviceRows}>
             {primaryGroups.map(([category, items]) => renderGroup(category, items, false))}
           </div>
@@ -574,7 +586,7 @@ export function RepairCart({
           {services.length > 1 && (
             <p className={styles.discountNote}>
               {blackNovember
-                ? "15 % rabat ved 3 eller flere reparationer. Rabatten vises i din oversigt."
+                ? "Black November: 10 % på alle reparationer · 15 % ved 3 eller flere. Rabatten vises i din oversigt."
                 : "10 % rabat ved 2 reparationer · 15 % rabat ved 3 eller flere. Rabatten vises i din oversigt."}
             </p>
           )}

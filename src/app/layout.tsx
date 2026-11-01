@@ -9,6 +9,7 @@ import { getMegaMenu } from "@/lib/navigation/mega-menu-data";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
 import { GlobalClickTracker } from "@/components/tracking/global-click-tracker";
 import "./globals.css";
+import { isBlackNovember } from "@/lib/campaign/black-november";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
 
@@ -104,7 +105,7 @@ export default async function RootLayout({
           `}
         </Script>
         <JsonLd data={ORGANIZATION_JSONLD} />
-        <LayoutShell menu={await getMegaMenu()}>{children}</LayoutShell>
+        <LayoutShell menu={await getMegaMenu()} campaignActive={isBlackNovember()}>{children}</LayoutShell>
         {/* e-maerket verification widget — not gated (trust badge, not tracking) */}
         <Script
           src="https://widget.emaerket.dk/widget/v1/8a2653aa0adf3cc13568f383d289c6bf"

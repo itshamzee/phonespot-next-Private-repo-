@@ -45,3 +45,7 @@ it('flags lagersalgsvarer in the cart so 3 for 2 can be shown',()=>{
  render(<AccessoryCard {...product} lagersalg={true}/>);fireEvent.click(screen.getByRole('button',{name:'Tilføj til kurv'}));
  expect(cart.addSku).toHaveBeenCalledWith(expect.objectContaining({skuProductId:'cover',lagersalg:true}));
 });
+it('marks Black November prices on the card',()=>{
+ render(<AccessoryCard {...product} black_november={true}/>);
+ expect(screen.getByText('Black November-pris')).toBeInTheDocument();
+});

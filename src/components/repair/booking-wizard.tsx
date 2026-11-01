@@ -15,7 +15,7 @@ import { STORES } from "@/lib/store-config";
 import Link from "next/link";
 import styles from "./repair.module.css";
 import { repairServiceLabel } from "./service-label";
-import { repairDiscountPercentFor } from "@/lib/campaign/black-november";
+import { BLACK_NOVEMBER, repairDiscountPercentFor, volumeRepairPercent } from "@/lib/campaign/black-november";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 
 /** Samme prisformat som prissiderne: 1.899 kr. */
@@ -450,6 +450,8 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
   }, 0);
 
   const discountPercent = repairDiscountPercentFor(totalServiceCount, blackNovember);
+  const discountIsCampaign =
+    blackNovember && volumeRepairPercent(totalServiceCount) <= BLACK_NOVEMBER.repairPercent;
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const totalPrice = subtotal - discountAmount;
 
@@ -1386,7 +1388,9 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                   -{discountPercent}%
                 </span>
                 <span className="text-sm font-medium text-charcoal">
-                  {discountPercent} % rabat{" "}
+                  {discountIsCampaign
+                    ? "Black November: 10 % på alle reparationer"
+                    : `Rabat ved ${totalServiceCount} reparationer`}{" "}
                   — du sparer {kr(discountAmount)}
                 </span>
               </div>
@@ -1571,7 +1575,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                 {discountPercent > 0 && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="rounded-full bg-green-eco/20 px-2 py-0.5 font-bold text-green-eco">
-                      {`-${discountPercent} % rabat`}
+                      {discountIsCampaign ? `Black November -${discountPercent} %` : `-${discountPercent} % rabat`}
                     </span>
                     <span className="text-gray line-through">
                       {kr(subtotal)}

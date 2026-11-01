@@ -51,6 +51,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
           <p className="text-xl font-bold tabular-nums text-charcoal">{(effectivePrice/100).toLocaleString("da-DK")} kr.</p>
           {isOnSale && <s className="text-sm tabular-nums text-charcoal/50">{(price/100).toLocaleString("da-DK")} kr.</s>}
         </div>
+        {black_november && <p className="mt-1 text-xs font-semibold text-charcoal">Black November-pris</p>}
         {saving != null && <p className="mt-1 text-xs text-charcoal/55">Vejl. pris {listPriceKr} kr.</p>}
         <p className="mt-1.5 min-h-5 text-xs text-charcoal/65">{stockLabel}</p>
         <button type="button" disabled={!canBuy} aria-disabled={added || undefined} onClick={add} className={`mt-3 min-h-11 w-full rounded-lg px-3 py-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.97] ${buttonClass}`}>{added ? "Tilføjet til kurv" : canBuy ? "Tilføj til kurv" : stockLabel}</button>
