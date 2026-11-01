@@ -5,46 +5,7 @@ import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 
-// Sort, hvid og gul i november: afspærringsbånd, stor hvid titel og gule procent-mærker.
-
-/** Gult bånd med gentaget kampagnenavn. Pynt, så det skjules for skærmlæsere. */
-export function BlackNovemberTape({ className = "" }: { className?: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={`pointer-events-none absolute overflow-hidden whitespace-nowrap bg-[#FFD54A] py-1.5 text-[13px] leading-none text-black ${className}`}
-    >
-      {Array.from({ length: 60 }, (_, i) => (
-        <span key={i} className="mr-3">
-          <strong className="font-bold">BLACK</strong> NOVEMBER
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function PercentBadge({ className = "" }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`absolute flex items-center justify-center rounded-full bg-[#FFD54A] font-bold text-black ${className}`}
-    >
-      %
-    </span>
-  );
-}
-
-/** Titlen fra kampagnen: hvidt BLACK over en hvid NOVEMBER-plade med rund kant. */
-function CampaignTitle({ id }: { id: string }) {
-  return (
-    <h2 id={id} className="inline-block font-body font-bold leading-none text-white">
-      <span className="block text-[60px] tracking-[-0.03em] md:text-[84px]">BLACK</span>
-      <span className="mt-2 block rounded-bl-[28px] bg-[#f4f4f4] py-2.5 text-center text-[20px] tracking-[0.1em] text-black md:text-[28px]">
-        NOVEMBER
-      </span>
-    </h2>
-  );
-}
+// Sort, hvid og gul i november, så kampagnen ikke ligner lagersalgets grønne.
 
 const OFFERS = [
   { figure: `${BLACK_NOVEMBER.repairPercent} %`, title: "på alle reparationer", href: "/reparation" },
@@ -78,19 +39,23 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
   );
 }
 
-/** Forsidens bånd: sort flade, afspærringsbånd og tilbuddene på gul og hvid. */
+/** Forsidens bånd: sort flade med tilbuddene på gul og hvid. */
 export function BlackNovemberBand({ serverActive }: { serverActive: boolean }) {
   const active = useBlackNovember(serverActive);
   if (!active) return null;
   return (
     <section aria-labelledby="black-november-band" className="my-4">
-      <article className="relative isolate grid overflow-hidden rounded-[10px] bg-black text-white md:min-h-[420px] md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-center">
-        <BlackNovemberTape className="-left-10 -right-10 top-8 -rotate-[3deg]" />
-        <BlackNovemberTape className="-left-10 -right-10 bottom-4 rotate-[2deg]" />
-        <PercentBadge className="right-5 top-[58%] hidden h-14 w-14 text-2xl md:flex" />
-        <PercentBadge className="bottom-14 left-5 h-9 w-9 text-sm" />
-        <div className="relative z-10 px-6 pb-4 pt-24 md:px-[38px] md:py-24">
-          <CampaignTitle id="black-november-band" />
+      <article className="relative isolate grid overflow-hidden rounded-[10px] bg-black text-white md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:items-center">
+        <div className="relative z-10 px-6 pb-4 pt-7 md:px-[38px] md:py-[42px]">
+          <div className="mb-[13px] flex items-center gap-2 text-[12px] font-[550] text-[#FFD54A]">
+            <StorefrontIcon kind="bag" className="h-[17px] w-[17px]" />
+            Black November
+          </div>
+          <h2 id="black-november-band" className="text-[32px] font-[550] leading-[1.04] tracking-[-1.4px] md:text-[44px]">
+            Lavere priser.
+            <br />
+            Hele november.
+          </h2>
           <p className="mb-5 mt-5 max-w-[380px] text-[13px] leading-[1.65] text-white/75">
             I butikkerne i Vejle og Slagelse og her på siden.
             <br />
@@ -104,8 +69,8 @@ export function BlackNovemberBand({ serverActive }: { serverActive: boolean }) {
             <StorefrontIcon kind="arrow" className="h-5 w-5" />
           </Link>
         </div>
-        <div className="relative z-10 mx-6 mb-16 md:mb-0 md:ml-0 md:mr-[38px]">
-          <ul className="overflow-hidden rounded-tl-[24px] bg-[#FFD54A] text-black">
+        <div className="relative z-10 mx-6 mb-6 md:mb-0 md:ml-0 md:mr-[38px]">
+          <ul className="overflow-hidden rounded-t-[10px] bg-[#FFD54A] text-black">
             {OFFERS.map((o) => (
               <li key={o.href} className="border-b border-black/15 last:border-b-0">
                 <Link
