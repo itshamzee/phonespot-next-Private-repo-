@@ -5,6 +5,7 @@ import { COLLECTION_MAP } from "@/lib/collections";
 import { isSparePart } from "@/lib/spare-part-filter";
 import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
+import { CAMPAIGN_OFFERS } from "@/app/black-november/[tilbud]/offers";
 import { IPHONE_SELL_PAGES } from "@/app/saelg-din-enhed/iphone/[model]/models";
 import { SELL_MODEL_PAGES } from "@/app/saelg-din-enhed/[device]/[model]/models";
 import { NEW_CATEGORY_PAGES } from "@/app/saelg-din-enhed/[device]/new-categories";
@@ -65,6 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ---- Static pages --------------------------------------------------------
 
   const staticPages: MetadataRoute.Sitemap = [
+    ...CAMPAIGN_OFFERS.map((offer) => ({
+      url: `${BASE_URL}/black-november/${offer.slug}`,
+      lastModified: new Date("2026-11-01"),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
     {
       url: `${BASE_URL}/black-november`,
       lastModified: new Date("2026-11-01"),

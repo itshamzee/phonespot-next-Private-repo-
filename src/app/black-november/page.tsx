@@ -5,12 +5,13 @@ import { STORES } from "@/lib/store-config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BLACK_NOVEMBER, isBlackNovember, isCampaignCover } from "@/lib/campaign/black-november";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
+import { CAMPAIGN_OFFERS } from "./[tilbud]/offers";
 import styles from "./black-november.module.css";
 
 // Siden skifter tilstand ved midnat 1. og 1. december; frisk hvert 5. minut.
 export const revalidate = 300;
 
-const TITLE = "Black November 2026: 10 % på reparation | PhoneSpot";
+const TITLE = "Black Friday 2026 hele november: tilbud på iPhone | PhoneSpot";
 const DESCRIPTION =
   "Black November hos PhoneSpot 1.–30. november: 10 % på alle reparationer, 5 % på brugte iPhones og andre enheder, covers og beskyttelsesglas til 199 kr. I Vejle, Slagelse og online.";
 
@@ -60,6 +61,10 @@ async function campaignCovers(): Promise<{ src: string; alt: string }[]> {
 }
 
 const FAQ = [
+  {
+    q: "Er Black November det samme som Black Friday?",
+    a: "Black Friday er fredag 27. november 2026. Vi kører i stedet tilbuddene hele november, så du får samme pris fra 1. til og med 30. november og ikke skal nå det på én dag.",
+  },
   {
     q: "Hvornår gælder Black November?",
     a: "Fra 1. november kl. 00.00 til og med 30. november 2026. Tilbuddene gælder både online og i butikkerne i Vejle og Slagelse.",
@@ -130,6 +135,8 @@ export default async function BlackNovemberPage() {
 
       <section className={styles.hero} aria-labelledby="bn-title">
         <div className={styles.wrap}>
+          <div className={styles.heroFrame}>
+          <div className={styles.heroCopy}>
           <p className={styles.status}>
             <span className={styles.tag}>{status}</span>
             <span>Vejle · Slagelse · phonespot.dk</span>
@@ -142,6 +149,11 @@ export default async function BlackNovemberPage() {
               ? "Tak fordi du handlede med os i november. Vores normale priser gælder igen, og garantien er den samme."
               : "En hel måned med lavere priser på det, vi laver hver dag: reparationer, brugte enheder med garanti og tilbehør, der passer."}
           </p>
+          </div>
+          <div className={styles.heroPhoto}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={IPHONE_IMAGE} alt="Brugt iPhone 17 Pro i sølv" fetchPriority="high" />
+          </div>
           <ol className={styles.ledger} aria-label="Tilbuddene">
             <li>
               <span className={styles.figure}>{BLACK_NOVEMBER.repairPercent} %</span>
@@ -156,6 +168,7 @@ export default async function BlackNovemberPage() {
               <span>for covers og beskyttelsesglas</span>
             </li>
           </ol>
+          </div>
         </div>
       </section>
 
@@ -250,6 +263,19 @@ export default async function BlackNovemberPage() {
               <img src="/images/privacy-glas.webp" alt="Privacy-beskyttelsesglas" loading="lazy" />
             )}
           </div>
+        </div>
+      </section>
+
+      <section className={styles.terms} aria-labelledby="bn-offers">
+        <div className={`${styles.wrap} ${styles.termsGrid}`}>
+          <h2 id="bn-offers">Black Friday-tilbud pr. kategori</h2>
+          <ul>
+            {CAMPAIGN_OFFERS.map((offer) => (
+              <li key={offer.slug}>
+                <Link href={`/black-november/${offer.slug}`}>{offer.h1}</Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

@@ -11,9 +11,52 @@
 
 /* ---------- Hero ---------- */
 .hero {
-  background: #1a3d2e;
-  color: #f4f3ef;
-  padding: 64px 0 56px;
+  padding: 16px 0 0;
+}
+.heroFrame {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 0 32px;
+  padding: 48px 48px 32px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  color: #f4f4f4;
+}
+.heroCopy {
+  align-self: center;
+}
+.heroPhoto {
+  position: relative;
+  min-height: 360px;
+}
+.heroPhoto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.heroFrame .ledger {
+  grid-column: 1 / -1;
+}
+.offerCopy {
+  max-width: 68ch;
+}
+.offerCopy h1 {
+  margin: 8px 0 18px;
+  font-size: clamp(32px, 4.6vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.offerCopy p {
+  font-size: 16px;
+  line-height: 1.65;
+}
+.offerCopy .offerLead {
+  font-size: 19px;
+  line-height: 1.5;
 }
 .status {
   display: flex;
@@ -26,11 +69,11 @@
 }
 .tag {
   font-weight: 650;
-  color: #f4f3ef;
+  color: #f4f4f4;
 }
 .title {
   margin: 22px 0 0;
-  font-size: clamp(56px, 11vw, 148px);
+  font-size: clamp(46px, 6.6vw, 88px);
   font-weight: 700;
   letter-spacing: -0.055em;
   line-height: 0.88;
@@ -129,6 +172,11 @@
 }
 .primary,
 .secondary {
+  background: transparent !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
   display: inline-flex;
   align-items: center;
   min-height: 46px;
@@ -140,12 +188,12 @@
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease;
 }
 .primary {
-  background: #1a3d2e;
+  background: #000;
   color: #fff;
 }
 .secondary {
   background: #edf2ee;
-  color: #1a3d2e;
+  color: #000;
 }
 .primary:active,
 .secondary:active {
@@ -153,7 +201,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .primary:hover {
-    background: #294d39;
+    background: #1c1c1c;
   }
   .secondary:hover {
     background: #e0eae2;
@@ -172,6 +220,7 @@
   display: block;
 }
 .cutout {
+  background: transparent;
   background: #ffffff;
   display: flex;
   align-items: center;
@@ -179,7 +228,7 @@
   padding: 28px;
 }
 .chapterAlt .cutout {
-  background: #fff;
+  background: transparent;
 }
 .cutout img {
   object-fit: contain;
@@ -250,7 +299,7 @@
 }
 .terms a,
 .more a {
-  color: #1a3d2e;
+  color: #000;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -364,5 +413,16 @@
   }
   .storeList {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .heroFrame {
+    grid-template-columns: 1fr;
+    padding: 32px 24px 24px;
+  }
+  .heroPhoto {
+    min-height: 300px;
+    margin-top: 16px;
   }
 }
