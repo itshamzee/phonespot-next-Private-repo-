@@ -6,6 +6,8 @@ import { isSparePart } from "@/lib/spare-part-filter";
 import { getPublishedTemplates, getPublishedSkuProducts } from "@/lib/supabase/product-queries";
 import { getAllPosts } from "@/lib/blog";
 import { IPHONE_SELL_PAGES } from "@/app/saelg-din-enhed/iphone/[model]/models";
+import { SELL_MODEL_PAGES } from "@/app/saelg-din-enhed/[device]/[model]/models";
+import { NEW_CATEGORY_PAGES } from "@/app/saelg-din-enhed/[device]/new-categories";
 import { COMPARISONS } from "@/lib/comparisons";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
@@ -334,6 +336,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    ...NEW_CATEGORY_PAGES.map((page) => ({
+      url: `${BASE_URL}/saelg-din-enhed/${page.slug}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+    ...SELL_MODEL_PAGES.map((page) => ({
+      url: `${BASE_URL}/saelg-din-enhed/${page.device}/${page.slug}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
     ...IPHONE_SELL_PAGES.map((page) => ({
       url: `${BASE_URL}/saelg-din-enhed/iphone/${page.slug}`,
       lastModified: STATIC_LAST_MODIFIED,

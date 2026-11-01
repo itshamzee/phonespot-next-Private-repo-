@@ -107,8 +107,9 @@ export default function SaelgDinEnhedPage() {
             </p>
             <div className={styles.introDetail}>
               <p>
-                Telefon, tablet, laptop eller smartwatch — du kan tilføje flere
-                enheder i samme anmodning.
+                Telefon, tablet, laptop, smartwatch, spillekonsol, controller,
+                høretelefoner, Dyson eller smart home, virkende eller defekte.
+                Du kan tilføje flere enheder i samme anmodning.
               </p>
               <div>
                 <StorefrontIcon kind="person" />
@@ -247,6 +248,12 @@ export default function SaelgDinEnhedPage() {
             <li><Link href="/saelg-din-enhed/ipad">Sælg iPad</Link></li>
             <li><Link href="/saelg-din-enhed/macbook">Sælg MacBook</Link></li>
             <li><Link href="/saelg-din-enhed/apple-watch">Sælg Apple Watch</Link></li>
+            <li><Link href="/saelg-din-enhed/laptop">Sælg bærbar</Link></li>
+            <li><Link href="/saelg-din-enhed/spillekonsol">Sælg spillekonsol</Link></li>
+            <li><Link href="/saelg-din-enhed/controller">Sælg controller</Link></li>
+            <li><Link href="/saelg-din-enhed/hoeretelefoner">Sælg høretelefoner</Link></li>
+            <li><Link href="/saelg-din-enhed/dyson">Sælg Dyson</Link></li>
+            <li><Link href="/saelg-din-enhed/smart-home">Sælg smart home</Link></li>
           </ul>
         </nav>
         <section className={styles.help} aria-labelledby="help-title">

@@ -102,7 +102,51 @@ const DEVICE_CATEGORIES = [
       <StorefrontIcon kind="watch" className="h-7 w-7" />
     ),
   },
+  {
+    type: "Konsol",
+    label: "Spillekonsol",
+    sublabel: "PlayStation, Xbox, Switch",
+    icon: (
+      <StorefrontIcon kind="console" className="h-7 w-7" />
+    ),
+  },
+  {
+    type: "Controller",
+    label: "Controller",
+    sublabel: "DualSense, Xbox, Joy-Con",
+    icon: (
+      <StorefrontIcon kind="gamepad" className="h-7 w-7" />
+    ),
+  },
+  {
+    type: "Høretelefoner",
+    label: "Høretelefoner",
+    sublabel: "AirPods, Sony, Bose",
+    icon: (
+      <StorefrontIcon kind="headphones" className="h-7 w-7" />
+    ),
+  },
+  {
+    type: "Dyson",
+    label: "Dyson",
+    sublabel: "Supersonic, Airwrap",
+    icon: (
+      <StorefrontIcon kind="dryer" className="h-7 w-7" />
+    ),
+  },
+  {
+    type: "Smart home",
+    label: "Smart home",
+    sublabel: "HomePod, Sonos, Nest",
+    icon: (
+      <StorefrontIcon kind="home" className="h-7 w-7" />
+    ),
+  },
 ];
+
+// Enheder uden telefonens skærm, bagside og batteri får ét felt: Udvendig stand.
+const OUTER_CONDITION_TYPES = new Set(["Konsol", "Controller", "Høretelefoner", "Dyson", "Smart home"]);
+const OUTER_OPTIONS = ["Perfekt", "Små ridser", "Buler/ridser", "Knækket"];
 
 /* ---- Dynamic options per device type ---- */
 const STORAGE_OPTIONS: Record<string, string[]> = {
@@ -110,6 +154,7 @@ const STORAGE_OPTIONS: Record<string, string[]> = {
   Tablet: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"],
   Laptop: ["128GB SSD", "256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD"],
   Smartwatch: ["32GB", "64GB"],
+  Konsol: ["32GB", "64GB", "256GB", "512GB", "825GB", "1TB", "2TB"],
 };
 
 const RAM_OPTIONS: Record<string, string[]> = {
@@ -137,6 +182,11 @@ const BROKEN_PARTS: Record<string, string[]> = {
   Tablet: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Knapper", "Tænder ikke", "Andet"],
   Laptop: ["Kamera", "Højtaler", "Mikrofon", "WiFi", "Bluetooth", "Opladning", "Tastatur", "Trackpad", "USB-porte", "Tænder ikke", "Andet"],
   Smartwatch: ["Skærm-touch", "Højtaler", "Mikrofon", "Bluetooth", "Opladning", "Knapper", "Tænder ikke", "Andet"],
+  Konsol: ["Tænder ikke", "Diskdrev", "HDMI", "Overophedning", "Blæserstøj", "Skærm", "Opladning", "WiFi", "Bluetooth", "Andet"],
+  Controller: ["Stick drift", "Knapper", "Triggere", "Opladning", "Bluetooth", "Tænder ikke", "Andet"],
+  Høretelefoner: ["Lyd i én side", "Støjreduktion", "Mikrofon", "Bluetooth", "Opladning", "Batteri", "Tænder ikke", "Andet"],
+  Dyson: ["Varmer ikke", "Blæser svagt", "Ledning", "Filter", "Mundstykker mangler", "Tænder ikke", "Andet"],
+  "Smart home": ["Tænder ikke", "Højtaler", "Mikrofon", "Kamera", "WiFi", "Bluetooth", "Andet"],
 };
 
 /* ---- Condition SVG icons (replaces emoji) ---- */
@@ -404,6 +454,99 @@ const BRANDS_BY_TYPE: Record<string, BrandEntry[]> = {
     {
       name: "Fossil",
       models: ["Fossil Gen 6", "Fossil Gen 5"],
+    },
+  ],
+  Konsol: [
+    {
+      name: "Sony",
+      models: [
+        "PlayStation 5 Pro", "PlayStation 5 Slim", "PlayStation 5", "PlayStation 5 Digital Edition",
+        "PlayStation Portal", "PlayStation 4 Pro", "PlayStation 4 Slim", "PlayStation 4",
+      ],
+    },
+    {
+      name: "Microsoft",
+      models: ["Xbox Series X", "Xbox Series S", "Xbox One X", "Xbox One S", "Xbox One"],
+    },
+    {
+      name: "Nintendo",
+      models: ["Nintendo Switch 2", "Nintendo Switch OLED", "Nintendo Switch", "Nintendo Switch Lite"],
+    },
+    {
+      name: "Valve",
+      models: ["Steam Deck OLED", "Steam Deck"],
+    },
+    {
+      name: "ASUS",
+      models: ["ROG Ally X", "ROG Ally"],
+    },
+  ],
+  Controller: [
+    {
+      name: "Sony",
+      models: ["DualSense Edge", "DualSense", "DualShock 4"],
+    },
+    {
+      name: "Microsoft",
+      models: ["Xbox Elite Series 2", "Xbox Wireless Controller"],
+    },
+    {
+      name: "Nintendo",
+      models: ["Switch 2 Pro Controller", "Switch Pro Controller", "Joy-Con"],
+    },
+  ],
+  Høretelefoner: [
+    {
+      name: "Apple",
+      models: ["AirPods Max", "AirPods Pro 3", "AirPods Pro 2", "AirPods Pro", "AirPods 4", "AirPods 3", "AirPods 2"],
+    },
+    {
+      name: "Sony",
+      models: ["WH-1000XM6", "WH-1000XM5", "WH-1000XM4", "WF-1000XM5", "WF-1000XM4"],
+    },
+    {
+      name: "Bose",
+      models: ["QuietComfort Ultra", "QuietComfort 45", "QuietComfort Earbuds II"],
+    },
+    {
+      name: "Sennheiser",
+      models: ["Momentum 4", "Momentum True Wireless 4"],
+    },
+    {
+      name: "Beats",
+      models: ["Beats Studio Pro", "Beats Fit Pro", "Powerbeats Pro 2"],
+    },
+    {
+      name: "Samsung",
+      models: ["Galaxy Buds3 Pro", "Galaxy Buds2 Pro"],
+    },
+  ],
+  Dyson: [
+    {
+      name: "Dyson",
+      models: ["Supersonic Nural", "Supersonic", "Airwrap i.d.", "Airwrap", "Corrale", "Airstrait"],
+    },
+  ],
+  "Smart home": [
+    {
+      name: "Apple",
+      models: ["HomePod", "HomePod mini"],
+    },
+    {
+      name: "Sonos",
+      models: ["Era 300", "Era 100", "Arc", "Beam", "Move", "One"],
+    },
+    {
+      name: "Google",
+      models: ["Nest Hub", "Nest Audio", "Nest Mini", "Nest Cam"],
+    },
+    {
+      name: "Amazon",
+      models: ["Echo Show", "Echo", "Echo Dot"],
+    },
+    {
+      name: "Ring",
+      models: ["Video Doorbell", "Indoor Cam"],
     },
   ],
 };
@@ -805,6 +948,7 @@ export function SellDeviceWizard({
   const isPhone = activeDevice.device.deviceType === "Telefon";
   const isTablet = activeDevice.device.deviceType === "Tablet";
   const isLaptop = activeDevice.device.deviceType === "Laptop";
+  const hasOuterCondition = OUTER_CONDITION_TYPES.has(activeDevice.device.deviceType);
   const showCloudLock = isPhone || isTablet;
 
   /* ---- validation ---- */
@@ -826,7 +970,10 @@ export function SellDeviceWizard({
           const d = entry.device;
           // Vi køber defekte enheder, men skal kende fejlen på forhånd.
           const faultKnown = c.allWorking !== "Nej" || c.brokenParts.length > 0;
-          const baseValid = !!(c.screen && c.back && c.battery && c.allWorking && faultKnown);
+          const conditionKnown = OUTER_CONDITION_TYPES.has(d.deviceType)
+            ? !!c.screen
+            : !!(c.screen && c.back && c.battery);
+          const baseValid = !!(conditionKnown && c.allWorking && faultKnown);
           const needsCloudLock =
             d.deviceType === "Telefon" || d.deviceType === "Tablet";
           if (needsCloudLock) return baseValid && !!c.cloudLocked;
@@ -858,9 +1005,9 @@ export function SellDeviceWizard({
         `Model: ${d.useCustom ? d.modelCustom : d.model}`,
         d.storage ? `Lagerplads: ${d.storage}` : null,
         d.ram ? `RAM: ${d.ram}` : null,
-        `Skærm: ${c.screen}`,
-        `Bagside/krop: ${c.back}`,
-        `Batteri: ${c.battery}`,
+        OUTER_CONDITION_TYPES.has(d.deviceType) ? `Udvendig stand: ${c.screen}` : `Skærm: ${c.screen}`,
+        OUTER_CONDITION_TYPES.has(d.deviceType) ? null : `Bagside/krop: ${c.back}`,
+        OUTER_CONDITION_TYPES.has(d.deviceType) ? null : `Batteri: ${c.battery}`,
         `Alt fungerer: ${c.allWorking}`,
         c.allWorking === "Nej" && c.brokenParts.length > 0
           ? `Defekte dele: ${c.brokenParts.join(", ")}`
@@ -956,8 +1103,8 @@ export function SellDeviceWizard({
         const firstIncomplete = devices.findIndex(
           (e) =>
             !e.condition.screen ||
-            !e.condition.back ||
-            !e.condition.battery ||
+            (!OUTER_CONDITION_TYPES.has(e.device.deviceType) &&
+              (!e.condition.back || !e.condition.battery)) ||
             !e.condition.allWorking,
         );
         setActiveDeviceIndex(firstIncomplete >= 0 ? firstIncomplete : 0);
@@ -1136,7 +1283,7 @@ export function SellDeviceWizard({
             )}
 
             {/* Device category cards */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {DEVICE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.type}
@@ -1477,10 +1624,12 @@ export function SellDeviceWizard({
 
             {/* Condition for active device */}
             <ConditionCardGrid
-              label="Skærm"
+              label={hasOuterCondition ? "Udvendig stand" : "Skærm"}
               options={
-                SCREEN_OPTIONS[activeDevice.device.deviceType] ??
-                SCREEN_OPTIONS.Telefon
+                hasOuterCondition
+                  ? OUTER_OPTIONS
+                  : (SCREEN_OPTIONS[activeDevice.device.deviceType] ??
+                    SCREEN_OPTIONS.Telefon)
               }
               value={activeCondition.screen}
               onChange={(v) =>
@@ -1488,6 +1637,8 @@ export function SellDeviceWizard({
               }
             />
 
+            {!hasOuterCondition && (
+              <>
             <ConditionCardGrid
               label={isLaptop ? "Kabinet" : "Bagside"}
               options={
@@ -1506,6 +1657,8 @@ export function SellDeviceWizard({
                 updateCondition(activeDeviceIndex, { battery: v })
               }
             />
+              </>
+            )}
 
             <RadioGroup
               label="Fungerer alt?"
@@ -1599,8 +1752,7 @@ export function SellDeviceWizard({
                       d.deviceType === "Telefon" || d.deviceType === "Tablet";
                     const filled = !!(
                       c.screen &&
-                      c.back &&
-                      c.battery &&
+                      (OUTER_CONDITION_TYPES.has(d.deviceType) || (c.back && c.battery)) &&
                       c.allWorking &&
                       (!needsCloud || c.cloudLocked)
                     );
@@ -1909,11 +2061,15 @@ export function SellDeviceWizard({
                         </div>
                       )}
                       <div className="flex justify-between gap-3">
-                        <dt className="text-gray">Skærm</dt>
+                        <dt className="text-gray">
+                          {OUTER_CONDITION_TYPES.has(entry.device.deviceType) ? "Udvendig stand" : "Skærm"}
+                        </dt>
                         <dd className="font-medium text-charcoal">
                           {entry.condition.screen}
                         </dd>
                       </div>
+                      {!OUTER_CONDITION_TYPES.has(entry.device.deviceType) && (
+                        <>
                       <div className="flex justify-between gap-3">
                         <dt className="text-gray">
                           {entry.device.deviceType === "Laptop"
@@ -1930,6 +2086,8 @@ export function SellDeviceWizard({
                           {DISPLAY_LABELS[entry.condition.battery] ?? entry.condition.battery}
                         </dd>
                       </div>
+                        </>
+                      )}
                     </dl>
                   </div>
                 ))}

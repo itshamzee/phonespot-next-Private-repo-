@@ -7,7 +7,11 @@
  * konkrete forberedelsestrin. Skal tabeller tilføjes, kræver det ejerens ja.
  */
 
-export type SellDeviceSlug = "iphone" | "samsung" | "ipad" | "macbook" | "apple-watch";
+export type SellDeviceSlug =
+  | "iphone" | "samsung" | "ipad" | "macbook" | "apple-watch"
+  | "laptop" | "spillekonsol" | "controller" | "hoeretelefoner" | "dyson" | "smart-home";
+
+import { NEW_CATEGORY_PAGES } from "./new-categories";
 
 export type SellDeviceFaq = { question: string; answer: string };
 
@@ -23,7 +27,7 @@ export type SellDeviceConfig = {
   /** Svaret først: ét kort afsnit under H1. */
   answer: string;
   /** Sendes videre til SellDeviceWizard, så første enhed er forvalgt. */
-  wizardPreset: { deviceType: string; brand: string };
+  wizardPreset: { deviceType: string; brand?: string };
   bodyHeading: string;
   body: string[];
   /** Modeller formularen kender, i klar tekst. */
@@ -287,6 +291,7 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
     blogSlugs: [],
     linkLabel: "Apple Watch",
   },
+  ...NEW_CATEGORY_PAGES,
 ];
 
 export function getSellDevice(slug: string): SellDeviceConfig | undefined {

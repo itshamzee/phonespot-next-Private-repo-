@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SellLandingPage } from "@/components/sell-device/sell-landing-page";
 import { SELL_DEVICES, getSellDevice } from "./devices";
 import { IPHONE_FAMILY_PAGES } from "../iphone/[model]/models";
+import { getModelPages } from "./[model]/models";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -46,7 +47,11 @@ export default async function SellDeviceDevicePage({ params }: PageProps) {
       content={{ ...device, faqHeading: `Spørgsmål om at sælge ${device.name}` }}
       path={`/saelg-din-enhed/${device.slug}`}
       crumbs={[{ name: `Sælg ${device.name}`, label: device.name }]}
-      readMoreLinks={device.slug === "iphone" ? IPHONE_FAMILY_PAGES.map((page) => ({ href: `/saelg-din-enhed/iphone/${page.slug}`, label: `Sælg ${page.linkLabel}` })) : []}
+      readMoreLinks={
+        device.slug === "iphone"
+          ? IPHONE_FAMILY_PAGES.map((page) => ({ href: `/saelg-din-enhed/iphone/${page.slug}`, label: `Sælg ${page.linkLabel}` }))
+          : getModelPages(device.slug).map((page) => ({ href: `/saelg-din-enhed/${device.slug}/${page.slug}`, label: `Sælg ${page.linkLabel}` }))
+      }
       relatedHeading="Sælg en anden enhed"
       relatedLinks={SELL_DEVICES.filter((other) => other.slug !== device.slug).map((other) => ({
         href: `/saelg-din-enhed/${other.slug}`,

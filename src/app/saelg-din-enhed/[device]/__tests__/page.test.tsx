@@ -15,12 +15,12 @@ afterEach(() => {
   wizardProps.mockClear();
 });
 
-const SLUGS = ["iphone", "samsung", "ipad", "macbook", "apple-watch"];
+const SLUGS = ["iphone", "samsung", "ipad", "macbook", "apple-watch", "laptop", "spillekonsol", "controller", "hoeretelefoner", "dyson", "smart-home"];
 const BANNED = [/foxway/i, /dropship/i, /panserglas/i, /certificerede teknikere/i, /30\+ tests/i, /esbjerg/i, /original kasse/i];
 const params = (device: string) => ({ params: Promise.resolve({ device }) });
 
 describe("Enhedssider under /saelg-din-enhed/[device]", () => {
-  it("bygger præcis de fem kendte enhedssider", () => {
+  it("bygger præcis de kendte enhedssider", () => {
     expect(generateStaticParams()).toEqual(SLUGS.map((device) => ({ device })));
   });
 
