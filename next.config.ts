@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
     return [
       ...shopifyRedirects,
       // Laptop brand/tier pages no longer exist; blog posts and /baerbare-vejle still link here.
+      { source: "/black-november", destination: "/", permanent: false },
+      { source: "/blog/black-november-2026", destination: "/blog", permanent: false },
       { source: "/baerbare/apple", destination: "/baerbare?brand=apple", permanent: true },
       { source: "/baerbare/:slug(lenovo|hp|studiecomputer)", destination: "/baerbare", permanent: true },
       // Old model landing slugs from the sitemap; no route has served them.

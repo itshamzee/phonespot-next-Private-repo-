@@ -1,5 +1,4 @@
 "use client";
-import { BlackNovemberStrip } from "@/components/campaign/black-november";
 
 import { Suspense, useState, useCallback, useMemo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -197,7 +196,6 @@ function TilbehoerLayoutInner({
 
       <div className="mx-auto max-w-[1280px] px-5 sm:px-9 py-8">
         <div className="-mt-4 mb-2">
-          <BlackNovemberStrip kind="accessories" />
         </div>
         <div className="flex gap-8">
           <TilbehoerSidebar activeCategory={activeCategory} />

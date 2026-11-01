@@ -1,6 +1,5 @@
 "use client";
 
-import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -844,8 +843,7 @@ export function DeviceDetail({
             )}
             {bestMatch?.list_price && price != null && bestMatch.list_price > price && (
               <p className={styles.campaignLine}>
-                <strong>Black November:</strong>
-                {BLACK_NOVEMBER.devicePercent} % er trukket fra · før{" "}
+                Før{" "}
                 <s>{formatDKK(bestMatch.list_price)}</s>
               </p>
             )}

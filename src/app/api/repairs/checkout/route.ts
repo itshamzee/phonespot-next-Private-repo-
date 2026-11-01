@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
         percent_off: discountPercent,
         duration: "once",
         name: isBlackNovember() && discountPercent === BLACK_NOVEMBER.repairPercent
-          ? `Black November ${discountPercent}%`
+          ? `Rabat ${discountPercent}%`
           : `Reparationsrabat ${discountPercent}%`,
         metadata: { repair_ticket_id: firstTicketId },
       });

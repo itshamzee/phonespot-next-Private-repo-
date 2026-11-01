@@ -52,7 +52,7 @@ const kr = (n: number) => `${n.toLocaleString("da-DK")} kr.`;
  * en kategori, og et panel med modeller på lager åbner under menuen. Linket
  * selv fører stadig til kategorisiden. Panelerne åbner kun med mus og bred skærm.
  */
-export function MegaNav({ menu, panelClassName, campaign = false }: { menu: MegaMenu | null; panelClassName: string; campaign?: boolean }) {
+export function MegaNav({ menu, panelClassName }: { menu: MegaMenu | null; panelClassName: string }) {
   const pathname = usePathname();
   // Åbent panel hører til den side, det blev åbnet på; et sideskift lukker det.
   const [openState, setOpenState] = useState<{ path: string; href: string } | null>(null);
@@ -140,17 +140,6 @@ export function MegaNav({ menu, panelClassName, campaign = false }: { menu: Mega
           </div>
         );
       })}
-      {campaign && (
-        <div className="flex self-stretch">
-          <Link
-            href="/black-november"
-            aria-current={pathname === "/black-november" ? "page" : undefined}
-            className={"relative my-auto flex items-center " + SALE_TEXT}
-          >
-            Black November
-          </Link>
-        </div>
-      )}
     </>
   );
 }

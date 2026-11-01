@@ -1,5 +1,3 @@
-import { BlackNovemberStrip } from "@/components/campaign/black-november";
-import { isBlackNovember } from "@/lib/campaign/black-november";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -142,7 +140,6 @@ export default async function ReparationPage() {
         }}
       />
       <div className={landing.wrap}>
-        <BlackNovemberStrip kind="repair" serverActive={isBlackNovember()} />
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}>
           <ol>
             <li>

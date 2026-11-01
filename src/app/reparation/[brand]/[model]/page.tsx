@@ -22,7 +22,7 @@ import {
 } from "@/lib/supabase/repairs";
 import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 import { fitTitle } from "@/lib/repairs/hub-meta";
-import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
+import { isBlackNovember } from "@/lib/campaign/black-november";
 
 export const revalidate = 3600;
 
@@ -290,12 +290,6 @@ export default async function ModelPricePage({ params }: Props) {
                 )}
                 <span>{storeCities.join(" og ")}</span>
               </div>
-              {campaignActive && paidServices.length > 0 && (
-                <p className={styles.heroCampaign}>
-                  <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % på alle
-                  reparationer til og med 30. november.
-                </p>
-              )}
             </div>
           </div>
           {services.length > 0 && (

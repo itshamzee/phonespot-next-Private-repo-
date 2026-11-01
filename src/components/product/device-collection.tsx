@@ -1,5 +1,3 @@
-import { BlackNovemberStrip } from "@/components/campaign/black-november";
-import { isBlackNovember } from "@/lib/campaign/black-november";
 import Link from "next/link";
 import Image from "next/image";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
@@ -125,7 +123,6 @@ export function DeviceCollection({
 
       <section id="udvalg" className={styles.products} aria-label={collectionHeading}>
         <div className={styles.wrap}>
-          <BlackNovemberStrip kind="devices" serverActive={isBlackNovember()} />
           <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} promos={promos} />
         </div>
       </section>
