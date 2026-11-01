@@ -93,7 +93,11 @@ export function BlackNovemberSlider({ serverActive }: { serverActive: boolean })
               slide.light ? "bg-white text-black" : "bg-black text-white"
             } ${current ? "opacity-100" : "pointer-events-none opacity-0"}`}
           >
-            <div className="flex flex-col justify-center px-6 pt-8 md:px-10 md:pt-0">
+            <div
+              className={`flex flex-col justify-center px-6 pt-8 transition-opacity md:px-10 md:pt-0 ${
+                current ? "opacity-100 delay-300 duration-500" : "opacity-0 duration-150"
+              }`}
+            >
               <p className="text-[12px] font-[550] opacity-70">Black November</p>
               <p className="mt-3 font-display text-[64px] font-bold leading-[0.95] tracking-tight md:text-[96px]">
                 {slide.figure}

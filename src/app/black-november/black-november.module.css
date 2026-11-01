@@ -172,11 +172,6 @@
 }
 .primary,
 .secondary {
-  background: transparent !important;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  padding-left: 4px !important;
-  padding-right: 4px !important;
   display: inline-flex;
   align-items: center;
   min-height: 46px;
@@ -425,4 +420,12 @@
     min-height: 300px;
     margin-top: 16px;
   }
+}
+
+.actions .secondary {
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
