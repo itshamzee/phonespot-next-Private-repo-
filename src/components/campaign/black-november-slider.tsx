@@ -98,8 +98,8 @@ export function BlackNovemberSlider({ serverActive }: { serverActive: boolean })
                 current ? "opacity-100 delay-300 duration-500" : "opacity-0 duration-150"
               }`}
             >
-              <p className="text-[12px] font-[550] opacity-70">Black November</p>
-              <p className="mt-3 font-display text-[64px] font-bold leading-[0.95] tracking-tight md:text-[96px]">
+              <p className="font-display text-[34px] font-bold leading-none tracking-tight [text-shadow:3px_3px_0_#FFD54A] md:text-[52px]">Black November</p>
+              <p className="mt-4 font-display text-[60px] font-bold leading-[0.95] tracking-tight md:text-[84px]">
                 {slide.figure}
               </p>
               <p className="mt-2 text-[20px] font-[550] tracking-[-0.4px] md:text-[24px]">{slide.title}</p>
@@ -121,7 +121,7 @@ export function BlackNovemberSlider({ serverActive }: { serverActive: boolean })
                 src={slide.image}
                 alt={current ? slide.alt : ""}
                 loading={i === 0 ? "eager" : "lazy"}
-                className={`absolute inset-0 h-full w-full ${slide.imageClass}`}
+                className={`absolute inset-0 h-full w-full ${slide.imageClass} ${slide.light ? "" : "drop-shadow-[0_0_36px_rgba(255,213,74,0.35)]"}`}
               />
             </div>
           </article>

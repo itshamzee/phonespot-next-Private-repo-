@@ -31,6 +31,7 @@
   min-height: 360px;
 }
 .heroPhoto img {
+  filter: drop-shadow(0 0 36px rgba(255, 213, 74, 0.35));
   position: absolute;
   inset: 0;
   width: 100%;
@@ -73,7 +74,8 @@
 }
 .title {
   margin: 22px 0 0;
-  font-size: clamp(46px, 6.6vw, 88px);
+  font-size: clamp(50px, 7.4vw, 100px);
+  text-shadow: 4px 4px 0 #ffd54a;
   font-weight: 700;
   letter-spacing: -0.055em;
   line-height: 0.88;
