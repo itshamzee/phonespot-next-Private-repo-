@@ -12,7 +12,7 @@ import {
 import { toPublicSkuProduct } from "@/lib/product/public-sku";
 import { DeviceDetail } from "@/components/product/device-detail";
 import type { UpgradeOption } from "@/components/product/upgrade-selector";
-import { JsonLd } from "@/components/seo/json-ld";
+import { JsonLd, MERCHANT_RETURN_POLICY_JSONLD } from "@/components/seo/json-ld";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
@@ -185,7 +185,24 @@ export default async function RefurbishedProductPage({ params }: Props) {
     if (cur === undefined || d.selling_price < cur) gradeMinPrices.set(g, d.selling_price);
   }
   const pageUrl = `https://phonespot.dk/refurbished/${slug}`;
+  // Fragt og returret på hvert Offer: Google kræver dem for at vise
+  // enheden som produktopslag (merchant listing) i de gratis visninger.
+  // Enheder koster over fragtfri-grænsen, så fragten er altid 0 kr.
   const seller = { "@type": "Organization", name: "PhoneSpot" };
+  const offerExtras = {
+    seller,
+    hasMerchantReturnPolicy: MERCHANT_RETURN_POLICY_JSONLD,
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "DKK" },
+      shippingDestination: { "@type": "DefinedRegion", addressCountry: "DK" },
+      deliveryTime: {
+        "@type": "ShippingDeliveryTime",
+        handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 2, unitCode: "DAY" },
+        transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+      },
+    },
+  };
   // Samme opdeling som feedet: varianter med egen vare får eget Offer med den
   // pris og det link, feedet sender, og GTIN, hvor den er kendt.
   const feedGroups = groupDevices(
@@ -206,7 +223,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
             itemCondition: gradeToItemCondition(g),
             url: `${pageUrl}?grade=${g}`,
             ...(gradeGtin.has(g) ? { gtin: gradeGtin.get(g) } : {}),
-            seller,
+            ...offerExtras,
           })),
           ...feedGroups
             .filter((g) => g.linkVariant)
@@ -218,7 +235,7 @@ export default async function RefurbishedProductPage({ params }: Props) {
               itemCondition: gradeToItemCondition(g.grade),
               url: deviceUrl(g),
               ...(g.gtin ? { gtin: g.gtin } : {}),
-              seller,
+              ...offerExtras,
             })),
         ]
       : {

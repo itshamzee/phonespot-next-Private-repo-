@@ -10,6 +10,8 @@ import {
   deviceUrl,
   groupDevices,
   hasValidGtinCheckDigit,
+  manufacturerMpn,
+  shortProcessor,
   shippingLines,
   validSalePrice,
   variantGtin,
@@ -353,5 +355,48 @@ describe("titel-dedupe", () => {
     expect(m.get("1")).toBe("Beskyttelsesglas iPhone 15 - Sort");
     expect(m.get("2")).toBe("Beskyttelsesglas iPhone 15 - Hvid");
     expect(m.get("3")).toBe("Unik");
+  });
+});
+
+describe("bærbare: MPN og titel", () => {
+  it("renser leverandørens suffikser og godtager kun producentens numre", () => {
+    expect(manufacturerMpn("Lenovo", "21L1007BMX")).toBe("21L1007BMX");
+    expect(manufacturerMpn("Lenovo", "21F7S11J0B-NORDICS")).toBe("21F7S11J0B");
+    expect(manufacturerMpn("Lenovo", "21KS0006UK-NORDIC-06")).toBe("21KS0006UK");
+    expect(manufacturerMpn("Lenovo", "20X2S8QY02-CTO-04")).toBe("20X2S8QY02");
+    expect(manufacturerMpn("HP", "B72T0ETR#UUW")).toBe("B72T0ETR#UUW");
+    expect(manufacturerMpn("HP", "817X6EA#UUW-CTO-06")).toBe("817X6EA#UUW");
+    expect(manufacturerMpn("Lenovo", "TLT14G1MX24P")).toBeNull();
+    expect(manufacturerMpn("Lenovo", "20XX-CTOMX-08-C")).toBeNull();
+    expect(manufacturerMpn("HP", "TH850G8MX24P")).toBeNull();
+    expect(manufacturerMpn("Dell", "PRE7-114762-08-A")).toBeNull();
+    expect(manufacturerMpn("Apple", "MK2K3KN/A")).toBeNull();
+  });
+
+  it("forkorter processoren", () => {
+    expect(shortProcessor("Intel Core i5-1145G7")).toBe("i5-1145G7");
+    expect(shortProcessor("Intel Core Ultra 5 125U")).toBe("Ultra 5 125U");
+    expect(shortProcessor("AMD Ryzen 5 PRO 4650U")).toBe("Ryzen 5 PRO 4650U");
+    expect(shortProcessor("")).toBeNull();
+  });
+
+  it("titlen får processor, RAM og skærm, og MPN sendes, når hele gruppen deler det", () => {
+    const laptop: FeedTemplate = {
+      ...tpl,
+      brand: "Lenovo",
+      category: "laptop",
+      display_name: "ThinkPad T14 G2",
+      slug: "lenovo-thinkpad-t14-g2",
+      specifications: { processor: "Intel Core i5-1145G7", ram: "16GB", screen_size: '14"' },
+    };
+    const [g] = groupDevices(
+      [dev({ storage: "512GB SSD NVMe M.2", color: "Sort", source_sku: "20W1S0MJ00-G" })],
+      new Map([[laptop.id, laptop]]),
+    );
+    expect(deviceTitle(g)).toBe('Lenovo ThinkPad T14 G2 i5-1145G7 16GB RAM 512GB SSD 14" Sort - Refurbished, Som ny');
+    const xml = buildDeviceItem(g)!;
+    expect(xml).toContain("<g:mpn>20W1S0MJ00<");
+    expect(xml).not.toContain("identifier_exists");
+    expect(xml).toContain("<g:product_detail>");
   });
 });

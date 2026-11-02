@@ -269,6 +269,8 @@ export interface FeedTemplate {
   short_description: string | null;
   images: string[] | null;
   default_attributes?: Record<string, unknown> | null;
+  /** processor, ram, screen_size, os osv. Bruges til titel og product_detail på bærbare. */
+  specifications?: Record<string, unknown> | null;
 }
 
 export interface FeedDevice {
@@ -282,6 +284,8 @@ export interface FeedDevice {
   /** Kun brugt af det lokale lagerfeed. */
   location_id?: string | null;
   source?: string | null;
+  /** Leverandørens varenummer; ofte producentens MPN med et suffiks. */
+  source_sku?: string | null;
 }
 
 export interface DeviceGroup {
@@ -296,6 +300,8 @@ export interface DeviceGroup {
   colors: Set<string>;
   /** Kun sat, når hele gruppen er én præcis variant med kendt GTIN. */
   gtin: string | null;
+  /** Producentens varenummer, kun når alle enheder i gruppen har det samme. */
+  mpn: string | null;
   /** Variant, som linket skal forvælge, fordi ?grade= alene ville vise en anden pris. */
   linkVariant: { storage: string | null; color: string | null } | null;
   devices: FeedDevice[];
@@ -334,6 +340,55 @@ export function variantGtin(
   return gtin;
 }
 
+/**
+ * Producentens varenummer (MPN) ud fra leverandørens source_sku, ellers null.
+ *
+ * Leverandøren hænger egne suffikser på ("-NORDICS", "-CTO-04", "-G") og
+ * bruger for nogle partier egne koder ("TLT14G1MX24P", "PRE7-114762-08-A").
+ * Kun mønstre, der er producentens egne, slipper igennem: Lenovos
+ * maskintype (10 tegn, 20/21/82/83) og HP's varenummer med eller uden
+ * landekode (#UUW). Et forkert MPN er værre end intet, så alt andet afvises.
+ */
+export function manufacturerMpn(brand: string | null | undefined, sourceSku: string | null | undefined): string | null {
+  const b = brand?.trim().toLowerCase();
+  let sku = sourceSku?.trim().toUpperCase();
+  if (!b || !sku) return null;
+  const suffix = /-(NORDICS?|NORDIC(-\d+)?|CTO(-\d+)?|[A-Z]|\d{2})$/;
+  sku = sku.replace(suffix, "").replace(suffix, "");
+  if (b === "lenovo") return /^(20|21|82|83)[A-Z0-9]{8}$/.test(sku) ? sku : null;
+  if (b === "hp") {
+    if (/^[0-9A-Z]{6,9}#[A-Z0-9]{3}$/.test(sku) && /\d/.test(sku) && /[A-Z]/.test(sku)) return sku;
+    if (/^[0-9A-Z]{4,6}E[ACT][A-Z]?$/.test(sku) && /\d/.test(sku)) return sku;
+    return null;
+  }
+  return null;
+}
+
+/** "Intel Core i5-1145G7" -> "i5-1145G7", "AMD Ryzen 5 Pro 4650U" -> "Ryzen 5 Pro 4650U". */
+export function shortProcessor(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const s = raw.replace(/\s+/g, " ").trim();
+  const m =
+    s.match(/\b(i[3579]-?\s?\d{4,5}[A-Z]{0,2}\d?)\b/i) ??
+    s.match(/\b(Ultra [579] \d{3}[A-Z]?)\b/i) ??
+    s.match(/\b(Ryzen (?:AI )?\d+(?: Pro)? \d{3,4}[A-Z]{0,2})\b/i) ??
+    s.match(/\b(R[3579]-\d{3,4}[A-Z]{0,2})\b/) ??
+    s.match(/\b(M[1-5](?: Pro| Max)?)\b/);
+  return m ? m[1].replace(/^i(\d)[ -]?/i, "i$1-") : null;
+}
+
+const spec = (t: FeedTemplate, key: string): string | null => {
+  const v = t.specifications?.[key];
+  return typeof v === "string" && v.trim() && !/^0\s*GB$/i.test(v.trim()) ? v.trim() : null;
+};
+
+/** "512GB SSD NVMe M.2" -> "512GB SSD". */
+export function shortStorage(storage: string): string {
+  const m = storage.match(/(\d+(?:[.,]\d+)?)\s*(GB|TB)/i);
+  if (!m) return storage.trim();
+  return `${m[1]}${m[2].toUpperCase()}${/ssd/i.test(storage) ? " SSD" : ""}`;
+}
+
 /** Kort, stabil hash (FNV-1a), så id'et holder sig under Googles 50 tegn. */
 function variantHash(storage: string, color: string): string {
   let h = 0x811c9dc5;
@@ -362,9 +417,12 @@ function buildGroup(
     storages: new Set(),
     colors: new Set(),
     gtin,
+    mpn: null,
     linkVariant,
     devices,
   };
+  const mpns = new Set(devices.map((d) => manufacturerMpn(template.brand, d.source_sku)));
+  if (mpns.size === 1) g.mpn = [...mpns][0];
   for (const d of devices) {
     if (d.storage?.trim()) g.storages.add(d.storage.trim());
     if (d.color?.trim()) g.colors.add(d.color.trim());
@@ -456,9 +514,23 @@ export function deviceTitle(group: DeviceGroup): string {
     name = `${template.brand} ${name}`;
   }
   const parts = [name];
+  const laptop = template.category?.toLowerCase() === "laptop";
+  if (laptop) {
+    const cpu = shortProcessor(spec(template, "processor"));
+    // Modelnavnet har nogle gange processoren i forvejen ("T14s G1 R5 Pro 4650U").
+    const cpuNumber = cpu?.split(/[\s-]/).pop()?.toLowerCase();
+    if (cpu && !(cpuNumber && name.toLowerCase().includes(cpuNumber))) parts.push(cpu);
+    const ram = spec(template, "ram");
+    if (ram && /\d/.test(ram)) parts.push(`${ram.replace(/\s+/g, "")} RAM`);
+  }
   if (group.storages.size === 1) {
-    const s = [...group.storages][0];
+    const raw = [...group.storages][0];
+    const s = laptop ? shortStorage(raw) : raw;
     if (!name.toLowerCase().includes(s.toLowerCase())) parts.push(s);
+  }
+  if (laptop) {
+    const screen = spec(template, "screen_size");
+    if (screen) parts.push(screen.replace(/\s+/g, ""));
   }
   if (group.colors.size === 1) {
     const c = [...group.colors][0];
@@ -516,6 +588,42 @@ export const DEVICE_GOOGLE_CATEGORY: Record<string, string> = {
   smartwatch: "Electronics > Electronics Accessories > Wearable Technology > Smartwatches",
 };
 
+const DEVICE_TYPE_LABEL: Record<string, string> = {
+  iphone: "iPhones",
+  smartphone: "Smartphones",
+  ipad: "iPads",
+  tablet: "Tablets",
+  laptop: "Bærbare",
+  smartwatch: "Smartwatches",
+};
+
+/** Egen kategorisering til kampagnestyring, fx "Refurbished > Bærbare > Lenovo". */
+export function deviceProductType(group: DeviceGroup): string {
+  const kind = DEVICE_TYPE_LABEL[group.template.category?.toLowerCase() ?? ""] ?? "Enheder";
+  return `${isNewGrade(group.grade) ? "Fabriksny" : "Refurbished"} > ${kind} > ${group.template.brand}`;
+}
+
+/** Fakta, der gælder alle enheder (se lib/promises.ts). Ingen påstande om den enkelte enhed. */
+export function deviceHighlights(group: DeviceGroup): string[] {
+  const h = ["36 måneders garanti", "30 dages returret", "Dansk forhandler med butikker i Vejle og Slagelse"];
+  if (!isNewGrade(group.grade)) h.unshift(`Refurbished, stand: ${gradeLabelForTitle(group.grade).toLowerCase()}`);
+  return h;
+}
+
+/** product_detail-linjer til bærbare: processor, RAM, skærm, grafik, styresystem. */
+export function deviceDetails(group: DeviceGroup): Array<[string, string]> {
+  if (group.template.category?.toLowerCase() !== "laptop") return [];
+  const t = group.template;
+  const rows: Array<[string, string | null]> = [
+    ["Processor", spec(t, "processor")],
+    ["RAM", spec(t, "ram")],
+    ["Skærmstørrelse", spec(t, "screen_size")],
+    ["Grafik", spec(t, "graphics")],
+    ["Styresystem", spec(t, "os")],
+  ];
+  return rows.filter((r): r is [string, string] => Boolean(r[1]));
+}
+
 export function buildDeviceItem(group: DeviceGroup): string | null {
   const { template } = group;
   if (!isPublishableDeviceGroup(group)) return null;
@@ -532,18 +640,25 @@ export function buildDeviceItem(group: DeviceGroup): string | null {
     `      <g:description>${escapeXml(deviceDescription(group, title))}</g:description>`,
     `      <g:link>${escapeXml(deviceUrl(group))}</g:link>`,
     `      <g:image_link>${escapeXml(images[0])}</g:image_link>`,
+    ...images.slice(1, 10).map((src) => `      <g:additional_image_link>${escapeXml(src)}</g:additional_image_link>`),
     `      <g:condition>${merchantCondition(group.grade)}</g:condition>`,
     `      <g:availability>in_stock</g:availability>`,
     `      <g:price>${formatPrice(group.minPrice)}</g:price>`,
     `      <g:brand>${escapeXml(template.brand)}</g:brand>`,
     // GTIN kommer fra product_templates.default_attributes.gtins_by_variant (se
     // variantGtin). Uden præcist variantmatch har enheden hverken GTIN eller MPN.
-    group.gtin
-      ? `      <g:gtin>${escapeXml(group.gtin)}</g:gtin>`
-      : `      <g:identifier_exists>no</g:identifier_exists>`,
+    ...(group.gtin ? [`      <g:gtin>${escapeXml(group.gtin)}</g:gtin>`] : []),
+    ...(group.mpn ? [`      <g:mpn>${escapeXml(group.mpn)}</g:mpn>`] : []),
+    ...(!group.gtin && !group.mpn ? [`      <g:identifier_exists>no</g:identifier_exists>`] : []),
     ...(color ? [`      <g:color>${escapeXml(color)}</g:color>`] : []),
     ...(storage ? [`      <g:size>${escapeXml(storage)}</g:size>`] : []),
     `      <g:google_product_category>${escapeXml(DEVICE_GOOGLE_CATEGORY[template.category?.toLowerCase() ?? ""] ?? "Electronics")}</g:google_product_category>`,
+    `      <g:product_type>${escapeXml(deviceProductType(group))}</g:product_type>`,
+    ...deviceHighlights(group).map((h) => `      <g:product_highlight>${escapeXml(h)}</g:product_highlight>`),
+    ...deviceDetails(group).map(
+      ([name, value]) =>
+        `      <g:product_detail><g:section_name>Specifikationer</g:section_name><g:attribute_name>${escapeXml(name)}</g:attribute_name><g:attribute_value>${escapeXml(value)}</g:attribute_value></g:product_detail>`,
+    ),
     ...shippingLines(group.minPrice),
     "    </item>",
   ];
