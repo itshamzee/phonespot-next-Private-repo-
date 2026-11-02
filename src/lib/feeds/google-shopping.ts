@@ -286,6 +286,8 @@ export interface FeedDevice {
   source?: string | null;
   /** Leverandørens varenummer; ofte producentens MPN med et suffiks. */
   source_sku?: string | null;
+  /** Indkøbspris i øre. Kun til avancemærket (custom_label_0), aldrig synlig. */
+  purchase_price?: number | null;
 }
 
 export interface DeviceGroup {
@@ -597,6 +599,22 @@ const DEVICE_TYPE_LABEL: Record<string, string> = {
   smartwatch: "Smartwatches",
 };
 
+/**
+ * Avance på varens pris (den billigste enhed i gruppen), som Google Ads kan
+ * byde efter: "bud-a" over 1.500 kr., "bud-b" 500-1.500 kr.,
+ * "bud-c" under 500 kr., "bud-x" uden registreret indkøbspris. Neutrale koder,
+ * fordi feedet er offentligt og ikke må afsløre avancen.
+ */
+export function marginLabel(group: DeviceGroup): string {
+  const cheapest = group.devices.reduce((a, b) => (b.selling_price! < a.selling_price! ? b : a));
+  const cost = cheapest.purchase_price;
+  if (!cost || cost <= 0) return "bud-x";
+  const margin = (cheapest.selling_price! - cost) / 100;
+  if (margin > 1500) return "bud-a";
+  if (margin >= 500) return "bud-b";
+  return "bud-c";
+}
+
 /** Egen kategorisering til kampagnestyring, fx "Refurbished > Bærbare > Lenovo". */
 export function deviceProductType(group: DeviceGroup): string {
   const kind = DEVICE_TYPE_LABEL[group.template.category?.toLowerCase() ?? ""] ?? "Enheder";
@@ -654,6 +672,7 @@ export function buildDeviceItem(group: DeviceGroup): string | null {
     ...(storage ? [`      <g:size>${escapeXml(storage)}</g:size>`] : []),
     `      <g:google_product_category>${escapeXml(DEVICE_GOOGLE_CATEGORY[template.category?.toLowerCase() ?? ""] ?? "Electronics")}</g:google_product_category>`,
     `      <g:product_type>${escapeXml(deviceProductType(group))}</g:product_type>`,
+    `      <g:custom_label_0>${marginLabel(group)}</g:custom_label_0>`,
     ...deviceHighlights(group).map((h) => `      <g:product_highlight>${escapeXml(h)}</g:product_highlight>`),
     ...deviceDetails(group).map(
       ([name, value]) =>

@@ -40,7 +40,7 @@ export async function loadFeedCatalog(supabase: SupabaseClient): Promise<FeedCat
   const { data: devices, error: deviceError } = await supabase
     .from("devices")
     .select(
-      "id, template_id, grade, condition_notes, storage, color, selling_price, photos, status, location_id, source, source_sku",
+      "id, template_id, grade, condition_notes, storage, color, selling_price, photos, status, location_id, source, source_sku, purchase_price",
     )
     .eq("status", "listed");
 
