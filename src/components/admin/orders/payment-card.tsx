@@ -88,7 +88,14 @@ export function PaymentCard({ order, payments = [] }: PaymentCardProps) {
           </div>
         ))}
 
-        {order.stripe_payment_id && (
+        {order.stripe_payment_id && order.payment_method === "frisbii" && (
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-gray shrink-0">Frisbii-handle</p>
+            <p className="text-xs font-mono text-charcoal-light truncate text-right">{order.stripe_payment_id}</p>
+          </div>
+        )}
+
+        {order.stripe_payment_id && order.payment_method !== "frisbii" && (
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs text-gray shrink-0">Stripe ID</p>
             <a

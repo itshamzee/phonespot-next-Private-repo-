@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { settleOrderPayment } from "@/lib/payments/frisbii/order-payment";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STORES } from "@/lib/store-config";
 import { BRAND, hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
@@ -89,6 +90,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   if (updateErr) {
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  }
+
+  // Afsendt/afhentet/leveret: hæv en reserveret Frisbii-betaling. No-op for Stripe.
+  if (status === "shipped" || status === "picked_up" || status === "delivered") {
+    await settleOrderPayment(id);
   }
 
   await supabase.from("activity_log").insert({

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { completeFrisbiiOrder } from "@/lib/payments/frisbii/order-payment";
 import { ConfirmationView } from "./confirmation-view";
 
 interface RawOrderItem {
@@ -38,9 +39,12 @@ export const dynamic = "force-dynamic";
 export default async function OrderConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; id?: string; provider?: string }>;
 }) {
-  const { session_id: sessionId } = await searchParams;
+  // Stripe sender ?session_id=cs_…; Frisbii sender ?id=cs_…&invoice=<handle>.
+  // Begge gemmes i orders.stripe_checkout_session_id.
+  const params = await searchParams;
+  const sessionId = params.session_id ?? (params.provider === "frisbii" ? params.id : undefined);
 
   if (!sessionId) {
     return <ConfirmationError message="Vi kunne ikke finde oplysninger om din bestilling." />;
@@ -62,6 +66,8 @@ export default async function OrderConfirmationPage({
       shipping_cost,
       total,
       created_at,
+      payment_method,
+      stripe_payment_id,
       customer:customers!customer_id (name, email),
       order_items (
         id,
@@ -90,7 +96,19 @@ export default async function OrderConfirmationPage({
     );
   }
 
-  const raw = data as unknown as RawOrder;
+  const raw = data as unknown as RawOrder & { payment_method?: string | null; stripe_payment_id?: string | null };
+
+  // Frisbii-webhooken kan komme et øjeblik efter kunden. Status hentes fra
+  // Frisbiis API (aldrig fra URL-parametrene), og ordren færdiggøres her, hvis
+  // betalingen allerede er gennemført. Idempotent med webhooken.
+  if (raw.payment_method === "frisbii" && raw.status === "pending" && raw.stripe_payment_id) {
+    try {
+      const result = await completeFrisbiiOrder(raw.stripe_payment_id);
+      if (result === "completed") raw.status = "confirmed";
+    } catch (err) {
+      console.error("[bekraeftelse] frisbii completion failed:", err);
+    }
+  }
   const order = {
     id: raw.id,
     order_number: raw.order_number,

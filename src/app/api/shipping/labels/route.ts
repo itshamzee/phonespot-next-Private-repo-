@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { settleOrderPayment } from "@/lib/payments/frisbii/order-payment";
 import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createShipment, getShipmentLabel } from "@/lib/shipmondo/client";
@@ -137,6 +138,9 @@ export async function POST(request: NextRequest) {
     if (updateErr) {
       console.error("Failed to update order with tracking:", updateErr);
     }
+
+    // Frisbii-ordrer er kun reserveret indtil afsendelse — hæv nu. No-op for Stripe.
+    await settleOrderPayment(order_id);
 
     // Store the label PDF so staff can view/print it from the admin later.
     // The booking is already made, so a storage hiccup must not fail the

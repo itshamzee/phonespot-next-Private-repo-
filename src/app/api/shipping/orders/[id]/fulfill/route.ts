@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { settleOrderPayment } from "@/lib/payments/frisbii/order-payment";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmation";
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Hæv en evt. stadig reserveret Frisbii-betaling. No-op for Stripe.
+    await settleOrderPayment(id);
 
     await supabase.from("activity_log").insert({
       action: "order_delivered",
@@ -85,6 +89,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Frisbii-ordrer er kun reserveret indtil afsendelse — hæv nu. No-op for Stripe.
+  await settleOrderPayment(id);
 
   // Log to activity_log
   await supabase.from("activity_log").insert({

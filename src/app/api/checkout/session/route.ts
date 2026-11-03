@@ -3,6 +3,8 @@ import { validateCart, hasFoxwayDevice, toServerItems } from "@/lib/checkout/val
 import { validateDiscountCode } from "@/lib/checkout/discount";
 import { createOrder } from "@/lib/checkout/order";
 import { createCheckoutSession } from "@/lib/stripe/checkout-session";
+import { createFrisbiiCheckoutSession } from "@/lib/payments/frisbii/checkout-session";
+import { getCheckoutProvider } from "@/lib/payments/provider";
 import { calcBundleDiscounts, calcDiscount, calcSubtotal } from "@/lib/cart/utils";
 import type { CartItem, CartDeviceItem, DiscountApplication } from "@/lib/cart/types";
 import type { CustomerInfo } from "@/lib/checkout/order";
@@ -137,7 +139,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Create order with placeholder Stripe session ID
+    // 5. Create order with placeholder session ID
+    const provider = getCheckoutProvider();
     const createdOrder = await createOrder({
       items: validation.items,
       customer,
@@ -152,11 +155,12 @@ export async function POST(req: NextRequest) {
       total,
       bundleByKey: bundle.byKey,
       stripeCheckoutSessionId: "pending",
+      paymentMethod: provider,
       foxwayPending: hasFoxwayDevice(validation.items),
     });
 
-    // 6. Create Stripe Checkout session
-    const checkoutSession = await createCheckoutSession({
+    // 6. Create the payment session (Stripe Checkout or Frisbii Checkout)
+    const sessionParams = {
       orderId: createdOrder.id,
       orderNumber: createdOrder.orderNumber,
       items: validation.items,
@@ -169,19 +173,28 @@ export async function POST(req: NextRequest) {
       discountAmount,
       bundleDiscountAmount,
       total,
-    });
+    };
+    const isPickup = shippingMethod.startsWith("pickup_") || shippingMethod.startsWith("click_collect_");
+    const checkoutSession = provider === "frisbii"
+      ? await createFrisbiiCheckoutSession({ ...sessionParams, shippingAddress: !isPickup })
+      : await createCheckoutSession(sessionParams);
 
-    // 7. Update order with real Stripe session ID
+    // 7. Update order with the real session ID (and the Frisbii charge handle,
+    //    which is how the Frisbii webhook finds the order again)
     const supabase = createServerClient();
     await supabase
       .from("orders")
-      .update({ stripe_checkout_session_id: checkoutSession.sessionId })
+      .update({
+        stripe_checkout_session_id: checkoutSession.sessionId,
+        ...("handle" in checkoutSession ? { stripe_payment_id: checkoutSession.handle } : {}),
+      })
       .eq("id", createdOrder.id);
 
     // 8. Return session details to client
     return NextResponse.json({
       sessionId: checkoutSession.sessionId,
       url: checkoutSession.url,
+      provider,
       orderId: createdOrder.id,
       orderNumber: createdOrder.orderNumber,
     });

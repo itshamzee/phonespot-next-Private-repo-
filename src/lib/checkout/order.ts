@@ -34,6 +34,8 @@ export interface CreateOrderParams {
   bundleByKey: Record<string, { discount_oere: number; freeUnits: number }>;
   total: number;
   stripeCheckoutSessionId: string;
+  /** Betalingsudbyder for ordren (orders.payment_method). Standard: stripe. */
+  paymentMethod?: "stripe" | "frisbii";
   /** Ordren indeholder Foxway-enheder og skal bestilles hos leverandøren. */
   foxwayPending: boolean;
 }
@@ -153,7 +155,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     type: "online",
     customer_id: customerId,
     status: "pending",
-    payment_method: "stripe",
+    payment_method: params.paymentMethod ?? "stripe",
     stripe_checkout_session_id: params.stripeCheckoutSessionId,
     shipping_method: params.shippingMethod,
     pickup_point: params.pickupPoint ?? null,

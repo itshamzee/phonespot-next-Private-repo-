@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { stripe } from "@/lib/stripe/client";
+import { refundOrderPayment, RefundError } from "@/lib/payments/refund";
 
 /**
  * POST /api/refund
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(`
-        id, order_number, type, status, total, stripe_payment_id,
+        id, order_number, type, status, total, payment_method, stripe_payment_id,
         order_items ( id, item_type, device_id, quantity, unit_price, total_price )
       `)
       .eq("id", orderId)
@@ -96,23 +96,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process Stripe refund if payment was made via Stripe
+    // Refundér hos den udbyder, ordren blev betalt med (Stripe eller Frisbii)
     let stripeRefundId: string | null = null;
-    if (order.stripe_payment_id) {
-      try {
-        const refund = await stripe.refunds.create({
-          payment_intent: order.stripe_payment_id,
-          amount: refundAmount, // Stripe uses smallest currency unit (øre for DKK)
-          reason: "requested_by_customer",
-        });
-        stripeRefundId = refund.id;
-      } catch (stripeErr) {
-        console.error("[refund] Stripe refund failed:", stripeErr);
-        return NextResponse.json(
-          { error: "Stripe refundering fejlede. Kontrollér betalingen i Stripe Dashboard." },
-          { status: 500 }
-        );
-      }
+    let refundProvider: string | null = null;
+    try {
+      const refund = await refundOrderPayment(order, refundAmount, { reason });
+      stripeRefundId = refund?.refundId ?? null;
+      refundProvider = refund?.provider ?? null;
+    } catch (refundErr) {
+      console.error("[refund] provider refund failed:", refundErr);
+      const message = refundErr instanceof RefundError
+        ? refundErr.userMessage
+        : "Refunderingen fejlede hos betalingsudbyderen. Kontrollér betalingen i Stripe/Frisbii.";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
     // Update order status
@@ -123,7 +119,7 @@ export async function POST(request: NextRequest) {
       .from("orders")
       .update({
         status: newStatus,
-        notes: `Refunderet ${refundAmount / 100} DKK — ${reason}${stripeRefundId ? ` (Stripe: ${stripeRefundId})` : ""}`,
+        notes: `Refunderet ${refundAmount / 100} DKK — ${reason}${stripeRefundId ? ` (${refundProvider === "frisbii" ? "Frisbii" : "Stripe"}: ${stripeRefundId})` : ""}`,
       })
       .eq("id", orderId);
 
@@ -153,6 +149,7 @@ export async function POST(request: NextRequest) {
         amount: refundAmount,
         reason,
         stripe_refund_id: stripeRefundId,
+        refund_provider: refundProvider,
         returned_devices: returnedDeviceIds,
         staff_name: staff.name,
       },

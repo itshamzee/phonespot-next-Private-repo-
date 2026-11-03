@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isFrisbiiConfigured } from "@/lib/payments/frisbii/client";
+import { findAgingAuthorizations, sweepStaleFrisbiiOrders } from "@/lib/payments/frisbii/order-payment";
+import { sendPushover } from "@/lib/notifications/pushover";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Frisbii først: betalte ordrer, hvis webhook aldrig kom frem, skal
+  // færdiggøres, før reservationerne nedenfor frigives.
+  const frisbiiResult = isFrisbiiConfigured() ? await runFrisbiiMaintenance() : null;
+
   const supabase = createServerClient();
   const now = new Date().toISOString();
   const { data, error } = await supabase
@@ -72,5 +79,27 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`Marked ${abandonedCount} orders as abandoned`);
-  return NextResponse.json({ released: count, abandoned: abandonedCount });
+  return NextResponse.json({ released: count, abandoned: abandonedCount, frisbii: frisbiiResult });
+}
+
+async function runFrisbiiMaintenance() {
+  try {
+    const sweep = await sweepStaleFrisbiiOrders();
+    console.log("[cron] frisbii sweep:", sweep);
+
+    const aging = await findAgingAuthorizations(5);
+    if (aging.length > 0) {
+      await sendPushover({
+        title: `${aging.length} betaling(er) kun reserveret i 5+ dage`,
+        message: `Send eller udlever snarest, ellers kan reservationen udløbe: ${aging.map((o) => o.order_number).join(", ")}`,
+        priority: 1,
+        url: "https://phonespot.dk/admin/platform/orders",
+        url_title: "Åbn ordrer",
+      }).catch(() => {});
+    }
+    return { ...sweep, aging: aging.length };
+  } catch (err) {
+    console.error("[cron] frisbii maintenance failed:", err);
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
 }

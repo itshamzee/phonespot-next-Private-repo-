@@ -174,7 +174,7 @@ export function CheckoutForm() {
         return;
       }
 
-      // Redirect to Stripe Checkout (external URL — must use window.location, not router.push)
+      // Redirect to the payment window (Stripe or Frisbii — external URL — must use window.location, not router.push)
       window.location.href = data.url;
     } catch {
       setSubmitError("Netværksfejl. Tjek din forbindelse og prøv igen.");
@@ -503,7 +503,7 @@ export function CheckoutForm() {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-green-eco">
           <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
         </svg>
-        SSL-krypteret · Du viderestilles til Stripe for sikker betaling
+        SSL-krypteret · Du viderestilles til sikker betaling
       </div>
     </form>
   );

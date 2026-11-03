@@ -159,7 +159,7 @@ export default function KassePage() {
                     </svg>
                   ),
                   title: "Sikker betaling",
-                  sub: "SSL-krypteret via Stripe",
+                  sub: "SSL-krypteret betaling",
                 },
               ].map((usp) => (
                 <div key={usp.title} className="flex items-start gap-3">

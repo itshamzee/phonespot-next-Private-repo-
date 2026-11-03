@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type Stripe from "stripe";
 import { Resend } from "resend";
 import RefundConfirmationEmail from "@/lib/email/templates/refund-confirmation";
-import { stripe } from "@/lib/stripe/client";
+import { refundOrderPayment, RefundError } from "@/lib/payments/refund";
 import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -42,21 +41,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   if (!order.stripe_payment_id) {
     return NextResponse.json(
-      { error: "No Stripe payment ID on this order" },
+      { error: "Ordren har ingen betalings-id (Stripe/Frisbii)" },
       { status: 400 }
     );
   }
 
   try {
-    const refundParams: Stripe.RefundCreateParams = {
-      payment_intent: order.stripe_payment_id,
-      reason: "requested_by_customer",
+    const providerRefund = await refundOrderPayment(order, amount ? Number(amount) : undefined, { reason });
+    const refund = {
+      id: providerRefund?.refundId ?? null,
+      amount: providerRefund?.amount ?? (amount ? Number(amount) : order.total),
+      provider: providerRefund?.provider ?? null,
     };
-    if (amount) {
-      refundParams.amount = amount;
-    }
-
-    const refund = await stripe.refunds.create(refundParams);
 
     await supabase
       .from("orders")
@@ -78,6 +74,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       entity_id: id,
       details: {
         stripe_refund_id: refund.id,
+        refund_provider: refund.provider,
         amount: refund.amount,
         reason,
         partial: !!amount,
@@ -117,9 +114,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       amount: refund.amount,
     });
   } catch (err) {
-    console.error("Stripe refund failed:", err);
+    console.error("Provider refund failed:", err);
     return NextResponse.json(
-      { error: "Refusion mislykkedes. Tjek Stripe dashboard." },
+      { error: err instanceof RefundError ? err.userMessage : "Refusion mislykkedes. Tjek betalingen i Stripe/Frisbii." },
       { status: 502 }
     );
   }
