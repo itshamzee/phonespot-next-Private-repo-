@@ -130,6 +130,9 @@ export async function POST(request: NextRequest) {
         tracking_number: shipment.pkg_no,
         tracking_url: trackingUrl,
         status: "shipped",
+        // Forsendelseskortet i admin læser fulfillment_status — uden den stod
+        // ordren som "Ikke sendt", og personalet tastede tracking igen.
+        fulfillment_status: "shipped",
         shipped_at: new Date().toISOString(),
       })
       .eq("id", order_id);

@@ -106,6 +106,15 @@ export async function handleCheckoutCompleted(
   }
   for (const item of orderItems) if (batteryItemIds.has(item.id)) item.battery_upgrade = true;
 
+  // Betalt via kurv-påmindelsens link: først nu er ordren reelt genoptaget.
+  if (session.metadata?.recovery === "true") {
+    const { error: recoveryErr } = await supabase
+      .from("orders")
+      .update({ recovery_status: "recovered" })
+      .eq("id", orderId);
+    if (recoveryErr) console.error("[webhook] failed to mark order recovered:", recoveryErr);
+  }
+
   // 7. Increment discount code usage
   if (order.discount_code_id) {
     const { error: discountError } = await supabase.rpc(

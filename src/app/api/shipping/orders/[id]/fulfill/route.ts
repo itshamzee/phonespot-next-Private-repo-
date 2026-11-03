@@ -5,6 +5,7 @@ import ShippingConfirmationEmail from "@/lib/email/templates/shipping-confirmati
 import { sendPushover } from "@/lib/notifications/pushover";
 import { sendTrustpilotInvitation } from "@/lib/trustpilot/invite";
 import { hasGuaranteeQualifyingDevice, uspsForOrder } from "@/lib/email/brand";
+import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -66,14 +67,35 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  const trackingNo = tracking_number.trim();
+
+  // Læs ordren først: findes forsendelsen allerede (oprettet via "Opret
+  // forsendelse"), har kunden fået trackingmailen, og linket skal bevares.
+  const { data: existing } = await supabase
+    .from("orders")
+    .select("tracking_number, tracking_url, shipping_method, pickup_point, shipped_at")
+    .eq("id", id)
+    .single();
+
+  const sameShipment = existing?.tracking_number === trackingNo;
+  const resolvedUrl =
+    (typeof tracking_url === "string" && tracking_url.trim()) ||
+    (sameShipment ? existing?.tracking_url : null) ||
+    buildTrackingUrl(
+      existing?.shipping_method ?? null,
+      (existing?.pickup_point as { carrier_code?: string } | null)?.carrier_code ?? carrier ?? null,
+      trackingNo,
+    ) ||
+    null;
+
   const { data: order, error } = await supabase
     .from("orders")
     .update({
       fulfillment_status: "shipped",
       status: "shipped",
-      tracking_number: tracking_number.trim(),
-      tracking_url: tracking_url || null,
-      shipped_at: new Date().toISOString(),
+      tracking_number: trackingNo,
+      tracking_url: resolvedUrl,
+      shipped_at: (sameShipment && existing?.shipped_at) || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -91,13 +113,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     action: "order_fulfilled",
     entity_type: "order",
     entity_id: id,
-    details: { tracking_number, tracking_url, carrier },
+    details: { tracking_number: trackingNo, tracking_url: resolvedUrl, carrier, same_shipment: sameShipment },
   });
 
-  // Auto-send shipping confirmation email if tracking number is provided
-  if (tracking_number && order.customer?.email) {
+  // Send trackingmail — men ikke igen, hvis "Opret forsendelse" allerede har
+  // sendt den for præcis dette trackingnummer.
+  if (!sameShipment && order.customer?.email) {
     try {
-      const trackingLink = tracking_url || buildTrackingUrl(order.shipping_method, tracking_number);
+      const trackingLink = resolvedUrl ?? "";
       // Accessory-only orders must not promise the 36-month device
       // guarantee in the shipping confirmation's USP bar.
       const guaranteeItems = ((order.items as any[]) ?? []).map((item) => ({
@@ -113,7 +136,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         react: ShippingConfirmationEmail({
           orderNumber: order.order_number,
           customerName: order.customer.name ?? "Kunde",
-          trackingNumber: tracking_number,
+          trackingNumber: trackingNo,
           trackingUrl: trackingLink,
           shippingMethod: order.shipping_method,
           usps,
@@ -130,15 +153,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   return NextResponse.json(order);
 }
 
-function buildTrackingUrl(method: string | null, trackingNumber: string): string {
-  if (method?.startsWith("gls")) {
-    return `https://www.gls-group.eu/276-I-PORTAL-WEB/content/GLS/DK01/DA/5004.htm?txtAction=71000&txtQuery=${trackingNumber}`;
-  }
-  if (method?.startsWith("postnord")) {
-    return `https://tracking.postnord.com/dk/?id=${trackingNumber}`;
-  }
-  if (method?.startsWith("dao")) {
-    return `https://dao.as/tracking/${trackingNumber}`;
-  }
+/** Trackinglink ud fra transportør (pakkeshop-valget) eller fragtmetode. */
+function buildTrackingUrl(method: string | null, carrierCode: string | null, trackingNumber: string): string {
+  const key = (carrierCode || method || "").toLowerCase();
+  if (key.startsWith("gls")) return trackingUrlFor("gls", trackingNumber);
+  if (key.startsWith("dao")) return `https://dao.as/tracking/${encodeURIComponent(trackingNumber)}`;
+  if (key.startsWith("postnord") || key.startsWith("pdk")) return trackingUrlFor("pdk", trackingNumber);
   return "";
 }

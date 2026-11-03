@@ -40,13 +40,16 @@ function shippingLabel(method: string): string {
 interface FulfillModalProps {
   orderId: string;
   currentStatus: string;
+  /** Forudfyldes fra en allerede oprettet Shipmondo-forsendelse. */
+  initialTracking?: string | null;
+  initialTrackingUrl?: string | null;
   onClose: () => void;
   onDone: () => void;
 }
 
-function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalProps) {
-  const [tracking, setTracking] = useState("");
-  const [trackingUrl, setTrackingUrl] = useState("");
+function FulfillModal({ orderId, currentStatus, initialTracking, initialTrackingUrl, onClose, onDone }: FulfillModalProps) {
+  const [tracking, setTracking] = useState(initialTracking ?? "");
+  const [trackingUrl, setTrackingUrl] = useState(initialTrackingUrl ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,7 +118,7 @@ function FulfillModal({ orderId, currentStatus, onClose, onDone }: FulfillModalP
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-charcoal-light">
-                  Tracking URL <span className="text-gray">(valgfri)</span>
+                  Tracking URL <span className="text-gray">(udfyldes automatisk, hvis tom)</span>
                 </label>
                 <input
                   type="url"
@@ -287,6 +290,8 @@ export function OrderDetail({ order, activity, warranties = [], payments = [] }:
         <FulfillModal
           orderId={order.id}
           currentStatus={order.fulfillment_status ?? "unfulfilled"}
+          initialTracking={order.tracking_number}
+          initialTrackingUrl={order.tracking_url}
           onClose={() => setFulfillOpen(false)}
           onDone={() => {
             setFulfillOpen(false);

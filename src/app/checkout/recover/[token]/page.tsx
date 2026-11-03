@@ -14,7 +14,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, recovery_status, total, shipping_cost, shipping_method, customer:customers(name, email, phone), order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)"
+      "id, order_number, status, payment_status, recovery_status, stripe_checkout_session_id, total, shipping_cost, shipping_method, customer:customers(name, email, phone), order_items(id, item_type, device_id, sku_product_id, quantity, unit_price)"
     )
     .eq("recovery_token", token)
     .single();
@@ -38,14 +38,28 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     );
   }
 
-  // Already recovered
-  if (order.recovery_status === "recovered") {
+  // Kunden åbnede linket for nylig og har stadig en åben betalingsside —
+  // send dem tilbage til den i stedet for at afvise linket.
+  if (order.status === "pending" && order.payment_status !== "paid" && order.stripe_checkout_session_id) {
+    let openUrl: string | null = null;
+    try {
+      const existing = await stripe.checkout.sessions.retrieve(order.stripe_checkout_session_id);
+      if (existing.status === "open" && existing.url) openUrl = existing.url;
+    } catch {
+      openUrl = null;
+    }
+    if (openUrl) redirect(openUrl);
+  }
+
+  // "recovered" sættes først, når betalingen er gennemført (se Stripe-webhooken),
+  // så denne side viser kun "betalt", når ordren reelt er betalt.
+  if (order.payment_status === "paid") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4">
         <div className="max-w-md text-center space-y-4">
-          <h1 className="text-2xl font-bold text-stone-800">Denne ordre er allerede genoptaget</h1>
+          <h1 className="text-2xl font-bold text-stone-800">Ordren er allerede betalt</h1>
           <p className="text-stone-500">
-            Din ordre #{order.order_number} er allerede blevet betalt eller genoptaget.
+            Din ordre #{order.order_number} er betalt. Ordrebekræftelsen er sendt til din e-mail.
           </p>
           <a
             href="/"
@@ -118,7 +132,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     if (item.item_type === "device" && item.device_id) {
       const { data: device } = await supabase
         .from("devices")
-        .select("sku, color, storage, grade, product_templates(name)")
+        .select("sku, color, storage, grade, product_templates(brand, model)")
         .eq("id", item.device_id)
         .single();
 
@@ -130,7 +144,7 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
         : null;
 
       const name = device
-        ? `${template?.name ?? "Enhed"} — Stand ${device.grade} (${device.storage}, ${device.color})`
+        ? `${[template?.brand, template?.model].filter(Boolean).join(" ") || "Enhed"} — Stand ${device.grade} (${device.storage}, ${device.color})`
         : "Enhed";
 
       lineItems.push({
@@ -144,14 +158,14 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     } else if (item.item_type === "sku_product" && item.sku_product_id) {
       const { data: skuProduct } = await supabase
         .from("sku_products")
-        .select("name")
+        .select("title")
         .eq("id", item.sku_product_id)
         .single();
 
       lineItems.push({
         price_data: {
           currency: "dkk",
-          product_data: { name: skuProduct?.name ?? "Produkt" },
+          product_data: { name: skuProduct?.title ?? "Produkt" },
           unit_amount: item.unit_price,
         },
         quantity: item.quantity,
@@ -214,11 +228,11 @@ export default async function RecoverCheckoutPage({ params }: PageProps) {
     );
   }
 
-  // Update order recovery_status to 'recovered' and store new Stripe session
+  // Gem den nye Stripe-session. recovery_status sættes til "recovered" først,
+  // når betalingen er gennemført (handleCheckoutCompleted).
   await supabase
     .from("orders")
     .update({
-      recovery_status: "recovered",
       stripe_checkout_session_id: session.id,
       status: "pending",
     })
