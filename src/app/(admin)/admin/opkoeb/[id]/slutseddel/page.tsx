@@ -236,6 +236,20 @@ export default function AdminSlutseddelPage() {
         );
       }
     } else {
+      // Default buyer = the legal entity of the logged-in staff's location (staff can still edit).
+      try {
+        const meRes = await staffFetch("/api/admin/me", { cache: "no-store" });
+        if (meRes.ok) {
+          const me = (await meRes.json()) as { legalEntity?: { name: string; cvr: string } };
+          if (me.legalEntity) {
+            setBuyerCompany(me.legalEntity.name);
+            setBuyerCvr(me.legalEntity.cvr);
+          }
+        }
+      } catch {
+        /* keep the Fixon defaults */
+      }
+
       // Auto-fill from accepted offer and inquiry
       if (offer) {
         setSellerName(offer.seller_name ?? inq?.name ?? "");

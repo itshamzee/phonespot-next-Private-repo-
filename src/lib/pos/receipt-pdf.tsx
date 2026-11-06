@@ -140,6 +140,8 @@ export type PosReceiptProps = {
   date: string;
   locationName: string;
   locationAddress: string;
+  /** Legal entity line, e.g. "PhoneGo ApS · CVR: 38688766" (see receiptLegalLine). */
+  legalLine: string;
   registerName?: string;
   staffName: string;
   items: ReceiptItem[];
@@ -224,7 +226,7 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
           <Text style={styles.storeName}>PhoneSpot</Text>
           <Text style={styles.storeInfo}>{receipt.locationName}</Text>
           <Text style={styles.storeInfo}>{receipt.locationAddress}</Text>
-          <Text style={styles.storeInfo}>CVR: 46079019</Text>
+          <Text style={styles.storeInfo}>{receipt.legalLine}</Text>
         </View>
 
         <View style={styles.divider} />

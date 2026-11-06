@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .from("orders")
     .select(
       `id, order_number, status, total, subtotal, discount_amount, bundle_discount_amount, shipping_cost,
-       brugtmoms_total, created_at, confirmed_at, shipping_address, shipping_method, notes, location_id,
+       brugtmoms_total, created_at, confirmed_at, shipping_address, shipping_method, notes, location_id, legal_name, legal_cvr,
        customer:customers(name, email, phone),
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, total_price, discount_amount, purchase_price, vat_scheme, upgrade_details, battery_upgrade)`,
     )

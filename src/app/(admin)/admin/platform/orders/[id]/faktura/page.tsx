@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { invoiceLegalEntity } from "@/lib/legal-entity";
 import { useParams } from "next/navigation";
 import {
   THREE_FOR_TWO_FREE_LABEL,
@@ -24,6 +25,9 @@ interface OrderData {
   shipping_address: Record<string, any> | null;
   shipping_method: string | null;
   notes: string | null;
+  /** Seller snapshot taken when the order was created; null on older orders. */
+  legal_name: string | null;
+  legal_cvr: string | null;
   customer: { name: string; email: string; phone: string | null } | null;
   order_items: Array<{
     id: string;
@@ -144,6 +148,7 @@ export default function FakturaPage() {
   const customer = order.customer as any;
   const addr = order.shipping_address || {};
   const orderDate = order.confirmed_at || order.created_at;
+  const seller = invoiceLegalEntity(order);
 
   return (
     <>
@@ -175,8 +180,8 @@ export default function FakturaPage() {
         <div style={{ display: "flex", gap: 40, marginBottom: 32 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: "bold", textTransform: "uppercase" as const, color: "#999", marginBottom: 6 }}>Fra</div>
-            <div style={{ fontWeight: "bold" }}>PhoneSpot / Fixon ApS</div>
-            <div>CVR: 46079019</div>
+            <div style={{ fontWeight: "bold" }}>PhoneSpot / {seller.name}</div>
+            <div>CVR: {seller.cvr}</div>
             <div>info@phonespot.dk</div>
             <div>phonespot.dk</div>
           </div>
@@ -267,7 +272,7 @@ export default function FakturaPage() {
 
         {/* Footer */}
         <div style={{ marginTop: 48, paddingTop: 16, borderTop: "1px solid #eee", fontSize: 11, color: "#999", textAlign: "center" }}>
-          PhoneSpot / Fixon ApS | CVR: 46079019 | info@phonespot.dk | phonespot.dk
+          PhoneSpot / {seller.name} | CVR: {seller.cvr} | info@phonespot.dk | phonespot.dk
         </div>
 
         {/* Print button */}

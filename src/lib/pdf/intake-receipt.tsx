@@ -322,6 +322,8 @@ interface IntakeReceiptData {
   serialNumber?: string;
   deviceColor?: string;
   checklist: ChecklistItem[];
+  /** Juridisk enhed for sagens butik (legalEntityForStoreSlug). Falder tilbage til Fixon. */
+  legalEntity?: { name: string; cvr: string };
   /** Linjer og beløb fra sagen (lib/repairs/receipt.ts). */
   money: ReceiptMoney;
   /**
@@ -615,7 +617,7 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
         <View style={styles.footer}>
           <Text style={styles.footerBrand}>PHONESPOT</Text>
           <Text style={styles.footerText}>
-            CVR: 46079019 | phonespot.dk | info@phonespot.dk
+            {`${data.legalEntity?.name ?? "Fixon ApS"} | CVR: ${data.legalEntity?.cvr ?? "46079019"} | phonespot.dk | info@phonespot.dk`}
           </Text>
         </View>
       </Page>

@@ -7,6 +7,7 @@ import { IntakeReceiptDocument } from "@/lib/pdf/intake-receipt";
 import type { ChecklistItem } from "@/lib/supabase/types";
 import type { IntakeReceiptDevice } from "@/lib/pdf/intake-receipt";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { legalEntityForStoreSlug } from "@/lib/legal-entity-server";
 import { loadReceiptMoney } from "@/lib/repairs/receipt";
 
 type ChecklistRows = { label: string; status: "ok" | "fejl" | "ikke_relevant"; note: string; photo_url: string | null }[];
@@ -105,6 +106,7 @@ export async function GET(
 
   // Linjer og beløb fra samme kilde som sagssiden (nye sager, ældre booking-sager, rabat, depositum).
   const money = await loadReceiptMoney(supabase, ticketId, ticket);
+  const legalEntity = await legalEntityForStoreSlug((ticket.store_id as string | null) ?? null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
@@ -125,6 +127,7 @@ export async function GET(
         deviceColor: device?.color ?? undefined,
         checklist: (ticket.intake_checklist ?? []) as { label: string; status: "ok" | "fejl" | "ikke_relevant"; note: string; photo_url: string | null }[],
         money,
+        legalEntity,
         devices,
       },
     }) as any,
@@ -180,6 +183,7 @@ export async function POST(
   }
 
   const money = await loadReceiptMoney(supabase, ticketId, ticket);
+  const legalEntity = await legalEntityForStoreSlug((ticket.store_id as string | null) ?? null);
   const wantsGroup = Array.isArray(body.devices) && body.devices.length > 1;
   const groupDevices =
     wantsGroup && ticket.intake_group_id ? await loadGroupDevices(supabase, ticket.intake_group_id as string) : null;
@@ -204,6 +208,7 @@ export async function POST(
         deviceColor: body.deviceColor,
         checklist: (body.checklist ?? []) as ChecklistItem[],
         money,
+        legalEntity,
         devices,
       },
     }) as any,

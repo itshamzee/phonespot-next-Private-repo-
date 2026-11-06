@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isOwner, staffStoreSlug } from "@/lib/auth/store-scope";
+import { legalEntityForLocation } from "@/lib/legal-entity-server";
 import { requireStaffScope, unauthorizedResponse } from "@/lib/auth/store-scope-server";
 
 /**
@@ -11,6 +12,7 @@ export async function GET(request: Request) {
   const ctx = await requireStaffScope(request);
   if (!ctx) return unauthorizedResponse();
   const { staff, scope } = ctx;
+  const legalEntity = await legalEntityForLocation(staff.location_id);
 
   return NextResponse.json(
     {
@@ -21,6 +23,8 @@ export async function GET(request: Request) {
       isOwner: isOwner(staff),
       ownSlug: staffStoreSlug(staff),
       scope,
+      /** Legal entity of the staff's own location (Fixon when none, e.g. the owner). */
+      legalEntity,
     },
     { headers: { "Cache-Control": "no-store" } },
   );
