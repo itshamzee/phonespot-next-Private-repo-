@@ -4,6 +4,8 @@ import { requireStaff } from "@/lib/auth/require-staff";
 
 /* GET /api/trade-in/receipts?inquiry_id=xxx */
 export async function GET(req: Request) {
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const inquiryId = searchParams.get("inquiry_id");
   if (!inquiryId) return NextResponse.json({ error: "inquiry_id required" }, { status: 400 });

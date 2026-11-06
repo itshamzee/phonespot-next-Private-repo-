@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 /* PATCH /api/trade-in/receipts/[id] — update draft receipt */
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
   const { items, ...receiptFields } = body;
@@ -69,9 +72,11 @@ export async function PATCH(
 
 /* DELETE /api/trade-in/receipts/[id] — delete draft only */
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const supabase = createServerClient();
 

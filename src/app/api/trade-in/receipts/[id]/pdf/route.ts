@@ -3,12 +3,27 @@ import { createServerClient } from "@/lib/supabase/client";
 import { renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 import { SlutseddelDocument } from "@/lib/pdf/slutseddel";
+import { timingSafeEqual } from "node:crypto";
+import { requireStaff } from "@/lib/auth/require-staff";
+
+/** The confirm route renders the PDF through this route with the service key. */
+function isInternalCall(req: Request): boolean {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const sent = req.headers.get("x-internal-key");
+  if (!key || !sent) return false;
+  const a = Buffer.from(sent);
+  const b = Buffer.from(key);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /* GET /api/trade-in/receipts/[id]/pdf — generate and return PDF */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!isInternalCall(req) && !(await requireStaff(req))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { id } = await params;
   const supabase = createServerClient();
 

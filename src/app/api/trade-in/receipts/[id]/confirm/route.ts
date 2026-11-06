@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -7,9 +8,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
 
 /* POST /api/trade-in/receipts/[id]/confirm — confirm receipt + generate PDF */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const supabase = createServerClient();
 
