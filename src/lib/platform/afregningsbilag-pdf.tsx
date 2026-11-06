@@ -233,15 +233,15 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
   return (
     <Document
       title={`Afregningsbilag ${documentNumber}`}
-      author="PhoneSpot ApS"
+      author="Fixon ApS"
       creator="PhoneSpot Platform"
     >
       <Page size="A4" style={styles.page}>
         {/* ── Header bar ── */}
         <View style={styles.headerBar}>
-          <Text style={styles.companyName}>PhoneSpot ApS</Text>
+          <Text style={styles.companyName}>Fixon ApS</Text>
           <Text style={styles.companyMeta}>
-            CVR: 38688766{"  "}|{"  "}{STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+            CVR: 46079019{"  "}|{"  "}{STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
           </Text>
         </View>
 
@@ -273,9 +273,9 @@ export function AfregningsbilagDocument(props: AfregningsbilagProps) {
             {/* Buyer */}
             <View style={styles.partyBox}>
               <Text style={styles.partyLabel}>Køber</Text>
-              <Text style={styles.partyName}>PhoneSpot ApS</Text>
+              <Text style={styles.partyName}>Fixon ApS</Text>
               <Text style={styles.partyDetail}>
-                CVR: 38688766{"\n"}
+                CVR: 46079019{"\n"}
                 {STORES.slagelse.street}{"\n"}
                 {STORES.slagelse.zip} {STORES.slagelse.city}
               </Text>

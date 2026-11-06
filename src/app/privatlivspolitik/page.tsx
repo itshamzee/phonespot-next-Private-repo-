@@ -33,14 +33,14 @@ export default function PrivatlivspolitikPage() {
         <div>
           <h2>1. Dataansvarlig</h2>
           <p className="mt-3">
-            PhoneSpot ApS er dataansvarlig for behandlingen af de personoplysninger, som vi modtager
+            Fixon ApS er dataansvarlig for behandlingen af de personoplysninger, som vi modtager
             om dig.
           </p>
           <div className="mt-3 space-y-1">
             <p>
-              <strong>PhoneSpot ApS</strong>
+              <strong>Fixon ApS</strong>
             </p>
-            <p>CVR-nr.: 38688766</p>
+            <p>CVR-nr.: 46079019</p>
             <p>{STORES.slagelse.street}</p>
             <p>{STORES.slagelse.zip} {STORES.slagelse.city}</p>
             <p>

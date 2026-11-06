@@ -176,7 +176,7 @@ export default function CookiesPage() {
                 <strong>Telefon:</strong> +45 61 10 00 48
               </li>
               <li>
-                <strong>Adresse:</strong> PhoneSpot ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+                <strong>Adresse:</strong> Fixon ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
               </li>
             </ul>
           </section>

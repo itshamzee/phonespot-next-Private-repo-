@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           "Har du spørgsmål, er du velkommen til at kontakte os på info@phonespot.dk.",
           "",
           "Med venlig hilsen,",
-          "PhoneSpot ApS",
+          "Fixon ApS",
         ].join("\n"),
       });
     } catch {

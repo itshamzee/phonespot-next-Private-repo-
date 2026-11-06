@@ -437,7 +437,7 @@ export async function GET(req: NextRequest) {
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;" class="page-break-avoid">
     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">
-      PhoneSpot / PhoneGo ApS &middot; CVR ${BRAND.cvr} &middot; phonespot.dk
+      PhoneSpot / Fixon ApS &middot; CVR ${BRAND.cvr} &middot; phonespot.dk
     </div>
     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">
       ${hasDevice ? "36 måneders garanti &middot; 14 dages fortrydelsesret" : "2 års reklamationsret &middot; 14 dages fortrydelsesret"}

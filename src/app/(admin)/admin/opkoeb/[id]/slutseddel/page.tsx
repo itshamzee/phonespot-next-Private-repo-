@@ -113,8 +113,8 @@ export default function AdminSlutseddelPage() {
   const [sellerBankReg, setSellerBankReg] = useState("");
   const [sellerBankAccount, setSellerBankAccount] = useState("");
 
-  const [buyerCompany, setBuyerCompany] = useState("Phonego ApS");
-  const [buyerCvr, setBuyerCvr] = useState("38688766");
+  const [buyerCompany, setBuyerCompany] = useState("Fixon ApS");
+  const [buyerCvr, setBuyerCvr] = useState("46079019");
   const [buyerEmail, setBuyerEmail] = useState("info@phonespot.dk");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerAddress, setBuyerAddress] = useState("");

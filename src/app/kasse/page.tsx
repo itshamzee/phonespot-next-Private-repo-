@@ -175,7 +175,7 @@ export default function KassePage() {
             {/* Seller info compact */}
             <div className="rounded-2xl border border-sand bg-warm-white px-4 py-3 text-xs text-gray">
               <p>
-                <span className="font-semibold text-charcoal">PhoneSpot ApS</span> · CVR: 38688766 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+                <span className="font-semibold text-charcoal">Fixon ApS</span> · CVR: 46079019 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
               </p>
               <p className="mt-1">
                 Solgt under brugtmomsordningen. Køber har ikke fradragsret for moms.

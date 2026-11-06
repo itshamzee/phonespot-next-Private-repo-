@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { STORES } from "@/lib/store-config";
+import { LEGAL_ENTITY } from "@/lib/company";
 import { isDeviceCategory } from "@/lib/collections";
 
 const slagelseAddress = `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`;
@@ -22,7 +23,7 @@ export const BRAND = {
   email: "info@phonespot.dk",
   orderEmail: "info@phonespot.dk",
   website: "https://phonespot.dk",
-  cvr: "38688766",
+  cvr: LEGAL_ENTITY.cvr,
 
   // Social
   facebook: "https://www.facebook.com/phonespot.dk/",

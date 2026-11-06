@@ -615,7 +615,7 @@ export function IntakeReceiptDocument({ data }: { data: IntakeReceiptData }) {
         <View style={styles.footer}>
           <Text style={styles.footerBrand}>PHONESPOT</Text>
           <Text style={styles.footerText}>
-            CVR: 38688766 | phonespot.dk | info@phonespot.dk
+            CVR: 46079019 | phonespot.dk | info@phonespot.dk
           </Text>
         </View>
       </Page>

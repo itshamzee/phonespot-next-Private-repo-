@@ -36,9 +36,9 @@ export default function HandelsbetingelserPage() {
           </p>
           <div className="mt-3 space-y-1">
             <p>
-              <strong>PhoneSpot ApS</strong>
+              <strong>Fixon ApS</strong>
             </p>
-            <p>CVR-nr.: 38688766</p>
+            <p>CVR-nr.: 46079019</p>
             <p>{STORES.slagelse.street}</p>
             <p>{STORES.slagelse.zip} {STORES.slagelse.city}</p>
             <p>
@@ -58,7 +58,7 @@ export default function HandelsbetingelserPage() {
         <div>
           <h2>2. Anvendelsesområde</h2>
           <p className="mt-3">
-            Disse handelsbetingelser gælder for alle køb foretaget hos PhoneSpot ApS — både via
+            Disse handelsbetingelser gælder for alle køb foretaget hos Fixon ApS — både via
             vores webshop på phonespot.dk og i vores fysiske butik. Ved at gennemføre et køb
             accepterer du disse betingelser i deres helhed.
           </p>
@@ -247,7 +247,7 @@ export default function HandelsbetingelserPage() {
           </p>
           <div className="mt-4 rounded-lg border border-charcoal/20 bg-charcoal/5 p-5 space-y-3 text-sm">
             <p>
-              <strong>Til:</strong> PhoneSpot ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+              <strong>Til:</strong> Fixon ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
               <br />
               E-mail:{" "}
               <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>

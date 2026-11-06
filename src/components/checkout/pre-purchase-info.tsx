@@ -65,7 +65,7 @@ export function PrePurchaseInfo() {
           <div>
             <p className="font-semibold">Sælger</p>
             <p className="text-gray text-xs mt-0.5">
-              PhoneSpot ApS · CVR: 38688766
+              Fixon ApS · CVR: 46079019
               <br />
               {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
             </p>

@@ -38,7 +38,7 @@ export function DailySummaryPDF({ summary: s }: { summary: DailySummary }) {
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>Dagsopgørelse {dateDa(s.date)}</Text>
-        <Text style={styles.sub}>PhoneSpot ApS · {s.registerName ?? "Alle kasser"}</Text>
+        <Text style={styles.sub}>Fixon ApS · {s.registerName ?? "Alle kasser"}</Text>
 
         <Text style={styles.h2}>Salg</Text>
         <Line label={`Salg (${s.salesCount} bon)`} value={`${kr(s.grossSales)} kr`} />

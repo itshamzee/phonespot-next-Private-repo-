@@ -224,7 +224,7 @@ export function PosReceiptPDF({ receipt }: { receipt: PosReceiptProps }) {
           <Text style={styles.storeName}>PhoneSpot</Text>
           <Text style={styles.storeInfo}>{receipt.locationName}</Text>
           <Text style={styles.storeInfo}>{receipt.locationAddress}</Text>
-          <Text style={styles.storeInfo}>CVR: 44588819</Text>
+          <Text style={styles.storeInfo}>CVR: 46079019</Text>
         </View>
 
         <View style={styles.divider} />

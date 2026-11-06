@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           `Vi har modtaget din fortrydelse af ordre #${order.order_number}.`,
           "",
           "Næste skridt:",
-          `1. Send varen retur til: PhoneSpot ApS, ${SLAGELSE_ADDRESS}`,
+          `1. Send varen retur til: Fixon ApS, ${SLAGELSE_ADDRESS}`,
           "2. Returomkostninger afholdes af dig som køber",
           "3. Tilbagebetaling sker senest 14 dage efter vi har modtaget din fortrydelsesmeddelelse, dog tidligst når vi har modtaget varen retur",
           "",

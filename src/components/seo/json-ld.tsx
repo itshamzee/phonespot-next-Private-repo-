@@ -1,4 +1,5 @@
 import { STORES } from "@/lib/store-config";
+import { LEGAL_ENTITY } from "@/lib/company";
 
 type JsonLdProps = {
   data: Record<string, unknown>;
@@ -42,8 +43,8 @@ export const ORGANIZATION_JSONLD: Record<string, unknown> = {
   "@context": "https://schema.org",
   "@type": ["Organization", "OnlineStore"],
   name: "PhoneSpot",
-  legalName: "PhoneSpot ApS",
-  vatID: "DK38688766",
+  legalName: LEGAL_ENTITY.name,
+  vatID: LEGAL_ENTITY.vatId,
   url: "https://phonespot.dk",
   logo: "https://phonespot.dk/brand/logo.png",
   image: "https://phonespot.dk/brand/logo.png",

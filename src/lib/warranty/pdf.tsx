@@ -148,7 +148,7 @@ export function WarrantyPDF(props: WarrantyPDFProps) {
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Garantibevis</Text>
-            <Text style={styles.subtitle}>PhoneSpot ApS — Refurbished Electronics</Text>
+            <Text style={styles.subtitle}>PhoneSpot — Refurbished Electronics</Text>
           </View>
           <View style={styles.qrContainer}>
             <Image src={props.qrCodeDataUrl} style={styles.qrImage} />
@@ -231,7 +231,7 @@ export function WarrantyPDF(props: WarrantyPDFProps) {
         </View>
 
         <View style={styles.footer}>
-          <Text>PhoneSpot ApS · CVR: 38688766 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</Text>
+          <Text>Fixon ApS · CVR: 46079019 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</Text>
           <Text>info@phonespot.dk · phonespot.dk</Text>
         </View>
       </Page>
