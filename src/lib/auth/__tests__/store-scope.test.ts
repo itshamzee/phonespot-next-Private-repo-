@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  SCOPE_LABELS,
   StoreAccessError,
   assertStoreAccess,
   buildLocationIndex,
@@ -176,5 +177,29 @@ describe("location index", () => {
       { id: "B", name: "Vejle", type: "store" },
     ]);
     expect(locationIdForSlug(index, "vejle")).toBe("A");
+  });
+});
+
+describe("nye butikker (Vejle Gågade, Esbjerg)", () => {
+  it("normalizes the new slugs", () => {
+    expect(normalizeScopeSlug("Vejle-Gaagade ")).toBe("vejle-gaagade");
+    expect(normalizeScopeSlug("esbjerg")).toBe("esbjerg");
+  });
+
+  it("scopes employees to their own new store only", () => {
+    expect(canAccessStore({ role: "employee", location_slug: "esbjerg" }, "esbjerg")).toBe(true);
+    expect(canAccessStore({ role: "employee", location_slug: "esbjerg" }, "vejle")).toBe(false);
+    expect(canAccessStore({ role: "employee", location_slug: "vejle" }, "vejle-gaagade")).toBe(false);
+  });
+
+  it("derives slugs from location names", () => {
+    expect(deriveLocationSlug({ id: "x", name: "Vejle Gågade", slug: null })).toBe("vejle-gaagade");
+    expect(deriveLocationSlug({ id: "y", name: "Esbjerg", slug: null })).toBe("esbjerg");
+  });
+
+  it("has a label and never yields a customer-facing store id for new records", () => {
+    expect(SCOPE_LABELS["vejle-gaagade"]).toBe("Vejle Gågade");
+    expect(SCOPE_LABELS.esbjerg).toBe("Esbjerg");
+    expect(storeForNewRecord({ role: "employee", location_slug: "esbjerg" }, "esbjerg")).toBeNull();
   });
 });
