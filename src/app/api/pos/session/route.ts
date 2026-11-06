@@ -7,6 +7,7 @@ import {
   openCashSession,
   recentSessions,
 } from "@/lib/pos/sessions";
+import { hasPermission } from "@/lib/auth/permissions";
 import { sessionActionSchema, uuidSchema } from "@/lib/pos/schemas";
 import { validateCashClose } from "@/lib/pos/cash-session";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.action === "close") {
+      if (!hasPermission(staff, "lukke_dagen")) return FORBIDDEN("Du har ikke tilladelse til at lukke dagen");
       const check = validateCashClose({
         countedCash: body.countedCash,
         cashToBank: body.cashToBank,

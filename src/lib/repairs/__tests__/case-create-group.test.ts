@@ -18,6 +18,7 @@ const staff: StaffIdentity = {
   email: null,
   location_id: U(50),
   location_slug: "vejle",
+  permissions: [],
 };
 const ctx = { staff, scope: "vejle" as const };
 

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { createRequestAuthClient } from "@/lib/supabase/server";
 import { deriveLocationSlug, type ScopeSlug } from "@/lib/auth/store-scope";
+import { parsePermissions, type Permission } from "@/lib/auth/permissions";
 import { INTERN_ROLE, internMayAccess } from "@/lib/auth/intern-access";
 
 export type StaffIdentity = {
@@ -13,6 +14,8 @@ export type StaffIdentity = {
   location_id: string | null;
   /** 'vejle' | 'slagelse' | 'webshop' — udledt af location_id. */
   location_slug: ScopeSlug | null;
+  /** Ekstra tilladelser udover rollens standard (se permissions.ts). */
+  permissions: Permission[];
 };
 
 /**
@@ -29,7 +32,7 @@ export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity
     .from("staff")
     // name and email so a route can record who did something without a second
     // query — "modtaget af hvem" is worth nothing as a bare uuid.
-    .select("id, role, name, email, location_id")
+    .select("id, role, name, email, location_id, permissions")
     .eq("auth_id", authId)
     .eq("is_active", true)
     .maybeSingle();
@@ -43,6 +46,7 @@ export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity
     name: string | null;
     email: string | null;
     location_id: string | null;
+    permissions: unknown;
   };
   return {
     id: row.id,
@@ -51,6 +55,7 @@ export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity
     email: row.email,
     location_id: row.location_id ?? null,
     location_slug: row.location_id ? await locationSlugFor(supabase, row.location_id) : null,
+    permissions: parsePermissions(row.permissions),
   };
 }
 

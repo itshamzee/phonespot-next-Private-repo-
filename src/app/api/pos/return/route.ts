@@ -4,7 +4,8 @@ import { findReturnableOrder } from "@/lib/pos/create-return";
 import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
 import { returnBodySchema } from "@/lib/pos/schemas";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { hasPermission } from "@/lib/auth/permissions";
+import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
 
 /**
  * GET /api/pos/return?q=<receipt number or order number>
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const staff = await requireStaff(request);
     if (!staff) return UNAUTHORIZED();
+    if (!hasPermission(staff, "lave_retur")) return FORBIDDEN("Du har ikke tilladelse til at lave retur");
 
     const parsed = await parseBody(request, returnBodySchema);
     if (!parsed.ok) return parsed.response;

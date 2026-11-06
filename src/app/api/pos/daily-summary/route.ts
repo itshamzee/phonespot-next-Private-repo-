@@ -4,7 +4,8 @@ import { loadDailySummary } from "@/lib/pos/daily-summary-data";
 import { copenhagenDateString, isValidDateString } from "@/lib/pos/copenhagen";
 import { summaryToCsv } from "@/lib/pos/summary-csv";
 import { renderDailySummaryPdf } from "@/lib/pos/summary-pdf";
-import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { hasPermission } from "@/lib/auth/permissions";
+import { FORBIDDEN, UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
     if (!isValidDateString(date)) return NextResponse.json({ error: "Ugyldig dato" }, { status: 400 });
     if (!["json", "csv", "pdf"].includes(format)) {
       return NextResponse.json({ error: "Ugyldigt format" }, { status: 400 });
+    }
+
+    if (format !== "json" && !hasPermission(staff, "eksportere")) {
+      return FORBIDDEN("Du har ikke tilladelse til at eksportere");
     }
 
     const summary = await loadDailySummary({ date, registerId, locationId });

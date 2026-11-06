@@ -53,7 +53,7 @@ describe("lookupStaffByAuthId", () => {
   });
 
   it("returns id, role, location_id and location_slug", async () => {
-    state.staffRow = { id: "s1", role: "employee", name: "Mette", email: "m@phonespot.dk", location_id: "L1" };
+    state.staffRow = { id: "s1", role: "employee", name: "Mette", email: "m@phonespot.dk", location_id: "L1", permissions: ["eksportere", "ukendt"] };
     state.locationResults = [{ data: { id: "L1", name: "Vejle", type: "store", slug: "vejle" }, error: null }];
     expect(await lookupStaffByAuthId("a")).toEqual({
       id: "s1",
@@ -62,6 +62,7 @@ describe("lookupStaffByAuthId", () => {
       email: "m@phonespot.dk",
       location_id: "L1",
       location_slug: "vejle",
+      permissions: ["eksportere"],
     });
   });
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hasPermission, parsePermissions } from "@/lib/auth/permissions";
 import { createServerClient } from "@/lib/supabase/client";
 
 /**
@@ -29,12 +30,15 @@ export async function GET(request: NextRequest) {
   // Check owner role
   const { data: staff } = await supabase
     .from("staff")
-    .select("role")
+    .select("role, permissions")
     .eq("auth_id", user.id)
     .single();
 
   if (!staff || staff.role !== "owner") {
     return NextResponse.json({ error: "Kun ejere kan eksportere transaktioner" }, { status: 403 });
+  }
+  if (!hasPermission({ role: staff.role, permissions: parsePermissions(staff.permissions) }, "eksportere")) {
+    return NextResponse.json({ error: "Du har ikke tilladelse til at eksportere" }, { status: 403 });
   }
 
   // Parse date range

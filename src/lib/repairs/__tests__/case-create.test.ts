@@ -19,6 +19,7 @@ const staff = (over: Partial<StaffIdentity> = {}): StaffIdentity => ({
   email: null,
   location_id: U(50),
   location_slug: "vejle",
+  permissions: [],
   ...over,
 });
 

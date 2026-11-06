@@ -205,6 +205,14 @@ describe("POST /api/pos/return", () => {
     expect((await returnPOST(req("/api/pos/return", { ...returnBody, refunds: [{ type: "gavekort", amountOere: 1 }] }))).status).toBe(400);
   });
 
+  it("forbids staff without the lave_retur permission (intern)", async () => {
+    requireStaffMock.mockResolvedValue({ ...staff, role: "intern" });
+    const res = await returnPOST(req("/api/pos/return", returnBody));
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("Du har ikke tilladelse til at lave retur");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("creates a credit note through the RPC and never reads or updates the original order itself", async () => {
     requireStaffMock.mockResolvedValue(staff);
     rpcMock.mockResolvedValue({

@@ -144,6 +144,14 @@ describe("POST /api/pos/session", () => {
     });
   });
 
+  it("forbids closing the day without the lukke_dagen permission (intern)", async () => {
+    requireStaffMock.mockResolvedValue({ ...staff, role: "intern" });
+    const res = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [], countedCard: 0 });
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("Du har ikke tilladelse til at lukke dagen");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("requires the terminal total to close (0 is allowed)", async () => {
     requireStaffMock.mockResolvedValue(staff);
     const missing = await post({ action: "close", sessionId: U(9), countedCash: 1000, cashToBank: 0, expenses: [] });

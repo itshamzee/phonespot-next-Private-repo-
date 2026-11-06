@@ -21,6 +21,7 @@ const staff = (role: string, slug: StaffIdentity["location_slug"]): StaffIdentit
   email: "t@phonespot.dk",
   location_id: slug ? `loc-${slug}` : null,
   location_slug: slug,
+  permissions: [],
 });
 
 const req = (url: string, cookie?: string) =>
