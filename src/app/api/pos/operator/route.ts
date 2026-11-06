@@ -3,29 +3,36 @@ import { z } from "zod";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { INTERN_ROLE } from "@/lib/auth/intern-access";
 import { OPERATOR_COOKIE, OPERATOR_TTL_MS, operatorSecret, signOperator } from "@/lib/auth/operator";
-import { verifyPin } from "@/lib/auth/pin";
-import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+import { attemptPin } from "@/lib/auth/pin-attempts";
+import { canAccessStore, isOwner, type ScopedStaff } from "@/lib/auth/store-scope";
+import { resolveLocationSlug } from "@/lib/auth/store-scope-server";
+import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 import { createServerClient } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
-const MAX_ATTEMPTS = 5;
-const LOCK_MS = 15 * 60 * 1000;
-/** Antal forsøg på en betinget opdatering, hvis en anden forespørgsel nåede først. */
-const CAS_RETRIES = 5;
-
 const WRONG_PIN = () => NextResponse.json({ error: "Forkert pinkode" }, { status: 401 });
-const LOCKED = () => NextResponse.json({ error: "Pinkoden er låst i 15 minutter" }, { status: 423 });
+const LOCKED = (message: string) => NextResponse.json({ error: message }, { status: 423 });
 
-const bodySchema = z.object({ staffId: z.string().min(1).max(100), pin: z.string().max(100) });
+const bodySchema = z.object({
+  staffId: z.string().min(1).max(100),
+  pin: z.string().max(100),
+  locationId: uuidSchema,
+});
 
-type PinRow = { pin_hash: string; failed_attempts: number; locked_until: string | null };
+/** Må den indloggede bruge kassen i denne location? Ejeren: altid. Ukendt location: kun ejeren. */
+async function mayUseLocation(loggedIn: ScopedStaff, locationId: string): Promise<boolean> {
+  if (isOwner(loggedIn)) return true;
+  const slug = await resolveLocationSlug(locationId);
+  return slug !== null && canAccessStore(loggedIn, slug);
+}
 
 /**
  * GET /api/pos/operator?location_id=<id>
  * Hvem betjener kassen nu, og hvem kan skifte ind: aktive medarbejdere i
  * butikken plus alle ejere. Pinkode-hashen forlader aldrig serveren.
+ * 403 hvis den indloggede ikke har adgang til butikken.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -35,6 +42,9 @@ export async function GET(request: NextRequest) {
     const locationId = new URL(request.url).searchParams.get("location_id");
     if (!locationId || !uuidSchema.safeParse(locationId).success) {
       return NextResponse.json({ error: "location_id påkrævet" }, { status: 400 });
+    }
+    if (!(await mayUseLocation(pos.loggedIn, locationId))) {
+      return FORBIDDEN("Du har ikke adgang til denne butik.");
     }
 
     const supabase = createServerClient();
@@ -76,9 +86,11 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/pos/operator { staffId, pin }
- * Skifter ekspedient. 5. forkerte forsøg låser pinkoden i 15 minutter.
- * Ukendt, inaktiv eller pinkodeløs medarbejder svarer som en forkert kode.
+ * POST /api/pos/operator { staffId, pin, locationId }
+ * Skifter ekspedient. Låsning efter 5, 10 og 15 forkerte forsøg (pin-attempts.ts).
+ * Ukendt, inaktiv, pinkodeløs medarbejder, en medarbejder fra en anden butik,
+ * eller en butik den indloggede ikke har adgang til: samme 401 som en forkert
+ * kode. Forsøget tælles kun, når medarbejderen findes og har en pinkode.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -90,70 +102,43 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, bodySchema);
     if (!parsed.ok) return parsed.response;
-    const { staffId, pin } = parsed.data;
+    const { staffId, pin, locationId } = parsed.data;
     if (!uuidSchema.safeParse(staffId).success) return WRONG_PIN();
 
     const supabase = createServerClient();
-    const { data: staff, error: staffError } = await supabase
+    const { data, error: staffError } = await supabase
       .from("staff")
-      .select("id, name, role")
+      .select("id, name, role, location_id")
       .eq("id", staffId)
       .eq("is_active", true)
       .maybeSingle();
     if (staffError) throw new Error(staffError.message);
-    if (!staff || (staff as { role: string }).role === INTERN_ROLE) return WRONG_PIN();
-    const current = { id: (staff as { id: string }).id, name: (staff as { name: string | null }).name };
+    const target = data as { id: string; name: string | null; role: string; location_id: string | null } | null;
+    if (!target || target.role === INTERN_ROLE) return WRONG_PIN();
 
-    // Tælleren opdateres med compare-and-set på failed_attempts: opdateringen
-    // gælder kun, hvis tælleren stadig har den værdi, vi læste. Ellers læses
-    // rækken igen. Så kan to samtidige forkerte forsøg ikke tælle som ét.
-    for (let attempt = 0; attempt < CAS_RETRIES; attempt++) {
-      const { data: row, error } = await supabase
-        .from("staff_pins")
-        .select("pin_hash, failed_attempts, locked_until")
-        .eq("staff_id", staffId)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      if (!row) return WRONG_PIN();
-      const pinRow = row as PinRow;
-
-      const now = Date.now();
-      const lockedUntil = pinRow.locked_until ? Date.parse(pinRow.locked_until) : null;
-      if (lockedUntil !== null && lockedUntil > now) return LOCKED();
-      // En udløbet lås giver fem nye forsøg.
-      const counted = lockedUntil !== null ? 0 : pinRow.failed_attempts;
-
-      const ok = verifyPin(pin, pinRow.pin_hash);
-      const next = ok ? 0 : counted + 1;
-      const locks = !ok && next >= MAX_ATTEMPTS;
-      const patch = {
-        failed_attempts: next,
-        locked_until: locks ? new Date(now + LOCK_MS).toISOString() : null,
-        updated_at: new Date(now).toISOString(),
-      };
-      const { data: updated, error: updateError } = await supabase
-        .from("staff_pins")
-        .update(patch)
-        .eq("staff_id", staffId)
-        .eq("failed_attempts", pinRow.failed_attempts)
-        .select("staff_id");
-      if (updateError) throw new Error(updateError.message);
-      if (!updated || updated.length === 0) continue;
-
-      if (!ok) return locks ? LOCKED() : WRONG_PIN();
-
-      const res = NextResponse.json({ current });
-      res.cookies.set(OPERATOR_COOKIE, signOperator(current.id, now, secret), {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        path: "/",
-        maxAge: OPERATOR_TTL_MS / 1000,
-      });
-      return res;
+    const inScope =
+      (await mayUseLocation(loggedIn, locationId)) &&
+      (target.role === "owner" || target.location_id === locationId);
+    if (!inScope) {
+      // Afvises altid, men tæller som et forkert forsøg, så scopet ikke kan bruges til at gætte uden låsning.
+      await attemptPin(supabase, staffId, null, { location: locationId });
+      return WRONG_PIN();
     }
-    // Vedvarende kamp om rækken: afvis frem for at lukke ind.
-    return WRONG_PIN();
+
+    const result = await attemptPin(supabase, staffId, pin, { location: locationId });
+    if (result.kind === "locked") return LOCKED(result.message);
+    if (result.kind !== "ok") return WRONG_PIN();
+
+    const current = { id: target.id, name: target.name };
+    const res = NextResponse.json({ current });
+    res.cookies.set(OPERATOR_COOKIE, signOperator(current.id, loggedIn.id, Date.now(), secret), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+      maxAge: OPERATOR_TTL_MS / 1000,
+    });
+    return res;
   } catch (err) {
     return posErrorResponse(err, "Fejl ved skift af ekspedient");
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { hashPin, isValidPin } from "@/lib/auth/pin";
+import { attemptPin } from "@/lib/auth/pin-attempts";
 import { parseBody } from "@/lib/pos/route-helpers";
 import { createServerClient } from "@/lib/supabase/client";
 import { isOwner, staffStoreSlug } from "@/lib/auth/store-scope";
@@ -35,11 +36,13 @@ export async function GET(request: Request) {
   );
 }
 
-const pinBodySchema = z.object({ pin: z.string() });
+const pinBodySchema = z.object({ pin: z.string(), currentPin: z.string().optional() });
 
 /**
- * PATCH /api/admin/me { pin }: medarbejderen sætter sin egen pinkode til
- * ekspedientskift i kassen. Nulstiller en eventuel lås.
+ * PATCH /api/admin/me { pin, currentPin? }: medarbejderen sætter sin egen
+ * pinkode til ekspedientskift i kassen. Har medarbejderen allerede en pinkode,
+ * kræves currentPin; et forkert currentPin tæller som et forkert forsøg med de
+ * samme låseregler som i kassen. En ny pinkode nulstiller tæller og lås.
  */
 export async function PATCH(request: Request) {
   const staff = await requireStaff(request);
@@ -47,24 +50,45 @@ export async function PATCH(request: Request) {
 
   const parsed = await parseBody(request, pinBodySchema);
   if (!parsed.ok) return parsed.response;
-  if (!isValidPin(parsed.data.pin)) {
+  const { pin, currentPin } = parsed.data;
+  if (!isValidPin(pin)) {
     return NextResponse.json({ error: "Pinkoden skal være 4 til 6 cifre" }, { status: 400 });
   }
 
-  const { error } = await createServerClient()
-    .from("staff_pins")
-    .upsert(
+  const supabase = createServerClient();
+  try {
+    if (currentPin === undefined || currentPin === "") {
+      const { data: existing, error } = await supabase
+        .from("staff_pins")
+        .select("staff_id")
+        .eq("staff_id", staff.id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (existing) {
+        return NextResponse.json({ error: "Skriv din nuværende pinkode" }, { status: 400 });
+      }
+    } else {
+      const result = await attemptPin(supabase, staff.id, currentPin, { location: staff.location_id });
+      if (result.kind === "locked") return NextResponse.json({ error: result.message }, { status: 423 });
+      if (result.kind === "wrong") {
+        return NextResponse.json({ error: "Forkert nuværende pinkode" }, { status: 401 });
+      }
+      // "ok", eller "no_pin" (ingen pinkode endnu): den nye må sættes.
+    }
+
+    const { error } = await supabase.from("staff_pins").upsert(
       {
         staff_id: staff.id,
-        pin_hash: hashPin(parsed.data.pin),
+        pin_hash: hashPin(pin),
         failed_attempts: 0,
         locked_until: null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "staff_id" },
     );
-  if (error) {
-    console.error("[admin/me] pin upsert failed", error.message);
+    if (error) throw new Error(error.message);
+  } catch (err) {
+    console.error("[admin/me] pin change failed", err);
     return NextResponse.json({ error: "Pinkoden kunne ikke gemmes" }, { status: 500 });
   }
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });

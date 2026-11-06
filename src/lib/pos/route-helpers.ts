@@ -25,10 +25,14 @@ function cookieValue(request: Request, name: string): string | undefined {
 
 /**
  * Logged-in staff plus the acting operator. actor is the operator from the
- * ps_operator cookie when it is validly signed, unexpired and the staff member
- * is still active (and not an intern); otherwise actor is loggedIn. Without
- * OPERATOR_COOKIE_SECRET the cookie is ignored. Returns null when nobody is
- * logged in.
+ * ps_operator cookie when it is validly signed, unexpired, was issued under
+ * this same login, and the staff member is still active (and not an intern);
+ * otherwise actor is loggedIn. Without OPERATOR_COOKIE_SECRET the cookie is
+ * ignored. Returns null when nobody is logged in.
+ *
+ * Fails closed: if the operator lookup itself errors, this throws (the route's
+ * posErrorResponse answers 500) rather than silently recording the sale on the
+ * logged-in user.
  */
 export async function requirePosStaff(request: Request): Promise<PosStaff | null> {
   const loggedIn = await requireStaff(request);
@@ -36,15 +40,17 @@ export async function requirePosStaff(request: Request): Promise<PosStaff | null
 
   const secret = operatorSecret();
   const op = secret ? readOperator(cookieValue(request, OPERATOR_COOKIE), Date.now(), secret) : null;
-  if (!op || op.staffId === loggedIn.id) return { loggedIn, actor: loggedIn };
+  if (!op || op.loggedInId !== loggedIn.id || op.staffId === loggedIn.id) return { loggedIn, actor: loggedIn };
 
+  let actor: StaffIdentity | null;
   try {
-    const actor = await lookupStaffById(op.staffId);
-    if (!actor || actor.role === INTERN_ROLE) return { loggedIn, actor: loggedIn };
-    return { loggedIn, actor };
-  } catch {
-    return { loggedIn, actor: loggedIn };
+    actor = await lookupStaffById(op.staffId);
+  } catch (err) {
+    console.error("[pos] operator lookup failed", err);
+    throw err;
   }
+  if (!actor || actor.role === INTERN_ROLE) return { loggedIn, actor: loggedIn };
+  return { loggedIn, actor };
 }
 
 /** Maps any thrown error to a JSON response; business errors keep their Danish message and status. */
