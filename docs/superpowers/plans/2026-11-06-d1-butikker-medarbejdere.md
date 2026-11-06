@@ -178,6 +178,7 @@
     - Medarbejderen findes ikke, eller har ingen pinkode: samme 401 som ved forkert kode.
     - Ved korrekt kode nulstilles tælleren.
   - `DELETE /api/pos/operator` sletter cookien.
+  - **Lagring (ruling efter Task 1):** pinkoden ligger i `public.staff_pins(staff_id pk → staff.id, pin_hash, failed_attempts, locked_until, updated_at)` med RLS uden policies. Den ligger ikke på `staff`. `pin_failed_attempts` og `pin_locked_until` ovenfor betyder `staff_pins.failed_attempts` og `staff_pins.locked_until`. Tabellen må kun tilgås fra serveren med service role.
   - Hemmeligheden ligger i env `OPERATOR_COOKIE_SECRET`. Hvis den mangler, svarer POST `500 "Pinkode-skift er ikke sat op"`, og `requirePosStaff` ignorerer cookien.
 
 - [ ] **Step 1: Skriv de fejlende tests.**
@@ -262,8 +263,8 @@
 **Interfaces:**
 - Consumes: `PERMISSIONS`, `PERMISSION_LABELS` og `ROLE_DEFAULTS` (Task 4), `hashPin` og `isValidPin` (Task 5), og `SCOPE_SLUGS` (Task 2)
 - Produces:
-  - `GET /api/admin/staff` returnerer pr. medarbejder `permissions: Permission[]` og `hasPin: boolean`. Selve hashen sendes aldrig.
-  - `PATCH` tager `{ permissions?: Permission[]; pin?: string | null }`. En ugyldig pinkode giver 400 "Pinkoden skal være 4–6 cifre". `null` fjerner pinkoden. Ukendte tilladelser giver 400.
+  - `GET /api/admin/staff` returnerer pr. medarbejder `permissions: Permission[]` og `hasPin: boolean` (findes der en række i `staff_pins`?). Selve hashen sendes aldrig.
+  - `PATCH` tager `{ permissions?: Permission[]; pin?: string | null }`. Pinkoden skrives som upsert i `staff_pins` og nulstiller `failed_attempts`; `null` sletter rækken. En ugyldig pinkode giver 400 "Pinkoden skal være 4–6 cifre". `null` fjerner pinkoden. Ukendte tilladelser giver 400.
   - `POST` og `PATCH` accepterer `location_slug` blandt alle 5 slugs.
   - Profil: medarbejderen kan sætte sin egen pinkode via `/api/admin/me` (Task 5).
 
