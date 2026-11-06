@@ -11,6 +11,7 @@ vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: vi.fn(async () => sta
 vi.mock("@/lib/supabase/client", () => ({ createServerClient: () => state.client }));
 
 import { createFakeDb } from "@/test/fake-supabase";
+import { SCOPE_SLUGS } from "@/lib/auth/store-scope";
 import { resetLocationCache } from "@/lib/auth/store-scope-server";
 import { GET, PATCH, POST } from "../route";
 import { GET as getMe } from "../../me/route";
@@ -84,7 +85,7 @@ describe("/api/admin/staff", () => {
     const json = await (await GET(req("GET"))).json();
     expect(json.staff.find((s: { id: string }) => s.id === "v").location_slug).toBe("vejle");
     expect(json.staff.find((s: { id: string }) => s.id === "n").location_slug).toBeNull();
-    expect(json.stores.map((s: { slug: string }) => s.slug)).toEqual(["vejle", "slagelse", "webshop"]);
+    expect(json.stores.map((s: { slug: string }) => s.slug)).toEqual([...SCOPE_SLUGS]);
   });
 
   it("owner assigns a store, and can clear it again", async () => {
