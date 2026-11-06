@@ -1,6 +1,6 @@
 import { createServerClient } from "@/lib/supabase/client";
-import { SCOPE_SLUGS, type ScopeSlug, type ScopedStaff } from "@/lib/auth/store-scope";
-import { canSeeCost, searchTokens, type ItemType, type OverviewResult, type OverviewRow } from "./rules";
+import { type ScopeSlug, type ScopedStaff } from "@/lib/auth/store-scope";
+import { STOCK_VIEW_SLUGS, canSeeCost, searchTokens, type ItemType, type OverviewResult, type OverviewRow } from "./rules";
 
 export * from "./rules";
 
@@ -15,7 +15,7 @@ const num = (v: unknown): number | null => (typeof v === "number" ? v : v === nu
 export function mapOverviewRow(r: Raw): OverviewRow {
   const qty = {} as Record<ScopeSlug, number>;
   const min = {} as Record<ScopeSlug, number | null>;
-  for (const slug of SCOPE_SLUGS) {
+  for (const slug of STOCK_VIEW_SLUGS) {
     qty[slug] = num(r[`qty_${slug}`]) ?? 0;
     min[slug] = num(r[`min_${slug}`]);
   }
@@ -54,6 +54,11 @@ export async function queryOverview(
   const cost = canSeeCost(staff);
   const perPage = Math.min(100, Math.max(1, opts.perPage ?? OVERVIEW_PER_PAGE));
   const page = Math.max(1, Math.floor(opts.page ?? 1));
+
+  // Butikker uden kolonner i viewet (Vejle Gågade, Esbjerg) har endnu ingen lagerliste.
+  if (opts.onlyStore && !STOCK_VIEW_SLUGS.includes(opts.onlyStore)) {
+    return { rows: [], total: 0, page, perPage, canSeeCost: cost };
+  }
 
   let query = db
     .from("stock_overview")

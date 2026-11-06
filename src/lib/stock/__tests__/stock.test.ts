@@ -13,6 +13,7 @@ import {
   queryOverview,
   requestSources,
   searchTokens,
+  STOCK_VIEW_SLUGS,
   type OverviewRow,
 } from "../overview";
 
@@ -117,7 +118,7 @@ describe("mapOverviewRow", () => {
       in_transit: 1,
     });
     expect(r).toMatchObject({ kind: "device", vatScheme: "brugtmoms", costPrice: 310000, inTransit: 1 });
-    expect(r.qty).toEqual(qtys(0, 2, 1));
+    expect(r.qty).toEqual({ vejle: 0, slagelse: 2, webshop: 1 });
     expect(r.min.vejle).toBeNull();
   });
 });
@@ -148,5 +149,32 @@ describe("queryOverview cost privacy", () => {
       expect(selects[0]).toContain("cost_price");
       expect(res.canSeeCost).toBe(true);
     }
+  });
+});
+
+describe("stores without stock_overview columns", () => {
+  it("mapOverviewRow only has keys for the stores in the view", () => {
+    const r = mapOverviewRow({ row_key: "k", name: "x" });
+    expect(Object.keys(r.qty).sort()).toEqual([...STOCK_VIEW_SLUGS].sort());
+    expect(Object.keys(r.min).sort()).toEqual([...STOCK_VIEW_SLUGS].sort());
+  });
+
+  it("queryOverview for vejle-gaagade returns [] and never references an invalid column", async () => {
+    const used: string[] = [];
+    const q: Record<string, unknown> = {};
+    for (const m of ["order", "range", "ilike", "or", "select"]) {
+      q[m] = (...a: unknown[]) => {
+        used.push(...a.filter((x): x is string => typeof x === "string"));
+        return q;
+      };
+    }
+    q.then = (resolve: (v: unknown) => void) => resolve({ data: [], error: null, count: 0 });
+    const db = { from: () => q } as never;
+    for (const slug of ["vejle-gaagade", "esbjerg"] as const) {
+      const res = await queryOverview({ role: "employee" }, { onlyStore: slug }, db);
+      expect(res.rows).toEqual([]);
+      expect(res.total).toBe(0);
+    }
+    expect(used.filter((u) => u.includes("-"))).toEqual([]);
   });
 });

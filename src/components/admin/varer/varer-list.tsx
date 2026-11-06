@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { SCOPE_LABELS, SCOPE_SLUGS, type ScopeSlug } from "@/lib/auth/store-scope";
-import { canRequestRow, isLow, type OverviewRow } from "@/lib/stock/rules";
+import { SCOPE_LABELS, type ScopeSlug } from "@/lib/auth/store-scope";
+import { STOCK_VIEW_SLUGS, canRequestRow, isLow, type OverviewRow } from "@/lib/stock/rules";
 import { formatKr } from "@/lib/transfers/format";
 import { RequestDialog } from "./request-dialog";
 
@@ -125,7 +125,7 @@ export function VarerList({
             <span>Vare</span>
             {cost && <span className="text-right">Kostpris</span>}
             <span className="text-right">Pris</span>
-            {SCOPE_SLUGS.map((s) => (
+            {STOCK_VIEW_SLUGS.map((s) => (
               <span key={s} className="text-center">
                 {SCOPE_LABELS[s]}
               </span>
@@ -155,7 +155,7 @@ export function VarerList({
                 </span>
                 {cost && <span className="text-right tabular-nums">{formatKr(row.costPrice)}</span>}
                 <span className="text-right tabular-nums">{priceLabel(row)}</span>
-                {SCOPE_SLUGS.map((s) => {
+                {STOCK_VIEW_SLUGS.map((s) => {
                   const low = isLow(row, s) || (s === mine && requestable);
                   const empty = row.kind === "sku" && row.qty[s] === 0 && row.min[s] === null;
                   return (
