@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { terminalCancelSchema } from "@/lib/pos/schemas";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { terminalForLocation } from "@/lib/pos/terminal-flow";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +16,8 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
 
     const parsed = await parseBody(request, terminalCancelSchema);
     if (!parsed.ok) return parsed.response;

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { loadDailySummary } from "@/lib/pos/daily-summary-data";
 import { copenhagenDateString, isValidDateString } from "@/lib/pos/copenhagen";
-import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -13,8 +12,8 @@ import { uuidSchema } from "@/lib/pos/schemas";
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
 
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get("location_id");

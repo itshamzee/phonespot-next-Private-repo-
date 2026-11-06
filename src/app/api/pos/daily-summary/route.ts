@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { loadDailySummary } from "@/lib/pos/daily-summary-data";
 import { copenhagenDateString, isValidDateString } from "@/lib/pos/copenhagen";
 import { summaryToCsv } from "@/lib/pos/summary-csv";
 import { renderDailySummaryPdf } from "@/lib/pos/summary-pdf";
 import { hasPermission } from "@/lib/auth/permissions";
-import { FORBIDDEN, UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { FORBIDDEN, UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -16,8 +15,9 @@ import { uuidSchema } from "@/lib/pos/schemas";
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const { searchParams } = new URL(request.url);
     const registerId = searchParams.get("register_id");
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Ugyldigt format" }, { status: 400 });
     }
 
-    if (format !== "json" && !hasPermission(staff, "eksportere")) {
+    if (format !== "json" && !hasPermission(actor, "eksportere")) {
       return FORBIDDEN("Du har ikke tilladelse til at eksportere");
     }
 

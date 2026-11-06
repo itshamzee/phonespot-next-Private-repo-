@@ -1,6 +1,51 @@
 import { NextResponse } from "next/server";
 import type { ZodType } from "zod";
 import { toPosError } from "./errors";
+import { lookupStaffById, requireStaff, type StaffIdentity } from "@/lib/auth/require-staff";
+import { INTERN_ROLE } from "@/lib/auth/intern-access";
+import { OPERATOR_COOKIE, operatorSecret, readOperator } from "@/lib/auth/operator";
+
+export type PosStaff = {
+  /** Den, der er logget ind på kassen (Supabase-sessionen). */
+  loggedIn: StaffIdentity;
+  /** Ekspedienten, der betjener lige nu: staffId på salg/retur og grundlag for tilladelser. */
+  actor: StaffIdentity;
+};
+
+function cookieValue(request: Request, name: string): string | undefined {
+  const header = request.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const i = part.indexOf("=");
+    if (i < 0) continue;
+    if (part.slice(0, i).trim() === name) return part.slice(i + 1).trim();
+  }
+  return undefined;
+}
+
+/**
+ * Logged-in staff plus the acting operator. actor is the operator from the
+ * ps_operator cookie when it is validly signed, unexpired and the staff member
+ * is still active (and not an intern); otherwise actor is loggedIn. Without
+ * OPERATOR_COOKIE_SECRET the cookie is ignored. Returns null when nobody is
+ * logged in.
+ */
+export async function requirePosStaff(request: Request): Promise<PosStaff | null> {
+  const loggedIn = await requireStaff(request);
+  if (!loggedIn) return null;
+
+  const secret = operatorSecret();
+  const op = secret ? readOperator(cookieValue(request, OPERATOR_COOKIE), Date.now(), secret) : null;
+  if (!op || op.staffId === loggedIn.id) return { loggedIn, actor: loggedIn };
+
+  try {
+    const actor = await lookupStaffById(op.staffId);
+    if (!actor || actor.role === INTERN_ROLE) return { loggedIn, actor: loggedIn };
+    return { loggedIn, actor };
+  } catch {
+    return { loggedIn, actor: loggedIn };
+  }
+}
 
 /** Maps any thrown error to a JSON response; business errors keep their Danish message and status. */
 export function posErrorResponse(err: unknown, fallback: string): NextResponse {

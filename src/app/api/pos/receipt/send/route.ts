@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { renderReceiptPdf } from "@/lib/pos/receipt-data";
 import { receiptUrl } from "@/lib/pos/receipt-link";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 import { createServerClient } from "@/lib/supabase/client";
 
@@ -24,8 +23,8 @@ const bodySchema = z.discriminatedUnion("channel", [
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
     const parsed = await parseBody(request, bodySchema);
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;

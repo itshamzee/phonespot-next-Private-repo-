@@ -27,13 +27,25 @@ export type StaffIdentity = {
  * Throws on lookup failure so callers can fail closed rather than fail open.
  */
 export async function lookupStaffByAuthId(authId: string): Promise<StaffIdentity | null> {
+  return lookupActiveStaff("auth_id", authId);
+}
+
+/**
+ * Active staff member by staff.id — used for the POS operator (ekspedient) who
+ * switched in with a pin. Throws on lookup failure, like lookupStaffByAuthId.
+ */
+export async function lookupStaffById(staffId: string): Promise<StaffIdentity | null> {
+  return lookupActiveStaff("id", staffId);
+}
+
+async function lookupActiveStaff(column: "auth_id" | "id", value: string): Promise<StaffIdentity | null> {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("staff")
     // name and email so a route can record who did something without a second
     // query — "modtaget af hvem" is worth nothing as a bare uuid.
     .select("id, role, name, email, location_id, permissions")
-    .eq("auth_id", authId)
+    .eq(column, value)
     .eq("is_active", true)
     .maybeSingle();
 

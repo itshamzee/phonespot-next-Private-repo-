@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { findReturnableOrder } from "@/lib/pos/create-return";
 import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
 import { returnBodySchema } from "@/lib/pos/schemas";
 import { hasPermission } from "@/lib/auth/permissions";
-import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
  * GET /api/pos/return?q=<receipt number or order number>
@@ -15,8 +14,8 @@ import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
     const q = new URL(request.url).searchParams.get("q") ?? "";
     const order = await findReturnableOrder(q);
     return NextResponse.json({ order, terminalKind: paymentTerminalKind() });
@@ -43,9 +42,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
-    if (!hasPermission(staff, "lave_retur")) return FORBIDDEN("Du har ikke tilladelse til at lave retur");
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
+    if (!hasPermission(actor, "lave_retur")) return FORBIDDEN("Du har ikke tilladelse til at lave retur");
 
     const parsed = await parseBody(request, returnBodySchema);
     if (!parsed.ok) return parsed.response;
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       originalOrderId: body.originalOrderId,
       locationId: body.locationId,
       registerId: body.registerId,
-      staffId: staff.id,
+      staffId: actor.id,
       lines: body.lines,
       refunds: body.refunds,
       reason: body.reason,

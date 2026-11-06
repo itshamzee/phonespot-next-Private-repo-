@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { createSaleWithTerminal } from "@/lib/pos/terminal-flow";
 import { saleBodySchema } from "@/lib/pos/schemas";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
  * POST /api/pos/sale
@@ -34,8 +33,9 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const parsed = await parseBody(request, saleBodySchema);
     if (!parsed.ok) return parsed.response;
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       discountAmount: body.discountAmount ?? 0,
       discountReason: body.discountReason ?? null,
       notes: body.notes ?? null,
-      staffId: staff.id,
+      staffId: actor.id,
       terminalReference: body.terminalReference ?? null,
     });
 
