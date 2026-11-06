@@ -39,6 +39,10 @@ describe("resolveActive", () => {
     expect(at("/admin/reservedele/abc-123")).toEqual(["varer", null]);
   });
 
+  it("lagersiden for reservedele ligger under Lager", () => {
+    expect(at("/admin/lager/reservedele")).toEqual(["varer", "Reservedele"]);
+  });
+
   it("et præfiks matcher kun hele sti-led", () => {
     expect(at("/admin/kunderne")).toEqual([null, null]);
   });
