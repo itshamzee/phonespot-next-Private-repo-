@@ -10,6 +10,10 @@ import { NextRequest } from "next/server";
 import type { PaymentTerminal } from "@/lib/pos/payment-terminal";
 
 const requireStaffMock = vi.fn();
+vi.mock("@/lib/pos/return-entity", () => ({
+  assertReturnEntity: async () => undefined,
+  assertReturnLookupEntity: async () => undefined,
+}));
 // Butik/kasse-opslaget (src/lib/pos/pos-context.ts) har egne tests; her er det en gennemstilling til Vejle-lokationen.
 vi.mock("@/lib/pos/pos-context", () => ({
   resolveRegister: async (_actor: unknown, registerId: string) => ({

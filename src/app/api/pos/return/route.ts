@@ -4,6 +4,7 @@ import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
 import { returnBodySchema } from "@/lib/pos/schemas";
 import { resolveRegister } from "@/lib/pos/pos-context";
+import { assertReturnEntity, assertReturnLookupEntity } from "@/lib/pos/return-entity";
 import { hasPermission } from "@/lib/auth/permissions";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     if (!pos) return UNAUTHORIZED();
     const q = new URL(request.url).searchParams.get("q") ?? "";
     const order = await findReturnableOrder(q);
+    await assertReturnLookupEntity(pos.actor, order.id);
     return NextResponse.json({ order, terminalKind: paymentTerminalKind() });
   } catch (err) {
     return posErrorResponse(err, "Fejl ved opslag af salg");
@@ -53,6 +55,8 @@ export async function POST(request: NextRequest) {
     const body = parsed.data;
 
     const register = await resolveRegister(actor, body.registerId);
+
+    await assertReturnEntity(register.locationId, body.originalOrderId);
 
     const result = await createReturnWithTerminal({
       originalOrderId: body.originalOrderId,

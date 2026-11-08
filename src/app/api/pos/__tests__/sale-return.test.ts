@@ -24,7 +24,7 @@ vi.mock("@/lib/pos/route-helpers", async (importActual) => {
 // else may be read or written outside the RPC.
 const dbRows: Record<string, Array<Record<string, unknown>>> = {};
 const fromMock = vi.fn((table: string) => {
-  if (table === "registers" || table === "locations") {
+  if (table === "registers" || table === "locations" || table === "orders") {
     // pos-context: the register / location lookup that decides store access.
     const eqs: Array<[string, unknown]> = [];
     const b: Record<string, unknown> = {};
@@ -173,8 +173,8 @@ describe("POST /api/pos/sale", () => {
     ]);
     expect(JSON.stringify(args)).not.toContain("pi_should_be_ignored");
     // Only the read-only 3 for 2 price lookup touches a table directly.
-    // Besides the register/location access lookup, only the 3 for 2 price read is allowed.
-    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations")).toEqual(["sku_products"]);
+    // Besides the register/location/original-order access lookups (return-entity.ts has its own tests), only the 3 for 2 price read is allowed.
+    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations" && t !== "orders")).toEqual(["sku_products"]);
   });
 
   it("surfaces a database business error instead of swallowing it (stock / reservation lock)", async () => {
@@ -264,7 +264,7 @@ describe("POST /api/pos/return", () => {
     expect(args.p_refunds).toEqual([{ type: "kontant", amount_oere: 9000, reference: null }]);
     expect(args.p_reason).toBe("Defekt");
     // No direct table access: the original order is never updated from TypeScript.
-    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations")).toEqual([]);
+    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations" && t !== "orders")).toEqual([]);
   });
 
   it("maps return business errors", async () => {
