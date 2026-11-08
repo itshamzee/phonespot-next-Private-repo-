@@ -237,6 +237,7 @@
 
 **Interfaces:**
 - Consumes: `GET`/`POST`/`DELETE /api/pos/operator` (Task 5) og `GET /api/pos/locations` (Task 6)
+- **Ruling efter Task 5:** `POST /api/pos/operator` tager `{staffId, pin, locationId}`. Låsebeskederne kan være "Pinkoden er låst i 15 minutter", "Pinkoden er låst i 30 minutter" eller "Pinkoden er låst. Bed ejeren om at sætte en ny pinkode", og alle tre vises som de er. Et `403` fra GET betyder "ingen adgang til butikken".
 - Produces: `<OperatorSwitch locationId={string} onChanged={(current:{id:string;name:string}) => void} />`
   - Chippen viser "Ekspedient: {navn}". Et klik åbner en dialog med listen af medarbejdere (dem uden pinkode er grå med "Ingen pinkode").
   - Efter valg af navn kommer et taltastatur. Koden kan også tastes på det fysiske tastatur, og Enter sender den.
