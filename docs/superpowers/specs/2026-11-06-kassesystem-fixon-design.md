@@ -268,3 +268,25 @@ Det vigtigste delprojekt for ejeren. Beskrivelsen er godkendt af ejeren i samtal
 3. **Green.dk-priser (afklaret):** Prisen hentes automatisk, hvis det er muligt. Ellers bruges et link.
 4. **Printere (afklaret):** Ejeren vil have forslag. Se D4. Ejeren vælger model og antal, før der bestilles.
 5. **Dinero-adgang:** Direktøren skal oprette API-adgang (klient-ID og nøgle) til Fixons Dinero-konto.
+
+## Tillæg 2026-11-08: lovgrundlag for D2 (opkøb)
+
+Kilde: `docs/superpowers/specs/2026-11-08-opkoeb-lovgrundlag.md`. Det er research, ikke advokatrådgivning.
+
+- **Ingen bevilling til elektronik, men politiet skal have besked.** Lov 1450/2024 og BEK 1497/2024 kræver ikke bevilling til elektronik. Politiet skal dog have besked om, hvor regnskab og butikker er (§ 9). Politiet har adgang til regnskab og lager (§ 10). Ved mistanke om, at sælgeren ikke ejer varen, gælder meldepligt og tilbageholdelse (§ 11).
+- **ID-krav:** Over 2.000 kr. skal sælgeren vise ID: MitID eller gyldigt billed-ID. Der gemmes ID-type, ID-nummer, udløbsdato og den medarbejder, der tjekkede, i 5 år. Herefter slettes de automatisk. Der gemmes ingen CPR og ingen kopi af ID.
+- **Sælgeren skal være mindst 18 år.**
+- **Udbetaling** sker kun til en konto i sælgerens navn. Kvitteringen for overførslen gemmes som ekstra dokumentation.
+- **Knap ved mistanke:** varen spærres, og det logges, at politiet er kontaktet.
+- **Afregningsbilag:**
+  - Indhold: fortløbende nummer, købende selskab, dato, sælgerens navn og adresse, beskrivelse af varen med IMEI og pris. Bilaget må ikke vise moms.
+  - Sælgeren bekræfter med underskrift på papir, der scannes ind. Online bekræfter sælgeren med logget accept, og udbetalingen går til en konto i sælgerens navn.
+- **Køb fra firma:** fakturatypen afgør momsen. Se tabellen nedenfor.
+
+  | Fakturatype | Moms |
+  |---|---|
+  | Med moms | Almindelig moms |
+  | Påtegnet "fortjenstmargenordning – brugte genstande" | Brugtmoms |
+  | Fra EU efter de normale regler | Erhvervelsesmoms og almindelig moms |
+
+- **Privatlivsinformation** vises til sælgeren, og opkøb kommer med i GDPR-fortegnelsen.
