@@ -23,11 +23,12 @@ export function OperatorSwitch({
   onChanged,
 }: {
   locationId: string;
-  onChanged: (current: Operator) => void;
+  onChanged: (current: Operator | null) => void;
 }) {
   const [current, setCurrent] = useState<Operator | null>(null);
   const [staff, setStaff] = useState<StaffEntry[]>([]);
   const [loggedInName, setLoggedInName] = useState("");
+  const [loggedInId, setLoggedInId] = useState("");
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<StaffEntry | null>(null);
   const [pin, setPin] = useState("");
@@ -41,8 +42,10 @@ export function OperatorSwitch({
       try {
         const res = await posFetch("/api/admin/me", { cache: "no-store" });
         if (!res.ok) return;
-        const me = (await res.json()) as { name?: string };
-        if (!cancelled && me.name) setLoggedInName(me.name);
+        const me = (await res.json()) as { id?: string; name?: string };
+        if (cancelled) return;
+        if (me.name) setLoggedInName(me.name);
+        if (me.id) setLoggedInId(me.id);
       } catch {
         // Uden navn viser knappen blot "Tilbage".
       }
@@ -128,17 +131,24 @@ export function OperatorSwitch({
         setError(body.error || "Noget gik galt");
         return;
       }
-      const after = await posFetch(`/api/pos/operator?location_id=${locationId}`, { cache: "no-store" });
-      const data = after.ok ? ((await after.json()) as { current?: Operator; staff?: StaffEntry[] }) : {};
+      // Nulstillingen er gennemført; forælderen skal altid genindlæse, også hvis
+      // opslaget bagefter fejler (fx 403 fordi adgangen ændrer sig med ekspedienten).
+      let data: { current?: Operator; staff?: StaffEntry[] } = {};
+      try {
+        const after = await posFetch(`/api/pos/operator?location_id=${locationId}`, { cache: "no-store" });
+        if (after.ok) data = (await after.json()) as typeof data;
+      } catch {
+        // Falder tilbage til genindlæsning nedenfor.
+      }
       if (data.current) {
         setCurrent(data.current);
         setStaff(data.staff ?? []);
         close();
-        onChanged(data.current);
       } else {
         close();
         await load();
       }
+      onChanged(data.current ?? null);
     } catch {
       setError("Noget gik galt");
     } finally {
@@ -167,7 +177,7 @@ export function OperatorSwitch({
 
   if (!current) return null;
 
-  const isOverridden = loggedInName !== "" ? current.name !== loggedInName : false;
+  const isOverridden = loggedInId !== "" ? current.id !== loggedInId : false;
 
   return (
     <>
@@ -264,7 +274,7 @@ export function OperatorSwitch({
               )}
               {isOverridden && (
                 <button type="button" className={`${btnSecondary} mt-4 w-full`} disabled={busy} onClick={() => void reset()}>
-                  Tilbage til {loggedInName}
+                  {loggedInName ? `Tilbage til ${loggedInName}` : "Tilbage"}
                 </button>
               )}
             </div>
