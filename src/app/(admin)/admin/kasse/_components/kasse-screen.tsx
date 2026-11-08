@@ -32,6 +32,7 @@ import {
 import { withTerminalReceipt } from "@/lib/pos/terminal-receipt";
 import { CartPanel } from "./cart-panel";
 import { OperatorSwitch } from "./operator-switch";
+import { exactSlugMatch, fallbackLocation } from "./default-location";
 import {
   CardDialog,
   CaseDialog,
@@ -188,9 +189,33 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
 
   useEffect(() => {
     if (locations.length === 0) return;
-    const wanted = scope === "vejle" || scope === "slagelse" ? scope : ownSlug;
-    const match = wanted ? locations.find((l) => (l.slug ?? l.name).toLowerCase().includes(wanted)) : null;
-    setLocationId((cur) => (match && cur !== match.id ? match.id : locations.some((l) => l.id === cur) ? cur : (match ?? locations[0]).id));
+    const wanted = scope !== "alle" && scope !== "ingen" ? scope : ownSlug;
+    const match = exactSlugMatch(locations, wanted);
+    if (match) {
+      setLocationId((cur) => (cur !== match.id ? match.id : cur));
+      return;
+    }
+    if (locationId && locations.some((l) => l.id === locationId)) return;
+    // Ejer med "alle": foretræk en butik med åben kasse, ellers Vejle, ellers den første.
+    let cancelled = false;
+    (async () => {
+      const open = new Set<string>();
+      await Promise.all(
+        locations.map(async (l) => {
+          try {
+            const data = await posJson<{ registers: RegisterInfo[] }>(`/api/pos/session?location_id=${l.id}`);
+            if (data.registers.some((r) => r.openSession)) open.add(l.id);
+          } catch {
+            // Butikken springes over.
+          }
+        }),
+      );
+      if (!cancelled) setLocationId((cur) => (locations.some((l) => l.id === cur) ? cur : fallbackLocation(locations, open).id));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationId læses kun som startværdi
   }, [locations, scope, ownSlug]);
 
   const loadRegisters = useCallback(async () => {
