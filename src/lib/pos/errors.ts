@@ -18,6 +18,7 @@ export class PosError extends Error {
 type Entry = { status: number; message: (detail?: string) => string };
 
 const CATALOG: Record<string, Entry> = {
+  store_forbidden: { status: 403, message: () => "Du har ikke adgang til denne butik." },
   register_not_found: { status: 404, message: () => "Kassen findes ikke eller er inaktiv" },
   register_location_mismatch: { status: 400, message: () => "Kassen hører ikke til den valgte lokation" },
   staff_not_found: { status: 403, message: () => "Medarbejderen er ikke aktiv" },

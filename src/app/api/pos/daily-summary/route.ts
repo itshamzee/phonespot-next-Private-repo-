@@ -5,6 +5,7 @@ import { summaryToCsv } from "@/lib/pos/summary-csv";
 import { renderDailySummaryPdf } from "@/lib/pos/summary-pdf";
 import { hasPermission } from "@/lib/auth/permissions";
 import { FORBIDDEN, UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+import { assertLocationAccess, assertOwnerForAllStores, resolveRegister } from "@/lib/pos/pos-context";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get("format") ?? "json";
 
     if (!registerId && !locationId) {
+      assertOwnerForAllStores(actor);
       return NextResponse.json({ error: "register_id eller location_id påkrævet" }, { status: 400 });
     }
     for (const id of [registerId, locationId]) {
@@ -41,6 +43,9 @@ export async function GET(request: NextRequest) {
     if (format !== "json" && !hasPermission(actor, "eksportere")) {
       return FORBIDDEN("Du har ikke tilladelse til at eksportere");
     }
+
+    if (registerId) await resolveRegister(actor, registerId);
+    if (locationId) await assertLocationAccess(actor, locationId);
 
     const summary = await loadDailySummary({ date, registerId, locationId });
     const scope = (summary.registerName ?? "alle-kasser").toLowerCase().replace(/[^a-z0-9]+/g, "-");

@@ -17,12 +17,19 @@ const rpcMock = vi.fn();
 
 function builder(table: string) {
   const b: Record<string, unknown> = {};
+  const eqs: Array<[string, unknown]> = [];
   for (const m of ["select", "eq", "in", "gte", "lt", "is", "order", "limit"]) {
     b[m] = (...args: unknown[]) => {
       calls.push({ table, method: m, args });
+      if (m === "eq") eqs.push([args[0] as string, args[1]]);
       return b;
     };
   }
+  // pos-context reads single rows (register, cash session): first row matching the eq filters.
+  b.maybeSingle = async () => {
+    const rows = (tableData[table] ?? []) as Array<Record<string, unknown>>;
+    return { data: rows.find((r) => eqs.every(([k, v]) => r[k] === v)) ?? null, error: null };
+  };
   b.then = (resolve: (v: unknown) => unknown) => resolve({ data: tableData[table] ?? [], error: null });
   return b;
 }
@@ -34,11 +41,26 @@ import { GET as cashupGET } from "../cashup/route";
 import { POST as sessionPOST } from "../session/route";
 
 const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-const staff = { id: U(1), role: "employee", name: "Test", email: "t@phonespot.dk" };
+// The owner may use every store; the store-scope cases below use employees with a store.
+const staff = { id: U(1), role: "owner", name: "Test", email: "t@phonespot.dk", location_id: null, location_slug: null };
+const vejleStaff = { ...staff, role: "employee", location_id: U(2), location_slug: "vejle" };
+const slagelseStaff = { ...staff, role: "employee", location_id: U(4), location_slug: "slagelse" };
 
 beforeEach(() => {
   calls.length = 0;
   for (const k of Object.keys(tableData)) delete tableData[k];
+  tableData.locations = [
+    { id: U(2), name: "Vejle", slug: "vejle", type: "store" },
+    { id: U(4), name: "Slagelse", slug: "slagelse", type: "store" },
+  ];
+  tableData.registers = [
+    { id: U(3), name: "Kasse 1", location_id: U(2), active: true },
+    { id: U(5), name: "Kasse S1", location_id: U(4), active: true },
+  ];
+  tableData.cash_sessions = [
+    { id: U(9), register_id: U(3) },
+    { id: U(10), register_id: U(5) },
+  ];
   requireStaffMock.mockReset();
   rpcMock.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -188,17 +210,57 @@ describe("POST /api/pos/session", () => {
   });
 
   it("only managers and owners add adjustment rows to a locked session", async () => {
-    requireStaffMock.mockResolvedValue(staff);
+    requireStaffMock.mockResolvedValue({ ...vejleStaff, role: "employee" });
     const denied = await post({ action: "adjust", sessionId: U(9), amountOere: -500, reason: "Optalt forkert" });
     expect(denied.status).toBe(403);
     expect(rpcMock).not.toHaveBeenCalled();
 
-    requireStaffMock.mockResolvedValue({ ...staff, role: "manager" });
+    requireStaffMock.mockResolvedValue({ ...vejleStaff, role: "manager" });
     rpcMock.mockResolvedValue({ data: { adjustment_id: U(77) }, error: null });
     const ok = await post({ action: "adjust", sessionId: U(9), amountOere: -500, reason: "Optalt forkert" });
     expect(ok.status).toBe(200);
     expect(rpcMock).toHaveBeenCalledWith("pos_add_session_adjustment", {
       p_session_id: U(9), p_staff_id: staff.id, p_amount_oere: -500, p_reason: "Optalt forkert",
     });
+  });
+});
+
+describe("store access on cash-up and sessions", () => {
+  const post = (body: unknown) =>
+    sessionPOST(new NextRequest("http://localhost/api/pos/session", { method: "POST", body: JSON.stringify(body) }));
+
+  it("a non-owner cannot read the daily summary of another store's register or location", async () => {
+    requireStaffMock.mockResolvedValue(vejleStaff);
+    const reg = await cashupGET(get(`register_id=${U(5)}&date=2026-10-01`));
+    expect(reg.status).toBe(403);
+    expect((await reg.json()).code).toBe("store_forbidden");
+    expect((await cashupGET(get(`location_id=${U(4)}&date=2026-10-01`))).status).toBe(403);
+    expect((await cashupGET(get(`location_id=${U(2)}&date=2026-10-01`))).status).toBe(200);
+  });
+
+  it("only the owner may ask for a summary without location and register", async () => {
+    requireStaffMock.mockResolvedValue(vejleStaff);
+    expect((await cashupGET(get("date=2026-10-01"))).status).toBe(403);
+  });
+
+  it("a Slagelse clerk cannot open the Vejle register", async () => {
+    requireStaffMock.mockResolvedValue(slagelseStaff);
+    const res = await post({ action: "open", registerId: U(3), openingFloat: 50000 });
+    expect(res.status).toBe(403);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("closing a session follows the access of the session's register", async () => {
+    requireStaffMock.mockResolvedValue({ ...vejleStaff, role: "manager" });
+    const res = await post({ action: "close", sessionId: U(10), countedCash: 1000, cashToBank: 0, expenses: [], countedCard: 0 });
+    expect(res.status).toBe(403);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("an unknown register is 404 and an unknown session is 404", async () => {
+    requireStaffMock.mockResolvedValue(staff);
+    expect((await post({ action: "open", registerId: U(99), openingFloat: 0 })).status).toBe(404);
+    const res = await post({ action: "close", sessionId: U(98), countedCash: 0, cashToBank: 0, expenses: [], countedCard: 0 });
+    expect(res.status).toBe(404);
   });
 });

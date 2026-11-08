@@ -3,6 +3,7 @@ import { findReturnableOrder } from "@/lib/pos/create-return";
 import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
 import { returnBodySchema } from "@/lib/pos/schemas";
+import { resolveRegister } from "@/lib/pos/pos-context";
 import { hasPermission } from "@/lib/auth/permissions";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
  * Return = credit note (kreditnota). The original order is never modified.
  *
  * Body: {
- *   originalOrderId, locationId, registerId,
+ *   originalOrderId, registerId,   // locationId is ignored: the server uses the register's own location
  *   lines: Array<{ orderItemId, quantity, restock }>,   // restock: accessories back on the shelf /
  *                                                       // device back to "listed"; false parks a device as "returned"
  *   refunds: Array<{ type: kontant|kort_terminal|mobilepay|tilgodebevis, amountOere, reference? }>,
@@ -51,10 +52,12 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
+    const register = await resolveRegister(actor, body.registerId);
+
     const result = await createReturnWithTerminal({
       originalOrderId: body.originalOrderId,
-      locationId: body.locationId,
-      registerId: body.registerId,
+      locationId: register.locationId,
+      registerId: register.registerId,
       staffId: actor.id,
       lines: body.lines,
       refunds: body.refunds,

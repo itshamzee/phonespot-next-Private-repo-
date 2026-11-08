@@ -76,7 +76,8 @@ export const saleBodySchema = z
   .object({
     items: z.array(saleItemSchema).min(1, "Tilføj mindst ét produkt"),
     payments: z.array(paymentLineSchema).max(10),
-    locationId: uuid,
+    // Accepted but ignored: the server derives the location from the register.
+    locationId: uuid.optional(),
     registerId: uuid,
     customerId: uuid.optional().nullable(),
     discountAmount: oere.min(0).optional(),
@@ -92,7 +93,8 @@ export type SaleBody = z.infer<typeof saleBodySchema>;
 
 export const returnBodySchema = z.object({
   originalOrderId: uuid,
-  locationId: uuid,
+  // Accepted but ignored: the server derives the location from the register.
+  locationId: uuid.optional(),
   registerId: uuid,
   lines: z
     .array(

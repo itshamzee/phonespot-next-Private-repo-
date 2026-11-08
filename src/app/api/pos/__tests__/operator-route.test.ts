@@ -62,6 +62,14 @@ function query(table: "staff" | "staff_pins" | "locations") {
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({ from: (t: "staff" | "staff_pins" | "locations") => query(t), rpc: rpcMock }),
 }));
+// Butik/kasse-opslaget (src/lib/pos/pos-context.ts) har egne tests; her er det en gennemstilling til Vejle-lokationen.
+vi.mock("@/lib/pos/pos-context", () => ({
+  resolveRegister: async (_actor: unknown, registerId: string) => ({
+    registerId,
+    locationId: "00000000-0000-4000-8000-000000000020",
+    locationSlug: "vejle",
+  }),
+}));
 vi.mock("@/lib/auth/require-staff", async (orig) => ({
   ...(await orig<typeof import("@/lib/auth/require-staff")>()),
   requireStaff: (...a: unknown[]) => requireStaffMock(...a),

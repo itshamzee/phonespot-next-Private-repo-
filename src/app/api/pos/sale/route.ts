@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSaleWithTerminal } from "@/lib/pos/terminal-flow";
 import { saleBodySchema } from "@/lib/pos/schemas";
+import { resolveRegister } from "@/lib/pos/pos-context";
 import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
@@ -16,7 +17,7 @@ import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/li
  *   >,
  *   payments: Array<{ type: kontant|kort_terminal|mobilepay|klarna|faktura|tilgodebevis|gavekort,
  *                     amountOere, reference? }>,    // must sum to the total
- *   locationId, registerId, customerId?,
+ *   registerId, customerId?,   // locationId is ignored: the server uses the register's own location
  *   discountAmount?: number (oere), discountReason?: "Fejl"|"Kundeservice"|"Tilbud"|"Partner"|"Andet",
  *   notes?,
  *   terminalReference?   // only with an integrated terminal: lets the Kasse cancel a pending charge
@@ -41,11 +42,13 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
+    const register = await resolveRegister(actor, body.registerId);
+
     const result = await createSaleWithTerminal({
       items: body.items,
       payments: body.payments,
-      locationId: body.locationId,
-      registerId: body.registerId,
+      locationId: register.locationId,
+      registerId: register.registerId,
       customerId: body.customerId ?? null,
       discountAmount: body.discountAmount ?? 0,
       discountReason: body.discountReason ?? null,

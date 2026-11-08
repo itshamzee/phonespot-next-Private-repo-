@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { assertLocationAccess } from "@/lib/pos/pos-context";
+import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 /**
@@ -10,35 +12,17 @@ import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
  */
 export async function GET(request: NextRequest) {
   try {
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
     const supabase = createServerClient();
-
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.slice(7);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: staff } = await supabase
-      .from("staff")
-      .select("id")
-      .neq("role", "intern") // praktikanter: kun hurtig-optagelsen
-      .eq("auth_id", user.id)
-      .single();
-
-    if (!staff) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
 
     const { searchParams } = new URL(request.url);
     // Strip characters that would change the meaning of the PostgREST .or() filter below.
     const query = searchParams.get("q")?.replace(/[,()*%\\]/g, " ").trim();
     const locationId = searchParams.get("location_id");
+
+    // Stock in the other stores may be looked up (no location_id), but a named location must be the actor's own.
+    if (locationId) await assertLocationAccess(pos.actor, locationId);
 
     if (!query || query.length < 2) {
       return NextResponse.json({ devices: [], skuProducts: [] });
@@ -78,10 +62,6 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (err) {
-    console.error("POS lookup error:", err);
-    return NextResponse.json(
-      { error: "Fejl ved søgning" },
-      { status: 500 }
-    );
+    return posErrorResponse(err, "Fejl ved søgning");
   }
 }

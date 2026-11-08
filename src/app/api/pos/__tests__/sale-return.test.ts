@@ -13,10 +13,30 @@ const requireStaffMock = vi.fn();
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: (...a: unknown[]) => requireStaffMock(...a) }));
 
 const rpcMock = vi.fn();
+// Lets one test put a different clerk (PIN cookie) behind the login; unset = the real requirePosStaff.
+const posOverride = vi.fn<(r: Request) => Promise<unknown> | undefined>();
+vi.mock("@/lib/pos/route-helpers", async (importActual) => {
+  const actual = await importActual<typeof import("@/lib/pos/route-helpers")>();
+  return { ...actual, requirePosStaff: (r: Request) => posOverride(r) ?? actual.requirePosStaff(r) };
+});
 // The only direct read allowed is the 3 for 2 price lookup on sku_products
 // (create-sale recomputes the lagersalg discount from the database). Nothing
 // else may be read or written outside the RPC.
+const dbRows: Record<string, Array<Record<string, unknown>>> = {};
 const fromMock = vi.fn((table: string) => {
+  if (table === "registers" || table === "locations") {
+    // pos-context: the register / location lookup that decides store access.
+    const eqs: Array<[string, unknown]> = [];
+    const b: Record<string, unknown> = {};
+    b.select = () => b;
+    b.eq = (k: string, v: unknown) => (eqs.push([k, v]), b);
+    b.maybeSingle = async () => ({
+      data: (dbRows[table] ?? []).find((r) => eqs.every(([k, v]) => r[k] === v)) ?? null,
+      error: null,
+    });
+    b.then = (resolve: (v: unknown) => unknown) => resolve({ data: dbRows[table] ?? [], error: null });
+    return b;
+  }
   if (table !== "sku_products") throw new Error("from() must not be used by sale/return");
   return {
     select: () => ({
@@ -40,7 +60,10 @@ import { POST as returnPOST } from "../return/route";
 import { DISCOUNT_REASONS } from "@/lib/pos/constants";
 
 const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-const staff = { id: U(1), role: "employee", name: "Test", email: "t@phonespot.dk" };
+// The owner may use every store; the store-scope cases use employees with a store.
+const staff = { id: U(1), role: "owner", name: "Test", email: "t@phonespot.dk", location_id: null, location_slug: null };
+const vejleStaff = { ...staff, id: U(2), role: "employee", location_id: U(20), location_slug: "vejle" };
+const slagelseStaff = { ...staff, id: U(3), role: "employee", location_id: U(30), location_slug: "slagelse" };
 
 function req(path: string, body: unknown) {
   return new NextRequest(`http://localhost${path}`, { method: "POST", body: JSON.stringify(body) });
@@ -69,6 +92,15 @@ beforeEach(() => {
   requireStaffMock.mockReset();
   rpcMock.mockReset();
   fromMock.mockClear();
+  posOverride.mockReset();
+  dbRows.locations = [
+    { id: U(20), name: "Vejle", slug: "vejle", type: "store" },
+    { id: U(30), name: "Slagelse", slug: "slagelse", type: "store" },
+  ];
+  dbRows.registers = [
+    { id: U(21), code: "V1", location_id: U(20), active: true },
+    { id: U(31), code: "S1", location_id: U(30), active: true },
+  ];
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
@@ -141,7 +173,8 @@ describe("POST /api/pos/sale", () => {
     ]);
     expect(JSON.stringify(args)).not.toContain("pi_should_be_ignored");
     // Only the read-only 3 for 2 price lookup touches a table directly.
-    expect(fromMock.mock.calls.map((c) => c[0])).toEqual(["sku_products"]);
+    // Besides the register/location access lookup, only the 3 for 2 price read is allowed.
+    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations")).toEqual(["sku_products"]);
   });
 
   it("surfaces a database business error instead of swallowing it (stock / reservation lock)", async () => {
@@ -231,7 +264,7 @@ describe("POST /api/pos/return", () => {
     expect(args.p_refunds).toEqual([{ type: "kontant", amount_oere: 9000, reference: null }]);
     expect(args.p_reason).toBe("Defekt");
     // No direct table access: the original order is never updated from TypeScript.
-    expect(fromMock).not.toHaveBeenCalled();
+    expect(fromMock.mock.calls.map((c) => c[0]).filter((t) => t !== "registers" && t !== "locations")).toEqual([]);
   });
 
   it("maps return business errors", async () => {
@@ -243,5 +276,75 @@ describe("POST /api/pos/return", () => {
 
     rpcMock.mockResolvedValue({ data: null, error: { message: "pos:no_open_session" } });
     expect((await returnPOST(req("/api/pos/return", returnBody))).status).toBe(409);
+  });
+});
+
+describe("store access: the server decides location and register", () => {
+  const rpcOk = () =>
+    rpcMock.mockResolvedValue({
+      data: { order_id: U(50), order_number: "PSP-1", receipt_number: "V1-000001", total: 90000, vat_total: 0, brugtmoms_total: 0 },
+      error: null,
+    });
+
+  it("a Vejle clerk cannot book a sale on the Slagelse register: 403 and no RPC", async () => {
+    requireStaffMock.mockResolvedValue(vejleStaff);
+    const res = await salePOST(req("/api/pos/sale", { ...saleBody, registerId: U(31) }));
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe("store_forbidden");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("ignores a client locationId and uses the register's own location", async () => {
+    requireStaffMock.mockResolvedValue(vejleStaff);
+    rpcOk();
+    const res = await salePOST(req("/api/pos/sale", { ...saleBody, registerId: U(21), locationId: U(30) }));
+    expect(res.status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_location_id: U(20), p_register_id: U(21) });
+  });
+
+  it("works without a locationId in the body (the old field is optional)", async () => {
+    requireStaffMock.mockResolvedValue(vejleStaff);
+    rpcOk();
+    const { locationId: _omit, ...noLocation } = saleBody;
+    expect((await salePOST(req("/api/pos/sale", noLocation))).status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_location_id: U(20) });
+  });
+
+  it("the acting clerk decides: logged in as Vejle, clerk from the cookie is Slagelse, a V1 sale is 403", async () => {
+    posOverride.mockResolvedValue({ loggedIn: vejleStaff, actor: slagelseStaff });
+    const res = await salePOST(req("/api/pos/sale", saleBody));
+    expect(res.status).toBe(403);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("the acting clerk decides the other way: a Vejle clerk behind a Slagelse login may sell on V1", async () => {
+    posOverride.mockResolvedValue({ loggedIn: slagelseStaff, actor: vejleStaff });
+    rpcOk();
+    expect((await salePOST(req("/api/pos/sale", saleBody))).status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_staff_id: vejleStaff.id, p_location_id: U(20) });
+  });
+
+  it("the owner without a store can book on every register", async () => {
+    requireStaffMock.mockResolvedValue(staff);
+    rpcOk();
+    expect((await salePOST(req("/api/pos/sale", { ...saleBody, registerId: U(21) }))).status).toBe(200);
+    expect((await salePOST(req("/api/pos/sale", { ...saleBody, registerId: U(31) }))).status).toBe(200);
+    expect(rpcMock.mock.calls[0][1]).toMatchObject({ p_location_id: U(20) });
+    expect(rpcMock.mock.calls[1][1]).toMatchObject({ p_location_id: U(30) });
+  });
+
+  it("an unknown or inactive register is 404", async () => {
+    requireStaffMock.mockResolvedValue(staff);
+    expect((await salePOST(req("/api/pos/sale", { ...saleBody, registerId: U(99) }))).status).toBe(404);
+    dbRows.registers[0].active = false;
+    expect((await salePOST(req("/api/pos/sale", saleBody))).status).toBe(404);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("returns follow the same rule", async () => {
+    requireStaffMock.mockResolvedValue({ ...vejleStaff, permissions: ["lave_retur"] });
+    const res = await returnPOST(req("/api/pos/return", { ...returnBody, registerId: U(31) }));
+    expect(res.status).toBe(403);
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 });

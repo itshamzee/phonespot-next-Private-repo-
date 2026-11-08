@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { categoryTiles, listedDeviceTiles, stockedCategories, topSellingTiles } from "@/lib/pos/quick-tiles";
 import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+import { assertLocationAccess } from "@/lib/pos/pos-context";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     if (!locationId || !uuidSchema.safeParse(locationId).success) {
       return NextResponse.json({ error: "location_id påkrævet" }, { status: 400 });
     }
+    await assertLocationAccess(pos.actor, locationId);
     if (sp.get("kind") === "devices") {
       return NextResponse.json({ devices: await listedDeviceTiles(locationId) });
     }

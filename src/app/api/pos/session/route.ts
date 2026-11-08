@@ -6,6 +6,7 @@ import {
   openCashSession,
   recentSessions,
 } from "@/lib/pos/sessions";
+import { assertLocationAccess, assertSessionAccess, resolveRegister } from "@/lib/pos/pos-context";
 import { hasPermission } from "@/lib/auth/permissions";
 import { sessionActionSchema, uuidSchema } from "@/lib/pos/schemas";
 import { validateCashClose } from "@/lib/pos/cash-session";
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const pos = await requirePosStaff(request);
     if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get("location_id");
@@ -30,6 +32,9 @@ export async function GET(request: NextRequest) {
     if (registerId && !uuidSchema.safeParse(registerId).success) {
       return NextResponse.json({ error: "Ugyldigt register_id" }, { status: 400 });
     }
+
+    await assertLocationAccess(actor, locationId);
+    if (registerId) await resolveRegister(actor, registerId);
 
     const registers = await listRegisters(locationId);
     const history = registerId ? await recentSessions(registerId) : [];
@@ -56,6 +61,7 @@ export async function POST(request: NextRequest) {
     const body = parsed.data;
 
     if (body.action === "open") {
+      await resolveRegister(actor, body.registerId);
       const res = await openCashSession({
         registerId: body.registerId,
         staffId: actor.id,
@@ -66,6 +72,7 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "close") {
       if (!hasPermission(actor, "lukke_dagen")) return FORBIDDEN("Du har ikke tilladelse til at lukke dagen");
+      await assertSessionAccess(actor, body.sessionId);
       const check = validateCashClose({
         countedCash: body.countedCash,
         cashToBank: body.cashToBank,
@@ -98,6 +105,7 @@ export async function POST(request: NextRequest) {
     if (!["manager", "owner"].includes(actor.role)) {
       return FORBIDDEN("Kun managere og ejere kan justere en lukket kassesession");
     }
+    await assertSessionAccess(actor, body.sessionId);
     const res = await addSessionAdjustment({
       sessionId: body.sessionId,
       staffId: actor.id,

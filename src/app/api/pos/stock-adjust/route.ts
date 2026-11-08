@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adjustStock } from "@/lib/pos/sessions";
 import { stockAdjustSchema } from "@/lib/pos/schemas";
+import { assertLocationAccess } from "@/lib/pos/pos-context";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
     const parsed = await parseBody(request, stockAdjustSchema);
     if (!parsed.ok) return parsed.response;
     const b = parsed.data;
+
+    await assertLocationAccess(actor, b.locationId);
 
     const res = await adjustStock({
       productId: b.productId,
