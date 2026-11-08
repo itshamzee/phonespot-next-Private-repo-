@@ -127,7 +127,7 @@ describe("OperatorSwitch", () => {
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
   });
 
-  it("sammenligner på id: samme navn, andet id viser Tilbage til", async () => {
+  it("sammenligner pÃ¥ id: samme navn, andet id viser Tilbage til", async () => {
     net.fetch.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === "/api/admin/me") return json(200, { id: LISE, name: "Lise" });
       if (url.startsWith("/api/pos/operator") && (!init?.method || init.method === "GET")) {
@@ -140,7 +140,7 @@ describe("OperatorSwitch", () => {
     expect(await screen.findByRole("button", { name: "Tilbage til Lise" })).toBeTruthy();
   });
 
-  it("viser Tilbage når den loggede ind brugers navn er ukendt", async () => {
+  it("viser Tilbage nÃ¥r den loggede ind brugers navn er ukendt", async () => {
     net.fetch.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === "/api/admin/me") return json(200, { id: LISE });
       if (url.startsWith("/api/pos/operator") && (!init?.method || init.method === "GET")) {

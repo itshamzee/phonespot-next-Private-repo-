@@ -131,14 +131,14 @@ export function OperatorSwitch({
         setError(body.error || "Noget gik galt");
         return;
       }
-      // Nulstillingen er gennemført; forælderen skal altid genindlæse, også hvis
-      // opslaget bagefter fejler (fx 403 fordi adgangen ændrer sig med ekspedienten).
+      // Nulstillingen er gennemfÃ¸rt; forÃ¦lderen skal altid genindlÃ¦se, ogsÃ¥ hvis
+      // opslaget bagefter fejler (fx 403 fordi adgangen Ã¦ndrer sig med ekspedienten).
       let data: { current?: Operator; staff?: StaffEntry[] } = {};
       try {
         const after = await posFetch(`/api/pos/operator?location_id=${locationId}`, { cache: "no-store" });
         if (after.ok) data = (await after.json()) as typeof data;
       } catch {
-        // Falder tilbage til genindlæsning nedenfor.
+        // Falder tilbage til genindlÃ¦sning nedenfor.
       }
       if (data.current) {
         setCurrent(data.current);

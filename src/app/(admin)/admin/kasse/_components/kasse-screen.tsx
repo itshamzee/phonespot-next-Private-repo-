@@ -196,7 +196,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
       return;
     }
     if (locationId && locations.some((l) => l.id === locationId)) return;
-    // Ejer med "alle": foretræk en butik med åben kasse, ellers Vejle, ellers den første.
+    // Ejer med "alle": foretrÃ¦k en butik med Ã¥ben kasse, ellers Vejle, ellers den fÃ¸rste.
     let cancelled = false;
     (async () => {
       const open = new Set<string>();
@@ -215,7 +215,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationId læses kun som startværdi
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationId lÃ¦ses kun som startvÃ¦rdi
   }, [locations, scope, ownSlug]);
 
   const loadRegisters = useCallback(async () => {
