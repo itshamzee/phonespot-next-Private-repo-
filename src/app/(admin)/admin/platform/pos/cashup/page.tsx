@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatOere } from "@/lib/cart/utils";
-import { posJson } from "@/lib/pos/client";
+import { posFetch, posJson } from "@/lib/pos/client";
 import { PAYMENT_LABELS } from "@/lib/pos/constants";
 import { copenhagenDateString } from "@/lib/pos/copenhagen";
 import type { DailySummary } from "@/lib/pos/daily-summary";
@@ -32,6 +32,24 @@ function CashupPageInner() {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [canExport, setCanExport] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    posFetch("/api/admin/me", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) {
+          if (!cancelled) setCanExport(false);
+          return;
+        }
+        const me = (await res.json()) as { permissions?: string[] };
+        if (!cancelled) setCanExport(Boolean(me.permissions?.includes("eksportere")));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!locationId) return;
@@ -104,12 +122,20 @@ function CashupPageInner() {
             onChange={(e) => setDate(e.target.value)}
             className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm text-charcoal"
           />
-          <a href={`${downloadBase}&format=pdf`} className="rounded-xl bg-charcoal px-4 py-2.5 text-sm font-semibold text-white">
-            Hent PDF
-          </a>
-          <a href={`${downloadBase}&format=csv`} className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm font-semibold text-charcoal">
-            Hent CSV (Dinero)
-          </a>
+          {canExport === null ? null : canExport ? (
+            <>
+              <a href={`${downloadBase}&format=pdf`} className="rounded-xl bg-charcoal px-4 py-2.5 text-sm font-semibold text-white">
+                Hent PDF
+              </a>
+              <a href={`${downloadBase}&format=csv`} className="rounded-xl border border-black/[0.06] bg-white px-4 py-2.5 text-sm font-semibold text-charcoal">
+                Hent CSV (Dinero)
+              </a>
+            </>
+          ) : (
+            <span title="Kræver tilladelsen Eksportere" className="text-sm text-charcoal/40">
+              Eksport kræver tilladelsen Eksportere
+            </span>
+          )}
         </div>
       </div>
 

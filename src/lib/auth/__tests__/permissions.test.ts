@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hasPermission, parsePermissions } from "../permissions";
+import { ENFORCED_PERMISSIONS, hasPermission, parsePermissions } from "../permissions";
 
 describe("hasPermission", () => {
   it("owner har altid tilladelse", () => {
@@ -20,6 +20,13 @@ describe("hasPermission", () => {
   it("intern har ingen standard, men kan få ekstra", () => {
     expect(hasPermission({ role: "intern" }, "lave_retur")).toBe(false);
     expect(hasPermission({ role: "intern", permissions: ["lave_retur"] }, "lave_retur")).toBe(true);
+  });
+  it("manager ser indkøbspris som standard, employee gør ikke (som canSeeCost)", () => {
+    expect(hasPermission({ role: "manager" }, "se_indkoebspris")).toBe(true);
+    expect(hasPermission({ role: "employee" }, "se_indkoebspris")).toBe(false);
+  });
+  it("kun lave_retur, lukke_dagen og eksportere er håndhævet", () => {
+    expect([...ENFORCED_PERMISSIONS].sort()).toEqual(["eksportere", "lave_retur", "lukke_dagen"]);
   });
   it("ukendt rolle har ingen standard", () => {
     expect(hasPermission({ role: "gaest" }, "lave_retur")).toBe(false);

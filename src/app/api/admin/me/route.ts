@@ -6,6 +6,7 @@ import { attemptPin, isPinLocked, lockMessageFor, type PinRow } from "@/lib/auth
 import { verifyStaffPassword } from "@/lib/auth/verify-password";
 import { parseBody } from "@/lib/pos/route-helpers";
 import { createServerClient } from "@/lib/supabase/client";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { isOwner, staffStoreSlug } from "@/lib/auth/store-scope";
 import { legalEntityForLocation } from "@/lib/legal-entity-server";
 import { requireStaffScope, unauthorizedResponse } from "@/lib/auth/store-scope-server";
@@ -38,6 +39,8 @@ export async function GET(request: Request) {
       isOwner: isOwner(staff),
       ownSlug: staffStoreSlug(staff),
       scope,
+      /** Gældende tilladelser (rollestandard + individuelle; ejeren har alle). */
+      permissions: PERMISSIONS.filter((p) => hasPermission(staff, p)),
       hasPin: Boolean(pin),
       pinLocked: pin ? isPinLocked(pin, Date.now()) : false,
       /** Legal entity of the staff's own location (Fixon when none, e.g. the owner). */

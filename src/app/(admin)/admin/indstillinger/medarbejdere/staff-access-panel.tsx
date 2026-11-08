@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Field, Input, Tag } from "@/components/admin/ui";
-import { PERMISSIONS, PERMISSION_LABELS, ROLE_DEFAULTS, type Permission } from "@/lib/auth/permissions";
+import { ENFORCED_PERMISSIONS, PERMISSIONS, PERMISSION_LABELS, ROLE_DEFAULTS, type Permission } from "@/lib/auth/permissions";
 import { isValidPin } from "@/lib/auth/pin";
 
 export type AccessTarget = {
@@ -71,6 +71,9 @@ export function StaffAccessPanel({
                   />
                   <span>{PERMISSION_LABELS[p]}</span>
                   {byRole && <span className="text-[12px] text-gray">Følger rollen</span>}
+                  {!ENFORCED_PERMISSIONS.includes(p) && !(byRole && p === "se_indkoebspris") && (
+                    <span className="text-[12px] text-gray">Træder i kraft senere</span>
+                  )}
                 </label>
               </li>
             );
