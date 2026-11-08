@@ -111,6 +111,7 @@ const cookieFor = (staffId: string, loggedInId = U(1), secret = SECRET) =>
   `${OPERATOR_COOKIE}=${signOperator(staffId, loggedInId, Date.now(), secret)}`;
 
 beforeEach(() => {
+  vi.restoreAllMocks();
   process.env.OPERATOR_COOKIE_SECRET = SECRET;
   resetLocationCache();
   rpcMock.mockReset();
@@ -228,20 +229,40 @@ describe("POST /api/pos/operator", () => {
     }
   });
 
-  it("refuses a staff member from another store with the same 401, even with the right pin, and counts it", async () => {
+  it("refuses a staff member from another store with the same 401, even with the right pin, without counting", async () => {
     const res = await POST(postReq({ staffId: U(4), pin: "1234" }));
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: "Forkert pinkode" });
     expect(res.cookies.get(OPERATOR_COOKIE)).toBeUndefined();
-    expect(db.staff_pins.find((r) => r.staff_id === U(4))!.failed_attempts).toBe(1);
+    expect(db.staff_pins.find((r) => r.staff_id === U(4))!.failed_attempts).toBe(0);
   });
 
-  it("refuses a location the logged-in user may not use with the same 401, and counts it", async () => {
+  it("refuses a location the logged-in user may not use with the same 401, without counting", async () => {
     requireStaffMock.mockResolvedValue(slagelseLogin);
     const res = await right();
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: "Forkert pinkode" });
-    expect(pinRow().failed_attempts).toBe(1);
+    expect(pinRow().failed_attempts).toBe(0);
+  });
+
+  it("cannot be used to grief: 20 out-of-scope attempts leave the target's counter alone and the pin still works", async () => {
+    db.staff_pins.push({ staff_id: U(3), pin_hash: hashPin("9999"), failed_attempts: 0, locked_until: null });
+    const before = JSON.stringify(db.staff_pins);
+    for (let i = 0; i < 10; i++) {
+      // Vejle-leder mod en Slagelse-medarbejder (target uden for butikken) ...
+      expect((await POST(postReq({ staffId: U(4), pin: "0000" }))).status).toBe(401);
+    }
+    requireStaffMock.mockResolvedValue(slagelseLogin);
+    for (let i = 0; i < 10; i++) {
+      // ... og Slagelse-leder mod ejeren i Vejle (butik uden adgang).
+      expect((await POST(postReq({ staffId: U(3), pin: "0000" }))).status).toBe(401);
+    }
+    expect(JSON.stringify(db.staff_pins)).toBe(before);
+    expect(console.warn).not.toHaveBeenCalled();
+
+    requireStaffMock.mockResolvedValue(ownerLogin);
+    expect((await POST(postReq({ staffId: U(3), pin: "9999" }))).status).toBe(200);
+    expect((await POST(postReq({ staffId: U(4), pin: "1234", locationId: OTHER_LOC }))).status).toBe(200);
   });
 
   it("lets the owner switch in at any store, and an owner can be switched in anywhere", async () => {

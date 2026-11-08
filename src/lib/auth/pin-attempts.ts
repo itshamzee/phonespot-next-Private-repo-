@@ -62,14 +62,13 @@ export function isPinLocked(row: Pick<PinRow, "failed_attempts" | "locked_until"
 }
 
 /**
- * Prøver `pin` for medarbejderen. `pin = null` registrerer et forkert forsøg
- * uden at prøve koden (bruges når forespørgslen alligevel skal afvises).
+ * Prøver `pin` for medarbejderen og tæller et forkert forsøg.
  * `context` kommer med i loggen, når en lås sættes.
  */
 export async function attemptPin(
   supabase: Supabase,
   staffId: string,
-  pin: string | null,
+  pin: string,
   context: { location: string | null },
 ): Promise<PinAttemptResult> {
   for (let attempt = 0; attempt < CAS_RETRIES; attempt++) {
@@ -85,7 +84,7 @@ export async function attemptPin(
     const now = Date.now();
     if (isPinLocked(row, now)) return { kind: "locked", message: lockMessageFor(row.failed_attempts) };
 
-    const ok = pin !== null && verifyPin(pin, row.pin_hash);
+    const ok = verifyPin(pin, row.pin_hash);
     const next = ok ? 0 : row.failed_attempts + 1;
     const lockedUntil = ok ? null : lockUntilFor(next, now);
     const { data: updated, error: updateError } = await supabase

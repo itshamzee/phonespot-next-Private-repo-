@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { hashPin, isValidPin } from "@/lib/auth/pin";
-import { attemptPin } from "@/lib/auth/pin-attempts";
+import { attemptPin, isPinLocked, lockMessageFor, type PinRow } from "@/lib/auth/pin-attempts";
+import { verifyStaffPassword } from "@/lib/auth/verify-password";
 import { parseBody } from "@/lib/pos/route-helpers";
 import { createServerClient } from "@/lib/supabase/client";
 import { isOwner, staffStoreSlug } from "@/lib/auth/store-scope";
@@ -36,13 +37,22 @@ export async function GET(request: Request) {
   );
 }
 
-const pinBodySchema = z.object({ pin: z.string(), currentPin: z.string().optional() });
+const pinBodySchema = z.object({
+  pin: z.string().max(100),
+  currentPin: z.string().max(100).optional(),
+  password: z.string().max(100).optional(),
+});
 
 /**
- * PATCH /api/admin/me { pin, currentPin? }: medarbejderen sætter sin egen
- * pinkode til ekspedientskift i kassen. Har medarbejderen allerede en pinkode,
- * kræves currentPin; et forkert currentPin tæller som et forkert forsøg med de
- * samme låseregler som i kassen. En ny pinkode nulstiller tæller og lås.
+ * PATCH /api/admin/me { pin, currentPin?, password? }: medarbejderen sætter sin
+ * egen pinkode til ekspedientskift i kassen.
+ *  - Ingen pinkode endnu: pin alene.
+ *  - Pinkode findes og er ikke låst: currentPin kræves; et forkert currentPin
+ *    tæller som et forkert forsøg med de samme låseregler som i kassen.
+ *  - Pinkoden er låst (alle trin, også den permanente): ny pinkode med
+ *    kontoens adgangskode (password) i stedet; forkert adgangskode tæller ikke
+ *    på pinkoden. currentPin alene giver 423.
+ * En ny pinkode nulstiller tæller og lås.
  */
 export async function PATCH(request: Request) {
   const staff = await requireStaff(request);
@@ -50,30 +60,34 @@ export async function PATCH(request: Request) {
 
   const parsed = await parseBody(request, pinBodySchema);
   if (!parsed.ok) return parsed.response;
-  const { pin, currentPin } = parsed.data;
+  const { pin, currentPin, password } = parsed.data;
   if (!isValidPin(pin)) {
     return NextResponse.json({ error: "Pinkoden skal være 4 til 6 cifre" }, { status: 400 });
   }
 
   const supabase = createServerClient();
   try {
-    if (currentPin === undefined || currentPin === "") {
-      const { data: existing, error } = await supabase
-        .from("staff_pins")
-        .select("staff_id")
-        .eq("staff_id", staff.id)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      if (existing) {
-        return NextResponse.json({ error: "Skriv din nuværende pinkode" }, { status: 400 });
+    const { data: existing, error: lookupError } = await supabase
+      .from("staff_pins")
+      .select("failed_attempts, locked_until")
+      .eq("staff_id", staff.id)
+      .maybeSingle();
+    if (lookupError) throw new Error(lookupError.message);
+    const row = existing as Pick<PinRow, "failed_attempts" | "locked_until"> | null;
+
+    if (row && isPinLocked(row, Date.now())) {
+      if (!password) return NextResponse.json({ error: lockMessageFor(row.failed_attempts) }, { status: 423 });
+      if (!(await verifyStaffPassword(staff.email, password))) {
+        return NextResponse.json({ error: "Forkert adgangskode" }, { status: 401 });
       }
-    } else {
+    } else if (row) {
+      if (!currentPin) return NextResponse.json({ error: "Skriv din nuværende pinkode" }, { status: 400 });
       const result = await attemptPin(supabase, staff.id, currentPin, { location: staff.location_id });
       if (result.kind === "locked") return NextResponse.json({ error: result.message }, { status: 423 });
       if (result.kind === "wrong") {
         return NextResponse.json({ error: "Forkert nuværende pinkode" }, { status: 401 });
       }
-      // "ok", eller "no_pin" (ingen pinkode endnu): den nye må sættes.
+      // "ok", eller "no_pin" (rækken forsvandt imellem): den nye må sættes.
     }
 
     const { error } = await supabase.from("staff_pins").upsert(

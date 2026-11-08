@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
  * Skifter ekspedient. Låsning efter 5, 10 og 15 forkerte forsøg (pin-attempts.ts).
  * Ukendt, inaktiv, pinkodeløs medarbejder, en medarbejder fra en anden butik,
  * eller en butik den indloggede ikke har adgang til: samme 401 som en forkert
- * kode. Forsøget tælles kun, når medarbejderen findes og har en pinkode.
+ * kode. Kun forsøg inden for scope, hvor koden faktisk prøves, tælles.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -119,11 +119,9 @@ export async function POST(request: NextRequest) {
     const inScope =
       (await mayUseLocation(loggedIn, locationId)) &&
       (target.role === "owner" || target.location_id === locationId);
-    if (!inScope) {
-      // Afvises altid, men tæller som et forkert forsøg, så scopet ikke kan bruges til at gætte uden låsning.
-      await attemptPin(supabase, staffId, null, { location: locationId });
-      return WRONG_PIN();
-    }
+    // Uden for scope afvises uden at røre tælleren: ellers kunne enhver
+    // medarbejder låse andres (også ejerens) pinkode med forsøg fra en anden butik.
+    if (!inScope) return WRONG_PIN();
 
     const result = await attemptPin(supabase, staffId, pin, { location: locationId });
     if (result.kind === "locked") return LOCKED(result.message);
