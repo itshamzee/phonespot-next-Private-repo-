@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { posFetch, posJson } from "@/lib/pos/client";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
@@ -32,6 +31,7 @@ import {
 } from "@/lib/pos/kasse-logic";
 import { withTerminalReceipt } from "@/lib/pos/terminal-receipt";
 import { CartPanel } from "./cart-panel";
+import { OperatorSwitch } from "./operator-switch";
 import {
   CardDialog,
   CaseDialog,
@@ -117,7 +117,6 @@ function shortStoreName(name: string) {
 
 export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: PaymentTerminalKind } = {}) {
   const integratedTerminal = isIntegratedTerminal(terminalKind);
-  const supabase = useMemo(() => createBrowserClient(), []);
   const router = useRouter();
   const params = useSearchParams();
   const { scope, ownSlug } = useStoreScope();
@@ -174,24 +173,18 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
 
   /* ----- Location, registers ----- */
 
+  const loadLocations = useCallback(async () => {
+    try {
+      const data = await posJson<{ locations: Array<{ id: string; name: string; slug: string | null }> }>("/api/pos/locations");
+      setLocations([...data.locations].sort((a, b) => a.name.localeCompare(b.name, "da")));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kunne ikke hente butikker");
+    }
+  }, []);
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      let rows: Loc[] = [];
-      const withSlug = await supabase.from("locations").select("id, name, slug").eq("type", "store");
-      if (!withSlug.error) {
-        rows = (withSlug.data ?? []) as Loc[];
-      } else {
-        // locations.slug comes with migration 20261003100000; fall back to names before it is applied.
-        const legacy = await supabase.from("locations").select("id, name").eq("type", "store");
-        rows = ((legacy.data ?? []) as Array<{ id: string; name: string }>).map((l) => ({ ...l, slug: null }));
-      }
-      if (!cancelled) setLocations(rows.sort((a, b) => a.name.localeCompare(b.name, "da")));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase]);
+    void loadLocations();
+  }, [loadLocations]);
 
   useEffect(() => {
     if (locations.length === 0) return;
@@ -215,6 +208,11 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   useEffect(() => {
     void loadRegisters();
   }, [loadRegisters]);
+
+  // Ekspedienten er skiftet: tilladte butikker og kasser kan have ændret sig.
+  const onOperatorChanged = useCallback(async () => {
+    await Promise.all([loadLocations(), loadRegisters()]);
+  }, [loadLocations, loadRegisters]);
 
   async function openRegister() {
     if (!register) return;
@@ -743,6 +741,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
             {openSession.openedByName ? ` af ${openSession.openedByName}` : ""} · startbeholdning {fmtKr(openSession.openingFloat)}
           </span>
         )}
+        <OperatorSwitch locationId={locationId} onChanged={() => void onOperatorChanged()} />
         <div className="flex-1" />
         <Link href="/admin/kasse/salg" className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
           Salgshistorik
