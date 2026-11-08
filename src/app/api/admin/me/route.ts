@@ -21,6 +21,14 @@ export async function GET(request: Request) {
   const { staff, scope } = ctx;
   const legalEntity = await legalEntityForLocation(staff.location_id);
 
+  // Hash og tæller forlader aldrig serveren; profilsiden får kun to flag.
+  const { data: pinRow } = await createServerClient()
+    .from("staff_pins")
+    .select("failed_attempts, locked_until")
+    .eq("staff_id", staff.id)
+    .maybeSingle();
+  const pin = pinRow as Pick<PinRow, "failed_attempts" | "locked_until"> | null;
+
   return NextResponse.json(
     {
       id: staff.id,
@@ -30,6 +38,8 @@ export async function GET(request: Request) {
       isOwner: isOwner(staff),
       ownSlug: staffStoreSlug(staff),
       scope,
+      hasPin: Boolean(pin),
+      pinLocked: pin ? isPinLocked(pin, Date.now()) : false,
       /** Legal entity of the staff's own location (Fixon when none, e.g. the owner). */
       legalEntity,
     },

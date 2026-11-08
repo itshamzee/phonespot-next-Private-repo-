@@ -155,7 +155,86 @@ describe("PATCH /api/admin/staff (rolle, aktiv, kode)", () => {
   });
 });
 
+describe("PATCH/GET /api/admin/staff (tilladelser og pinkode)", () => {
+  it("rejects a malformed pin and leaves staff_pins untouched", async () => {
+    state.staff = OWNER;
+    const res = await PATCH(req("PATCH", { id: "n", pin: "12" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Pinkoden skal være 4–6 cifre");
+    expect((await PATCH(req("PATCH", { id: "n", pin: 4821 }))).status).toBe(400);
+    expect(db.tables.staff_pins ?? []).toHaveLength(0);
+  });
+
+  it("stores a scrypt hash, resets the lock, and GET shows hasPin without the hash", async () => {
+    state.staff = OWNER;
+    db.tables.staff_pins = [
+      { staff_id: "n", pin_hash: "gammel", failed_attempts: 15, locked_until: "infinity", updated_at: "x" },
+    ];
+    let json = await (await GET(req("GET"))).json();
+    expect(json.staff.find((s: { id: string }) => s.id === "n")).toMatchObject({ hasPin: true, pinLocked: true });
+
+    expect((await PATCH(req("PATCH", { id: "n", pin: "4821" }))).status).toBe(200);
+    const row = db.tables.staff_pins.find((p) => p.staff_id === "n")!;
+    expect(String(row.pin_hash)).toMatch(/^scrypt\$/);
+    expect(row).toMatchObject({ failed_attempts: 0, locked_until: null });
+
+    json = await (await GET(req("GET"))).json();
+    const n = json.staff.find((s: { id: string }) => s.id === "n");
+    expect(n).toMatchObject({ hasPin: true, pinLocked: false });
+    expect(JSON.stringify(json)).not.toMatch(/pin_hash|scrypt/);
+    expect(json.staff.find((s: { id: string }) => s.id === "v")).toMatchObject({ hasPin: false, pinLocked: false });
+  });
+
+  it("pin: null removes the pin", async () => {
+    state.staff = OWNER;
+    expect((await PATCH(req("PATCH", { id: "n", pin: "4821" }))).status).toBe(200);
+    expect((await PATCH(req("PATCH", { id: "n", pin: null }))).status).toBe(200);
+    expect(db.tables.staff_pins).toHaveLength(0);
+  });
+
+  it("saves explicit permissions and lists them; unknown ones give 400", async () => {
+    state.staff = OWNER;
+    expect((await PATCH(req("PATCH", { id: "n", permissions: ["eksportere", "flyve"] }))).status).toBe(400);
+    expect((await PATCH(req("PATCH", { id: "n", permissions: "eksportere" }))).status).toBe(400);
+    expect(db.tables.staff.find((s) => s.id === "n")?.permissions).toBeUndefined();
+    expect((await PATCH(req("PATCH", { id: "n", permissions: ["eksportere", "eksportere", "rette_priser"] }))).status).toBe(200);
+    expect(db.tables.staff.find((s) => s.id === "n")?.permissions).toEqual(["eksportere", "rette_priser"]);
+    const json = await (await GET(req("GET"))).json();
+    expect(json.staff.find((s: { id: string }) => s.id === "n").permissions).toEqual(["eksportere", "rette_priser"]);
+  });
+
+  it("non-owners get 403 and nothing is written; the owner's own pin is not set here", async () => {
+    state.staff = VEJLE;
+    expect((await PATCH(req("PATCH", { id: "n", pin: "4821", permissions: ["eksportere"] }))).status).toBe(403);
+    expect(db.tables.staff_pins ?? []).toHaveLength(0);
+    state.staff = OWNER;
+    expect((await PATCH(req("PATCH", { id: "o", pin: "4821" }))).status).toBe(400);
+  });
+
+  it("accepts all five stores for POST and PATCH", async () => {
+    state.staff = OWNER;
+    db.tables.locations.push(
+      { id: "L-g", name: "Vejle Gågade", type: "store", slug: "vejle-gaagade" },
+      { id: "L-e", name: "Esbjerg", type: "store", slug: "esbjerg" },
+    );
+    resetLocationCache();
+    expect((await PATCH(req("PATCH", { id: "n", location_slug: "esbjerg" }))).status).toBe(200);
+    expect(db.tables.staff.find((s) => s.id === "n")?.location_id).toBe("L-e");
+    expect((await POST(req("POST", { ...NEW, location_slug: "vejle-gaagade" }))).status).toBe(201);
+  });
+});
+
 describe("GET /api/admin/me", () => {
+  it("exposes hasPin and pinLocked, never the hash", async () => {
+    state.staff = VEJLE;
+    let json = await (await getMe(req("GET"))).json();
+    expect(json).toMatchObject({ hasPin: false, pinLocked: false });
+    db.tables.staff_pins = [{ staff_id: "v", pin_hash: "scrypt$x", failed_attempts: 5, locked_until: "2999-01-01T00:00:00Z" }];
+    json = await (await getMe(req("GET"))).json();
+    expect(json).toMatchObject({ hasPin: true, pinLocked: true });
+    expect(JSON.stringify(json)).not.toMatch(/scrypt/);
+  });
+
   it("owner: the scope follows the cookie", async () => {
     state.staff = OWNER;
     const json = await (await getMe(req("GET", undefined, "ps_store=vejle"))).json();

@@ -1,7 +1,7 @@
 /**
  * Minimal in-memory stand-in for the Supabase query builder, enough to test
  * routes that filter by store (eq / is / in / neq / ilike / order / limit /
- * range, plus update / insert). `or()` is a pass-through on purpose: tests of
+ * range, plus update / insert / upsert). `or()` is a pass-through on purpose: tests of
  * scope enforcement assert on the filters the route applies, not on PostgREST
  * text search.
  */
@@ -17,7 +17,8 @@ export type FakeDb = {
 
 class FakeQuery implements PromiseLike<{ data: unknown; error: null; count: number | null }> {
   private filters: Filter[] = [];
-  private op: "select" | "update" | "insert" | "delete" = "select";
+  private op: "select" | "update" | "insert" | "delete" | "upsert" = "select";
+  private conflictKey: string | null = null;
   private payload: Row | Row[] | null = null;
   private wantsRows = true;
   private countMode = false;
@@ -50,6 +51,13 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null; count: numb
   insert(payload: Row | Row[]) {
     this.op = "insert";
     this.payload = payload;
+    this.wantsRows = false;
+    return this;
+  }
+  upsert(payload: Row, opts?: { onConflict?: string }) {
+    this.op = "upsert";
+    this.payload = payload;
+    this.conflictKey = opts?.onConflict ?? "id";
     this.wantsRows = false;
     return this;
   }
@@ -141,6 +149,14 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: null; count: numb
       const created = incoming.map((r, i) => ({ id: `${this.table}-${rows.length + i + 1}`, ...r }));
       rows.push(...created);
       return { data: created, count: created.length };
+    }
+    if (this.op === "upsert") {
+      const incoming = this.payload as Row;
+      const key = this.conflictKey as string;
+      const existing = rows.find((r) => r[key] === incoming[key]);
+      if (existing) Object.assign(existing, incoming);
+      else rows.push({ ...incoming });
+      return { data: [existing ?? incoming], count: 1 };
     }
     const matched = rows.filter((r) => this.filters.every((f) => f(r)));
     if (this.op === "update") {
