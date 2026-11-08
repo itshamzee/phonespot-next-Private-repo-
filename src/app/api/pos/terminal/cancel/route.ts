@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { terminalCancelSchema } from "@/lib/pos/schemas";
 import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { terminalForLocation } from "@/lib/pos/terminal-flow";
+import { assertLocationAccess } from "@/lib/pos/pos-context";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     const parsed = await parseBody(request, terminalCancelSchema);
     if (!parsed.ok) return parsed.response;
 
+    await assertLocationAccess(pos.actor, parsed.data.locationId);
     const { terminal, locationSlug } = await terminalForLocation(parsed.data.locationId);
     if (terminal.kind === "manual" || !terminal.cancel) {
       return NextResponse.json({ status: "cancelled" });

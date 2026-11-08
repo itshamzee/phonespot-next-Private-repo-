@@ -21,6 +21,7 @@ vi.mock("@/lib/pos/pos-context", () => ({
     locationId: "00000000-0000-4000-8000-000000000020",
     locationSlug: "vejle",
   }),
+  assertLocationAccess: async () => "vejle",
 }));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: (...a: unknown[]) => requireStaffMock(...a) }));
 
