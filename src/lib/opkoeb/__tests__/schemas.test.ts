@@ -22,10 +22,15 @@ describe("receiptDraftSchema", () => {
     expect(r.success).toBe(true);
   });
   it("rejects CPR-like id_number", () => {
-    for (const v of ["010190-1234", "0101901234"]) {
+    for (const v of ["010190-1234", "0101901234", "010190 1234", "010190–1234", " 0101 90 12 34 ", "010190 - 1234"]) {
       const r = receiptDraftSchema.safeParse({ seller_type: "private", id_number: v, items: [item] });
       expect(r.success).toBe(false);
       expect(JSON.stringify(r.error?.issues)).toContain("Skriv ikke CPR-nummer");
+    }
+  });
+  it("keeps ordinary ID numbers", () => {
+    for (const v of ["AB123456", "123456789", "12345678"]) {
+      expect(receiptDraftSchema.safeParse({ seller_type: "private", id_number: v, items: [item] }).success).toBe(true);
     }
   });
   it("rejects sundhedskort", () => {

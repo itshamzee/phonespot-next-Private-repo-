@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ID_TYPES, INVOICE_TYPES, PAYOUT_METHODS } from "./rules";
+import { ID_TYPES, INVOICE_TYPES, PAYOUT_METHODS, looksLikeCpr } from "./rules";
 
 /**
  * Kladder må være ufuldstændige; fuldstændighed er confirmBlockers' ansvar.
@@ -36,7 +36,7 @@ export const receiptDraftSchema = z.object({
   lock_checks_confirmed: z.boolean().optional(),
   id_type: z.enum(ID_TYPES).nullish(),
   id_number: text(50)
-    .refine((v) => !/^\d{6}-?\d{4}$/.test(v), "Skriv ikke CPR-nummer")
+    .refine((v) => !looksLikeCpr(v), "Skriv ikke CPR-nummer")
     .nullish(),
   id_expiry: isoDate.nullish(),
   payout_method: z.enum(PAYOUT_METHODS).nullish(),

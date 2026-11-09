@@ -93,6 +93,15 @@ export function normalizeIdentifier(
   return null;
 }
 
+/**
+ * Ligner værdien et CPR-nummer? Mellemrum og bindestreger (også tankestreger) fjernes
+ * først, så "010190 1234" og "010190–1234" fanges som "0101901234".
+ */
+export function looksLikeCpr(raw: string): boolean {
+  const stripped = raw.replace(/[\s\-\u2010-\u2015\u2212]/g, "");
+  return /^\d{10}$/.test(stripped) || /^\d{6}-?\d{4}$/.test(raw.trim());
+}
+
 // ---------------------------------------------------------------- beløb og moms
 
 export function idRequired(totalOere: number): boolean {

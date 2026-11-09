@@ -5,6 +5,7 @@
  */
 import {
   idRequired,
+  looksLikeCpr,
   normalizeIdentifier,
   type ConditionLabel,
   type IdType,
@@ -141,8 +142,6 @@ export function totalOere(form: ReceiptForm): number {
 
 // ---------------------------------------------------------------- felter
 
-export const CPR_PATTERN = /^\d{6}-?\d{4}$/;
-
 const opt = (v: string) => (v.trim() === "" ? null : v.trim());
 /** Felter som skemaet tjekker med et mønster: kun gyldige værdier sendes, ellers null. */
 const matching = (v: string, re: RegExp) => {
@@ -172,7 +171,7 @@ export function emailError(value: string): string | null {
 }
 
 export function idNumberError(value: string): string | null {
-  return CPR_PATTERN.test(value.trim()) ? "Det ligner et CPR-nummer. Skriv ID'ets nummer." : null;
+  return looksLikeCpr(value) ?"Det ligner et CPR-nummer. Skriv ID'ets nummer." : null;
 }
 
 /** Batteritilstand i hele procent, 0 til 100. Tomt er tilladt. */
@@ -210,7 +209,7 @@ export function toDraftPayload(form: ReceiptForm): ReceiptDraft {
     seller_age_confirmed: !business && form.seller_age_confirmed,
     lock_checks_confirmed: form.lock_checks_confirmed,
     id_type: needsId && form.id_type ? form.id_type : null,
-    id_number: needsId && idNumber && !CPR_PATTERN.test(idNumber) ? idNumber : null,
+    id_number: needsId && idNumber && !looksLikeCpr(idNumber) ? idNumber : null,
     id_expiry: needsId && form.id_type && form.id_type !== "mitid" && /^\d{4}-\d{2}-\d{2}$/.test(form.id_expiry) ? form.id_expiry : null,
     payout_method: form.payout_method || null,
     seller_bank_reg: bank ? matching(form.seller_bank_reg, fieldPatterns.reg) : null,
