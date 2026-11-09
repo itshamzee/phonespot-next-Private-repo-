@@ -5,6 +5,11 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry, InquiryMessage } from "@/lib/supabase/types";
+import {
+  STATUS_LABELS as RECEIPT_STATUS_LABELS,
+  draftHref,
+  receiptHref,
+} from "../slutsedler/_components/receipt-status";
 import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import {
   formatDKK,
@@ -1090,7 +1095,7 @@ export default function AdminOpkoebDetailPage() {
               {receipts.map((r) => (
                 <div key={r.id} className="flex items-center justify-between rounded-lg border border-stone-100 p-3">
                   <div>
-                    <span className="text-sm font-medium text-charcoal">{r.receipt_number}</span>
+                    <span className="text-sm font-medium text-charcoal">{r.receipt_number ?? "Kladde"}</span>
                     <span className="ml-2 text-xs text-stone-400">{formatDKK(r.total_amount)}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1098,15 +1103,16 @@ export default function AdminOpkoebDetailPage() {
                       r.status === "paid" ? "bg-emerald-100 text-emerald-700"
                       : r.status === "confirmed" ? "bg-blue-100 text-blue-700"
                       : r.status === "completed" ? "bg-green-100 text-green-700"
+                      : r.status === "voided" ? "bg-red-50 text-red-700"
                       : "bg-stone-100 text-stone-500"
                     }`}>
-                      {r.status === "draft" ? "Kladde" : r.status === "confirmed" ? "Bekraeftet" : r.status === "paid" ? "Betalt" : "Faerdig"}
+                      {RECEIPT_STATUS_LABELS[r.status] ?? r.status}
                     </span>
                     <Link
-                      href={`/admin/opkoeb/${inquiryId}/slutseddel`}
+                      href={r.status === "draft" ? draftHref(r.id) : receiptHref(r.id)}
                       className="text-xs text-green-eco hover:underline"
                     >
-                      Abn
+                      Åbn
                     </Link>
                   </div>
                 </div>
