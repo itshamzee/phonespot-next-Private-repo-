@@ -118,6 +118,7 @@ const payBody = {
   seller_bank_reg: "1234",
   seller_bank_account: "1234567890",
   account_owner_confirmed: true,
+  expected_amount_oere: 100000,
 };
 
 beforeEach(() => {
@@ -244,6 +245,43 @@ describe("POST pay", () => {
     const res = await PAY(jsonReq(payBody), ctx(U(50)));
     expect(res.status).toBe(409);
     expect((await res.json()).error).toBe("Kontooplysningerne skal stå på slutsedlen før den bekræftes");
+  });
+
+  it("409 when the payout amount changed since the page was loaded (a till offset in between)", async () => {
+    withScan();
+    rows.trade_in_receipts[0].payout_method = "modregning";
+    rows.trade_in_receipts[0].offset_amount = 40000;
+    const res = await PAY(jsonReq(payBody), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Beløbet er ændret — genindlæs slutsedlen");
+    expect(updates).toHaveLength(0);
+  });
+
+  it("pays the remainder after a partial offset, matches offset_amount in the update and logs the remainder", async () => {
+    withScan();
+    rows.trade_in_receipts[0].offset_amount = 40000;
+    const res = await PAY(jsonReq({ ...payBody, expected_amount_oere: 60000 }), ctx(U(50)));
+    expect(res.status).toBe(200);
+    const upd = updates.find((u) => u.table === "trade_in_receipts")!;
+    expect(upd.filters).toContainEqual(["eq", "offset_amount", 40000]);
+    const log = inserts.find((i) => i.row.action === "opkoeb_paid")!;
+    expect((log.row.details as Record<string, unknown>).amount).toBe(60000);
+  });
+
+  it("guards a slip without offset with offset_amount IS NULL, so a concurrent till offset cannot slip in", async () => {
+    withScan();
+    const res = await PAY(jsonReq(payBody), ctx(U(50)));
+    expect(res.status).toBe(200);
+    const upd = updates.find((u) => u.table === "trade_in_receipts")!;
+    expect(upd.filters).toContainEqual(["is", "offset_amount", null]);
+  });
+
+  it("400 without expected_amount_oere", async () => {
+    withScan();
+    const { expected_amount_oere: _omit, ...rest } = payBody;
+    void _omit;
+    const res = await PAY(jsonReq(rest), ctx(U(50)));
+    expect(res.status).toBe(400);
   });
 
   it("400 for modregning", async () => {

@@ -4,13 +4,15 @@ import { logActivity } from "@/lib/platform/activity-log";
 import { parseBody, posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { PosError } from "@/lib/pos/errors";
 import { loadReceiptForActor, sanitizeReceipt } from "@/lib/opkoeb/receipt-access";
-import { payBlockers, type ReceiptForRules } from "@/lib/opkoeb/rules";
+import { payBlockers, payoutRemainderOere, type ReceiptForRules } from "@/lib/opkoeb/rules";
 import { payBodySchema } from "@/lib/opkoeb/schemas";
 
 /**
  * POST /api/trade-in/receipts/[id]/pay: markerer en bekræftet slutseddel som udbetalt (bank).
  * Modregning sættes kun af kassen og afvises her. Kontooplysningerne er låst efter
- * bekræftelsen, så de skal stå på sedlen og stemme med kroppen.
+ * bekræftelsen, så de skal stå på sedlen og stemme med kroppen. Kroppen bærer også det
+ * beløb, medarbejderen så (expected_amount_oere); har kassen modregnet imellemtiden, afvises
+ * udbetalingen, og opdateringen matcher offset_amount, så en samtidig modregning ikke smutter ind.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,6 +37,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const blockers = payBlockers(merged);
     if (blockers.length > 0) throw new PosError("pay_blocked", blockers[0], 409);
 
+    const remainder = payoutRemainderOere(merged);
+    if (body.expected_amount_oere !== remainder) {
+      throw new PosError("amount_changed", "Beløbet er ændret — genindlæs slutsedlen", 409);
+    }
+
     // seller_bank_reg/-account kan ikke skrives efter bekræftelsen (slutseddel-låsen).
     if (!row.seller_bank_reg || !row.seller_bank_account) {
       throw new PosError("bank_not_on_slip", "Kontooplysningerne skal stå på slutsedlen før den bekræftes", 409);
@@ -43,8 +50,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       throw new PosError("bank_mismatch", "Kontooplysningerne stemmer ikke med slutsedlen", 409);
     }
 
+    const offsetRead = (row.offset_amount as number | null | undefined) ?? null;
     const supabase = createServerClient();
-    const { data, error } = await supabase
+    const update = supabase
       .from("trade_in_receipts")
       .update({
         status: "paid",
@@ -55,7 +63,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       })
       .eq("id", id)
       .eq("status", "confirmed")
-      .is("suspected_at", null)
+      .is("suspected_at", null);
+    // offset_amount IS NOT DISTINCT FROM det læste.
+    const { data, error } = await (offsetRead === null
+      ? update.is("offset_amount", null)
+      : update.eq("offset_amount", offsetRead)
+    )
       .select("*")
       .maybeSingle();
     if (error) throw new Error(`pay: ${error.message}`);
@@ -67,7 +80,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       action: "opkoeb_paid",
       entityType: "trade_in_receipt",
       entityId: id,
-      details: { receipt_number: row.receipt_number, amount: row.total_amount },
+      details: { receipt_number: row.receipt_number, amount: remainder },
     });
 
     return NextResponse.json(sanitizeReceipt(data as Record<string, unknown>, { bankAccount: "draft-only" }));

@@ -472,7 +472,14 @@ export function ReceiptDetail({ receiptId }: { receiptId: string }) {
             void send(
               `${base}/pay`,
               "POST",
-              { payout_method: "bank", seller_bank_reg: reg, seller_bank_account: account, account_owner_confirmed: true },
+              {
+                payout_method: "bank",
+                seller_bank_reg: reg,
+                seller_bank_account: account,
+                account_owner_confirmed: true,
+                // Det beløb, der står i dialogen. Har kassen modregnet imens, afviser ruten (409).
+                expected_amount_oere: remainder,
+              },
               "Udbetalingen kunne ikke markeres",
             )
           }

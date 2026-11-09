@@ -54,11 +54,15 @@ describe("other schemas", () => {
       seller_bank_reg: "1234",
       seller_bank_account: "1234567",
       account_owner_confirmed: true,
+      expected_amount_oere: 250000,
     };
     expect(payBodySchema.safeParse({}).success).toBe(false);
     expect(payBodySchema.safeParse(pay).success).toBe(true);
     expect(payBodySchema.safeParse({ ...pay, account_owner_confirmed: false }).success).toBe(false);
     expect(payBodySchema.safeParse({ ...pay, payout_method: "modregning" }).success).toBe(false);
     expect(payBodySchema.safeParse({ ...pay, seller_bank_reg: "12" }).success).toBe(false);
+    expect(payBodySchema.safeParse({ ...pay, expected_amount_oere: undefined }).success).toBe(false);
+    expect(payBodySchema.safeParse({ ...pay, expected_amount_oere: 0 }).success).toBe(false);
+    expect(payBodySchema.safeParse({ ...pay, expected_amount_oere: 1.5 }).success).toBe(false);
   });
 });

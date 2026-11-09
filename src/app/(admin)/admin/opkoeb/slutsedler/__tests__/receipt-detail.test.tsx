@@ -173,6 +173,7 @@ describe("ReceiptDetail", () => {
       seller_bank_reg: "1234",
       seller_bank_account: "12345678",
       account_owner_confirmed: true,
+      expected_amount_oere: 350000,
     });
   });
 
@@ -202,6 +203,15 @@ describe("ReceiptDetail", () => {
     await open();
     expect(payButton().disabled).toBe(false);
     expect(screen.queryByText("Vælg udbetaling til bank")).toBeNull();
+    fireEvent.click(payButton());
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Reg.nr."), { target: { value: "1234" } });
+    fireEvent.change(within(dialog).getByLabelText("Kontonummer"), { target: { value: "12345678" } });
+    fireEvent.click(within(dialog).getByLabelText("Kontoen står i sælgers navn"));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bekræft udbetaling" }));
+    await waitFor(() => expect(api.calls.some((c) => c.url.endsWith("/pay"))).toBe(true));
+    // Restbeløbet sendes med, så ruten kan afvise, hvis kassen har modregnet imellemtiden.
+    expect((api.calls.find((c) => c.url.endsWith("/pay"))!.body as { expected_amount_oere: number }).expected_amount_oere).toBe(250000);
   });
 
   it("holder udbetaling lukket med begrundelse, når kontooplysningerne ikke er gemt på sedlen", async () => {

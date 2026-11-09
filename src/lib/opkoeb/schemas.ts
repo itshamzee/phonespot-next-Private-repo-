@@ -60,6 +60,8 @@ export const payBodySchema = z.object({
     .string()
     .regex(/^\d{6,10}$/, "Kontonummer skal være 6 til 10 cifre"),
   account_owner_confirmed: z.literal(true),
+  /** Det beløb (øre), medarbejderen så som "udbetales til bank". Skal stemme med restbeløbet nu. */
+  expected_amount_oere: z.number().int().min(1),
 });
 
 export const suspicionBodySchema = z.object({
