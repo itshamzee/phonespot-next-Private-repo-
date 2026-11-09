@@ -12,6 +12,8 @@ vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: (...a: unknown[]) => 
 const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const rows: Record<string, Array<Record<string, unknown>>> = {};
 const inserted: Array<{ table: string; row: Record<string, unknown> }> = [];
+/** Next write to this table fails with this error (one shot). */
+const failWrite: { table: string | null; error: { code: string; message: string } | null } = { table: null, error: null };
 let seq = 100;
 
 function builder(table: string) {
@@ -26,7 +28,19 @@ function builder(table: string) {
   b.limit = (n: number) => ((max = n), b);
   b.eq = (k: string, v: unknown) => (filters.push((r) => r[k] === v), b);
   b.in = (k: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[k])), b);
+  b.neq = (k: string, v: unknown) => (filters.push((r) => r[k] !== v), b);
+  let failing: { code: string; message: string } | null = null;
+  const takeFailure = () => {
+    if (failWrite.table === table && failWrite.error) {
+      failing = failWrite.error;
+      failWrite.table = null;
+      failWrite.error = null;
+      return true;
+    }
+    return false;
+  };
   b.insert = (row: Record<string, unknown> | Array<Record<string, unknown>>) => {
+    if (takeFailure()) return b;
     for (const r of Array.isArray(row) ? row : [row]) {
       const full = { id: U(seq++), status: "draft", created_at: "2026-11-09T10:00:00Z", ...r };
       inserted.push({ table, row: full });
@@ -36,9 +50,10 @@ function builder(table: string) {
     filters.push((r) => r === last);
     return b;
   };
-  b.update = (p: Record<string, unknown>) => ((mode = "update"), (patch = p), b);
+  b.update = (p: Record<string, unknown>) => (takeFailure(), (mode = "update"), (patch = p), b);
   b.delete = () => ((mode = "delete"), b);
   const result = () => {
+    if (failing) return { data: null, error: failing };
     const m = matching();
     if (mode === "update") m.forEach((r) => Object.assign(r, patch));
     if (mode === "delete") rows[table] = (rows[table] ?? []).filter((r) => !m.includes(r));
@@ -46,6 +61,7 @@ function builder(table: string) {
   };
   b.maybeSingle = async () => ({ data: matching()[0] ?? null, error: null });
   b.single = async () => {
+    if (failing) return { data: null, error: failing };
     const first = matching()[0];
     if (first && table === "trade_in_receipts") {
       return {
@@ -74,6 +90,8 @@ const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 beforeEach(() => {
   requireStaffMock.mockReset();
   inserted.length = 0;
+  failWrite.table = null;
+  failWrite.error = null;
   rows.locations = [
     { id: U(20), name: "Vejle", slug: "vejle", type: "store" },
     { id: U(30), name: "Slagelse", slug: "slagelse", type: "store" },
@@ -132,9 +150,9 @@ describe("attestation follows the accepted offer, never the client", () => {
   const INQ = U(60);
   beforeEach(() => {
     rows.trade_in_offers = [
-      { id: U(61), inquiry_id: INQ, status: "accepted" },
-      { id: U(62), inquiry_id: INQ, status: "sent" },
-      { id: U(63), inquiry_id: U(64), status: "accepted" },
+      { id: U(61), inquiry_id: INQ, status: "accepted", offer_amount: 500000 },
+      { id: U(62), inquiry_id: INQ, status: "sent", offer_amount: 500000 },
+      { id: U(63), inquiry_id: U(64), status: "accepted", offer_amount: 500000 },
     ];
   });
   const created = () => inserted.find((i) => i.table === "trade_in_receipts")!.row;
@@ -168,6 +186,99 @@ describe("attestation follows the accepted offer, never the client", () => {
     expect(row().attestation).toBe("online_accept");
     await PATCH(req("/x", "PATCH", { offer_id: null }), ctx(U(52)));
     expect(row().attestation).toBe("paper_scan");
+  });
+});
+
+describe("attestation rules (ruling 29)", () => {
+  const INQ = U(60);
+  const OFFER = U(61);
+  beforeEach(() => {
+    rows.trade_in_offers = [{ id: OFFER, inquiry_id: INQ, status: "accepted", offer_amount: 300000 }];
+  });
+  const created = () => inserted.find((i) => i.table === "trade_in_receipts")!.row;
+  const post = (body: Record<string, unknown>) =>
+    POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), inquiry_id: INQ, offer_id: OFFER, ...body }));
+
+  it("online_accept when the total is at most the accepted amount; paper_scan above it", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    await post({ items: [{ brand: "Apple", model: "iPhone", price: 300000 }] });
+    expect(created().attestation).toBe("online_accept");
+    inserted.length = 0;
+    rows.trade_in_receipts = rows.trade_in_receipts.filter((r) => r.offer_id !== OFFER);
+    await post({ items: [{ brand: "Apple", model: "iPhone", price: 300001 }] });
+    expect(created().attestation).toBe("paper_scan");
+  });
+
+  it("paper_scan when another non-voided receipt already uses the offer; a voided one does not count", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    rows.trade_in_receipts.push({ id: U(80), status: "voided", location_id: U(20), offer_id: OFFER, inquiry_id: INQ });
+    rows.trade_in_receipts.find((r) => r.id === U(52))!.inquiry_id = INQ;
+    const row = () => rows.trade_in_receipts.find((r) => r.id === U(52))!;
+    await PATCH(req("/x", "PATCH", { offer_id: OFFER }), ctx(U(52)));
+    expect(row().attestation).toBe("online_accept");
+    await PATCH(req("/x", "PATCH", { offer_id: null }), ctx(U(52)));
+    expect(row().attestation).toBe("paper_scan");
+    rows.trade_in_receipts.push({ id: U(81), status: "confirmed", location_id: U(20), offer_id: OFFER, inquiry_id: INQ });
+    await PATCH(req("/x", "PATCH", { offer_id: OFFER }), ctx(U(52)));
+    expect(row().attestation).toBe("paper_scan");
+  });
+
+  it("PATCH recomputes when the total changes, but an unrelated autosave leaves attestation alone", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const row = () => rows.trade_in_receipts.find((r) => r.id === U(52))!;
+    Object.assign(row(), { inquiry_id: INQ, offer_id: OFFER, attestation: "online_accept", total_amount: 300000 });
+    rows.trade_in_offers = [];
+    // Same offer, same total: not recomputed (the offer lookup would now fail).
+    await PATCH(
+      req("/x", "PATCH", { seller_name: "X", inquiry_id: INQ, offer_id: OFFER, items: [{ brand: "A", model: "B", price: 300000 }] }),
+      ctx(U(52)),
+    );
+    expect(row().attestation).toBe("online_accept");
+    rows.trade_in_offers = [{ id: OFFER, inquiry_id: INQ, status: "accepted", offer_amount: 300000 }];
+    await PATCH(req("/x", "PATCH", { items: [{ brand: "A", model: "B", price: 350000 }] }), ctx(U(52)));
+    expect(row().attestation).toBe("paper_scan");
+  });
+
+  it("maps the offer-once unique violation to 409 on POST and PATCH", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const violation = { code: "23505", message: 'duplicate key value violates unique constraint "trade_in_receipts_offer_once"' };
+    failWrite.table = "trade_in_receipts";
+    failWrite.error = violation;
+    const res = await post({});
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Tilbuddet er allerede brugt på en anden slutseddel");
+    failWrite.table = "trade_in_receipts";
+    failWrite.error = violation;
+    const res2 = await PATCH(req("/x", "PATCH", { inquiry_id: INQ, offer_id: OFFER }), ctx(U(52)));
+    expect(res2.status).toBe(409);
+    expect((await res2.json()).error).toBe("Tilbuddet er allerede brugt på en anden slutseddel");
+  });
+});
+
+describe("audit stamps", () => {
+  const row = () => rows.trade_in_receipts.find((r) => r.id === U(52))!;
+
+  it("MitID with a number stamps id_checked_by without an expiry", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    await PATCH(req("/x", "PATCH", { id_type: "mitid", id_number: "MIT123", id_expiry: null }), ctx(U(52)));
+    expect(row().id_checked_by).toBe(U(2));
+  });
+
+  it("an autosave by another clerk that resends unchanged checks keeps the original stamps", async () => {
+    const staffB = { ...vejle, id: U(4) };
+    requireStaffMock.mockResolvedValue(vejle);
+    const checks = { lock_checks_confirmed: true, id_type: "pas", id_number: "AB123", id_expiry: "2030-01-01" };
+    await PATCH(req("/x", "PATCH", checks), ctx(U(52)));
+    expect(row().lock_checks_by).toBe(U(2));
+    expect(row().id_checked_by).toBe(U(2));
+    requireStaffMock.mockResolvedValue(staffB);
+    await PATCH(req("/x", "PATCH", { ...checks, seller_name: "Ny" }), ctx(U(52)));
+    expect(row().lock_checks_by).toBe(U(2));
+    expect(row().id_checked_by).toBe(U(2));
+    // A real change is stamped by whoever made it.
+    await PATCH(req("/x", "PATCH", { ...checks, id_number: "AB124" }), ctx(U(52)));
+    expect(row().id_checked_by).toBe(U(4));
+    expect(row().lock_checks_by).toBe(U(2));
   });
 });
 

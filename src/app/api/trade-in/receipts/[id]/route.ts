@@ -5,6 +5,8 @@ import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
 import {
   attestationFor,
   checkStamps,
+  offerUsedConflict,
+  touchedChecks,
   draftColumns,
   itemRows,
   itemsTotal,
@@ -68,20 +70,24 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { items, ...draft } = parsed.data;
 
     const fields = draftColumns(draft);
-    if ("offer_id" in fields || "inquiry_id" in fields) {
+    const total = items ? itemsTotal(items) : (existing.total_amount as number | null) ?? 0;
+    // Kun når tilbud, henvendelse eller total ændres; et almindeligt autogem rører den ikke.
+    const relinked = ["offer_id", "inquiry_id"].some((k) => k in fields && (fields[k] ?? null) !== (existing[k] ?? null));
+    if (relinked || total !== existing.total_amount) {
       const linked = { ...existing, ...fields };
-      fields.attestation = await attestationFor(linked.offer_id, linked.inquiry_id);
+      fields.attestation = await attestationFor({
+        offerId: linked.offer_id,
+        inquiryId: linked.inquiry_id,
+        receiptId: id,
+        totalOere: total,
+      });
     }
     const merged = { ...existing, ...fields };
-    const touched = {
-      lock: "lock_checks_confirmed" in fields,
-      id: "id_type" in fields || "id_number" in fields || "id_expiry" in fields,
-    };
     const update: Record<string, unknown> = {
       ...fields,
-      ...checkStamps(merged, existing, actor.id, new Date().toISOString(), touched),
+      ...checkStamps(merged, existing, actor.id, new Date().toISOString(), touchedChecks(fields, existing)),
     };
-    if (items) update.total_amount = itemsTotal(items);
+    if (items) update.total_amount = total;
 
     const supabase = createServerClient();
     if (Object.keys(update).length > 0) {
@@ -91,7 +97,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
         .eq("id", id)
         .eq("status", "draft")
         .select("id");
-      if (error) throw new Error(error.message);
+      if (error) throw offerUsedConflict(error) ?? new Error(error.message);
       // Bekræftet imellem tjekket og skrivningen: rør ikke varerne.
       if (!updated || updated.length === 0) return LOCKED();
     }

@@ -45,9 +45,15 @@ const docUpdates: Array<{ patch: Record<string, unknown>; col: string; val: unkn
 function builder(table: string) {
   const filters: Array<(r: Record<string, unknown>) => boolean> = [];
   let patch: Record<string, unknown> | null = null;
-  const matching = () => (rows[table] ?? []).filter((r) => filters.every((f) => f(r)));
+  let orderBy: string | null = null;
+  const matching = () => {
+    const m = (rows[table] ?? []).filter((r) => filters.every((f) => f(r)));
+    return orderBy ? [...m].sort((a, b) => String(a[orderBy!]).localeCompare(String(b[orderBy!]))) : m;
+  };
   const b: Record<string, unknown> = {};
   b.select = () => b;
+  b.order = (k: string) => ((orderBy = k), b);
+  b.neq = (k: string, v: unknown) => (filters.push((r) => r[k] !== v), b);
   b.eq = (k: string, v: unknown) => {
     filters.push((r) => r[k] === v);
     if (patch) {
@@ -214,6 +220,33 @@ describe("POST /api/trade-in/receipts/[id]/confirm", () => {
     expect(res.status).toBe(409);
     expect((await res.json()).error).toBe("ID'et er udløbet");
     expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("numbers items in created_at order, like the editor", async () => {
+    rows.trade_in_receipt_items = [
+      { receipt_id: U(50), template_id: U(70), imei_serial: "490154203237518", price: 0, created_at: "2026-11-09T10:00:02Z" },
+      { receipt_id: U(50), template_id: U(70), imei_serial: "490154203237518", price: 100000, created_at: "2026-11-09T10:00:01Z" },
+    ];
+    Object.assign(rows.trade_in_receipts[0], { total_amount: 100000 });
+    const res = await POST(req(), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Vare 2: pris mangler");
+  });
+
+  it("downgrades online_accept to paper_scan before the rpc when the total exceeds the accepted offer", async () => {
+    Object.assign(rows.trade_in_receipts[0], { attestation: "online_accept", offer_id: U(61), inquiry_id: U(60) });
+    rows.trade_in_offers = [{ id: U(61), inquiry_id: U(60), status: "accepted", offer_amount: 90000 }];
+    const res = await POST(req(), ctx(U(50)));
+    expect(res.status).toBe(200);
+    expect(docUpdates).toContainEqual({ patch: { attestation: "paper_scan" }, col: "id", val: U(50) });
+    expect(rpcMock).toHaveBeenCalled();
+  });
+
+  it("keeps online_accept when the offer still covers the receipt", async () => {
+    Object.assign(rows.trade_in_receipts[0], { attestation: "online_accept", offer_id: U(61), inquiry_id: U(60) });
+    rows.trade_in_offers = [{ id: U(61), inquiry_id: U(60), status: "accepted", offer_amount: 100000 }];
+    await POST(req(), ctx(U(50)));
+    expect(docUpdates.some((d) => "attestation" in d.patch)).toBe(false);
   });
 
   it("404 for another store, and the rpc is never called", async () => {

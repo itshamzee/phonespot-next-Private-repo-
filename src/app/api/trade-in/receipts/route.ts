@@ -8,6 +8,7 @@ import {
   accessibleLocationIds,
   assertReceiptVisible,
   attestationFor,
+  offerUsedConflict,
   checkStamps,
   draftColumns,
   itemRows,
@@ -166,7 +167,14 @@ export async function POST(req: Request) {
     // Ingen receipt_number her: kolonnen har ingen default, og en kladde har intet nummer.
     const now = new Date().toISOString();
     const fields = draftColumns(draft);
-    if (fields.offer_id !== undefined) fields.attestation = await attestationFor(fields.offer_id, fields.inquiry_id);
+    if (fields.offer_id !== undefined) {
+      fields.attestation = await attestationFor({
+        offerId: fields.offer_id,
+        inquiryId: fields.inquiry_id,
+        receiptId: null,
+        totalOere: itemsTotal(items),
+      });
+    }
     const supabase = createServerClient();
     const { data: receipt, error: receiptErr } = await supabase
       .from("trade_in_receipts")
@@ -180,7 +188,7 @@ export async function POST(req: Request) {
       })
       .select("id")
       .single();
-    if (receiptErr || !receipt) throw new Error(receiptErr?.message ?? "Failed to create receipt");
+    if (receiptErr || !receipt) throw offerUsedConflict(receiptErr) ?? new Error(receiptErr?.message ?? "Failed to create receipt");
 
     if (items.length > 0) {
       const { error: itemsErr } = await supabase.from("trade_in_receipt_items").insert(itemRows(receipt.id, items));

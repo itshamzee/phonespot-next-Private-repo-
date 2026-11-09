@@ -188,6 +188,34 @@ describe("ReceiptEditor", () => {
     expect(nav.push).not.toHaveBeenCalled();
   });
 
+  it("never autosaves after confirmation", async () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    await fillComplete();
+    await waitFor(() => expect(confirmButton().disabled).toBe(false));
+    fireEvent.click(confirmButton());
+    await waitFor(() => expect(nav.push).toHaveBeenCalled());
+    const before = api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts")).length;
+    type("Navn", "Rettet efter bekræftelse");
+    await new Promise((r) => setTimeout(r, 1300));
+    expect(api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts")).length).toBe(before);
+  });
+
+  it("MitID hides the expiry field", () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    type("Pris, vare 1", "2500");
+    expect(screen.getByLabelText("Udløbsdato")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("ID-type"), { target: { value: "mitid" } });
+    expect(screen.queryByLabelText("Udløbsdato")).toBeNull();
+  });
+
+  it("shows an error for a battery health above 100 %", () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    type("Batteri, vare 1", "150");
+    expect(screen.getByText("Batteri skal være mellem 0 og 100 %")).toBeTruthy();
+    type("Batteri, vare 1", "88");
+    expect(screen.queryByText("Batteri skal være mellem 0 og 100 %")).toBeNull();
+  });
+
   it("autosaves: creates the draft after the first input, then patches", async () => {
     render(<ReceiptEditor locationId={LOC} />);
     expect(api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts"))).toHaveLength(0);

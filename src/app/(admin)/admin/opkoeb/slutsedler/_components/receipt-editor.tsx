@@ -144,7 +144,7 @@ export function ReceiptEditor({
           return;
         }
         if (inquiryId) {
-          const res = await staffFetch(`/api/trade-in/receipts?inquiry_id=${inquiryId}`);
+          const res = await staffFetch(`/api/trade-in/receipts?inquiry_id=${encodeURIComponent(inquiryId)}`);
           if (!res.ok) throw new Error(await errorMessage(res, "Henvendelsens slutsedler kunne ikke hentes"));
           const list = (await res.json()) as Array<Record<string, unknown>>;
           const done = list.find((r) => r.status !== "draft" && r.status !== "voided");
@@ -239,11 +239,13 @@ export function ReceiptEditor({
   function addItem() {
     const item = emptyItem();
     setFocusItemKey(item.key);
-    update({ items: [...form.items, item] });
+    touched.current = true;
+    setForm((f) => ({ ...f, items: [...f.items, item] }));
   }
 
   function removeItem(key: string) {
-    update({ items: form.items.filter((i) => i.key !== key) });
+    touched.current = true;
+    setForm((f) => ({ ...f, items: f.items.filter((i) => i.key !== key) }));
   }
 
   /* ---- CVR ---- */

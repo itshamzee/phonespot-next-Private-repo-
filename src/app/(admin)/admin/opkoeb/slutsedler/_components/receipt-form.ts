@@ -175,6 +175,13 @@ export function idNumberError(value: string): string | null {
   return CPR_PATTERN.test(value.trim()) ? "Det ligner et CPR-nummer. Skriv ID'ets nummer." : null;
 }
 
+/** Batteritilstand i hele procent, 0 til 100. Tomt er tilladt. */
+export function batteryError(value: string): string | null {
+  const v = value.trim();
+  if (v === "") return null;
+  return /^\d{1,3}$/.test(v) && Number(v) <= 100 ? null : "Batteri skal være mellem 0 og 100 %";
+}
+
 export function imeiError(value: string): string | null {
   if (value.trim() === "" || normalizeIdentifier(value)) return null;
   return /^\d{15}$/.test(value.replace(/\s+/g, "")) ? "Ugyldigt IMEI" : "Ugyldigt IMEI eller serienummer";

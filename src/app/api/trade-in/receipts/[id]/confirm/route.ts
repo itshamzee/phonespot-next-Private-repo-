@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { rpcConflict } from "@/lib/opkoeb/rpc-conflict";
-import { loadReceiptForActor, receiptForRules } from "@/lib/opkoeb/receipt-access";
+import { attestationFor, loadReceiptForActor, receiptForRules } from "@/lib/opkoeb/receipt-access";
 import { confirmBlockers } from "@/lib/opkoeb/rules";
 import { PosError } from "@/lib/pos/errors";
 import { copenhagenDateString } from "@/lib/pos/copenhagen";
@@ -34,14 +34,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (row.status === "draft") {
       const { data: items, error: itemsErr } = await supabase
         .from("trade_in_receipt_items")
-        .select("template_id, imei_serial, price")
-        .eq("receipt_id", id);
+        .select("template_id, imei_serial, price, created_at")
+        .eq("receipt_id", id)
+        .order("created_at", { ascending: true });
       if (itemsErr) throw new Error(`Failed to load receipt items: ${itemsErr.message}`);
       const blockers = confirmBlockers(
         receiptForRules(row, (items ?? []) as Array<Record<string, unknown>>),
         copenhagenDateString(),
       );
       if (blockers.length > 0) throw new PosError("confirm_blocked", blockers[0], 409);
+
+      // Online-accept skal stadig holde (tilbud, ét brug, beløb); ellers kræves papir.
+      if (row.attestation === "online_accept") {
+        const now = await attestationFor({
+          offerId: row.offer_id,
+          inquiryId: row.inquiry_id,
+          receiptId: id,
+          totalOere: typeof row.total_amount === "number" ? row.total_amount : 0,
+        });
+        if (now !== "online_accept") {
+          const { error: attErr } = await supabase.from("trade_in_receipts").update({ attestation: now }).eq("id", id);
+          if (attErr) throw new Error(`Failed to reset attestation: ${attErr.message}`);
+        }
+      }
     }
 
     const { data: rpc, error: rpcErr } = await supabase.rpc("trade_in_confirm", {

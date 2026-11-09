@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Button, Input, Select } from "@/components/admin/ui";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import type { ConditionLabel } from "@/lib/opkoeb/rules";
-import { CONDITIONS, formatKr, formatKrInput, imeiError, parseKr, type ItemForm } from "./receipt-form";
+import { batteryError, CONDITIONS, formatKr, formatKrInput, imeiError, parseKr, type ItemForm } from "./receipt-form";
 
 type Template = {
   id: string;
@@ -348,9 +348,15 @@ export function ItemRow({
             disabled={disabled}
             inputMode="numeric"
             suffix="%"
-            onChange={(e) => onChange({ battery: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+            invalid={!!batteryError(item.battery)}
+            onChange={(e) => onChange({ battery: e.target.value })}
             onKeyDown={enterTo(() => priceRef.current?.focus())}
           />
+          {batteryError(item.battery) && (
+            <p role="alert" className="text-[13px] text-[#B42318]">
+              {batteryError(item.battery)}
+            </p>
+          )}
         </div>
       </div>
 

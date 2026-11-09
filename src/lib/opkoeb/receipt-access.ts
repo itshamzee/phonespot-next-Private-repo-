@@ -159,7 +159,8 @@ export function checkStamps(
   } else if (existing?.lock_checks_by) {
     Object.assign(out, { lock_checks_by: null, lock_checks_at: null });
   }
-  const idFilled = Boolean(merged.id_type && merged.id_number && merged.id_expiry);
+  // MitID har ingen udløbsdato; de andre ID-typer skal have en.
+  const idFilled = Boolean(merged.id_type && merged.id_number && (merged.id_type === "mitid" || merged.id_expiry));
   if (idFilled) {
     if (touched.id || !existing?.id_checked_by) Object.assign(out, { id_checked_by: actorId, id_checked_at: nowIso });
   } else if (existing?.id_checked_by) {
@@ -204,20 +205,64 @@ export function receiptForRules(
   };
 }
 
+const LOCK_FIELDS = ["lock_checks_confirmed"] as const;
+const ID_FIELDS = ["id_type", "id_number", "id_expiry"] as const;
+const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
+
 /**
- * Sælger har accepteret online, når sedlen peger på et accepteret tilbud på
- * netop sin henvendelse. Afledes altid her på serveren og sendes aldrig af
- * klienten, fordi online_accept fritager for en underskrevet seddel ved udbetaling.
+ * Hvilke tjek-grupper en skrivning faktisk ændrer. Autogem sender alle felter
+ * hver gang; uændrede værdier må ikke flytte stemplet til en anden medarbejder.
  */
-export async function attestationFor(offerId: unknown, inquiryId: unknown): Promise<"online_accept" | "paper_scan"> {
+export function touchedChecks(
+  fields: Record<string, unknown>,
+  existing: Record<string, unknown> | null,
+): { lock: boolean; id: boolean } {
+  const changed = (keys: readonly string[]) => keys.some((k) => k in fields && !same(fields[k], existing?.[k]));
+  return { lock: changed(LOCK_FIELDS), id: changed(ID_FIELDS) };
+}
+
+export type Attestation = "online_accept" | "paper_scan";
+
+/**
+ * Sælger har accepteret online (og slipper for en underskrevet seddel ved
+ * udbetaling) kun når alt dette holder:
+ *  a) tilbuddet er accepteret og hører til sedlens henvendelse,
+ *  b) ingen anden ikke-annulleret seddel bruger samme tilbud,
+ *  c) sedlens total er højst det accepterede beløb.
+ * Afledes altid her på serveren; klienten kan ikke sende feltet.
+ */
+export async function attestationFor(args: {
+  offerId: unknown;
+  inquiryId: unknown;
+  /** Sedlen selv, som ikke tæller som "en anden" seddel. null ved oprettelse. */
+  receiptId: string | null;
+  totalOere: number;
+}): Promise<Attestation> {
+  const { offerId, inquiryId, receiptId, totalOere } = args;
   if (typeof offerId !== "string" || typeof inquiryId !== "string") return "paper_scan";
-  const { data, error } = await createServerClient()
+  const supabase = createServerClient();
+  const { data: offer, error } = await supabase
     .from("trade_in_offers")
-    .select("id")
+    .select("id, offer_amount")
     .eq("id", offerId)
     .eq("inquiry_id", inquiryId)
     .eq("status", "accepted")
     .maybeSingle();
   if (error) throw new Error(`Failed to load offer: ${error.message}`);
-  return data ? "online_accept" : "paper_scan";
+  if (!offer) return "paper_scan";
+  if (typeof offer.offer_amount !== "number" || totalOere > offer.offer_amount) return "paper_scan";
+
+  let others = supabase.from("trade_in_receipts").select("id").eq("offer_id", offerId).neq("status", "voided");
+  if (receiptId) others = others.neq("id", receiptId);
+  const { data: used, error: usedErr } = await others;
+  if (usedErr) throw new Error(`Failed to check offer use: ${usedErr.message}`);
+  return (used ?? []).length > 0 ? "paper_scan" : "online_accept";
+}
+
+/** Unik-indekset trade_in_receipts_offer_once: ét tilbud, én (ikke-annulleret) seddel. */
+export function offerUsedConflict(error: { code?: string; message?: string } | null | undefined): PosError | null {
+  if (error?.code === "23505" && (error.message ?? "").includes("trade_in_receipts_offer_once")) {
+    return new PosError("offer_used", "Tilbuddet er allerede brugt på en anden slutseddel", 409);
+  }
+  return null;
 }
