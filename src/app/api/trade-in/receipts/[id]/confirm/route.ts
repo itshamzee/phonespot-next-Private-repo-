@@ -1,21 +1,13 @@
 import { NextResponse, after } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
-import { PosError, toPosError } from "@/lib/pos/errors";
+import { rpcConflict } from "@/lib/opkoeb/rpc-conflict";
 import { loadReceiptForActor } from "@/lib/opkoeb/receipt-access";
 import { loadSlutseddelData } from "@/lib/opkoeb/slutseddel-data";
 import { renderSlutseddelPdf } from "@/lib/pdf/slutseddel";
 import { resend, EMAIL_FROM } from "@/lib/email/resend";
 
 const BUCKET = "slutsedler";
-
-/** RPC'ens forretningsfejl er konflikter med sedlens tilstand: 409 og den danske besked. */
-function rpcConflict(err: unknown): PosError | null {
-  const pos = toPosError(err);
-  if (!pos) return null;
-  if (pos.status === 403 || pos.status === 404) return pos;
-  return new PosError(pos.code, pos.message, 409);
-}
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 

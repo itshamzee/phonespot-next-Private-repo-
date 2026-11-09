@@ -1,41 +1,74 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { requireStaff } from "@/lib/auth/require-staff";
+import { logActivity } from "@/lib/platform/activity-log";
+import { parseBody, posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
+import { PosError } from "@/lib/pos/errors";
+import { loadReceiptForActor, sanitizeReceipt } from "@/lib/opkoeb/receipt-access";
+import { payBlockers, type ReceiptForRules } from "@/lib/opkoeb/rules";
+import { payBodySchema } from "@/lib/opkoeb/schemas";
 
-/* POST /api/trade-in/receipts/[id]/pay — mark receipt as paid */
-export async function POST(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  // Staff only. This route acts on a customer's behalf — it was reachable by
-  // anyone who could guess an id.
-  const staff = await requireStaff(_req);
-  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+/**
+ * POST /api/trade-in/receipts/[id]/pay: markerer en bekræftet slutseddel som udbetalt (bank).
+ * Modregning sættes kun af kassen og afvises her. Kontooplysningerne er låst efter
+ * bekræftelsen, så de skal stå på sedlen og stemme med kroppen.
+ */
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const staff = await requirePosStaff(req);
+    if (!staff) return UNAUTHORIZED();
+    const { actor } = staff;
+    const { id } = await params;
+    const row = await loadReceiptForActor(actor, id);
 
-  const { id } = await params;
-  const supabase = createServerClient();
+    const parsed = await parseBody(req, payBodySchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
-  const { data: receipt } = await supabase
-    .from("trade_in_receipts")
-    .select("status")
-    .eq("id", id)
-    .single();
+    const merged = {
+      ...row,
+      payout_method: "bank",
+      seller_bank_reg: body.seller_bank_reg,
+      seller_bank_account: body.seller_bank_account,
+      account_owner_confirmed: true,
+      items: [],
+    } as unknown as ReceiptForRules;
+    const blockers = payBlockers(merged);
+    if (blockers.length > 0) throw new PosError("pay_blocked", blockers[0], 409);
 
-  if (!receipt) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (receipt.status !== "confirmed") {
-    return NextResponse.json({ error: "Receipt must be confirmed before marking as paid" }, { status: 400 });
+    // seller_bank_reg/-account kan ikke skrives efter bekræftelsen (slutseddel-låsen).
+    if (row.seller_bank_reg !== body.seller_bank_reg || row.seller_bank_account !== body.seller_bank_account) {
+      throw new PosError("bank_not_on_slip", "Kontooplysningerne skal stå på slutsedlen før den bekræftes", 409);
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from("trade_in_receipts")
+      .update({
+        status: "paid",
+        paid_at: new Date().toISOString(),
+        paid_by: actor.id,
+        payout_method: "bank",
+        account_owner_confirmed: true,
+      })
+      .eq("id", id)
+      .eq("status", "confirmed")
+      .is("suspected_at", null)
+      .select("*")
+      .maybeSingle();
+    if (error) throw new Error(`pay: ${error.message}`);
+    if (!data) throw new PosError("receipt_changed", "Slutsedlen er ændret. Genindlæs og prøv igen.", 409);
+
+    await logActivity({
+      supabase,
+      actorId: actor.id,
+      action: "opkoeb_paid",
+      entityType: "trade_in_receipt",
+      entityId: id,
+      details: { receipt_number: row.receipt_number, amount: row.total_amount },
+    });
+
+    return NextResponse.json(sanitizeReceipt(data as Record<string, unknown>, { bankAccount: "draft-only" }));
+  } catch (err) {
+    return posErrorResponse(err, "Kunne ikke markere udbetalingen");
   }
-
-  const { data, error } = await supabase
-    .from("trade_in_receipts")
-    .update({
-      status: "paid",
-      paid_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
 }

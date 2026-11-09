@@ -67,6 +67,10 @@ export const suspicionBodySchema = z.object({
   police_notified: z.boolean(),
 });
 
+export const suspicionReleaseBodySchema = z.object({
+  note: z.string().trim().min(1, "Skriv en note").max(1000),
+});
+
 export const voidBodySchema = z.object({
   reason: z.string().trim().min(1, "Skriv en begrundelse").max(1000),
 });

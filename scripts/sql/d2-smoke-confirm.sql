@@ -511,6 +511,23 @@ BEGIN
   END IF;
 END $$;
 
+-- 13. Mistanke: en seddel med suspected_at kan ikke annulleres; efter ophævelse kan den.
+DO $$
+DECLARE
+  v_staff uuid := (SELECT v FROM _smoke WHERE k = 'staff');
+  v_rec uuid;
+BEGIN
+  v_rec := pg_temp.mk_receipt('vejle', ARRAY[1000], ARRAY['SERIAL0013A']);
+  PERFORM public.trade_in_confirm(v_rec, v_staff);
+  UPDATE public.trade_in_receipts SET suspected_at = now(), suspected_by = v_staff, suspicion_note = 'smoke' WHERE id = v_rec;
+  PERFORM pg_temp.expect_pos(format('SELECT public.trade_in_void(%L, %L, %L)', v_rec, v_staff, 'x'), 'receipt_not_voidable');
+  UPDATE public.trade_in_receipts SET suspected_at = NULL, suspected_by = NULL WHERE id = v_rec;
+  PERFORM public.trade_in_void(v_rec, v_staff, 'Efter ophævet mistanke');
+  IF (SELECT status FROM public.trade_in_receipts WHERE id = v_rec) <> 'voided' THEN
+    RAISE EXCEPTION 'smoke 13: seddel kunne ikke annulleres efter ophævet mistanke';
+  END IF;
+END $$;
+
 SELECT 'd2-smoke-confirm: ok' AS result,
        (SELECT jsonb_agg(jsonb_build_object('le', legal_entity_id, 'year', year, 'last', last_number))
           FROM public.slutseddel_counters) AS counters_in_tx;
