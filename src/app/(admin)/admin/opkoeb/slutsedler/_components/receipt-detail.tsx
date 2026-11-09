@@ -225,7 +225,9 @@ export function ReceiptDetail({ receiptId }: { receiptId: string }) {
   const total = num(r.total_amount) ?? 0;
   const rules = rulesInput(r);
   const remainder = payoutRemainderOere(rules);
-  const blockers = status === "confirmed" ? payBlockers(rules) : [];
+  // Udbetaling sker altid til bank (pay-ruten sætter payout_method='bank'). Efter en delvis
+  // modregning i kassen står payout_method på 'modregning', men resten skal stadig kunne udbetales.
+  const blockers = status === "confirmed" ? payBlockers({ ...rules, payout_method: "bank" }) : [];
   const locked = status === "confirmed" || status === "paid";
   const storeName = stores.find((s) => s.id === r.location_id)?.name;
   const number = str(r.receipt_number);

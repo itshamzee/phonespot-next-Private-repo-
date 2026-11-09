@@ -477,6 +477,7 @@ describe("GET /api/trade-in/receipts (lists)", () => {
         seller_type: "private",
         has_signed_scan: false,
         has_invoice: true,
+        suspected: false,
       },
     ]);
   });

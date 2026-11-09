@@ -196,6 +196,14 @@ describe("ReceiptDetail", () => {
     expect(screen.getByText(/Kun resten, 2\.500,00 kr\., udbetales til bank/)).toBeTruthy();
   });
 
+  it("lader resten udbetale til bank efter en delvis modregning i kassen", async () => {
+    // Kassen sætter payout_method='modregning' ved modregningen; resten går stadig til bank.
+    api.receipt = { ...confirmedPrivate(), has_signed_scan: true, offset_amount: 100000, payout_method: "modregning" };
+    await open();
+    expect(payButton().disabled).toBe(false);
+    expect(screen.queryByText("Vælg udbetaling til bank")).toBeNull();
+  });
+
   it("holder udbetaling lukket med begrundelse, når kontooplysningerne ikke er gemt på sedlen", async () => {
     api.receipt = { ...confirmedPrivate(), has_signed_scan: true, has_bank_account: false, seller_bank_reg: null, seller_bank_account: null };
     await open();

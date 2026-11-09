@@ -16,6 +16,7 @@ import {
   caseStockSummary,
   casePaymentLines,
   checkPayments,
+  deviceNeedsIdentifier,
   discountableBase,
   mergeSkuLine,
   paymentsNeedCustomer,
@@ -41,6 +42,7 @@ import {
   DiscountDialog,
   DoneDialog,
   FreeTextDialog,
+  IdentifierDialog,
   SplitDialog,
   btnPrimary,
   fieldClass,
@@ -60,6 +62,9 @@ type LookupDevice = {
   id: string;
   barcode: string | null;
   imei: string | null;
+  serial_number: string | null;
+  blocked: boolean;
+  has_purchase_document: boolean;
   grade: string | null;
   storage: string | null;
   color: string | null;
@@ -96,7 +101,35 @@ type Dialog =
   | "discount"
   | "customer"
   | "split"
-  | "card";
+  | "card"
+  | "identifier";
+
+/** A unit on its way into the cart (from a scan, the search list or a device tile). */
+type DeviceToAdd = {
+  id: string;
+  name: string;
+  grade: string | null;
+  storage: string | null;
+  priceOere: number;
+  vatScheme: string | null;
+  hasIdentifier: boolean;
+  hasPurchaseDocument: boolean;
+  blocked?: boolean;
+};
+
+function fromLookup(d: LookupDevice): DeviceToAdd {
+  return {
+    id: d.id,
+    name: d.product_templates?.display_name ?? "Enhed",
+    grade: d.grade,
+    storage: d.storage,
+    priceOere: d.selling_price,
+    vatScheme: d.vat_scheme,
+    hasIdentifier: !!(d.imei?.trim() || d.serial_number?.trim()),
+    hasPurchaseDocument: d.has_purchase_document !== false,
+    blocked: d.blocked === true,
+  };
+}
 
 const CHIP_QUICK = "__quick";
 const CHIP_DEVICES = "__devices";
@@ -160,6 +193,8 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   const [dialogError, setDialogError] = useState("");
   const [dialogBusy, setDialogBusy] = useState(false);
   const [depositCase, setDepositCase] = useState<CaseContext | null>(null);
+  // A brugtmoms unit without IMEI/serial number waits here while the cashier scans it.
+  const [pendingDevice, setPendingDevice] = useState<DeviceToAdd | null>(null);
   const [splitInitial, setSplitInitial] = useState<ReturnType<typeof newPaymentLine>[]>([]);
   const [processing, setProcessing] = useState(false);
   // Integrated terminal only: the key of the charge that is waiting on the terminal.
@@ -405,7 +440,22 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     clearScan();
   }
 
-  function addDevice(d: { id: string; name: string; grade: string | null; storage: string | null; priceOere: number; vatScheme: string | null }) {
+  /**
+   * A blocked unit is refused. A brugtmoms unit without IMEI/serial number asks for it first
+   * (the receipt must carry it); units that have one go straight in, with no extra round trip.
+   */
+  function addDevice(d: DeviceToAdd, imei?: string) {
+    if (d.blocked) {
+      setError("Enheden er spærret og kan ikke sælges");
+      clearScan();
+      return;
+    }
+    if (!imei && deviceNeedsIdentifier(d) && !lines.some((l) => l.type === "device" && l.deviceId === d.id)) {
+      setPendingDevice(d);
+      setDialog("identifier");
+      clearScan();
+      return;
+    }
     setLines((prev) =>
       prev.some((l) => l.type === "device" && l.deviceId === d.id)
         ? prev
@@ -419,6 +469,8 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
               detail: [d.storage, d.grade ? `Grade ${d.grade}` : null].filter(Boolean).join(" · "),
               price: d.priceOere,
               vatScheme: d.vatScheme === "brugtmoms" ? "brugtmoms" : "regular",
+              ...(imei ? { imei } : {}),
+              ...(d.hasPurchaseDocument ? {} : { missingPurchaseDocument: true }),
             },
           ],
     );
@@ -532,14 +584,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
       const exactDevice = devs.length === 1 && skus.length === 0 ? devs[0] : null;
       const exactSku = skus.length === 1 && devs.length === 0 ? skus[0] : null;
       if (exactDevice) {
-        addDevice({
-          id: exactDevice.id,
-          name: exactDevice.product_templates?.display_name ?? "Enhed",
-          grade: exactDevice.grade,
-          storage: exactDevice.storage,
-          priceOere: exactDevice.selling_price,
-          vatScheme: exactDevice.vat_scheme,
-        });
+        addDevice(fromLookup(exactDevice));
       } else if (exactSku) {
         addSku({ id: exactSku.id, title: exactSku.title, priceOere: effectiveSkuPrice(exactSku), lagersalg: exactSku.lagersalg === true });
       } else {
@@ -890,20 +935,12 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                       key={d.id}
                       type="button"
                       className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
-                      onClick={() =>
-                        addDevice({
-                          id: d.id,
-                          name: d.product_templates?.display_name ?? "Enhed",
-                          grade: d.grade,
-                          storage: d.storage,
-                          priceOere: d.selling_price,
-                          vatScheme: d.vat_scheme,
-                        })
-                      }
+                      onClick={() => addDevice(fromLookup(d))}
                     >
                       <span>
                         <b>{d.product_templates?.display_name ?? "Enhed"}</b>
                         <span className="block text-[#5E6A63]">{[d.storage, d.color, d.grade ? `Grade ${d.grade}` : null, d.barcode].filter(Boolean).join(" · ")}</span>
+                        {d.blocked && <span className="block font-semibold text-red-700">Spærret</span>}
                       </span>
                       <span className="tabular-nums">{fmt(d.selling_price)}</span>
                     </button>
@@ -1008,7 +1045,18 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                     key={d.id}
                     type="button"
                     className={tileClass}
-                    onClick={() => addDevice({ id: d.id, name: d.name, grade: d.grade, storage: d.storage, priceOere: d.priceOere, vatScheme: d.vatScheme })}
+                    onClick={() =>
+                      addDevice({
+                        id: d.id,
+                        name: d.name,
+                        grade: d.grade,
+                        storage: d.storage,
+                        priceOere: d.priceOere,
+                        vatScheme: d.vatScheme,
+                        hasIdentifier: d.hasIdentifier,
+                        hasPurchaseDocument: d.hasPurchaseDocument,
+                      })
+                    }
                   >
                     <span>
                       <b className="text-[15px]">{d.name}</b>
@@ -1055,6 +1103,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
             onDiscount={() => setDialog("discount")}
             onMethod={pickMethod}
             onSplit={() => openSplit()}
+            onOffset={() => openSplit("opkoeb")}
             onCharge={requestCharge}
           />
         </div>
@@ -1106,6 +1155,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
         <SplitDialog
           total={totals.total}
           hasCustomer={!!customer}
+          locationId={locationId}
           initialLines={splitInitial}
           onClose={() => setDialog(null)}
           onConfirm={(ls) => {
@@ -1124,6 +1174,21 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           onCancelTerminal={() => void cancelTerminal()}
           onClose={() => setDialog(null)}
           onApproved={(r) => void submitSale({ card: true, terminalReceipt: r })}
+        />
+      )}
+      {dialog === "identifier" && pendingDevice && (
+        <IdentifierDialog
+          deviceName={pendingDevice.name}
+          onClose={() => {
+            setPendingDevice(null);
+            setDialog(null);
+          }}
+          onConfirm={(imei) => {
+            const d = pendingDevice;
+            setPendingDevice(null);
+            setDialog(null);
+            addDevice(d, imei);
+          }}
         />
       )}
       {done && <DoneDialog sale={done} onNew={newCustomer} />}

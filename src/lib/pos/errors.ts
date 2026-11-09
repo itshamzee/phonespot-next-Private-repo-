@@ -45,7 +45,10 @@ const CATALOG: Record<string, Entry> = {
   discount_exceeds_total: { status: 400, message: () => "Rabatten kan ikke overstige varernes værdi" },
   invalid_payment_type: { status: 400, message: () => "Ugyldig betalingstype" },
   invalid_payment_amount: { status: 400, message: () => "Beløb skal være større end 0" },
-  payment_reference_required: { status: 400, message: () => "Angiv nummer/kode på tilgodebevis eller gavekort" },
+  payment_reference_required: {
+    status: 400,
+    message: () => "Angiv nummer/kode på tilgodebevis eller gavekort, eller slutseddelnummeret ved modregning",
+  },
   payment_mismatch: { status: 400, message: () => "Betalingerne skal give præcis totalen" },
   customer_required_for_invoice: { status: 400, message: () => "Vælg en kunde for at betale med faktura" },
   insufficient_stock: { status: 409, message: (d) => `Ikke nok på lager: ${d ?? "varen"}` },
@@ -149,6 +152,22 @@ const CATALOG: Record<string, Entry> = {
       "Slutsedlen kan ikke annulleres. Den er udbetalt, modregnet eller allerede annulleret, eller en enhed er ikke længere i modtagelse.",
   },
   void_reason_required: { status: 400, message: () => "Skriv en begrundelse for annulleringen" },
+  // Kassen: spærrede enheder, IMEI på bonen og modregning af opkøb (pos_create_sale)
+  device_blocked: { status: 409, message: (d) => `Enheden ${d ?? ""} er spærret og kan ikke sælges` },
+  imei_required: { status: 400, message: (d) => `Skriv IMEI eller serienummer på enheden ${d ?? ""}` },
+  imei_mismatch: { status: 409, message: (d) => `IMEI eller serienummer passer ikke med enheden ${d ?? ""}` },
+  imei_invalid: { status: 400, message: (d) => `Ugyldigt IMEI eller serienummer på enheden ${d ?? ""}` },
+  trade_in_not_found: { status: 404, message: (d) => `Slutseddel ${d ?? ""} findes ikke` },
+  trade_in_not_settleable: {
+    status: 409,
+    message: (d) =>
+      `Slutseddel ${d ?? ""} kan ikke modregnes. Den skal være bekræftet i denne butik, have sit bilag og må ikke være modregnet, udbetalt eller spærret.`,
+  },
+  trade_in_amount_too_high: {
+    status: 400,
+    message: (d) =>
+      `Modregningen kan højst være slutsedlens total${d ? ` på ${(Number(d) / 100).toLocaleString("da-DK", { minimumFractionDigits: 2 })} kr.` : ""}`,
+  },
 };
 
 const PATTERN = /pos:([a-z_]+)(?::([^\n]*))?/;

@@ -151,6 +151,9 @@ export type DeviceTile = {
   barcode: string | null;
   priceOere: number;
   vatScheme: "brugtmoms" | "regular";
+  /** IMEI or serial number on file (a brugtmoms unit without one is prompted for at the till). */
+  hasIdentifier: boolean;
+  hasPurchaseDocument: boolean;
 };
 
 /** Devices that are for sale at the location (the "Enheder" chip). */
@@ -158,9 +161,12 @@ export async function listedDeviceTiles(locationId: string, limit = 40): Promise
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("devices")
-    .select("id, barcode, grade, storage, color, selling_price, vat_scheme, product_templates ( display_name )")
+    .select(
+      "id, barcode, imei, serial_number, grade, storage, color, selling_price, vat_scheme, product_templates ( display_name ), purchase_documents ( id )",
+    )
     .eq("status", "listed")
     .eq("location_id", locationId)
+    .is("blocked_at", null)
     .gt("selling_price", 0)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -173,7 +179,10 @@ export async function listedDeviceTiles(locationId: string, limit = 40): Promise
     color: string | null;
     selling_price: number;
     vat_scheme: "brugtmoms" | "regular" | null;
+    imei: string | null;
+    serial_number: string | null;
     product_templates: { display_name: string } | Array<{ display_name: string }> | null;
+    purchase_documents: Array<{ id: string }> | { id: string } | null;
   }>).map((d) => ({
     id: d.id,
     name: one(d.product_templates)?.display_name ?? "Enhed",
@@ -183,5 +192,7 @@ export async function listedDeviceTiles(locationId: string, limit = 40): Promise
     barcode: d.barcode,
     priceOere: d.selling_price,
     vatScheme: d.vat_scheme === "brugtmoms" ? "brugtmoms" : "regular",
+    hasIdentifier: !!(d.imei?.trim() || d.serial_number?.trim()),
+    hasPurchaseDocument: Array.isArray(d.purchase_documents) ? d.purchase_documents.length > 0 : d.purchase_documents != null,
   }));
 }

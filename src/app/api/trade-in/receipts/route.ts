@@ -94,6 +94,8 @@ export async function GET(req: Request) {
           seller_type: s.seller_type,
           has_signed_scan: s.has_signed_scan,
           has_invoice: s.has_invoice,
+          // Kassen viser, hvorfor en seddel under mistanke ikke kan modregnes.
+          suspected: s.suspected_at != null,
         },
       ]);
     }

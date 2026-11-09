@@ -20,7 +20,8 @@ export type DineroKey =
   | "depositum"
   | "kassedifference"
   | "bank"
-  | "udlaeg";
+  | "udlaeg"
+  | "opkoeb_afregning";
 
 export const DINERO_ACCOUNTS: Record<DineroKey, { label: string; account: string }> = {
   omsaetning: { label: "Omsætning (salg med 25 % moms, ekskl. moms)", account: "[KONTO-OMSAETNING]" },
@@ -38,6 +39,7 @@ export const DINERO_ACCOUNTS: Record<DineroKey, { label: string; account: string
   kassedifference: { label: "Kassedifference", account: "[KONTO-KASSEDIFFERENCE]" },
   bank: { label: "Bank / pengeskab", account: "[KONTO-BANK]" },
   udlaeg: { label: "Dagens udlæg", account: "[KONTO-UDLAEG]" },
+  opkoeb_afregning: { label: "Afregning opkøb (modregnet i salg)", account: "[KONTO-OPKOEB-AFREGNING]" },
 };
 
 export const PAYMENT_TO_DINERO: Record<string, DineroKey> = {
@@ -48,4 +50,6 @@ export const PAYMENT_TO_DINERO: Record<string, DineroKey> = {
   faktura: "debitorer",
   tilgodebevis: "tilgodebevis",
   gavekort: "gavekort",
+  // The shop's debt to the seller on the slutseddel, settled in the sale (not cash).
+  opkoeb: "opkoeb_afregning",
 };

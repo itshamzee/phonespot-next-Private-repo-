@@ -11,6 +11,8 @@ export const PAYMENT_TYPES = [
   "faktura",
   "tilgodebevis",
   "gavekort",
+  // Modregning af en bekræftet slutseddel (opkøb). Reference = slutseddelnummeret.
+  "opkoeb",
 ] as const;
 export type PaymentType = (typeof PAYMENT_TYPES)[number];
 
@@ -22,14 +24,15 @@ export const PAYMENT_LABELS: Record<PaymentType, string> = {
   faktura: "Faktura",
   tilgodebevis: "Tilgodebevis",
   gavekort: "Gavekort",
+  opkoeb: "Modregnet opkøb",
 };
 
-/** Refund methods allowed on a credit note (money going back to the customer). */
+/** Refund methods allowed on a credit note (money going back to the customer). Never "opkoeb". */
 export const REFUND_TYPES = ["kontant", "kort_terminal", "mobilepay", "tilgodebevis"] as const;
 export type RefundType = (typeof REFUND_TYPES)[number];
 
-/** Payment types that require a reference (voucher / gift card code). */
-export const REFERENCE_REQUIRED_TYPES: readonly PaymentType[] = ["tilgodebevis", "gavekort"];
+/** Payment types that require a reference (voucher / gift card code / slutseddel number). */
+export const REFERENCE_REQUIRED_TYPES: readonly PaymentType[] = ["tilgodebevis", "gavekort", "opkoeb"];
 
 export const DISCOUNT_REASONS = ["Fejl", "Kundeservice", "Tilbud", "Partner", "Andet"] as const;
 export type DiscountReason = (typeof DISCOUNT_REASONS)[number];

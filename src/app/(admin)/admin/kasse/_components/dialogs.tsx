@@ -18,9 +18,12 @@ import { oereToInput, parseKr } from "@/lib/pos/money";
 import { checkTerminalReceipt, TERMINAL_RECEIPT_MAX } from "@/lib/pos/terminal-receipt";
 import {
   DEFAULT_DEPOSIT_SUGGESTION_OERE,
+  tradeInOffsetProblem,
   validateDeposit,
   type CaseContext,
+  type TradeInLookup,
 } from "@/lib/pos/kasse-logic";
+import { normalizeIdentifier } from "@/lib/opkoeb/rules";
 import { fmtKr } from "./format";
 import { newPaymentLine, paymentLinesToInput, type PaymentLineState } from "./payment-lines";
 
@@ -378,6 +381,70 @@ export function FreeTextDialog({
 }
 
 /* ------------------------------------------------------------------ */
+/*  IMEI / serial number for a unit without one on file                */
+/* ------------------------------------------------------------------ */
+
+export function IdentifierDialog({
+  deviceName,
+  onConfirm,
+  onClose,
+}: {
+  deviceName: string;
+  /** The normalised IMEI or serial number. */
+  onConfirm: (identifier: string) => void;
+  onClose: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const [invalid, setInvalid] = useState(false);
+
+  function confirm() {
+    const n = normalizeIdentifier(value);
+    if (!n) {
+      setInvalid(true);
+      return;
+    }
+    onConfirm(n.value);
+  }
+
+  return (
+    <Modal title="Enhedens IMEI eller serienummer" onClose={onClose}>
+      <p className="text-sm text-[#5E6A63]">
+        <b className="text-[#15211B]">{deviceName}</b> har intet IMEI eller serienummer. Scan eller skriv det, så det står på bonen.
+      </p>
+      <label className="mb-1 mt-4 block text-sm text-[#5E6A63]" htmlFor="kasse-device-identifier">
+        IMEI eller serienummer
+      </label>
+      <input
+        id="kasse-device-identifier"
+        autoFocus
+        autoComplete="off"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setInvalid(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            confirm();
+          }
+        }}
+        className={`${fieldClass} tabular-nums`}
+      />
+      {invalid && <p className="mt-1.5 text-sm text-red-700">Ugyldigt IMEI eller serienummer</p>}
+      <div className="mt-5 flex justify-end gap-2">
+        <button type="button" className={btnSecondary} onClick={onClose}>
+          Annuller
+        </button>
+        <button type="button" className={btnPrimary} disabled={!value.trim()} onClick={confirm}>
+          Læg i kurv
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Discount                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -502,31 +569,80 @@ export function CustomerDialog({ onPick, onClose }: { onPick: (c: CustomerPick) 
 /*  Split payment                                                      */
 /* ------------------------------------------------------------------ */
 
+/** Lookup state of a "Modregnet opkøb" line's slutseddel number. */
+type OffsetLookup =
+  | { state: "loading" }
+  | { state: "found"; receipt: TradeInLookup; problem: string | null }
+  | { state: "missing" }
+  | { state: "error"; message: string };
+
+/** An offset line is usable when its slutseddel was found, can be settled here and covers the amount. */
+function offsetLineProblem(line: PaymentLineState, lookup: OffsetLookup | undefined, lines: PaymentLineState[]): string | null {
+  if (!lookup || lookup.state !== "found") return "Find slutsedlen";
+  if (lookup.problem) return lookup.problem;
+  const amount = parseKr(line.amountKr) ?? 0;
+  if (amount > lookup.receipt.total_amount) return `Højst ${fmtKr(lookup.receipt.total_amount)} på denne slutseddel`;
+  const ref = line.reference.trim();
+  if (lines.some((l) => l.id !== line.id && l.type === "opkoeb" && l.reference.trim() === ref)) {
+    return "Slutsedlen er allerede brugt i en anden linje";
+  }
+  return null;
+}
+
 export function SplitDialog({
   total,
   hasCustomer,
+  locationId,
   initialLines,
   onConfirm,
   onClose,
 }: {
   total: number;
   hasCustomer: boolean;
+  /** The register's store: a slutseddel can only be offset in its own store. */
+  locationId: string;
   initialLines: PaymentLineState[];
   onConfirm: (lines: PaymentLineState[]) => void;
   onClose: () => void;
 }) {
   const [lines, setLines] = useState<PaymentLineState[]>(initialLines);
+  const [offsets, setOffsets] = useState<Record<string, OffsetLookup>>({});
   const input = paymentLinesToInput(lines);
   const check = validatePayments(input, total);
   const paid = input.reduce((s, l) => s + l.amountOere, 0);
   const remaining = total - paid;
   const needsCustomer = lines.some((l) => l.type === "faktura") && !hasCustomer;
+  const offsetBlocked = lines.some((l) => l.type === "opkoeb" && offsetLineProblem(l, offsets[l.id], lines) !== null);
 
   function add(type: PaymentType) {
     setLines((ls) => [...ls, newPaymentLine(type, Math.max(0, remaining))]);
   }
   function update(id: string, patch: Partial<PaymentLineState>) {
     setLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  }
+
+  async function findReceipt(line: PaymentLineState) {
+    const number = line.reference.trim();
+    if (!number) return;
+    setOffsets((o) => ({ ...o, [line.id]: { state: "loading" } }));
+    try {
+      const rows = await posJson<TradeInLookup[]>(`/api/trade-in/receipts?number=${encodeURIComponent(number)}`);
+      const receipt = rows[0];
+      if (!receipt) {
+        setOffsets((o) => ({ ...o, [line.id]: { state: "missing" } }));
+        return;
+      }
+      const problem = tradeInOffsetProblem(receipt, locationId);
+      setOffsets((o) => ({ ...o, [line.id]: { state: "found", receipt, problem } }));
+      // The offset never exceeds the slutseddel: cap the line, the rest is paid another way.
+      const amount = parseKr(line.amountKr);
+      if (!problem && (amount == null || amount <= 0 || amount > receipt.total_amount)) {
+        update(line.id, { amountKr: oereToInput(amount != null && amount > 0 ? Math.min(amount, receipt.total_amount) : receipt.total_amount) });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Slutsedlen kunne ikke hentes";
+      setOffsets((o) => ({ ...o, [line.id]: { state: "error", message } }));
+    }
   }
 
   return (
@@ -542,7 +658,7 @@ export function SplitDialog({
             onClick={() => add(t)}
             className="h-9 rounded-[10px] border border-[#C9D0C7] bg-white px-3 text-sm font-semibold hover:bg-[#F5F6F4]"
           >
-            + {t === "kort_terminal" ? "Kort" : PAYMENT_LABELS[t]}
+            + {t === "kort_terminal" ? "Kort" : t === "opkoeb" ? "Modregn opkøb" : PAYMENT_LABELS[t]}
           </button>
         ))}
       </div>
@@ -564,13 +680,30 @@ export function SplitDialog({
                 Fjern
               </button>
             </div>
-            {REFERENCE_REQUIRED_TYPES.includes(l.type) && (
-              <input
-                value={l.reference}
-                onChange={(e) => update(l.id, { reference: e.target.value })}
-                placeholder={l.type === "gavekort" ? "Gavekortnummer" : "Nummer på tilgodebevis"}
-                className="mt-2 h-10 w-full rounded-[10px] border border-[#C9D0C7] px-3 text-sm outline-none focus:border-[#1A3D2E]"
+            {l.type === "opkoeb" ? (
+              <OffsetReference
+                line={l}
+                lookup={offsets[l.id]}
+                problem={offsetLineProblem(l, offsets[l.id], lines)}
+                onChange={(reference) => {
+                  update(l.id, { reference });
+                  setOffsets((o) => {
+                    const next = { ...o };
+                    delete next[l.id];
+                    return next;
+                  });
+                }}
+                onFind={() => void findReceipt(l)}
               />
+            ) : (
+              REFERENCE_REQUIRED_TYPES.includes(l.type) && (
+                <input
+                  value={l.reference}
+                  onChange={(e) => update(l.id, { reference: e.target.value })}
+                  placeholder={l.type === "gavekort" ? "Gavekortnummer" : "Nummer på tilgodebevis"}
+                  className="mt-2 h-10 w-full rounded-[10px] border border-[#C9D0C7] px-3 text-sm outline-none focus:border-[#1A3D2E]"
+                />
+              )
             )}
             {l.type === "faktura" && !hasCustomer && <p className="mt-2 text-xs text-red-700">Vælg en kunde for at betale med faktura.</p>}
             {l.type === "kort_terminal" && <p className="mt-2 text-xs text-[#5E6A63]">Beløbet slås ind på Worldline-terminalen.</p>}
@@ -589,11 +722,76 @@ export function SplitDialog({
         <button type="button" className={btnSecondary} onClick={onClose}>
           Annuller
         </button>
-        <button type="button" className={btnPrimary} disabled={!check.ok || needsCustomer || lines.length === 0} onClick={() => onConfirm(lines)}>
+        <button
+          type="button"
+          className={btnPrimary}
+          disabled={!check.ok || needsCustomer || offsetBlocked || lines.length === 0}
+          onClick={() => onConfirm(lines)}
+        >
           Brug delt betaling
         </button>
       </div>
     </Modal>
+  );
+}
+
+/** Slutseddel number on a "Modregnet opkøb" line: scan or type it, Enter looks it up and shows its total. */
+function OffsetReference({
+  line,
+  lookup,
+  problem,
+  onChange,
+  onFind,
+}: {
+  line: PaymentLineState;
+  lookup: OffsetLookup | undefined;
+  problem: string | null;
+  onChange: (reference: string) => void;
+  onFind: () => void;
+}) {
+  const inputId = `kasse-offset-${line.id}`;
+  return (
+    <div className="mt-2">
+      <label htmlFor={inputId} className="sr-only">
+        Slutseddelnummer
+      </label>
+      <div className="flex gap-2">
+        <input
+          id={inputId}
+          autoFocus
+          autoComplete="off"
+          value={line.reference}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onFind();
+            }
+          }}
+          placeholder="Slutseddelnummer, fx SS-2026-0001"
+          className="h-10 flex-1 rounded-[10px] border border-[#C9D0C7] px-3 text-sm outline-none focus:border-[#1A3D2E]"
+        />
+        <button
+          type="button"
+          onClick={onFind}
+          disabled={!line.reference.trim() || lookup?.state === "loading"}
+          className="h-10 rounded-[10px] border border-[#C9D0C7] bg-white px-3 text-sm font-semibold hover:bg-[#F5F6F4] disabled:opacity-40"
+        >
+          {lookup?.state === "loading" ? "Søger..." : "Find"}
+        </button>
+      </div>
+      {lookup?.state === "found" && (
+        <>
+          <p className={`mt-2 text-xs ${problem ? "text-[#5E6A63]" : "text-[#23703F]"}`}>
+            Slutsedlens total {fmtKr(lookup.receipt.total_amount)}
+            {!problem && " · Kan modregnes"}
+          </p>
+          {problem && <p className="mt-1 text-xs text-red-700">{problem}</p>}
+        </>
+      )}
+      {lookup?.state === "missing" && <p className="mt-2 text-xs text-red-700">Slutsedlen findes ikke i dine butikker</p>}
+      {lookup?.state === "error" && <p className="mt-2 text-xs text-red-700">{lookup.message}</p>}
+    </div>
   );
 }
 

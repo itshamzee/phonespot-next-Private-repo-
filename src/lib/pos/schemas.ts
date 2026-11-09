@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DISCOUNT_REASONS, PAYMENT_TYPES, REFUND_TYPES } from "./constants";
+import { normalizeIdentifier } from "@/lib/opkoeb/rules";
 
 /** Loose UUID shape (Postgres uuid_generate_v4 / gen_random_uuid), not RFC-strict. */
 const uuid = z
@@ -20,8 +21,27 @@ const terminalReference = z
   .optional()
   .nullable();
 
+/**
+ * IMEI or serial number typed/scanned at the till for a unit that has none on file.
+ * Normalised like the buyback (spaces removed, upper case); an IMEI must pass Luhn.
+ * Empty means "not given" (the database decides whether it is required).
+ */
+const deviceIdentifier = z
+  .string()
+  .max(40)
+  .transform((v, ctx) => {
+    if (!v.trim()) return undefined;
+    const n = normalizeIdentifier(v);
+    if (!n) {
+      ctx.addIssue({ code: "custom", message: "Ugyldigt IMEI eller serienummer" });
+      return z.NEVER;
+    }
+    return n.value;
+  })
+  .optional();
+
 export const saleItemSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("device"), deviceId: uuid, repairTicketItemId: uuid.optional() }),
+  z.object({ type: z.literal("device"), deviceId: uuid, repairTicketItemId: uuid.optional(), imei: deviceIdentifier }),
   z.object({
     type: z.literal("sku_product"),
     skuProductId: uuid,
@@ -60,11 +80,17 @@ export const saleItemSchema = z.discriminatedUnion("type", [
 ]);
 export type SaleItem = z.infer<typeof saleItemSchema>;
 
-export const paymentLineSchema = z.object({
-  type: z.enum(PAYMENT_TYPES),
-  amountOere: oere.min(1),
-  reference: z.string().trim().max(100).optional().nullable(),
-});
+export const paymentLineSchema = z
+  .object({
+    type: z.enum(PAYMENT_TYPES),
+    amountOere: oere.min(1),
+    reference: z.string().trim().max(100).optional().nullable(),
+  })
+  // A trade-in offset names the slutseddel it settles.
+  .refine((p) => p.type !== "opkoeb" || !!p.reference, {
+    message: "Angiv slutseddelnummeret",
+    path: ["reference"],
+  });
 
 export const refundLineSchema = z.object({
   type: z.enum(REFUND_TYPES),

@@ -42,6 +42,8 @@ type Props = {
   onDiscount: () => void;
   onMethod: (type: PaymentType) => void;
   onSplit: () => void;
+  /** Opens the split payment with a "Modregnet opkøb" line (slutseddel number). */
+  onOffset?: () => void;
   onCharge: () => void;
 };
 
@@ -128,6 +130,10 @@ export function CartPanel(p: Props) {
               <div className="text-[#5E6A63]">
                 {l.type === "repair_service" && l.detail}
                 {l.type === "device" && l.detail}
+                {l.type === "device" && l.imei && <span className="block tabular-nums">IMEI/serienr. {l.imei}</span>}
+                {l.type === "device" && l.missingPurchaseDocument && (
+                  <span className="block font-semibold text-[#8A5A00]">Mangler indkøbsbilag</span>
+                )}
                 {(l.type === "sku_product" || l.type === "free_text") && (
                   <span className="inline-flex items-center gap-2">
                     <button
@@ -270,6 +276,11 @@ export function CartPanel(p: Props) {
               Del betaling · Faktura · Klarna · Tilgodebevis
             </button>
           )
+        )}
+        {!zero && p.onOffset && (
+          <button type="button" onClick={p.onOffset} className="text-center text-[13px] text-[#1A3D2E] hover:text-[#2D6B45]">
+            Modregn opkøb
+          </button>
         )}
 
         {single === "kontant" && !zero && (

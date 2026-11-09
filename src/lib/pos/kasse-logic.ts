@@ -18,7 +18,20 @@ import { threeForTwo, type ThreeForTwoLine, type ThreeForTwoResult } from "@/lib
 export const DEFAULT_DEPOSIT_SUGGESTION_OERE = 50_000;
 
 export type CartLine =
-  | { key: string; type: "device"; deviceId: string; name: string; detail?: string; price: number; vatScheme: "brugtmoms" | "regular"; repairTicketItemId?: string }
+  | {
+      key: string;
+      type: "device";
+      deviceId: string;
+      name: string;
+      detail?: string;
+      price: number;
+      vatScheme: "brugtmoms" | "regular";
+      repairTicketItemId?: string;
+      /** IMEI or serial number typed at the till (only for a unit without one on file). */
+      imei?: string;
+      /** No purchase document (indkøbsbilag) on file: warned about, never blocks the sale. */
+      missingPurchaseDocument?: boolean;
+    }
   | {
       key: string;
       type: "sku_product";
@@ -237,7 +250,14 @@ export function toSaleItems(lines: CartLine[], applied: AppliedDepositLine[]): S
   const items: SaleItem[] = lines.flatMap((l): SaleItem[] => {
     switch (l.type) {
       case "device":
-        return [{ type: "device", deviceId: l.deviceId, ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}) }];
+        return [
+          {
+            type: "device",
+            deviceId: l.deviceId,
+            ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}),
+            ...(l.imei ? { imei: l.imei } : {}),
+          },
+        ];
       case "sku_product": {
         const free = bundle.byKey[l.key];
         if (free && free.freeUnits > 0 && !l.repairTicketItemId) {
@@ -431,4 +451,46 @@ export function parseKasseParams(params: { get(name: string): string | null }): 
   const caseId = raw && /^[0-9a-z-]{3,40}$/i.test(raw.trim()) ? raw.trim() : null;
   const dep = params.get("depositum");
   return { caseId, openDeposit: !!caseId && (dep === "1" || dep === "true") };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Opkøb: IMEI on the receipt and offsetting a slutseddel              */
+/* ------------------------------------------------------------------ */
+
+/** A brugtmoms unit must carry an IMEI or serial number on the receipt; ask for it when none is on file. */
+export function deviceNeedsIdentifier(d: { vatScheme: string | null; hasIdentifier: boolean }): boolean {
+  return d.vatScheme === "brugtmoms" && !d.hasIdentifier;
+}
+
+/** GET /api/trade-in/receipts?number= (one row, only in the actor's stores). */
+export type TradeInLookup = {
+  id: string;
+  receipt_number: string;
+  status: string;
+  total_amount: number;
+  offset_amount: number | null;
+  location_id: string | null;
+  attestation: string | null;
+  seller_type: string;
+  has_signed_scan: boolean;
+  has_invoice: boolean;
+  suspected?: boolean;
+};
+
+/**
+ * Why a slutseddel cannot be offset in a sale at this store, or null when it can.
+ * Mirrors the check in pos_create_sale (which decides).
+ */
+export function tradeInOffsetProblem(r: TradeInLookup, locationId: string): string | null {
+  if (r.suspected) return "Slutsedlen er spærret ved mistanke";
+  if (r.status === "voided") return "Slutsedlen er annulleret";
+  if (r.status === "draft") return "Slutsedlen er ikke bekræftet endnu";
+  if (r.status !== "confirmed" || r.offset_amount != null) return "Slutsedlen er allerede udbetalt eller modregnet";
+  if (r.location_id !== locationId) return "Slutsedlen hører til en anden butik";
+  if (r.seller_type === "business") {
+    if (!r.has_invoice) return "Læg firmaets faktura op, før den kan modregnes";
+  } else if (r.attestation !== "online_accept" && !r.has_signed_scan) {
+    return "Læg den underskrevne slutseddel op, før den kan modregnes";
+  }
+  return null;
 }

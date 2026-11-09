@@ -8,6 +8,7 @@ import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
  * GET /api/pos/lookup?q=<barcode|imei|search>&location_id=<id>
  * Look up a device by barcode/IMEI or search SKU products.
  * Returns matching devices (at this location, status=listed) and SKU products.
+ * Devices carry imei, serial_number, blocked and has_purchase_document.
  * Staff only.
  */
 export async function GET(request: NextRequest) {
@@ -28,12 +29,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ devices: [], skuProducts: [] });
     }
 
-    // Search devices by barcode or IMEI (exact match) at this location
+    // Search devices by barcode or IMEI (exact match) at this location. The purchase
+    // document is embedded (same round trip) so the Kasse can warn when it is missing.
     const deviceQuery = supabase
       .from("devices")
       .select(`
-        id, barcode, imei, grade, storage, color, selling_price, vat_scheme,
-        product_templates ( display_name, brand, model )
+        id, barcode, imei, serial_number, grade, storage, color, selling_price, vat_scheme, blocked_at,
+        product_templates ( display_name, brand, model ),
+        purchase_documents ( id )
       `)
       .eq("status", "listed")
       .or(`barcode.eq.${query},imei.eq.${query}`);
@@ -54,7 +57,14 @@ export async function GET(request: NextRequest) {
       .limit(10);
 
     return NextResponse.json({
-      devices: devices ?? [],
+      // blocked_at and the document rows are internal: the Kasse gets two flags.
+      devices: ((devices ?? []) as Array<Record<string, unknown>>).map(
+        ({ blocked_at, purchase_documents, ...d }) => ({
+          ...d,
+          blocked: blocked_at != null,
+          has_purchase_document: Array.isArray(purchase_documents) ? purchase_documents.length > 0 : purchase_documents != null,
+        }),
+      ),
       // attributes is internal: only the derived lagersalg flag (3 for 2) goes to the Kasse.
       skuProducts: (skuProducts ?? []).map(({ attributes, ...p }) => ({
         ...p,
