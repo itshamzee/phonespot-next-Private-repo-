@@ -23,6 +23,7 @@ import { ModelGrid, type ModelCardData } from "./model-grid";
 import { getHubContent, hasLifetimeWarranty } from "@/lib/repairs/brand-hub-content";
 import { fitTitle } from "@/lib/repairs/hub-meta";
 import styles from "@/components/repair/repair.module.css";
+import { localServiceKeyForBrand } from "@/lib/local-service-pages";
 
 export const revalidate = 3600;
 
@@ -119,7 +120,11 @@ export default async function BrandPage({ params }: Props) {
           <h2 id="find-model">Find din model</h2>
           <ModelGrid models={modelCards} brandName={brand.name} />
         </section>
-        <CityLinks label={content.label} note={content.cityNote} />
+        <CityLinks
+          label={content.label}
+          note={content.cityNote}
+          serviceKey={localServiceKeyForBrand(brand.slug)}
+        />
         <FaqSection title={`Spørgsmål om ${content.label}-reparation`} faqs={content.faqs} />
         <section className={styles.help}>
           <div>

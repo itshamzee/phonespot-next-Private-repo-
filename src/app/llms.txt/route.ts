@@ -69,6 +69,9 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
 - [Reparation for Næstved](${SITE}/reparation-naestved): ingen butik i Næstved; butikken i VestsjællandsCentret, Slagelse, ligger ca. 30 min ad rute 22, åbent alle ugens dage, eller send ind med gratis fragtlabel
+- [iPad-reparation i Vejle](${SITE}/reparation-vejle/ipad) og [i Slagelse](${SITE}/reparation-slagelse/ipad): ladestik skiftes med mikrolodning på ca. 30 min, skærm og batteri, faste priser pr. model
+- [PS5- og konsolreparation i Vejle](${SITE}/reparation-vejle/playstation) og [i Slagelse](${SITE}/reparation-slagelse/playstation): sort skærm på PS5 = oftest HDMI-porten; HDMI-port + indvendig rengøring 1.300 kr., 2-3 hverdage, 2 års garanti; også PS4, Xbox og Nintendo Switch; kan sendes ind
+- [Computer- og MacBook-reparation i Vejle](${SITE}/reparation-vejle/computer) og [i Slagelse](${SITE}/reparation-slagelse/computer): batteri, skærm, tastatur og rensning af MacBook; andre bærbare vurderes ved disken
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [Dyson-reparation](${SITE}/reparation/dyson): Dyson-støvsugere med fast pris pr. model, 12 måneders garanti på dele og arbejde, uafhængigt værksted
 - [Xbox-reparation](${SITE}/reparation/xbox): Xbox-konsoller og controllere i Vejle og Slagelse
@@ -81,7 +84,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Book reparation](${SITE}/reparation/booking)
 - [Refurbished iPhones](${SITE}/iphones): med 36 måneders garanti
 - [Garanti](${SITE}/garanti): garanti på refurbished enheder
-- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte telefoner, tablets og computere
+- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte og nu også nye, uåbnede telefoner, tablets, computere, konsoller, høretelefoner, Dyson og smart home. Fast pris, udbetaling inden 2 hverdage efter tjek, gratis retur hvis du afviser. Aflever i Vejle eller Slagelse (snart også Esbjerg), eller send med post
 - [Erhverv](${SITE}/erhverv): reparation og enheder til virksomheder
 - [Butikker](${SITE}/butik)
 - [Blog og guides](${SITE}/blog)

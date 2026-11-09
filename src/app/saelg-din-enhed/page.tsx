@@ -11,7 +11,7 @@ import styles from "@/components/sell-device/sell-device.module.css";
 export const metadata: Metadata = {
   title: "Sælg brugt elektronik – iPhone, Samsung og MacBook | PhoneSpot",
   description:
-    "Sælg din brugte iPhone, Samsung, iPad, MacBook eller smartwatch. Fast pris, udbetaling inden 2 hverdage og gratis retur, hvis du afviser. Vejle, Slagelse eller med post.",
+    "Sælg din brugte eller nye iPhone, Samsung, iPad, MacBook eller konsol. Fast pris, udbetaling inden 2 hverdage og gratis retur, hvis du afviser. Vejle, Slagelse eller med post.",
   alternates: { canonical: "https://phonespot.dk/saelg-din-enhed" },
   openGraph: {
     title: "Sælg din brugte elektronik | PhoneSpot",
@@ -35,6 +35,11 @@ const questions = [
       "Ja. Vælg din første enhed og tryk på Tilføj endnu en enhed. Du kan beskrive standen for hver enhed og sende dem i én samlet anmodning.",
   },
   {
+    question: "Køber I også ny og uåbnet elektronik?",
+    answer:
+      "Ja. Vi køber nu også nye og uåbnede enheder, fx en gave, du ikke skal bruge. Vælg den bedste stand i formularen, og skriv i kommentarfeltet, at enheden er ny, og om æsken er uåbnet. Gem gerne kvitteringen.",
+  },
+  {
     question: "Min model er ikke på listen. Hvad gør jeg?",
     answer:
       "Vælg enhedstype og tryk på Min enhed findes ikke på listen. Så kan du selv skrive mærke og model. Listen er en hjælp til formularen; vi vurderer din konkrete enhed.",
@@ -47,7 +52,7 @@ const questions = [
   {
     question: "Hvordan afleverer eller sender jeg enheden?",
     answer:
-      "Vælg din foretrukne løsning i formularen. Når der er en aftale, får du oplysninger om aflevering i Vejle eller Slagelse eller om indsendelse med en forsendelseslabel.",
+      "Vælg din foretrukne løsning i formularen. Når der er en aftale, får du oplysninger om aflevering i Vejle eller Slagelse eller om indsendelse med en forsendelseslabel. Snart kan du også aflevere i vores nye butik i Esbjerg.",
   },
   {
     question: "Hvordan gør jeg min enhed klar til salg?",
@@ -109,7 +114,8 @@ export default function SaelgDinEnhedPage() {
               <p>
                 Telefon, tablet, laptop, smartwatch, spillekonsol, controller,
                 høretelefoner, Dyson eller smart home, virkende eller defekte.
-                Du kan tilføje flere enheder i samme anmodning.
+                Nu køber vi også ny og uåbnet elektronik. Du kan tilføje flere
+                enheder i samme anmodning.
               </p>
               <div>
                 <StorefrontIcon kind="person" />
@@ -118,7 +124,8 @@ export default function SaelgDinEnhedPage() {
               <div>
                 <StorefrontIcon kind="pin" />
                 <span>
-                  Aflever i Vejle eller Slagelse, eller send efter aftale.
+                  Aflever i Vejle eller Slagelse, snart også Esbjerg, eller
+                  send efter aftale.
                 </span>
               </div>
               <div>

@@ -9,6 +9,7 @@ import { CAMPAIGN_OFFERS } from "@/app/black-november/[tilbud]/offers";
 import { IPHONE_SELL_PAGES } from "@/app/saelg-din-enhed/iphone/[model]/models";
 import { SELL_MODEL_PAGES } from "@/app/saelg-din-enhed/[device]/[model]/models";
 import { NEW_CATEGORY_PAGES } from "@/app/saelg-din-enhed/[device]/new-categories";
+import { getAllLocalServicePages } from "@/lib/local-service-pages";
 import { COMPARISONS } from "@/lib/comparisons";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
@@ -305,6 +306,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ].map((path) => ({
       url: `${BASE_URL}${path}`,
       lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
+    // Lokale ydelsessider (iPad, konsol, computer pr. by), 2026-11-10.
+    ...getAllLocalServicePages().map((page) => ({
+      url: `${BASE_URL}${page.path}`,
+      lastModified: new Date("2026-11-10"),
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),

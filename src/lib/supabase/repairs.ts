@@ -122,6 +122,64 @@ export async function getAllModelSlugs(): Promise<{ brand: string; model: string
   }));
 }
 
+/** En kolonne i en ydelsestabel: matcher ydelser på præcist navn eller kategori. */
+export type ServicePriceColumn = {
+  key: string;
+  label: string;
+  names?: string[];
+  categories?: string[];
+};
+
+export type ServicePriceRow = {
+  brandSlug: string;
+  modelSlug: string;
+  modelName: string;
+  /** Billigste aktive pris pr. kolonne-nøgle, eller null hvis ydelsen ikke findes. */
+  prices: Record<string, number | null>;
+};
+
+// Pristabel til lokale ydelsessider (iPad, konsol, computer pr. by). Én
+// forespørgsel; rækkefølgen følger `models`, og modeller uden nogen pris i de
+// valgte kolonner udelades, så tabellen aldrig viser tomme rækker.
+export async function getServicePriceRows(
+  models: { brand: string; model: string }[],
+  columns: ServicePriceColumn[],
+): Promise<ServicePriceRow[]> {
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("repair_models")
+    .select(
+      "slug, name, repair_brands!inner(slug), repair_services(name, price_dkk, service_category, active)",
+    )
+    .eq("active", true)
+    .in("slug", models.map((m) => m.model));
+  if (!data) return [];
+
+  type Row = {
+    slug: string;
+    name: string;
+    repair_brands: { slug: string };
+    repair_services: Pick<RepairService, "name" | "price_dkk" | "service_category" | "active">[];
+  };
+  const rows = data as unknown as Row[];
+  return models.flatMap(({ brand, model }) => {
+    const row = rows.find((r) => r.slug === model && r.repair_brands.slug === brand);
+    if (!row) return [];
+    const services = row.repair_services.filter((s) => s.active && s.price_dkk > 0);
+    const prices: Record<string, number | null> = {};
+    for (const col of columns) {
+      const hits = services.filter(
+        (s) =>
+          (col.names?.includes(s.name) ?? false) ||
+          (s.service_category !== null && (col.categories?.includes(s.service_category) ?? false)),
+      );
+      prices[col.key] = hits.length > 0 ? Math.min(...hits.map((s) => s.price_dkk)) : null;
+    }
+    if (Object.values(prices).every((p) => p === null)) return [];
+    return [{ brandSlug: brand, modelSlug: model, modelName: row.name, prices }];
+  });
+}
+
 export type RepairPriceSummary = {
   brandSlug: string;
   modelSlug: string;

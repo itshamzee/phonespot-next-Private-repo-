@@ -14,6 +14,8 @@ const TEXT = {
       "iPad, Samsung Galaxy Tab og andre tablets: knust glas, svagt batteri eller en tablet, der ikke vil lade. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     macbook:
       "Computerreparation i Vejle handler hos os mest om MacBook Air og MacBook Pro: batteri, skærm, tastatur og ladestik, og rensning af maskiner, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
+    console:
+      "Sort skærm på PS5 skyldes oftest en knækket HDMI-port. Vi skifter porten med mikrolodning og renser konsollen indvendigt i én pakke. Vi reparerer også PS4, Xbox og Nintendo Switch.",
   },
   slagelse: {
     android:
@@ -22,6 +24,8 @@ const TEXT = {
       "Knust glas eller et batteri, der ikke holder? Vi reparerer iPad og andre tablets i butikken i VestsjællandsCentret. Du får en fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     macbook:
       "Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
+    console:
+      "Reparation af porte: HDMI-port på PS5, PS4, Xbox og Nintendo Switch skiftes med mikrolodning. På PS5 renser vi også konsollen indvendigt i samme omgang.",
   },
 } as const;
 
@@ -41,7 +45,7 @@ export function CityCategorySections({ store }: { store: "vejle" | "slagelse" })
       heading: `iPad og tablets i ${city}`,
       text: t.tablet,
       links: [
-        { href: "/reparation/ipad", label: "iPad-reparation" },
+        { href: `/reparation-${store}/ipad`, label: `iPad-reparation i ${city}` },
         { href: "/reparation/tablet", label: "Alle tablets" },
       ],
     },
@@ -49,8 +53,16 @@ export function CityCategorySections({ store }: { store: "vejle" | "slagelse" })
       heading: `Computer og MacBook i ${city}`,
       text: t.macbook,
       links: [
-        { href: "/reparation/macbook", label: "MacBook-reparation" },
+        { href: `/reparation-${store}/computer`, label: `Computerreparation i ${city}` },
         { href: "/blog/hvad-koster-macbook-reparation", label: "Hvad koster MacBook-reparation?" },
+      ],
+    },
+    {
+      heading: `PS5 og konsoller i ${city}`,
+      text: t.console,
+      links: [
+        { href: `/reparation-${store}/playstation`, label: `PS5-reparation i ${city}` },
+        { href: "/blog/ps5-sort-skaerm-hdmi-reparation", label: "Sort skærm på PS5?" },
       ],
     },
   ];
