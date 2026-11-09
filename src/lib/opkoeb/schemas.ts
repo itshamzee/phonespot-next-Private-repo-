@@ -54,11 +54,17 @@ export const receiptDraftSchema = z.object({
 export type ReceiptDraft = z.infer<typeof receiptDraftSchema>;
 
 export const payBodySchema = z.object({
-  payout_note: text(500).nullish(),
+  payout_method: z.literal("bank"),
+  seller_bank_reg: z.string().regex(/^\d{4}$/, "Reg.nr. skal være 4 cifre"),
+  seller_bank_account: z
+    .string()
+    .regex(/^\d{6,10}$/, "Kontonummer skal være 6 til 10 cifre"),
+  account_owner_confirmed: z.literal(true),
 });
 
 export const suspicionBodySchema = z.object({
-  reason: z.string().trim().min(1, "Skriv en begrundelse").max(1000),
+  note: z.string().trim().min(1, "Skriv en note").max(1000),
+  police_notified: z.boolean(),
 });
 
 export const voidBodySchema = z.object({

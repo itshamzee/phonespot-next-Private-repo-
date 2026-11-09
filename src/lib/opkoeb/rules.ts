@@ -135,8 +135,9 @@ export function confirmBlockers(r: ReceiptForRules, today: string): string[] {
   const out: string[] = [];
 
   if (blank(r.seller_name)) out.push("Sælgers navn mangler");
+  // Bilaget skal bære sælgers adresse for alle sælgertyper (momsbek. § 122).
+  if (blank(r.seller_address)) out.push("Sælgers adresse mangler");
   if (r.seller_type === "private") {
-    if (blank(r.seller_address)) out.push("Sælgers adresse mangler");
     if (!r.seller_age_confirmed) out.push("Sælger skal være fyldt 18");
   } else {
     if (!r.seller_cvr || !/^\d{8}$/.test(r.seller_cvr)) {

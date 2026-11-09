@@ -44,9 +44,21 @@ describe("other schemas", () => {
   it("validates upload kinds and bodies", () => {
     expect(uploadKindSchema.safeParse("payout_proof").success).toBe(true);
     expect(uploadKindSchema.safeParse("x").success).toBe(false);
-    expect(suspicionBodySchema.safeParse({ reason: "Stjålet?" }).success).toBe(true);
-    expect(suspicionBodySchema.safeParse({ reason: "" }).success).toBe(false);
+    expect(suspicionBodySchema.safeParse({ note: "Stjålet?", police_notified: false }).success).toBe(true);
+    expect(suspicionBodySchema.safeParse({ note: " ", police_notified: true }).success).toBe(false);
+    expect(suspicionBodySchema.safeParse({ note: "x" }).success).toBe(false);
+    expect(suspicionBodySchema.safeParse({ note: "x".repeat(1001), police_notified: true }).success).toBe(false);
     expect(voidBodySchema.safeParse({ reason: "Fejl" }).success).toBe(true);
-    expect(payBodySchema.safeParse({}).success).toBe(true);
+    const pay = {
+      payout_method: "bank",
+      seller_bank_reg: "1234",
+      seller_bank_account: "1234567",
+      account_owner_confirmed: true,
+    };
+    expect(payBodySchema.safeParse({}).success).toBe(false);
+    expect(payBodySchema.safeParse(pay).success).toBe(true);
+    expect(payBodySchema.safeParse({ ...pay, account_owner_confirmed: false }).success).toBe(false);
+    expect(payBodySchema.safeParse({ ...pay, payout_method: "modregning" }).success).toBe(false);
+    expect(payBodySchema.safeParse({ ...pay, seller_bank_reg: "12" }).success).toBe(false);
   });
 });

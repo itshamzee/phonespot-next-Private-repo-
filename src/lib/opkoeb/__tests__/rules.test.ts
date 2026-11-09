@@ -117,12 +117,12 @@ describe("confirmBlockers", () => {
   it("requires lock checks", () => {
     expect(has(confirmBlockers(receipt({ lock_checks_confirmed: false }), TODAY), "Tjek Find My og spærring")).toBe(true);
   });
-  it("requires name, and address for private", () => {
+  it("requires name and address for every seller type", () => {
     const b = confirmBlockers(receipt({ seller_name: " ", seller_address: null }), TODAY);
     expect(has(b, "navn")).toBe(true);
     expect(has(b, "adresse")).toBe(true);
     const biz = receipt({ seller_type: "business", seller_cvr: "12345678", invoice_type: "med_moms", seller_address: null });
-    expect(has(confirmBlockers(biz, TODAY), "adresse")).toBe(false);
+    expect(has(confirmBlockers(biz, TODAY), "adresse")).toBe(true);
   });
   it("requires CVR and invoice type for business", () => {
     const b = confirmBlockers(receipt({ seller_type: "business", seller_cvr: "1234", invoice_type: null }), TODAY);
