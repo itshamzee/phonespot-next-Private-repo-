@@ -4,20 +4,17 @@ import { logActivity } from "@/lib/platform/activity-log";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { PosError } from "@/lib/pos/errors";
 import { loadReceiptForActor, sanitizeReceipt } from "@/lib/opkoeb/receipt-access";
-import { uploadKindSchema, type UploadKind } from "@/lib/opkoeb/schemas";
+import { UPLOAD_COLUMN, uploadKindSchema } from "@/lib/opkoeb/schemas";
 
 const BUCKET = "slutsedler";
-const MAX_BYTES = 10 * 1024 * 1024;
+// Vercel afviser forespørgsler over ca. 4,5 MB; browseren komprimerer fotos før upload.
+const MAX_BYTES = 4 * 1024 * 1024;
 const TYPE_EXT: Record<string, string[]> = {
   "image/jpeg": ["jpg", "jpeg"],
   "image/png": ["png"],
-  "image/heic": ["heic"],
+  "image/heic": ["heic", "heif"],
+  "image/heif": ["heic", "heif"],
   "application/pdf": ["pdf"],
-};
-const COLUMN: Record<UploadKind, string> = {
-  signed_scan: "signed_scan_path",
-  invoice: "invoice_file_path",
-  payout_proof: "payout_proof_path",
 };
 
 const bad = (msg: string) => new PosError("upload_invalid", msg, 400);
@@ -48,9 +45,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!(file instanceof File)) throw bad("Vælg en fil");
 
     const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
-    if (!TYPE_EXT[file.type]?.includes(ext)) throw bad("Filen skal være JPG, PNG, HEIC eller PDF");
+    // Nogle browsere sender ingen type (eller octet-stream) for HEIC/HEIF; så afgør filendelsen.
+    const untyped = !file.type || file.type === "application/octet-stream";
+    const type = untyped && (ext === "heic" || ext === "heif") ? `image/${ext}` : file.type;
+    if (!TYPE_EXT[type]?.includes(ext)) throw bad("Filen skal være JPG, PNG, HEIC eller PDF");
     if (file.size === 0) throw bad("Filen er tom");
-    if (file.size > MAX_BYTES) throw bad("Filen må højst fylde 10 MB");
+    if (file.size > MAX_BYTES) throw bad("Filen er for stor (maks. 4 MB). Tag billedet igen eller gem PDF'en mindre.");
 
     const business = row.seller_type === "business";
     if (kind === "invoice" && !business) throw bad("Faktura kan kun lægges op på firmaopkøb");
@@ -65,12 +65,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const key = `${receiptNumber}/${kind}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from(BUCKET)
-      .upload(key, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
-    if (upErr) throw new Error(`upload: ${upErr.message}`);
+      .upload(key, Buffer.from(await file.arrayBuffer()), { contentType: type, upsert: false });
+    if (upErr) {
+      console.error("[opkoeb] storage upload failed", receiptNumber, upErr.message);
+      throw new PosError("storage_failed", "Filen kunne ikke gemmes", 500);
+    }
 
     const { data, error } = await supabase
       .from("trade_in_receipts")
-      .update({ [COLUMN[kind]]: key })
+      .update({ [UPLOAD_COLUMN[kind]]: key })
       .eq("id", id)
       .in("status", ["confirmed", "paid"])
       .select("*")

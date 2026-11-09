@@ -36,8 +36,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (blockers.length > 0) throw new PosError("pay_blocked", blockers[0], 409);
 
     // seller_bank_reg/-account kan ikke skrives efter bekræftelsen (slutseddel-låsen).
-    if (row.seller_bank_reg !== body.seller_bank_reg || row.seller_bank_account !== body.seller_bank_account) {
+    if (!row.seller_bank_reg || !row.seller_bank_account) {
       throw new PosError("bank_not_on_slip", "Kontooplysningerne skal stå på slutsedlen før den bekræftes", 409);
+    }
+    if (row.seller_bank_reg !== body.seller_bank_reg || row.seller_bank_account !== body.seller_bank_account) {
+      throw new PosError("bank_mismatch", "Kontooplysningerne stemmer ikke med slutsedlen", 409);
     }
 
     const supabase = createServerClient();

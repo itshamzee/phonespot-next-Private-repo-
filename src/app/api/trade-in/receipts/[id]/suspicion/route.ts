@@ -42,21 +42,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const supabase = createServerClient();
     const now = new Date().toISOString();
-    const ids = await receiptDeviceIds(id);
     const blocked = { blocked_at: now, blocked_reason: `${REASON_PREFIX} ${note}` };
 
-    if (ids.length > 0) {
-      // To sætninger i stedet for at læse status først, så et samtidigt salg ikke kan snige sig forbi.
-      const { error: unsoldErr } = await supabase
-        .from("devices")
-        .update({ ...blocked, status: "delisted" })
-        .in("id", ids)
-        .not("status", "in", `(${SOLD.join(",")})`);
-      if (unsoldErr) throw new Error(`block devices: ${unsoldErr.message}`);
-      const { error: soldErr } = await supabase.from("devices").update(blocked).in("id", ids).in("status", SOLD);
-      if (soldErr) throw new Error(`block sold devices: ${soldErr.message}`);
-    }
-
+    // Først selve markeringen (betinget); kun hvis den ramte, spærres enhederne.
     const { data, error } = await supabase
       .from("trade_in_receipts")
       .update({
@@ -72,6 +60,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .maybeSingle();
     if (error) throw new Error(`suspicion: ${error.message}`);
     if (!data) throw new PosError("receipt_changed", "Slutsedlen er ændret. Genindlæs og prøv igen.", 409);
+
+    const ids = await receiptDeviceIds(id);
+    if (ids.length > 0) {
+      // To sætninger i stedet for at læse status først, så et samtidigt salg ikke kan snige sig forbi.
+      // Allerede spærrede enheder (fx 'Slutseddel annulleret') beholder deres årsag.
+      const { error: unsoldErr } = await supabase
+        .from("devices")
+        .update({ ...blocked, status: "delisted" })
+        .in("id", ids)
+        .is("blocked_at", null)
+        .not("status", "in", `(${SOLD.join(",")})`);
+      if (unsoldErr) throw new Error(`block devices: ${unsoldErr.message}`);
+      const { error: soldErr } = await supabase.from("devices").update(blocked).in("id", ids).in("status", SOLD);
+      if (soldErr) throw new Error(`block sold devices: ${soldErr.message}`);
+    }
 
     await logActivity({
       supabase,

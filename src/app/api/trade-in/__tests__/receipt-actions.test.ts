@@ -37,6 +37,15 @@ function builder(table: string) {
       if (op === "eq") return r[k] === v;
       if (op === "in") return (v as unknown[]).includes(r[k]);
       if (op === "is") return r[k] === v || (v === null && r[k] == null);
+      if (op === "not") {
+        // .not(col, "in", "(a,b)")
+        const list = String(v).replace(/^\(|\)$/g, "").split(",");
+        return !list.includes(String(r[k]));
+      }
+      if (op === "like") {
+        const re = new RegExp(`^${String(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/%/g, ".*")}$`);
+        return typeof r[k] === "string" && re.test(r[k] as string);
+      }
       return true;
     });
   const result = () => {
@@ -47,7 +56,8 @@ function builder(table: string) {
     const hit = (rows[table] ?? []).filter(matches);
     if (patch) {
       updates.push({ table, patch, filters: [...filters] });
-      return { data: hit.map((r) => ({ ...r, ...patch })), error: null };
+      for (const r of hit) Object.assign(r, patch);
+      return { data: hit, error: null };
     }
     return { data: hit, error: null };
   };
@@ -168,7 +178,18 @@ beforeEach(() => {
   rows.trade_in_receipt_items = [
     { receipt_id: U(50), device_id: U(900) },
     { receipt_id: U(50), device_id: U(901) },
+    { receipt_id: U(50), device_id: U(905) },
     { receipt_id: U(52), device_id: U(902) },
+    { receipt_id: U(52), device_id: U(903) },
+    { receipt_id: U(52), device_id: U(904) },
+  ];
+  rows.devices = [
+    { id: U(900), status: "intake", blocked_at: null, blocked_reason: null },
+    { id: U(901), status: "sold", blocked_at: null, blocked_reason: null },
+    { id: U(905), status: "delisted", blocked_at: "2026-11-01T00:00:00Z", blocked_reason: "Slutseddel annulleret" },
+    { id: U(902), status: "delisted", blocked_at: "2026-11-09T10:00:00Z", blocked_reason: "Mistanke: stjålet?" },
+    { id: U(903), status: "sold", blocked_at: "2026-11-09T10:00:00Z", blocked_reason: "Mistanke: stjålet?" },
+    { id: U(904), status: "delisted", blocked_at: "2026-11-01T00:00:00Z", blocked_reason: "Slutseddel annulleret" },
   ];
   rpcMock.mockResolvedValue({ data: null, error: null });
   storageUpload.mockResolvedValue({ error: null });
@@ -213,8 +234,16 @@ describe("POST pay", () => {
     withScan();
     const res = await PAY(jsonReq({ ...payBody, seller_bank_account: "999999999" }), ctx(U(50)));
     expect(res.status).toBe(409);
-    expect((await res.json()).error).toBe("Kontooplysningerne skal stå på slutsedlen før den bekræftes");
+    expect((await res.json()).error).toBe("Kontooplysningerne stemmer ikke med slutsedlen");
     expect(updates).toHaveLength(0);
+  });
+
+  it("409 when the confirmed slip has no bank details", async () => {
+    withScan();
+    rows.trade_in_receipts[0].seller_bank_account = null;
+    const res = await PAY(jsonReq(payBody), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Kontooplysningerne skal stå på slutsedlen før den bekræftes");
   });
 
   it("400 for modregning", async () => {
@@ -230,21 +259,28 @@ describe("POST pay", () => {
 });
 
 describe("POST suspicion / DELETE suspicion", () => {
-  it("blocks both devices (unsold and sold in separate updates), flags the receipt and logs", async () => {
+  it("flags the receipt first, then blocks unsold devices (not already blocked) and sold ones, and logs", async () => {
     const res = await SUSPECT(jsonReq({ note: "Meldt stjålet", police_notified: true }), ctx(U(50)));
     expect(res.status).toBe(200);
-    const dev = updates.filter((u) => u.table === "devices");
-    expect(dev).toHaveLength(2);
-    const unsold = dev.find((u) => u.patch.status === "delisted")!;
-    expect(unsold.patch).toMatchObject({ blocked_reason: "Mistanke: Meldt stjålet", status: "delisted" });
-    expect(typeof unsold.patch.blocked_at).toBe("string");
-    expect(unsold.filters).toContainEqual(["in", "id", [U(900), U(901)]]);
-    const sold = dev.find((u) => !("status" in u.patch))!;
-    expect(sold.patch).toMatchObject({ blocked_reason: "Mistanke: Meldt stjålet" });
-    const rec = updates.find((u) => u.table === "trade_in_receipts")!.patch;
-    expect(rec).toMatchObject({ suspected_by: U(3), suspicion_note: "Meldt stjålet" });
-    expect(typeof rec.police_notified_at).toBe("string");
+    expect(updates[0].table).toBe("trade_in_receipts");
+    expect(updates[0].patch).toMatchObject({ suspected_by: U(3), suspicion_note: "Meldt stjålet" });
+    expect(typeof updates[0].patch.police_notified_at).toBe("string");
+    expect(updates.filter((u) => u.table === "devices")).toHaveLength(2);
+    const byId = (id: string) => rows.devices.find((d) => d.id === id)!;
+    expect(byId(U(900))).toMatchObject({ status: "delisted", blocked_reason: "Mistanke: Meldt stjålet" });
+    expect(typeof byId(U(900)).blocked_at).toBe("string");
+    // Sold: blocked, status untouched.
+    expect(byId(U(901))).toMatchObject({ status: "sold", blocked_reason: "Mistanke: Meldt stjålet" });
+    // Already blocked (voided receipt): reason never overwritten.
+    expect(byId(U(905))).toMatchObject({ status: "delisted", blocked_reason: "Slutseddel annulleret" });
     expect(inserts.some((i) => i.table === "activity_log" && i.row.action === "opkoeb_suspicion")).toBe(true);
+  });
+
+  it("does not touch devices when the receipt update matches nothing", async () => {
+    rows.trade_in_receipts[0].status = "voided";
+    const res = await SUSPECT(jsonReq({ note: "x", police_notified: false }), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect(updates.filter((u) => u.table === "devices")).toHaveLength(0);
   });
 
   it("409 when already under suspicion", async () => {
@@ -258,13 +294,15 @@ describe("POST suspicion / DELETE suspicion", () => {
     expect(updates).toHaveLength(0);
   });
 
-  it("DELETE as owner releases the devices and logs the note", async () => {
+  it("DELETE as owner releases only Mistanke devices, keeps other blocks, and logs the note", async () => {
     requireStaffMock.mockResolvedValue({ ...owner, id: U(2) });
     lookupMock.mockResolvedValue(owner);
     const res = await RELEASE(jsonReq({ note: "Falsk alarm" }, "DELETE"), ctx(U(52)));
     expect(res.status).toBe(200);
-    const dev = updates.filter((u) => u.table === "devices");
-    expect(dev.some((u) => u.patch.status === "intake" && u.patch.blocked_at === null)).toBe(true);
+    const byId = (id: string) => rows.devices.find((d) => d.id === id)!;
+    expect(byId(U(902))).toMatchObject({ status: "intake", blocked_at: null, blocked_reason: null });
+    expect(byId(U(903))).toMatchObject({ status: "sold", blocked_at: null, blocked_reason: null });
+    expect(byId(U(904))).toMatchObject({ status: "delisted", blocked_reason: "Slutseddel annulleret" });
     const log = inserts.find((i) => i.row.action === "opkoeb_suspicion_released")!;
     expect((log.row.details as Record<string, unknown>).note).toBe("Falsk alarm");
   });
@@ -284,10 +322,40 @@ describe("POST upload", () => {
     expect(res.status).toBe(400);
   });
 
-  it("400 above 10 MB", async () => {
-    const big = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "scan.pdf", { type: "application/pdf" });
+  it("400 above 4 MB with the Danish message", async () => {
+    const big = new File([new Uint8Array(4 * 1024 * 1024 + 1)], "scan.pdf", { type: "application/pdf" });
     const res = await UPLOAD(uploadReq("signed_scan", big), ctx(U(50)));
     expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Filen er for stor (maks. 4 MB). Tag billedet igen eller gem PDF'en mindre.");
+  });
+
+  it("accepts exactly 4 MB", async () => {
+    const ok = new File([new Uint8Array(4 * 1024 * 1024)], "scan.pdf", { type: "application/pdf" });
+    const res = await UPLOAD(uploadReq("signed_scan", ok), ctx(U(50)));
+    expect(res.status).toBe(200);
+  });
+
+  it.each([
+    ["foto.heif", "image/heif"],
+    ["foto.heic", "image/heic"],
+    ["foto.heic", ""],
+    ["foto.heif", ""],
+  ])("accepts %s with declared type %j", async (name, type) => {
+    const res = await UPLOAD(uploadReq("signed_scan", new File([new Uint8Array([1])], name, { type })), ctx(U(50)));
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects an empty declared type for non-heic extensions", async () => {
+    const res = await UPLOAD(uploadReq("signed_scan", new File([new Uint8Array([1])], "scan.pdf", { type: "" })), ctx(U(50)));
+    expect(res.status).toBe(400);
+  });
+
+  it("answers a Danish 500 when storage fails", async () => {
+    storageUpload.mockResolvedValue({ error: { message: "mime type not supported" } });
+    const res = await UPLOAD(uploadReq("signed_scan", pdf()), ctx(U(50)));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe("Filen kunne ikke gemmes");
+    expect(updates).toHaveLength(0);
   });
 
   it("400 for invoice on a private receipt", async () => {

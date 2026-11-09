@@ -77,3 +77,10 @@ export const voidBodySchema = z.object({
 
 export const uploadKindSchema = z.enum(["signed_scan", "invoice", "payout_proof"]);
 export type UploadKind = z.infer<typeof uploadKindSchema>;
+
+/** Hvilken kolonne på slutsedlen hver filtype gemmes i. Bruges af upload- og files-ruterne. */
+export const UPLOAD_COLUMN: Record<UploadKind, "signed_scan_path" | "invoice_file_path" | "payout_proof_path"> = {
+  signed_scan: "signed_scan_path",
+  invoice: "invoice_file_path",
+  payout_proof: "payout_proof_path",
+};
