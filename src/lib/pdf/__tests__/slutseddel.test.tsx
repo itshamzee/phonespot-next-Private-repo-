@@ -83,7 +83,7 @@ describe("slutseddel", () => {
     const t = textOf(
       <SlutseddelDocument data={{ ...slagelse, id_type: null, id_number: null, id_expiry: null, payout_method: "modregning", seller_bank_reg: null, seller_bank_account: null }} />,
     );
-    expect(t).toContain("Ikke påkrævet (under 2.000 kr.)");
+    expect(t).toContain("Ikke påkrævet (2.000 kr. eller derunder)");
     expect(t).toContain("Modregnes i køb");
   });
 
@@ -91,6 +91,13 @@ describe("slutseddel", () => {
     const t = textOf(<SlutseddelDocument data={{ ...slagelse, seller_type: "business", seller_cvr: "12345678", invoice_type: "brugtmoms" }} />);
     expect(t).toContain("12345678");
     expect(t).toContain("Brugtmoms");
+    expect(t).toContain("Beløbet indeholder ikke moms.");
+  });
+
+  it("business seller with a VAT invoice: the amount includes 25 % VAT, never 'ikke moms'", () => {
+    const t = textOf(<SlutseddelDocument data={{ ...slagelse, seller_type: "business", seller_cvr: "12345678", invoice_type: "med_moms" }} />);
+    expect(t).toContain("Beløbet er inkl. 25 % moms jf. sælgers faktura.");
+    expect(t).not.toContain("indeholder ikke moms");
   });
 
   it("renders a real PDF", async () => {

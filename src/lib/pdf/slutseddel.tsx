@@ -53,7 +53,8 @@ export const ATTESTATION_TEXT =
 export const PRIVACY_TEXT =
   "Vi gemmer dine oplysninger efter lov om handel med brugte genstande og bogføringsloven. ID-oplysninger slettes efter 5 år. Læs mere på phonespot.dk/privatlivspolitik.";
 export const NO_VAT_TEXT = "Beløbet indeholder ikke moms.";
-export const ID_NOT_REQUIRED_TEXT = "Ikke påkrævet (under 2.000 kr.)";
+export const VAT_INCLUDED_TEXT = "Beløbet er inkl. 25 % moms jf. sælgers faktura.";
+export const ID_NOT_REQUIRED_TEXT = "Ikke påkrævet (2.000 kr. eller derunder)";
 
 const ID_TYPE_LABELS: Record<string, string> = {
   pas: "Pas",
@@ -213,7 +214,9 @@ export function SlutseddelDocument({ data }: { data: SlutseddelData }) {
           <Text style={s.totalLabel}>Total:</Text>
           <Text style={s.totalAmount}>{formatDKK(data.total_amount)}</Text>
         </View>
-        <Text style={s.vatNote}>{NO_VAT_TEXT}</Text>
+        <Text style={s.vatNote}>
+          {data.seller_type === "business" && data.invoice_type === "med_moms" ? VAT_INCLUDED_TEXT : NO_VAT_TEXT}
+        </Text>
 
         <View style={s.infoSection} wrap={false}>
           <Text style={s.infoLabel}>ID</Text>
