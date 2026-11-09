@@ -72,7 +72,9 @@ describe("POST /api/trade-in/price-suggestion", () => {
     );
     const json = await res.json();
     expect(json).toMatchObject({ status: "ok", aim_oere: 250000, floor_oere: 200000 });
-    expect(json.green_url).toMatch(/^https:\/\/www\.green\.dk\//);
+    expect(json.green_url).toMatch(/^https:\/\/www\.google\.com\/search\?q=/);
+    expect(json.green_url).toContain(encodeURIComponent("iPhone 14"));
+    expect(json.note).toBeUndefined();
     const [, device, condition] = estimateMock.mock.calls[0];
     expect(device).toMatchObject({ deviceType: "Telefon", brand: "Apple", model: "iPhone 14", storage: "128 GB", useCustom: false });
     expect(condition).toMatchObject({ cloudLocked: "Nej", battery: "God (80%+)", allWorking: "Ja" });
@@ -89,5 +91,17 @@ describe("POST /api/trade-in/price-suggestion", () => {
     expect(json.status).toBe("manual");
     expect(json.manual_reason).toBeTruthy();
     expect(estimateMock.mock.calls[0][2].allWorking).toBe("Nej");
+  });
+
+  it("Acceptabel adds a note but no fault; Perfekt and God do not", async () => {
+    const NOTE = "Prisforslaget tager ikke højde for ridser og slid. Justér selv prisen.";
+    const acc = await (await POST(req({ template_id: TID, condition: "Acceptabel", find_my_off: true }))).json();
+    expect(acc.status).toBe("ok");
+    expect(acc.note).toBe(NOTE);
+    expect(estimateMock.mock.calls[0][2]).toMatchObject({ screen: "Perfekt", back: "Perfekt", brokenParts: [] });
+    for (const condition of ["Perfekt", "God"]) {
+      const json = await (await POST(req({ template_id: TID, condition, find_my_off: true }))).json();
+      expect(json.note).toBeUndefined();
+    }
   });
 });

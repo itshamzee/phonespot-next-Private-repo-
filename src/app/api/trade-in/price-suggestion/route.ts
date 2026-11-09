@@ -35,7 +35,7 @@ function batteryLabel(health: number | undefined): string {
 function conditionFor(b: Body): BuybackCondition {
   return {
     screen: "Perfekt",
-    back: b.condition === "Acceptabel" ? "Ridser" : "Perfekt",
+    back: "Perfekt",
     battery: batteryLabel(b.battery_health),
     allWorking: b.condition === "Defekt" ? "Nej" : "Ja",
     brokenParts: [],
@@ -78,19 +78,20 @@ export async function POST(request: Request) {
 
     // The engine does not read allWorking, so a defective device would be priced
     // as a working one. Never auto-price it.
-    const manual = result.status === "manual" || b.condition === "Defekt";
-    const manualReason =
-      result.status === "manual"
-        ? result.manualReason
-        : b.condition === "Defekt"
-          ? "Defekt enhed prissættes manuelt"
-          : undefined;
+    const defekt = b.condition === "Defekt";
+    const manual = defekt || result.status === "manual";
+    const manualReason = defekt ? "Defekt enhed prissættes manuelt" : result.manualReason;
+    const note =
+      b.condition === "Acceptabel"
+        ? "Prisforslaget tager ikke højde for ridser og slid. Justér selv prisen."
+        : undefined;
 
     return NextResponse.json({
       status: manual ? "manual" : "ok",
       aim_oere: manual ? 0 : result.aimOfferOre,
       floor_oere: manual ? 0 : result.floorOfferOre,
-      ...(manualReason ? { manual_reason: manualReason } : {}),
+      ...(manual && manualReason ? { manual_reason: manualReason } : {}),
+      ...(note ? { note } : {}),
       green_url: greenUrl(device.brand, device.model, storage || undefined),
     });
   } catch (err) {
