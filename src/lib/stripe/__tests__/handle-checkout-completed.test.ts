@@ -15,10 +15,15 @@ const s = vi.hoisted(() => ({
   alert: vi.fn(),
   staff: vi.fn(),
   draft: vi.fn(),
+  meta: vi.fn(),
   lineItems: vi.fn(),
   items: [] as Array<Record<string, unknown>>,
 }));
 vi.mock("@/lib/stripe/repair-payment", () => ({ handleRepairPayment: vi.fn() }));
+vi.mock("@/lib/tracking/meta-capi", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/tracking/meta-capi")>()),
+  sendPurchaseToMeta: s.meta,
+}));
 vi.mock("@/lib/stripe/client", () => ({
   stripe: { checkout: { sessions: { listLineItems: s.lineItems } } },
 }));
@@ -95,7 +100,7 @@ beforeEach(() => {
   }));
 });
 function noSuccess() {
-  for (const fn of [s.mail, s.notify, s.warranty, s.staff, s.update])
+  for (const fn of [s.mail, s.notify, s.warranty, s.staff, s.update, s.meta])
     expect(fn).not.toHaveBeenCalled();
 }
 it("stock failure rejects without confirmation, warranty or success notifications", async () => {
@@ -139,8 +144,29 @@ it("only the winning completion runs downstream once", async () => {
   expect(s.update).not.toHaveBeenCalled();
   s.result = "already_completed";
   await handleCheckoutCompleted(session);
-  for (const fn of [s.notify, s.mail, s.staff, s.warranty])
+  for (const fn of [s.notify, s.mail, s.staff, s.warranty, s.meta])
     expect(fn).toHaveBeenCalledTimes(1);
+});
+it("sends one Meta CAPI Purchase with the øre total, catalog ids and checkout consent context", async () => {
+  s.result = "completed";
+  s.items = [
+    { id: "line-sku", item_type: "sku_product", sku_product_id: "sku-1", quantity: 2, unit_price: 50 },
+  ];
+  await handleCheckoutCompleted({
+    id: "cs_test",
+    payment_intent: "pi_test",
+    metadata: { order_id: "order", meta_consent: "1", meta_fbp: "fb.1.2.3" },
+  } as never);
+  expect(s.meta).toHaveBeenCalledTimes(1);
+  expect(s.meta.mock.calls[0][0]).toMatchObject({
+    orderId: "order",
+    orderNumber: "S-1001",
+    totalOere: 100,
+    contentIds: ["sku-1"],
+    numItems: 2,
+    email: "fixture@example.invalid",
+    context: { consent: true, fbp: "fb.1.2.3" },
+  });
 });
 it.each(["missing", "readError"] as const)(
   "order read failure is retriable: %s",

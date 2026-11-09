@@ -7,6 +7,7 @@ import { convertDraftToOrder } from "@/lib/draft-orders/convert";
 import { notifyNewOrder, sendPushover } from "@/lib/notifications/pushover";
 import { sendStaffOrderNotification } from "@/lib/email/staff-order-notification";
 import { handleRepairPayment } from "@/lib/stripe/repair-payment";
+import { metaContextFromMetadata, sendPurchaseToMeta } from "@/lib/tracking/meta-capi";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -148,6 +149,9 @@ export async function handleCheckoutCompleted(
     new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
 
   const itemNames: string[] = [];
+  // Katalog-id'er til Meta (samme som ViewContent/AddToCart: skabelon-id for
+  // enheder, sku_product-id for tilbehør).
+  const metaContentIds: string[] = [];
   const enrichedItems: Array<{
     id: string;
     itemType: "device" | "sku_product";
@@ -175,10 +179,11 @@ export async function handleCheckoutCompleted(
     if (item.item_type === "device" && item.device_id) {
       const { data: dev } = await supabase
         .from("devices")
-        .select("storage, color, grade, template:product_templates(brand, model, display_name, images)")
+        .select("storage, color, grade, template:product_templates(id, brand, model, display_name, images)")
         .eq("id", item.device_id)
         .single();
       const t = (dev as any)?.template;
+      if (t?.id) metaContentIds.push(t.id);
       if (t) {
         const parts = [t.display_name || [t.brand, t.model].filter(Boolean).join(" ")];
         if (dev?.storage) parts.push(dev.storage);
@@ -189,6 +194,7 @@ export async function handleCheckoutCompleted(
         itemNames.push(`• ${title} — ${fmtKr(item.unit_price)}`);
       }
     } else if (item.sku_product_id) {
+      metaContentIds.push(item.sku_product_id);
       const { data: sku } = await supabase
         .from("sku_products")
         .select("title, images, category")
@@ -292,6 +298,24 @@ export async function handleCheckoutCompleted(
   } catch (staffEmailErr) {
     console.error("[webhook] staff order notification email failed:", staffEmailErr);
   }
+
+  // 14. Meta Conversions API — Purchase, deduplikeret med browserens pixel via
+  // event_id purchase_<order.id>. Kører kun her, efter complete_checkout_order
+  // har returneret "completed" (Stripe-genforsøg returnerer tidligt ovenfor),
+  // så hvert køb sendes én gang. sendPurchaseToMeta kaster aldrig.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
+  await sendPurchaseToMeta({
+    orderId,
+    orderNumber: order.order_number,
+    totalOere: order.total,
+    contentIds: [...new Set(metaContentIds)],
+    numItems: orderItems.reduce((n, i) => n + i.quantity, 0),
+    email: customer?.email,
+    phone: customer?.phone,
+    customerId: order.customer_id,
+    context: metaContextFromMetadata(session.metadata),
+    eventSourceUrl: `${siteUrl}/ordre/bekraeftelse`,
+  });
 
   console.log("[webhook] order confirmed:", order.order_number);
 }

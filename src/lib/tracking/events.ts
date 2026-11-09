@@ -10,6 +10,7 @@
  * kun til Meta, når besøgende aktivt har accepteret.
  */
 import { readStoredConsent } from "@/lib/consent-client";
+import { whenFbqReady } from "./fbq";
 
 type Params = Record<string, unknown>;
 
@@ -40,9 +41,10 @@ function sendGtag(name: string, params: Params): void {
 }
 
 function sendMeta(name: string, params: Params, eventId: string): void {
-  if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  if (typeof window === "undefined") return;
   if (readStoredConsent() !== "accepted") return;
-  window.fbq("track", name, clean(params), { eventID: eventId });
+  // Vent på pixlen: ved hård sideindlæsning findes fbq først efter sidens egne effects.
+  whenFbqReady((fbq) => fbq("track", name, clean(params), { eventID: eventId }));
 }
 
 /* ------------------------------------------------------------------ */

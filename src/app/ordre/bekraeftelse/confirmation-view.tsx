@@ -28,6 +28,8 @@ interface OrderItem {
   color: string | null;
   storage: string | null;
   upgrade_details?: Array<{ label: string; price_oere: number }> | null;
+  /** Katalog-id til Meta (skabelon-id for enheder, sku_product-id for tilbehør). */
+  content_id?: string;
 }
 
 interface Order {
@@ -57,7 +59,8 @@ export function ConfirmationView({ order }: { order: Order }) {
     trackPurchase({
       orderId: order.id,
       value: order.total / 100,
-      contentIds: order.order_items.map((i) => i.id),
+      contentIds: [...new Set(order.order_items.map((i) => i.content_id ?? i.id))],
+      numItems: order.order_items.reduce((n, i) => n + i.quantity, 0),
     });
 
     trackAdsPurchase({

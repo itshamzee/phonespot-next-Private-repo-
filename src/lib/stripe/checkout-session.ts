@@ -19,6 +19,8 @@ export interface CreateCheckoutSessionParams {
   /** Lagersalg 3 for 2-rabat i øre (beregnet på serveren). */
   bundleDiscountAmount: number;
   total: number;
+  /** Meta CAPI-kontekst (samtykke, _fbp/_fbc, IP, user agent) — se lib/tracking/meta-capi. */
+  trackingMetadata?: Record<string, string>;
 }
 
 export interface CheckoutSessionResult {
@@ -169,6 +171,7 @@ export async function createCheckoutSession(
     success_url: `${baseUrl}/ordre/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/kasse?cancelled=true`,
     metadata: {
+      ...(params.trackingMetadata ?? {}),
       order_id: params.orderId,
       order_number: params.orderNumber,
     },

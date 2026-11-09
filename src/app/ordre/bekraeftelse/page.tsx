@@ -9,12 +9,13 @@ interface RawOrderItem {
   total_price: number;
   discount_amount: number | null;
   item_type: "device" | "sku_product";
+  sku_product_id: string | null;
   upgrade_details: Array<{ label: string; price_oere: number }> | null;
   device: {
     grade: string | null;
     color: string | null;
     storage: string | null;
-    template: { display_name: string; images: string[] } | null;
+    template: { id: string; display_name: string; images: string[] } | null;
   } | null;
   sku_product: { title: string; images: string[] } | null;
 }
@@ -70,12 +71,13 @@ export default async function OrderConfirmationPage({
         total_price,
         discount_amount,
         item_type,
+        sku_product_id,
         upgrade_details,
         device:devices!device_id (
           grade,
           color,
           storage,
-          template:product_templates!template_id (display_name, images)
+          template:product_templates!template_id (id, display_name, images)
         ),
         sku_product:sku_products!sku_product_id (title, images)
       )
@@ -124,6 +126,7 @@ export default async function OrderConfirmationPage({
         color: isDevice ? item.device?.color ?? null : null,
         storage: isDevice ? item.device?.storage ?? null : null,
         upgrade_details: item.upgrade_details ?? null,
+        content_id: isDevice ? item.device?.template?.id ?? item.id : item.sku_product_id ?? item.id,
       };
     }),
   };
