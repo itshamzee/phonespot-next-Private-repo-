@@ -183,6 +183,8 @@ beforeEach(() => {
     { receipt_id: U(52), device_id: U(902) },
     { receipt_id: U(52), device_id: U(903) },
     { receipt_id: U(52), device_id: U(904) },
+    { receipt_id: U(52), device_id: U(906) },
+    { receipt_id: U(50), device_id: U(907) },
   ];
   rows.devices = [
     { id: U(900), status: "intake", blocked_at: null, blocked_reason: null },
@@ -191,6 +193,9 @@ beforeEach(() => {
     { id: U(902), status: "delisted", blocked_at: "2026-11-09T10:00:00Z", blocked_reason: "Mistanke: stjålet?" },
     { id: U(903), status: "sold", blocked_at: "2026-11-09T10:00:00Z", blocked_reason: "Mistanke: stjålet?" },
     { id: U(904), status: "delisted", blocked_at: "2026-11-01T00:00:00Z", blocked_reason: "Slutseddel annulleret" },
+    // Receipt 52's block failed for this one (the earlier POST died after flagging the receipt).
+    { id: U(906), status: "intake", blocked_at: null, blocked_reason: null },
+    { id: U(907), status: "sold", blocked_at: "2026-11-01T00:00:00Z", blocked_reason: "Slutseddel annulleret" },
   ];
   rpcMock.mockResolvedValue({ data: null, error: null });
   storageUpload.mockResolvedValue({ error: null });
@@ -311,6 +316,8 @@ describe("POST suspicion / DELETE suspicion", () => {
     expect(byId(U(901))).toMatchObject({ status: "sold", blocked_reason: "Mistanke: Meldt stjålet" });
     // Already blocked (voided receipt): reason never overwritten.
     expect(byId(U(905))).toMatchObject({ status: "delisted", blocked_reason: "Slutseddel annulleret" });
+    // Sold and already blocked: reason never overwritten either.
+    expect(byId(U(907))).toMatchObject({ status: "sold", blocked_reason: "Slutseddel annulleret" });
     expect(inserts.some((i) => i.table === "activity_log" && i.row.action === "opkoeb_suspicion")).toBe(true);
   });
 
@@ -321,9 +328,20 @@ describe("POST suspicion / DELETE suspicion", () => {
     expect(updates.filter((u) => u.table === "devices")).toHaveLength(0);
   });
 
-  it("409 when already under suspicion", async () => {
+  it("already under suspicion: re-applies the blocks (retry after a failed block) and answers 200", async () => {
     const res = await SUSPECT(jsonReq({ note: "x", police_notified: false }), ctx(U(52)));
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(200);
+    // The receipt's suspicion is not rewritten.
+    expect(updates.filter((u) => u.table === "trade_in_receipts")).toHaveLength(0);
+    expect(rows.trade_in_receipts[2]).toMatchObject({ suspected_at: "2026-11-09T10:00:00Z", suspicion_note: "stjålet?" });
+    const byId = (id: string) => rows.devices.find((d) => d.id === id)!;
+    // The device the first attempt missed is blocked now, with the original note.
+    expect(byId(U(906))).toMatchObject({ status: "delisted", blocked_reason: "Mistanke: stjålet?" });
+    expect(typeof byId(U(906)).blocked_at).toBe("string");
+    // Existing blocks keep their reason and time.
+    expect(byId(U(902))).toMatchObject({ blocked_at: "2026-11-09T10:00:00Z", blocked_reason: "Mistanke: stjålet?" });
+    expect(byId(U(904))).toMatchObject({ status: "delisted", blocked_reason: "Slutseddel annulleret" });
+    expect((await res.json()).suspected_at).toBe("2026-11-09T10:00:00Z");
   });
 
   it("DELETE as employee is 403", async () => {

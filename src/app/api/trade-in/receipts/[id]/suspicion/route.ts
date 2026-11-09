@@ -20,8 +20,35 @@ async function receiptDeviceIds(receiptId: string): Promise<string[]> {
 }
 
 /**
+ * Spærrer sedlens enheder. Idempotent: kun enheder uden spærring rammes, så en anden årsag
+ * (fx 'Slutseddel annulleret') eller en tidligere mistanke aldrig overskrives. To sætninger i
+ * stedet for at læse status først, så et samtidigt salg ikke kan snige sig forbi.
+ */
+async function blockDevices(ids: string[], reason: string, now: string): Promise<void> {
+  if (ids.length === 0) return;
+  const supabase = createServerClient();
+  const blocked = { blocked_at: now, blocked_reason: reason };
+  const { error: unsoldErr } = await supabase
+    .from("devices")
+    .update({ ...blocked, status: "delisted" })
+    .in("id", ids)
+    .is("blocked_at", null)
+    .not("status", "in", `(${SOLD.join(",")})`);
+  if (unsoldErr) throw new Error(`block devices: ${unsoldErr.message}`);
+  const { error: soldErr } = await supabase
+    .from("devices")
+    .update(blocked)
+    .in("id", ids)
+    .is("blocked_at", null)
+    .in("status", SOLD);
+  if (soldErr) throw new Error(`block sold devices: ${soldErr.message}`);
+}
+
+/**
  * POST /api/trade-in/receipts/[id]/suspicion: marker sedlen som mistænkt og spærrer alle dens
  * enheder. Enheder, der ikke er solgt, tages af lager (delisted); solgte får kun spærringen.
+ * Er sedlen allerede mistænkt, lægges spærringerne igen (200), så en fejlet spærring kan
+ * gentages; sedlens mistanke og note ændres ikke.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -38,11 +65,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (row.status !== "confirmed" && row.status !== "paid") {
       throw new PosError("receipt_not_suspectable", "Kun bekræftede eller udbetalte slutsedler kan markeres", 409);
     }
-    if (row.suspected_at) throw new PosError("already_suspected", "Opkøbet er allerede markeret som mistænkt", 409);
-
     const supabase = createServerClient();
     const now = new Date().toISOString();
-    const blocked = { blocked_at: now, blocked_reason: `${REASON_PREFIX} ${note}` };
+
+    if (row.suspected_at) {
+      const ids = await receiptDeviceIds(id);
+      await blockDevices(ids, `${REASON_PREFIX} ${String(row.suspicion_note ?? note)}`, now);
+      await logActivity({
+        supabase,
+        actorId: actor.id,
+        action: "opkoeb_suspicion",
+        entityType: "trade_in_receipt",
+        entityId: id,
+        details: { receipt_number: row.receipt_number, reapplied: true, device_ids: ids },
+      });
+      return NextResponse.json(sanitizeReceipt(row as Record<string, unknown>, { bankAccount: "draft-only" }));
+    }
 
     // Først selve markeringen (betinget); kun hvis den ramte, spærres enhederne.
     const { data, error } = await supabase
@@ -62,19 +100,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!data) throw new PosError("receipt_changed", "Slutsedlen er ændret. Genindlæs og prøv igen.", 409);
 
     const ids = await receiptDeviceIds(id);
-    if (ids.length > 0) {
-      // To sætninger i stedet for at læse status først, så et samtidigt salg ikke kan snige sig forbi.
-      // Allerede spærrede enheder (fx 'Slutseddel annulleret') beholder deres årsag.
-      const { error: unsoldErr } = await supabase
-        .from("devices")
-        .update({ ...blocked, status: "delisted" })
-        .in("id", ids)
-        .is("blocked_at", null)
-        .not("status", "in", `(${SOLD.join(",")})`);
-      if (unsoldErr) throw new Error(`block devices: ${unsoldErr.message}`);
-      const { error: soldErr } = await supabase.from("devices").update(blocked).in("id", ids).in("status", SOLD);
-      if (soldErr) throw new Error(`block sold devices: ${soldErr.message}`);
-    }
+    await blockDevices(ids, `${REASON_PREFIX} ${note}`, now);
 
     await logActivity({
       supabase,
