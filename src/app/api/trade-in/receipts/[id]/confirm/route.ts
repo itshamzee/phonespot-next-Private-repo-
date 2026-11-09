@@ -1,97 +1,92 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { requireStaff } from "@/lib/auth/require-staff";
-import { Resend } from "resend";
+import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
+import { PosError, toPosError } from "@/lib/pos/errors";
+import { loadReceiptForActor } from "@/lib/opkoeb/receipt-access";
+import { loadSlutseddelData } from "@/lib/opkoeb/slutseddel-data";
+import { renderSlutseddelPdf } from "@/lib/pdf/slutseddel";
+import { resend, EMAIL_FROM } from "@/lib/email/resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://phonespot.dk";
+const BUCKET = "slutsedler";
 
-/* POST /api/trade-in/receipts/[id]/confirm — confirm receipt + generate PDF */
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const staff = await requireStaff(req);
-  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { id } = await params;
-  const supabase = createServerClient();
+/** RPC'ens forretningsfejl er konflikter med sedlens tilstand: 409 og den danske besked. */
+function rpcConflict(err: unknown): PosError | null {
+  const pos = toPosError(err);
+  if (!pos) return null;
+  if (pos.status === 403 || pos.status === 404) return pos;
+  return new PosError(pos.code, pos.message, 409);
+}
 
-  // Fetch receipt with items
-  const { data: receipt } = await supabase
-    .from("trade_in_receipts")
-    .select("*, trade_in_receipt_items(*)")
-    .eq("id", id)
-    .single();
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-  if (!receipt) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (receipt.status !== "draft") {
-    return NextResponse.json({ error: "Receipt already confirmed" }, { status: 400 });
-  }
+/**
+ * POST /api/trade-in/receipts/[id]/confirm: bekræfter kladden via trade_in_confirm
+ * (nummer, enheder, indkøbsbilag), gemmer PDF'en privat og mailer den til sælger.
+ * Sedlen er bekræftet, så snart RPC'en er gået igennem; PDF og mail er bagefter
+ * og vælter aldrig svaret (PDF'en kan altid renderes igen fra pdf-ruten).
+ */
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const staff = await requirePosStaff(req);
+    if (!staff) return UNAUTHORIZED();
+    const { actor } = staff;
+    const { id } = await params;
+    await loadReceiptForActor(actor, id);
 
-  // Generate PDF via internal API
-  const pdfRes = await fetch(`${BASE_URL}/api/trade-in/receipts/${id}/pdf`, {
-    headers: { "x-internal-key": process.env.SUPABASE_SERVICE_ROLE_KEY || "" },
-  });
-
-  let pdfUrl: string | null = null;
-
-  if (pdfRes.ok) {
-    const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer());
-
-    // Upload to Supabase Storage
-    const fileName = `${receipt.receipt_number}.pdf`;
-    const { data: uploadData } = await supabase.storage
-      .from("slutsedler")
-      .upload(fileName, pdfBuffer, {
-        contentType: "application/pdf",
-        upsert: true,
-      });
-
-    if (uploadData) {
-      const { data: urlData } = supabase.storage
-        .from("slutsedler")
-        .getPublicUrl(fileName);
-      pdfUrl = urlData.publicUrl;
+    const supabase = createServerClient();
+    const { data: rpc, error: rpcErr } = await supabase.rpc("trade_in_confirm", {
+      p_receipt_id: id,
+      p_staff_id: actor.id,
+    });
+    if (rpcErr) {
+      const conflict = rpcConflict(rpcErr);
+      if (conflict) throw conflict;
+      throw new Error(`trade_in_confirm: ${rpcErr.message}`);
     }
-
-    // Send PDF to both parties
-    const attachments = [{ filename: `Slutseddel-${receipt.receipt_number}.pdf`, content: pdfBuffer }];
-
-    if (receipt.seller_email) {
-      try {
-        await resend.emails.send({
-          from: "PhoneSpot <noreply@phonespot.dk>",
-          to: receipt.seller_email,
-          subject: `Slutseddel ${receipt.receipt_number} — PhoneSpot`,
-          html: `<p>Hej ${receipt.seller_name},</p><p>Vedhæftet finder du din slutseddel.</p><p>Med venlig hilsen,<br>PhoneSpot</p>`,
-          attachments,
-        });
-      } catch { /* non-fatal */ }
-    }
+    const result = rpc as { receipt_number?: string; device_ids?: string[] } | null;
+    const receiptNumber = result?.receipt_number;
+    if (!receiptNumber) throw new Error("trade_in_confirm returned no receipt_number");
 
     try {
-      await resend.emails.send({
-        from: "PhoneSpot <noreply@phonespot.dk>",
-        to: "info@phonespot.dk",
-        subject: `Slutseddel bekræftet: ${receipt.receipt_number}`,
-        html: `<p>Slutseddel ${receipt.receipt_number} er bekræftet for ${receipt.seller_name}.</p>`,
-        attachments,
-      });
-    } catch { /* non-fatal */ }
+      const { data, sellerEmail } = await loadSlutseddelData(id);
+      const pdf = await renderSlutseddelPdf(data);
+      // Stien bygges kun af nummeret fra RPC'en.
+      const path = `slutsedler/${receiptNumber}.pdf`;
+      const { error: uploadErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(`${receiptNumber}.pdf`, pdf, { contentType: "application/pdf", upsert: true });
+      if (uploadErr) {
+        console.error("[opkoeb] slutseddel upload failed", receiptNumber, uploadErr.message);
+      } else {
+        // trade_in_receipts.pdf_url er låst efter bekræftelsen, så kun bilagene får stien.
+        const { error: docErr } = await supabase
+          .from("purchase_documents")
+          .update({ pdf_url: path })
+          .eq("trade_in_receipt_id", id);
+        if (docErr) console.error("[opkoeb] purchase_documents.pdf_url failed", receiptNumber, docErr.message);
+      }
+
+      if (sellerEmail) {
+        after(async () => {
+          try {
+            await resend.emails.send({
+              from: EMAIL_FROM,
+              to: sellerEmail,
+              subject: `Slutseddel ${receiptNumber}`,
+              html: `<p>Hej ${esc(data.seller_name)},</p><p>Vedhæftet finder du din slutseddel.</p><p>Med venlig hilsen<br>PhoneSpot</p>`,
+              attachments: [{ filename: `Slutseddel-${receiptNumber}.pdf`, content: pdf }],
+            });
+          } catch (err) {
+            console.error("[opkoeb] slutseddel mail failed", receiptNumber, err);
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[opkoeb] slutseddel pdf/upload failed", receiptNumber, err);
+    }
+
+    return NextResponse.json({ receipt_number: receiptNumber, device_ids: result?.device_ids ?? [] });
+  } catch (err) {
+    return posErrorResponse(err, "Kunne ikke bekræfte slutsedlen");
   }
-
-  // Update receipt status
-  const { data: updated, error } = await supabase
-    .from("trade_in_receipts")
-    .update({
-      status: "confirmed",
-      confirmed_at: new Date().toISOString(),
-      pdf_url: pdfUrl,
-    })
-    .eq("id", id)
-    .select("*, trade_in_receipt_items(*)")
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(updated);
 }

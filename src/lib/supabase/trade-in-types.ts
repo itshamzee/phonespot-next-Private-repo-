@@ -40,11 +40,12 @@ export interface TradeInOffer {
   send_state?: "scheduled" | "sent" | "cancelled" | "failed";
 }
 
-export type TradeInReceiptStatus = "draft" | "confirmed" | "paid" | "completed";
+export type TradeInReceiptStatus = "draft" | "confirmed" | "paid" | "completed" | "voided";
 
 export interface TradeInReceipt {
   id: string;
-  receipt_number: string;
+  /** NULL på en kladde; tildeles af trade_in_confirm (SS-/SP-ÅÅÅÅ-NNNN). */
+  receipt_number: string | null;
   inquiry_id: string | null;
   offer_id: string | null;
   store_location_id: string | null;
@@ -68,6 +69,40 @@ export interface TradeInReceipt {
   delivery_method: "shipping" | "in_store" | null;
   confirmed_at: string | null;
   paid_at: string | null;
+  // Opkøb i butikken (D2). Nummer, firma og bekræftelse hører til trade_in_confirm.
+  location_id: string | null;
+  legal_entity_id: string | null;
+  seller_type: "private" | "business";
+  seller_cvr: string | null;
+  invoice_type: "med_moms" | "brugtmoms" | "eu_normal" | null;
+  seller_age_confirmed: boolean;
+  lock_checks_confirmed: boolean;
+  lock_checks_by: string | null;
+  lock_checks_at: string | null;
+  id_type: "pas" | "koerekort" | "id_kort" | "mitid" | null;
+  id_number: string | null;
+  id_expiry: string | null;
+  id_checked_by: string | null;
+  id_checked_at: string | null;
+  id_purged_at: string | null;
+  attestation: "paper_scan" | "online_accept";
+  signed_scan_path: string | null;
+  invoice_file_path: string | null;
+  payout_proof_path: string | null;
+  payout_method: "bank" | "modregning" | null;
+  account_owner_confirmed: boolean;
+  offset_order_id: string | null;
+  offset_amount: number | null;
+  created_by: string | null;
+  confirmed_by: string | null;
+  paid_by: string | null;
+  suspected_at: string | null;
+  suspected_by: string | null;
+  suspicion_note: string | null;
+  police_notified_at: string | null;
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -83,6 +118,10 @@ export interface TradeInReceiptItem {
   condition_grade: "Perfekt" | "God" | "Acceptabel" | "Defekt" | null;
   color: string | null;
   condition_notes: string | null;
+  template_id: string | null;
+  battery_health: number | null;
+  suggested_price: number | null;
+  device_id: string | null;
   price: number;
   created_at: string;
   updated_at: string;

@@ -31,6 +31,7 @@ const RECEIPT_STATUS_CONFIG: Record<
   confirmed: { label: "Bekraeftet", color: "bg-emerald-100 text-emerald-700" },
   paid: { label: "Betalt", color: "bg-emerald-200 text-emerald-800" },
   completed: { label: "Faerdig", color: "bg-green-100 text-green-700" },
+  voided: { label: "Annulleret", color: "bg-red-100 text-red-700" },
 };
 
 const DELIVERY_LABELS: Record<string, string> = {
@@ -455,8 +456,9 @@ export default function AdminSlutseddelPage() {
         const err = await confirmRes.json().catch(() => ({ error: "Ukendt fejl" }));
         setError(err.error ?? "Kunne ikke bekraefte slutseddel");
       } else {
-        const confirmed = (await confirmRes.json()) as TradeInReceipt;
-        setReceipt(confirmed);
+        // Ruten svarer kun med nummeret; resten af sedlen er uændret.
+        const confirmed = (await confirmRes.json()) as { receipt_number: string };
+        setReceipt({ ...savedReceipt, receipt_number: confirmed.receipt_number, status: "confirmed" });
         setSuccess("Slutseddel bekraeftet og PDF genereret!");
       }
     } catch {

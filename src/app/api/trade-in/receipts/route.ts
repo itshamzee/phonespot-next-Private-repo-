@@ -162,6 +162,7 @@ export async function POST(req: Request) {
 
     await assertLocationAccess(actor, location_id);
 
+    // Ingen receipt_number her: kolonnen har ingen default, og en kladde har intet nummer.
     const now = new Date().toISOString();
     const fields = draftColumns(draft);
     const supabase = createServerClient();
