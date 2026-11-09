@@ -6,7 +6,6 @@ import {
   Image,
   StyleSheet,
 } from "@react-pdf/renderer";
-import { STORES } from "@/lib/store-config";
 
 const styles = StyleSheet.create({
   page: {
@@ -231,7 +230,7 @@ export function WarrantyPDF(props: WarrantyPDFProps) {
         </View>
 
         <View style={styles.footer}>
-          <Text>Fixon ApS · CVR: 46079019 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</Text>
+          <Text>Fixon ApS · CVR: 46079019 · Løversysselvej 3C, 7100 Vejle</Text>
           <Text>info@phonespot.dk · phonespot.dk</Text>
         </View>
       </Page>

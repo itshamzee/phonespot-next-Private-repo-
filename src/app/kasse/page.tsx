@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
-import { STORES } from "@/lib/store-config";
 import { useCart } from "@/components/cart/cart-context";
 
 export default function KassePage() {
@@ -175,7 +174,7 @@ export default function KassePage() {
             {/* Seller info compact */}
             <div className="rounded-2xl border border-sand bg-warm-white px-4 py-3 text-xs text-gray">
               <p>
-                <span className="font-semibold text-charcoal">Fixon ApS</span> · CVR: 46079019 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+                <span className="font-semibold text-charcoal">Fixon ApS</span> · CVR: 46079019 · Løversysselvej 3C, 7100 Vejle
               </p>
               <p className="mt-1">
                 Solgt under brugtmomsordningen. Køber har ikke fradragsret for moms.

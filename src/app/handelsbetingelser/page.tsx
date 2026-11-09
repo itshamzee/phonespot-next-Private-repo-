@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
-import { STORES } from "@/lib/store-config";
 
 export const metadata: Metadata = {
   title: "Handelsbetingelser - PhoneSpot",
@@ -247,7 +246,7 @@ export default function HandelsbetingelserPage() {
           </p>
           <div className="mt-4 rounded-lg border border-charcoal/20 bg-charcoal/5 p-5 space-y-3 text-sm">
             <p>
-              <strong>Til:</strong> Fixon ApS, {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+              <strong>Til:</strong> Fixon ApS, Løversysselvej 3C, 7100 Vejle
               <br />
               E-mail:{" "}
               <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>
