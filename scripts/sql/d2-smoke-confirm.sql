@@ -426,6 +426,90 @@ BEGIN
   PERFORM pg_temp.expect_pos(format('SELECT public.trade_in_void(%L, %L, %L)', v_other, v_staff, 'x'), 'receipt_not_voidable');
 END $$;
 
+-- 10. Genkøb efter annullering: bekræft → annullér → ny seddel med samme IMEI lykkes.
+DO $$
+DECLARE
+  v_staff uuid := (SELECT v FROM _smoke WHERE k = 'staff');
+  v_rec uuid;
+BEGIN
+  v_rec := pg_temp.mk_receipt('vejle', ARRAY[20000], ARRAY['359999000000117']);
+  PERFORM public.trade_in_confirm(v_rec, v_staff);
+  -- Før annullering er IMEI'et på lager.
+  PERFORM pg_temp.expect_pos(
+    format('SELECT public.trade_in_confirm(%L, %L)',
+           pg_temp.mk_receipt('vejle', ARRAY[20000], ARRAY['359999000000117']), v_staff),
+    'imei_in_stock');
+  PERFORM public.trade_in_void(v_rec, v_staff, 'Forkert model');
+
+  v_rec := pg_temp.mk_receipt('vejle', ARRAY[21000], ARRAY['359999000000117']);
+  PERFORM public.trade_in_confirm(v_rec, v_staff);
+  IF (SELECT count(*) FROM public.devices WHERE imei = '359999000000117') <> 2
+     OR (SELECT count(*) FROM public.devices WHERE imei = '359999000000117' AND status = 'intake' AND blocked_at IS NULL) <> 1 THEN
+    RAISE EXCEPTION 'smoke 10: genkøb efter annullering oprettede ikke en ny, fri enhed';
+  END IF;
+  -- Men en spærret enhed af anden grund (fx mistanke) blokerer stadig.
+  UPDATE public.devices SET blocked_at = now(), blocked_reason = 'Mistanke om tyveri'
+   WHERE imei = '359999000000117' AND status = 'intake';
+  PERFORM pg_temp.expect_pos(
+    format('SELECT public.trade_in_confirm(%L, %L)',
+           pg_temp.mk_receipt('vejle', ARRAY[20000], ARRAY['359999000000117']), v_staff),
+    'imei_in_stock');
+END $$;
+
+-- 11. Kladder får intet nummer: receipt_number har ingen default.
+DO $$
+DECLARE
+  v_rec uuid;
+BEGIN
+  IF (SELECT column_default FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'trade_in_receipts' AND column_name = 'receipt_number') IS NOT NULL THEN
+    RAISE EXCEPTION 'smoke 11: receipt_number har stadig en default';
+  END IF;
+  -- Som den gamle POST /api/trade-in/receipts: ingen receipt_number og ingen location_id.
+  INSERT INTO public.trade_in_receipts (seller_name, total_amount) VALUES ('Smoke Legacy', 1000) RETURNING id INTO v_rec;
+  INSERT INTO public.trade_in_receipts (seller_name, total_amount) VALUES ('Smoke Legacy 2', 1000);
+  IF (SELECT receipt_number FROM public.trade_in_receipts WHERE id = v_rec) IS NOT NULL
+     OR (SELECT status FROM public.trade_in_receipts WHERE id = v_rec) <> 'draft' THEN
+    RAISE EXCEPTION 'smoke 11: ny kladde fik et nummer';
+  END IF;
+END $$;
+
+-- 12. Varelinje-låsen: læser sedlen med FOR SHARE, låser bekræftede sedler,
+--     og kaskadesletning af en kladde med varer virker stadig.
+DO $$
+DECLARE
+  v_staff uuid := (SELECT v FROM _smoke WHERE k = 'staff');
+  v_rec uuid;
+  v_n int;
+BEGIN
+  IF (SELECT pg_get_functiondef('public.trade_in_receipt_items_guard'::regproc)) NOT LIKE '%FOR SHARE%' THEN
+    RAISE EXCEPTION 'smoke 12: items-guard læser ikke sedlen med FOR SHARE';
+  END IF;
+
+  v_rec := pg_temp.mk_receipt('vejle', ARRAY[15000], ARRAY['SERIAL0012A']);
+  PERFORM public.trade_in_confirm(v_rec, v_staff);
+  BEGIN
+    INSERT INTO public.trade_in_receipt_items (receipt_id, brand, model, price) VALUES (v_rec, 'Apple', 'iPhone', 100);
+    RAISE EXCEPTION 'smoke 12: varelinje kunne tilføjes til bekræftet seddel';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM <> 'receipt_locked' THEN RAISE; END IF;
+  END;
+  BEGIN
+    UPDATE public.trade_in_receipt_items SET price = 1 WHERE receipt_id = v_rec;
+    RAISE EXCEPTION 'smoke 12: varelinje på bekræftet seddel kunne ændres';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM <> 'receipt_locked' THEN RAISE; END IF;
+  END;
+
+  v_rec := pg_temp.mk_receipt('vejle', ARRAY[1000, 2000], ARRAY['SERIAL0012B', 'SERIAL0012C']);
+  UPDATE public.trade_in_receipt_items SET price = 1500 WHERE receipt_id = v_rec AND price = 1000;
+  DELETE FROM public.trade_in_receipts WHERE id = v_rec;
+  SELECT count(*) INTO v_n FROM public.trade_in_receipt_items WHERE receipt_id = v_rec;
+  IF v_n <> 0 THEN
+    RAISE EXCEPTION 'smoke 12: kaskadesletning af kladde efterlod varelinjer';
+  END IF;
+END $$;
+
 SELECT 'd2-smoke-confirm: ok' AS result,
        (SELECT jsonb_agg(jsonb_build_object('le', legal_entity_id, 'year', year, 'last', last_number))
           FROM public.slutseddel_counters) AS counters_in_tx;

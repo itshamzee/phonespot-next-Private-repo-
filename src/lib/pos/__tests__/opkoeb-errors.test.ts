@@ -5,7 +5,7 @@ import { toPosError } from "../errors";
 /** Fejlkoder fra trade_in_confirm / trade_in_void (migration 20261109121000). */
 const cases: Array<[string, number, string]> = [
   ["pos:receipt_not_found", 404, "Slutsedlen findes ikke"],
-  ["pos:receipt_not_draft", 409, "Slutsedlen er allerede bekræftet"],
+  ["pos:receipt_not_draft", 409, "Slutsedlen er ikke længere en kladde"],
   ["pos:receipt_empty", 400, "Tilføj mindst én vare"],
   ["pos:item_invalid:2", 400, "Vare 2: vælg model, skriv et gyldigt IMEI eller serienummer, og angiv en pris"],
   ["pos:seller_missing", 400, "Udfyld sælgers navn og adresse"],

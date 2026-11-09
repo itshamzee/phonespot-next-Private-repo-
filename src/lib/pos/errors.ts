@@ -121,7 +121,7 @@ const CATALOG: Record<string, Entry> = {
   },
   // Opkøb (trade_in_confirm / trade_in_void)
   receipt_not_found: { status: 404, message: () => "Slutsedlen findes ikke" },
-  receipt_not_draft: { status: 409, message: () => "Slutsedlen er allerede bekræftet" },
+  receipt_not_draft: { status: 409, message: () => "Slutsedlen er ikke længere en kladde" },
   receipt_empty: { status: 400, message: () => "Tilføj mindst én vare" },
   item_invalid: {
     status: 400,
