@@ -119,13 +119,23 @@ export async function GET(req: Request) {
     }
     const limit = Math.min(Math.max(parseInt(sp.get("limit") ?? "50", 10) || 50, 1), 200);
 
-    let q = supabase.from("trade_in_receipts").select(LIST_COLUMNS).order("created_at", { ascending: false }).limit(limit);
+    let q = supabase
+      .from("trade_in_receipts")
+      .select(`${LIST_COLUMNS}, trade_in_receipt_items(id)`)
+      .order("created_at", { ascending: false })
+      .limit(limit);
     if (locationId) q = q.eq("location_id", locationId);
     if (allowed) q = q.in("location_id", allowed);
     if (status) q = q.eq("status", status);
     const { data, error } = await q;
     if (error) throw new Error(error.message);
-    return NextResponse.json((data ?? []).map((r) => sanitizeReceipt(r as ReceiptRow, { bankAccount: "omit" })));
+    // Listen viser kun antallet af enheder, ikke selve varerne.
+    return NextResponse.json(
+      (data ?? []).map((r) => {
+        const { trade_in_receipt_items: items, ...row } = r as ReceiptRow & { trade_in_receipt_items?: unknown[] };
+        return { ...sanitizeReceipt(row as ReceiptRow, { bankAccount: "omit" }), item_count: items?.length ?? 0 };
+      }),
+    );
   } catch (err) {
     return posErrorResponse(err, "Kunne ikke hente slutsedler");
   }

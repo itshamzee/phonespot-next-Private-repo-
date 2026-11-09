@@ -126,6 +126,7 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/opkoeb", label: "Pipeline" },
       { href: "/admin/opkoeb/ko", label: "Kø" },
+      { href: "/admin/opkoeb/slutsedler", label: "Slutsedler" },
       { href: "/admin/opkoeb/priser", label: "Priser" },
       { href: "/admin/opkoeb/indstillinger", label: "Automatik" },
     ],

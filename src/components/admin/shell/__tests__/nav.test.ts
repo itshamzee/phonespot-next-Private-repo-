@@ -18,6 +18,8 @@ describe("resolveActive", () => {
     expect(at("/admin/platform/pos/cashup")).toEqual(["kasse", "Dagsopgørelse"]);
     expect(at("/admin/platform/pos")).toEqual(["kasse", "Kasseapparat"]);
     expect(at("/admin/opkoeb/ko")).toEqual(["opkoeb", "Kø"]);
+    expect(at("/admin/opkoeb/slutsedler")).toEqual(["opkoeb", "Slutsedler"]);
+    expect(at("/admin/opkoeb/slutsedler/ny")).toEqual(["opkoeb", "Slutsedler"]);
     expect(at("/admin/opkoeb/8f3a/slutseddel")).toEqual(["opkoeb", "Pipeline"]);
   });
 
