@@ -39,8 +39,8 @@ export default function HandelsbetingelserPage() {
               <strong>Fixon ApS</strong>
             </p>
             <p>CVR-nr.: 46079019</p>
-            <p>{STORES.slagelse.street}</p>
-            <p>{STORES.slagelse.zip} {STORES.slagelse.city}</p>
+            <p>Løversysselvej 3C</p>
+            <p>7100 Vejle</p>
             <p>
               E-mail:{" "}
               <a href="mailto:info@phonespot.dk">info@phonespot.dk</a>
