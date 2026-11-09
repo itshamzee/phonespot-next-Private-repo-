@@ -11,14 +11,14 @@ const empty: DigestData = {
 };
 
 describe("buildDigestHtml", () => {
-  it("puts payouts first, with reg and account number", () => {
+  it("puts payouts first, with reg number and the masked account", () => {
     const html = buildDigestHtml({
       ...empty,
       toPay: [
         {
           sellerName: "Mette Hansen",
           bankReg: "1234",
-          bankAccount: "5678901234",
+          bankAccount: "••••1234",
           amountKr: 1800,
           receiptNumber: "PS-001",
         },
@@ -27,7 +27,7 @@ describe("buildDigestHtml", () => {
     });
     expect(html).toContain("Mette Hansen");
     expect(html).toContain("1234");
-    expect(html).toContain("5678901234");
+    expect(html).toContain("••••1234");
     expect(html.indexOf("Skal betales")).toBeLessThan(html.indexOf("Venter på dig"));
   });
 
