@@ -66,8 +66,10 @@ describe("middleware matcher", () => {
     "/api/repairs/abc/comments",
     "/api/contact/abc",
     "/api/contact/abc/reply",
+    "/api/trade-in/receipts",
     "/api/trade-in/receipts/abc",
     "/api/trade-in/receipts/abc/pdf",
+    "/api/trade-in/price-suggestion",
     "/api/trade-in/abc/upload-label",
   ])("gates staff-only route %s", (url) => {
     expect(matches(url)).toBe(true);
