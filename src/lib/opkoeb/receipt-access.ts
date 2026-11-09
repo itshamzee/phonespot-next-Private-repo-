@@ -80,12 +80,42 @@ export function sanitizeReceipt<T extends Record<string, unknown>>(row: T, opts:
     has_signed_scan: signed_scan_path != null,
     has_invoice: invoice_file_path != null,
     has_payout_proof: payout_proof_path != null,
+    // Kontonummeret er maskeret eller udeladt; klientens regler skal kun vide, om det findes.
+    has_bank_account: Boolean(rest.seller_bank_reg) && Boolean(seller_bank_account),
     id_number: id_number == null ? null : draft ? id_number : maskTail(id_number),
   };
   if (opts.bankAccount === "draft-only") {
     out.seller_bank_account = seller_bank_account == null ? null : draft ? seller_bank_account : maskTail(seller_bank_account);
   }
   return out;
+}
+
+const NAME_FIELDS = [
+  ["created_by", "created_by_name"],
+  ["confirmed_by", "confirmed_by_name"],
+  ["paid_by", "paid_by_name"],
+] as const;
+
+/**
+ * Tilføjer medarbejdernavne (created_by_name m.fl.) til sedlerne med én
+ * forespørgsel på staff for alle id'erne. Ukendt eller manglende id giver null.
+ */
+export async function withStaffNames(
+  rows: Array<Record<string, unknown>>,
+  fields: ReadonlyArray<(typeof NAME_FIELDS)[number][0]>,
+): Promise<Array<Record<string, unknown>>> {
+  const wanted = NAME_FIELDS.filter(([from]) => fields.includes(from));
+  const ids = [...new Set(rows.flatMap((r) => wanted.map(([from]) => r[from]).filter((v): v is string => typeof v === "string")))];
+  const names = new Map<string, string>();
+  if (ids.length > 0) {
+    const { data, error } = await createServerClient().from("staff").select("id, name").in("id", ids);
+    if (error) throw new Error(`Failed to load staff names: ${error.message}`);
+    for (const s of data ?? []) if (typeof s.name === "string" && s.name) names.set(s.id as string, s.name);
+  }
+  return rows.map((r) => ({
+    ...r,
+    ...Object.fromEntries(wanted.map(([from, to]) => [to, typeof r[from] === "string" ? (names.get(r[from] as string) ?? null) : null])),
+  }));
 }
 
 const RECEIPT_SCALARS = [

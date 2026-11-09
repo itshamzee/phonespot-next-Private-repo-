@@ -7,7 +7,7 @@ import { Button, DataTable, Field, Notice, PageHeader, Select, type Column } fro
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { apiErrorMessage, receiptHref, StatusTag, STATUS_LABELS, SuspicionTag } from "./_components/receipt-status";
 import { formatKr } from "./_components/receipt-form";
-import { useStaffNames, useStores } from "./_components/use-receipt-lookups";
+import { useStores } from "./_components/use-receipt-lookups";
 
 type Row = {
   id: string;
@@ -18,7 +18,7 @@ type Row = {
   seller_name: string | null;
   seller_type: string | null;
   created_at: string;
-  created_by: string | null;
+  created_by_name?: string | null;
   suspected_at?: string | null;
   has_signed_scan: boolean;
   has_invoice: boolean;
@@ -36,7 +36,6 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("da-DK", { day: "
 export default function ReceiptsPage() {
   const router = useRouter();
   const { stores } = useStores();
-  const staffName = useStaffNames();
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("");
   const [onlyMissing, setOnlyMissing] = useState(false);
@@ -97,7 +96,7 @@ export default function ReceiptsPage() {
         </span>
       ),
     },
-    { key: "staff", header: "Medarbejder", hideBelow: "lg", render: (r) => staffName(r.created_by) },
+    { key: "staff", header: "Medarbejder", hideBelow: "lg", render: (r) => r.created_by_name ?? "–" },
   ];
 
   return (
@@ -148,6 +147,7 @@ export default function ReceiptsPage() {
           Mangler scan
         </Button>
       </div>
+      <p className="-mt-2 mb-4 text-[13px] text-gray">Mangler scan dækker kun de seneste {LIMIT} slutsedler.</p>
 
       {error && (
         <div className="mb-4">

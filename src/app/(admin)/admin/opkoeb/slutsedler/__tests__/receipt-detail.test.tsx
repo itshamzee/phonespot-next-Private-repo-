@@ -76,6 +76,7 @@ const confirmedPrivate = () => ({
   payout_method: "bank",
   seller_bank_reg: "1234",
   seller_bank_account: "••••5678",
+  has_bank_account: true,
   account_owner_confirmed: true,
   suspected_at: null,
   has_signed_scan: false,
@@ -193,6 +194,13 @@ describe("ReceiptDetail", () => {
     await open();
     expect(screen.getByText(/Modregnet i køb: 1\.000,00 kr\./)).toBeTruthy();
     expect(screen.getByText(/Kun resten, 2\.500,00 kr\., udbetales til bank/)).toBeTruthy();
+  });
+
+  it("holder udbetaling lukket med begrundelse, når kontooplysningerne ikke er gemt på sedlen", async () => {
+    api.receipt = { ...confirmedPrivate(), has_signed_scan: true, has_bank_account: false, seller_bank_reg: null, seller_bank_account: null };
+    await open();
+    expect(payButton().disabled).toBe(true);
+    expect(screen.getByText(/Reg.nr. skal være 4 cifre/)).toBeTruthy();
   });
 
   it("viser Fortsæt kladde for en kladde", async () => {

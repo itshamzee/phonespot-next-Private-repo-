@@ -44,7 +44,7 @@ export function ReceiptDialog({
       return;
     }
     if (e.key !== "Tab" || !ref.current) return;
-    const items = Array.from(ref.current.querySelectorAll<HTMLElement>("input:not([disabled]), textarea:not([disabled]), button:not([disabled])"));
+    const items = Array.from(ref.current.querySelectorAll<HTMLElement>("input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), a[href]"));
     if (items.length === 0) return;
     const first = items[0];
     const last = items[items.length - 1];

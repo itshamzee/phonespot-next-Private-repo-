@@ -14,12 +14,13 @@ import {
   itemRows,
   itemsTotal,
   sanitizeReceipt,
+  withStaffNames,
   type ReceiptRow,
 } from "@/lib/opkoeb/receipt-access";
 
 const MAX_INQUIRY_IDS = 200;
 const LIST_COLUMNS =
-  "id, receipt_number, status, total_amount, offset_amount, location_id, inquiry_id, seller_name, seller_type, attestation, created_at, confirmed_at, paid_at, created_by, signed_scan_path, invoice_file_path, payout_proof_path";
+  "id, receipt_number, status, total_amount, offset_amount, location_id, inquiry_id, seller_name, seller_type, attestation, created_at, confirmed_at, paid_at, created_by, suspected_at, signed_scan_path, invoice_file_path, payout_proof_path";
 const STATUSES = ["draft", "confirmed", "paid", "completed", "voided"];
 
 const uuidSchema = z.string().uuid();
@@ -130,12 +131,11 @@ export async function GET(req: Request) {
     const { data, error } = await q;
     if (error) throw new Error(error.message);
     // Listen viser kun antallet af enheder, ikke selve varerne.
-    return NextResponse.json(
-      (data ?? []).map((r) => {
-        const { trade_in_receipt_items: items, ...row } = r as ReceiptRow & { trade_in_receipt_items?: unknown[] };
-        return { ...sanitizeReceipt(row as ReceiptRow, { bankAccount: "omit" }), item_count: items?.length ?? 0 };
-      }),
-    );
+    const listed = (data ?? []).map((r) => {
+      const { trade_in_receipt_items: items, ...row } = r as ReceiptRow & { trade_in_receipt_items?: unknown[] };
+      return { ...sanitizeReceipt(row as ReceiptRow, { bankAccount: "omit" }), item_count: items?.length ?? 0 };
+    });
+    return NextResponse.json(await withStaffNames(listed, ["created_by"]));
   } catch (err) {
     return posErrorResponse(err, "Kunne ikke hente slutsedler");
   }

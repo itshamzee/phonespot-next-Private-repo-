@@ -14,6 +14,8 @@ const rows: Record<string, Array<Record<string, unknown>>> = {};
 const inserted: Array<{ table: string; row: Record<string, unknown> }> = [];
 /** Next write to this table fails with this error (one shot). */
 const failWrite: { table: string | null; error: { code: string; message: string } | null } = { table: null, error: null };
+/** Every select(...) the routes issue, to assert which columns and how many queries. */
+const selects: Array<{ table: string; cols: string }> = [];
 let seq = 100;
 
 function builder(table: string) {
@@ -23,7 +25,7 @@ function builder(table: string) {
   let max = Infinity;
   const matching = () => (rows[table] ?? []).filter((r) => filters.every((f) => f(r))).slice(0, max);
   const b: Record<string, unknown> = {};
-  b.select = () => b;
+  b.select = (cols?: string) => (selects.push({ table, cols: cols ?? "*" }), b);
   b.order = () => b;
   b.limit = (n: number) => ((max = n), b);
   b.eq = (k: string, v: unknown) => (filters.push((r) => r[k] === v), b);
@@ -90,6 +92,7 @@ const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 beforeEach(() => {
   requireStaffMock.mockReset();
   inserted.length = 0;
+  selects.length = 0;
   failWrite.table = null;
   failWrite.error = null;
   rows.locations = [
@@ -97,6 +100,11 @@ beforeEach(() => {
     { id: U(30), name: "Slagelse", slug: "slagelse", type: "store" },
   ];
   rows.trade_in_receipt_items = [];
+  rows.staff = [
+    { id: U(1), name: "Ejer Ejersen" },
+    { id: U(2), name: "Vibeke Vejle" },
+    { id: U(3), name: "Pia Pinkode" },
+  ];
   rows.trade_in_receipts = [
     { id: U(50), receipt_number: "SS-2026-0001", status: "confirmed", location_id: U(30), seller_name: "A", id_number: "AB123456", seller_bank_account: "12345678", signed_scan_path: "x/y.pdf", invoice_file_path: null, total_amount: 5000, offset_amount: null, attestation: "paper_scan", seller_type: "private" },
     { id: U(51), receipt_number: "SS-2026-0002", status: "confirmed", location_id: U(20), seller_name: "B", id_number: "CD987654", seller_bank_account: "87654321", signed_scan_path: null, invoice_file_path: "i.pdf", total_amount: 7000, offset_amount: null, attestation: "paper_scan", seller_type: "private" },
@@ -352,6 +360,47 @@ describe("PATCH / DELETE", () => {
     requireStaffMock.mockResolvedValue(vejle);
     expect((await DELETE(req("/x", "DELETE"), ctx(U(52)))).status).toBe(200);
     expect(rows.trade_in_receipts.some((r) => r.id === U(52))).toBe(false);
+  });
+});
+
+describe("GET /api/trade-in/receipts (names, suspicion, bank flag)", () => {
+  it("the list returns suspected_at and staff names resolved in one staff query", async () => {
+    requireStaffMock.mockResolvedValue(owner);
+    Object.assign(rows.trade_in_receipts.find((r) => r.id === U(51))!, { suspected_at: "2026-11-09T11:00:00Z", created_by: U(2) });
+    Object.assign(rows.trade_in_receipts.find((r) => r.id === U(50))!, { created_by: U(3) });
+    const body = await (await GET(req("/api/trade-in/receipts"))).json();
+    expect(selects.find((q) => q.table === "trade_in_receipts")!.cols).toContain("suspected_at");
+    expect(selects.filter((q) => q.table === "staff")).toHaveLength(1);
+    const byId = (id: string) => body.find((r: { id: string }) => r.id === id);
+    expect(byId(U(51)).suspected_at).toBe("2026-11-09T11:00:00Z");
+    expect(byId(U(50)).suspected_at ?? null).toBeNull();
+    expect(byId(U(51)).created_by_name).toBe("Vibeke Vejle");
+    expect(byId(U(50)).created_by_name).toBe("Pia Pinkode");
+    expect(byId(U(52)).created_by_name).toBeNull();
+  });
+
+  it("the single GET returns created_by_name, confirmed_by_name and paid_by_name, and has_bank_account", async () => {
+    requireStaffMock.mockResolvedValue(owner);
+    Object.assign(rows.trade_in_receipts.find((r) => r.id === U(51))!, {
+      status: "paid",
+      created_by: U(2),
+      confirmed_by: U(3),
+      paid_by: U(1),
+      seller_bank_reg: "1234",
+      seller_bank_account: "87654321",
+    });
+    const body = await (await GET_ONE(req("/x"), ctx(U(51)))).json();
+    expect(body.created_by_name).toBe("Vibeke Vejle");
+    expect(body.confirmed_by_name).toBe("Pia Pinkode");
+    expect(body.paid_by_name).toBe("Ejer Ejersen");
+    expect(body.has_bank_account).toBe(true);
+    expect(JSON.stringify(body)).not.toContain("87654321");
+  });
+
+  it("has_bank_account is false when the registration number is missing", async () => {
+    requireStaffMock.mockResolvedValue(owner);
+    const body = await (await GET_ONE(req("/x"), ctx(U(50)))).json();
+    expect(body.has_bank_account).toBe(false);
   });
 });
 

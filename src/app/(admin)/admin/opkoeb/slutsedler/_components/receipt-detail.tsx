@@ -10,7 +10,7 @@ import { prepareUpload } from "./compress-image";
 import { ReceiptDialog } from "./receipt-dialog";
 import { apiErrorMessage, draftHref, StatusTag, SuspicionTag } from "./receipt-status";
 import { formatKr, INVOICE_TYPE_LABELS } from "./receipt-form";
-import { useStaffNames, useStores } from "./use-receipt-lookups";
+import { useStores } from "./use-receipt-lookups";
 
 type Item = {
   id: string;
@@ -70,8 +70,10 @@ export function rulesInput(r: Receipt): ReceiptForRules {
     signed_scan_path: r.has_signed_scan ? "uploaded" : null,
     invoice_file_path: r.has_invoice ? "uploaded" : null,
     payout_method: str(r.payout_method) as ReceiptForRules["payout_method"],
-    seller_bank_reg: str(r.seller_bank_reg),
-    seller_bank_account: str(r.seller_bank_account) ? "000000" : null,
+    // Kontonummeret er maskeret i den rensede række; serverens has_bank_account siger, om reg.nr. og konto er gemt.
+    // Pladsholderne består kun reglernes formatkrav; serveren afgør udbetalingen med de indtastede tal.
+    seller_bank_reg: r.has_bank_account ? "0000" : null,
+    seller_bank_account: r.has_bank_account ? "000000" : null,
     account_owner_confirmed: r.account_owner_confirmed === true,
     offset_amount: num(r.offset_amount),
     suspected_at: str(r.suspected_at),
@@ -92,7 +94,6 @@ export function ReceiptDetail({ receiptId }: { receiptId: string }) {
   const base = `/api/trade-in/receipts/${receiptId}`;
   const { isOwner } = useStoreScope();
   const { stores } = useStores();
-  const staffName = useStaffNames();
 
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -325,12 +326,14 @@ export function ReceiptDetail({ receiptId }: { receiptId: string }) {
               <Row label="ID">{idType ? `${ID_TYPE_LABELS[idType]} ${str(r.id_number) ?? ""}`.trim() : "Ikke krævet"}</Row>
               <Row label="Butik">{storeName ?? "–"}</Row>
               <Row label="Oprettet">
-                {dateTime(r.created_at)} af {staffName(r.created_by)}
+                {dateTime(r.created_at)} af {str(r.created_by_name) ?? "–"}
               </Row>
-              {status !== "draft" && <Row label="Bekræftet den">{dateTime(r.confirmed_at)}</Row>}
+              {status !== "draft" && <Row label="Bekræftet den">
+                  {dateTime(r.confirmed_at)} af {str(r.confirmed_by_name) ?? "–"}
+                </Row>}
               {str(r.paid_at) && (
                 <Row label="Udbetalt den">
-                  {dateTime(r.paid_at)} af {staffName(r.paid_by)}
+                  {dateTime(r.paid_at)} af {str(r.paid_by_name) ?? "–"}
                 </Row>
               )}
             </dl>

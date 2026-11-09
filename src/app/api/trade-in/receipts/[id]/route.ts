@@ -12,6 +12,7 @@ import {
   itemsTotal,
   loadReceiptForActor,
   sanitizeReceipt,
+  withStaffNames,
   type ReceiptRow,
 } from "@/lib/opkoeb/receipt-access";
 
@@ -37,7 +38,12 @@ export async function GET(req: Request, { params }: Ctx) {
     if (!staff) return UNAUTHORIZED();
     const { id } = await params;
     await loadReceiptForActor(staff.actor, id);
-    return NextResponse.json(sanitizeReceipt(await loadWithItems(id), { bankAccount: "draft-only" }));
+    const [named] = await withStaffNames([sanitizeReceipt(await loadWithItems(id), { bankAccount: "draft-only" })], [
+      "created_by",
+      "confirmed_by",
+      "paid_by",
+    ]);
+    return NextResponse.json(named);
   } catch (err) {
     return posErrorResponse(err, "Kunne ikke hente slutsedlen");
   }
