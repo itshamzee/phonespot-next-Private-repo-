@@ -119,6 +119,36 @@ const CATALOG: Record<string, Entry> = {
     status: 409,
     message: (d) => `${d ?? "Noget"} af lageret er reserveret til reparationssager. Fjern reservationen først.`,
   },
+  // Opkøb (trade_in_confirm / trade_in_void)
+  receipt_not_found: { status: 404, message: () => "Slutsedlen findes ikke" },
+  receipt_not_draft: { status: 409, message: () => "Slutsedlen er allerede bekræftet" },
+  receipt_empty: { status: 400, message: () => "Tilføj mindst én vare" },
+  item_invalid: {
+    status: 400,
+    message: (d) =>
+      `${d ? `Vare ${d}` : "En vare"}: vælg model, skriv et gyldigt IMEI eller serienummer, og angiv en pris`,
+  },
+  seller_missing: { status: 400, message: () => "Udfyld sælgers navn og adresse" },
+  age_missing: { status: 400, message: () => "Bekræft, at sælger er fyldt 18" },
+  business_fields_missing: {
+    status: 400,
+    message: () => "Udfyld firmaets CVR-nummer (8 cifre) og vælg fakturatype",
+  },
+  checks_missing: { status: 400, message: () => "Tjek Find My og spærring, og sæt kryds" },
+  id_required: { status: 400, message: () => "ID kræves, når opkøbet er over 2.000 kr." },
+  id_incomplete: { status: 400, message: () => "Udfyld ID-type, ID-nummer og udløbsdato" },
+  id_expired: { status: 400, message: () => "ID'et er udløbet" },
+  imei_in_stock: {
+    status: 409,
+    message: (d) => (d ? `IMEI'et ${d} findes allerede på en enhed på lager` : "IMEI'et findes allerede på en enhed på lager"),
+  },
+  location_missing: { status: 400, message: () => "Butikken mangler et firma med nummerserie til slutsedler" },
+  receipt_not_voidable: {
+    status: 409,
+    message: () =>
+      "Slutsedlen kan ikke annulleres. Den er udbetalt, modregnet eller allerede annulleret, eller en enhed er ikke længere i modtagelse.",
+  },
+  void_reason_required: { status: 400, message: () => "Skriv en begrundelse for annulleringen" },
 };
 
 const PATTERN = /pos:([a-z_]+)(?::([^\n]*))?/;
