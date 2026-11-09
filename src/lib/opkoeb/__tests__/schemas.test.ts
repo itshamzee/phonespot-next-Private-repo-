@@ -32,8 +32,8 @@ describe("receiptDraftSchema", () => {
     expect(receiptDraftSchema.safeParse({ seller_type: "private", id_type: "sundhedskort", items: [item] }).success).toBe(false);
   });
   it("rejects malformed values", () => {
-    expect(receiptDraftSchema.safeParse({ items: [{ ...item, price: 0 }] }).success).toBe(false);
-    expect(receiptDraftSchema.safeParse({ items: [{ ...item, price: 10.5 }] }).success).toBe(false);
+    expect(receiptDraftSchema.safeParse({ items: [{ ...item, price: 0 }] }).success).toBe(true);
+    expect(receiptDraftSchema.safeParse({ items: [{ ...item, price: -1 }] }).success).toBe(false);
     expect(receiptDraftSchema.safeParse({ items: [{ ...item, battery_health: 101 }] }).success).toBe(false);
     expect(receiptDraftSchema.safeParse({ seller_bank_reg: "12" }).success).toBe(false);
     expect(receiptDraftSchema.safeParse({ seller_cvr: "123" }).success).toBe(false);

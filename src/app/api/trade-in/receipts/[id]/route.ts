@@ -6,7 +6,6 @@ import {
   checkStamps,
   draftColumns,
   itemRows,
-  itemsMissingPrice,
   itemsTotal,
   loadReceiptForActor,
   sanitizeReceipt,
@@ -66,9 +65,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
       );
     }
     const { items, ...draft } = parsed.data;
-    if (items && itemsMissingPrice(items)) {
-      return NextResponse.json({ error: "Angiv en pris på hver vare" }, { status: 400 });
-    }
 
     const fields = draftColumns(draft);
     const merged = { ...existing, ...fields };
@@ -84,8 +80,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
     const supabase = createServerClient();
     if (Object.keys(update).length > 0) {
-      const { error } = await supabase.from("trade_in_receipts").update(update).eq("id", id).eq("status", "draft");
+      const { data: updated, error } = await supabase
+        .from("trade_in_receipts")
+        .update(update)
+        .eq("id", id)
+        .eq("status", "draft")
+        .select("id");
       if (error) throw new Error(error.message);
+      // Bekræftet imellem tjekket og skrivningen: rør ikke varerne.
+      if (!updated || updated.length === 0) return LOCKED();
     }
 
     if (items) {

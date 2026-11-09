@@ -10,7 +10,6 @@ import {
   checkStamps,
   draftColumns,
   itemRows,
-  itemsMissingPrice,
   itemsTotal,
   sanitizeReceipt,
   type ReceiptRow,
@@ -21,11 +20,14 @@ const LIST_COLUMNS =
   "id, receipt_number, status, total_amount, offset_amount, location_id, inquiry_id, seller_name, seller_type, attestation, created_at, confirmed_at, paid_at, created_by, signed_scan_path, invoice_file_path, payout_proof_path";
 const STATUSES = ["draft", "confirmed", "paid", "completed", "voided"];
 
+const uuidSchema = z.string().uuid();
+const BAD_INQUIRY = () => NextResponse.json({ error: "Ugyldigt henvendelses-id" }, { status: 400 });
+
 const createSchema = receiptDraftSchema.extend({ location_id: z.string().uuid("Vælg en butik") });
 
 /**
  * GET /api/trade-in/receipts
- *   ?inquiry_ids=a,b      status pr. henvendelse (ingen persondata, ikke butiksafgrænset, bruges til at udlede henvendelsens status)
+ *   ?inquiry_ids=a,b      status pr. henvendelse (ingen persondata, butiksafgrænset)
  *   ?inquiry_id=x         sedlerne på én henvendelse, med varer
  *   ?number=SS-2026-0001  højst én seddel, kun i aktørens butikker (kassen)
  *   ?location_id=&status=&limit=  liste, afgrænset til aktørens butikker
@@ -48,10 +50,14 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: `Højst ${MAX_INQUIRY_IDS} henvendelser ad gangen` }, { status: 400 });
       }
       if (ids.length === 0) return NextResponse.json([]);
-      const { data, error } = await supabase
+      if (!ids.every((i) => uuidSchema.safeParse(i).success)) return BAD_INQUIRY();
+      const allowedForIds = await accessibleLocationIds(actor);
+      let idsQuery = supabase
         .from("trade_in_receipts")
         .select("inquiry_id, status, total_amount, created_at, confirmed_at, paid_at")
         .in("inquiry_id", ids);
+      if (allowedForIds) idsQuery = idsQuery.in("location_id", allowedForIds);
+      const { data, error } = await idsQuery;
       if (error) throw new Error(error.message);
       return NextResponse.json(data ?? []);
     }
@@ -91,6 +97,7 @@ export async function GET(req: Request) {
     const allowed = await accessibleLocationIds(actor);
     const inquiryId = sp.get("inquiry_id");
     if (inquiryId) {
+      if (!uuidSchema.safeParse(inquiryId).success) return BAD_INQUIRY();
       let q = supabase
         .from("trade_in_receipts")
         .select("*, trade_in_receipt_items(*)")
@@ -154,9 +161,6 @@ export async function POST(req: Request) {
     const { location_id, items = [], ...draft } = parsed.data;
 
     await assertLocationAccess(actor, location_id);
-    if (itemsMissingPrice(items)) {
-      return NextResponse.json({ error: "Angiv en pris på hver vare" }, { status: 400 });
-    }
 
     const now = new Date().toISOString();
     const fields = draftColumns(draft);

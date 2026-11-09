@@ -19,7 +19,7 @@ export const receiptItemSchema = z.object({
   condition_grade: z.enum(["Perfekt", "God", "Acceptabel", "Defekt"]).nullish(),
   battery_health: z.number().int().min(0).max(100).nullish(),
   suggested_price: z.number().int().min(0).nullish(),
-  price: z.number().int().positive().nullish(),
+  price: z.number().int().min(0).nullish(),
   condition_notes: text(1000).nullish(),
 });
 

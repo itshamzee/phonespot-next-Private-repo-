@@ -239,12 +239,44 @@ describe("GET /api/trade-in/receipts (lists)", () => {
     ]);
   });
 
-  it("?inquiry_ids= returns status rows and rejects more than 200 ids", async () => {
+  it("?inquiry_ids= is store filtered: Vejle gets no Slagelse or legacy rows, the owner gets them", async () => {
+    rows.trade_in_receipts.push(
+      { id: U(60), inquiry_id: U(70), status: "paid", total_amount: 1, created_at: "c", confirmed_at: "c", paid_at: "p", location_id: U(30) },
+      { id: U(61), inquiry_id: U(71), status: "paid", total_amount: 1, created_at: "c", confirmed_at: "c", paid_at: "p", location_id: U(20) },
+      { id: U(62), inquiry_id: U(72), status: "draft", total_amount: 1, created_at: "c", confirmed_at: null, paid_at: null, location_id: null },
+    );
+    const q = `/api/trade-in/receipts?inquiry_ids=${U(70)},${U(71)},${U(72)}`;
     requireStaffMock.mockResolvedValue(vejle);
-    rows.trade_in_receipts.push({ id: U(60), inquiry_id: U(70), status: "paid", total_amount: 1, created_at: "c", confirmed_at: "c", paid_at: "p", location_id: U(30) });
-    const body = await (await GET(req(`/api/trade-in/receipts?inquiry_ids=${U(70)}`))).json();
-    expect(body).toHaveLength(1);
+    expect((await (await GET(req(q))).json()).map((r: { inquiry_id: string }) => r.inquiry_id)).toEqual([U(71)]);
+    requireStaffMock.mockResolvedValue(owner);
+    expect((await (await GET(req(q))).json()).length).toBe(3);
+  });
+
+  it("?inquiry_ids= rejects more than 200 ids and malformed ids", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
     const many = Array.from({ length: 201 }, (_, i) => U(i + 1000)).join(",");
     expect((await GET(req(`/api/trade-in/receipts?inquiry_ids=${many}`))).status).toBe(400);
+    expect((await GET(req("/api/trade-in/receipts?inquiry_ids=abc"))).status).toBe(400);
+    expect((await GET(req("/api/trade-in/receipts?inquiry_id=abc"))).status).toBe(400);
+  });
+
+  it("?inquiry_id= is store filtered and masks locked receipts", async () => {
+    rows.trade_in_receipts.push(
+      { id: U(60), inquiry_id: U(70), status: "paid", location_id: U(30), id_number: "AB123456" },
+      { id: U(61), inquiry_id: U(70), status: "paid", location_id: U(20), id_number: "CD987654" },
+    );
+    requireStaffMock.mockResolvedValue(vejle);
+    const mine = await (await GET(req(`/api/trade-in/receipts?inquiry_id=${U(70)}`))).json();
+    expect(mine.map((r: { id: string }) => r.id)).toEqual([U(61)]);
+    expect(mine[0].id_number).toBe("••••7654");
+    requireStaffMock.mockResolvedValue(owner);
+    expect((await (await GET(req(`/api/trade-in/receipts?inquiry_id=${U(70)}`))).json()).length).toBe(2);
+  });
+
+  it("the list's status filter narrows to that status; an unknown status is 400", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const drafts = await (await GET(req("/api/trade-in/receipts?status=draft"))).json();
+    expect(drafts.map((r: { id: string }) => r.id)).toEqual([U(52)]);
+    expect((await GET(req("/api/trade-in/receipts?status=bogus"))).status).toBe(400);
   });
 });

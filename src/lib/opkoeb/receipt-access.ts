@@ -120,11 +120,6 @@ export function draftColumns(draft: ReceiptDraft): Record<string, unknown> {
 
 export type DraftItem = NonNullable<ReceiptDraft["items"]>[number];
 
-/** price er NOT NULL (> 0) i tabellen; en varelinje kan derfor først gemmes, når den har en pris. */
-export function itemsMissingPrice(items: DraftItem[]): boolean {
-  return items.some((i) => !i.price || i.price <= 0);
-}
-
 export function itemRows(receiptId: string, items: DraftItem[]) {
   return items.map((i) => ({
     receipt_id: receiptId,
@@ -137,7 +132,8 @@ export function itemRows(receiptId: string, items: DraftItem[]) {
     condition_grade: i.condition_grade ?? null,
     battery_health: i.battery_health ?? null,
     suggested_price: i.suggested_price ?? null,
-    price: i.price as number,
+    // 0 = ikke sat endnu; trade_in_confirm kræver > 0.
+    price: i.price ?? 0,
     condition_notes: i.condition_notes || null,
   }));
 }
