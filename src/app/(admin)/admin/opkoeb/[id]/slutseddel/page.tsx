@@ -186,13 +186,14 @@ export default function AdminSlutseddelPage() {
     setAcceptedOffer(offer);
 
     // Check for existing receipt
-    const { data: receiptData } = await supabase
-      .from("trade_in_receipts")
-      .select("*")
-      .eq("inquiry_id", inquiryId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    const existingReceipt = (receiptData as TradeInReceipt[] | null)?.[0] ?? null;
+    // Slutsedler læses via serveren (butiksadgang og maskering), nyeste først, med varer.
+    let existingReceipt: (TradeInReceipt & { trade_in_receipt_items?: TradeInReceiptItem[] }) | null = null;
+    try {
+      const receiptRes = await staffFetch(`/api/trade-in/receipts?inquiry_id=${inquiryId}`);
+      if (receiptRes.ok) existingReceipt = ((await receiptRes.json()) as TradeInReceipt[])[0] ?? null;
+    } catch {
+      existingReceipt = null;
+    }
 
     if (existingReceipt) {
       // Load existing receipt into form
@@ -213,12 +214,9 @@ export default function AdminSlutseddelPage() {
       setStaffInitials(existingReceipt.staff_initials ?? "");
 
       // Load receipt items
-      const { data: itemData } = await supabase
-        .from("trade_in_receipt_items")
-        .select("*")
-        .eq("receipt_id", existingReceipt.id)
-        .order("created_at", { ascending: true });
-      const existingItems = (itemData as TradeInReceiptItem[] | null) ?? [];
+      const existingItems = [...(existingReceipt.trade_in_receipt_items ?? [])].sort((a, b) =>
+        (a.created_at ?? "").localeCompare(b.created_at ?? ""),
+      );
       if (existingItems.length > 0) {
         setItems(
           existingItems.map((it) => ({

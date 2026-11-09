@@ -30,7 +30,7 @@ import {
 } from "@/lib/buyback/overview";
 import { Notice } from "@/components/admin/ui";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
-import { staffFetch } from "@/lib/buyback/admin-fetch";
+import { fetchReceiptsByInquiry, staffFetch } from "@/lib/buyback/admin-fetch";
 import StoreBadge from "@/components/admin/StoreBadge";
 import BuybackFeed from "@/components/admin/BuybackFeed";
 import BuybackHoldWindow from "@/components/admin/BuybackHoldWindow";
@@ -254,12 +254,7 @@ function OpkoebOverview() {
           .in("inquiry_id", chunk)
           .order("created_at", { ascending: false }),
       ),
-      fetchInChunks<ReceiptRow>(ids, (chunk) =>
-        supabase
-          .from("trade_in_receipts")
-          .select("inquiry_id, status, total_amount, created_at, confirmed_at, paid_at")
-          .in("inquiry_id", chunk),
-      ),
+      fetchReceiptsByInquiry<ReceiptRow>(ids),
       fetchInChunks<{ id: string; inquiry_id: string }>(ids, (chunk) =>
         supabase.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", chunk),
       ),

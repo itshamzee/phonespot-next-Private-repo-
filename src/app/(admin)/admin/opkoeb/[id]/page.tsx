@@ -154,12 +154,13 @@ export default function AdminOpkoebDetailPage() {
   }
 
   async function loadReceipts() {
-    const { data } = await supabase
-      .from("trade_in_receipts")
-      .select("*")
-      .eq("inquiry_id", inquiryId)
-      .order("created_at", { ascending: false });
-    setReceipts((data as TradeInReceipt[]) ?? []);
+    // Slutsedler læses via serveren (butiksadgang og maskering), nyeste først.
+    try {
+      const res = await staffFetch(`/api/trade-in/receipts?inquiry_id=${inquiryId}`);
+      setReceipts(res.ok ? ((await res.json()) as TradeInReceipt[]) : []);
+    } catch {
+      setReceipts([]);
+    }
   }
 
   async function loadDeclines() {
