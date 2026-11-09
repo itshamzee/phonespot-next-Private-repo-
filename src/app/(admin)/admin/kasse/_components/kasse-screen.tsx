@@ -18,6 +18,7 @@ import {
   checkPayments,
   deviceNeedsIdentifier,
   discountableBase,
+  lineNeedingIdentifier,
   mergeSkuLine,
   paymentsNeedCustomer,
   parseKasseParams,
@@ -193,8 +194,13 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   const [dialogError, setDialogError] = useState("");
   const [dialogBusy, setDialogBusy] = useState(false);
   const [depositCase, setDepositCase] = useState<CaseContext | null>(null);
-  // A brugtmoms unit without IMEI/serial number waits here while the cashier scans it.
-  const [pendingDevice, setPendingDevice] = useState<DeviceToAdd | null>(null);
+  // A brugtmoms unit without IMEI/serial number waits here while the cashier scans it:
+  // a unit about to be added, or a device line already in the cart (from a repair case).
+  const [identifierFor, setIdentifierFor] = useState<
+    { kind: "new"; device: DeviceToAdd } | { kind: "line"; key: string; name: string } | null
+  >(null);
+  // Case lines whose prompt the cashier closed: not reopened by itself, only when charging.
+  const [identifierDismissed, setIdentifierDismissed] = useState<string[]>([]);
   const [splitInitial, setSplitInitial] = useState<ReturnType<typeof newPaymentLine>[]>([]);
   const [processing, setProcessing] = useState(false);
   // Integrated terminal only: the key of the charge that is waiting on the terminal.
@@ -451,7 +457,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
       return;
     }
     if (!imei && deviceNeedsIdentifier(d) && !lines.some((l) => l.type === "device" && l.deviceId === d.id)) {
-      setPendingDevice(d);
+      setIdentifierFor({ kind: "new", device: d });
       setDialog("identifier");
       clearScan();
       return;
@@ -598,6 +604,16 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     }
   }
 
+  // A repair case brought a brugtmoms unit without IMEI/serial number into the cart: ask for it.
+  useEffect(() => {
+    if (dialog || done) return;
+    const missing = lineNeedingIdentifier(lines);
+    if (missing && !identifierDismissed.includes(missing.key)) {
+      setIdentifierFor({ kind: "line", key: missing.key, name: missing.name });
+      setDialog("identifier");
+    }
+  }, [lines, dialog, done, identifierDismissed]);
+
   // Keyboard: F2 focuses the scan field, Esc clears it when no dialog is open.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -638,6 +654,13 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   function requestCharge() {
     if (!canCharge) return;
     setError("");
+    // A brugtmoms unit from a repair case without IMEI/serial number: ask before charging.
+    const missing = lineNeedingIdentifier(lines);
+    if (missing) {
+      setIdentifierFor({ kind: "line", key: missing.key, name: missing.name });
+      setDialog("identifier");
+      return;
+    }
     if (usesCardTerminal(payments)) {
       setDialogError("");
       setDialog("card");
@@ -1176,18 +1199,23 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           onApproved={(r) => void submitSale({ card: true, terminalReceipt: r })}
         />
       )}
-      {dialog === "identifier" && pendingDevice && (
+      {dialog === "identifier" && identifierFor && (
         <IdentifierDialog
-          deviceName={pendingDevice.name}
+          deviceName={identifierFor.kind === "new" ? identifierFor.device.name : identifierFor.name}
           onClose={() => {
-            setPendingDevice(null);
+            if (identifierFor.kind === "line") {
+              const key = identifierFor.key;
+              setIdentifierDismissed((ks) => (ks.includes(key) ? ks : [...ks, key]));
+            }
+            setIdentifierFor(null);
             setDialog(null);
           }}
           onConfirm={(imei) => {
-            const d = pendingDevice;
-            setPendingDevice(null);
+            const target = identifierFor;
+            setIdentifierFor(null);
             setDialog(null);
-            addDevice(d, imei);
+            if (target.kind === "new") addDevice(target.device, imei);
+            else setLines((prev) => prev.map((l) => (l.key === target.key && l.type === "device" ? { ...l, imei } : l)));
           }}
         />
       )}

@@ -18,7 +18,9 @@ import { oereToInput, parseKr } from "@/lib/pos/money";
 import { checkTerminalReceipt, TERMINAL_RECEIPT_MAX } from "@/lib/pos/terminal-receipt";
 import {
   DEFAULT_DEPOSIT_SUGGESTION_OERE,
+  normalizeReceiptNumber,
   tradeInOffsetProblem,
+  tradeInRemainderProblem,
   validateDeposit,
   type CaseContext,
   type TradeInLookup,
@@ -582,6 +584,8 @@ function offsetLineProblem(line: PaymentLineState, lookup: OffsetLookup | undefi
   if (lookup.problem) return lookup.problem;
   const amount = parseKr(line.amountKr) ?? 0;
   if (amount > lookup.receipt.total_amount) return `Højst ${fmtKr(lookup.receipt.total_amount)} på denne slutseddel`;
+  const remainder = tradeInRemainderProblem(lookup.receipt, amount);
+  if (remainder) return remainder;
   const ref = line.reference.trim();
   if (lines.some((l) => l.id !== line.id && l.type === "opkoeb" && l.reference.trim() === ref)) {
     return "Slutsedlen er allerede brugt i en anden linje";
@@ -607,6 +611,9 @@ export function SplitDialog({
 }) {
   const [lines, setLines] = useState<PaymentLineState[]>(initialLines);
   const [offsets, setOffsets] = useState<Record<string, OffsetLookup>>({});
+  // The reference each line has right now: a lookup answer for an older number is dropped.
+  const currentRefs = useRef<Record<string, string>>({});
+  currentRefs.current = Object.fromEntries(lines.map((l) => [l.id, normalizeReceiptNumber(l.reference)]));
   const input = paymentLinesToInput(lines);
   const check = validatePayments(input, total);
   const paid = input.reduce((s, l) => s + l.amountOere, 0);
@@ -622,11 +629,13 @@ export function SplitDialog({
   }
 
   async function findReceipt(line: PaymentLineState) {
-    const number = line.reference.trim();
+    const number = normalizeReceiptNumber(line.reference);
     if (!number) return;
+    const stale = () => currentRefs.current[line.id] !== number;
     setOffsets((o) => ({ ...o, [line.id]: { state: "loading" } }));
     try {
       const rows = await posJson<TradeInLookup[]>(`/api/trade-in/receipts?number=${encodeURIComponent(number)}`);
+      if (stale()) return;
       const receipt = rows[0];
       if (!receipt) {
         setOffsets((o) => ({ ...o, [line.id]: { state: "missing" } }));
@@ -640,10 +649,17 @@ export function SplitDialog({
         update(line.id, { amountKr: oereToInput(amount != null && amount > 0 ? Math.min(amount, receipt.total_amount) : receipt.total_amount) });
       }
     } catch (err) {
+      if (stale()) return;
       const message = err instanceof Error ? err.message : "Slutsedlen kunne ikke hentes";
       setOffsets((o) => ({ ...o, [line.id]: { state: "error", message } }));
     }
   }
+
+  // Reopened with offset lines that already carry a number: look them up again (the slip may have changed).
+  useEffect(() => {
+    for (const l of initialLines) if (l.type === "opkoeb" && l.reference.trim()) void findReceipt(l);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Modal title="Del betaling" onClose={onClose} wide>
@@ -686,7 +702,7 @@ export function SplitDialog({
                 lookup={offsets[l.id]}
                 problem={offsetLineProblem(l, offsets[l.id], lines)}
                 onChange={(reference) => {
-                  update(l.id, { reference });
+                  update(l.id, { reference: reference.toUpperCase() });
                   setOffsets((o) => {
                     const next = { ...o };
                     delete next[l.id];

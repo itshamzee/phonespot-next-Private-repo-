@@ -68,10 +68,13 @@ export async function GET(req: Request) {
 
     const number = sp.get("number");
     if (number !== null) {
+      // Slutseddelnumre er A-Z, 0-9 og bindestreg; alt andet kan ikke matche (og ingen LIKE-jokertegn).
+      const wanted = number.trim();
+      if (!/^[A-Za-z0-9-]{1,40}$/.test(wanted)) return NextResponse.json([]);
       const { data, error } = await supabase
         .from("trade_in_receipts")
-        .select(LIST_COLUMNS)
-        .eq("receipt_number", number.trim())
+        .select(`${LIST_COLUMNS}, seller_bank_reg, seller_bank_account`)
+        .ilike("receipt_number", wanted)
         .limit(1);
       if (error) throw new Error(error.message);
       const row = (data ?? [])[0] as ReceiptRow | undefined;
@@ -94,6 +97,8 @@ export async function GET(req: Request) {
           seller_type: s.seller_type,
           has_signed_scan: s.has_signed_scan,
           has_invoice: s.has_invoice,
+          // Et restbeløb efter modregning udbetales til bank og kræver konto på sedlen.
+          has_bank_account: s.has_bank_account,
           // Kassen viser, hvorfor en seddel under mistanke ikke kan modregnes.
           suspected: s.suspected_at != null,
         },

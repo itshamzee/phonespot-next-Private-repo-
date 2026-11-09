@@ -131,6 +131,9 @@ export function CartPanel(p: Props) {
                 {l.type === "repair_service" && l.detail}
                 {l.type === "device" && l.detail}
                 {l.type === "device" && l.imei && <span className="block tabular-nums">IMEI/serienr. {l.imei}</span>}
+                {l.type === "device" && l.needsIdentifier && !l.imei && (
+                  <span className="block font-semibold text-[#8A5A00]">Mangler IMEI eller serienummer</span>
+                )}
                 {l.type === "device" && l.missingPurchaseDocument && (
                   <span className="block font-semibold text-[#8A5A00]">Mangler indkøbsbilag</span>
                 )}

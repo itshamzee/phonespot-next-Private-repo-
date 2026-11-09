@@ -129,6 +129,15 @@ describe("confirmBlockers", () => {
     expect(has(b, "CVR")).toBe(true);
     expect(has(b, "fakturatype")).toBe(true);
   });
+  it("modregning: the account is optional, but a filled-in account must be valid and owner-confirmed", () => {
+    const m = (over: Record<string, unknown>) =>
+      confirmBlockers(receipt({ payout_method: "modregning", seller_bank_reg: null, seller_bank_account: null, account_owner_confirmed: false, ...over }), TODAY);
+    expect(m({})).toEqual([]);
+    expect(m({ seller_bank_reg: "1234", seller_bank_account: "12345678", account_owner_confirmed: true })).toEqual([]);
+    expect(m({ seller_bank_reg: "1234" })).toContain("Kontonummer skal være 6 til 10 cifre");
+    expect(m({ seller_bank_account: "12345678", account_owner_confirmed: true })).toContain("Reg.nr. skal være 4 cifre");
+    expect(m({ seller_bank_reg: "1234", seller_bank_account: "12345678" })).toContain("Bekræft at kontoen står i sælgers navn");
+  });
   it("requires a payout method, and complete bank details when it is bank", () => {
     expect(confirmBlockers(receipt({ payout_method: null }), TODAY)).toContain("Vælg udbetaling");
     expect(confirmBlockers(receipt({ payout_method: "modregning", seller_bank_reg: null, seller_bank_account: null, account_owner_confirmed: false }), TODAY)).toEqual([]);

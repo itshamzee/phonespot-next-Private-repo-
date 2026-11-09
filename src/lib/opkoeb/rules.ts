@@ -169,9 +169,12 @@ export function confirmBlockers(r: ReceiptForRules, today: string): string[] {
   });
 
   // Kontooplysningerne låses ved bekræftelsen, så de skal være på plads inden.
+  // Ved modregning er kontoen valgfri (et restbeløb udbetales til bank), men er den
+  // udfyldt, gælder samme krav som ved bank.
+  const accountGiven = !blank(r.seller_bank_reg) || !blank(r.seller_bank_account);
   if (!r.payout_method) {
     out.push("Vælg udbetaling");
-  } else if (r.payout_method === "bank") {
+  } else if (r.payout_method === "bank" || accountGiven) {
     if (!r.seller_bank_reg || !/^\d{4}$/.test(r.seller_bank_reg)) out.push("Reg.nr. skal være 4 cifre");
     if (!r.seller_bank_account || !/^\d{6,10}$/.test(r.seller_bank_account)) {
       out.push("Kontonummer skal være 6 til 10 cifre");

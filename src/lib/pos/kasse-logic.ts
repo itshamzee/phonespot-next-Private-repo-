@@ -29,6 +29,8 @@ export type CartLine =
       repairTicketItemId?: string;
       /** IMEI or serial number typed at the till (only for a unit without one on file). */
       imei?: string;
+      /** Brugtmoms unit from a repair case without IMEI/serial number: the till asks before charging. */
+      needsIdentifier?: boolean;
       /** No purchase document (indkøbsbilag) on file: warned about, never blocks the sale. */
       missingPurchaseDocument?: boolean;
     }
@@ -331,6 +333,7 @@ export function casePaymentLines(c: CaseContext, key = `case-${c.id}`): CartLine
         price: l.unit_oere,
         vatScheme: l.vat_scheme ?? "brugtmoms",
         repairTicketItemId: l.item_id,
+        ...((l.vat_scheme ?? "brugtmoms") === "brugtmoms" && l.has_identifier === false ? { needsIdentifier: true } : {}),
       });
     } else if (l.kind === "product" && l.sku_product_id) {
       out.push({
@@ -462,6 +465,17 @@ export function deviceNeedsIdentifier(d: { vatScheme: string | null; hasIdentifi
   return d.vatScheme === "brugtmoms" && !d.hasIdentifier;
 }
 
+/** The first device line that still needs an IMEI/serial number before the sale can be charged. */
+export function lineNeedingIdentifier(lines: CartLine[]): Extract<CartLine, { type: "device" }> | null {
+  for (const l of lines) if (l.type === "device" && l.needsIdentifier && !l.imei) return l;
+  return null;
+}
+
+/** Slutseddel numbers are upper case (SS-2026-0001); typed or scanned input is matched without case. */
+export function normalizeReceiptNumber(raw: string): string {
+  return raw.trim().toUpperCase();
+}
+
 /** GET /api/trade-in/receipts?number= (one row, only in the actor's stores). */
 export type TradeInLookup = {
   id: string;
@@ -474,8 +488,18 @@ export type TradeInLookup = {
   seller_type: string;
   has_signed_scan: boolean;
   has_invoice: boolean;
+  /** Reg.nr. and account on the slip: needed when only part of it is offset (the rest goes to bank). */
+  has_bank_account?: boolean;
   suspected?: boolean;
 };
+
+export const REMAINDER_NO_ACCOUNT_MESSAGE =
+  "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.";
+
+/** An offset below the slip's total leaves a remainder that is paid by bank, so the slip needs an account. */
+export function tradeInRemainderProblem(r: TradeInLookup, amountOere: number): string | null {
+  return amountOere < r.total_amount && !r.has_bank_account ? REMAINDER_NO_ACCOUNT_MESSAGE : null;
+}
 
 /**
  * Why a slutseddel cannot be offset in a sale at this store, or null when it can.

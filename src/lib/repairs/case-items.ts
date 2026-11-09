@@ -49,10 +49,12 @@ export async function loadCaseItems(db: SupabaseClient, ticketId: string): Promi
   const rows = await loadCaseItemRows(db, ticketId);
   const deviceIds = rows.map((r) => r.device_id).filter((v): v is string => Boolean(v));
   const scheme = new Map<string, "brugtmoms" | "regular">();
+  const identified = new Map<string, boolean>();
   if (deviceIds.length > 0) {
-    const { data } = await db.from("devices").select("id, vat_scheme").in("id", deviceIds);
-    for (const d of (data ?? []) as Array<{ id: string; vat_scheme: string | null }>) {
+    const { data } = await db.from("devices").select("id, vat_scheme, imei, serial_number").in("id", deviceIds);
+    for (const d of (data ?? []) as Array<{ id: string; vat_scheme: string | null; imei?: string | null; serial_number?: string | null }>) {
       scheme.set(d.id, d.vat_scheme === "regular" ? "regular" : "brugtmoms");
+      identified.set(d.id, Boolean(d.imei?.trim() || d.serial_number?.trim()));
     }
   }
   return rows.map((r) => ({
@@ -67,6 +69,7 @@ export async function loadCaseItems(db: SupabaseClient, ticketId: string): Promi
     device_id: r.device_id,
     created_at: r.created_at,
     vat_scheme: r.device_id ? scheme.get(r.device_id) : undefined,
+    ...(r.device_id && identified.has(r.device_id) ? { has_identifier: identified.get(r.device_id) } : {}),
   }));
 }
 

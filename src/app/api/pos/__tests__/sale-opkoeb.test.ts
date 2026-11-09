@@ -151,6 +151,11 @@ describe("Danish messages for the new pos_create_sale errors", () => {
       "Slutseddel SS-2026-0001 kan ikke modregnes. Den skal være bekræftet i denne butik, have sit bilag og må ikke være modregnet, udbetalt eller spærret.",
     ],
     ["pos:trade_in_amount_too_high:300000", 400, "Modregningen kan højst være slutsedlens total på 3.000,00 kr."],
+    [
+      "pos:trade_in_remainder_no_account:SS-2026-0001",
+      409,
+      "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.",
+    ],
   ];
   it.each(cases)("%s → %i %s", (raw, status, message) => {
     const e = toPosError({ message: raw });

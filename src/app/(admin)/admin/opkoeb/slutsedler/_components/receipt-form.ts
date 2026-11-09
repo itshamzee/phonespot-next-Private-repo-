@@ -194,7 +194,8 @@ export function imeiError(value: string): string | null {
  */
 export function toDraftPayload(form: ReceiptForm): ReceiptDraft {
   const business = form.seller_type === "business";
-  const bank = form.payout_method === "bank";
+  // Bank kræver konto; modregning kan have en (til et restbeløb, hvis købet bliver mindre).
+  const bank = form.payout_method === "bank" || form.payout_method === "modregning";
   const needsId = idRequired(totalOere(form));
   const idNumber = opt(form.id_number);
   return {

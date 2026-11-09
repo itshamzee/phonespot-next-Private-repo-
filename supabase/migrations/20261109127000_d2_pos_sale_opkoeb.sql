@@ -16,14 +16,16 @@
 --   * order_items.imei = linjens id (IMEI eller serienummer).
 --
 --  Betalingstypen 'opkoeb' (modregning af en slutseddel):
---   * reference = slutsedlens receipt_number (påkrævet). Sedlerne låses FOR UPDATE
+--   * reference = slutsedlens receipt_number (påkrævet, uden hensyn til store/små bogstaver). Sedlerne låses FOR UPDATE
 --     før enhederne (samme rækkefølge som trade_in_void: seddel → enheder).
 --   * Sedlen skal være 'confirmed', i salgets butik, ikke modregnet, ikke under
 --     mistanke, ikke annulleret og have sit bilag (privat + paper_scan: underskrevet
 --     scan; firma: faktura; privat + online_accept: intet). Ellers
 --     pos:trade_in_not_settleable; findes den ikke: pos:trade_in_not_found;
 --     beløb > total_amount: pos:trade_in_amount_too_high. Samme seddel to gange i
---     ét salg: pos:trade_in_not_settleable.
+--     ét salg: pos:trade_in_not_settleable. Modregnes mindre end totalen, skal sedlen have
+--     sælgers reg.nr. og konto (restbeløbet udbetales til bank): ellers
+--     pos:trade_in_remainder_no_account.
 --   * Efter ordren: offset_order_id, offset_amount, payout_method='modregning'; er
 --     beløbet hele totalen, også status 'paid', paid_at, paid_by. Et restbeløb
 --     udbetales via bank fra slutsedlens side.
@@ -95,8 +97,8 @@ BEGIN
   -- Trade-in receipts offset in this sale: locked in id order before cases and devices
   -- (trade_in_void locks the receipt, then its devices). Checked with the payments below.
   PERFORM 1 FROM public.trade_in_receipts
-    WHERE receipt_number IN (
-      SELECT btrim(e->>'reference') FROM jsonb_array_elements(
+    WHERE upper(receipt_number) IN (
+      SELECT upper(btrim(e->>'reference')) FROM jsonb_array_elements(
         CASE WHEN jsonb_typeof(p_payments) = 'array' THEN p_payments ELSE '[]'::jsonb END) e
        WHERE e->>'type' = 'opkoeb')
     ORDER BY id FOR UPDATE;
@@ -345,8 +347,9 @@ BEGIN
     IF pay.e->>'type' = 'opkoeb' THEN
       v_tr_ref := btrim(pay.e->>'reference');
       SELECT id, status, location_id, offset_order_id, suspected_at, voided_at, seller_type,
-             attestation, signed_scan_path, invoice_file_path, total_amount
-        INTO tr FROM public.trade_in_receipts WHERE receipt_number = v_tr_ref;
+             attestation, signed_scan_path, invoice_file_path, total_amount,
+             seller_bank_reg, seller_bank_account
+        INTO tr FROM public.trade_in_receipts WHERE upper(receipt_number) = upper(v_tr_ref);
       IF NOT FOUND THEN PERFORM public.pos_fail('trade_in_not_found', v_tr_ref); END IF;
       IF tr.status <> 'confirmed' OR tr.location_id IS DISTINCT FROM p_location_id
          OR tr.offset_order_id IS NOT NULL OR tr.suspected_at IS NOT NULL OR tr.voided_at IS NOT NULL
@@ -357,6 +360,11 @@ BEGIN
       END IF;
       IF (pay.e->>'amount_oere')::integer > tr.total_amount THEN
         PERFORM public.pos_fail('trade_in_amount_too_high', tr.total_amount::text);
+      END IF;
+      -- A remainder is paid out by bank later, so the slip must carry the seller's account.
+      IF (pay.e->>'amount_oere')::integer < tr.total_amount
+         AND (nullif(btrim(tr.seller_bank_reg), '') IS NULL OR nullif(btrim(tr.seller_bank_account), '') IS NULL) THEN
+        PERFORM public.pos_fail('trade_in_remainder_no_account', v_tr_ref);
       END IF;
       o_id := array_append(o_id, tr.id);
       o_ref := array_append(o_ref, v_tr_ref);
@@ -466,7 +474,12 @@ BEGIN
 
   FOR pay IN SELECT e FROM jsonb_array_elements(coalesce(p_payments, '[]'::jsonb)) e LOOP
     INSERT INTO public.order_payments (order_id, type, amount_oere, reference)
-      VALUES (v_order_id, pay.e->>'type', (pay.e->>'amount_oere')::integer, nullif(btrim(coalesce(pay.e->>'reference', '')), ''));
+      VALUES (v_order_id, pay.e->>'type', (pay.e->>'amount_oere')::integer,
+              CASE WHEN pay.e->>'type' = 'opkoeb'
+                   -- The slip's own number, whatever case the till sent.
+                   THEN (SELECT receipt_number FROM public.trade_in_receipts
+                          WHERE upper(receipt_number) = upper(btrim(pay.e->>'reference')) LIMIT 1)
+                   ELSE nullif(btrim(coalesce(pay.e->>'reference', '')), '') END);
   END LOOP;
 
   -- Trade-in offsets: the receipt points at this sale. Offset in full = paid; a remainder

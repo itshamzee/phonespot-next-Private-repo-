@@ -163,6 +163,11 @@ const CATALOG: Record<string, Entry> = {
     message: (d) =>
       `Slutseddel ${d ?? ""} kan ikke modregnes. Den skal være bekræftet i denne butik, have sit bilag og må ikke være modregnet, udbetalt eller spærret.`,
   },
+  trade_in_remainder_no_account: {
+    status: 409,
+    message: () =>
+      "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.",
+  },
   trade_in_amount_too_high: {
     status: 400,
     message: (d) =>

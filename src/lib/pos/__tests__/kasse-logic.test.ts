@@ -366,6 +366,22 @@ describe("case own lines and stock status", () => {
     ...over,
   });
 
+  it("marks a brugtmoms case device without IMEI/serial number for the till's prompt, and sends the identifier", () => {
+    const c = ctx({
+      deposits: [],
+      totalOere: 400_000,
+      lines: [
+        item({ id: "d", item_id: "d", name: "iPhone 13", kind: "device", device_id: U(40), unit_oere: 400_000, total_oere: 400_000, vat_scheme: "brugtmoms", has_identifier: false }),
+        item({ id: "e", item_id: "e", name: "iPhone 12", kind: "device", device_id: U(42), unit_oere: 0, total_oere: 0, vat_scheme: "brugtmoms", has_identifier: true }),
+        item({ id: "f", item_id: "f", name: "Pixel 7", kind: "device", device_id: U(43), unit_oere: 0, total_oere: 0, vat_scheme: "regular", has_identifier: false }),
+      ],
+    });
+    const lines = casePaymentLines(c);
+    expect(lines.map((l) => l.type === "device" && l.needsIdentifier === true)).toEqual([true, false, false]);
+    const withId = lines.map((l) => (l.type === "device" && l.deviceId === U(40) ? { ...l, imei: "359999000000018" } : l));
+    expect(toSaleItems(withId, [])[0]).toEqual({ type: "device", deviceId: U(40), repairTicketItemId: "d", imei: "359999000000018" });
+  });
+
   it("puts a device and a product from the case on their own cart lines, not in the repair line", () => {
     const c = ctx({
       totalOere: 100_000 + 500_000 + 9_900,

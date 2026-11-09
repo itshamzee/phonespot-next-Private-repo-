@@ -45,19 +45,23 @@ BEGIN
   RETURN v_id;
 END $$;
 
--- Hjælper: en bekræftet slutseddel. Privat + paper_scan; p_scan styrer, om scannet er lagt op.
-CREATE FUNCTION pg_temp.mk_receipt(p_loc_slug text, p_number text, p_total int, p_scan boolean) RETURNS uuid
+-- Hjælper: en bekræftet slutseddel. Privat + paper_scan; p_scan styrer, om scannet er lagt op,
+-- p_bank, om sælgers konto står på sedlen (kræves for et restbeløb efter modregning).
+CREATE FUNCTION pg_temp.mk_receipt(p_loc_slug text, p_number text, p_total int, p_scan boolean,
+                                   p_bank boolean DEFAULT false) RETURNS uuid
 LANGUAGE plpgsql AS $$
 DECLARE v_id uuid;
 BEGIN
   INSERT INTO public.trade_in_receipts (
     receipt_number, location_id, seller_type, seller_name, seller_address, seller_postal_city,
     seller_age_confirmed, lock_checks_confirmed, total_amount, status, attestation,
-    signed_scan_path, confirmed_at, confirmed_by
+    signed_scan_path, confirmed_at, confirmed_by, payout_method,
+    seller_bank_reg, seller_bank_account, account_owner_confirmed
   ) VALUES (
     p_number, (SELECT id FROM public.locations WHERE slug = p_loc_slug), 'private', 'Smoke Sælger',
     'Testvej 1', '7100 Vejle', true, true, p_total, 'confirmed', 'paper_scan',
-    CASE WHEN p_scan THEN 'smoke/scan.pdf' END, now(), (SELECT v FROM _smoke WHERE k = 'staff')
+    CASE WHEN p_scan THEN 'smoke/scan.pdf' END, now(), (SELECT v FROM _smoke WHERE k = 'staff'), 'modregning',
+    CASE WHEN p_bank THEN '1234' END, CASE WHEN p_bank THEN '12345678' END, p_bank
   ) RETURNING id INTO v_id;
   RETURN v_id;
 END $$;
@@ -108,7 +112,7 @@ DECLARE
 BEGIN
   EXECUTE pg_temp.sale_sql('vejle',
     jsonb_build_array(jsonb_build_object('type', 'device', 'device_id', (SELECT v FROM _smoke WHERE k = 'dev1'))),
-    '[{"type":"opkoeb","amount_oere":300000,"reference":"SMOKE-D2-1"},{"type":"kontant","amount_oere":200000}]')
+    '[{"type":"opkoeb","amount_oere":300000,"reference":" smoke-d2-1 "},{"type":"kontant","amount_oere":200000}]')
     INTO v_res;
   v_order := (v_res->>'order_id')::uuid;
   INSERT INTO _smoke (k, v) VALUES ('order1', v_order);
@@ -186,8 +190,14 @@ SELECT pg_temp.expect_pos(pg_temp.sale_sql('vejle',
 -- 8. Seddel, der ikke findes → trade_in_not_found; for højt beløb → trade_in_amount_too_high;
 --    uden scan → trade_in_not_settleable; uden reference → payment_reference_required.
 INSERT INTO _smoke (k, v) VALUES
-  ('rec8', pg_temp.mk_receipt('vejle', 'SMOKE-D2-8', 100000, true)),
-  ('rec8b', pg_temp.mk_receipt('vejle', 'SMOKE-D2-8B', 300000, false));
+  ('rec8', pg_temp.mk_receipt('vejle', 'SMOKE-D2-8', 100000, true, true)),
+  ('rec8b', pg_temp.mk_receipt('vejle', 'SMOKE-D2-8B', 300000, false)),
+  ('rec8c', pg_temp.mk_receipt('vejle', 'SMOKE-D2-8C', 300000, true));
+-- Restbeløb uden konto på sedlen: trade_in_remainder_no_account (fuld modregning af samme seddel er i orden, se 1).
+SELECT pg_temp.expect_pos(pg_temp.sale_sql('vejle',
+  jsonb_build_array(jsonb_build_object('type', 'device', 'device_id', (SELECT v FROM _smoke WHERE k = 'dev2'))),
+  '[{"type":"opkoeb","amount_oere":100000,"reference":"SMOKE-D2-8C"},{"type":"kontant","amount_oere":400000}]'),
+  'trade_in_remainder_no_account');
 SELECT pg_temp.expect_pos(pg_temp.sale_sql('vejle',
   jsonb_build_array(jsonb_build_object('type', 'device', 'device_id', (SELECT v FROM _smoke WHERE k = 'dev2'))),
   '[{"type":"opkoeb","amount_oere":300000,"reference":"SMOKE-D2-FINDES-IKKE"},{"type":"kontant","amount_oere":200000}]'),
@@ -274,6 +284,42 @@ BEGIN
   EXECUTE pg_temp.sale_sql('vejle',
     '[{"type":"free_text","description":"Smoke diverse","unit_price_oere":10000,"quantity":1}]',
     '[{"type":"mobilepay","amount_oere":10000}]');
+END $$;
+
+-- 12. En enhed solgt på en reparationssag (case-linje) følger samme IMEI-regler som en almindelig linje.
+INSERT INTO _smoke (k, v) VALUES ('dev12', pg_temp.mk_device('vejle', 'SMOKE-D2-DEV12', 400000, 'brugtmoms', NULL, NULL));
+WITH t AS (
+  INSERT INTO public.repair_tickets (customer_name, customer_email, customer_phone, device_type, device_model,
+                                     issue_description, service_type, store_id)
+  VALUES ('Smoke Kunde', 'smoke@example.dk', '12345678', 'Smartphone', 'iPhone 13', 'Smoke', 'repair', 'vejle')
+  RETURNING id)
+INSERT INTO _smoke (k, v) SELECT 'ticket12', id FROM t;
+INSERT INTO public.repair_ticket_items (ticket_id, kind, description, qty, unit_price_oere, list_price_oere, device_id, stock_status)
+SELECT (SELECT v FROM _smoke WHERE k = 'ticket12'), 'device', 'Smoke iPhone 13', 1, 400000, 400000,
+       (SELECT v FROM _smoke WHERE k = 'dev12'), 'planned';
+INSERT INTO _smoke (k, v)
+SELECT 'item12', id FROM public.repair_ticket_items WHERE device_id = (SELECT v FROM _smoke WHERE k = 'dev12');
+SELECT pg_temp.expect_pos(pg_temp.sale_sql('vejle',
+  jsonb_build_array(jsonb_build_object('type', 'device', 'device_id', (SELECT v FROM _smoke WHERE k = 'dev12'),
+                                       'repair_ticket_item_id', (SELECT v FROM _smoke WHERE k = 'item12'))),
+  '[{"type":"kontant","amount_oere":400000}]'),
+  'imei_required');
+DO $$
+DECLARE
+  v_res jsonb;
+BEGIN
+  EXECUTE pg_temp.sale_sql('vejle',
+    jsonb_build_array(jsonb_build_object('type', 'device', 'device_id', (SELECT v FROM _smoke WHERE k = 'dev12'),
+                                         'repair_ticket_item_id', (SELECT v FROM _smoke WHERE k = 'item12'),
+                                         'imei', '359999000000067')),
+    '[{"type":"kontant","amount_oere":400000}]')
+    INTO v_res;
+  IF (SELECT imei FROM public.devices WHERE id = (SELECT v FROM _smoke WHERE k = 'dev12')) IS DISTINCT FROM '359999000000067'
+     OR (SELECT imei FROM public.order_items WHERE order_id = (v_res->>'order_id')::uuid AND item_type = 'device')
+        IS DISTINCT FROM '359999000000067'
+     OR (SELECT stock_status FROM public.repair_ticket_items WHERE id = (SELECT v FROM _smoke WHERE k = 'item12')) <> 'sold' THEN
+    RAISE EXCEPTION 'smoke: case-linjens IMEI blev ikke gemt (enhed, bon eller sagslinje)';
+  END IF;
 END $$;
 
 SELECT 'd2-smoke-sale OK' AS result;

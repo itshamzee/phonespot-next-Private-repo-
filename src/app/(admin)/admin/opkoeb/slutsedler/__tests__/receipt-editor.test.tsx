@@ -216,6 +216,32 @@ describe("ReceiptEditor", () => {
     expect(screen.queryByText("Batteri skal være mellem 0 og 100 %")).toBeNull();
   });
 
+  it("modregning shows the bank fields as optional with help text, and saves a filled-in account", async () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Modregnes i køb i kassen" }));
+    expect(screen.getByText("Udfyld konto, hvis købet i kassen kan blive mindre end opkøbet.")).toBeTruthy();
+    // Optional: no account is no blocker.
+    const blockers = screen.getByRole("list", { name: "Mangler før bekræftelse" });
+    expect(within(blockers).queryByText("Reg.nr. skal være 4 cifre")).toBeNull();
+    type("Reg.nr.", "1234");
+    type("Kontonummer", "12345678");
+    // Filled in: the owner confirmation is then required.
+    expect(within(screen.getByRole("list", { name: "Mangler før bekræftelse" })).getByText("Bekræft at kontoen står i sælgers navn")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Kontoen står i sælgers navn"));
+    await waitFor(
+      () => {
+        const saves = api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts") && c.body);
+        expect(saves[saves.length - 1]?.body).toMatchObject({
+          payout_method: "modregning",
+          seller_bank_reg: "1234",
+          seller_bank_account: "12345678",
+          account_owner_confirmed: true,
+        });
+      },
+      { timeout: 4000 },
+    );
+  });
+
   it("autosaves: creates the draft after the first input, then patches", async () => {
     render(<ReceiptEditor locationId={LOC} />);
     expect(api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts"))).toHaveLength(0);

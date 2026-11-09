@@ -31,6 +31,8 @@ function builder(table: string) {
   b.eq = (k: string, v: unknown) => (filters.push((r) => r[k] === v), b);
   b.in = (k: string, vs: unknown[]) => (filters.push((r) => vs.includes(r[k])), b);
   b.neq = (k: string, v: unknown) => (filters.push((r) => r[k] !== v), b);
+  // Only exact (wildcard-free) patterns are used: case-insensitive equality.
+  b.ilike = (k: string, v: string) => (filters.push((r) => typeof r[k] === "string" && (r[k] as string).toLowerCase() === v.toLowerCase()), b);
   let failing: { code: string; message: string } | null = null;
   const takeFailure = () => {
     if (failWrite.table === table && failWrite.error) {
@@ -114,7 +116,7 @@ beforeEach(() => {
   ];
   rows.trade_in_receipts = [
     { id: U(50), receipt_number: "SS-2026-0001", status: "confirmed", location_id: U(30), seller_name: "A", id_number: "AB123456", seller_bank_account: "12345678", signed_scan_path: "x/y.pdf", invoice_file_path: null, total_amount: 5000, offset_amount: null, attestation: "paper_scan", seller_type: "private" },
-    { id: U(51), receipt_number: "SS-2026-0002", status: "confirmed", location_id: U(20), seller_name: "B", id_number: "CD987654", seller_bank_account: "87654321", signed_scan_path: null, invoice_file_path: "i.pdf", total_amount: 7000, offset_amount: null, attestation: "paper_scan", seller_type: "private" },
+    { id: U(51), receipt_number: "SS-2026-0002", status: "confirmed", location_id: U(20), seller_name: "B", id_number: "CD987654", seller_bank_reg: "4321", seller_bank_account: "87654321", signed_scan_path: null, invoice_file_path: "i.pdf", total_amount: 7000, offset_amount: null, attestation: "paper_scan", seller_type: "private" },
     { id: U(52), receipt_number: null, status: "draft", location_id: U(20), seller_name: "C", id_number: "EF111222", seller_bank_account: "11112222", total_amount: 0 },
     { id: U(53), receipt_number: null, status: "draft", location_id: null, seller_name: "Legacy", total_amount: 0 },
   ];
@@ -477,9 +479,17 @@ describe("GET /api/trade-in/receipts (lists)", () => {
         seller_type: "private",
         has_signed_scan: false,
         has_invoice: true,
+        has_bank_account: true,
         suspected: false,
       },
     ]);
+  });
+
+  it("?number= matches the slutseddel number case-insensitively and ignores odd characters", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const lower = await (await GET(req("/api/trade-in/receipts?number=%20ss-2026-0002%20"))).json();
+    expect(lower.map((r: { receipt_number: string }) => r.receipt_number)).toEqual(["SS-2026-0002"]);
+    expect(await (await GET(req("/api/trade-in/receipts?number=SS-2026-%25"))).json()).toEqual([]);
   });
 
   it("?inquiry_ids= is store filtered: Vejle gets no Slagelse or legacy rows, the owner gets them", async () => {

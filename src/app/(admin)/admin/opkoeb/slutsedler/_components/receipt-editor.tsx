@@ -503,7 +503,13 @@ export function ReceiptEditor({
             { value: "modregning", label: "Modregnes i køb i kassen" },
           ]}
         />
-        {form.payout_method === "bank" && (
+        {form.payout_method === "modregning" && (
+          <p className="text-[13px] text-gray">Beløbet trækkes fra sælgers køb, når det slås op i kassen på slutseddelnummeret.</p>
+        )}
+        {form.payout_method === "modregning" && (
+          <p className="text-[13px] text-gray">Udfyld konto, hvis købet i kassen kan blive mindre end opkøbet.</p>
+        )}
+        {(form.payout_method === "bank" || form.payout_method === "modregning") && (
           <>
             <FieldRow>
               <Field label="Reg.nr." error={fieldError("reg", form.seller_bank_reg)}>
@@ -531,9 +537,6 @@ export function ReceiptEditor({
               onChange={(v) => update({ account_owner_confirmed: v })}
             />
           </>
-        )}
-        {form.payout_method === "modregning" && (
-          <p className="text-[13px] text-gray">Beløbet trækkes fra sælgers køb, når det slås op i kassen på slutseddelnummeret.</p>
         )}
       </Section>
 
