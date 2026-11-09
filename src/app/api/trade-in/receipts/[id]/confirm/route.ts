@@ -45,12 +45,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (blockers.length > 0) throw new PosError("confirm_blocked", blockers[0], 409);
 
       // Online-accept skal stadig holde (tilbud, ét brug, beløb); ellers kræves papir.
+      // Totalen tages fra varerne: PATCH skriver total og varer i to trin.
       if (row.attestation === "online_accept") {
+        const itemSum = (items ?? []).reduce((s, i) => s + (typeof i.price === "number" ? i.price : 0), 0);
         const now = await attestationFor({
           offerId: row.offer_id,
           inquiryId: row.inquiry_id,
           receiptId: id,
-          totalOere: typeof row.total_amount === "number" ? row.total_amount : 0,
+          totalOere: itemSum,
         });
         if (now !== "online_accept") {
           const { error: attErr } = await supabase.from("trade_in_receipts").update({ attestation: now }).eq("id", id);

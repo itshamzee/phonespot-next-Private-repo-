@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
 import {
+  assertInquiryLinkable,
   attestationFor,
   checkStamps,
   offerUsedConflict,
@@ -76,6 +77,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { items, ...draft } = parsed.data;
 
     const fields = draftColumns(draft);
+    // En ny kobling til en henvendelse kræver adgang til den (et uændret felt er tjekket, da det blev sat).
+    if ("inquiry_id" in fields && (fields.inquiry_id ?? null) !== (existing.inquiry_id ?? null)) {
+      await assertInquiryLinkable(actor, fields.inquiry_id);
+    }
     const total = items ? itemsTotal(items) : (existing.total_amount as number | null) ?? 0;
     // Kun når tilbud, henvendelse eller total ændres; et almindeligt autogem rører den ikke.
     const relinked = ["offer_id", "inquiry_id"].some((k) => k in fields && (fields[k] ?? null) !== (existing[k] ?? null));

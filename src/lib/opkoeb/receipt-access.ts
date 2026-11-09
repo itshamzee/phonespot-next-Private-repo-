@@ -251,6 +251,26 @@ export function touchedChecks(
   return { lock: changed(LOCK_FIELDS), id: changed(ID_FIELDS) };
 }
 
+/**
+ * Må aktøren knytte sedlen til denne henvendelse? Ejeren altid; andre kun til
+ * henvendelser i egne butikker eller uden butik. Ellers 404, så en anden
+ * butiks henvendelse ikke kan afsløres eller bruges til online-accept.
+ */
+export async function assertInquiryLinkable(actor: StaffIdentity, inquiryId: unknown): Promise<void> {
+  if (typeof inquiryId !== "string") return;
+  const notFoundInquiry = () => new PosError("inquiry_not_found", "Henvendelsen findes ikke", 404);
+  const { data, error } = await createServerClient()
+    .from("contact_inquiries")
+    .select("id, store_id")
+    .eq("id", inquiryId)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load inquiry: ${error.message}`);
+  if (!data) throw notFoundInquiry();
+  const storeId = (data as { store_id?: string | null }).store_id ?? null;
+  if (isOwner(actor) || storeId === null) return;
+  if (!canAccessStore(actor, storeId)) throw notFoundInquiry();
+}
+
 export type Attestation = "online_accept" | "paper_scan";
 
 /**

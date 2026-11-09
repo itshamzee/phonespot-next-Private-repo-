@@ -7,6 +7,7 @@ import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
 import {
   accessibleLocationIds,
   assertReceiptVisible,
+  assertInquiryLinkable,
   attestationFor,
   offerUsedConflict,
   checkStamps,
@@ -173,6 +174,7 @@ export async function POST(req: Request) {
     const { location_id, items = [], ...draft } = parsed.data;
 
     await assertLocationAccess(actor, location_id);
+    await assertInquiryLinkable(actor, draft.inquiry_id);
 
     // Ingen receipt_number her: kolonnen har ingen default, og en kladde har intet nummer.
     const now = new Date().toISOString();

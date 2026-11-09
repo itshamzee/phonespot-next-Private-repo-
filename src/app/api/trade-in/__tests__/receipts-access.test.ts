@@ -95,6 +95,13 @@ beforeEach(() => {
   selects.length = 0;
   failWrite.table = null;
   failWrite.error = null;
+  // Henvendelser uden butik må alle linke; U(65)/U(66) hører til en butik.
+  rows.contact_inquiries = [
+    { id: U(60), store_id: null },
+    { id: U(64), store_id: null },
+    { id: U(65), store_id: "slagelse" },
+    { id: U(66), store_id: "vejle" },
+  ];
   rows.locations = [
     { id: U(20), name: "Vejle", slug: "vejle", type: "store" },
     { id: U(30), name: "Slagelse", slug: "slagelse", type: "store" },
@@ -194,6 +201,38 @@ describe("attestation follows the accepted offer, never the client", () => {
     expect(row().attestation).toBe("online_accept");
     await PATCH(req("/x", "PATCH", { offer_id: null }), ctx(U(52)));
     expect(row().attestation).toBe("paper_scan");
+  });
+});
+
+describe("linking an inquiry respects store access (ruling 30)", () => {
+  const post = (inquiry: string) => POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), inquiry_id: inquiry }));
+
+  it("a Vejle employee cannot link a Slagelse inquiry: 404, nothing saved", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const res = await post(U(65));
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe("Henvendelsen findes ikke");
+    expect(inserted).toHaveLength(0);
+    const patch = await PATCH(req("/x", "PATCH", { inquiry_id: U(65) }), ctx(U(52)));
+    expect(patch.status).toBe(404);
+    expect(rows.trade_in_receipts.find((r) => r.id === U(52))!.inquiry_id).toBeUndefined();
+  });
+
+  it("an unknown inquiry is 404", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    expect((await post(U(99))).status).toBe(404);
+  });
+
+  it("own store and inquiries without a store are allowed", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    expect((await post(U(66))).status).toBe(201);
+    expect((await post(U(60))).status).toBe(201);
+    expect((await PATCH(req("/x", "PATCH", { inquiry_id: U(66) }), ctx(U(52)))).status).toBe(200);
+  });
+
+  it("the owner may link any store's inquiry", async () => {
+    requireStaffMock.mockResolvedValue(owner);
+    expect((await post(U(65))).status).toBe(201);
   });
 });
 

@@ -242,6 +242,15 @@ describe("POST /api/trade-in/receipts/[id]/confirm", () => {
     expect(rpcMock).toHaveBeenCalled();
   });
 
+  it("re-checks against the item sum, not a stale stored total", async () => {
+    // PATCH writes total and items separately: stored 100.000 øre, items sum to 150.000.
+    Object.assign(rows.trade_in_receipts[0], { attestation: "online_accept", offer_id: U(61), inquiry_id: U(60), total_amount: 100000 });
+    rows.trade_in_receipt_items[0].price = 150000;
+    rows.trade_in_offers = [{ id: U(61), inquiry_id: U(60), status: "accepted", offer_amount: 120000 }];
+    await POST(req(), ctx(U(50)));
+    expect(docUpdates).toContainEqual({ patch: { attestation: "paper_scan" }, col: "id", val: U(50) });
+  });
+
   it("keeps online_accept when the offer still covers the receipt", async () => {
     Object.assign(rows.trade_in_receipts[0], { attestation: "online_accept", offer_id: U(61), inquiry_id: U(60) });
     rows.trade_in_offers = [{ id: U(61), inquiry_id: U(60), status: "accepted", offer_amount: 100000 }];
