@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { STORES } from "@/lib/store-config";
-import { LEGAL_ENTITY } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Privatlivspolitik - PhoneSpot",
@@ -346,7 +345,7 @@ export default function PrivatlivspolitikPage() {
         <div>
           <h2>10. Når du sælger en enhed til os</h2>
           <p className="mt-3">
-            Når du sælger en brugt enhed til {LEGAL_ENTITY.name} i en af vores butikker, udfylder vi en
+            Når du sælger en brugt enhed til os i en af vores butikker, udfylder vi en
             slutseddel sammen med dig. Vi gemmer følgende oplysninger på den:
           </p>
           <ul className="mt-3 space-y-1">

@@ -4,16 +4,18 @@ import { describe, it, expect } from "vitest";
 import { SlutseddelDocument, renderSlutseddelPdf, type SlutseddelData } from "../slutseddel";
 
 /** Samler al tekst i react-pdf-træet. Funktionskomponenter kaldes, så Document/Page/View foldes ud. */
-function textOf(node: unknown): string {
+function rawText(node: unknown): string {
   if (node == null || typeof node === "boolean") return "";
   if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(textOf).join(" ");
+  if (Array.isArray(node)) return node.map(rawText).join(" ");
   const el = node as React.ReactElement<{ children?: unknown }>;
   if (typeof el.type === "function") {
-    return textOf((el.type as (p: unknown) => unknown)(el.props));
+    return rawText((el.type as (p: unknown) => unknown)(el.props));
   }
-  return textOf(el.props?.children);
+  return rawText(el.props?.children);
 }
+
+const textOf = (node: unknown) => rawText(node).replace(/\s+/g, " ");
 
 const slagelse: SlutseddelData = {
   receipt_number: "SP-2026-0007",
@@ -43,7 +45,7 @@ const slagelse: SlutseddelData = {
 };
 
 describe("slutseddel", () => {
-  it("shows buyer, masked id and account, and the no-vat line, never the full id or 25 %", () => {
+  it("shows buyer, masked id and account, and the no-vat line, never the full id or a VAT amount", () => {
     const t = textOf(<SlutseddelDocument data={slagelse} />);
     expect(t).toContain("Slutseddel");
     expect(t).toContain("PhoneGo ApS");
@@ -55,19 +57,26 @@ describe("slutseddel", () => {
     expect(t).toContain("phonespot.dk/privatlivspolitik");
     expect(t).not.toContain("AB991234");
     expect(t).not.toContain("1234565678");
-    expect(t).not.toContain("25 %");
+    expect(t).not.toMatch(/25\s*%\s*moms/i);
+    expect(t).not.toMatch(/moms:/i);
   });
 
-  it("Esbjerg: store name but no address", () => {
+  it("Esbjerg: shows the store name and the buying company's address", () => {
     const t = textOf(
       <SlutseddelDocument
-        data={{ ...slagelse, receipt_number: "SS-2026-0001", buyer_company: "Fixon ApS", buyer_cvr: "46079019", buyer_address: null, location_name: "Esbjerg" }}
+        data={{ ...slagelse, receipt_number: "SS-2026-0001", buyer_company: "Fixon ApS", buyer_cvr: "46079019", buyer_address: "Løversysselvej 3C, 7100 Vejle", location_name: "Esbjerg" }}
       />,
     );
-    expect(t).toContain("Esbjerg");
-    expect(t).toContain("Fixon ApS");
-    expect(t).not.toContain("Løversysselvej");
-    expect(t).not.toContain("Skovsøvej");
+    expect(t).toContain("Butik: Esbjerg");
+    expect(t).toContain("Løversysselvej 3C, 7100 Vejle");
+  });
+
+  it("masks values of four characters or fewer completely", () => {
+    const t = textOf(<SlutseddelDocument data={{ ...slagelse, id_number: "AB12", seller_bank_account: "9876" }} />);
+    expect(t).not.toContain("AB12");
+    expect(t).not.toContain("9876");
+    expect(t).toContain("Pas ••••,");
+    expect(t).toContain("konto ••••");
   });
 
   it("under the id limit and offset payout", () => {

@@ -84,7 +84,7 @@ export type SlutseddelData = {
   date: string;
   buyer_company: string;
   buyer_cvr: string;
-  /** NULL for Esbjerg: adressen er ikke offentlig */
+  /** Det købende selskabs adresse (momsbekendtgørelsen § 122); aldrig Esbjerg-butikkens adresse */
   buyer_address: string | null;
   location_name: string;
   staff_name: string;
@@ -106,7 +106,9 @@ export type SlutseddelData = {
   seller_bank_account: string | null;
 };
 
-const mask = (value: string | null): string | null => (value ? `••••${value.slice(-4)}` : null);
+/** Sidste fire tegn; er værdien højst fire tegn, vises intet af den. */
+const mask = (value: string | null): string | null =>
+  value ? (value.length <= 4 ? "••••" : `••••${value.slice(-4)}`) : null;
 
 function formatDKK(ore: number): string {
   return new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(ore / 100) + " kr";

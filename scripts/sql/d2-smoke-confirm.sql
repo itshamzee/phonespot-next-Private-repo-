@@ -184,19 +184,20 @@ BEGIN
   END IF;
 END $$;
 
--- 3. Esbjerg → ingen køberadresse.
+-- 3. Esbjerg → købers adresse er Fixons (aldrig en Esbjerg-butiksadresse, heller ikke hvis locations.address er sat).
 DO $$
 DECLARE
   v_staff uuid := (SELECT v FROM _smoke WHERE k = 'staff');
   v_rec uuid;
   r public.trade_in_receipts%ROWTYPE;
 BEGIN
+  UPDATE public.locations SET address = 'Hemmelig Esbjergvej 1, 6700 Esbjerg' WHERE slug = 'esbjerg';
   v_rec := pg_temp.mk_receipt('esbjerg', ARRAY[40000], ARRAY['SERIALESB01']);
   PERFORM public.trade_in_confirm(v_rec, v_staff);
   SELECT * INTO r FROM public.trade_in_receipts WHERE id = v_rec;
   IF r.receipt_number !~ '^SS-2026-\d{4}$' OR r.buyer_company <> 'Fixon ApS'
-     OR r.buyer_address IS NOT NULL OR r.buyer_postal_city IS NOT NULL THEN
-    RAISE EXCEPTION 'smoke 3: Esbjerg-sedlen må ikke have adresse: %', to_jsonb(r);
+     OR r.buyer_address IS DISTINCT FROM 'Løversysselvej 3C, 7100 Vejle' THEN
+    RAISE EXCEPTION 'smoke 3: Esbjerg-sedlen skal have Fixons adresse: %', to_jsonb(r);
   END IF;
 END $$;
 
