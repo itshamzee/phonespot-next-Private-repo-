@@ -168,6 +168,17 @@ export function confirmBlockers(r: ReceiptForRules, today: string): string[] {
     if (!item.price || item.price <= 0) out.push(`Vare ${n}: pris mangler`);
   });
 
+  // Kontooplysningerne låses ved bekræftelsen, så de skal være på plads inden.
+  if (!r.payout_method) {
+    out.push("Vælg udbetaling");
+  } else if (r.payout_method === "bank") {
+    if (!r.seller_bank_reg || !/^\d{4}$/.test(r.seller_bank_reg)) out.push("Reg.nr. skal være 4 cifre");
+    if (!r.seller_bank_account || !/^\d{6,10}$/.test(r.seller_bank_account)) {
+      out.push("Kontonummer skal være 6 til 10 cifre");
+    }
+    if (!r.account_owner_confirmed) out.push("Bekræft at kontoen står i sælgers navn");
+  }
+
   return out;
 }
 

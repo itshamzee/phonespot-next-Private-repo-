@@ -768,7 +768,15 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
         )}
         <OperatorSwitch locationId={locationId} onChanged={() => void onOperatorChanged()} />
         <div className="flex-1" />
-        <Link href="/admin/kasse/salg" className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
+        {locationId && (
+          <Link
+            href={`/admin/opkoeb/slutsedler/ny?location=${locationId}`}
+            className="inline-flex h-9 items-center rounded-lg border border-[#E2E5E0] bg-white px-3 text-sm font-semibold text-[#1A3D2E] hover:bg-[#F5F6F4]"
+          >
+            Nyt opkøb
+          </Link>
+        )}
+        <Link href="/admin/kasse/salg"className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
           Salgshistorik
         </Link>
         <Link href={`/admin/platform/pos/retur?${sessionQs}`} className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">

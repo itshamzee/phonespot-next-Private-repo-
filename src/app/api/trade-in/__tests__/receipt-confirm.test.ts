@@ -90,9 +90,27 @@ beforeEach(() => {
     { id: U(20), name: "Vejle", slug: "vejle", type: "store" },
     { id: U(30), name: "Slagelse", slug: "slagelse", type: "store" },
   ];
+  // A complete draft, so confirmBlockers lets it through to the rpc.
+  const complete = {
+    receipt_number: null,
+    status: "draft",
+    total_amount: 100000,
+    seller_type: "private",
+    seller_address: "Vestergade 1",
+    seller_age_confirmed: true,
+    lock_checks_confirmed: true,
+    payout_method: "bank",
+    seller_bank_reg: "1234",
+    seller_bank_account: "1234567",
+    account_owner_confirmed: true,
+  };
   rows.trade_in_receipts = [
-    { id: U(50), receipt_number: null, status: "draft", location_id: U(20), seller_name: "A" },
-    { id: U(51), receipt_number: null, status: "draft", location_id: U(30), seller_name: "B" },
+    { ...complete, id: U(50), location_id: U(20), seller_name: "A" },
+    { ...complete, id: U(51), location_id: U(30), seller_name: "B" },
+  ];
+  rows.trade_in_receipt_items = [
+    { receipt_id: U(50), template_id: U(70), imei_serial: "490154203237518", price: 100000 },
+    { receipt_id: U(51), template_id: U(70), imei_serial: "490154203237518", price: 100000 },
   ];
   rpcMock.mockResolvedValue({ data: { receipt_number: "SS-2026-0042", device_ids: [U(900)] }, error: null });
   uploadMock.mockResolvedValue({ error: null });
@@ -168,6 +186,34 @@ describe("POST /api/trade-in/receipts/[id]/confirm", () => {
     const res = await POST(req(), ctx(U(50)));
     expect(res.status).toBe(409);
     expect((await res.json()).error).toContain("356938035643809");
+  });
+
+  it("409 with the first confirmBlockers message before the rpc, and the rpc is never called", async () => {
+    rows.trade_in_receipts[0].payout_method = null;
+    const res = await POST(req(), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Vælg udbetaling");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("409 when an item lacks a price, read from the receipt's items", async () => {
+    rows.trade_in_receipt_items[0].price = 0;
+    const res = await POST(req(), ctx(U(50)));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("Vare 1: pris mangler");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("409 when the ID expired yesterday in Copenhagen", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-09T23:30:00Z")); // 00:30 on 10/11 in Copenhagen
+    Object.assign(rows.trade_in_receipts[0], { total_amount: 250000, id_type: "pas", id_number: "AB123", id_expiry: "2026-11-09" });
+    rows.trade_in_receipt_items[0].price = 250000;
+    const res = await POST(req(), ctx(U(50)));
+    vi.useRealTimers();
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("ID'et er udløbet");
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 
   it("404 for another store, and the rpc is never called", async () => {

@@ -129,6 +129,16 @@ describe("confirmBlockers", () => {
     expect(has(b, "CVR")).toBe(true);
     expect(has(b, "fakturatype")).toBe(true);
   });
+  it("requires a payout method, and complete bank details when it is bank", () => {
+    expect(confirmBlockers(receipt({ payout_method: null }), TODAY)).toContain("Vælg udbetaling");
+    expect(confirmBlockers(receipt({ payout_method: "modregning", seller_bank_reg: null, seller_bank_account: null, account_owner_confirmed: false }), TODAY)).toEqual([]);
+    expect(confirmBlockers(receipt({ seller_bank_reg: "123" }), TODAY)).toContain("Reg.nr. skal være 4 cifre");
+    expect(confirmBlockers(receipt({ seller_bank_reg: null }), TODAY)).toContain("Reg.nr. skal være 4 cifre");
+    expect(confirmBlockers(receipt({ seller_bank_account: "12345" }), TODAY)).toContain("Kontonummer skal være 6 til 10 cifre");
+    expect(confirmBlockers(receipt({ seller_bank_account: "12345678901" }), TODAY)).toContain("Kontonummer skal være 6 til 10 cifre");
+    expect(confirmBlockers(receipt({ seller_bank_account: "123456" }), TODAY)).toEqual([]);
+    expect(confirmBlockers(receipt({ account_owner_confirmed: false }), TODAY)).toContain("Bekræft at kontoen står i sælgers navn");
+  });
   it("checks items and numbers them", () => {
     expect(has(confirmBlockers(receipt({ items: [] }), TODAY), "mindst én vare")).toBe(true);
     const items = [

@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
 import {
+  attestationFor,
   checkStamps,
   draftColumns,
   itemRows,
@@ -67,6 +68,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { items, ...draft } = parsed.data;
 
     const fields = draftColumns(draft);
+    if ("offer_id" in fields || "inquiry_id" in fields) {
+      const linked = { ...existing, ...fields };
+      fields.attestation = await attestationFor(linked.offer_id, linked.inquiry_id);
+    }
     const merged = { ...existing, ...fields };
     const touched = {
       lock: "lock_checks_confirmed" in fields,

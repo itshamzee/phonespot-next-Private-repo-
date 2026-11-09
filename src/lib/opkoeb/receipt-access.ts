@@ -4,6 +4,7 @@ import { buildLocationIndex, canAccessStore, isOwner } from "@/lib/auth/store-sc
 import { assertLocationAccess } from "@/lib/pos/pos-context";
 import { PosError } from "@/lib/pos/errors";
 import type { ReceiptDraft } from "./schemas";
+import type { ReceiptForRules } from "./rules";
 
 /** En række fra trade_in_receipts (select "*"). Kolonnerne er løst typet, fordi tabellen er vokset flere gange. */
 export type ReceiptRow = Record<string, unknown> & {
@@ -165,4 +166,58 @@ export function checkStamps(
     Object.assign(out, { id_checked_by: null, id_checked_at: null });
   }
   return out;
+}
+
+/** En række fra trade_in_receipts og dens varer, som confirmBlockers/payBlockers læser dem. */
+export function receiptForRules(
+  row: Record<string, unknown>,
+  items: Array<Record<string, unknown>>,
+): ReceiptForRules {
+  const s = (v: unknown) => (typeof v === "string" ? v : null);
+  return {
+    total_amount: typeof row.total_amount === "number" ? row.total_amount : 0,
+    status: s(row.status) ?? "draft",
+    seller_type: row.seller_type === "business" ? "business" : "private",
+    seller_cvr: s(row.seller_cvr),
+    invoice_type: s(row.invoice_type) as ReceiptForRules["invoice_type"],
+    seller_name: s(row.seller_name),
+    seller_address: s(row.seller_address),
+    seller_age_confirmed: row.seller_age_confirmed === true,
+    lock_checks_confirmed: row.lock_checks_confirmed === true,
+    id_type: s(row.id_type) as ReceiptForRules["id_type"],
+    id_number: s(row.id_number),
+    id_expiry: s(row.id_expiry),
+    attestation: s(row.attestation),
+    signed_scan_path: s(row.signed_scan_path),
+    invoice_file_path: s(row.invoice_file_path),
+    payout_method: s(row.payout_method) as ReceiptForRules["payout_method"],
+    seller_bank_reg: s(row.seller_bank_reg),
+    seller_bank_account: s(row.seller_bank_account),
+    account_owner_confirmed: row.account_owner_confirmed === true,
+    offset_amount: typeof row.offset_amount === "number" ? row.offset_amount : null,
+    suspected_at: s(row.suspected_at),
+    items: items.map((i) => ({
+      template_id: s(i.template_id),
+      imei_serial: s(i.imei_serial),
+      price: typeof i.price === "number" ? i.price : null,
+    })),
+  };
+}
+
+/**
+ * Sælger har accepteret online, når sedlen peger på et accepteret tilbud på
+ * netop sin henvendelse. Afledes altid her på serveren og sendes aldrig af
+ * klienten, fordi online_accept fritager for en underskrevet seddel ved udbetaling.
+ */
+export async function attestationFor(offerId: unknown, inquiryId: unknown): Promise<"online_accept" | "paper_scan"> {
+  if (typeof offerId !== "string" || typeof inquiryId !== "string") return "paper_scan";
+  const { data, error } = await createServerClient()
+    .from("trade_in_offers")
+    .select("id")
+    .eq("id", offerId)
+    .eq("inquiry_id", inquiryId)
+    .eq("status", "accepted")
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load offer: ${error.message}`);
+  return data ? "online_accept" : "paper_scan";
 }

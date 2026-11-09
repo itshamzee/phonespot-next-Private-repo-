@@ -128,6 +128,49 @@ describe("POST /api/trade-in/receipts", () => {
   });
 });
 
+describe("attestation follows the accepted offer, never the client", () => {
+  const INQ = U(60);
+  beforeEach(() => {
+    rows.trade_in_offers = [
+      { id: U(61), inquiry_id: INQ, status: "accepted" },
+      { id: U(62), inquiry_id: INQ, status: "sent" },
+      { id: U(63), inquiry_id: U(64), status: "accepted" },
+    ];
+  });
+  const created = () => inserted.find((i) => i.table === "trade_in_receipts")!.row;
+
+  it("POST with the inquiry's accepted offer gives online_accept", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    const res = await POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), inquiry_id: INQ, offer_id: U(61) }));
+    expect(res.status).toBe(201);
+    expect(created().attestation).toBe("online_accept");
+  });
+
+  it("POST with an offer that is not accepted, or belongs to another inquiry, gives paper_scan", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    await POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), inquiry_id: INQ, offer_id: U(62) }));
+    expect(created().attestation).toBe("paper_scan");
+    inserted.length = 0;
+    await POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), inquiry_id: INQ, offer_id: U(63) }));
+    expect(created().attestation).toBe("paper_scan");
+  });
+
+  it("a client-sent attestation is ignored", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    await POST(req("/api/trade-in/receipts", "POST", { location_id: U(20), attestation: "online_accept" }));
+    expect(created().attestation).toBeUndefined();
+  });
+
+  it("PATCH that links the accepted offer sets online_accept, and unlinking sets paper_scan", async () => {
+    requireStaffMock.mockResolvedValue(vejle);
+    await PATCH(req("/x", "PATCH", { inquiry_id: INQ, offer_id: U(61) }), ctx(U(52)));
+    const row = () => rows.trade_in_receipts.find((r) => r.id === U(52))!;
+    expect(row().attestation).toBe("online_accept");
+    await PATCH(req("/x", "PATCH", { offer_id: null }), ctx(U(52)));
+    expect(row().attestation).toBe("paper_scan");
+  });
+});
+
 describe("GET /api/trade-in/receipts/[id]", () => {
   it("404 when a Vejle employee reads a Slagelse receipt", async () => {
     requireStaffMock.mockResolvedValue(vejle);

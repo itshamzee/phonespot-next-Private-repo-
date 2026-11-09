@@ -109,6 +109,12 @@ describe("Kasse screen", () => {
     expect(document.activeElement).toBe(screen.getByLabelText("Scan eller søg"));
   });
 
+  it("links 'Nyt opkøb' to the buyback editor with the register's store", async () => {
+    render(<KasseScreen />);
+    const link = await screen.findByRole("link", { name: "Nyt opkøb" });
+    expect(link.getAttribute("href")).toBe(`/admin/opkoeb/slutsedler/ny?location=${LOC}`);
+  });
+
   it("asks for the opening float when the till is closed", async () => {
     api.session = null;
     render(<KasseScreen />);

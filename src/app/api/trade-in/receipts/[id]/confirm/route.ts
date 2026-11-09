@@ -2,7 +2,10 @@ import { NextResponse, after } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
 import { rpcConflict } from "@/lib/opkoeb/rpc-conflict";
-import { loadReceiptForActor } from "@/lib/opkoeb/receipt-access";
+import { loadReceiptForActor, receiptForRules } from "@/lib/opkoeb/receipt-access";
+import { confirmBlockers } from "@/lib/opkoeb/rules";
+import { PosError } from "@/lib/pos/errors";
+import { copenhagenDateString } from "@/lib/pos/copenhagen";
 import { loadSlutseddelData } from "@/lib/opkoeb/slutseddel-data";
 import { renderSlutseddelPdf } from "@/lib/pdf/slutseddel";
 import { resend, EMAIL_FROM } from "@/lib/email/resend";
@@ -23,9 +26,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!staff) return UNAUTHORIZED();
     const { actor } = staff;
     const { id } = await params;
-    await loadReceiptForActor(actor, id);
+    const row = await loadReceiptForActor(actor, id);
 
     const supabase = createServerClient();
+    // Samme regler som editoren viser, med dagens dato i Danmark. RPC'en er
+    // stadig den endelige myndighed; en låst seddel afvises dér.
+    if (row.status === "draft") {
+      const { data: items, error: itemsErr } = await supabase
+        .from("trade_in_receipt_items")
+        .select("template_id, imei_serial, price")
+        .eq("receipt_id", id);
+      if (itemsErr) throw new Error(`Failed to load receipt items: ${itemsErr.message}`);
+      const blockers = confirmBlockers(
+        receiptForRules(row, (items ?? []) as Array<Record<string, unknown>>),
+        copenhagenDateString(),
+      );
+      if (blockers.length > 0) throw new PosError("confirm_blocked", blockers[0], 409);
+    }
+
     const { data: rpc, error: rpcErr } = await supabase.rpc("trade_in_confirm", {
       p_receipt_id: id,
       p_staff_id: actor.id,

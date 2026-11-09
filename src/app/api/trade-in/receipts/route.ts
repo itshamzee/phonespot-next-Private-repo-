@@ -7,6 +7,7 @@ import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
 import {
   accessibleLocationIds,
   assertReceiptVisible,
+  attestationFor,
   checkStamps,
   draftColumns,
   itemRows,
@@ -165,6 +166,7 @@ export async function POST(req: Request) {
     // Ingen receipt_number her: kolonnen har ingen default, og en kladde har intet nummer.
     const now = new Date().toISOString();
     const fields = draftColumns(draft);
+    if (fields.offer_id !== undefined) fields.attestation = await attestationFor(fields.offer_id, fields.inquiry_id);
     const supabase = createServerClient();
     const { data: receipt, error: receiptErr } = await supabase
       .from("trade_in_receipts")
