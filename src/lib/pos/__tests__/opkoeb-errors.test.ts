@@ -33,3 +33,11 @@ describe("toPosError for opkøb", () => {
     expect(e?.message).toBe(message);
   });
 });
+
+describe("toPosError for retur af opkøbsbetalte salg", () => {
+  it("maps opkoeb_refund_tilgodebevis to 409 with the Danish message", () => {
+    const e = toPosError({ message: "pos:opkoeb_refund_tilgodebevis" });
+    expect(e?.status).toBe(409);
+    expect(e?.message).toBe("Den del af købet, der blev betalt med et opkøb, kan kun refunderes som tilgodebevis");
+  });
+});

@@ -177,3 +177,37 @@ export function buildCreditNote(
     refundAmount: -total,
   };
 }
+
+// ---------------------------------------------------------------- opkøb og tilbagebetaling
+
+export const OPKOEB_REFUND_MESSAGE =
+  "Den del af købet, der blev betalt med et opkøb, kan kun refunderes som tilgodebevis";
+
+/** Hvad et salg er betalt med, og hvad tidligere returer har betalt ud i penge (alle positive øre). */
+export type OpkoebRefundCaps = {
+  orderTotal: number;
+  /** Sum af salgets betalingslinjer af typen 'opkoeb'. */
+  opkoebPaid: number;
+  /** Tidligere kreditnotaers tilbagebetalinger som kontant, kort eller MobilePay. */
+  nonVoucherRefunded: number;
+};
+
+/**
+ * Det, der stadig kan tilbagebetales som kontant, kort eller MobilePay. null = ingen
+ * grænse (salget er ikke betalt med opkøb). Spejler pos_create_return
+ * (migration 20261109128000): opkøbsandelen kommer kun retur som tilgodebevis.
+ */
+export function maxNonVoucherRefund(c: OpkoebRefundCaps): number | null {
+  if (c.opkoebPaid <= 0) return null;
+  return Math.max(0, c.orderTotal - c.opkoebPaid - c.nonVoucherRefunded);
+}
+
+export function opkoebRefundProblem(
+  c: OpkoebRefundCaps,
+  refunds: Array<{ type: string; amountOere: number }>,
+): string | null {
+  const max = maxNonVoucherRefund(c);
+  if (max === null) return null;
+  const money = refunds.filter((r) => r.type !== "tilgodebevis").reduce((s, r) => s + r.amountOere, 0);
+  return money > max ? OPKOEB_REFUND_MESSAGE : null;
+}

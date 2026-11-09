@@ -19,7 +19,11 @@ const item = (id: string, sku: unknown) => ({
   sku_products: sku,
 });
 
-const s = vi.hoisted(() => ({ items: [] as unknown[] }));
+const s = vi.hoisted(() => ({
+  items: [] as unknown[],
+  credits: [] as unknown[],
+  payments: [] as Array<{ order_id: string; type: string; amount_oere: number }>,
+}));
 
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
@@ -36,9 +40,13 @@ vi.mock("@/lib/supabase/client", () => ({
         }),
         eq: (col: string) => {
           if (table === "order_items" && col === "order_id") return Promise.resolve({ data: s.items });
+          if (table === "orders" && col === "original_order_id") return Promise.resolve({ data: s.credits });
           return q;
         },
-        in: async () => ({ data: [] }),
+        in: async (_col: string, ids: string[]) =>
+          table === "order_payments"
+            ? { data: s.payments.filter((p) => ids.includes(p.order_id)) }
+            : { data: [] },
       };
       return q;
     },
@@ -59,5 +67,32 @@ describe("findReturnableOrder lagersalg", () => {
     const order = await findReturnableOrder("V1-000123");
     expect(order.lines.map((l) => l.lagersalg)).toEqual([true, false, false, false]);
     expect(JSON.stringify(order)).not.toContain("udsalg");
+  });
+});
+
+describe("findReturnableOrder opkøb", () => {
+  it("returns the opkøb share and what earlier returns paid out in money", async () => {
+    s.items = [item(U(10), null)];
+    s.credits = [{ id: U(2) }, { id: U(3) }];
+    s.payments = [
+      { order_id: U(1), type: "opkoeb", amount_oere: 3000 },
+      { order_id: U(1), type: "kontant", amount_oere: 2900 },
+      { order_id: U(2), type: "kontant", amount_oere: -1000 },
+      { order_id: U(2), type: "tilgodebevis", amount_oere: -500 },
+      { order_id: U(3), type: "mobilepay", amount_oere: -400 },
+      { order_id: U(9), type: "opkoeb", amount_oere: 99999 },
+    ];
+    const order = await findReturnableOrder("V1-000123");
+    expect(order.opkoebPaid).toBe(3000);
+    expect(order.nonVoucherRefunded).toBe(1400);
+  });
+
+  it("is 0/0 for a sale without opkøb or returns", async () => {
+    s.items = [item(U(10), null)];
+    s.credits = [];
+    s.payments = [{ order_id: U(1), type: "kontant", amount_oere: 5900 }];
+    const order = await findReturnableOrder("V1-000123");
+    expect(order.opkoebPaid).toBe(0);
+    expect(order.nonVoucherRefunded).toBe(0);
   });
 });

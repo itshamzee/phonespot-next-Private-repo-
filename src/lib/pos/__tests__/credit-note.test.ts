@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { buildCreditNote, CreditNoteError, type OriginalLine, type ReturnedSoFar } from "../credit-note";
+import {
+  buildCreditNote,
+  CreditNoteError,
+  maxNonVoucherRefund,
+  OPKOEB_REFUND_MESSAGE,
+  opkoebRefundProblem,
+  type OriginalLine,
+  type ReturnedSoFar,
+} from "../credit-note";
 
 const device: OriginalLine = {
   id: "i-dev",
@@ -127,5 +135,45 @@ describe("buildCreditNote", () => {
     const paid = buildCreditNote(both, none, [{ orderItemId: "a", quantity: 1, restock: true }]);
     expect(free.refundAmount + 0).toBe(0); // +0 normaliserer -0 (refundAmount = -total)
     expect(paid.refundAmount).toBe(5900);
+  });
+});
+
+describe("opkoebRefundProblem", () => {
+  const caps = { orderTotal: 500000, opkoebPaid: 300000, nonVoucherRefunded: 0 };
+
+  it("allows anything when the sale had no opkøb", () => {
+    expect(
+      opkoebRefundProblem({ orderTotal: 500000, opkoebPaid: 0, nonVoucherRefunded: 0 }, [
+        { type: "kontant", amountOere: 500000 },
+      ]),
+    ).toBeNull();
+    expect(maxNonVoucherRefund({ orderTotal: 500000, opkoebPaid: 0, nonVoucherRefunded: 0 })).toBeNull();
+  });
+
+  it("refuses cash, card and MobilePay beyond what was paid without the opkøb", () => {
+    expect(opkoebRefundProblem(caps, [{ type: "kontant", amountOere: 500000 }])).toBe(OPKOEB_REFUND_MESSAGE);
+    expect(
+      opkoebRefundProblem(caps, [
+        { type: "kort_terminal", amountOere: 200000 },
+        { type: "mobilepay", amountOere: 1 },
+        { type: "tilgodebevis", amountOere: 299999 },
+      ]),
+    ).toBe(OPKOEB_REFUND_MESSAGE);
+  });
+
+  it("accepts the opkøb share as tilgodebevis", () => {
+    expect(
+      opkoebRefundProblem(caps, [
+        { type: "kontant", amountOere: 200000 },
+        { type: "tilgodebevis", amountOere: 300000 },
+      ]),
+    ).toBeNull();
+  });
+
+  it("counts what earlier returns already paid out in money", () => {
+    const later = { ...caps, nonVoucherRefunded: 200000 };
+    expect(maxNonVoucherRefund(later)).toBe(0);
+    expect(opkoebRefundProblem(later, [{ type: "kontant", amountOere: 1 }])).toBe(OPKOEB_REFUND_MESSAGE);
+    expect(opkoebRefundProblem(later, [{ type: "tilgodebevis", amountOere: 250000 }])).toBeNull();
   });
 });

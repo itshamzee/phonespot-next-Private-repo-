@@ -168,6 +168,11 @@ const CATALOG: Record<string, Entry> = {
     message: () =>
       "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.",
   },
+  // pos_create_return: opkøbsandelen af et salg kommer kun retur som tilgodebevis
+  opkoeb_refund_tilgodebevis: {
+    status: 409,
+    message: () => "Den del af købet, der blev betalt med et opkøb, kan kun refunderes som tilgodebevis",
+  },
   trade_in_amount_too_high: {
     status: 400,
     message: (d) =>

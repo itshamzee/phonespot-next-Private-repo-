@@ -14,7 +14,14 @@ import {
   type PaymentTerminalKind,
   type RefundType,
 } from "@/lib/pos/constants";
-import { buildCreditNote, CreditNoteError, type CreditNote } from "@/lib/pos/credit-note";
+import {
+  buildCreditNote,
+  CreditNoteError,
+  maxNonVoucherRefund,
+  opkoebRefundProblem,
+  type CreditNote,
+  type OpkoebRefundCaps,
+} from "@/lib/pos/credit-note";
 import type { ReturnableOrder } from "@/lib/pos/create-return";
 import { terminalBodyExtras } from "@/lib/pos/kasse-logic";
 import { checkTerminalReceipt, TERMINAL_RECEIPT_MAX } from "@/lib/pos/terminal-receipt";
@@ -88,12 +95,23 @@ function ReturnPageInner() {
 
   const refundAmount = preview.note?.refundAmount ?? 0;
   const refundSum = refunds.reduce((s, r) => s + (parseKr(r.amountKr) ?? 0), 0);
+  // Opkøbsandelen af salget kommer kun retur som tilgodebevis (pos_create_return håndhæver det).
+  const caps: OpkoebRefundCaps | null = order
+    ? { orderTotal: order.total, opkoebPaid: order.opkoebPaid ?? 0, nonVoucherRefunded: order.nonVoucherRefunded ?? 0 }
+    : null;
+  const maxMoney = caps ? maxNonVoucherRefund(caps) : null;
+  const refundLinesOere = refunds.map((r) => ({ type: r.type, amountOere: parseKr(r.amountKr) ?? 0 }));
+  const opkoebProblem = caps ? opkoebRefundProblem(caps, refundLinesOere) : null;
   const cardReceiptsOk = refunds.every((r) => r.type !== "kort_terminal" || integrated || checkTerminalReceipt(r.reference).ok);
   const canSubmit =
-    !!order && !!preview.note && !!reason && refundSum === refundAmount && refundAmount > 0 && cardReceiptsOk && !busy && !!locationId && !!registerId;
+    !!order && !!preview.note && !!reason && refundSum === refundAmount && refundAmount > 0 && cardReceiptsOk && !opkoebProblem && !busy && !!locationId && !!registerId;
 
   function addRefund(type: RefundType) {
-    const rest = Math.max(0, refundAmount - refundSum);
+    let rest = Math.max(0, refundAmount - refundSum);
+    if (type !== "tilgodebevis" && maxMoney !== null) {
+      const moneySoFar = refundLinesOere.filter((r) => r.type !== "tilgodebevis").reduce((s, r) => s + r.amountOere, 0);
+      rest = Math.min(rest, Math.max(0, maxMoney - moneySoFar));
+    }
     setRefunds((r) => [...r, { id: crypto.randomUUID(), type, amountKr: rest ? oereToInput(rest) : "", reference: "" }]);
   }
 
@@ -263,6 +281,12 @@ function ReturnPageInner() {
               </div>
 
               <p className="mb-2 mt-5 text-[11px] font-bold tracking-[0.08em] text-charcoal/30">Tilbagebetaling</p>
+              {maxMoney !== null && (
+                <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  Salget er betalt med et opkøb på {formatOere(caps!.opkoebPaid)}. Den del kan kun refunderes som
+                  tilgodebevis. Højst {formatOere(maxMoney)} kan betales tilbage kontant, på kort eller med MobilePay.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {REFUND_TYPES.map((t) => (
                   <button key={t} onClick={() => addRefund(t)} className="rounded-xl border border-black/[0.06] bg-[#f4f3f0] px-3 py-2 text-xs font-semibold text-charcoal/60 hover:text-charcoal">
@@ -307,6 +331,12 @@ function ReturnPageInner() {
               <p className={`mt-3 text-sm ${refundSum === refundAmount ? "text-emerald-600" : "text-red-500"}`}>
                 {refundSum === refundAmount ? "Tilbagebetalingen matcher kreditbeløbet" : `Mangler ${formatOere(refundAmount - refundSum)}`}
               </p>
+
+              {opkoebProblem && (
+                <p role="alert" className="mt-2 text-sm text-red-500">
+                  {opkoebProblem}
+                </p>
+              )}
 
               <button onClick={submit} disabled={!canSubmit} className="mt-4 rounded-xl bg-charcoal px-6 py-3 text-sm font-bold text-white disabled:opacity-40">
                 {busy
