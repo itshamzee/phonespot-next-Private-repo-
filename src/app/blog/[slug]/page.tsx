@@ -1,15 +1,26 @@
 import { RepairCta } from "@/components/blog/repair-cta";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isValidElement, type ReactNode } from "react";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 
-import { getAllSlugs, getPostBySlug, getAllPosts } from "@/lib/blog";
+import {
+  getAllSlugs,
+  getPostBySlug,
+  getPostCta,
+  getRelatedPosts,
+  getTableOfContents,
+  headingId,
+  type BlogCta,
+} from "@/lib/blog";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { JsonLd } from "@/components/seo/json-ld";
 import { BlogCover } from "@/components/blog/blog-cover";
+import { TransparencyPanel } from "@/components/blog/transparency-panel";
 
 /* ------------------------------------------------------------------ */
 /*  Static params                                                      */
@@ -136,15 +147,51 @@ function KeyTakeaway({ children }: { children: React.ReactNode }) {
   return (
     <div className="not-prose my-10 rounded-2xl bg-[#1A3D2E] p-8 text-white ring-1 ring-white/10">
       <div className="mb-3 flex items-center gap-2">
-        <svg className="h-5 w-5 text-green-eco" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <svg className="h-5 w-5 text-[#9CC5AB]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span className="font-display text-sm font-bold tracking-tight text-green-eco">
+        <span className="font-display text-base font-bold tracking-tight text-[#9CC5AB]">
           Kort sagt
         </span>
       </div>
-      <div className="font-body text-base leading-relaxed text-white/80 [&>p]:m-0">{children}</div>
+      <div className="font-body text-[17px] leading-relaxed text-white/90 [&>p]:m-0 [&_a]:text-white [&_a]:underline [&_strong]:text-white">{children}</div>
     </div>
+  );
+}
+
+/**
+ * Billede i artiklen med billedtekst. `wide` bryder ud af tekstspalten på
+ * større skærme, så lange artikler får luft og rytme.
+ */
+function Figure({
+  src,
+  alt,
+  caption,
+  wide = false,
+  ratio = "3/2",
+}: {
+  src: string;
+  alt: string;
+  caption?: string;
+  wide?: boolean;
+  ratio?: "3/2" | "16/9" | "4/3";
+}) {
+  const aspect = { "3/2": "aspect-[3/2]", "16/9": "aspect-[16/9]", "4/3": "aspect-[4/3]" }[ratio];
+  return (
+    <figure className={`not-prose my-12 ${wide ? "lg:-mr-24" : ""}`}>
+      <div className={`relative ${aspect} overflow-hidden rounded-2xl bg-[#F7F7F8]`}>
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={wide ? "(max-width: 1024px) 100vw, 776px" : "(max-width: 768px) 100vw, 680px"}
+          className="object-cover"
+        />
+      </div>
+      {caption && (
+        <figcaption className="mt-3 font-body text-sm leading-relaxed text-charcoal/55">{caption}</figcaption>
+      )}
+    </figure>
   );
 }
 
@@ -156,21 +203,27 @@ function ComparisonBox({ children }: { children: React.ReactNode }) {
   );
 }
 
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
 function createHeading(level: 2 | 3) {
   const Tag = `h${level}` as const;
   return function HeadingComponent({ children }: { children: React.ReactNode }) {
-    const text = typeof children === "string" ? children : "";
-    const id = text
-      .toLowerCase()
-      .replace(/\*\*/g, "")
-      .replace(/[^a-z0-9æøå]+/g, "-")
-      .replace(/^-|-$/g, "");
-    return <Tag id={id}>{children}</Tag>;
+    return (
+      <Tag id={headingId(textOf(children))} className="scroll-mt-28">
+        {children}
+      </Tag>
+    );
   };
 }
 
 const mdxComponents = {
   Callout,
+  Figure,
   RepairCta,
   KeyTakeaway,
   ComparisonBox,
@@ -210,6 +263,40 @@ const mdxComponents = {
   ),
 };
 
+type CtaContent = {
+  heading: string;
+  text: string;
+  primary: { href: string; label: string };
+  secondary?: { href: string; label: string };
+};
+
+const CTA: Record<BlogCta, CtaContent> = {
+  saelg: {
+    heading: "Gratis label. Vi modtager enheden. Du får pengene.",
+    text: "Fast pris og pengene samme dag, som vi modtager enheden. Aflever i Vejle eller Slagelse, eller send den gratis.",
+    primary: { href: "/saelg-din-enhed", label: "Få et tilbud" },
+  },
+  reparation: {
+    heading: "Fast pris, før vi går i gang.",
+    text: "Find din model og se prisen. Kom forbi i Vejle eller Slagelse uden tidsbestilling, eller send enheden ind.",
+    primary: { href: "/reparation", label: "Find din model og pris" },
+    secondary: { href: "/reparation/indsend", label: "Send ind" },
+  },
+  koeb: {
+    heading: "Klar til at finde din næste enhed?",
+    text: "Udforsk vores udvalg af kvalitetstestede refurbished iPhones med 36 måneders garanti.",
+    primary: { href: "/iphones", label: "Se iPhones" },
+  },
+};
+
+function ArrowIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+    </svg>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
@@ -222,10 +309,10 @@ export default async function BlogPostPage({ params }: PageProps) {
   const { frontmatter, content } = post;
   const readingTime = getReadingTime(content);
 
-  const allPosts = getAllPosts();
-  const relatedPosts = allPosts
-    .filter((p) => p.frontmatter.slug !== slug)
-    .slice(0, 3);
+  const relatedPosts = getRelatedPosts(slug, 3);
+  const toc = getTableOfContents(content);
+  const ctaKind = getPostCta(frontmatter);
+  const cta = CTA[ctaKind];
 
   return (
     <>
@@ -237,6 +324,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           headline: frontmatter.title,
           description: frontmatter.description,
           datePublished: frontmatter.date,
+          dateModified: frontmatter.updated ?? frontmatter.date,
           ...(frontmatter.coverImage && { image: `https://phonespot.dk${frontmatter.coverImage}` }),
           author: { "@type": "Organization", name: "PhoneSpot" },
           publisher: { "@type": "Organization", name: "PhoneSpot", url: "https://phonespot.dk" },
@@ -258,7 +346,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       {/* Breadcrumb */}
       <nav className="mx-auto max-w-6xl px-4 pt-6" aria-label="Brødkrumme">
-        <ol className="flex items-center gap-2 text-sm text-charcoal/45">
+        <ol className="flex items-center gap-2 text-sm text-charcoal/45 lg:ml-[284px]">
           <li><Link href="/" className="transition-colors hover:text-charcoal">Forside</Link></li>
           <li aria-hidden="true">/</li>
           <li><Link href="/blog" className="transition-colors hover:text-charcoal">Blog</Link></li>
@@ -267,10 +355,32 @@ export default async function BlogPostPage({ params }: PageProps) {
         </ol>
       </nav>
 
-      {/* Photo hero with overlaid title — green.dk style */}
-      <section className="mx-auto max-w-6xl px-4 pt-5">
-        <div className="group relative overflow-hidden rounded-3xl">
-          <div className="relative aspect-[4/3] sm:aspect-[16/8] md:aspect-[21/9]">
+      {/* Redaktionel header: titel og intro på ren baggrund, billedet under */}
+      <header className="mx-auto max-w-6xl px-4 pt-8 md:pt-12">
+        <div className="max-w-3xl lg:ml-[284px]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-charcoal/55">
+            <CategoryBadge category={frontmatter.category} />
+            <span>Af PhoneSpots værksted</span>
+            <span aria-hidden="true">&middot;</span>
+            {frontmatter.updated && frontmatter.updated !== frontmatter.date ? (
+              <span>
+                Opdateret <time dateTime={frontmatter.updated}>{formatDate(frontmatter.updated)}</time>
+              </span>
+            ) : (
+              <time dateTime={frontmatter.date}>{formatDate(frontmatter.date)}</time>
+            )}
+            <span aria-hidden="true">&middot;</span>
+            <span>{readingTime} min. læsning</span>
+          </div>
+          <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-charcoal [text-wrap:balance] md:text-5xl lg:text-[56px]">
+            {frontmatter.title}
+          </h1>
+          <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-charcoal/65 md:text-xl">
+            {frontmatter.description}
+          </p>
+        </div>
+        {frontmatter.coverImage && (
+          <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-3xl bg-[#F7F7F8] md:aspect-[21/9]">
             <BlogCover
               image={frontmatter.coverImage}
               title={frontmatter.title}
@@ -278,69 +388,98 @@ export default async function BlogPostPage({ params }: PageProps) {
               sizes="(max-width: 1152px) 100vw, 1104px"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-              <div className="flex items-center gap-3">
-                <CategoryBadge category={frontmatter.category} />
-                <time dateTime={frontmatter.date} className="text-sm font-medium text-white/75">
-                  {formatDate(frontmatter.date)}
-                </time>
-                <span className="text-sm text-white/75">&middot; {readingTime} min. læsning</span>
-              </div>
-              <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-tight text-white md:text-4xl lg:text-5xl">
-                {frontmatter.title}
-              </h1>
-            </div>
           </div>
+        )}
+      </header>
+
+      {/* Indholdsfortegnelse i venstre spalte på desktop, læsespalte til højre */}
+      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 lg:grid lg:grid-cols-[220px_minmax(0,680px)] lg:gap-16">
+        {toc.length >= 3 ? (
+          <aside className="hidden lg:block" aria-label="Indhold">
+            <nav className="sticky top-28">
+              <p className="font-display text-sm font-bold uppercase tracking-wide text-charcoal/45">I denne artikel</p>
+              <ol className="mt-4 space-y-2.5 border-l border-[#E5E5EA]">
+                {toc.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      className="-ml-px block border-l-2 border-transparent pl-4 font-body text-sm leading-snug text-charcoal/60 transition-colors hover:border-[#1A3D2E] hover:text-[#1A3D2E]"
+                    >
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+        ) : (
+          <div className="hidden lg:block" />
+        )}
+
+        <div className="min-w-0">
+          {toc.length >= 4 && (
+            <details className="mb-10 rounded-2xl border border-[#E5E5EA] px-5 py-4 lg:hidden">
+              <summary className="cursor-pointer font-display text-base font-bold text-charcoal">I denne artikel</summary>
+              <ol className="mt-3 space-y-2">
+                {toc.map((item) => (
+                  <li key={item.id}>
+                    <a href={`#${item.id}`} className="font-body text-sm text-[#1A3D2E] underline-offset-2 hover:underline">
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+
+          <article
+            className="prose prose-lg max-w-none
+              prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight
+              prose-h2:mt-16 prose-h2:mb-4 prose-h2:text-[30px] prose-h2:leading-tight prose-h2:text-[#1A3D2E]
+              prose-h3:mt-10 prose-h3:mb-3 prose-h3:text-[21px] prose-h3:text-charcoal
+              prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
+              prose-li:marker:text-[#1A3D2E]
+              prose-strong:text-charcoal prose-strong:font-semibold
+              prose-p:text-[#2a2d28] prose-p:font-body prose-p:leading-[1.75] prose-p:text-[18px]
+              prose-li:text-[#2a2d28] prose-li:font-body prose-li:leading-[1.75] prose-li:text-[18px]
+              prose-ul:my-6 prose-ol:my-6 prose-li:my-1.5
+              prose-img:rounded-xl"
+          >
+            <MDXRemote
+              source={content}
+              components={mdxComponents}
+              options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+            />
+          </article>
+
+          <TransparencyPanel cta={ctaKind} />
         </div>
-      </section>
-
-      {/* Article — single centered reading column */}
-      <div className="mx-auto max-w-2xl px-4 py-12 md:py-16">
-        {/* Intro / standfirst */}
-        <p className="mb-10 border-l-2 border-[#1A3D2E] pl-5 font-body text-lg leading-relaxed text-charcoal/70">
-          {frontmatter.description}
-        </p>
-
-        <article
-          className="prose prose-lg max-w-none
-            prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight
-            prose-h2:mt-14 prose-h2:mb-5 prose-h2:text-[26px] prose-h2:text-[#1A3D2E]
-            prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-xl prose-h3:text-charcoal
-            prose-a:text-[#1A3D2E] prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-[#4a7a5e]
-            prose-li:marker:text-[#1A3D2E]
-            prose-strong:text-charcoal prose-strong:font-semibold
-            prose-p:text-[#2a2d28] prose-p:font-body prose-p:leading-[1.8] prose-p:text-[17px]
-            prose-li:text-[#2a2d28] prose-li:font-body prose-li:leading-[1.8]
-            prose-ul:my-6 prose-ol:my-6
-            prose-img:rounded-xl prose-img:shadow-md"
-        >
-          <MDXRemote
-            source={content}
-            components={mdxComponents}
-            options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
-          />
-        </article>
       </div>
 
-      {/* CTA */}
+      {/* CTA efter emne: opkøb, reparation eller køb */}
       <SectionWrapper background="green" className="!py-16">
-        <div className="text-center">
-          <Heading as="h2" size="md" className="!text-white">
-            Klar til at finde din næste enhed?
+        <div className="mx-auto max-w-3xl text-center">
+          <Heading as="h2" size="md" className="!text-white [text-wrap:balance]">
+            {cta.heading}
           </Heading>
-          <p className="mx-auto mt-3 max-w-xl font-body text-white/70">
-            Udforsk vores udvalg af kvalitetstestede refurbished iPhones med 36 måneders garanti.
-          </p>
-          <Link
-            href="/iphones"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-semibold text-charcoal transition-opacity hover:opacity-90"
-          >
-            Se iPhones
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>
-          </Link>
+          <p className="mx-auto mt-3 max-w-xl font-body text-white/80">{cta.text}</p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href={cta.primary.href}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-semibold text-charcoal transition-opacity hover:opacity-90"
+            >
+              {cta.primary.label}
+              <ArrowIcon />
+            </Link>
+            {cta.secondary && (
+              <Link
+                href={cta.secondary.href}
+                className="inline-flex items-center gap-2 rounded-full border border-white/40 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                {cta.secondary.label}
+              </Link>
+            )}
+          </div>
         </div>
       </SectionWrapper>
 
@@ -380,9 +519,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#1A3D2E]">
                     Læs mere
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4 transition-transform group-hover:translate-x-1">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                    </svg>
+                    <ArrowIcon />
                   </span>
                 </div>
               </Link>
