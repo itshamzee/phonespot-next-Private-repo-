@@ -907,7 +907,8 @@ export function SellDeviceWizard({
     phone: "",
     preferredContact: "Ring mig",
     deliveryMethod: "",
-    preferredStore: "Slagelse",
+    // Ingen forvalgt butik: standarden "Slagelse" gjorde Vejle-efterspørgslen usynlig (opkøbsanalyse 10/11).
+    preferredStore: "",
     comment: "",
   });
 
@@ -985,7 +986,8 @@ export function SellDeviceWizard({
           contact.name.trim() &&
           contact.email.trim() &&
           contact.phone.trim() &&
-          contact.deliveryMethod
+          contact.deliveryMethod &&
+          (contact.deliveryMethod !== "Aflever i butik" || contact.preferredStore)
         );
       default:
         return false;
@@ -1060,7 +1062,7 @@ export function SellDeviceWizard({
               condition: e.condition,
             })),
             deliveryMethod: contact.deliveryMethod,
-            preferredStore: contact.preferredStore,
+            preferredStore: contact.deliveryMethod === "Aflever i butik" ? contact.preferredStore : null,
             preferredContact: contact.preferredContact,
             comment: contact.comment,
             attribution: getAttribution(),
@@ -1915,11 +1917,14 @@ export function SellDeviceWizard({
                   }
                   className={inputStyles}
                 >
-                  <option value="Slagelse">
-                    PhoneSpot Slagelse — {STORES.slagelse.street}
+                  <option value="" disabled>
+                    Vælg butik
                   </option>
                   <option value="Vejle">
                     PhoneSpot Vejle — {STORES.vejle.street}
+                  </option>
+                  <option value="Slagelse">
+                    PhoneSpot Slagelse — {STORES.slagelse.street}
                   </option>
                 </select>
               </div>

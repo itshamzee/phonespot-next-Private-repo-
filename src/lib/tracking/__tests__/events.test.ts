@@ -110,7 +110,16 @@ describe("attribution", () => {
     captureAttribution();
     window.history.pushState({}, "", "/?utm_source=facebook&fbclid=zzz");
     captureAttribution();
-    expect(getAttribution()).toEqual({ utm_source: "google", utm_medium: "cpc", gclid: "abc" });
+    expect(getAttribution()).toEqual({ utm_source: "google", utm_medium: "cpc", gclid: "abc", landing_page: "/" });
+  });
+
+  it("records the referring domain and landing page for organic visits", () => {
+    sessionStorage.clear();
+    Object.defineProperty(document, "referrer", { value: "https://www.google.com/search?q=s%C3%A6lg+iphone", configurable: true });
+    window.history.pushState({}, "", "/saelg-din-enhed/iphone");
+    captureAttribution();
+    expect(getAttribution()).toEqual({ referrer: "www.google.com", landing_page: "/saelg-din-enhed/iphone" });
+    Object.defineProperty(document, "referrer", { value: "", configurable: true });
   });
 
   it("returns empty object when storage throws", () => {

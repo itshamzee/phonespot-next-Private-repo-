@@ -75,3 +75,15 @@ export async function resumeAutomation(client: SupabaseAdmin): Promise<void> {
     summary: "Automatikken er genstartet",
   });
 }
+
+/**
+ * Skal automatikken pauses efter en afvisning? Kun de seneste tre svar på
+ * automatiske bud tæller. Manuelle bud må aldrig pause motoren.
+ */
+export function shouldPauseAfterReject(
+  recentAnswers: { type: string; offer_id: string | null }[],
+  autoOfferIds: Set<string>,
+): boolean {
+  const auto = recentAnswers.filter((e) => e.offer_id && autoOfferIds.has(e.offer_id)).slice(0, 3);
+  return auto.length === 3 && auto.every((e) => e.type === "rejected");
+}

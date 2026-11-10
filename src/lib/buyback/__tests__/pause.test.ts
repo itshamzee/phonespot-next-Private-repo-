@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { catalogStaleReason, catalogLastSyncedAt } from "../pause";
+import { catalogStaleReason, catalogLastSyncedAt, shouldPauseAfterReject } from "../pause";
 import { makeFakeClient } from "./fake-supabase";
 
 const now = new Date("2026-08-01T09:00:00Z");
@@ -45,5 +45,34 @@ describe("catalogLastSyncedAt", () => {
   it("returns null for an empty catalog", async () => {
     const { client } = makeFakeClient({ foneday_catalog: [] });
     expect(await catalogLastSyncedAt(client)).toBeNull();
+  });
+});
+
+describe("shouldPauseAfterReject", () => {
+  const auto = new Set(["a1", "a2", "a3"]);
+  it("pauser efter tre afviste automatiske bud", () => {
+    const events = [
+      { type: "rejected", offer_id: "a1" },
+      { type: "rejected", offer_id: "a2" },
+      { type: "rejected", offer_id: "a3" },
+    ];
+    expect(shouldPauseAfterReject(events, auto)).toBe(true);
+  });
+  it("ignorerer manuelle afvisninger", () => {
+    const events = [
+      { type: "rejected", offer_id: "m1" },
+      { type: "rejected", offer_id: "a1" },
+      { type: "rejected", offer_id: "m2" },
+      { type: "rejected", offer_id: "a2" },
+    ];
+    expect(shouldPauseAfterReject(events, auto)).toBe(false);
+  });
+  it("pauser ikke, når et af de tre seneste automatiske bud blev accepteret", () => {
+    const events = [
+      { type: "rejected", offer_id: "a1" },
+      { type: "accepted", offer_id: "a2" },
+      { type: "rejected", offer_id: "a3" },
+    ];
+    expect(shouldPauseAfterReject(events, auto)).toBe(false);
   });
 });

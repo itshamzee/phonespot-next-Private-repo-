@@ -53,9 +53,13 @@ function sendMeta(name: string, params: Params, eventId: string): void {
 
 const ATTRIBUTION_KEY = "ps-attribution";
 const ATTRIBUTION_FIELDS = ["utm_source", "utm_medium", "utm_campaign", "gclid", "fbclid"] as const;
-export type Attribution = Partial<Record<(typeof ATTRIBUTION_FIELDS)[number], string>>;
+export type Attribution = Partial<Record<(typeof ATTRIBUTION_FIELDS)[number] | "referrer" | "landing_page", string>>;
 
-/** Gem første utm_*, gclid og fbclid i sessionStorage. Overskriver aldrig. */
+/**
+ * Gem første utm_*, gclid og fbclid samt henvisende domæne og landingsside i
+ * sessionStorage. Overskriver aldrig. Henviseren gemmes kun som domæne (fx
+ * www.google.com), så organiske leads kan skelnes fra annoncer uden persondata.
+ */
 export function captureAttribution(): void {
   try {
     if (sessionStorage.getItem(ATTRIBUTION_KEY)) return;
@@ -65,7 +69,14 @@ export function captureAttribution(): void {
       const value = search.get(field);
       if (value) found[field] = value.slice(0, 200);
     }
-    if (Object.keys(found).length > 0) sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(found));
+    try {
+      const ref = document.referrer ? new URL(document.referrer).hostname : "";
+      if (ref && ref !== window.location.hostname) found.referrer = ref.slice(0, 100);
+    } catch {
+      // Ugyldig henviser: ignorér.
+    }
+    found.landing_page = window.location.pathname.slice(0, 200);
+    sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(found));
   } catch {
     // Privat tilstand / blokeret storage: ingen kildedata, ingen fejl.
   }
