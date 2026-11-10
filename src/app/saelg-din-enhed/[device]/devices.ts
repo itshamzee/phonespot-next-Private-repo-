@@ -44,9 +44,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "iphone",
     name: "iPhone",
-    title: "Sælg iPhone: fast pris og udbetaling | PhoneSpot",
+    title: "Sælg din brugte iPhone: iPhone 11 og nyere | PhoneSpot",
     metaDescription:
-      "Sælg din brugte iPhone til PhoneSpot. Vælg model, lagerplads og stand, så vender vi tilbage med et tilbud. Aflever i Vejle eller Slagelse. Se, hvad du skal gøre først.",
+      "Sælg din iPhone til PhoneSpot. Vi køber iPhone 11 og nyere, også med defekter. Fast pris, gratis label og pengene samme dag, vi modtager den.",
     eyebrow: "Sælg iPhone",
     h1: "Sælg din iPhone",
     answer:
@@ -94,9 +94,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "samsung",
     name: "Samsung Galaxy",
-    title: "Sælg Samsung Galaxy: fast pris | PhoneSpot",
+    title: "Sælg Samsung Galaxy S, A, Z Fold og Flip | PhoneSpot",
     metaDescription:
-      "Sælg din brugte Samsung Galaxy S, A, Z Fold eller Z Flip til PhoneSpot. Du får et fast tilbud efter vores gennemgang. Fjern Google-kontoen først.",
+      "Sælg din Samsung Galaxy S, A, Z Fold eller Z Flip. Vi køber virkende og defekte. Fast pris, gratis label og pengene samme dag, vi modtager den.",
     eyebrow: "Sælg Samsung",
     h1: "Sælg din Samsung Galaxy",
     answer:
@@ -144,9 +144,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "ipad",
     name: "iPad",
-    title: "Sælg iPad: fast pris og gratis retur | PhoneSpot",
+    title: "Sælg din iPad, iPad Air eller iPad Pro | PhoneSpot",
     metaDescription:
-      "Sælg din brugte iPad, iPad Air, iPad Pro eller iPad mini til PhoneSpot. Beskriv model og stand, så vender vi tilbage med et tilbud. Log ud af Apple-kontoen først.",
+      "Sælg din iPad til PhoneSpot. Vi køber virkende og defekte. Fast pris, gratis label og pengene samme dag, vi modtager den. Aflever i Vejle eller Slagelse.",
     eyebrow: "Sælg iPad",
     h1: "Sælg din iPad",
     answer:
@@ -194,9 +194,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "macbook",
     name: "MacBook",
-    title: "Sælg MacBook: fast pris og udbetaling | PhoneSpot",
+    title: "Sælg MacBook Air eller MacBook Pro | PhoneSpot",
     metaDescription:
-      "Sælg din brugte MacBook Air eller MacBook Pro til PhoneSpot. Oplys model, chip, hukommelse og stand, så vender vi tilbage med et tilbud. Log ud af iCloud først.",
+      "Sælg din MacBook Air eller Pro. Oplys chip, RAM og lager, og få et tilbud. Fast pris, gratis label og pengene samme dag, vi modtager den.",
     eyebrow: "Sælg MacBook",
     h1: "Sælg din MacBook",
     answer:
@@ -244,9 +244,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "apple-watch",
     name: "Apple Watch",
-    title: "Sælg Apple Watch: fast pris | PhoneSpot",
+    title: "Sælg Apple Watch Series, SE eller Ultra | PhoneSpot",
     metaDescription:
-      "Sælg dit brugte Apple Watch (Series, SE eller Ultra) til PhoneSpot. Fjern parringen først, så er aktiveringslåsen væk. Aflever i Vejle eller Slagelse.",
+      "Sælg dit brugte Apple Watch til PhoneSpot. Fjern parringen med iPhone først. Fast pris, gratis label og pengene samme dag, vi modtager det.",
     eyebrow: "Sælg Apple Watch",
     h1: "Sælg dit Apple Watch",
     answer:

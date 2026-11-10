@@ -9,9 +9,9 @@ import { STORES } from "@/lib/store-config";
 import styles from "@/components/sell-device/sell-device.module.css";
 
 export const metadata: Metadata = {
-  title: "Sælg brugt elektronik – iPhone, Samsung og MacBook | PhoneSpot",
+  title: "Sælg din telefon, tablet eller computer | PhoneSpot",
   description:
-    "Sælg din brugte eller nye iPhone, Samsung, iPad, MacBook eller konsol. Fast pris, gratis label og pengene samme dag, som vi modtager enheden. Aflever i Vejle eller Slagelse.",
+    "Sælg din brugte telefon, tablet, computer eller konsol, også ny og uåbnet. Fast pris, gratis label og pengene samme dag, vi modtager den. Vejle eller Slagelse.",
   alternates: { canonical: "https://phonespot.dk/saelg-din-enhed" },
   openGraph: {
     title: "Sælg din brugte elektronik | PhoneSpot",
@@ -124,8 +124,8 @@ export default function SaelgDinEnhedPage() {
               <div>
                 <StorefrontIcon kind="pin" />
                 <span>
-                  Aflever i Vejle eller Slagelse, snart også Esbjerg, eller
-                  send efter aftale.
+                  Aflever i <Link href="/saelg-din-enhed/vejle">Vejle</Link> eller
+                  Slagelse, snart også Esbjerg, eller send med gratis label.
                 </span>
               </div>
               <div>

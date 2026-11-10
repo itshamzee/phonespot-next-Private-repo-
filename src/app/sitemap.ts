@@ -351,6 +351,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/vejle`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
     ...NEW_CATEGORY_PAGES.map((page) => ({
       url: `${BASE_URL}/saelg-din-enhed/${page.slug}`,
       lastModified: STATIC_LAST_MODIFIED,

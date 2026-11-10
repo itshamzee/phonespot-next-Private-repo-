@@ -419,13 +419,13 @@ function variantPage(variant: ModelVariant): IphoneSellPage {
   const family = FAMILY_PAGES.find((page) => page.slug === variant.family);
   if (!family) throw new Error(`Ukendt iPhone-familie: ${variant.family}`);
   const { name } = variant;
-  const title = `Sælg ${name}: fast pris og udbetaling | PhoneSpot`;
+  const title = `Sælg ${name}: fast pris | PhoneSpot`;
   return {
     ...family,
     slug: variant.slug,
     name,
     title,
-    metaDescription: `Sælg din ${name} til PhoneSpot. Vælg lagerplads og stand, og få et tilbud efter vores gennemgang. Aflever i Vejle eller Slagelse, eller send efter aftale.`,
+    metaDescription: `Sælg din ${name} til PhoneSpot. Vælg lagerplads og stand, og få et tilbud efter vores gennemgang. Aflever i Vejle eller Slagelse, eller send gratis.`,
     eyebrow: `Sælg ${name}`,
     h1: `Sælg din ${name}`,
     answer: `Du sælger din ${name} ved at vælge den i formularen og oplyse lagerplads og stand. Vi gennemgår oplysningerne og vender tilbage med et tilbud. Du kan aflevere telefonen i Vejle eller Slagelse eller sende den efter aftale.`,
