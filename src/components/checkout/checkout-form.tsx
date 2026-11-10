@@ -9,6 +9,7 @@ import { getShippingOption } from "@/lib/shipping";
 import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 import { PrePurchaseInfo } from "@/components/checkout/pre-purchase-info";
 import { trackInitiateCheckout } from "@/lib/tracking/fbq";
+import { readStoredConsent } from "@/lib/consent-client";
 import { STORES } from "@/lib/store-config";
 
 interface CustomerInfo {
@@ -156,6 +157,7 @@ export function CheckoutForm() {
           discountCode: cartState.discount?.code ?? undefined,
           shippingMethod,
           pickupPoint: pickupPoint ?? undefined,
+          marketingConsent: readStoredConsent() === "accepted",
         }),
       });
 
