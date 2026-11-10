@@ -69,7 +69,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
 - [Reparation for Næstved](${SITE}/reparation-naestved): ingen butik i Næstved; butikken i VestsjællandsCentret, Slagelse, ligger ca. 30 min ad rute 22, åbent alle ugens dage, eller send ind med gratis fragtlabel
-- [iPad-reparation i Vejle](${SITE}/reparation-vejle/ipad) og [i Slagelse](${SITE}/reparation-slagelse/ipad): ladestik skiftes med mikrolodning på ca. 30 min, skærm og batteri, faste priser pr. model
+- [iPad-reparation i Vejle](${SITE}/reparation-vejle/ipad) og [i Slagelse](${SITE}/reparation-slagelse/ipad): ladestik 899 kr. på alle iPad-modeller, mikrolodning, 2-3 hverdage, livstidsgaranti; skærm og batteri med faste priser pr. model
 - [PS5- og konsolreparation i Vejle](${SITE}/reparation-vejle/playstation) og [i Slagelse](${SITE}/reparation-slagelse/playstation): sort skærm på PS5 = oftest HDMI-porten; HDMI-port + indvendig rengøring 1.300 kr., 2-3 hverdage, 2 års garanti; også PS4, Xbox og Nintendo Switch; kan sendes ind
 - [Computer- og MacBook-reparation i Vejle](${SITE}/reparation-vejle/computer) og [i Slagelse](${SITE}/reparation-slagelse/computer): batteri, skærm, tastatur og rensning af MacBook; andre bærbare vurderes ved disken
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse

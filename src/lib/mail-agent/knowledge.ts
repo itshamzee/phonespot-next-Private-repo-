@@ -54,7 +54,9 @@ ${upcomingStoreBlock()}
 - Tilbehør: covers, beskyttelsesglas, opladere, kabler, høretelefoner.
 - Vi sælger ikke reservedele til kunder. Spørger kunden efter en reservedel, så tilbyd reparation i butikken i stedet.
 - Reparation af alle mærker: skærm, batteri, ladestik, kamera, vandskade. Faste priser, de fleste er klar på 30–60 minutter. Alle reparationer (telefon, tablet, computer, konsol og ur) har livstidsgaranti på arbejde og dele; batteriskift har 6 måneders garanti. Se reparationsbetingelserne for dækning. Man kan booke tid på phonespot.dk/reparation eller komme ind uden aftale.
-- Opkøb af brugte telefoner, tablets og laptops ("Sælg din enhed"): kunden får et tilbud inden 24 timer, sender enheden gratis med PostNord-label eller afleverer i butikken, og får udbetalt efter kontrol. Prisen kan blive justeret hvis enheden er i anden stand end oplyst; kunden får altid besked før vi ændrer noget.
+- Ladestik på iPad: 899 kr. på alle iPad-modeller, tager 2–3 hverdage (porten loddes på bundkortet), livstidsgaranti på arbejde og dele. Kan afleveres i butikken eller sendes ind.
+- Sort skærm på PS5 skyldes oftest HDMI-porten. Pakke med HDMI-port og indvendig rengøring (PS5, PS5 Digital og PS5 Pro): 1.300 kr., 2–3 hverdage, 2 års garanti. HDMI-port alene: 1.599 kr. Kan afleveres i butikken eller sendes ind.
+- Opkøb af brugte telefoner, tablets, laptops, konsoller m.m. og nu også ny, uåbnet elektronik ("Sælg din enhed"): kunden får et tilbud inden 24 timer, sender enheden gratis med PostNord-label eller afleverer i butikken i Vejle eller Slagelse, og får udbetalt inden 2 hverdage efter kontrol. Prisen kan blive justeret hvis enheden er i anden stand end oplyst; kunden får altid besked før vi ændrer noget.
 
 ## Garanti og rettigheder
 - Enheder (telefoner, tablets, computere, ure): 36 måneders garanti. Dækker fejl der ikke skyldes skader, væske eller uautoriseret reparation. Batteri dækkes ved kapacitet under 80 % i garantiperioden.

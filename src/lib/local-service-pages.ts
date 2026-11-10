@@ -112,13 +112,13 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
       { key: "battery", label: "Batteri", categories: ["Batteriskift"] },
     ],
     priceIntro:
-      "Faste priser inklusive moms, reservedel og garanti. Ladestikket er den reparation, vi laver oftest på iPads.",
+      "Faste priser inklusive moms, reservedel og garanti. Ladestikket er den reparation, vi laver oftest på iPads, og det koster 899 kr. uanset model.",
     allModelsHref: "/reparation/ipad",
     allModelsLabel: "Se priser på alle iPad-modeller",
     problems: [
       {
         title: "iPaden lader ikke, eller kablet sidder løst",
-        text: "Oftest er ladestikket slidt eller knækket indvendigt. På de fleste nyere iPads sidder stikket loddet på bundkortet, så det skal skiftes med mikrolodning. Det tager ca. 30 minutter.",
+        text: "Oftest er ladestikket slidt eller knækket indvendigt. På de fleste nyere iPads sidder stikket loddet på bundkortet, så det skal skiftes med mikrolodning. Det koster 899 kr. på alle modeller og tager 2-3 hverdage.",
       },
       {
         title: "Knust glas eller touch, der ikke reagerer",
@@ -136,7 +136,7 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
     steps: [
       { title: "Kom forbi eller book", text: "Ingen tidsbestilling nødvendig. Vi kigger på iPaden ved disken." },
       { title: "Fast pris", text: "Du får prisen, før vi går i gang. Hurtigt tjek ved disken er gratis." },
-      { title: "Reparation", text: "Ladestik tager ca. 30 minutter, når delen er på lager." },
+      { title: "Reparation", text: "Ladestik tager 2-3 hverdage. Du får besked, når iPaden er klar." },
       { title: "Test", text: "Vi tester opladning, touch, lyd og kamera, før du får den igen." },
     ],
     warrantyLine:
@@ -255,19 +255,19 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
     ipad: {
       metaTitle: "iPad-reparation i Vejle: ladestik og skærm | PhoneSpot",
       metaDescription:
-        "iPad lader ikke eller knust skærm? Vi reparerer iPad på Løversysselvej 3B i Vejle. Nyt ladestik på ca. 30 minutter, faste priser og livstidsgaranti. Gratis parkering.",
+        "iPad lader ikke eller knust skærm? Vi reparerer iPad på Løversysselvej 3B i Vejle. Nyt ladestik 899 kr. på alle modeller, 2-3 hverdage, livstidsgaranti. Gratis parkering.",
       h1: "iPad-reparation i Vejle",
       heroLead:
-        "Lader din iPad ikke, eller er glasset knust? Kom forbi værkstedet på Løversysselvej 3B uden tidsbestilling. Et nyt ladestik tager ca. 30 minutter, og du kender prisen, før vi går i gang.",
+        "Lader din iPad ikke, eller er glasset knust? Aflever den på værkstedet på Løversysselvej 3B uden tidsbestilling. Et nyt ladestik koster 899 kr. på alle modeller og er klar på 2-3 hverdage.",
       answerFirst:
-        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer iPad, iPad Air, iPad mini og iPad Pro. Ladestikket er den fejl, vi ser oftest, og det skiftes på ca. 30 minutter med mikrolodning. Du får livstidsgaranti på arbejde og dele, og der er gratis parkering ved butikken.",
+        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer iPad, iPad Air, iPad mini og iPad Pro. Ladestikket er den fejl, vi ser oftest. Det skiftes med mikrolodning, koster 899 kr. uanset model og tager 2-3 hverdage. Du får livstidsgaranti på arbejde og dele, og der er gratis parkering ved butikken.",
       intro: [
         "Mange af de iPads, vi får ind i Vejle, fejler det samme: De lader pludselig ikke, eller kablet skal holdes i en bestemt vinkel. Det skyldes næsten altid ladestikket. En iPad bliver brugt i sofaen og af børn, mens den lader, og det slider på stikket.",
-        "På nyere iPads sidder ladestikket loddet fast på bundkortet. Det kræver mikrolodning at skifte det, og det har vi specialister til på værkstedet. Du kan vente i butikken eller gå en tur i byen, mens vi arbejder.",
+        "På nyere iPads sidder ladestikket loddet fast på bundkortet. Det kræver mikrolodning at skifte det, og det har vi specialister til på værkstedet. Du afleverer iPaden og får besked, når den er klar, typisk efter 2-3 hverdage.",
       ],
       tiles: [
-        { title: "Ca. 30 min", desc: "Nyt ladestik, når delen er på lager" },
-        { title: "Mikrolodning", desc: "Specialister på eget værksted" },
+        { title: "899 kr.", desc: "Nyt ladestik, alle iPad-modeller" },
+        { title: "2-3 hverdage", desc: "Mikrolodning på eget værksted" },
         { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
         { title: "Gratis parkering", desc: "Ved butikken i Vejle" },
       ],
@@ -280,17 +280,17 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
         {
           question: "Hvor lang tid tager det at skifte ladestik på en iPad?",
           answer:
-            "Ca. 30 minutter, når delen er på lager. Du kan vente i butikken.",
+            "2-3 hverdage fra aflevering. Du får besked, når iPaden er klar til afhentning.",
         },
         {
           question: "Hvad koster et nyt ladestik til iPad i Vejle?",
           answer:
-            "Prisen afhænger af modellen. Se tabellen på siden. Priserne er de samme i alle vores butikker og ved indsendelse.",
+            "899 kr. på alle iPad-modeller, inklusive moms, reservedel og livstidsgaranti. Prisen er den samme i alle vores butikker og ved indsendelse.",
         },
         {
           question: "Kan I reparere iPads fra Horsens, Kolding og Fredericia?",
           answer:
-            "Ja. Mange kunder kører fra omegnen til Vejle, fordi ladestikket kan skiftes, mens de venter. Du kan også sende iPaden ind med en gratis fragtlabel.",
+            "Ja. Aflever iPaden i Vejle, eller send den ind med en gratis fragtlabel, så sender vi den retur, når den er klar.",
         },
       ],
     },
@@ -382,19 +382,19 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
     ipad: {
       metaTitle: "iPad-reparation i Slagelse: ladestik og skærm | PhoneSpot",
       metaDescription:
-        "iPad lader ikke eller knust skærm? Vi reparerer iPad i VestsjællandsCentret i Slagelse. Nyt ladestik på ca. 30 minutter, faste priser og livstidsgaranti.",
+        "iPad lader ikke eller knust skærm? Vi reparerer iPad i VestsjællandsCentret i Slagelse. Nyt ladestik 899 kr. på alle modeller, 2-3 hverdage og livstidsgaranti.",
       h1: "iPad-reparation i Slagelse",
       heroLead:
-        "Lader din iPad ikke, eller er skærmen knust? Kom forbi butikken i VestsjællandsCentret uden tidsbestilling. Et nyt ladestik tager ca. 30 minutter, så du kan nå indkøbene, mens vi arbejder.",
+        "Lader din iPad ikke, eller er skærmen knust? Aflever den i butikken i VestsjællandsCentret uden tidsbestilling. Et nyt ladestik koster 899 kr. på alle modeller og er klar på 2-3 hverdage.",
       answerFirst:
-        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer iPad, iPad Air, iPad mini og iPad Pro. Et defekt ladestik er den fejl, vi ser oftest, og det skiftes på ca. 30 minutter med mikrolodning. Du får livstidsgaranti på arbejde og dele, og vi har åbent alle ugens dage.",
+        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer iPad, iPad Air, iPad mini og iPad Pro. Et defekt ladestik er den fejl, vi ser oftest. Det skiftes med mikrolodning, koster 899 kr. uanset model og tager 2-3 hverdage. Du får livstidsgaranti på arbejde og dele, og vi har åbent alle ugens dage.",
       intro: [
         "I Slagelse får vi mange iPads ind, der pludselig er holdt op med at lade. Det er sjældent batteriet. Oftest er det ladestikket, der er slidt eller knækket, fordi iPaden bliver brugt, mens den lader.",
-        "Ladestikket sidder loddet fast på bundkortet på de fleste nyere iPads, så det skal skiftes med mikrolodning. Reparationen tager ca. 30 minutter. Butikken ligger i VestsjællandsCentret, så du kan handle i centret i mellemtiden.",
+        "Ladestikket sidder loddet fast på bundkortet på de fleste nyere iPads, så det skal skiftes med mikrolodning. Reparationen tager 2-3 hverdage. Du afleverer iPaden i VestsjællandsCentret og henter den, når vi har givet besked.",
       ],
       tiles: [
-        { title: "Ca. 30 min", desc: "Nyt ladestik, når delen er på lager" },
-        { title: "Mikrolodning", desc: "Specialister på værkstedet" },
+        { title: "899 kr.", desc: "Nyt ladestik, alle iPad-modeller" },
+        { title: "2-3 hverdage", desc: "Mikrolodning på værkstedet" },
         { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
         { title: "Åbent hver dag", desc: "I VestsjællandsCentret" },
       ],
@@ -407,7 +407,7 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
         {
           question: "Hvor lang tid tager det at skifte ladestik på en iPad?",
           answer:
-            "Ca. 30 minutter, når delen er på lager. Du kan handle i centret imens.",
+            "2-3 hverdage fra aflevering. Du får besked, når iPaden er klar til afhentning.",
         },
         {
           question: "Kan I reparere iPads fra Næstved, Korsør og Sorø?",
