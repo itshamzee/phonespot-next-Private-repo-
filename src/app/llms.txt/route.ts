@@ -84,7 +84,7 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Book reparation](${SITE}/reparation/booking)
 - [Refurbished iPhones](${SITE}/iphones): med 36 måneders garanti
 - [Garanti](${SITE}/garanti): garanti på refurbished enheder
-- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte og nu også nye, uåbnede telefoner, tablets, computere, konsoller, høretelefoner, Dyson og smart home. Fast pris, udbetaling inden 2 hverdage efter tjek, gratis retur hvis du afviser. Aflever i Vejle eller Slagelse (snart også Esbjerg), eller send med post
+- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte og nu også nye, uåbnede telefoner, tablets, computere, konsoller, høretelefoner, Dyson og smart home. Fast pris, gratis fragtlabel, pengene samme dag som vi modtager enheden, gratis retur hvis du afviser. Aflever i Vejle eller Slagelse (snart også Esbjerg), eller send med post
 - [Erhverv](${SITE}/erhverv): reparation og enheder til virksomheder
 - [Butikker](${SITE}/butik)
 - [Blog og guides](${SITE}/blog)

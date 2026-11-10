@@ -98,7 +98,7 @@ export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], rel
             <div className={styles.introDetail}>
               <div>
                 <StorefrontIcon kind="pin" />
-                <span>Aflever i Vejle eller Slagelse, eller send efter aftale.</span>
+                <span>Gratis label, eller aflever i Vejle eller Slagelse.</span>
               </div>
               {BUYBACK_PROMISE && (
                 <div>

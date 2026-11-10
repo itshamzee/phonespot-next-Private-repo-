@@ -49,9 +49,9 @@ describe("iPhone-sider under /saelg-din-enhed/iphone/[model]", () => {
       expect(faq.mainEntity).toHaveLength(container.querySelectorAll("details").length);
       expect(new Set(faq.mainEntity.map((q: { name: string }) => q.name)).size).toBe(faq.mainEntity.length);
       const text = container.textContent ?? "";
-      expect(text, page.slug).toContain("Udbetaling inden 2 hverdage");
+      expect(text, page.slug).toContain("Pengene samme dag, som vi modtager enheden");
       expect(text, page.slug).not.toMatch(/\d[\d.]*\s*(kr\b|kroner)/i);
-      expect(text, page.slug).not.toMatch(/med det samme|samme dag|øjeblikkelig/i);
+      expect(text, page.slug).not.toMatch(/med det samme|øjeblikkelig/i); // "samme dag" er tilladt fra 10/11-2026 (ejerbeslutning: pengene samme dag, som vi modtager enheden)
       for (const pattern of BANNED) expect(text).not.toMatch(pattern);
       expect(text).not.toMatch(/\p{Extended_Pictographic}/u);
       unmount();

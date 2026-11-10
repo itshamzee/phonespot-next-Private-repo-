@@ -36,7 +36,7 @@ export const PHONESPOT_PROMISES: BrandPromise[] = [
   {
     title: "Fast opkøbspris",
     detail:
-      "Sælger du din enhed, holder prisen, medmindre enheden afviger fra din beskrivelse. Udbetaling inden 2 hverdage, og gratis retur hvis du afviser.",
+      "Sælger du din enhed, holder prisen, medmindre enheden afviger fra din beskrivelse. Pengene samme dag, som vi modtager enheden, og gratis retur hvis du afviser.",
     href: "/saelg-din-enhed",
   },
   {
