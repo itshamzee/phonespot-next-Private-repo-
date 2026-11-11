@@ -1,6 +1,11 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { RepairCart } from "../repair-cart";
+
+// Prislisten viser novemberpriser, når Black November kører. Testene her
+// gælder normalpriserne og må ikke afhænge af, hvilken måned de køres i.
+const campaign = vi.hoisted(() => ({ active: false }));
+vi.mock("@/lib/campaign/use-black-november", () => ({ useBlackNovember: () => campaign.active }));
 const common = {
   estimated_minutes: 45,
   description: "Udskiftning og test af din enhed.",
@@ -208,5 +213,20 @@ describe("repair service selection", () => {
       ],
       preferred_time: "10:00-12:00",
     });
+  });
+});
+
+describe("Black November on the price list", () => {
+  afterEach(() => {
+    campaign.active = false;
+  });
+  it("shows the November price with the normal price struck through", () => {
+    campaign.active = true;
+    render(
+      <RepairCart services={services} brandName="iPhone" modelName="iPhone 17 Pro" brandSlug="iphone" modelSlug="iphone-17-pro" />,
+    );
+    const premium = screen.getByRole("button", { name: "Vælg Skærmskift premium til 1.439 kr." });
+    expect(premium).toHaveTextContent("1.439 kr.");
+    expect(within(premium).getByText(/1\.599 kr\./, { selector: "s" })).toBeInTheDocument();
   });
 });

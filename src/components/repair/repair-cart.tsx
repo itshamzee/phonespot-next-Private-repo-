@@ -7,7 +7,13 @@ import Link from "next/link";
 import type { DeviceType } from "@/lib/supabase/types";
 import styles from "./repair.module.css";
 import { QUALITY_BLURB, QUALITY_ORDER, qualityLabel, repairServiceLabel } from "./service-label";
-import { BLACK_NOVEMBER, repairDiscountPercentFor, volumeRepairPercent } from "@/lib/campaign/black-november";
+import {
+  BLACK_NOVEMBER,
+  blackNovemberRepairPrice,
+  repairDiscountPercentFor,
+  volumeRepairPercent,
+} from "@/lib/campaign/black-november";
+import { PriceTag } from "@/components/campaign/price-tag";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
@@ -523,6 +529,7 @@ export function RepairCart({
           onToggle={toggleService}
           formatPrice={fmt}
           compact={compact}
+          campaign={blackNovember}
         />
       );
     return (
@@ -533,6 +540,7 @@ export function RepairCart({
         selected={selected}
         onToggle={toggleService}
         formatPrice={fmt}
+        campaign={blackNovember}
       />
     );
   }
@@ -558,9 +566,10 @@ export function RepairCart({
           </p>
           {blackNovember && services.some((service) => service.price_dkk > 0) && (
             <div className={styles.campaignStrip} role="note">
+              <PriceTag size="sm" price={`−${BLACK_NOVEMBER.repairPercent} %`} />
               <p>
-                <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % på alle reparationer hele november.
-                Rabatten trækkes automatisk i din oversigt.
+                <strong>Black November:</strong> {BLACK_NOVEMBER.repairPercent} % er trukket fra priserne herunder til
+                og med 30. november.
               </p>
             </div>
           )}
@@ -764,12 +773,15 @@ function TierGroup({
   selected,
   onToggle,
   formatPrice,
+  campaign = false,
 }: {
   category: string;
   items: ServiceItem[];
   selected: ServiceItem | undefined;
   onToggle: (id: string) => void;
   formatPrice: PriceFormatter;
+  /** Black November: vis novemberprisen med normalprisen overstreget. */
+  campaign?: boolean;
 }) {
   const headingId = useId();
   const sorted = [...items].sort(
@@ -797,11 +809,15 @@ function TierGroup({
           </small>
         </div>
         <span className={styles.rowPrice}>
-          {selected
-            ? formatPrice(selected.price_dkk) + " kr."
-            : prices.length
-              ? "Fra " + formatPrice(Math.min(...prices)) + " kr."
-              : "Pris på forespørgsel"}
+          {selected ? (
+            <CampaignPrice price={selected.price_dkk} campaign={campaign} formatPrice={formatPrice} />
+          ) : prices.length ? (
+            <>
+              Fra <CampaignPrice price={Math.min(...prices)} campaign={campaign} formatPrice={formatPrice} />
+            </>
+          ) : (
+            "Pris på forespørgsel"
+          )}
         </span>
       </div>
       <div
@@ -840,7 +856,7 @@ function TierGroup({
                 "Vælg " +
                 service.name +
                 " til " +
-                formatPrice(service.price_dkk) +
+                formatPrice(campaign ? blackNovemberRepairPrice(service.price_dkk) : service.price_dkk) +
                 " kr."
               }
               onClick={() => onToggle(service.id)}
@@ -850,7 +866,7 @@ function TierGroup({
               )}
               <span className={styles.tierName}>{label}</span>
               <strong className={styles.tierPrice}>
-                {formatPrice(service.price_dkk)} kr.
+                <CampaignPrice price={service.price_dkk} campaign={campaign} formatPrice={formatPrice} />
               </strong>
               <span className={styles.tierBlurb}>{blurb}</span>
               <span className={styles.tierAction} aria-hidden="true">
@@ -926,17 +942,45 @@ function GlassUpsell({
   );
 }
 
+/**
+ * Pris i en prisliste. I november: novemberprisen og normalprisen overstreget.
+ * Kurven regner rabatten på totalen, så summen kan afvige med en krone.
+ */
+function CampaignPrice({
+  price,
+  campaign,
+  formatPrice,
+}: {
+  price: number;
+  campaign: boolean;
+  formatPrice: PriceFormatter;
+}) {
+  if (!campaign || price <= 0) return <>{formatPrice(price)} kr.</>;
+  return (
+    <>
+      {formatPrice(blackNovemberRepairPrice(price))} kr.{" "}
+      <s className={styles.campaignBefore}>
+        <span className="sr-only">normalpris </span>
+        {formatPrice(price)} kr.
+      </s>
+    </>
+  );
+}
+
 function ServiceOption({
   service,
   selected,
   onToggle,
   formatPrice,
   compact = false,
+  campaign = false,
 }: {
   service: ServiceItem;
   selected: boolean;
   onToggle: (id: string) => void;
   formatPrice: PriceFormatter;
+  /** Black November: vis novemberprisen med normalprisen overstreget. */
+  campaign?: boolean;
   /** Kompakt række under "Andre reparationer": beskrivelsen ligger i "Hvad er inkluderet?". */
   compact?: boolean;
 }) {
@@ -960,13 +1004,15 @@ function ServiceOption({
               "Vælg " +
               service.name +
               " til " +
-              formatPrice(service.price_dkk) +
+              formatPrice(campaign ? blackNovemberRepairPrice(service.price_dkk) : service.price_dkk) +
               " kr."
             }
             aria-pressed={selected}
             onClick={() => onToggle(service.id)}
           >
-            <strong>{formatPrice(service.price_dkk)} kr.</strong>
+            <strong>
+              <CampaignPrice price={service.price_dkk} campaign={campaign} formatPrice={formatPrice} />
+            </strong>
             <span>{selected ? "Valgt −" : "Tilføj +"}</span>
           </button>
         ) : (

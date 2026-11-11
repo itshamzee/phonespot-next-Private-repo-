@@ -1524,7 +1524,7 @@
   margin: 18px 0 20px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: #1a3d2e;
+  background: #000;
   color: #f4f3ef;
 }
 .campaignStrip p {
@@ -1597,4 +1597,13 @@
 .heroCampaign strong {
   color: #111311;
   font-weight: 650;
+}
+
+/* Black November: normalprisen overstreget ved siden af novemberprisen. */
+.campaignBefore {
+  margin-left: 4px;
+  font-size: 0.78em;
+  font-weight: 400;
+  opacity: 0.55;
+  white-space: nowrap;
 }

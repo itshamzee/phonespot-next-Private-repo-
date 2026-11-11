@@ -37,6 +37,34 @@ function previewActive(): boolean {
   );
 }
 
+/**
+ * Et rigtigt prisexempel til kampagnefladerne: iPhone 17 Pro, skærmskift i
+ * budgetkvalitet. Opdatér normalprisen her, hvis prislisten ændres.
+ */
+export const REPAIR_EXAMPLE = {
+  label: "Skærmskift, iPhone 17 Pro",
+  beforeKr: 1899,
+} as const;
+
+/** Hele dage tilbage af kampagnen, talt med i dag (30/11 = 1). 0 når den er slut. */
+export function blackNovemberDaysLeft(now: number = Date.now()): number {
+  if (now >= BLACK_NOVEMBER.endsAt) return 0;
+  return Math.max(1, Math.ceil((BLACK_NOVEMBER.endsAt - now) / 86_400_000));
+}
+
+/** "19 dage tilbage" / "Sidste dag i dag". */
+export function blackNovemberDaysLeftLabel(now: number = Date.now()): string {
+  const days = blackNovemberDaysLeft(now);
+  if (days <= 0) return "Slut";
+  if (days === 1) return "Sidste dag i dag";
+  return `${days} dage tilbage`;
+}
+
+/** Kampagnepris for en reparation i hele kroner (vist på prislisten; kurven regner på totalen). */
+export function blackNovemberRepairPrice(priceDkk: number): number {
+  return Math.round(priceDkk * (1 - BLACK_NOVEMBER.repairPercent / 100));
+}
+
 export function isBlackNovember(now: number = Date.now()): boolean {
   if (previewActive()) return true;
   return now >= BLACK_NOVEMBER.startsAt && now < BLACK_NOVEMBER.endsAt;
