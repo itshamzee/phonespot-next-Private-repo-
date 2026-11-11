@@ -195,7 +195,7 @@ export class FlatpayClient {
     amountOere: number;
     transactionReference: string;
     externalReference: string;
-  }): Promise<{ transactionReference: string; status?: FlatpayStatus }> {
+  }): Promise<{ transactionReference: string; status?: FlatpayStatus; alreadyStarted: boolean }> {
     const guid = await this.guid();
     const res = await this.request("POST", "/socket/transaction/start", {
       body: {
@@ -210,7 +210,12 @@ export class FlatpayClient {
       },
     });
     const body = (await res.json().catch(() => ({}))) as { transactionReference?: string; status?: FlatpayStatus };
-    return { transactionReference: body.transactionReference || input.transactionReference, status: body.status };
+    // 202 = "already started or completed": the reference was used before.
+    return {
+      transactionReference: body.transactionReference || input.transactionReference,
+      status: body.status,
+      alreadyStarted: res.status === 202,
+    };
   }
 
   /** GET /socket/transaction/response. null = Flatpay has no such transaction (404). */

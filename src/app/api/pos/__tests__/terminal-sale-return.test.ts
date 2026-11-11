@@ -29,6 +29,8 @@ const rpcMock = vi.fn();
 const tables = vi.hoisted(() => ({
   reads: [] as string[],
   rows: {} as Record<string, unknown>,
+  /** Tables whose list query answers with a database error. */
+  failing: new Set<string>(),
 }));
 function query(table: string) {
   tables.reads.push(table);
@@ -42,7 +44,9 @@ function query(table: string) {
   };
   b.maybeSingle = async () => ({ data: Array.isArray(row) ? (row[0] ?? null) : (row ?? null), error: null });
   b.then = (resolve: (v: unknown) => unknown) =>
-    Promise.resolve({ data: Array.isArray(row) ? row : [], error: null }).then(resolve);
+    Promise.resolve(
+      tables.failing.has(table) ? { data: null, error: { message: "db down" } } : { data: Array.isArray(row) ? row : [], error: null },
+    ).then(resolve);
   return b;
 }
 vi.mock("@/lib/supabase/client", () => ({
@@ -209,6 +213,21 @@ describe("integrated terminal with a transaction id", () => {
     expect((await res.json()).code).toBe("terminal_duplicate");
     expect(rpcMock).not.toHaveBeenCalled();
     expect(refund).not.toHaveBeenCalled();
+  });
+
+  it("voids the new charge when the duplicate check cannot run", async () => {
+    const refund = vi.fn<PaymentTerminal["refund"]>(async () => ({ status: "approved" }));
+    fake.terminal = { kind: "worldline", charge: async () => ({ status: "approved", transactionId: "WL-NEW" }), refund };
+    tables.failing.add("order_payments");
+    try {
+      const res = await salePOST(req("/api/pos/sale", saleBody));
+      expect(res.status).toBe(503);
+      expect((await res.json()).code).toBe("terminal_voided");
+      expect(rpcMock).not.toHaveBeenCalled();
+      expect(refund).toHaveBeenCalledWith(expect.objectContaining({ originalTransactionId: "WL-NEW" }));
+    } finally {
+      tables.failing.delete("order_payments");
+    }
   });
 
   it("voids the card payment when the database refuses the sale", async () => {

@@ -38,8 +38,11 @@ type Env = Record<string, string | undefined>;
 const POLL_INTERVAL_MS = 1_500;
 /** captureCardPayments numbers card lines by their index in the payment list. */
 const MAX_LINES_TO_CANCEL = 8;
-/** A COMPLETED transaction older than this (before our start) belongs to another sale. */
-const MAX_AGE_MS = 10 * 60_000;
+/**
+ * A COMPLETED transaction created before this request started belongs to
+ * another sale. Small allowance for clock difference between us and Flatpay.
+ */
+const CLOCK_SKEW_MS = 60_000;
 
 export const FLATPAY_NO_TERMINAL = "Der er ingen Flatpay-terminal sat op for butikken";
 
@@ -99,10 +102,16 @@ export class FlatpayTerminal implements PaymentTerminal {
     }
 
     let transactionReference = flatpayTransactionReference(reference);
-    const expected: Expected = { type, amountOere, terminalId, notBefore: this.client.now() - MAX_AGE_MS };
+    const expected: Expected = { type, amountOere, terminalId, notBefore: this.client.now() - CLOCK_SKEW_MS };
     try {
       const started = await this.client.start({ terminalId, type, amountOere, transactionReference, externalReference: reference });
       transactionReference = started.transactionReference;
+      if (started.alreadyStarted) {
+        // Each Kasse request uses a fresh reference, so this is a reused one:
+        // never let an earlier (possibly voided) payment count for this sale.
+        console.error("[flatpay] start answered 'already started' for a new request", { transactionReference });
+        return { status: "error", message: "Betalingsreferencen er allerede brugt. Prøv igen" };
+      }
     } catch (err) {
       // A network error may hide a payment that did start; look before giving up.
       if (!(err instanceof FlatpayError) || err.status !== 0) return { status: "error", message: describe(err) };
@@ -142,7 +151,8 @@ type Expected = { type: FlatpayTransactionType; amountOere: number; terminalId: 
 /**
  * A COMPLETED answer only counts when it is the payment we asked for: same
  * amount, type and terminal. Guards against a reused reference that points at
- * an older, different transaction (Flatpay answers "already completed").
+ * an older transaction. run() also refuses Flatpay's 202 "already started",
+ * and terminal-flow.ts refuses an id already saved on another payment.
  */
 function matchesExpected(tx: FlatpayTransaction, e: Expected): boolean {
   const amount = Number(tx.amount);

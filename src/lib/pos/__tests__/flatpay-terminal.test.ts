@@ -196,6 +196,19 @@ describe("only the payment we asked for counts", () => {
   });
 });
 
+describe("reused references", () => {
+  it("refuses when Flatpay says the reference was already started (202)", async () => {
+    const f = fakeFlatpay(
+      scripted([{ status: "COMPLETED" }], (c) =>
+        c.path === "/socket/transaction/start" ? { status: 202, json: { transactionReference: c.body?.transactionReference, status: "COMPLETED" } } : {},
+      ),
+    );
+    const r = await new FlatpayTerminal("vejle", ENV, f.deps).charge({ amountOere: 100, reference: "r:0", locationSlug: "vejle" });
+    expect(r.status).toBe("error");
+    expect(f.calls.some((c) => c.path === "/socket/transaction/response")).toBe(false);
+  });
+});
+
 describe("refund and login", () => {
   it("sends a refund as a REFUND transaction", async () => {
     const f = fakeFlatpay(scripted([{ status: "COMPLETED" }]));
