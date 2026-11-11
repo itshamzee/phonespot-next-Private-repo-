@@ -83,14 +83,33 @@ async function sendSellConfirmation(
 ): Promise<void> {
   if (!inquiry.email) return;
   try {
+    // The form is public, so this mail can be aimed at any address. Keep what
+    // the sender typed out of it as far as possible: catalog model names only
+    // (typed-in "min enhed findes ikke" names become "din enhed"), a short first
+    // name, and at most one confirmation per address per hour.
+    const { count } = await client
+      .from("mail_log")
+      .select("id", { count: "exact", head: true })
+      .eq("to_email", inquiry.email)
+      .like("subject", "Vi har din anmodning%")
+      .gte("created_at", new Date(Date.now() - 3_600_000).toISOString());
+    if ((count ?? 0) > 0) return;
+
     const devices = readLeadDevices(inquiry.metadata);
+    const first = devices[0]?.device;
+    const fromCatalog = Boolean(first?.brand.trim() && first?.model.trim());
+    const catalogLabel = fromCatalog
+      ? deviceLabel(first).replace(/^Apple\s+/i, "").slice(0, 60)
+      : "";
     const label =
       devices.length > 1
-        ? `dine ${devices.length} enheder`
-        : `din ${deviceLabel(devices[0]?.device).replace(/^Apple\s+/i, "")}`;
+        ? `dine ${Math.min(devices.length, 50)} enheder`
+        : catalogLabel
+          ? `din ${catalogLabel}`
+          : "din enhed";
     const meta = (inquiry.metadata ?? {}) as Record<string, unknown>;
     const { subject, html } = buildConfirmationEmail({
-      firstName: inquiry.name.trim().split(/\s+/)[0] || "der",
+      firstName: (inquiry.name.trim().split(/\s+/)[0] || "der").slice(0, 30),
       deviceLabel: label,
       inStore: meta.deliveryMethod === "Aflever i butik",
     });

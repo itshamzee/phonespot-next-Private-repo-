@@ -153,7 +153,7 @@ export function buildConfirmationEmail(params: {
   deviceLabel: string;
   inStore: boolean;
 }): { subject: string; html: string } {
-  const subject = `Vi har din anmodning om at sælge ${params.deviceLabel}`;
+  const subject = "Vi har din anmodning – dit tilbud er på vej";
   const preheader = "Du får dit tilbud på mail, normalt inden for 24 timer på hverdage.";
   const lines = [
     `Tak – vi har modtaget ${params.deviceLabel} og kigger på det nu.`,
