@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { dispatchAutoOffer } from "@/lib/buyback/dispatch";
 import { normalizeStoreId, storeLabel } from "@/lib/stores";
 import { getStaffRecipients } from "@/lib/email/staff-routing";
+import { buildConfirmationEmail } from "@/lib/email/buyback-followup-email";
+import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -49,6 +51,7 @@ export async function POST(request: Request) {
       email: inserted.email,
       metadata: inserted.metadata,
     });
+    await sendSellConfirmation(createAdminClient(), inserted);
   }
 
   try {
@@ -66,5 +69,47 @@ export async function POST(request: Request) {
       { error: "Kunne ikke sende besked" },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * The customer used to see only "Tak for din henvendelse" and then nothing for
+ * a day. This mail says it arrived, when the offer comes and what happens after.
+ * Never throws: the lead is saved, a mail problem must not fail the form.
+ */
+async function sendSellConfirmation(
+  client: ReturnType<typeof createAdminClient>,
+  inquiry: { id: string; name: string; email: string; metadata: unknown },
+): Promise<void> {
+  if (!inquiry.email) return;
+  try {
+    const devices = readLeadDevices(inquiry.metadata);
+    const label =
+      devices.length > 1
+        ? `dine ${devices.length} enheder`
+        : `din ${deviceLabel(devices[0]?.device).replace(/^Apple\s+/i, "")}`;
+    const meta = (inquiry.metadata ?? {}) as Record<string, unknown>;
+    const { subject, html } = buildConfirmationEmail({
+      firstName: inquiry.name.trim().split(/\s+/)[0] || "der",
+      deviceLabel: label,
+      inStore: meta.deliveryMethod === "Aflever i butik",
+    });
+    const sent = await resend.emails.send({
+      from: "PhoneSpot <info@phonespot.dk>",
+      to: inquiry.email,
+      replyTo: "info@phonespot.dk",
+      subject,
+      html,
+    });
+    await client.from("mail_log").insert({
+      inquiry_id: inquiry.id,
+      to_email: inquiry.email,
+      subject,
+      body: html,
+      status: sent.error ? "failed" : "sent",
+      resend_id: sent.data?.id ?? null,
+    });
+  } catch (err) {
+    console.warn("[contact] sell confirmation failed", err);
   }
 }
