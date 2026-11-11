@@ -17,7 +17,7 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
         <span className="min-w-0">
           <strong className="font-semibold text-white">Black November</strong>
           <span className="hidden sm:inline">
-            {" "}· {BLACK_NOVEMBER.repairPercent} % på reparationer · {BLACK_NOVEMBER.devicePercent} % på brugte enheder · covers og glas{" "}
+            {" "}· {BLACK_NOVEMBER.repairPercent} % på reparationer · covers og glas{" "}
             {BLACK_NOVEMBER.accessoryPriceKr} kr.
           </span>
           <span className="sm:hidden"> hele november</span>
@@ -33,18 +33,13 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
   );
 }
 
-type StripKind = "repair" | "devices" | "accessories";
+type StripKind = "repair" | "accessories";
 
 const STRIP_COPY: Record<StripKind, { text: string; small: string; figure: string }> = {
   repair: {
     text: "På alle reparationer hele november. Rabatten trækkes, når du booker.",
     small: "spar",
     figure: `${BLACK_NOVEMBER.repairPercent} %`,
-  },
-  devices: {
-    text: "På alle brugte enheder hele november. Priserne herunder er allerede nedsat.",
-    small: "spar",
-    figure: `${BLACK_NOVEMBER.devicePercent} %`,
   },
   accessories: {
     text: "Covers og beskyttelsesglas hele november. Bookcovers og lagersalg er ikke med.",

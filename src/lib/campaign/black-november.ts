@@ -3,7 +3,8 @@
  *
  * Gælder 1.–30. november 2026 (dansk tid), i butikkerne og online:
  * - 10 % på alle reparationer (mængderabatten 15 % ved 3+ vinder, de lægges ikke sammen)
- * - 5 % på alle brugte enheder (fabriksnye enheder er ikke med)
+ * - Brugte enheder: ingen rabat. De 5 % fra kampagnestarten blev stoppet
+ *   11/11-2026 (ejerens beslutning, marginen). devicePercent = 0 slår dem fra.
  * - Covers og beskyttelsesglas til højst 199 kr. Bookcovers/pungcovers og
  *   lagersalgsvarer er ikke med; lagersalg har sine egne priser.
  *
@@ -18,7 +19,8 @@ export const BLACK_NOVEMBER = {
   /** 1. dec. 00:00 dansk tid — kampagnen er slut. */
   endsAt: Date.parse("2026-12-01T00:00:00+01:00"),
   repairPercent: 10,
-  devicePercent: 5,
+  /** 0 = ingen kampagnerabat på enheder (stoppet 11/11-2026). */
+  devicePercent: 0 as number,
   accessoryPriceOere: 19900,
   accessoryPriceKr: 199,
   href: "/black-november",
@@ -83,7 +85,7 @@ export function isUsedDeviceGrade(grade: string | null | undefined): boolean {
 }
 
 /**
- * Enhedspris i øre med 5 % rabat, rundet ned til hele kroner.
+ * Enhedspris i øre med kampagnens enhedsrabat, rundet ned til hele kroner.
  * Uden for kampagnen (eller for fabriksnye enheder) returneres prisen uændret.
  */
 export function blackNovemberDevicePrice(
@@ -92,6 +94,7 @@ export function blackNovemberDevicePrice(
   now: number = Date.now(),
 ): number {
   if (!Number.isFinite(priceOere) || priceOere <= 0) return priceOere;
+  if (BLACK_NOVEMBER.devicePercent <= 0) return priceOere;
   if (!isBlackNovember(now) || !isUsedDeviceGrade(grade)) return priceOere;
   const discounted = (priceOere * (100 - BLACK_NOVEMBER.devicePercent)) / 100;
   return Math.floor(discounted / 100) * 100;
@@ -220,9 +223,9 @@ type TemplatePrices = {
   base_price_p?: number | null;
 };
 
-/** Skabelonens standpriser (A/B/C/P) med 5 %. Fabriksny (N) og nypris røres ikke. */
+/** Skabelonens standpriser (A/B/C/P) med enhedsrabatten. Fabriksny (N) og nypris røres ikke. */
 export function withBlackNovemberTemplate<T extends TemplatePrices>(t: T, now: number = Date.now()): T {
-  if (!isBlackNovember(now)) return t;
+  if (!isBlackNovember(now) || BLACK_NOVEMBER.devicePercent <= 0) return t;
   const cut = (v: number | null | undefined) =>
     v ? blackNovemberDevicePrice(v, "A", now) : (v ?? null);
   return {

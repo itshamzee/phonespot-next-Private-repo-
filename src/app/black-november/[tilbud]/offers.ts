@@ -50,44 +50,6 @@ export const CAMPAIGN_OFFERS: CampaignOffer[] = [
     ],
   },
   {
-    slug: "brugt-iphone",
-    name: "Brugte iPhones",
-    title: "Black Friday brugt iPhone: 5 % hele november | PhoneSpot",
-    description:
-      "Black Friday på brugte iPhones: 5 % på alle brugte enheder hele november, med 36 måneders garanti og batteri på mindst 90 %. Se tilbuddene hos PhoneSpot.",
-    h1: "Black Friday på brugte iPhones: 5 % hele november",
-    lead: "Alle brugte enheder er sat 5 % ned fra 1. til og med 30. november. Det gælder iPhones, iPads, bærbare og ure, online og i butikkerne i Vejle og Slagelse.",
-    body: [
-      "Priserne på siden er allerede nedsat, og du kan se den normale pris ved hver enhed. Du skal ikke bruge en kode, og du behøver ikke vente til Black Friday den 27. november for at få samme pris.",
-      "En brugt iPhone fra PhoneSpot har 36 måneders garanti, batteri på mindst 90 % og 30 dages returret. Det ændrer sig ikke, fordi prisen er nedsat. Fabriksnye enheder er ikke med i tilbuddet.",
-      "Er du i tvivl om modellen, så sammenlign lagerplads og stand først. Vil du have noget for din gamle telefon, kan du også sælge den til os, virkende eller defekt.",
-    ],
-    actions: [
-      { href: "/iphones", label: "Se brugte iPhones" },
-      { href: "/ipads", label: "Brugte iPads" },
-      { href: "/baerbare", label: "Brugte bærbare" },
-      { href: "/saelg-din-enhed/iphone", label: "Sælg din gamle iPhone" },
-    ],
-    faq: [
-      {
-        q: "Hvad er det bedste tidspunkt at købe en brugt iPhone?",
-        a: "Prisen er den samme hele november, så du kan vælge i ro. De enkelte enheder er unikke, så den model, du vil have, kan blive udsolgt.",
-      },
-      {
-        q: "Gælder garantien på tilbudsvarer?",
-        a: "Ja. Du får 36 måneders garanti og 30 dages returret som altid.",
-      },
-      {
-        q: "Gælder de 5 % på alle enheder?",
-        a: "De gælder alle brugte enheder. Fabriksnye enheder er ikke med.",
-      },
-      {
-        q: "Kan jeg få tilbuddet i butikken?",
-        a: "Ja, tilbuddet gælder både online og i butikkerne i Vejle og Slagelse.",
-      },
-    ],
-  },
-  {
     slug: "covers-og-glas",
     name: "Covers og glas",
     title: "Black Friday covers og beskyttelsesglas: 199 kr. | PhoneSpot",
@@ -124,6 +86,9 @@ export const CAMPAIGN_OFFERS: CampaignOffer[] = [
     ],
   },
 ];
+
+/** Undersider, der er taget ned. De sendes videre til kampagnesiden. */
+export const RETIRED_OFFER_SLUGS = new Set(["brugt-iphone"]);
 
 export function getCampaignOffer(slug: string): CampaignOffer | undefined {
   return CAMPAIGN_OFFERS.find((offer) => offer.slug === slug);

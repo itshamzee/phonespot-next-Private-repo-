@@ -42,9 +42,9 @@ describe("repairs", () => {
 });
 
 describe("used devices", () => {
-  it("takes 5 % and rounds down to whole kroner", () => {
-    expect(blackNovemberDevicePrice(499900, "A", mid)).toBe(474900);
-    expect(blackNovemberDevicePrice(345000, "B", mid)).toBe(327700);
+  it("gives no device discount since 11/11 (the 5 % was stopped)", () => {
+    expect(blackNovemberDevicePrice(499900, "A", mid)).toBe(499900);
+    expect(blackNovemberDevicePrice(345050, "B", mid)).toBe(345050);
   });
   it("leaves factory-new devices and other months alone", () => {
     expect(blackNovemberDevicePrice(499900, "N", mid)).toBe(499900);

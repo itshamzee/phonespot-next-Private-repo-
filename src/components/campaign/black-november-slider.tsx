@@ -21,17 +21,6 @@ const SLIDES = [
     imageClass: "object-contain p-4 md:p-8",
   },
   {
-    figure: `${BLACK_NOVEMBER.devicePercent} %`,
-    title: "på alle brugte enheder",
-    href: "/iphones",
-    cta: "Se brugte iPhones",
-    image:
-      "https://xfcadewtpmjrvuzfwkku.supabase.co/storage/v1/object/public/product-media/iphones/cutout/apple-iphone-17-pro-soelv-1792173850693.webp",
-    alt: "Brugt iPhone 17 Pro i sølv",
-    light: false,
-    imageClass: "object-contain p-6 md:p-8",
-  },
-  {
     figure: `${BLACK_NOVEMBER.accessoryPriceKr} kr.`,
     title: "for covers og beskyttelsesglas",
     href: "/tilbehoer/covers",

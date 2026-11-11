@@ -30,7 +30,7 @@ const baseMetadata: Metadata = {
 export async function generateMetadata(): Promise<Metadata> {
   if (!isBlackNovember()) return baseMetadata;
   const description =
-    "Black Friday hele november: 10 % på alle reparationer, 5 % på brugte iPhones og enheder, covers og glas 199 kr. 36 måneders garanti. Vejle og Slagelse.";
+    "Black Friday hele november: 10 % på alle reparationer, covers og glas 199 kr. 36 måneders garanti. Vejle og Slagelse.";
   return { ...baseMetadata, description, openGraph: { ...baseMetadata.openGraph, description } };
 }
 
