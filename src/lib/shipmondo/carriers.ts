@@ -85,7 +85,13 @@ export const SENDER_ADDRESSES = {
  * regardless of which store the enquiry came in through — the assessment
  * happens in one place, so the label must too.
  */
-export const BUYBACK_DESTINATION = SENDER_ADDRESSES.vejle;
+export const BUYBACK_DESTINATION = {
+  ...SENDER_ADDRESSES.vejle,
+  // PostNord sends "your parcel is at the pickup point" and the pickup code to
+  // the receiver's e-mail. vejle@ is not read by anyone or by the mail agent, so
+  // those notices vanished and parcels sat at OK Plus Vejle Øst until returned.
+  email: "info@phonespot.dk",
+};
 
 export const CLICK_COLLECT_OPTIONS: ShippingOption[] = [
   {
