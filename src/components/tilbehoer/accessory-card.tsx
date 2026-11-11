@@ -33,7 +33,7 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   }
   // eslint-disable-next-line @next/next/no-img-element
   const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
-  const campaignTag=black_november ? <PriceTag size="sm" surface="light" tilt={-3} price="Black November" className="absolute left-3 top-3"/> : null;
+  const campaignTag=black_november ? <span className="absolute left-3 top-3"><PriceTag size="sm" surface="light" tilt={-3} price="Black November"/></span> : null;
   const tile="relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
   // Tilføjet-tilstanden må ikke ligne "udsolgt": den beholder farven og er kun låst for dobbeltklik.
   const buttonClass = added

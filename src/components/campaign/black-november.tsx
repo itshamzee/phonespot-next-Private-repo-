@@ -45,7 +45,7 @@ const STRIP_COPY: Record<StripKind, { text: string; small: string; figure: strin
   },
   accessories: {
     text: "Covers og beskyttelsesglas hele november. Bookcovers og lagersalg er ikke med.",
-    small: "højst, covers og glas",
+    small: "højst",
     figure: `${BLACK_NOVEMBER.accessoryPriceKr} kr.`,
   },
 };

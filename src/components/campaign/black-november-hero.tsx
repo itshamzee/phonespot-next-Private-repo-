@@ -69,14 +69,15 @@ export function BlackNovemberHero({ serverActive, headingLevel = "h2" }: { serve
             fetchPriority="high"
             className="absolute inset-0 h-full w-full object-contain object-right p-6 md:p-10"
           />
-          <PriceTag
-            size="lg"
-            tilt={-4}
-            before={kr(REPAIR_EXAMPLE.beforeKr)}
-            price={kr(blackNovemberRepairPrice(REPAIR_EXAMPLE.beforeKr))}
-            note={REPAIR_EXAMPLE.label}
-            className="absolute bottom-8 left-6 md:bottom-14 md:left-2"
-          />
+          <div className="absolute bottom-8 left-6 md:bottom-14 md:left-0">
+            <PriceTag
+              size="lg"
+              tilt={-4}
+              before={kr(REPAIR_EXAMPLE.beforeKr)}
+              price={kr(blackNovemberRepairPrice(REPAIR_EXAMPLE.beforeKr))}
+              note={REPAIR_EXAMPLE.label}
+            />
+          </div>
         </div>
       </div>
 
