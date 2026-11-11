@@ -35,6 +35,7 @@ først flaget til, når alle butikker har en terminal.
 - `src/lib/pos/flatpay.ts`: klient til Socket API'et (login → GUID, start, status, annuller).
 - `src/lib/pos/flatpay-terminal.ts`: `PaymentTerminal` til Kassen. Den starter betalingen, spørger efter status hvert 1,5 sekund og annullerer, hvis der ikke er svar inden tidsgrænsen. Derefter læser den status én gang til.
 - Hver kortlinje får en fast `transactionReference` (UUID), som regnes ud fra Kassens reference. Et gentaget kald trækker derfor ikke kortet to gange. Knappen "Annuller betaling" finder den ventende betaling uden at slå noget op i databasen. Id'et gemmes som `order_payments.reference` på kortlinjen.
+- Kassen godtager kun en godkendt betaling, hvis beløb, type (SALE/REFUND) og terminal er dem, der blev bedt om, og betalingen er højst 10 minutter gammel. Et betalings-id, der allerede står på en anden betaling i `order_payments`, afvises (`terminal_duplicate`). Det forhindrer, at en genbrugt reference får et nyt salg til at se betalt ud.
 - Retur sendes som en `REFUND`. Kunden skal holde kortet til terminalen igen, fordi Flatpay ikke kobler en retur til det oprindelige køb.
 - Hvis et salg ikke kan gemmes efter et godkendt kort, laver Kassen automatisk en `REFUND`. Kunden skal også her holde kortet til terminalen.
 - `/api/pos/sale` og `/api/pos/return` har `maxDuration = 120`.

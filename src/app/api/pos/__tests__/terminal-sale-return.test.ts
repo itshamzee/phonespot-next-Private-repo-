@@ -33,8 +33,13 @@ const tables = vi.hoisted(() => ({
 function query(table: string) {
   tables.reads.push(table);
   const b: Record<string, unknown> = {};
-  for (const m of ["select", "eq", "in", "or", "limit"]) b[m] = () => b;
-  const row = tables.rows[table];
+  for (const m of ["select", "eq", "or", "limit"]) b[m] = () => b;
+  let row = tables.rows[table];
+  // .in(column, values) filters array rows, so the duplicate-transaction check sees real matches.
+  b.in = (column: string, values: unknown[]) => {
+    if (Array.isArray(row)) row = row.filter((r) => values.includes((r as Record<string, unknown>)[column]));
+    return b;
+  };
   b.maybeSingle = async () => ({ data: Array.isArray(row) ? (row[0] ?? null) : (row ?? null), error: null });
   b.then = (resolve: (v: unknown) => unknown) =>
     Promise.resolve({ data: Array.isArray(row) ? row : [], error: null }).then(resolve);
@@ -192,6 +197,18 @@ describe("integrated terminal with a transaction id", () => {
       { type: "kontant", amount_oere: 50_000, reference: null },
       { type: "kort_terminal", amount_oere: 40_000, reference: "WL-TX-777" },
     ]);
+  });
+
+  it("refuses a terminal transaction that is already saved on another payment", async () => {
+    const refund = vi.fn<PaymentTerminal["refund"]>(async () => ({ status: "approved" }));
+    fake.terminal = { kind: "worldline", charge: async () => ({ status: "approved", transactionId: "WL-OLD" }), refund };
+    tables.rows.order_payments = [{ reference: "WL-OLD" }];
+
+    const res = await salePOST(req("/api/pos/sale", saleBody));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe("terminal_duplicate");
+    expect(rpcMock).not.toHaveBeenCalled();
+    expect(refund).not.toHaveBeenCalled();
   });
 
   it("voids the card payment when the database refuses the sale", async () => {

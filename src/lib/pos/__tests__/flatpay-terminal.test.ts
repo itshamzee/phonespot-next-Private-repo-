@@ -36,11 +36,15 @@ function fakeFlatpay(handler: Handler) {
 
 /** Answers start with 200 and the given sequence of statuses on each poll. */
 function scripted(statuses: Array<Record<string, unknown>>, extra: Handler = () => ({})): Handler {
+  let started: Record<string, unknown> = {};
+  const echo = () => ({ amount: Number(started.amount), transactionType: started.transactionType, terminalId: started.terminalId });
   return (c) => {
+    if (c.path === "/socket/transaction/start") started = c.body ?? {};
     const e = extra(c);
+    if (e.json && c.path === "/socket/transaction/response") return { ...e, json: { ...echo(), ...(e.json as object) } };
     if (e.status || e.json || e.text) return e;
     if (c.path === "/socket/transaction/start") return { json: { transactionReference: c.body?.transactionReference, status: "PENDING" } };
-    if (c.path === "/socket/transaction/response") return { json: { transactionReference: c.query.transactionReference, ...(statuses.shift() ?? { status: "PENDING" }) } };
+    if (c.path === "/socket/transaction/response") return { json: { transactionReference: c.query.transactionReference, ...echo(), ...(statuses.shift() ?? { status: "PENDING" }) } };
     if (c.path === "/socket/transaction/cancel") return { json: { status: "CANCELLED" } };
     return { status: 500 };
   };
@@ -158,6 +162,37 @@ describe("charge", () => {
       { reference: "sale-9", locationSlug: "vejle" },
     );
     expect(out[1]).toEqual({ type: "kort_terminal", amountOere: 1_000, reference: flatpayTransactionReference("sale-9:1") });
+  });
+});
+
+describe("only the payment we asked for counts", () => {
+  const run = async (completed: Record<string, unknown>) => {
+    const f = fakeFlatpay(scripted([{ status: "COMPLETED", ...completed }]));
+    return new FlatpayTerminal("vejle", ENV, f.deps).charge({ amountOere: 50_000, reference: "r:0", locationSlug: "vejle" });
+  };
+
+  it("refuses a completed payment with another amount (a reused reference)", async () => {
+    expect((await run({ amount: 100 })).status).toBe("error");
+  });
+
+  it("refuses a completed REFUND when we asked for a SALE, or another terminal", async () => {
+    expect((await run({ transactionType: "REFUND" })).status).toBe("error");
+    expect((await run({ terminalId: "TID-OTHER" })).status).toBe("error");
+  });
+
+  it("refuses an old completed payment", async () => {
+    vi.useFakeTimers();
+    try {
+      const f = fakeFlatpay(scripted([{ status: "COMPLETED", createdAt: "2026-01-01T10:00:00Z" }]));
+      const deps = { ...f.deps, now: () => Date.parse("2026-11-11T12:00:00Z") };
+      const r = await new FlatpayTerminal("vejle", ENV, deps).charge({ amountOere: 50_000, reference: "r:0", locationSlug: "vejle" });
+      expect(r.status).toBe("error");
+      const fresh = fakeFlatpay(scripted([{ status: "COMPLETED", createdAt: "2026-11-11T11:59:30" }]));
+      const ok = await new FlatpayTerminal("vejle", ENV, { ...fresh.deps, now: deps.now }).charge({ amountOere: 50_000, reference: "r:0", locationSlug: "vejle" });
+      expect(ok.status).toBe("approved");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

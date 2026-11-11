@@ -54,6 +54,7 @@ export async function createSaleWithTerminal(
   const ctx = { reference: terminalReference(given), locationSlug };
   const payments = await captureCardPayments(terminal, sale.payments, ctx);
   const charged = terminalTransactionIds(sale.payments, payments);
+  await assertTransactionsUnused(charged);
 
   try {
     return await createPosSale({ ...sale, payments });
@@ -92,6 +93,7 @@ export async function createReturnWithTerminal(
   const originalTransactionIds = await originalCardTransactionIds(ret.originalOrderId);
   const ctx = { reference: terminalReference(given), locationSlug, originalTransactionIds };
   const refunds = await refundCardPayments(terminal, ret.refunds, ctx);
+  await assertTransactionsUnused(terminalTransactionIds(ret.refunds, refunds));
   try {
     return await createPosReturn({ ...ret, refunds });
   } catch (err) {
@@ -102,6 +104,35 @@ export async function createReturnWithTerminal(
       "terminal_refund_unrecorded",
       `${sentence(pos?.message ?? "Kreditnotaen kunne ikke gemmes")}. Pengene er sendt retur på kortet, men kreditnotaen er ikke oprettet. Kontakt ejeren, før du prøver igen.`,
       pos?.status ?? 500,
+    );
+  }
+}
+
+/**
+ * A terminal transaction may back exactly one payment line. If the terminal
+ * hands back an id that is already saved (a reused reference pointing at an
+ * earlier, completed payment), refuse: no new money was taken. Not voided,
+ * since the money belongs to that earlier sale.
+ */
+async function assertTransactionsUnused(ids: ReadonlySet<string>): Promise<void> {
+  if (ids.size === 0) return;
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("order_payments")
+    .select("reference")
+    .eq("type", CARD)
+    .in("reference", [...ids])
+    .limit(1);
+  if (error) {
+    console.error("[pos-terminal] duplicate check failed:", error.message);
+    throw new PosError("terminal_error", "Kortbetalingen kunne ikke kontrolleres. Salget er ikke gemt.", 503);
+  }
+  if ((data ?? []).length > 0) {
+    console.error("[pos-terminal] terminal transaction already used", { ids: [...ids] });
+    throw new PosError(
+      "terminal_duplicate",
+      "Terminalen svarede med en betaling, der allerede hører til et andet salg. Salget er ikke gemt. Prøv igen.",
+      409,
     );
   }
 }

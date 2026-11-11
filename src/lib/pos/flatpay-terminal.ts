@@ -38,6 +38,8 @@ type Env = Record<string, string | undefined>;
 const POLL_INTERVAL_MS = 1_500;
 /** captureCardPayments numbers card lines by their index in the payment list. */
 const MAX_LINES_TO_CANCEL = 8;
+/** A COMPLETED transaction older than this (before our start) belongs to another sale. */
+const MAX_AGE_MS = 10 * 60_000;
 
 export const FLATPAY_NO_TERMINAL = "Der er ingen Flatpay-terminal sat op for butikken";
 
@@ -97,6 +99,7 @@ export class FlatpayTerminal implements PaymentTerminal {
     }
 
     let transactionReference = flatpayTransactionReference(reference);
+    const expected: Expected = { type, amountOere, terminalId, notBefore: this.client.now() - MAX_AGE_MS };
     try {
       const started = await this.client.start({ terminalId, type, amountOere, transactionReference, externalReference: reference });
       transactionReference = started.transactionReference;
@@ -113,7 +116,7 @@ export class FlatpayTerminal implements PaymentTerminal {
         console.error("[flatpay] poll failed:", err instanceof Error ? err.message : err);
         return null;
       });
-      const result = tx ? toResult(tx, transactionReference) : null;
+      const result = tx ? toResult(tx, transactionReference, expected) : null;
       if (result) return result;
       if (this.client.now() >= deadline) break;
       await this.client.sleep(POLL_INTERVAL_MS);
@@ -124,7 +127,7 @@ export class FlatpayTerminal implements PaymentTerminal {
       console.error("[flatpay] cancel after timeout failed:", err instanceof Error ? err.message : err);
     });
     const last = await this.client.transaction(transactionReference, terminalId).catch(() => null);
-    const final = last ? toResult(last, transactionReference) : null;
+    const final = last ? toResult(last, transactionReference, expected) : null;
     if (final) return final;
     console.error("[flatpay] payment state unknown after timeout", { transactionReference, terminalId });
     return {
@@ -134,10 +137,40 @@ export class FlatpayTerminal implements PaymentTerminal {
   }
 }
 
+type Expected = { type: FlatpayTransactionType; amountOere: number; terminalId: string; notBefore: number };
+
+/**
+ * A COMPLETED answer only counts when it is the payment we asked for: same
+ * amount, type and terminal. Guards against a reused reference that points at
+ * an older, different transaction (Flatpay answers "already completed").
+ */
+function matchesExpected(tx: FlatpayTransaction, e: Expected): boolean {
+  const amount = Number(tx.amount);
+  if (!Number.isFinite(amount) || amount !== e.amountOere) return false;
+  if (tx.transactionType && tx.transactionType.toUpperCase() !== e.type) return false;
+  if (tx.terminalId && tx.terminalId !== e.terminalId) return false;
+  // An old, already completed transaction is never accepted for a new sale.
+  if (tx.createdAt) {
+    const created = Date.parse(tx.createdAt.endsWith("Z") || /[+-]\d\d:?\d\d$/.test(tx.createdAt) ? tx.createdAt : `${tx.createdAt}Z`);
+    if (Number.isFinite(created) && created < e.notBefore) return false;
+  }
+  return true;
+}
+
 /** Final Flatpay state -> TerminalResult. null while the payment is still running. */
-function toResult(tx: FlatpayTransaction, fallbackReference: string): TerminalResult | null {
+function toResult(tx: FlatpayTransaction, fallbackReference: string, expected: Expected): TerminalResult | null {
   switch (tx.status) {
     case "COMPLETED":
+      if (!matchesExpected(tx, expected)) {
+        console.error("[flatpay] completed transaction does not match the request", {
+          transactionReference: tx.transactionReference ?? fallbackReference,
+          amount: tx.amount,
+          expectedAmount: expected.amountOere,
+          type: tx.transactionType,
+          terminalId: tx.terminalId,
+        });
+        return { status: "error", message: "Terminalens svar passer ikke til betalingen. Salget er ikke gemt" };
+      }
       return { status: "approved", transactionId: tx.transactionReference || fallbackReference };
     case "DECLINED":
       return { status: "declined", message: tx.errorText?.trim() || "Kortet blev afvist på terminalen" };

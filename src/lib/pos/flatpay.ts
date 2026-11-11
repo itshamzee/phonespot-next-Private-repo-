@@ -35,6 +35,8 @@ export type FlatpayTransaction = {
   status?: FlatpayStatus;
   amount?: number;
   transactionType?: string;
+  /** UTC time of creation (ISO). */
+  createdAt?: string | null;
   cardScheme?: string | null;
   cardPan?: string | null;
   receiptNumber?: string | null;
