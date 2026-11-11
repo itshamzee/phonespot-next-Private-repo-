@@ -4,6 +4,9 @@ import { saleBodySchema } from "@/lib/pos/schemas";
 import { resolveRegister } from "@/lib/pos/pos-context";
 import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
+// An integrated card terminal waits for the customer (Flatpay: up to ~100 s).
+export const maxDuration = 120;
+
 /**
  * POST /api/pos/sale
  * Create a POS sale. Staff only.

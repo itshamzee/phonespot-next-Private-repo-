@@ -8,6 +8,9 @@ import { assertReturnEntity, assertReturnLookupEntity } from "@/lib/pos/return-e
 import { hasPermission } from "@/lib/auth/permissions";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
+// An integrated card terminal waits for the customer (Flatpay: up to ~100 s).
+export const maxDuration = 120;
+
 /**
  * GET /api/pos/return?q=<receipt number or order number>
  * Finds a POS sale and what can still be returned on each line, plus which card

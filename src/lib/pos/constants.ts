@@ -59,7 +59,7 @@ export const STRIPE_TERMINAL_ENABLED = process.env.NEXT_PUBLIC_POS_STRIPE_TERMIN
  * terminal itself. Chosen server side by POS_TERMINAL_PROVIDER (see
  * src/lib/pos/payment-terminal.ts); the client only ever receives the kind.
  */
-export const PAYMENT_TERMINAL_KINDS = ["manual", "worldline"] as const;
+export const PAYMENT_TERMINAL_KINDS = ["manual", "worldline", "flatpay"] as const;
 export type PaymentTerminalKind = (typeof PAYMENT_TERMINAL_KINDS)[number];
 
 export function isIntegratedTerminal(kind: PaymentTerminalKind | null | undefined): boolean {

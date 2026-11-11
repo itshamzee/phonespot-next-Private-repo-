@@ -8,6 +8,7 @@ import { posJson, printBase64Pdf } from "@/lib/pos/client";
 import { oereToInput, parseKr } from "@/lib/pos/money";
 import {
   PAYMENT_LABELS,
+  PAYMENT_TERMINAL_KINDS,
   REFUND_TYPES,
   RETURN_REASONS,
   isIntegratedTerminal,
@@ -62,7 +63,9 @@ function ReturnPageInner() {
         `/api/pos/return?q=${encodeURIComponent(query)}`,
       );
       setOrder(data.order);
-      setTerminalKind(data.terminalKind === "worldline" ? "worldline" : "manual");
+      setTerminalKind(
+        data.terminalKind && (PAYMENT_TERMINAL_KINDS as readonly string[]).includes(data.terminalKind) ? data.terminalKind : "manual",
+      );
       setQty({});
       setRestock(
         Object.fromEntries(data.order.lines.map((l) => [l.id, l.itemType === "sku_product"])),
