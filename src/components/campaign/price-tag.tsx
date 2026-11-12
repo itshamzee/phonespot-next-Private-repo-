@@ -1,5 +1,5 @@
 /**
- * Black November-prismærket: det gule skilt fra butiksskærmen, brugt ens på
+ * Black November-prismærket: det grønne skilt (PhoneSpot-grøn #5A8C6F), brugt ens på
  * forsiden, kategoribåndene, tilbehørskort og /black-november. Et rigtigt
  * hængeskilt med hul, let skævt, ikke en glødende knap.
  */
@@ -35,27 +35,27 @@ export function PriceTag({
   /** Grader. Brug lidt (-3 til -5) på store flader, 0 i lister. */
   tilt?: number;
   /** Farven bag mærket, så hullet ser udstanset ud. */
-  surface?: "dark" | "light";
+  surface?: "dark" | "light" | "green";
   className?: string;
 }) {
   const s = SIZES[size];
   return (
     <span
-      className={`relative inline-flex flex-col items-start bg-[#FFD60A] text-black shadow-[0_1px_0_rgba(0,0,0,0.2),0_10px_24px_-12px_rgba(0,0,0,0.55)] ${s.box} ${className}`}
+      className={`relative inline-flex flex-col items-start bg-[#5A8C6F] text-white shadow-[0_1px_0_rgba(0,0,0,0.2),0_10px_24px_-12px_rgba(0,0,0,0.55)] ${s.box} ${className}`}
       style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}
     >
       <span
         aria-hidden="true"
-        className={`absolute top-1/2 -translate-y-1/2 rounded-full ${surface === "dark" ? "bg-black" : "bg-white"} ${s.hole}`}
+        className={`absolute top-1/2 -translate-y-1/2 rounded-full ${surface === "dark" ? "bg-black" : surface === "green" ? "bg-[#0E2219]" : "bg-white"} ${s.hole}`}
       />
       {before && (
-        <s className={`${s.small} font-medium tabular-nums text-black/60`}>
+        <s className={`${s.small} font-medium tabular-nums text-white/70`}>
           <span className="sr-only">Før </span>
           {before}
         </s>
       )}
       <span className={`font-display ${s.price} font-bold leading-[0.9] tracking-[-0.01em] tabular-nums`}>{price}</span>
-      {note && <span className={`${s.small} font-medium leading-tight text-black/75`}>{note}</span>}
+      {note && <span className={`${s.small} font-medium leading-tight text-white/85`}>{note}</span>}
     </span>
   );
 }

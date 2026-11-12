@@ -6,7 +6,7 @@ import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { useBlackNovemberDaysLeft } from "@/lib/campaign/use-days-left";
 import { PriceTag } from "./price-tag";
 
-// Sort flade, hvid tekst, gult prismærke. Forsidens top ligger i black-november-hero.tsx.
+// Sort flade, hvid tekst, grønt prismærke. Forsidens top ligger i black-november-hero.tsx.
 
 /** Smal bjælke øverst på alle sider i november: ét budskab og dage tilbage. */
 export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
