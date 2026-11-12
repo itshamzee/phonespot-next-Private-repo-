@@ -138,6 +138,16 @@ export async function markSeen(box: MailboxConfig, uids: number[]): Promise<void
   });
 }
 
+/**
+ * Who a mail is a conversation with. Reply-To is set by the sender, so it is
+ * only trusted on our own form notices; anyone else is identified by From, or
+ * a stranger could attach their mail to another customer's conversation.
+ */
+export function counterpartOf(fromEmail: string, replyTo: string): string {
+  const own = fromEmail === "noreply@phonespot.dk" || fromEmail === "ordre@phonespot.dk";
+  return own && replyTo ? replyTo : fromEmail;
+}
+
 /** Envelope and flags for everything in INBOX. Read-only. */
 export async function listInbox(box: MailboxConfig): Promise<InboxEntry[]> {
   return withImap(box, async (client) => {
@@ -153,7 +163,7 @@ export async function listInbox(box: MailboxConfig): Promise<InboxEntry[]> {
         out.push({
           uid: msg.uid,
           messageId: env?.messageId ?? "",
-          counterpart: replyTo || fromEmail,
+          counterpart: counterpartOf(fromEmail, replyTo),
           fromEmail,
           subject: env?.subject ?? "",
           date: new Date((msg.internalDate as Date | string | undefined) ?? env?.date ?? Date.now()),

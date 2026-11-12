@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chooseUids, parseInbound, preferredBody } from "@/lib/mail-agent/imap";
+import { chooseUids, counterpartOf, parseInbound, preferredBody } from "@/lib/mail-agent/imap";
 
 describe("preferredBody", () => {
   it("prefers text and strips html otherwise", () => {
@@ -52,6 +52,14 @@ describe("parseInbound", () => {
   it("flags newsletters via List-Unsubscribe", () => {
     const parsed = { from: { value: [{ address: "news@x.dk" }] }, subject: "Tilbud", text: "", headers: new Map([["list-unsubscribe", "<mailto:x>"]]) } as never;
     expect(parseInbound({ mailbox: "info@phonespot.dk", uid: 1, parsed }).listUnsubscribe).toBe(true);
+  });
+});
+
+describe("counterpartOf", () => {
+  it("trusts Reply-To only on our own form notices", () => {
+    expect(counterpartOf("noreply@phonespot.dk", "kunde@gmail.com")).toBe("kunde@gmail.com");
+    expect(counterpartOf("fremmed@evil.dk", "kunde@gmail.com")).toBe("fremmed@evil.dk");
+    expect(counterpartOf("kunde@gmail.com", "")).toBe("kunde@gmail.com");
   });
 });
 
