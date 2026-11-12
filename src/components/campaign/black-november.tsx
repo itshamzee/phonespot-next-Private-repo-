@@ -8,29 +8,26 @@ import { PriceTag } from "./price-tag";
 
 // Sort flade, hvid tekst, grønt prismærke. Forsidens top ligger i black-november-hero.tsx.
 
-/** Smal bjælke øverst på alle sider i november: ét budskab og dage tilbage. */
+/** Smal bjælke øverst på alle sider i november: én linje, ingen mærker. */
 export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
   const active = useBlackNovember(serverActive);
   const daysLeft = useBlackNovemberDaysLeft();
   if (!active) return null;
   return (
-    <div role="region" aria-label="Black November" className="bg-black text-[13px] text-white/70">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 py-2 sm:justify-center sm:gap-5 sm:px-5">
-        <span className="flex min-w-0 items-center gap-2.5">
-          <PriceTag size="sm" price={`−${BLACK_NOVEMBER.repairPercent} %`} />
-          <span className="min-w-0 truncate">
-            <strong className="font-semibold text-white">Black November</strong>
-            <span className="hidden sm:inline"> på alle reparationer · covers og glas {BLACK_NOVEMBER.accessoryPriceKr} kr.</span>
-          </span>
+    <div role="region" aria-label="Black November" className="bg-black text-[13px] text-white/65">
+      <Link
+        href={BLACK_NOVEMBER.href}
+        className="group mx-auto flex max-w-[1280px] items-center justify-center gap-x-4 px-4 py-2.5 !text-white/65 sm:px-5"
+      >
+        <span className="min-w-0 truncate">
+          <strong className="font-semibold text-white">Black November</strong>
+          <span className="mx-2.5 inline-block h-3 w-px translate-y-[1px] bg-white/25" aria-hidden="true" />
+          <span className="text-white">{BLACK_NOVEMBER.repairPercent} % på alle reparationer</span>
+          <span className="hidden lg:inline"> og covers og glas til {BLACK_NOVEMBER.accessoryPriceKr} kr.</span>
         </span>
-        {daysLeft && <span className="hidden tabular-nums md:inline">{daysLeft}</span>}
-        <Link
-          href={BLACK_NOVEMBER.href}
-          className="inline-flex min-h-6 shrink-0 items-center font-semibold !text-white underline underline-offset-[3px]"
-        >
-          Se tilbuddene
-        </Link>
-      </div>
+        {daysLeft && <span className="hidden shrink-0 tabular-nums md:inline">{daysLeft}</span>}
+        <span className="hidden shrink-0 font-semibold text-[#8fb89f] group-hover:underline group-hover:underline-offset-[3px] sm:inline">Se tilbuddene</span>
+      </Link>
     </div>
   );
 }

@@ -6,7 +6,6 @@ import { StorefrontIcon, type StorefrontIconKind } from "@/components/ui/storefr
 import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { useBlackNovemberDaysLeft } from "@/lib/campaign/use-days-left";
-import { PriceTag } from "@/components/campaign/price-tag";
 import styles from "./storefront.module.css";
 
 // Editorial photography from the approved design; inventory comes only from ShopTabs.
@@ -18,8 +17,8 @@ const categories: { label: string; name: string; href: string; title: [string, s
 ];
 
 /**
- * Forsidens faste top. I november hænger Black November-mærket på den
- * (hjørnet af billedet og reparationskortet); resten er uændret.
+ * Forsidens faste top. I november står Black November som en lille pille
+ * over overskriften og på reparationskortet; resten er uændret.
  */
 export function StorefrontHero({ blackNovember = false }: { blackNovember?: boolean }) {
   const campaign = useBlackNovember(blackNovember);
@@ -33,6 +32,13 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
     <section className={`${styles.campaign} ${slide === 0 ? styles["is-iphone"] : slide === 1 ? styles["is-laptop"] : ""}`} aria-label="Udforsk vores enheder" aria-roledescription="karrusel">
       <div className={styles["campaign-stage"]} id="campaign-stage">
         <div className={styles["campaign-copy"]}>
+          {campaign && (
+            <Link className={styles["bn-pill"]} href={BLACK_NOVEMBER.href}>
+              <span className={styles["bn-pill-name"]}>Black November</span>
+              <span className={styles["bn-pill-text"]}>{BLACK_NOVEMBER.repairPercent} % på alle reparationer</span>
+              <StorefrontIcon kind="arrow" />
+            </Link>
+          )}
           <span className={styles.eyebrow}>Refurbished. Klar til mere.</span>
           <h1>{category.title[0]}<br />{category.title[1]}</h1>
           <p>{category.description}</p>
@@ -44,11 +50,6 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} decoding="async" />
           <span className={styles["hero-caption"]}>{category.caption}</span>
-          {campaign && (
-            <Link className={styles["bn-tag"]} href={BLACK_NOVEMBER.href} aria-label={`Black November: ${BLACK_NOVEMBER.repairPercent} % på alle reparationer. Se tilbuddene`}>
-              <PriceTag size="md" surface="light" price={`−${BLACK_NOVEMBER.repairPercent} %`} note="på reparationer" />
-            </Link>
-          )}
         </div>
         <div className={styles["carousel-controls"]}>
           <span aria-live="polite" aria-atomic="true">{slide + 1} / 4 · {category.name}</span>
@@ -69,7 +70,7 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
     <section className={styles.services} aria-label="Reparation og opkøb">
       <article className={`${styles["service-card"]} ${styles["repair-card"]}`}>
         <div className={styles["service-content"]}>
-          <div className={styles["service-label"]}><StorefrontIcon kind="repair" />Reparation{campaign && <PriceTag size="sm" surface="green" price={`−${BLACK_NOVEMBER.repairPercent} %`} className={styles["bn-chip"]} />}</div>
+          <div className={styles["service-label"]}><StorefrontIcon kind="repair" />Reparation{campaign && <span className={styles["bn-chip"]}>{BLACK_NOVEMBER.repairPercent} % i november</span>}</div>
           <h2>Giv din telefon<br />mere tid.</h2>
           <p>Skærm, batteri eller noget andet?<br />Find hjælp til netop din model.</p>
           <Link className={`${styles.button} ${styles.light}`} href="/reparation">Find din reparation<StorefrontIcon kind="arrow" /></Link>
