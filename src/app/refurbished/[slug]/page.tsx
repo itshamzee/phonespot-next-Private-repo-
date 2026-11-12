@@ -325,6 +325,9 @@ export default async function RefurbishedProductPage({ params }: Props) {
           accessories={accessories.map(toPublicSkuProduct)}
           relatedInStock={relatedInStock}
           upgradeOptions={upgradeOptions}
+          campaignAccessoryIds={accessories
+            .filter((acc) => "black_november" in acc && acc.black_november)
+            .map((acc) => acc.id)}
         />
       </section>
 

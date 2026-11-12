@@ -82,6 +82,8 @@ type DeviceDetailProps = {
   relatedInStock?: RelatedInStockProduct[];
   /** RAM/SSD-opgraderingstilvalg (kun laptops). */
   upgradeOptions?: UpgradeOption[];
+  /** Tilbehør med Black November-pris lige nu (sat af serveren). */
+  campaignAccessoryIds?: string[];
 };
 
 function formatDKK(oere: number): string {
@@ -199,6 +201,7 @@ export function DeviceDetail({
   accessories,
   relatedInStock = [],
   upgradeOptions = [],
+  campaignAccessoryIds = [],
 }: DeviceDetailProps) {
   const { addDevice, openCart, openUpsell, cartState } = useCart();
 
@@ -1114,7 +1117,15 @@ export function DeviceDetail({
         </aside>
       </div>
 
-      {accessories.length > 0 && (
+      {campaignAccessoryIds.length > 0 ? (
+        <BlackNovemberAccessories
+          modelName={template.display_name}
+          accessories={[
+            ...accessories.filter((acc) => campaignAccessoryIds.includes(acc.id)),
+            ...accessories.filter((acc) => !campaignAccessoryIds.includes(acc.id)),
+          ]}
+        />
+      ) : accessories.length > 0 ? (
         <section className={styles.related}>
           <div className={styles.sectionHeading}>
             <h2>Kompatibelt tilbehør</h2>
@@ -1160,7 +1171,72 @@ export function DeviceDetail({
               ))}
           </div>
         </section>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+/* ================================================================== */
+/*  Black November: mørkt tilbehørsafsnit (kun i november)            */
+/* ================================================================== */
+
+function BlackNovemberAccessories({
+  modelName,
+  accessories,
+}: {
+  modelName: string;
+  accessories: PublicSkuProduct[];
+}) {
+  const items = accessories.filter((acc) => acc.slug).slice(0, 4);
+  return (
+    <section className={styles.bnBand} aria-labelledby="bn-tilbehoer">
+      <div className={styles.bnHead}>
+        <div>
+          <p className={styles.bnKicker}>Black November</p>
+          <h2 id="bn-tilbehoer">Beskyt den fra dag ét.</h2>
+          <p className={styles.bnLead}>
+            Cover og beskyttelsesglas til {modelName}, højst{" "}
+            {BLACK_NOVEMBER.accessoryPriceKr} kr. til og med 30. november.
+          </p>
+        </div>
+        <Link href={BLACK_NOVEMBER.href} className={styles.bnLink}>
+          Se alle tilbud <span aria-hidden="true">&rarr;</span>
+        </Link>
+      </div>
+      <div className={styles.bnGrid}>
+        {items.map((acc) => {
+          const price = acc.sale_price ?? acc.selling_price;
+          const before =
+            acc.sale_price != null && acc.sale_price < acc.selling_price ? acc.selling_price : null;
+          return (
+            <Link
+              key={acc.id}
+              href={`/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[acc.subcategory ?? ""] ?? "covers"}/${acc.slug}`}
+              className={styles.bnCard}
+            >
+              <div className={styles.bnImage}>
+                {acc.images[0] ? (
+                  <Image
+                    src={acc.images[0]}
+                    alt={acc.title}
+                    fill
+                    className="object-contain p-5"
+                    sizes="(min-width: 1024px) 22vw, 60vw"
+                  />
+                ) : (
+                  <p>Billede kommer snart</p>
+                )}
+              </div>
+              <h3>{acc.title}</h3>
+              <p className={styles.bnPrice}>
+                {formatDKK(price)}
+                {before != null && <s>{formatDKK(before)}</s>}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+      <p className={styles.bnFoot}>Tilbehør har 2 års reklamationsret.</p>
+    </section>
   );
 }

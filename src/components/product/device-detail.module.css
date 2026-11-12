@@ -398,3 +398,143 @@
 .campaignLine s {
   color: #77776f;
 }
+
+/* Black November: mørkt tilbehørsafsnit i Apple-stil. Lyset i baggrunden er
+   PhoneSpots grønne (#5A8C6F), svagt og kun i ét hjørne. */
+.bnBand {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 56px;
+  padding: 44px 22px 30px;
+  border-radius: 24px;
+  background: #000;
+  color: #f5f5f7;
+}
+.bnBand::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -45%;
+  width: 140%;
+  aspect-ratio: 1;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(90, 140, 111, 0.4), rgba(90, 140, 111, 0));
+  pointer-events: none;
+}
+.bnHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px 32px;
+}
+.bnKicker {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8fb89f;
+}
+.bnBand h2 {
+  margin-top: 6px;
+  font-size: clamp(30px, 4.4vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.bnLead {
+  max-width: 34rem;
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #a1a1a6;
+}
+.bnLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bnLink:hover {
+  background: #fff;
+}
+.bnGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 66%);
+  gap: 14px;
+  overflow-x: auto;
+  margin: 30px -22px 0;
+  padding: 0 22px 6px;
+  scrollbar-width: none;
+}
+.bnCard {
+  display: block;
+  padding: 10px 10px 16px;
+  border-radius: 18px;
+  background: #161617;
+  transition: background 0.2s;
+}
+.bnCard:hover {
+  background: #1d1d1f;
+}
+.bnImage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 190px;
+  border-radius: 12px;
+  background: #f5f5f7;
+  font-size: 12px;
+  color: #6e6e73;
+}
+.bnCard h3 {
+  margin: 14px 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #f5f5f7;
+}
+.bnPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 6px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.bnPrice s {
+  font-size: 13px;
+  font-weight: 400;
+  color: #86868b;
+}
+.bnFoot {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #86868b;
+}
+@media (min-width: 900px) {
+  .bnBand {
+    padding: 56px 48px 40px;
+  }
+  .bnBand::before {
+    top: -45%;
+    right: -15%;
+    width: 75%;
+  }
+  .bnGrid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 36px 0 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
