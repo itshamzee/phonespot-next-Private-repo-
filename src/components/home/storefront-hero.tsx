@@ -3,6 +3,10 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { StorefrontIcon, type StorefrontIconKind } from "@/components/ui/storefront-icon";
+import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
+import { useBlackNovember } from "@/lib/campaign/use-black-november";
+import { useBlackNovemberDaysLeft } from "@/lib/campaign/use-days-left";
+import { PriceTag } from "@/components/campaign/price-tag";
 import styles from "./storefront.module.css";
 
 // Editorial photography from the approved design; inventory comes only from ShopTabs.
@@ -13,7 +17,13 @@ const categories: { label: string; name: string; href: string; title: [string, s
   { label: "Smartwatches", name: "smartwatches", href: "/smartwatches", title: ["Mere med.", "Om håndleddet."], description: "Find et smartwatch til din hverdag. Testet og klar med 36 måneders garanti.", image: "https://xfcadewtpmjrvuzfwkku.supabase.co/storage/v1/object/public/product-images/templates/ee2befe2-7cad-451e-82d8-ebdb5c49a54d/1774206341440-hralrn.webp", alt: "Samsung Galaxy Watch 4", caption: "Samsung Galaxy Watch 4", icon: "watch" },
 ];
 
-export function StorefrontHero() {
+/**
+ * Forsidens faste top. I november hænger Black November-mærket på den
+ * (hjørnet af billedet og reparationskortet); resten er uændret.
+ */
+export function StorefrontHero({ blackNovember = false }: { blackNovember?: boolean }) {
+  const campaign = useBlackNovember(blackNovember);
+  const daysLeft = useBlackNovemberDaysLeft();
   const [slide, setSlide] = useState(0);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const category = categories[slide];
@@ -34,6 +44,11 @@ export function StorefrontHero() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} decoding="async" />
           <span className={styles["hero-caption"]}>{category.caption}</span>
+          {campaign && (
+            <Link className={styles["bn-tag"]} href={BLACK_NOVEMBER.href} aria-label={`Black November: ${BLACK_NOVEMBER.repairPercent} % på alle reparationer. Se tilbuddene`}>
+              <PriceTag size="md" tilt={-4} surface="light" price={`−${BLACK_NOVEMBER.repairPercent} %`} note="på reparationer" />
+            </Link>
+          )}
         </div>
         <div className={styles["carousel-controls"]}>
           <span aria-live="polite" aria-atomic="true">{slide + 1} / 4 · {category.name}</span>
@@ -54,14 +69,14 @@ export function StorefrontHero() {
     <section className={styles.services} aria-label="Reparation og opkøb">
       <article className={`${styles["service-card"]} ${styles["repair-card"]}`}>
         <div className={styles["service-content"]}>
-          <div className={styles["service-label"]}><StorefrontIcon kind="repair" />Reparation</div>
+          <div className={styles["service-label"]}><StorefrontIcon kind="repair" />Reparation{campaign && <PriceTag size="sm" surface="green" price={`−${BLACK_NOVEMBER.repairPercent} %`} className={styles["bn-chip"]} />}</div>
           <h2>Giv din telefon<br />mere tid.</h2>
           <p>Skærm, batteri eller noget andet?<br />Find hjælp til netop din model.</p>
           <Link className={`${styles.button} ${styles.light}`} href="/reparation">Find din reparation<StorefrontIcon kind="arrow" /></Link>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/repair/tekniker-reparerer.jpg" alt="En tekniker arbejder med reparation af en tablet" loading="lazy" />
-        <span className={styles["service-foot"]}>Hjælp online og i vores butikker</span>
+        <span className={styles["service-foot"]}>{campaign ? `Black November · ${daysLeft ?? "til og med 30. november"}` : "Hjælp online og i vores butikker"}</span>
       </article>
       <article className={`${styles["service-card"]} ${styles["buyback-card"]}`}>
         <div className={styles["service-content"]}>

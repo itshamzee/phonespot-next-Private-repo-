@@ -328,3 +328,10 @@
   .surface .topline .storeLocations .upcomingStore { display: none; }
   .surface .topline .phoneLink { margin-left: auto; }
 }
+
+/* Black November: mærket hænger på den faste top, intet andet ændres. */
+.surface .campaign-visual{position:relative}
+.surface .bn-tag{position:absolute;top:22px;right:26px;z-index:2;line-height:1}
+.surface .campaign-visual .bn-tag span{color:revert-layer;font-size:revert-layer;margin:revert-layer}
+.surface .bn-chip{margin-left:10px}
+@media(max-width:760px){.surface .bn-tag{top:-14px;right:12px;transform:scale(.8);transform-origin:top right}}

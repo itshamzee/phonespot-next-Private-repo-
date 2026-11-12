@@ -1,4 +1,3 @@
-import { BlackNovemberHero } from "@/components/campaign/black-november-hero";
 import { isBlackNovember } from "@/lib/campaign/black-november";
 import type { Metadata } from "next";
 import { ShopTabs } from "@/components/home/shop-tabs";
@@ -38,8 +37,7 @@ export default async function HomePage() {
   const initialProducts = await getHomepageProducts("iphones", 8).catch(() => []);
   return <div className={styles.surface}>
     <div className={`${styles.wrap} ${styles.intro}`}>
-      <BlackNovemberHero serverActive={isBlackNovember()} />
-      <StorefrontHero />
+      <StorefrontHero blackNovember={isBlackNovember()} />
       <ShopTabs initialProducts={initialProducts} />
       <LagersalgHomeStrip />
       <StorefrontSections />
