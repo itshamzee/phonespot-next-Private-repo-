@@ -1,7 +1,17 @@
 import { ImapFlow } from "imapflow";
 import { simpleParser, type ParsedMail, type AddressObject } from "mailparser";
 import { ONECOM, type MailboxConfig } from "./config";
+import type { InboxEntry } from "./folders";
 import type { InboundMail } from "./types";
+
+/**
+ * Keyword the agent puts on INBOX mail it has dealt with. It replaces the Seen
+ * flag as the "done" marker, so unread keeps meaning "no person has looked at this".
+ */
+export const AGENT_KEYWORD = "PSAgent";
+const LOOKBACK_DAYS = 14;
+const SEEN = String.fromCharCode(92) + "Seen";
+const ANSWERED = String.fromCharCode(92) + "Answered";
 
 /** Plain text for the model: the text part when present, otherwise stripped HTML. */
 export function preferredBody(parsed: { text?: string; html?: string | false }): string {
@@ -66,26 +76,24 @@ export async function withImap<T>(box: MailboxConfig, fn: (client: ImapFlow) => 
   }
 }
 
-/** Unseen and retry UIDs merged, deduplicated, oldest first, capped at `limit`. */
-export function chooseUids(unseen: number[], retry: number[], limit: number): number[] {
-  return [...new Set([...unseen, ...retry])].sort((a, b) => a - b).slice(0, limit);
+/** Deduplicated, oldest first, capped at `limit`. */
+export function chooseUids(uids: number[], limit: number): number[] {
+  return [...new Set(uids)].sort((a, b) => a - b).slice(0, limit);
 }
 
 /**
- * Unseen mail in INBOX, oldest first, plus `retryUids`: mail that failed on an
- * earlier run but has since been marked read (e.g. opened in Thunderbird), so
- * an outage does not lose it for good. Does not change any flags.
+ * Recent INBOX mail the agent has not handled yet, oldest first, read or not.
+ * Whether a person has opened the mail plays no part: a mail read in
+ * Thunderbird before the poll is still picked up, and a mail that failed is
+ * retried until it succeeds or ages out. Does not change any flags.
  */
-export async function fetchUnseen(box: MailboxConfig, limit: number, retryUids: number[] = []): Promise<InboundMail[]> {
+export async function fetchUnhandled(box: MailboxConfig, limit: number): Promise<InboundMail[]> {
   return withImap(box, async (client) => {
     const lock = await client.getMailboxLock("INBOX");
     try {
-      const unseen = (await client.search({ seen: false }, { uid: true })) as number[] | false;
-      // Retry UIDs that are still in INBOX; moved or deleted mail drops out here.
-      const retry = retryUids.length
-        ? (((await client.search({ uid: retryUids.join(",") }, { uid: true })) as number[] | false) || [])
-        : [];
-      const chosen = chooseUids(unseen || [], retry, limit);
+      const since = new Date(Date.now() - LOOKBACK_DAYS * 24 * 3600 * 1000);
+      const found = (await client.search({ since, unKeyword: AGENT_KEYWORD }, { uid: true })) as number[] | false;
+      const chosen = chooseUids(found || [], limit);
       if (chosen.length === 0) return [];
       const out: InboundMail[] = [];
       for await (const msg of client.fetch(chosen, { uid: true, source: true }, { uid: true })) {
@@ -100,12 +108,69 @@ export async function fetchUnseen(box: MailboxConfig, limit: number, retryUids: 
   });
 }
 
+/**
+ * Mark INBOX mail as handled by the agent. Only `read` is also marked as read
+ * (noise such as newsletters); the rest stays unread for a person.
+ */
+export async function markHandled(box: MailboxConfig, uids: number[], read: number[] = []): Promise<void> {
+  if (uids.length === 0) return;
+  await withImap(box, async (client) => {
+    const lock = await client.getMailboxLock("INBOX");
+    try {
+      await client.messageFlagsAdd(uids, [AGENT_KEYWORD], { uid: true });
+      if (read.length) await client.messageFlagsAdd(read, [SEEN], { uid: true });
+    } finally {
+      lock.release();
+    }
+  });
+}
+
+/** Mark INBOX mail read: used when a reply has gone out or a draft was discarded. */
 export async function markSeen(box: MailboxConfig, uids: number[]): Promise<void> {
   if (uids.length === 0) return;
   await withImap(box, async (client) => {
     const lock = await client.getMailboxLock("INBOX");
     try {
-      await client.messageFlagsAdd(uids, ["\\Seen"], { uid: true });
+      await client.messageFlagsAdd(uids, [SEEN], { uid: true });
+    } finally {
+      lock.release();
+    }
+  });
+}
+
+/**
+ * Who a mail is a conversation with. Reply-To is set by the sender, so it is
+ * only trusted on our own form notices; anyone else is identified by From, or
+ * a stranger could attach their mail to another customer's conversation.
+ */
+export function counterpartOf(fromEmail: string, replyTo: string): string {
+  const own = fromEmail === "noreply@phonespot.dk" || fromEmail === "ordre@phonespot.dk";
+  return own && replyTo ? replyTo : fromEmail;
+}
+
+/** Envelope and flags for everything in INBOX. Read-only. */
+export async function listInbox(box: MailboxConfig): Promise<InboxEntry[]> {
+  return withImap(box, async (client) => {
+    const lock = await client.getMailboxLock("INBOX", { readOnly: true });
+    try {
+      const out: InboxEntry[] = [];
+      const status = await client.status("INBOX", { messages: true });
+      if (!status.messages) return out;
+      for await (const msg of client.fetch("1:*", { uid: true, envelope: true, flags: true, internalDate: true })) {
+        const env = msg.envelope;
+        const fromEmail = (env?.from?.[0]?.address ?? "").toLowerCase();
+        const replyTo = (env?.replyTo?.[0]?.address ?? "").toLowerCase();
+        out.push({
+          uid: msg.uid,
+          messageId: env?.messageId ?? "",
+          counterpart: counterpartOf(fromEmail, replyTo),
+          fromEmail,
+          subject: env?.subject ?? "",
+          date: new Date((msg.internalDate as Date | string | undefined) ?? env?.date ?? Date.now()),
+          answered: msg.flags?.has(ANSWERED) ?? false,
+        });
+      }
+      return out;
     } finally {
       lock.release();
     }

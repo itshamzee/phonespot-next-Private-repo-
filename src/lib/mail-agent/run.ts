@@ -4,8 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { assessMessage, type AssessOutput } from "./agent";
 import { displayNameFor, loadMailboxes, type MailboxConfig } from "./config";
 import { insertDraft, markDraft } from "./drafts";
-import { folderByRules, folderForCategory, folderPath, type FolderKey } from "./folders";
-import { fetchUnseen, markSeen, moveToFolder } from "./imap";
+import { folderByRules, folderForAnswered, folderForCategory, folderPath, isContactNotice, isReadOnFiling, pickAnswered, type FolderKey } from "./folders";
+import { fetchUnhandled, listInbox, markHandled, markSeen, moveToFolder } from "./imap";
 import { ingestInboundEmail } from "./ingest";
 import { notifyNeedsHuman } from "./notify";
 import { handlingFor } from "./schema";
@@ -62,11 +62,49 @@ export async function fileInquiryMail(sb: SupabaseClient, inquiryId: string, cat
   for (const box of boxes) {
     const mine = list.filter((r) => r.mailbox === box.address);
     if (!mine.length) continue;
+    // Answered or dismissed: no longer something a person has to look at.
+    await markSeen(box, mine.map((r) => r.imap_uid));
     await moveToFolder(box, mine.map((r) => r.imap_uid), folderPath(key));
     await sb.from("mail_inbound").update({ folder: folderPath(key).join("/") }).in("id", mine.map((r) => r.id));
     moved += mine.length;
   }
   return moved;
+}
+
+/**
+ * File INBOX conversations that were answered straight from the mail program
+ * (the newest mail from that person carries the Answered flag). Keeps INBOX to
+ * what is still open, and retires the agent's now pointless pending drafts.
+ */
+export async function sweepAnswered(sb: SupabaseClient, box: MailboxConfig, now = Date.now()): Promise<number> {
+  const picked = pickAnswered(await listInbox(box), now);
+  if (!picked.length) return 0;
+  const ids = picked.map((e) => e.messageId).filter(Boolean);
+  const { data } = ids.length
+    ? await sb.from("mail_inbound").select("id, message_id, classification, inquiry_id").in("message_id", ids)
+    : { data: [] };
+  type Known = { id: string; message_id: string; classification: string | null; inquiry_id: string | null };
+  const known = new Map(((data ?? []) as Known[]).map((r) => [r.message_id, r]));
+
+  const byFolder = new Map<FolderKey, typeof picked>();
+  for (const e of picked) {
+    const key = folderForAnswered(e, known.get(e.messageId)?.classification ?? null);
+    byFolder.set(key, [...(byFolder.get(key) ?? []), e]);
+  }
+  for (const [key, list] of byFolder) {
+    await moveToFolder(box, list.map((e) => e.uid), folderPath(key));
+    const rowIds = list.map((e) => known.get(e.messageId)?.id).filter((id): id is string => Boolean(id));
+    if (rowIds.length) await sb.from("mail_inbound").update({ folder: folderPath(key).join("/") }).in("id", rowIds);
+  }
+  const inquiryIds = [...new Set(picked.map((e) => known.get(e.messageId)?.inquiry_id).filter((id): id is string => Boolean(id)))];
+  if (inquiryIds.length) {
+    await sb
+      .from("ai_drafts")
+      .update({ status: "discarded", reviewed_by: "Besvaret fra mailprogrammet", reviewed_at: new Date(now).toISOString() })
+      .in("inquiry_id", inquiryIds)
+      .eq("status", "pending");
+  }
+  return picked.length;
 }
 
 /** Phase 2 switch: only categories the owner has enabled, and only clean, confident drafts. */
@@ -201,6 +239,10 @@ async function afterAssessment(
   }
 }
 
+/**
+ * Handles one mail. Returns true when the mail is noise that should be marked
+ * read; false leaves it unread so a person sees it as new.
+ */
 async function processMail(
   sb: SupabaseClient,
   box: MailboxConfig,
@@ -209,15 +251,22 @@ async function processMail(
   report: RunReport,
   moves: PendingMoves,
   anthropic?: Anthropic,
-): Promise<void> {
+): Promise<boolean> {
   const { data: existing } = await sb
     .from("mail_inbound")
     .select("id, processed_at, inquiry_id, inquiry_message_id")
     .eq("message_id", mail.messageId)
     .maybeSingle();
+  const ctx = { mailbox: box.address, polled: loadMailboxes().map((b) => b.address) };
+  const ruleFolder = folderByRules({ fromEmail: mail.fromEmail, subject: mail.subject, listUnsubscribe: mail.listUnsubscribe }, ctx);
   if (existing?.processed_at) {
     report.skipped++;
-    return;
+    // Same mail delivered to a second mailbox (store + info): file this copy as well.
+    if (ruleFolder) {
+      queueMove(moves, ruleFolder, mail.uid);
+      return isReadOnFiling(ruleFolder);
+    }
+    return false;
   }
 
   let inboundId = existing?.id as string | undefined;
@@ -256,18 +305,24 @@ async function processMail(
     await afterAssessment(sb, box, mail, existing.inquiry_id as string, r.draft, r.assessment, settings, report);
     await finishInbound(sb, inboundId, { classification: r.assessment.category });
     report.processed++;
-    return;
+    return false;
+  }
+
+  // A contact-form message a person must answer: stays unread in INBOX, no model call.
+  if (isContactNotice(mail, ctx)) {
+    await finishInbound(sb, inboundId, { classification: "system_notifikation" });
+    report.processed++;
+    return false;
   }
 
   // Cheap filing first: our own notifications, shipping, suppliers, platforms,
   // newsletters and applications never reach Claude and go straight to a folder.
-  const ruleFolder = folderByRules({ fromEmail: mail.fromEmail, subject: mail.subject, listUnsubscribe: mail.listUnsubscribe });
   if (ruleFolder) {
     const classification = mail.fromEmail.endsWith("@phonespot.dk") ? "system_notifikation" : (RULE_CLASSIFICATION[ruleFolder] ?? "system_notifikation");
     await finishInbound(sb, inboundId, { classification, folder: folderPath(ruleFolder).join("/") });
     queueMove(moves, ruleFolder, mail.uid);
     report.processed++;
-    return;
+    return isReadOnFiling(ruleFolder);
   }
 
   // First pass on the raw mail decides whether it becomes an inquiry at all.
@@ -277,7 +332,7 @@ async function processMail(
     await finishInbound(sb, inboundId, { classification: first.assessment.category, folder: folderPath(key).join("/") });
     queueMove(moves, key, mail.uid);
     report.processed++;
-    return;
+    return isReadOnFiling(key);
   }
 
   const ingest = await ingestInboundEmail(sb, {
@@ -321,19 +376,7 @@ async function processMail(
   await afterAssessment(sb, box, mail, ingest.inquiryId, draft, assessment, settings, report);
   await finishInbound(sb, inboundId, { classification: assessment.category });
   report.processed++;
-}
-
-/** UIDs of recent mail in this mailbox that failed and was never finished. */
-async function failedUids(sb: SupabaseClient, mailbox: string): Promise<number[]> {
-  const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
-  const { data } = await sb
-    .from("mail_inbound")
-    .select("imap_uid")
-    .eq("mailbox", mailbox)
-    .is("processed_at", null)
-    .not("error", "is", null)
-    .gte("created_at", since);
-  return (data ?? []).map((r) => r.imap_uid as number).filter((u) => Number.isInteger(u) && u > 0);
+  return false;
 }
 
 function isStopWorthy(message: string): boolean {
@@ -343,8 +386,10 @@ function isStopWorthy(message: string): boolean {
 }
 
 /**
- * One poll of every configured mailbox. Marks a mail \Seen only after it has
- * been processed, so anything that fails is picked up again on the next run.
+ * One poll of every configured mailbox. A mail gets the agent keyword only
+ * after it has been processed, so anything that fails is picked up again on
+ * the next run. Customer mail is left unread: unread means nobody has dealt
+ * with it yet.
  */
 export async function runMailAgent(
   opts: { maxMails?: number; timeBudgetMs?: number; dryRun?: boolean; supabase?: SupabaseClient; anthropic?: Anthropic } = {},
@@ -374,14 +419,15 @@ export async function runMailAgent(
 
     let mails: InboundMail[] = [];
     try {
-      mails = await fetchUnseen(box, remaining, opts.dryRun ? [] : await failedUids(sb, box.address));
+      mails = await fetchUnhandled(box, remaining);
     } catch (err) {
       report.errors.push({ mailbox: box.address, messageId: "-", error: `IMAP: ${(err as Error).message}` });
       continue;
     }
     report.fetched += mails.length;
 
-    const seen: number[] = [];
+    const handled: number[] = [];
+    const read: number[] = [];
     const moves: PendingMoves = new Map();
     for (const mail of mails) {
       if (Date.now() - started > budget) break;
@@ -393,8 +439,9 @@ export async function runMailAgent(
             `\n[${box.address}] ${mail.fromEmail} · ${mail.subject}\n  → ${a.category} · needs_human=${a.needs_human} · ${a.confidence}\n  ${a.summary}\n  ${a.reason}\n  opslag: ${out.lookups.map((l) => `${l.tool}=${l.hits}`).join(", ") || "ingen"}\n${a.draft ? `\n${a.draft.body}\n` : ""}`,
           );
         } else {
-          await processMail(sb, box, mail, settings, report, moves, opts.anthropic);
-          seen.push(mail.uid);
+          const markRead = await processMail(sb, box, mail, settings, report, moves, opts.anthropic);
+          handled.push(mail.uid);
+          if (markRead) read.push(mail.uid);
         }
         remaining--;
       } catch (err) {
@@ -405,14 +452,21 @@ export async function runMailAgent(
         }
         if (isStopWorthy(message)) {
           console.error(`[mail-agent] stopper koerslen: ${message}`);
-          if (!opts.dryRun && seen.length) await markSeenSafely(box, seen, report);
+          if (!opts.dryRun && handled.length) await markHandledSafely(box, handled, read, report);
           if (!opts.dryRun) await applyMoves(box, moves, report);
           break outer;
         }
       }
     }
-    if (!opts.dryRun && seen.length) await markSeenSafely(box, seen, report);
+    if (!opts.dryRun && handled.length) await markHandledSafely(box, handled, read, report);
     if (!opts.dryRun) await applyMoves(box, moves, report);
+    if (!opts.dryRun) {
+      try {
+        report.filed += await sweepAnswered(sb, box);
+      } catch (err) {
+        report.errors.push({ mailbox: box.address, messageId: "-", error: `sweep: ${(err as Error).message}` });
+      }
+    }
   }
 
   if (report.runId) {
@@ -443,10 +497,10 @@ async function applyMoves(box: MailboxConfig, moves: PendingMoves, report: RunRe
   moves.clear();
 }
 
-async function markSeenSafely(box: MailboxConfig, uids: number[], report: RunReport): Promise<void> {
+async function markHandledSafely(box: MailboxConfig, uids: number[], read: number[], report: RunReport): Promise<void> {
   try {
-    await markSeen(box, uids);
+    await markHandled(box, uids, read);
   } catch (err) {
-    report.errors.push({ mailbox: box.address, messageId: "-", error: `markSeen: ${(err as Error).message}` });
+    report.errors.push({ mailbox: box.address, messageId: "-", error: `markHandled: ${(err as Error).message}` });
   }
 }

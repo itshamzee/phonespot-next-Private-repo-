@@ -45,14 +45,81 @@ function matchesDomain(domain: string, list: readonly string[]): boolean {
 }
 
 /**
+ * A contact-form message from the website that a person has to answer
+ * (support, questions). It stays unread in INBOX until someone replies, and is
+ * never sent to the model: the form already created the inquiry. "Sælg enhed"
+ * is excluded because those are handled as offers in the buyback admin.
+ *
+ * The form mails a copy to info@ and to the store. With `ctx`, the copy only
+ * counts in the mailbox that owns it: the store's own mailbox when the agent
+ * polls it, otherwise info@. The other copy is filed as an ordinary notification.
+ */
+export function isContactNotice(mail: { fromEmail: string; subject: string }, ctx?: MailboxContext): boolean {
+  const from = mail.fromEmail.toLowerCase();
+  if (from !== "noreply@phonespot.dk" && from !== "ordre@phonespot.dk") return false;
+  const subject = mail.subject ?? "";
+  if (!/^kontakt\b/i.test(subject) || /sælg enhed/i.test(subject)) return false;
+  if (!ctx) return true;
+  const store = /^kontakt\s*\(([^)]+)\)/i.exec(subject)?.[1]?.trim().toLowerCase();
+  const storeBox = store ? `${store}@phonespot.dk` : null;
+  const owner = storeBox && ctx.polled.includes(storeBox) ? storeBox : "info@phonespot.dk";
+  return ctx.mailbox.toLowerCase() === owner;
+}
+
+export interface MailboxContext {
+  mailbox: string;
+  polled: readonly string[];
+}
+
+/** Folders that are pure noise once filed: marked read so only real work shows as unread. */
+export function isReadOnFiling(key: FolderKey): boolean {
+  return key === "nyhedsbreve" || key.startsWith("notifikationer_");
+}
+
+/** One INBOX message, as much as the answered-sweep needs. */
+export interface InboxEntry {
+  uid: number;
+  messageId: string;
+  /** The person on the other end: Reply-To when set (contact form), else From. */
+  counterpart: string;
+  fromEmail: string;
+  subject: string;
+  date: Date;
+  answered: boolean;
+}
+
+/**
+ * INBOX mail that can be filed because the conversation is answered: the
+ * newest mail from that person carries the Answered flag and has rested for
+ * `minAgeMs`. A person with a newer unanswered mail keeps the whole thread in INBOX.
+ */
+export function pickAnswered(entries: InboxEntry[], now: number, minAgeMs = 24 * 3600 * 1000): InboxEntry[] {
+  const groups = new Map<string, InboxEntry[]>();
+  for (const e of entries) groups.set(e.counterpart, [...(groups.get(e.counterpart) ?? []), e]);
+  const out: InboxEntry[] = [];
+  for (const list of groups.values()) {
+    const latest = list.reduce((a, b) => (b.date.getTime() > a.date.getTime() ? b : a));
+    if (latest.answered && now - latest.date.getTime() >= minAgeMs) out.push(...list);
+  }
+  return out;
+}
+
+/** Where an answered INBOX mail goes: contact notices to their folder, the rest by the agent's category. */
+export function folderForAnswered(entry: { fromEmail: string; subject: string }, category: string | null): FolderKey {
+  if (isContactNotice(entry)) return "notifikationer_kontakt";
+  return category ? folderForCategory(category as MailCategory) : "kunder_andet";
+}
+
+/**
  * Cheap, deterministic filing for mail that is not a customer conversation.
  * Returns null when only the agent's category can decide (customer mail).
  */
-export function folderByRules(mail: { fromEmail: string; subject: string; listUnsubscribe?: boolean }): FolderKey | null {
+export function folderByRules(mail: { fromEmail: string; subject: string; listUnsubscribe?: boolean }, ctx?: MailboxContext): FolderKey | null {
   const from = mail.fromEmail.toLowerCase();
   const domain = domainOf(from);
   const subject = mail.subject ?? "";
 
+  if (isContactNotice(mail, ctx)) return null;
   if (from === "noreply@phonespot.dk" || from === "ordre@phonespot.dk") {
     if (/^kontakt\b/i.test(subject)) return "notifikationer_kontakt";
     if (/^ny ordre\b/i.test(subject)) return "notifikationer_ordrer";

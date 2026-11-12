@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chooseUids, parseInbound, preferredBody } from "@/lib/mail-agent/imap";
+import { chooseUids, counterpartOf, parseInbound, preferredBody } from "@/lib/mail-agent/imap";
 
 describe("preferredBody", () => {
   it("prefers text and strips html otherwise", () => {
@@ -55,10 +55,18 @@ describe("parseInbound", () => {
   });
 });
 
+describe("counterpartOf", () => {
+  it("trusts Reply-To only on our own form notices", () => {
+    expect(counterpartOf("noreply@phonespot.dk", "kunde@gmail.com")).toBe("kunde@gmail.com");
+    expect(counterpartOf("fremmed@evil.dk", "kunde@gmail.com")).toBe("fremmed@evil.dk");
+    expect(counterpartOf("kunde@gmail.com", "")).toBe("kunde@gmail.com");
+  });
+});
+
 describe("chooseUids", () => {
-  it("merges unseen and retry uids, dedupes, sorts oldest first and caps", () => {
-    expect(chooseUids([30, 10], [20, 10], 15)).toEqual([10, 20, 30]);
-    expect(chooseUids([5, 4, 3], [1, 2], 3)).toEqual([1, 2, 3]);
-    expect(chooseUids([], [], 15)).toEqual([]);
+  it("dedupes, sorts oldest first and caps", () => {
+    expect(chooseUids([30, 10, 20, 10], 15)).toEqual([10, 20, 30]);
+    expect(chooseUids([5, 4, 3, 1, 2], 3)).toEqual([1, 2, 3]);
+    expect(chooseUids([], 15)).toEqual([]);
   });
 });

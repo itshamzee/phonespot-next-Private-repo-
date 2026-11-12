@@ -14,7 +14,8 @@ export const revalidate = 300;
 type PageProps = { params: Promise<{ tilbud: string }> };
 
 export function generateStaticParams() {
-  return CAMPAIGN_OFFERS.map(({ slug }) => ({ tilbud: slug }));
+  // Nedlagte undersider bygges også, så de kan sende videre i stedet for 404.
+  return [...CAMPAIGN_OFFERS.map(({ slug }) => slug), ...RETIRED_OFFER_SLUGS].map((tilbud) => ({ tilbud }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
