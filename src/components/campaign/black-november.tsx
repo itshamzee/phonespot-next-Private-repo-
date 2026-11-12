@@ -20,7 +20,7 @@ export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
         className="group mx-auto flex max-w-[1280px] items-center justify-center gap-x-4 px-4 py-2.5 !text-white/65 sm:px-5"
       >
         <span className="min-w-0 truncate">
-          <strong className="font-semibold text-white">Black November</strong>
+          <strong className="font-semibold text-white">Black November<span className="hidden font-normal text-[#8fb89f] lg:inline"> er grøn hos PhoneSpot</span></strong>
           <span className="mx-2.5 inline-block h-3 w-px translate-y-[1px] bg-white/25" aria-hidden="true" />
           <span className="text-white">{BLACK_NOVEMBER.repairPercent} % på alle reparationer</span>
           <span className="hidden lg:inline"> og covers og glas til {BLACK_NOVEMBER.accessoryPriceKr} kr.</span>

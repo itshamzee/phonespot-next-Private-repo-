@@ -77,7 +77,7 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/repair/tekniker-reparerer.jpg" alt="En tekniker arbejder med reparation af en tablet" loading="lazy" />
-        <span className={styles["service-foot"]}>{campaign ? `Black November · ${daysLeft ?? "til og med 30. november"}` : "Hjælp online og i vores butikker"}</span>
+        <span className={styles["service-foot"]}>{campaign ? `Reparér det, du har · ${daysLeft ?? "til og med 30. november"}` : "Hjælp online og i vores butikker"}</span>
       </article>
       <article className={`${styles["service-card"]} ${styles["buyback-card"]}`}>
         <div className={styles["service-content"]}>

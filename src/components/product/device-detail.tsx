@@ -1192,11 +1192,12 @@ function BlackNovemberAccessories({
     <section className={styles.bnBand} aria-labelledby="bn-tilbehoer">
       <div className={styles.bnHead}>
         <div>
-          <p className={styles.bnKicker}>Black November</p>
+          <p className={styles.bnKicker}>Black November er grøn hos PhoneSpot</p>
           <h2 id="bn-tilbehoer">Beskyt den fra dag ét.</h2>
           <p className={styles.bnLead}>
-            Cover og beskyttelsesglas til {modelName}, højst{" "}
-            {BLACK_NOVEMBER.accessoryPriceKr} kr. til og med 30. november.
+            Jo længere din telefon holder, jo færre nye skal laves. Cover og
+            beskyttelsesglas til {modelName}, højst {BLACK_NOVEMBER.accessoryPriceKr} kr.
+            til og med 30. november.
           </p>
         </div>
         <Link href={BLACK_NOVEMBER.href} className={styles.bnLink}>
