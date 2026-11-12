@@ -41,6 +41,9 @@ function ProductCard({ product }: { product: HomepageProduct }) {
       <div className={styles["product-body"]}>
         <h3>{product.title.replace(/^Apple /, "")}</h3>
         <p className={styles.descriptor}>{descriptor || "Se specifikationer og stand"}</p>
+        {!isAccessory && product.minPrice != null && product.compareAtPrice != null && product.compareAtPrice > product.minPrice && (
+          <p className={styles["new-price"]}>Nypris <s>{new Intl.NumberFormat("da-DK", { maximumFractionDigits: 0 }).format(product.compareAtPrice / 100)} kr.</s></p>
+        )}
         <div className={styles.price}>{product.minPrice != null
           ? <><small>Fra</small>{new Intl.NumberFormat("da-DK", { maximumFractionDigits: 2 }).format(product.minPrice / 100)} kr.</>
           : "Se pris"}</div>

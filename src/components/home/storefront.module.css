@@ -334,4 +334,8 @@
 .surface .bn-tag{position:absolute;top:22px;right:26px;z-index:2;line-height:1}
 .surface .campaign-visual .bn-tag span{color:revert-layer;font-size:revert-layer;margin:revert-layer}
 .surface .bn-chip{margin-left:10px}
-@media(max-width:760px){.surface .bn-tag{top:-14px;right:12px;transform:scale(.8);transform-origin:top right}}
+/* På mobil ligger billedet lige under teksten; her bærer topbjælken og reparationskortet kampagnen. */
+@media(max-width:760px){.surface .bn-tag{display:none}}
+/* Nypris ved siden af vores pris på forsidens produktkort. */
+.surface .product-body .new-price{font-size:12px;color:#667066;margin:auto 0 2px;line-height:1.2}
+.surface .product-body .new-price + .price{margin-top:0}

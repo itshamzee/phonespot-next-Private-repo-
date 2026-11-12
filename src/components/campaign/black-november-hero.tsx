@@ -65,7 +65,6 @@ export function BlackNovemberHero({ serverActive, headingLevel = "h2" }: { serve
       <div className="relative order-3 -mt-20 flex flex-wrap items-end gap-x-7 gap-y-5 px-6 pb-7 md:absolute md:bottom-12 md:left-12 md:mt-0 md:px-0 md:pb-0">
         <PriceTag
           size="lg"
-          tilt={-4}
           before={kr(REPAIR_EXAMPLE.beforeKr)}
           price={kr(blackNovemberRepairPrice(REPAIR_EXAMPLE.beforeKr))}
           note={REPAIR_EXAMPLE.label}

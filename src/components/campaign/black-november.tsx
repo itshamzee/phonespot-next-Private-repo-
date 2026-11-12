@@ -64,7 +64,7 @@ export function BlackNovemberStrip({ kind, serverActive = false }: { kind: Strip
         <span className="block text-[22px] font-[550] leading-tight tracking-[-0.02em] md:text-[26px]">Black November</span>
         <span className="mt-1 block text-sm text-white/75">{copy.text}</span>
       </span>
-      <PriceTag size="md" tilt={-3} price={copy.figure} note={copy.small} className="mr-1 shrink-0" />
+      <PriceTag size="md" price={copy.figure} note={copy.small} className="mr-1 shrink-0" />
     </Link>
   );
 }

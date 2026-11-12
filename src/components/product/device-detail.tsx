@@ -859,6 +859,11 @@ export function DeviceDetail({
                 nypris
               </p>
             )}
+            {compareAtPrice && price && compareAtPrice > price && (
+              <p className={styles.small}>
+                Nypris er producentens danske pris, da modellen kom på markedet.
+              </p>
+            )}
             {inStock ? (
               <>
                 <p className={styles.stock}>

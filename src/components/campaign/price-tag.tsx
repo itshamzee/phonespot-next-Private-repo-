@@ -1,7 +1,7 @@
 /**
  * Black November-prismærket: det grønne skilt (PhoneSpot-grøn #5A8C6F), brugt ens på
  * forsiden, kategoribåndene, tilbehørskort og /black-november. Et rigtigt
- * hængeskilt med hul, let skævt, ikke en glødende knap.
+ * hængeskilt med hul: flad farve, ingen skygge, ingen glød.
  */
 type Size = "sm" | "md" | "lg";
 
@@ -41,7 +41,7 @@ export function PriceTag({
   const s = SIZES[size];
   return (
     <span
-      className={`relative inline-flex flex-col items-start bg-[#5A8C6F] text-white shadow-[0_1px_0_rgba(0,0,0,0.2),0_10px_24px_-12px_rgba(0,0,0,0.55)] ${s.box} ${className}`}
+      className={`relative inline-flex flex-col items-start bg-[#5A8C6F] text-white ${s.box} ${className}`}
       style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}
     >
       <span
