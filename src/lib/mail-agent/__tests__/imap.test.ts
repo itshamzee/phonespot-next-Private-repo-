@@ -56,9 +56,9 @@ describe("parseInbound", () => {
 });
 
 describe("chooseUids", () => {
-  it("merges unseen and retry uids, dedupes, sorts oldest first and caps", () => {
-    expect(chooseUids([30, 10], [20, 10], 15)).toEqual([10, 20, 30]);
-    expect(chooseUids([5, 4, 3], [1, 2], 3)).toEqual([1, 2, 3]);
-    expect(chooseUids([], [], 15)).toEqual([]);
+  it("dedupes, sorts oldest first and caps", () => {
+    expect(chooseUids([30, 10, 20, 10], 15)).toEqual([10, 20, 30]);
+    expect(chooseUids([5, 4, 3, 1, 2], 3)).toEqual([1, 2, 3]);
+    expect(chooseUids([], 15)).toEqual([]);
   });
 });
