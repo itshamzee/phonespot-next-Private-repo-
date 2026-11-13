@@ -84,19 +84,22 @@ export function trackViewContent(product: {
 export function trackAddToCart(product: {
   id: string;
   name: string;
-  price: number; // in DKK
+  price: number; // in DKK, per stk.
+  quantity?: number;
 }) {
+  const quantity = product.quantity ?? 1;
+  const value = product.price * quantity;
   fire("AddToCart", {
     content_ids: [product.id],
     content_name: product.name,
     content_type: "product",
-    value: product.price,
+    value,
     currency: "DKK",
   });
   ga4("add_to_cart", {
     currency: "DKK",
-    value: product.price,
-    items: [{ item_id: product.id, item_name: product.name, price: product.price, quantity: 1 }],
+    value,
+    items: [{ item_id: product.id, item_name: product.name, price: product.price, quantity }],
   });
 }
 

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { normalizeStoreId } from "@/lib/stores";
-import { getAttribution, normalizeTrackStore, trackLead } from "@/lib/tracking/events";
+import { getAttribution, normalizeTrackStore, trackLead, trackSellWizardStep } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { customerFacingError } from "@/lib/customer-facing-error";
 import { GuidePricePanel } from "@/components/sell-device/guide-price-panel";
@@ -893,6 +893,20 @@ export function SellDeviceWizard({
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const wizardRef = useRef<HTMLDivElement>(null);
   const previousStep = useRef(step);
+  // Mål hvert trin første gang, kunden når det (frem og tilbage tæller ikke igen).
+  const furthestTracked = useRef(-1);
+  useEffect(() => {
+    if (step <= furthestTracked.current) return;
+    furthestTracked.current = step;
+    trackSellWizardStep({
+      stepNumber: step + 1,
+      stepName: STEPS[step],
+      deviceType: devices[0]?.device.deviceType || undefined,
+      devices: devices.length,
+    });
+    // Kun når trinnet skifter; enhedslisten må ikke udløse nye hændelser.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   useEffect(() => {
     if (previousStep.current !== step) {
       // Fokus må ikke selv rulle siden: det sendte kunden op til sidens top.

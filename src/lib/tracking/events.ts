@@ -204,6 +204,20 @@ export function trackMessagingClick(input: {
   return eventId;
 }
 
+/**
+ * Trin i sælg-guiden (kun GA4). Uden dem kunne vi se, at folk landede på
+ * sælg-siden og at nogle sendte en forespørgsel, men ikke hvor resten faldt fra.
+ * step_number starter ved 1, så det matcher trinviseren på siden.
+ */
+export function trackSellWizardStep(input: { stepNumber: number; stepName: string; deviceType?: string; devices?: number }): void {
+  sendGtag("sell_wizard_step", {
+    step_number: input.stepNumber,
+    step_name: input.stepName,
+    device_type: input.deviceType,
+    devices: input.devices,
+  });
+}
+
 export interface Ga4Item {
   item_id: string;
   item_name: string;

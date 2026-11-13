@@ -21,6 +21,7 @@ import { cartItemKey } from "@/lib/cart/types";
 import { loadCart, saveCart, clearCartStorage } from "@/lib/cart/storage";
 import { calcCartTotals } from "@/lib/cart/utils";
 import { cartReducer } from "@/lib/cart/reducer";
+import { trackAddToCart } from "@/lib/tracking/fbq";
 
 // ---------------------------------------------------------------------------
 // Context
@@ -152,6 +153,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addSku = useCallback((item: CartSkuItem) => {
     dispatch({ type: "ADD_SKU", item });
+    // Enheder måles i device-detail. Tilbehør lægges i kurven fra mange steder
+    // (produktside, kort, upsell, glasvælger), så det måles her, ét sted.
+    trackAddToCart({
+      id: item.skuProductId,
+      name: item.title,
+      price: item.price / 100,
+      quantity: item.quantity,
+    });
   }, []);
 
   const removeItem = useCallback(
