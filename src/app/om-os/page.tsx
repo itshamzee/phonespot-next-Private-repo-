@@ -54,7 +54,7 @@ const COMMITMENTS = [
   {
     title: "Ærlig gradering",
     description:
-      "Vi pynter aldrig på standen. Vores system med Grade A, B og C fortæller dig præcis, hvad du kan forvente kosmetisk. Ingen ubehagelige overraskelser, når pakken lander.",
+      "Vi pynter aldrig på standen. Vores system med stand A, B og C fortæller dig præcis, hvad du kan forvente kosmetisk. Ingen ubehagelige overraskelser, når pakken lander.",
     icon: "check",
   },
   {

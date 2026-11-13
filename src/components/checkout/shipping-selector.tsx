@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatOere } from "@/lib/cart/utils";
+import { useCart } from "@/components/cart/cart-context";
 import { getShippingOptions } from "@/lib/shipping";
 import { STORES } from "@/lib/store-config";
 import { PickupPointPicker, type PickupPoint } from "./pickup-point-picker";
@@ -96,6 +97,10 @@ export function ShippingSelector({
   onPickupPoint,
 }: ShippingSelectorProps) {
   const [skuStockByLocation, setSkuStockByLocation] = useState<Record<string, string[]>>({});
+  // Samme regel som kurven og checkout-serveren: over 500 kr. (eller med en
+  // fri-fragt-kode) er levering til døren gratis. Listen viste før 39 kr.
+  const { totals } = useCart();
+  const freeShipping = totals.subtotal > 0 && totals.shippingCost === 0;
 
   // Fetch per-location stock for SKU items to validate pickup availability
   const skuItems = items.filter((i): i is CartSkuItem => i.type === "sku_product");
@@ -171,7 +176,16 @@ export function ShippingSelector({
                   "shrink-0 text-sm font-semibold",
                   isDisabled ? "text-stone-400" : "text-charcoal",
                 ].join(" ")}>
-                  {method.cost === 0 ? "Gratis" : formatOere(method.cost)}
+                  {method.cost === 0 ? (
+                    "Gratis"
+                  ) : freeShipping ? (
+                    <>
+                      Gratis{" "}
+                      <s className="ml-1 font-normal text-stone-400">{formatOere(method.cost)}</s>
+                    </>
+                  ) : (
+                    formatOere(method.cost)
+                  )}
                 </span>
               </div>
             </label>

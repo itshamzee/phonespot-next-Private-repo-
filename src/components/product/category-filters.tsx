@@ -43,8 +43,8 @@ const QUICK_PRICES = [
 ] as const;
 
 const GRADES: { grade: Grade; label: string; description: string }[] = [
-  { grade: "A", label: "Stand A", description: "Meget flot" },
-  { grade: "B", label: "Stand B", description: "Almindelige brugsspor" },
+  { grade: "A", label: "Stand A", description: "Som ny" },
+  { grade: "B", label: "Stand B", description: "God stand, lette brugsspor" },
   { grade: "C", label: "Stand C", description: "Tydelige brugsspor" },
 ];
 

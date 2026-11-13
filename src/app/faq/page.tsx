@@ -15,7 +15,7 @@ const sections = [
     id: "enheder", title: "Enheder og stand",
     items: [
       { question: 'Hvad betyder "refurbished"?', answer: "Refurbished betyder, at enheden er professionelt inspiceret, testet og klargjort til videresalg. Vores refurbished enheder gennemgår en grundig kvalitetskontrol." },
-      { question: "Hvilken stand er jeres enheder i?", answer: "Grade P er premiumstand med minimale eller ingen brugsspor. Grade A fremstår som ny. Grade B har lette brugsspor, og Grade C har synlige brugsspor. Grade N er fabriksny og er ikke refurbished. Se de tilgængelige grader ved den enkelte model." },
+      { question: "Hvilken stand er jeres enheder i?", answer: "Stand P (premiumstand) har minimale eller ingen brugsspor. Stand A (som ny) har ingen synlige brugsspor. Stand B (god stand) har lette brugsspor, og stand C (brugt stand) har synlige brugsspor. Fabriksnye enheder er ikke refurbished. Se de tilgængelige stande ved den enkelte model, og læs mere i guiden til vores stande." },
       { question: "Siger graden noget om batteriet?", answer: "Nej. Batterisundheden måles for den enkelte enhed og beskrives separat på produktsiden. Den kosmetiske grade er ikke en batteriprocent. Kontakt os, hvis du mangler en måling før køb." },
       { question: "Hvad er jeres Outlet?", answer: "Vores Outlet indeholder produkter med særligt gode priser – det kan være restlager, udgåede modeller eller produkter med mindre kosmetiske fejl." },
     ],

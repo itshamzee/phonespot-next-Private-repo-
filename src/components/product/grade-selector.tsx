@@ -26,7 +26,7 @@ const GRADE_META: Record<
     badge: "NY",
   },
   P: {
-    label: "Premium",
+    label: "Premiumstand",
     description: "Næsten perfekt stand",
     tooltip:
       "Premium: Enheden er i næsten perfekt stand med minimale eller ingen brugsspor. Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden.",
@@ -43,7 +43,7 @@ const GRADE_META: Record<
     bg: "bg-green-eco/10",
   },
   B: {
-    label: "God",
+    label: "God stand",
     description: "Lette brugsspor",
     tooltip:
       "Stand B: Enheden har lette brugsspor som små ridser. Fuldt funktionel og i god stand.",
@@ -51,7 +51,7 @@ const GRADE_META: Record<
     bg: "bg-amber-50",
   },
   C: {
-    label: "Brugt",
+    label: "Brugt stand",
     description: "Synlige brugsspor",
     tooltip:
       "Stand C: Enheden har synlige brugsspor. Fuldt funktionel og bedste pris.",
@@ -100,7 +100,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               Stand
             </dt>
             <dd className="flex-1 text-right text-sm font-semibold leading-snug text-charcoal">
-              {meta.label}
+              {grade === "N" ? meta.label : `Stand ${grade} · ${meta.label}`}
               {price != null && (
                 <span className="ml-2 font-body text-charcoal">{formatPrice(price)} kr.</span>
               )}

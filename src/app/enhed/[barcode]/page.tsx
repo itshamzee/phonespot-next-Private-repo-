@@ -26,7 +26,7 @@ const GRADE_INFO: Record<string, { label: string; color: string; description: st
     description: "Ingen synlige ridser eller skader. Skærm og kabinet i perfekt stand.",
   },
   B: {
-    label: "Stand B — Let brugt",
+    label: "Stand B · God stand",
     color: "bg-amber-100 text-amber-800 border-amber-200",
     description: "Lette kosmetiske brugsspor. Skærm i god stand, muligvis lette ridser på kabinettet.",
   },

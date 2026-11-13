@@ -1,5 +1,6 @@
 "use client";
 
+import { gradeDisplayLabel } from "@/lib/grades";
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -171,7 +172,7 @@ export function ConfirmationView({ order }: { order: Order }) {
                   (item.grade || item.color || item.storage) && (
                     <p className="text-xs text-gray-500">
                       {[
-                        item.grade && `Stand ${item.grade}`,
+                        item.grade && gradeDisplayLabel(item.grade),
                         item.color,
                         item.storage,
                       ]

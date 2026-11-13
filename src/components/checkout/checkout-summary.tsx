@@ -1,5 +1,6 @@
 "use client";
 
+import { gradeDisplayLabel } from "@/lib/grades";
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal } from "@/lib/cart/utils";
@@ -69,7 +70,7 @@ export function CheckoutSummary() {
 
                   {item.type === "device" && (
                     <p className="text-xs text-gray">
-                      {[`Stand ${item.grade}`, item.color, item.storage].filter(Boolean).join(" · ")}
+                      {[gradeDisplayLabel(item.grade), item.color, item.storage].filter(Boolean).join(" · ")}
                     </p>
                   )}
 

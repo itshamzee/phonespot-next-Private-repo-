@@ -564,3 +564,79 @@
     overflow: visible;
   }
 }
+
+/* Fast købsbjælke (som hos de store: variant, pris og Køb altid inden for rækkevidde). */
+.buyBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 60;
+  transform: translateY(-110%);
+  transition: transform 0.22s ease-out;
+  background: #fff;
+  border-bottom: 1px solid #e5e5ea;
+  box-shadow: 0 6px 20px rgba(17, 17, 17, 0.06);
+  padding-top: env(safe-area-inset-top);
+}
+.buyBarVisible {
+  transform: translateY(0);
+}
+.buyBarInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+.buyBarThumb {
+  position: relative;
+  flex: 0 0 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #f4f5f2;
+}
+.buyBarText {
+  min-width: 0;
+  flex: 1;
+}
+.buyBarMeta {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: #3d433f;
+}
+.buyBarPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+}
+.buyBarPrice span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #5a8c6f;
+}
+.buyBarButton {
+  flex: 0 0 auto;
+  min-height: 46px;
+  min-width: 86px;
+  border-radius: 6px;
+  background: #1a3d2e;
+  color: #fff;
+  padding: 0 22px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.buyBarButton:hover {
+  background: #254e3c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .buyBar {
+    transition: none;
+  }
+}

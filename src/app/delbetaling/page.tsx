@@ -54,25 +54,25 @@ const STEPS = [
 const EXAMPLES = [
   {
     product: "iPhone 14 Pro",
-    grade: "Grade A",
+    grade: "Stand A",
     total: "5.499",
     monthly: "1.833",
   },
   {
     product: "iPhone 13",
-    grade: "Grade B",
+    grade: "Stand B",
     total: "3.299",
     monthly: "1.100",
   },
   {
     product: "iPad Air M1",
-    grade: "Grade A",
+    grade: "Stand A",
     total: "3.999",
     monthly: "1.333",
   },
   {
     product: "MacBook Air M2",
-    grade: "Grade A",
+    grade: "Stand A",
     total: "7.999",
     monthly: "2.667",
   },

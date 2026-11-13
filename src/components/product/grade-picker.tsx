@@ -30,7 +30,7 @@ const GRADE_META: Record<
     badgeColor: "text-amber-600",
   },
   C: {
-    label: "Okay stand",
+    label: "Brugt stand",
     sublabel: "Synlige brugsspor. Bedste pris",
     ring: "border-gray ring-gray/20",
     badgeBg: "bg-gray/10",

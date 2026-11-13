@@ -25,7 +25,7 @@ const DEFAULT_GRADE_META: Record<Grade, GradeMeta> = {
     ringColor: "ring-amber-500",
   },
   C: {
-    label: "Okay stand",
+    label: "Brugt stand",
     description: "Enheden har tydelige brugsspor såsom ridser eller små mærker. Alle funktioner virker perfekt. Bedste pris.",
     badgeBg: "bg-gray/10",
     badgeColor: "text-gray",
@@ -49,7 +49,7 @@ const LAPTOP_GRADE_META: Record<Grade, GradeMeta> = {
     ringColor: "ring-amber-500",
   },
   C: {
-    label: "Okay stand",
+    label: "Brugt stand",
     description: "Den bærbare har tydelige brugsspor på låg og kabinet. Skærm og tastatur kan have lette ridser. Alle funktioner virker perfekt. Bedste pris.",
     badgeBg: "bg-gray/10",
     badgeColor: "text-gray",

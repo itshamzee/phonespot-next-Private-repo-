@@ -318,6 +318,21 @@ export function DeviceDetail({
     ssd: string | null;
   }>({ ram: null, ssd: null });
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  // Fast købsbjælke: vises, når "Læg i kurv" er scrollet ud af syne opad.
+  const [buyEl, setBuyEl] = useState<HTMLDivElement | null>(null);
+  const [showBuyBar, setShowBuyBar] = useState(false);
+  useEffect(() => {
+    const el = buyEl;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setShowBuyBar(false);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => {
+      setShowBuyBar(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [buyEl]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const [notifyEmail, setNotifyEmail] = useState("");
@@ -914,14 +929,16 @@ export function DeviceDetail({
                 <p className={styles.stock}>
                   {matchingDevices.length} på lager i den valgte variant
                 </p>
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className={styles.buyButton}
-                >
-                  {isAddingToCart ? "Reserverer..." : "Læg i kurv"}
-                </button>
+                <div ref={setBuyEl}>
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart}
+                    className={styles.buyButton}
+                  >
+                    {isAddingToCart ? "Reserverer..." : "Læg i kurv"}
+                  </button>
+                </div>
               </>
             ) : (
               <div className={styles.soldOut}>
@@ -1214,6 +1231,38 @@ export function DeviceDetail({
           </div>
         </section>
       ) : null}
+      {inStock && price != null && (
+        <div
+          className={`${styles.buyBar} ${showBuyBar ? styles.buyBarVisible : ""}`}
+          aria-hidden={!showBuyBar}
+        >
+          <div className={styles.buyBarInner}>
+            {(images[0] ?? null) && (
+              <div className={styles.buyBarThumb}>
+                <Image src={images[0]} alt="" fill className="object-contain p-1" sizes="48px" />
+              </div>
+            )}
+            <div className={styles.buyBarText}>
+              <p className={styles.buyBarMeta}>
+                {[selectedStorage, selectedColor, gradeDetail?.label].filter(Boolean).join(" | ")}
+              </p>
+              <p className={styles.buyBarPrice}>
+                {formatDKK(price + selectedUpgradeTotal)}
+                <span>2–4 hverdage</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAddingToCart}
+              tabIndex={showBuyBar ? 0 : -1}
+              className={styles.buyBarButton}
+            >
+              {isAddingToCart ? "..." : "Køb"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
