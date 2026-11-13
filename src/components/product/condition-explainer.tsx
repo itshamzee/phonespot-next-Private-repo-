@@ -207,7 +207,7 @@ const MARKERS: Record<DeviceType, Record<"B" | "C", Record<ImageView, Marker[]>>
       display: [{ x: 58, y: 48, label: "Skærmen er fejlfri" }, { x: 29, y: 58, label: "Lette ridser i kanten" }],
     },
     C: {
-      frame: [{ x: 53, y: 30, label: "Lette ridser på bagsiden" }, { x: 38, y: 66, label: "Synlige skrammer i kanten" }, { x: 39, y: 92, label: "Lille bule i hjørnet" }],
+      frame: [{ x: 53, y: 30, label: "Lette ridser på bagsiden, ses i skråt lys" }, { x: 38, y: 66, label: "Små skrammer i kanten" }],
       display: [{ x: 55, y: 34, label: "Lette mikroridser på skærmen, ses kun i skråt lys" }, { x: 34, y: 56, label: "Skrammer i kanten" }],
     },
   },
