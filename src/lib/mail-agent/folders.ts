@@ -86,6 +86,8 @@ export interface InboxEntry {
   subject: string;
   date: Date;
   answered: boolean;
+  /** Read by a person (or filed as noise). Unread customer mail is what is still waiting. */
+  seen: boolean;
 }
 
 /**

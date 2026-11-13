@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assessMessage, type AssessOutput } from "./agent";
 import { displayNameFor, loadMailboxes, type MailboxConfig } from "./config";
+import { digestRecipient, isDigestMail, isDigestReply } from "./digest";
 import { insertDraft, markDraft } from "./drafts";
 import { folderByRules, folderForAnswered, folderForCategory, folderPath, isContactNotice, isReadOnFiling, pickAnswered, type FolderKey } from "./folders";
 import { fetchUnhandled, listInbox, markHandled, markSeen, moveToFolder } from "./imap";
@@ -286,6 +287,27 @@ async function processMail(
       .single();
     if (error || !data) throw new Error(`mail_inbound: ${error?.message ?? "insert fejlede"}`);
     inboundId = data.id as string;
+  }
+
+  // The agent's own overview in the owner's inbox: stays unread, never assessed.
+  if (isDigestMail(mail)) {
+    await finishInbound(sb, inboundId, { classification: "system_notifikation" });
+    report.processed++;
+    return false;
+  }
+
+  // The owner's answer to an overview: carry it out, then file the answer.
+  if (isDigestReply(mail, digestRecipient())) {
+    // Lazy: pulls in the send path (Resend, React Email), which most polls never need.
+    const { handleDigestReply } = await import("./digest-reply");
+    const result = await handleDigestReply(sb, mail, anthropic);
+    if (result.handled) {
+      await finishInbound(sb, inboundId, { classification: "system_notifikation", folder: folderPath("notifikationer_andet").join("/") });
+      queueMove(moves, "notifikationer_andet", mail.uid);
+      report.processed++;
+      report.autoSent += result.sent;
+      return true;
+    }
   }
 
   // Ingested on an earlier run but the agent step failed: resume there, no second message row.
