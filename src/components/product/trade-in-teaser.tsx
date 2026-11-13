@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { sellHubForCategory } from "@/lib/sell-links";
 
 export type TradeInTeaserProps = {
   /** Raw product category (e.g. "iphone", "ipad", "laptop", "smartwatch") — used
@@ -42,7 +43,7 @@ export function TradeInTeaser({ category, inverse = false }: TradeInTeaserProps)
     <div className={inverse ? "my-5 border-t border-white/20 pt-5 text-white" : "border-l-2 border-[#1A3D2E]/25 py-0.5 pl-3 text-[#1A3D2E]"}>
       <p className="text-sm font-semibold text-current">Har du en gammel {word}?</p>
       <Link
-        href="/saelg-din-enhed"
+        href={sellHubForCategory(category)}
         className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-current hover:underline"
       >
         Få din enhed vurderet

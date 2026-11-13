@@ -23,6 +23,7 @@ import {
 import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 import { fitTitle } from "@/lib/repairs/hub-meta";
 import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
+import { sellLinkForRepairModel } from "@/lib/sell-links";
 
 export const revalidate = 3600;
 
@@ -113,6 +114,7 @@ export default async function ModelPricePage({ params }: Props) {
   // Tillidslinjen bygger på modellens egne data, så den aldrig lover mere end
   // reparationerne faktisk har: garanti fra warranty_info, tid fra estimated_minutes.
   const repairs = services.filter((s) => s.slug !== "diagnostik");
+  const sellLink = sellLinkForRepairModel(brand.slug, model.slug, model.name);
   const lifetimeCount = repairs.filter((s) =>
     s.warranty_info?.toLocaleLowerCase("da-DK").includes("livstid"),
   ).length;
@@ -384,6 +386,14 @@ export default async function ModelPricePage({ params }: Props) {
             Se alle {brand.name}-reparationer
           </Link>
         </p>
+        {sellLink && (
+          <p className="pb-6 text-sm">
+            Er reparationen ikke pengene værd? Vi køber også {model.name}, virkende eller defekt.{" "}
+            <Link href={sellLink.href} className="font-semibold text-[#1A3D2E] underline underline-offset-4">
+              {sellLink.label}
+            </Link>
+          </p>
+        )}
         <RepairStoreFinder
           modelName={model.name}
           stores={finderStores}
