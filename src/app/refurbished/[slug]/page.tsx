@@ -347,8 +347,14 @@ export default async function RefurbishedProductPage({ params }: Props) {
               beskrivelsen af den konkrete enhed, når du vælger ovenfor.
             </p>
             <Link
+              href="/blog/stand-a-b-c-og-batteri"
+              className="mt-5 flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
+            >
+              Sådan vurderer vi stand og batteri &rarr;
+            </Link>
+            <Link
               href="/kvalitet"
-              className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
             >
               Læs om vores kvalitet &rarr;
             </Link>

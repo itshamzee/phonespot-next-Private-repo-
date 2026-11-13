@@ -64,6 +64,7 @@ export default function QualityPage() {
           <div style={{ marginTop: 40 }}>
             <h3 style={{ marginBottom: 16 }}>Se forskellen på stand A, B og C</h3>
             <ConditionExplainer deviceType="phone" />
+            <p style={{ marginTop: 16 }}><Link className={styles.textLink} href="/blog/stand-a-b-c-og-batteri">Læs guiden: sådan vurderer vi stand og batteri →</Link></p>
           </div>
         </section>
         <section id="batteri" className={styles.section}>

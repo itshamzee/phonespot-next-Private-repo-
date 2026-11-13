@@ -40,7 +40,7 @@ export function GET() {
 - Brugte og refurbished iPhones, iPads, MacBooks, Android-telefoner og smartwatches, testet og istandsat på eget værksted.
 - 36 måneders garanti på enheder. Tilbehør har 2 års reklamationsret.
 - 30 dages returret på enheder (ud over den lovpligtige fortrydelsesret på 14 dage).
-- Kosmetisk stand A, B eller C. Batteri min. 90 % ved levering; under 90 % skiftes batteriet uden beregning.
+- Kosmetisk stand: P (premiumstand), A (som ny), B (god stand: perfekt skærm, lette spor på kabinettet), C (brugt stand: synlige spor). Alle stande er fuldt funktionelle og testet på over 30 punkter. Batteri min. 90 % ved levering; under 90 % skiftes batteriet uden beregning. Guide: ${SITE}/blog/stand-a-b-c-og-batteri · Kvalitet: ${SITE}/kvalitet
 - Køb online med levering, eller se og afhent enheden i Vejle eller Slagelse.
 - Brugte iPhones: ${SITE}/iphones · Android: ${SITE}/smartphones · Guide: ${SITE}/blog/koeb-brugt-iphone
 
