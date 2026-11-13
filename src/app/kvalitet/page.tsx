@@ -4,6 +4,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
 import { GRADE_SHORT_LABEL } from "@/lib/grades";
+import { ConditionExplainer } from "@/components/product/condition-explainer";
 import styles from "@/components/ui/information.module.css";
 
 export const metadata: Metadata = {
@@ -59,6 +60,10 @@ export default function QualityPage() {
           <div className={styles.grid}>
             <div><h2>Standen handler om det, du kan se.</h2><p className={styles.intro}>Graden beskriver de kosmetiske brugsspor. De refurbished enheder er testet for funktion i alle grader, mens batteriet vurderes separat. De tilgængelige grader fremgår ved den enkelte model.</p><div className={styles.notice} style={{ marginTop: 24 }}><h3>{GRADE_SHORT_LABEL.N} · Grade N</h3><p>En forseglet enhed, som aldrig har været brugt. Grade N er ny og sælges derfor ikke som refurbished.</p></div></div>
             <div className={styles.rows}>{grades.map(({ grade, description }) => <div key={grade}><h3>{GRADE_SHORT_LABEL[grade]} · Grade {grade}</h3><p>{description}</p></div>)}</div>
+          </div>
+          <div style={{ marginTop: 40 }}>
+            <h3 style={{ marginBottom: 16 }}>Se forskellen på stand A, B og C</h3>
+            <ConditionExplainer deviceType="phone" />
           </div>
         </section>
         <section id="batteri" className={styles.section}>
