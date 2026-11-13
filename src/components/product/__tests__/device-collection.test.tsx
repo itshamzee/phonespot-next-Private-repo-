@@ -46,5 +46,5 @@ describe("DeviceCollection", () => {
 it.each(["laptop", "ipad", "watch"] as const)("uses %s condition examples even when the collection is empty", (deviceType) => {
  render(<DeviceCollection templates={[]} deviceType={deviceType} title="Enheder" intro="Udvalg" collectionHeading="Modeller" guideTitle="Guide" guideIntro="Hjælp" choices={[]} faqs={[]} />);
  const images = screen.getAllByRole("img");
- expect(images.some((image) => image.getAttribute("src")?.includes(deviceType + "-grade-a-frame.png"))).toBe(true);
+ expect(images.some((image) => image.getAttribute("src")?.includes(deviceType + "-grade-a-frame.webp"))).toBe(true);
 });

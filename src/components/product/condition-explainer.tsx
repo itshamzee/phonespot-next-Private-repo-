@@ -26,8 +26,8 @@ const PHONE_GRADES: GradeData[] = [
       "Kabinettet har ingen synlige ridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/grade-a-display.png",
-    frameImage: "/quality/grade-a-frame.png",
+    displayImage: "/quality/grade-a-display.webp",
+    frameImage: "/quality/grade-a-frame.webp",
   },
   {
     grade: "B",
@@ -39,8 +39,8 @@ const PHONE_GRADES: GradeData[] = [
       "Kabinettet kan have lette brugsridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/grade-b-display.png",
-    frameImage: "/quality/grade-b-frame.png",
+    displayImage: "/quality/grade-b-display.webp",
+    frameImage: "/quality/grade-b-frame.webp",
   },
   {
     grade: "C",
@@ -53,8 +53,8 @@ const PHONE_GRADES: GradeData[] = [
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
-    displayImage: "/quality/grade-c-display.png",
-    frameImage: "/quality/grade-c-frame.png",
+    displayImage: "/quality/grade-c-display.webp",
+    frameImage: "/quality/grade-c-frame.webp",
   },
 ];
 
@@ -69,8 +69,8 @@ const WATCH_GRADES: GradeData[] = [
       "Kassen har ingen synlige ridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/watch-grade-a-display.png",
-    frameImage: "/quality/watch-grade-a-frame.png",
+    displayImage: "/quality/watch-grade-a-display.webp",
+    frameImage: "/quality/watch-grade-a-frame.webp",
   },
   {
     grade: "B",
@@ -82,8 +82,8 @@ const WATCH_GRADES: GradeData[] = [
       "Kassen kan have lette brugsridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/watch-grade-b-display.png",
-    frameImage: "/quality/watch-grade-b-frame.png",
+    displayImage: "/quality/watch-grade-b-display.webp",
+    frameImage: "/quality/watch-grade-b-frame.webp",
   },
   {
     grade: "C",
@@ -96,8 +96,8 @@ const WATCH_GRADES: GradeData[] = [
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
-    displayImage: "/quality/watch-grade-c-display.png",
-    frameImage: "/quality/watch-grade-c-frame.png",
+    displayImage: "/quality/watch-grade-c-display.webp",
+    frameImage: "/quality/watch-grade-c-frame.webp",
   },
 ];
 
@@ -112,8 +112,8 @@ const IPAD_GRADES: GradeData[] = [
       "Kabinettet har ingen synlige ridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/ipad-grade-a-display.png",
-    frameImage: "/quality/ipad-grade-a-frame.png",
+    displayImage: "/quality/ipad-grade-a-display.webp",
+    frameImage: "/quality/ipad-grade-a-frame.webp",
   },
   {
     grade: "B",
@@ -125,8 +125,8 @@ const IPAD_GRADES: GradeData[] = [
       "Kabinettet kan have lette brugsridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/ipad-grade-b-display.png",
-    frameImage: "/quality/ipad-grade-b-frame.png",
+    displayImage: "/quality/ipad-grade-b-display.webp",
+    frameImage: "/quality/ipad-grade-b-frame.webp",
   },
   {
     grade: "C",
@@ -139,8 +139,8 @@ const IPAD_GRADES: GradeData[] = [
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
-    displayImage: "/quality/ipad-grade-c-display.png",
-    frameImage: "/quality/ipad-grade-c-frame.png",
+    displayImage: "/quality/ipad-grade-c-display.webp",
+    frameImage: "/quality/ipad-grade-c-frame.webp",
   },
 ];
 
@@ -155,8 +155,8 @@ const LAPTOP_GRADES: GradeData[] = [
       "Kabinettet har ingen synlige ridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/laptop-grade-a-display.png",
-    frameImage: "/quality/laptop-grade-a-frame.png",
+    displayImage: "/quality/laptop-grade-a-display.webp",
+    frameImage: "/quality/laptop-grade-a-frame.webp",
   },
   {
     grade: "B",
@@ -168,8 +168,8 @@ const LAPTOP_GRADES: GradeData[] = [
       "Kabinettet kan have lette brugsridser",
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
     ],
-    displayImage: "/quality/laptop-grade-b-display.png",
-    frameImage: "/quality/laptop-grade-b-frame.png",
+    displayImage: "/quality/laptop-grade-b-display.webp",
+    frameImage: "/quality/laptop-grade-b-frame.webp",
   },
   {
     grade: "C",
@@ -182,8 +182,8 @@ const LAPTOP_GRADES: GradeData[] = [
       "Batterikapaciteten er målt for den enkelte enhed og fremgår på produktsiden",
       "Mest budgetvenlige valg",
     ],
-    displayImage: "/quality/laptop-grade-c-display.png",
-    frameImage: "/quality/laptop-grade-c-frame.png",
+    displayImage: "/quality/laptop-grade-c-display.webp",
+    frameImage: "/quality/laptop-grade-c-frame.webp",
   },
 ];
 

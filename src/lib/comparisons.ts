@@ -29,7 +29,7 @@ export const COMPARISONS: Comparison[] = [
   {
     slug: "refurbished-vs-brugt-vs-ny",
     title: "Refurbished, brugt eller ny",
-    image: "/quality/grade-a.png",
+    image: "/quality/grade-a.webp",
     metaTitle:
       "Refurbished, brugt eller ny \— Hvad skal du vælge? | PhoneSpot",
     metaDescription:
