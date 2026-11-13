@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { ShippingSelector } from "@/components/checkout/shipping-selector";
 import type { PickupPoint } from "@/components/checkout/pickup-point-picker";
-import { getShippingOption } from "@/lib/shipping";
+import { getShippingOption, getShippingPrice } from "@/lib/shipping";
+import { formatOere } from "@/lib/cart/utils";
 import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
 import { PrePurchaseInfo } from "@/components/checkout/pre-purchase-info";
 import { trackInitiateCheckout } from "@/lib/tracking/fbq";
@@ -40,10 +41,12 @@ const EMPTY_CUSTOMER: CustomerInfo = {
 
 export function CheckoutForm() {
   const router = useRouter();
-  const { cartState, applyDiscount, removeDiscount } = useCart();
+  const { cartState, totals, applyDiscount, removeDiscount, setCheckoutShippingPrice } = useCart();
 
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY_CUSTOMER);
-  const [shippingMethod, setShippingMethod] = useState<string | null>(null);
+  // Pakkeshop er gratis og det mest valgte, så den er forvalgt. Før startede
+  // valget tomt, og kunden fik først en fejl ved "Gå til betaling".
+  const [shippingMethod, setShippingMethod] = useState<string | null>("pakkeshop");
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   const [discountInput, setDiscountInput] = useState("");
@@ -52,6 +55,22 @@ export function CheckoutForm() {
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Oversigten og knappen regner med den valgte metodes pris (samme regel
+  // som serveren), ikke et estimat for levering til døren.
+  useEffect(() => {
+    if (!shippingMethod) {
+      setCheckoutShippingPrice(null);
+      return;
+    }
+    const price = shippingMethod.startsWith("pickup_") ? 0 : getShippingPrice(shippingMethod);
+    setCheckoutShippingPrice(price ?? null);
+  }, [shippingMethod, setCheckoutShippingPrice]);
+  useEffect(() => () => setCheckoutShippingPrice(null), [setCheckoutShippingPrice]);
+  // Kurven læses fra localStorage ved første klientrender, mens serveren ser
+  // en tom kurv. Beløbet på knappen vises derfor først efter mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // -----------------------------------------------------------------------
   // Field helpers
@@ -187,6 +206,26 @@ export function CheckoutForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       {/* ---------------------------------------------------------------- */}
+      {/* Shipping selector                                                  */}
+      {/* ---------------------------------------------------------------- */}
+      <section>
+        <ShippingSelector
+          selected={shippingMethod}
+          items={cartState.items}
+          zipcode={customer.address.postal_code}
+          pickupPoint={pickupPoint}
+          onPickupPoint={setPickupPoint}
+          onZipcode={(zip) => setAddressField("postal_code", zip)}
+          onSelect={(method, cost) => {
+            setShippingMethod(method);
+            setShippingCost(cost);
+            // A shop chosen for one carrier means nothing for another.
+            setPickupPoint(null);
+          }}
+        />
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
       {/* Customer info                                                      */}
       {/* ---------------------------------------------------------------- */}
       <section className="space-y-4">
@@ -258,20 +297,12 @@ export function CheckoutForm() {
       {/* ---------------------------------------------------------------- */}
       {/* Shipping address                                                   */}
       {/* ---------------------------------------------------------------- */}
+      {!pickupStore && (
       <section className="space-y-4">
         <h2 className="font-display text-lg font-bold tracking-tight text-charcoal">
-          Leveringsadresse
+          {requiresPickupPoint ? "Din adresse" : "Leveringsadresse"}
         </h2>
 
-        {pickupStore ? (
-          <p className="rounded-xl bg-warm-white px-4 py-3 text-sm text-charcoal">
-            Du henter i butikken i {pickupStore.city}, {pickupStore.street}. Du skal ikke udfylde en adresse.
-          </p>
-        ) : (
-        <>
-        <p className="text-sm text-gray-500">
-          Henter du i butikken i Vejle eller Slagelse? Vælg afhentning nedenfor, så skal du ikke udfylde adresse.
-        </p>
 
         {/* Address line 1 */}
         <div>
@@ -357,28 +388,8 @@ export function CheckoutForm() {
 
         {/* Country (hidden, always DK) */}
         <input type="hidden" name="country" value="DK" />
-        </>
-        )}
       </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Shipping selector                                                  */}
-      {/* ---------------------------------------------------------------- */}
-      <section>
-        <ShippingSelector
-          selected={shippingMethod}
-          items={cartState.items}
-          zipcode={customer.address.postal_code}
-          pickupPoint={pickupPoint}
-          onPickupPoint={setPickupPoint}
-          onSelect={(method, cost) => {
-            setShippingMethod(method);
-            setShippingCost(cost);
-            // A shop chosen for one carrier means nothing for another.
-            setPickupPoint(null);
-          }}
-        />
-      </section>
+      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Discount code                                                      */}
@@ -496,7 +507,7 @@ export function CheckoutForm() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
               <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
             </svg>
-            Gå til sikker betaling
+            Gå til betaling{mounted && totals.total > 0 ? ` · ${formatOere(totals.total)}` : ""}
           </>
         )}
       </button>

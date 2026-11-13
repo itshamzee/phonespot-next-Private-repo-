@@ -123,9 +123,9 @@ describe("Grade copy never promises a battery percentage — cosmetic only", () 
 describe("garanti/page.tsx warranty floors — left alone, and read as a post-sale threshold", () => {
   it("still states the same A 85% / B 80% / C 75% degradation floors (a different, deliberately untouched fact)", () => {
     const src = read("src/app/garanti/page.tsx");
-    expect(src).toMatch(/Grade A:\s?85%/);
-    expect(src).toMatch(/Grade B:\s?80%/);
-    expect(src).toMatch(/Grade C:\s?75%/);
+    expect(src).toMatch(/stand A:\s?85\s?%/i);
+    expect(src).toMatch(/stand B:\s?80\s?%/i);
+    expect(src).toMatch(/stand C:\s?75\s?%/i);
   });
 
   it("reads as a post-sale degradation threshold, not an at-sale promise", () => {

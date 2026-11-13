@@ -52,6 +52,12 @@ interface CartContextValue {
   applyDiscount: (code: string) => Promise<{ error: string | null }>;
   removeDiscount: () => void;
   clearCart: () => Promise<void>;
+  /**
+   * Prisen (øre) på den leveringsmetode, kunden har valgt i kassen. null =
+   * intet valgt endnu, og fragten estimeres som levering til døren. Gemmes
+   * ikke, så kurven andre steder altid viser estimatet.
+   */
+  setCheckoutShippingPrice: (price: number | null) => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -65,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useReducerToggle(false);
   const [showUpsell, setShowUpsell] = useReducerToggle(false);
   const [upsellContext, setUpsellContext] = useState<UpsellContext | null>(null);
+  const [checkoutShippingPrice, setCheckoutShippingPrice] = useState<number | null>(null);
 
   // Persist to localStorage on every state change
   useEffect(() => {
@@ -105,7 +112,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Derived totals
   // ------------------------------------------------------------------
   // Fragt afgøres på nettobeløbet efter rabatkode og 3 for 2 (som serveren).
-  const totals = useMemo<CartTotals>(() => calcCartTotals(cartState), [cartState]);
+  const totals = useMemo<CartTotals>(
+    () => calcCartTotals(cartState, checkoutShippingPrice),
+    [cartState, checkoutShippingPrice],
+  );
 
   // ------------------------------------------------------------------
   // Drawer / upsell toggles
@@ -227,6 +237,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       applyDiscount,
       removeDiscount,
       clearCart,
+      setCheckoutShippingPrice,
     }),
     [
       cartState,
@@ -245,6 +256,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       applyDiscount,
       removeDiscount,
       clearCart,
+      setCheckoutShippingPrice,
     ],
   );
 

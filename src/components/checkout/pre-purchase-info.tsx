@@ -76,6 +76,7 @@ export function PrePurchaseInfo() {
             <p className="font-semibold">Dine rettigheder</p>
             <ul className="mt-1 space-y-1 text-xs text-gray list-disc list-inside">
               <li>14 dages fortrydelsesret fra modtagelse</li>
+              {hasDevice && <li>30 dages returret på enheder (udvidet returret fra PhoneSpot)</li>}
               <li>24 måneders reklamationsret (mangelsansvar)</li>
               {hasDevice && <li>36 måneders garanti fra PhoneSpot på refurbished enheder</li>}
             </ul>

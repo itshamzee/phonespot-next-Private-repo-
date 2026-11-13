@@ -81,7 +81,7 @@ export function PickupPointPicker({ zipcode, selected, onSelect }: Props) {
   if (!/^\d{4}$/.test(zipcode)) {
     return (
       <p className="rounded-xl bg-warm-white px-4 py-3 text-sm text-gray-500">
-        Udfyld postnummeret ovenfor, så viser vi pakkeshops i nærheden.
+        Skriv dit postnummer, så viser vi pakkeshops i nærheden.
       </p>
     );
   }

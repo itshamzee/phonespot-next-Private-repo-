@@ -10,12 +10,26 @@ import type { MegaMenu } from "@/lib/navigation/mega-menu";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { MessengerChat } from "@/components/ui/messenger-chat";
 import { BlackNovemberBar } from "@/components/campaign/black-november";
+import { CheckoutHeader, CheckoutFooter } from "@/components/checkout/checkout-chrome";
 
 export function LayoutShell({ children, menu = null, campaignActive = false }: { children: React.ReactNode; menu?: MegaMenu | null; campaignActive?: boolean }) {
   const pathname = usePathname();
 
   if (pathname.startsWith("/admin")) {
     return <>{children}</>;
+  }
+
+  // Kassen får en slank ramme: ingen menu, kampagnebjælke, upsell eller
+  // chatboble, der kan lede kunden væk midt i betalingen.
+  if (pathname === "/kasse") {
+    return (
+      <CartProvider>
+        <CheckoutHeader />
+        <main id="indhold" tabIndex={-1} className="overflow-x-clip">{children}</main>
+        <CheckoutFooter />
+        <CookieConsent />
+      </CartProvider>
+    );
   }
 
   return (
