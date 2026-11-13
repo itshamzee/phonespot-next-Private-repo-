@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ZoomImage } from "@/components/product/zoom-image";
 
 const GRADES = [
   {
@@ -46,8 +47,9 @@ export function GradeSlider() {
             }`}
           />
         ))}
+        <ZoomImage src={current.image} alt={`Stand ${current.grade}, ${current.title}`} />
         {/* Grade badge overlay */}
-        <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm">
+        <div className="pointer-events-none absolute left-4 top-4 z-[2] flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm">
           <span className={`flex h-8 w-8 items-center justify-center rounded-full ${current.color} font-display text-sm font-bold text-white`}>
             {current.grade}
           </span>

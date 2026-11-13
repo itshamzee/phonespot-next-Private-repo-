@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ZoomImage } from "./zoom-image";
 
 type DeviceType = "phone" | "watch" | "ipad" | "laptop";
 
@@ -208,17 +209,22 @@ function ImageSlider({
   const [view, setView] = useState<ImageView>("frame");
 
   return (
-    <div className="relative aspect-[4/3] overflow-hidden bg-sand/30">
+    <div className="relative aspect-[4/3] overflow-hidden bg-white">
       {/* Image */}
       <Image
         src={view === "display" ? displayImage : frameImage}
         alt={`${title} — ${view === "display" ? "forside" : "bagside"}`}
         fill
-        className="object-cover"
+        className="object-contain p-2"
+        sizes="(max-width: 768px) 100vw, 33vw"
+      />
+      <ZoomImage
+        src={view === "display" ? displayImage : frameImage}
+        alt={`${title}, ${view === "display" ? "forside" : "bagside"}`}
       />
 
       {/* Toggle pills */}
-      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-charcoal/70 p-1 backdrop-blur-sm">
+      <div className="absolute bottom-3 left-1/2 z-[2] flex -translate-x-1/2 gap-1 rounded-full bg-charcoal/70 p-1 backdrop-blur-sm">
         <button
           type="button"
           onClick={() => setView("frame")}

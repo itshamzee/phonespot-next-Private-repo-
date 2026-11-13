@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ZoomImage } from "./zoom-image";
 
 type Grade = "A" | "B" | "C";
 type DeviceType = "watch" | "phone" | "ipad" | "laptop";
@@ -131,13 +132,17 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
               className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm"
             >
               {/* Condition image */}
-              <div className="relative aspect-[4/3] bg-sand/30">
+              <div className="relative aspect-[4/3] bg-white">
                 <Image
                   src={view === "frame" ? imgs.frame : imgs.display}
                   alt={`${meta.label} — ${view === "frame" ? "bagside" : "forside"}`}
                   fill
-                  className="object-cover"
+                  className="object-contain p-2"
                   sizes="(max-width: 768px) 100vw, 33vw"
+                />
+                <ZoomImage
+                  src={view === "frame" ? imgs.frame : imgs.display}
+                  alt={`Stand ${grade}, ${meta.label}, ${view === "frame" ? "bagside" : "forside"}`}
                 />
                 {/* Grade badge overlay */}
                 <div className="absolute top-3 left-3">
