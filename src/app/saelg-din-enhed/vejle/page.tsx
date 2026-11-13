@@ -101,6 +101,10 @@ export default function SellInVejlePage() {
         readMoreLinks={[
           { href: "/butik/vejle", label: "PhoneSpot Vejle: adresse og åbningstider" },
           { href: "/reparation-vejle", label: "Reparation i Vejle" },
+          { href: "/saelg-din-enhed/kolding", label: "Sælg i Kolding" },
+          { href: "/saelg-din-enhed/horsens", label: "Sælg i Horsens" },
+          { href: "/saelg-din-enhed/fredericia", label: "Sælg i Fredericia" },
+          { href: "/saelg-din-enhed/slagelse", label: "Sælg i Slagelse" },
         ]}
         relatedHeading="Sælg en bestemt enhed"
         relatedLinks={SELL_DEVICES.map((device) => ({ href: `/saelg-din-enhed/${device.slug}`, label: `Sælg ${device.linkLabel}` }))}

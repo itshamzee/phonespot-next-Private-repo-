@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "Sælg din brugte telefon, tablet, computer eller konsol, også ny og uåbnet. Fast pris, gratis label og pengene samme dag, vi modtager den. Vejle eller Slagelse.",
   alternates: { canonical: "https://phonespot.dk/saelg-din-enhed" },
   openGraph: {
-    title: "Sælg din brugte elektronik | PhoneSpot",
+    title: "Sælg din telefon, tablet eller computer | PhoneSpot",
     description:
       "Din gamle enhed. Stadig noget værd. Fortæl os om din model og stand, så gennemgår vi den og vender tilbage med en vurdering.",
     url: "https://phonespot.dk/saelg-din-enhed",
@@ -103,7 +103,7 @@ export default function SaelgDinEnhedPage() {
               Sælg din enhed
             </p>
             <h1 id="sell-title">
-              Sælg din brugte elektronik.
+              Sælg din telefon, tablet eller computer.
             </h1>
             <p className={styles.lead}>
               Din gamle enhed kan stadig være noget værd. Fortæl os om din
@@ -124,8 +124,8 @@ export default function SaelgDinEnhedPage() {
               <div>
                 <StorefrontIcon kind="pin" />
                 <span>
-                  Aflever i <Link href="/saelg-din-enhed/vejle">Vejle</Link> eller
-                  Slagelse, snart også Esbjerg, eller send med gratis label.
+                  Aflever i <Link href="/saelg-din-enhed/vejle">Vejle</Link> eller{" "}
+                  <Link href="/saelg-din-enhed/slagelse">Slagelse</Link>, snart også Esbjerg, eller send med gratis label.
                 </span>
               </div>
               <div>

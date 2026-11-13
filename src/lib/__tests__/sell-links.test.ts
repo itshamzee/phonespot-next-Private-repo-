@@ -10,9 +10,15 @@ describe("sellLinkForRepairModel", () => {
     expect(sellLinkForRepairModel("iphone", "iphone-13", "iPhone 13")?.href).toBe("/saelg-din-enhed/iphone/iphone-13");
   });
 
+  it("samler iPhone 8, X, XR og XS på deres samlesider", () => {
+    expect(sellLinkForRepairModel("iphone", "iphone-8-plus", "iPhone 8 Plus")?.href).toBe("/saelg-din-enhed/iphone/iphone-8");
+    expect(sellLinkForRepairModel("iphone", "iphone-xs-max", "iPhone XS Max")?.href).toBe("/saelg-din-enhed/iphone/iphone-x");
+    expect(sellLinkForRepairModel("iphone", "iphone-xr", "iPhone XR")?.href).toBe("/saelg-din-enhed/iphone/iphone-x");
+  });
+
   it("giver intet link for iPhones, vi ikke køber", () => {
-    expect(sellLinkForRepairModel("iphone", "iphone-8-plus", "iPhone 8 Plus")).toBeNull();
-    expect(sellLinkForRepairModel("iphone", "iphone-xs-max", "iPhone XS Max")).toBeNull();
+    expect(sellLinkForRepairModel("iphone", "iphone-7-plus", "iPhone 7 Plus")).toBeNull();
+    expect(sellLinkForRepairModel("iphone", "iphone-6s", "iPhone 6s")).toBeNull();
   });
 
   it("samler Samsung-varianter på seriens side", () => {

@@ -12,13 +12,14 @@ const BANNED = [/foxway/i, /dropship/i, /panserglas/i, /certificerede teknikere/
 const params = (model: string) => ({ params: Promise.resolve({ model }) });
 
 describe("iPhone-sider under /saelg-din-enhed/iphone/[model]", () => {
-  it("bygger en side pr. model fra iPhone 11 og op plus defekt", () => {
+  // Ejerbeslutning 2026-11-13: vi køber iPhone 8, X, XR og XS igen. iPhone 7 og ældre er stadig ude.
+  it("bygger en side pr. model fra iPhone 8 og op plus defekt", () => {
     const slugs = generateStaticParams().map(({ model }) => model);
     expect(new Set(slugs).size).toBe(slugs.length);
-    for (const slug of ["iphone-11", "iphone-11-pro-max", "iphone-13-mini", "iphone-16e", "iphone-air", "iphone-duo", "defekt"]) {
+    for (const slug of ["iphone-8", "iphone-x", "iphone-11", "iphone-11-pro-max", "iphone-13-mini", "iphone-16e", "iphone-air", "iphone-duo", "defekt"]) {
       expect(slugs).toContain(slug);
     }
-    expect(slugs.join(" ")).not.toMatch(/iphone-(x|xr|xs|8|7)\b/);
+    expect(slugs.join(" ")).not.toMatch(/iphone-(7|6|se)\b/);
   });
 
   it("giver unik titel under 66 tegn, beskrivelse og egen canonical", async () => {
@@ -36,8 +37,8 @@ describe("iPhone-sider under /saelg-din-enhed/iphone/[model]", () => {
   });
 
   it("returnerer 404 for ukendt model", async () => {
-    expect(await generateMetadata(params("iphone-x"))).toEqual({});
-    await expect(Page(params("iphone-x"))).rejects.toThrow();
+    expect(await generateMetadata(params("iphone-7"))).toEqual({});
+    await expect(Page(params("iphone-7"))).rejects.toThrow();
   });
 
   it("viser en H1, FAQ der matcher JSON-LD, og ingen priser eller forbudte ord", async () => {

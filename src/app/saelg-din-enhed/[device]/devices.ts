@@ -44,9 +44,9 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
   {
     slug: "iphone",
     name: "iPhone",
-    title: "Sælg din brugte iPhone: iPhone 11 og nyere | PhoneSpot",
+    title: "Sælg din brugte iPhone: iPhone 8 og nyere | PhoneSpot",
     metaDescription:
-      "Sælg din iPhone til PhoneSpot. Vi køber iPhone 11 og nyere, også med defekter. Fast pris, gratis label og pengene samme dag, vi modtager den.",
+      "Sælg din iPhone til PhoneSpot. Vi køber iPhone 8 og nyere, også med defekter. Fast pris, gratis label og pengene samme dag, vi modtager den.",
     eyebrow: "Sælg iPhone",
     h1: "Sælg din iPhone",
     answer:
@@ -60,7 +60,7 @@ export const SELL_DEVICES: SellDeviceConfig[] = [
     ],
     coverageHeading: "Hvilke iPhones kan du få vurderet",
     coverage:
-      "Vi køber iPhone 11 og alle nyere modeller: almindelige, Plus, mini, Pro og Pro Max samt SE (2. og 3. gen). iPhone X, XR og XS køber vi ikke. Har du en defekt iPhone, så oplys fejlen i formularen.",
+      "Vi køber iPhone 8 og alle nyere modeller: iPhone 8, X, XR og XS, og derefter almindelige, Plus, mini, Pro og Pro Max samt SE (2. og 3. gen). iPhone 7 og ældre køber vi ikke. Har du en defekt iPhone, så oplys fejlen i formularen.",
     faq: [
       {
         question: "Hvordan fjerner jeg Find min iPhone og min Apple-konto?",

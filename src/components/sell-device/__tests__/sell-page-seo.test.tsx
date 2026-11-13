@@ -12,7 +12,7 @@ describe("Salgssidens søgbare indhold", () => {
     render(<SellPage />);
     expect(metadata.alternates?.canonical).toBe("https://phonespot.dk/saelg-din-enhed");
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Sælg din brugte elektronik/);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Sælg din telefon, tablet eller computer/);
     for (const model of [/brugte iPhone/, /Samsung Galaxy/, /iPad eller tablet/, /MacBook eller laptop/, /smartwatch/]) {
       expect(screen.getByRole("heading", { name: model })).toBeTruthy();
     }

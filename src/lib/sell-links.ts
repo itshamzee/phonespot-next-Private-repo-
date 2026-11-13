@@ -28,10 +28,13 @@ function prefixLink(device: string, repairSlug: string, name: string): SellLink 
 
 export function sellLinkForRepairModel(brandSlug: string, modelSlug: string, modelName: string): SellLink | null {
   switch (brandSlug) {
-    case "iphone":
-      return getIphoneSellPage(modelSlug) && modelSlug !== "defekt"
-        ? { href: `${SELL_ROOT}/iphone/${modelSlug}`, label: `Sælg ${modelName}` }
+    case "iphone": {
+      // iPhone 8, X, XR og XS deler to samlesider; iPhone 7 og ældre køber vi ikke.
+      const slug = /^iphone-8(-plus)?$/.test(modelSlug) ? "iphone-8" : /^iphone-x(r|s|s-max)?$/.test(modelSlug) ? "iphone-x" : modelSlug;
+      return getIphoneSellPage(slug) && slug !== "defekt"
+        ? { href: `${SELL_ROOT}/iphone/${slug}`, label: `Sælg ${modelName}` }
         : null;
+    }
     case "samsung":
       return prefixLink("samsung", modelSlug, modelName);
     case "ipad": {

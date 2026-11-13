@@ -357,6 +357,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    ...["slagelse", "kolding", "horsens", "fredericia"].map((city) => ({
+      url: `${BASE_URL}/saelg-din-enhed/${city}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
     ...NEW_CATEGORY_PAGES.map((page) => ({
       url: `${BASE_URL}/saelg-din-enhed/${page.slug}`,
       lastModified: STATIC_LAST_MODIFIED,

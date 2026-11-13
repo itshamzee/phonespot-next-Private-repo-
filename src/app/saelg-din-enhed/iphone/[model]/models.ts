@@ -2,7 +2,7 @@
  * Indhold til siderne under /saelg-din-enhed/iphone/[model].
  *
  * Ingen priser her, med vilje: se kommentaren i ../../[device]/devices.ts.
- * Ældste iPhone, vi køber, er iPhone 11 (ejerbeslutning 2026-10-31). Defekte
+ * Ældste iPhone, vi køber, er iPhone 8 (ejerbeslutning 2026-11-13; før iPhone 11). Defekte
  * iPhones købes, men fejlen skal oplyses i formularen på forhånd.
  */
 import type { SellFaq, SellLandingContent } from "@/components/sell-device/sell-landing-page";
@@ -282,7 +282,7 @@ const FAMILY_PAGES: IphoneSellPage[] = [
       {
         question: "Er min iPhone 12 for gammel til, at I vil købe den?",
         answer:
-          "Nej. Vi køber iPhone 11 og nyere, så iPhone 12 er med. Hvor meget den er værd, afhænger af stand, batteri og lagerplads, og det får du svar på i vores tilbud.",
+          "Nej. Vi køber iPhone 8 og nyere, så iPhone 12 er med. Hvor meget den er værd, afhænger af stand, batteri og lagerplads, og det får du svar på i vores tilbud.",
       },
       {
         question: "Hvad betyder det, at min iPhone 12 kun har 64 GB?",
@@ -299,27 +299,27 @@ const FAMILY_PAGES: IphoneSellPage[] = [
     name: "iPhone 11",
     title: "Sælg iPhone 11, 11 Pro eller 11 Pro Max | PhoneSpot",
     metaDescription:
-      "Sælg din iPhone 11, 11 Pro eller 11 Pro Max til PhoneSpot. iPhone 11 er den ældste model, vi køber. Beskriv standen, og få et tilbud efter vores gennemgang.",
+      "Sælg din iPhone 11, 11 Pro eller 11 Pro Max til PhoneSpot. Vi køber alle tre, også med fejl. Beskriv standen, og få et tilbud efter vores gennemgang.",
     eyebrow: "Sælg iPhone 11",
     h1: "Sælg din iPhone 11",
     answer:
-      "iPhone 11 er den ældste iPhone, vi køber. Du vælger model, lagerplads og stand i formularen, og vi vender tilbage med et tilbud efter vores gennemgang. Aflever telefonen i Vejle eller Slagelse, eller send den efter aftale.",
+      "Vi køber iPhone 11, 11 Pro og 11 Pro Max. Du vælger model, lagerplads og stand i formularen, og vi vender tilbage med et tilbud efter vores gennemgang. Aflever telefonen i Vejle eller Slagelse, eller send den efter aftale.",
     wizardPreset: PRESET,
     bodyHeading: "Det kigger vi på, når telefonen er fra 2019",
     body: [
-      "iPhone 11, 11 Pro og 11 Pro Max kom i 2019. De er de ældste iPhones, vi køber, og på en telefon i den alder er stand og batteri afgørende. Almindelig 11 har LCD-skærm og findes med 64, 128 og 256 GB. Pro-modellerne har OLED-skærm og findes med 64, 256 og 512 GB.",
+      "iPhone 11, 11 Pro og 11 Pro Max kom i 2019. På en telefon i den alder er stand og batteri afgørende. Almindelig 11 har LCD-skærm og findes med 64, 128 og 256 GB. Pro-modellerne har OLED-skærm og findes med 64, 256 og 512 GB.",
       "Hvis skærmen er skiftet på et tidspunkt, kan det ses under Indstillinger, Generelt, Om, hvor iPhone viser oplysninger om dele og service. Mange telefoner fra 2019 har fået ny skærm eller nyt batteri, så det er ikke et problem i sig selv. Skriv blot, hvad du ved, så stemmer tilbuddet bedre.",
       "Tjek opladning, højttalere, kamera og Face ID, før du udfylder formularen. Lightning-porten kan blive slidt med årene, og et løst kabel er ofte tegn på fnug i porten. Tænder telefonen slet ikke, kan du stadig sende den til vurdering. Markér Tænder ikke, og skriv, hvad der skete.",
     ],
     coverageHeading: "Hvilke modeller dækker siden",
-    coverage: "Siden dækker iPhone 11, iPhone 11 Pro og iPhone 11 Pro Max. Ældre modeller som iPhone X, XR og XS køber vi ikke.",
+    coverage: "Siden dækker iPhone 11, iPhone 11 Pro og iPhone 11 Pro Max. Har du en iPhone X, XR, XS eller 8, køber vi også den.",
     faqHeading: "Spørgsmål om at sælge iPhone 11",
     faq: [
       worthFaq("iPhone 11", "På en model fra 2019 betyder batteri, skærm og lagerplads særligt meget."),
       {
         question: "Køber I ældre iPhones end iPhone 11?",
         answer:
-          "Nej, iPhone 11 er grænsen. iPhone X, XS og XR køber vi ikke. Vil du af med en ældre telefon, så husk at slette dine data og aflevere den til genbrug i din kommune.",
+          "Ja. Vi køber også iPhone X, XR, XS og iPhone 8. iPhone 7 og ældre køber vi ikke.",
       },
       {
         question: "Min iPhone 11 tænder ikke. Kan I stadig bruge den?",
@@ -332,15 +332,89 @@ const FAMILY_PAGES: IphoneSellPage[] = [
     linkLabel: "iPhone 11",
   },
   {
+    slug: "iphone-x",
+    name: "iPhone X, XR og XS",
+    title: "Sælg iPhone X, XR, XS eller XS Max | PhoneSpot",
+    metaDescription:
+      "Sælg din iPhone X, XR, XS eller XS Max til PhoneSpot. Vi køber dem igen, også med fejl. Beskriv standen, og få et tilbud efter vores gennemgang.",
+    eyebrow: "Sælg iPhone X, XR og XS",
+    h1: "Sælg din iPhone X, XR eller XS",
+    answer:
+      "Vi køber iPhone X, XR, XS og XS Max. Du vælger model, lagerplads og stand i formularen, og vi vender tilbage med et tilbud efter vores gennemgang. Aflever telefonen i Vejle eller Slagelse, eller send den med gratis label.",
+    wizardPreset: PRESET,
+    bodyHeading: "Det kigger vi på, når telefonen er fra 2017 eller 2018",
+    body: [
+      "iPhone X kom i 2017 og var den første iPhone med Face ID og OLED-skærm. Den findes med 64 og 256 GB. iPhone XR, XS og XS Max kom i 2018. XR har LCD-skærm og findes med 64, 128 og 256 GB, mens XS og XS Max har OLED-skærm og findes med 64, 256 og 512 GB.",
+      "På telefoner i den alder er batteri og skærm det, der afgør mest. Se batteriet under Indstillinger, Batteri, Batteritilstand og opladning, og skriv tallet i formularen. Er skærmen eller batteriet skiftet, så skriv det også. Det er normalt på en telefon, der har været i brug i mange år.",
+      "Regn ikke med en høj pris. Modellerne er gamle, og iPhone X får ikke længere nye iOS-versioner. Til gengæld får du et konkret tilbud, gratis fragt og pengene samme dag, som vi modtager telefonen, og det er nemmere end at sælge den privat.",
+    ],
+    coverageHeading: "Hvilke modeller dækker siden",
+    coverage: "Siden dækker iPhone X, iPhone XR, iPhone XS og iPhone XS Max. Alle fire står i formularens modelliste. iPhone 7 og ældre køber vi ikke.",
+    faqHeading: "Spørgsmål om at sælge iPhone X, XR og XS",
+    faq: [
+      worthFaq("iPhone X, XR eller XS", "På modeller fra 2017 og 2018 betyder batteri og skærm mere end lagerplads."),
+      {
+        question: "Er min iPhone X for gammel til, at I vil købe den?",
+        answer:
+          "Nej. Vi køber iPhone 8 og nyere, så iPhone X, XR og XS er med. Prisen er lavere end på nyere modeller, og en telefon med flere fejl kan ende med et afslag.",
+      },
+      {
+        question: "Face ID virker ikke på min iPhone X. Kan jeg stadig sælge den?",
+        answer:
+          "Ja, men oplys det. Vælg Nej ved Fungerer alt? og markér Face ID. Fejlen kan sjældent repareres billigt, så den tæller med i vurderingen.",
+      },
+      defectFaq("iPhone X, XR eller XS"),
+    ],
+    blogSlugs: BLOGS,
+    linkLabel: "iPhone X, XR og XS",
+  },
+  {
+    slug: "iphone-8",
+    name: "iPhone 8",
+    title: "Sælg iPhone 8 eller iPhone 8 Plus | PhoneSpot",
+    metaDescription:
+      "Sælg din iPhone 8 eller 8 Plus til PhoneSpot. iPhone 8 er den ældste model, vi køber. Beskriv standen, og få et tilbud efter vores gennemgang.",
+    eyebrow: "Sælg iPhone 8",
+    h1: "Sælg din iPhone 8",
+    answer:
+      "iPhone 8 og 8 Plus er de ældste iPhones, vi køber. Du vælger model, lagerplads og stand i formularen, og vi vender tilbage med et tilbud efter vores gennemgang. Aflever telefonen i Vejle eller Slagelse, eller send den med gratis label.",
+    wizardPreset: PRESET,
+    bodyHeading: "Det kigger vi på, når telefonen er fra 2017",
+    body: [
+      "iPhone 8 og 8 Plus kom i 2017. De har hjemknap med Touch ID, bagside i glas og findes med 64, 128 og 256 GB. 8 Plus har den store skærm på 5,5 tommer og to kameraer bagpå.",
+      "Tjek hjemknappen og Touch ID, før du udfylder formularen. Virker fingeraftrykket ikke, så skriv det, for hjemknappen er parret med telefonen og kan ikke bare skiftes. Se også batteriet under Indstillinger, Batteri, Batteritilstand og opladning, og kig efter revner i bagglasset.",
+      "Regn ikke med en høj pris. Telefonen får ikke længere nye iOS-versioner, og det sænker værdien for en ny ejer. Til gengæld får du et konkret tilbud, gratis fragt og pengene samme dag, som vi modtager telefonen.",
+    ],
+    coverageHeading: "Hvilke modeller dækker siden",
+    coverage: "Siden dækker iPhone 8 og iPhone 8 Plus. iPhone 7, 7 Plus og ældre køber vi ikke.",
+    faqHeading: "Spørgsmål om at sælge iPhone 8",
+    faq: [
+      worthFaq("iPhone 8", "På en model fra 2017 betyder batteri, bagglas og hjemknap særligt meget."),
+      {
+        question: "Køber I ældre iPhones end iPhone 8?",
+        answer:
+          "Nej, iPhone 8 er grænsen. iPhone 7, 7 Plus og ældre køber vi ikke. Vil du af med en ældre telefon, så husk at slette dine data og aflevere den til genbrug i din kommune.",
+      },
+      {
+        question: "Hjemknappen virker ikke. Kan I stadig bruge telefonen?",
+        answer:
+          "Det vurderer vi fra sag til sag. Vælg Nej ved Fungerer alt?, markér Knapper, og skriv, om det er selve trykket eller kun Touch ID, der fejler.",
+      },
+      defectFaq("iPhone 8"),
+    ],
+    blogSlugs: BLOGS,
+    linkLabel: "iPhone 8",
+  },
+  {
     slug: "defekt",
     name: "Defekt iPhone",
     title: "Sælg defekt iPhone: oplys fejlen, få et tilbud | PhoneSpot",
     metaDescription:
-      "Sælg din defekte iPhone 11 eller nyere til PhoneSpot. Revnet skærm, dårligt batteri eller en telefon, der ikke tænder: oplys fejlen, og få et tilbud.",
+      "Sælg din defekte iPhone 8 eller nyere til PhoneSpot. Revnet skærm, dårligt batteri eller en telefon, der ikke tænder: oplys fejlen, og få et tilbud.",
     eyebrow: "Sælg defekt iPhone",
     h1: "Sælg din defekte iPhone",
     answer:
-      "Vi køber defekte iPhones fra iPhone 11 og nyere, så længe vi kender fejlen på forhånd. Markér, hvad der ikke virker, i formularen. Vi gennemgår oplysningerne og vender tilbage med et tilbud, eller et afslag, hvis telefonen ikke kan bruges.",
+      "Vi køber defekte iPhones fra iPhone 8 og nyere, så længe vi kender fejlen på forhånd. Markér, hvad der ikke virker, i formularen. Vi gennemgår oplysningerne og vender tilbage med et tilbud, eller et afslag, hvis telefonen ikke kan bruges.",
     wizardPreset: PRESET,
     bodyHeading: "Sådan beskriver du fejlen",
     body: [
@@ -350,7 +424,7 @@ const FAMILY_PAGES: IphoneSellPage[] = [
     ],
     coverageHeading: "Hvilke defekte iPhones køber vi",
     coverage:
-      "Vi vurderer defekte iPhones fra iPhone 11 og nyere samt SE (2. og 3. gen). Vi kan ikke love at købe alle: er skaden for stor, eller er telefonen låst, får du et afslag og et forslag til, hvad du kan gøre. Stemmer telefonen ikke med din beskrivelse, får du et nyt tilbud eller får den gratis retur.",
+      "Vi vurderer defekte iPhones fra iPhone 8 og nyere samt SE (2. og 3. gen). Vi kan ikke love at købe alle: er skaden for stor, eller er telefonen låst, får du et afslag og et forslag til, hvad du kan gøre. Stemmer telefonen ikke med din beskrivelse, får du et nyt tilbud eller får den gratis retur.",
     faqHeading: "Spørgsmål om at sælge en defekt iPhone",
     faq: [
       {
