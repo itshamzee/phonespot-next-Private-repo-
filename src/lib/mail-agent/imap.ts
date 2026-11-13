@@ -168,6 +168,7 @@ export async function listInbox(box: MailboxConfig): Promise<InboxEntry[]> {
           subject: env?.subject ?? "",
           date: new Date((msg.internalDate as Date | string | undefined) ?? env?.date ?? Date.now()),
           answered: msg.flags?.has(ANSWERED) ?? false,
+          seen: msg.flags?.has(SEEN) ?? false,
         });
       }
       return out;
@@ -205,6 +206,28 @@ export async function moveToFolder(box: MailboxConfig, uids: number[], path: str
     const lock = await client.getMailboxLock("INBOX");
     try {
       await client.messageMove(uids, target, { uid: true });
+    } finally {
+      lock.release();
+    }
+  });
+}
+
+/** Recipients and subjects of what left this mailbox since `since` (agent replies and Thunderbird alike). */
+export async function listSentSince(box: MailboxConfig, since: Date): Promise<{ to: string; subject: string; date: Date }[]> {
+  return withImap(box, async (client) => {
+    const path = await sentFolder(client);
+    const lock = await client.getMailboxLock(path, { readOnly: true });
+    try {
+      const uids = ((await client.search({ since }, { uid: true })) as number[] | false) || [];
+      const out: { to: string; subject: string; date: Date }[] = [];
+      if (!uids.length) return out;
+      for await (const msg of client.fetch(uids, { uid: true, envelope: true, internalDate: true }, { uid: true })) {
+        const date = new Date((msg.internalDate as Date | string | undefined) ?? Date.now());
+        // IMAP SINCE works on whole days; cut to the exact moment here.
+        if (date.getTime() < since.getTime()) continue;
+        out.push({ to: (msg.envelope?.to?.[0]?.address ?? "").toLowerCase(), subject: msg.envelope?.subject ?? "", date });
+      }
+      return out;
     } finally {
       lock.release();
     }

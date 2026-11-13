@@ -67,7 +67,7 @@ describe("isReadOnFiling", () => {
 describe("pickAnswered", () => {
   const now = new Date("2026-11-13T12:00:00Z").getTime();
   const e = (uid: number, counterpart: string, day: string, answered: boolean): InboxEntry => ({
-    uid, messageId: `<${uid}@x>`, counterpart, fromEmail: counterpart, subject: "s", date: new Date(`2026-11-${day}T10:00:00Z`), answered,
+    uid, messageId: `<${uid}@x>`, counterpart, fromEmail: counterpart, subject: "s", date: new Date(`2026-11-${day}T10:00:00Z`), answered, seen: true,
   });
 
   it("files a whole conversation once its newest mail is answered and a day old", () => {
