@@ -47,6 +47,10 @@ export interface BuybackSettings {
   fromAddress: string; // sender for buyback mail; changeable without a deploy
   pausedReason: string | null; // non-null means automation has stopped itself
   feedLastSeenAt: string | null; // ISO timestamp for the admin unread badge
+  // Vejledende pris i sælg-formularen (guide-price.ts). Slået fra ved deploy;
+  // ejeren tænder den i admin, når priserne er set igennem.
+  publicPriceEnabled: boolean;
+  guidePriceFactor: number; // 0..1, andel af nulpunktsbuddet vi tilbyder (0,70 godkendt 2026-11-13)
 }
 
 export interface PricingInputs {

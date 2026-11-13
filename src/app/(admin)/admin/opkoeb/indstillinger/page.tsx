@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
 import type { BuybackSettings } from "@/lib/buyback/types";
+import { GuidePriceSettings } from "@/components/admin/buyback/guide-price-settings";
 
 /**
  * Everything that governs the automation, in one place.
@@ -136,6 +137,8 @@ export default function BuybackSettingsPage() {
           </button>
         </div>
       )}
+
+      <GuidePriceSettings settings={settings} saving={saving} patch={patch} />
 
       {/* Kill switch */}
       <section className="mb-5 rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm">

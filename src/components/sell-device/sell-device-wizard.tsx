@@ -6,6 +6,7 @@ import { normalizeStoreId } from "@/lib/stores";
 import { getAttribution, normalizeTrackStore, trackLead } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { customerFacingError } from "@/lib/customer-facing-error";
+import { GuidePricePanel } from "@/components/sell-device/guide-price-panel";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -1741,6 +1742,21 @@ export function SellDeviceWizard({
                 )}
               </>
             )}
+
+            <GuidePricePanel
+              device={activeDevice.device}
+              condition={activeCondition}
+              ready={
+                !!(
+                  activeCondition.screen &&
+                  activeCondition.back &&
+                  activeCondition.battery &&
+                  activeCondition.allWorking &&
+                  (activeCondition.allWorking !== "Nej" || activeCondition.brokenParts.length > 0) &&
+                  activeCondition.cloudLocked
+                )
+              }
+            />
 
             {/* Progress across devices when multiple */}
             {devices.length > 1 && (

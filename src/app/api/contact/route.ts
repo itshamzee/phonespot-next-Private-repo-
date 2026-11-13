@@ -7,6 +7,8 @@ import { normalizeStoreId, storeLabel } from "@/lib/stores";
 import { getStaffRecipients } from "@/lib/email/staff-routing";
 import { buildConfirmationEmail } from "@/lib/email/buyback-followup-email";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
+import { loadBuybackSettings } from "@/lib/buyback/settings";
+import { estimateGuidePrice, loadGuideListings } from "@/lib/buyback/guide-price-server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -24,6 +26,10 @@ export async function POST(request: Request) {
   // Decides both what we store and which mailbox the staff notification lands in.
   const storeId = normalizeStoreId(store_id);
 
+  // Vejledende priser regnes ud igen her på serveren, så det personalet ser,
+  // er det formularen viste, og ikke et tal kunden selv kan have sendt med.
+  const guideNote = normalizedSource === "saelg-enhed" ? await guidePriceNote(metadata) : "";
+
   // Save to database
   const { data: inserted } = await supabase
     .from("contact_inquiries")
@@ -32,7 +38,7 @@ export async function POST(request: Request) {
       email: (email ?? "").trim(),
       phone: phone?.trim() || null,
       subject: subject?.trim() || null,
-      message: message.trim(),
+      message: message.trim() + guideNote,
       source: normalizedSource,
       metadata: metadata || null,
       store_id: storeId,
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
       ...getStaffRecipients(storeId),
       ...(email ? { replyTo: email } : {}),
       subject: `Kontakt${storeLabel(storeId) === "Generel" ? "" : ` (${storeLabel(storeId)})`}: ${subject || "Generel henvendelse"}`,
-      text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}Butik: ${storeLabel(storeId)}\n\n${message}`,
+      text: `Navn: ${name}\nEmail: ${email}\n${phone ? `Telefon: ${phone}\n` : ""}Butik: ${storeLabel(storeId)}\n\n${message}${guideNote}`,
     });
 
     return NextResponse.json({ success: true });
@@ -69,6 +75,32 @@ export async function POST(request: Request) {
       { error: "Kunne ikke sende besked" },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Linjer til sagen om, hvilken vejledende pris formularen viste pr. enhed.
+ * Tom streng, når funktionen er slået fra eller ingen enhed fik en pris.
+ * Kaster aldrig: en prisfejl må ikke koste os henvendelsen.
+ */
+async function guidePriceNote(metadata: unknown): Promise<string> {
+  try {
+    const client = createAdminClient();
+    const settings = await loadBuybackSettings(client);
+    if (!settings.publicPriceEnabled) return "";
+    const devices = readLeadDevices(metadata).slice(0, 10);
+    if (devices.length === 0) return "";
+    const listings = await loadGuideListings(client);
+    const lines: string[] = [];
+    for (const entry of devices) {
+      const estimate = await estimateGuidePrice(client, entry.device, entry.condition, settings, { listings });
+      if (estimate.status === "priced") {
+        lines.push(`Vejledende pris vist for ${deviceLabel(entry.device)}: ${(estimate.amountOre / 100).toLocaleString("da-DK")} kr.`);
+      }
+    }
+    return lines.length > 0 ? `\n\n${lines.join("\n")}` : "";
+  } catch {
+    return "";
   }
 }
 

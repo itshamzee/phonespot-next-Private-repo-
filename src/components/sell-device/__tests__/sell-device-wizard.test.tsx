@@ -10,6 +10,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SellDeviceWizard } from "../sell-device-wizard";
 
+// Prispanelet har egne tests. Her holdes det ude, så fetch-kaldene i disse
+// tests fortsat kun er formularens egen indsendelse.
+vi.mock("@/components/sell-device/guide-price-panel", () => ({ GuidePricePanel: () => null }));
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
 });

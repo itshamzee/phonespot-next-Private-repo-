@@ -23,6 +23,8 @@ export const DEFAULT_BUYBACK_SETTINGS: BuybackSettings = {
   fromAddress: "PhoneSpot <info@phonespot.dk>",
   pausedReason: null,
   feedLastSeenAt: null,
+  publicPriceEnabled: false,
+  guidePriceFactor: 0.7,
 };
 
 export async function loadBuybackSettings(client: SupabaseAdmin): Promise<BuybackSettings> {
