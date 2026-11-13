@@ -11,7 +11,8 @@ import {
 } from "@/lib/supabase/product-queries";
 import { skuProductToProduct } from "@/lib/supabase/product-adapter";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 import type { Product } from "@/lib/shopify/types";
 import { ImageGalleryWithGrade } from "@/components/product/image-gallery-with-grade";
 import { ProductInfo } from "@/components/product/product-info";

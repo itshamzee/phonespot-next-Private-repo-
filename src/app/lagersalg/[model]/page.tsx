@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getDeviceConfig } from "@/lib/tilbehoer-config";
 import { CoversSaleView, MIN_INDEXABLE, SALE_URL, coversForModel, getSaleItems, lowestKr } from "../sale-view";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 export const dynamicParams = true;
 
 type Props = { params: Promise<{ model: string }> };

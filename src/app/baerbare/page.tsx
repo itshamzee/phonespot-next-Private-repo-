@@ -3,7 +3,8 @@ import { DeviceCollection, type CollectionFaq } from "@/components/product/devic
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Brugt bærbar og refurbished laptop – 36 mdr. garanti | PhoneSpot",

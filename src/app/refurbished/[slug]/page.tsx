@@ -29,7 +29,8 @@ import {
 } from "@/lib/seo/device-meta";
 import { getDeviceFaq } from "@/lib/product/device-faq";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 type Props = {
   params: Promise<{ slug: string }>;

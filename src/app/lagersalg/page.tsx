@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { CoversSaleView, SALE_URL, getSaleItems, lowestKr } from "./sale-view";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const rows = await getSaleItems();

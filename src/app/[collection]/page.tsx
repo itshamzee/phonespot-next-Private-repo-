@@ -5,7 +5,8 @@ import { getCollectionConfig, getAllCollectionSlugs, DEVICE_CATEGORIES } from "@
 import { getPublishedSkuProducts, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
@@ -86,13 +87,10 @@ export async function generateMetadata({
 
 export default async function CollectionPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ collection: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { collection: slug } = await params;
-  const { sort } = await searchParams;
 
   const config = getCollectionConfig(slug);
   if (!config) {

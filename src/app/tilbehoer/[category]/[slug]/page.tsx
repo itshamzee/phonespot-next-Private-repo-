@@ -18,7 +18,8 @@ import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { accessoryModelLabels } from "@/lib/product/accessory-models";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 type Props = {
   params: Promise<{ category: string; slug: string }>;

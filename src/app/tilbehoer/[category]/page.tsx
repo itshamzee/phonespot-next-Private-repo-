@@ -8,7 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CoversSaleBanner } from "@/components/tilbehoer/covers-sale-banner";
 
 export const dynamicParams = true;
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export function generateStaticParams() {
   return getAllCategoryParams();
