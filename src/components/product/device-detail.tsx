@@ -12,6 +12,8 @@ import type { PublicSkuProduct } from "@/lib/product/public-sku";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { useCart } from "@/components/cart/cart-context";
 import { GradeSelector } from "./grade-selector";
+import { CONDITION_IMAGES } from "./condition-illustrations";
+import { ZoomImage } from "./zoom-image";
 import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
@@ -519,7 +521,17 @@ export function DeviceDetail({
       : null;
   const images =
     colorImages ?? (template.images.length > 0 ? template.images : []);
-  const mainImage = images[mainImageIndex] ?? null;
+  // Eksempelfotos af den valgte stand (A/B/C) ligger sidst i galleriet.
+  const standKey = selectedGrade === "A" || selectedGrade === "B" || selectedGrade === "C" ? selectedGrade : null;
+  const standImages = standKey
+    ? [
+        { src: CONDITION_IMAGES[getDeviceType(template.category)][standKey].frame, side: "bagside" },
+        { src: CONDITION_IMAGES[getDeviceType(template.category)][standKey].display, side: "forside" },
+      ]
+    : [];
+  const standIndex = mainImageIndex - images.length;
+  const standImage = standIndex >= 0 ? standImages[standIndex] ?? null : null;
+  const mainImage = standImage ? null : images[mainImageIndex] ?? images[0] ?? null;
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
   // Per-unit battery statement for the specific device that would actually
@@ -742,8 +754,25 @@ export function DeviceDetail({
         </header>
 
         <div className={styles.gallery}>
-          <div className={styles.imageStage}>
-            {mainImage ? (
+          <div className={styles.imageStage} style={standImage ? { background: "#fff", border: "1px solid #e5e5ea" } : undefined}>
+            {standImage ? (
+              <>
+                <Image
+                  src={standImage.src}
+                  alt={`Eksempel på ${gradeDetail?.label.toLowerCase() ?? "standen"}, ${standImage.side}`}
+                  fill
+                  className="object-contain p-3 sm:p-5"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                />
+                <ZoomImage
+                  src={standImage.src}
+                  alt={`Eksempel på stand ${standKey}, ${standImage.side}`}
+                />
+                <span className={styles.standCaption}>
+                  Eksempel på stand {standKey} · {gradeDetail?.label}
+                </span>
+              </>
+            ) : mainImage ? (
               <Image
                 src={mainImage}
                 alt={template.display_name}
@@ -756,7 +785,7 @@ export function DeviceDetail({
               <p>Billede kommer snart</p>
             )}
           </div>
-          {images.length > 1 && (
+          {images.length + standImages.length > 1 && (
             <div className={styles.thumbnails} aria-label="Produktbilleder">
               {images.map((img, i) => (
                 <button
@@ -773,6 +802,19 @@ export function DeviceDetail({
                     className="object-contain p-2"
                     sizes="64px"
                   />
+                </button>
+              ))}
+              {standImages.map((img, i) => (
+                <button
+                  key={img.src}
+                  type="button"
+                  onClick={() => setMainImageIndex(images.length + i)}
+                  aria-label={`Vis eksempel på stand ${standKey}, ${img.side}`}
+                  aria-pressed={images.length + i === mainImageIndex}
+                  className={styles.standThumb}
+                >
+                  <Image src={img.src} alt="" fill className="object-contain p-1" sizes="64px" />
+                  <span>Stand {standKey}</span>
                 </button>
               ))}
             </div>

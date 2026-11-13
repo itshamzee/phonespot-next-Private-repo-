@@ -276,36 +276,49 @@ function CheckIcon({ className }: { className?: string }) {
 }
 
 function FullVariant({ grades }: { grades: GradeData[] }) {
+  // Ét stort billede af den valgte stand frem for tre små kort, så forskellen
+  // mellem standene kan ses (og zoomes) på samme billede.
+  const [active, setActive] = useState(grades[1]?.grade ?? grades[0].grade);
+  const g = grades.find((x) => x.grade === active) ?? grades[0];
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-      {grades.map((g) => (
-        <div
-          key={g.grade}
-          className={`group overflow-hidden rounded-3xl border ${g.color} bg-white shadow-sm transition-shadow hover:shadow-md`}
-        >
-          <ImageSlider
-            displayImage={g.displayImage}
-            frameImage={g.frameImage}
-            title={g.title}
-          />
-          <div className="px-6 pb-6 pt-5">
-            <div className="mb-3 flex items-baseline gap-2">
-              <h3 className="font-body text-xl font-bold text-charcoal">
-                {g.title}
-              </h3>
-              <span className="text-xs font-medium text-gray">{g.subtitle}</span>
-            </div>
-            <ul className="space-y-2">
-              {g.bullets.map((bullet) => (
-                <li key={bullet} className="flex items-start gap-2 text-sm text-charcoal/80">
-                  <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-green-eco" />
-                  {bullet}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div className="overflow-hidden rounded-[10px] border border-[#dde2dd] bg-white">
+      <div role="tablist" aria-label="Vælg stand" className="grid grid-cols-3 border-b border-[#dde2dd]">
+        {grades.map((x) => (
+          <button
+            key={x.grade}
+            type="button"
+            role="tab"
+            aria-selected={x.grade === active}
+            onClick={() => setActive(x.grade)}
+            className={`min-h-14 border-b-2 px-2 py-3 text-left transition-colors sm:px-5 ${
+              x.grade === active
+                ? "border-[#1a3d2e] bg-[#f4f5f2] text-charcoal"
+                : "border-transparent text-charcoal/60 hover:text-charcoal"
+            }`}
+          >
+            <span className="block text-[11px] font-semibold text-[#5a8c6f]">{x.subtitle}</span>
+            <span className="block text-sm font-semibold sm:text-base">{x.title}</span>
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" className="grid md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+        <ImageSlider displayImage={g.displayImage} frameImage={g.frameImage} title={g.title} />
+        <div className="px-5 pb-6 pt-5 sm:px-6">
+          <p className="text-xs font-semibold text-[#5a8c6f]">{g.subtitle}</p>
+          <h3 className="mt-1 font-body text-2xl font-semibold tracking-[-0.03em] text-charcoal">{g.title}</h3>
+          <ul className="mt-4 space-y-2.5">
+            {g.bullets.map((bullet) => (
+              <li key={bullet} className="flex items-start gap-2 text-sm leading-6 text-charcoal/80">
+                <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-green-eco" />
+                {bullet}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-xs leading-5 text-[#626862]">
+            Billedet viser et eksempel på standen. Tryk på billedet for at zoome ind.
+          </p>
         </div>
-      ))}
+      </div>
     </div>
   );
 }

@@ -61,7 +61,7 @@ function getGradeMeta(deviceType: DeviceType): Record<Grade, GradeMeta> {
   return deviceType === "laptop" ? LAPTOP_GRADE_META : DEFAULT_GRADE_META;
 }
 
-const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; frame: string }>> = {
+export const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; frame: string }>> = {
   watch: {
     A: { display: "/quality/watch-grade-a-display.webp", frame: "/quality/watch-grade-a-frame.webp" },
     B: { display: "/quality/watch-grade-b-display.webp", frame: "/quality/watch-grade-b-frame.webp" },
