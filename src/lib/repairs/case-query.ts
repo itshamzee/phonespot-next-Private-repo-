@@ -27,6 +27,8 @@ const BASE_COLUMNS =
 const OPTIONAL_COLUMNS = "promised_at, assigned_to";
 /** Findes først efter migrationen 20261005170000_repair_case_group.sql. */
 const GROUP_COLUMN = "intake_group_id";
+/** Findes først efter migrationen 20261013120000_repair_parts_check.sql (lagertjek, "Skal bestilles"). */
+const PARTS_COLUMN = "parts_status";
 const EMBEDS = "customer_devices(serial_number, color), repair_quotes(estimated_days, created_at)";
 
 const PAGE_FETCH = 1000; // Supabase afkorter som standard svar ved 1000 rækker.
@@ -38,6 +40,7 @@ export const MAX_PAGE_SIZE = 100;
 type Selection = { columns: string; hasOptional: boolean };
 
 const SELECTIONS: Selection[] = [
+  { columns: `${BASE_COLUMNS}, ${OPTIONAL_COLUMNS}, ${GROUP_COLUMN}, ${PARTS_COLUMN}, ${EMBEDS}`, hasOptional: true },
   { columns: `${BASE_COLUMNS}, ${OPTIONAL_COLUMNS}, ${GROUP_COLUMN}, ${EMBEDS}`, hasOptional: true },
   { columns: `${BASE_COLUMNS}, ${OPTIONAL_COLUMNS}, ${EMBEDS}`, hasOptional: true },
   { columns: `${BASE_COLUMNS}, ${EMBEDS}`, hasOptional: false },
