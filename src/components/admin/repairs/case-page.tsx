@@ -21,6 +21,8 @@ import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { PrintModal } from "@/components/admin/repairs/print-modal";
 import { SmsThread } from "@/components/admin/repairs/sms-thread";
+import { PartsUsedPanel } from "@/components/admin/repairs/parts-used-panel";
+import { PartsStatusBadge } from "@/components/admin/repairs/parts-status-badge";
 
 /** Er adgangskoden noteret? Selve koden gemmes og vises aldrig her. */
 function passcodeLabel(detail: CaseDetail): string {
@@ -193,6 +195,7 @@ export default function CasePage({ id }: { id: string }) {
           <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-[#15211B]">Sag {label}</h1>
           <span className="rounded-lg bg-[#EEF0EC] px-2.5 py-1 text-[13px] font-semibold text-[#3D4842]">{tabLabel}</span>
           {t.is_urgent && <Pill tone="amber">Hastesag</Pill>}
+          <PartsStatusBadge status={t.parts_status} />
           {detail.group && (
             <p className="m-0 basis-full text-sm text-[#5E6A63]" data-testid="group-with">
               Del af indlevering med{" "}
@@ -463,6 +466,15 @@ export default function CasePage({ id }: { id: string }) {
           )}
         </div>
       </Card>
+
+      {/* Dele brugt (fælles lagersystem) — skjult når LAGERSYSTEM_* ikke er sat */}
+      <PartsUsedPanel
+        ticketId={id}
+        storeId={normalizeStoreId(t.store_id)}
+        onPartsStatusChange={(s) =>
+          setDetail((d) => (d && (d.ticket.parts_status ?? null) !== s ? { ...d, ticket: { ...d.ticket, parts_status: s } } : d))
+        }
+      />
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
         <SmsThread

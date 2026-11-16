@@ -13,6 +13,7 @@ import {
 } from "@/lib/repair/booking-devices";
 import { priceFromCatalog } from "@/lib/repair/catalog-pricing";
 import { Resend } from "resend";
+import { scheduleTicketPartsCheck } from "@/lib/lagersystem/schedule-parts-check";
 
 const TEMPERED_GLASS_PRICE = 99; // DKK
 
@@ -180,6 +181,8 @@ export async function POST(request: NextRequest) {
       }
       ticketIds = [ticket.id];
     }
+    // Lagertjek (spec §4.4) — kører efter svaret, påvirker aldrig kunden.
+    for (const id of ticketIds) scheduleTicketPartsCheck(id);
     const firstTicketId = ticketIds[0];
 
     // 3. Insert status log entry

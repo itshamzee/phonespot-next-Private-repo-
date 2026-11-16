@@ -104,6 +104,7 @@ export const NAV: NavArea[] = [
     icon: ["M4 5v14M7 5v14M11 5v14M14 5v14M17 5v14M20 5v14"],
     children: [
       { href: "/admin/varer", label: "Lager" },
+      { href: "/admin/lager/reservedele", label: "Reservedele" },
       { href: "/admin/varer/overforsler", label: "Overførsler" },
       { href: "/admin/platform/products", label: "Produkter", match: ["/admin/platform/sku"] },
       { href: "/admin/tilbehoer", label: "Tilbehør", match: ["/admin/spot"] },

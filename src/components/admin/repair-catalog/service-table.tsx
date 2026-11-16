@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatKr, isValidPrice, parseAmount } from "@/lib/repairs/catalog-manage-rules";
 import type { ManageCategory, ManageService } from "@/lib/repairs/catalog-manage-types";
+import { ServicePartsEditor } from "@/components/admin/repairs/service-parts-editor";
 import { Switch, btnSmall } from "./ui";
 
 export type ServicePatch = {
@@ -123,6 +124,7 @@ export function ServiceTable({
   onStock: (partId: string) => void;
   onError: (message: string) => void;
 }) {
+  const [partsOpenId, setPartsOpenId] = useState<string | null>(null);
   if (categories.length === 0) {
     return (
       <p className="rounded-xl border border-[#E2E5E0] bg-white px-6 py-10 text-center text-[14px] text-[#5E6A63]">
@@ -156,7 +158,8 @@ export function ServiceTable({
               {cat.services.map((s) => {
                 const priced = isValidPrice(s.price_dkk);
                 return (
-                  <div key={s.id} className={`${GRID} border-b border-[#EEF0EC] px-3 py-2.5 last:border-b-0 ${s.active ? "" : "bg-[#FAFAF8]"}`}>
+                  <div key={s.id} className="border-b border-[#EEF0EC] last:border-b-0">
+                  <div className={`${GRID} px-3 py-2.5 ${s.active ? "" : "bg-[#FAFAF8]"}`}>
                     <input
                       type="checkbox"
                       checked={selected.has(s.id)}
@@ -205,7 +208,21 @@ export function ServiceTable({
                       placeholder="Garantitekst"
                       onCommit={(raw) => onPatch(s.id, { warranty_info: raw.trim() === "" ? null : raw.trim() })}
                     />
-                    <PartCell service={s} onStock={onStock} />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <PartCell service={s} onStock={onStock} />
+                      </div>
+                      <button
+                        type="button"
+                        className={btnSmall}
+                        aria-expanded={partsOpenId === s.id}
+                        aria-label={`Dele til lagertjek for ${s.name}`}
+                        title="Kobl reservedele til lagertjek"
+                        onClick={() => setPartsOpenId(partsOpenId === s.id ? null : s.id)}
+                      >
+                        Dele
+                      </button>
+                    </div>
                     <div className="flex justify-end">
                       <Switch
                         checked={s.active}
@@ -215,6 +232,12 @@ export function ServiceTable({
                         onChange={(next) => void onPatch(s.id, { active: next })}
                       />
                     </div>
+                  </div>
+                  {partsOpenId === s.id && (
+                    <div className="border-t border-[#EEF0EC] bg-[#F5F6F4] px-4 py-4">
+                      <ServicePartsEditor serviceId={s.id} />
+                    </div>
+                  )}
                   </div>
                 );
               })}
