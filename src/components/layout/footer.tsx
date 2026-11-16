@@ -21,6 +21,8 @@ const SERVICE_LINKS = [
   { label: "Reparation", href: "/reparation" },
   { label: "Reparation Vejle", href: "/reparation-vejle" },
   { label: "Reparation Slagelse", href: "/reparation-slagelse" },
+  { label: "Brugte iPhones i Vejle", href: "/iphones-vejle" },
+  { label: "Brugte iPhones i Slagelse", href: "/iphones-slagelse" },
   { label: "Erhverv", href: "/erhverv" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },

@@ -7,8 +7,8 @@ import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Refurbished iPads med 36 måneders garanti | PhoneSpot",
-  description: "Sammenlign aktuelle refurbished iPads efter pris, lagerplads, fysisk stand og tilgængelighed hos PhoneSpot.",
+  title: "Brugt iPad med 36 mdr. garanti – refurbished | PhoneSpot",
+  description: "Køb en brugt iPad, der er testet og istandsat: iPad, iPad Air og iPad Pro. 36 mdr. garanti og 30 dages returret. Sammenlign pris, lagerplads og stand.",
   alternates: { canonical: "https://phonespot.dk/ipads" },
   openGraph: { title: "Refurbished iPads | PhoneSpot", description: "Find en kvalitetstestet refurbished iPad i det aktuelle udvalg.", url: "https://phonespot.dk/ipads" },
 };

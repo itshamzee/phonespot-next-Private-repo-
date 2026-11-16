@@ -521,6 +521,14 @@ export function LocalRepairPage({ town, prices }: Props) {
               <Link href="/butik/slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
                 butikken i Slagelse
               </Link>
+              . Vi sælger også{" "}
+              <Link href="/iphones-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+                brugte iPhones i Slagelse
+              </Link>{" "}
+              og{" "}
+              <Link href="/baerbare-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+                brugte bærbare i Slagelse
+              </Link>
               .
             </p>
           )}

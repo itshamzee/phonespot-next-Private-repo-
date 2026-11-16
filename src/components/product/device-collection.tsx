@@ -18,6 +18,8 @@ interface CollectionDetailsProps {
   choices: { title: string; body: string }[];
   faqs: CollectionFaq[];
   serviceLink?: { href: string; label: string; body: string };
+  /** Lokale købssider for kategorien, fx "Brugte iPhones i Vejle". */
+  localLinks?: { href: string; label: string }[];
 }
 
 interface DeviceCollectionProps extends CollectionDetailsProps {
@@ -36,6 +38,7 @@ export function DeviceCollectionDetails({
   choices,
   faqs,
   serviceLink,
+  localLinks,
   deviceType = "phone",
 }: CollectionDetailsProps) {
   return (
@@ -79,6 +82,7 @@ export function DeviceCollectionDetails({
               <div className="mt-7 divide-y divide-white/20 border-y border-white/20">
                 <Link href="/butik/vejle" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Vejle <span aria-hidden="true">&rarr;</span></Link>
                 <Link href="/butik/slagelse" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Slagelse <span aria-hidden="true">&rarr;</span></Link>
+                {localLinks?.map((link) => <Link key={link.href} href={link.href} className="flex min-h-12 items-center justify-between text-sm font-semibold">{link.label} <span aria-hidden="true">&rarr;</span></Link>)}
               </div>
               {serviceLink && <div className="mt-7 border-t border-white/20 pt-6"><p className="text-sm leading-6 text-white/75">{serviceLink.body}</p><Link href={serviceLink.href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold">{serviceLink.label} <span aria-hidden="true">&rarr;</span></Link></div>}
             </aside>
@@ -108,6 +112,7 @@ export function DeviceCollection({
   faqs,
   initialBrand,
   serviceLink,
+  localLinks,
   deviceType = "phone",
   collection = deviceType === "phone" ? "iphone" : deviceType,
 }: DeviceCollectionProps) {
@@ -135,6 +140,7 @@ export function DeviceCollection({
         choices={choices}
         faqs={faqs}
         serviceLink={serviceLink}
+        localLinks={localLinks}
       />
     </div>
   );

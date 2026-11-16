@@ -49,6 +49,7 @@ export default async function IphonesPage() {
       guideIntro="Modelnavne fortæller ikke hele historien. Tag udgangspunkt i de funktioner, du bruger hver dag, og sammenlign derefter de konkrete enheder."
       choices={CHOICES}
       faqs={FAQS}
+      localLinks={[{ href: "/iphones-vejle", label: "Brugte iPhones i Vejle" }, { href: "/iphones-slagelse", label: "Brugte iPhones i Slagelse" }]}
      
     />
   </>;

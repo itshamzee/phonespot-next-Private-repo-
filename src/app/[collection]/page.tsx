@@ -61,11 +61,12 @@ export async function generateMetadata({
   // the 36-month device warranty, so the collection description must not
   // claim it (same fix as the product-page/TrustBar variant split).
   const isDeviceCollection = DEVICE_CATEGORIES.has(SLUG_TO_CATEGORY[collection] ?? "");
-  const description = isDeviceCollection
+  const description = config.metaDescription ? config.metaDescription : isDeviceCollection
     ? `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 36 måneders garanti.`
     : `Udforsk vores udvalg af ${config.title.toLowerCase()}. Hurtig levering og 2 års reklamationsret.`;
 
-  const title = `${config.title} - Køb brugte ${config.title} hos PhoneSpot`;
+  // "Køb brugte Outlet" gav ingen mening for tilbehør: kategorier kan sætte deres egen titel.
+  const title = config.metaTitle ?? (isDeviceCollection ? `${config.title} - Køb brugte ${config.title} hos PhoneSpot` : `${config.title} | PhoneSpot`);
 
   return {
     title,

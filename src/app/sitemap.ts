@@ -454,6 +454,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${BASE_URL}/iphones-slagelse`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/baerbare-slagelse`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    {
       url: `${BASE_URL}/iphone-18-tilbehoer`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,

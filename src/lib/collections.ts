@@ -4,6 +4,9 @@ export const COLLECTION_MAP: Record<string, {
   description: string;
   badge?: string;
   showConditionWalkthrough?: boolean;
+  /** Sidens <title> og metabeskrivelse, når standardteksten ikke passer til kategorien. */
+  metaTitle?: string;
+  metaDescription?: string;
 }> = {
   iphones: {
     shopifyHandle: "iphones",
@@ -35,6 +38,8 @@ export const COLLECTION_MAP: Record<string, {
     shopifyHandle: "covers-1",
     title: "Covers og beskyttelse",
     description: "Beskyt din enhed med kvalitetscovers og beskyttelsesglas.",
+    metaTitle: "Covers til iPhone, iPad og Samsung | PhoneSpot",
+    metaDescription: "Covers og beskyttelsesglas til iPhone, iPad og Samsung. Se modeller, priser og lagerstatus hos PhoneSpot. Hurtig levering og 2 års reklamationsret.",
   },
   tilbehor: {
     shopifyHandle: "tilbehor",
@@ -45,11 +50,15 @@ export const COLLECTION_MAP: Record<string, {
     shopifyHandle: "lyd",
     title: "Lyd og høretelefoner",
     description: "Høretelefoner, øretelefoner og headsets til alle enheder.",
+    metaTitle: "Høretelefoner og headsets til iPhone og Android | PhoneSpot",
+    metaDescription: "Høretelefoner, øretelefoner og headsets til iPhone, iPad og Android. Se priser og lagerstatus hos PhoneSpot. Hurtig levering og 2 års reklamationsret.",
   },
   opladere: {
     shopifyHandle: "opladere",
     title: "Opladere",
     description: "Opladere og kabler til iPhone, iPad og andre enheder.",
+    metaTitle: "Opladere og kabler til iPhone, iPad og Android | PhoneSpot",
+    metaDescription: "Opladere, kabler og powerbanks til iPhone, iPad og Android. Se priser og lagerstatus hos PhoneSpot. Hurtig levering og 2 års reklamationsret.",
   },
   restsalg: {
     shopifyHandle: "restsalg",
@@ -68,6 +77,8 @@ export const COLLECTION_MAP: Record<string, {
     shopifyHandle: "outlet",
     title: "Outlet",
     description: "Ekstra skarpe priser på udvalgte produkter. Begrænset antal.",
+    metaTitle: "Outlet: covers, glas og opladere til nedsat pris | PhoneSpot",
+    metaDescription: "Outlet hos PhoneSpot: covers, beskyttelsesglas, opladere og powerbanks til nedsat pris. Begrænset antal, hurtig levering og 2 års reklamationsret.",
     badge: "Ekstra tilbud",
   },
 };

@@ -237,6 +237,11 @@ export default async function ReparationVejlePage() {
     <>
       <JsonLd data={localBusinessJsonLd} />
       <JsonLd data={faqJsonLd} />
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+        { "@type": "ListItem", position: 2, name: "Reparation", item: "https://phonespot.dk/reparation" },
+        { "@type": "ListItem", position: 3, name: "Reparation i Vejle", item: "https://phonespot.dk/reparation-vejle" },
+      ] }} />
       <MobileContactBar
         phone={store.phone}
         bookingHref={`/reparation/booking?store=${store.slug}`}
@@ -728,6 +733,25 @@ export default async function ReparationVejlePage() {
             og{" "}
             <Link href="/reparation-fredericia" className="font-semibold text-[#1A3D2E] hover:underline">
               Reparation Fredericia
+            </Link>
+            .
+          </p>
+          <p className="mt-3">
+            Mere i butikken:{" "}
+            <Link href="/butik/vejle" className="font-semibold text-[#1A3D2E] hover:underline">
+              adresse og åbningstider i Vejle
+            </Link>
+            ,{" "}
+            <Link href="/iphones-vejle" className="font-semibold text-[#1A3D2E] hover:underline">
+              brugte iPhones i Vejle
+            </Link>
+            ,{" "}
+            <Link href="/baerbare-vejle" className="font-semibold text-[#1A3D2E] hover:underline">
+              brugte bærbare i Vejle
+            </Link>{" "}
+            og{" "}
+            <Link href="/saelg-din-enhed/vejle" className="font-semibold text-[#1A3D2E] hover:underline">
+              sælg din telefon i Vejle
             </Link>
             .
           </p>
