@@ -3,6 +3,11 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 let mockStaff: Record<string, unknown> | null = null;
 const updates: Record<string, unknown>[] = [];
+const otherWrites: { table: string; op: string; row: Record<string, unknown> }[] = [];
+let beforeRow: Record<string, unknown> | null = {
+  customer_id: "c1", device_id: "d1", customer_name: "Anna", customer_phone: "12345678",
+  customer_email: "", device_model: "iPhone 13", issue_description: "Skærm",
+};
 let updateResult: { data: unknown; error: unknown } = { data: { id: "t1" }, error: null };
 
 vi.mock("@/lib/auth/require-staff", () => ({
@@ -12,8 +17,22 @@ vi.mock("@/lib/auth/require-staff", () => ({
 vi.mock("@/lib/supabase/client", () => ({
   createServerClient: () => ({
     from: (table: string) => {
+      if (table === "customers" || table === "customer_devices" || table === "activity_log") {
+        return {
+          update: (row: Record<string, unknown>) => {
+            otherWrites.push({ table, op: "update", row });
+            return { eq: async () => ({ error: null }) };
+          },
+          insert: async (row: Record<string, unknown>) => {
+            otherWrites.push({ table, op: "insert", row });
+            return { error: null };
+          },
+          select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { serial_number: "111" }, error: null }) }) }),
+        };
+      }
       if (table !== "repair_tickets") throw new Error(`Unexpected table: ${table}`);
       return {
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: beforeRow, error: null }) }) }),
         update: (row: Record<string, unknown>) => {
           updates.push(row);
           return {
@@ -46,6 +65,11 @@ describe("PATCH /api/repairs/[id]", () => {
   beforeEach(() => {
     mockStaff = null;
     updates.length = 0;
+    otherWrites.length = 0;
+    beforeRow = {
+      customer_id: "c1", device_id: "d1", customer_name: "Anna", customer_phone: "12345678",
+      customer_email: "", device_model: "iPhone 13", issue_description: "Skærm",
+    };
     updateResult = { data: { id: "t1" }, error: null };
   });
 
@@ -61,7 +85,7 @@ describe("PATCH /api/repairs/[id]", () => {
       is_urgent: true,
       status: "afhentet",
       paid: true,
-      customer_email: "x@y.dk",
+      internal_notes: [],
       store_id: "Vejle",
     });
     expect(res.status).toBe(200);
@@ -89,5 +113,38 @@ describe("PATCH /api/repairs/[id]", () => {
     mockStaff = STAFF;
     updateResult = { data: null, error: null };
     expect((await call({ is_urgent: false })).status).toBe(404);
+  });
+
+  it("retter kundens telefon, kundekortet og skriver historik", async () => {
+    mockStaff = STAFF;
+    const res = await call({ customer_phone: "87654321", customer_name: "Anna", update_customer: true });
+    expect(res.status).toBe(200);
+    expect(updates[0].customer_phone).toBe("87654321");
+    expect(otherWrites).toContainEqual({ table: "customers", op: "update", row: { name: "Anna", phone: "87654321" } });
+    const log = otherWrites.find((w) => w.table === "activity_log");
+    const details = log?.row.details as { changes: { field: string; from: string; to: string }[] };
+    // Navnet var uændret, så kun telefonen står i historikken.
+    expect(details.changes).toEqual([{ field: "customer_phone", label: "Telefon", from: "12345678", to: "87654321" }]);
+    expect(log?.row.actor_id).toBe("s1");
+  });
+
+  it("lader kundekortet være, når personalet fravælger det", async () => {
+    mockStaff = STAFF;
+    await call({ customer_phone: "87654321", update_customer: false });
+    expect(otherWrites.some((w) => w.table === "customers")).toBe(false);
+  });
+
+  it("gemmer IMEI på enheden", async () => {
+    mockStaff = STAFF;
+    const res = await call({ serial_number: "356789" });
+    expect(res.status).toBe(200);
+    expect(otherWrites).toContainEqual({ table: "customer_devices", op: "update", row: { serial_number: "356789" } });
+  });
+
+  it("giver 404 og retter intet, når sagen hører til en anden butik", async () => {
+    mockStaff = STAFF;
+    beforeRow = null;
+    expect((await call({ customer_name: "Bo" })).status).toBe(404);
+    expect(updates).toHaveLength(0);
   });
 });

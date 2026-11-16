@@ -21,6 +21,7 @@ import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { PrintModal } from "@/components/admin/repairs/print-modal";
 import { SmsThread } from "@/components/admin/repairs/sms-thread";
+import { CaseInfoForm } from "@/components/admin/repairs/case-info-form";
 
 /** Er adgangskoden noteret? Selve koden gemmes og vises aldrig her. */
 function passcodeLabel(detail: CaseDetail): string {
@@ -55,6 +56,13 @@ export default function CasePage({ id }: { id: string }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quote, setQuote] = useState({ price: "", days: "", notes: "" });
   const [noteText, setNoteText] = useState("");
+  const [editing, setEditing] = useState<"kunde" | "detaljer" | null>(null);
+
+  async function savedInfo(warning: string | null) {
+    setEditing(null);
+    setNotice(warning);
+    await load();
+  }
 
   const load = useCallback(async () => {
     try {
@@ -373,7 +381,30 @@ export default function CasePage({ id }: { id: string }) {
       )}
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
-        <Card title="Detaljer">
+        <Card
+          title="Detaljer"
+          aside={
+            editing !== "detaljer" && (
+              <Btn size="sm" onClick={() => setEditing("detaljer")} aria-label="Rediger enhed og fejl">
+                Rediger
+              </Btn>
+            )
+          }
+        >
+          {editing === "detaljer" ? (
+            <CaseInfoForm
+              ticketId={id}
+              fields={[
+                { name: "device_model", label: "Enhed", value: t.device_model ?? "" },
+                ...(t.device_id
+                  ? [{ name: "serial_number" as const, label: "IMEI / serienr.", value: detail.device?.serial_number ?? "" }]
+                  : []),
+                { name: "issue_description", label: "Fejl", value: t.issue_description ?? "", type: "textarea" as const },
+              ]}
+              onCancel={() => setEditing(null)}
+              onSaved={savedInfo}
+            />
+          ) : (
           <Dl
             rows={[
               ["Enhed", <b key="e">{[t.device_model || t.device_type, detail.device?.color].filter(Boolean).join(" · ")}</b>],
@@ -386,8 +417,31 @@ export default function CasePage({ id }: { id: string }) {
               ["Garanti", detail.warranty || "Ikke angivet på ydelsen"],
             ]}
           />
+          )}
         </Card>
-        <Card title="Kunde">
+        <Card
+          title="Kunde"
+          aside={
+            editing !== "kunde" && (
+              <Btn size="sm" onClick={() => setEditing("kunde")} aria-label="Rediger kundeoplysninger">
+                Rediger
+              </Btn>
+            )
+          }
+        >
+          {editing === "kunde" ? (
+            <CaseInfoForm
+              ticketId={id}
+              customerId={t.customer_id}
+              fields={[
+                { name: "customer_name", label: "Navn", value: t.customer_name ?? "", required: true },
+                { name: "customer_phone", label: "Telefon", value: t.customer_phone ?? "", type: "tel" },
+                { name: "customer_email", label: "E-mail", value: t.customer_email ?? "", type: "email" },
+              ]}
+              onCancel={() => setEditing(null)}
+              onSaved={savedInfo}
+            />
+          ) : (
           <Dl
             rows={[
               ["Navn", <b key="n">{t.customer_name}</b>],
@@ -407,7 +461,8 @@ export default function CasePage({ id }: { id: string }) {
               ],
             ]}
           />
-          {t.customer_id && (
+          )}
+          {editing !== "kunde" && t.customer_id && (
             <div className="mt-3 text-sm">
               <Link href={`/admin/kunder/${t.customer_id}`} className="text-[#1A3D2E] underline">
                 Åbn kunde
