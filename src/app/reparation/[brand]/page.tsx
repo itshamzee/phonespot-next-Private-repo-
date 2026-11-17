@@ -47,11 +47,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `${content.label}-reparation${price} | PhoneSpot`,
     `${content.label}-reparation | PhoneSpot`,
   ]);
-  const warranty = hasLifetimeWarranty(brand.device_type)
-    ? "Livstidsgaranti på arbejde og dele."
-    : brand.device_type === "appliance"
-      ? "12 måneders garanti på dele og arbejde."
-      : "Fast pris før vi går i gang.";
+  const warranty = content.warrantyLine
+    ? content.warrantyLine.charAt(0).toUpperCase() + content.warrantyLine.slice(1)
+    : hasLifetimeWarranty(brand.device_type)
+      ? "Livstidsgaranti på arbejde og dele."
+      : brand.device_type === "appliance"
+        ? "12 måneders garanti på dele og arbejde."
+        : "Fast pris før vi går i gang.";
   const description = `${content.label}-reparation i Vejle og Slagelse${price ? `:${price}` : ""}. ${warranty} Kom forbi uden tid eller send ind med gratis fragtlabel.`;
 
   return {
@@ -120,6 +122,20 @@ export default async function BrandPage({ params }: Props) {
           <h2 id="find-model">Find din model</h2>
           <ModelGrid models={modelCards} brandName={brand.name} />
         </section>
+        {content.guides && content.guides.length > 0 && (
+          <section className={styles.section} aria-labelledby="guides">
+            <h2 id="guides">Guides og relaterede reparationer</h2>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {content.guides.map((g) => (
+                <li key={g.href}>
+                  <Link href={g.href} className={styles.textLink}>
+                    {g.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <CityLinks
           label={content.label}
           note={content.cityNote}
@@ -131,7 +147,9 @@ export default async function BrandPage({ params }: Props) {
             <h2>Brug for hjælp til at vælge?</h2>
             <p>
               Vi hjælper med at finde din model og den rette reparation.{" "}
-              {hasLifetimeWarranty(brand.device_type)
+              {content.warrantyLine
+                ? `Du får ${content.warrantyLine}`
+                : hasLifetimeWarranty(brand.device_type)
                 ? "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele."
                 : brand.device_type === "appliance"
                   ? "Apparatreparationer har 12 måneders garanti på dele og arbejde."

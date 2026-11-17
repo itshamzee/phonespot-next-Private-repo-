@@ -15,7 +15,7 @@ const TEXT = {
     macbook:
       "Computerreparation i Vejle handler hos os mest om MacBook Air og MacBook Pro: batteri, skærm, tastatur og ladestik, og rensning af maskiner, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
     console:
-      "Sort skærm på PS5 skyldes oftest en knækket HDMI-port. Vi skifter porten med mikrolodning og renser konsollen indvendigt i én pakke. Vi reparerer også PS4, Xbox og Nintendo Switch.",
+      "Larmer eller bliver din PS5 varm, renser vi den og fornyer kølingen for 899 kr. på 1-2 hverdage. Sort skærm skyldes oftest en knækket HDMI-port, som vi skifter med mikrolodning og renser konsollen i samme omgang. Vi reparerer også PS4, Xbox og Nintendo Switch.",
   },
   slagelse: {
     android:
@@ -25,7 +25,7 @@ const TEXT = {
     macbook:
       "Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken. Prisen aftaler vi, før vi begynder.",
     console:
-      "Reparation af porte: HDMI-port på PS5, PS4, Xbox og Nintendo Switch skiftes med mikrolodning. På PS5 renser vi også konsollen indvendigt i samme omgang.",
+      "Reparation af porte: HDMI-port på PS5, PS4 og Xbox skiftes med mikrolodning, og på PS5 renser vi konsollen indvendigt i samme omgang. Larmer konsollen bare, koster en rens med ny køling 899 kr.",
   },
 } as const;
 
@@ -53,7 +53,7 @@ export function CityCategorySections({ store }: { store: "vejle" | "slagelse" })
       heading: `Computer og MacBook i ${city}`,
       text: t.macbook,
       links: [
-        { href: `/reparation-${store}/computer`, label: `Computerreparation i ${city}` },
+        { href: `/reparation-${store}/computer`, label: `Computer- og pc-reparation i ${city}` },
         { href: "/blog/hvad-koster-macbook-reparation", label: "Hvad koster MacBook-reparation?" },
       ],
     },
@@ -62,6 +62,8 @@ export function CityCategorySections({ store }: { store: "vejle" | "slagelse" })
       text: t.console,
       links: [
         { href: `/reparation-${store}/playstation`, label: `PS5-reparation i ${city}` },
+        { href: "/reparation/playstation/playstation-5", label: "PS5-priser" },
+        { href: "/blog/gta-6-klar-ps5-rens-koelepasta", label: "PS5 rens før GTA 6" },
         { href: "/blog/ps5-sort-skaerm-hdmi-reparation", label: "Sort skærm på PS5?" },
       ],
     },

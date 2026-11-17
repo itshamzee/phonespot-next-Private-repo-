@@ -24,6 +24,7 @@ import { countsTowardFromPrice } from "@/lib/repairs/from-price";
 import { fitTitle } from "@/lib/repairs/hub-meta";
 import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
 import { sellLinkForRepairModel } from "@/lib/sell-links";
+import { consolePricesFrom, getConsoleModelPage } from "@/lib/repairs/console-model-content";
 
 export const revalidate = 3600;
 
@@ -57,9 +58,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const model = await getModelBySlug(brand.id, modelSlug);
   if (!model) return {};
 
-  const cheapest = (await getServicesByModel(model.id))
+  const allServices = await getServicesByModel(model.id);
+  const cheapest = allServices
     .filter((s) => countsTowardFromPrice(s))
     .sort((a, b) => a.price_dkk - b.price_dkk)[0];
+
+  // Konsoller har egen titel og beskrivelse pr. model, så PS5, PS5 Digital og
+  // PS5 Pro ikke konkurrerer med den samme skabelontekst.
+  const consolePage =
+    brand.device_type === "console"
+      ? getConsoleModelPage(model.slug, consolePricesFrom(allServices))
+      : null;
+  if (consolePage) {
+    const url = `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`;
+    return {
+      title: consolePage.title,
+      description: consolePage.description,
+      alternates: { canonical: url },
+      openGraph: {
+        title: consolePage.title,
+        description: consolePage.description,
+        url,
+        type: "website",
+      },
+    };
+  }
 
   // Helt nye modeller oprettes uden services, så siden kan indekseres fra
   // lanceringsdagen — titlen må ikke love en pris, der ikke findes endnu.
@@ -114,6 +137,10 @@ export default async function ModelPricePage({ params }: Props) {
   // Tillidslinjen bygger på modellens egne data, så den aldrig lover mere end
   // reparationerne faktisk har: garanti fra warranty_info, tid fra estimated_minutes.
   const repairs = services.filter((s) => s.slug !== "diagnostik");
+  const isConsole = brand.device_type === "console";
+  const consolePage = isConsole
+    ? getConsoleModelPage(model.slug, consolePricesFrom(services))
+    : null;
   const sellLink = sellLinkForRepairModel(brand.slug, model.slug, model.name);
   const lifetimeCount = repairs.filter((s) =>
     s.warranty_info?.toLocaleLowerCase("da-DK").includes("livstid"),
@@ -125,6 +152,11 @@ export default async function ModelPricePage({ params }: Props) {
     s.warranty_info?.toLocaleLowerCase("da-DK").includes("12 måneders garanti"),
   ).length;
   const trust = [
+    // Kun selve konsollerne (ikke controllere), hvor 2 års garanti er besluttet.
+    consolePage && {
+      title: "2 års garanti",
+      text: "På konsolreparation",
+    },
     twelveMonthCount > 0 && {
       title: "12 mdr. garanti",
       text:
@@ -167,10 +199,12 @@ export default async function ModelPricePage({ params }: Props) {
       .map((s) => s.price_dkk);
     return prices.length ? Math.min(...prices) : null;
   };
-  const anchorPrices = [
-    { label: "Skærm", price: fromPriceOf(/sk(æ|ae)rm/) },
-    { label: "Batteri", price: fromPriceOf(/batteri/) },
-  ].filter((a): a is { label: string; price: number } => a.price != null);
+  const anchorPrices = consolePage
+    ? consolePage.anchors
+    : [
+        { label: "Skærm", price: fromPriceOf(/sk(æ|ae)rm/) },
+        { label: "Batteri", price: fromPriceOf(/batteri/) },
+      ].filter((a): a is { label: string; price: number } => a.price != null);
   const finderStores = Object.values(STORES).map((store) => ({
     slug: store.slug,
     name: store.name,
@@ -216,6 +250,8 @@ export default async function ModelPricePage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Service",
     name: `${model.name} reparation`,
+    url: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
+    ...(consolePage && { description: consolePage.answer }),
     serviceType: brand.device_type === "appliance" ? "Reparation af husholdningsapparater" : brand.device_type === "console" ? "Konsolreparation" : "Mobilreparation",
     provider: providers,
     areaServed: [STORES.vejle.city, STORES.slagelse.city],
@@ -235,9 +271,21 @@ export default async function ModelPricePage({ params }: Props) {
     }),
   };
 
+  // FAQPage kun, hvor spørgsmålene er skrevet til modellen og står synligt på siden.
+  const faqJsonLd = consolePage && {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: consolePage.faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  };
+
   return (
     <div className={styles.shell}>
       <JsonLd data={jsonLd} />
+      {faqJsonLd && <JsonLd data={faqJsonLd} />}
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}>
           <ol>
@@ -270,11 +318,14 @@ export default async function ModelPricePage({ params }: Props) {
               </div>
             )}
             <div>
-              <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
-              <h1>{model.name}</h1>
+              <span className={styles.eyebrow}>
+                {consolePage ? consolePage.eyebrow : "Reparation hos PhoneSpot"}
+              </span>
+              <h1>{consolePage ? consolePage.h1 : model.name}</h1>
               <p>
-                Vælg, hvad vi skal hjælpe med. Se den konkrete pris og
-                oplysninger om reservedelen, før du booker.
+                {consolePage
+                  ? consolePage.answer
+                  : "Vælg, hvad vi skal hjælpe med. Se den konkrete pris og oplysninger om reservedelen, før du booker."}
               </p>
               <div className={styles.priceLine}>
                 {anchorPrices.length > 0 ? (
@@ -381,6 +432,25 @@ export default async function ModelPricePage({ params }: Props) {
             }))}
           />
         )}
+        {consolePage && (
+          <section className={styles.section} aria-labelledby="om-reparationen">
+            <h2 id="om-reparationen">{consolePage.aboutHeading}</h2>
+            <div className="max-w-[680px] space-y-4 text-[15px] leading-relaxed text-[#444449]">
+              {consolePage.about.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
+            </div>
+            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {consolePage.links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className={styles.textLink}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <p className="py-6 text-sm">
           <Link href={"/reparation/" + brand.slug} className="font-semibold text-[#1A3D2E] underline underline-offset-4">
             Se alle {brand.name}-reparationer
@@ -399,6 +469,19 @@ export default async function ModelPricePage({ params }: Props) {
           stores={finderStores}
           upcoming={upcomingStores}
         />
+        {consolePage ? (
+          <section className={styles.faq}>
+            <h2>Spørgsmål om {consolePage.h1.split(":")[0]}</h2>
+            <div>
+              {consolePage.faqs.map((f) => (
+                <details key={f.question}>
+                  <summary>{f.question}</summary>
+                  <p>{f.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : (
         <section className={styles.faq}>
           <h2>Inden du afleverer.</h2>
           <div>
@@ -436,6 +519,7 @@ export default async function ModelPricePage({ params }: Props) {
             )}
           </div>
         </section>
+        )}
         {brand.device_type !== "appliance" && (
           <div className={styles.section}>
             <StorstromInsuranceTeaser variant="repair" />

@@ -104,7 +104,7 @@ export function LocalRepairPage({ town, prices }: Props) {
 
   const heroTiles = [
     { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
-    { title: "30 minutter", desc: "90% klar mens du venter" },
+    { title: "30 minutter", desc: "90 % af skærm- og batteriskift" },
     { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
     isVejle
       ? { title: "Gratis parkering", desc: "Ved butikken i Vejle" }
@@ -194,8 +194,8 @@ export function LocalRepairPage({ town, prices }: Props) {
       <section className="border-b border-[#E5E5EA] bg-white">
         <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
           {isHomeTown
-            ? `${store.name}, ${store.street}, ${store.zip} ${store.city}, reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter.`
-            : `Fra ${town.name} er der ${town.travel.headline.toLowerCase()} til ${store.name}, ${store.street}, ${store.zip} ${store.city}. Kom uden tidsbestilling: 90% af skærm- og batteriskift er klar på 30 minutter.`}
+            ? `${store.name}, ${store.street}, ${store.zip} ${store.city}, reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. 90 % af skærm- og batteriskift er klar på 30 minutter.`
+            : `Fra ${town.name} er der ${town.travel.headline.toLowerCase()} til ${store.name}, ${store.street}, ${store.zip} ${store.city}. Kom uden tidsbestilling: 90 % af skærm- og batteriskift er klar på 30 minutter.`}
           {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
           {` Du får ${REPAIR_WARRANTY_SHORT}`}
           {isHomeTown ? ". " : ", og du kan også sende enheden ind med en gratis fragtlabel."}
@@ -227,6 +227,15 @@ export function LocalRepairPage({ town, prices }: Props) {
                 <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
                   {section.text}
                 </p>
+                {section.links && section.links.length > 0 && (
+                  <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm font-semibold text-[#1A3D2E]">
+                    {section.links.map((l) => (
+                      <Link key={l.href} href={l.href} className="underline underline-offset-4">
+                        {l.label}
+                      </Link>
+                    ))}
+                  </p>
+                )}
               </div>
             ))}
           </div>

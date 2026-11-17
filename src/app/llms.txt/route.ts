@@ -48,7 +48,7 @@ export function GET() {
 ${PHONESPOT_PROMISES.map((p, i) => `${i + 1}. ${p.title}: ${p.detail}`).join("\n")}
 
 ## Reparation — fakta
-- Walk-in uden tidsbestilling i begge butikker. 90% af alle skærm- og batteriskift er klar på 30 minutter.
+- Walk-in uden tidsbestilling i begge butikker. 90 % af skærm- og batteriskift er klar på 30 minutter.
 - ${REPAIR_WARRANTY_ANSWER}
 - Kunden vælger selv skærmkvalitet (budget, OEM eller original), og prisen er fast og oplyst før reparationen.
 - Gratis hurtigt tjek ved disken i butikken. En fuld diagnose (fx printfejl) koster 249 kr.
@@ -62,19 +62,21 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Komplet prisliste som tekst](${SITE}/llms-full.txt): pris på hver reparation for hver model (iPhone, Samsung, iPad, MacBook, konsoller m.fl.), én linje pr. ydelse
 - [Reparationspriser og fakta](${SITE}/reparation/priser): prisliste for alle modeller, garanti, ventetid, adresser og åbningstider samlet på én side
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
-- [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
-- [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
+- [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90 % af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
+- [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90 % af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
 - [Reparation Hedensted](${SITE}/reparation-hedensted): værkstedet i Vejle, ca. 15 min ad E45 fra Hedensted, livstidsgaranti, gratis parkering
 - [Reparation Horsens](${SITE}/reparation-horsens): værkstedet i Vejle, ca. 25 min ad E45 fra Horsens, livstidsgaranti, gratis parkering
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
 - [Reparation for Næstved](${SITE}/reparation-naestved): ingen butik i Næstved; butikken i VestsjællandsCentret, Slagelse, ligger ca. 30 min ad rute 22, åbent alle ugens dage, eller send ind med gratis fragtlabel
 - [iPad-reparation i Vejle](${SITE}/reparation-vejle/ipad) og [i Slagelse](${SITE}/reparation-slagelse/ipad): ladestik 899 kr. på alle iPad-modeller, mikrolodning, 2-3 hverdage, livstidsgaranti; skærm og batteri med faste priser pr. model
-- [PS5- og konsolreparation i Vejle](${SITE}/reparation-vejle/playstation) og [i Slagelse](${SITE}/reparation-slagelse/playstation): sort skærm på PS5 = oftest HDMI-porten; HDMI-port + indvendig rengøring 1.300 kr., 2-3 hverdage, 2 års garanti; også PS4, Xbox og Nintendo Switch; kan sendes ind
-- [Computer- og MacBook-reparation i Vejle](${SITE}/reparation-vejle/computer) og [i Slagelse](${SITE}/reparation-slagelse/computer): batteri, skærm, tastatur og rensning af MacBook; andre bærbare vurderes ved disken
+- [PS5- og konsolreparation i Vejle](${SITE}/reparation-vejle/playstation) og [i Slagelse](${SITE}/reparation-slagelse/playstation): rens + ny køling 899 kr. (1-2 hverdage) på PS5, PS5 Digital, PS5 Pro, PS4 og Xbox Series X/S; sort skærm på PS5 = oftest HDMI-porten; HDMI-port + indvendig rengøring 1.300 kr., 2-3 hverdage; 2 års garanti på konsolreparation; kan sendes ind
+- [PS5-reparation](${SITE}/reparation/playstation/playstation-5), [PS5 Digital](${SITE}/reparation/playstation/playstation-5-digital) og [PS5 Pro](${SITE}/reparation/playstation/playstation-5-pro): faste priser pr. model; PS5 har flydende metal på chippen fra fabrikken
+- [Guide: PS5 rens før GTA 6](${SITE}/blog/gta-6-klar-ps5-rens-koelepasta): hvad en rens med ny køling indeholder, og hvornår konsollen trænger
+- [Computer- og pc-reparation i Vejle](${SITE}/reparation-vejle/computer) og [i Slagelse](${SITE}/reparation-slagelse/computer): batteri, skærm, tastatur og rensning af MacBook; bærbare pc'er fra andre mærker vurderes ved disken
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [Dyson-reparation](${SITE}/reparation/dyson): Dyson-støvsugere med fast pris pr. model, 12 måneders garanti på dele og arbejde, uafhængigt værksted
-- [Xbox-reparation](${SITE}/reparation/xbox): Xbox-konsoller og controllere i Vejle og Slagelse
+- [Xbox-reparation](${SITE}/reparation/xbox): Xbox Series X og S og controllere i Vejle og Slagelse; rens + ny køling 899 kr., 2 års garanti
 - [iPhone-reparation](${SITE}/reparation/iphone): alle iPhone-modeller med priser
 - [Samsung-reparation](${SITE}/reparation/samsung): alle Galaxy-modeller med priser
 - [iPad-reparation](${SITE}/reparation/ipad): alle iPad-modeller med priser

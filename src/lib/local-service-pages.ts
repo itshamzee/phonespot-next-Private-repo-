@@ -185,11 +185,11 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
     steps: [
       { title: "Aflever konsollen", text: "Tag kun selve konsollen med. Controller og kabler kan blive hjemme." },
       { title: "Fejlfinding", text: "Vi bekræfter fejlen og giver dig en fast pris, før vi går i gang." },
-      { title: "Reparation", text: "HDMI-port og rengøring tager 2-3 hverdage." },
+      { title: "Reparation", text: "Rens og ny køling tager 1-2 hverdage. HDMI-port og rengøring tager 2-3 hverdage." },
       { title: "Test", text: "Vi tester billede, lyd og temperatur, før du får konsollen igen." },
     ],
     warrantyLine:
-      "PS5-pakken med HDMI-port og rengøring har 2 års garanti. Garantien dækker ikke nye skader, fx hvis kablet bliver revet ud igen.",
+      "Konsolreparation har 2 års garanti. Garantien dækker ikke nye skader, fx hvis kablet bliver revet ud igen.",
     mailInText:
       "Bor du længere væk, kan du sende konsollen ind. Pak den godt ind, gerne i den originale æske, så sender vi den retur, når den er klar.",
     guides: [
@@ -296,22 +296,22 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
       ],
     },
     playstation: {
-      metaTitle: "PS5-reparation i Vejle: HDMI-port og rengøring | PhoneSpot",
+      metaTitle: "PS5-reparation i Vejle: rens og HDMI-port | PhoneSpot",
       metaDescription:
-        "Sort skærm på din PS5? Vi skifter HDMI-porten og renser konsollen for 1.300 kr. med 2 års garanti. Aflever på Løversysselvej 3B i Vejle, eller send den ind.",
+        "PS5-reparation på Løversysselvej 3B i Vejle: rens og ny køling 899 kr., HDMI-port og rengøring 1.300 kr. 2 års garanti. Aflever i butikken, eller send den ind.",
       h1: "PS5- og konsolreparation i Vejle",
       heroLead:
         "Sort skærm, intet signal eller en konsol, der larmer? Aflever din PlayStation, Xbox eller Nintendo Switch på Løversysselvej 3B i Vejle. På PS5 skifter vi HDMI-porten og renser konsollen indvendigt i én pakke til 1.300 kr.",
       answerFirst:
-        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer PS5, PS4, Xbox og Nintendo Switch. Den hyppigste fejl er en defekt HDMI-port, som giver sort skærm. HDMI-port og rengøring på PS5 koster 1.300 kr., tager 2-3 hverdage og har 2 års garanti.",
+        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer PS5, PS4, Xbox og Nintendo Switch. Larmer konsollen, renser vi den og fornyer kølingen for 899 kr. på 1-2 hverdage. Sort skærm skyldes oftest HDMI-porten: port og rengøring på PS5 koster 1.300 kr. og tager 2-3 hverdage. Du får 2 års garanti.",
       intro: [
         "En PS5 med sort skærm er en af de reparationer, vi oftest får ind i Vejle. Typisk er HDMI-kablet blevet trukket eller presset skævt, og porten er knækket indvendigt. Konsollen tænder, men tv'et får intet signal.",
         "HDMI-porten sidder loddet på bundkortet og har mange små ben. Vi skifter den med mikrolodning og renser samtidig blæser og køleprofil, fordi konsollen alligevel er åben. Det giver en køligere og mere stille konsol.",
       ],
       tiles: [
+        { title: "899 kr.", desc: "Rens + ny køling, 1-2 hverdage" },
         { title: "1.300 kr.", desc: "PS5 HDMI-port + rengøring" },
-        { title: "2-3 hverdage", desc: "Fra aflevering til klar" },
-        { title: "2 års garanti", desc: "På PS5-pakken" },
+        { title: "2 års garanti", desc: "På konsolreparation" },
         { title: "Gratis parkering", desc: "Ved butikken i Vejle" },
       ],
       faqs: [
@@ -326,8 +326,13 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
             "1.300 kr. for HDMI-port og indvendig rengøring i én pakke. Porten alene koster 1.599 kr. Prisen gælder PS5, PS5 Digital og PS5 Pro.",
         },
         {
+          question: "Hvad koster det at rense en PS5 i Vejle?",
+          answer:
+            "Rens og ny køling koster 899 kr. og tager 1-2 hverdage. Vi renser blæser og køleprofil, skifter termopuder og tjekker det flydende metal på chippen. Prisen gælder også PS5 Digital, PS5 Pro, PS4 og Xbox Series X og S.",
+        },
+        {
           question: "Hvor lang tid tager en PS5-reparation?",
-          answer: "HDMI-port og rengøring tager 2-3 hverdage.",
+          answer: "Rens og ny køling tager 1-2 hverdage. HDMI-port og rengøring tager 2-3 hverdage.",
         },
         {
           question: "Mister jeg mine spil og gemte data?",
@@ -337,14 +342,14 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
       ],
     },
     computer: {
-      metaTitle: "Computer- og MacBook-reparation i Vejle | PhoneSpot",
+      metaTitle: "Computer- og pc-reparation i Vejle | PhoneSpot",
       metaDescription:
-        "Computerreparation i Vejle: batteri, skærm, tastatur og rensning af MacBook og bærbare. Faste priser på Løversysselvej 3B. Gratis parkering, eller send ind.",
-      h1: "Computer- og MacBook-reparation i Vejle",
+        "Computer- og pc-reparation i Vejle: batteri, skærm, tastatur og rens af MacBook og bærbare pc'er. Fast pris før vi går i gang. Løversysselvej 3B, gratis parkering.",
+      h1: "Computer- og pc-reparation i Vejle",
       heroLead:
-        "Batteri, der ikke holder, en computer, der larmer, eller en knust skærm? Vi reparerer MacBook Air, MacBook Pro og andre bærbare på værkstedet på Løversysselvej 3B i Vejle. Du får prisen, før vi går i gang.",
+        "Batteri, der ikke holder, en computer, der larmer, eller en knust skærm? Vi reparerer MacBook Air, MacBook Pro og bærbare pc'er fra andre mærker på værkstedet på Løversysselvej 3B i Vejle. Du får prisen, før vi går i gang.",
       answerFirst:
-        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer MacBook og bærbare computere: batteri, skærm, tastatur, ladestik og rensning af computere, der bliver varme. Priserne på MacBook står på siden, og andre bærbare vurderer vi ved disken. Der er gratis parkering ved butikken.",
+        "PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer MacBook og bærbare pc'er: batteri, skærm, tastatur, ladestik og rens af computere, der bliver varme. Priserne på MacBook står på siden, og bærbare pc'er fra andre mærker vurderer vi ved disken, før vi giver en fast pris. Der er gratis parkering ved butikken.",
       intro: [
         "De fleste computere, vi får ind i Vejle, er MacBooks med et træt batteri eller en blæser fuld af støv. Begge dele kan løses for en brøkdel af prisen på en ny computer. Har du en bærbar fra et andet mærke, så tag den med, så kigger vi på den ved disken.",
         "Vi reparerer på eget værksted og rører ikke dine data. Tag alligevel en sikkerhedskopi, før du afleverer, og husk opladeren, så vi kan teste opladningen bagefter.",
@@ -362,9 +367,9 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
             "Hos PhoneSpot på Løversysselvej 3B, 7100 Vejle. Kom forbi med computeren og opladeren i åbningstiden. Der er gratis parkering ved butikken.",
         },
         {
-          question: "Reparerer I andre bærbare end MacBook?",
+          question: "Reparerer I bærbare pc'er, ikke kun MacBook?",
           answer:
-            "Ja, vi kigger på bærbare fra andre mærker ved disken og giver dig en pris, før vi går i gang. Faste priser på siden gælder MacBook.",
+            "Ja. Vi kigger på bærbare pc'er fra andre mærker ved disken og giver dig en pris, før vi går i gang. Faste priser på siden gælder MacBook.",
         },
         {
           question: "Hvad koster et nyt batteri til MacBook?",
@@ -423,22 +428,22 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
       ],
     },
     playstation: {
-      metaTitle: "PS5-reparation i Slagelse: HDMI og rengøring | PhoneSpot",
+      metaTitle: "PS5-reparation i Slagelse: rens og HDMI-port | PhoneSpot",
       metaDescription:
-        "Sort skærm på din PS5? Vi skifter HDMI-porten og renser konsollen for 1.300 kr. med 2 års garanti. Aflever i VestsjællandsCentret i Slagelse, eller send den ind.",
+        "PS5-reparation i VestsjællandsCentret, Slagelse: rens og ny køling 899 kr., HDMI-port og rengøring 1.300 kr. 2 års garanti. Åbent alle ugens dage.",
       h1: "PS5- og konsolreparation i Slagelse",
       heroLead:
         "Sort skærm på PS5, en Xbox der larmer, eller en Switch der ikke vil vise billede på tv'et? Aflever konsollen i VestsjællandsCentret. På PS5 skifter vi HDMI-porten og renser konsollen i én pakke til 1.300 kr.",
       answerFirst:
-        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer porte og konsoller: HDMI-port på PS5, PS4, Xbox og Nintendo Switch, blæsere og controllere. HDMI-port og rengøring på PS5 koster 1.300 kr., tager 2-3 hverdage og har 2 års garanti.",
+        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer porte og konsoller: HDMI-port på PS5, PS4 og Xbox, blæsere og controllere. Rens og ny køling koster 899 kr. og tager 1-2 hverdage. HDMI-port og rengøring på PS5 koster 1.300 kr. og tager 2-3 hverdage. Du får 2 års garanti.",
       intro: [
         "Reparation af porte er noget af det, vi oftest bliver spurgt om i Slagelse. På konsoller er det næsten altid HDMI-porten: Kablet er blevet trukket ud skævt, og porten er knækket indvendigt. Konsollen tænder, men skærmen er sort.",
         "Porten sidder loddet på bundkortet og skiftes med mikrolodning. Når konsollen er åben, renser vi også blæser og køleprofil. Du afleverer konsollen i VestsjællandsCentret og får besked, når den er klar.",
       ],
       tiles: [
+        { title: "899 kr.", desc: "Rens + ny køling, 1-2 hverdage" },
         { title: "1.300 kr.", desc: "PS5 HDMI-port + rengøring" },
-        { title: "2-3 hverdage", desc: "Fra aflevering til klar" },
-        { title: "2 års garanti", desc: "På PS5-pakken" },
+        { title: "2 års garanti", desc: "På konsolreparation" },
         { title: "Åbent hver dag", desc: "I VestsjællandsCentret" },
       ],
       faqs: [
@@ -458,20 +463,25 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
             "Ja. Vi skifter HDMI-port på PS4, Xbox Series X og S og Nintendo Switch. Se priserne i tabellen.",
         },
         {
+          question: "Kan I rense min PS5 i Slagelse?",
+          answer:
+            "Ja. Rens og ny køling koster 899 kr. og tager 1-2 hverdage. Vi renser blæser og køleprofil og tester konsollen under belastning, før du får den igen. Prisen gælder også PS5 Digital, PS5 Pro, PS4 og Xbox Series X og S.",
+        },
+        {
           question: "Hvor lang tid tager det?",
-          answer: "HDMI-port og rengøring på PS5 tager 2-3 hverdage.",
+          answer: "Rens og ny køling tager 1-2 hverdage. HDMI-port og rengøring på PS5 tager 2-3 hverdage.",
         },
       ],
     },
     computer: {
-      metaTitle: "Computer- og MacBook-reparation i Slagelse | PhoneSpot",
+      metaTitle: "Computer- og pc-reparation i Slagelse | PhoneSpot",
       metaDescription:
-        "Computerreparation i Slagelse: batteri, skærm, tastatur og rensning af MacBook og bærbare. Faste priser i VestsjællandsCentret. Åbent alle ugens dage.",
-      h1: "Computer- og MacBook-reparation i Slagelse",
+        "Computerreparation i Slagelse: batteri, skærm, tastatur og rens af MacBook og bærbare pc'er. Fast pris før vi går i gang. VestsjællandsCentret, åbent alle dage.",
+      h1: "Computer- og pc-reparation i Slagelse",
       heroLead:
-        "Computeren er langsom, varm eller holder ikke strøm? Vi reparerer MacBook og andre bærbare i butikken i VestsjællandsCentret. Du får prisen, før vi går i gang.",
+        "Computeren er langsom, varm eller holder ikke strøm? Vi reparerer MacBook og bærbare pc'er i butikken i VestsjællandsCentret. Du får prisen, før vi går i gang.",
       answerFirst:
-        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer MacBook og bærbare computere: batteri, skærm, tastatur, ladestik og rensning af computere, der bliver varme eller larmer. Priserne på MacBook står på siden, og andre bærbare vurderer vi ved disken.",
+        "PhoneSpot Slagelse i VestsjællandsCentret 10A, 103, 4200 Slagelse, reparerer MacBook og bærbare pc'er: batteri, skærm, tastatur, ladestik og rens af computere, der bliver varme eller larmer. Priserne på MacBook står på siden, og bærbare pc'er fra andre mærker vurderer vi ved disken. Butikken har åbent alle ugens dage.",
       intro: [
         "I Slagelse kommer mange med en bærbar, der er blevet langsom og varm. Ofte er blæseren fyldt med støv, og den termiske pasta er tørret ud. En rensning kan give computeren et nyt liv for en lille pris.",
         "Vi reparerer MacBook Air og MacBook Pro til faste priser og kigger på bærbare fra andre mærker ved disken. Tag opladeren med, så vi kan teste opladningen, og tag en sikkerhedskopi, før du afleverer.",
@@ -489,9 +499,9 @@ const CITY_COPY: Record<LocalServiceStore, Record<LocalServiceKey, CityCopy>> = 
             "Hos PhoneSpot i VestsjællandsCentret 10A, 103, 4200 Slagelse. Kom forbi med computeren og opladeren. Vi har åbent alle ugens dage.",
         },
         {
-          question: "Reparerer I andre bærbare end MacBook?",
+          question: "Reparerer I bærbare pc'er i Slagelse, ikke kun MacBook?",
           answer:
-            "Ja, vi vurderer bærbare fra andre mærker ved disken og giver dig en pris, før vi går i gang. Faste priser på siden gælder MacBook.",
+            "Ja. Vi vurderer bærbare pc'er fra andre mærker ved disken og giver dig en pris, før vi går i gang. Faste priser på siden gælder MacBook.",
         },
         {
           question: "Min computer er langsom og varm. Hvad kan I gøre?",

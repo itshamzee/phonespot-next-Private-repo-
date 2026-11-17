@@ -13,7 +13,7 @@ export const REPAIR_EMAIL_FROM = "PhoneSpot Reparation <noreply@phonespot.dk>";
 
 const REPAIR_USPS = [
   "Livstidsgaranti på arbejde og dele",
-  "90% klar på 30 min.",
+  "90 % af skærm- og batteriskift klar på 30 min.",
   "Gratis parkering",
 ] as const;
 
