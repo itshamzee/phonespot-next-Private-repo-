@@ -135,7 +135,7 @@ describe("POST /api/repairs/checkout recovery link", () => {
     await post({ ...base, selected_services: [svc("a", 1)], total_price_dkk: 1 });
     const args = m.sessionCreate.mock.calls[0][0];
     const url = new URL(args.cancel_url);
-    expect(url.pathname).toBe("/reparation/betaling-afbrudt");
+    expect(url.pathname).toBe("/api/repairs/recovery/start");
     expect(url.searchParams.get("ticket_id")).toBe("ticket-1");
     const token = url.searchParams.get("token") ?? "";
     expect(token.length).toBeGreaterThanOrEqual(16);

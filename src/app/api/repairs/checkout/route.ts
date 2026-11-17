@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
       currency: "dkk",
       expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       success_url: `${baseUrl}/reparation/bekraeftelse?session_id={CHECKOUT_SESSION_ID}&ticket_id=${firstTicketId}`,
-      cancel_url: `${baseUrl}/reparation/betaling-afbrudt?ticket_id=${firstTicketId}&token=${recovery.token}`,
+      cancel_url: `${baseUrl}/api/repairs/recovery/start?ticket_id=${firstTicketId}&token=${recovery.token}`,
       metadata: {
         type: "repair",
         repair_ticket_id: firstTicketId,

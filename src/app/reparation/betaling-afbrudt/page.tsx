@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { RECOVERY_COOKIE, recoveryTokenFromCookie } from "@/lib/repair/recovery-cookie";
 import { createServerClient } from "@/lib/supabase/client";
 import { normalizeStoreId } from "@/lib/stores";
 import { STORES } from "@/lib/store-config";
@@ -32,9 +34,11 @@ const card = "w-full max-w-2xl rounded-2xl border border-[#dce1db] bg-white p-6 
 export default async function BetalingAfbrudtPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ticket_id?: string; token?: string }>;
+  searchParams: Promise<{ ticket_id?: string }>;
 }) {
-  const { ticket_id: ticketId, token } = await searchParams;
+  const { ticket_id: ticketId } = await searchParams;
+  // Nøglen ligger i en HttpOnly-cookie (sat af /api/repairs/recovery/start), så den aldrig står i adressen.
+  const token = recoveryTokenFromCookie((await cookies()).get(RECOVERY_COOKIE)?.value, ticketId);
   const found = await lookupRecoverableTickets(createServerClient(), ticketId, token);
 
   if (!found.ok && found.reason === "paid") {
@@ -125,7 +129,6 @@ export default async function BetalingAfbrudtPage({
 
         <PaymentCancelledActions
           ticketId={head.id}
-          token={token as string}
           storeCity={store?.city ?? null}
           alreadyInStore={found.alreadyInStore}
           canRetry={!!found.sessionId}

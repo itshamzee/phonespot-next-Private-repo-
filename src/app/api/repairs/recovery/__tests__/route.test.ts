@@ -124,3 +124,30 @@ describe("POST /api/repairs/recovery", () => {
     expect((await post({ ticket_id: ID, token, action: "retry" })).status).toBe(410);
   });
 });
+
+describe("recovery token via cookie", () => {
+  it("accepts the token from the HttpOnly cookie when the body has none", async () => {
+    const { token, state } = setup();
+    const res = await POST(
+      new Request("http://x/api/repairs/recovery", {
+        method: "POST",
+        headers: { cookie: `ps_repair_recovery=${ID}.${token}` },
+        body: JSON.stringify({ ticket_id: ID, action: "pay_in_store" }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(state).toBeDefined();
+  });
+
+  it("ignores a cookie that belongs to another ticket", async () => {
+    const { token } = setup();
+    const res = await POST(
+      new Request("http://x/api/repairs/recovery", {
+        method: "POST",
+        headers: { cookie: `ps_repair_recovery=other-id.${token}` },
+        body: JSON.stringify({ ticket_id: ID, action: "pay_in_store" }),
+      }),
+    );
+    expect(res.status).toBe(404);
+  });
+});

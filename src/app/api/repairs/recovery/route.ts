@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { RECOVERY_COOKIE, recoveryTokenFromCookie } from "@/lib/repair/recovery-cookie";
 import { createServerClient } from "@/lib/supabase/client";
 import { stripe } from "@/lib/stripe/client";
 import { resend } from "@/lib/email/resend";
@@ -37,6 +38,14 @@ type Details = {
 
 const detailsOf = (t: RecoveryTicket) => (t.booking_details ?? {}) as Details;
 const label = (t: RecoveryTicket) => `${t.device_type ?? ""} ${t.device_model ?? ""}`.trim();
+
+function readCookie(request: Request, name: string): string | undefined {
+  for (const part of (request.headers.get("cookie") ?? "").split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return decodeURIComponent(v.join("="));
+  }
+  return undefined;
+}
 
 const INVALID = "Linket er ugyldigt eller udløbet. Book på ny, eller ring til os.";
 
@@ -126,7 +135,10 @@ export async function POST(request: Request) {
   }
 
   const supabase = createServerClient();
-  const found = await lookupRecoverableTickets(supabase, body.ticket_id, body.token);
+  // Nøglen kommer fra HttpOnly-cookien; et token i body accepteres stadig (tests, ældre links).
+  const token =
+    recoveryTokenFromCookie(readCookie(request, RECOVERY_COOKIE), body.ticket_id) ?? body.token;
+  const found = await lookupRecoverableTickets(supabase, body.ticket_id, token);
   if (!found.ok) {
     if (found.reason === "paid") {
       return NextResponse.json(
