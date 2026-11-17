@@ -324,14 +324,15 @@ export async function POST(request: NextRequest) {
       await resend.emails.send({
         from: `${STORE.name} <noreply@phonespot.dk>`,
         ...getStaffRecipients(storeId),
-        subject: `Ny reparationsbooking${storeId ? ` (${storeLabel(storeId)})` : ""}: ${multi ? `${priced.devices.length} enheder` : priced.devices[0].device_model} — ${body.customer_name}`,
+        subject: `Afventer betaling: ny reparationsbooking${storeId ? ` (${storeLabel(storeId)})` : ""}: ${multi ? `${priced.devices.length} enheder` : priced.devices[0].device_model} — ${body.customer_name}`,
         html: `
-          <h2>Ny reparationsbooking med forudbetaling</h2>
+          <h2>Ny reparationsbooking, afventer onlinebetaling</h2>
+          <p>Kunden er sendt videre til betaling. Tiden er først booket, når betalingen er gennemført, eller når kunden vælger at betale i butikken. Så får I en ny mail.</p>
           <table style="border-collapse:collapse;">
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Butik</td><td>${storeLabel(storeId)}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Kunde</td><td>${body.customer_name}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Email</td><td>${body.customer_email}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Telefon</td><td>${body.customer_phone}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Kunde</td><td>${escapeHtml(body.customer_name)}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Email</td><td>${escapeHtml(body.customer_email)}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Telefon</td><td>${escapeHtml(body.customer_phone)}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Enhed</td><td>${escapeHtml(enhedCell)}</td></tr>
             ${body.delivery_method ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Levering</td><td>${body.delivery_method}</td></tr>` : ""}
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Foretrukken dato</td><td>${body.preferred_date}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}</td></tr>
@@ -341,7 +342,7 @@ export async function POST(request: NextRequest) {
           </table>
           <h3>Valgte services</h3>
           ${servicesHtml}
-          ${body.issue_description ? `<h3>Beskrivelse</h3><p>${body.issue_description}</p>` : ""}
+          ${body.issue_description ? `<h3>Beskrivelse</h3><p>${escapeHtml(body.issue_description)}</p>` : ""}
           <p style="margin-top:16px;color:#666;">Sag ID: ${ticketIds.join(", ")}</p>
         `,
       });
