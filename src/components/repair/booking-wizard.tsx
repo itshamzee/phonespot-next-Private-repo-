@@ -1898,7 +1898,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
               Bekræft din booking
             </h2>
             <p className="mt-1 text-sm text-gray">
-              Gennemgå dine valg og vælg betalingsmetode.
+              Gennemgå dine valg, og vælg hvordan du vil betale.
             </p>
           </div>
 
@@ -2020,10 +2020,12 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                   <dd className="min-w-0 text-right font-medium text-charcoal [overflow-wrap:anywhere]">{value}</dd>
                 </div>
               ))}
-              <div>
-                <dt className="text-gray">Beskrivelse</dt>
-                <dd className="mt-1 text-charcoal">{customer.description}</dd>
-              </div>
+              {customer.description.trim() && (
+                <div>
+                  <dt className="text-gray">Beskrivelse</dt>
+                  <dd className="mt-1 text-charcoal [overflow-wrap:anywhere]">{customer.description}</dd>
+                </div>
+              )}
             </dl>
           </div>
 
@@ -2051,129 +2053,53 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
             </div>
           </div>
 
-          {/* Payment buttons */}
+          {/* Betalingsvalg: betal i butikken er primær (ingen betaling nu, ingen afbrydelse), betal nu er ligestillet alternativ */}
           <div className="space-y-4">
-            <button
-              type="button"
-              onClick={handleSubmitAndPay}
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Sender...
-                </>
-              ) : (
-                <>Betal nu — {kr(totalPrice)}</>
+            <div className="rounded-2xl border-2 border-green-eco bg-white p-5">
+              <p className="font-body text-base font-bold text-charcoal">
+                Betal i butikken
+                {selectedStore ? ` i ${selectedStore.city}` : ""}
+              </p>
+              <p className="mt-1 text-sm text-gray">
+                Du booker din tid nu og betaler først, når du afhenter din
+                enhed. Prisen er den samme
+                {discountPercent > 0 ? `, også med din rabat på ${discountPercent} %` : ""}.
+              </p>
+              {selectedStore && (
+                <p className="mt-2 text-xs text-gray">
+                  {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                  {" · "}
+                  {storeHoursLine(selectedStore.hours)}
+                  {" · "}
+                  {selectedStore.phone.replace("+45 ", "")}
+                </p>
               )}
-            </button>
-            <p className="text-center text-xs text-gray">
-              Betal sikkert med Klarna, kort eller MobilePay
-            </p>
-
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-soft-grey" />
-              <span className="text-sm text-gray">eller</span>
-              <div className="h-px flex-1 bg-soft-grey" />
-            </div>
-
-            {/* Betal i butikken — with store info */}
-            <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-eco/10">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    className="h-5 w-5 text-green-eco"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="font-body text-sm font-bold text-charcoal">
-                    Aflever i butikken
-                    {selectedStore ? ` — ${selectedStore.city}` : ""}
-                  </p>
-                  {selectedStore && (
-                    <p className="mt-0.5 text-xs text-gray">
-                      {selectedStore.street}, {selectedStore.zip}{" "}
-                      {selectedStore.city}
-                    </p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray">
-                    {selectedStore && (
-                      <span className="flex items-center gap-1">
-                        <svg
-                          viewBox="0 0 16 16"
-                          fill="currentColor"
-                          className="h-3 w-3 text-green-eco"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        {storeHoursLine(selectedStore.hours)}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <svg
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        className="h-3 w-3 text-green-eco"
-                      >
-                        <path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" />
-                      </svg>
-                      {selectedStore
-                        ? selectedStore.phone.replace("+45 ", "")
-                        : "61 10 00 48"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               <button
                 type="button"
                 onClick={handleSubmitNoPay}
                 disabled={isSubmitting}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-charcoal bg-charcoal px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-charcoal/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               >
-                {isSubmitting ? "Sender..." : "Book og betal i butikken"}
+                {isSubmitting ? "Sender..." : "Book nu og betal i butikken"}
               </button>
-              <p className="mt-2 text-center text-xs text-gray">
-                Ingen betaling nu — du betaler, når du afhenter din enhed
+            </div>
+
+            <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
+              <p className="font-body text-base font-bold text-charcoal">
+                Betal online nu
               </p>
+              <p className="mt-1 text-sm text-gray">
+                Betal sikkert med kort, MobilePay eller Klarna. Din tid er først
+                booket, når betalingen er gennemført.
+              </p>
+              <button
+                type="button"
+                onClick={handleSubmitAndPay}
+                disabled={isSubmitting}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-charcoal bg-white px-8 py-3.5 text-sm font-bold text-charcoal transition-all hover:bg-charcoal/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? "Sender..." : `Betal nu, ${kr(totalPrice)}`}
+              </button>
             </div>
           </div>
 

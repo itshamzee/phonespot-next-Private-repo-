@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeSupabase, type CatalogService } from "@/lib/repair/__tests__/test-supabase";
 
 const m = vi.hoisted(() => ({ client: null as unknown, send: vi.fn(), confirm: vi.fn() }));
@@ -41,7 +41,10 @@ const post = (body: unknown) =>
   POST(new Request("http://x/api/repairs", { method: "POST", body: JSON.stringify(body) }));
 
 let state: ReturnType<typeof makeSupabase>["state"];
+// Black November giver 10 % fra første reparation; testene forudsætter den normale rabatregel.
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-10T10:00:00Z"));
   vi.clearAllMocks();
   const s = makeSupabase(catalog);
   m.client = s.client;
@@ -130,4 +133,8 @@ describe("POST /api/repairs", () => {
     expect(res.status).toBe(200);
     expect(state.tickets[0].booking_details).toBeUndefined();
   });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });

@@ -295,7 +295,7 @@ async function loadWebBookings(supabase: Supabase, scope: StoreScope, today: str
   if (scope === "ingen") return { groups: [], stale: 0 };
   const q = supabase
     .from("repair_tickets")
-    .select("id, ticket_number, customer_name, device_model, service_type, store_id, created_at, booking_details")
+    .select("id, ticket_number, customer_name, device_model, service_type, store_id, created_at, paid, booking_details")
     .eq("status", "modtaget")
     .not("booking_details", "is", null);
   const { data } = await applyStoreScope(q, scope).order("created_at", { ascending: false }).limit(500);
