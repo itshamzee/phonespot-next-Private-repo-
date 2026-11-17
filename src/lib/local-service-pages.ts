@@ -158,10 +158,10 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
       { key: "bundle", label: "HDMI + rengøring", names: ["HDMI-port + rengøring"] },
       { key: "hdmi", label: "HDMI-port", names: ["HDMI-port"] },
       { key: "fan", label: "Blæser", names: ["Blæser"] },
-      { key: "paste", label: "Termisk pasta", names: ["Termisk pasta"] },
+      { key: "clean", label: "Rens + kølepasta", names: ["Rens + ny kølepasta"] },
     ],
     priceIntro:
-      "Faste priser inklusive moms og reservedel. På PS5 er HDMI-port og indvendig rengøring samlet i én pakke, som er billigere end porten alene.",
+      "Faste priser inklusive moms og reservedel. På PS5 er HDMI-port og indvendig rengøring samlet i én pakke, som er billigere end porten alene. Larmer konsollen, renser vi den og fornyer kølingen for 899 kr.",
     allModelsHref: "/reparation/playstation",
     allModelsLabel: "Se alle PlayStation-priser",
     problems: [
@@ -171,7 +171,7 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
       },
       {
         title: "Konsollen larmer eller bliver varm",
-        text: "Støv i blæser og køleprofil får konsollen til at larme og slukke af varme. Vi renser den indvendigt og skifter termisk pasta eller blæser, hvis det er nødvendigt.",
+        text: "Støv i blæser og køleprofil får konsollen til at larme og slukke af varme. Vi renser den indvendigt og fornyer kølepasta og termopuder for 899 kr. Klar til GTA 6 på 1-2 hverdage.",
       },
       {
         title: "Controller med stick-drift eller dødt batteri",
@@ -193,6 +193,7 @@ const SERVICES: Record<LocalServiceKey, ServiceDefinition> = {
     mailInText:
       "Bor du længere væk, kan du sende konsollen ind. Pak den godt ind, gerne i den originale æske, så sender vi den retur, når den er klar.",
     guides: [
+      { href: "/blog/gta-6-klar-ps5-rens-koelepasta", label: "Gør din PS5 klar til GTA 6: rens og ny køling" },
       { href: "/blog/ps5-sort-skaerm-hdmi-reparation", label: "Sort skærm på PS5? Så er det ofte HDMI-porten" },
       { href: "/reparation/xbox", label: "Xbox-reparation" },
       { href: "/reparation/nintendo", label: "Nintendo Switch-reparation" },
