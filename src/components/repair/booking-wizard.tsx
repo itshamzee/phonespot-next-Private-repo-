@@ -20,7 +20,7 @@ import { useBlackNovember } from "@/lib/campaign/use-black-november";
 
 /** Samme prisformat som prissiderne: 1.899 kr. */
 const kr = (n: number) => n.toLocaleString("da-DK") + " kr.";
-import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
+import { normalizeTrackStore, trackRepairBooking, trackRepairBookingStep } from "@/lib/tracking/events";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -868,6 +868,14 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
       setIsSubmitting(false);
     }
   };
+
+  // Mål frafald pr. trin: hvert trin sendes kun første gang kunden når det.
+  const furthestTracked = useRef(-1);
+  useEffect(() => {
+    if (step <= furthestTracked.current) return;
+    furthestTracked.current = step;
+    trackRepairBookingStep({ stepNumber: step + 1, stepName: STEPS[step].label });
+  }, [step]);
 
   const goNext = () => setStep((s) => Math.min(s + 1, 4));
   const goPrev = () => setStep((s) => Math.max(s - 1, 0));
