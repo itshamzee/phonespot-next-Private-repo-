@@ -179,6 +179,32 @@ describe("Overblik for en butik", () => {
     expect(heads).not.toContain("Nye webshop-ordrer");
   });
 
+  it("ejeren ser profit og margin", () => {
+    const { container } = render(<StoreOverviewView data={store} />);
+    expect(screen.getByText("Profit")).toBeTruthy();
+    expect(container.textContent).toMatch(/profit|margin|fortjeneste/i);
+  });
+
+  it("medarbejderens payload uden ejer-felter viser ingen profit, margin eller forklaring, men resten er der", () => {
+    const k = store.kpis;
+    const staffKpis = {
+      revenue: k.revenue,
+      salesCount: k.salesCount,
+      creditCount: k.creditCount,
+      avgBasket: k.avgBasket,
+      vatStandard: k.vatStandard,
+      brugtmoms: k.brugtmoms,
+      deposits: k.deposits,
+    };
+    const { container } = render(<StoreOverviewView data={{ ...store, kpis: staffKpis }} />);
+    expect(container.textContent).not.toMatch(/profit|margin|fortjeneste/i);
+    expect(screen.queryByText("36 % af omsætning")).toBeNull();
+    expect(screen.getByText("Omsætning inkl. moms")).toBeTruthy();
+    expect(screen.getByText("Antal salg")).toBeTruthy();
+    expect(screen.getByText("Gns. kurv 639 kr.")).toBeTruthy();
+    expect(screen.getByText("Kassen")).toBeTruthy();
+  });
+
   it("medarbejder uden butik får en forklaring i stedet for tal", () => {
     render(<StoreOverviewView data={{ ...store, scope: "ingen" }} />);
     expect(screen.getByText(/ikke knyttet til en butik/)).toBeTruthy();

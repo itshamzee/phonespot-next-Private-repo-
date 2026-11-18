@@ -64,12 +64,17 @@ export type CashInfo = { state: CashState; detail: string };
 export type ReadyCase = { id: string; label: string; title: string; days: number; overdue: boolean };
 export type TransferLine = { id: string; text: string; action: "Modtag" | "Send" | null };
 
+/** Nøgletal, der afslører kostpris; kun ejeren får dem (se forViewer). */
+export type OwnerKpiField = "revenueExVat" | "cost" | "profit" | "marginPct";
+/** Butikkens nøgletal: ejer-felterne findes kun i ejerens payload. */
+export type StoreKpis = Omit<Kpis, OwnerKpiField> & Partial<Pick<Kpis, OwnerKpiField>>;
+
 export type StoreOverview = {
   kind: "store";
   scope: StoreScope;
   period: PeriodKey;
   range: PeriodRange;
-  kpis: Kpis;
+  kpis: StoreKpis;
   /** Procent mod forrige periode; null uden sammenligningsgrundlag. */
   revenueDeltaPct: number | null;
   cash: CashInfo;
@@ -780,11 +785,38 @@ async function loadAllOverview(period: PeriodKey, now: Date): Promise<AllOvervie
 /* ------------------------------------------------------------------ */
 
 /**
- * Den eneste vej ind: afgør, hvad den aktuelle bruger må se.
- *  - scope "ingen" (medarbejder uden butik): tom visning, ingen forespørgsler.
- *  - scope "alle" kræver ejer; ellers behandles det som "ingen" (fail closed).
+ * Payload til viewer. Ejeren får den uændret. For alle andre bygges den op af
+ * navngivne felter, så kostpris, profit, margin og omsætning ekskl. moms aldrig
+ * forlader serveren; Alle butikker (med profit pr. butik) bliver til den tomme visning.
  */
-export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Date = new Date()): Promise<OverviewPayload> {
+export function forViewer(payload: OverviewPayload, isOwner: boolean): OverviewPayload {
+  if (isOwner) return payload;
+  if (payload.kind === "alle") return forViewer(emptyStore("ingen", payload.period, payload.range), false);
+  const k = payload.kpis;
+  return {
+    kind: "store",
+    scope: payload.scope,
+    period: payload.period,
+    range: payload.range,
+    kpis: {
+      revenue: k.revenue,
+      salesCount: k.salesCount,
+      creditCount: k.creditCount,
+      avgBasket: k.avgBasket,
+      vatStandard: k.vatStandard,
+      brugtmoms: k.brugtmoms,
+      deposits: k.deposits,
+    },
+    revenueDeltaPct: payload.revenueDeltaPct,
+    cash: payload.cash,
+    ready: payload.ready,
+    webBookings: payload.webBookings,
+    webshopOrders: payload.webshopOrders,
+    transfers: payload.transfers,
+  };
+}
+
+async function loadForScope(ctx: OverviewCtx, period: PeriodKey, now: Date): Promise<OverviewPayload> {
   const { scope } = ctx;
   if (scope === "alle") {
     if (!ctx.isOwner) return emptyStore("ingen", period, periodRange(period, now));
@@ -792,5 +824,15 @@ export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Dat
   }
   if (scope === "ingen") return emptyStore("ingen", period, periodRange(period, now));
   return loadStoreOverview(scope, period, now);
+}
+
+/**
+ * Den eneste vej ind: afgør, hvad den aktuelle bruger må se.
+ *  - scope "ingen" (medarbejder uden butik): tom visning, ingen forespørgsler.
+ *  - scope "alle" kræver ejer; ellers behandles det som "ingen" (fail closed).
+ *  - kostpris, profit og margin er kun til ejeren (forViewer, eneste udgang).
+ */
+export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Date = new Date()): Promise<OverviewPayload> {
+  return forViewer(await loadForScope(ctx, period, now), ctx.isOwner);
 }
 

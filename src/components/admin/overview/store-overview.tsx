@@ -30,6 +30,8 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
   const deltaNote =
     delta === null ? undefined : `${delta > 0 ? "+" : delta < 0 ? "−" : ""}${Math.abs(delta)} % ${data.range.compareLabel}`;
 
+  // Profit og margin er kun med i ejerens payload (forViewer i load.ts).
+  const showProfit = kpis.profit !== undefined;
   const isWebshop = scope === "webshop";
   const bookings = data.webBookings;
   // Webshoppen håndterer ordrer først; reparationsanmodninger vises kun, hvis der er nogen.
@@ -57,11 +59,13 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
               value={<KpiNumber value={kpis.salesCount} kind="count" />}
               note={kpis.salesCount > 0 ? `Gns. kurv ${formatKr(kpis.avgBasket)}` : "Ingen salg endnu"}
             />
-            <KpiCard
-              label="Profit"
-              value={<KpiNumber value={kpis.profit} kind="kr" />}
-              note={kpis.marginPct !== null ? `${kpis.marginPct} % af omsætning` : undefined}
-            />
+            {kpis.profit !== undefined ? (
+              <KpiCard
+                label="Profit"
+                value={<KpiNumber value={kpis.profit} kind="kr" />}
+                note={kpis.marginPct != null ? `${kpis.marginPct} % af omsætning` : undefined}
+              />
+            ) : null}
             {hasCash ? (
               <KpiCard
                 label="Kassen"
@@ -70,9 +74,11 @@ export function StoreOverviewView({ data }: { data: StoreOverview }) {
               />
             ) : null}
           </KpiGrid>
-          <p className="m-0 -mt-3 text-[12px] text-[#5E6A63]">
-            Profit er omsætning ekskl. moms (brugtmoms fratrukket) minus kostpris. Depositum indgår ikke, før det er afregnet.
-          </p>
+          {showProfit ? (
+            <p className="m-0 -mt-3 text-[12px] text-[#5E6A63]">
+              Profit er omsætning ekskl. moms (brugtmoms fratrukket) minus kostpris. Depositum indgår ikke, før det er afregnet.
+            </p>
+          ) : null}
 
           {showBookingsLate ? <WebBookingsPanel data={bookings} /> : null}
 

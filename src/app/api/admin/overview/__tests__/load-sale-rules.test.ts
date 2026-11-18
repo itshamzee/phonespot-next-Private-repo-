@@ -94,7 +94,8 @@ describe("loadOrders med de fælles salgsregler", () => {
   });
 
   it("brugte reservedele er kostpris, frigivne dele er ikke", async () => {
-    const { kpis } = await store("vejle");
+    // Kostpris er kun med i ejerens payload.
+    const { kpis } = (await loadOverview({ scope: "vejle", isOwner: true }, "dag")) as StoreOverview;
     expect(kpis.cost).toBe(30_000);
   });
 
