@@ -14,7 +14,7 @@ function Shell() {
   return (
     <NavPendingProvider>
       <div className="relative">
-        <NavPendingBar />
+        <NavPendingBar className="inset-x-0 lg:left-[232px]" />
       </div>
       <Link href="/admin/kunder">
         Kunder
@@ -39,7 +39,7 @@ describe("NavPending", () => {
     status.pending = true;
     const { rerender } = render(<Shell />);
     const bar = screen.getByTestId("nav-pending-bar");
-    expect(bar).toHaveClass("m-pending-bar");
+    expect(bar).toHaveClass("m-pending-bar", "inset-x-0", "lg:left-[232px]");
     expect(bar).toHaveAttribute("aria-hidden", "true");
 
     status.pending = false;

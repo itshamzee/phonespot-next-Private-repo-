@@ -66,12 +66,13 @@
   opacity: 0.6;
 }
 
-/* Navigation i gang: 2 px streg øverst i indholdet. Ligger absolut, så intet flytter sig. */
+/*
+ * Navigation i gang: 2 px streg øverst i indholdet. Ligger absolut, så intet flytter sig.
+ * Vandret placering (left/right) sættes af komponenten, så den kan følge indholdskolonnen.
+ */
 .m-pending-bar {
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 20;
   height: 2px;
   overflow: hidden;

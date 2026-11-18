@@ -35,9 +35,12 @@ export function NavPendingSignal() {
   return null;
 }
 
-/** Stregen; skal ligge i et element med position: relative. Fylder intet i layoutet. */
-export function NavPendingBar() {
+/**
+ * Stregen; skal ligge i et element med position: relative. Fylder intet i layoutet.
+ * `className` giver den vandrette placering (standard: hele bredden).
+ */
+export function NavPendingBar({ className = "inset-x-0" }: { className?: string }) {
   const pending = useContext(Ctx)?.pending ?? false;
   if (!pending) return null;
-  return <div aria-hidden="true" data-testid="nav-pending-bar" className="m-pending-bar" />;
+  return <div aria-hidden="true" data-testid="nav-pending-bar" className={`m-pending-bar ${className}`} />;
 }

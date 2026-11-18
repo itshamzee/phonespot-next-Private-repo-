@@ -269,8 +269,10 @@ function AuthedShell({
             <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
 
             <div className="relative flex min-h-0 flex-1">
-              {/* Navigation i gang: 2 px streg øverst i indholdet, absolut placeret. */}
-              <NavPendingBar />
+              {/* Navigation i gang: 2 px streg øverst i indholdskolonnen, absolut placeret.
+                  lg:left-[232px] = sidemenuens bredde (w-[232px] i sidebar.tsx); under lg er
+                  menuen en skuffe ovenpå, så kolonnen er hele bredden. */}
+              <NavPendingBar className="inset-x-0 lg:left-[232px]" />
               {/* Altid monteret, så den kan tone ind og ud (.m-backdrop). */}
               <div
                 aria-hidden="true"
