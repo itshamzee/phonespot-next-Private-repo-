@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { MOTION_MS } from "./motion";
 
 /**
  * Fælles toast til admin: én besked ad gangen nederst i midten, resten står i kø.
@@ -8,6 +9,13 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
  * og står i 8 s. Bevægelsen er .m-toast (app/admin-motion.css): de to felter er
  * altid monteret, så de kan tone ind og ud, og skærmlæsere hører ændringen.
  * Tænkt som afløser for alert() i senere trin.
+ *
+ * Over åbne dialoger: en åben <dialog> ligger i browserens top layer, over alt med z-index.
+ * Feltet får derfor popover="manual" (sat i browseren, kun hvis Popover API findes) og løftes med showPopover(), hver gang en ny besked
+ * vises (så den kommer øverst, også over en dialog åbnet efter), og hidePopover(), når køen
+ * er tom. Uden Popover API (ældre browsere, jsdom) står det som før med position: fixed.
+ * Browserens popover-standarder (display: none, kant, polstring, centrering) er nulstillet,
+ * så udseendet og .m-toast-bevægelsen er de samme; display: grid holder felterne i DOM'en.
  */
 
 export type ToastTone = "neutral" | "error";
@@ -15,8 +23,8 @@ type ToastItem = { id: number; message: string; tone: ToastTone };
 type ToastFn = (message: string, options?: { tone?: ToastTone }) => void;
 
 const VISIBLE_MS: Record<ToastTone, number> = { neutral: 4000, error: 8000 };
-/** Samme som --dur-base: tid til at tone ud, før næste vises. */
-const EXIT_MS = 220;
+/** --dur-base: tid til at tone ud, før næste vises. */
+const EXIT_MS = MOTION_MS.base;
 
 const ToastCtx = createContext<ToastFn | null>(null);
 
@@ -65,13 +73,42 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [showNext],
   );
 
+  // Løft feltet øverst i top layer, når en besked vises; tag det ned, når køen er tom.
+  const regionRef = useRef<HTMLDivElement>(null);
+  const promoted = useRef(false);
+  useLayoutEffect(() => {
+    // Kun med Popover API: ellers ville attributten skjule feltet (fx jsdoms standardark).
+    const el = regionRef.current;
+    if (el && typeof el.showPopover === "function") el.setAttribute("popover", "manual");
+  }, []);
+  useLayoutEffect(() => {
+    const el = regionRef.current;
+    if (!el || typeof el.showPopover !== "function") return;
+    try {
+      if (current) {
+        if (promoted.current) el.hidePopover();
+        el.showPopover();
+        promoted.current = true;
+      } else if (promoted.current) {
+        el.hidePopover();
+        promoted.current = false;
+      }
+    } catch {
+      // Fx ikke i dokumentet endnu: feltet står så med position: fixed som før.
+      promoted.current = false;
+    }
+  }, [current]);
+
   const showing = (tone: ToastTone) => open && current?.tone === tone;
   const text = (tone: ToastTone) => (current?.tone === tone ? current.message : "");
 
   return (
     <ToastCtx.Provider value={toast}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] grid justify-items-center px-4">
+      <div
+        ref={regionRef}
+        className="pointer-events-none fixed inset-x-0 top-auto bottom-6 z-[70] m-0 grid h-auto w-auto max-w-none justify-items-center overflow-visible border-0 bg-transparent px-4 py-0 text-inherit"
+      >
         <div
           role="status"
           aria-live="polite"

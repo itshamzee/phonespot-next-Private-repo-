@@ -80,4 +80,43 @@ describe("Toast", () => {
     expect(() => render(<Trigger message="x" />)).toThrow(/ToastProvider/);
     spy.mockRestore();
   });
+
+  it("uden Popover API (jsdom) står feltet som før med position: fixed", () => {
+    setup();
+    const region = screen.getByRole("status").parentElement!;
+    expect(region).not.toHaveAttribute("popover");
+    expect(region.className.split(" ")).toContain("fixed");
+    fireEvent.click(screen.getByRole("button", { name: "vis Gemt" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Gemt");
+  });
+
+  it("løftes over åbne dialoger med showPopover, igen ved hver ny besked, og tages ned, når køen er tom", () => {
+    const show = vi.fn();
+    const hide = vi.fn();
+    const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+    proto.showPopover = show;
+    proto.hidePopover = hide;
+    // jsdoms standardark skjuler [popover], så felterne findes uden rolle-forespørgsler.
+    const status = () => document.querySelector<HTMLElement>("[role=status]")!;
+    try {
+      setup();
+      expect(status().parentElement).toHaveAttribute("popover", "manual");
+      expect(show).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "vis Gemt" }));
+      expect(show).toHaveBeenCalledTimes(1);
+      expect(show.mock.contexts[0]).toBe(status().parentElement);
+      fireEvent.click(screen.getByRole("button", { name: "vis Sendt" }));
+      advance(4000 + 220);
+      // Næste besked: ned og op igen, så den ligger øverst.
+      expect(status()).toHaveTextContent("Sendt");
+      expect(hide).toHaveBeenCalledTimes(1);
+      expect(show).toHaveBeenCalledTimes(2);
+      advance(4000 + 220);
+      expect(hide).toHaveBeenCalledTimes(2);
+      expect(show).toHaveBeenCalledTimes(2);
+    } finally {
+      delete proto.showPopover;
+      delete proto.hidePopover;
+    }
+  });
 });
