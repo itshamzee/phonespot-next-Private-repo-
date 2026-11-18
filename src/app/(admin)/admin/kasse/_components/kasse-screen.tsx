@@ -1004,7 +1004,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                   role="tab"
                   aria-selected={chip === c.id}
                   onClick={() => setChip(c.id)}
-                  className={`m-press h-[38px] rounded-full px-4 text-sm ${
+                  className={`m-press m-tap h-[38px] rounded-full px-4 text-sm ${
                     chip === c.id ? "bg-[#1A3D2E] font-semibold text-white" : "border border-[#C9D0C7] bg-white hover:bg-[#FBFCFB]"
                   }`}
                 >
