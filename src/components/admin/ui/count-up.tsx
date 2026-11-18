@@ -1,6 +1,6 @@
 "use client";
 
-import { formatNumber, type NumberFormat } from "@/components/admin/statistik/format";
+import { formatNumber, type NumberFormat } from "./format-number";
 import { useCountUp } from "./use-count-up";
 
 /** Et tal, der tæller op til sin værdi. Til server-komponenter, der ikke kan bruge hooks. */
