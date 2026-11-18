@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import GlobalSearch from "@/components/admin/global-search";
 import { NotificationsButton } from "./notifications";
@@ -8,6 +8,8 @@ import { useSaveBarState } from "./save-bar";
 import type { NavCounts } from "./sidebar";
 import { useStoreScope } from "./store-scope-context";
 import { StoreSwitcher } from "./store-switcher";
+import { NavPendingSignal } from "./nav-pending";
+import { menuItemClass, usePopoverMenu } from "./use-popover-menu";
 
 /** Forbogstaver til avataren: "Mikkel Kjær" -> "MK", ellers første bogstav i mailen. */
 export function initialsOf(name: string | null | undefined, email: string | null | undefined): string {
@@ -35,25 +37,16 @@ export function Topbar({
 }) {
   const save = useSaveBarState();
   const { me } = useStoreScope();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const menuWrapRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
+  const menu = usePopoverMenu({ wrapRef: menuWrapRef, triggerRef: menuTriggerRef, panelRef: menuPanelRef });
   const [searchOpen, setSearchOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const close = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
-    };
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [menuOpen]);
 
   const unsaved = Boolean(save?.dirty);
+  // Søgefeltet toner kun ind, når det kommer tilbage efter Gem-bjælken, ikke ved første visning.
+  const [saveBarSeen, setSaveBarSeen] = useState(false);
+  if (unsaved && !saveBarSeen) setSaveBarSeen(true);
   const displayName = me?.name?.trim() || null;
   const firstName = displayName?.split(/\s+/)[0] ?? null;
 
@@ -62,7 +55,7 @@ export function Topbar({
       <button
         type="button"
         onClick={onMenu}
-        className="rounded-lg p-2 text-[#15211B] hover:bg-[#F5F6F4] lg:hidden"
+        className="m-press m-tap rounded-lg p-2 text-[#15211B] hover:bg-[#F5F6F4] lg:hidden"
         aria-label="Åbn menu"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
@@ -74,12 +67,13 @@ export function Topbar({
       <Link href="/admin" className="hidden shrink-0 sm:block" aria-label="PhoneSpot admin, til overblik">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/logos/phonespot-wordmark-green.png" alt="PhoneSpot" className="h-auto w-[104px] sm:w-[124px]" />
+        <NavPendingSignal />
       </Link>
 
       <StoreSwitcher className={unsaved ? "hidden sm:block" : ""} />
 
       {unsaved && save ? (
-        <div role="status" className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-lg bg-[#E7EFE9] py-1.5 pl-3 pr-1.5 lg:max-w-[720px]">
+        <div role="status" className="m-row-in flex min-w-0 flex-1 items-center justify-between gap-3 rounded-lg bg-[#E7EFE9] py-1.5 pl-3 pr-1.5 lg:max-w-[720px]">
           <p className="min-w-0 truncate text-[13px] font-medium text-[#1A3D2E]">
             {save.blocked ? save.blocked : "Ændringer, der ikke er gemt"}
           </p>
@@ -104,7 +98,7 @@ export function Topbar({
         </div>
       ) : (
         <>
-          <div className="hidden min-w-0 flex-1 sm:block sm:max-w-[520px]">
+          <div className={`hidden min-w-0 flex-1 sm:block sm:max-w-[520px] ${saveBarSeen ? "m-row-in" : ""}`}>
             <GlobalSearch />
           </div>
           <button
@@ -112,7 +106,7 @@ export function Topbar({
             onClick={() => setSearchOpen((v) => !v)}
             aria-expanded={searchOpen}
             aria-label="Søg"
-            className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#15211B] hover:bg-[#F5F6F4] sm:hidden"
+            className="m-press m-tap ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#15211B] hover:bg-[#F5F6F4] sm:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
               <circle cx="11" cy="11" r="7" />
@@ -129,34 +123,53 @@ export function Topbar({
 
       <div className={`flex shrink-0 items-center gap-2 sm:ml-auto sm:gap-3 ${unsaved ? "hidden sm:flex" : ""}`}>
         <NotificationsButton counts={counts} />
-        <div ref={menuRef} className="relative shrink-0">
+        <div ref={menuWrapRef} className="relative shrink-0">
           <button
+            ref={menuTriggerRef}
             type="button"
-            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menu.open}
+            aria-controls={menu.panelId}
+            onClick={menu.toggle}
             aria-haspopup="menu"
-            aria-expanded={menuOpen}
             aria-label="Konto"
-            className="flex items-center gap-2 rounded-lg p-0.5 text-[14px] hover:bg-[#F5F6F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3D2E]/40 sm:pr-2"
+            className="m-press m-tap flex items-center gap-2 rounded-lg p-0.5 text-[14px] hover:bg-[#F5F6F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3D2E]/40 sm:pr-2"
           >
             <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#1A3D2E] text-[13px] font-semibold text-white">
               {initialsOf(displayName, email)}
             </span>
             <span className="hidden sm:inline">{firstName ?? email?.split("@")[0] ?? ""}</span>
           </button>
-          {menuOpen && (
-            <div role="menu" className="absolute right-0 top-11 w-60 rounded-xl border border-[#E2E5E0] bg-white p-1.5 text-[#15211B] shadow-lg">
-              <p className="truncate px-2.5 py-2 text-[13px] text-[#5E6A63]">{email}</p>
-              <Link role="menuitem" href="/admin/indstillinger/profil" onClick={() => setMenuOpen(false)} className="block rounded-lg px-2.5 py-2 text-[14px] hover:bg-[#F5F6F4]">
-                Profil og signatur
-              </Link>
-              <Link role="menuitem" href="/" target="_blank" onClick={() => setMenuOpen(false)} className="block rounded-lg px-2.5 py-2 text-[14px] hover:bg-[#F5F6F4]">
-                Åbn webshoppen
-              </Link>
-              <button role="menuitem" type="button" onClick={onLogout} className="block w-full rounded-lg px-2.5 py-2 text-left text-[14px] hover:bg-[#F5F6F4]">
-                Log ud
-              </button>
-            </div>
-          )}
+          {/* Altid monteret (.m-pop), så menuen kan tone ind og ud. */}
+          <div
+            ref={menuPanelRef}
+            id={menu.panelId}
+            tabIndex={-1}
+            data-open={menu.open}
+            aria-hidden={menu.open ? undefined : true}
+            role="menu"
+            aria-label="Konto"
+            className="m-pop absolute right-0 top-11 w-60 rounded-xl border border-[#E2E5E0] bg-white p-1.5 text-[#15211B] outline-none"
+          >
+            <p className="truncate px-2.5 py-2 text-[13px] text-[#5E6A63]">{email}</p>
+            <Link role="menuitem" href="/admin/indstillinger/profil" onClick={menu.closeAndReturn} className={menuItemClass}>
+              Profil og signatur
+              <NavPendingSignal />
+            </Link>
+            <Link role="menuitem" href="/" target="_blank" onClick={menu.closeAndReturn} className={menuItemClass}>
+              Åbn webshoppen
+            </Link>
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                menu.closeAndReturn();
+                onLogout();
+              }}
+              className={`${menuItemClass} w-full text-left`}
+            >
+              Log ud
+            </button>
+          </div>
         </div>
       </div>
     </header>
