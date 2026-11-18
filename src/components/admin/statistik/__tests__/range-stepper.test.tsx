@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { PeriodSelector, RangeStepper, StatNavProvider } from "../controls";
+import { PeriodSelector, RangeStepper, StatNavContext, StatNavProvider } from "../controls";
 import { statRange, type StatPreset } from "@/lib/admin/statistik/range";
 
 const NOW = new Date("2026-11-18T13:32:00Z");
@@ -142,5 +142,26 @@ describe("RangeStepper", () => {
     expect(replace).not.toHaveBeenCalled();
     fireEvent.keyDown(document.body, { key: "ArrowRight" });
     expect(lastQuery().get("fra")).toBe("2026-11-11");
+  });
+
+  it("ArrowLeft and ArrowRight do nothing while a navigation is pending", () => {
+    const go = vi.fn();
+    const r = statRange({ from: "2026-11-10", to: "2026-11-10" }, NOW);
+    const range = { preset: r.preset, from: r.from, to: r.to, rangeLabel: r.rangeLabel, compareLabel: r.compareLabel, unit: r.unit };
+    const nav = (pending: boolean) => ({ pending, go, isDatesOpen: () => false, setDatesOpen: () => {} });
+    const ui = (pending: boolean) => (
+      <StatNavContext.Provider value={nav(pending)}>
+        <RangeStepper range={range} minDate={MIN} today={TODAY} />
+      </StatNavContext.Provider>
+    );
+    const { rerender } = render(ui(true));
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    fireEvent.keyDown(document.body, { key: "ArrowRight" });
+    expect(go).not.toHaveBeenCalled();
+
+    // Navigationen er færdig: tasterne virker igen.
+    rerender(ui(false));
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    expect(go).toHaveBeenCalledWith({ periode: null, fra: "2026-11-09", til: "2026-11-09" });
   });
 });

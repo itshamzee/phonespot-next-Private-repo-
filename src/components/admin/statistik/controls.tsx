@@ -23,6 +23,8 @@ type Nav = {
 };
 
 const NavContext = createContext<Nav>({ pending: false, go: () => {}, isDatesOpen: () => false, setDatesOpen: () => {} });
+/** Kun til tests (fx en navigation i gang uden en rigtig router); siden bruger StatNavProvider. */
+export const StatNavContext = NavContext;
 
 export function StatNavProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
