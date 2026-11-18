@@ -12,6 +12,7 @@ vi.mock("@/components/admin/repairs/print-modal", () => ({ PrintModal: () => nul
 
 import CaseListPage from "../case-list-page";
 import CasePage from "../case-page";
+import { MeldKlarDialog } from "../meld-klar-dialog";
 
 const fetchMock = vi.fn();
 const withToast = (ui: ReactElement) => render(ui, { wrapper: ToastProvider });
@@ -121,5 +122,34 @@ describe("Sagsstyring: sagen", () => {
     expect(box.closest("[role=alert]")).not.toBeNull();
     expect(box.closest(".m-toast")).toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+});
+
+describe("Sagsstyring: dialoger lukker som før step 2", () => {
+  const target = { id: "t1", label: "PS-2026-0042", status: "faerdig", customer_name: "Anna", customer_phone: "", paid: false, rest_oere: 50_000 };
+
+  it("Meld klar: klik på baggrunden lukker ikke (en skrevet begrundelse bevares); Esc lukker", () => {
+    const onClose = vi.fn();
+    withToast(<MeldKlarDialog target={target} onClose={onClose} onDone={vi.fn()} />);
+    fireEvent.click(screen.getByLabelText("Afhentet uden betaling"));
+    fireEvent.change(screen.getByPlaceholderText("Fx faktura til erhverv eller kulance"), { target: { value: "Kulance" } });
+    fireEvent.mouseDown(screen.getByRole("dialog"));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByPlaceholderText("Fx faktura til erhverv eller kulance")).toHaveValue("Kulance");
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("Fotos: klik på baggrunden lukker ikke; Esc lukker", async () => {
+    const withPhotos = { ...detail, ticket: { ...detail.ticket, intake_photos: ["https://example.test/a.jpg"] } };
+    fetchMock.mockImplementation(() => json(withPhotos));
+    withToast(<CasePage id="t1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Fotos (1)" }));
+    const dialog = screen.getByRole("dialog", { name: "Fotos" });
+    expect(dialog).toHaveAttribute("open");
+    fireEvent.mouseDown(dialog);
+    expect(dialog).toHaveAttribute("open");
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(dialog).not.toHaveAttribute("open");
   });
 });

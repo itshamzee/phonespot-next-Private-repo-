@@ -99,8 +99,16 @@ export function MeldKlarDialog({
   );
 
   return (
-    // Fælles Dialog: fokusfælde, Esc og baggrund lukker, fokus tilbage til knappen bagefter.
-    <Dialog open onClose={onClose} title={`Meld klar: ${target.label}`} description={target.customer_name} size="sm">
+    // Fælles Dialog: fokusfælde, Esc lukker, fokus tilbage til knappen bagefter.
+    <Dialog
+      open
+      onClose={onClose}
+      title={`Meld klar: ${target.label}`}
+      description={target.customer_name}
+      size="sm"
+      // Som før: kun Esc og knapperne lukker; et klik ved siden af må ikke tabe en skrevet begrundelse.
+      dismissOnBackdrop={false}
+    >
       <form onSubmit={submit} className="flex flex-col gap-3">
         <div role="radiogroup" aria-label="Hvad er status?" className="flex flex-col gap-2">
           {option("klar", "Klar til kunde", "Sagen er færdig og venter på afhentning.")}

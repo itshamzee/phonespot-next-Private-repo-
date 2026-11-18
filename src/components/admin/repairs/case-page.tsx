@@ -629,7 +629,7 @@ export default function CasePage({ id }: { id: string }) {
         />
       )}
       {print && <PrintModal detail={detail} type={print} onClose={() => setPrint(null)} />}
-      <Dialog open={photos} onClose={() => setPhotos(false)} title="Fotos" style={{ maxWidth: 768 }}>
+      <Dialog open={photos} onClose={() => setPhotos(false)} title="Fotos" dismissOnBackdrop={false} style={{ maxWidth: 768 }}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {photoUrls.map((u, i) => (
             // eslint-disable-next-line @next/next/no-img-element
