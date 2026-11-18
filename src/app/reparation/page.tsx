@@ -68,6 +68,11 @@ const REPAIR_FAQ = [
     answer:
       "Ja. Vælg Apple og derefter din enhedstype i modelvælgeren. Find din model for at se de tilgængelige reparationer, eller kontakt os for hjælp.",
   },
+  {
+    question: "Reparerer I PS5 og andre konsoller?",
+    answer:
+      "Ja. Larmer konsollen eller bliver den varm, renser vi den og fornyer kølingen for 899 kr. Det gælder PS5, PS5 Digital, PS5 Pro, PS4 og Xbox Series X og S. Sort skærm på PS5 skyldes oftest HDMI-porten, og port og rengøring koster 1.300 kr.",
+  },
 ];
 
 const REPAIR_SERVICE_JSONLD = [STORES.vejle, STORES.slagelse].map((store) => ({
@@ -175,7 +180,7 @@ export default async function ReparationPage() {
         </div>
         <section id="find-din-pris" className={landing.finder} aria-labelledby="finder-title">
           <div className={landing.sectionHeading}>
-            <div><h2 id="finder-title">Hvad skal vi reparere?</h2><p>Find din model for at se reparationer, reservedele og priser.</p></div>
+            <div><h2 id="finder-title">Hvad skal vi reparere?</h2><p>Find din model for at se reparationer, reservedele og priser. Apple finder du under <Link href="/reparation/iphone">iPhone</Link>, <Link href="/reparation/ipad">iPad</Link> og <Link href="/reparation/macbook">MacBook</Link>.</p></div>
             <Link href="/kontakt">Kan du ikke finde din model? <StorefrontIcon kind="arrow" /></Link>
           </div>
           <BrandPicker brands={brands} models={allModels} />
@@ -225,12 +230,13 @@ export default async function ReparationPage() {
           </div>
         </section>
         <section className={landing.deviceGuide} aria-labelledby="repair-devices-title">
-          <h2 id="repair-devices-title">Reparation af telefoner, tablets og bærbare</h2>
+          <h2 id="repair-devices-title">Reparation af telefoner, tablets, bærbare og konsoller</h2>
           <div>
-            <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/android">Android-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/samsung">Samsung-reparation <StorefrontIcon kind="arrow" /></Link></article>
-            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><a href="#find-din-pris">Find din iPad eller MacBook <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/tablet">Tablet-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/macbook">MacBook-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/iphone">Apple iPhone-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/android">Android-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/samsung">Samsung-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><a href="#find-din-pris">Find din iPad eller MacBook <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/ipad">iPad-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/tablet">Tablet-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/macbook">MacBook-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article className={landing.consoleGuide}><h3>PS5, Xbox og andre konsoller</h3><p>Larmer din PS5 eller Xbox, eller er tv&apos;et sort, selvom konsollen tænder? Vi renser konsollen og fornyer kølingen for 899 kr. og skifter HDMI-porten med mikrolodning. Aflever den i Vejle eller Slagelse, eller send den ind.</p><Link href="/reparation/playstation/playstation-5">PS5-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/playstation">PlayStation-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/xbox">Xbox-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/blog/gta-6-klar-ps5-rens-koelepasta">PS5 rens før GTA 6 <StorefrontIcon kind="arrow" /></Link></article>
           </div>
-          <p className={landing.longerLife}>Vi reparerer også <Link href="/reparation/dyson">Dyson</Link>, <Link href="/reparation/roborock">Roborock</Link>, <Link href="/reparation/irobot">iRobot</Link>, <Link href="/reparation/nespresso">Nespresso</Link>, <Link href="/reparation/delonghi">De&apos;Longhi</Link> og <Link href="/reparation/xbox">Xbox</Link>. <Link href="/reparation/dyson">Se apparater <StorefrontIcon kind="arrow" /></Link></p>
+          <p className={landing.longerLife}>Vi reparerer også <Link href="/reparation/dyson">Dyson</Link>, <Link href="/reparation/roborock">Roborock</Link>, <Link href="/reparation/irobot">iRobot</Link>, <Link href="/reparation/nespresso">Nespresso</Link> og <Link href="/reparation/delonghi">De&apos;Longhi</Link>. <Link href="/reparation/dyson">Se apparater <StorefrontIcon kind="arrow" /></Link></p>
           <p className={landing.longerLife}>Når en reparation holder din enhed i brug, får du mere ud af det, du allerede har. Er reparation ikke den rette løsning for dig, kan du også <Link href="/saelg-din-enhed">få din brugte enhed vurderet</Link>.</p>
         </section>
         <section className={`${styles.faq} ${landing.faq}`}>

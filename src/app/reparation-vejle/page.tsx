@@ -15,7 +15,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
   description:
-    "iPhone-, Samsung- og MacBook-reparation i Vejle. 90% af skærm- og batteriskift klar på 30 min. Livstidsgaranti på arbejde og dele. Gratis parkering ved døren.",
+    "iPhone-, Samsung- og MacBook-reparation i Vejle. 90 % af skærm- og batteriskift klar på 30 min. Livstidsgaranti på arbejde og dele. Gratis parkering ved døren.",
   alternates: { canonical: "https://phonespot.dk/reparation-vejle" },
   openGraph: {
     title: "iPhone-reparation i Vejle – mens du venter | PhoneSpot",
@@ -143,7 +143,7 @@ const SERVICES = [
   {
     title: "Skærmskift",
     description:
-      "Knust eller sort skærm? Vi skifter skærmen på iPhone, Samsung, iPad og andre enheder. 90% klar på 30 minutter.",
+      "Knust eller sort skærm? Vi skifter skærmen på iPhone, Samsung, iPad og andre enheder. 90 % af skærm- og batteriskift er klar på 30 minutter.",
   },
   {
     title: "Batteriskift",
@@ -181,7 +181,7 @@ const FAQS = [
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
     answer:
-      "Ja, vi tager imod reparationer uden tidsbestilling. 90% af alle skærmskift og batteriskift er klar inden for 30 minutter. Du er altid velkommen til at kigge forbi uden forudgående aftale.",
+      "Ja, vi tager imod reparationer uden tidsbestilling. 90 % af skærm- og batteriskift er klar på 30 minutter. Du er altid velkommen til at kigge forbi uden forudgående aftale.",
   },
   {
     question: "Er der parkering ved butikken?",
@@ -261,7 +261,7 @@ export default async function ReparationVejlePage() {
             iPhone- og mobilreparation i Vejle — mens du venter
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
-            Kom forbi uden tidsbestilling. 90% af alle skærm- og batteriskift er
+            Kom forbi uden tidsbestilling. 90 % af skærm- og batteriskift er
             klar på 30 minutter, og du får livstidsgaranti på arbejde og dele
             (6 måneder på batteriskift). Gratis parkering lige ved døren.
           </p>
@@ -286,7 +286,7 @@ export default async function ReparationVejlePage() {
           <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
-              { title: "30 minutter", desc: "90% klar mens du venter" },
+              { title: "30 minutter", desc: "90 % af skærm- og batteriskift" },
               { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
               { title: "Gratis parkering", desc: "Lige ved døren" },
             ].map(({ title, desc }) => (
@@ -306,7 +306,7 @@ export default async function ReparationVejlePage() {
       <section className="border-b border-[#E5E5EA] bg-white">
         <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
           PhoneSpot Vejle, Løversysselvej 3B, 7100 Vejle, reparerer iPhone,
-          Samsung, iPad og MacBook uden tidsbestilling. 90% af skærm- og
+          Samsung, iPad og MacBook uden tidsbestilling. 90 % af skærm- og
           batteriskift er klar på 30 minutter.
           {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
           {` Du får ${REPAIR_WARRANTY_SHORT}.`} Gratis parkering ved døren.{" "}
@@ -605,7 +605,7 @@ export default async function ReparationVejlePage() {
               {
                 title: "Hurtig service",
                 description:
-                  "90% af alle reparationer er klar på 30 minutter. Du kan vente i butikken og tage enheden med samme dag.",
+                  "90 % af skærm- og batteriskift er klar på 30 minutter. Du kan vente i butikken og tage enheden med samme dag.",
               },
               {
                 title: "Professionelle teknikere",
@@ -656,8 +656,8 @@ export default async function ReparationVejlePage() {
             <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
               Hos PhoneSpot Vejle tilbyder vi professionel iPhone-reparation
               uden forudgående tidsbestilling. Vi skifter skærme, batterier,
-              opladningsporte og meget mere — og 90% af reparationerne er klar
-              inden for 30 minutter. Du vælger selv skærmkvaliteten, fra budget
+              opladningsporte og meget mere, og 90 % af skærm- og batteriskift er
+              klar på 30 minutter. Du vælger selv skærmkvaliteten, fra budget
               til original, og du får livstidsgaranti på arbejde og dele.
             </p>
           </div>

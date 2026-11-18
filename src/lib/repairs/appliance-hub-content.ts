@@ -45,10 +45,10 @@ export const APPLIANCE_HUB_CONTENT: Record<string, BrandHubContent> = {
   xbox: {
     label: "Xbox",
     answer: (p) =>
-      `Vi reparerer Xbox i Vejle og Slagelse: fejlsøgning, HDMI-port, strømproblemer, overophedning og controllere${p ? `, fra ${p}` : ""}. Du får en fast pris, før vi går i gang. Kom forbi med konsollen eller controlleren, så tjekker vi fejlen ved disken, eller send den ind med gratis fragtlabel.`,
+      `Vi reparerer Xbox Series X og S i Vejle og Slagelse: HDMI-port, overophedning, rens med ny kølepasta og controllere${p ? `, fra ${p}` : ""}. Rens og ny køling koster 899 kr. og tager 1-2 hverdage. Du får en fast pris, før vi går i gang, og 2 års garanti på konsolreparation.`,
     body: [
       "De mest almindelige fejl på Xbox er en defekt HDMI-port, en konsol der slukker af sig selv eller bliver meget varm, og controllere med stickdrift eller knapper, der ikke svarer. Find din model nedenfor for at se prisen.",
-      "Står din konsol eller controller ikke på listen, så ring til os, så hører vi, om vi kan hjælpe. Vilkår aftales ved den enkelte reparation.",
+      "Series X og Series S køler med én stor blæser. Står konsollen på et tæppe eller inde i et lukket tv-møbel, samler den støv, og så stiger både temperatur og støj. Står din konsol eller controller ikke på listen, så ring til os, så hører vi, om vi kan hjælpe.",
     ],
     categoryNotes: {},
     cityNote:
@@ -62,7 +62,7 @@ export const APPLIANCE_HUB_CONTENT: Record<string, BrandHubContent> = {
       {
         question: "Min Xbox bliver meget varm og slukker. Kan det repareres?",
         answer:
-          "Ofte er årsagen støv, tør termisk pasta eller en defekt blæser. Vi finder fejlen og oplyser prisen, før vi går i gang.",
+          "Ofte er årsagen støv, tør kølepasta eller en defekt blæser. Rens og ny kølepasta koster 899 kr. og tager 1-2 hverdage. Er blæseren defekt, oplyser vi prisen, før vi går i gang.",
       },
       {
         question: "Kan I reparere en Xbox-controller med stickdrift?",
@@ -70,12 +70,17 @@ export const APPLIANCE_HUB_CONTENT: Record<string, BrandHubContent> = {
           "Ja. Find Xbox Wireless Controller på siden for at se prisen på reparationen.",
       },
       {
-        question: "Hvilken garanti får jeg på reparationen?",
+        question: "Hvilken garanti får jeg på en konsolreparation?",
         answer:
-          "Vilkårene aftales ved den enkelte reparation, og du får dem, før vi går i gang.",
+          "Konsolreparation har 2 års garanti. Garantien dækker ikke nye skader, fx hvis HDMI-kablet bliver revet ud igen.",
       },
       mailIn("Xbox"),
     ],
+    guides: [
+      { href: "/blog/gta-6-klar-ps5-rens-koelepasta", label: "Gør konsollen klar til GTA 6: rens og ny køling" },
+      { href: "/reparation/playstation", label: "PlayStation-reparation" },
+    ],
+    warrantyLine: "2 års garanti på konsolreparation.",
   },
   dyson: {
     label: "Dyson",

@@ -5,6 +5,7 @@ const brands: Record<string, { id: string; slug: string; name: string; device_ty
   samsung: { id: "1", slug: "samsung", name: "Samsung", device_type: "smartphone" },
   macbook: { id: "2", slug: "macbook", name: "MacBook", device_type: "laptop" },
   "google-pixel": { id: "3", slug: "google-pixel", name: "Google Pixel", device_type: "smartphone" },
+  playstation: { id: "4", slug: "playstation", name: "PlayStation", device_type: "console" },
 };
 
 vi.mock("@/lib/supabase/repairs", () => ({
@@ -57,6 +58,21 @@ describe("/reparation/[brand] hub", () => {
     expect(faq.mainEntity.map((q: { name: string }) => q.name)).toEqual(visible);
     expect(blocks.find((b) => b["@type"] === "Service").hasOfferCatalog.itemListElement).toHaveLength(2);
     expect(blocks.some((b) => b["@type"] === "BreadcrumbList")).toBe(true);
+  });
+
+  it("PlayStation-hubben lover 2 års garanti og linker til rens-guiden og lokale konsolsider", async () => {
+    const c = await run("playstation");
+    const text = c.textContent ?? "";
+    expect(c.querySelector("h1")?.textContent).toContain("PlayStation-reparation");
+    expect(text).toContain("2 års garanti på konsolreparation");
+    expect(text).toContain("Hvad koster det at rense en PS5?");
+    expect(text).not.toMatch(/livstidsgaranti|vilkår aftales/i);
+    const hrefs = Array.from(c.querySelectorAll("a")).map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/blog/gta-6-klar-ps5-rens-koelepasta");
+    expect(hrefs).toContain("/reparation-vejle/playstation");
+    expect(hrefs).toContain("/reparation-slagelse/playstation");
+    const m = await generateMetadata({ params: Promise.resolve({ brand: "playstation" }) });
+    expect(String(m.description)).toContain("2 års garanti");
   });
 
   it("has canonical metadata within length limits", async () => {

@@ -13,6 +13,7 @@ import {
 } from "@/lib/repair/booking-devices";
 import { priceFromCatalog } from "@/lib/repair/catalog-pricing";
 import { Resend } from "resend";
+import { newRecoveryToken, onlinePaymentFields } from "@/lib/repair/payment-recovery";
 
 const TEMPERED_GLASS_PRICE = 99; // DKK
 
@@ -106,7 +107,11 @@ export async function POST(request: NextRequest) {
     const multi = parsed.multi;
     const group = multi ? newBookingGroup(priced.devices.length, priced.total) : null;
 
+    // Gendannelsesnøgle: kunden får den kun i Stripes cancel_url og kan bruge den til
+    // at vælge "betal i butikken", hvis betalingen afbrydes. Kun hashen gemmes.
+    const recovery = newRecoveryToken();
     const sharedDetails = {
+      ...onlinePaymentFields(recovery.hash),
       preferred_date: body.preferred_date,
       preferred_time: body.preferred_time || null,
       delivery_method: body.delivery_method || null,
@@ -122,7 +127,18 @@ export async function POST(request: NextRequest) {
 
     // 2. Create repair ticket(s) in Supabase
     let ticketIds: string[];
+    let ticketDetails: Record<string, unknown>[] = [];
     if (multi && group) {
+      ticketDetails = priced.devices.map((d, index) => ({
+        selected_services: d.selected_services,
+        total_price_dkk: d.total_price_dkk,
+        discount_percent: discountPercent,
+        discount_dkk: d.discount_dkk,
+        includes_tempered_glass: d.includes_tempered_glass,
+        ...sharedDetails,
+        ...group,
+        booking_device_index: index + 1,
+      }));
       const { data, error: ticketsError } = await supabase
         .from("repair_tickets")
         .insert(
@@ -131,16 +147,7 @@ export async function POST(request: NextRequest) {
             device_type: d.device_type,
             device_model: d.device_model,
             service_type: d.service_type,
-            booking_details: {
-              selected_services: d.selected_services,
-              total_price_dkk: d.total_price_dkk,
-              discount_percent: discountPercent,
-              discount_dkk: d.discount_dkk,
-              includes_tempered_glass: d.includes_tempered_glass,
-              ...sharedDetails,
-              ...group,
-              booking_device_index: index + 1,
-            },
+            booking_details: ticketDetails[index],
           })),
         )
         .select("id");
@@ -153,6 +160,15 @@ export async function POST(request: NextRequest) {
       }
       ticketIds = (data as { id: string }[]).map((t) => t.id);
     } else {
+      ticketDetails = [
+        {
+          selected_services: priced.devices[0].selected_services,
+          total_price_dkk: priced.total,
+          discount_percent: discountPercent,
+          includes_tempered_glass: priced.devices[0].includes_tempered_glass,
+          ...sharedDetails,
+        },
+      ];
       const { data: ticket, error: ticketError } = await supabase
         .from("repair_tickets")
         .insert({
@@ -160,13 +176,7 @@ export async function POST(request: NextRequest) {
           device_type: priced.devices[0].device_type,
           device_model: priced.devices[0].device_model,
           service_type: priced.devices[0].service_type,
-          booking_details: {
-            selected_services: priced.devices[0].selected_services,
-            total_price_dkk: priced.total,
-            discount_percent: discountPercent,
-            includes_tempered_glass: priced.devices[0].includes_tempered_glass,
-            ...sharedDetails,
-          },
+          booking_details: ticketDetails[0],
         })
         .select("id")
         .single();
@@ -264,7 +274,7 @@ export async function POST(request: NextRequest) {
       currency: "dkk",
       expires_at: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       success_url: `${baseUrl}/reparation/bekraeftelse?session_id={CHECKOUT_SESSION_ID}&ticket_id=${firstTicketId}`,
-      cancel_url: `${baseUrl}/reparation/booking?cancelled=true`,
+      cancel_url: `${baseUrl}/api/repairs/recovery/start?ticket_id=${firstTicketId}&token=${recovery.token}`,
       metadata: {
         type: "repair",
         repair_ticket_id: firstTicketId,
@@ -277,6 +287,16 @@ export async function POST(request: NextRequest) {
         preferred_date: body.preferred_date,
       },
     });
+
+    // Gem Stripe-sessionen på sagerne, så "prøv at betale igen" kan genbruge den.
+    // Best effort: fejler det, kan kunden stadig vælge "betal i butikken".
+    for (let i = 0; i < ticketIds.length; i++) {
+      const { error: sessionSaveError } = await supabase
+        .from("repair_tickets")
+        .update({ booking_details: { ...ticketDetails[i], checkout_session_id: session.id } })
+        .eq("id", ticketIds[i]);
+      if (sessionSaveError) console.error("[repairs/checkout] could not store session id:", ticketIds[i], sessionSaveError);
+    }
 
     // Betalingen kobles til sagerne via metadata.repair_ticket_id(s) i Stripe-
     // webhooken (lib/stripe/repair-payment.ts), som markerer dem betalt.
@@ -304,14 +324,15 @@ export async function POST(request: NextRequest) {
       await resend.emails.send({
         from: `${STORE.name} <noreply@phonespot.dk>`,
         ...getStaffRecipients(storeId),
-        subject: `Ny reparationsbooking${storeId ? ` (${storeLabel(storeId)})` : ""}: ${multi ? `${priced.devices.length} enheder` : priced.devices[0].device_model} — ${body.customer_name}`,
+        subject: `Afventer betaling: ny reparationsbooking${storeId ? ` (${storeLabel(storeId)})` : ""}: ${multi ? `${priced.devices.length} enheder` : priced.devices[0].device_model} — ${body.customer_name}`,
         html: `
-          <h2>Ny reparationsbooking med forudbetaling</h2>
+          <h2>Ny reparationsbooking, afventer onlinebetaling</h2>
+          <p>Kunden er sendt videre til betaling. Tiden er først booket, når betalingen er gennemført, eller når kunden vælger at betale i butikken. Så får I en ny mail.</p>
           <table style="border-collapse:collapse;">
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Butik</td><td>${storeLabel(storeId)}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Kunde</td><td>${body.customer_name}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Email</td><td>${body.customer_email}</td></tr>
-            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Telefon</td><td>${body.customer_phone}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Kunde</td><td>${escapeHtml(body.customer_name)}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Email</td><td>${escapeHtml(body.customer_email)}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Telefon</td><td>${escapeHtml(body.customer_phone)}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Enhed</td><td>${escapeHtml(enhedCell)}</td></tr>
             ${body.delivery_method ? `<tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Levering</td><td>${body.delivery_method}</td></tr>` : ""}
             <tr><td style="padding:4px 12px 4px 0;font-weight:bold;">Foretrukken dato</td><td>${body.preferred_date}${body.preferred_time ? ` kl. ${body.preferred_time}` : ""}</td></tr>
@@ -321,7 +342,7 @@ export async function POST(request: NextRequest) {
           </table>
           <h3>Valgte services</h3>
           ${servicesHtml}
-          ${body.issue_description ? `<h3>Beskrivelse</h3><p>${body.issue_description}</p>` : ""}
+          ${body.issue_description ? `<h3>Beskrivelse</h3><p>${escapeHtml(body.issue_description)}</p>` : ""}
           <p style="margin-top:16px;color:#666;">Sag ID: ${ticketIds.join(", ")}</p>
         `,
       });

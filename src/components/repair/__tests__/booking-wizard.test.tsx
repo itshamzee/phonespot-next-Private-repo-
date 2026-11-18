@@ -102,7 +102,10 @@ beforeEach(() => {
     vi.fn().mockRejectedValue(new Error("Unexpected network call")),
   );
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 async function chooseModel() {
   fireEvent.change(await screen.findByRole("combobox", { name: "Mærke" }), {
     target: { value: "apple" },
@@ -131,6 +134,8 @@ function fillDetails() {
 }
 describe("booking presentation preserves existing flow", () => {
   it("keeps query-prefilled device/service/store through back navigation and the mocked request", async () => {
+    // Uden for Black November (1.–30. nov.), så kampagnerabatten ikke ændrer prisen.
+    vi.useFakeTimers({ now: new Date("2026-10-10T10:00:00Z"), shouldAdvanceTime: true });
     fixture.params = new URLSearchParams(
       "brand=iphone&model=iphone-15&service=batteriskift&store=Vejle",
     );
@@ -169,10 +174,10 @@ describe("booking presentation preserves existing flow", () => {
     next();
     next();
     expect(
-      screen.getByRole("button", { name: /Betal nu.*499 kr./ }),
+      screen.getByRole("button", { name: /Betal nu.*499 kr/ }),
     ).toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole("button", { name: "Book og betal i butikken" }),
+      screen.getByRole("button", { name: "Book nu og betal i butikken" }),
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Test: intet sendt",

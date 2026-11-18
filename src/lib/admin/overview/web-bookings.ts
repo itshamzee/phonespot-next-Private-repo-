@@ -18,7 +18,9 @@ export type WebBookingRaw = {
   service_type: string | null;
   store_id: string | null;
   created_at: string;
+  paid?: boolean | null;
   booking_details: {
+    payment_flow?: "online" | "butik" | null;
     preferred_date?: string | null;
     preferred_time?: string | null;
     selected_services?: { name: string; price_dkk?: number | null }[] | null;
@@ -38,7 +40,17 @@ export type WebBookingItem = {
   time: string | null;
   /** Booket inden for det seneste døgn. */
   isNew: boolean;
+  /** Betalingsstatus for sager oprettet med "Betal nu": ellers null. */
+  payment?: "afventer" | "betalt" | "butik" | null;
 };
+
+/** "Betal nu" uden gennemført betaling = afventer (kunden kan stadig vende tilbage); omvalgt = betaler i butikken. */
+export function paymentState(t: Pick<WebBookingRaw, "paid" | "booking_details">): WebBookingItem["payment"] {
+  const flow = t.booking_details?.payment_flow;
+  if (flow === "butik") return "butik";
+  if (flow !== "online") return null;
+  return t.paid ? "betalt" : "afventer";
+}
 
 /** En booking hvis dag ligger mere end så mange dage tilbage, er ikke "ny" længere, men en glemt sag. */
 export const STALE_AFTER_DAYS = 14;
@@ -94,6 +106,7 @@ function toItem(t: WebBookingRaw, now: Date): WebBookingItem {
     store: storeLabel(normalizeStoreId(t.store_id)),
     time: formatTimeWindow(t.booking_details?.preferred_time),
     isNew: now.getTime() - Date.parse(t.created_at) < NEW_MS,
+    payment: paymentState(t),
   };
 }
 

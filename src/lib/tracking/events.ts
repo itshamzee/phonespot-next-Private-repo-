@@ -218,6 +218,11 @@ export function trackSellWizardStep(input: { stepNumber: number; stepName: strin
   });
 }
 
+/** GA4: hvor langt kunden når i reparationsbookingen (fyres én gang pr. trin). */
+export function trackRepairBookingStep(input: { stepNumber: number; stepName: string }): void {
+  sendGtag("repair_booking_step", { step_number: input.stepNumber, step_name: input.stepName });
+}
+
 export interface Ga4Item {
   item_id: string;
   item_name: string;
