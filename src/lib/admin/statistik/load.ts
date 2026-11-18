@@ -13,7 +13,7 @@ import {
   loadOrdersWithMeta,
 } from "@/lib/admin/overview/load";
 import type { StatViewer } from "./access";
-import { loadFunnel } from "./ga4";
+import { ga4Configured, loadFunnel } from "./ga4";
 import type { Stream } from "./lines";
 import {
   buildNowBlock,
@@ -27,6 +27,7 @@ import {
   type ReceiptRow,
   type StaffRow,
   type StatPayload,
+  type StatSection,
   type TicketRow,
 } from "./payload";
 import { nowBlockRanges, type StatRange } from "./range";
@@ -39,7 +40,7 @@ import { nowBlockRanges, type StatRange } from "./range";
  * Ordrer, betalinger, kreditnotaernes originaler, sager og medarbejdere kaster
  * ved fejl (tallene ville ellers være forkerte uden at det ses). Øvrige afsnit
  * (opkøb, tragt, forladte kurve, lager, delvise refunderinger, åbne sager) svigter
- * blødt: afsnittet bliver tomt, resten af siden indlæses.
+ * blødt: afsnittet bliver tomt og nævnes i payload.unavailable, resten indlæses.
  */
 
 type Supabase = ReturnType<typeof createServerClient>;
@@ -50,16 +51,20 @@ const RECEIPT_STATUSES = ["paid", "completed"];
 /** Bruges, hvis der ikke kan findes en første ordre. Data findes fra marts 2026. */
 const FALLBACK_MIN_DATE = "2026-03-01";
 const MIN_DATE_CACHE_MS = 60 * 60 * 1000;
+/** "Lige nu" hentes hvert minut pr. åben side; samme scope deler svaret i 45 sek. */
+const NOW_BLOCK_CACHE_MS = 45_000;
 
 /* ------------------------------------------------------------------ */
 /*  Hjælpere                                                           */
 /* ------------------------------------------------------------------ */
 
-async function soft<T>(label: string, run: () => Promise<T>, fallback: T): Promise<T> {
+/** Kører et afsnits forespørgsel; ved fejl logges den, afsnittet noteres i `failed`, og fallback bruges. */
+async function soft<T>(failed: StatSection[], section: StatSection, run: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await run();
   } catch (err) {
-    console.error(`Statistik: ${label} kunne ikke hentes`, err);
+    console.error(`Statistik: ${section} kunne ikke hentes`, err);
+    failed.push(section);
     return fallback;
   }
 }
@@ -232,6 +237,7 @@ async function loadPartialRefunds(
       .from("activity_log")
       .select("entity_id, details")
       .eq("action", "partial_refund")
+      .eq("entity_type", "order")
       .gte("created_at", range.startIso)
       .lt("created_at", range.endIso)
       .order("created_at", { ascending: true })
@@ -305,6 +311,7 @@ function emptyInput(range: StatRange, now: Date): BuildInput {
     publishedTemplateIds: [],
     accessoryStock: [],
     partialRefunds: [],
+    unavailable: [],
   };
 }
 
@@ -318,6 +325,7 @@ export async function loadStatistik(viewer: StatViewer, range: StatRange, now: D
   const slugOf = (id: string | null | undefined) => slugForLocationId(index, id);
   const span = nowBlockSpan(now);
   const withFunnel = scope === "alle" || scope === "webshop";
+  const failed: StatSection[] = [];
 
   const [current, prevOrders, nowOrders, minDate, staff, openRepairs, receipts, offers, funnel, abandoned, stock, accessoryStock, partialRefunds] =
     await Promise.all([
@@ -326,15 +334,17 @@ export async function loadStatistik(viewer: StatViewer, range: StatRange, now: D
       loadOrders(supabase, scope, index, span.startIso, span.endIso),
       firstOrderDate(),
       loadStaff(supabase),
-      soft("åbne sager", () => countOpenRepairs(supabase, scope), 0),
-      soft("slutsedler", () => loadReceipts(supabase, scope, index, range), [] as ReceiptRow[]),
-      soft("opkøbstilbud", () => loadOffers(supabase, scope, range), [] as OfferRow[]),
+      soft(failed, "openRepairs", () => countOpenRepairs(supabase, scope), 0),
+      soft(failed, "receipts", () => loadReceipts(supabase, scope, index, range), [] as ReceiptRow[]),
+      soft(failed, "offers", () => loadOffers(supabase, scope, range), [] as OfferRow[]),
       withFunnel ? loadFunnel(range.from, range.to) : Promise.resolve(null),
-      soft("forladte kurve", () => countAbandoned(supabase, scope, index, range), 0),
-      soft("enhedslager", () => loadDevices(supabase, scope, index), { devices: [] as DeviceRow[], publishedTemplateIds: [] as string[] }),
-      soft("tilbehørslager", () => loadAccessoryStock(supabase, scope, index), [] as AccessoryStockRow[]),
-      soft("delvise refunderinger", () => loadPartialRefunds(supabase, scope, index, range), [] as number[]),
+      soft(failed, "abandoned", () => countAbandoned(supabase, scope, index, range), 0),
+      soft(failed, "devices", () => loadDevices(supabase, scope, index), { devices: [] as DeviceRow[], publishedTemplateIds: [] as string[] }),
+      soft(failed, "accessoryStock", () => loadAccessoryStock(supabase, scope, index), [] as AccessoryStockRow[]),
+      soft(failed, "partialRefunds", () => loadPartialRefunds(supabase, scope, index, range), [] as number[]),
     ]);
+  // loadFunnel giver null både uden opsætning og ved fejl; kun det sidste er "kunne ikke hentes".
+  if (withFunnel && funnel === null && ga4Configured()) failed.push("funnel");
 
   const orders = current.orders;
   const [originalStreamByOrderId, tickets, payments] = await Promise.all([
@@ -367,18 +377,40 @@ export async function loadStatistik(viewer: StatViewer, range: StatRange, now: D
       publishedTemplateIds: stock.publishedTemplateIds,
       accessoryStock,
       partialRefunds,
+      unavailable: failed,
     },
     scoped,
   );
 }
 
-/** Kun "Lige nu"-blokken, til den automatiske opdatering hvert minut. */
+const nowBlockCache = new Map<string, { at: number; block: NowBlock }>();
+
+/** Til tests. */
+export function resetNowBlockCache(): void {
+  nowBlockCache.clear();
+}
+
+/**
+ * Kun "Lige nu"-blokken, til den automatiske opdatering hvert minut. Cachet i
+ * 45 sek. pr. scope og ejer/ikke-ejer; en kopi returneres med den cachede updatedAt.
+ */
 export async function loadNowBlock(viewer: StatViewer, now: Date = new Date()): Promise<NowBlock> {
   const scope = effectiveScope(viewer);
   const scoped: StatViewer = { ...viewer, scope };
   if (scope === "ingen") {
     return buildNowBlock({ now, orders: [], slugOf: () => null, originalStreamByOrderId: new Map() }, scoped);
   }
+  const key = `${scope}:${viewer.isOwner ? "ejer" : "medarbejder"}`;
+  const hit = nowBlockCache.get(key);
+  const age = hit ? now.getTime() - hit.at : Infinity;
+  if (hit && age >= 0 && age < NOW_BLOCK_CACHE_MS) return structuredClone(hit.block);
+
+  const block = await buildFreshNowBlock(scoped, scope, now);
+  nowBlockCache.set(key, { at: now.getTime(), block });
+  return structuredClone(block);
+}
+
+async function buildFreshNowBlock(scoped: StatViewer, scope: StoreScope, now: Date): Promise<NowBlock> {
   const supabase = createServerClient();
   const index = await loadLocationIndex();
   const span = nowBlockSpan(now);

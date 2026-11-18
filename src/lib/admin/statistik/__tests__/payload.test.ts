@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { OverviewOrder } from "@/lib/admin/overview/kpi";
 import type { ScopeSlug } from "@/lib/auth/store-scope";
 import type { StatViewer } from "../access";
-import { buildPayload, stripForViewer, type BuildInput, type StatPayload } from "../payload";
+import { copenhagenDateString } from "@/lib/pos/copenhagen";
+import { buildPayload, prevBuckets, stripForViewer, type BuildInput, type StatPayload } from "../payload";
 import { statRange } from "../range";
 
 const NOW = new Date("2026-11-18T12:00:00Z");
@@ -100,6 +101,7 @@ function input(over: Partial<BuildInput> = {}): BuildInput {
     publishedTemplateIds: ["tpl-1", "tpl-2", "tpl-3"],
     accessoryStock: [{ quantity: 2, cost_price: 50000 }, { quantity: 3, cost_price: null }],
     partialRefunds: [2500, 1000],
+    unavailable: [],
     ...over,
   };
 }
@@ -142,7 +144,7 @@ describe("buildPayload", () => {
   });
 
   it("non-owner payload has no owner-only data", () => {
-    const json = JSON.stringify(buildPayload(input(), STAFF_VIEWER));
+    const json = JSON.stringify(buildPayload(input({ unavailable: ["devices", "accessoryStock"] }), STAFF_VIEWER));
     for (const word of ["profit", "marginPct", "cost", "costValue", "staff", "categories", "missingCost", "prevProfit"]) {
       expect(json, word).not.toContain(word);
     }
@@ -180,5 +182,51 @@ describe("buildPayload", () => {
     const year = buildPayload(input({ range: statRange("aar", NOW) }), OWNER);
     expect(year.series.length).toBeGreaterThan(0);
     expect(year.series.every((s) => s.prevRevenue === null)).toBe(true);
+  });
+
+  it("lists failed sections for every viewer", () => {
+    const failed = input({ receipts: [], unavailable: ["receipts", "funnel"], funnel: null });
+    expect(buildPayload(failed, OWNER).unavailable).toEqual(["receipts", "funnel"]);
+    expect(buildPayload(failed, STAFF_VIEWER).unavailable).toEqual(["receipts", "funnel"]);
+    expect(buildPayload(input(), OWNER).unavailable).toEqual([]);
+  });
+});
+
+describe("prevBuckets", () => {
+  // Over 366 dage: måneds-inddeling; forrige periode er de 444 dage før og starter midt i juni.
+  const later = new Date("2026-11-20T12:00:00Z");
+  const range = statRange({ from: "2025-09-01", to: "2026-11-18" }, later);
+  const days = (b: { startIso: string; endIso: string }) =>
+    Math.round(
+      (Date.parse(`${copenhagenDateString(b.endIso)}T00:00:00Z`) - Date.parse(`${copenhagenDateString(b.startIso)}T00:00:00Z`)) / 86_400_000,
+    );
+
+  it("month buckets cover the previous period exactly, each with the same number of days", () => {
+    expect(range.unit).toBe("maaned");
+    expect(range.prev).not.toBeNull();
+    const prev = prevBuckets(range)!;
+    expect(prev).toHaveLength(range.buckets.length);
+    expect(prev[0].startIso).toBe(range.prev!.startIso);
+    expect(prev[prev.length - 1].endIso).toBe(range.prev!.endIso);
+    prev.forEach((b, i) => {
+      if (i > 0) expect(b.startIso).toBe(prev[i - 1].endIso);
+      expect(days(b)).toBe(days(range.buckets[i]));
+    });
+    expect(copenhagenDateString(range.prev!.startIso)).toBe("2024-06-14");
+  });
+
+  it("previous-period sales land in the bucket of equal position and sum to the previous total", () => {
+    const start = Date.parse(range.prev!.startIso);
+    const end = Date.parse(range.prev!.endIso);
+    const iso = (ms: number) => new Date(ms).toISOString();
+    const prevOrders = [
+      pos("a", iso(start + 3_600_000), { total: 5000, vat_total: 1000 }),
+      pos("b", iso(end - 3_600_000), { total: 5000, vat_total: 1000 }),
+    ];
+    const p = buildPayload(input({ range, now: later, orders: [], nowOrders: [], prevOrders }), OWNER);
+    // Hver ordre er 5000 inkl. moms = 4000 uden.
+    expect(p.series[0].prevRevenue).toBe(4000);
+    expect(p.series[p.series.length - 1].prevRevenue).toBe(4000);
+    expect(sum(p.series.map((s) => s.prevRevenue ?? 0))).toBe(8000);
   });
 });

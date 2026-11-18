@@ -35,6 +35,17 @@ export type NowBlock = {
   rows: { key: "igaar" | "uge" | "maaned"; label: string; money: Money; deltaPct: number | null; compareLabel: string }[];
 };
 
+/** Afsnit, der kan svigte blødt i load.ts; står de i `unavailable`, er tallene tomme, ikke 0. */
+export type StatSection =
+  | "openRepairs"
+  | "receipts"
+  | "offers"
+  | "abandoned"
+  | "funnel"
+  | "devices"
+  | "accessoryStock"
+  | "partialRefunds";
+
 export type StatPayload = {
   viewer: { isOwner: boolean; canExport: boolean; scope: StoreScope };
   range: Pick<StatRange, "preset" | "from" | "to" | "rangeLabel" | "compareLabel" | "unit">;
@@ -56,6 +67,8 @@ export type StatPayload = {
   stock: { units: number; costValue?: number; accessoryCostValue?: number; avgDays: number | null; over60: number; soldOutModels: number; oneLeftModels: number };
   /** Øre refunderet delvist i perioden. */
   notes: { partialRefunds: number };
+  /** Afsnit, der ikke kunne hentes; vises som "Kunne ikke hentes lige nu". Ingen ejer-data. */
+  unavailable: StatSection[];
 };
 
 export type TicketRow = { id: string; assigned_to: string | null; service_type: string | null; services: { name?: string | null }[] | null };
@@ -105,6 +118,8 @@ export type BuildInput = {
   accessoryStock: AccessoryStockRow[];
   /** details.amount (øre) for hver delvis refundering i perioden. */
   partialRefunds: number[];
+  /** Afsnit, hvis forespørgsel fejlede (deres felter ovenfor er tomme). */
+  unavailable: StatSection[];
 };
 
 /* ------------------------------------------------------------------ */
@@ -186,6 +201,14 @@ function storeOptions(viewer: StatViewer, locationSlugs: ScopeSlug[]): StatPaylo
  * Forrige periodes intervaller, så interval i svarer til interval i i perioden:
  * timer forskydes med periodernes afstand, dage/uger/måneder med samme antal
  * kalenderdage. Afskæres ved prev.endIso (samme tid i forrige periode).
+ *
+ * Måneder: måneds-inddeling bruges kun til I år (ingen forrige periode) og frie
+ * intervaller over 366 dage. Deres forrige periode er "lige så mange dage før"
+ * og starter sjældent den 1., så den kan ikke deles i kalendermåneder med samme
+ * nummer. Interval i sammenlignes derfor med det stykke af forrige periode, der
+ * ligger på samme plads og har samme antal dage. Intervallerne dækker forrige
+ * periode præcis, uden huller eller overlap, så summen af prevRevenue er hele
+ * forrige periodes omsætning.
  */
 export function prevBuckets(range: StatRange): StatBucket[] | null {
   if (!range.prev) return null;
@@ -481,6 +504,7 @@ function fullPayload(input: BuildInput, viewer: StatViewer): StatPayload {
     },
     stock: buildStock(input),
     notes: { partialRefunds: sum(input.partialRefunds) },
+    unavailable: [...input.unavailable],
   };
 }
 
@@ -525,6 +549,7 @@ export function stripForViewer(p: StatPayload, viewer: StatViewer): StatPayload 
     webshop: p.webshop,
     stock: strippedStock,
     notes: p.notes,
+    unavailable: p.unavailable,
   };
 }
 

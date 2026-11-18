@@ -5,6 +5,11 @@ import { google } from "googleapis";
  * kurv (addToCarts). Samme opsætning som /api/dashboard/ga4: GA4_PROPERTY_ID og
  * GOOGLE_SERVICE_ACCOUNT_JSON. Uden opsætning, eller hvis kaldet fejler, null.
  */
+/** Er GA4 sat op? Uden opsætning er en tom tragt forventet, ikke en fejl. */
+export function ga4Configured(): boolean {
+  return Boolean(process.env.GA4_PROPERTY_ID && process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+}
+
 export async function loadFunnel(startDate: string, endDate: string): Promise<{ visits: number; addToCart: number } | null> {
   const propertyId = process.env.GA4_PROPERTY_ID;
   const credsRaw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;

@@ -71,6 +71,7 @@ function ownerPayload(): StatPayload {
     webshop: { visits: 1000, addToCart: 120, purchases: 8, abandoned: 4, avgOrder: 125_000 },
     stock: { units: 214, costValue: 48_620_000, accessoryCostValue: 2_000_000, avgDays: 31, over60: 19, soldOutModels: 7, oneLeftModels: 12 },
     notes: { partialRefunds: 0 },
+    unavailable: [],
   };
 }
 
@@ -98,6 +99,7 @@ function staffPayload(): StatPayload {
     webshop: p.webshop,
     stock: { units: 214, avgDays: 31, over60: 19, soldOutModels: 7, oneLeftModels: 12 },
     notes: p.notes,
+    unavailable: p.unavailable,
   };
 }
 
@@ -189,5 +191,18 @@ describe("StatistikView", () => {
     const rows = within(chart).getAllByRole("row");
     expect(rows).toHaveLength(3);
     expect(within(rows[1]).getByText("27.485 kr.")).toBeInTheDocument();
+  });
+
+  it("et afsnit, der ikke kunne hentes, viser en linje i stedet for nuller", () => {
+    const p = ownerPayload();
+    p.unavailable = ["devices"];
+    render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    const stock = screen.getByRole("region", { name: "Lager" });
+    expect(within(stock).getByText("Kunne ikke hentes lige nu")).toBeInTheDocument();
+    expect(within(stock).queryByText("Enheder på lager")).toBeNull();
+    // Andre paneler viser stadig deres tal.
+    const repairs = screen.getByRole("region", { name: "Reparationer" });
+    expect(within(repairs).queryByText("Kunne ikke hentes lige nu")).toBeNull();
+    expect(within(repairs).getByText("Åbne sager nu")).toBeInTheDocument();
   });
 });

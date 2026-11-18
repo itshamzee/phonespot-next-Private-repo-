@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Money, StatPayload } from "@/lib/admin/statistik/payload";
+import type { Money, StatPayload, StatSection } from "@/lib/admin/statistik/payload";
 import { CountUp } from "./count-up";
 import { int, kr, longDate, pct } from "./format";
 import { cardClass, h2Class } from "./styles";
@@ -98,6 +98,10 @@ function MarginBar({ pctValue, index }: { pctValue: number | null; index: number
     </span>
   );
 }
+
+/** Fejlede et af panelets afsnit, vises en linje i stedet for tal, der ligner rigtige nuller. */
+const failed = (payload: StatPayload, sections: StatSection[]) => sections.some((s) => payload.unavailable.includes(s));
+const UNAVAILABLE = "Kunne ikke hentes lige nu";
 
 const metricValue = (m: Money, metric: Metric) => (metric === "fortjeneste" ? (m.profit ?? 0) : m.revenue);
 
@@ -229,6 +233,13 @@ export function TopPanel({ payload }: { payload: StatPayload }) {
 
 export function RepairsPanel({ payload }: { payload: StatPayload }) {
   const { repairs } = payload;
+  if (failed(payload, ["openRepairs"])) {
+    return (
+      <Card title="Reparationer" delayMs={50}>
+        <Muted>{UNAVAILABLE}</Muted>
+      </Card>
+    );
+  }
   return (
     <Card title="Reparationer" delayMs={50}>
       <Kv>
@@ -273,6 +284,13 @@ export function BuybackPanel({ payload }: { payload: StatPayload }) {
   const { buyback, range } = payload;
   // Hele perioden ligger før slutsedlerne: ingen tal at vise, kun hvorfra de findes.
   const noData = buyback.dataFrom != null && range.to < buyback.dataFrom;
+  if (failed(payload, ["receipts", "offers"])) {
+    return (
+      <Card title="Opkøb" tag="penge ud" delayMs={100}>
+        <Muted>{UNAVAILABLE}</Muted>
+      </Card>
+    );
+  }
   return (
     <Card title="Opkøb" tag="penge ud" delayMs={100}>
       {noData ? null : (
@@ -324,6 +342,13 @@ export function WebshopPanel({ payload }: { payload: StatPayload }) {
           { label: "Lagt i kurv", value: webshop.addToCart ?? 0, width: share(webshop.addToCart ?? 0) },
           { label: "Købt", value: webshop.purchases, width: share(webshop.purchases) },
         ];
+  if (failed(payload, ["funnel", "abandoned"])) {
+    return (
+      <Card title="Webshop">
+        <Muted>{UNAVAILABLE}</Muted>
+      </Card>
+    );
+  }
   return (
     <Card title="Webshop">
       {steps ? (
@@ -363,6 +388,13 @@ export function WebshopPanel({ payload }: { payload: StatPayload }) {
 
 export function StockPanel({ payload }: { payload: StatPayload }) {
   const { stock } = payload;
+  if (failed(payload, ["devices", "accessoryStock"])) {
+    return (
+      <Card title="Lager" tag="lige nu" delayMs={50}>
+        <Muted>{UNAVAILABLE}</Muted>
+      </Card>
+    );
+  }
   return (
     <Card title="Lager" tag="lige nu" delayMs={50}>
       <Kv>
