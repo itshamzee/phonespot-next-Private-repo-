@@ -1,13 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render as rtlRender, screen, within } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { ToastProvider } from "@/components/admin/ui/toast";
 import { StoreOverviewView } from "../store-overview";
 import { AllStoresOverviewView } from "../all-stores-overview";
 import { OVERBLIK_PERIODS, periodRange } from "@/lib/admin/overview/period";
 import { computeKpis } from "@/lib/admin/overview/kpi";
 import type { AllOverview, StoreOverview } from "@/lib/admin/overview/load";
 import { formatKr, formatTimeWindow, readyLabel, ticketLabel } from "@/lib/admin/overview/format";
+
+// Arkivér-knappen i bookingpanelet viser en toast og skal derfor have ToastProvider over sig.
+const render = (ui: ReactElement) => rtlRender(ui, { wrapper: ToastProvider });
 
 const NOW = new Date("2026-10-04T10:00:00Z");
 

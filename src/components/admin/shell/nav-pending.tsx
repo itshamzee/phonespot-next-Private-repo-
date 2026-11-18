@@ -23,6 +23,11 @@ export function NavPendingProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+/** true, mens et link under den nærmeste NavPendingProvider er på vej. */
+export function useNavPending(): boolean {
+  return useContext(Ctx)?.pending ?? false;
+}
+
 /** Placeres inde i et <Link>. Tegner intet selv. Uden NavPendingProvider gør den ingenting. */
 export function NavPendingSignal() {
   const { pending } = useLinkStatus();

@@ -2,15 +2,17 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { PageSkeleton } from "@/components/admin/ui/skeleton";
 
 /**
  * Vises når serveren ikke kunne se en session (fx lige efter login i den klientside
- * ramme): henter siden igen én gang, så den nu logger ind med cookien.
+ * ramme): henter siden igen én gang, så den nu logger ind med cookien. Imens står
+ * det fælles sideskelet, så siden ikke er tom.
  */
 export function RefreshOnMount() {
   const router = useRouter();
   useEffect(() => {
     router.refresh();
   }, [router]);
-  return <p className="m-0 text-[14px] text-[#5E6A63]">Indlæser</p>;
+  return <PageSkeleton />;
 }
