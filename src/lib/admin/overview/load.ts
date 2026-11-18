@@ -40,7 +40,7 @@ import {
 type Supabase = ReturnType<typeof createServerClient>;
 
 /** Ordrer der tæller som salg: gennemført POS/webshop og kreditnotaer. */
-const SALE_STATUSES = ["confirmed", "shipped", "picked_up", "delivered"];
+export const SALE_STATUSES = ["confirmed", "shipped", "picked_up", "delivered"];
 const ORDER_COLS =
   "id, type, total, vat_total, brugtmoms_total, location_id, confirmed_at, staff_id, shipping_method, shipping_cost, payment_method, original_order_id, order_items ( id, item_type, quantity, total_price, discount_amount, purchase_price, vat_amount, vat_scheme, repair_ticket_id, name:description, device_id, sku_product_id )";
 /** Sager der ikke længere er åbne. */
@@ -122,7 +122,8 @@ export type OverviewPayload = StoreOverview | AllOverview;
 
 type Result<T> = { data: T[] | null; error: { message: string } | null };
 
-async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Result<T>>): Promise<T[]> {
+/** Henter alle rækker side for side (PostgREST giver højst 1.000 ad gangen). */
+export async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Result<T>>): Promise<T[]> {
   const out: T[] = [];
   for (let i = 0; i < MAX_PAGES; i++) {
     const { data, error } = await page(i * PAGE, i * PAGE + PAGE - 1);
@@ -140,14 +141,28 @@ async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Resul
  *  - reparationer betalt online på forhånd (uden kasselinje) er med som "repair_prepaid";
  *  - reservedele brugt på en sag lægges på sagens linje som kostpris.
  */
-async function loadOrders(
+export async function loadOrders(
   supabase: Supabase,
   scope: StoreScope,
   index: LocationIndex,
   startIso: string,
   endIso: string,
 ): Promise<OverviewOrder[]> {
-  if (scope === "ingen") return [];
+  return (await loadOrdersWithMeta(supabase, scope, index, startIso, endIso)).orders;
+}
+
+/**
+ * Som loadOrders, plus antallet af forudbetalte sager uden beløb
+ * (booking_details.total_price_dkk mangler), som ikke kan tælles med.
+ */
+export async function loadOrdersWithMeta(
+  supabase: Supabase,
+  scope: StoreScope,
+  index: LocationIndex,
+  startIso: string,
+  endIso: string,
+): Promise<{ orders: OverviewOrder[]; prepaidWithoutAmount: number }> {
+  if (scope === "ingen") return { orders: [], prepaidWithoutAmount: 0 };
   const slugOf = (id: string | null | undefined) => slugForLocationId(index, id);
   const saleQuery = () =>
     supabase
@@ -186,8 +201,11 @@ async function loadOrders(
   }
   real.sort((a, b) => (a.confirmed_at ?? "").localeCompare(b.confirmed_at ?? ""));
 
-  const orders = [...real, ...prepaid];
-  return applyRepairCosts(orders, await loadRepairPartsCost(supabase, orders));
+  const orders = [...real, ...prepaid.orders];
+  return {
+    orders: applyRepairCosts(orders, await loadRepairPartsCost(supabase, orders)),
+    prepaidWithoutAmount: prepaid.withoutAmount,
+  };
 }
 
 /**
@@ -200,7 +218,7 @@ async function loadPrepaidRepairs(
   index: LocationIndex,
   startIso: string,
   endIso: string,
-): Promise<OverviewOrder[]> {
+): Promise<{ orders: OverviewOrder[]; withoutAmount: number }> {
   type Raw = { id: string; paid_at: string; location_id: string | null; total_price_dkk: unknown };
   const tickets = await fetchAll<Raw>((from, to) => {
     const q = supabase
@@ -212,7 +230,7 @@ async function loadPrepaidRepairs(
       .neq("status", "annulleret");
     return applyLocationScope(q, scope, index).order("paid_at", { ascending: true }).range(from, to);
   });
-  if (tickets.length === 0) return [];
+  if (tickets.length === 0) return { orders: [], withoutAmount: 0 };
 
   const { data: linked, error } = await fetchInChunks<{ repair_ticket_id: string | null }>(
     tickets.map((t) => t.id),
@@ -227,7 +245,7 @@ async function loadPrepaidRepairs(
       const kr = t.total_price_dkk == null || t.total_price_dkk === "" ? NaN : Number(t.total_price_dkk);
       return { id: t.id, paid_at: t.paid_at, location_id: t.location_id, total_price_dkk: Number.isFinite(kr) ? kr : null };
     });
-  return prepaidRepairOrders(prepaid).orders;
+  return prepaidRepairOrders(prepaid);
 }
 
 /** Reservedelskost (øre) pr. sag for de sager, der optræder i ordrerne. Frigivne dele er ikke brugt. */
