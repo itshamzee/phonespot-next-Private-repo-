@@ -11,6 +11,9 @@ import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { NewBookingToast, type LatestWebBooking } from "@/components/admin/shell/new-booking-toast";
 import { INTERN_HOME, INTERN_ROLE, internMayOpenPage } from "@/lib/auth/intern-access";
+import { PageSkeleton } from "@/components/admin/ui/skeleton";
+import { ToastProvider } from "@/components/admin/ui/toast";
+import "@/app/admin-motion.css";
 
 const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, webBookings: 0, inquiries: 0, buyback: 0 };
 /** Menu-tallene hentes igen så ofte, mens fanen er synlig, så en ny booking dukker op uden at skifte side. */
@@ -260,22 +263,31 @@ function AuthedShell({
   return (
     <SaveBarProvider>
       <div className="flex h-dvh flex-col overflow-hidden bg-[#F5F6F4] font-body text-[#15211B]">
-        <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
+        <ToastProvider>
+          <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
 
-        <div className="relative flex min-h-0 flex-1">
-          {sidebarOpen && (
-            <div className="fixed inset-0 top-14 z-30 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          )}
-          <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
+          <div className="relative flex min-h-0 flex-1">
+            {/* Altid monteret, så den kan tone ind og ud (.m-backdrop). */}
+            <div
+              aria-hidden="true"
+              data-open={sidebarOpen}
+              className="m-backdrop fixed inset-0 top-14 z-30 bg-black/30 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
-          <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-            {scopeLoading ? null : children}
-          </main>
-        </div>
+            <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+              {/* Nøglen på stien afspiller indgangen ved hver navigation; rammen genmonteres ikke. */}
+              <div key={pathname} className="m-enter">
+                {scopeLoading ? <PageSkeleton /> : children}
+              </div>
+            </main>
+          </div>
 
-        {/* Real-time new-order toast watcher */}
-        <NewOrdersWatcher />
-        <NewBookingToast latest={latestBooking} />
+          {/* Real-time new-order toast watcher */}
+          <NewOrdersWatcher />
+          <NewBookingToast latest={latestBooking} />
+        </ToastProvider>
       </div>
     </SaveBarProvider>
   );
