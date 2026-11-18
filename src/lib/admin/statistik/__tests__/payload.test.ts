@@ -44,7 +44,7 @@ const ORDERS: OverviewOrder[] = [
     shipping_cost: 4900,
     payment_method: "stripe",
     order_items: [
-      { item_type: "device", device_id: "d1", name: "iPhone 14", quantity: 1, total_price: 400000, vat_scheme: "brugtmoms", purchase_price: 300000 },
+      { item_type: "device", device_id: "d1", name: "iPhone 14", quantity: 1, total_price: 400000, vat_amount: 0, vat_scheme: "brugtmoms", purchase_price: 300000 },
     ],
   },
   {
@@ -145,7 +145,7 @@ describe("buildPayload", () => {
 
   it("non-owner payload has no owner-only data", () => {
     const json = JSON.stringify(buildPayload(input({ unavailable: ["devices", "accessoryStock"] }), STAFF_VIEWER));
-    for (const word of ["profit", "marginPct", "cost", "costValue", "staff", "categories", "missingCost", "prevProfit"]) {
+    for (const word of ["profit", "marginPct", "cost", "costValue", "staff", "categories", "missingCost", "prevProfit", "withoutPartsCost"]) {
       expect(json, word).not.toContain(word);
     }
   });
@@ -182,6 +182,49 @@ describe("buildPayload", () => {
     const year = buildPayload(input({ range: statRange("aar", NOW) }), OWNER);
     expect(year.series.length).toBeGreaterThan(0);
     expect(year.series.every((s) => s.prevRevenue === null)).toBe(true);
+  });
+
+  it("payment fallback maps legacy payment_method values onto the existing rows", () => {
+    const orders = [
+      pos("k1", "2026-11-10T10:00:00Z"), // betalt med order_payments: kontant
+      pos("k2", "2026-11-10T11:00:00Z", { payment_method: "cash", total: 5000 }),
+      pos("k3", "2026-11-10T12:00:00Z", { payment_method: "card", total: 7000 }),
+      pos("k4", "2026-11-10T13:00:00Z", { payment_method: "kort_terminal", total: 1000 }),
+      pos("k5", "2026-11-10T14:00:00Z", { payment_method: "split", total: 3000 }),
+      pos("k6", "2026-11-10T15:00:00Z", { payment_method: "draft", total: 2000 }),
+      pos("k7", "2026-11-10T16:00:00Z", { payment_method: null, total: 500 }),
+    ];
+    const p = buildPayload(input({ orders, payments: [{ order_id: "k1", type: "kontant", amount_oere: 10000 }] }), OWNER);
+    expect(p.payments).toEqual([
+      { type: "kontant", label: "Kontant", amount: 15000 },
+      { type: "kort_terminal", label: "Kort", amount: 8000 },
+      { type: "split", label: "Delt betaling", amount: 3000 },
+      { type: "ukendt", label: "Ukendt", amount: 2500 },
+    ]);
+  });
+
+  it("counts paid repairs without booked parts cost, for the owner only", () => {
+    const repair = (id: string, ticket: string, purchase_price: number | null, quantity = 1): OverviewOrder =>
+      pos(id, "2026-11-11T10:00:00Z", {
+        total: 50000 * quantity,
+        vat_total: 10000 * quantity,
+        order_items: [
+          { item_type: "repair_service", repair_ticket_id: ticket, quantity, total_price: 50000 * quantity, vat_amount: 10000 * quantity, vat_scheme: "regular", purchase_price },
+        ],
+      });
+    const orders = [
+      ...ORDERS, // t1 med kostpris 200 kr.
+      repair("r1", "t2", null),
+      repair("r2", "t3", 0),
+      repair("r3", "t4", 15000),
+      // Krediteret sag uden kostpris: kreditnotaen tæller ikke som betalt sag.
+      { ...repair("r4", "t5", null, -1), type: "credit_note" },
+    ];
+    const owner = buildPayload(input({ orders }), OWNER);
+    expect(owner.repairs.paidCases).toBe(4);
+    expect(owner.repairs.withoutPartsCost).toBe(2);
+    expect(buildPayload(input(), OWNER).repairs.withoutPartsCost).toBe(0);
+    expect(buildPayload(input({ orders }), STAFF_VIEWER).repairs).not.toHaveProperty("withoutPartsCost");
   });
 
   it("lists failed sections for every viewer", () => {

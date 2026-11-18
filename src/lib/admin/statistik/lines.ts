@@ -86,16 +86,24 @@ function productKeyOf(it: OverviewItem): string {
 }
 
 /**
- * Brugtmoms for linjer uden vat_amount: ordrens brugtmoms_total (minus brugtmoms
+ * Linjens moms er ukendt, når vat_amount mangler. order_items.vat_amount er
+ * NOT NULL DEFAULT 0, og webshoppen skriver den ikke, så på online-ordrer
+ * betyder 0 også "ukendt".
+ */
+const vatUnknown = (it: OverviewItem, o: OverviewOrder) =>
+  it.vat_amount == null || (o.type === "online" && it.vat_amount === 0);
+
+/**
+ * Brugtmoms for linjer med ukendt moms: ordrens brugtmoms_total (minus brugtmoms
  * der allerede står på linjerne) fordelt efter linjebeløb. Den sidste linje får
  * afrundingsresten, så fordelingen summer præcis.
  */
 function allocateBrugtmoms(o: OverviewOrder, items: OverviewItem[]): Map<OverviewItem, number> {
   const out = new Map<OverviewItem, number>();
   const brugt = items.filter((it) => it.vat_scheme === "brugtmoms");
-  const open = brugt.filter((it) => it.vat_amount == null);
+  const open = brugt.filter((it) => vatUnknown(it, o));
   if (!open.length) return out;
-  const known = brugt.reduce((s, it) => s + (it.vat_amount ?? 0), 0);
+  const known = brugt.filter((it) => !vatUnknown(it, o)).reduce((s, it) => s + (it.vat_amount ?? 0), 0);
   const toSplit = (o.brugtmoms_total ?? 0) - known;
   const base = open.reduce((s, it) => s + lineAmount(it), 0);
   let given = 0;
@@ -107,10 +115,15 @@ function allocateBrugtmoms(o: OverviewOrder, items: OverviewItem[]): Map<Overvie
   return out;
 }
 
+/**
+ * Linjens moms. Ukendt standardmoms på en online-linje udledes som en femtedel,
+ * men kun når ordren ikke har vat_total (samme betingelse som estimateStandardVat
+ * i computeKpis); ellers ligger forskellen på "Fragt og rabatter"-linjen.
+ */
 function lineVat(it: OverviewItem, o: OverviewOrder, brugtmoms: Map<OverviewItem, number>): number {
-  if (it.vat_amount != null) return it.vat_amount;
+  if (!vatUnknown(it, o)) return it.vat_amount ?? 0;
   if (it.vat_scheme === "brugtmoms") return brugtmoms.get(it) ?? 0;
-  if (o.type === "online") return Math.round(lineAmount(it) / 5);
+  if (o.type === "online" && (o.vat_total ?? 0) === 0) return Math.round(lineAmount(it) / 5);
   return 0;
 }
 

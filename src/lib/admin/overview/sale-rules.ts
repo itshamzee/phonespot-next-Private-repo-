@@ -85,11 +85,18 @@ const REPAIR_ITEM_TYPES = new Set(["repair_service", "repair"]);
  * afrundes til hele øre, så kostpris * mængde får kreditnotaens fortegn. Øvrige
  * kandidatlinjer for sagen får 0, så kosten kun tælles én gang. Har den valgte
  * linje mængde 0, lægges kosten ikke på. Linjer med kostpris røres ikke.
+ *
+ * Blandt salgsordrerne (alt andet end kreditnotaer) bærer kun den første ordre
+ * med sagen kosten; står sagen på flere salg (fx delbetaling), får de senere 0.
+ * Kreditnotaer tilbagefører stadig kosten, som salget bar.
  * Returnerer kopier.
  */
 export function applyRepairCosts(orders: OverviewOrder[], costByTicket: Map<string, number>): OverviewOrder[] {
+  /** Sager, hvis kost allerede ligger på et salg. */
+  const costedOnSale = new Set<string>();
   return orders.map((o) => {
     if (!o.order_items?.length) return o;
+    const isSale = o.type !== "credit_note";
     const isCandidate = (it: OverviewItem) =>
       Boolean(it.repair_ticket_id) && it.purchase_price == null && !isDepositLine(it) && costByTicket.has(it.repair_ticket_id!);
 
@@ -106,12 +113,16 @@ export function applyRepairCosts(orders: OverviewOrder[], costByTicket: Map<stri
     });
     if (chosen.size === 0) return o;
 
+    // Sager, hvis kost et tidligere salg allerede bærer: alle deres linjer i dette salg får 0.
+    const alreadyCosted = new Set(isSale ? [...chosen.keys()].filter((t) => costedOnSale.has(t)) : []);
+
     const order_items = o.order_items.map((it, i) => {
       if (!isCandidate(it)) return it;
       const ticket = it.repair_ticket_id!;
-      if (chosen.get(ticket) !== i) return { ...it, purchase_price: 0 };
+      if (alreadyCosted.has(ticket) || chosen.get(ticket) !== i) return { ...it, purchase_price: 0 };
       const qty = Math.abs(it.quantity ?? 0);
       if (qty === 0) return it;
+      if (isSale) costedOnSale.add(ticket);
       return { ...it, purchase_price: Math.round(costByTicket.get(ticket)! / qty) };
     });
     return { ...o, order_items };

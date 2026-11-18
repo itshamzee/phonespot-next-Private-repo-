@@ -67,7 +67,8 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
     if (isOwner) {
       const revenue = visible.reduce((a, { key }) => a + s[key].revenue, 0);
       const profit = visible.reduce((a, { key }) => a + (s[key].profit ?? 0), 0);
-      row.marginPct = revenue !== 0 ? (profit / revenue) * 100 : null;
+      // Som sumLines: ingen margin uden positiv omsætning.
+      row.marginPct = revenue > 0 ? (profit / revenue) * 100 : null;
     }
     return row;
   });
@@ -82,6 +83,9 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
           <div data-testid="chart-total" className="mt-2 text-[34px] font-bold tracking-[-0.02em] tabular-nums">
             <CountUp value={shownTotal} />
           </div>
+          {metric === "omsaetning" && allOn ? (
+            <p className="m-0 mt-0.5 text-[14px] text-[#5E6A63] tabular-nums">Inkl. moms {kr(total.revenueInclVat)}</p>
+          ) : null}
           {/* Sammenligningen gælder alle typer; for et udsnit findes ingen. */}
           {allOn ? (
             <div className="mt-1">

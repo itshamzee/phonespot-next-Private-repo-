@@ -183,6 +183,73 @@ describe("StatistikView", () => {
     expect(within(repairs).getByText("Åbne sager nu")).toBeInTheDocument();
   });
 
+  it("ejeren ser reparationer uden registreret reservedelsforbrug; en medarbejder ikke", () => {
+    const p = ownerPayload();
+    p.repairs = { ...p.repairs, withoutPartsCost: 3 };
+    const { unmount } = render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    expect(screen.getByText("3 reparationer uden registreret reservedelsforbrug")).toBeInTheDocument();
+    unmount();
+
+    const one = ownerPayload();
+    one.repairs = { ...one.repairs, withoutPartsCost: 1 };
+    const { unmount: unmountOne } = render(<StatistikView payload={one} metric="omsaetning" today={TODAY} />);
+    expect(screen.getByText("1 reparation uden registreret reservedelsforbrug")).toBeInTheDocument();
+    unmountOne();
+
+    const { container } = render(<StatistikView payload={stripForViewer(p, { isOwner: false, scope: "vejle", canExport: false })} metric="omsaetning" today={TODAY} />);
+    expect(container.textContent).not.toMatch(/reservedelsforbrug/);
+  });
+
+  it("betalingsform og gns. ordre er markeret inkl. moms", () => {
+    render(<StatistikView payload={ownerPayload()} metric="omsaetning" today={TODAY} />);
+    expect(screen.getByRole("heading", { name: "Betalingsform, inkl. moms" })).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Webshop" })).getByText("Gns. ordre, inkl. moms")).toBeInTheDocument();
+  });
+
+  it("GA4-tragten fejlede: kun tragten er væk, Købt, forladte kurve og gns. ordre står", () => {
+    const p = ownerPayload();
+    p.unavailable = ["funnel"];
+    p.webshop = { ...p.webshop, visits: null, addToCart: null };
+    render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    const web = screen.getByRole("region", { name: "Webshop" });
+    expect(within(web).getByText("Kunne ikke hentes lige nu")).toBeInTheDocument();
+    expect(within(web).queryByText("Besøg")).toBeNull();
+    expect(within(web).getByText("Købt")).toBeInTheDocument();
+    expect(within(web).getByText("Forladte kurve i perioden").parentElement).toHaveTextContent("4");
+    expect(within(web).getByText(/Gns\. ordre/)).toBeInTheDocument();
+  });
+
+  it("forladte kurve fejlede: kun den række viser Kunne ikke hentes", () => {
+    const p = ownerPayload();
+    p.unavailable = ["abandoned"];
+    render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    const web = screen.getByRole("region", { name: "Webshop" });
+    expect(within(web).getByText(/Besøg/)).toBeInTheDocument();
+    expect(within(web).getByText("Forladte kurve i perioden").parentElement).toHaveTextContent("Kunne ikke hentes lige nu");
+    expect(within(web).getByText(/Gns\. ordre/)).toBeInTheDocument();
+  });
+
+  it("åbne sager fejlede: resten af Reparationer står, kun Åbne sager nu mangler", () => {
+    const p = ownerPayload();
+    p.unavailable = ["openRepairs"];
+    render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    const repairs = screen.getByRole("region", { name: "Reparationer" });
+    expect(within(repairs).getByText("Betalte sager")).toBeInTheDocument();
+    expect(within(repairs).getByText("Skærmskift")).toBeInTheDocument();
+    expect(within(repairs).getByText("Åbne sager nu").parentElement).toHaveTextContent("Kunne ikke hentes lige nu");
+  });
+
+  it("tilbehørslager fejlede: kun rækken Tilbehør, lagerværdi mangler", () => {
+    const p = ownerPayload();
+    p.unavailable = ["accessoryStock"];
+    render(<StatistikView payload={p} metric="omsaetning" today={TODAY} />);
+    const stock = screen.getByRole("region", { name: "Lager" });
+    expect(within(stock).getByText("Enheder på lager")).toBeInTheDocument();
+    expect(within(stock).getByText("Udsolgte modeller")).toBeInTheDocument();
+    expect(within(stock).getByText("Tilbehør, lagerværdi").parentElement?.parentElement).toHaveTextContent("Kunne ikke hentes lige nu");
+    expect(within(stock).queryByText("20.000 kr.")).toBeNull();
+  });
+
   it("datovælgeren flytter fokus ind og tilbage og begrænser til-datoen", () => {
     render(<StatistikView payload={ownerPayload()} metric="omsaetning" today={TODAY} />);
     const toggle = screen.getByRole("button", { name: "Vælg datoer" });
@@ -192,6 +259,12 @@ describe("StatistikView", () => {
     expect(screen.getByLabelText("Til")).toHaveAttribute("min", "2026-10-20");
     fireEvent.change(fra, { target: { value: "2026-11-01" } });
     expect(screen.getByLabelText("Til")).toHaveAttribute("min", "2026-11-01");
+    expect(screen.getByLabelText("Til")).toHaveValue("2026-11-18");
+    // Flyttes fra efter til, følger til med.
+    fireEvent.change(fra, { target: { value: "2026-11-10" } });
+    fireEvent.change(screen.getByLabelText("Til"), { target: { value: "2026-11-12" } });
+    fireEvent.change(fra, { target: { value: "2026-11-15" } });
+    expect(screen.getByLabelText("Til")).toHaveValue("2026-11-15");
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("dialog", { name: "Vælg datoer" })).toBeNull();

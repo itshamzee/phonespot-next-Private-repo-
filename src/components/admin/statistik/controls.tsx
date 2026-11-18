@@ -239,7 +239,21 @@ function DatePopover({
     >
       <label htmlFor={`${id}-fra`} className="flex flex-col gap-1 text-[13px] text-[#5E6A63]">
         Fra
-        <input ref={fraRef} id={`${id}-fra`} type="date" value={fra} min={minDate} max={today} onChange={(e) => setFra(e.target.value)} className={inputClass} />
+        <input
+          ref={fraRef}
+          id={`${id}-fra`}
+          type="date"
+          value={fra}
+          min={minDate}
+          max={today}
+          onChange={(e) => {
+            const next = e.target.value;
+            setFra(next);
+            // Til kan ikke ligge før fra: flyttes fra forbi til, følger til med.
+            if (next && til && next > til) setTil(next);
+          }}
+          className={inputClass}
+        />
       </label>
       <label htmlFor={`${id}-til`} className="flex flex-col gap-1 text-[13px] text-[#5E6A63]">
         Til

@@ -43,13 +43,22 @@ function Kv({ children }: { children: ReactNode }) {
   return <div className="mt-5 grid grid-cols-2 gap-6">{children}</div>;
 }
 
-function KvItem({ label, children, tone }: { label: string; children: ReactNode; tone?: "warn" }) {
+function KvItem({ label, children, tone, unavailable }: { label: string; children: ReactNode; tone?: "warn"; unavailable?: boolean }) {
   return (
     <div>
       <span className="text-[#5E6A63]">{label}</span>
-      <b className={`mt-0.5 block text-[24px] tabular-nums ${tone === "warn" ? "text-[#9A5B0A]" : ""}`}>{children}</b>
+      {unavailable ? (
+        <span className="mt-0.5 block text-[14px] text-[#5E6A63]">{UNAVAILABLE}</span>
+      ) : (
+        <b className={`mt-0.5 block text-[24px] tabular-nums ${tone === "warn" ? "text-[#9A5B0A]" : ""}`}>{children}</b>
+      )}
     </div>
   );
+}
+
+/** Værdien i en listerække, eller "Kunne ikke hentes lige nu" når dens afsnit fejlede. */
+function LiValue({ unavailable, children }: { unavailable: boolean; children: ReactNode }) {
+  return unavailable ? <span className="text-[14px] text-[#5E6A63]">{UNAVAILABLE}</span> : <b className="tabular-nums">{children}</b>;
 }
 
 function List({ children, className = "mt-[22px]" }: { children: ReactNode; className?: string }) {
@@ -113,7 +122,7 @@ export function StoresAndPaymentsPanel({ payload, metric }: { payload: StatPaylo
     <section aria-label="Fordelt på butik og betalingsform" className={cardClass} style={delay(60)}>
       <h2 className={h2Class}>Fordelt på butik</h2>
       <BarList rows={payload.byStore.map((s) => ({ label: s.label, value: metricValue(s.money, metric) }))} empty="Ingen salg." />
-      <h2 className={`${h2Class} mt-[34px]`}>Betalingsform</h2>
+      <h2 className={`${h2Class} mt-[34px]`}>Betalingsform, inkl. moms</h2>
       <BarList rows={payload.payments.map((p) => ({ label: p.label, value: p.amount }))} empty="Ingen betalinger." />
     </section>
   );
@@ -232,13 +241,8 @@ export function TopPanel({ payload }: { payload: StatPayload }) {
 
 export function RepairsPanel({ payload }: { payload: StatPayload }) {
   const { repairs } = payload;
-  if (failed(payload, ["openRepairs"])) {
-    return (
-      <Card title="Reparationer" delayMs={50}>
-        <Muted>{UNAVAILABLE}</Muted>
-      </Card>
-    );
-  }
+  // Kun i ejerens payload (stripForViewer fjerner feltet).
+  const withoutParts = payload.viewer.isOwner ? (repairs.withoutPartsCost ?? 0) : 0;
   return (
     <Card title="Reparationer" delayMs={50}>
       <Kv>
@@ -253,11 +257,11 @@ export function RepairsPanel({ payload }: { payload: StatPayload }) {
             <CountUp value={repairs.money.profit} />
           </KvItem>
         ) : null}
-        <KvItem label="Åbne sager nu">
+        <KvItem label="Åbne sager nu" unavailable={failed(payload, ["openRepairs"])}>
           <CountUp value={repairs.openNow} format="int" />
         </KvItem>
       </Kv>
-      {repairs.byType.length > 0 || repairs.prepaidWithoutAmount > 0 ? (
+      {repairs.byType.length > 0 || repairs.prepaidWithoutAmount > 0 || withoutParts > 0 ? (
         <List>
           {repairs.byType.map((t) => (
             <Li key={t.label} label={t.label}>
@@ -269,6 +273,17 @@ export function RepairsPanel({ payload }: { payload: StatPayload }) {
               label={
                 <span className="text-[#5E6A63]">
                   {repairs.prepaidWithoutAmount === 1 ? "1 forudbetalt sag uden beløb" : `${int(repairs.prepaidWithoutAmount)} forudbetalte sager uden beløb`}
+                </span>
+              }
+            />
+          ) : null}
+          {withoutParts > 0 ? (
+            <Li
+              label={
+                <span className="text-[#5E6A63]">
+                  {withoutParts === 1
+                    ? "1 reparation uden registreret reservedelsforbrug"
+                    : `${int(withoutParts)} reparationer uden registreret reservedelsforbrug`}
                 </span>
               }
             />
@@ -341,15 +356,10 @@ export function WebshopPanel({ payload }: { payload: StatPayload }) {
           { label: "Lagt i kurv", value: webshop.addToCart ?? 0, width: share(webshop.addToCart ?? 0) },
           { label: "Købt", value: webshop.purchases, width: share(webshop.purchases) },
         ];
-  if (failed(payload, ["funnel", "abandoned"])) {
-    return (
-      <Card title="Webshop">
-        <Muted>{UNAVAILABLE}</Muted>
-      </Card>
-    );
-  }
+  const funnelFailed = failed(payload, ["funnel"]);
   return (
     <Card title="Webshop">
+      {funnelFailed && !steps ? <Muted>{UNAVAILABLE}</Muted> : null}
       {steps ? (
         <div className="mt-4">
           {steps.map((s, i) => (
@@ -375,9 +385,9 @@ export function WebshopPanel({ payload }: { payload: StatPayload }) {
           </Li>
         )}
         <Li label="Forladte kurve i perioden">
-          <b className="tabular-nums">{int(webshop.abandoned)}</b>
+          <LiValue unavailable={failed(payload, ["abandoned"])}>{int(webshop.abandoned)}</LiValue>
         </Li>
-        <Li label="Gns. ordre">
+        <Li label="Gns. ordre, inkl. moms">
           <b className="tabular-nums">{kr(webshop.avgOrder)}</b>
         </Li>
       </List>
@@ -387,7 +397,8 @@ export function WebshopPanel({ payload }: { payload: StatPayload }) {
 
 export function StockPanel({ payload }: { payload: StatPayload }) {
   const { stock } = payload;
-  if (failed(payload, ["devices", "accessoryStock"])) {
+  // Enhederne bærer hele panelet; tilbehørslageret kun sin egen række.
+  if (failed(payload, ["devices"])) {
     return (
       <Card title="Lager" tag="lige nu" delayMs={50}>
         <Muted>{UNAVAILABLE}</Muted>
@@ -419,7 +430,7 @@ export function StockPanel({ payload }: { payload: StatPayload }) {
         </Li>
         {stock.accessoryCostValue !== undefined ? (
           <Li label="Tilbehør, lagerværdi">
-            <b className="tabular-nums">{kr(stock.accessoryCostValue)}</b>
+            <LiValue unavailable={failed(payload, ["accessoryStock"])}>{kr(stock.accessoryCostValue)}</LiValue>
           </Li>
         ) : null}
       </List>

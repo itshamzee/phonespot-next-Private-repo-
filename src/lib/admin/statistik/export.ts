@@ -44,8 +44,8 @@ function rowTotals(s: Row) {
   };
 }
 
-/** Margin i procent, eller null når omsætningen er 0. */
-const marginOf = (profit: number, revenue: number) => (revenue === 0 ? null : (profit / revenue) * 100);
+/** Margin i procent, eller null uden positiv omsætning (som sumLines). */
+const marginOf = (profit: number, revenue: number) => (revenue > 0 ? (profit / revenue) * 100 : null);
 
 const failed = (p: StatPayload, sections: StatSection[]) => sections.some((s) => p.unavailable.includes(s));
 
@@ -264,14 +264,18 @@ function topSheet(wb: ExcelJS.Workbook, p: StatPayload, profit: boolean) {
 
 function repairsSheet(wb: ExcelJS.Workbook, p: StatPayload, profit: boolean) {
   const ws = wb.addWorksheet("Reparationer");
-  if (failed(p, ["openRepairs"])) return writeUnavailable(ws);
   const r = p.repairs;
   const facts: [string, Kind, Value][] = [
     ["Betalte sager", "int", r.paidCases],
     ["Omsætning uden moms", "kr", r.money.revenue],
   ];
   if (profit) facts.push(["Fortjeneste", "kr", r.money.profit ?? 0]);
-  facts.push(["Åbne sager nu", "int", r.openNow], ["Forudbetalte sager uden beløb", "int", r.prepaidWithoutAmount]);
+  facts.push(
+    failed(p, ["openRepairs"]) ? ["Åbne sager nu", "text", UNAVAILABLE] : ["Åbne sager nu", "int", r.openNow],
+    ["Forudbetalte sager uden beløb", "int", r.prepaidWithoutAmount],
+  );
+  // Kun i ejerens payload.
+  if (r.withoutPartsCost !== undefined) facts.push(["Reparationer uden registreret reservedelsforbrug", "int", r.withoutPartsCost]);
   const next = writeFacts(ws, facts);
   if (r.byType.length > 0) {
     writeTable(
@@ -313,20 +317,21 @@ function buybackSheet(wb: ExcelJS.Workbook, p: StatPayload) {
 
 function webshopSheet(wb: ExcelJS.Workbook, p: StatPayload) {
   const ws = wb.addWorksheet("Webshop");
-  if (failed(p, ["funnel", "abandoned"])) return writeUnavailable(ws);
   const w = p.webshop;
+  const funnelFailed = failed(p, ["funnel"]);
   writeFacts(ws, [
-    ["Besøg", "int", w.visits],
-    ["Lagt i kurv", "int", w.addToCart],
+    funnelFailed ? ["Besøg", "text", UNAVAILABLE] : ["Besøg", "int", w.visits],
+    funnelFailed ? ["Lagt i kurv", "text", UNAVAILABLE] : ["Lagt i kurv", "int", w.addToCart],
     ["Købt", "int", w.purchases],
-    ["Forladte kurve i perioden", "int", w.abandoned],
-    ["Gns. ordre", "kr", w.avgOrder],
+    failed(p, ["abandoned"]) ? ["Forladte kurve i perioden", "text", UNAVAILABLE] : ["Forladte kurve i perioden", "int", w.abandoned],
+    ["Gns. ordre, inkl. moms", "kr", w.avgOrder],
   ]);
 }
 
 function stockSheet(wb: ExcelJS.Workbook, p: StatPayload) {
   const ws = wb.addWorksheet("Lager");
-  if (failed(p, ["devices", "accessoryStock"])) return writeUnavailable(ws);
+  // Enhederne bærer hele fanen; tilbehørslageret kun sin egen række.
+  if (failed(p, ["devices"])) return writeUnavailable(ws);
   const s = p.stock;
   const facts: [string, Kind, Value][] = [["Enheder på lager", "int", s.units]];
   if (s.costValue !== undefined) facts.push(["Lagerværdi, kostpris", "kr", s.costValue]);
@@ -336,7 +341,11 @@ function stockSheet(wb: ExcelJS.Workbook, p: StatPayload) {
     ["Udsolgte modeller", "int", s.soldOutModels],
     ["Kun 1 tilbage", "int", s.oneLeftModels],
   );
-  if (s.accessoryCostValue !== undefined) facts.push(["Tilbehør, lagerværdi", "kr", s.accessoryCostValue]);
+  if (s.accessoryCostValue !== undefined) {
+    facts.push(
+      failed(p, ["accessoryStock"]) ? ["Tilbehør, lagerværdi", "text", UNAVAILABLE] : ["Tilbehør, lagerværdi", "kr", s.accessoryCostValue],
+    );
+  }
   writeFacts(ws, facts);
 }
 

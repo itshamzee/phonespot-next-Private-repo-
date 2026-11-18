@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createFakeDb } from "@/test/fake-supabase";
 
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(() => ({})),
@@ -20,7 +21,11 @@ vi.mock("@/lib/admin/overview/load", () => ({
   loadOrders: mocks.loadOrders,
   loadOrdersWithMeta: mocks.loadOrdersWithMeta,
 }));
-vi.mock("../ga4", () => ({ ga4Configured: () => false, loadFunnel: vi.fn(async () => null) }));
+const ga4 = vi.hoisted(() => ({
+  configured: false,
+  loadFunnel: vi.fn(async (): Promise<{ visits: number; addToCart: number } | null> => null),
+}));
+vi.mock("../ga4", () => ({ ga4Configured: () => ga4.configured, loadFunnel: ga4.loadFunnel }));
 
 import type { StatViewer } from "../access";
 import { loadNowBlock, loadStatistik, resetNowBlockCache } from "../load";
@@ -36,6 +41,45 @@ const FAIL_CLOSED: StatViewer[] = [
 beforeEach(() => {
   vi.clearAllMocks();
   resetNowBlockCache();
+  ga4.configured = false;
+  ga4.loadFunnel.mockImplementation(async () => null);
+});
+
+describe("GA4 funnel timeout", () => {
+  const owner: StatViewer = { isOwner: true, scope: "alle", canExport: true };
+
+  afterEach(() => vi.useRealTimers());
+
+  it("a GA4 call that hangs is cut off after 3 seconds and only the funnel is unavailable", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.createServerClient.mockReturnValue(createFakeDb({}).client as never);
+    ga4.configured = true;
+    ga4.loadFunnel.mockImplementation(() => new Promise(() => {}));
+
+    let done = false;
+    const pending = loadStatistik(owner, statRange("30d", NOW), NOW).then((p) => {
+      done = true;
+      return p;
+    });
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    const p = await pending;
+    expect(p.unavailable).toEqual(["funnel"]);
+    expect(p.webshop.visits).toBeNull();
+    expect(logged).toHaveBeenCalledWith(expect.stringContaining("GA4"));
+    logged.mockRestore();
+  });
+
+  it("a GA4 answer within 3 seconds is used", async () => {
+    mocks.createServerClient.mockReturnValue(createFakeDb({}).client as never);
+    ga4.configured = true;
+    ga4.loadFunnel.mockImplementation(async () => ({ visits: 500, addToCart: 40 }));
+    const p = await loadStatistik(owner, statRange("30d", NOW), NOW);
+    expect(p.unavailable).toEqual([]);
+    expect(p.webshop.visits).toBe(500);
+  });
 });
 
 describe("fail-closed loading", () => {

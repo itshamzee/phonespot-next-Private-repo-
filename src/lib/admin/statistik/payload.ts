@@ -61,7 +61,15 @@ export type StatPayload = {
   missingCost?: number;
   staff?: { name: string; store: string | null; sales: number; repairs: number; money: Required<Money> }[];
   top: { name: string; category: Category; units: number; money: Money }[];
-  repairs: { paidCases: number; money: Money; openNow: number; byType: { label: string; sharePct: number }[]; prepaidWithoutAmount: number };
+  repairs: {
+    paidCases: number;
+    money: Money;
+    openNow: number;
+    byType: { label: string; sharePct: number }[];
+    prepaidWithoutAmount: number;
+    /** Kun ejeren: betalte sager, hvis reparationslinje har kostpris 0 (ingen reservedele bogført). */
+    withoutPartsCost?: number;
+  };
   buyback: { paidOut: number; offset: number; receipts: number; offersSent: number; acceptedPct: number | null; byStore: { label: string; amount: number }[]; dataFrom: string | null };
   webshop: { visits: number | null; addToCart: number | null; purchases: number; abandoned: number; avgOrder: number };
   stock: { units: number; costValue?: number; accessoryCostValue?: number; avgDays: number | null; over60: number; soldOutModels: number; oneLeftModels: number };
@@ -144,7 +152,14 @@ const PAYMENT_LABELS: Record<string, string> = {
   gavekort: "Gavekort",
   opkoeb: "Modregnet opkøb",
   online: "Online betaling",
+  split: "Delt betaling",
+  ukendt: "Ukendt",
 };
+/**
+ * Ældre orders.payment_method-værdier lægges sammen med de rækker, order_payments
+ * giver; "draft" er ingen betalingsform og tælles som ukendt.
+ */
+const LEGACY_METHODS: Record<string, string> = { cash: "kontant", card: "kort_terminal", draft: "ukendt" };
 /** orders.payment_method for webshop-betalinger. */
 const ONLINE_METHODS = new Set(["stripe"]);
 
@@ -319,7 +334,8 @@ function buildPayments(orders: OverviewOrder[], payments: PaymentRow[]): StatPay
   for (const p of payments) add(p.type, p.amount_oere);
   for (const o of orders) {
     if (o.id && paid.has(o.id)) continue;
-    const method = o.type === "repair_prepaid" || ONLINE_METHODS.has(o.payment_method ?? "") ? "online" : o.payment_method || "ukendt";
+    const raw = o.payment_method || "ukendt";
+    const method = o.type === "repair_prepaid" || ONLINE_METHODS.has(raw) ? "online" : (LEGACY_METHODS[raw] ?? raw);
     add(method, o.total ?? 0);
   }
   return [...amounts]
@@ -334,9 +350,14 @@ function repairLabel(t: TicketRow | undefined): string | null {
 }
 
 function buildRepairs(lines: StatLine[], input: BuildInput): StatPayload["repairs"] {
-  const paid = new Set(
-    lines.filter((l) => !l.isCredit && l.productKey.startsWith(TICKET_KEY)).map((l) => l.productKey.slice(TICKET_KEY.length)),
-  );
+  // Kostpris pr. betalt sag (kun salgslinjer); 0 betyder, at ingen reservedele er bogført.
+  const costByPaid = new Map<string, number>();
+  for (const l of lines) {
+    if (l.isCredit || !l.productKey.startsWith(TICKET_KEY)) continue;
+    const id = l.productKey.slice(TICKET_KEY.length);
+    costByPaid.set(id, (costByPaid.get(id) ?? 0) + l.cost);
+  }
+  const paid = new Set(costByPaid.keys());
   const ticketById = new Map(input.tickets.map((t) => [t.id, t]));
   const byLabel = new Map<string, number>();
   for (const id of paid) {
@@ -354,6 +375,7 @@ function buildRepairs(lines: StatLine[], input: BuildInput): StatPayload["repair
     openNow: input.openRepairs,
     byType,
     prepaidWithoutAmount: input.prepaidWithoutAmount,
+    withoutPartsCost: [...costByPaid.values()].filter((c) => c === 0).length,
   };
 }
 
@@ -544,7 +566,13 @@ export function stripForViewer(p: StatPayload, viewer: StatViewer): StatPayload 
     byStore: p.byStore.map((s) => ({ ...s, money: publicMoney(s.money) })),
     payments: p.payments,
     top: p.top.map((t) => ({ ...t, money: publicMoney(t.money) })),
-    repairs: { ...p.repairs, money: publicMoney(p.repairs.money) },
+    repairs: {
+      paidCases: p.repairs.paidCases,
+      money: publicMoney(p.repairs.money),
+      openNow: p.repairs.openNow,
+      byType: p.repairs.byType,
+      prepaidWithoutAmount: p.repairs.prepaidWithoutAmount,
+    },
     buyback: p.buyback,
     webshop: p.webshop,
     stock: strippedStock,

@@ -51,6 +51,7 @@ export const NAV: NavArea[] = [
     key: "overblik",
     label: "Overblik",
     href: "/admin",
+    // /admin/platform selv omdirigeres til Statistik; matchet dækker kun undersider uden eget menupunkt.
     match: ["/admin/platform"],
     icon: ["m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"],
   },

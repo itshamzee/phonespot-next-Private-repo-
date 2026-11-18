@@ -71,8 +71,8 @@ describe("toCsv", () => {
     expect(lines[0].endsWith("Fortjeneste;Margin %")).toBe(true);
     expect(lines[1]).toBe("2026-11-17;10000,00;10000,00;7485,00;27485,00;34356,25;9000,00;32,7");
     expect(csv).toContain("27485,00");
-    // Negative beløb (kreditnota) og tom margin, når omsætningen er 0.
-    expect(lines[2]).toBe("2026-11-18;0,00;-5,00;0,00;-5,00;-6,25;-1,00;20,0");
+    // Negative beløb (kreditnota) og tom margin, når omsætningen er 0 eller negativ (som sumLines).
+    expect(lines[2]).toBe("2026-11-18;0,00;-5,00;0,00;-5,00;-6,25;-1,00;");
     expect(lines[3]).toBe("2026-11-19;0,00;0,00;0,00;0,00;0,00;0,00;");
   });
 
@@ -112,6 +112,8 @@ describe("toXlsx", () => {
     // Beløb er tal i kroner, ikke tekst.
     const perDay = wb.getWorksheet("Pr. dag")!;
     expect(perDay.getRow(2).getCell(5).value).toBe(27485);
+    // Margin-kolonnen (9) er tom for intervallet med negativ omsætning.
+    expect(perDay.getRow(3).getCell(9).value).toBeNull();
   });
 
   it("afsnit, der ikke kunne hentes, står som Kunne ikke hentes i stedet for nuller", async () => {
@@ -123,7 +125,49 @@ describe("toXlsx", () => {
     expect(sheetText(wb.getWorksheet("Lager")!)).toBe("Kunne ikke hentes");
     expect(sheetText(wb.getWorksheet("Reparationer")!)).toContain("Åbne sager nu");
   });
+
+  it("Reparationer-fanen har reparationer uden reservedelsforbrug for ejeren, ikke for andre", async () => {
+    const p = ownerPayload();
+    p.repairs = { ...p.repairs, withoutPartsCost: 2 };
+    const owner = await readBack(await toXlsx(p));
+    expect(fact(owner.getWorksheet("Reparationer")!, "Reparationer uden registreret reservedelsforbrug")).toBe(2);
+    const staff = await readBack(await toXlsx(stripForViewer(p, { isOwner: false, scope: "vejle", canExport: true })));
+    expect(sheetText(staff.getWorksheet("Reparationer")!)).not.toContain("reservedelsforbrug");
+  });
+
+  it("kun de berørte rækker står som Kunne ikke hentes (tragt, forladte kurve, åbne sager, tilbehørslager)", async () => {
+    const p = ownerPayload();
+    p.unavailable = ["funnel", "openRepairs", "accessoryStock"];
+    p.webshop = { ...p.webshop, visits: null, addToCart: null };
+    const wb = await readBack(await toXlsx(p));
+    const web = wb.getWorksheet("Webshop")!;
+    expect(fact(web, "Besøg")).toBe("Kunne ikke hentes");
+    expect(fact(web, "Lagt i kurv")).toBe("Kunne ikke hentes");
+    expect(fact(web, "Købt")).toBe(8);
+    expect(fact(web, "Forladte kurve i perioden")).toBe(4);
+    const repairs = wb.getWorksheet("Reparationer")!;
+    expect(fact(repairs, "Betalte sager")).toBe(5);
+    expect(fact(repairs, "Åbne sager nu")).toBe("Kunne ikke hentes");
+    const stock = wb.getWorksheet("Lager")!;
+    expect(fact(stock, "Enheder på lager")).toBe(214);
+    expect(fact(stock, "Tilbehør, lagerværdi")).toBe("Kunne ikke hentes");
+
+    p.unavailable = ["abandoned"];
+    p.webshop = { ...p.webshop, visits: 1000, addToCart: 120 };
+    const wb2 = await readBack(await toXlsx(p));
+    expect(fact(wb2.getWorksheet("Webshop")!, "Besøg")).toBe(1000);
+    expect(fact(wb2.getWorksheet("Webshop")!, "Forladte kurve i perioden")).toBe("Kunne ikke hentes");
+  });
 });
+
+/** Værdien ud for et nøgletal (kolonne A = navn, B = værdi). */
+function fact(ws: ExcelJS.Worksheet, label: string): unknown {
+  let out: unknown = undefined;
+  ws.eachRow((row) => {
+    if (row.getCell(1).value === label) out = row.getCell(2).value;
+  });
+  return out;
+}
 
 describe("exportFileName", () => {
   it("periode og butik i navnet", () => {

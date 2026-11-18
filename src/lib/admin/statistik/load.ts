@@ -58,6 +58,23 @@ const NOW_BLOCK_CACHE_MS = 45_000;
 /*  Hjælpere                                                           */
 /* ------------------------------------------------------------------ */
 
+/** GA4 må højst tage så lang tid; ellers vises siden uden tragten. */
+const FUNNEL_TIMEOUT_MS = 3_000;
+const TIMED_OUT = Symbol("timed out");
+
+/** Venter på `p` i højst `ms` millisekunder; derefter TIMED_OUT. */
+async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | typeof TIMED_OUT> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => resolve(TIMED_OUT), ms);
+  });
+  try {
+    return await Promise.race([p, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Kører et afsnits forespørgsel; ved fejl logges den, afsnittet noteres i `failed`, og fallback bruges. */
 async function soft<T>(failed: StatSection[], section: StatSection, run: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -327,7 +344,7 @@ export async function loadStatistik(viewer: StatViewer, range: StatRange, now: D
   const withFunnel = scope === "alle" || scope === "webshop";
   const failed: StatSection[] = [];
 
-  const [current, prevOrders, nowOrders, minDate, staff, openRepairs, receipts, offers, funnel, abandoned, stock, accessoryStock, partialRefunds] =
+  const [current, prevOrders, nowOrders, minDate, staff, openRepairs, receipts, offers, funnelResult, abandoned, stock, accessoryStock, partialRefunds] =
     await Promise.all([
       loadOrdersWithMeta(supabase, scope, index, range.startIso, range.endIso),
       range.prev ? loadOrders(supabase, scope, index, range.prev.startIso, range.prev.endIso) : Promise.resolve([]),
@@ -337,14 +354,17 @@ export async function loadStatistik(viewer: StatViewer, range: StatRange, now: D
       soft(failed, "openRepairs", () => countOpenRepairs(supabase, scope), 0),
       soft(failed, "receipts", () => loadReceipts(supabase, scope, index, range), [] as ReceiptRow[]),
       soft(failed, "offers", () => loadOffers(supabase, scope, range), [] as OfferRow[]),
-      withFunnel ? loadFunnel(range.from, range.to) : Promise.resolve(null),
+      withFunnel ? withTimeout(loadFunnel(range.from, range.to), FUNNEL_TIMEOUT_MS) : Promise.resolve(null),
       soft(failed, "abandoned", () => countAbandoned(supabase, scope, index, range), 0),
       soft(failed, "devices", () => loadDevices(supabase, scope, index), { devices: [] as DeviceRow[], publishedTemplateIds: [] as string[] }),
       soft(failed, "accessoryStock", () => loadAccessoryStock(supabase, scope, index), [] as AccessoryStockRow[]),
       soft(failed, "partialRefunds", () => loadPartialRefunds(supabase, scope, index, range), [] as number[]),
     ]);
   // loadFunnel giver null både uden opsætning og ved fejl; kun det sidste er "kunne ikke hentes".
-  if (withFunnel && funnel === null && ga4Configured()) failed.push("funnel");
+  // Svarer GA4 ikke inden for FUNNEL_TIMEOUT_MS, regnes det som en fejl.
+  const funnel = funnelResult === TIMED_OUT ? null : funnelResult;
+  if (funnelResult === TIMED_OUT) console.error(`Statistik: GA4-tragten svarede ikke inden for ${FUNNEL_TIMEOUT_MS} ms`);
+  if (withFunnel && funnel === null && (funnelResult === TIMED_OUT || ga4Configured())) failed.push("funnel");
 
   const orders = current.orders;
   const [originalStreamByOrderId, tickets, payments] = await Promise.all([

@@ -122,16 +122,21 @@ export type OverviewPayload = StoreOverview | AllOverview;
 
 type Result<T> = { data: T[] | null; error: { message: string } | null };
 
-/** Henter alle rækker side for side (PostgREST giver højst 1.000 ad gangen). */
+/**
+ * Henter alle rækker side for side (PostgREST giver højst 1.000 ad gangen).
+ * Forespørgslen skal have en entydig sortering (fx ... .order("id")), så siderne
+ * er stabile. Er sidste tilladte side fuld, kastes en fejl i stedet for at
+ * returnere et ufuldstændigt resultat.
+ */
 export async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Result<T>>): Promise<T[]> {
   const out: T[] = [];
   for (let i = 0; i < MAX_PAGES; i++) {
     const { data, error } = await page(i * PAGE, i * PAGE + PAGE - 1);
     if (error) throw new Error(error.message);
     out.push(...(data ?? []));
-    if (!data || data.length < PAGE) break;
+    if (!data || data.length < PAGE) return out;
   }
-  return out;
+  throw new Error(`fetchAll: for mange rækker (over ${MAX_PAGES * PAGE})`);
 }
 
 /**
@@ -176,7 +181,7 @@ export async function loadOrdersWithMeta(
   const pickupMethods = scope === "vejle" || scope === "slagelse" ? [...PICKUP_METHODS[scope]] : [];
   const [located, pickedUp, prepaid] = await Promise.all([
     fetchAll<OverviewOrder>((from, to) =>
-      applyLocationScope(saleQuery(), scope, index).order("confirmed_at", { ascending: true }).range(from, to),
+      applyLocationScope(saleQuery(), scope, index).order("confirmed_at", { ascending: true }).order("id").range(from, to),
     ),
     pickupMethods.length === 0
       ? Promise.resolve([] as OverviewOrder[])
@@ -185,6 +190,7 @@ export async function loadOrdersWithMeta(
             .eq("type", "online")
             .in("shipping_method", pickupMethods)
             .order("confirmed_at", { ascending: true })
+            .order("id")
             .range(from, to),
         ),
     loadPrepaidRepairs(supabase, scope, index, startIso, endIso),
@@ -209,8 +215,32 @@ export async function loadOrdersWithMeta(
 }
 
 /**
+ * Sager, der er solgt ved kassen: deres repair_service-linjer i POS-ordrer og
+ * kreditnotaer med salgsstatus giver tilsammen en positiv mængde. Depositumlinjer,
+ * kladder, annullerede ordrer og en sag der er solgt og krediteret igen tæller ikke.
+ */
+type TillOrder = { type: string | null; status: string | null };
+type TillLine = {
+  repair_ticket_id: string | null;
+  item_type: string | null;
+  quantity: number | null;
+  orders: TillOrder | TillOrder[] | null;
+};
+
+function tillPaidTickets(rows: TillLine[]): Set<string> {
+  const net = new Map<string, number>();
+  for (const r of rows) {
+    const o = Array.isArray(r.orders) ? r.orders[0] : r.orders;
+    if (!r.repair_ticket_id || r.item_type !== "repair_service" || !o) continue;
+    if ((o.type !== "pos" && o.type !== "credit_note") || !SALE_STATUSES.includes(o.status ?? "")) continue;
+    net.set(r.repair_ticket_id, (net.get(r.repair_ticket_id) ?? 0) + (r.quantity ?? 0));
+  }
+  return new Set([...net].filter(([, q]) => q > 0).map(([id]) => id));
+}
+
+/**
  * Sager betalt online på forhånd (repair-payment.ts sætter kun paid/paid_at). Sager
- * med en ordrelinje er allerede med som kassesalg og springes over.
+ * der er solgt ved kassen (tillPaidTickets) er allerede med som kassesalg og springes over.
  */
 async function loadPrepaidRepairs(
   supabase: Supabase,
@@ -228,16 +258,21 @@ async function loadPrepaidRepairs(
       .gte("paid_at", startIso)
       .lt("paid_at", endIso)
       .neq("status", "annulleret");
-    return applyLocationScope(q, scope, index).order("paid_at", { ascending: true }).range(from, to);
+    return applyLocationScope(q, scope, index).order("paid_at", { ascending: true }).order("id").range(from, to);
   });
   if (tickets.length === 0) return { orders: [], withoutAmount: 0 };
 
-  const { data: linked, error } = await fetchInChunks<{ repair_ticket_id: string | null }>(
+  const { data: linked, error } = await fetchInChunks<TillLine>(
     tickets.map((t) => t.id),
-    (chunk) => supabase.from("order_items").select("repair_ticket_id").in("repair_ticket_id", chunk),
+    (chunk) =>
+      supabase
+        .from("order_items")
+        .select("repair_ticket_id, item_type, quantity, orders!inner(type, status)")
+        .eq("item_type", "repair_service")
+        .in("repair_ticket_id", chunk),
   );
   if (error) throw new Error(error.message);
-  const onTill = new Set(linked.map((l) => l.repair_ticket_id));
+  const onTill = tillPaidTickets(linked);
 
   const prepaid = tickets
     .filter((t) => !onTill.has(t.id))
@@ -464,7 +499,7 @@ async function countOpenCases(supabase: Supabase, scope: StoreScope): Promise<Re
       .from("repair_tickets")
       .select("store_id")
       .not("status", "in", `(${CLOSED_REPAIR_STATUSES.join(",")})`);
-    return applyStoreScope(q, scope).range(from, to);
+    return applyStoreScope(q, scope).order("id").range(from, to);
   });
   for (const r of rows) {
     const key = r.store_id === "vejle" || r.store_id === "slagelse" ? r.store_id : "webshop";

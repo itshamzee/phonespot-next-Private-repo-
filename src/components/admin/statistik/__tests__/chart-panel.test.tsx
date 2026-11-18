@@ -208,7 +208,9 @@ describe("ChartPanel", () => {
     expect(rows[2]).toMatchObject({ kasse: -300_000, total: -300_000, prev: null, capTop: null, capBottom: "kasse" });
     expect(rows[1]).toMatchObject({ capTop: "reparation", capBottom: null });
     expect(within(tableRows()[2]).getAllByText("-3.000 kr.")).toHaveLength(2);
-    expect(within(tableRows()[2]).getByText("–")).toBeInTheDocument();
+    // Ingen margin på negativ omsætning (som sumLines), og ingen forrige periode.
+    expect(rows[2].marginPct).toBeNull();
+    expect(within(tableRows()[2]).getAllByText("–")).toHaveLength(2);
     expect(container.textContent).not.toMatch(/NaN/);
   });
 
@@ -218,6 +220,23 @@ describe("ChartPanel", () => {
     expect(within(region()).getByText("Ingen salg i perioden")).toBeInTheDocument();
     expect(within(region()).queryByRole("table")).toBeNull();
     expect(canvas).not.toHaveBeenCalled();
+  });
+
+  it("omsætning inkl. moms står under totalen, kun når alle typer er slået til", () => {
+    const { unmount } = render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
+    // 44.985 kr. * 1,25 = 56.231,25 kr.
+    expect(screen.getByText("Inkl. moms 56.231 kr.")).toBeInTheDocument();
+    fireEvent.click(legendButton("Reparation"));
+    expect(screen.queryByText(/Inkl\. moms/)).toBeNull();
+    unmount();
+
+    render(<ChartPanel payload={ownerPayload()} metric="fortjeneste" />);
+    expect(screen.queryByText(/Inkl\. moms/)).toBeNull();
+  });
+
+  it("medarbejderen ser også omsætning inkl. moms", () => {
+    render(<ChartPanel payload={staffPayload()} metric="omsaetning" />);
+    expect(screen.getByText("Inkl. moms 56.231 kr.")).toBeInTheDocument();
   });
 
   it("delvise refunderinger står stadig under totalen", () => {

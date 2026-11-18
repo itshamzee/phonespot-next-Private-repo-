@@ -41,7 +41,8 @@ const online: OverviewOrder = {
       quantity: 1,
       total_price: 19900,
       purchase_price: 5000,
-      vat_amount: null,
+      // order_items.vat_amount er NOT NULL DEFAULT 0; webshoppen skriver den ikke.
+      vat_amount: 0,
       vat_scheme: "regular",
     },
   ],
@@ -251,6 +252,81 @@ describe("toStatLines", () => {
     expect(lines.map((l) => l.revenue)).toEqual([100000 - 3334, 200000 - 6667]);
     expect(lines).toHaveLength(2);
     expect(sumLines(lines).revenue).toBe(computeKpis([order]).revenueExVat);
+  });
+
+  it("online lines with vat_amount 0: VAT is estimated and brugtmoms is spread, so oevrigt is shipping and order discount only", () => {
+    // Enhed 4.000 kr. (brugtmoms 200 kr.), cover 199 kr., fragt 49 kr., rabat på ordren 100 kr.
+    const order: OverviewOrder = {
+      id: "o7",
+      type: "online",
+      total: 400000 + 19900 + 4900 - 10000,
+      vat_total: 0,
+      brugtmoms_total: 20000,
+      location_id: null,
+      shipping_method: "gls_home",
+      shipping_cost: 4900,
+      confirmed_at: "2026-11-18T10:00:00Z",
+      order_items: [
+        { id: "a", device_id: "d7", item_type: "device", quantity: 1, total_price: 400000, purchase_price: 300000, vat_amount: 0, vat_scheme: "brugtmoms" },
+        { id: "b", sku_product_id: "sku7", item_type: "product", quantity: 1, total_price: 19900, purchase_price: 5000, vat_amount: 0, vat_scheme: "regular" },
+      ],
+    };
+    const lines = toStatLines([order], ctx());
+    expect(lines.find((l) => l.productKey === "device:d7")).toMatchObject({ category: "enheder", revenue: 380000, revenueInclVat: 400000 });
+    expect(lines.find((l) => l.productKey === "sku:sku7")).toMatchObject({ category: "tilbehoer", revenue: 15920, revenueInclVat: 19900 });
+    const rest = lines.filter((l) => l.category === "oevrigt");
+    expect(rest).toHaveLength(1);
+    expect(rest[0]).toMatchObject({ revenue: 4900 - 10000, revenueInclVat: 4900 - 10000 });
+
+    const kpis = computeKpis([order]);
+    const total = sumLines(lines);
+    expect(total.revenue).toBe(kpis.revenueExVat);
+    expect(total.revenueInclVat).toBe(kpis.revenue);
+    expect(total.profit).toBe(kpis.profit);
+  });
+
+  it("online brugtmoms: a known vat_amount is kept and only the rest of brugtmoms_total is spread", () => {
+    const order: OverviewOrder = {
+      id: "o8",
+      type: "online",
+      total: 300000,
+      vat_total: 0,
+      brugtmoms_total: 30000,
+      location_id: null,
+      confirmed_at: "2026-11-18T10:00:00Z",
+      order_items: [
+        { id: "a", device_id: "da", item_type: "device", quantity: 1, total_price: 100000, purchase_price: 1, vat_amount: 12000, vat_scheme: "brugtmoms" },
+        { id: "b", device_id: "db", item_type: "device", quantity: 1, total_price: 200000, purchase_price: 1, vat_amount: 0, vat_scheme: "brugtmoms" },
+      ],
+    };
+    const lines = toStatLines([order], ctx());
+    expect(lines.map((l) => l.revenue)).toEqual([100000 - 12000, 200000 - 18000]);
+    expect(sumLines(lines).revenue).toBe(computeKpis([order]).revenueExVat);
+  });
+
+  it("online order with vat_total set: no estimated VAT on lines (mirrors computeKpis), sums still match", () => {
+    const order: OverviewOrder = { ...online, id: "o9", vat_total: 3980 };
+    const lines = toStatLines([order], ctx());
+    expect(lines.find((l) => l.productKey === "sku:sku1")).toMatchObject({ revenue: 19900 });
+    const kpis = computeKpis([order]);
+    expect(sumLines(lines).revenue).toBe(kpis.revenueExVat);
+    expect(sumLines(lines).revenueInclVat).toBe(kpis.revenue);
+  });
+
+  it("a POS line with vat_amount 0 keeps 0 VAT (only online treats 0 as unknown)", () => {
+    const order: OverviewOrder = {
+      id: "o10",
+      type: "pos",
+      total: 5000,
+      vat_total: 0,
+      brugtmoms_total: 0,
+      location_id: "loc-v",
+      confirmed_at: "2026-11-18T10:00:00Z",
+      order_items: [{ id: "a", sku_product_id: "s", item_type: "product", quantity: 1, total_price: 5000, purchase_price: 1, vat_amount: 0, vat_scheme: "regular" }],
+    };
+    const lines = toStatLines([order], ctx());
+    expect(lines).toHaveLength(1);
+    expect(lines[0].revenue).toBe(5000);
   });
 
   it("technician match", () => {

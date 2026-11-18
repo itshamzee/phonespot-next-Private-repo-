@@ -90,6 +90,24 @@ describe("applyRepairCosts", () => {
     expect(out.order_items![0].purchase_price).toBe(3333);
     expect(Number.isInteger(out.order_items![0].purchase_price)).toBe(true);
   });
+  it("counts the parts once when the same ticket is on two sale orders, and a credit note still reverses it", () => {
+    // Fx delbetaling: sagen står på to kassesalg.
+    const two = applyRepairCosts([order(1, 60000), order(1, 40000)], new Map([["t1", 30000]]));
+    expect(two.map((o) => o.order_items![0].purchase_price)).toEqual([30000, 0]);
+    expect(computeKpis(two).cost).toBe(30000);
+
+    // Den første ordre bærer kosten; kreditnotaen tilbagefører den, uanset rækkefølge.
+    const withCredit = applyRepairCosts([order(1, 60000), order(1, 40000), order(-1, -60000)], new Map([["t1", 30000]]));
+    expect(computeKpis(withCredit).cost).toBe(0);
+    const creditFirst = applyRepairCosts([order(-1, -60000), order(1, 60000), order(1, 40000)], new Map([["t1", 30000]]));
+    expect(computeKpis(creditFirst).cost).toBe(0);
+  });
+
+  it("a quantity-0 line on the first sale order does not use up the ticket's cost", () => {
+    const out = applyRepairCosts([order(0, 0), order(1, 100000)], new Map([["t1", 30000]]));
+    expect(computeKpis(out).cost).toBe(30000);
+  });
+
   it("leaves a quantity-0 line untouched", () => {
     const [out] = applyRepairCosts([order(0, 0)], new Map([["t1", 30000]]));
     expect(out.order_items![0].purchase_price).toBeNull();

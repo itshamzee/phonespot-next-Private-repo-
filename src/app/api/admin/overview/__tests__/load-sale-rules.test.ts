@@ -31,7 +31,9 @@ function order(id: string, location_id: string | null, total: number, type: stri
   };
 }
 
-function seed() {
+type Extra = { tickets?: Record<string, unknown>[]; items?: Record<string, unknown>[] };
+
+function seed(extra: Extra = {}) {
   return createFakeDb({
     locations: [
       { id: "L-v", name: "Vejle", type: "store", slug: "vejle" },
@@ -47,11 +49,16 @@ function seed() {
       order("cc-s", "L-w", 50_000, "online", "pickup_slagelse"),
       order("ship", "L-w", 20_000, "online", "postnord"),
     ],
-    order_items: [{ repair_ticket_id: "tk-till" }],
+    // Fladt udsnit af order_items med den indlejrede ordre (orders!inner(type, status)).
+    order_items: [
+      { repair_ticket_id: "tk-till", item_type: "repair_service", quantity: 1, orders: { type: "pos", status: "confirmed" } },
+      ...(extra.items ?? []),
+    ],
     repair_tickets: [
       { id: "tk-till", paid: true, paid_at: TODAY, status: "afhentet", location_id: "L-v", total_price_dkk: 1000 },
       { id: "tk-web", paid: true, paid_at: TODAY, status: "modtaget", location_id: "L-v", total_price_dkk: 899 },
       { id: "tk-cancel", paid: true, paid_at: TODAY, status: "annulleret", location_id: "L-v", total_price_dkk: 500 },
+      ...(extra.tickets ?? []),
     ],
     repair_ticket_items: [
       { ticket_id: "tk-till", kind: "part", cost_oere: 30_000, qty: 1, stock_status: "consumed" },
@@ -111,5 +118,45 @@ describe("loadOrders med de fælles salgsregler", () => {
       ["webshop", 20_000],
     ]);
     expect(all.total.revenue).toBe(289_900);
+  });
+});
+
+describe("forudbetalt sag: kun et nettosalg ved kassen gør den til kassesalg", () => {
+  const ticket = (id: string, kr: number) => ({ id, paid: true, paid_at: TODAY, status: "modtaget", location_id: "L-s", total_price_dkk: kr });
+  const line = (repair_ticket_id: string, item_type: string, quantity: number, type: string, status: string) => ({
+    repair_ticket_id,
+    item_type,
+    quantity,
+    orders: { type, status },
+  });
+
+  beforeEach(() => {
+    state.client = seed({
+      tickets: [ticket("tk-deposit", 100), ticket("tk-credited", 200), ticket("tk-draft", 300), ticket("tk-cancelled-order", 400), ticket("tk-pos-s", 500)],
+      items: [
+        // Kun depositum ved kassen: sagen er stadig betalt online.
+        line("tk-deposit", "deposit", 1, "pos", "confirmed"),
+        // Solgt og krediteret ved kassen, derefter betalt online.
+        line("tk-credited", "repair_service", 1, "pos", "confirmed"),
+        line("tk-credited", "repair_service", -1, "credit_note", "confirmed"),
+        // Linjer i en kladde og en annulleret ordre er ikke salg.
+        line("tk-draft", "repair_service", 1, "pos", "draft"),
+        line("tk-cancelled-order", "repair_service", 1, "pos", "cancelled"),
+        // Almindeligt kassesalg: tælles ikke igen som forudbetalt.
+        line("tk-pos-s", "repair_service", 1, "pos", "picked_up"),
+      ],
+    }).client;
+  });
+
+  it("deposit-only, credited, draft and cancelled-order tickets are counted as prepaid; a normal till sale is not", async () => {
+    const { kpis } = await store("slagelse");
+    // 50 000 afhentning + 10 000 + 20 000 + 30 000 + 40 000 forudbetalt; tk-pos-s ikke.
+    expect(kpis.revenue).toBe(150_000);
+    expect(kpis.salesCount).toBe(5);
+  });
+
+  it("Vejle is unchanged: tk-till is still a till sale", async () => {
+    const { kpis } = await store("vejle");
+    expect(kpis.revenue).toBe(219_900);
   });
 });
