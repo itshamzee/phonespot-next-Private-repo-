@@ -26,6 +26,8 @@ import {
   type TradeInLookup,
 } from "@/lib/pos/kasse-logic";
 import { normalizeIdentifier } from "@/lib/opkoeb/rules";
+import { Dialog } from "@/components/admin/ui/dialog";
+import { Spinner } from "@/components/admin/ui/spinner";
 import { fmtKr } from "./format";
 import { newPaymentLine, paymentLinesToInput, type PaymentLineState } from "./payment-lines";
 
@@ -36,7 +38,14 @@ export const btnSecondary =
 export const fieldClass =
   "h-11 w-full rounded-[10px] border border-[#C9D0C7] bg-white px-3 text-[15px] text-[#15211B] outline-none focus:border-[#1A3D2E] focus:ring-2 focus:ring-[#1A3D2E]/10";
 
-/** Esc closes the dialog (the screen-level Esc only clears the scan field when no dialog is open). */
+/**
+ * Kassens dialog: en tynd indpakning om den fælles Dialog (native <dialog>, fokusfælde,
+ * fokus tilbage ved lukning). Samme props og samme lukning som før: Esc, klik på baggrunden
+ * og "Luk" kalder onClose, også midt i en betaling; dialoger, der ikke må lukkes under en
+ * betaling, giver selv et onClose, der ikke gør noget (CardDialog). Kassen åbner og lukker
+ * ved at montere og afmontere, så der ingen udtoning er, der kan forsinke noget.
+ * data-kasse-dialog: skærmens egen Esc rydder kun scanfeltet, når ingen dialog er åben.
+ */
 export function Modal({
   title,
   onClose,
@@ -48,39 +57,22 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      data-kasse-dialog
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className={`max-h-[90dvh] w-full overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ${wide ? "max-w-xl" : "max-w-md"}`}>
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 className="text-lg font-bold text-[#15211B]">{title}</h2>
-          <button type="button" onClick={onClose} className="text-sm text-[#5E6A63] hover:text-[#15211B]" aria-label="Luk">
-            Luk
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <Dialog open onClose={onClose} title={title} size={wide ? "lg" : "sm"} data-kasse-dialog="">
+      {children}
+    </Dialog>
   );
+}
+
+/** Hele sekunder siden komponenten blev vist (tæller hvert sekund). */
+function useElapsedSeconds(): number {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => setSeconds(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return seconds;
 }
 
 function ErrorLine({ children }: { children: ReactNode }) {
@@ -97,9 +89,18 @@ function ErrorLine({ children }: { children: ReactNode }) {
  * answers by itself (cancelled, or completed if the card was already approved).
  */
 function TerminalPending({ amountOere, cancelling, onCancel }: { amountOere: number; cancelling: boolean; onCancel?: () => void }) {
+  const seconds = useElapsedSeconds();
   return (
     <div role="status" aria-live="polite" className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
-      <p className="text-[15px] font-semibold text-[#15211B]">Sender beløb til terminalen…</p>
+      <div className="flex items-center gap-2.5">
+        {/* Rolig indikator, så skærmen ikke ser frossen ud, mens kunden betaler. */}
+        <Spinner className="h-4 w-4 text-[#1A3D2E]" />
+        <p className="flex-1 text-[15px] font-semibold text-[#15211B]">Sender beløb til terminalen…</p>
+        {/* Skærmlæsere får ikke hvert sekund læst op. */}
+        <span aria-hidden="true" className="text-sm tabular-nums text-[#5E6A63]">
+          {seconds} sek.
+        </span>
+      </div>
       <p className="mt-1 text-sm text-[#5E6A63]">
         <b>{fmtKr(amountOere)}</b>. Bed kunden betale på terminalen. Salget gemmes, når kortet er godkendt.
       </p>

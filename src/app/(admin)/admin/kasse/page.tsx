@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { KasseScreen } from "./_components/kasse-screen";
+import { KasseSkeleton } from "./_components/kasse-skeleton";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
  */
 export default function KassePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<KasseSkeleton />}>
       <KasseScreen terminalKind={paymentTerminalKind()} />
     </Suspense>
   );

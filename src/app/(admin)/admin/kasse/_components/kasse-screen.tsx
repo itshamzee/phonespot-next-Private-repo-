@@ -136,7 +136,7 @@ const CHIP_QUICK = "__quick";
 const CHIP_DEVICES = "__devices";
 
 const tileClass =
-  "flex h-[108px] flex-col justify-between rounded-xl border border-[#E2E5E0] bg-white p-3.5 text-left transition-colors hover:border-[#1A3D2E]/40 hover:bg-[#FBFCFB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1A3D2E]";
+  "m-press flex h-[108px] flex-col justify-between rounded-xl border border-[#E2E5E0] bg-white p-3.5 text-left transition-colors hover:border-[#1A3D2E]/40 hover:bg-[#FBFCFB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1A3D2E]";
 
 function effectiveSkuPrice(s: { selling_price: number; sale_price: number | null }) {
   return s.sale_price != null && s.sale_price < s.selling_price ? s.sale_price : s.selling_price;
@@ -916,7 +916,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
               {showResults && (
                 <div className="absolute inset-x-0 top-[52px] z-20 max-h-[360px] overflow-y-auto rounded-xl border border-[#E2E5E0] bg-white shadow-lg">
                   {caseHit && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3">
+                    <div className="m-row-in flex flex-wrap items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3">
                       <div className="min-w-0 text-sm">
                         <b>Sag {caseHit.ticketNumber}</b>
                         <div className="truncate text-[#5E6A63]">
@@ -952,12 +952,12 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                       </div>
                     </div>
                   )}
-                  {caseHitError && !caseHit && <p className="px-4 py-3 text-sm text-[#5E6A63]">{caseHitError}</p>}
+                  {caseHitError && !caseHit && <p className="m-row-in px-4 py-3 text-sm text-[#5E6A63]">{caseHitError}</p>}
                   {lookup?.devices.map((d) => (
                     <button
                       key={d.id}
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
+                      className="m-row-in flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
                       onClick={() => addDevice(fromLookup(d))}
                     >
                       <span>
@@ -972,7 +972,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                     <button
                       key={s.id}
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
+                      className="m-row-in flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
                       onClick={() => addSku({ id: s.id, title: s.title, priceOere: effectiveSkuPrice(s), lagersalg: s.lagersalg === true })}
                     >
                       <span>
@@ -999,7 +999,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                   role="tab"
                   aria-selected={chip === c.id}
                   onClick={() => setChip(c.id)}
-                  className={`h-[38px] rounded-full px-4 text-sm ${
+                  className={`m-press h-[38px] rounded-full px-4 text-sm ${
                     chip === c.id ? "bg-[#1A3D2E] font-semibold text-white" : "border border-[#C9D0C7] bg-white hover:bg-[#FBFCFB]"
                   }`}
                 >
