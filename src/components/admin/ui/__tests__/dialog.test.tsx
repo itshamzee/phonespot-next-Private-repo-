@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { Dialog } from "../dialog";
+import { MOTION_MS } from "../motion";
 
 afterEach(cleanup);
 
@@ -132,6 +133,86 @@ describe("Dialog", () => {
     expect(outer).not.toHaveBeenCalled();
   });
 
+  it("dismissOnBackdrop={false}: baggrunden lukker ikke, Esc og Luk gør stadig", () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog open onClose={onClose} title="Meld klar" dismissOnBackdrop={false}>
+        <input aria-label="Begrundelse" />
+      </Dialog>,
+    );
+    fireEvent.mouseDown(screen.getByRole("dialog"));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Luk" }));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it('initialFocus="container": fokus på selve dialogen, ikke på Luk; autoFocus vinder stadig', () => {
+    function Box({ autoFocusField }: { autoFocusField?: boolean }) {
+      return (
+        <Dialog open onClose={vi.fn()} title="Skift ekspedient" initialFocus="container">
+          <button type="button">Mads</button>
+          {autoFocusField && <input aria-label="Felt" autoFocus />}
+        </Dialog>
+      );
+    }
+    const { unmount } = render(<Box />);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveFocus();
+    expect(dialog).toHaveAttribute("tabindex", "-1");
+    expect(dialog.className).toContain("outline-none");
+    unmount();
+    render(<Box autoFocusField />);
+    expect(screen.getByRole("textbox", { name: "Felt" })).toHaveFocus();
+  });
+
+  it("uden initialFocus er dialogen ikke selv fokuserbar", () => {
+    render(
+      <Dialog open onClose={vi.fn()} title="Rabat">
+        <p>tekst</p>
+      </Dialog>,
+    );
+    expect(screen.getByRole("dialog")).not.toHaveAttribute("tabindex");
+  });
+
+  it("restoreFocus={false}: fokus lægges ikke tilbage på udløseren", () => {
+    function NoRestore() {
+      const [show, setShow] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setShow(true)}>
+            Åbn
+          </button>
+          {show && (
+            <Dialog open onClose={() => setShow(false)} title="Skift" restoreFocus={false}>
+              <button type="button" onClick={() => setShow(false)}>
+                Færdig
+              </button>
+            </Dialog>
+          )}
+        </>
+      );
+    }
+    render(<NoRestore />);
+    const trigger = openIt();
+    fireEvent.click(screen.getByRole("button", { name: "Færdig" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(trigger).not.toHaveFocus();
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("kalderens attributter kommer med, men Dialogs egne vinder", () => {
+    render(
+      <Dialog open onClose={vi.fn()} title="Fotos" data-kasse-dialog="" aria-labelledby="andet" style={{ maxWidth: 768 }}>
+        <p>tekst</p>
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Fotos" });
+    expect(dialog).toHaveAttribute("data-kasse-dialog");
+    expect(dialog.style.maxWidth).toBe("768px");
+  });
+
   it("holder indholdet monteret, mens den toner ud", () => {
     vi.useFakeTimers();
     try {
@@ -141,7 +222,7 @@ describe("Dialog", () => {
       const dialog = document.querySelector("dialog")!;
       expect(dialog).not.toHaveAttribute("open");
       expect(dialog).toHaveTextContent("Første");
-      act(() => vi.advanceTimersByTime(160));
+      act(() => vi.advanceTimersByTime(MOTION_MS.fast));
       expect(dialog).not.toHaveTextContent("Første");
     } finally {
       vi.useRealTimers();

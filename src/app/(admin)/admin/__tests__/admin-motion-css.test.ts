@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { MOTION_MS } from "@/components/admin/ui/motion";
 
 /**
  * Vagt for src/app/admin-motion.css: al bevægelse ligger i blokken
@@ -69,6 +70,12 @@ describe("admin-motion.css", () => {
     }
     for (const cls of [".m-enter", ".m-page", ".m-press", ".m-pop", ".m-backdrop", ".m-toast", ".m-busy", ".m-row-in", ".m-pending-bar", ".m-tap", ".m-skeleton", ".m-dialog"]) {
       expect(css).toContain(cls);
+    }
+  });
+
+  it("varighederne i MOTION_MS er de samme som CSS-tokens", () => {
+    for (const [name, ms] of Object.entries(MOTION_MS)) {
+      expect(css).toMatch(new RegExp(`--dur-${name}:\\s*${ms}ms;`));
     }
   });
 

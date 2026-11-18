@@ -9,13 +9,18 @@ import {
   type DialogHTMLAttributes,
   type ReactNode,
 } from "react";
+import { MOTION_MS } from "./motion";
 
 /**
  * Fælles dialog til admin på det native <dialog> med showModal(): resten af siden er
  * inert (fokusfælde), og dialogen ligger øverst. Fokus går til elementet med autoFocus
  * eller det første fokuserbare, og tilbage til det, der havde fokus før, når den lukker.
+ * initialFocus="container" lægger fokus på selve dialogen i stedet for den første knap
+ * (kassen: en scanners Enter må ikke trykke på noget), og restoreFocus={false} lader
+ * fokus være, når den lukker (kassen lægger det selv i scanfeltet).
  *
- * Esc og klik på baggrunden kalder onClose, medmindre dismissable={false}. Esc fanges
+ * Esc og klik på baggrunden kalder onClose, medmindre dismissable={false};
+ * dismissOnBackdrop={false} slår kun baggrundsklikket fra (fx når der er tastet tekst). Esc fanges
  * på keydown (som kassens gamle Modal), så browserens egen lukning aldrig når at lukke
  * dialogen bag om React; lukker browseren den alligevel, åbnes den igen, hvis den stadig
  * skal være åben. Kun den øverste åbne dialog reagerer på Esc.
@@ -34,8 +39,8 @@ const sizes: Record<Size, string> = {
   lg: "max-w-[576px]",
 };
 
-/** Samme som --dur-fast: tid til at tone ud, før indholdet afmonteres. */
-const EXIT_MS = 160;
+/** --dur-fast: tid til at tone ud, før indholdet afmonteres. */
+const EXIT_MS = MOTION_MS.fast;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -60,12 +65,22 @@ function hide(el: HTMLDialogElement) {
   }
 }
 
-function restoreFocus(previous: HTMLElement | null) {
+function focusBack(previous: HTMLElement | null) {
   if (previous && previous !== document.body && previous.isConnected) previous.focus({ preventScroll: true });
 }
 
+/** Fokus ved åbning: selve dialogen eller dens første fokuserbare element. */
+function focusInitial(el: HTMLDialogElement, initialFocus: "first" | "container") {
+  if (initialFocus === "container") el.focus({ preventScroll: true });
+  else el.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
+}
+
 export interface DialogProps
-  extends Omit<DialogHTMLAttributes<HTMLDialogElement>, "open" | "onClose" | "onCancel" | "title" | "children"> {
+  extends Omit<
+    DialogHTMLAttributes<HTMLDialogElement>,
+    // Lukning, fokus og baggrund styres af Dialog selv og kan ikke overskrives udefra.
+    "open" | "onClose" | "onCancel" | "onMouseDown" | "tabIndex" | "title" | "children"
+  > {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
@@ -75,6 +90,15 @@ export interface DialogProps
   size?: Size;
   /** false: Esc, baggrund og lukkeknap lukker ikke (fx midt i en betaling). */
   dismissable?: boolean;
+  /** false: klik på baggrunden lukker ikke (Esc og lukkeknap gør stadig). Standard true. */
+  dismissOnBackdrop?: boolean;
+  /** false: fokus lægges ikke tilbage, når dialogen lukker. Standard true. */
+  restoreFocus?: boolean;
+  /**
+   * Fokus ved åbning, når intet felt har autoFocus: "first" (standard) = første fokuserbare,
+   * "container" = selve dialogen, så ingen knap har fokus.
+   */
+  initialFocus?: "first" | "container";
 }
 
 export function Dialog({
@@ -86,6 +110,9 @@ export function Dialog({
   footer,
   size = "md",
   dismissable = true,
+  dismissOnBackdrop = true,
+  restoreFocus = true,
+  initialFocus = "first",
   className = "",
   ...rest
 }: DialogProps) {
@@ -97,10 +124,16 @@ export function Dialog({
   // Nyeste værdier til lyttere, der lever længere end én render.
   const onCloseRef = useRef(onClose);
   const dismissableRef = useRef(dismissable);
+  const backdropRef = useRef(dismissOnBackdrop);
+  const restoreRef = useRef(restoreFocus);
+  const initialRef = useRef(initialFocus);
   const openRef = useRef(open);
   useLayoutEffect(() => {
     onCloseRef.current = onClose;
     dismissableRef.current = dismissable;
+    backdropRef.current = dismissOnBackdrop;
+    restoreRef.current = restoreFocus;
+    initialRef.current = initialFocus;
     openRef.current = open;
   });
 
@@ -117,9 +150,7 @@ export function Dialog({
     openStack.push(token);
     show(el);
     // Genåbnet, mens indholdet stadig stod (under udtoningen): fokus ind med det samme.
-    if (el.firstElementChild && !el.contains(document.activeElement)) {
-      el.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
-    }
+    if (el.firstElementChild && !el.contains(document.activeElement)) focusInitial(el, initialRef.current);
     setMounted(true);
 
     function onKey(e: KeyboardEvent) {
@@ -135,7 +166,7 @@ export function Dialog({
       const i = openStack.indexOf(token);
       if (i >= 0) openStack.splice(i, 1);
       hide(el);
-      restoreFocus(previous);
+      if (restoreRef.current) focusBack(previous);
     };
   }, [open]);
 
@@ -143,16 +174,17 @@ export function Dialog({
   // der havde det (fx et felt i dialogen, der toner ud). Derfor også her, efter React.
   useLayoutEffect(() => {
     if (open || !previousRef.current) return;
-    restoreFocus(previousRef.current);
+    if (restoreRef.current) focusBack(previousRef.current);
     previousRef.current = null;
   }, [open]);
 
-  // Indholdet er monteret: har intet taget fokus (autoFocus), får det første fokuserbare det.
+  // Indholdet er monteret: har intet taget fokus (autoFocus), får det første fokuserbare
+  // eller selve dialogen det (initialFocus).
   useLayoutEffect(() => {
     const el = ref.current;
     if (!open || !mounted || !el) return;
     if (el.contains(document.activeElement)) return;
-    el.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
+    focusInitial(el, initialRef.current);
     // Kun ved åbning; senere fokusskift inde i dialogen er brugerens egne.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
@@ -166,9 +198,14 @@ export function Dialog({
 
   return (
     <dialog
+      // Først: Dialogs egne attributter og handlere nedenfor kan ikke overskrives af en kalder.
+      {...rest}
       ref={ref}
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
+      // "container": dialogen selv kan have fokus (ingen ring på selve fladen; knapperne inde i
+      // den har deres egen focus-visible-ring).
+      tabIndex={initialFocus === "container" ? -1 : undefined}
       onCancel={(e) => {
         // Andre lukkeanmodninger end Esc (fx Androids tilbage-knap).
         e.preventDefault();
@@ -185,10 +222,9 @@ export function Dialog({
       }}
       onMouseDown={(e) => {
         // Kun selve baggrunden (indholdet fylder hele <dialog>-elementet).
-        if (e.target === e.currentTarget && dismissableRef.current) onCloseRef.current();
+        if (e.target === e.currentTarget && dismissableRef.current && backdropRef.current) onCloseRef.current();
       }}
-      className={`m-dialog m-auto w-[calc(100vw-32px)] rounded-xl border border-[#E2E5E0] bg-white p-0 text-[#15211B] ${sizes[size]} ${className}`}
-      {...rest}
+      className={`m-dialog m-auto w-[calc(100vw-32px)] rounded-xl border border-[#E2E5E0] bg-white p-0 text-[#15211B] outline-none ${sizes[size]} ${className}`}
     >
       {mounted && (
         <div className="flex max-h-[85dvh] flex-col">
