@@ -2,7 +2,7 @@ import { google } from "googleapis";
 
 /**
  * Webshop-tragten fra GA4 for en vilkårlig periode: besøg (sessions) og lagt i
- * kurv (addToCarts). Samme opsætning som /api/dashboard/ga4: GA4_PROPERTY_ID og
+ * kurv (addToCarts). Samme opsætning som det tidligere GA4-endpoint: GA4_PROPERTY_ID og
  * GOOGLE_SERVICE_ACCOUNT_JSON. Uden opsætning, eller hvis kaldet fejler, null.
  */
 /** Er GA4 sat op? Uden opsætning er en tom tragt forventet, ikke en fejl. */
