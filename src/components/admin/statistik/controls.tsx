@@ -14,15 +14,26 @@ import { ExportMenu } from "./export-menu";
  */
 
 type Patch = Record<string, string | null>;
-type Nav = { pending: boolean; go: (patch: Patch) => void };
+type Nav = {
+  pending: boolean;
+  go: (patch: Patch) => void;
+  /** Om datovælgeren er åben; bladretasterne gør intet imens. Meldes af PeriodSelector. */
+  isDatesOpen: () => boolean;
+  setDatesOpen: (open: boolean) => void;
+};
 
-const NavContext = createContext<Nav>({ pending: false, go: () => {} });
+const NavContext = createContext<Nav>({ pending: false, go: () => {}, isDatesOpen: () => false, setDatesOpen: () => {} });
 
 export function StatNavProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
+  const datesOpen = useRef(false);
+  const isDatesOpen = useCallback(() => datesOpen.current, []);
+  const setDatesOpen = useCallback((open: boolean) => {
+    datesOpen.current = open;
+  }, []);
 
   const go = useCallback(
     (patch: Patch) => {
@@ -37,7 +48,7 @@ export function StatNavProvider({ children }: { children: ReactNode }) {
     [params, pathname, router],
   );
 
-  const value = useMemo(() => ({ pending, go }), [pending, go]);
+  const value = useMemo(() => ({ pending, go, isDatesOpen, setDatesOpen }), [pending, go, isDatesOpen, setDatesOpen]);
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;
 }
 
@@ -129,7 +140,7 @@ export function ExportControl({ viewer, range }: { viewer: StatPayload["viewer"]
 /* ------------------------------------------------------------------ */
 
 export function PeriodSelector({ range, minDate, today }: { range: StatPayload["range"]; minDate: string; today: string }) {
-  const { go } = useContext(NavContext);
+  const { go, setDatesOpen } = useContext(NavContext);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -140,6 +151,12 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
     setOpen(false);
     if (restoreFocus) toggleRef.current?.focus();
   }, []);
+
+  // Bladretasterne (RangeStepper) læser dette og står stille, mens datovælgeren er åben.
+  useEffect(() => {
+    setDatesOpen(open);
+    return () => setDatesOpen(false);
+  }, [open, setDatesOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -238,12 +255,19 @@ function Chevron({ dir }: { dir: -1 | 1 }) {
  * når fokus er på siden selv eller på knapperne her.
  */
 export function RangeStepper({ range, minDate, today }: { range: StatPayload["range"]; minDate: string; today: string }) {
-  const { go } = useContext(NavContext);
+  const { go, pending, isDatesOpen } = useContext(NavContext);
   const ref = useRef<HTMLDivElement>(null);
   const singleDay = range.from === range.to;
   const isToday = singleDay && range.to === today;
-  const prev = shiftRange(range, -1, today, minDate);
-  const next = shiftRange(range, 1, today, minDate);
+  const { preset, from, to } = range;
+  // Memoiseret på de felter, shiftRange bruger, så tastaturlytteren ikke tilmeldes igen ved hver rendering.
+  const prev = useMemo(() => shiftRange({ preset, from, to }, -1, today, minDate), [preset, from, to, today, minDate]);
+  const next = useMemo(() => shiftRange({ preset, from, to }, 1, today, minDate), [preset, from, to, today, minDate]);
+  // Seneste pending i en ref, så lytteren kan læse den uden at blive tilmeldt igen.
+  const pendingRef = useRef(pending);
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
 
   const step = useCallback(
     (target: { fra: string; til: string } | null) => {
@@ -260,6 +284,8 @@ export function RangeStepper({ range, minDate, today }: { range: StatPayload["ra
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      // Holdt nede, datovælgeren åben eller en navigation allerede i gang: gør intet.
+      if (e.repeat || isDatesOpen() || pendingRef.current) return;
       // Kun fra selve siden eller bladreknapperne: aldrig fra felter, datovælgeren eller andre vælgere.
       const t = e.target;
       const onPage = t === document.body || t === document.documentElement;
@@ -269,7 +295,7 @@ export function RangeStepper({ range, minDate, today }: { range: StatPayload["ra
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [step, prev, next]);
+  }, [step, prev, next, isDatesOpen]);
 
   return (
     <div ref={ref} role="group" aria-label="Bladr i perioder" className="stat-noprint flex w-full items-center gap-2 min-[980px]:w-auto">

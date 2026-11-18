@@ -34,6 +34,12 @@ describe("shiftRange", () => {
     expect(shiftRange(aar, -1, today, min)).toBeNull();
     expect(shiftRange(aar, 1, today, min)).toBeNull();
   });
+  it("moves by whole calendar days across the 29 Mar 2026 spring DST change", () => {
+    expect(shiftRange(custom("2026-03-29", "2026-03-29"), -1, today, min)).toEqual({ fra: "2026-03-28", til: "2026-03-28" });
+    expect(shiftRange(custom("2026-03-29", "2026-03-29"), 1, today, min)).toEqual({ fra: "2026-03-30", til: "2026-03-30" });
+    expect(shiftRange(custom("2026-03-26", "2026-04-01"), -1, today, min)).toEqual({ fra: "2026-03-19", til: "2026-03-25" });
+    expect(shiftRange(custom("2026-03-26", "2026-04-01"), 1, today, min)).toEqual({ fra: "2026-04-02", til: "2026-04-08" });
+  });
   it("moves by whole calendar days across the 25 Oct 2026 DST change", () => {
     expect(shiftRange(custom("2026-10-25", "2026-10-25"), -1, today, min)).toEqual({ fra: "2026-10-24", til: "2026-10-24" });
     expect(shiftRange(custom("2026-10-25", "2026-10-25"), 1, today, min)).toEqual({ fra: "2026-10-26", til: "2026-10-26" });

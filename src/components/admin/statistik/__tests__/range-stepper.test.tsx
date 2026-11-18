@@ -8,18 +8,19 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { RangeStepper, StatNavProvider } from "../controls";
+import { PeriodSelector, RangeStepper, StatNavProvider } from "../controls";
 import { statRange, type StatPreset } from "@/lib/admin/statistik/range";
 
 const NOW = new Date("2026-11-18T13:32:00Z");
 const TODAY = "2026-11-18";
 const MIN = "2026-03-10";
 
-function show(input: StatPreset | { from: string; to: string }) {
+function show(input: StatPreset | { from: string; to: string }, { withPeriod = false } = {}) {
   const r = statRange(input, NOW);
   const range = { preset: r.preset, from: r.from, to: r.to, rangeLabel: r.rangeLabel, compareLabel: r.compareLabel, unit: r.unit };
   return render(
     <StatNavProvider>
+      {withPeriod ? <PeriodSelector range={range} minDate={MIN} today={TODAY} /> : null}
       <RangeStepper range={range} minDate={MIN} today={TODAY} />
       <input aria-label="Andet felt" />
     </StatNavProvider>,
@@ -103,6 +104,35 @@ describe("RangeStepper", () => {
     const input = screen.getByRole("textbox", { name: "Andet felt" });
     input.focus();
     fireEvent.keyDown(input, { key: "ArrowLeft" });
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("disables previous when the range starts at minDate and does nothing on click or ArrowLeft", () => {
+    show({ from: MIN, to: MIN });
+    const prev = screen.getByRole("button", { name: "Forrige dag" });
+    expect(prev).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(prev);
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("ignores arrow keys while the date popover is open", () => {
+    show({ from: "2026-11-10", to: "2026-11-10" }, { withPeriod: true });
+    fireEvent.click(screen.getByRole("button", { name: "Vælg datoer" }));
+    expect(screen.getByRole("dialog", { name: "Vælg datoer" })).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    fireEvent.keyDown(document.body, { key: "ArrowRight" });
+    expect(replace).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Vælg datoer" })).toBeNull();
+    fireEvent.keyDown(document.body, { key: "ArrowLeft" });
+    expect(lastQuery().get("fra")).toBe("2026-11-09");
+  });
+
+  it("ignores held-down (repeating) arrow keys", () => {
+    show({ from: "2026-11-10", to: "2026-11-10" });
+    fireEvent.keyDown(document.body, { key: "ArrowLeft", repeat: true });
     expect(replace).not.toHaveBeenCalled();
   });
 
