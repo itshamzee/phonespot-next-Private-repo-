@@ -281,8 +281,9 @@ function AuthedShell({
               <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
               <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-                {/* Nøglen på stien afspiller indgangen ved hver navigation; rammen genmonteres ikke. */}
-                <div key={pathname} className="m-enter">
+                {/* Sidens rod glider ind (.m-page), også når den afløser skelettet; nøglen på stien
+                    genstarter det ved hver navigation uden at genmontere rammen. */}
+                <div key={pathname} className="m-page">
                   {scopeLoading ? <PageSkeleton /> : children}
                 </div>
               </main>

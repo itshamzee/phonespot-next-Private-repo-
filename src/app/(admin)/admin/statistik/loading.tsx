@@ -12,7 +12,7 @@ function Bar({ className }: { className: string }) {
 
 export default function StatistikLoading() {
   return (
-    <div aria-busy="true" aria-label="Indlæser statistik" className="mx-auto flex max-w-[1320px] flex-col gap-5 min-[980px]:gap-7">
+    <div data-skeleton aria-busy="true" aria-label="Indlæser statistik" className="mx-auto flex max-w-[1320px] flex-col gap-5 min-[980px]:gap-7">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="m-0 text-[28px] font-bold tracking-[-0.02em] text-[#15211B] sm:text-[32px]">Statistik</h1>
         <Bar className="h-11 w-64" />

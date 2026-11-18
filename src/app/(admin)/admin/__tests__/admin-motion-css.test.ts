@@ -67,9 +67,15 @@ describe("admin-motion.css", () => {
     for (const token of ["--ease-out", "--ease-sheet", "--dur-press", "--dur-fast", "--dur-base", "--dur-slow"]) {
       expect(css).toContain(`${token}:`);
     }
-    for (const cls of [".m-enter", ".m-press", ".m-pop", ".m-backdrop", ".m-toast", ".m-busy", ".m-row-in", ".m-pending-bar", ".m-tap", ".m-skeleton"]) {
+    for (const cls of [".m-enter", ".m-page", ".m-press", ".m-pop", ".m-backdrop", ".m-toast", ".m-busy", ".m-row-in", ".m-pending-bar", ".m-tap", ".m-skeleton"]) {
       expect(css).toContain(cls);
     }
+  });
+
+  it("indholdsfeltet animerer sine børn, men ikke skeletter", () => {
+    const plain = stripComments(css);
+    const [start, end] = mediaBlocks(plain, /prefers-reduced-motion:\s*no-preference/)[0];
+    expect(plain.slice(start, end)).toMatch(/\.m-page > :not\(\[data-skeleton\]\)\s*\{[^}]*animation:[^;}]*backwards/);
   });
 
   it("vagten fanger regelbrud", () => {

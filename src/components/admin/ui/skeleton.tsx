@@ -16,7 +16,7 @@ const surface = "rounded-xl border border-[#E2E5E0] bg-white p-5";
  */
 export function PageSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Indlæser" className="flex flex-col gap-5">
+    <div data-skeleton aria-busy="true" aria-label="Indlæser" className="flex flex-col gap-5">
       <div className="flex min-h-10 flex-wrap items-center justify-between gap-4">
         <Skeleton className="h-8 w-56 rounded-lg" />
         <Skeleton className="h-10 w-36 rounded-lg" />

@@ -9,6 +9,8 @@ describe("admin loading.tsx", () => {
     render(<AdminLoading />);
     const page = screen.getByLabelText("Indlæser");
     expect(page).toHaveAttribute("aria-busy", "true");
+    // Skelettet står bare der; .m-page lader kun den rigtige side glide ind.
+    expect(page).toHaveAttribute("data-skeleton");
     expect(page.querySelectorAll("[data-skeleton-surface]")).toHaveLength(3);
   });
 });

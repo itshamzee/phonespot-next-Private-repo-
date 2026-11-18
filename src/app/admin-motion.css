@@ -11,6 +11,7 @@
  * - .m-pop / .m-backdrop / .m-toast styres med data-open="true|false" og bliver
  *   i DOM'en, når de er lukket, så de kan tone ud. Komponenten sætter aria-hidden.
  * - .m-busy dæmpes med aria-busy="true".
+ * - .m-page på indholdsfeltet: direkte børn glider ind, undtagen [data-skeleton].
  */
 
 :root {
@@ -129,6 +130,13 @@
   .m-enter {
     animation: m-enter var(--dur-base) var(--ease-out) backwards;
   }
+  /*
+   * Rammens indholdsfelt: hvert direkte barn glider ind, når det monteres — også den
+   * rigtige side, når den afløser skelettet. Skeletter (data-skeleton) står bare der.
+   */
+  .m-page > :not([data-skeleton]) {
+    animation: m-enter var(--dur-base) var(--ease-out) backwards;
+  }
   .m-row-in {
     animation: m-fade-in var(--dur-fast) ease-out backwards;
   }
@@ -199,6 +207,7 @@
 /* Sikkerhedsnet: under reduceret bevægelse bevæger intet sig, uanset rækkefølge. */
 @media (prefers-reduced-motion: reduce) {
   .m-enter,
+  .m-page > *,
   .m-row-in,
   .m-press,
   .m-pop,
