@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { resolveActive, visibleNav, type CountKey, type NavArea } from "./nav";
+import { NavPendingSignal } from "./nav-pending";
 import { useStoreScope } from "./store-scope-context";
 
 export type NavCounts = Record<CountKey, number>;
@@ -29,6 +30,9 @@ function Count({ value, muted = false, suffix }: { value: number; muted?: boolea
     </span>
   );
 }
+
+/** Synlig fokusring på menupunkter (tastatur): 2 px grøn med 2 px afstand. */
+const navFocus = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3D2E]";
 
 function areaCount(area: NavArea, counts: NavCounts): number {
   const own = area.countKey ? counts[area.countKey] : 0;
@@ -66,7 +70,7 @@ export function Sidebar({
           href={area.href}
           onClick={onNavigate}
           aria-current={isActive && !active.child ? "page" : undefined}
-          className={`flex h-[42px] items-center gap-3 rounded-lg px-3 transition-colors ${
+          className={`m-press m-tap flex h-[42px] items-center gap-3 rounded-lg px-3 transition-colors ${navFocus} ${
             quiet ? "text-[14px]" : "text-[15px]"
           } ${
             isActive
@@ -79,6 +83,7 @@ export function Sidebar({
           <Icon paths={area.icon} />
           {area.label}
           {!expanded && <Count value={areaCount(area, counts)} suffix={area.countSuffix} />}
+          <NavPendingSignal />
         </Link>
         {expanded && (
           <ul className="mb-1 mt-0.5 flex flex-col">
@@ -90,12 +95,13 @@ export function Sidebar({
                     href={child.href}
                     onClick={onNavigate}
                     aria-current={current ? "page" : undefined}
-                    className={`flex h-8 items-center rounded-lg pl-[42px] pr-3 text-[13px] transition-colors ${
+                    className={`m-press m-tap flex h-8 items-center rounded-lg pl-[42px] pr-3 text-[13px] transition-colors ${navFocus} ${
                       current ? "font-semibold text-[#1A3D2E]" : "text-[#5E6A63] hover:text-[#15211B]"
                     }`}
                   >
                     {child.label}
                     <Count value={child.countKey ? counts[child.countKey] : child.href === area.href && area.countKey ? counts[area.countKey] : 0} muted />
+                    <NavPendingSignal />
                   </Link>
                 </li>
               );
