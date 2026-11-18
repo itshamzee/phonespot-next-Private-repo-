@@ -108,13 +108,15 @@ function TerminalPending({ amountOere, cancelling, onCancel }: { amountOere: num
   const seconds = useElapsedSeconds();
   const rootRef = useRef<HTMLDivElement>(null);
   // Mens kunden betaler, må en scanners Enter ikke ramme en knap (Luk, Annuller betaling):
-  // står fokus på en knap eller ingen steder, flyttes det til selve dialogen. Et tekstfelt
-  // med fokus (depositumsbeløbet) får lov at beholde det, som før.
+  // står fokus på en knap, et slået-fra felt (depositumsbeløbet) eller ingen steder,
+  // flyttes det til selve dialogen.
   useLayoutEffect(() => {
     const dlg = rootRef.current?.closest("dialog");
     if (!dlg || !dlg.hasAttribute("tabindex")) return;
     const active = document.activeElement;
-    if (!active || active === document.body || active instanceof HTMLButtonElement) dlg.focus({ preventScroll: true });
+    if (!active || active === document.body || active instanceof HTMLButtonElement || active.matches(":disabled")) {
+      dlg.focus({ preventScroll: true });
+    }
   }, []);
   return (
     <div ref={rootRef} role="status" aria-live="polite" className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
@@ -281,6 +283,9 @@ export function DepositDialog({
         id="kasse-deposit-amount"
         autoFocus
         inputMode="decimal"
+        // Beløb og betalingsform ligger fast, mens anmodningen kører (ellers kunne "Kontant"
+        // midt i en terminalbetaling fjerne låsen og skjule "Annuller betaling").
+        disabled={busy}
         value={amountKr}
         onChange={(e) => {
           setAmountKr(e.target.value);
@@ -293,7 +298,7 @@ export function DepositDialog({
             else onSubmit(amount!, method);
           }
         }}
-        className={`${fieldClass} text-right text-lg font-semibold tabular-nums`}
+        className={`${fieldClass} text-right text-lg font-semibold tabular-nums disabled:cursor-not-allowed disabled:opacity-40`}
       />
       {check.warning && <p className="mt-1.5 text-sm text-amber-800">{check.warning}</p>}
       {amount != null && !check.ok && check.message && <p className="mt-1.5 text-sm text-red-700">{check.message}</p>}
@@ -304,12 +309,13 @@ export function DepositDialog({
           <button
             key={t}
             type="button"
+            disabled={busy}
             onClick={() => {
               setMethod(t);
               setCardStep(false);
             }}
             aria-pressed={method === t}
-            className={`h-11 rounded-[10px] text-sm font-semibold ${
+            className={`h-11 rounded-[10px] text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${
               method === t
                 ? "border-2 border-[#1A3D2E] bg-[#E7EFE9] text-[#1A3D2E]"
                 : "border border-[#C9D0C7] bg-white text-[#15211B]"

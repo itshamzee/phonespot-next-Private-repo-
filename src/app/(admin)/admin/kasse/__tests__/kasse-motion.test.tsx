@@ -250,4 +250,26 @@ describe("Kasse: scanneren rammer ingen knap", () => {
     fireEvent.keyDown(document.body, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("DepositDialog under anmodningen: beløb og betalingsform er slået fra, Kontant fjerner ikke låsen", () => {
+    const onClose = vi.fn();
+    const props = { c: caseCtx, error: "", terminalKind: "worldline" as const, onSubmit: vi.fn(), onClose, onCancelTerminal: vi.fn() };
+    const { rerender } = render(<DepositDialog {...props} busy={false} />);
+    const amount = screen.getByLabelText("Depositum (kr.)");
+    expect(amount).toHaveFocus();
+    rerender(<DepositDialog {...props} busy />);
+    const methods = ["Kontant", "Kort", "MobilePay"].map((n) => screen.getByRole("button", { name: n }));
+    for (const b of [amount, ...methods]) expect(b).toBeDisabled();
+    // Fokus forlader det slåede-fra felt og står på dialogen.
+    expect(document.activeElement).toBe(screen.getByRole("dialog"));
+    fireEvent.click(screen.getByRole("button", { name: "Kontant" }));
+    expect(screen.getByRole("button", { name: "Kort" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Annuller betaling" })).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    fireEvent.mouseDown(screen.getByRole("dialog"));
+    expect(onClose).not.toHaveBeenCalled();
+
+    rerender(<DepositDialog {...props} busy={false} />);
+    for (const b of [amount, ...methods]) expect(b).toBeEnabled();
+  });
 });
