@@ -236,6 +236,24 @@
     }
   }
 
+  /*
+   * Sidepanel (Sagsstyring): på mobil glider det ind fra højre som en skuffe
+   * (--ease-sheet, --dur-slow); i desktopkolonnen toner det blot ind.
+   */
+  @keyframes m-sheet-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  .m-sheet {
+    animation: m-fade-in var(--dur-fast) ease-out backwards;
+  }
+  @media (max-width: 1023.98px) {
+    .m-sheet {
+      animation: m-sheet-in var(--dur-slow) var(--ease-sheet) backwards;
+    }
+  }
+
   /* Den ene undtagelse fra "ingen uendelige animationer": rolig puls på 1,4 s. */
   .m-skeleton {
     animation: m-skeleton-pulse 1.4s ease-in-out infinite;
@@ -255,7 +273,8 @@
   .m-pending-bar::before,
   .m-skeleton,
   .m-dialog,
-  .m-dialog::backdrop {
+  .m-dialog::backdrop,
+  .m-sheet {
     transition: none !important;
     animation: none !important;
   }
