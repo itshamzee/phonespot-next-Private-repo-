@@ -8,17 +8,19 @@ function reducedMotion(): boolean {
 }
 
 /**
- * Tæller op fra det viste tal til `value` på `duration` ms (ease-out); første
- * gang fra 0. Serveren og første render viser den rigtige værdi, så tallet
- * findes uden JavaScript. Under prefers-reduced-motion springer tallet direkte.
+ * Tæller fra det viste tal til `value` på `duration` ms (ease-out), når værdien
+ * skifter efter første visning. Første visning (også serverens HTML) står med
+ * den rigtige værdi uden animation. Under prefers-reduced-motion springer tallet.
  */
 export function useCountUp(value: number, duration = 450): number {
   const [shown, setShown] = useState(value);
-  const current = useRef(0);
+  // Det tal, der står på skærmen lige nu; startpunkt for næste animation.
+  const current = useRef(value);
 
   useEffect(() => {
     const start = current.current;
-    const animate = start !== value && !reducedMotion();
+    if (start === value) return;
+    const animate = !reducedMotion();
     const t0 = performance.now();
     let frame = 0;
     const tick = (t: number) => {

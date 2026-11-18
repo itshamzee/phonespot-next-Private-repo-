@@ -1,3 +1,5 @@
+import { surfaceClass as card } from "@/components/admin/statistik/styles";
+
 /**
  * Første indlæsning af Statistik: sidens ramme med tomme flader. Ved skift af
  * periode eller butik vises den ikke; dér bliver det gamle indhold stående dæmpet.
@@ -7,7 +9,6 @@ function Bar({ className }: { className: string }) {
   return <div className={`rounded-md bg-[#EEF0EC] ${className}`} />;
 }
 
-const card = "min-w-0 rounded-xl border border-[#E2E5E0] bg-white px-5 py-[22px] min-[980px]:px-[30px] min-[980px]:py-7";
 
 export default function StatistikLoading() {
   return (

@@ -2,20 +2,13 @@ import type { Money, StatPayload } from "@/lib/admin/statistik/payload";
 import { CountUp } from "./count-up";
 import { Delta } from "./delta";
 import { kr } from "./format";
+import { STREAMS, type Metric } from "./shared";
 import { cardClass, h2Class } from "./styles";
 
 /**
  * Midlertidig graf: periodens total og en enkel tabel over intervallerne.
  * Task 7 erstatter indholdet med den interaktive graf (samme props).
  */
-
-type Metric = "omsaetning" | "fortjeneste";
-
-const STREAMS = [
-  { key: "webshop", label: "Webshop" },
-  { key: "kasse", label: "Kassesalg" },
-  { key: "reparation", label: "Reparation" },
-] as const;
 
 const value = (m: Money, metric: Metric) => (metric === "fortjeneste" ? (m.profit ?? 0) : m.revenue);
 

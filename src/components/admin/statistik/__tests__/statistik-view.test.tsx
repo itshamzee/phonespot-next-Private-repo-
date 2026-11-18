@@ -6,9 +6,9 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { StatistikView } from "../statistik-view";
-import type { Money, StatPayload } from "@/lib/admin/statistik/payload";
+import { stripForViewer, type Money, type StatPayload } from "@/lib/admin/statistik/payload";
 
 afterEach(cleanup);
 
@@ -75,32 +75,9 @@ function ownerPayload(): StatPayload {
   };
 }
 
-/** Samme form som stripForViewer giver en medarbejder. */
+/** Medarbejderens payload: den rigtige stripForViewer på ejerens. */
 function staffPayload(): StatPayload {
-  const p = ownerPayload();
-  const pub = (x: Money): Money => ({ revenue: x.revenue, revenueInclVat: x.revenueInclVat });
-  return {
-    viewer: { isOwner: false, canExport: false, scope: "vejle" },
-    range: p.range,
-    minDate: p.minDate,
-    stores: [{ slug: "vejle", label: "Vejle" }],
-    now: {
-      updatedAt: p.now.updatedAt,
-      today: { ...pub(p.now.today), count: p.now.today.count, deltaPct: p.now.today.deltaPct, hours: p.now.today.hours, streams: p.now.today.streams },
-      rows: p.now.rows.map((r) => ({ ...r, money: pub(r.money) })),
-    },
-    total: { ...pub(p.total), deltaPct: p.total.deltaPct },
-    series: p.series.map((s) => ({ key: s.key, label: s.label, webshop: pub(s.webshop), kasse: pub(s.kasse), reparation: pub(s.reparation), prevRevenue: s.prevRevenue })),
-    byStore: p.byStore.map((s) => ({ ...s, money: pub(s.money) })),
-    payments: p.payments,
-    top: p.top.map((t) => ({ ...t, money: pub(t.money) })),
-    repairs: { ...p.repairs, money: pub(p.repairs.money) },
-    buyback: p.buyback,
-    webshop: p.webshop,
-    stock: { units: 214, avgDays: 31, over60: 19, soldOutModels: 7, oneLeftModels: 12 },
-    notes: p.notes,
-    unavailable: p.unavailable,
-  };
+  return stripForViewer(ownerPayload(), { isOwner: false, scope: "vejle", canExport: false });
 }
 
 function emptyPayload(): StatPayload {
@@ -204,5 +181,25 @@ describe("StatistikView", () => {
     const repairs = screen.getByRole("region", { name: "Reparationer" });
     expect(within(repairs).queryByText("Kunne ikke hentes lige nu")).toBeNull();
     expect(within(repairs).getByText("Åbne sager nu")).toBeInTheDocument();
+  });
+
+  it("datovælgeren flytter fokus ind og tilbage og begrænser til-datoen", () => {
+    render(<StatistikView payload={ownerPayload()} metric="omsaetning" today={TODAY} />);
+    const toggle = screen.getByRole("button", { name: "Vælg datoer" });
+    fireEvent.click(toggle);
+    const fra = screen.getByLabelText("Fra");
+    expect(fra).toHaveFocus();
+    expect(screen.getByLabelText("Til")).toHaveAttribute("min", "2026-10-20");
+    fireEvent.change(fra, { target: { value: "2026-11-01" } });
+    expect(screen.getByLabelText("Til")).toHaveAttribute("min", "2026-11-01");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Vælg datoer" })).toBeNull();
+    expect(toggle).toHaveFocus();
+
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole("button", { name: "Anvend" }));
+    expect(screen.queryByRole("dialog", { name: "Vælg datoer" })).toBeNull();
+    expect(toggle).toHaveFocus();
   });
 });

@@ -103,12 +103,19 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
   const { go } = useContext(NavContext);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const isCustom = range.preset === "valg";
+
+  /** Lukker datovælgeren; ved Escape og Anvend får knappen fokus igen. */
+  const close = useCallback((restoreFocus: boolean) => {
+    setOpen(false);
+    if (restoreFocus) toggleRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close(true);
     };
     const onDown = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
@@ -119,7 +126,7 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onDown);
     };
-  }, [open]);
+  }, [open, close]);
 
   return (
     <div ref={wrapRef} className="relative max-w-full self-start">
@@ -139,6 +146,7 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
           </button>
         ))}
         <button
+          ref={toggleRef}
           type="button"
           aria-pressed={isCustom}
           aria-expanded={open}
@@ -156,7 +164,7 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
           minDate={minDate}
           today={today}
           onApply={(fra, til) => {
-            setOpen(false);
+            close(true);
             go({ periode: null, fra, til });
           }}
         />
@@ -179,8 +187,13 @@ function DatePopover({
   onApply: (fra: string, til: string) => void;
 }) {
   const id = useId();
+  const fraRef = useRef<HTMLInputElement>(null);
   const [fra, setFra] = useState(from);
   const [til, setTil] = useState(to);
+
+  useEffect(() => {
+    fraRef.current?.focus();
+  }, []);
 
   const valid = Boolean(fra && til);
   const inputClass =
@@ -198,11 +211,11 @@ function DatePopover({
     >
       <label htmlFor={`${id}-fra`} className="flex flex-col gap-1 text-[13px] text-[#5E6A63]">
         Fra
-        <input id={`${id}-fra`} type="date" value={fra} min={minDate} max={today} onChange={(e) => setFra(e.target.value)} className={inputClass} />
+        <input ref={fraRef} id={`${id}-fra`} type="date" value={fra} min={minDate} max={today} onChange={(e) => setFra(e.target.value)} className={inputClass} />
       </label>
       <label htmlFor={`${id}-til`} className="flex flex-col gap-1 text-[13px] text-[#5E6A63]">
         Til
-        <input id={`${id}-til`} type="date" value={til} min={minDate} max={today} onChange={(e) => setTil(e.target.value)} className={inputClass} />
+        <input id={`${id}-til`} type="date" value={til} min={fra || minDate} max={today} onChange={(e) => setTil(e.target.value)} className={inputClass} />
       </label>
       <button
         type="submit"

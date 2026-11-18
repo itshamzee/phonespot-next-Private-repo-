@@ -13,6 +13,7 @@ import {
   TopPanel,
   WebshopPanel,
 } from "./panels";
+import type { Metric } from "./shared";
 import "./statistik.css";
 
 /**
@@ -26,7 +27,7 @@ export function StatistikView({
   today,
 }: {
   payload: StatPayload;
-  metric: "omsaetning" | "fortjeneste";
+  metric: Metric;
   /** Dansk dato i dag (YYYY-MM-DD), øverste grænse i datovælgeren. */
   today: string;
 }) {

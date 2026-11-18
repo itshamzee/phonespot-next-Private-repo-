@@ -5,21 +5,18 @@ import type { NowBlock as NowData } from "@/lib/admin/statistik/payload";
 import { CountUp } from "./count-up";
 import { Delta } from "./delta";
 import { clock, kr, pct } from "./format";
+import { STREAMS } from "./shared";
 import { cardClass } from "./styles";
 
 /**
  * "Lige nu": dagens omsætning med timesøjler og fordeling, og i går, ugen og
- * måneden. Henter sig selv igen hvert minut (ikke mens fanen er skjult); ved fejl
+ * måneden. Henter sig selv igen hvert minut (ikke mens fanen er skjult) og straks,
+ * når fanen bliver synlig igen; højst én forespørgsel ad gangen. Ved fejl
  * bliver de sidste tal stående med "Kunne ikke opdatere".
  */
 
 const POLL_MS = 60_000;
 const HOUR_LABELS = ["9", "11", "13", "15", "17", "19"];
-const STREAMS = [
-  { key: "webshop", label: "Webshop" },
-  { key: "kasse", label: "Kassesalg" },
-  { key: "reparation", label: "Reparation" },
-] as const;
 
 export function NowBlock({ initial, isOwner, butik }: { initial: NowData; isOwner: boolean; butik: string }) {
   const [data, setData] = useState(initial);
@@ -35,8 +32,10 @@ export function NowBlock({ initial, isOwner, butik }: { initial: NowData; isOwne
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
     const refresh = async () => {
-      if (document.hidden) return;
+      if (document.hidden || inFlight) return;
+      inFlight = true;
       try {
         const res = await fetch(`/api/admin/statistik/now?butik=${encodeURIComponent(butik)}`, { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
@@ -47,12 +46,20 @@ export function NowBlock({ initial, isOwner, butik }: { initial: NowData; isOwne
         }
       } catch {
         if (!cancelled) setFailed(true);
+      } finally {
+        inFlight = false;
       }
     };
+    // Tilbage til fanen: hent med det samme i stedet for at vente på næste minut.
+    const onVisible = () => {
+      if (!document.hidden) void refresh();
+    };
     const timer = setInterval(refresh, POLL_MS);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [butik]);
 

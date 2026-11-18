@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Money, StatPayload, StatSection } from "@/lib/admin/statistik/payload";
 import { CountUp } from "./count-up";
 import { int, kr, longDate, pct } from "./format";
+import type { Metric } from "./shared";
 import { cardClass, h2Class } from "./styles";
 import { TopList } from "./top-list";
 
@@ -10,8 +11,6 @@ import { TopList } from "./top-list";
  * margin, Medarbejdere, lagerværdi) findes kun, når payloaden har felterne;
  * for andre end ejeren er de skåret fra på serveren og vises slet ikke.
  */
-
-type Metric = "omsaetning" | "fortjeneste";
 
 const delay = (ms: number) => ({ animationDelay: `${ms}ms` });
 
