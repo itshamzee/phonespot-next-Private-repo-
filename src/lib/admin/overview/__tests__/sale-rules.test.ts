@@ -58,4 +58,41 @@ describe("applyRepairCosts", () => {
     const [o] = applyRepairCosts([order(1, 100000)], new Map());
     expect(o.order_items![0].purchase_price).toBeNull();
   });
+  it("puts the cost on the repair line when a deposit line with the ticket id comes first", () => {
+    const o = { ...order(1, 100000), order_items: [
+      { item_type: "deposit", quantity: 1, total_price: 20000, purchase_price: null, repair_ticket_id: "t1" },
+      { item_type: "repair_service", quantity: 1, total_price: 100000, purchase_price: null, repair_ticket_id: "t1" },
+    ] };
+    const [out] = applyRepairCosts([o], new Map([["t1", 30000]]));
+    expect(out.order_items![0].purchase_price).toBeNull();
+    expect(out.order_items![1].purchase_price).toBe(30000);
+    expect(computeKpis([out]).cost).toBe(30000);
+  });
+  it("prefers the repair line over an earlier free-text line of the same ticket", () => {
+    const o = { ...order(1, 100000), order_items: [
+      { item_type: "free_text", quantity: 1, total_price: 5000, purchase_price: null, repair_ticket_id: "t1" },
+      { item_type: "repair_service", quantity: 1, total_price: 95000, purchase_price: null, repair_ticket_id: "t1" },
+    ] };
+    const [out] = applyRepairCosts([o], new Map([["t1", 30000]]));
+    expect(out.order_items![0].purchase_price).toBe(0);
+    expect(out.order_items![1].purchase_price).toBe(30000);
+  });
+  it("falls back to the first null-cost line when the ticket has no repair line", () => {
+    const o = { ...order(1, 100000), order_items: [
+      { item_type: "free_text", quantity: 1, total_price: 60000, purchase_price: null, repair_ticket_id: "t1" },
+      { item_type: "free_text", quantity: 1, total_price: 40000, purchase_price: null, repair_ticket_id: "t1" },
+    ] };
+    const [out] = applyRepairCosts([o], new Map([["t1", 30000]]));
+    expect(out.order_items!.map((i) => i.purchase_price)).toEqual([30000, 0]);
+  });
+  it("keeps purchase_price a whole øre amount on odd quantities", () => {
+    const [out] = applyRepairCosts([order(3, 100000)], new Map([["t1", 10000]]));
+    expect(out.order_items![0].purchase_price).toBe(3333);
+    expect(Number.isInteger(out.order_items![0].purchase_price)).toBe(true);
+  });
+  it("leaves a quantity-0 line untouched", () => {
+    const [out] = applyRepairCosts([order(0, 0)], new Map([["t1", 30000]]));
+    expect(out.order_items![0].purchase_price).toBeNull();
+    expect(computeKpis([out]).cost).toBe(0);
+  });
 });

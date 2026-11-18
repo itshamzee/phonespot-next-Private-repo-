@@ -75,26 +75,44 @@ export function prepaidRepairOrders(tickets: PrepaidTicket[]): { orders: Overvie
 }
 
 const isDepositLine = (it: OverviewItem) => it.item_type === "deposit" || it.item_type === "deposit_applied";
+/** Reparationslinjer: "repair_service" fra kassen (pos_create_sale), "repair" fra prepaidRepairOrders. */
+const REPAIR_ITEM_TYPES = new Set(["repair_service", "repair"]);
 
 /**
- * Lægger sagens reservedelskost på dens første linje uden kostpris. Kostprisen
- * deles med |mængde|, så kostpris * mængde får kreditnotaens fortegn. Øvrige
- * linjer for samme sag får 0, så kosten kun tælles én gang. Depositumlinjer
- * springes over (de er uden for profit), og linjer med kostpris røres ikke.
+ * Lægger sagens reservedelskost på én linje pr. sag og ordre: blandt sagens
+ * linjer uden kostpris (depositumlinjer undtaget, de er uden for profit) vælges
+ * reparationslinjen, ellers den første. Kostprisen deles med |mængde| og
+ * afrundes til hele øre, så kostpris * mængde får kreditnotaens fortegn. Øvrige
+ * kandidatlinjer for sagen får 0, så kosten kun tælles én gang. Har den valgte
+ * linje mængde 0, lægges kosten ikke på. Linjer med kostpris røres ikke.
  * Returnerer kopier.
  */
 export function applyRepairCosts(orders: OverviewOrder[], costByTicket: Map<string, number>): OverviewOrder[] {
   return orders.map((o) => {
     if (!o.order_items?.length) return o;
-    const done = new Set<string>();
-    const order_items = o.order_items.map((it) => {
-      const ticket = it.repair_ticket_id;
-      if (!ticket || it.purchase_price != null || isDepositLine(it)) return it;
-      const cost = costByTicket.get(ticket);
-      if (cost == null) return it;
-      if (done.has(ticket)) return { ...it, purchase_price: 0 };
-      done.add(ticket);
-      return { ...it, purchase_price: cost / (Math.abs(it.quantity ?? 0) || 1) };
+    const isCandidate = (it: OverviewItem) =>
+      Boolean(it.repair_ticket_id) && it.purchase_price == null && !isDepositLine(it) && costByTicket.has(it.repair_ticket_id!);
+
+    // Vælg én linje pr. sag: reparationslinjen foretrækkes, ellers den første kandidat.
+    const chosen = new Map<string, number>();
+    o.order_items.forEach((it, i) => {
+      if (!isCandidate(it)) return;
+      const ticket = it.repair_ticket_id!;
+      const current = chosen.get(ticket);
+      if (current === undefined) chosen.set(ticket, i);
+      else if (!REPAIR_ITEM_TYPES.has(o.order_items![current].item_type ?? "") && REPAIR_ITEM_TYPES.has(it.item_type ?? "")) {
+        chosen.set(ticket, i);
+      }
+    });
+    if (chosen.size === 0) return o;
+
+    const order_items = o.order_items.map((it, i) => {
+      if (!isCandidate(it)) return it;
+      const ticket = it.repair_ticket_id!;
+      if (chosen.get(ticket) !== i) return { ...it, purchase_price: 0 };
+      const qty = Math.abs(it.quantity ?? 0);
+      if (qty === 0) return it;
+      return { ...it, purchase_price: Math.round(costByTicket.get(ticket)! / qty) };
     });
     return { ...o, order_items };
   });
