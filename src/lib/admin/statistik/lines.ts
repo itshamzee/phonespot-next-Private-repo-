@@ -28,6 +28,8 @@ export type StatLine = {
   revenueInclVat: number;
   cost: number;
   missingCost: boolean;
+  /** Linjen hører til en kreditnota. */
+  isCredit: boolean;
 };
 export type StaffLookup = { id: string; name: string; active: boolean }[];
 export type LineCtx = {
@@ -35,7 +37,7 @@ export type LineCtx = {
   /** repair_tickets.assigned_to (fritekst) pr. sag. */
   technicianByTicket: Map<string, string | null>;
   staff: StaffLookup;
-  /** Den oprindelige ordres type, slået op på kreditnotaens original_order_id. */
+  /** Type pr. oprindelig ordre-id; kreditnotaer slås op på deres original_order_id. */
   originalStreamByOrderId?: Map<string, Stream>;
 };
 
@@ -64,8 +66,7 @@ export function matchStaffByName(name: string | null | undefined, staff: StaffLo
 function orderStream(o: OverviewOrder, ctx: LineCtx): Stream {
   if (o.type === "online") return "webshop";
   if (o.type === "credit_note") {
-    const map = ctx.originalStreamByOrderId;
-    return (o.original_order_id && map?.get(o.original_order_id)) || (o.id && map?.get(o.id)) || "kasse";
+    return (o.original_order_id && ctx.originalStreamByOrderId?.get(o.original_order_id)) || "kasse";
   }
   return "kasse";
 }
@@ -84,9 +85,32 @@ function productKeyOf(it: OverviewItem): string {
   return `${it.item_type ?? "item"}:${it.name ?? ""}`;
 }
 
-function lineVat(it: OverviewItem, o: OverviewOrder): number {
+/**
+ * Brugtmoms for linjer uden vat_amount: ordrens brugtmoms_total (minus brugtmoms
+ * der allerede står på linjerne) fordelt efter linjebeløb. Den sidste linje får
+ * afrundingsresten, så fordelingen summer præcis.
+ */
+function allocateBrugtmoms(o: OverviewOrder, items: OverviewItem[]): Map<OverviewItem, number> {
+  const out = new Map<OverviewItem, number>();
+  const brugt = items.filter((it) => it.vat_scheme === "brugtmoms");
+  const open = brugt.filter((it) => it.vat_amount == null);
+  if (!open.length) return out;
+  const known = brugt.reduce((s, it) => s + (it.vat_amount ?? 0), 0);
+  const toSplit = (o.brugtmoms_total ?? 0) - known;
+  const base = open.reduce((s, it) => s + lineAmount(it), 0);
+  let given = 0;
+  open.forEach((it, i) => {
+    const share = i === open.length - 1 ? toSplit - given : base === 0 ? 0 : Math.round((toSplit * lineAmount(it)) / base);
+    given += share;
+    out.set(it, share);
+  });
+  return out;
+}
+
+function lineVat(it: OverviewItem, o: OverviewOrder, brugtmoms: Map<OverviewItem, number>): number {
   if (it.vat_amount != null) return it.vat_amount;
-  if (o.type === "online" && it.vat_scheme !== "brugtmoms") return Math.round(lineAmount(it) / 5);
+  if (it.vat_scheme === "brugtmoms") return brugtmoms.get(it) ?? 0;
+  if (o.type === "online") return Math.round(lineAmount(it) / 5);
   return 0;
 }
 
@@ -97,14 +121,17 @@ export function toStatLines(orders: OverviewOrder[], ctx: LineCtx): StatLine[] {
     const stream = orderStream(o, ctx);
     const store = storeSlugForOrder(o, ctx.slugOf);
     const orderStaff = stream === "webshop" ? null : o.staff_id ?? null;
-    const base = { orderId: o.id ?? "", at: o.confirmed_at ?? "", store };
+    const isCredit = o.type === "credit_note";
+    // Uden confirmed_at falder linjen uden for alle intervaller; loaderen sender kun ordrer med confirmed_at i perioden.
+    const base = { orderId: o.id ?? "", at: o.confirmed_at ?? "", store, isCredit };
+    const items = (o.order_items ?? []).filter((it) => !isDepositLine(it));
+    const brugtmoms = allocateBrugtmoms(o, items);
     let sumExVat = 0;
     let sumInclVat = 0;
 
-    for (const it of o.order_items ?? []) {
-      if (isDepositLine(it)) continue;
+    for (const it of items) {
       const amount = lineAmount(it);
-      const revenue = amount - lineVat(it, o);
+      const revenue = amount - lineVat(it, o, brugtmoms);
       const category = categoryOf(it);
       const ticket = it.repair_ticket_id;
       const quantity = it.quantity ?? 0;

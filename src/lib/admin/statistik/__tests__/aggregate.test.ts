@@ -18,6 +18,7 @@ function line(over: Partial<StatLine>): StatLine {
     revenueInclVat: 0,
     cost: 0,
     missingCost: false,
+    isCredit: false,
     ...over,
   };
 }
@@ -122,6 +123,23 @@ describe("staffTable", () => {
     const inStores = sumLines(lines.filter((l) => l.stream !== "webshop"));
     expect(rows.reduce((s, r) => s + r.totals.revenue, 0)).toBe(inStores.revenue);
     expect(rows.reduce((s, r) => s + r.totals.cost, 0)).toBe(inStores.cost);
+  });
+
+  it("does not count credit notes or remainder-only orders as sales", () => {
+    const rows = staffTable(
+      [
+        line({ orderId: "o1", staffId: "a", revenue: 10000 }),
+        line({ orderId: "c1", staffId: "a", revenue: -10000, quantity: -1, isCredit: true }),
+        line({ orderId: "o2", staffId: "a", revenue: 500, category: "oevrigt", productKey: "oevrigt", name: "Fragt og rabatter" }),
+        line({ orderId: "o3", staffId: "a", stream: "reparation", category: "reparation", productKey: "ticket:t1", revenue: 4000 }),
+        line({ orderId: "o3", staffId: "a", revenue: 300, category: "oevrigt", productKey: "oevrigt" }),
+      ],
+      staff,
+      storeOfStaff,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ staffId: "a", sales: 1, repairs: 1 });
+    expect(rows[0].totals.revenue).toBe(4800);
   });
 
   it("leaves out Ikke fordelt when nothing is unassigned", () => {

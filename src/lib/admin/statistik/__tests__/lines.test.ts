@@ -204,7 +204,53 @@ describe("toStatLines", () => {
     expect(mapped[0]).toMatchObject({ stream: "webshop", revenue: -280000, cost: -200000, quantity: -1, staffId: null });
 
     const fallback = toStatLines([credit], ctx());
-    expect(fallback[0]).toMatchObject({ stream: "kasse", staffId: "kasse-1", category: "enheder", store: "vejle" });
+    expect(fallback[0]).toMatchObject({ stream: "kasse", staffId: "kasse-1", category: "enheder", store: "vejle", isCredit: true });
+
+    // Kun den oprindelige ordres id er nøgle, ikke kreditnotaens eget.
+    const ownId = toStatLines([credit], ctx({ originalStreamByOrderId: new Map([["o3", "webshop"]]) }));
+    expect(ownId[0].stream).toBe("kasse");
+    expect(toStatLines([pos], ctx()).every((l) => !l.isCredit)).toBe(true);
+  });
+
+  it("allocates brugtmoms_total to brugtmoms lines without vat_amount", () => {
+    const order: OverviewOrder = {
+      id: "o5",
+      type: "pos",
+      total: 400000,
+      vat_total: 0,
+      brugtmoms_total: 40000,
+      location_id: "loc-v",
+      staff_id: "kasse-1",
+      confirmed_at: "2026-11-18T10:00:00Z",
+      order_items: [
+        { id: "i7", device_id: "d7", item_type: "device", quantity: 1, total_price: 400000, purchase_price: 300000, vat_amount: null, vat_scheme: "brugtmoms" },
+      ],
+    };
+    const lines = toStatLines([order], ctx());
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({ productKey: "device:d7", revenue: 360000, revenueInclVat: 400000 });
+    expect(lines.some((l) => l.category === "oevrigt")).toBe(false);
+    expect(sumLines(lines).revenue).toBe(computeKpis([order]).revenueExVat);
+  });
+
+  it("splits brugtmoms by line amount and gives the rounding remainder to the last line", () => {
+    const order: OverviewOrder = {
+      id: "o6",
+      type: "pos",
+      total: 300000,
+      vat_total: 0,
+      brugtmoms_total: 10001,
+      location_id: "loc-v",
+      confirmed_at: "2026-11-18T10:00:00Z",
+      order_items: [
+        { id: "a", device_id: "da", item_type: "device", quantity: 1, total_price: 100000, purchase_price: 1, vat_scheme: "brugtmoms" },
+        { id: "b", device_id: "db", item_type: "device", quantity: 1, total_price: 200000, purchase_price: 1, vat_scheme: "brugtmoms" },
+      ],
+    };
+    const lines = toStatLines([order], ctx());
+    expect(lines.map((l) => l.revenue)).toEqual([100000 - 3334, 200000 - 6667]);
+    expect(lines).toHaveLength(2);
+    expect(sumLines(lines).revenue).toBe(computeKpis([order]).revenueExVat);
   });
 
   it("technician match", () => {

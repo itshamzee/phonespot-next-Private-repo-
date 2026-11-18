@@ -102,7 +102,8 @@ export function topProducts(
 
 /**
  * Medarbejdertabel over kassesalg og reparationer (webshop har ingen medarbejder).
- * Salg = forskellige kasseordrer, reparationer = forskellige sager. Linjer uden
+ * Salg = forskellige kasseordrer med mindst én vare (ikke kreditnota, ikke kun
+ * "Fragt og rabatter"), reparationer = forskellige sager. Linjer uden
  * medarbejder samles i "Ikke fordelt", som kun vises når den ikke er 0.
  */
 export function staffTable(
@@ -116,7 +117,7 @@ export function staffTable(
     staffId: id || null,
     name: id ? nameOf.get(id) ?? "Ukendt medarbejder" : UNASSIGNED,
     store: id ? storeOfStaff.get(id) ?? null : null,
-    sales: new Set(ls.filter((l) => l.stream === "kasse").map((l) => l.orderId)).size,
+    sales: new Set(ls.filter((l) => l.stream === "kasse" && !l.isCredit && l.category !== "oevrigt").map((l) => l.orderId)).size,
     repairs: new Set(ls.filter((l) => l.productKey.startsWith("ticket:")).map((l) => l.productKey)).size,
     totals: sumLines(ls),
   }));
