@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Button } from "./button";
+import { Skeleton } from "./skeleton";
 
 export interface Column<T> {
   key: string;
@@ -55,13 +56,13 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-sand">
+        <tbody aria-busy={(loading && rows.length > 0) || undefined} className="m-busy divide-y divide-sand">
           {loading && rows.length === 0 &&
             Array.from({ length: 6 }).map((_, i) => (
               <tr key={`skeleton-${i}`}>
                 {columns.map((c) => (
                   <td key={c.key} className={`px-3 py-3 ${c.hideBelow ? hide[c.hideBelow] : ""}`}>
-                    <div className="h-3.5 w-2/3 animate-pulse rounded bg-cream" />
+                    <Skeleton className="h-3.5 w-2/3 rounded" />
                   </td>
                 ))}
               </tr>
@@ -79,7 +80,7 @@ export function DataTable<T>({
             <tr
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={`${onRowClick ? "cursor-pointer hover:bg-cream/60" : ""} ${loading ? "opacity-60" : ""}`}
+              className={onRowClick ? "cursor-pointer hover:bg-cream/60" : undefined}
             >
               {columns.map((c) => (
                 <td

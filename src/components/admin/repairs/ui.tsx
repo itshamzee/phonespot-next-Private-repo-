@@ -27,7 +27,7 @@ export function Btn({
   type = "button",
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant; size?: "md" | "sm" }) {
-  return <button type={type} className={btnClass(variant, size, className)} {...rest} />;
+  return <button type={type} className={btnClass(variant, size, `m-press ${className}`)} {...rest} />;
 }
 
 export function BtnLink({

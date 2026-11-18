@@ -35,7 +35,7 @@ export function Segmented<T extends string>({
             aria-checked={active}
             title={opt.hint}
             onClick={() => onChange(opt.value)}
-            className={`rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-light ${
+            className={`m-press rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-light ${
               size === "sm" ? "px-2.5 py-1 text-[13px]" : "px-3.5 py-1.5 text-[14px]"
             } ${active ? "bg-white text-charcoal shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-gray hover:text-charcoal"}`}
           >
