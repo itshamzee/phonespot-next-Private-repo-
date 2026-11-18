@@ -89,6 +89,13 @@ describe("NAV", () => {
     expect(ownerNav.flatMap((a) => (a.children ?? []).map((c) => c.label))).toContain("Medarbejdere");
   });
 
+  it("Statistik kræver se_statistik for andre end ejeren", () => {
+    expect(visibleNav(false).map((a) => a.key)).not.toContain("statistik");
+    expect(visibleNav(false, NAV, ["lave_retur"]).map((a) => a.key)).not.toContain("statistik");
+    expect(visibleNav(false, NAV, ["se_statistik"]).map((a) => a.key)).toContain("statistik");
+    expect(visibleNav(true).map((a) => a.key)).toContain("statistik");
+  });
+
   it("menuen bruger ingen versaler i etiketter (ingen skrigende navigation)", () => {
     const labels = NAV.flatMap((a) => [a.label, ...(a.children ?? []).map((c) => c.label)]);
     expect(labels.filter((l) => l === l.toUpperCase() && l.length > 3)).toEqual([]);

@@ -8,6 +8,8 @@ import { notificationItems } from "../notifications";
 const owner: AdminMe = { id: "o", name: "Ejer", email: "o@phonespot.dk", role: "owner", isOwner: true, ownSlug: null, scope: "alle" };
 const vejle: AdminMe = { id: "v", name: "Mikkel", email: "v@phonespot.dk", role: "employee", isOwner: false, ownSlug: "vejle", scope: "vejle" };
 
+const vejleStat: AdminMe = { ...vejle, permissions: ["se_statistik"] };
+
 const counts: NavCounts = { orders: 2, repairs: 3, newRepairs: 5, webBookings: 2, inquiries: 4, buyback: 0 };
 
 function renderSidebar(me: AdminMe, pathname = "/admin") {
@@ -21,8 +23,15 @@ function renderSidebar(me: AdminMe, pathname = "/admin") {
 afterEach(cleanup);
 
 describe("Sidebar", () => {
-  it("medarbejdere ser alle punkter undtagen Økonomi", () => {
+  it("medarbejdere uden se_statistik ser hverken Statistik eller Økonomi", () => {
     renderSidebar(vejle);
+    const nav = screen.getByRole("navigation", { name: "Hovedmenu" });
+    const labels = within(nav).getAllByRole("link").map((a) => a.textContent?.replace(/\d+( nye)?$/, ""));
+    expect(labels).toEqual(["Overblik", "Sagsstyring", "Kasse", "Kunder", "Varer", "Opkøb"]);
+  });
+
+  it("medarbejdere ser alle punkter undtagen Økonomi", () => {
+    renderSidebar(vejleStat);
     const nav = screen.getByRole("navigation", { name: "Hovedmenu" });
     const labels = within(nav).getAllByRole("link").map((a) => a.textContent?.replace(/\d+( nye)?$/, ""));
     expect(labels).toEqual(["Overblik", "Sagsstyring", "Kasse", "Kunder", "Varer", "Opkøb", "Statistik"]);

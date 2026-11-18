@@ -25,8 +25,8 @@ describe("hasPermission", () => {
     expect(hasPermission({ role: "manager" }, "se_indkoebspris")).toBe(true);
     expect(hasPermission({ role: "employee" }, "se_indkoebspris")).toBe(false);
   });
-  it("kun lave_retur, lukke_dagen og eksportere er håndhævet", () => {
-    expect([...ENFORCED_PERMISSIONS].sort()).toEqual(["eksportere", "lave_retur", "lukke_dagen"]);
+  it("kun lave_retur, lukke_dagen, se_statistik og eksportere er håndhævet", () => {
+    expect([...ENFORCED_PERMISSIONS].sort()).toEqual(["eksportere", "lave_retur", "lukke_dagen", "se_statistik"]);
   });
   it("ukendt rolle har ingen standard", () => {
     expect(hasPermission({ role: "gaest" }, "lave_retur")).toBe(false);

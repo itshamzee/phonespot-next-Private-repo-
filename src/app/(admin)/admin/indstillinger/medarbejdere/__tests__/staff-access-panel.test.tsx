@@ -15,10 +15,10 @@ function item(label: string) {
 describe("StaffAccessPanel", () => {
   it("markerer ikke-håndhævede tilladelser med Træder i kraft senere", () => {
     render(<StaffAccessPanel row={row("employee")} saving={false} onSave={vi.fn()} onClose={vi.fn()} />);
-    for (const l of ["Se statistik", "Rette priser", "Se andre butikkers omsætning", "Give rabat"]) {
+    for (const l of ["Rette priser", "Se andre butikkers omsætning", "Give rabat"]) {
       expect(within(item(l)).getByText("Træder i kraft senere")).toBeTruthy();
     }
-    for (const l of ["Lave retur", "Lukke dagen", "Eksportere"]) {
+    for (const l of ["Lave retur", "Lukke dagen", "Se statistik", "Eksportere"]) {
       expect(within(item(l)).queryByText("Træder i kraft senere")).toBeNull();
     }
   });

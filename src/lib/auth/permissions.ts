@@ -31,7 +31,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
  * styrer endnu ingen funktion (vises som "Træder i kraft senere" i panelet).
  * se_indkoebspris styres af rollen (canSeeCost), ikke af den individuelle tilladelse.
  */
-export const ENFORCED_PERMISSIONS: readonly Permission[] = ["lave_retur", "lukke_dagen", "eksportere"];
+export const ENFORCED_PERMISSIONS: readonly Permission[] = ["lave_retur", "lukke_dagen", "se_statistik", "eksportere"];
 
 /**
  * Bevarer dagens adfærd: medarbejdere og managere kan retur, lukke dagen og give rabat.

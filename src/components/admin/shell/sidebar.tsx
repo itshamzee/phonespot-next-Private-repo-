@@ -51,8 +51,8 @@ export function Sidebar({
   open: boolean;
   onNavigate: () => void;
 }) {
-  const { isOwner } = useStoreScope();
-  const nav = visibleNav(isOwner);
+  const { isOwner, me } = useStoreScope();
+  const nav = visibleNav(isOwner, undefined, me?.permissions ?? []);
   const active = resolveActive(pathname, nav);
   const main = nav.filter((a) => !a.pinned);
   const pinned = nav.filter((a) => a.pinned);

@@ -13,6 +13,8 @@
  * repairs = åbne sager i butikken; newRepairs = ikke-modtagne, til notifikationer;
  * webBookings = nye reparationsanmodninger fra hjemmesiden (Sagsstyrings menu-tal).
  */
+import type { Permission } from "@/lib/auth/permissions";
+
 export type CountKey = "orders" | "repairs" | "newRepairs" | "webBookings" | "inquiries" | "buyback";
 
 export interface NavChild {
@@ -40,6 +42,8 @@ export interface NavArea {
   pinned?: boolean;
   /** Kun ejeren ser området. */
   ownerOnly?: boolean;
+  /** Ejeren, eller medarbejdere med denne tilladelse, ser området. */
+  permission?: Permission;
 }
 
 export const NAV: NavArea[] = [
@@ -135,6 +139,7 @@ export const NAV: NavArea[] = [
     key: "statistik",
     label: "Statistik",
     href: "/admin/statistik",
+    permission: "se_statistik",
     icon: ["M4 20V10M10 20V4M16 20v-8M22 20H2"],
     children: [
       { href: "/admin/statistik", label: "Salg" },
@@ -169,11 +174,14 @@ export const NAV: NavArea[] = [
   },
 ];
 
-/** Menuen som den ser ud for en rolle: ejer-områder og -punkter skjules for alle andre. */
-export function visibleNav(isOwner: boolean, nav: NavArea[] = NAV): NavArea[] {
+/**
+ * Menuen som den ser ud for en rolle: ejer-områder og -punkter skjules for alle andre,
+ * og områder med `permission` kræver at tilladelsen findes i `permissions`.
+ */
+export function visibleNav(isOwner: boolean, nav: NavArea[] = NAV, permissions: readonly string[] = []): NavArea[] {
   if (isOwner) return nav;
   return nav
-    .filter((area) => !area.ownerOnly)
+    .filter((area) => !area.ownerOnly && (!area.permission || permissions.includes(area.permission)))
     .map((area) => (area.children ? { ...area, children: area.children.filter((c) => !c.ownerOnly) } : area));
 }
 
