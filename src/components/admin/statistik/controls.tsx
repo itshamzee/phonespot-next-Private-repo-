@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useId, useMemo, useR
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { STAT_PRESETS } from "@/lib/admin/statistik/range";
 import type { StatPayload } from "@/lib/admin/statistik/payload";
+import { ExportMenu } from "./export-menu";
 
 /**
  * Vælgerne på Statistik. Valget bor i URL'en (?periode, ?fra/?til, ?butik, ?vis),
@@ -74,7 +75,7 @@ export function StoreSelector({ stores, current }: { stores: StatPayload["stores
   const { go } = useContext(NavContext);
   if (stores.length <= 1) return null;
   return (
-    <div role="group" aria-label="Butik" className={segClass}>
+    <div role="group" aria-label="Butik" className={`stat-noprint ${segClass}`}>
       {stores.map((s) => (
         <button
           key={s.slug}
@@ -98,6 +99,28 @@ export function RangeLabel({ range }: { range: StatPayload["range"] }) {
       <span className="text-[13px] text-[#5E6A63]">{range.compareLabel}</span>
     </div>
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Eksport                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Eksportér-menuen, kun med rettigheden eksportere. Forespørgslen bygges af det,
+ * siden viser (payloadens periode og butik), så filen altid matcher skærmen.
+ * Ruten afgør selv adgang og butik igen.
+ */
+export function ExportControl({ viewer, range }: { viewer: StatPayload["viewer"]; range: StatPayload["range"] }) {
+  if (!viewer.canExport) return null;
+  const q = new URLSearchParams();
+  if (range.preset === "valg") {
+    q.set("fra", range.from);
+    q.set("til", range.to);
+  } else {
+    q.set("periode", range.preset);
+  }
+  q.set("butik", viewer.scope);
+  return <ExportMenu query={q.toString()} />;
 }
 
 /* ------------------------------------------------------------------ */
@@ -134,7 +157,7 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
   }, [open, close]);
 
   return (
-    <div ref={wrapRef} className="relative max-w-full self-start">
+    <div ref={wrapRef} className="stat-noprint relative max-w-full self-start">
       <div role="group" aria-label="Periode" className={segClass}>
         {STAT_PRESETS.map((p) => (
           <button

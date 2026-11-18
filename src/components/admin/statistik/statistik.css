@@ -33,4 +33,70 @@
   .stat-pulse { animation: stat-pulse 2.4s ease-in-out infinite; }
   .stat-pop { transform-origin: top left; animation: stat-pop 0.2s cubic-bezier(0.22, 0.8, 0.26, 1) both; }
   .stat-busy { transition: opacity 0.2s ease; }
+
+  /* Eksportér-menuen og toasten: synligheden skifter først, når udtoningen er færdig. */
+  .stat-menu { transition: opacity 0.16s, transform 0.2s cubic-bezier(0.22, 0.8, 0.26, 1), visibility 0s linear 0.2s; }
+  .stat-menu[data-open] { transition: opacity 0.16s, transform 0.2s cubic-bezier(0.22, 0.8, 0.26, 1), visibility 0s; }
+  .stat-toast { transition: opacity 0.2s, transform 0.25s cubic-bezier(0.22, 0.8, 0.26, 1); }
+}
+
+/* Eksportér-menu (åben/lukket) og toast; bevægelsen ligger i blokken ovenfor. */
+.stat-menu {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  pointer-events: none;
+}
+.stat-menu[data-open] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.stat-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 60;
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  pointer-events: none;
+}
+.stat-toast[data-show] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/*
+ * PDF til print. Kun når Statistik er siden: reglerne for admin-rammen er bundet
+ * til den <main>, der indeholder .stat-page (AuthedShell i app/(admin)/admin/layout.tsx:
+ * div.h-dvh > header + div > [aside, main]). Andre admin-sider (kvitteringer,
+ * labels, fakturaer) printer som før, også efter at denne CSS er indlæst.
+ */
+@media print {
+  div:has(> div > main .stat-page) {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  /* Topbjælke og rammens toasts; derefter sidemenu og mobil-overlay. */
+  div:has(> div > main .stat-page) > :not(:has(> main)),
+  div:has(> main .stat-page) > :not(main) {
+    display: none !important;
+  }
+  div:has(> main .stat-page) {
+    display: block !important;
+  }
+  main:has(.stat-page) {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .stat-page .stat-noprint {
+    display: none !important;
+  }
+  .stat-page .stat-panel {
+    break-inside: avoid;
+  }
 }

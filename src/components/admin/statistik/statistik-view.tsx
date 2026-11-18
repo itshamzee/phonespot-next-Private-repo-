@@ -1,7 +1,7 @@
 import type { StatPayload } from "@/lib/admin/statistik/payload";
 import { PageHeading } from "@/components/admin/overview/parts";
 import { ChartPanel } from "./chart-panel";
-import { BusyRegion, PeriodSelector, RangeLabel, StatNavProvider, StoreSelector } from "./controls";
+import { BusyRegion, ExportControl, PeriodSelector, RangeLabel, StatNavProvider, StoreSelector } from "./controls";
 import { NowBlock } from "./now-block";
 import {
   BuybackPanel,
@@ -36,12 +36,13 @@ export function StatistikView({
 
   return (
     <StatNavProvider>
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-5 text-[15px] leading-normal text-[#15211B] min-[980px]:gap-7">
+      <div className="stat-page mx-auto flex max-w-[1320px] flex-col gap-5 text-[15px] leading-normal text-[#15211B] min-[980px]:gap-7">
         <PageHeading
           aside={
             <div className="flex max-w-full flex-wrap items-center gap-3">
               <StoreSelector stores={payload.stores} current={viewer.scope} />
               <RangeLabel range={payload.range} />
+              <ExportControl viewer={viewer} range={payload.range} />
             </div>
           }
         >
@@ -52,7 +53,7 @@ export function StatistikView({
           <NowBlock initial={payload.now} isOwner={viewer.isOwner} butik={viewer.scope} />
         </BusyRegion>
 
-        <p className="m-0 mb-[-8px] mt-5 text-[15px] font-medium text-[#5E6A63]">Vælg periode for resten af siden</p>
+        <p className="stat-noprint m-0 mb-[-8px] mt-5 text-[15px] font-medium text-[#5E6A63]">Vælg periode for resten af siden</p>
         <PeriodSelector range={payload.range} minDate={payload.minDate} today={today} />
 
         <BusyRegion className="flex flex-col gap-5 min-[980px]:gap-7">
