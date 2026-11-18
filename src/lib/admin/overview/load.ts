@@ -14,6 +14,13 @@ import {
 } from "@/lib/auth/store-scope";
 import { finalDifference } from "@/lib/pos/cash-session";
 import { computeKpis, groupByStore, pctChange, type Kpis, type OverviewOrder } from "./kpi";
+import {
+  PICKUP_METHODS,
+  applyRepairCosts,
+  prepaidRepairOrders,
+  storeSlugForOrder,
+  type PrepaidTicket,
+} from "./sale-rules";
 import { calendarDaysSince, formatClock, ticketLabel } from "./format";
 import { periodRange, type PeriodKey, type PeriodRange } from "./period";
 import { splitWebBookings, type WebBookingRaw, type WebBookings } from "./web-bookings";
@@ -35,7 +42,7 @@ type Supabase = ReturnType<typeof createServerClient>;
 /** Ordrer der tæller som salg: gennemført POS/webshop og kreditnotaer. */
 const SALE_STATUSES = ["confirmed", "shipped", "picked_up", "delivered"];
 const ORDER_COLS =
-  "id, type, total, vat_total, brugtmoms_total, location_id, order_items ( item_type, quantity, total_price, discount_amount, purchase_price, vat_amount, vat_scheme )";
+  "id, type, total, vat_total, brugtmoms_total, location_id, confirmed_at, staff_id, shipping_method, shipping_cost, payment_method, original_order_id, order_items ( id, item_type, quantity, total_price, discount_amount, purchase_price, vat_amount, vat_scheme, repair_ticket_id, name:description, device_id, sku_product_id )";
 /** Sager der ikke længere er åbne. */
 export const CLOSED_REPAIR_STATUSES = ["afhentet", "reklamation_loest"];
 
@@ -126,6 +133,13 @@ async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Resul
   return out;
 }
 
+/**
+ * Salg i [startIso, endIso) for scopet, efter de fælles salgsregler (sale-rules.ts):
+ *  - butikken afgøres af storeSlugForOrder, så en webshop-ordre til afhentning i
+ *    Vejle/Slagelse tæller hos butikken og ikke i Webshop;
+ *  - reparationer betalt online på forhånd (uden kasselinje) er med som "repair_prepaid";
+ *  - reservedele brugt på en sag lægges på sagens linje som kostpris.
+ */
 async function loadOrders(
   supabase: Supabase,
   scope: StoreScope,
@@ -133,16 +147,111 @@ async function loadOrders(
   startIso: string,
   endIso: string,
 ): Promise<OverviewOrder[]> {
-  return fetchAll<OverviewOrder>((from, to) => {
-    const q = supabase
+  if (scope === "ingen") return [];
+  const slugOf = (id: string | null | undefined) => slugForLocationId(index, id);
+  const saleQuery = () =>
+    supabase
       .from("orders")
       .select(ORDER_COLS)
       .in("type", ["pos", "online", "credit_note"])
       .in("status", SALE_STATUSES)
       .gte("confirmed_at", startIso)
       .lt("confirmed_at", endIso);
-    return applyLocationScope(q, scope, index).order("confirmed_at", { ascending: true }).range(from, to);
+
+  const pickupMethods = scope === "vejle" || scope === "slagelse" ? [...PICKUP_METHODS[scope]] : [];
+  const [located, pickedUp, prepaid] = await Promise.all([
+    fetchAll<OverviewOrder>((from, to) =>
+      applyLocationScope(saleQuery(), scope, index).order("confirmed_at", { ascending: true }).range(from, to),
+    ),
+    pickupMethods.length === 0
+      ? Promise.resolve([] as OverviewOrder[])
+      : fetchAll<OverviewOrder>((from, to) =>
+          saleQuery()
+            .eq("type", "online")
+            .in("shipping_method", pickupMethods)
+            .order("confirmed_at", { ascending: true })
+            .range(from, to),
+        ),
+    loadPrepaidRepairs(supabase, scope, index, startIso, endIso),
+  ]);
+
+  const seen = new Set<string>();
+  const real: OverviewOrder[] = [];
+  for (const o of [...located, ...pickedUp]) {
+    if (o.id) {
+      if (seen.has(o.id)) continue;
+      seen.add(o.id);
+    }
+    if (scope === "alle" || storeSlugForOrder(o, slugOf) === scope) real.push(o);
+  }
+  real.sort((a, b) => (a.confirmed_at ?? "").localeCompare(b.confirmed_at ?? ""));
+
+  const orders = [...real, ...prepaid];
+  return applyRepairCosts(orders, await loadRepairPartsCost(supabase, orders));
+}
+
+/**
+ * Sager betalt online på forhånd (repair-payment.ts sætter kun paid/paid_at). Sager
+ * med en ordrelinje er allerede med som kassesalg og springes over.
+ */
+async function loadPrepaidRepairs(
+  supabase: Supabase,
+  scope: StoreScope,
+  index: LocationIndex,
+  startIso: string,
+  endIso: string,
+): Promise<OverviewOrder[]> {
+  type Raw = { id: string; paid_at: string; location_id: string | null; total_price_dkk: unknown };
+  const tickets = await fetchAll<Raw>((from, to) => {
+    const q = supabase
+      .from("repair_tickets")
+      .select("id, paid_at, location_id, total_price_dkk:booking_details->total_price_dkk")
+      .eq("paid", true)
+      .gte("paid_at", startIso)
+      .lt("paid_at", endIso)
+      .neq("status", "annulleret");
+    return applyLocationScope(q, scope, index).order("paid_at", { ascending: true }).range(from, to);
   });
+  if (tickets.length === 0) return [];
+
+  const { data: linked, error } = await fetchInChunks<{ repair_ticket_id: string | null }>(
+    tickets.map((t) => t.id),
+    (chunk) => supabase.from("order_items").select("repair_ticket_id").in("repair_ticket_id", chunk),
+  );
+  if (error) throw new Error(error.message);
+  const onTill = new Set(linked.map((l) => l.repair_ticket_id));
+
+  const prepaid = tickets
+    .filter((t) => !onTill.has(t.id))
+    .map<PrepaidTicket>((t) => {
+      const kr = t.total_price_dkk == null || t.total_price_dkk === "" ? NaN : Number(t.total_price_dkk);
+      return { id: t.id, paid_at: t.paid_at, location_id: t.location_id, total_price_dkk: Number.isFinite(kr) ? kr : null };
+    });
+  return prepaidRepairOrders(prepaid).orders;
+}
+
+/** Reservedelskost (øre) pr. sag for de sager, der optræder i ordrerne. Frigivne dele er ikke brugt. */
+async function loadRepairPartsCost(supabase: Supabase, orders: OverviewOrder[]): Promise<Map<string, number>> {
+  const ids = new Set<string>();
+  for (const o of orders) for (const it of o.order_items ?? []) if (it.repair_ticket_id) ids.add(it.repair_ticket_id);
+  const cost = new Map<string, number>();
+  if (ids.size === 0) return cost;
+  const { data, error } = await fetchInChunks<{ ticket_id: string; cost_oere: number | null; qty: number | null }>(
+    [...ids],
+    (chunk) =>
+      supabase
+        .from("repair_ticket_items")
+        .select("ticket_id, cost_oere, qty")
+        .eq("kind", "part")
+        .neq("stock_status", "released")
+        .in("ticket_id", chunk),
+  );
+  if (error) throw new Error(error.message);
+  for (const p of data) {
+    if (p.cost_oere == null) continue;
+    cost.set(p.ticket_id, (cost.get(p.ticket_id) ?? 0) + p.cost_oere * (p.qty ?? 1));
+  }
+  return cost;
 }
 
 type RegisterRow = { id: string; name: string; location_id: string };
