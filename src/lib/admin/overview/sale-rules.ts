@@ -88,7 +88,11 @@ const REPAIR_ITEM_TYPES = new Set(["repair_service", "repair"]);
  *
  * Blandt salgsordrerne (alt andet end kreditnotaer) bærer kun den første ordre
  * med sagen kosten; står sagen på flere salg (fx delbetaling), får de senere 0.
- * Kreditnotaer tilbagefører stadig kosten, som salget bar.
+ * Kreditnotaer tilbagefører stadig kosten, som salget bar, og frigiver sagen, så
+ * næste salg (salg, kreditnota, gensalg eller forudbetaling) bærer kosten igen.
+ *
+ * Ordrerne behandles i den rækkefølge, de gives (sorteres ikke her). loadOrdersWithMeta
+ * giver dem efter confirmed_at med de forudbetalte sager (repair_prepaid) til sidst.
  * Returnerer kopier.
  */
 export function applyRepairCosts(orders: OverviewOrder[], costByTicket: Map<string, number>): OverviewOrder[] {
@@ -122,7 +126,10 @@ export function applyRepairCosts(orders: OverviewOrder[], costByTicket: Map<stri
       if (alreadyCosted.has(ticket) || chosen.get(ticket) !== i) return { ...it, purchase_price: 0 };
       const qty = Math.abs(it.quantity ?? 0);
       if (qty === 0) return it;
+      // Et salg binder kosten til sagen; en kreditnota tilbagefører den og frigiver sagen,
+      // så et senere salg (gensalg ved kassen eller betaling online) bærer kosten igen.
       if (isSale) costedOnSale.add(ticket);
+      else costedOnSale.delete(ticket);
       return { ...it, purchase_price: Math.round(costByTicket.get(ticket)! / qty) };
     });
     return { ...o, order_items };

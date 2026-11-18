@@ -103,6 +103,23 @@ describe("applyRepairCosts", () => {
     expect(computeKpis(creditFirst).cost).toBe(0);
   });
 
+  it("a credit note frees the ticket, so a re-sale at the till carries the cost again", () => {
+    const out = applyRepairCosts([order(1, 60000), order(-1, -60000), order(1, 60000)], new Map([["t1", 30000]]));
+    expect(computeKpis(out).cost).toBe(30000);
+  });
+
+  it("sale, credit note, then paid online: the prepaid order carries the cost", () => {
+    const [prepaid] = prepaidRepairOrders([{ id: "t1", paid_at: "2026-11-17T12:00:00Z", location_id: "loc-v", total_price_dkk: 600 }]).orders;
+    const out = applyRepairCosts([order(1, 60000), order(-1, -60000), prepaid], new Map([["t1", 30000]]));
+    expect(computeKpis(out).cost).toBe(30000);
+    expect(out[2].order_items![0].purchase_price).toBe(30000);
+  });
+
+  it("a credit note alone gives -C and a sale alone +C", () => {
+    expect(computeKpis(applyRepairCosts([order(-1, -60000)], new Map([["t1", 30000]]))).cost).toBe(-30000);
+    expect(computeKpis(applyRepairCosts([order(1, 60000)], new Map([["t1", 30000]]))).cost).toBe(30000);
+  });
+
   it("a quantity-0 line on the first sale order does not use up the ticket's cost", () => {
     const out = applyRepairCosts([order(0, 0), order(1, 100000)], new Map([["t1", 30000]]));
     expect(computeKpis(out).cost).toBe(30000);
