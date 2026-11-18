@@ -56,7 +56,7 @@ export function NotificationsButton({ counts }: { counts: NavCounts }) {
           </span>
         )}
       </button>
-      {/* Altid monteret (.m-pop), så panelet kan tone ind og ud. */}
+      {/* Altid monteret (.m-pop), så panelet kan tone ind og ud. prefetch={false}: skjulte links skal ikke hentes ved hver sidevisning. */}
       <div
         ref={panelRef}
         id={menu.panelId}
@@ -71,7 +71,7 @@ export function NotificationsButton({ counts }: { counts: NavCounts }) {
           <p className="px-2.5 py-2 text-[14px] text-[#5E6A63]">Intet nyt lige nu.</p>
         ) : (
           items.map((item) => (
-            <Link key={item.key} role="menuitem" href={item.href} onClick={menu.closeAndReturn} className={menuItemClass}>
+            <Link key={item.key} role="menuitem" href={item.href} prefetch={false} onClick={menu.closeAndReturn} className={menuItemClass}>
               {item.text}
               <NavPendingSignal />
             </Link>

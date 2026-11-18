@@ -139,7 +139,7 @@ export function Topbar({
             </span>
             <span className="hidden sm:inline">{firstName ?? email?.split("@")[0] ?? ""}</span>
           </button>
-          {/* Altid monteret (.m-pop), så menuen kan tone ind og ud. */}
+          {/* Altid monteret (.m-pop), så menuen kan tone ind og ud. prefetch={false}: skjulte links skal ikke hentes ved hver sidevisning. */}
           <div
             ref={menuPanelRef}
             id={menu.panelId}
@@ -151,11 +151,11 @@ export function Topbar({
             className="m-pop absolute right-0 top-11 w-60 rounded-xl border border-[#E2E5E0] bg-white p-1.5 text-[#15211B] outline-none"
           >
             <p className="truncate px-2.5 py-2 text-[13px] text-[#5E6A63]">{email}</p>
-            <Link role="menuitem" href="/admin/indstillinger/profil" onClick={menu.closeAndReturn} className={menuItemClass}>
+            <Link role="menuitem" href="/admin/indstillinger/profil" prefetch={false} onClick={menu.closeAndReturn} className={menuItemClass}>
               Profil og signatur
               <NavPendingSignal />
             </Link>
-            <Link role="menuitem" href="/" target="_blank" onClick={menu.closeAndReturn} className={menuItemClass}>
+            <Link role="menuitem" href="/" target="_blank" prefetch={false} onClick={menu.closeAndReturn} className={menuItemClass}>
               Åbn webshoppen
             </Link>
             <button
