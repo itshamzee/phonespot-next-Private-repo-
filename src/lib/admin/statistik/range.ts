@@ -77,10 +77,18 @@ function shortDate(dateStr: string): string {
   return `${d}. ${MONTHS[m - 1]}`;
 }
 
+const WEEKDAYS = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"];
+
+function weekdayName(dateStr: string): string {
+  const { y, m, d } = parseDate(dateStr);
+  return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+}
+
 function rangeLabel(from: string, to: string): string {
   const yFrom = parseDate(from).y;
   const yTo = parseDate(to).y;
-  if (from === to) return `${shortDate(to)} ${yTo}`;
+  // Én dag læses med ugedagen, så man kan se, hvor man er, når man bladrer.
+  if (from === to) return `${weekdayName(to)} ${shortDate(to)} ${yTo}`;
   return yFrom === yTo
     ? `${shortDate(from)} – ${shortDate(to)} ${yTo}`
     : `${shortDate(from)} ${yFrom} – ${shortDate(to)} ${yTo}`;
@@ -184,7 +192,8 @@ export function statRange(input: StatPreset | { from: string; to: string }, now:
       to: input.to,
       prevFrom: addDays(input.from, -n),
       prevTo: addDays(input.from, -1),
-      compareLabel: n === 1 ? "mod dagen før" : `mod de ${n} dage før`,
+      // Én dag sammenlignes med hele dagen før; er dagen i dag, med i går samme tid (build afkorter).
+      compareLabel: n > 1 ? `mod de ${n} dage før` : input.from === today ? "mod i går samme tid" : "mod dagen før",
       now,
     });
   }
@@ -238,6 +247,35 @@ export function statRange(input: StatPreset | { from: string; to: string }, now:
         now,
       });
   }
+}
+
+/**
+ * Perioden flyttet sin egen længde i hele danske kalenderdage (1 dag, 7 dage, ...),
+ * som `fra`/`til` til URL'en. Bagud stopper ved minDate (så flyttes kortere, og
+ * længden bevares); fremad lander højst på i dag. null, når der ikke er mere at
+ * bladre til, og altid for "I år".
+ */
+export function shiftRange(
+  range: Pick<StatRange, "preset" | "from" | "to">,
+  dir: -1 | 1,
+  today: string,
+  minDate: string,
+): { fra: string; til: string } | null {
+  if (range.preset === "aar") return null;
+  const n = daysBetween(range.from, range.to) + 1;
+
+  if (dir === -1) {
+    if (range.from <= minDate) return null;
+    let fra = addDays(range.from, -n);
+    if (fra < minDate) fra = minDate;
+    return { fra, til: addDays(fra, n - 1) };
+  }
+
+  if (range.to >= today) return null;
+  let til = addDays(range.to, n);
+  if (til > today) til = today;
+  const fra = addDays(til, -(n - 1));
+  return { fra: fra < minDate ? minDate : fra, til };
 }
 
 const PRESET_VALUES: string[] = STAT_PRESETS.map((p) => p.value);

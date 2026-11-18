@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { STAT_PRESETS } from "@/lib/admin/statistik/range";
+import { addDays } from "@/lib/admin/overview/period";
+import { STAT_PRESETS, shiftRange } from "@/lib/admin/statistik/range";
 import type { StatPayload } from "@/lib/admin/statistik/payload";
 import { ExportMenu } from "./export-menu";
 
@@ -196,6 +197,115 @@ export function PeriodSelector({ range, minDate, today }: { range: StatPayload["
             go({ periode: null, fra, til });
           }}
         />
+      ) : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Bladr: dagen/perioden før og efter                                 */
+/* ------------------------------------------------------------------ */
+
+const stepButtonBase =
+  "inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-[#E2E5E0] bg-white text-[14px] text-[#15211B]";
+
+function stepButtonClass(enabled: boolean, extra = ""): string {
+  return `${stepButtonBase} ${extra} ${
+    enabled
+      ? "cursor-pointer hover:border-[#C9CEC6] motion-safe:transition-transform motion-safe:duration-[120ms] motion-safe:active:scale-[0.96]"
+      : "cursor-not-allowed opacity-40"
+  }`;
+}
+
+function Chevron({ dir }: { dir: -1 | 1 }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d={dir === -1 ? "M10 3.5 5.5 8 10 12.5" : "M6 3.5 10.5 8 6 12.5"}
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Forrige / næste dag eller periode og et hurtigt "I dag". Et skridt flytter
+ * perioden sin egen længde (shiftRange). Lander man på i dag eller i går, bruges
+ * forvalget, så knappen i periodevælgeren lyser. Pil venstre/højre gør det samme,
+ * når fokus er på siden selv eller på knapperne her.
+ */
+export function RangeStepper({ range, minDate, today }: { range: StatPayload["range"]; minDate: string; today: string }) {
+  const { go } = useContext(NavContext);
+  const ref = useRef<HTMLDivElement>(null);
+  const singleDay = range.from === range.to;
+  const isToday = singleDay && range.to === today;
+  const prev = shiftRange(range, -1, today, minDate);
+  const next = shiftRange(range, 1, today, minDate);
+
+  const step = useCallback(
+    (target: { fra: string; til: string } | null) => {
+      if (!target) return;
+      const { fra, til } = target;
+      if (fra === til && til === today) go({ periode: "idag", fra: null, til: null });
+      else if (fra === til && til === addDays(today, -1)) go({ periode: "igaar", fra: null, til: null });
+      else go({ periode: null, fra, til });
+    },
+    [go, today],
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      // Kun fra selve siden eller bladreknapperne: aldrig fra felter, datovælgeren eller andre vælgere.
+      const t = e.target;
+      const onPage = t === document.body || t === document.documentElement;
+      if (!onPage && !(t instanceof Node && ref.current?.contains(t))) return;
+      e.preventDefault();
+      step(e.key === "ArrowLeft" ? prev : next);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [step, prev, next]);
+
+  return (
+    <div ref={ref} role="group" aria-label="Bladr i perioder" className="stat-noprint flex w-full items-center gap-2 min-[980px]:w-auto">
+      <button
+        type="button"
+        aria-label={singleDay ? "Forrige dag" : "Forrige periode"}
+        aria-disabled={!prev}
+        className={stepButtonClass(Boolean(prev), "w-9")}
+        onClick={() => step(prev)}
+      >
+        <Chevron dir={-1} />
+      </button>
+      <span
+        aria-live="polite"
+        className="min-w-0 flex-1 truncate text-center text-[14px] font-medium tabular-nums text-[#15211B] min-[980px]:min-w-[170px] min-[980px]:flex-none"
+      >
+        {range.rangeLabel}
+      </span>
+      {/* Under 980px står I dag før Næste, så forrige og næste ligger i hver sin kant. */}
+      <button
+        type="button"
+        aria-label={singleDay ? "Næste dag" : "Næste periode"}
+        aria-disabled={!next}
+        className={stepButtonClass(Boolean(next), "w-9 max-[979px]:order-2")}
+        onClick={() => step(next)}
+      >
+        <Chevron dir={1} />
+      </button>
+      {!isToday ? (
+        <button
+          type="button"
+          className={stepButtonClass(true, "px-3 max-[979px]:order-1")}
+          onClick={() => go({ periode: "idag", fra: null, til: null })}
+        >
+          I dag
+        </button>
       ) : null}
     </div>
   );

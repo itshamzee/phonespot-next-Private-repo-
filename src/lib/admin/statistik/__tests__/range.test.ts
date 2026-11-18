@@ -1,7 +1,70 @@
 import { describe, expect, it } from "vitest";
-import { statRange, parseStatQuery, nowBlockRanges } from "../range";
+import { statRange, parseStatQuery, nowBlockRanges, shiftRange } from "../range";
 
 const at = (iso: string) => new Date(iso);
+
+describe("shiftRange", () => {
+  const now = at("2026-11-18T13:32:00Z");
+  const today = "2026-11-18";
+  const min = "2026-03-10";
+  const custom = (from: string, to: string) => statRange({ from, to }, now);
+
+  it("one day back from today gives yesterday", () => {
+    expect(shiftRange(statRange("idag", now), -1, today, min)).toEqual({ fra: "2026-11-17", til: "2026-11-17" });
+  });
+  it("one day forward from yesterday gives today", () => {
+    expect(shiftRange(statRange("igaar", now), 1, today, min)).toEqual({ fra: "2026-11-18", til: "2026-11-18" });
+  });
+  it("forward from a range ending today is null", () => {
+    expect(shiftRange(statRange("idag", now), 1, today, min)).toBeNull();
+    expect(shiftRange(statRange("7d", now), 1, today, min)).toBeNull();
+  });
+  it("7d back gives the 7 days before", () => {
+    expect(shiftRange(statRange("7d", now), -1, today, min)).toEqual({ fra: "2026-11-05", til: "2026-11-11" });
+  });
+  it("a forward step that would pass today lands on til = today with the same length", () => {
+    expect(shiftRange(custom("2026-11-10", "2026-11-16"), 1, today, min)).toEqual({ fra: "2026-11-12", til: "2026-11-18" });
+  });
+  it("back at minDate is null; close to minDate shifts less and keeps the length", () => {
+    expect(shiftRange(custom("2026-03-10", "2026-03-12"), -1, today, min)).toBeNull();
+    expect(shiftRange(custom("2026-03-12", "2026-03-14"), -1, today, min)).toEqual({ fra: "2026-03-10", til: "2026-03-12" });
+  });
+  it("aar is null both ways", () => {
+    const aar = statRange("aar", now);
+    expect(shiftRange(aar, -1, today, min)).toBeNull();
+    expect(shiftRange(aar, 1, today, min)).toBeNull();
+  });
+  it("moves by whole calendar days across the 25 Oct 2026 DST change", () => {
+    expect(shiftRange(custom("2026-10-25", "2026-10-25"), -1, today, min)).toEqual({ fra: "2026-10-24", til: "2026-10-24" });
+    expect(shiftRange(custom("2026-10-25", "2026-10-25"), 1, today, min)).toEqual({ fra: "2026-10-26", til: "2026-10-26" });
+    expect(shiftRange(custom("2026-10-22", "2026-10-28"), -1, today, min)).toEqual({ fra: "2026-10-15", til: "2026-10-21" });
+    expect(shiftRange(custom("2026-10-22", "2026-10-28"), 1, today, min)).toEqual({ fra: "2026-10-29", til: "2026-11-04" });
+  });
+});
+
+describe("single-day ranges", () => {
+  const now = at("2026-11-18T13:32:00Z"); // onsdag 14:32 dansk
+
+  it("a past custom day reads with the weekday and compares with the full day before", () => {
+    const r = statRange({ from: "2026-11-17", to: "2026-11-17" }, now);
+    expect(r.rangeLabel).toBe("Tirsdag 17. nov. 2026");
+    expect(r.compareLabel).toBe("mod dagen før");
+    expect(r.prev).toEqual({ startIso: "2026-11-15T23:00:00.000Z", endIso: "2026-11-16T23:00:00.000Z" });
+  });
+  it("a custom day that is today compares with yesterday up to the same time", () => {
+    const r = statRange({ from: "2026-11-18", to: "2026-11-18" }, now);
+    expect(r.rangeLabel).toBe("Onsdag 18. nov. 2026");
+    expect(r.compareLabel).toBe("mod i går samme tid");
+    expect(r.prev).toEqual({ startIso: "2026-11-16T23:00:00.000Z", endIso: "2026-11-17T13:32:00.000Z" });
+  });
+  it("the I dag and I går presets also carry the weekday", () => {
+    expect(statRange("idag", now).rangeLabel).toBe("Onsdag 18. nov. 2026");
+    expect(statRange("igaar", now).rangeLabel).toBe("Tirsdag 17. nov. 2026");
+  });
+  it("multi-day labels are unchanged", () => {
+    expect(statRange("7d", now).rangeLabel).toBe("12. nov. – 18. nov. 2026");
+  });
+});
 
 describe("statRange", () => {
   it("idag compares with yesterday up to the same time", () => {

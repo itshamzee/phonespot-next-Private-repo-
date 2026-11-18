@@ -1,7 +1,7 @@
 import type { StatPayload } from "@/lib/admin/statistik/payload";
 import { PageHeading } from "@/components/admin/overview/parts";
 import { ChartPanel } from "./chart-panel";
-import { BusyRegion, ExportControl, PeriodSelector, RangeLabel, StatNavProvider, StoreSelector } from "./controls";
+import { BusyRegion, ExportControl, PeriodSelector, RangeLabel, RangeStepper, StatNavProvider, StoreSelector } from "./controls";
 import { NowBlock } from "./now-block";
 import {
   BuybackPanel,
@@ -54,7 +54,13 @@ export function StatistikView({
         </BusyRegion>
 
         <p className="stat-noprint m-0 mb-[-8px] mt-5 text-[15px] font-medium text-[#5E6A63]">Vælg periode for resten af siden</p>
-        <PeriodSelector range={payload.range} minDate={payload.minDate} today={today} />
+        {/* Under 980px står bladreren på sin egen række over periodevælgeren. */}
+        <div className="flex flex-col gap-3 min-[980px]:flex-row min-[980px]:flex-wrap min-[980px]:items-center min-[980px]:justify-between">
+          <PeriodSelector range={payload.range} minDate={payload.minDate} today={today} />
+          <div className="max-[979px]:order-first">
+            <RangeStepper range={payload.range} minDate={payload.minDate} today={today} />
+          </div>
+        </div>
 
         <BusyRegion className="flex flex-col gap-5 min-[980px]:gap-7">
           <div className="grid grid-cols-1 gap-6 min-[980px]:grid-cols-[2fr_1fr]">
