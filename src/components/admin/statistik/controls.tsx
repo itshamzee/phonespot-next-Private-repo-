@@ -39,6 +39,11 @@ export function StatNavProvider({ children }: { children: ReactNode }) {
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;
 }
 
+/** Vælgernes navigation (pending og go) til andre klientkomponenter på siden, fx grafens Omsætning/Fortjeneste. */
+export function useStatNav(): Nav {
+  return useContext(NavContext);
+}
+
 /** Indhold, der afhænger af vælgerne: dæmpes, mens den nye side hentes. */
 export function BusyRegion({ children, className = "" }: { children: ReactNode; className?: string }) {
   const { pending } = useContext(NavContext);
