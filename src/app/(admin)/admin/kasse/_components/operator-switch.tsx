@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { posFetch } from "@/lib/pos/client";
 import { Modal, btnSecondary } from "./dialogs";
 
@@ -17,13 +17,21 @@ const keyClass =
  * Ekspedient-chip i kassens topbjælke. Et klik åbner en liste over butikkens
  * medarbejdere; efter valg af navn tastes pinkoden på taltastaturet eller det
  * fysiske tastatur. Serveren afgør adgang og låsning, og beskederne vises som de er.
+ *
+ * Scanneren: mens dialogen er åben, har ingen knap fokus (fokus står på selve dialogen),
+ * så en scanners Enter ikke lukker eller vælger noget. Når den lukker (valgt, pinkode
+ * godkendt, Esc eller baggrund), gives fokus ikke tilbage til "Ekspedient"-knappen;
+ * i stedet kaldes onClosed, og kassen lægger fokus i scanfeltet.
  */
 export function OperatorSwitch({
   locationId,
   onChanged,
+  onClosed,
 }: {
   locationId: string;
   onChanged: (current: Operator | null) => void;
+  /** Efter dialogen er lukket og fjernet (alle veje). */
+  onClosed?: () => void;
 }) {
   const [current, setCurrent] = useState<Operator | null>(null);
   const [staff, setStaff] = useState<StaffEntry[]>([]);
@@ -75,6 +83,17 @@ export function OperatorSwitch({
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Kaldes efter lukningen er committed, så dialogen ikke længere gør siden inert.
+  const onClosedRef = useRef(onClosed);
+  useLayoutEffect(() => {
+    onClosedRef.current = onClosed;
+  });
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open) onClosedRef.current?.();
+    wasOpen.current = open;
+  }, [open]);
 
   function close() {
     setOpen(false);
@@ -190,7 +209,12 @@ export function OperatorSwitch({
       </button>
 
       {open && (
-        <Modal title={picked ? `Pinkode for ${picked.name}` : "Skift ekspedient"} onClose={close}>
+        <Modal
+          title={picked ? `Pinkode for ${picked.name}` : "Skift ekspedient"}
+          onClose={close}
+          initialFocus="container"
+          restoreFocus={false}
+        >
           {picked ? (
             <div>
               <div

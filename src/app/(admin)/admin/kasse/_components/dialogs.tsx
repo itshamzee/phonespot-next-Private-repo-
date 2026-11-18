@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { posJson, printBase64Pdf } from "@/lib/pos/client";
 import { validatePayments } from "@/lib/pos/calc";
@@ -41,24 +41,40 @@ export const fieldClass =
 /**
  * Kassens dialog: en tynd indpakning om den fælles Dialog (native <dialog>, fokusfælde,
  * fokus tilbage ved lukning). Samme props og samme lukning som før: Esc, klik på baggrunden
- * og "Luk" kalder onClose, også midt i en betaling; dialoger, der ikke må lukkes under en
- * betaling, giver selv et onClose, der ikke gør noget (CardDialog). Kassen åbner og lukker
- * ved at montere og afmontere, så der ingen udtoning er, der kan forsinke noget.
+ * og "Luk" kalder onClose; dialoger, der ikke må lukkes under en betaling, giver selv et
+ * onClose, der ikke gør noget (CardDialog, DepositDialog under en terminalbetaling). Kassen
+ * åbner og lukker ved at montere og afmontere, så der ingen udtoning er, der kan forsinke noget.
  * data-kasse-dialog: skærmens egen Esc rydder kun scanfeltet, når ingen dialog er åben.
+ *
+ * Scanneren: en stregkodescanner sender tegn + Enter til det, der har fokus. Dialoger uden
+ * autoFocus-felt bruger initialFocus="container", så Enter aldrig rammer en knap (fx Luk).
+ * Efter lukning lægger kassen selv fokus i scanfeltet (kasse-screen.tsx).
  */
 export function Modal({
   title,
   onClose,
   children,
   wide,
+  initialFocus,
+  restoreFocus,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  initialFocus?: "first" | "container";
+  restoreFocus?: boolean;
 }) {
   return (
-    <Dialog open onClose={onClose} title={title} size={wide ? "lg" : "sm"} data-kasse-dialog="">
+    <Dialog
+      open
+      onClose={onClose}
+      title={title}
+      size={wide ? "lg" : "sm"}
+      initialFocus={initialFocus}
+      restoreFocus={restoreFocus}
+      data-kasse-dialog=""
+    >
       {children}
     </Dialog>
   );
@@ -90,8 +106,18 @@ function ErrorLine({ children }: { children: ReactNode }) {
  */
 function TerminalPending({ amountOere, cancelling, onCancel }: { amountOere: number; cancelling: boolean; onCancel?: () => void }) {
   const seconds = useElapsedSeconds();
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Mens kunden betaler, må en scanners Enter ikke ramme en knap (Luk, Annuller betaling):
+  // står fokus på en knap eller ingen steder, flyttes det til selve dialogen. Et tekstfelt
+  // med fokus (depositumsbeløbet) får lov at beholde det, som før.
+  useLayoutEffect(() => {
+    const dlg = rootRef.current?.closest("dialog");
+    if (!dlg || !dlg.hasAttribute("tabindex")) return;
+    const active = document.activeElement;
+    if (!active || active === document.body || active instanceof HTMLButtonElement) dlg.focus({ preventScroll: true });
+  }, []);
   return (
-    <div role="status" aria-live="polite" className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
+    <div ref={rootRef} role="status" aria-live="polite" className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
       <div className="flex items-center gap-2.5">
         {/* Rolig indikator, så skærmen ikke ser frossen ud, mens kunden betaler. */}
         <Spinner className="h-4 w-4 text-[#1A3D2E]" />
@@ -229,9 +255,13 @@ export function DepositDialog({
   const amount = parseKr(amountKr);
   const check = validateDeposit(amount, c);
   const open = c.deposits.reduce((s, d) => s + Math.max(0, d.remaining_oere), 0);
+  // Beløbet er sendt til den integrerede terminal: samme betingelse, som viser TerminalPending.
+  const terminalInFlight = integrated && busy && method === "kort_terminal";
 
   return (
-    <Modal title="Depositum på sag" onClose={onClose}>
+    // Ejerbeslutning 2026-11-18: mens terminalen venter, lukker Esc, baggrund og Luk ikke
+    // (som CardDialog); "Annuller betaling" virker som før.
+    <Modal title="Depositum på sag" onClose={terminalInFlight ? () => undefined : onClose} initialFocus="container">
       <div className="rounded-[10px] bg-[#F5F6F4] px-3 py-2.5 text-sm">
         <p className="font-semibold text-[#15211B]">
           Sag {c.ticketNumber}
@@ -295,7 +325,7 @@ export function DepositDialog({
       </p>
       {error && <ErrorLine>{error}</ErrorLine>}
 
-      {integrated && busy && method === "kort_terminal" ? (
+      {terminalInFlight ? (
         <TerminalPending amountOere={amount ?? 0} cancelling={cancelling} onCancel={onCancelTerminal} />
       ) : cardStep ? (
         <div className="mt-4 rounded-[10px] border border-[#C9D0C7] bg-[#F5F6F4] p-3">
@@ -663,7 +693,7 @@ export function SplitDialog({
   }, []);
 
   return (
-    <Modal title="Del betaling" onClose={onClose} wide>
+    <Modal title="Del betaling" onClose={onClose} wide initialFocus="container">
       <p className="text-sm text-[#5E6A63]">
         Total <b className="text-[#15211B]">{fmtKr(total)}</b>. Tilføj en linje pr. betalingsform; beløbene skal give præcis totalen.
       </p>
@@ -840,7 +870,7 @@ export function CardDialog({
   const receiptCheck = checkTerminalReceipt(receiptNo);
   if (isIntegratedTerminal(terminalKind)) {
     return (
-      <Modal title="Kortbetaling" onClose={busy ? () => undefined : onClose}>
+      <Modal title="Kortbetaling" onClose={busy ? () => undefined : onClose} initialFocus="container">
         {busy ? (
           <TerminalPending amountOere={amountOere} cancelling={cancelling} onCancel={onCancelTerminal} />
         ) : (

@@ -17,8 +17,9 @@ vi.mock("@/lib/pos/client", () => ({ posJson: vi.fn(), printBase64Pdf: vi.fn() }
 
 import KassePage from "../page";
 import { CartPanel } from "../_components/cart-panel";
-import { CardDialog, Modal } from "../_components/dialogs";
-import type { CartLine, CartTotals } from "@/lib/pos/kasse-logic";
+import { CardDialog, DepositDialog, Modal, SplitDialog } from "../_components/dialogs";
+import type { CartLine, CartTotals, CaseContext } from "@/lib/pos/kasse-logic";
+import { newPaymentLine } from "../_components/payment-lines";
 
 afterEach(() => {
   cleanup();
@@ -142,7 +143,8 @@ describe("Kasse: Modal om den fælles Dialog", () => {
     );
   }
 
-  it("er en navngiven dialog med kassens markør, fokus går ind og kommer tilbage", () => {
+  // Fokusfælden selv er browserens (showModal gør siden inert) og kan ikke testes i jsdom.
+  it("er en navngiven dialog med kassens markør; fokus flyttes ind ved åbning og tilbage ved lukning", () => {
     render(<Harness />);
     const trigger = screen.getByRole("button", { name: "Rabat" });
     trigger.focus();
@@ -174,5 +176,78 @@ describe("Kasse: Modal om den fælles Dialog", () => {
     fireEvent.mouseDown(screen.getByRole("dialog"));
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog")).toHaveAttribute("open");
+  });
+});
+
+describe("Kasse: scanneren rammer ingen knap", () => {
+  const caseCtx = {
+    id: "t1",
+    ticketNumber: "PS-2026-1189",
+    paid: false,
+    customer: { id: null, name: "Anders Hansen", phone: null, email: null },
+    deviceLabel: "OnePlus Nord 3",
+    totalOere: 169_800,
+    description: "Sag",
+    deposits: [],
+    depositsOk: true,
+  } as CaseContext;
+
+  it("TerminalPending (kort): fokus på selve dialogen, ikke på Luk; Enter lukker ikke", () => {
+    const onClose = vi.fn();
+    render(<CardDialog amountOere={100_000} busy error="" terminalKind="worldline" onApproved={vi.fn()} onClose={onClose} onCancelTerminal={vi.fn()} />);
+    const dialog = screen.getByRole("dialog", { name: "Kortbetaling" });
+    expect(document.activeElement).toBe(dialog);
+    fireEvent.keyDown(document.activeElement!, { key: "Enter" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog).toHaveAttribute("open");
+    // Knapperne virker som før.
+    expect(screen.getByRole("button", { name: "Annuller betaling" })).toBeEnabled();
+  });
+
+  it("TerminalPending efter Prøv igen: fokus går fra knappen til dialogen", () => {
+    const { rerender } = render(<CardDialog amountOere={100_000} busy={false} error="Afvist" terminalKind="worldline" onApproved={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Prøv igen" })).toHaveFocus();
+    rerender(<CardDialog amountOere={100_000} busy error="" terminalKind="worldline" onApproved={vi.fn()} onClose={vi.fn()} />);
+    expect(document.activeElement).toBe(screen.getByRole("dialog"));
+  });
+
+  it("Del betaling uden felt med autoFocus: fokus på dialogen, ikke på Luk", () => {
+    render(
+      <SplitDialog total={10_000} hasCustomer={false} locationId="l1" initialLines={[newPaymentLine("kontant", 10_000)]} onConfirm={vi.fn()} onClose={vi.fn()} />,
+    );
+    expect(document.activeElement).toBe(screen.getByRole("dialog", { name: "Del betaling" }));
+  });
+
+  it("DepositDialog under en terminalbetaling: Esc, baggrund og Luk lukker ikke; fokus på dialogen", () => {
+    const onClose = vi.fn();
+    const onCancel = vi.fn();
+    render(<DepositDialog c={caseCtx} busy error="" terminalKind="worldline" onSubmit={vi.fn()} onClose={onClose} onCancelTerminal={onCancel} />);
+    const dialog = screen.getByRole("dialog", { name: "Depositum på sag" });
+    expect(screen.getByText("Sender beløb til terminalen…")).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    fireEvent.mouseDown(dialog);
+    fireEvent.click(screen.getByRole("button", { name: "Luk" }));
+    expect(onClose).not.toHaveBeenCalled();
+    // Annuller betaling virker som før.
+    fireEvent.click(screen.getByRole("button", { name: "Annuller betaling" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("DepositDialog efter terminalsvaret (godkendt eller afvist): lukker på Esc og baggrund som før", () => {
+    const onClose = vi.fn();
+    const props = { c: caseCtx, error: "", terminalKind: "worldline" as const, onSubmit: vi.fn(), onClose, onCancelTerminal: vi.fn() };
+    const { rerender } = render(<DepositDialog {...props} busy />);
+    rerender(<DepositDialog {...props} busy={false} error="Kortet blev afvist" />);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    fireEvent.mouseDown(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("DepositDialog med manuel terminal under gemning: lukker som før (kun den integrerede terminal er låst)", () => {
+    const onClose = vi.fn();
+    render(<DepositDialog c={caseCtx} busy error="" terminalKind="manual" onSubmit={vi.fn()} onClose={onClose} />);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

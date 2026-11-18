@@ -636,6 +636,11 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     if (!dialog && !done && openSession) scanRef.current?.focus();
   }, [dialog, done, openSession, lines.length]);
 
+  // Ekspedientskiftet er sin egen dialog (ikke `dialog`): samme regel, når den lukker.
+  const focusScanAfterOperator = useCallback(() => {
+    if (!dialog && !done && openSession) scanRef.current?.focus();
+  }, [dialog, done, openSession]);
+
   /* ----- Payment + sale ----- */
 
   function pickMethod(type: PaymentType) {
@@ -834,7 +839,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
             {openSession.openedByName ? ` af ${openSession.openedByName}` : ""} · startbeholdning {fmtKr(openSession.openingFloat)}
           </span>
         )}
-        <OperatorSwitch locationId={locationId} onChanged={() => void onOperatorChanged()} />
+        <OperatorSwitch locationId={locationId} onChanged={() => void onOperatorChanged()} onClosed={focusScanAfterOperator} />
         <div className="flex-1" />
         {locationId && (
           <Link

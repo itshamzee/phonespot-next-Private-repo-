@@ -183,7 +183,9 @@ export function Dialog({
   useLayoutEffect(() => {
     const el = ref.current;
     if (!open || !mounted || !el) return;
-    if (el.contains(document.activeElement)) return;
+    // Browseren kan selv have lagt fokus på den tomme dialog ved showModal(); det tæller ikke.
+    const active = document.activeElement;
+    if (active && active !== el && el.contains(active)) return;
     focusInitial(el, initialRef.current);
     // Kun ved åbning; senere fokusskift inde i dialogen er brugerens egne.
     // eslint-disable-next-line react-hooks/exhaustive-deps
