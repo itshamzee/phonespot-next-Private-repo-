@@ -1,30 +1,37 @@
-import { cloneElement, type ReactElement } from "react";
+import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ChartCanvas as RealChartCanvas } from "../chart-canvas";
 
-const replace = vi.fn();
+type ChartCanvasProps = ComponentProps<typeof RealChartCanvas>;
+
+const { replace, canvas } = vi.hoisted(() => ({
+  replace: vi.fn(),
+  // Grafen (Recharts) erstattes helt: testen ser kun på de props, ChartPanel giver den.
+  canvas: vi.fn((props: ChartCanvasProps): null => {
+    void props;
+    return null;
+  }),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, refresh: vi.fn(), push: vi.fn() }),
   usePathname: () => "/admin/statistik",
   useSearchParams: () => new URLSearchParams("periode=30d"),
 }));
 
-// next/dynamic indlæser grafen asynkront; i testen bruges den rigtige graf med det samme.
+vi.mock("../chart-canvas", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../chart-canvas")>();
+  return { ...actual, ChartCanvas: (props: ChartCanvasProps) => canvas(props) };
+});
+
+// next/dynamic indlæser grafen asynkront; i testen bruges den (mockede) graf med det samme.
 vi.mock("next/dynamic", async () => {
   const mod = await import("../chart-canvas");
   return { default: () => mod.ChartCanvas };
 });
 
-// ResponsiveContainer måler 0×0 i jsdom; giv grafen en fast størrelse.
-vi.mock("recharts", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("recharts")>();
-  return {
-    ...actual,
-    ResponsiveContainer: ({ children }: { children: ReactElement<{ width?: number; height?: number }> }) =>
-      cloneElement(children, { width: 800, height: 300 }),
-  };
-});
-
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { ChartTooltip, type ChartRow } from "../chart-canvas";
 import { ChartPanel } from "../chart-panel";
 import { StatNavProvider } from "../controls";
 import { stripForViewer, type Money, type StatPayload } from "@/lib/admin/statistik/payload";
@@ -32,6 +39,7 @@ import { stripForViewer, type Money, type StatPayload } from "@/lib/admin/statis
 afterEach(() => {
   cleanup();
   replace.mockClear();
+  canvas.mockClear();
 });
 
 const m = (revenue: number, profit: number): Required<Money> => ({
@@ -87,47 +95,83 @@ const staffPayload = (p: StatPayload = ownerPayload()) => stripForViewer(p, { is
 
 const region = () => screen.getByRole("region", { name: /over tid/ });
 const hiddenTable = () => within(region()).getByRole("table");
+const tableRows = () => within(hiddenTable()).getAllByRole("row").slice(1);
+const columns = () => within(hiddenTable()).getAllByRole("columnheader").map((h) => h.textContent);
+/** Props fra seneste tegning af grafen. */
+const lastCanvas = () => canvas.mock.calls.at(-1)![0];
+const legendButton = (name: string) => within(screen.getByRole("group", { name: "Typer" })).getByRole("button", { name });
 
 describe("ChartPanel", () => {
   it("den skjulte tabel har én række pr. interval med omsætningen i kroner", () => {
     render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
-    const rows = within(hiddenTable()).getAllByRole("row").slice(1);
+    const rows = tableRows();
     expect(rows).toHaveLength(3);
     expect(within(rows[0]).getByRole("rowheader")).toHaveTextContent("16. nov.");
     expect(within(rows[0]).getByText("17.500 kr.")).toBeInTheDocument();
     expect(within(rows[1]).getByText("27.485 kr.")).toBeInTheDocument();
     expect(within(rows[1]).getByText("20.000 kr.")).toBeInTheDocument();
+    expect(lastCanvas().rows.map((r) => r.total)).toEqual([1_750_000, 2_748_500, 0]);
   });
 
-  it("Reparation slås fra i forklaringen og totalen falder med reparationssummen", async () => {
+  it("Reparation slås fra: totalen falder, sammenligning og forrige periode forsvinder", async () => {
     render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
     const total = screen.getByTestId("chart-total");
     expect(total).toHaveTextContent("44.985 kr.");
     expect(screen.getByText("+8,2 %")).toBeInTheDocument();
+    expect(screen.getByText("mod de 30 dage før")).toBeInTheDocument();
+    expect(lastCanvas().hasPrev).toBe(true);
+    expect(columns()).toContain("Forrige periode");
 
-    const legend = screen.getByRole("group", { name: "Typer" });
-    const rep = within(legend).getByRole("button", { name: "Reparation" });
+    const rep = legendButton("Reparation");
     expect(rep).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(rep);
     expect(rep).toHaveAttribute("aria-pressed", "false");
     // 44.985 kr. - (2.500 + 7.485) kr.; tallet tæller over et billede (rAF).
     await waitFor(() => expect(total).toHaveTextContent("35.000 kr."));
-    // Procentændringen gælder alle typer og vises ikke for et udsnit.
+    // Sammenligningen gælder alle typer og vises ikke for et udsnit.
     expect(screen.queryByText("+8,2 %")).toBeNull();
-    // Tabellen følger de viste typer.
-    const header = within(hiddenTable()).getAllByRole("columnheader").map((h) => h.textContent);
-    expect(header).not.toContain("Reparation");
+    expect(screen.queryByText("mod de 30 dage før")).toBeNull();
+    expect(columns()).not.toContain("Reparation");
+    expect(columns()).not.toContain("Forrige periode");
+    const props = lastCanvas();
+    expect(props.hasPrev).toBe(false);
+    expect(props.rows.every((r) => r.prev === null)).toBe(true);
+    expect(props.series.map((s) => s.key)).toEqual(["webshop", "kasse"]);
+    expect(props.rows[1]).toMatchObject({ reparation: 0, total: 2_000_000, capTop: "kasse" });
 
     fireEvent.click(rep);
     expect(rep).toHaveAttribute("aria-pressed", "true");
     await waitFor(() => expect(total).toHaveTextContent("44.985 kr."));
+    expect(lastCanvas().hasPrev).toBe(true);
+  });
+
+  it("den sidste viste type kan ikke slås fra", () => {
+    render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
+    fireEvent.click(legendButton("Webshop"));
+    fireEvent.click(legendButton("Kassesalg"));
+    const rep = legendButton("Reparation");
+    fireEvent.click(rep);
+    expect(rep).toHaveAttribute("aria-pressed", "true");
+    expect(lastCanvas().series.map((s) => s.key)).toEqual(["reparation"]);
+  });
+
+  it("margin i tabellen gælder de viste typer", () => {
+    render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
+    // 16. nov.: 6.000 kr. fortjeneste af 17.500 kr.
+    expect(within(tableRows()[0]).getByText("34,3 %")).toBeInTheDocument();
+    expect(lastCanvas().rows[0].marginPct).toBeCloseTo(34.29, 2);
+    fireEvent.click(legendButton("Reparation"));
+    // Uden reparation: 4.500 kr. af 15.000 kr.
+    expect(within(tableRows()[0]).getByText("30,0 %")).toBeInTheDocument();
   });
 
   it("en medarbejder får ingen Fortjeneste-vælger og ingen fortjeneste i grafen", () => {
-    const { container } = render(<ChartPanel payload={staffPayload()} metric="omsaetning" />);
+    const { container } = render(<ChartPanel payload={staffPayload()} metric="fortjeneste" />);
     expect(screen.queryByRole("group", { name: "Vis" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Fortjeneste" })).toBeNull();
     expect(container.textContent).not.toMatch(/fortjeneste|margin/i);
+    expect(lastCanvas().rows.every((r) => r.marginPct === undefined)).toBe(true);
+    expect(lastCanvas().rows[0].total).toBe(1_750_000);
   });
 
   it("ejeren skifter til Fortjeneste via URL'en", () => {
@@ -151,17 +195,20 @@ describe("ChartPanel", () => {
     expect(screen.getByRole("heading", { name: "Fortjeneste over tid" })).toBeInTheDocument();
     expect(screen.getByTestId("chart-total")).toHaveTextContent("15.000 kr.");
     expect(screen.getByText("+4,1 %")).toBeInTheDocument();
+    expect(lastCanvas().rows[1].prev).toBe(700_000);
     fireEvent.click(within(screen.getByRole("group", { name: "Vis" })).getByRole("button", { name: "Omsætning" }));
     expect(replace).toHaveBeenCalledWith("/admin/statistik?periode=30d", { scroll: false });
   });
 
-  it("et interval med negativ omsætning tegnes uden fejl", () => {
+  it("et interval med negativ omsætning går til grafen og tabellen uden fejl", () => {
     const series = defaultSeries();
     series[2] = { ...series[2], kasse: m(-300_000, -100_000), prevRevenue: null, prevProfit: null };
     const { container } = render(<ChartPanel payload={ownerPayload(series)} metric="omsaetning" />);
-    expect(container.querySelector("svg")).not.toBeNull();
-    const rows = within(hiddenTable()).getAllByRole("row").slice(1);
-    expect(within(rows[2]).getAllByText("-3.000 kr.").length).toBeGreaterThan(0);
+    const rows = lastCanvas().rows;
+    expect(rows[2]).toMatchObject({ kasse: -300_000, total: -300_000, prev: null, capTop: null, capBottom: "kasse" });
+    expect(rows[1]).toMatchObject({ capTop: "reparation", capBottom: null });
+    expect(within(tableRows()[2]).getAllByText("-3.000 kr.")).toHaveLength(2);
+    expect(within(tableRows()[2]).getByText("–")).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/NaN/);
   });
 
@@ -170,6 +217,7 @@ describe("ChartPanel", () => {
     render(<ChartPanel payload={staffPayload(ownerPayload(series))} metric="omsaetning" />);
     expect(within(region()).getByText("Ingen salg i perioden")).toBeInTheDocument();
     expect(within(region()).queryByRole("table")).toBeNull();
+    expect(canvas).not.toHaveBeenCalled();
   });
 
   it("delvise refunderinger står stadig under totalen", () => {
@@ -178,20 +226,48 @@ describe("ChartPanel", () => {
     render(<ChartPanel payload={p} metric="omsaetning" />);
     expect(screen.getByText("Delvist refunderet i perioden: 1.500 kr.")).toBeInTheDocument();
   });
+});
 
-  it("tastaturfokus på grafen viser tallene for første interval, piletast flytter", async () => {
-    render(<ChartPanel payload={ownerPayload()} metric="omsaetning" />);
-    const chart = within(region()).getByRole("application", { name: /Omsætning over tid, fordelt på webshop/ });
-    await act(async () => {
-      chart.focus();
-    });
-    const tip = await screen.findByTestId("chart-tooltip");
-    expect(tip).toHaveTextContent("16. nov.");
-    expect(tip).toHaveTextContent("Forrige periode");
-    expect(tip).toHaveTextContent("Margin");
-    await act(async () => {
-      fireEvent.keyDown(chart, { key: "ArrowRight" });
-    });
-    expect(await screen.findByTestId("chart-tooltip")).toHaveTextContent("17. nov.");
+describe("ChartTooltip", () => {
+  const series = [
+    { key: "webshop" as const, label: "Webshop", color: "#1A3D2E" },
+    { key: "kasse" as const, label: "Kassesalg", color: "#5A8C6F" },
+  ];
+  const row: ChartRow = {
+    key: "2026-11-18T08:00:00.000Z",
+    label: "9",
+    webshop: 100_000,
+    kasse: 250_000,
+    reparation: 0,
+    total: 350_000,
+    prev: 300_000,
+    capTop: "kasse",
+    capBottom: null,
+    marginPct: 31.4,
+  };
+
+  it("viser time, total, viste typer, margin og forrige periode", () => {
+    render(<ChartTooltip active payload={[{ payload: row }]} series={series} hourly />);
+    const tip = screen.getByTestId("chart-tooltip");
+    expect(tip).toHaveTextContent("Kl. 9.00");
+    expect(tip).toHaveTextContent("3.500 kr.");
+    expect(tip).toHaveTextContent("Webshop1.000 kr.");
+    expect(tip).toHaveTextContent("Kassesalg2.500 kr.");
+    expect(tip).not.toHaveTextContent("Reparation");
+    expect(tip).toHaveTextContent("Margin31,4 %");
+    expect(tip).toHaveTextContent("Forrige periode3.000 kr.");
+  });
+
+  it("uden margin og forrige periode for en medarbejder eller et udsnit", () => {
+    const plain: ChartRow = { ...row, label: "17. nov.", prev: null, marginPct: undefined };
+    render(<ChartTooltip active payload={[{ payload: plain }]} series={series} hourly={false} />);
+    const tip = screen.getByTestId("chart-tooltip");
+    expect(tip).toHaveTextContent("17. nov.");
+    expect(tip).not.toHaveTextContent(/Margin|Forrige periode|Kl\./);
+  });
+
+  it("intet uden aktivt interval", () => {
+    const { container } = render(<ChartTooltip active={false} payload={[{ payload: row }]} series={series} hourly={false} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

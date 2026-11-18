@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, ComposedChart, Line, Rectangle, ResponsiveContainer, Tooltip, XAxis, YAxis, type BarShapeProps } from "recharts";
 import type { Stream } from "@/lib/admin/statistik/lines";
 import { int, kr, pct } from "./format";
 
@@ -9,8 +9,9 @@ import { int, kr, pct } from "./format";
  * Selve grafen (Recharts). Indlæses kun via next/dynamic fra chart-panel.tsx,
  * så Recharts ikke kommer med i andre admin-siders bundles. Al tekst og alle
  * tal uden for SVG'en (total, forklaring, tabel) ligger i chart-panel.tsx.
- * Tastatur: Recharts' accessibilityLayer viser tallene for første interval ved
- * fokus og flytter med venstre/højre piletast.
+ * Tastatur: Recharts' accessibilityLayer (slået til som standard) viser tallene
+ * for første interval ved fokus og flytter med venstre/højre piletast. Det
+ * garanterede alternativ er den skjulte tabel i chart-panel.tsx.
  */
 
 /** Ét interval, allerede regnet om til den valgte visning (øre). */
@@ -22,8 +23,12 @@ export type ChartRow = {
   reparation: number;
   /** Summen af de viste typer. */
   total: number;
-  /** Forrige periodes total for intervallet; null uden sammenligning. */
+  /** Forrige periodes total for intervallet; null uden sammenligning eller når en type er slået fra. */
   prev: number | null;
+  /** Den øverste positive type i stakken (får runde hjørner foroven). */
+  capTop: Stream | null;
+  /** Den nederste negative type i stakken (får runde hjørner forneden). */
+  capBottom: Stream | null;
   /** Margin for de viste typer; kun for ejeren. */
   marginPct?: number | null;
 };
@@ -51,6 +56,18 @@ function axisTick(oere: number): string {
   return int(kroner);
 }
 
+const RADIUS = 2;
+
+/** Kun stakkens yderste segment får runde hjørner; samlingerne inde i stakken er lige. */
+function renderSegment(props: BarShapeProps, stream: Stream) {
+  const row = props.payload as ChartRow | undefined;
+  const y = Math.min(props.y, props.y + props.height);
+  const height = Math.abs(props.height);
+  const radius: [number, number, number, number] =
+    row?.capTop === stream ? [RADIUS, RADIUS, 0, 0] : row?.capBottom === stream ? [0, 0, RADIUS, RADIUS] : [0, 0, 0, 0];
+  return <Rectangle x={props.x} y={y} width={props.width} height={height} fill={props.fill} radius={radius} />;
+}
+
 type TipProps = {
   active?: boolean;
   payload?: readonly { payload?: unknown }[];
@@ -58,7 +75,8 @@ type TipProps = {
   hourly: boolean;
 };
 
-function ChartTooltip({ active, payload, series, hourly }: TipProps) {
+/** Grafens tooltip; eksporteret, så den kan testes uden Recharts. */
+export function ChartTooltip({ active, payload, series, hourly }: TipProps) {
   const row = payload?.[0]?.payload as ChartRow | undefined;
   if (!active || !row) return null;
   return (
@@ -146,7 +164,7 @@ export function ChartCanvas({
             name={s.label}
             stackId="typer"
             fill={s.color}
-            radius={2}
+            shape={(props: BarShapeProps) => renderSegment(props, s.key)}
             isAnimationActive={animate}
             animationDuration={550}
           />

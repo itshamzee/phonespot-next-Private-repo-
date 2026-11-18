@@ -47,10 +47,12 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
   const visible = STREAMS.filter(({ key }) => on[key]);
   const allOn = visible.length === STREAMS.length;
   const delta = metric === "fortjeneste" ? total.profitDeltaPct : total.deltaPct;
-  const hasPrev = series.some((s) => (metric === "fortjeneste" ? s.prevProfit : s.prevRevenue) != null);
+  // Forrige periode findes kun som total for alle typer; for et udsnit vises den ikke.
+  const hasPrev = allOn && series.some((s) => (metric === "fortjeneste" ? s.prevProfit : s.prevRevenue) != null);
   const empty = series.every((s) => STREAMS.every(({ key }) => s[key].revenue === 0 && (s[key].profit ?? 0) === 0));
 
   const rows: ChartRow[] = series.map((s) => {
+    const values = visible.map(({ key }) => ({ key, v: valueOf(s[key], metric) }));
     const row: ChartRow = {
       key: s.key,
       label: s.label,
@@ -58,7 +60,9 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
       kasse: on.kasse ? valueOf(s.kasse, metric) : 0,
       reparation: on.reparation ? valueOf(s.reparation, metric) : 0,
       total: visible.reduce((a, { key }) => a + valueOf(s[key], metric), 0),
-      prev: (metric === "fortjeneste" ? s.prevProfit : s.prevRevenue) ?? null,
+      prev: hasPrev ? ((metric === "fortjeneste" ? s.prevProfit : s.prevRevenue) ?? null) : null,
+      capTop: values.filter((x) => x.v > 0).at(-1)?.key ?? null,
+      capBottom: values.filter((x) => x.v < 0).at(-1)?.key ?? null,
     };
     if (isOwner) {
       const revenue = visible.reduce((a, { key }) => a + s[key].revenue, 0);
@@ -78,10 +82,12 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
           <div data-testid="chart-total" className="mt-2 text-[34px] font-bold tracking-[-0.02em] tabular-nums">
             <CountUp value={shownTotal} />
           </div>
-          <div className="mt-1">
-            {/* Procentændringen gælder alle typer; for et udsnit findes ingen sammenligning. */}
-            {allOn ? <Delta value={delta} /> : null} <span className="text-[#5E6A63]">{range.compareLabel}</span>
-          </div>
+          {/* Sammenligningen gælder alle typer; for et udsnit findes ingen. */}
+          {allOn ? (
+            <div className="mt-1">
+              <Delta value={delta} /> <span className="text-[#5E6A63]">{range.compareLabel}</span>
+            </div>
+          ) : null}
           {notes.partialRefunds > 0 ? (
             <p className="m-0 mt-1 text-[13px] text-[#5E6A63]">Delvist refunderet i perioden: {kr(notes.partialRefunds)}</p>
           ) : null}
@@ -113,7 +119,8 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
                 key={s.key}
                 type="button"
                 aria-pressed={on[s.key]}
-                onClick={() => setOn((prev) => ({ ...prev, [s.key]: !prev[s.key] }))}
+                // Mindst én type er altid slået til.
+                onClick={() => setOn((prev) => (prev[s.key] && STREAMS.filter(({ key }) => prev[key]).length === 1 ? prev : { ...prev, [s.key]: !prev[s.key] }))}
                 className={`flex h-[34px] cursor-pointer items-center gap-2 rounded-lg border border-[#E2E5E0] px-3 text-[13px] motion-safe:transition-[background-color,color,transform] motion-safe:duration-200 motion-safe:active:scale-[0.97] ${
                   on[s.key] ? "bg-white text-[#15211B]" : "bg-[#F4F6F3] text-[#5E6A63]"
                 }`}
@@ -134,7 +141,7 @@ export function ChartPanel({ payload, metric: requested }: { payload: StatPayloa
               series={chartSeries}
               hasPrev={hasPrev}
               hourly={range.unit === "time"}
-              label={`${title}, fordelt på ${visible.map((s) => s.label.toLowerCase()).join(", ") || "ingen typer"}`}
+              label={`${title}, fordelt på ${visible.map((s) => s.label.toLowerCase()).join(", ")}`}
             />
           </div>
 
