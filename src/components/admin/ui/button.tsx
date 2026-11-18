@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { Spinner } from "./spinner";
 
 type Variant = "primary" | "secondary" | "quiet" | "danger";
 type Size = "md" | "sm";
@@ -41,12 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
       {...rest}
     >
-      {loading && (
-        <span
-          aria-hidden
-          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
-        />
-      )}
+      {loading && <Spinner />}
       {children}
     </button>
   );

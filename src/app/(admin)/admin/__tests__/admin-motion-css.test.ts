@@ -67,7 +67,7 @@ describe("admin-motion.css", () => {
     for (const token of ["--ease-out", "--ease-sheet", "--dur-press", "--dur-fast", "--dur-base", "--dur-slow"]) {
       expect(css).toContain(`${token}:`);
     }
-    for (const cls of [".m-enter", ".m-page", ".m-press", ".m-pop", ".m-backdrop", ".m-toast", ".m-busy", ".m-row-in", ".m-pending-bar", ".m-tap", ".m-skeleton"]) {
+    for (const cls of [".m-enter", ".m-page", ".m-press", ".m-pop", ".m-backdrop", ".m-toast", ".m-busy", ".m-row-in", ".m-pending-bar", ".m-tap", ".m-skeleton", ".m-dialog"]) {
       expect(css).toContain(cls);
     }
   });

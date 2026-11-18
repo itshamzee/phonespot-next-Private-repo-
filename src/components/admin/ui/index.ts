@@ -12,3 +12,5 @@ export { Skeleton, PageSkeleton } from "./skeleton";
 export { ToastProvider, useToast, type ToastTone } from "./toast";
 export { useCountUp } from "./use-count-up";
 export { CountUp } from "./count-up";
+export { Dialog, type DialogProps } from "./dialog";
+export { Spinner } from "./spinner";
