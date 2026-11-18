@@ -51,11 +51,14 @@ export function Topbar({
   const firstName = displayName?.split(/\s+/)[0] ?? null;
 
   return (
-    <header className="relative z-50 flex h-14 shrink-0 items-center gap-3 border-b border-[#E2E5E0] bg-white px-3 text-[#15211B] sm:gap-5 sm:px-5">
+    // Plads på en 360 px-telefon (touch, ejer): menu 44 + butiksvælger + søg 44 + klokke ~64 + konto 44,
+    // gap-2 og px-3. Kun butiksvælgeren krymper (min-w-0, afkortet tekst); alt andet er fast eller
+    // shrink-0, så kontoknappen aldrig skubbes ud over kanten. Fra sm og op er afstanden som før.
+    <header className="relative z-50 flex h-14 shrink-0 items-center gap-2 border-b border-[#E2E5E0] bg-white px-3 text-[#15211B] sm:gap-5 sm:px-5">
       <button
         type="button"
         onClick={onMenu}
-        className="m-press m-tap rounded-lg p-2 text-[#15211B] hover:bg-[#F5F6F4] lg:hidden"
+        className="m-press m-tap shrink-0 rounded-lg p-2 text-[#15211B] hover:bg-[#F5F6F4] lg:hidden"
         aria-label="Åbn menu"
       >
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
@@ -106,7 +109,7 @@ export function Topbar({
             onClick={() => setSearchOpen((v) => !v)}
             aria-expanded={searchOpen}
             aria-label="Søg"
-            className="m-press m-tap ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-[#15211B] hover:bg-[#F5F6F4] sm:hidden"
+            className="m-press m-tap ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#15211B] hover:bg-[#F5F6F4] sm:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
               <circle cx="11" cy="11" r="7" />

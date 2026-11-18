@@ -10,6 +10,9 @@ const OWNER_OPTIONS = ["alle", "vejle", "slagelse", "webshop"] as const;
  * Butikken i topbjælken. Ejeren vælger mellem Alle / Vejle / Slagelse / Webshop;
  * alle andre ser blot deres egen butik som en fast etiket (ingen valg — serveren
  * ignorerer alligevel ønsker om andre butikker).
+ *
+ * Vælgeren er det eneste i topbjælken, der må krympe (min-w-0 + afkortet tekst), så
+ * knapperne til højre aldrig skubbes ud over kanten på en 360 px-telefon.
  */
 export function StoreSwitcher({ className = "" }: { className?: string }) {
   const { loading, isOwner, scope, setScope, ownSlug } = useStoreScope();
@@ -24,7 +27,7 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
     const all = scope === "alle" || scope === "ingen";
     return (
       <div
-        className={`relative shrink-0 ${pill} pl-3 pr-8 focus-within:ring-2 focus-within:ring-[#1A3D2E]/40 ${all ? "border-[#1A3D2E] bg-[#E7EFE9] text-[#1A3D2E]" : ""} ${className}`}
+        className={`relative min-w-0 ${pill} pl-3 pr-8 focus-within:ring-2 focus-within:ring-[#1A3D2E]/40 ${all ? "border-[#1A3D2E] bg-[#E7EFE9] text-[#1A3D2E]" : ""} ${className}`}
       >
         {dot}
         <label htmlFor="admin-store-switcher" className="sr-only">
@@ -37,7 +40,7 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
             const next = parseRequestedScope(e.target.value);
             if (next) setScope(next);
           }}
-          className="h-full cursor-pointer appearance-none bg-transparent pr-1 font-semibold focus:outline-none"
+          className="h-full min-w-0 flex-1 cursor-pointer appearance-none truncate bg-transparent pr-1 font-semibold focus:outline-none"
         >
           {OWNER_OPTIONS.map((slug) => (
             <option key={slug} value={slug} className="text-[#15211B]">
@@ -64,10 +67,10 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
     <p
       data-testid="store-label"
       aria-label="Din butik"
-      className={`${pill} shrink-0 px-3 ${known ? "" : "text-[#5E6A63]"} ${className}`}
+      className={`${pill} min-w-0 px-3 ${known ? "" : "text-[#5E6A63]"} ${className}`}
     >
       {known ? dot : null}
-      {known ? SCOPE_LABELS[ownSlug] : "Ingen butik tildelt"}
+      <span className="truncate">{known ? SCOPE_LABELS[ownSlug] : "Ingen butik tildelt"}</span>
     </p>
   );
 }
