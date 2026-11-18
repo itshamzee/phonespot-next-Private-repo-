@@ -187,7 +187,7 @@ describe("loadOverview", () => {
 });
 
 describe("profit, margin og kostpris er kun til ejeren", () => {
-  const OWNER_ONLY = ["profit", "marginPct", "cost", "revenueExVat"];
+  const OWNER_ONLY = ["profit", "marginPct", "cost", "revenueExVat", "brugtmoms", "vatStandard"];
   // Kostpris, så profit og margin ikke er trivielle.
   const withCost = () => {
     const s = seed();
@@ -204,7 +204,7 @@ describe("profit, margin og kostpris er kun til ejeren", () => {
     }
   });
 
-  it("medarbejderen beholder omsætning, antal, kurv, moms og depositum", async () => {
+  it("medarbejderen beholder omsætning, antal og kurv (det butiksvisningen viser), ikke moms og depositum", async () => {
     state.client = withCost().client;
     const data = await loadOverview({ scope: "vejle", isOwner: false }, "dag", NOW);
     if (data.kind !== "store") throw new Error("forventede butik");
@@ -213,9 +213,6 @@ describe("profit, margin og kostpris er kun til ejeren", () => {
       salesCount: 1,
       creditCount: 0,
       avgBasket: 100_000,
-      vatStandard: 0,
-      brugtmoms: 0,
-      deposits: 0,
     });
     expect(data.cash.state).toBe("open");
     expect(data.ready.total).toBe(1);
@@ -226,6 +223,8 @@ describe("profit, margin og kostpris er kun til ejeren", () => {
     const data = await loadOverview({ scope: "vejle", isOwner: true }, "dag", NOW);
     if (data.kind !== "store") throw new Error("forventede butik");
     expect(data.kpis).toMatchObject({ revenue: 100_000, revenueExVat: 100_000, cost: 40_000, profit: 60_000, marginPct: 60 });
+    // Momsopdeling og depositum står uændret i ejerens payload.
+    expect(data.kpis).toMatchObject({ vatStandard: 0, brugtmoms: 0, deposits: 0 });
   });
 
   it("API'et sender medarbejderen den afskårne form og ejeren den fulde", async () => {
@@ -234,7 +233,7 @@ describe("profit, margin og kostpris er kun til ejeren", () => {
     const staffBody = await (await call()).json();
     expect(staffBody.kind).toBe("store");
     expect(Object.keys(staffBody.kpis).sort()).toEqual(
-      ["avgBasket", "brugtmoms", "creditCount", "deposits", "revenue", "salesCount", "vatStandard"],
+      ["avgBasket", "creditCount", "revenue", "salesCount"],
     );
     const text = JSON.stringify(staffBody);
     for (const word of OWNER_ONLY) expect(text, word).not.toContain(word);

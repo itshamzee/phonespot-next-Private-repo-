@@ -64,8 +64,12 @@ export type CashInfo = { state: CashState; detail: string };
 export type ReadyCase = { id: string; label: string; title: string; days: number; overdue: boolean };
 export type TransferLine = { id: string; text: string; action: "Modtag" | "Send" | null };
 
-/** Nøgletal, der afslører kostpris; kun ejeren får dem (se forViewer). */
-export type OwnerKpiField = "revenueExVat" | "cost" | "profit" | "marginPct";
+/**
+ * Nøgletal, kun ejeren får (se forViewer): kostpris og profit, og momsopdelingen, fordi
+ * brugtmoms × 5 er avancen på brugte enheder, og omsætning − moms er omsætning ekskl. moms.
+ * Depositum vises heller ikke for medarbejdere i butiksvisningen.
+ */
+export type OwnerKpiField = "revenueExVat" | "cost" | "profit" | "marginPct" | "vatStandard" | "brugtmoms" | "deposits";
 /** Butikkens nøgletal: ejer-felterne findes kun i ejerens payload. */
 export type StoreKpis = Omit<Kpis, OwnerKpiField> & Partial<Pick<Kpis, OwnerKpiField>>;
 
@@ -786,8 +790,9 @@ async function loadAllOverview(period: PeriodKey, now: Date): Promise<AllOvervie
 
 /**
  * Payload til viewer. Ejeren får den uændret. For alle andre bygges den op af
- * navngivne felter, så kostpris, profit, margin og omsætning ekskl. moms aldrig
- * forlader serveren; Alle butikker (med profit pr. butik) bliver til den tomme visning.
+ * navngivne felter, så kostpris, profit, margin, omsætning ekskl. moms og momsopdelingen
+ * (standardmoms, brugtmoms) aldrig forlader serveren; kun det, butiksvisningen viser
+ * medarbejderen, kommer med; Alle butikker (med profit pr. butik) bliver til den tomme visning.
  */
 export function forViewer(payload: OverviewPayload, isOwner: boolean): OverviewPayload {
   if (isOwner) return payload;
@@ -803,9 +808,6 @@ export function forViewer(payload: OverviewPayload, isOwner: boolean): OverviewP
       salesCount: k.salesCount,
       creditCount: k.creditCount,
       avgBasket: k.avgBasket,
-      vatStandard: k.vatStandard,
-      brugtmoms: k.brugtmoms,
-      deposits: k.deposits,
     },
     revenueDeltaPct: payload.revenueDeltaPct,
     cash: payload.cash,

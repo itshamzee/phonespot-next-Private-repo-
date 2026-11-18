@@ -9,8 +9,8 @@ export const ARCHIVE_REASON = "Arkiveret fra oversigten (reparationsanmodning ik
 const quiet =
   "m-press m-tap inline-flex min-h-11 items-center justify-center rounded-lg border border-[#E2E5E0] bg-white px-3 py-2 text-[13px] text-[#15211B] hover:bg-[#F5F6F4] disabled:cursor-not-allowed disabled:opacity-50 md:min-h-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F8F55]";
 
-/** Rækken, knappen står i, markeres med denne attribut (og .m-busy), så den kan dæmpes. */
-export const ARCHIVE_ROW_ATTR = "data-archive-row";
+/** Rækken, knappen står i, markeres med denne attribut (og .m-busy), så den kan dæmpes (web-bookings-panel, case-list-page). */
+const ARCHIVE_ROW_ATTR = "data-archive-row";
 
 function markRowBusy(from: HTMLElement | null, busy: boolean) {
   const row = from?.closest(`[${ARCHIVE_ROW_ATTR}]`);
