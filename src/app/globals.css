@@ -366,7 +366,6 @@ main[data-page-enter] {
    Søgeforslag, popovers og bannere: fade + 4 px fra deres kant. Bruges kun
    på elementer, der monteres efter et klik eller indtastning. */
 .pop-in {
-  transform-origin: top;
   transition:
     opacity 160ms var(--ease-ps-out),
     transform 160ms var(--ease-ps-out);
