@@ -36,7 +36,7 @@ export function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="rise-in fixed bottom-0 left-0 right-0 z-50 border-t border-soft-grey bg-white px-4 py-4 shadow-lg">
+    <div className="rise-in fixed bottom-0 left-0 right-0 z-50 border-t border-soft-grey bg-white px-4 py-4 shadow-floating-up">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 sm:flex-row sm:justify-between">
         <p className="text-sm text-charcoal">
           Vi bruger cookies for at forbedre din oplevelse.{" "}

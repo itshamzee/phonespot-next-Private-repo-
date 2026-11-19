@@ -98,7 +98,7 @@ export function CartDrawer() {
 
       {/* Drawer panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-white shadow-xl transition-[transform,visibility] motion-reduce:transition-none ${
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-md transform bg-white shadow-overlay transition-[transform,visibility] motion-reduce:transition-none ${
           isOpen
             ? "visible translate-x-0 duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
             : "invisible translate-x-full duration-200 ease-out"

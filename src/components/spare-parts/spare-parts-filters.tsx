@@ -737,7 +737,7 @@ function SparePartsFiltersInner() {
           {/* Panel */}
           <div
             ref={drawerRef}
-            className="absolute inset-y-0 left-0 flex w-[min(320px,90vw)] flex-col bg-white shadow-xl"
+            className="absolute inset-y-0 left-0 flex w-[min(320px,90vw)] flex-col bg-white shadow-overlay"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">

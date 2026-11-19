@@ -584,7 +584,7 @@
   transition: transform 0.22s ease-out;
   background: #fff;
   border-bottom: 1px solid #e5e5ea;
-  box-shadow: 0 6px 20px rgba(17, 17, 17, 0.06);
+  box-shadow: var(--shadow-floating);
   padding-top: env(safe-area-inset-top);
 }
 .buyBarVisible {

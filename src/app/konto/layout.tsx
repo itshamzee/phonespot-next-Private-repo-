@@ -233,7 +233,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
             className="backdrop-enter absolute inset-0 bg-black/40"
             onClick={() => setMobileNavOpen(false)}
           />
-          <div className="drawer-enter-left relative z-10 flex w-72 flex-col bg-white shadow-xl">
+          <div className="drawer-enter-left relative z-10 flex w-72 flex-col bg-white shadow-overlay">
             <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">
               <span className="font-semibold text-[#1A3D2E]">Min konto</span>
               <button

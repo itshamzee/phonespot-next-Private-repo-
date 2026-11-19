@@ -307,7 +307,7 @@
 .surface .catalog-state { grid-column: 1 / -1; min-height: 450px; padding: 40px 24px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; border: 1px solid var(--line); border-radius: 8px; width: 100%; }
 .surface .catalog-state p { margin: 0; font-size: 14px; }
 .surface .menu-backdrop { position: fixed; inset: 0; z-index: 70; background: #1116; }
-.surface .menu-panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(390px, 100%); z-index: 71; background: white; padding: 24px; overflow-y: auto; }
+.surface .menu-panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(390px, 100%); z-index: 71; background: white; box-shadow: var(--shadow-overlay); padding: 24px; overflow-y: auto; }
 .surface .menu-panel nav { display: flex; flex-direction: column; }
 .surface .menu-panel a { min-height: 48px; padding-block: 12px; border-bottom: 1px solid var(--line); }
 .surface .menu-close { display: flex; align-items: center; gap: 12px; min-height: 44px; margin: 0 0 16px auto; border: 0; background: transparent; }

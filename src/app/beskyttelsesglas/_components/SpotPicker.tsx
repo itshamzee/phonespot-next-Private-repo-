@@ -172,7 +172,7 @@ function ModelSearch({
               if(event.key === "ArrowDown") { event.preventDefault(); buttons[(index+1)%buttons.length]?.focus(); }
               if(event.key === "ArrowUp") { event.preventDefault(); if(index<=0) searchRef.current?.focus(); else buttons[index-1]?.focus(); }
               if(event.key === "Escape") { event.preventDefault(); setQ(""); searchRef.current?.focus(); }
-            }} className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-xl">
+            }} className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-floating">
               {matches.map((m) => (
                 <li key={m.slug}>
                   <button

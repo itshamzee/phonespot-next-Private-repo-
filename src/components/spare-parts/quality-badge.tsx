@@ -38,7 +38,7 @@ export function QualityBadge({
     <div className="relative inline-block">
       {badge}
       {showTooltip && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-[#E5E5EA] bg-white p-4 shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-[#E5E5EA] bg-white p-4 shadow-floating">
           <p className="text-sm leading-relaxed text-[#111111]/70">{description}</p>
           <button
             onClick={() => setShowTooltip(false)}

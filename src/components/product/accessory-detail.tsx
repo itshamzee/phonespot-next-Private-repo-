@@ -331,7 +331,7 @@ function StickyMobileCta({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-sand bg-white px-4 py-3 shadow-lg transition-transform duration-300 md:hidden ${
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-sand bg-white px-4 py-3 shadow-floating-up transition-transform duration-300 md:hidden ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >

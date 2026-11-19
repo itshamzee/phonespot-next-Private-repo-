@@ -90,7 +90,7 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
       </div>
     </div>
     <div className={`${styles.navwrap} relative z-40`}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      <MegaNav menu={menu} campaign={blackNovember} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-[0_24px_40px_-24px_rgba(17,17,17,0.25)]" />
+      <MegaNav menu={menu} campaign={blackNovember} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-floating" />
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>

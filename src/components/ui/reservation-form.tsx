@@ -86,7 +86,7 @@ export function ReservationForm({
       }}
     >
       {/* Panel */}
-      <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-white shadow-overlay sm:rounded-2xl">
         {/* Top accent bar */}
         <div className="h-[3px] bg-gradient-to-r from-emerald-400 to-emerald-600" />
 

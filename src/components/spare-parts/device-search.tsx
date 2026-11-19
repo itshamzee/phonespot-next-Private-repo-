@@ -69,7 +69,7 @@ export function DeviceSearch() {
       </div>
 
       {open && filtered.length > 0 && (
-        <div className="absolute top-full z-50 mt-2 w-full rounded-2xl border border-sand/50 bg-white p-2 shadow-lg">
+        <div className="absolute top-full z-50 mt-2 w-full rounded-2xl border border-sand/50 bg-white p-2 shadow-floating">
           {filtered.map((model) => (
             <button
               key={`${model.categorySlug}-${model.slug}`}

@@ -886,7 +886,7 @@ function SearchableSelect({
         </button>
         {open && (
           <div
-            className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-soft-grey bg-white shadow-lg"
+            className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-soft-grey bg-white shadow-floating"
             onKeyDown={keyboard}
           >
             <div className="border-b border-soft-grey p-2">

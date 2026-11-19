@@ -86,7 +86,7 @@ export function DeviceChips({ category, devices, activeDevice }: DeviceChipsProp
 
       {/* Dropdown panel */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-40 mt-2 w-full max-w-xl rounded-2xl border border-sand bg-white p-4 shadow-lg">
+        <div className="absolute left-0 top-full z-40 mt-2 w-full max-w-xl rounded-2xl border border-sand bg-white p-4 shadow-floating">
           {/* Brand tabs */}
           <div className="mb-4 flex gap-1 overflow-x-auto overscroll-x-contain rounded-lg bg-cream p-1">
             {availableBrands.map((brand) => (
@@ -95,7 +95,7 @@ export function DeviceChips({ category, devices, activeDevice }: DeviceChipsProp
                 onClick={() => setActiveBrand(brand.slug)}
                 className={`shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
                   activeBrand === brand.slug
-                    ? "bg-white text-charcoal shadow-sm"
+                    ? "bg-white text-charcoal shadow-rest"
                     : "text-charcoal/60 hover:text-charcoal"
                 }`}
               >

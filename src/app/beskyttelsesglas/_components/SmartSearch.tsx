@@ -34,7 +34,7 @@ export function SmartSearch({ models }: { models: string[] }) {
         aria-label="Søg telefonmodel"
       />
       {matches.length > 0 && (
-        <ul className="absolute z-10 left-0 right-0 mt-2 bg-white text-black rounded-2xl shadow-2xl overflow-hidden">
+        <ul className="absolute z-10 left-0 right-0 mt-2 bg-white text-black rounded-2xl shadow-floating overflow-hidden">
           {matches.map(m => (
             <li key={m.slug}>
               <Link href={`/beskyttelsesglas/${brandKeyFor(m.slug, m.brand)}/${m.slug}`} className="block px-6 py-3 hover:bg-gray-100">

@@ -734,7 +734,7 @@ function FilterDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="outlet-drawer-title"
-        className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-[16px] bg-white shadow-2xl"
+        className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-[16px] bg-white shadow-overlay"
       >
         <div className="flex items-center justify-between border-b border-sand px-4 py-3">
           <h2 id="outlet-drawer-title" className="text-[17px] font-semibold text-charcoal">
