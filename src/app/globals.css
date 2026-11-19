@@ -388,50 +388,19 @@ main[data-page-enter] {
   }
 }
 
-/* Indlæsningsfelter: en rolig pulsering, der stopper ved reduced motion. */
-.skeleton {
-  background-color: #ececef;
-  animation: ps-skeleton 1.4s ease-in-out infinite;
-}
-@keyframes ps-skeleton {
-  50% {
-    opacity: 0.55;
-  }
-}
-
-/* Kort med billede (blog, guides, butikker): billedet løfter sig en anelse
-   ved hover, som produktkortene. */
-@media (hover: hover) and (pointer: fine) {
-  .media-lift img {
-    transition: transform 320ms var(--ease-ps-out);
-  }
-  .media-lift:hover img {
-    transform: scale(1.03);
-  }
-}
-
-/* Rækker i lister og tabeller (prislister, søgeresultater): baggrunden
-   toner ved hover i stedet for at blinke. */
-.row-hover {
-  transition: background-color var(--dur-ps-fast) ease;
-}
-
 @media (prefers-reduced-motion: reduce) {
   main[data-page-enter],
   .hero-rise > *,
   .value-change,
   .swap-in,
-  .skeleton {
+  /* Pulserende indlæsningsfelter og løbende tekst står stille. */
+  .animate-pulse,
+  .animate-marquee {
     animation: none;
   }
   .pop-in,
-  .rise-in,
-  .media-lift img,
-  .row-hover {
+  .rise-in {
     transition: none;
-  }
-  .media-lift:hover img {
-    transform: none;
   }
 }
 
