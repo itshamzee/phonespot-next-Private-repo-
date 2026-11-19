@@ -5,6 +5,7 @@ import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
 import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
+import { SYMPTOMS, diagnoseImpl } from "./symptoms";
 import type { LookupLog } from "./types";
 
 /**
@@ -287,6 +288,14 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
           .describe("Reparationskategori, fx Skærmskift, Batteriskift, Opladerstik, Bagglas, Kamera"),
       }),
       run: rec((input: { model: string; category?: string }) => quoteRepairImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "diagnose",
+      description: `Koble en beskrevet fejl til en reparationskategori. Vælg den række, der passer bedst: ${SYMPTOMS.map((s) => `${s.key}: ${s.label}`).join("; ")}. Kald derefter quote_repair for pris, hvis svaret beder om det.`,
+      inputSchema: z.object({
+        symptom_key: z.enum(SYMPTOMS.map((s) => s.key) as [string, ...string[]]),
+      }),
+      run: rec((input: { symptom_key: string }) => diagnoseImpl(ctx, input)),
     }),
     betaZodTool({
       name: "get_knowledge",
