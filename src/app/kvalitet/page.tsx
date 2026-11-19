@@ -30,7 +30,7 @@ const QUALITY_FAQ = [
   { question: "Tester I også bærbare og iPads?", answer: "Ja. Testene tilpasses enheden. På bærbare kontrolleres blandt andet tastatur, trackpad, skærmhængsler og porte ud over skærm, batteri og forbindelser." },
   { question: "Tjekker I for vandskade?", answer: "Enhederne inspiceres for vandskadeindikatorer som del af vores testproces. Enheder med tegn på vandskade sælges ikke som refurbished hos PhoneSpot." },
   { question: "Hvad gør jeg, hvis min enhed har en fejl?", answer: "Kontakt os eller opret en reklamation. Enheder har 36 måneders garanti på fabrikationsfejl og funktionelle mangler efter vores garantivilkår. Tilbehør har 2 års reklamationsret." },
-  { question: "Har jeg fortrydelsesret?", answer: "Ved køb online har du 14 dages fortrydelsesret fra leveringsdagen. Læs vores returpolitik for fremgangsmåde og vilkår." },
+  { question: "Har jeg fortrydelsesret?", answer: "Ved køb online har du 30 dages returret på enheder og 14 dages fortrydelsesret på tilbehør og reservedele, regnet fra leveringsdagen. Læs vores returpolitik for fremgangsmåde og vilkår." },
   { question: "Hvorfor vælge en enhed, der allerede er brugt?", answer: "Når en fungerende enhed bliver testet og taget i brug igen, forlænges dens levetid. Det giver eksisterende elektronik mere tid i brug." },
 ];
 
