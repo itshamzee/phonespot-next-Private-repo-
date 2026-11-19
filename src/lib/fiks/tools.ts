@@ -4,6 +4,29 @@ import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import { z } from "zod";
 import { buildPublicDataTools, type ToolContext } from "@/lib/mail-agent/tools";
 import { FIKS_CHANNEL, FIKS_STAFF_NAME } from "./config";
+import {
+  DEVICE_CATEGORIES,
+  DEVICE_GRADES,
+  defaultFindDevicesDeps,
+  findDevicesImpl,
+  type FindDevicesDeps,
+  type FindDevicesInput,
+} from "./devices";
+import type { FiksProduct } from "./products-shared";
+
+/**
+ * The chat's tool context. `deviceFinds` gets the structured result of every
+ * find_devices call (like buybackQuotes), so the reply can carry product cards
+ * without parsing the tool's text.
+ */
+export interface FiksToolContext extends ToolContext {
+  deviceFinds?: FiksProduct[][];
+  /** For tests; the shop's own loaders otherwise. */
+  findDevicesDeps?: FindDevicesDeps;
+}
+
+const DEVICE_LOOKUP_FAILED =
+  "Lageropslaget fejlede teknisk. Nævn ingen modeller, priser eller lagerstatus; henvis til https://phonespot.dk/iphones eller tilbyd at en kollega vender tilbage.";
 
 export interface HandoffInput {
   name: string;
@@ -95,16 +118,63 @@ export async function handoffImpl(target: HandoffTarget, input: HandoffInput): P
 }
 
 /**
- * Tools for an anonymous chat visitor: public price data, the fact base and
- * handoff. No order, repair, buyback or customer lookups: the visitor is not
+ * Tools for an anonymous chat visitor: public price data, the fact base,
+ * devices in stock (find_devices) and handoff. No order, repair, buyback or customer lookups: the visitor is not
  * verified and must never be shown anyone's personal data.
  */
 export function buildPublicTools(
-  ctx: ToolContext,
+  ctx: FiksToolContext,
   onHandoff: (input: HandoffInput) => Promise<{ text: string; done: boolean }>,
 ): BetaRunnableTool[] {
   return [
     ...buildPublicDataTools(ctx),
+    betaZodTool({
+      name: "find_devices",
+      description:
+        "Find enheder (telefoner, tablets, bærbare, ure), der er på lager i webshoppen lige nu, med pris, stand, lagerplads og butik. Returnerer højst 4, bedste match først, derefter billigste. Brug når den besøgende vil købe en enhed eller spørger, hvad vi har. Kortene under dit svar viser billede, pris og link.",
+      inputSchema: z.object({
+        query: z.string().max(100).optional().describe("Model eller mærke, fx iPhone 13 Pro eller Samsung"),
+        category: z
+          .enum(DEVICE_CATEGORIES)
+          .optional()
+          .describe("iphone, smartphone (andre mærker end Apple), ipad, laptop (bærbar) eller smartwatch"),
+        max_price: z.number().positive().optional().describe("Budget i hele kroner, inkl. moms"),
+        min_storage_gb: z.number().positive().optional().describe("Mindste lagerplads i GB (1 TB = 1024)"),
+        grade: z
+          .enum(DEVICE_GRADES)
+          .optional()
+          .describe("Stand: N fabriksny, P premiumstand, A som ny, B god stand, C brugt stand"),
+        in_store: z.enum(["vejle", "slagelse"]).optional().describe("Kun enheder, der står i butikken i Vejle eller Slagelse"),
+      }),
+      run: async (input: FindDevicesInput) => {
+        let text: string;
+        let products: FiksProduct[] = [];
+        try {
+          const out = await findDevicesImpl(input, ctx.findDevicesDeps ?? defaultFindDevicesDeps);
+          text = out.text;
+          products = out.products;
+        } catch (err) {
+          console.error("[fiks] find_devices failed", err instanceof Error ? err.message : err);
+          text = DEVICE_LOOKUP_FAILED;
+        }
+        // The last call of the turn decides the cards, also when it found nothing.
+        ctx.deviceFinds?.push(products);
+        ctx.outputs.push(text);
+        ctx.log.push({
+          tool: "find_devices",
+          input: {
+            query: input.query ?? null,
+            category: input.category ?? null,
+            max_price: input.max_price ?? null,
+            min_storage_gb: input.min_storage_gb ?? null,
+            grade: input.grade ?? null,
+            in_store: input.in_store ?? null,
+          },
+          hits: products.length,
+        });
+        return text;
+      },
+    }),
     betaZodTool({
       name: "handoff",
       description:
