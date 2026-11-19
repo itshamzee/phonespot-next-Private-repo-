@@ -74,7 +74,7 @@ export async function assessMessage(input: AssessInput, anthropic: Anthropic = c
     supabase: input.supabase,
     verified: {
       emails:
-        input.channel === "email" || input.channel === "form" ? [input.senderEmail.toLowerCase()].filter(Boolean) : [],
+        input.channel === "email" || input.channel === "form" ? [input.senderEmail.trim().toLowerCase()].filter(Boolean) : [],
     },
     log: [],
     outputs: [],

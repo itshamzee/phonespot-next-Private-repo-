@@ -168,8 +168,18 @@ export async function assessAndDraft(
     .eq("inquiry_id", args.inquiryId)
     .order("created_at", { ascending: true });
   const thread = (msgs ?? []) as ThreadMessage[];
-  const { data: inquiryRow } = await sb.from("contact_inquiries").select("channel").eq("id", args.inquiryId).maybeSingle();
-  const channel = ((inquiryRow?.channel as InquiryChannel | undefined) ?? "email") as InquiryChannel;
+  const { data: inquiryRow, error: channelError } = await sb
+    .from("contact_inquiries")
+    .select("channel")
+    .eq("id", args.inquiryId)
+    .maybeSingle();
+  // Fail closed: without a known channel the sender is not treated as verified.
+  let channel: InquiryChannel = "messenger";
+  if (channelError || !inquiryRow) {
+    console.error(`[mail-agent] kanal ikke fundet for henvendelse ${args.inquiryId}: ${channelError?.message ?? "ingen række"}`);
+  } else {
+    channel = (inquiryRow.channel as InquiryChannel | null | undefined) ?? "email";
+  }
   const latest = thread.length ? thread[thread.length - 1].body : "";
   const out = await assessMessage(
     {

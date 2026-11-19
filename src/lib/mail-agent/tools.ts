@@ -3,6 +3,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableTool";
 import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
+import { escapeLike } from "./like";
 import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
 import { SYMPTOMS, diagnoseImpl } from "./symptoms";
@@ -57,18 +58,26 @@ function day(v: unknown): string {
   return v ? String(v).slice(0, 10) : "-";
 }
 
-async function customerIdFor(sb: SupabaseClient, email: string): Promise<string | null> {
-  const { data } = await sb.from("customers").select("id").ilike("email", email).maybeSingle();
-  return (data?.id as string | undefined) ?? null;
-}
-
-async function customerIdsFor(sb: SupabaseClient, emails: string[]): Promise<string[]> {
+/**
+ * Customer ids for the verified addresses. The address is escaped for ilike and
+ * the returned row's email is re-checked; a row that is not the sender's sets
+ * scopeMismatch and is dropped.
+ */
+async function customerIdsFor(ctx: ToolContext): Promise<{ ids: string[]; mismatch: boolean }> {
   const ids: string[] = [];
-  for (const e of emails) {
-    const id = await customerIdFor(sb, e);
-    if (id && !ids.includes(id)) ids.push(id);
+  let mismatch = false;
+  for (const e of ctx.verified.emails) {
+    const { data } = await ctx.supabase.from("customers").select("id, email").ilike("email", escapeLike(e)).maybeSingle();
+    if (!data) continue;
+    if (!ctx.verified.emails.includes(String(data.email ?? "").toLowerCase())) {
+      ctx.scopeMismatch.value = true;
+      mismatch = true;
+      continue;
+    }
+    const id = data.id as string;
+    if (!ids.includes(id)) ids.push(id);
   }
-  return ids;
+  return { ids, mismatch };
 }
 
 function formatOrders(orders: Row[]): string {
@@ -102,7 +111,7 @@ export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?:
     const { data: order } = await sb
       .from("orders")
       .select("*")
-      .ilike("order_number", input.order_number.trim())
+      .ilike("order_number", escapeLike(input.order_number.trim()))
       .maybeSingle();
     ctx.log.push({ tool: "lookup_orders", input, hits: order ? 1 : 0 });
     if (!order) return `Ingen ordre med nummer ${input.order_number}.`;
@@ -114,10 +123,10 @@ export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?:
     return formatOrders([order as Row]);
   }
 
-  const customerIds = await customerIdsFor(sb, ctx.verified.emails);
+  const { ids: customerIds, mismatch } = await customerIdsFor(ctx);
   if (!customerIds.length) {
     ctx.log.push({ tool: "lookup_orders", input, hits: 0 });
-    return "Ingen ordrer registreret på afsenderens adresse.";
+    return mismatch ? MISMATCH : "Ingen ordrer registreret på afsenderens adresse.";
   }
   const orders: Row[] = [];
   for (const customerId of customerIds) {
@@ -150,14 +159,14 @@ export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: strin
     rows.push(...((data ?? []) as Row[]));
   } else {
     for (const email of ctx.verified.emails) {
-      const { data } = await base().ilike("customer_email", email);
+      const { data } = await base().ilike("customer_email", escapeLike(email));
       rows.push(...((data ?? []) as Row[]));
     }
   }
   const mine = rows.filter((r) => ctx.verified.emails.includes(String(r.customer_email ?? "").toLowerCase()));
 
+  if (mine.length < rows.length) ctx.scopeMismatch.value = true;
   if (rows.length && mine.length === 0) {
-    ctx.scopeMismatch.value = true;
     ctx.log.push({ tool: "lookup_repairs", input, hits: rows.length });
     return MISMATCH;
   }
@@ -176,16 +185,20 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
   const sb = ctx.supabase;
   const lines: string[] = [];
 
+  let mismatch = false;
   const inquiries: Row[] = [];
   for (const email of ctx.verified.emails) {
     const { data } = await sb
       .from("contact_inquiries")
-      .select("id, subject, status, created_at")
-      .ilike("email", email)
+      .select("id, subject, status, created_at, email")
+      .ilike("email", escapeLike(email))
       .eq("source", "saelg-enhed")
       .order("created_at", { ascending: false })
       .limit(3);
-    inquiries.push(...((data ?? []) as Row[]));
+    for (const r of (data ?? []) as Row[]) {
+      if (ctx.verified.emails.includes(String(r.email ?? "").toLowerCase())) inquiries.push(r);
+      else mismatch = true;
+    }
   }
   for (const i of inquiries) {
     const { data: offers } = await sb
@@ -200,7 +213,10 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
     );
   }
 
-  for (const customerId of await customerIdsFor(sb, ctx.verified.emails)) {
+  const customers = await customerIdsFor(ctx);
+  if (customers.mismatch) mismatch = true;
+  if (mismatch) ctx.scopeMismatch.value = true;
+  for (const customerId of customers.ids) {
     const { data: tradeIns } = await sb
       .from("trade_ins")
       .select("device_description, offered_price, status, received_at, paid_at, created_at")
@@ -215,20 +231,31 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
   }
 
   ctx.log.push({ tool: "lookup_buyback", input: {}, hits: lines.length });
+  if (!lines.length && mismatch) return MISMATCH;
   return lines.length ? lines.join("\n") : "Ingen salgsforespørgsler eller opkøb på afsenderens adresse.";
 }
 
 export async function lookupCustomerImpl(ctx: ToolContext): Promise<string> {
   if (unverified(ctx)) return NOT_VERIFIED;
   let data: Row | null = null;
+  let mismatch = false;
   for (const email of ctx.verified.emails) {
-    const res = await ctx.supabase.from("customers").select("id, name, created_at").ilike("email", email).maybeSingle();
-    if (res.data) {
-      data = res.data as Row;
-      break;
+    const res = await ctx.supabase
+      .from("customers")
+      .select("id, name, created_at, email")
+      .ilike("email", escapeLike(email))
+      .maybeSingle();
+    if (!res.data) continue;
+    if (!ctx.verified.emails.includes(String(res.data.email ?? "").toLowerCase())) {
+      ctx.scopeMismatch.value = true;
+      mismatch = true;
+      continue;
     }
+    data = res.data as Row;
+    break;
   }
   ctx.log.push({ tool: "lookup_customer", input: {}, hits: data ? 1 : 0 });
+  if (!data && mismatch) return MISMATCH;
   if (!data) return "Ukendt kunde – ingen profil på adressen.";
   const { count } = await ctx.supabase
     .from("orders")
