@@ -80,6 +80,7 @@ describe("middleware matcher", () => {
     "/api/repairs/checkout",
     "/api/repairs/abc/public",
     "/api/contact",
+    "/api/fiks/chat",
     "/api/shipping/rates",
     "/api/shipping/pickup-points",
     "/api/checkout/session",
