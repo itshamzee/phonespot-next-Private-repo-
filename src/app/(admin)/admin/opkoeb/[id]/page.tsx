@@ -23,6 +23,7 @@ import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 import SellerAddressEditor from "@/components/admin/buyback/SellerAddressEditor";
+import { useToast } from "@/components/admin/ui";
 
 /** What GET /api/trade-in/suggest answers with. */
 interface LeadSuggestionResponse {
@@ -91,6 +92,7 @@ function formatDate(dateStr: string) {
 /* ------------------------------------------------------------------ */
 
 export default function AdminOpkoebDetailPage() {
+  const toast = useToast();
   const params = useParams();
   const inquiryId = params.id as string;
   const supabase = useMemo(() => createBrowserClient(), []);
@@ -397,9 +399,18 @@ export default function AdminOpkoebDetailPage() {
       if (res.ok) {
         setReplyText("");
         await loadMessages();
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const message = data.error || "Kunne ikke sende svaret";
+        if (res.status === 500 && message.startsWith("SMS'en er sendt")) {
+          // The SMS went out although saving failed: do not invite a second send.
+          setReplyText("");
+          await loadMessages();
+        }
+        toast(message, { tone: "error" });
       }
     } catch {
-      // Silently handle
+      toast("Kunne ikke sende svaret — prøv igen", { tone: "error" });
     }
     setReplySending(false);
   }

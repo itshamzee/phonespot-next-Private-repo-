@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/admin/ui";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import type {
   ContactInquiry,
@@ -60,7 +61,7 @@ const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   erhvervsreparation: "Erhverv",
 };
 
-const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "email", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring"];
+const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "email", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring", "erhvervsreparation"];
 
 const CHANNEL_LABELS: Record<string, string> = {
   email: "Email",
@@ -75,6 +76,7 @@ const CHANNEL_BADGE: Record<string, string> = {
 };
 
 export default function AdminHenvendelserPage() {
+  const toast = useToast();
   const [inquiries, setInquiries] = useState<ContactInquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InquiryStatus | "alle">("alle");
@@ -304,9 +306,18 @@ export default function AdminHenvendelserPage() {
         setReplyText("");
         await loadMessages(inquiryId);
         await loadInquiries();
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const message = data.error || "Kunne ikke sende svaret";
+        if (res.status === 500 && message.startsWith("SMS'en er sendt")) {
+          // The SMS went out although saving failed: do not invite a second send.
+          setReplyText("");
+          await loadMessages(inquiryId);
+        }
+        toast(message, { tone: "error" });
       }
     } catch {
-      // Silently handle
+      toast("Kunne ikke sende svaret — prøv igen", { tone: "error" });
     }
     setReplySending(false);
   }
