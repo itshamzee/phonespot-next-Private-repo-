@@ -36,12 +36,40 @@ type Props = {
   readMoreLinks?: SellLink[];
   relatedHeading: string;
   relatedLinks: SellLink[];
+  /** Vejledende opkøbspriser for sidens model. Tom eller udeladt: ingen pristabel, tekst som før. */
+  prices?: { model: string; rows: { storageGb: number; perfectDkk: number; wornDkk: number | null }[] };
 };
+
+const dkk = (value: number) => `${value.toLocaleString("da-DK")} kr.`;
+const storageLabel = (gb: number) => (gb >= 1024 ? `${gb / 1024} TB` : `${gb} GB`);
+
+/** Når siden viser priser, må teksten ikke sige, at prisen først kommer senere. */
+export function instantPriceCopy(text: string): string {
+  return text
+    .replace(/Vi gennemgår oplysningerne og vender tilbage med et tilbud/g, "Du ser prisen med det samme")
+    .replace(/[Vv]i vender tilbage med et tilbud efter vores gennemgang/g, (match) => (match[0] === "V" ? "Du ser prisen med det samme" : "du ser prisen med det samme"))
+    .replace(/Du får et konkret tilbud, når vi har gennemgået dine oplysninger, og siger du ja,/g, "Du ser prisen med det samme i formularen, og siger du ja,");
+}
+
+/** FAQ med de konkrete priser, så Google og AI kan citere dem. */
+export function sellPriceFaq(model: string, rows: { storageGb: number; perfectDkk: number }[]): SellFaq {
+  const parts = rows.map((row) => `${dkk(row.perfectDkk)} for ${storageLabel(row.storageGb)}`);
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} og ${parts[parts.length - 1]}` : parts[0];
+  return {
+    question: `Hvad giver I for en ${model}?`,
+    answer: `Lige nu betaler vi ${list} for en ${model} i fin stand uden fejl, med batteri over 80 % og uden iCloud-lås. Har skærm eller bagside små ridser, er prisen ca. 10 % lavere. Du ser prisen for din telefon med det samme i formularen, og den holder, når telefonen svarer til din beskrivelse. Pengene kommer samme dag, som vi modtager den.`,
+  };
+}
 
 // Løfte 5 (fast opkøbspris) er godkendt ordlyd i src/lib/promises.ts.
 const BUYBACK_PROMISE = PHONESPOT_PROMISES.find((promise) => promise.title === "Fast opkøbspris");
 
-export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], relatedHeading, relatedLinks }: Props) {
+export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], relatedHeading, relatedLinks, prices }: Props) {
+  const priced = prices && prices.rows.length > 0 ? prices : null;
+  const faq = priced
+    ? [sellPriceFaq(priced.model, priced.rows), ...content.faq.map((item) => ({ ...item, answer: instantPriceCopy(item.answer) }))]
+    : content.faq;
+  const answer = priced ? instantPriceCopy(content.answer) : content.answer;
   const blogPosts = content.blogSlugs
     .map((blogSlug) => getPostBySlug(blogSlug))
     .filter((post): post is NonNullable<typeof post> => post !== null);
@@ -68,7 +96,7 @@ export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], rel
         data={{
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          mainEntity: content.faq.map(({ question, answer }) => ({
+          mainEntity: faq.map(({ question, answer }) => ({
             "@type": "Question",
             name: question,
             acceptedAnswer: { "@type": "Answer", text: answer },
@@ -94,7 +122,7 @@ export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], rel
               {content.eyebrow}
             </p>
             <h1 id="sell-device-title">{content.h1}</h1>
-            <p className={styles.lead}>{content.answer}</p>
+            <p className={styles.lead}>{answer}</p>
             <div className={styles.introDetail}>
               <div>
                 <StorefrontIcon kind="pin" />
@@ -107,9 +135,37 @@ export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], rel
                 </div>
               )}
               <p className={styles.note}>
-                Du sender en vurderingsanmodning. Et tilbud kommer efter vores gennemgang.
+                {priced
+                  ? "Du ser prisen med det samme, når du har beskrevet standen. Den holder, når telefonen svarer til beskrivelsen."
+                  : "Du sender en vurderingsanmodning. Et tilbud kommer efter vores gennemgang."}
               </p>
             </div>
+            {priced && (
+              <div className={styles.prices}>
+                <h2>Det betaler vi for en {priced.model}</h2>
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Lagerplads</th>
+                      <th scope="col">Fin stand</th>
+                      <th scope="col">Små ridser</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {priced.rows.map((row) => (
+                      <tr key={row.storageGb}>
+                        <td>{storageLabel(row.storageGb)}</td>
+                        <td>
+                          <strong>{dkk(row.perfectDkk)}</strong>
+                        </td>
+                        <td>{row.wornDkk != null ? dkk(row.wornDkk) : "Ring til os"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p>Uden fejl, batteri over 80 % og uden iCloud-lås. Revnet skærm eller dårligt batteri trækkes fra i formularen.</p>
+              </div>
+            )}
           </div>
           <div id="start" className={styles.formStart}>
             <SellDeviceWizard initialDevice={content.wizardPreset} />
@@ -135,7 +191,7 @@ export function SellLandingPage({ content, path, crumbs, readMoreLinks = [], rel
             <p className={styles.eyebrow}>Sådan gør du klar</p>
             <h2 id="device-help-title">{content.faqHeading}</h2>
             <div className={styles.faq}>
-              {content.faq.map(({ question, answer }) => (
+              {faq.map(({ question, answer }) => (
                 <details key={question}>
                   <summary>
                     {question}

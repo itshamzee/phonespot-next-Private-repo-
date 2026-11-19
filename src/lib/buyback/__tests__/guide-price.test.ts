@@ -51,7 +51,7 @@ describe("computeGuidePrice", () => {
   });
 
   it("viser ingen pris over loftet og afviser en ugyldig faktor", () => {
-    expect(computeGuidePrice({ baseOre: kr(9399), partPricesOre: [], factor: 0.7 }).status).toBe("none");
+    expect(computeGuidePrice({ baseOre: kr(14999), partPricesOre: [], factor: 0.7 }).status).toBe("none");
     expect(computeGuidePrice({ baseOre: kr(2399), partPricesOre: [], factor: 1.2 }).status).toBe("none");
     expect(computeGuidePrice({ baseOre: kr(2399), partPricesOre: [], factor: 0 }).status).toBe("none");
   });
@@ -129,7 +129,7 @@ describe("estimateGuidePrice", () => {
     deviceType: "Telefon", brand: "Apple", model: "iPhone 13", storage: "128GB", ram: "",
     useCustom: false, brandCustom: "", modelCustom: "",
   };
-  const fine: BuybackCondition = { screen: "Perfekt", back: "Små ridser", battery: "God (80%+)", allWorking: "Ja", brokenParts: [], cloudLocked: "Nej" };
+  const fine: BuybackCondition = { screen: "Perfekt", back: "Perfekt", battery: "God (80%+)", allWorking: "Ja", brokenParts: [], cloudLocked: "Nej" };
   const on = { ...DEFAULT_BUYBACK_SETTINGS, publicPriceEnabled: true };
   // Ingen fejl i de fleste tests, så reservedelsopslaget må aldrig blive kaldt.
   const noDb = {} as Parameters<typeof estimateGuidePrice>[0];
@@ -175,5 +175,28 @@ describe("guidePriceTable", () => {
     expect(rows.map((r) => r.model)).not.toContain("iPhone 11");
     expect(rows[0].model).toBe("iPhone 13");
     expect(rows.find((r) => r.model === "iPhone 13" && r.storageGb === 128)).toMatchObject({ amountDkk: 1200, source: "exact" });
+  });
+});
+
+describe("stand og sælg-sidens pristabel (19/11-2026)", () => {
+  it("små ridser giver ca. 10 % mindre, perfekt stand giver fuld pris", async () => {
+    const { isWorn } = await import("../guide-price");
+    expect(isWorn({ screen: "Små ridser", back: "Perfekt" })).toBe(true);
+    expect(isWorn({ screen: "Perfekt", back: "Perfekt" })).toBe(false);
+    const fine = computeGuidePrice({ baseOre: kr(3799), partPricesOre: [], factor: 0.75 });
+    const worn = computeGuidePrice({ baseOre: kr(3799), partPricesOre: [], factor: 0.75, worn: true });
+    if (fine.status !== "priced" || worn.status !== "priced") throw new Error("ingen pris");
+    expect(worn.amountOre).toBeLessThan(fine.amountOre);
+    expect(worn.amountOre).toBeGreaterThanOrEqual(fine.amountOre * 0.85);
+    expect(worn.marginOre).toBeGreaterThan(fine.marginOre);
+  });
+
+  it("viser kun lagerstørrelser, vi selv har salgspriser på", async () => {
+    const { guidePricesForModel } = await import("../guide-price-server");
+    const listings: GuideListing[] = [3799, 3799, 3899].map((price) => ({ model: "iphone 15", catalogModel: "iPhone 15", storageGb: 128, priceOre: kr(price) }));
+    const rows = guidePricesForModel(listings, { ...DEFAULT_BUYBACK_SETTINGS, guidePriceFactor: 0.75 }, "iPhone 15");
+    expect(rows.map((row) => row.storageGb)).toEqual([128]);
+    expect(rows[0].perfectDkk).toBeGreaterThan(rows[0].wornDkk ?? 0);
+    expect(guidePricesForModel(listings, DEFAULT_BUYBACK_SETTINGS, "iPhone X")).toEqual([]);
   });
 });

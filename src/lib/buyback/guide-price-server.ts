@@ -6,6 +6,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
 import type { BuybackCondition, BuybackDevice, BuybackSettings } from "./types";
 import { conditionToFaults, unpriceableBrokenParts } from "./fault-mapping";
 import { lookupPartPriceOre } from "./parts-lookup";
+import { loadBuybackSettings } from "./settings";
 import {
   DEFAULT_GUIDE_FACTOR,
   GUIDE_PRICE,
@@ -13,6 +14,7 @@ import {
   computeGuidePrice,
   effectiveFactor,
   guideFamily,
+  isWorn,
   normalizeModelName,
   storageGb,
   type BaseValue,
@@ -102,7 +104,50 @@ export async function estimateGuidePrice(
     partPricesOre.push(partOre);
   }
 
-  return { ...computeGuidePrice({ baseOre: base.baseOre, partPricesOre, factor: effectiveFactor(family, guideFactor(settings)) }), base };
+  return {
+    ...computeGuidePrice({ baseOre: base.baseOre, partPricesOre, factor: effectiveFactor(family, guideFactor(settings)), worn: isWorn(condition) }),
+    base,
+  };
+}
+
+/**
+ * Pristabel til en offentlig sælg-side. Tom liste, når prisen på forhånd er slået
+ * fra, modellen ikke er med, eller databasen ikke svarer: siden virker som før.
+ */
+export async function loadSellPagePrices(client: SupabaseAdmin, model: string): Promise<ModelPriceRow[]> {
+  try {
+    if (guideFamily(model) == null) return [];
+    const settings = await loadBuybackSettings(client);
+    if (!settings.publicPriceEnabled) return [];
+    return guidePricesForModel(await loadGuideListings(client), settings, model);
+  } catch {
+    return [];
+  }
+}
+
+export type ModelPriceRow ={ storageGb: number; perfectDkk: number; wornDkk: number | null };
+
+/**
+ * Priser til sælg-siden for én model: fin stand og små ridser pr. lagerstørrelse,
+ * uden fejl og med godt batteri. Kun lagerstørrelser, vi har salgspriser på selv
+ * (ikke gættet ud fra større varianter), så tabellen aldrig lover for meget.
+ */
+export function guidePricesForModel(listings: GuideListing[], settings: BuybackSettings, model: string): ModelPriceRow[] {
+  const family = guideFamily(model);
+  if (family == null) return [];
+  const wanted = normalizeModelName(model);
+  const own = listings.filter((listing) => listing.model === wanted);
+  const factor = effectiveFactor(family, guideFactor(settings));
+  const rows: ModelPriceRow[] = [];
+  for (const gb of TABLE_STORAGES) {
+    const base = baseFromListings(own, gb);
+    if (!base || base.source !== "exact") continue;
+    const perfect = computeGuidePrice({ baseOre: base.baseOre, partPricesOre: [], factor });
+    if (perfect.status !== "priced") continue;
+    const worn = computeGuidePrice({ baseOre: base.baseOre, partPricesOre: [], factor, worn: true });
+    rows.push({ storageGb: gb, perfectDkk: perfect.amountOre / 100, wornDkk: worn.status === "priced" ? worn.amountOre / 100 : null });
+  }
+  return rows;
 }
 
 export type GuideTableRow = {

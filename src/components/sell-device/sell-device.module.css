@@ -94,6 +94,46 @@
   font-size: 12px;
   margin: 25px 0 0;
 }
+.prices {
+  margin-top: 28px;
+  border-top: 1px solid #d9e0d5;
+  padding-top: 22px;
+}
+.prices h2 {
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  margin: 0 0 12px;
+}
+.prices table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.prices th,
+.prices td {
+  text-align: left;
+  padding: 9px 0;
+  border-bottom: 1px solid #d9e0d5;
+}
+.prices th {
+  font-size: 12px;
+  font-weight: 600;
+  color: #576354;
+}
+.prices td:not(:first-child),
+.prices th:not(:first-child) {
+  text-align: right;
+}
+.prices td strong {
+  font-weight: 600;
+  color: #1a3d2e;
+}
+.prices p {
+  font-size: 12px;
+  color: #576354;
+  margin: 12px 0 0;
+}
 .formStart {
   min-width: 0;
   scroll-margin-top: 140px;

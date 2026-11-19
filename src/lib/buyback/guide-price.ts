@@ -29,7 +29,9 @@ export const GUIDE_PRICE = {
   /** Vi viser ingen pris under dette beløb. */
   minOfferOre: 30_000,
   /** Over dette beløb ser et menneske på sagen først. */
-  maxOfferOre: 500_000,
+  maxOfferOre: 800_000,
+  /** Små ridser på skærm eller bagside: prisen ganges med dette (Green: Velholdt er ca. 85-90 % af Som ny). */
+  wearFactor: 0.9,
   /** Mindste antal listede enheder, før en salgspris tæller som datagrundlag. */
   minDataPoints: 3,
   /** Fradrag pr. lagertrin, når vi kun har pris på en større lagerstørrelse. */
@@ -114,6 +116,13 @@ export function baseFromListings(
   return null;
 }
 
+const WORN = new Set(["små ridser", "ridser", "buler/ridser"]);
+
+/** Sandt, når skærm eller bagside har ridser, men ikke er i stykker. */
+export function isWorn(condition: { screen?: string | null; back?: string | null }): boolean {
+  return [condition.screen, condition.back].some((value) => WORN.has((value ?? "").trim().toLowerCase()));
+}
+
 export type GuidePrice =
   | { status: "priced"; amountOre: number; marginOre: number; baseOre: number; factor: number }
   | { status: "none"; reason: string };
@@ -123,8 +132,9 @@ export function effectiveFactor(family: number, factor: number): number {
 }
 
 /** Selve prisformlen. `partPricesOre` er én reservedelspris pr. oplyst fejl. */
-export function computeGuidePrice(input: { baseOre: number; partPricesOre: number[]; factor: number }): GuidePrice {
-  const { baseOre, partPricesOre, factor } = input;
+export function computeGuidePrice(input: { baseOre: number; partPricesOre: number[]; factor: number; worn?: boolean }): GuidePrice {
+  const { baseOre, partPricesOre } = input;
+  const factor = input.worn ? input.factor * GUIDE_PRICE.wearFactor : input.factor;
   if (!(factor > 0 && factor < 1)) return { status: "none", reason: "Ugyldig faktor" };
   if (baseOre <= 0) return { status: "none", reason: "Ingen salgspris" };
 
