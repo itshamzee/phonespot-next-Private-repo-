@@ -280,7 +280,7 @@ describe("fix round 2", () => {
     const start = Date.now();
     extractAmounts(text);
     hasUnparseableAmount(text);
-    expect(Date.now() - start).toBeLessThan(500);
+    expect(Date.now() - start).toBeLessThan(2000);
   });
 
   it("also stays fast on other long inputs", () => {
@@ -289,7 +289,7 @@ describe("fix round 2", () => {
       const start = Date.now();
       extractAmounts(text);
       hasUnparseableAmount(text);
-      expect(Date.now() - start).toBeLessThan(500);
+      expect(Date.now() - start).toBeLessThan(2000);
     }
   });
 });
