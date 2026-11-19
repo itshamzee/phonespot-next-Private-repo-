@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { formatKroner, type FiksSellAction } from "@/lib/fiks/quote-shared";
+import { sanitizeProducts, type FiksProduct } from "@/lib/fiks/products-shared";
 import { FiksFigure } from "./fiks-figure";
 import { FIKS_ENDPOINT, FIKS_MAX_CHARS, PANEL_CLASS, STARTERS, readToken, writeToken } from "./fiks-shared";
 import styles from "./fiks.module.css";
@@ -20,10 +21,12 @@ interface ChatMessage {
   fresh?: boolean;
   /** One-tap handoff to the sell form, under the reply that gave the price. */
   action?: FiksSellAction;
+  /** Devices from find_devices, shown as cards under the reply. */
+  products?: FiksProduct[];
 }
 
 export const GREETING =
-  "Hej, jeg er Fiks, PhoneSpots digitale assistent. Spørg mig om priser på reparation, hvad din enhed er værd, levering eller garanti.";
+  "Hej, jeg er Fiks, PhoneSpots digitale assistent. Spørg mig om priser på reparation, hvad din enhed er værd, hjælp til at vælge en telefon, levering eller garanti.";
 
 const NETWORK_ERROR = "Beskeden blev ikke sendt. Tjek din forbindelse, og prøv igen.";
 const CLOSE_MS = 160;
@@ -102,13 +105,16 @@ export function FiksPanel({
         const res = await fetch(`${FIKS_ENDPOINT}?token=${encodeURIComponent(token)}`, { cache: "no-store" });
         if (res.status === 503) return onDisabled();
         if (!res.ok) return;
-        const data = (await res.json()) as { messages?: { from: From; body: string }[]; action?: unknown };
+        const data = (await res.json()) as { messages?: { from: From; body: string }[]; action?: unknown; products?: unknown };
         if (cancelled || !data.messages?.length) return;
         const restoredMessages: ChatMessage[] = data.messages.map((m) => ({ id: nextId(), from: m.from, body: m.body }));
         // The sell button belongs under Fiks' latest reply.
         const action = validAction(data.action);
         const lastFiks = restoredMessages.findLastIndex((m) => m.from === "fiks");
         if (action && lastFiks >= 0) restoredMessages[lastFiks] = { ...restoredMessages[lastFiks], action };
+        // The server only sends cards that belong to Fiks' latest reply.
+        const products = sanitizeProducts(data.products);
+        if (products.length && lastFiks >= 0) restoredMessages[lastFiks] = { ...restoredMessages[lastFiks], products };
         if (cancelled || restored.current) return;
         restored.current = true;
         setMessages((current) => [...restoredMessages, ...current]);
@@ -144,14 +150,31 @@ export function FiksPanel({
           body: JSON.stringify({ token: readToken() ?? undefined, message, website: honeypotRef.current?.value ?? "" }),
         });
         if (res.status === 503) return onDisabled();
-        const data = (await res.json().catch(() => ({}))) as { token?: string | null; reply?: string; error?: string; action?: unknown };
+        const data = (await res.json().catch(() => ({}))) as {
+          token?: string | null;
+          reply?: string;
+          error?: string;
+          action?: unknown;
+          products?: unknown;
+        };
         if (!res.ok || !data.reply) {
           setMessages((m) => [...m, { id: nextId(), from: "fiks", body: data.error || NETWORK_ERROR, error: true, fresh: true }]);
           return;
         }
         if (data.token) writeToken(data.token);
         const action = validAction(data.action);
-        setMessages((m) => [...m, { id: nextId(), from: "fiks", body: data.reply!, fresh: true, ...(action ? { action } : {}) }]);
+        const products = sanitizeProducts(data.products);
+        setMessages((m) => [
+          ...m,
+          {
+            id: nextId(),
+            from: "fiks",
+            body: data.reply!,
+            fresh: true,
+            ...(action ? { action } : {}),
+            ...(products.length ? { products } : {}),
+          },
+        ]);
       } catch {
         setMessages((m) => [...m, { id: nextId(), from: "fiks", body: NETWORK_ERROR, error: true, fresh: true }]);
       } finally {
@@ -236,6 +259,7 @@ export function FiksPanel({
               {m.from === "visitor" ? m.body : linkify(m.body)}
             </Bubble>
             {m.action && <SellCard action={m.action} />}
+            {m.products && <ProductList products={m.products} fresh={m.fresh} />}
           </Fragment>
         ))}
         {pending && (
@@ -353,5 +377,76 @@ function SellCard({ action }: { action: FiksSellAction }) {
         {action.label}
       </a>
     </div>
+  );
+}
+
+/**
+ * Devices from find_devices: slim rows, each one link to the product page in
+ * the same tab. Price, stand and store come from the tool, never the model.
+ */
+function ProductList({ products, fresh }: { products: FiksProduct[]; fresh?: boolean }) {
+  return (
+    <ul aria-label="Enheder på lager" className="ml-8 flex max-w-[calc(100%-2rem)] flex-col gap-2 self-stretch">
+      {products.map((p, i) => (
+        <li
+          key={p.url}
+          className={fresh ? styles.productIn : undefined}
+          style={fresh ? { animationDelay: `${80 + i * 40}ms` } : undefined}
+        >
+          <ProductCard product={p} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ProductCard({ product }: { product: FiksProduct }) {
+  const [failed, setFailed] = useState(false);
+  const meta = [product.gradeLabel, product.storage].filter(Boolean).join(" · ");
+  return (
+    <a
+      href={product.url}
+      className={`${styles.press} ${styles.productCard} flex items-center gap-3 rounded-[12px] border border-soft-grey bg-white p-2 pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-eco`}
+    >
+      <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-[#F7F7F8]">
+        {product.image && !failed ? (
+          // Product photos come from several storage hosts; a plain img skips the optimiser's host list, like the shop tabs.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image}
+            alt={product.name}
+            width={64}
+            height={64}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailed(true)}
+            className="h-full w-full object-contain p-1.5"
+          />
+        ) : (
+          <span className="px-1 text-center text-[10px] leading-tight text-gray">Intet billede</span>
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-[14px] font-semibold leading-snug text-charcoal">{product.name}</span>
+        {meta && <span className="truncate text-[12px] leading-snug text-gray">{meta}</span>}
+        <span className="mt-0.5 text-[14px] font-semibold leading-snug text-[#1A3D2E]">
+          <span className="text-[12px] font-medium text-gray">fra </span>
+          {formatKroner(product.priceFrom)}
+        </span>
+        {product.inStore && <span className="truncate text-[11px] leading-snug text-gray">Kan ses i {product.inStore}</span>}
+      </span>
+      <svg
+        aria-hidden="true"
+        className="h-4 w-4 shrink-0 text-green-eco/60"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </a>
   );
 }

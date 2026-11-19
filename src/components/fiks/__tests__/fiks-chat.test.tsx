@@ -179,6 +179,89 @@ describe("FiksPanel", () => {
     expect(screen.getByText("1.850 kr.")).toBeInTheDocument();
   });
 
+  it("offers a fourth starter for choosing a phone", () => {
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    expect(STARTERS).toHaveLength(4);
+    expect(screen.getByRole("button", { name: "Hjælp mig med at vælge en telefon" })).toBeInTheDocument();
+  });
+
+  it("renders product cards under the reply as same-tab links with image, stand and price", async () => {
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        token: "t-1",
+        reply: "iPhone 13 passer til dit budget. Kortene herunder viser pris og stand.",
+        products: [
+          {
+            name: "iPhone 13",
+            url: "https://phonespot.dk/refurbished/iphone-13?grade=B",
+            image: "https://x.supabase.co/a.webp",
+            priceFrom: 3499,
+            grade: "B",
+            gradeLabel: "Stand B · God stand",
+            storage: "128GB",
+            inStore: "Vejle",
+          },
+          { name: "iPhone 12", url: "/refurbished/iphone-12", image: null, priceFrom: 2499 },
+        ],
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: STARTERS[3] }));
+
+    const list = await screen.findByRole("list", { name: "Enheder på lager" });
+    const links = list.querySelectorAll("a");
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "https://phonespot.dk/refurbished/iphone-13?grade=B");
+    expect(links[0].getAttribute("target")).toBeNull();
+    expect(links[1]).toHaveAttribute("href", "/refurbished/iphone-12");
+    const img = screen.getByRole("img", { name: "iPhone 13" });
+    expect(img).toHaveAttribute("loading", "lazy");
+    expect(img).toHaveAttribute("width", "64");
+    expect(screen.getByText("Stand B · God stand · 128GB")).toBeInTheDocument();
+    expect(screen.getByText("3.499 kr.")).toBeInTheDocument();
+    expect(screen.getByText("Kan ses i Vejle")).toBeInTheDocument();
+    expect(screen.getByText("Intet billede")).toBeInTheDocument();
+  });
+
+  it("renders no card for an unsafe product URL", async () => {
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        token: "t-1",
+        reply: "Her er et forslag.",
+        products: [
+          { name: "Ond", url: "https://evil.example/x", image: null, priceFrom: 100 },
+          { name: "Protokol", url: "//evil.example/x", image: null, priceFrom: 100 },
+          { name: "Script", url: "javascript:alert(1)", image: null, priceFrom: 100 },
+          { name: "God", url: "https://phonespot.dk/refurbished/ok", image: "javascript:alert(1)", priceFrom: 100 },
+        ],
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: STARTERS[3] }));
+    await screen.findByText("Her er et forslag.");
+    const list = screen.getByRole("list", { name: "Enheder på lager" });
+    expect(list.querySelectorAll("a")).toHaveLength(1);
+    expect(screen.queryByText("Ond")).toBeNull();
+    expect(screen.queryByText("Script")).toBeNull();
+    // The unsafe image is dropped, not rendered.
+    expect(list.querySelector("img")).toBeNull();
+  });
+
+  it("restores product cards under Fiks' latest reply", async () => {
+    window.sessionStorage.setItem(FIKS_TOKEN_KEY, "t-4");
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        messages: [
+          { from: "visitor", body: "iPhone?", at: "a" },
+          { from: "fiks", body: "Her er iPhone 12.", at: "b" },
+        ],
+        products: [{ name: "iPhone 12", url: "https://phonespot.dk/refurbished/iphone-12", image: null, priceFrom: 2499 }],
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    expect(await screen.findByRole("link", { name: /iPhone 12/ })).toHaveAttribute("href", "https://phonespot.dk/refurbished/iphone-12");
+  });
+
   it("shows a typing indicator while waiting", async () => {
     let resolve: (v: Response) => void = () => {};
     fetchMock.mockImplementation(() => new Promise<Response>((r) => (resolve = r)));

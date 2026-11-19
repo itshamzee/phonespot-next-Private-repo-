@@ -4,9 +4,10 @@ export const FIKS_TOKEN_KEY = "ps_fiks_token";
 export const FIKS_ENDPOINT = "/api/fiks/chat";
 export const FIKS_MAX_CHARS = 1000;
 
-/** Starter chips in an empty chat. The middle one is also what the teaser sends. */
+/** Starter chips in an empty chat. BUYBACK_STARTER is also what the teaser sends. */
 export const BUYBACK_STARTER = "Hvad er min iPhone værd?";
-export const STARTERS = ["Hvad koster en ny skærm?", BUYBACK_STARTER, "Hvornår har I åbent?"];
+export const BUY_STARTER = "Hjælp mig med at vælge en telefon";
+export const STARTERS = ["Hvad koster en ny skærm?", BUYBACK_STARTER, "Hvornår har I åbent?", BUY_STARTER];
 
 /** Mobile: bottom sheet up to 85dvh. From sm: a 380x580 panel anchored bottom-right, where the launcher sits. */
 export const PANEL_CLASS =
