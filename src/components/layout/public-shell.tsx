@@ -8,7 +8,7 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUpsellRouter } from "@/components/cart/cart-upsell-router";
 import type { MegaMenu } from "@/lib/navigation/mega-menu";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { MessengerChat } from "@/components/ui/messenger-chat";
+import { FiksChat } from "@/components/fiks/fiks-chat";
 import { BlackNovemberBar } from "@/components/campaign/black-november";
 import { CheckoutHeader, CheckoutFooter } from "@/components/checkout/checkout-chrome";
 
@@ -41,7 +41,7 @@ export function LayoutShell({ children, menu = null, campaignActive = false }: {
       <CartDrawer />
       <CartUpsellRouter />
       <CookieConsent />
-      <MessengerChat />
+      <FiksChat />
     </CartProvider>
   );
 }
