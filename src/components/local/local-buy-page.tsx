@@ -36,6 +36,7 @@ function Card({ template }: { template: TemplateWithStock }) {
     <ProductGridCard
       slug={template.slug}
       image={template.images?.[0]}
+      hoverImage={template.images?.[1]}
       imageSizes={IMAGE_SIZES}
       title={template.display_name}
       minPrice={template.min_price}

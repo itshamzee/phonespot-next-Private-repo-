@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase/client";
 
 export type HomepageProduct = {
   id: string; slug: string; title: string; image: string | null;
+  /** Second photo for the card's mouse-hover cross-fade. */
+  hoverImage?: string | null;
   minPrice: number | null; compareAtPrice: number | null; deviceCount: number;
   brand: string; category: string; inStock: boolean; href: string;
   specifications: Record<string, string>;
@@ -34,6 +36,7 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
       slug: p.slug,
       title: p.title,
       image: p.images?.[0] ?? null,
+      hoverImage: p.images?.[1] ?? null,
       minPrice: p.sale_price ?? p.selling_price,
       compareAtPrice: p.sale_price ? p.selling_price : null,
       deviceCount: 1,
@@ -152,6 +155,7 @@ export async function getHomepageProducts(tab: string, limit: number): Promise<H
         slug: t.slug,
         title: t.display_name,
         image: t.images?.[0] ?? null,
+        hoverImage: t.images?.[1] ?? null,
         minPrice,
         // Real recommended retail price only — never base_price_a, which is
         // PhoneSpot's own Grade A selling price, not the manufacturer's price.

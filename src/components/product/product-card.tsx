@@ -4,6 +4,7 @@ import type { Product } from "@/lib/shopify/types";
 import { Price } from "@/components/ui/price";
 import { ConditionBadge } from "@/components/ui/condition-badge";
 import { LinkPendingBar } from "@/components/ui/link-pending-bar";
+import { CardHoverImage } from "@/components/product/card-hover-image";
 
 function getConditionGrade(tags: string[]): "N" | "P" | "A" | "B" | "C" | null {
   const lower = tags.map((t) => t.toLowerCase());
@@ -36,6 +37,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const grade = getConditionGrade(product.tags);
   const image = product.images[0];
+  const hoverImage = product.images[1];
   const { minVariantPrice } = product.priceRange;
   const compareAt = product.variants[0]?.compareAtPrice;
   const savingsPercent = getSavingsPercent(minVariantPrice.amount, compareAt?.amount ?? null);
@@ -43,12 +45,12 @@ export function ProductCard({
   return (
     <Link
       href={href ?? `/${collectionHandle}/${product.handle}`}
-      className="group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white transition-shadow hover:shadow-md"
+      className="card-lift group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white transition-shadow hover:shadow-md"
     >
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-[16px]" />
 
       {/* Image area */}
-      <div className="relative aspect-square overflow-hidden rounded-t-[16px] bg-[#f4f5f2]">
+      <div className="card-media relative aspect-square overflow-hidden rounded-t-[16px] bg-[#f4f5f2]">
         {grade && (
           <div className="absolute top-3 left-3 z-10">
             <ConditionBadge grade={grade} />
@@ -74,6 +76,13 @@ export function ProductCard({
           <div className="flex h-full w-full items-center justify-center text-gray">
             Intet billede
           </div>
+        )}
+        {image && hoverImage && hoverImage.url !== image.url && (
+          <CardHoverImage
+            src={hoverImage.url}
+            sizes="(min-width: 1024px) 33vw, (min-width: 420px) 50vw, 100vw"
+            className="object-contain p-7"
+          />
         )}
       </div>
 

@@ -428,6 +428,7 @@ async function RelatedProducts({
             key={t.id}
             slug={t.slug}
             image={t.images[0]}
+            hoverImage={t.images[1]}
             title={t.display_name}
             minPrice={t.min_price}
             deviceCount={t.device_count}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { StorefrontIcon, type StorefrontIconKind } from "@/components/ui/storefront-icon";
+import { CardHoverImage } from "@/components/product/card-hover-image";
 import styles from "./storefront.module.css";
 
 import type { HomepageProduct } from "@/lib/home/homepage-products";
@@ -28,15 +29,16 @@ function ProductCard({ product }: { product: HomepageProduct }) {
       ? [specs["størrelse"], specs.connectivity].filter(Boolean).join(" · ")
       : isAccessory ? "Se produktets detaljer" : "Vælg lagerplads og stand";
 
-  return <article className={styles.product}>
+  return <article className={`${styles.product} card-lift`}>
     <Link href={product.href}>
-      <div className={styles["product-photo"]}>
+      <div className={`${styles["product-photo"]} card-media`}>
         <span className={styles["product-tag"]}>{isAccessory ? "Tilbehør" : "Refurbished"}</span>
         {product.image && !failedImage
           // API images can originate from several verified product storage hosts.
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={product.image} alt={product.title} loading="lazy" onError={() => setFailedImage(true)} />
           : <span className={styles["image-fallback"]}>Billede ikke tilgængeligt</span>}
+        {product.image && !failedImage && product.hoverImage && product.hoverImage !== product.image && <CardHoverImage src={product.hoverImage} plain />}
       </div>
       <div className={styles["product-body"]}>
         <h3>{product.title.replace(/^Apple /, "")}</h3>
