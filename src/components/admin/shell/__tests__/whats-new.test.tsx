@@ -18,11 +18,11 @@ describe("WhatsNew", () => {
     expect(screen.getByText(/Nyt kundecenter og en klogere assistent/)).toBeInTheDocument();
     expect(screen.queryByText("Til dig som ejer")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Forstået" }));
-    expect(JSON.parse(window.localStorage.getItem("ps_whats_new_seen_s1") ?? "[]")).toContain("2026-11-20-kundecenter");
+    expect(JSON.parse(window.localStorage.getItem("ps_whats_new_seen_s1") ?? "[]")).toContain("2026-11-19-kundecenter");
   });
 
   it("viser intet, når alt er set", () => {
-    window.localStorage.setItem("ps_whats_new_seen_s1", JSON.stringify(["2026-11-20-kundecenter"]));
+    window.localStorage.setItem("ps_whats_new_seen_s1", JSON.stringify(["2026-11-19-kundecenter"]));
     render(<WhatsNew />);
     expect(screen.queryByText("Nyt i admin")).toBeNull();
   });

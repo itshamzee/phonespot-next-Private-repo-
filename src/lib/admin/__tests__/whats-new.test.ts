@@ -3,7 +3,7 @@ import { unseenEntries, WHATS_NEW, type WhatsNewEntry } from "../whats-new";
 
 const e = (id: string, ownerOnly?: boolean): WhatsNewEntry => ({
   id,
-  date: "2026-11-20",
+  date: "2026-11-19",
   title: id,
   items: [{ text: "x" }],
   ...(ownerOnly ? { ownerOnly } : {}),
@@ -30,6 +30,6 @@ describe("WHATS_NEW", () => {
   it("har unikke id'er og nyeste først", () => {
     const ids = WHATS_NEW.map((x) => x.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(WHATS_NEW[0]?.id).toBe("2026-11-20-kundecenter");
+    expect(WHATS_NEW[0]?.id).toBe("2026-11-19-kundecenter");
   });
 });
