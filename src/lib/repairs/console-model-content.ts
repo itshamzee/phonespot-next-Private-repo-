@@ -115,7 +115,7 @@ const DEFINITIONS: Record<string, Definition> = {
     liquidMetal: true,
     about: (p) => [
       "Den almindelige PlayStation 5 med diskdrev er den konsol, vi oftest har på bordet. To fejl går igen: sort skærm, fordi HDMI-porten er knækket indvendigt, og en konsol, der larmer og bliver varm, fordi blæser og køleprofil er fyldt med støv.",
-      `HDMI-porten sidder loddet på bundkortet og skiftes med mikrolodning.${p.bundle ? ` Når konsollen alligevel er åben, renser vi den indvendigt, og pakken med port og rengøring koster ${kr(p.bundle)}${p.hdmi && p.hdmi > p.bundle ? `, mindre end porten alene til ${kr(p.hdmi)}` : ""}.` : ""}`,
+      `HDMI-porten sidder loddet på bundkortet og skiftes med mikrolodning.${p.bundle ? ` Når konsollen alligevel er åben, renser vi den indvendigt, og pakken med port og rengøring koster ${kr(p.bundle)}${p.hdmi && p.hdmi > p.bundle ? `, mindre end porten alene til ${kr(p.hdmi)}` : ""}` : ""}`,
       `Både den første PS5 og den slanke udgave (Slim) har flydende metal på chippen: ${LIQUID_METAL_NOTE}`,
     ],
     extraFaqs: () => [
@@ -309,7 +309,7 @@ export function getConsoleModelPage(
           {
             question: `Hvad koster en ny HDMI-port på ${d.short}?`,
             answer: prices.bundle
-              ? `HDMI-port og indvendig rengøring koster ${kr(prices.bundle)} i én pakke${prices.hdmi ? `. Porten alene koster ${kr(prices.hdmi)}` : ""}. Porten skiftes med mikrolodning, og det tager 2-3 hverdage.`
+              ? `HDMI-port og indvendig rengøring koster ${kr(prices.bundle)} i én pakke${prices.hdmi ? `. Porten alene koster ${kr(prices.hdmi)}` : "."} Porten skiftes med mikrolodning, og det tager 2-3 hverdage.`
               : `En ny HDMI-port koster ${kr(prices.hdmi!)} Porten skiftes med mikrolodning.`,
           },
         ]
