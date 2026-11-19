@@ -15,12 +15,23 @@ ALTER TABLE public.contact_inquiries DROP CONSTRAINT IF EXISTS contact_inquiries
 ALTER TABLE public.contact_inquiries ADD CONSTRAINT contact_inquiries_channel_check
   CHECK (channel IN ('email', 'form', 'sms', 'messenger', 'google_review', 'trustpilot_review'));
 
--- Backfill (sikker at koere igen: rammer kun raekker der stadig mangler vaerdi)
+-- Backfill kanal: eksplicit kildeliste og external_thread_id IS NULL goer det idempotent,
+-- fanger formularraekker oprettet mellem migration og deploy ved genkoersel, og roerer
+-- aldrig rigtige mailtraade.
 UPDATE public.contact_inquiries SET channel = 'form'
-  WHERE source <> 'email' AND channel = 'email';
+  WHERE channel = 'email'
+    AND external_thread_id IS NULL
+    AND source IN ('kontaktformular', 'saelg-enhed', 'reparation-booking',
+                   'elektronikforsikring', 'erhvervsreparation', 'manuel');
+
+-- Backfill last_inbound_at: kun gamle raekker (foer cutoff), saa en genkoersel ikke
+-- udfylder raekker som den nye kode bevidst har ladet vaere NULL.
 UPDATE public.contact_inquiries SET last_inbound_at = created_at
-  WHERE last_inbound_at IS NULL;
-UPDATE public.contact_inquiries SET email = NULL WHERE email = '';
+  WHERE last_inbound_at IS NULL
+    AND created_at < timestamptz '2026-11-21 00:00:00+00';
+
+-- email goeres kun nullable. Eksisterende '' omskrives ikke: koden der er deployet
+-- foer migrationen antager at email er en streng.
 
 CREATE UNIQUE INDEX IF NOT EXISTS contact_inquiries_channel_thread_open_idx
   ON public.contact_inquiries (channel, external_thread_id)

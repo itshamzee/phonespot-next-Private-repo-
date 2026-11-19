@@ -174,6 +174,7 @@ export interface RepairComment {
 // --- Inquiry types ---
 export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email" | "erhvervsreparation";
 export type InquiryChannel = "email" | "form" | "sms" | "messenger" | "google_review" | "trustpilot_review";
+export type InquiryMessageChannel = InquiryChannel | "system";
 export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 
 export interface ContactInquiry {
@@ -205,7 +206,7 @@ export interface InquiryMessage {
   id: string;
   inquiry_id: string;
   sender: "staff" | "customer";
-  channel: InquiryChannel;
+  channel: InquiryMessageChannel;
   body: string;
   staff_name: string | null;
   message_id?: string | null;
