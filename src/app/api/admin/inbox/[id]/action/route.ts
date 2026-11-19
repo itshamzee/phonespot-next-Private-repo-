@@ -26,6 +26,7 @@ interface Current {
 
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
 const FAILED = "Handlingen kunne ikke gennemføres. Prøv igen.";
+const CLOSED = "Sagen er lukket. Genåbn den først.";
 const SNOOZE_ERROR = "Vælg et tidspunkt i fremtiden, højst 30 dage frem.";
 
 /**
@@ -66,6 +67,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const respond = (patch: Partial<Current>) =>
     NextResponse.json({ ok: true, inquiry: { ...cur, ...patch } }, { headers: { "Cache-Control": "no-store" } });
 
+  const taken = (name: string | null) =>
+    NextResponse.json(
+      { error: `Sagen er allerede taget af ${name?.trim() || "en kollega"}.`, assignedName: name ?? null },
+      { status: 409 },
+    );
+  async function currentAssignee(): Promise<string | null> {
+    const { data } = await sb.from("contact_inquiries").select("assigned_name").eq("id", id).maybeSingle();
+    return (data?.assigned_name as string | null) ?? null;
+  }
+
   async function apply(patch: Record<string, unknown>): Promise<boolean> {
     const { error } = await sb.from("contact_inquiries").update(patch).eq("id", id);
     if (error) console.error("[admin/inbox] action update failed:", id, type, error.message);
@@ -74,38 +85,49 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   switch (type) {
     case "take": {
+      // Forventet ansvarlig er OBLIGATORISK (string eller null): klienten skal sige, hvad den så.
+      if (!("expectAssignedTo" in payload) || !(payload.expectAssignedTo === null || typeof payload.expectAssignedTo === "string")) {
+        return bad("Opdater siden og prøv igen.");
+      }
+      if (cur.status === "lukket") return bad(CLOSED, 409);
       const expect = payload.expectAssignedTo;
-      const taken = (name: string | null) =>
-        NextResponse.json(
-          { error: `Sagen er allerede taget af ${name?.trim() || "en kollega"}.`, assignedName: name ?? null },
-          { status: 409 },
-        );
-      const hasExpectation = expect === null || typeof expect === "string";
       if (cur.assigned_to === staff.id) return respond({}); // allerede min
-      if (hasExpectation && cur.assigned_to !== expect) return taken(cur.assigned_name);
+      if (cur.assigned_to !== expect) return taken(cur.assigned_name);
 
       const patch = { assigned_to: staff.id, assigned_name: myName };
-      let q = sb.from("contact_inquiries").update(patch).eq("id", id);
       // Betinget skrivning: mister vi et kapløb, rører vi ingenting.
-      if (hasExpectation) q = expect === null ? q.is("assigned_to", null) : q.eq("assigned_to", cur.assigned_to as string);
-      const { data, error } = await q.select("id");
+      const base = sb.from("contact_inquiries").update(patch).eq("id", id);
+      const { data, error } = await (expect === null ? base.is("assigned_to", null) : base.eq("assigned_to", expect)).select("id");
       if (error) {
         console.error("[admin/inbox] take failed:", id, error.message);
         return bad(FAILED, 500);
       }
-      if (hasExpectation && (data ?? []).length === 0) {
-        const { data: again } = await sb.from("contact_inquiries").select("assigned_name").eq("id", id).maybeSingle();
-        return taken((again?.assigned_name as string | null) ?? null);
-      }
+      if ((data ?? []).length === 0) return taken(await currentAssignee());
       return respond(patch);
     }
 
     case "release": {
+      if (!cur.assigned_to) return respond({}); // allerede ledig
+      const isOwner = staff.role === "owner";
+      if (cur.assigned_to !== staff.id && !isOwner) return taken(cur.assigned_name);
       const patch = { assigned_to: null, assigned_name: null };
-      return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
+      // Betinget på den ansvarlige, vi så: slipper aldrig en sag, der imens er skiftet hånd.
+      const { data, error } = await sb
+        .from("contact_inquiries")
+        .update(patch)
+        .eq("id", id)
+        .eq("assigned_to", cur.assigned_to)
+        .select("id");
+      if (error) {
+        console.error("[admin/inbox] release failed:", id, error.message);
+        return bad(FAILED, 500);
+      }
+      if ((data ?? []).length === 0) return taken(await currentAssignee());
+      return respond(patch);
     }
 
     case "snooze": {
+      if (cur.status === "lukket") return bad(CLOSED, 409);
       const until = parseSnoozeUntil(payload.until, now);
       if (!until) return bad(SNOOZE_ERROR);
       return (await apply({ snoozed_until: until })) ? respond({ snoozed_until: until }) : bad(FAILED, 500);
@@ -169,6 +191,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
       if (verdict === "correct") return respond({});
 
+      // Bevidst: "wrong" genåbner også en lukket sag, så en forkert Fiks-besvarelse altid lander hos et menneske.
       const patch = { status: "ny", assigned_to: staff.id, assigned_name: myName, snoozed_until: null };
       return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
     }

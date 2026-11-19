@@ -21,6 +21,7 @@ function digitsOf(phone: string | null | undefined): string {
 
 type Identity = { emails: string[]; digits: string | null };
 type Row = Record<string, unknown>;
+type Hits = { email: boolean; phone: boolean };
 
 /** Efterkontrol: rækken skal have præcis samme mail (små bogstaver) eller samme cifre i telefonen. */
 function isSame(row: Row, who: Identity, emailCol: string, phoneCol: string | null): boolean {
@@ -41,10 +42,17 @@ async function lookup(
   emailCol: string,
   phoneCol: string | null,
   build: (col: string, pattern: string) => PromiseLike<{ data: unknown; error: unknown }>,
+  hits: Hits,
 ): Promise<Row[]> {
   const seen = new Map<string, Row>();
   const add = (rows: unknown) => {
-    for (const r of (rows ?? []) as Row[]) if (isSame(r, who, emailCol, phoneCol)) seen.set(String(r.id), r);
+    for (const r of (rows ?? []) as Row[]) {
+      if (!isSame(r, who, emailCol, phoneCol)) continue;
+      seen.set(String(r.id), r);
+      const email = String(r[emailCol] ?? "").trim().toLowerCase();
+      if (email && who.emails.includes(email)) hits.email = true;
+      if (phoneCol && who.digits && digitsOf(r[phoneCol] as string | null) === who.digits) hits.phone = true;
+    }
   };
   for (const email of who.emails) {
     const res = await build(emailCol, escapeLike(email));
@@ -84,7 +92,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     email: (inq.email as string | null) ?? null,
     phone: (inq.phone as string | null) ?? null,
   };
-  const empty = { known: false, ...base, repairs: [], orders: [], buyback: [], previous: [] };
+  const empty = { known: false, matchedBy: null, ...base, repairs: [], orders: [], buyback: [], previous: [] };
 
   // Kun kanaler hvor afsenderen er verificeret: mail/formular (mail) og SMS (telefon).
   const channel = (inq.channel as string | null) ?? "email";
@@ -98,6 +106,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!who.emails.length && !who.digits) return NextResponse.json(empty, { headers: NO_STORE });
 
   const scope = scopeForRequest(request, access.staff);
+  const hits: Hits = { email: false, phone: false };
 
   try {
     const repairsRaw = await lookup(who, "customer_email", "customer_phone", (col, pattern) =>
@@ -110,6 +119,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           .limit(FETCH),
         scope,
       ),
+      hits,
     );
 
     // Ordrer: kunde (på mail) -> orders.customer_id.
@@ -151,6 +161,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .limit(FETCH),
           scope,
         ),
+        hits,
       )
     ).slice(0, 3);
     const offerByInquiry = new Map<string, Row>();
@@ -176,12 +187,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             .limit(FETCH),
           scope,
         ),
+        hits,
       )
     ).slice(0, 5);
+
+    if (ordersRaw.length) hits.email = true; // ordrer findes kun via mail
+    const matchedBy = hits.email && hits.phone ? "both" : hits.email ? "email" : hits.phone ? "phone" : null;
 
     return NextResponse.json(
       {
         known: true,
+        matchedBy,
         ...base,
         repairs: repairsRaw.slice(0, 5).map((r) => ({
           id: r.id,

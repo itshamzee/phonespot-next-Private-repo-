@@ -1,27 +1,26 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { applyStoreScope, requireStaffScope, unauthorizedResponse } from "@/lib/auth/store-scope-server";
+import { loadInboxRows } from "@/lib/inquiries/inbox-data";
 import {
-  buildInboxRows,
   buildSearchFilter,
   isInboxView,
   matchesView,
   staffDisplayName,
   viewCounts,
-  type InboxDraftInput,
   type InboxInquiryInput,
-  type InboxMessageInput,
   type InboxView,
 } from "@/lib/inquiries/inbox";
 
 const MAX_ROWS = 200;
 const DONE_ROWS = 100;
 const COUNT_ROWS = 1000;
+const NEED_CANDIDATES = 1000;
+const FIKS_CANDIDATES = 600;
+const OPEN_STATUSES = ["ny", "venter_paa_svar"];
 
 const PAGE_COLUMNS =
   "id, name, subject, message, status, channel, mailbox, store_id, assigned_to, assigned_name, snoozed_until, last_inbound_at, source, created_at";
-const COUNT_COLUMNS =
-  "id, status, channel, store_id, assigned_to, assigned_name, snoozed_until, last_inbound_at, source, created_at";
 
 const CHANNEL_BY_VIEW: Partial<Record<InboxView, string[]>> = {
   "ch-mail": ["email"],
@@ -57,112 +56,77 @@ export async function GET(request: Request) {
   const nowIso = now.toISOString();
 
   try {
-    // ---- 1. siden af henvendelser ----
-    let restrictIds: string[] | null = null;
-    if (view === "need" || view === "fiks") {
-      const q =
-        view === "need"
-          ? sb.from("ai_drafts").select("inquiry_id").eq("status", "pending").eq("needs_human", true)
-          : sb.from("ai_drafts").select("inquiry_id").eq("status", "auto_sent");
-      const { data, error } = await q.order("created_at", { ascending: false }).limit(300);
-      if (error) throw error;
-      restrictIds = [...new Set((data ?? []).map((d) => d.inquiry_id as string))];
-    }
-    if (view === "ch-chat" || (restrictIds && restrictIds.length === 0)) {
-      return NextResponse.json({ rows: [], counts: await countsFor(sb, scope, me.id, now), me }, { headers: NO_STORE });
-    }
+    const counts = await countsFor(sb, scope, me.id, now);
+    if (view === "ch-chat") return NextResponse.json({ rows: [], counts, me }, { headers: NO_STORE });
 
+    // ---- kandidater: statusfilter i SQL FØR sortering og grænse, så besvarede sager aldrig fortrænger åbne ----
     let query = applyStoreScope(sb.from("contact_inquiries").select(PAGE_COLUMNS), scope);
     if (view === "done") {
       query = query
         .eq("status", "lukket")
         .order("last_inbound_at", { ascending: false, nullsFirst: false })
         .limit(DONE_ROWS);
-    } else if (view === "waiting") {
+    } else if (view === "waiting" || view === "fiks") {
+      // fiks: besvarede sager, hvor seneste udkast er auto_sent (afgøres bagefter pr. gruppe).
       query = query
         .eq("status", "besvaret")
         .order("last_inbound_at", { ascending: false, nullsFirst: false })
+        .limit(view === "fiks" ? FIKS_CANDIDATES : MAX_ROWS);
+    } else if (view === "snoozed") {
+      query = query
+        .neq("status", "lukket")
+        .gt("snoozed_until", nowIso)
+        .order("snoozed_until", { ascending: true })
         .limit(MAX_ROWS);
     } else {
       query = query
-        .neq("status", "lukket")
+        .in("status", OPEN_STATUSES)
         .order("last_inbound_at", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: true })
-        .limit(MAX_ROWS);
+        .limit(view === "need" ? NEED_CANDIDATES : MAX_ROWS);
       if (view === "mine") query = query.eq("assigned_to", me.id);
       if (view === "unassigned") query = query.is("assigned_to", null);
-      if (view === "snoozed") query = query.gt("snoozed_until", nowIso);
+      // To .or() efter hinanden giver to `or`-parametre, som PostgREST OG'er (se rapporten).
       if (view === "mine" || view === "unassigned" || view === "need") {
         query = query.or(`snoozed_until.is.null,snoozed_until.lte.${nowIso}`);
       }
       const channels = CHANNEL_BY_VIEW[view];
       if (channels) query = query.in("channel", channels);
-      if (restrictIds) query = query.in("id", restrictIds);
     }
     const search = buildSearchFilter(url.searchParams.get("q") ?? "");
     if (search) query = query.or(search);
 
     const { data: inquiries, error } = await query;
     if (error) throw error;
-    const page = (inquiries ?? []) as unknown as InboxInquiryInput[];
-    const ids = page.map((i) => i.id);
+    const candidates = (inquiries ?? []) as unknown as InboxInquiryInput[];
 
-    // ---- 2 + 3. beskeder og udkast for hele siden, ét hug hver ----
-    let messages: InboxMessageInput[] = [];
-    let drafts: InboxDraftInput[] = [];
-    if (ids.length > 0) {
-      const [msgRes, draftRes] = await Promise.all([
-        sb
-          .from("inquiry_messages")
-          .select("inquiry_id, sender, body, is_internal, created_at")
-          .in("inquiry_id", ids)
-          .eq("is_internal", false)
-          .order("created_at", { ascending: false })
-          .limit(ids.length * 8),
-        sb
-          .from("ai_drafts")
-          .select("inquiry_id, status, needs_human, reason, draft_body, created_at")
-          .in("inquiry_id", ids)
-          .in("status", ["pending", "auto_sent"])
-          .order("created_at", { ascending: false })
-          .limit(ids.length * 4),
-      ]);
-      if (msgRes.error) throw msgRes.error;
-      if (draftRes.error) throw draftRes.error;
-      messages = (msgRes.data ?? []) as unknown as InboxMessageInput[];
-      drafts = (draftRes.data ?? []) as unknown as InboxDraftInput[];
-    }
-
-    const rows = buildInboxRows(page, messages, drafts)
+    const rows = (await loadInboxRows(sb, candidates))
       .filter((r) => matchesView(view, r, me.id, now))
       .slice(0, MAX_ROWS);
 
-    return NextResponse.json(
-      { rows, counts: await countsFor(sb, scope, me.id, now), me },
-      { headers: NO_STORE },
-    );
+    return NextResponse.json({ rows, counts, me }, { headers: NO_STORE });
   } catch (err) {
     console.error("[admin/inbox] list failed:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Kunne ikke hente indbakken" }, { status: 500 });
   }
 }
 
-/** Tællere for de tre faste visninger: alle åbne sager i scopet, uafhængigt af valgt visning og søgning. */
-async function countsFor(sb: ReturnType<typeof createServerClient>, scope: Parameters<typeof applyStoreScope>[1], meId: string, now: Date) {
-  const { data, error } = await applyStoreScope(sb.from("contact_inquiries").select(COUNT_COLUMNS), scope)
-    .neq("status", "lukket")
+/**
+ * Tællere for de tre faste visninger. Samme kandidatregler som listen (kun åbne statusser,
+ * scope, samme rækkebygning), så tal og liste stemmer for de samme data.
+ */
+async function countsFor(
+  sb: ReturnType<typeof createServerClient>,
+  scope: Parameters<typeof applyStoreScope>[1],
+  meId: string,
+  now: Date,
+) {
+  const { data, error } = await applyStoreScope(sb.from("contact_inquiries").select(PAGE_COLUMNS), scope)
+    .in("status", OPEN_STATUSES)
+    .order("last_inbound_at", { ascending: true, nullsFirst: false })
     .limit(COUNT_ROWS);
   if (error) throw error;
   const open = (data ?? []) as unknown as InboxInquiryInput[];
   if (open.length === 0) return { mine: 0, unassigned: 0, need: 0 };
-
-  const { data: draftData, error: draftErr } = await sb
-    .from("ai_drafts")
-    .select("inquiry_id, status, needs_human, reason, created_at")
-    .in("status", ["pending", "auto_sent"])
-    .order("created_at", { ascending: false })
-    .limit(5000);
-  if (draftErr) throw draftErr;
-  const rows = buildInboxRows(open, [], (draftData ?? []) as unknown as InboxDraftInput[]);
-  return viewCounts(rows, meId, now);
+  return viewCounts(await loadInboxRows(sb, open), meId, now);
 }

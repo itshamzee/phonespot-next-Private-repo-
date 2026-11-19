@@ -119,7 +119,7 @@ describe("action: take / release", () => {
   });
 
   it("slipper en sag", async () => {
-    await action(post({ type: "take" }), params("i-vejle"));
+    await action(post({ type: "take", expectAssignedTo: null }), params("i-vejle"));
     const res = await action(post({ type: "release" }), params("i-vejle"));
     expect(res.status).toBe(200);
     expect(inquiry("i-vejle")).toMatchObject({ assigned_to: null, assigned_name: null });
@@ -128,13 +128,13 @@ describe("action: take / release", () => {
 
 describe("action: adgang", () => {
   it("medarbejder uden adgang til butikken får 404", async () => {
-    const res = await action(post({ type: "take" }), params("i-slagelse"));
+    const res = await action(post({ type: "take", expectAssignedTo: null }), params("i-slagelse"));
     expect(res.status).toBe(404);
     expect(inquiry("i-slagelse").assigned_to).toBeNull();
   });
   it("uden login giver 401", async () => {
     state.staff = null;
-    const res = await action(post({ type: "take" }), params("i-vejle"));
+    const res = await action(post({ type: "take", expectAssignedTo: null }), params("i-vejle"));
     expect(res.status).toBe(401);
   });
 });
@@ -301,6 +301,7 @@ describe("GET /api/admin/inbox (liste)", () => {
     expect((await list(get("http://x/api/admin/inbox"))).status).toBe(401);
   });
   it("fiks-visning viser sager Fiks har besvaret, ikke ledige", async () => {
+    inquiry("i-vejle").status = "besvaret";
     const fiks = (await (await list(get("http://x/api/admin/inbox?view=fiks"))).json()).rows;
     expect(fiks.map((r: { id: string }) => r.id)).toEqual(["i-vejle"]);
     const free = (await (await list(get("http://x/api/admin/inbox?view=unassigned"))).json()).rows;
@@ -309,7 +310,8 @@ describe("GET /api/admin/inbox (liste)", () => {
   it("ingen N+1: kun én forespørgsel pr. tabel til rækkerne", async () => {
     await list(get("http://x/api/admin/inbox?view=ch-form"));
     const msgQueries = db.log.filter((l) => l.startsWith("inquiry_messages.inquiry_id=in:"));
-    expect(msgQueries).toHaveLength(1);
+    // én for listen og én for tællerne, uanset antal rækker
+    expect(msgQueries).toHaveLength(2);
   });
 });
 

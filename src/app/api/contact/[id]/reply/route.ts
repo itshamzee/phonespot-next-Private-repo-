@@ -44,8 +44,19 @@ export async function POST(
       staffName,
       channel,
     });
-    await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
-    return NextResponse.json({ id: result.messageRowId }, { status: 201 });
+    // Efter afsendelsen må intet gøre svaret til en fejl, der inviterer til gensendelse.
+    let bookkept = false;
+    try {
+      bookkept = await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
+    } catch {
+      console.error(`[reply route] bookkeeping threw for inquiry ${id}`);
+    }
+    return NextResponse.json(
+      bookkept
+        ? { id: result.messageRowId }
+        : { id: result.messageRowId, warning: "Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden." },
+      { status: 201 },
+    );
   } catch (err) {
     if (err instanceof ReplyError) {
       return NextResponse.json({ error: err.message }, { status: STATUS_BY_CODE[err.code] });
