@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { formatKroner } from "./amount-filter";
 import { MAIL_CATEGORIES, type Assessment, type MailCategory } from "./types";
 
 /** Shape of the submit_assessment tool input. Also the zod validation for the stored result. */
@@ -47,13 +48,22 @@ export function handlingFor(category: MailCategory): Handling {
  * categories, lookup scope mismatches, and no drafts for categories that never
  * get an answer.
  */
-export function finalizeAssessment(a: Assessment, opts: { scopeMismatch: boolean }): Assessment {
+export function finalizeAssessment(
+  a: Assessment,
+  opts: { scopeMismatch: boolean; unbackedAmounts: number[] },
+): Assessment {
   const h = handlingFor(a.category);
   let needs_human = a.needs_human || h.forceHuman;
   let reason = a.reason;
+  if (opts.unbackedAmounts.length > 0) {
+    needs_human = true;
+    const list = opts.unbackedAmounts.map(formatKroner);
+    const joined = list.length > 1 ? `${list.slice(0, -1).join(", ")} og ${list[list.length - 1]}` : list[0];
+    reason = `Udkastet nævner ${joined}, som ikke kommer fra et opslag. ${reason}`.trim();
+  }
   if (opts.scopeMismatch) {
     needs_human = true;
-    reason = `Opslag matchede en anden adresse end afsenderens. ${a.reason}`.trim();
+    reason = `Opslag matchede en anden adresse end afsenderens. ${reason}`.trim();
   }
   return { ...a, needs_human, reason, draft: h.draft ? a.draft : null };
 }

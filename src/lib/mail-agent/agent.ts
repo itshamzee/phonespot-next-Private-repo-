@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { unbackedAmounts } from "./amount-filter";
 import { buildSystemPrompt } from "./prompt";
 import { assessmentSchema, finalizeAssessment } from "./schema";
 import { buildTools, type ToolContext } from "./tools";
@@ -129,8 +130,12 @@ export async function assessMessage(input: AssessInput, anthropic: Anthropic = c
   }
 
   const parsed = assessmentSchema.safeParse(submitted);
-  const assessment = finalizeAssessment(parsed.success ? parsed.data : FALLBACK, {
+  const checked = parsed.success ? parsed.data : FALLBACK;
+  // Amounts a customer or staff member already wrote in the thread may be repeated.
+  const backingTexts = [...ctx.outputs, ...input.thread.map((m) => m.body), input.latest];
+  const assessment = finalizeAssessment(checked, {
     scopeMismatch: ctx.scopeMismatch.value,
+    unbackedAmounts: checked.draft ? unbackedAmounts(checked.draft.body, backingTexts) : [],
   });
   return { assessment, lookups: ctx.log, usage, model: MODEL };
 }
