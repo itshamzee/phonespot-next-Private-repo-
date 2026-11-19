@@ -63,14 +63,14 @@ export function ZoomImage({ src, alt, hint = "Zoom" }: { src: string; alt: strin
       </button>
 
       {open && createPortal(
-        <div role="dialog" aria-modal="true" aria-label={alt} className="fixed inset-0 z-[100] flex flex-col bg-white">
+        <div role="dialog" aria-modal="true" aria-label={alt} className="backdrop-enter fixed inset-0 z-[100] flex flex-col bg-white">
           <div className="flex items-center justify-between gap-4 border-b border-[#e5e5ea] px-4 py-3 sm:px-6">
             <p className="min-w-0 truncate text-sm font-semibold text-charcoal">{alt}</p>
             <button
               ref={closer}
               type="button"
               onClick={close}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-[4px] border border-[#d9d4c8] px-4 text-sm font-semibold text-charcoal hover:bg-[#f4f5f2]"
+              className="press inline-flex min-h-11 shrink-0 items-center rounded-[4px] border border-[#d9d4c8] px-4 text-sm font-semibold text-charcoal hover:bg-[#f4f5f2]"
             >
               Luk
             </button>

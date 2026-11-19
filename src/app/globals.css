@@ -350,6 +350,18 @@ main[data-page-enter] {
   }
 }
 
+/* Hovedbilledet i et produktgalleri, når kunden vælger et andet billede
+   eller en anden farve: kort fade, så skiftet ikke blinker. */
+.swap-in {
+  animation: ps-swap-in 220ms var(--ease-ps-out);
+}
+@keyframes ps-swap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
 /* ── Paneler, der åbner ved brugerhandling ───────────────
    Søgeforslag, popovers og bannere: fade + 4 px fra deres kant. Bruges kun
    på elementer, der monteres efter et klik eller indtastning. */
@@ -409,6 +421,7 @@ main[data-page-enter] {
   main[data-page-enter],
   .hero-rise > *,
   .value-change,
+  .swap-in,
   .skeleton {
     animation: none;
   }

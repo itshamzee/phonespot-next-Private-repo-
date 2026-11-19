@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 
 /**
  * Product photos for accessories. Desktop: every photo large in a two-column
@@ -106,6 +107,7 @@ function Lightbox({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const step = useCallback((d: number) => onIndex((index + d + photos.length) % photos.length), [index, photos.length, onIndex]);
+  const paged = useHasChanged(index);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -123,17 +125,17 @@ function Lightbox({
     };
   }, [onIndex, step]);
 
-  const arrow = "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-charcoal shadow-md hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco";
+  const arrow = "press absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-charcoal shadow-md hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco";
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`${title}, billede ${index + 1} af ${photos.length}`} className="fixed inset-0 z-[80] bg-white">
+    <div role="dialog" aria-modal="true" aria-label={`${title}, billede ${index + 1} af ${photos.length}`} className="backdrop-enter fixed inset-0 z-[80] bg-white">
       <button type="button" aria-label="Luk" className="absolute inset-0 cursor-zoom-out" onClick={() => onIndex(null)} tabIndex={-1} />
       <div className="pointer-events-none absolute inset-0 p-6 sm:p-14">
         <div className="relative h-full w-full">
-          <Image src={photos[index]} alt={title} fill className="object-contain" sizes="100vw" />
+          <Image key={photos[index]} src={photos[index]} alt={title} fill className={paged ? "object-contain swap-in" : "object-contain"} sizes="100vw" />
         </div>
       </div>
-      <button ref={closeRef} type="button" onClick={() => onIndex(null)} className="absolute right-4 top-4 rounded-full bg-cream px-4 py-2 text-sm font-medium text-charcoal hover:bg-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco">
+      <button ref={closeRef} type="button" onClick={() => onIndex(null)} className="press absolute right-4 top-4 rounded-full bg-cream px-4 py-2 text-sm font-medium text-charcoal hover:bg-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco">
         Luk
       </button>
       {photos.length > 1 && (

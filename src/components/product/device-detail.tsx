@@ -40,6 +40,7 @@ import styles from "./device-detail.module.css";
 import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
 import { customerFacingError } from "@/lib/customer-facing-error";
 import { AddedCheckIcon, useAddedConfirmation } from "./use-added-confirmation";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -551,6 +552,12 @@ export function DeviceDetail({
   const standIndex = mainImageIndex - images.length;
   const standImage = standIndex >= 0 ? standImages[standIndex] ?? null : null;
   const mainImage = standImage ? null : images[mainImageIndex] ?? images[0] ?? null;
+  // Kort overgang, når kunden skifter billede, farve, stand eller lagerplads.
+  // Ved indlæsning er alt som før (hovedbilledet er LCP).
+  const shownImage = standImage?.src ?? mainImage;
+  const imageChanged = useHasChanged(shownImage);
+  const priceChanged = useHasChanged(price);
+  const stockChanged = useHasChanged(matchingDevices.length);
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
   // Per-unit battery statement for the specific device that would actually
@@ -778,10 +785,11 @@ export function DeviceDetail({
             {standImage ? (
               <>
                 <Image
+                  key={standImage.src}
                   src={standImage.src}
                   alt={`Eksempel på ${gradeDetail?.label.toLowerCase() ?? "standen"}, ${standImage.side}`}
                   fill
-                  className="object-contain p-3 sm:p-5"
+                  className={`object-contain p-3 sm:p-5${imageChanged ? " swap-in" : ""}`}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                 />
                 <ZoomImage
@@ -794,10 +802,11 @@ export function DeviceDetail({
               </>
             ) : mainImage ? (
               <Image
+                key={mainImage}
                 src={mainImage}
                 alt={template.display_name}
                 fill
-                className="object-contain p-5 sm:p-8"
+                className={`object-contain p-5 sm:p-8${imageChanged ? " swap-in" : ""}`}
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 priority
               />
@@ -890,7 +899,7 @@ export function DeviceDetail({
               <p className={styles.small}>Grundpris for enheden</p>
             )}
             <div className={styles.priceLine}>
-              <span className={styles.price}>
+              <span key={String(price)} className={priceChanged ? `${styles.price} value-change` : styles.price}>
                 {price != null ? formatDKK(price) : "Pris ikke tilgængelig"}
               </span>
               {compareAtPrice && (
@@ -931,7 +940,7 @@ export function DeviceDetail({
             )}
             {inStock ? (
               <>
-                <p className={styles.stock}>
+                <p key={matchingDevices.length} className={stockChanged ? `${styles.stock} value-change` : styles.stock}>
                   {matchingDevices.length} på lager i den valgte variant
                 </p>
                 <div ref={setBuyEl}>
