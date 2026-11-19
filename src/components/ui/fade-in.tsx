@@ -31,12 +31,21 @@ export function FadeIn({ children, delay = 0, duration = 0.3, className }: FadeI
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    // Allerede (delvist) synlig ved montering: lad den stå.
-    if (el.getBoundingClientRect().top < window.innerHeight) return;
 
-    setPhase("waiting");
+    // Første svar fra observeren fortæller, om sektionen allerede er i
+    // billedet. Er den det, står den stille; ellers venter den 8 px nede.
+    let first = true;
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (first) {
+          first = false;
+          if (entry.isIntersecting) {
+            observer.disconnect();
+            return;
+          }
+          setPhase("waiting");
+          return;
+        }
         if (entry.isIntersecting) {
           setPhase("shown");
           observer.disconnect();
