@@ -205,7 +205,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / <Link href="/butik">Butikker</Link> / {store.city}</nav>
-        <header className={styles.header}><span className={styles.eyebrow}>Din lokale PhoneSpot</span><h1>{store.name}</h1><p className={styles.intro}>Køb en enhed, få den repareret eller sælg din brugte elektronik. Vi hjælper dig {store.mall ? `i ${store.mall}` : `på ${store.street}`}.</p></header>
+        <header className={`${styles.header} hero-rise`}><span className={styles.eyebrow}>Din lokale PhoneSpot</span><h1>{store.name}</h1><p className={styles.intro}>Køb en enhed, få den repareret eller sælg din brugte elektronik. Vi hjælper dig {store.mall ? `i ${store.mall}` : `på ${store.street}`}.</p></header>
         <section className={styles.section} aria-label="Planlæg dit besøg">
           <div className={styles.grid}>
             <div className={styles.panel}>

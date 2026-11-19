@@ -133,7 +133,7 @@ export function LocalBuyPage({ page, templates }: { page: LocalBuyPageData; temp
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}>
           <Link href="/">Forside</Link> / <Link href="/butik">Butikker</Link> / <Link href={`/butik/${store.slug}`}>{store.city}</Link> / {page.h1}
         </nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>{store.name}</span>
           <h1>{page.h1}</h1>
           <p className={styles.intro}>{lead}</p>

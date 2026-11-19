@@ -38,7 +38,7 @@ export default function FaqPage() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: sections.flatMap((section) => section.items).map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Spørgsmål og svar</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Hjælp hos PhoneSpot</span>
           <h1>Spørgsmål og svar.</h1>
           <p className={styles.intro}>Find svar om enheder, køb og hjælp efter levering. Du kan også kontakte os, hvis dit spørgsmål kræver et personligt svar.</p>

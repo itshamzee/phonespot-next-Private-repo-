@@ -91,7 +91,7 @@ export default function GarantiPage() {
       <JsonLd data={faqJsonLd} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Garanti</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Hjælp efter købet</span>
           <h1>36 måneders garanti på enheder.</h1>
           <p className={styles.intro}>Her kan du se, hvad garantien dækker, og hvordan du får hjælp ved en fejl. Tilbehør har 2 års reklamationsret.</p>

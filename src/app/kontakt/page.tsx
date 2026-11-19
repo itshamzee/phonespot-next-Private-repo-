@@ -52,7 +52,7 @@ export default function KontaktPage() {
     <div className={styles.shell}>
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Kontakt</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Vi hjælper dig videre</span>
           <h1>Kontakt os.</h1>
           <p className={styles.intro}>Spørgsmål til en ordre, en enhed eller en reparation? Skriv til os, ring eller kom forbi i Vejle eller Slagelse.</p>
