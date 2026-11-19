@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       { sender: "customer", body: inq.message as string, created_at: inq.created_at as string },
       ...((msgs ?? []) as ThreadMessage[]),
     ];
-    senderEmail = inq.email;
+    senderEmail = inq.email ?? "";
     channel = (inq.channel as InquiryChannel | null) ?? "email";
     senderName = inq.name;
     mailbox = (inq.mailbox as string | null) ?? mailbox;

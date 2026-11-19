@@ -28,7 +28,7 @@ UPDATE public.contact_inquiries SET channel = 'form'
 -- udfylder raekker som den nye kode bevidst har ladet vaere NULL.
 UPDATE public.contact_inquiries SET last_inbound_at = created_at
   WHERE last_inbound_at IS NULL
-    AND created_at < timestamptz '2026-11-21 00:00:00+00';
+    AND created_at < timestamptz '2026-11-19 06:00:00+00';
 
 -- email goeres kun nullable. Eksisterende '' omskrives ikke: koden der er deployet
 -- foer migrationen antager at email er en streng.

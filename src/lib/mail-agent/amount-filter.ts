@@ -5,6 +5,8 @@
  * is deliberately broad; a false positive only costs a human a look.
  */
 
+import { SUMMARY_CATEGORIES } from "@/lib/repairs/price-list";
+
 const L = "a-zæøåA-ZÆØÅ";
 
 // A number: optional thousands separator (dot, space, nbsp) and optional decimals.
@@ -17,12 +19,13 @@ const RANGE = String.raw`(?:mellem\s+${NUM}\s+og\s+${NUM}|${NUM}(?:\s*(?:[–—
 const UNIT_AFTER = String.raw`(?:(?:danske\s+)?kroner?(?![${L}])|kr(?![${L}])\.?|DKK|[,.]-)`;
 const UNIT_BEFORE = String.raw`(?:kroner?(?![${L}])|kr(?![${L}])\.?|DKK)`;
 // Words that announce a price, followed by a bare number (at least 2 digits).
-const PRICE_WORD = String.raw`(?:pris(?:en)?|koster|kostede|i\s+alt|total(?:t|en)?|beløb(?:et)?|betal(?:e|er)?)`;
+// "pris" also ends compound words ("opkøbsprisen", "totalprisen", "nypris"). Verbs: "få", "får", "giver", "koste".
+const PRICE_WORD = String.raw`(?:[${L}]*pris(?:en)?|koster|kostede|koste|i\s+alt|total(?:t|en)?|beløb(?:et)?|betal(?:e|er)?|få|får|giver)`;
 // Up to two short filler words may sit between the price word and the number (\"prisen ligger på 1299\").
-const FILLER = String.raw`(?:\s*:?\s*(?:ligger\s+på|var|bliver|er|på|ca\.?|cirka|omkring|kun|fra)(?![${L}])){0,2}`;
+const FILLER = String.raw`(?:\s*:?\s*(?:ligger\s+på|var|bliver|er|på|ca\.?|cirka|omkring|kun|fra|dig|du|vi|jer)(?![${L}])){0,2}`;
 // A number followed by one of these is not money (\"14 dage\", \"128 GB\", \"20 %\", or a phone number).
 const NON_MONEY_AFTER = new RegExp(
-  String.raw`^(?:\s*(?:dage?|minutter|min|timer|time|måneder|måned|mdr|år|uger|uge|hverdage|stk|enheder|GB|TB|mAh|procent|tommer)(?![${L}])|\s*%|\s\d{2}(?!\d))`,
+  String.raw`^(?:\s*(?:dages?|minutter|min|timer|time|måneders?|måneds?|mdr|år|uger|uge|hverdage|stk|enheder|GB|TB|mAh|procent|tommer)(?![${L}])|\s*%|\s\d{2}(?!\d))`,
   "i",
 );
 
@@ -35,11 +38,14 @@ const PRICE_WORD_RE = new RegExp(
   String.raw`(?<![${L}\d])${PRICE_WORD}${FILLER}\s*:?\s*(?<![\d.,])(${RANGE})`,
   "gi",
 );
+// A service label followed by colon and a bare number ("Skærmskift: 1.500"); value must be at least 100.
+const CATEGORY_RE = new RegExp(
+  String.raw`(?<![${L}\d])(?:${SUMMARY_CATEGORIES.join("|")})\s*:\s*(?<![\d.,])(${RANGE})`,
+  "gi",
+);
 /** Longest text the extractors look at; keeps the regexes from stalling on pathological input. */
 const MAX_TEXT = 20000;
 const NUM_RE = new RegExp(NUM, "g");
-
-export const AMOUNT_RES = { UNIT_RE, PRICE_WORD_RE };
 
 function toNumber(raw: string): number {
   if (/^\d+\.\d{1,2}$/.test(raw)) return Number(raw);
@@ -63,6 +69,7 @@ export function extractAmounts(rawText: string): number[] {
   };
   collect(UNIT_RE, 0);
   collect(PRICE_WORD_RE, 10, true);
+  collect(CATEGORY_RE, 100, true);
   hits.sort((a, b) => a.index - b.index || a.sub - b.sub);
   const found: number[] = [];
   for (const h of hits) if (!found.includes(h.value)) found.push(h.value);
@@ -81,6 +88,9 @@ const UNPARSEABLE_RES = [
   new RegExp(String.raw`(?<![\d.,])\d[\d.,]*\s*${MAGNITUDE}\s*${UNIT_BEFORE}`, "i"),
   // "5 tkr", "5 t.kr"
   new RegExp(String.raw`(?<![\d.,])\d[\d.,]*\s*t\.?\s?kr(?![${L}])`, "i"),
+  // other currencies next to a number: "100 €", "€100", "100 EUR", "100 euro", "$100", "100 USD"
+  new RegExp(String.raw`(?<![\d.,])\d[\d.,]*\s*(?:€|\$|(?:EUR|USD|euro)(?![${L}]))`, "i"),
+  new RegExp(String.raw`(?:€|\$|(?<![${L}])(?:EUR|USD|euro)(?![${L}]))\s*\d`, "i"),
   // "pris 5k", "koster 2 tusind"
   new RegExp(String.raw`(?<![${L}\d])${PRICE_WORD}${FILLER}\s*:?\s*(?<![\d.,])\d[\d.,]*\s*${MAGNITUDE}`, "i"),
 ];

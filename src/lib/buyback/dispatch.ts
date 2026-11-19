@@ -142,7 +142,7 @@ export async function dispatchAutoOffer(
     // sits in Resend until it fires, and can be cancelled or brought forward.
     const sent = await resend.emails.send({
       from: settings.fromAddress,
-      to: inquiry.email,
+      to: inquiry.email ?? "",
       replyTo: "info@phonespot.dk",
       subject,
       html,
@@ -169,7 +169,7 @@ export async function dispatchAutoOffer(
 
     await client.from("mail_log").insert({
       inquiry_id: inquiry.id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: html,
       status: "scheduled",
@@ -215,7 +215,7 @@ async function autoDecline(
   try {
     const sent = await resend.emails.send({
       from: fromAddress,
-      to: inquiry.email,
+      to: inquiry.email ?? "",
       replyTo: "info@phonespot.dk",
       subject,
       html,
@@ -223,7 +223,7 @@ async function autoDecline(
     emailSent = !sent.error;
     await client.from("mail_log").insert({
       inquiry_id: inquiry.id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: html,
       status: emailSent ? "delivered" : "failed",
@@ -232,7 +232,7 @@ async function autoDecline(
   } catch {
     await client.from("mail_log").insert({
       inquiry_id: inquiry.id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: html,
       status: "failed",

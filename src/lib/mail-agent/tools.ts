@@ -3,7 +3,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableTool";
 import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
-import { escapeLike } from "./like";
+import { escapeLike, hasLikeWildcardStar } from "./like";
 import { SUMMARY_CATEGORIES } from "@/lib/repairs/price-list";
 import { quoteBuybackImpl, type QuoteBuybackInput } from "./quote-buyback";
 import { quoteRepairImpl } from "./quote-repair";
@@ -32,9 +32,14 @@ const MISMATCH =
 const NOT_VERIFIED =
   "Afsenderen er ikke verificeret på denne kanal. Oplys ingen ordre-, sags- eller kundeoplysninger; bed kunden skrive fra den mailadresse, der er brugt ved købet, eller ringe til butikken.";
 
+/** Verified addresses that are safe in a LIKE filter; "*" would act as a wildcard in PostgREST. */
+function usableEmails(ctx: ToolContext): string[] {
+  return ctx.verified.emails.filter((e) => !hasLikeWildcardStar(e));
+}
+
 /** Shared guard: anonymous senders get no personal data and the mail goes to a human. */
 function unverified(ctx: ToolContext): boolean {
-  if (ctx.verified.emails.length > 0) return false;
+  if (usableEmails(ctx).length > 0) return false;
   ctx.scopeMismatch.value = true;
   return true;
 }
@@ -68,10 +73,10 @@ function day(v: unknown): string {
 async function customerIdsFor(ctx: ToolContext): Promise<{ ids: string[]; mismatch: boolean }> {
   const ids: string[] = [];
   let mismatch = false;
-  for (const e of ctx.verified.emails) {
+  for (const e of usableEmails(ctx)) {
     const { data } = await ctx.supabase.from("customers").select("id, email").ilike("email", escapeLike(e)).maybeSingle();
     if (!data) continue;
-    if (!ctx.verified.emails.includes(String(data.email ?? "").toLowerCase())) {
+    if (!usableEmails(ctx).includes(String(data.email ?? "").toLowerCase())) {
       ctx.scopeMismatch.value = true;
       mismatch = true;
       continue;
@@ -118,7 +123,7 @@ export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?:
     ctx.log.push({ tool: "lookup_orders", input, hits: order ? 1 : 0 });
     if (!order) return `Ingen ordre med nummer ${input.order_number}.`;
     const owner = await orderOwnerEmail(sb, order as Row);
-    if (!owner || !ctx.verified.emails.includes(owner)) {
+    if (!owner || !usableEmails(ctx).includes(owner)) {
       ctx.scopeMismatch.value = true;
       return MISMATCH;
     }
@@ -160,12 +165,12 @@ export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: strin
     const { data } = await base().eq("customer_phone", input.phone);
     rows.push(...((data ?? []) as Row[]));
   } else {
-    for (const email of ctx.verified.emails) {
+    for (const email of usableEmails(ctx)) {
       const { data } = await base().ilike("customer_email", escapeLike(email));
       rows.push(...((data ?? []) as Row[]));
     }
   }
-  const mine = rows.filter((r) => ctx.verified.emails.includes(String(r.customer_email ?? "").toLowerCase()));
+  const mine = rows.filter((r) => usableEmails(ctx).includes(String(r.customer_email ?? "").toLowerCase()));
 
   if (mine.length < rows.length) ctx.scopeMismatch.value = true;
   if (rows.length && mine.length === 0) {
@@ -189,7 +194,7 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
 
   let mismatch = false;
   const inquiries: Row[] = [];
-  for (const email of ctx.verified.emails) {
+  for (const email of usableEmails(ctx)) {
     const { data } = await sb
       .from("contact_inquiries")
       .select("id, subject, status, created_at, email")
@@ -198,7 +203,7 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
       .order("created_at", { ascending: false })
       .limit(3);
     for (const r of (data ?? []) as Row[]) {
-      if (ctx.verified.emails.includes(String(r.email ?? "").toLowerCase())) inquiries.push(r);
+      if (usableEmails(ctx).includes(String(r.email ?? "").toLowerCase())) inquiries.push(r);
       else mismatch = true;
     }
   }
@@ -241,14 +246,14 @@ export async function lookupCustomerImpl(ctx: ToolContext): Promise<string> {
   if (unverified(ctx)) return NOT_VERIFIED;
   let data: Row | null = null;
   let mismatch = false;
-  for (const email of ctx.verified.emails) {
+  for (const email of usableEmails(ctx)) {
     const res = await ctx.supabase
       .from("customers")
       .select("id, name, created_at, email")
       .ilike("email", escapeLike(email))
       .maybeSingle();
     if (!res.data) continue;
-    if (!ctx.verified.emails.includes(String(res.data.email ?? "").toLowerCase())) {
+    if (!usableEmails(ctx).includes(String(res.data.email ?? "").toLowerCase())) {
       ctx.scopeMismatch.value = true;
       mismatch = true;
       continue;

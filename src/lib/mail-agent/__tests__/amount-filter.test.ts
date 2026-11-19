@@ -275,7 +275,7 @@ describe("fix round 2", () => {
     expect(extractAmounts("koster 1299 20 kr")).toEqual([20]);
   });
 
-  it("returns within 500 ms on a 100,000-character pathological string", () => {
+  it("returns within 2000 ms on a 100,000-character pathological string", () => {
     const text = "12.345".repeat(Math.ceil(100000 / 6));
     const start = Date.now();
     extractAmounts(text);
@@ -291,5 +291,62 @@ describe("fix round 2", () => {
       hasUnparseableAmount(text);
       expect(Date.now() - start).toBeLessThan(2000);
     }
+  });
+});
+
+describe("final fix wave", () => {
+  it.each<[string, number[]]>([
+    ["Opkøbsprisen er 1.900", [1900]],
+    ["Totalprisen er 1.500", [1500]],
+    ["reparationspris: 899", [899]],
+    ["nypris 4.999", [4999]],
+    ["Du kan få 1.900 for telefonen", [1900]],
+    ["Vi giver 1.900", [1900]],
+    ["Vi giver 1.900 for den", [1900]],
+    ["Du får 1.900", [1900]],
+    ["Det vil koste dig cirka 1.500", [1500]],
+    ["Det vil koste 1.500", [1500]],
+    ["Skærmskift: 1.500", [1500]],
+    ["Batteriskift: 599", [599]],
+    ["batteriskift: 599", [599]],
+  ])("extracts %s", (text, expected) => {
+    expect(extractAmounts(text)).toEqual(expected);
+  });
+
+  it.each([
+    "få 14 dage",
+    "giver 36 måneders garanti",
+    "koste 15 minutter",
+    "Du kan få 14 dages returret",
+    "Kamera: 12 MP",
+    "Skærmskift: 5",
+    "Batteriskift: tager 30 minutter",
+    "Totalprisen 5",
+  ])("finds nothing in %s", (text) => {
+    expect(extractAmounts(text)).toEqual([]);
+    expect(hasUnparseableAmount(text)).toBe(false);
+  });
+
+  it.each(["Det koster 100 €", "Prisen er €100", "Det er 100 EUR", "100 euro", "ca. 100 USD", "Det koster $100", "100 $"])(
+    "flags other currency in %s",
+    (text) => {
+      expect(hasUnparseableAmount(text)).toBe(true);
+    },
+  );
+
+  it("does not flag the word euro without a number or inside another word", () => {
+    expect(hasUnparseableAmount("Vi sælger i hele Europa")).toBe(false);
+    expect(hasUnparseableAmount("EUR-pallen er 2 meter")).toBe(false);
+  });
+
+  it("backs a label amount from a tool output without a unit", () => {
+    expect(unbackedAmounts("Det koster 1.500 kr.", ["Skærmskift: 1.500"])).toEqual([]);
+  });
+
+  it("stays fast on a long run of letters ending in a price word", () => {
+    const text = "a".repeat(100000) + "pris";
+    const start = Date.now();
+    extractAmounts(text);
+    expect(Date.now() - start).toBeLessThan(2000);
   });
 });

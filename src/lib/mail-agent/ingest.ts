@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { escapeLike, hasLikeWildcardStar } from "./like";
 
 /**
  * Files one inbound email into the inquiry model (contact_inquiries +
@@ -51,11 +52,6 @@ function stripReplyPrefixes(subject: string): string {
 
 const CLOSED_WINDOW_MS = 30 * 86_400_000;
 
-/** Escape LIKE wildcards so ilike() is an exact, case-insensitive match. */
-function escapeLike(value: string): string {
-  return value.replace(/[\\%_]/g, "\\$&");
-}
-
 interface SenderMatch {
   id: string;
   /** True when a closed thread was picked up again by the sender. */
@@ -84,6 +80,8 @@ async function matchBySender(
 ): Promise<SenderMatch | null> {
   // A sender without an address must never attach to a legacy row with email "".
   if (!email.trim()) return null;
+  // PostgREST reads "*" as "%", which escapeLike cannot neutralise.
+  if (hasLikeWildcardStar(email)) return null;
   const pattern = escapeLike(email);
 
   const { data } = await supabase

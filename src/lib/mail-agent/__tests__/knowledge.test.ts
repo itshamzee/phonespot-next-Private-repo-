@@ -27,9 +27,24 @@ describe("buildKnowledge", () => {
     expect(text).toContain("6 måneders garanti");
     expect(text).toContain("30 dages returret");
     expect(text).not.toContain("Onlinekøb: 14 dages");
+    expect(text).not.toContain("30 dages returret fra modtagelse (den lovpligtige");
     expect(text).toContain("## Reparationstider");
     expect(text).toContain("30–60 minutter");
     expect(text).toContain("gratis diagnose");
+  });
+
+  it("states the three return-right tiers from the terms", () => {
+    expect(text).toContain("Enheder (telefoner, tablets, bærbare og smartwatches): 30 dages returret");
+    expect(text).toContain("Tilbehør og reservedele: 14 dages fortrydelsesret");
+    expect(text).toContain("Varer mærket lagersalg: 14 dages fortrydelsesret ved køb online; ved køb i butikken tages de ikke retur");
+    expect(text).toContain("Kunden betaler returfragten");
+    expect(text).toContain("særskilt sag");
+  });
+
+  it("states that a fixed buyback price is the offer after our assessment", () => {
+    expect(text).toContain(
+      "Fast opkøbspris gælder det tilbud, kunden har fået efter vores vurdering. En vejledende pris er ikke et tilbud.",
+    );
   });
 
   it("renders the six promises from promises.ts", () => {

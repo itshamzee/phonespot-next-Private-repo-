@@ -76,7 +76,7 @@ function fakeSupabase(seed: Record<string, Row[]>) {
         for (let i = 0; i < pattern.length; i++) {
           const c = pattern[i];
           if (c === "\\" && i + 1 < pattern.length) re += lit(pattern[++i]);
-          else if (c === "%") re += ".*";
+          else if (c === "%" || c === "*") re += ".*"; // PostgREST treats * as %
           else if (c === "_") re += ".";
           else re += lit(c);
         }
@@ -165,6 +165,18 @@ describe("ingestInboundEmail", () => {
 
     const r2 = await ingestInboundEmail(sb as never, { ...base, subject: "Noget helt andet" });
     expect(r2.inquiryId).toBe("inq-new");
+  });
+
+  it("does not match an open thread through a * wildcard in the sender address", async () => {
+    const sb = fakeSupabase({
+      contact_inquiries: [
+        { id: "inq-1", email: "anna@gmail.com", status: "ny", subject: "Min ordre", created_at: "2026-01-01" },
+      ],
+    });
+    const r = await ingestInboundEmail(sb as never, { ...base, fromEmail: "*@gmail.com", subject: "Min ordre" });
+    expect(r.created).toBe(true);
+    expect(r.inquiryId).not.toBe("inq-1");
+    expect(sb._tables.contact_inquiries).toHaveLength(2);
   });
 
   it("ignores closed inquiries when matching by sender", async () => {

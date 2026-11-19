@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
   // Do not send mails about a lead we failed to save.
   if (insertError) {
-    console.error("[contact] insert failed", insertError);
+    console.error("[contact] insert failed", { code: insertError.code, message: insertError.message });
     return NextResponse.json({ error: "Kunne ikke gemme besked" }, { status: 500 });
   }
 

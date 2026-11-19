@@ -33,7 +33,7 @@ function fakeSupabase(tables: Record<string, Row[]>) {
         for (let i = 0; i < v.length; i++) {
           const ch = v[i];
           if (ch === "\\" && i + 1 < v.length) re += lit(v[++i]);
-          else if (ch === "%") re += ".*";
+          else if (ch === "%" || ch === "*") re += ".*"; // PostgREST treats * as %
           else if (ch === "_") re += ".";
           else re += lit(ch);
         }
@@ -255,5 +255,35 @@ describe("buildTools ctx.outputs", () => {
     expect(ctx.outputs).toHaveLength(8);
     const submit = tools.find((t) => t.name === "submit_assessment")!;
     expect(submit).toBeDefined();
+  });
+});
+
+describe("star wildcard in a verified address", () => {
+  const sb = () =>
+    fakeSupabase({
+      orders,
+      customers: [{ id: "c1", email: "anna@gmail.com", name: "Anna" }],
+      repair_tickets: [{ id: "r1", customer_email: "anna@gmail.com", device_model: "iPhone" }],
+      contact_inquiries: [{ id: "i1", email: "anna@gmail.com", source: "saelg-enhed" }],
+    });
+
+  it.each([
+    ["orders", (c: ToolContext) => lookupOrdersImpl(c, {})],
+    ["repairs", (c: ToolContext) => lookupRepairsImpl(c, {})],
+    ["buyback", (c: ToolContext) => lookupBuybackImpl(c)],
+    ["customer", (c: ToolContext) => lookupCustomerImpl(c)],
+  ])("%s lookup gets no data and flags scope mismatch", async (_n, fn) => {
+    const ctx = ctxFor(sb(), ["*@gmail.com"]);
+    const out = await fn(ctx);
+    expect(out).toContain("ikke verificeret");
+    expect(out).not.toContain("Anna");
+    expect(out).not.toContain("PS-1001");
+    expect(ctx.scopeMismatch.value).toBe(true);
+  });
+
+  it("skips the star address but still uses a clean one", async () => {
+    const ctx = ctxFor(sb(), ["*@gmail.com", "anna@gmail.com"]);
+    const out = await lookupCustomerImpl(ctx);
+    expect(out).toContain("Anna");
   });
 });
