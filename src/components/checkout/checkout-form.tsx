@@ -444,7 +444,7 @@ export function CheckoutForm() {
               type="button"
               onClick={() => void handleApplyDiscount()}
               disabled={isApplyingDiscount || !discountInput.trim()}
-              className="rounded-lg bg-charcoal px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+              className="press rounded-lg bg-charcoal px-4 py-2.5 text-sm font-semibold text-white hover:opacity-80 disabled:opacity-40"
             >
               {isApplyingDiscount ? "…" : "Anvend"}
             </button>
@@ -452,7 +452,7 @@ export function CheckoutForm() {
         )}
 
         {discountError && (
-          <p className="text-xs text-red-500">{discountError}</p>
+          <p className="reveal-in text-xs text-red-500">{discountError}</p>
         )}
       </section>
 
@@ -465,7 +465,7 @@ export function CheckoutForm() {
       {/* Submit error                                                       */}
       {/* ---------------------------------------------------------------- */}
       {submitError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="reveal-in rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {submitError}
         </div>
       )}
@@ -476,7 +476,7 @@ export function CheckoutForm() {
       <button
         type="submit"
         disabled={isSubmitting || cartState.items.length === 0}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold text-white press hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
       >
         {isSubmitting ? (
           <>
