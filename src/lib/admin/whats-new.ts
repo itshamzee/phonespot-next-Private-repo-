@@ -12,8 +12,8 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    id: "2026-11-20-kundecenter",
-    date: "2026-11-20",
+    id: "2026-11-19-kundecenter",
+    date: "2026-11-19",
     title: "Nyt kundecenter og en klogere assistent",
     cta: { label: "Åbn kundecenter", href: "/admin/kundecenter" },
     items: [
@@ -32,13 +32,13 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     ],
   },
   {
-    id: "2026-11-20-ejer",
-    date: "2026-11-20",
+    id: "2026-11-19-ejer",
+    date: "2026-11-19",
     ownerOnly: true,
     title: "Til dig som ejer",
     items: [
       { text: "Automatisk afsendelse er ikke tændt. Alle svar til kunder kræver stadig et ja." },
-      { text: "Næste skridt står i docs/MORGENSTATUS-2026-11-20.md." },
+      { text: "Næste skridt står i docs/MORGENSTATUS-2026-11-19.md." },
     ],
   },
 ];
