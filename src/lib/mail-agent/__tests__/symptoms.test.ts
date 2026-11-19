@@ -21,13 +21,16 @@ describe("SYMPTOMS", () => {
     for (const s of SYMPTOMS.filter((r) => r.categories.length === 0)) expect(s.needsDiagnosis).toBe(true);
   });
   it("never advises opening the device or rice", () => {
-    for (const s of SYMPTOMS) expect(s.advice).not.toMatch(/ris|åbn(e)? (den|enheden) selv/i);
+    for (const s of SYMPTOMS) {
+      expect(s.advice).not.toMatch(/\bris\b|åbn(e)? (den|enheden|telefonen) selv|åbne telefonen|\bskil|varmepistol|hårtørrer/i);
+      expect(`${s.advice} ${s.label}`).not.toMatch(/\d\s*kr/i);
+    }
   });
   it("contains the required rows", () => {
     const keys = SYMPTOMS.map((s) => s.key);
     for (const k of [
       "sort_skaerm", "revnet_skaerm", "touch_virker_ikke", "streger_pletter_skaerm", "batteri_toemmes",
-      "slukker_selv", "lader_ikke", "revnet_bagside", "kamera_sloeret", "ingen_lyd_mikrofon",
+      "slukker_selv", "lader_ikke", "revnet_bagside", "kamera_sloeret", "kamera_virker_ikke", "ingen_lyd_mikrofon",
       "vandskade", "taender_ikke", "andet",
     ]) expect(keys).toContain(k);
     expect(SYMPTOMS.find((s) => s.key === "lader_ikke")?.categories).toEqual(["Opladerstik", "Batteriskift"]);

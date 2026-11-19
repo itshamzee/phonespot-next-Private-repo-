@@ -4,6 +4,7 @@ import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableT
 import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
 import { escapeLike } from "./like";
+import { SUMMARY_CATEGORIES } from "@/lib/repairs/price-list";
 import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
 import { SYMPTOMS, diagnoseImpl } from "./symptoms";
@@ -309,10 +310,7 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
         "Slå reparationspris og varighed op for en model. Brug kategori når du kender fejlen. Returnerer flere modeller, hvis navnet er tvetydigt; spørg da kunden.",
       inputSchema: z.object({
         model: z.string().describe("Modelnavn som kunden nævner, fx iPhone 13 Pro"),
-        category: z
-          .string()
-          .optional()
-          .describe("Reparationskategori, fx Skærmskift, Batteriskift, Opladerstik, Bagglas, Kamera"),
+        category: z.enum(SUMMARY_CATEGORIES).optional().describe("Reparationskategori når du kender fejlen"),
       }),
       run: rec((input: { model: string; category?: string }) => quoteRepairImpl(ctx, input)),
     }),
