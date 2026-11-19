@@ -1,4 +1,4 @@
-import { estimateGuidePrice } from "@/lib/buyback/guide-price-server";
+import { estimateGuidePrice, type GuideListing } from "@/lib/buyback/guide-price-server";
 import { loadBuybackSettings } from "@/lib/buyback/settings";
 import type { BuybackCondition, BuybackDevice } from "@/lib/buyback/types";
 import type { ToolContext } from "./tools";
@@ -27,6 +27,8 @@ export interface QuoteBuybackInput {
 export interface QuoteBuybackDeps {
   estimate?: typeof estimateGuidePrice;
   loadSettings?: typeof loadBuybackSettings;
+  /** Pre-loaded sales listings, passed straight to the engine (tests). */
+  listings?: GuideListing[];
 }
 
 function kroner(ore: number): string {
@@ -35,15 +37,28 @@ function kroner(ore: number): string {
 
 const FORM_FALLBACK = `Oplys ingen pris. Henvis kunden til sælg-formularen på ${SELL_URL}, hvor kunden får et tilbud inden for 24 timer.`;
 
+const ICLOUD_LOCKED = `Vi køber ikke iCloud-låste enheder. Oplys ingen pris. Bed kunden fjerne låsen og derefter bruge sælg-formularen: ${SELL_URL}.`;
+
+const ICLOUD_UNKNOWN =
+  "Spørg kunden, om Find min iPhone er slået fra og enheden er logget ud af iCloud. Oplys først en pris, når svaret er nej til iCloud-lås.";
+
+const STORAGE_MISSING = "Spørg kunden om lagerpladsen (fx 128 GB), og prøv igen. Oplys ingen pris, før lagerpladsen er kendt.";
+
 export async function quoteBuybackImpl(ctx: ToolContext, input: QuoteBuybackInput, deps: QuoteBuybackDeps = {}): Promise<string> {
   const estimate = deps.estimate ?? estimateGuidePrice;
   const loadSettings = deps.loadSettings ?? loadBuybackSettings;
 
+  // Only an explicit "Nej" is priced; the engine alone would let "Ved ikke" through.
+  if (input.cloud_locked !== "Nej") {
+    ctx.log.push({ tool: "quote_buyback", input: { ...input }, hits: 0 });
+    return input.cloud_locked === "Ja" ? ICLOUD_LOCKED : ICLOUD_UNKNOWN;
+  }
+
   const device: BuybackDevice = {
     deviceType: "Telefon",
     brand: "Apple",
-    model: input.model,
-    storage: input.storage,
+    model: input.model.trim(),
+    storage: input.storage.trim(),
     ram: "",
     useCustom: false,
     brandCustom: "",
@@ -64,7 +79,10 @@ export async function quoteBuybackImpl(ctx: ToolContext, input: QuoteBuybackInpu
     // The tool context only carries a plain client; the engine's type is the admin client.
     const client = ctx.supabase as never;
     const settings = await loadSettings(client);
-    result = await estimate(client, device, condition, settings, { ignoreSwitch: true });
+    result = await estimate(client, device, condition, settings, {
+      ignoreSwitch: true,
+      ...(deps.listings ? { listings: deps.listings } : {}),
+    });
   } catch (err) {
     console.error("quote_buyback failed", err);
     ctx.log.push({ tool: "quote_buyback", input: { ...input }, hits: 0 });
@@ -76,13 +94,12 @@ export async function quoteBuybackImpl(ctx: ToolContext, input: QuoteBuybackInpu
     return [
       `Vejledende opkøbspris: ${kroner(result.amountOre)}.`,
       "Sig tydeligt til kunden, at prisen er vejledende, og at det endelige tilbud først kommer, når vi har tjekket enheden.",
-      `Kunden kan få et bindende tilbud via sælg-formularen: ${SELL_URL}.`,
+      `Kunden kan få et tilbud inden for 24 timer via sælg-formularen: ${SELL_URL}.`,
     ].join("\n");
   }
 
   ctx.log.push({ tool: "quote_buyback", input: { ...input }, hits: 0 });
-  if (result.reason === "iCloud-låst") {
-    return `Vi køber ikke iCloud-låste enheder. Oplys ingen pris. Bed kunden fjerne låsen og derefter bruge sælg-formularen: ${SELL_URL}.`;
-  }
+  if (result.reason === "iCloud-låst") return ICLOUD_LOCKED;
+  if (result.reason === "Lagerplads mangler") return STORAGE_MISSING;
   return FORM_FALLBACK;
 }

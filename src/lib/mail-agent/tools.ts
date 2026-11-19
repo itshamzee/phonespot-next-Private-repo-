@@ -326,7 +326,7 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
         back: z.enum(["Perfekt", "Små ridser", "Revnet"]).describe("Bagsidens stand"),
         battery: z.enum(["God (80%+)", "Okay (60-80%)", "Dårligt (<60%)", "Ved ikke"]).describe("Batteriets tilstand"),
         charging_broken: z.boolean().describe("Virker opladning ikke?"),
-        other_faults: z.boolean().describe("Er der andre fejl end opladning (kamera, højttaler, Face ID, tænder ikke osv.)?"),
+        other_faults: z.boolean().describe("Skal være true ved vandskade, en telefon der ikke tænder, fejl på Face ID/Touch ID, kamera, højttaler eller mikrofon, eller andet der ikke dækkes af de øvrige felter. Ellers false."),
         cloud_locked: z.enum(["Ja", "Nej", "Ved ikke"]).describe("Er enheden låst til iCloud?"),
       }),
       run: rec((input: QuoteBuybackInput) => quoteBuybackImpl(ctx, input)),
