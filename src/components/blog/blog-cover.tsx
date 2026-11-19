@@ -36,7 +36,7 @@ export function BlogCover({ image, title, slug, sizes, priority }: BlogCoverProp
       alt={title}
       fill
       priority={priority}
-      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+      className="object-cover transition-[scale] duration-300 ease-[var(--ease-ps-out)] group-hover:scale-[1.03] motion-reduce:transition-none"
       sizes={sizes}
     />
   );
