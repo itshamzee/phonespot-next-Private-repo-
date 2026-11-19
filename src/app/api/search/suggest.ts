@@ -45,7 +45,6 @@ export function sanitizeSuggestQuery(raw: string | null | undefined): string {
   return (raw ?? "")
     .slice(0, SUGGEST_MAX_QUERY * 2)
     .replace(/[*%_\\]/g, " ")
-    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\s+/g, " ")
     .trim()

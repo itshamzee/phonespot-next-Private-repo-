@@ -377,3 +377,7 @@
 .surface .search button{transition:scale 150ms var(--ease-ps-out)}
 .surface .search button:active{scale:.9}
 @media(prefers-reduced-motion:reduce){.surface .search button:active{scale:none}}
+/* Søgeforslagene placeres under feltet; touch-skærme (også iPad) får 16 px,
+   så iOS ikke zoomer ind ved fokus. */
+.surface .search{position:relative}
+@media(pointer:coarse){.surface .search input{font-size:16px}}
