@@ -13,13 +13,26 @@ import type { LookupLog } from "./types";
  */
 export interface ToolContext {
   supabase: SupabaseClient;
-  senderEmail: string;
+  /** Lowercase addresses the sender has proven control of. Empty = anonymous sender. */
+  verified: { emails: string[] };
   log: LookupLog[];
+  /** Every tool's returned text, for the amount filter. */
+  outputs: string[];
   scopeMismatch: { value: boolean };
 }
 
 const MISMATCH =
   "Fundet, men registreret på en anden adresse end afsenderens. Oplys ikke detaljer; bed kunden skrive fra den mail der er brugt ved købet, eller lad en medarbejder tage over.";
+
+const NOT_VERIFIED =
+  "Afsenderen er ikke verificeret på denne kanal. Oplys ingen ordre-, sags- eller kundeoplysninger; bed kunden skrive fra den mailadresse, der er brugt ved købet, eller ringe til butikken.";
+
+/** Shared guard: anonymous senders get no personal data and the mail goes to a human. */
+function unverified(ctx: ToolContext): boolean {
+  if (ctx.verified.emails.length > 0) return false;
+  ctx.scopeMismatch.value = true;
+  return true;
+}
 
 const ORDER_STATUS: Record<string, string> = {
   pending: "afventer betaling",
@@ -47,6 +60,15 @@ async function customerIdFor(sb: SupabaseClient, email: string): Promise<string 
   return (data?.id as string | undefined) ?? null;
 }
 
+async function customerIdsFor(sb: SupabaseClient, emails: string[]): Promise<string[]> {
+  const ids: string[] = [];
+  for (const e of emails) {
+    const id = await customerIdFor(sb, e);
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
 function formatOrders(orders: Row[]): string {
   return orders
     .map((o) =>
@@ -71,8 +93,8 @@ async function orderOwnerEmail(sb: SupabaseClient, order: Row): Promise<string |
 }
 
 export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?: string }): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
 
   if (input.order_number) {
     const { data: order } = await sb
@@ -83,40 +105,54 @@ export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?:
     ctx.log.push({ tool: "lookup_orders", input, hits: order ? 1 : 0 });
     if (!order) return `Ingen ordre med nummer ${input.order_number}.`;
     const owner = await orderOwnerEmail(sb, order as Row);
-    if (owner !== email) {
+    if (!owner || !ctx.verified.emails.includes(owner)) {
       ctx.scopeMismatch.value = true;
       return MISMATCH;
     }
     return formatOrders([order as Row]);
   }
 
-  const customerId = await customerIdFor(sb, email);
-  if (!customerId) {
+  const customerIds = await customerIdsFor(sb, ctx.verified.emails);
+  if (!customerIds.length) {
     ctx.log.push({ tool: "lookup_orders", input, hits: 0 });
     return "Ingen ordrer registreret på afsenderens adresse.";
   }
-  const { data } = await sb
-    .from("orders")
-    .select("*")
-    .eq("customer_id", customerId)
-    .order("created_at", { ascending: false })
-    .limit(5);
-  const orders = (data ?? []) as Row[];
+  const orders: Row[] = [];
+  for (const customerId of customerIds) {
+    const { data } = await sb
+      .from("orders")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    orders.push(...((data ?? []) as Row[]));
+  }
+  orders.sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
+  orders.splice(5);
   ctx.log.push({ tool: "lookup_orders", input, hits: orders.length });
   return orders.length ? formatOrders(orders) : "Ingen ordrer registreret på afsenderens adresse.";
 }
 
 export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: string }): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
-  const base = sb
-    .from("repair_tickets")
-    .select("id, device_model, issue_description, status, created_at, updated_at, customer_email, customer_phone")
-    .order("created_at", { ascending: false })
-    .limit(5);
-  const { data } = input.phone ? await base.eq("customer_phone", input.phone) : await base.ilike("customer_email", email);
-  const rows = (data ?? []) as Row[];
-  const mine = rows.filter((r) => String(r.customer_email ?? "").toLowerCase() === email);
+  const base = () =>
+    sb
+      .from("repair_tickets")
+      .select("id, device_model, issue_description, status, created_at, updated_at, customer_email, customer_phone")
+      .order("created_at", { ascending: false })
+      .limit(5);
+  const rows: Row[] = [];
+  if (input.phone) {
+    const { data } = await base().eq("customer_phone", input.phone);
+    rows.push(...((data ?? []) as Row[]));
+  } else {
+    for (const email of ctx.verified.emails) {
+      const { data } = await base().ilike("customer_email", email);
+      rows.push(...((data ?? []) as Row[]));
+    }
+  }
+  const mine = rows.filter((r) => ctx.verified.emails.includes(String(r.customer_email ?? "").toLowerCase()));
 
   if (rows.length && mine.length === 0) {
     ctx.scopeMismatch.value = true;
@@ -134,18 +170,22 @@ export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: strin
 }
 
 export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
   const lines: string[] = [];
 
-  const { data: inquiries } = await sb
-    .from("contact_inquiries")
-    .select("id, subject, status, created_at")
-    .ilike("email", email)
-    .eq("source", "saelg-enhed")
-    .order("created_at", { ascending: false })
-    .limit(3);
-  for (const i of (inquiries ?? []) as Row[]) {
+  const inquiries: Row[] = [];
+  for (const email of ctx.verified.emails) {
+    const { data } = await sb
+      .from("contact_inquiries")
+      .select("id, subject, status, created_at")
+      .ilike("email", email)
+      .eq("source", "saelg-enhed")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    inquiries.push(...((data ?? []) as Row[]));
+  }
+  for (const i of inquiries) {
     const { data: offers } = await sb
       .from("trade_in_offers")
       .select("offer_amount, status, created_at, responded_at")
@@ -158,8 +198,7 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
     );
   }
 
-  const customerId = await customerIdFor(sb, email);
-  if (customerId) {
+  for (const customerId of await customerIdsFor(sb, ctx.verified.emails)) {
     const { data: tradeIns } = await sb
       .from("trade_ins")
       .select("device_description, offered_price, status, received_at, paid_at, created_at")
@@ -178,21 +217,33 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
 }
 
 export async function lookupCustomerImpl(ctx: ToolContext): Promise<string> {
-  const { data } = await ctx.supabase
-    .from("customers")
-    .select("id, name, created_at")
-    .ilike("email", ctx.senderEmail.toLowerCase())
-    .maybeSingle();
+  if (unverified(ctx)) return NOT_VERIFIED;
+  let data: Row | null = null;
+  for (const email of ctx.verified.emails) {
+    const res = await ctx.supabase.from("customers").select("id, name, created_at").ilike("email", email).maybeSingle();
+    if (res.data) {
+      data = res.data as Row;
+      break;
+    }
+  }
   ctx.log.push({ tool: "lookup_customer", input: {}, hits: data ? 1 : 0 });
   if (!data) return "Ukendt kunde – ingen profil på adressen.";
   const { count } = await ctx.supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("customer_id", data.id);
+    .eq("customer_id", data.id as string);
   return `Kunde: ${data.name ?? "(uden navn)"}, oprettet ${day(data.created_at)}, ${count ?? 0} ordrer.`;
 }
 
 export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void): BetaRunnableTool[] {
+  /** Records every returned text in ctx.outputs. */
+  const rec =
+    <A extends unknown[]>(fn: (...args: A) => Promise<string>) =>
+    async (...args: A): Promise<string> => {
+      const out = await fn(...args);
+      ctx.outputs.push(out);
+      return out;
+    };
   return [
     betaZodTool({
       name: "lookup_orders",
@@ -201,7 +252,7 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
       inputSchema: z.object({
         order_number: z.string().optional().describe("Ordrenummer som kunden nævner, fx PS-1001"),
       }),
-      run: (input) => lookupOrdersImpl(ctx, input),
+      run: rec((input: { order_number?: string }) => lookupOrdersImpl(ctx, input)),
     }),
     betaZodTool({
       name: "lookup_repairs",
@@ -209,29 +260,29 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
       inputSchema: z.object({
         phone: z.string().optional().describe("Telefonnummer hvis kunden nævner det"),
       }),
-      run: (input) => lookupRepairsImpl(ctx, input),
+      run: rec((input: { phone?: string }) => lookupRepairsImpl(ctx, input)),
     }),
     betaZodTool({
       name: "lookup_buyback",
       description: "Slå afsenderens salgsforespørgsler, tilbud og opkøb op (Sælg din enhed).",
       inputSchema: z.object({}),
-      run: () => lookupBuybackImpl(ctx),
+      run: rec(() => lookupBuybackImpl(ctx)),
     }),
     betaZodTool({
       name: "lookup_customer",
       description: "Slå afsenderens kundeprofil op: navn, oprettet, antal ordrer.",
       inputSchema: z.object({}),
-      run: () => lookupCustomerImpl(ctx),
+      run: rec(() => lookupCustomerImpl(ctx)),
     }),
     betaZodTool({
       name: "get_knowledge",
       description:
         "Hent PhoneSpots faktabase: butikker, åbningstider, garanti, retur, levering, opkøb, forsikring og ordvalg.",
       inputSchema: z.object({}),
-      run: async () => {
+      run: rec(async () => {
         ctx.log.push({ tool: "get_knowledge", input: {}, hits: 1 });
         return buildKnowledge();
-      },
+      }),
     }),
     betaZodTool({
       name: "submit_assessment",

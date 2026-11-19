@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildSystemPrompt } from "./prompt";
 import { assessmentSchema, finalizeAssessment } from "./schema";
 import { buildTools, type ToolContext } from "./tools";
+import type { InquiryChannel } from "@/lib/supabase/types";
 import type { Assessment, LookupLog } from "./types";
 
 export const MODEL = "claude-opus-5";
@@ -10,6 +11,8 @@ export const MODEL = "claude-opus-5";
 export interface AssessInput {
   supabase: SupabaseClient;
   senderEmail: string;
+  /** Decides whether senderEmail counts as verified for lookups. */
+  channel: InquiryChannel;
   senderName: string | null;
   mailbox: string;
   displayName: string;
@@ -69,8 +72,12 @@ function client(): Anthropic {
 export async function assessMessage(input: AssessInput, anthropic: Anthropic = client()): Promise<AssessOutput> {
   const ctx: ToolContext = {
     supabase: input.supabase,
-    senderEmail: input.senderEmail,
+    verified: {
+      emails:
+        input.channel === "email" || input.channel === "form" ? [input.senderEmail.toLowerCase()].filter(Boolean) : [],
+    },
     log: [],
+    outputs: [],
     scopeMismatch: { value: false },
   };
   let submitted: unknown = null;

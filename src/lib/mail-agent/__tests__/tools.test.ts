@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { lookupOrdersImpl, lookupRepairsImpl, type ToolContext } from "@/lib/mail-agent/tools";
+import {
+  lookupBuybackImpl,
+  lookupCustomerImpl,
+  lookupOrdersImpl,
+  lookupRepairsImpl,
+  type ToolContext,
+} from "@/lib/mail-agent/tools";
 
 type Row = Record<string, unknown>;
 
@@ -33,11 +39,12 @@ function fakeSupabase(tables: Record<string, Row[]>) {
     };
     return api;
   }
-  return { from: query } as never;
+  const sb = { from: (table: string) => { sb.calls++; return query(table); }, calls: 0 };
+  return sb as never;
 }
 
-function ctxFor(sb: never, senderEmail: string): ToolContext {
-  return { supabase: sb, senderEmail, log: [], scopeMismatch: { value: false } };
+function ctxFor(sb: never, emails: string[]): ToolContext {
+  return { supabase: sb, verified: { emails }, log: [], outputs: [], scopeMismatch: { value: false } };
 }
 
 const orders = [
@@ -47,7 +54,7 @@ const customers = [{ id: "c1", email: "kunde@example.com", name: "Kunde" }];
 
 describe("lookupOrdersImpl", () => {
   it("returns the sender's orders by email", async () => {
-    const ctx = ctxFor(fakeSupabase({ orders, customers }), "kunde@example.com");
+    const ctx = ctxFor(fakeSupabase({ orders, customers }), ["kunde@example.com"]);
     const out = await lookupOrdersImpl(ctx, {});
     expect(out).toContain("PS-1001");
     expect(out).toContain("afsendt");
@@ -57,14 +64,14 @@ describe("lookupOrdersImpl", () => {
   });
 
   it("finds an order by number when it belongs to the sender", async () => {
-    const ctx = ctxFor(fakeSupabase({ orders, customers }), "kunde@example.com");
+    const ctx = ctxFor(fakeSupabase({ orders, customers }), ["kunde@example.com"]);
     const out = await lookupOrdersImpl(ctx, { order_number: "ps-1001" });
     expect(out).toContain("PS-1001");
     expect(ctx.scopeMismatch.value).toBe(false);
   });
 
   it("flags a mismatch when the order number belongs to another address", async () => {
-    const ctx = ctxFor(fakeSupabase({ orders, customers }), "anden@example.com");
+    const ctx = ctxFor(fakeSupabase({ orders, customers }), ["anden@example.com"]);
     const out = await lookupOrdersImpl(ctx, { order_number: "PS-1001" });
     expect(out).toContain("anden adresse");
     expect(out).not.toContain("PN123");
@@ -72,7 +79,7 @@ describe("lookupOrdersImpl", () => {
   });
 
   it("reports no orders for an unknown sender", async () => {
-    const ctx = ctxFor(fakeSupabase({ orders, customers }), "ukendt@example.com");
+    const ctx = ctxFor(fakeSupabase({ orders, customers }), ["ukendt@example.com"]);
     expect(await lookupOrdersImpl(ctx, {})).toContain("Ingen ordrer");
   });
 });
@@ -83,16 +90,35 @@ describe("lookupRepairsImpl", () => {
   ];
 
   it("lists the sender's repairs", async () => {
-    const ctx = ctxFor(fakeSupabase({ repair_tickets }), "kunde@example.com");
+    const ctx = ctxFor(fakeSupabase({ repair_tickets }), ["kunde@example.com"]);
     const out = await lookupRepairsImpl(ctx, {});
     expect(out).toContain("iPhone 13");
     expect(ctx.log[0]).toMatchObject({ tool: "lookup_repairs", hits: 1 });
   });
 
   it("flags a mismatch when a phone lookup hits someone else's ticket", async () => {
-    const ctx = ctxFor(fakeSupabase({ repair_tickets }), "anden@example.com");
+    const ctx = ctxFor(fakeSupabase({ repair_tickets }), ["anden@example.com"]);
     const out = await lookupRepairsImpl(ctx, { phone: "12345678" });
     expect(out).toContain("anden adresse");
     expect(ctx.scopeMismatch.value).toBe(true);
   });
+});
+
+describe("anonym afsender (ingen verificerede adresser)", () => {
+  const cases: [string, (ctx: ToolContext) => Promise<string>][] = [
+    ["lookupOrdersImpl", (c) => lookupOrdersImpl(c, {})],
+    ["lookupRepairsImpl", (c) => lookupRepairsImpl(c, { phone: "12345678" })],
+    ["lookupBuybackImpl", (c) => lookupBuybackImpl(c)],
+    ["lookupCustomerImpl", (c) => lookupCustomerImpl(c)],
+  ];
+  for (const [name, call] of cases) {
+    it(`${name} returnerer ikke-verificeret og rører ikke databasen`, async () => {
+      const sb = fakeSupabase({ orders, customers }) as unknown as { calls: number };
+      const ctx = ctxFor(sb as never, []);
+      const out = await call(ctx);
+      expect(out).toContain("ikke verificeret");
+      expect(ctx.scopeMismatch.value).toBe(true);
+      expect(sb.calls).toBe(0);
+    });
+  }
 });

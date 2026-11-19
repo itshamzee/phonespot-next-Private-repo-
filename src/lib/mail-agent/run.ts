@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { InquiryChannel } from "@/lib/supabase/types";
 import { assessMessage, type AssessOutput } from "./agent";
 import { displayNameFor, loadMailboxes, type MailboxConfig } from "./config";
 import { digestRecipient, isDigestMail, isDigestReply } from "./digest";
@@ -167,11 +168,14 @@ export async function assessAndDraft(
     .eq("inquiry_id", args.inquiryId)
     .order("created_at", { ascending: true });
   const thread = (msgs ?? []) as ThreadMessage[];
+  const { data: inquiryRow } = await sb.from("contact_inquiries").select("channel").eq("id", args.inquiryId).maybeSingle();
+  const channel = ((inquiryRow?.channel as InquiryChannel | undefined) ?? "email") as InquiryChannel;
   const latest = thread.length ? thread[thread.length - 1].body : "";
   const out = await assessMessage(
     {
       supabase: sb,
       senderEmail: args.senderEmail,
+      channel,
       senderName: args.senderName,
       mailbox: args.mailbox,
       displayName: displayNameFor(args.mailbox),
@@ -190,6 +194,7 @@ async function assessRaw(sb: SupabaseClient, mail: InboundMail, box: MailboxConf
     {
       supabase: sb,
       senderEmail: mail.fromEmail,
+      channel: "email",
       senderName: mail.fromName,
       mailbox: box.address,
       displayName: box.displayName,
