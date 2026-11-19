@@ -233,3 +233,63 @@ describe("fix round 1: broader spellings", () => {
     );
   });
 });
+
+describe("fix round 2", () => {
+  it.each<[string, number[]]>([
+    ["1299 danske kroner", [1299]],
+    ["Prisen er 1299", [1299]],
+    ["koster ca. 1299", [1299]],
+    ["koster cirka 1299", [1299]],
+    ["prisen ligger på 1299", [1299]],
+    ["koster kun 899", [899]],
+    ["koster fra 899", [899]],
+    ["prisen er ca. 1299", [1299]],
+    ["totalen 1299", [1299]],
+    ["totalen er 1.299", [1299]],
+    ["betal 1299", [1299]],
+    ["899 og 1.299 kr", [899, 1299]],
+    ["899 eller 1.299 kr", [899, 1299]],
+  ])("extracts %s", (text, expected) => {
+    expect(extractAmounts(text)).toEqual(expected);
+  });
+
+  it.each([
+    "i alt 14 dage",
+    "koster 15 minutter",
+    "total 30 minutter",
+    "betaler 12 måneder",
+    "koster 10-15 minutter",
+    "total 36 måneder",
+    "koster 128 GB",
+    "koster 20 % mere",
+    "beløbet 50 45 33 71",
+    "koster 2 timer",
+    "pris 3 uger",
+    "koster 5 stk",
+  ])("finds nothing in %s", (text) => {
+    expect(extractAmounts(text)).toEqual([]);
+  });
+
+  it("still finds money when a unit follows the price word number", () => {
+    expect(extractAmounts("koster 15 kr")).toEqual([15]);
+    expect(extractAmounts("koster 1299 20 kr")).toEqual([20]);
+  });
+
+  it("returns within 500 ms on a 100,000-character pathological string", () => {
+    const text = "12.345".repeat(Math.ceil(100000 / 6));
+    const start = Date.now();
+    extractAmounts(text);
+    hasUnparseableAmount(text);
+    expect(Date.now() - start).toBeLessThan(500);
+  });
+
+  it("also stays fast on other long inputs", () => {
+    for (const unit of ["1 234 ", "pris ", "ca. 1,2,3 ", "tusind en "]) {
+      const text = unit.repeat(Math.ceil(100000 / unit.length));
+      const start = Date.now();
+      extractAmounts(text);
+      hasUnparseableAmount(text);
+      expect(Date.now() - start).toBeLessThan(500);
+    }
+  });
+});
