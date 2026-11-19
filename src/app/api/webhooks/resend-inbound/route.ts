@@ -23,32 +23,33 @@ function checkRateLimit(email: string): boolean {
 export async function POST(req: Request) {
   const supabase = createServerClient();
 
-  // 1. Verify webhook signature (Svix) — skip if secret not configured yet
+  // 1. Verify webhook signature (Svix). Fail closed: without a secret anyone
+  // could post forged inbound mail into the inbox.
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("[resend-inbound] RESEND_WEBHOOK_SECRET not set — rejecting request");
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
+  }
   const rawBody = await req.text();
 
-  if (webhookSecret) {
-    const svixId = req.headers.get("svix-id");
-    const svixTimestamp = req.headers.get("svix-timestamp");
-    const svixSignature = req.headers.get("svix-signature");
+  const svixId = req.headers.get("svix-id");
+  const svixTimestamp = req.headers.get("svix-timestamp");
+  const svixSignature = req.headers.get("svix-signature");
 
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      return NextResponse.json({ error: "Missing webhook headers" }, { status: 401 });
-    }
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return NextResponse.json({ error: "Missing webhook headers" }, { status: 401 });
+  }
 
-    const { Webhook } = await import("svix");
-    const wh = new Webhook(webhookSecret);
-    try {
-      wh.verify(rawBody, {
-        "svix-id": svixId,
-        "svix-timestamp": svixTimestamp,
-        "svix-signature": svixSignature,
-      });
-    } catch {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-  } else {
-    console.warn("[resend-inbound] RESEND_WEBHOOK_SECRET not set — skipping verification");
+  const { Webhook } = await import("svix");
+  const wh = new Webhook(webhookSecret);
+  try {
+    wh.verify(rawBody, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    });
+  } catch {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   const parsedBody = JSON.parse(rawBody);

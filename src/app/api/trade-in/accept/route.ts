@@ -137,7 +137,7 @@ export async function POST(req: Request) {
         sellerName: seller_name || inquiry.name,
         sellerAddress: seller_address,
         sellerPostalCity: seller_postal_city,
-        customerEmail: inquiry.email,
+        customerEmail: inquiry.email ?? "",
         customerPhone: inquiry.phone,
       });
 
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
 
       await resend.emails.send({
         from: "PhoneSpot <info@phonespot.dk>",
-        to: inquiry.email,
+        to: inquiry.email ?? "",
         replyTo: "support@reply.phonespot.dk",
         subject: `Tilbud accepteret — ${[brand, model].filter(Boolean).join(" ")}`,
         html,

@@ -165,7 +165,7 @@ export async function POST(req: Request) {
   try {
     const emailResult = await resend.emails.send({
       from: "PhoneSpot <info@phonespot.dk>",
-      to: inquiry.email,
+      to: inquiry.email ?? "",
       replyTo: "info@phonespot.dk",
       subject,
       html: emailHtml,
@@ -174,7 +174,7 @@ export async function POST(req: Request) {
     // Log to mail_log
     await supabase.from("mail_log").insert({
       inquiry_id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: emailHtml,
       status: "delivered",
@@ -184,7 +184,7 @@ export async function POST(req: Request) {
     // Log failure but don't fail the offer creation
     await supabase.from("mail_log").insert({
       inquiry_id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: emailHtml,
       status: "failed",

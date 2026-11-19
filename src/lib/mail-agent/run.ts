@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { InquiryChannel } from "@/lib/supabase/types";
 import { assessMessage, type AssessOutput } from "./agent";
 import { displayNameFor, loadMailboxes, type MailboxConfig } from "./config";
 import { digestRecipient, isDigestMail, isDigestReply } from "./digest";
@@ -167,11 +168,24 @@ export async function assessAndDraft(
     .eq("inquiry_id", args.inquiryId)
     .order("created_at", { ascending: true });
   const thread = (msgs ?? []) as ThreadMessage[];
+  const { data: inquiryRow, error: channelError } = await sb
+    .from("contact_inquiries")
+    .select("channel")
+    .eq("id", args.inquiryId)
+    .maybeSingle();
+  // Fail closed: without a known channel the sender is not treated as verified.
+  let channel: InquiryChannel = "messenger";
+  if (channelError || !inquiryRow) {
+    console.error(`[mail-agent] kanal ikke fundet for henvendelse ${args.inquiryId}: ${channelError?.message ?? "ingen række"}`);
+  } else {
+    channel = (inquiryRow.channel as InquiryChannel | null | undefined) ?? "email";
+  }
   const latest = thread.length ? thread[thread.length - 1].body : "";
   const out = await assessMessage(
     {
       supabase: sb,
       senderEmail: args.senderEmail,
+      channel,
       senderName: args.senderName,
       mailbox: args.mailbox,
       displayName: displayNameFor(args.mailbox),
@@ -190,6 +204,7 @@ async function assessRaw(sb: SupabaseClient, mail: InboundMail, box: MailboxConf
     {
       supabase: sb,
       senderEmail: mail.fromEmail,
+      channel: "email",
       senderName: mail.fromName,
       mailbox: box.address,
       displayName: box.displayName,

@@ -31,11 +31,13 @@ export async function POST(request: Request) {
   const guideNote = normalizedSource === "saelg-enhed" ? await guidePriceNote(metadata) : "";
 
   // Save to database
-  const { data: inserted } = await supabase
+  const { data: inserted, error: insertError } = await supabase
     .from("contact_inquiries")
     .insert({
       name: name.trim(),
-      email: (email ?? "").trim(),
+      email: (typeof email === "string" ? email.trim().toLowerCase() : "") || null,
+      channel: "form",
+      last_inbound_at: new Date().toISOString(),
       phone: phone?.trim() || null,
       subject: subject?.trim() || null,
       message: message.trim() + guideNote,
@@ -46,6 +48,12 @@ export async function POST(request: Request) {
     .select("id, name, email, metadata")
     .maybeSingle();
 
+  // Do not send mails about a lead we failed to save.
+  if (insertError) {
+    console.error("[contact] insert failed", { code: insertError.code, message: insertError.message });
+    return NextResponse.json({ error: "Kunne ikke gemme besked" }, { status: 500 });
+  }
+
   // Price the lead and, inside the safety envelope, schedule the offer. Awaited
   // rather than detached: a serverless function can be frozen the moment the
   // response returns, and a floating promise would simply be lost.
@@ -54,10 +62,11 @@ export async function POST(request: Request) {
     await dispatchAutoOffer(createAdminClient(), {
       id: inserted.id,
       name: inserted.name,
-      email: inserted.email,
+      // The column is nullable now; dispatchAutoOffer expects a string, as before.
+      email: inserted.email ?? "",
       metadata: inserted.metadata,
     });
-    await sendSellConfirmation(createAdminClient(), inserted);
+    await sendSellConfirmation(createAdminClient(), { ...inserted, email: inserted.email ?? "" });
   }
 
   try {

@@ -1,3 +1,4 @@
+import { PHONESPOT_PROMISES } from "@/lib/promises";
 import { STORES, UPCOMING_STORES, COMPANY_EMAIL } from "@/lib/store-config";
 
 // Sat sammen ved koersel: repoets stale-content-guard afviser det skrevne ord
@@ -12,6 +13,10 @@ export const FORBIDDEN_WORDS = [
   "original kasse",
   "originale kasse",
 ] as const;
+
+function promiseBlock(): string {
+  return PHONESPOT_PROMISES.map((p) => `- ${p.title}: ${p.detail}`).join("\n");
+}
 
 function storeBlock(): string {
   return Object.values(STORES)
@@ -61,9 +66,23 @@ ${upcomingStoreBlock()}
 ## Garanti og rettigheder
 - Enheder (telefoner, tablets, computere, ure): 36 måneders garanti. Dækker fejl der ikke skyldes skader, væske eller uautoriseret reparation. Batteri dækkes ved kapacitet under 80 % i garantiperioden.
 - Tilbehør (og reservedele købt tidligere): 2 års reklamationsret efter købeloven, ingen udvidet garanti.
-- Onlinekøb: 14 dages fortrydelsesret fra modtagelse. Kunden betaler returfragten ved fortrydelse. Kunden skal give besked inden fristen og returnere varen efter handelsbetingelserne. Lovpligtig reklamation ved fejl er en særskilt sag; pålæg ikke kunden returfragt ved en berettiget reklamation.
+- Returret ved onlinekøb (handelsbetingelserne punkt 7 og 7a): fristen løber fra modtagelsen.
+  - Enheder (telefoner, tablets, bærbare og smartwatches): 30 dages returret (den lovpligtige 14 dages fortrydelsesret er indeholdt heri).
+  - Tilbehør og reservedele: 14 dages fortrydelsesret.
+  - Varer mærket lagersalg: 14 dages fortrydelsesret ved køb online; ved køb i butikken tages de ikke retur (reklamationsretten gælder uændret).
+  - Kunden betaler returfragten ved fortrydelse. Kunden skal give besked inden fristen og returnere varen efter handelsbetingelserne. Lovpligtig reklamation ved fejl er en særskilt sag; pålæg ikke kunden returfragt ved en berettiget reklamation.
 - Refurbished enheder leveres i PhoneSpot-emballage med kabel; aldrig i producentens originale æske.
 - Garantisager: kunden skriver eller kommer i butikken; vi undersøger enheden og reparerer eller ombytter. Vi tager ikke stilling til refusion på mail.
+
+## Løfter
+${promiseBlock()}
+- Fast opkøbspris gælder det tilbud, kunden har fået efter vores vurdering. En vejledende pris er ikke et tilbud.
+
+## Reparationstider
+- De fleste telefonreparationer tager 30–60 minutter, mens kunden venter i butikken.
+- iPad-ladestik og konsoller tager 2–3 hverdage.
+- Enheden kan også sendes ind med post.
+- Vi tilbyder gratis diagnose over disken i butikkerne i Vejle og Slagelse.
 
 ## Levering og betaling
 - Fragt med PostNord til pakkeshop eller hjem, typisk 1–3 hverdage. Gratis afhentning i butik.
