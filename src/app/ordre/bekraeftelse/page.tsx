@@ -158,13 +158,13 @@ function ConfirmationError({ message }: { message: string }) {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
         <Link
           href="/"
-          className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-block rounded-full bg-green-eco px-8 py-3 font-semibold text-white press hover:opacity-90"
         >
           Gå til forsiden
         </Link>
         <Link
           href="/kontakt"
-          className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+          className="inline-block rounded-full border-2 border-charcoal px-8 py-3 font-semibold text-charcoal press hover:bg-charcoal hover:text-white"
         >
           Kontakt os
         </Link>
