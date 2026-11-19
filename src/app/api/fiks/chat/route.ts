@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { fiksReply, loadQuoteForToken, loadVisibleMessages, validateMessage } from "@/lib/fiks/chat";
+import { fiksReply, loadProductsForToken, loadQuoteForToken, loadVisibleMessages, validateMessage } from "@/lib/fiks/chat";
 import { sellAction } from "@/lib/fiks/quote-shared";
 import { BUSY_TEXT, HONEYPOT_TEXT, IP_WINDOW_MS, MAX_MESSAGE_CHARS, MAX_MESSAGES_PER_IP_PER_WINDOW, isFiksDisabled } from "@/lib/fiks/config";
 
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
       handoff: out.handoff,
       ...(out.limited ? { limited: out.limited } : {}),
       ...(out.quote && out.sessionToken ? { action: sellAction(out.quote, out.sessionToken) } : {}),
+      ...(out.products?.length ? { products: out.products } : {}),
     });
   } catch (err) {
     console.error("[fiks] chat turn failed", err instanceof Error ? err.message : err);
@@ -97,7 +98,14 @@ export async function GET(request: Request) {
     const messages = await loadVisibleMessages(supabase, token);
     // The button to the sell form survives a reload: it belongs to the latest stored quote.
     const quote = messages.length && token ? await loadQuoteForToken(supabase, token) : null;
-    return json({ messages, ...(quote && token ? { action: sellAction(quote, token) } : {}) });
+    // Product cards only come back under the reply that produced them.
+    const latestFiks = messages.findLast((m) => m.from === "fiks");
+    const products = latestFiks && token ? await loadProductsForToken(supabase, token, latestFiks.body) : null;
+    return json({
+      messages,
+      ...(quote && token ? { action: sellAction(quote, token) } : {}),
+      ...(products?.length ? { products } : {}),
+    });
   } catch (err) {
     console.error("[fiks] history load failed", err instanceof Error ? err.message : err);
     return json({ messages: [] });

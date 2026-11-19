@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -5,7 +6,6 @@ import {
   unbackedAmounts,
 } from "@/lib/mail-agent/amount-filter";
 import { FORBIDDEN_WORDS } from "@/lib/mail-agent/knowledge";
-import type { ToolContext } from "@/lib/mail-agent/tools";
 import {
   BUSY_TEXT,
   FALLBACK_TEXT,
@@ -31,7 +31,9 @@ import {
 } from "./config";
 import { buildFiksSystemPrompt, buildSessionNote } from "./prompt";
 import { readStoredQuote, toStoredQuote, type StoredFiksQuote } from "./quote";
-import { buildPublicTools, handoffImpl, type HandoffTarget } from "./tools";
+import { MAX_FIKS_PRODUCTS, sanitizeProducts, type FiksProduct } from "./products-shared";
+import { buildPublicTools, handoffImpl, type FiksToolContext, type HandoffTarget } from "./tools";
+import type { FindDevicesDeps } from "./devices";
 import type { PricedBuybackQuote } from "@/lib/mail-agent/tools";
 
 export interface FiksReplyInput {
@@ -43,6 +45,8 @@ export interface FiksReplyInput {
   ipHash?: string | null;
   /** For tests. */
   now?: () => Date;
+  /** For tests: the loaders behind find_devices. */
+  findDevicesDeps?: FindDevicesDeps;
 }
 
 export interface FiksReplyOutput {
@@ -53,6 +57,21 @@ export interface FiksReplyOutput {
   limited?: "session" | "busy";
   /** Set when quote_buyback priced a device in this turn and the reply passed the checks. */
   quote?: StoredFiksQuote;
+  /** Devices from the turn's last find_devices call, only when the reply passed the checks. */
+  products?: FiksProduct[];
+}
+
+/** Stored on the chat inquiry as metadata.fiks_products: the cards under one Fiks reply. */
+export interface StoredFiksProducts {
+  items: FiksProduct[];
+  at: string;
+  /** Hash of the reply the cards belong to, so a reload only shows them under that reply. */
+  reply_hash: string;
+}
+
+/** Short, stable fingerprint of a reply text. */
+export function replyHash(text: string): string {
+  return createHash("sha256").update(text).digest("hex").slice(0, 32);
 }
 
 export interface ChatMessageRow {
@@ -336,13 +355,16 @@ export async function fiksReply(
   await insertMessage(supabase, session.id, "customer", message);
 
   const buybackQuotes: PricedBuybackQuote[] = [];
-  const ctx: ToolContext = {
+  const deviceFinds: FiksProduct[][] = [];
+  const ctx: FiksToolContext = {
     supabase,
     verified: { emails: [] },
     log: [],
     outputs: [],
     scopeMismatch: { value: false },
     buybackQuotes,
+    deviceFinds,
+    ...(input.findDevicesDeps ? { findDevicesDeps: input.findDevicesDeps } : {}),
   };
   const target: HandoffTarget = {
     supabase,
@@ -429,23 +451,63 @@ export async function fiksReply(
 
   // The amount comes from the tool's structured result, never from the model's text.
   const priced = replyPassed ? buybackQuotes.at(-1) : undefined;
-  let quote: StoredFiksQuote | undefined;
-  if (priced) {
-    quote = toStoredQuote(priced, nowIso);
+  let quote: StoredFiksQuote | undefined = priced ? toStoredQuote(priced, nowIso) : undefined;
+  // Same for the cards: the last find_devices call of the turn, only under a reply that passed.
+  let products: FiksProduct[] | undefined = replyPassed
+    ? sanitizeProducts((deviceFinds.at(-1) ?? []).slice(0, MAX_FIKS_PRODUCTS))
+    : undefined;
+  if (products && products.length === 0) products = undefined;
+  if (quote || products) {
     // target.metadata already carries a handoff made in this turn.
-    const metadata = { ...target.metadata, fiks_quote: quote };
+    const metadata: Record<string, unknown> = { ...target.metadata };
+    if (quote) metadata.fiks_quote = quote;
+    if (products) {
+      const stored: StoredFiksProducts = { items: products, at: nowIso, reply_hash: replyHash(reply) };
+      metadata.fiks_products = stored;
+    }
     const { error } = await supabase.from("contact_inquiries").update({ metadata }).eq("id", session.id);
     if (error) {
-      // Without a stored quote the form cannot be prefilled; the reply still stands.
-      console.error("[fiks] quote store failed", { code: error.code, message: error.message });
+      // Without stored data the form cannot be prefilled and a reload loses the cards; the reply still stands.
+      console.error("[fiks] metadata store failed", { code: error.code, message: error.message });
       quote = undefined;
+      products = undefined;
     } else {
       target.metadata = metadata;
     }
   }
 
   await insertMessage(supabase, session.id, "staff", reply);
-  return { sessionToken: session.token, reply, handoff: handedOff, ...(quote ? { quote } : {}) };
+  return {
+    sessionToken: session.token,
+    reply,
+    handoff: handedOff,
+    ...(quote ? { quote } : {}),
+    ...(products ? { products } : {}),
+  };
+}
+
+/** The stored cards, or null if metadata has none or they do not have the expected shape. */
+export function readStoredProducts(metadata: Record<string, unknown> | null | undefined): StoredFiksProducts | null {
+  const p = metadata?.fiks_products as Record<string, unknown> | undefined;
+  if (!p || typeof p !== "object" || typeof p.reply_hash !== "string" || typeof p.at !== "string") return null;
+  const items = sanitizeProducts(p.items);
+  return items.length ? { items, at: p.at, reply_hash: p.reply_hash } : null;
+}
+
+/**
+ * The cards for a restored chat: only when Fiks' latest visible reply is the
+ * one that produced them, so old cards never end up under an unrelated reply.
+ */
+export async function loadProductsForToken(
+  supabase: SupabaseClient,
+  token: string | null | undefined,
+  latestFiksReply: string | null | undefined,
+): Promise<FiksProduct[] | null> {
+  if (!latestFiksReply) return null;
+  const session = await findSession(supabase, token);
+  const stored = session ? readStoredProducts(session.metadata) : null;
+  if (!stored || stored.reply_hash !== replyHash(latestFiksReply)) return null;
+  return stored.items;
 }
 
 /** The latest stored quote of an open chat session, by token. Null for unknown, malformed or closed sessions. */

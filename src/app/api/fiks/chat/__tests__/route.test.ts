@@ -107,6 +107,19 @@ describe("POST /api/fiks/chat", () => {
     expect(body).not.toHaveProperty("quote");
   });
 
+  it("passes the turn's product cards on", async () => {
+    const products = [{ name: "iPhone 12", url: "https://phonespot.dk/refurbished/iphone-12", image: null, priceFrom: 2499 }];
+    fiksReplyMock.mockResolvedValue({ sessionToken: "tok-1", reply: "Her er iPhone 12.", handoff: false, products });
+    const body = await (await post({ message: "iPhone?" })).json();
+    expect(body.products).toEqual(products);
+  });
+
+  it("sends no products key when the turn has none", async () => {
+    fiksReplyMock.mockResolvedValue({ sessionToken: "tok-1", reply: "Hej.", handoff: false, products: [] });
+    const body = await (await post({ message: "hej" })).json();
+    expect(body).not.toHaveProperty("products");
+  });
+
   it("allows long model calls", () => {
     expect(maxDuration).toBe(60);
   });
@@ -162,6 +175,32 @@ describe("GET /api/fiks/chat", () => {
     });
     const body = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
     expect(body.action).toMatchObject({ type: "sell", model: "iPhone 13", amount: 2150, href: expect.stringContaining(`fiks=${TOKEN}`) });
+  });
+
+  it("returns the stored cards only under the reply that produced them", async () => {
+    const { replyHash } = await import("@/lib/fiks/chat");
+    const items = [{ name: "iPhone 12", url: "https://phonespot.dk/refurbished/iphone-12", image: null, priceFrom: 2499 }];
+    const rows = (lastFiks: string) => [
+      { inquiry_id: "i1", channel: "chat", sender: "customer", body: "iPhone?", staff_name: null, is_internal: false, created_at: "2026-11-19T10:00:01Z" },
+      { inquiry_id: "i1", channel: "chat", sender: "staff", body: "Her er iPhone 12.", staff_name: "Fiks", is_internal: false, created_at: "2026-11-19T10:00:02Z" },
+      { inquiry_id: "i1", channel: "chat", sender: "staff", body: lastFiks, staff_name: "Fiks", is_internal: false, created_at: "2026-11-19T10:00:03Z" },
+    ];
+    const metadata = { fiks_products: { items, at: "x", reply_hash: replyHash("Her er iPhone 12.") } };
+
+    fake.current = fakeSupabase({
+      contact_inquiries: [{ id: "i1", channel: "chat", external_thread_id: TOKEN, status: "besvaret", metadata }],
+      inquiry_messages: rows("Her er iPhone 12.").slice(0, 2),
+    });
+    const fresh = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
+    expect(fresh.products).toEqual(items);
+
+    // A later, unrelated reply: the old cards must not be glued under it.
+    fake.current = fakeSupabase({
+      contact_inquiries: [{ id: "i1", channel: "chat", external_thread_id: TOKEN, status: "besvaret", metadata }],
+      inquiry_messages: rows("Vi har åbent til kl. 19."),
+    });
+    const later = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
+    expect(later).not.toHaveProperty("products");
   });
 
   it("returns an empty list for an unknown token", async () => {
