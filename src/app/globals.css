@@ -27,6 +27,18 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
+/* ── Bevægelse ───────────────────────────────────────────
+   Én kurve til ting der kommer ind (hurtig start, blød landing), én til ting
+   der flytter sig på skærmen, og drawer-kurven til ark og paneler. Kun
+   transform, opacity og farver animeres; intet spiller ved sideindlæsning. */
+:root {
+  --ease-ps-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-ps-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-ps-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-ps-fast: 150ms;
+  --dur-ps-panel: 240ms;
+}
+
 /* `clip` hides horizontal overflow like `hidden`, but without turning the element
    into a scroll container — `hidden` here silently disabled every
    position: sticky on the site. `hidden` stays as the fallback for browsers
@@ -153,5 +165,134 @@ body {
   .sheet-enter,
   .backdrop-enter {
     transition: none;
+  }
+}
+
+/* Mobilmenuen kommer fra venstre kant, samme kurve som kurven fra højre. */
+.drawer-enter-left {
+  transition: transform 260ms var(--ease-ps-drawer);
+}
+@starting-style {
+  .drawer-enter-left {
+    transform: translateX(-100%);
+  }
+}
+
+/* ── Tryk-feedback ───────────────────────────────────────
+   Knapper, fliser og vælgere giver lidt efter, når man trykker. Erstatter
+   elementets egen transition-* klasse (farver og skala i én). */
+@utility press {
+  transition-property: color, background-color, border-color, outline-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, scale;
+  transition-duration: var(--dur-ps-fast);
+  transition-timing-function: var(--ease-ps-out);
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    scale: 0.97;
+  }
+}
+
+/* ── Produktkort ─────────────────────────────────────────
+   .card-lift er hele kortet, .card-media billedfladen. Billedet løfter sig
+   en anelse ved hover, og har kortet et ekstra billede (CardHoverImage),
+   tones det frem over det første. Kun med mus, aldrig på touch. Uden
+   :has() vises det ekstra billede slet ikke, så de to aldrig ligger oven i
+   hinanden. */
+.card-media {
+  overflow: hidden;
+}
+.card-media img {
+  transition:
+    opacity 220ms ease,
+    transform 320ms var(--ease-ps-out);
+}
+.card-hover-img {
+  padding: inherit;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-lift:hover .card-media img {
+    transform: scale(1.03);
+  }
+  @supports selector(:has(*)) {
+    .card-lift:hover .card-hover-img[data-loaded] {
+      opacity: 1;
+    }
+    .card-lift:hover .card-media:has(.card-hover-img[data-loaded]) > img {
+      opacity: 0;
+    }
+  }
+}
+
+/* ── Ting der folder sig ud ──────────────────────────────
+   <details> toner indholdet frem, når det åbnes (lukning er øjeblikkelig).
+   Det er en transition, så intet spiller ved sideindlæsning, og indholdet
+   ligger i HTML'en som før. Browsere uden ::details-content ignorerer det. */
+details::details-content {
+  opacity: 0;
+}
+details[open]::details-content {
+  opacity: 1;
+  transition:
+    opacity 220ms var(--ease-ps-out),
+    content-visibility 220ms allow-discrete;
+}
+
+/* Svar i FaqAccordion og fejltekster i formularer: glider 3 px og tones ind,
+   når de vises (kun ved brugerhandling; de er skjulte ved indlæsning). */
+.reveal-in {
+  transition:
+    opacity 220ms var(--ease-ps-out),
+    transform 220ms var(--ease-ps-out);
+}
+@starting-style {
+  .reveal-in {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+/* Mega-menuens panel: kort fade ned fra menulinjen første gang det åbner.
+   Skift mellem kategorier sker uden animation (klassen sættes ikke). */
+.mega-enter {
+  transition:
+    opacity 180ms var(--ease-ps-out),
+    transform 180ms var(--ease-ps-out);
+}
+@starting-style {
+  .mega-enter {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Bekræftelse på knapper ("Lagt i kurven"): flueben tegner sig ind. */
+.confirm-in {
+  animation: ps-confirm-in 200ms var(--ease-ps-out);
+}
+@keyframes ps-confirm-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-enter-left,
+  .card-media img,
+  .card-hover-img,
+  .reveal-in,
+  .mega-enter,
+  details[open]::details-content {
+    transition: none;
+  }
+  .confirm-in {
+    animation: none;
+  }
+  .card-lift:hover .card-media img {
+    transform: none;
+  }
+  .press:active {
+    scale: none;
   }
 }
