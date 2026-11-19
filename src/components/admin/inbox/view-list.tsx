@@ -55,7 +55,7 @@ export function ViewList({ view, counts, onChange }: { view: InboxView; counts: 
                     type="button"
                     aria-current={active ? "true" : undefined}
                     onClick={() => onChange(v.id)}
-                    className={`m-press flex h-9 w-full items-center justify-between gap-2 rounded-lg px-2.5 text-left text-[14px] motion-safe:transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#2F8F55] ${
+                    className={`m-press flex h-10 w-full items-center justify-between gap-2 rounded-lg px-2.5 text-left text-[14px] motion-safe:transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#2F8F55] ${
                       active ? "bg-green-pale font-semibold text-green-eco" : "text-[#15211B] hover:bg-[#ECEEEA]"
                     }`}
                   >

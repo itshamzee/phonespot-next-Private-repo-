@@ -36,7 +36,7 @@ export interface ComposerProps {
   onReview: () => void;
 }
 
-const smallSelect = "!h-9 min-[900px]:!h-8 min-[900px]:!text-[13px]";
+const smallSelect = "min-[900px]:!h-8 min-[900px]:!text-[13px]";
 const actionBtn = "w-full min-[900px]:w-auto";
 
 export function Composer({ textareaRef, ...p }: ComposerProps) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { waitingLabel, type InboxRow, type InboxView } from "@/lib/inquiries/inbox";
-import { Segmented, Skeleton } from "@/components/admin/ui";
+import { Button, Segmented, Skeleton } from "@/components/admin/ui";
 import { CHANNEL_LABELS, isUnread, mailboxLabel } from "./inbox-helpers";
 import { storeName } from "./saved-replies";
 import { ViewSelect } from "./view-list";
@@ -75,7 +75,7 @@ export function ConversationList(p: ConversationListProps) {
           onChange={(e) => p.onQuery(e.target.value)}
           placeholder="Søg navn, telefon, tekst"
           aria-label="Søg i samtaler"
-          className="h-9 w-full min-w-0 rounded-lg border border-[#C9D0C7] bg-white px-2.5 text-[16px] outline-none focus:border-[#2F8F55] focus-visible:ring-2 focus-visible:ring-[#2F8F55]/30 min-[900px]:text-[14px]"
+          className="h-10 w-full min-w-0 rounded-lg border border-[#C9D0C7] bg-white px-2.5 text-[16px] outline-none focus:border-[#2F8F55] focus-visible:ring-2 focus-visible:ring-[#2F8F55]/30 min-[900px]:text-[14px]"
         />
         <div className="flex items-center gap-2">
           {p.showStoreFilter && <Segmented size="sm" label="Butik" value={p.store} onChange={p.onStore} options={STORE_OPTIONS} />}
@@ -87,9 +87,9 @@ export function ConversationList(p: ConversationListProps) {
         {p.error && !p.loaded ? (
           <div role="alert" className="m-3.5 flex items-center justify-between gap-3 rounded-lg bg-[#FDECEC] p-3 text-[14px] text-[#B42318]">
             <span>{p.error}</span>
-            <button type="button" onClick={p.onRetry} className="m-tap rounded-lg border border-[#F3C6C2] bg-white px-3 py-1.5 text-[13px] font-medium">
+            <Button size="sm" onClick={p.onRetry}>
               Prøv igen
-            </button>
+            </Button>
           </div>
         ) : !p.loaded ? (
           <ListSkeleton />

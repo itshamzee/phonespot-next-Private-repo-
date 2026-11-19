@@ -53,7 +53,7 @@ export function UndoToast({ item, onDismiss }: { item: UndoItem | null; onDismis
               item.onUndo();
               onDismiss();
             }}
-            className="m-press m-tap h-[30px] whitespace-nowrap rounded-lg border border-[#5E6A63] px-2.5 font-semibold tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="m-press m-tap h-8 whitespace-nowrap rounded-lg border border-[#5E6A63] px-2.5 font-semibold tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Fortryd ({left})
           </button>

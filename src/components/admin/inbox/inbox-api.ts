@@ -41,7 +41,8 @@ export type InboxActionBody =
   | { type: "snooze"; until: string }
   | { type: "unsnooze" }
   | { type: "done" }
-  | { type: "reopen" }
+  | { type: "waiting" }
+  | { type: "reopen"; to?: "ny" | "venter_paa_svar" | "besvaret"; snoozedUntil?: string }
   | { type: "note"; body: string }
   | { type: "verdict"; draftId: string; verdict: "correct" | "wrong"; note?: string };
 
@@ -57,12 +58,13 @@ export function postReply(id: string, body: { body: string; channel: "email" | "
   );
 }
 
-export function approveDraft(draftId: string, body: string) {
-  return call(`/api/admin/mail-agent/drafts/${encodeURIComponent(draftId)}/approve`, post({ body }), "Svaret blev ikke sendt. Prøv igen.");
-}
-
-export function discardDraft(draftId: string) {
-  return call(`/api/admin/mail-agent/drafts/${encodeURIComponent(draftId)}/discard`, post({}), "Udkastet kunne ikke lægges væk.");
+/** Sender et ventende udkast (evt. redigeret) i medarbejderens navn; serveren bogfører som svar-ruten. */
+export function approveDraft(draftId: string, body: string, after: "done" | "waiting") {
+  return call<{ warning?: string }>(
+    `/api/admin/mail-agent/drafts/${encodeURIComponent(draftId)}/approve`,
+    post({ body, after }),
+    "Svaret blev ikke sendt. Prøv igen.",
+  );
 }
 
 export function getJson<T>(url: string, signal: AbortSignal, fallback: string) {

@@ -131,7 +131,7 @@ export function CustomerPanel({ detail, customer, error, draft, onOpenConversati
       {onClose && (
         <div className="-mt-1 mb-2 flex items-center justify-between">
           <span className="text-[13px] text-[#5E6A63]">Kunde</span>
-          <button type="button" onClick={onClose} className="m-press m-tap rounded-lg px-2.5 py-1.5 text-[13px] font-medium hover:bg-[#F5F6F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F55]">
+          <button type="button" onClick={onClose} className="m-press m-tap h-8 rounded-lg px-2.5 text-[13px] font-medium hover:bg-[#F5F6F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F55]">
             Luk
           </button>
         </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useState, type RefObject } from "react";
 import { useToast } from "@/components/admin/ui";
-import { approveDraft, discardDraft, postAction, postReply, smsSentButNotSaved } from "./inbox-api";
+import { approveDraft, postReply, smsSentButNotSaved } from "./inbox-api";
 import { availableChannels, nextAfter, pendingDraft, reviewLink, type ThreadDraft } from "./inbox-helpers";
 import type { ComposerState, Sending } from "./composer";
 import type { UndoItem } from "./undo-toast";
@@ -54,6 +54,9 @@ export function useInboxActions({
       if (!inq || inq.status === "lukket") return;
       const id = inq.id;
       const next = nextAfter(rows, id);
+      // Til fortryd: status og en evt. aktiv udsættelse fra før "Færdig".
+      const prevStatus = inq.status as "ny" | "venter_paa_svar" | "besvaret";
+      const prevSnooze = inq.snoozed_until && Date.parse(inq.snoozed_until) > Date.now() ? inq.snoozed_until : null;
       setBusy(kind);
       const r =
         kind === "done"
@@ -68,7 +71,14 @@ export function useInboxActions({
       showUndo({
         message: kind === "done" ? "Sagen er færdig." : `Udsat til ${(label ?? "senere").toLowerCase()}.`,
         onUndo: async () => {
-          const back = await runAction(id, kind === "done" ? { type: "reopen" } : { type: "unsnooze" });
+          const back =
+            kind === "done"
+              ? await runAction(
+                  id,
+                  { type: "reopen", to: prevStatus, ...(prevSnooze ? { snoozedUntil: prevSnooze } : {}) },
+                  { status: prevStatus, snoozedUntil: prevSnooze },
+                )
+              : await runAction(id, { type: "unsnooze" }, { snoozedUntil: null });
           if (!back.ok) toast(back.error, { tone: "error" });
           else openNext(id);
         },
@@ -151,22 +161,15 @@ export function useInboxActions({
 
       await withBusy(async () => {
         if (viaDraft && pending) {
-          const r = await approveDraft(pending.id, text);
+          // Godkend-ruten sender og bogfører (status, udsættelse, tildeling) i ét kald.
+          const r = await approveDraft(pending.id, text, after);
           if (!r.ok) {
             patchComposer(id, { error: r.error });
+            // "Udkastet er allerede behandlet.": hent tråden, så feltet ikke bygger på et gammelt udkast.
             if (r.status === 409) reloadDetail();
             return;
           }
-          // Godkend-ruten sætter kun "besvaret"; resten af efterbehandlingen sker her.
-          let warning: string | undefined;
-          if (after === "done") {
-            const d = await postAction(id, { type: "done" });
-            if (!d.ok) warning = "Svaret er sendt, men sagen blev ikke lukket. Tryk Færdig.";
-          } else {
-            if (!inq.assigned_to) await postAction(id, { type: "take", expectAssignedTo: null });
-            if (inq.snoozed_until && Date.parse(inq.snoozed_until) > Date.now()) await postAction(id, { type: "unsnooze" });
-          }
-          finish(warning);
+          finish(typeof r.data.warning === "string" && r.data.warning ? r.data.warning : undefined);
           return;
         }
 
@@ -183,8 +186,7 @@ export function useInboxActions({
           patchComposer(id, { error: r.error });
           return;
         }
-        // Ventende udkast er besvaret af en person nu; læg dem væk, så sagen ikke står med "Udkast klar".
-        for (const d of detail.drafts) if (d.status === "pending") await discardDraft(d.id).catch(() => null);
+        // Svar-ruten kasserer selv ventende udkast på tråden.
         finish(typeof r.data.warning === "string" && r.data.warning ? r.data.warning : undefined);
       });
       setSending(null);
@@ -192,7 +194,7 @@ export function useInboxActions({
     [inq, detail, composer, rows, patchComposer, patchRow, toast, openNext, reloadList, reloadDetail, withBusy],
   );
 
-  /** Anmeldelse: kopier svaret, åbn anmeldelsen og tag sagen. Der sendes intet. */
+  /** Anmeldelse: kopier svaret, åbn anmeldelsen og sæt sagen til at vente. Der sendes intet. */
   const review = useCallback(async () => {
     if (!inq || !detail || !composer) return;
     const text = composer.text.trim();
@@ -211,11 +213,23 @@ export function useInboxActions({
       el?.select();
     }
     setSending("review");
-    if (!inq.assigned_to && meId) await runAction(inq.id, { type: "take", expectAssignedTo: null }, { assignedTo: meId, assignedName: meName });
+    const r = await runAction(
+      inq.id,
+      { type: "waiting" },
+      {
+        status: "besvaret",
+        snoozedUntil: null,
+        ...(!inq.assigned_to && meId ? { assignedTo: meId, assignedName: meName } : {}),
+      },
+    );
     setSending(null);
-    if (!copied) toast("Teksten er markeret. Kopiér den med Ctrl+C, og sæt den ind under anmeldelsen.");
-    else if (link) toast("Svaret er kopieret. Sæt det ind under anmeldelsen, og tryk Færdig, når det er lagt ud.");
-    else toast("Svaret er kopieret. Der er intet link til anmeldelsen i tråden, så åbn den selv.");
+    if (!r.ok) {
+      toast(r.error, { tone: "error" });
+      return;
+    }
+    if (!copied) toast("Teksten er markeret. Kopiér den med Ctrl+C. Sagen venter nu på, at du har lagt den ud.");
+    else if (link) toast("Svaret er kopieret. Sagen venter nu på, at du har lagt det ud.");
+    else toast("Svaret er kopieret. Der er intet link til anmeldelsen i tråden, så åbn den selv. Sagen venter nu på, at du har lagt det ud.");
   }, [inq, detail, composer, meId, meName, runAction, toast, textareaRef]);
 
   return { busy, sending, take, done, snooze, reopen, note, verdict, send, review };

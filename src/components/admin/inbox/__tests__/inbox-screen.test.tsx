@@ -62,12 +62,16 @@ const detail = {
 type Call = { url: string; method: string; body: Record<string, unknown> | null };
 let calls: Call[] = [];
 let takeStatus = 200;
+let approveResponse = () => json({ ok: true, transport: "onecom", filed: 0 });
+let detailData: { inquiry: Record<string, unknown>; messages: typeof detail.messages; drafts: typeof detail.drafts } = detail;
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
 beforeEach(() => {
   calls = [];
   takeStatus = 200;
+  approveResponse = () => json({ ok: true, transport: "onecom", filed: 0 });
+  detailData = detail;
   window.localStorage.clear();
   vi.stubGlobal(
     "fetch",
@@ -77,11 +81,11 @@ beforeEach(() => {
       const body = typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : null;
       calls.push({ url, method, body });
       if (url.startsWith("/api/admin/inbox?")) return json({ rows: [listRow], counts: { mine: 0, unassigned: 1, need: 0 }, me: { id: "me", name: "Mads" } });
-      if (url === "/api/admin/inbox/a") return json(detail);
+      if (url === "/api/admin/inbox/a") return json(detailData);
       if (url === "/api/admin/inbox/a/customer")
         return json({ known: true, matchedBy: "email", name: "Camilla Holm", email: "camilla@eksempel.dk", phone: "20123456", repairs: [], orders: [], buyback: [], previous: [] });
       if (url.startsWith("/api/admin/templates")) return json([]);
-      if (url.endsWith("/approve")) return json({ ok: true });
+      if (url.endsWith("/approve")) return approveResponse();
       if (url.endsWith("/discard")) return json({ ok: true });
       if (url === "/api/contact/a/reply") return json({ id: "m2" }, 201);
       if (url === "/api/admin/inbox/a/action") {
@@ -98,7 +102,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function openFirst() {
+async function openFirst(label = "Svar til kunden") {
   render(
     <StoreScopeProvider initialMe={me}>
       <ToastProvider>
@@ -109,7 +113,7 @@ async function openFirst() {
   const list = await screen.findByRole("list", { name: "Samtaler" });
   fireEvent.click(within(list).getAllByRole("button")[0], { detail: 1 });
   await screen.findByRole("heading", { name: "Skærmen er sort" });
-  return (await screen.findByLabelText("Svar til kunden")) as HTMLTextAreaElement;
+  return (await screen.findByLabelText(label)) as HTMLTextAreaElement;
 }
 
 describe("InboxScreen", () => {
@@ -122,20 +126,21 @@ describe("InboxScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send og vent på kunden" }));
     await screen.findByText("Sendt til Camilla Holm.");
     const approve = calls.find((c) => c.url === "/api/admin/mail-agent/drafts/d1/approve");
-    expect(approve?.body).toEqual({ body: `${DRAFT} Venlig hilsen` });
+    expect(approve?.body).toEqual({ body: `${DRAFT} Venlig hilsen`, after: "waiting" });
     expect(calls.some((c) => c.url === "/api/contact/a/reply")).toBe(false);
-    // Sagen var ledig: den tages bagefter (godkend-ruten tildeler ikke).
-    expect(calls.find((c) => c.url === "/api/admin/inbox/a/action")?.body).toEqual({ type: "take", expectAssignedTo: null });
+    // Godkend-ruten bogfører selv: ingen efterfølgende handlinger.
+    expect(calls.some((c) => c.url === "/api/admin/inbox/a/action")).toBe(false);
     for (const c of calls) expect(JSON.stringify(c.body ?? {})).not.toContain("staff_name");
   });
 
-  it("SMS går via svar-ruten med after og lægger udkastet væk", async () => {
+  it("SMS går via svar-ruten med after, uden egne kald til at kassere udkastet", async () => {
     await openFirst();
     fireEvent.change(screen.getByLabelText("Svar via"), { target: { value: "sms" } });
     fireEvent.click(screen.getByRole("button", { name: "Send og luk" }));
     await screen.findByText("Sendt til Camilla Holm.");
     expect(calls.find((c) => c.url === "/api/contact/a/reply")?.body).toEqual({ body: DRAFT, channel: "sms", after: "done" });
-    expect(calls.some((c) => c.url === "/api/admin/mail-agent/drafts/d1/discard")).toBe(true);
+    // Svar-ruten kasserer selv ventende udkast.
+    expect(calls.some((c) => c.url.endsWith("/discard"))).toBe(false);
     expect(calls.some((c) => c.url.endsWith("/approve"))).toBe(false);
   });
 
@@ -145,6 +150,55 @@ describe("InboxScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tag den" }));
     expect(await screen.findByText("Sagen er allerede taget af Sara.")).toBeTruthy();
     expect(calls.find((c) => c.body?.type === "take")?.body).toEqual({ type: "take", expectAssignedTo: null });
+  });
+
+  it("godkendelse med warning er en succes med advarslen i en toast; 409 viser fejlen og henter tråden", async () => {
+    approveResponse = () => json({ ok: true, warning: "Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden." });
+    const box = await openFirst();
+    fireEvent.click(screen.getByRole("button", { name: "Send og luk" }));
+    await screen.findByText("Sendt til Camilla Holm.");
+    expect(calls.find((c) => c.url.endsWith("/approve"))?.body).toEqual({ body: DRAFT, after: "done" });
+    expect(await screen.findByText("Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden.", {}, { timeout: 6000 })).toBeTruthy();
+    expect(box).toBeTruthy();
+  }, 10000);
+
+  it("409 fra godkendelse står over feltet, teksten bliver, og tråden hentes igen", async () => {
+    approveResponse = () => json({ error: "Udkastet er allerede behandlet." }, 409);
+    const box = await openFirst();
+    const before = calls.filter((c) => c.url === "/api/admin/inbox/a").length;
+    fireEvent.click(screen.getByRole("button", { name: "Send og vent på kunden" }));
+    expect(await screen.findByText("Udkastet er allerede behandlet.")).toBeTruthy();
+    expect(box.value).toBe(DRAFT);
+    await waitFor(() => expect(calls.filter((c) => c.url === "/api/admin/inbox/a").length).toBeGreaterThan(before));
+  });
+
+  it("fortryd af Færdig genåbner til den forrige status og udsættelse", async () => {
+    const until = new Date(Date.now() + 86_400_000).toISOString();
+    detailData = { ...detail, inquiry: { ...detail.inquiry, status: "besvaret", snoozed_until: until } };
+    await openFirst();
+    fireEvent.click(within(screen.getByRole("region", { name: "Samtale" })).getByRole("button", { name: "Færdig" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Fortryd/ }));
+    await waitFor(() => expect(calls.some((c) => c.body?.type === "reopen")).toBe(true));
+    expect(calls.find((c) => c.body?.type === "reopen")?.body).toEqual({ type: "reopen", to: "besvaret", snoozedUntil: until });
+  });
+
+  it("anmeldelse: kopierer, åbner linket og sætter sagen til at vente", async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    detailData = {
+      ...detail,
+      inquiry: { ...detail.inquiry, channel: "google_review", email: null, phone: null, name: "Google-anmeldelse" },
+      messages: [{ ...detail.messages[0], channel: "google_review", body: "Ventede længe. https://g.page/r/abc" }],
+    };
+    await openFirst("Offentligt svar");
+    fireEvent.click(screen.getByRole("button", { name: "Kopiér svar og åbn anmeldelsen" }));
+    expect(await screen.findByText("Svaret er kopieret. Sagen venter nu på, at du har lagt det ud.")).toBeTruthy();
+    expect(writeText).toHaveBeenCalledWith(DRAFT);
+    expect(open).toHaveBeenCalledWith("https://g.page/r/abc", "_blank", "noopener,noreferrer");
+    expect(calls.find((c) => c.url === "/api/admin/inbox/a/action")?.body).toEqual({ type: "waiting" });
+    expect(calls.some((c) => c.url.endsWith("/approve") || c.url.endsWith("/reply"))).toBe(false);
+    open.mockRestore();
   });
 
   it("adressen følger den valgte samtale", async () => {
