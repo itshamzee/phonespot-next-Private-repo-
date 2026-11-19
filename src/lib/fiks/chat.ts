@@ -437,10 +437,10 @@ export async function fiksReply(
         .filter((m) => m.sender === "staff" && !m.is_internal)
         .map((m) => m.body),
     ];
-    if (
-      unbackedAmounts(reply, backing).length > 0 ||
-      hasUnparseableAmount(reply)
-    ) {
+    const unbacked = unbackedAmounts(reply, backing);
+    if (unbacked.length > 0 || hasUnparseableAmount(reply)) {
+      // Kun tallene logges, så vi kan se hvorfor et svar blev stoppet.
+      console.error("[fiks] reply blocked by amount filter", JSON.stringify({ unbacked, unparseable: hasUnparseableAmount(reply) }));
       reply = handedOff ? HANDOFF_CONFIRM_TEXT : SAFE_PRICE_TEXT;
       replyPassed = false;
     } else if (hasForbiddenWord(reply)) {

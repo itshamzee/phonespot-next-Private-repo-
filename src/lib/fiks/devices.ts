@@ -329,9 +329,12 @@ export async function findDevicesImpl(
     }
   }
 
+  // Kundens eget budget må gerne gentages i svaret: det står her, så beløbsfilteret kender det.
+  const budget = input.max_price && input.max_price > 0 ? `Kundens budget: højst ${formatKroner(input.max_price)}` : null;
+
   if (hits.length === 0) {
     return {
-      text: "Ingen enheder på lager matcher lige nu, og der er ingen nære alternativer. Nævn ingen modeller eller priser; sig at lageret skifter, og tilbyd at en kollega vender tilbage.",
+      text: (budget ? `${budget}. ` : "") + "Ingen enheder på lager matcher lige nu, og der er ingen nære alternativer. Nævn ingen modeller eller priser; sig at lageret skifter, og tilbyd at en kollega vender tilbage.",
       products: [],
     };
   }
@@ -340,7 +343,7 @@ export async function findDevicesImpl(
     ? "På lager lige nu, bedste match først. Priser inkl. moms."
     : "Ingen enheder på lager matcher alle ønskerne. Sig det tydeligt. Nærmeste alternativer på lager lige nu:";
   return {
-    text: [header, ...hits.map((h, i) => lineFor(i, h)), FOOTER].join("\n"),
+    text: [budget, header, ...hits.map((h, i) => lineFor(i, h)), FOOTER].filter(Boolean).join("\n"),
     products: hits.map((h) => h.product),
   };
 }
