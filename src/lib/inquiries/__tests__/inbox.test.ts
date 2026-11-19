@@ -3,6 +3,8 @@ import {
   buildInboxRows,
   inboxState,
   matchesView,
+  needsAnswer,
+  sortFolderRows,
   viewCounts,
   waitingLabel,
   type InboxRow,
@@ -214,5 +216,44 @@ describe("buildInboxRows", () => {
   it("blander ikke udkast mellem tråde", () => {
     const rows = buildInboxRows([inq(), inq({ id: "i2" })] as never, [], [draft({ inquiry_id: "i2", needs_human: true })] as never);
     expect(rows.map((r) => r.needsHuman)).toEqual([false, true]);
+  });
+});
+
+describe("mapper", () => {
+  it("opkøb og postkasser viser alt, der ikke er færdigt", () => {
+    const opk = row({ source: "saelg-enhed", channel: "form", mailbox: null, status: "besvaret" });
+    expect(matchesView("opkoeb", opk, "me", NOW)).toBe(true);
+    expect(matchesView("opkoeb", row({ source: "saelg-enhed", status: "lukket" }), "me", NOW)).toBe(false);
+    expect(matchesView("opkoeb", row(), "me", NOW)).toBe(false);
+    expect(matchesView("mb-ha", row({ mailbox: "HA@phonespot.dk" }), "me", NOW)).toBe(true);
+    expect(matchesView("mb-ha", row({ mailbox: "info@phonespot.dk" }), "me", NOW)).toBe(false);
+    expect(matchesView("mb-info", row(), "me", NOW)).toBe(true);
+    expect(matchesView("mb-slagelse", row({ mailbox: null }), "me", NOW)).toBe(false);
+    expect(matchesView("ch-chat", row({ channel: "chat" as InboxRow["channel"], mailbox: null, status: "besvaret" }), "me", NOW)).toBe(true);
+    expect(matchesView("ch-chat", row(), "me", NOW)).toBe(false);
+  });
+
+  it("sorterer skal besvares øverst, også et overset kundesvar, derefter nyeste først", () => {
+    const rows = [
+      row({ id: "venter-ny", status: "besvaret", lastInboundAt: "2026-11-19T10:00:00Z" }),
+      row({ id: "aaben-gammel", status: "ny", lastInboundAt: "2026-11-10T10:00:00Z" }),
+      row({ id: "overset", status: "besvaret", customerLast: true, lastInboundAt: "2026-11-15T10:00:00Z" }),
+      row({ id: "venter-gammel", status: "besvaret", lastInboundAt: "2026-11-01T10:00:00Z" }),
+    ];
+    expect(sortFolderRows(rows, NOW).map((r) => r.id)).toEqual(["overset", "aaben-gammel", "venter-ny", "venter-gammel"]);
+    expect(needsAnswer(rows[2], NOW)).toBe(true);
+    expect(needsAnswer(rows[0], NOW)).toBe(false);
+  });
+
+  it("customerLast følger den nyeste ikke-interne besked", () => {
+    const base = { id: "q", name: "A", subject: null, message: "m", channel: "form" as const, mailbox: null, store_id: null, status: "besvaret" as const, assigned_to: null, assigned_name: null, snoozed_until: null, last_inbound_at: null, source: "saelg-enhed" };
+    const msgs = [
+      { inquiry_id: "q", sender: "staff" as const, body: "tilbud", created_at: "2026-11-01T10:00:00Z" },
+      { inquiry_id: "q", sender: "customer" as const, body: "ja tak", created_at: "2026-11-02T10:00:00Z" },
+      { inquiry_id: "q", sender: "staff" as const, body: "note", is_internal: true, created_at: "2026-11-03T10:00:00Z" },
+    ];
+    expect(buildInboxRows([base], msgs, [])[0].customerLast).toBe(true);
+    expect(buildInboxRows([base], msgs.slice(0, 1), [])[0].customerLast).toBe(false);
+    expect(buildInboxRows([base], [], [])[0].customerLast).toBe(false);
   });
 });

@@ -6,6 +6,7 @@ import { approveDraft, postReply, smsSentButNotSaved } from "./inbox-api";
 import { availableChannels, nextAfter, pendingDraft, reviewLink, type ThreadDraft } from "./inbox-helpers";
 import type { ComposerState, Sending } from "./composer";
 import type { UndoItem } from "./undo-toast";
+import type { InboxRow } from "@/lib/inquiries/inbox";
 import type { Inbox } from "./use-inbox";
 
 /**
@@ -108,6 +109,32 @@ export function useInboxActions({
 
   const done = useCallback(() => leave("done"), [leave]);
   const snooze = useCallback((until: string, label: string) => leave("snooze", until, label), [leave]);
+
+  /** Fluebenet i listen: luk en sag direkte fra rækken, med fortryd. */
+  const quickDone = useCallback(
+    async (row: InboxRow) => {
+      if (row.status === "lukket") return;
+      const id = row.id;
+      const wasSelected = id === selectedId;
+      const next = wasSelected ? nextAfter(rows, id) : null;
+      const prevStatus = row.status as "ny" | "venter_paa_svar" | "besvaret";
+      const prevSnooze = row.snoozedUntil && Date.parse(row.snoozedUntil) > Date.now() ? row.snoozedUntil : null;
+      const r = await runAction(id, { type: "done" }, { status: "lukket", snoozedUntil: null });
+      if (!r.ok) {
+        toast(r.error, { tone: "error" });
+        return;
+      }
+      if (wasSelected) openNext(next);
+      showUndo({
+        message: `${row.name || "Sagen"} er færdig.`,
+        onUndo: async () => {
+          const back = await runAction(id, { type: "reopen", to: prevStatus, ...(prevSnooze ? { snoozedUntil: prevSnooze } : {}) });
+          if (!back.ok) toast(back.error, { tone: "error" });
+        },
+      });
+    },
+    [selectedId, rows, runAction, toast, openNext, showUndo],
+  );
 
   const reopen = useCallback(async () => {
     if (!inq) return;
@@ -252,5 +279,5 @@ export function useInboxActions({
     else toast("Svaret er kopieret. Der er intet link til anmeldelsen i tråden, så åbn den selv. Sagen venter nu på, at du har lagt det ud.");
   }, [inq, detail, composer, meId, meName, runAction, toast, textareaRef]);
 
-  return { busy, sending, take, release, wake, done, snooze, reopen, note, verdict, send, review };
+  return { busy, sending, take, release, wake, done, quickDone, snooze, reopen, note, verdict, send, review };
 }

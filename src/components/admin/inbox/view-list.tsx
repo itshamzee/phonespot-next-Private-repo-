@@ -6,7 +6,7 @@ import type { Counts } from "./use-inbox";
 
 type ViewDef = { id: InboxView; label: string; count?: keyof Counts; hot?: boolean };
 
-/** Visningerne i to grupper. Tal kun på de tre første. Tomme kanaler vises stadig. */
+/** Visningerne i tre grupper. Tal kun på de tre første. Tomme kanaler vises stadig. */
 export const VIEW_GROUPS: { label: string; views: ViewDef[] }[] = [
   {
     label: "Indbakke",
@@ -21,13 +21,22 @@ export const VIEW_GROUPS: { label: string; views: ViewDef[] }[] = [
     ],
   },
   {
+    label: "Mapper",
+    views: [
+      { id: "opkoeb", label: "Opkøb" },
+      { id: "mb-info", label: "info@" },
+      { id: "mb-slagelse", label: "slagelse@" },
+      { id: "mb-ha", label: "ha@" },
+    ],
+  },
+  {
     label: "Kanaler",
     views: [
       { id: "ch-mail", label: "Mail" },
       { id: "ch-chat", label: "Chat på sitet" },
       { id: "ch-messenger", label: "Messenger" },
       { id: "ch-sms", label: "SMS" },
-      { id: "ch-form", label: "Formular og opkøb" },
+      { id: "ch-form", label: "Formular" },
       { id: "ch-reviews", label: "Anmeldelser" },
     ],
   },

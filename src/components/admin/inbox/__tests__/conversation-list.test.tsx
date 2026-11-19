@@ -106,3 +106,32 @@ describe("ConversationList", () => {
     expect(props.onRetry).toHaveBeenCalled();
   });
 });
+
+describe("flueben og mapper", () => {
+  it("fluebenet lukker sagen uden at åbne den", () => {
+    const onQuickDone = vi.fn();
+    const onOpen = vi.fn();
+    renderList({ onQuickDone, onOpen });
+    fireEvent.click(screen.getByRole("button", { name: "Markér Camilla Holm som færdig" }));
+    expect(onQuickDone).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("viser ikke flueben på færdige sager eller uden handler", () => {
+    renderList({ rows: [row({ status: "lukket" })], onQuickDone: vi.fn() });
+    expect(screen.queryByRole("button", { name: /som færdig/ })).toBeNull();
+    cleanup();
+    renderList({});
+    expect(screen.queryByRole("button", { name: /som færdig/ })).toBeNull();
+  });
+
+  it("mapper viser tilstand og et overset kundesvar", () => {
+    renderList({
+      view: "opkoeb",
+      rows: [row({ id: "x", status: "besvaret", customerLast: true }), row({ id: "y", name: "Bo", status: "besvaret" })],
+    });
+    expect(screen.getByText("Kunden skrev sidst")).toBeTruthy();
+    expect(within(screen.getByRole("list", { name: "Samtaler" })).getByText("Venter på kunden")).toBeTruthy();
+    expect(screen.getByText("Skal besvares øverst")).toBeTruthy();
+  });
+});

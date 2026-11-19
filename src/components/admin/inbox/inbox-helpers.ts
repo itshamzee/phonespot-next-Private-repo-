@@ -327,6 +327,7 @@ export const CHANNEL_LABELS: Record<string, string> = {
   form: "Formular",
   sms: "SMS",
   messenger: "Messenger",
+  chat: "Chat",
   google_review: "Google",
   trustpilot_review: "Trustpilot",
 };

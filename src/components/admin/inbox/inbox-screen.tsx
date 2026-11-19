@@ -210,6 +210,7 @@ export function InboxScreen() {
             meId={inbox.meId}
             readSet={inbox.readSet}
             onOpen={open}
+            onQuickDone={actions.quickDone}
           />
         </section>
 

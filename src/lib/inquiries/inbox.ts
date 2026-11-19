@@ -19,7 +19,11 @@ export type InboxView =
   | "ch-messenger"
   | "ch-sms"
   | "ch-form"
-  | "ch-reviews";
+  | "ch-reviews"
+  | "opkoeb"
+  | "mb-info"
+  | "mb-slagelse"
+  | "mb-ha";
 
 export const INBOX_VIEWS: readonly InboxView[] = [
   "mine",
@@ -35,7 +39,56 @@ export const INBOX_VIEWS: readonly InboxView[] = [
   "ch-sms",
   "ch-form",
   "ch-reviews",
+  "opkoeb",
+  "mb-info",
+  "mb-slagelse",
+  "mb-ha",
 ];
+
+/**
+ * Mapper: alt der ikke er færdigt (både "skal besvares" og "venter på kunden"),
+ * afgrænset på kilde, postkasse eller kanal. Sager der skal besvares ligger øverst.
+ */
+export interface FolderFilter {
+  source?: string;
+  mailbox?: string;
+  channel?: string;
+}
+
+export const FOLDER_FILTERS: Partial<Record<InboxView, FolderFilter>> = {
+  opkoeb: { source: "saelg-enhed" },
+  "mb-info": { mailbox: "info@phonespot.dk" },
+  "mb-slagelse": { mailbox: "slagelse@phonespot.dk" },
+  "mb-ha": { mailbox: "ha@phonespot.dk" },
+  "ch-chat": { channel: "chat" },
+};
+
+export function folderFilter(view: InboxView): FolderFilter | null {
+  return FOLDER_FILTERS[view] ?? null;
+}
+
+function inFolder(row: InboxRow, f: FolderFilter): boolean {
+  if (f.source && row.source !== f.source) return false;
+  if (f.mailbox && (row.mailbox ?? "").toLowerCase() !== f.mailbox) return false;
+  if (f.channel && (row.channel as string) !== f.channel) return false;
+  return true;
+}
+
+/** Skal sagen besvares? Åben, eller "besvaret" hvor kunden har skrevet sidst. */
+export function needsAnswer(row: InboxRow, now: Date): boolean {
+  const state = inboxState(row, now);
+  return state === "open" || (state === "waiting" && !!row.customerLast);
+}
+
+/** Mappernes rækkefølge: skal besvares først, derefter nyeste aktivitet øverst. */
+export function sortFolderRows(rows: InboxRow[], now: Date): InboxRow[] {
+  return [...rows].sort((a, b) => {
+    const na = needsAnswer(a, now) ? 0 : 1;
+    const nb = needsAnswer(b, now) ? 0 : 1;
+    if (na !== nb) return na - nb;
+    return (b.lastInboundAt ?? "").localeCompare(a.lastInboundAt ?? "");
+  });
+}
 
 export function isInboxView(v: unknown): v is InboxView {
   return typeof v === "string" && (INBOX_VIEWS as readonly string[]).includes(v);
@@ -60,6 +113,8 @@ export interface InboxRow {
   fiksAnswered: boolean;
   isPublic: boolean;
   source: string;
+  /** Seneste besked i tråden er fra kunden (kan være et overset svar på en besvaret sag). */
+  customerLast?: boolean;
 }
 
 export type InboxState = "open" | "waiting" | "snoozed" | "done";
@@ -75,6 +130,8 @@ export function inboxState(row: InboxRow, now: Date): InboxState {
 
 export function matchesView(view: InboxView, row: InboxRow, meId: string, now: Date): boolean {
   const state = inboxState(row, now);
+  const folder = folderFilter(view);
+  if (folder) return state !== "done" && inFolder(row, folder);
   switch (view) {
     case "mine":
       return state === "open" && row.assignedTo === meId;
@@ -100,8 +157,7 @@ export function matchesView(view: InboxView, row: InboxRow, meId: string, now: D
       return state !== "done" && row.channel === "form";
     case "ch-reviews":
       return state !== "done" && row.isPublic;
-    case "ch-chat":
-      // Fiks-chatten har endnu ingen kanal i datamodellen: visningen er tom, til den findes.
+    default:
       return false;
   }
 }
@@ -252,6 +308,7 @@ export function buildInboxRows(
       fiksAnswered,
       isPublic: channel === "google_review" || channel === "trustpilot_review",
       source: q.source ?? "",
+      customerLast: msgs[0]?.sender === "customer",
     };
   });
 }

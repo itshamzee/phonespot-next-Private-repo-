@@ -255,7 +255,7 @@ describe("InboxScreen", () => {
     await waitFor(() => expect(calls.filter((c) => c.url === "/api/admin/inbox/a").length).toBeGreaterThan(detailsBefore));
     await waitFor(() => expect(calls.filter((c) => c.url.startsWith("/api/admin/inbox?")).length).toBeGreaterThan(listsBefore));
     expect(within(thread).getByRole("button", { name: "Færdig" })).toBeTruthy();
-    expect(within(screen.getByRole("list", { name: "Samtaler" })).getAllByRole("button")).toHaveLength(1);
+    expect(within(screen.getByRole("list", { name: "Samtaler" })).getAllByRole("listitem")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /Fortryd/ })).toBeNull();
   });
 

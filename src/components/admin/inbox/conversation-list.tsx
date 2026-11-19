@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { waitingLabel, type InboxRow, type InboxView } from "@/lib/inquiries/inbox";
+import { folderFilter, inboxState, waitingLabel, type InboxRow, type InboxView } from "@/lib/inquiries/inbox";
 import { Button, Input, Segmented, Skeleton } from "@/components/admin/ui";
 import { CHANNEL_LABELS, isUnread, mailboxLabel } from "./inbox-helpers";
 import { storeName } from "./saved-replies";
@@ -59,11 +59,15 @@ export interface ConversationListProps {
   readSet: Set<string>;
   /** viaKeyboard: rækken blev aktiveret med Enter/mellemrum, så fokus skal videre til tråden. */
   onOpen: (id: string, viaKeyboard: boolean) => void;
+  /** Fluebenet på rækken: sagen er færdig, uden at den skal åbnes først. */
+  onQuickDone?: (row: InboxRow) => void;
 }
 
 export function ConversationList(p: ConversationListProps) {
   const now = useNow();
+  const folder = !!folderFilter(p.view);
   const newestFirst = p.view === "waiting" || p.view === "done";
+  const sortLabel = folder ? "Skal besvares øverst" : newestFirst ? "Nyeste øverst" : "Længst ventende øverst";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -80,7 +84,7 @@ export function ConversationList(p: ConversationListProps) {
         />
         <div className="flex items-center gap-2">
           {p.showStoreFilter && <Segmented size="sm" label="Butik" value={p.store} onChange={p.onStore} options={STORE_OPTIONS} />}
-          <span className="ml-auto text-[12px] text-[#5E6A63]">{newestFirst ? "Nyeste øverst" : "Længst ventende øverst"}</span>
+          <span className="ml-auto text-[12px] text-[#5E6A63]">{sortLabel}</span>
         </div>
       </div>
 
@@ -102,13 +106,13 @@ export function ConversationList(p: ConversationListProps) {
           <>
             {p.truncated && (
               <p className="m-0 border-b border-[#E2E5E0] px-3.5 py-2 text-[12.5px] text-[#5E6A63]">
-                Viser de 200 længst ventende. Brug søgning for at finde resten.
+                {folder || newestFirst ? "Viser de 200 første. Brug søgning for at finde resten." : "Viser de 200 længst ventende. Brug søgning for at finde resten."}
               </p>
             )}
             <ul className="m-0 list-none p-0" aria-label="Samtaler">
             {p.rows.map((row) => (
               <li key={row.id}>
-                <Row row={row} now={now} selected={row.id === p.selectedId} unread={isUnread(row, p.meId, p.readSet, now)} meId={p.meId} onOpen={p.onOpen} />
+                <Row row={row} now={now} selected={row.id === p.selectedId} unread={isUnread(row, p.meId, p.readSet, now)} meId={p.meId} onOpen={p.onOpen} showState={folder} onQuickDone={p.onQuickDone} />
               </li>
               ))}
             </ul>
@@ -126,6 +130,8 @@ function Row({
   unread,
   meId,
   onOpen,
+  showState,
+  onQuickDone,
 }: {
   row: InboxRow;
   now: Date;
@@ -133,12 +139,18 @@ function Row({
   unread: boolean;
   meId: string | null;
   onOpen: (id: string, viaKeyboard: boolean) => void;
+  /** Mapper blander "skal besvares" og "venter på kunden": vis hvilken. */
+  showState?: boolean;
+  onQuickDone?: (row: InboxRow) => void;
 }) {
   const wait = waitingLabel(row.lastInboundAt, now);
   const box = row.channel === "email" ? mailboxLabel(row.mailbox) : null;
   const store = storeName(row.store);
   const mine = !!meId && row.assignedTo === meId;
+  const state = inboxState(row, now);
+  const canTick = !!onQuickDone && row.status !== "lukket";
   return (
+    <div className="relative">
     <button
       type="button"
       data-row-id={row.id}
@@ -164,16 +176,33 @@ function Row({
       </span>
       {row.subject && <span className="mt-px block truncate text-[13px] text-[#15211B]">{row.subject}</span>}
       {row.preview && <span className="block truncate text-[13px] text-[#5E6A63]">{row.preview}</span>}
-      <span className="mt-[7px] flex flex-wrap items-center gap-[5px]">
+      <span className={`mt-[7px] flex flex-wrap items-center gap-[5px] ${canTick ? "pr-10" : ""}`}>
         <Tag>{box ? `${CHANNEL_LABELS[row.channel] ?? row.channel} · ${box}` : (CHANNEL_LABELS[row.channel] ?? row.channel)}</Tag>
         {store && <Tag>{store}</Tag>}
         {row.isPublic && <Tag tone="public">Offentlig</Tag>}
+        {state === "waiting" && row.customerLast && <Tag tone="public">Kunden skrev sidst</Tag>}
+        {showState && state === "waiting" && !row.customerLast && <Tag>Venter på kunden</Tag>}
+        {showState && state === "snoozed" && <Tag>Udsat</Tag>}
         {row.needsHuman && <Tag tone="need">Kræver dig</Tag>}
         {row.fiksAnswered && <Tag tone="fiks">Besvaret af Fiks</Tag>}
         {row.hasDraft && !row.isPublic && <Tag tone="fiks">Udkast klar</Tag>}
         {row.assignedTo && <Tag tone={mine ? "me" : "plain"}>{mine ? "Min" : row.assignedName || "En kollega"}</Tag>}
       </span>
     </button>
+    {canTick && (
+      <button
+        type="button"
+        title="Færdig"
+        aria-label={`Markér ${row.name || "sagen"} som færdig`}
+        onClick={() => onQuickDone?.(row)}
+        className="m-press absolute bottom-2 right-2.5 flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9D0C7] bg-white text-[#5E6A63] motion-safe:transition-colors hover:border-green-eco hover:bg-green-pale hover:text-green-eco focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#2F8F55]"
+      >
+        <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3.5 8.5l3 3 6-7" />
+        </svg>
+      </button>
+    )}
+    </div>
   );
 }
 

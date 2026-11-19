@@ -4,8 +4,10 @@ import { applyStoreScope, requireStaffScope, unauthorizedResponse } from "@/lib/
 import { loadInboxRows } from "@/lib/inquiries/inbox-data";
 import {
   buildSearchFilter,
+  folderFilter,
   isInboxView,
   matchesView,
+  sortFolderRows,
   staffDisplayName,
   viewCounts,
   type InboxInquiryInput,
@@ -17,6 +19,7 @@ const DONE_ROWS = 100;
 const COUNT_ROWS = 1000;
 const NEED_CANDIDATES = 1000;
 const FIKS_CANDIDATES = 600;
+const FOLDER_CANDIDATES = 600;
 const OPEN_STATUSES = ["ny", "venter_paa_svar"];
 
 const COUNT_COLUMNS =
@@ -59,11 +62,20 @@ export async function GET(request: Request) {
 
   try {
     const counts = await countsFor(sb, scope, me.id, now);
-    if (view === "ch-chat") return NextResponse.json({ rows: [], counts, me }, { headers: NO_STORE });
+    const folder = folderFilter(view);
 
     // ---- kandidater: statusfilter i SQL FØR sortering og grænse, så besvarede sager aldrig fortrænger åbne ----
     let query = applyStoreScope(sb.from("contact_inquiries").select(PAGE_COLUMNS), scope);
-    if (view === "done") {
+    if (folder) {
+      // Mappe: alt der ikke er færdigt. Sorteres bagefter, så "skal besvares" ligger øverst.
+      query = query
+        .neq("status", "lukket")
+        .order("last_inbound_at", { ascending: false, nullsFirst: false })
+        .limit(FOLDER_CANDIDATES);
+      if (folder.source) query = query.eq("source", folder.source);
+      if (folder.mailbox) query = query.eq("mailbox", folder.mailbox);
+      if (folder.channel) query = query.eq("channel", folder.channel);
+    } else if (view === "done") {
       query = query
         .eq("status", "lukket")
         .order("last_inbound_at", { ascending: false, nullsFirst: false })
@@ -102,11 +114,12 @@ export async function GET(request: Request) {
     if (error) throw error;
     const candidates = (inquiries ?? []) as unknown as InboxInquiryInput[];
 
-    const candidateLimit =
+    const candidateLimit = folder ? FOLDER_CANDIDATES :
       view === "done" ? DONE_ROWS : view === "fiks" ? FIKS_CANDIDATES : view === "need" ? NEED_CANDIDATES : MAX_ROWS;
-    const matching = (await loadInboxRows(sb, candidates, { withBody: true })).filter((r) =>
+    const built = (await loadInboxRows(sb, candidates, { withBody: true })).filter((r) =>
       matchesView(view, r, me.id, now),
     );
+    const matching = folder ? sortFolderRows(built, now) : built;
     // true, når SQL-grænsen blev nået eller der var flere end siden viser: der kan være flere sager end de viste.
     const truncated = candidates.length >= candidateLimit || matching.length > MAX_ROWS;
     const rows = matching.slice(0, MAX_ROWS);
