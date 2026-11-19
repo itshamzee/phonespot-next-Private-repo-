@@ -90,3 +90,37 @@ export function getAccessoryFaq(displayName: string): FaqItem[] {
     },
   ];
 }
+
+/**
+ * Model-specifikke spørgsmål øverst i FAQ'en på /refurbished/[slug]: pris pr.
+ * stand fra de enheder, der faktisk er på lager, og batteriløftet. AI-søgning
+ * citerer konkrete svar ("Hvad koster en brugt iPhone 15?"), ikke generiske.
+ * Priser er i øre som i databasen.
+ */
+export function getDeviceModelFaq(
+  displayName: string,
+  gradeMinPrices: Map<string, number>,
+  gradeLabel: (grade: string) => string,
+): FaqItem[] {
+  const kr = (oere: number) => `${Math.round(oere / 100).toLocaleString("da-DK")} kr.`;
+  const order = ["N", "P", "A", "B", "C"];
+  const rows = [...gradeMinPrices.entries()].sort(
+    (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]),
+  );
+  const out: FaqItem[] = [];
+  if (rows.length > 0) {
+    const min = Math.min(...rows.map(([, p]) => p));
+    const parts = rows.map(([g, p]) => `${gradeLabel(g)} fra ${kr(p)}`);
+    const list =
+      parts.length > 1 ? `${parts.slice(0, -1).join(", ")} og ${parts[parts.length - 1]}` : parts[0];
+    out.push({
+      q: `Hvad koster en brugt ${displayName} hos PhoneSpot?`,
+      a: `Lige nu koster ${displayName} fra ${kr(min)} hos PhoneSpot. Pris pr. stand: ${list} Alle enheder har 36 måneders garanti og 30 dages returret, og fragten er gratis.`,
+    });
+  }
+  out.push({
+    q: `Hvor godt er batteriet i en brugt ${displayName}?`,
+    a: "Batterikapaciteten måles på hver enkelt enhed og står ved enheden. Har en enhed fra os under 90 % batterikapacitet ved levering, skifter vi batteriet uden beregning.",
+  });
+  return out;
+}

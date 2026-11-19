@@ -566,10 +566,17 @@
   }
   .modelHeader {
     gap: 16px;
+    /* Svar-først-afsnittet er flere linjer: billedet flugter med overskriften. */
+    align-items: flex-start;
+  }
+  .modelHeader p {
+    font-size: 15px;
+    line-height: 1.55;
   }
   .modelHeaderPhoto {
     width: 70px;
     height: 100px;
+    margin-top: 28px;
   }
   .modelHeader h1 {
     font-size: 28px;

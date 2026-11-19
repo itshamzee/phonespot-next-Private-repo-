@@ -91,6 +91,15 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Butikker](${SITE}/butik)
 - [Blog og guides](${SITE}/blog)
 
+## Guides med konkrete svar
+- [Overfør data til ny iPhone](${SITE}/blog/overfoer-data-til-ny-iphone): Hurtig start, iCloud og Flyt til iOS trin for trin, og hvad du gør, hvis den gamle iPhones skærm er i stykker
+- [Hvad er refurbished?](${SITE}/blog/hvad-er-refurbished): refurbished vs. brugt, standerne P/A/B/C, originale dele, tjekliste ved modtagelse
+- [Køb brugt iPhone: det skal du tjekke](${SITE}/blog/koeb-brugt-iphone) · [Bedste refurbished iPhone 2026](${SITE}/blog/bedste-refurbished-iphone-2026) · [Refurbished iPad](${SITE}/blog/refurbished-ipad-guide)
+- [Black Friday iPhone 2026](${SITE}/blog/black-friday-iphone-2026): danske nypriser, hvordan du tjekker en førpris, ny eller brugt
+- [Hvad er din brugte iPhone værd?](${SITE}/blog/hvad-er-din-brugte-iphone-vaerd) · [Sælg iPhone med ødelagt skærm](${SITE}/blog/saelg-iphone-med-oedelagt-skaerm)
+- [Hvornår skal iPhone-batteriet skiftes?](${SITE}/blog/hvornaar-skifte-batteri-iphone) · [Hvad koster MacBook-reparation?](${SITE}/blog/hvad-koster-macbook-reparation) · [MacBook-batteriskift](${SITE}/blog/macbook-batteriskift-guide)
+- Hver reparationsside pr. model (fx ${SITE}/reparation/iphone/iphone-15) starter med et kort svar: pris på skærm- og batteriskift, tid og garanti, efterfulgt af hele prislisten og en FAQ.
+
 ## Anmeldelser og profiler
 - Trustpilot: https://dk.trustpilot.com/review/phonespot.dk
 - Facebook: https://www.facebook.com/phonespot.dk/

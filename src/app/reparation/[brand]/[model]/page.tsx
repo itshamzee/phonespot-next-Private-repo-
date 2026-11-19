@@ -25,6 +25,7 @@ import { fitTitle } from "@/lib/repairs/hub-meta";
 import { BLACK_NOVEMBER, isBlackNovember } from "@/lib/campaign/black-november";
 import { sellLinkForRepairModel } from "@/lib/sell-links";
 import { consolePricesFrom, getConsoleModelPage } from "@/lib/repairs/console-model-content";
+import { buildRepairModelAnswer } from "@/lib/repairs/model-answer";
 
 export const revalidate = 3600;
 
@@ -190,6 +191,16 @@ export default async function ModelPricePage({ params }: Props) {
   ].filter(Boolean) as { title: string; text: string; href?: string }[];
 
   const storeCities = Object.values(STORES).map((store) => store.city);
+  // Svar-først og FAQ pr. model ud fra prislisten (konsoller har egen tekst).
+  const modelAnswer = consolePage
+    ? null
+    : buildRepairModelAnswer({
+        modelName: model.name,
+        deviceType: brand.device_type,
+        services,
+        // Vejle først: hovedbutikken og den by, folk oftest søger på.
+        storeCities: [STORES.vejle.city, STORES.slagelse.city],
+      });
   const campaignActive = isBlackNovember();
   // Heroens pris skal matche det, folk kommer for: skærm og batteri, ikke den
   // billigste softwareydelse.
@@ -251,7 +262,9 @@ export default async function ModelPricePage({ params }: Props) {
     "@type": "Service",
     name: `${model.name} reparation`,
     url: `https://phonespot.dk/reparation/${brand.slug}/${model.slug}`,
-    ...(consolePage && { description: consolePage.answer }),
+    ...(consolePage
+      ? { description: consolePage.answer }
+      : modelAnswer && { description: modelAnswer.answer }),
     serviceType: brand.device_type === "appliance" ? "Reparation af husholdningsapparater" : brand.device_type === "console" ? "Konsolreparation" : "Mobilreparation",
     provider: providers,
     areaServed: [STORES.vejle.city, STORES.slagelse.city],
@@ -272,10 +285,11 @@ export default async function ModelPricePage({ params }: Props) {
   };
 
   // FAQPage kun, hvor spørgsmålene er skrevet til modellen og står synligt på siden.
-  const faqJsonLd = consolePage && {
+  const pageFaqs = consolePage ? consolePage.faqs : modelAnswer?.faqs ?? null;
+  const faqJsonLd = pageFaqs && {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: consolePage.faqs.map((f) => ({
+    mainEntity: pageFaqs.map((f) => ({
       "@type": "Question",
       name: f.question,
       acceptedAnswer: { "@type": "Answer", text: f.answer },
@@ -325,7 +339,9 @@ export default async function ModelPricePage({ params }: Props) {
               <p>
                 {consolePage
                   ? consolePage.answer
-                  : "Vælg, hvad vi skal hjælpe med. Se den konkrete pris og oplysninger om reservedelen, før du booker."}
+                  : modelAnswer
+                    ? modelAnswer.answer
+                    : "Vælg, hvad vi skal hjælpe med. Se den konkrete pris og oplysninger om reservedelen, før du booker."}
               </p>
               <div className={styles.priceLine}>
                 {anchorPrices.length > 0 ? (
@@ -474,6 +490,18 @@ export default async function ModelPricePage({ params }: Props) {
             <h2>Spørgsmål om {consolePage.h1.split(":")[0]}</h2>
             <div>
               {consolePage.faqs.map((f) => (
+                <details key={f.question}>
+                  <summary>{f.question}</summary>
+                  <p>{f.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : modelAnswer ? (
+          <section className={styles.faq}>
+            <h2>Spørgsmål om {model.name} reparation</h2>
+            <div>
+              {modelAnswer.faqs.map((f) => (
                 <details key={f.question}>
                   <summary>{f.question}</summary>
                   <p>{f.answer}</p>
