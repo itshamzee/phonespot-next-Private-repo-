@@ -13,6 +13,7 @@ import { NewBookingToast, type LatestWebBooking } from "@/components/admin/shell
 import { INTERN_HOME, INTERN_ROLE, internMayOpenPage } from "@/lib/auth/intern-access";
 import { PageSkeleton } from "@/components/admin/ui/skeleton";
 import { ToastProvider } from "@/components/admin/ui/toast";
+import { WhatsNew } from "@/components/admin/shell/whats-new";
 import { NavPendingBar, NavPendingProvider } from "@/components/admin/shell/nav-pending";
 import "@/app/admin-motion.css";
 
@@ -294,6 +295,7 @@ function AuthedShell({
             {/* Real-time new-order toast watcher */}
             <NewOrdersWatcher />
             <NewBookingToast latest={latestBooking} />
+            <WhatsNew />
           </ToastProvider>
         </div>
       </NavPendingProvider>
