@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { inboxKeyAction } from "../inbox-keys";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, renderHook } from "@testing-library/react";
+import { inboxKeyAction, useInboxKeys } from "../inbox-keys";
 
 const ids = ["a", "b", "c"];
 const k = (key: string, over: Record<string, unknown> = {}) => ({ key, ...over });
@@ -38,5 +39,26 @@ describe("inboxKeyAction", () => {
   it("andre taster ignoreres", () => {
     expect(inboxKeyAction(k("x"), ids, "a")).toBeNull();
     expect(inboxKeyAction(k("Enter"), ids, "a")).toBeNull();
+  });
+});
+
+describe("useInboxKeys", () => {
+  afterEach(() => {
+    cleanup();
+    document.body.innerHTML = "";
+  });
+
+  it("virker normalt, men ikke mens en dialog er åben", () => {
+    const onAction = vi.fn();
+    renderHook(() => useInboxKeys({ enabled: true, ids, selectedId: "a", onAction }));
+    fireEvent.keyDown(window, { key: "e" });
+    expect(onAction).toHaveBeenCalledWith({ type: "done" });
+    const dialog = document.createElement("dialog");
+    dialog.setAttribute("open", "");
+    document.body.appendChild(dialog);
+    onAction.mockClear();
+    fireEvent.keyDown(window, { key: "e" });
+    fireEvent.keyDown(window, { key: "j" });
+    expect(onAction).not.toHaveBeenCalled();
   });
 });

@@ -48,6 +48,25 @@ export function useInboxActions({
     }
   }, [inq, meId, meName, rows, runAction, toast, reloadDetail]);
 
+  /** Slip sagen: den bliver ledig igen. Den ansvarlige, vi så, sendes med (409 hvis den er skiftet). */
+  const release = useCallback(async () => {
+    if (!inq || !meId || inq.assigned_to !== meId) return;
+    setBusy("release");
+    const r = await runAction(inq.id, { type: "release", expectAssignedTo: inq.assigned_to }, { assignedTo: null, assignedName: null });
+    setBusy(null);
+    if (r.ok) toast("Sagen er sluppet.");
+    else toast(r.error, { tone: "error" });
+  }, [inq, meId, runAction, toast]);
+
+  /** Væk nu: udsættelsen fjernes, og sagen er tilbage i de åbne visninger. */
+  const wake = useCallback(async () => {
+    if (!inq) return;
+    setBusy("wake");
+    const r = await runAction(inq.id, { type: "unsnooze" }, { snoozedUntil: null });
+    setBusy(null);
+    if (!r.ok) toast(r.error, { tone: "error" });
+  }, [inq, runAction, toast]);
+
   /** Fælles for Færdig og Udsæt: næste sag med det samme, fortryd når serveren har sagt ja. */
   const leave = useCallback(
     async (kind: "done" | "snooze", until?: string, label?: string) => {
@@ -101,13 +120,14 @@ export function useInboxActions({
   const note = useCallback(async () => {
     if (!inq || !composer) return;
     const id = inq.id;
-    const text = composer.text.trim();
+    const text = composer.noteText.trim();
     if (!text) return;
     setSending("note");
     const r = await runAction(id, { type: "note", body: text });
     setSending(null);
     if (!r.ok) return patchComposer(id, { error: r.error });
-    patchComposer(id, { text: "", mode: "reply", error: null, draftId: null });
+    // Kun noten tømmes; svaret og Fiks' udkast står urørt, når vi går tilbage til "Svar".
+    patchComposer(id, { noteText: "", mode: "reply", error: null });
     reloadDetail();
     toast("Noten er gemt.");
   }, [inq, composer, runAction, patchComposer, reloadDetail, toast]);
@@ -140,7 +160,7 @@ export function useInboxActions({
     async (after: "waiting" | "done") => {
       if (!inq || !detail || !composer) return;
       const id = inq.id;
-      const text = composer.text.trim();
+      const text = composer.replyText.trim();
       const channel = composer.channel ?? availableChannels(inq)[0] ?? null;
       if (!text || !channel) return;
       const pending = pendingDraft(detail.drafts);
@@ -150,7 +170,7 @@ export function useInboxActions({
       setSending(after);
 
       const finish = (warning?: string) => {
-        patchComposer(id, { text: "", draftId: null, error: null, mode: "reply" });
+        patchComposer(id, { replyText: "", draftId: null, error: null, mode: "reply" });
         patchRow(id, { status: after === "done" ? "lukket" : "besvaret", hasDraft: false, needsHuman: false, snoozedUntil: null });
         toast(`Sendt til ${name}.`);
         // Svaret ER sendt; advarslen er en besked, ikke en fejl (rød er kun til fejl).
@@ -176,7 +196,7 @@ export function useInboxActions({
         const r = await postReply(id, { body: text, channel, after });
         if (smsSentButNotSaved(r)) {
           // SMS'en er gået ud: tøm feltet, så den ikke sendes igen, og hent tråden.
-          patchComposer(id, { text: "", draftId: null, error: null });
+          patchComposer(id, { replyText: "", draftId: null, error: null });
           reloadDetail();
           reloadList();
           toast(r.ok ? "" : r.error, { tone: "error" });
@@ -197,7 +217,7 @@ export function useInboxActions({
   /** Anmeldelse: kopier svaret, åbn anmeldelsen og sæt sagen til at vente. Der sendes intet. */
   const review = useCallback(async () => {
     if (!inq || !detail || !composer) return;
-    const text = composer.text.trim();
+    const text = composer.replyText.trim();
     if (!text) return;
     const link = reviewLink(detail.messages);
     // Kopieringen startes, før linket åbnes, mens siden stadig har fokus.
@@ -232,5 +252,5 @@ export function useInboxActions({
     else toast("Svaret er kopieret. Der er intet link til anmeldelsen i tråden, så åbn den selv. Sagen venter nu på, at du har lagt det ud.");
   }, [inq, detail, composer, meId, meName, runAction, toast, textareaRef]);
 
-  return { busy, sending, take, done, snooze, reopen, note, verdict, send, review };
+  return { busy, sending, take, release, wake, done, snooze, reopen, note, verdict, send, review };
 }

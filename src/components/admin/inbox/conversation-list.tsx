@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { waitingLabel, type InboxRow, type InboxView } from "@/lib/inquiries/inbox";
-import { Button, Segmented, Skeleton } from "@/components/admin/ui";
+import { Button, Input, Segmented, Skeleton } from "@/components/admin/ui";
 import { CHANNEL_LABELS, isUnread, mailboxLabel } from "./inbox-helpers";
 import { storeName } from "./saved-replies";
 import { ViewSelect } from "./view-list";
@@ -39,6 +39,8 @@ function Tag({ tone = "plain", children }: { tone?: Tone; children: ReactNode })
 
 export interface ConversationListProps {
   rows: InboxRow[];
+  /** Serveren klippede listen ved 200 rækker. */
+  truncated?: boolean;
   view: InboxView;
   counts: Counts;
   onViewChange: (v: InboxView) => void;
@@ -69,13 +71,12 @@ export function ConversationList(p: ConversationListProps) {
         <div className="min-[900px]:hidden">
           <ViewSelect view={p.view} counts={p.counts} onChange={p.onViewChange} />
         </div>
-        <input
+        <Input
           type="search"
           value={p.query}
           onChange={(e) => p.onQuery(e.target.value)}
           placeholder="Søg navn, telefon, tekst"
           aria-label="Søg i samtaler"
-          className="h-10 w-full min-w-0 rounded-lg border border-[#C9D0C7] bg-white px-2.5 text-[16px] outline-none focus:border-[#2F8F55] focus-visible:ring-2 focus-visible:ring-[#2F8F55]/30 min-[900px]:text-[14px]"
         />
         <div className="flex items-center gap-2">
           {p.showStoreFilter && <Segmented size="sm" label="Butik" value={p.store} onChange={p.onStore} options={STORE_OPTIONS} />}
@@ -98,13 +99,20 @@ export function ConversationList(p: ConversationListProps) {
             {p.searching ? "Ingen sager matcher søgningen her." : "Ingen sager her."}
           </p>
         ) : (
-          <ul className="m-0 list-none p-0" aria-label="Samtaler">
+          <>
+            {p.truncated && (
+              <p className="m-0 border-b border-[#E2E5E0] px-3.5 py-2 text-[12.5px] text-[#5E6A63]">
+                Viser de 200 længst ventende. Brug søgning for at finde resten.
+              </p>
+            )}
+            <ul className="m-0 list-none p-0" aria-label="Samtaler">
             {p.rows.map((row) => (
               <li key={row.id}>
                 <Row row={row} now={now} selected={row.id === p.selectedId} unread={isUnread(row, p.meId, p.readSet, now)} meId={p.meId} onOpen={p.onOpen} />
               </li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </div>

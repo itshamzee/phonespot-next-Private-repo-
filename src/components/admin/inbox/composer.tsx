@@ -11,9 +11,12 @@ export type Sending = "waiting" | "done" | "note" | "review" | null;
 /** Svarfeltets tilstand for én samtale. Lever i skærmen, så den overlever polling og skift af sag. */
 export interface ComposerState {
   mode: ComposerMode;
-  text: string;
+  /** Svaret til kunden. Røres aldrig af noten. */
+  replyText: string;
+  /** Den interne note; adskilt, så et skift til note aldrig ændrer svaret eller udkastet. */
+  noteText: string;
   channel: ReplyChannel | null;
-  /** Udkastet fra Fiks, teksten blev forudfyldt med (null når feltet er brugerens eget). */
+  /** Udkastet fra Fiks, svaret blev forudfyldt med (null når feltet er brugerens eget). */
   draftId: string | null;
   error: string | null;
 }
@@ -46,8 +49,10 @@ export function Composer({ textareaRef, ...p }: ComposerProps) {
   const isPublic = p.publicChannel !== null;
   const cannotReply = !note && !isPublic && p.channels.length === 0;
   const draftActive = !note && !!p.draft && !!state.draftId;
-  const sms = !note && !isPublic && state.channel === "sms" ? smsInfo(state.text) : null;
-  const empty = !state.text.trim();
+  const text = note ? state.noteText : state.replyText;
+  const setText = (value: string) => p.onChange(note ? { noteText: value, error: null } : { replyText: value, error: null });
+  const sms = !note && !isPublic && state.channel === "sms" ? smsInfo(state.replyText) : null;
+  const empty = !text.trim();
   const busy = p.sending !== null;
 
   function insertSaved(replyId: string) {
@@ -55,10 +60,11 @@ export function Composer({ textareaRef, ...p }: ComposerProps) {
     if (!reply) return;
     const filled = fillTemplate(reply.body, p.fillVars);
     const el = textareaRef.current;
-    const start = el?.selectionStart ?? state.text.length;
-    const end = el?.selectionEnd ?? state.text.length;
-    const next = state.text ? `${state.text.slice(0, start)}${filled}${state.text.slice(end)}` : filled;
-    p.onChange({ text: next, error: null });
+    const current = state.replyText;
+    const start = el?.selectionStart ?? current.length;
+    const end = el?.selectionEnd ?? current.length;
+    const next = current ? `${current.slice(0, start)}${filled}${current.slice(end)}` : filled;
+    p.onChange({ replyText: next, error: null });
     requestAnimationFrame(() => {
       el?.focus();
       const caret = start + filled.length;
@@ -134,8 +140,8 @@ export function Composer({ textareaRef, ...p }: ComposerProps) {
             id={id}
             ref={textareaRef}
             rows={4}
-            value={state.text}
-            onChange={(e) => p.onChange({ text: e.target.value, error: null })}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             placeholder={note ? "Skriv en note til kollegerne. Kunden ser den ikke." : "Skriv et svar"}
             className="min-h-24 resize-y min-[900px]:!text-[15px]"
           />
@@ -143,8 +149,8 @@ export function Composer({ textareaRef, ...p }: ComposerProps) {
       )}
 
       <div className="flex flex-col gap-2 min-[900px]:flex-row min-[900px]:flex-wrap min-[900px]:items-center">
-        {draftActive && p.draft && state.text !== p.draft.body && (
-          <Button size="sm" variant="quiet" className="self-start" onClick={() => p.onChange({ text: p.draft!.body, error: null })}>
+        {draftActive && p.draft && state.replyText !== p.draft.body && (
+          <Button size="sm" variant="quiet" className="self-start" onClick={() => p.onChange({ replyText: p.draft!.body, error: null })}>
             Oprindeligt udkast
           </Button>
         )}

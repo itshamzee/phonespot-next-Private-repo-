@@ -13,6 +13,11 @@ import {
   parseReadIds,
   reviewLink,
   smsInfo,
+  snoozeText,
+  statusLabel,
+  ORDER_STATUS_LABELS,
+  INQUIRY_STATUS_LABELS,
+  OFFER_STATUS_LABELS,
   snoozePresets,
   type ThreadDraft,
   type ThreadMessage,
@@ -129,19 +134,61 @@ describe("reviewLink", () => {
     created_at: "2026-11-19T08:00:00Z",
     ...over,
   });
-  it("finder første https-link til Google eller Trustpilot i første besked", () => {
-    expect(reviewLink([msg("Se https://www.google.com/maps/reviews/abc.")])).toBe("https://www.google.com/maps/reviews/abc");
-    expect(reviewLink([msg("https://g.page/r/xyz")])).toBe("https://g.page/r/xyz");
-    expect(reviewLink([msg("Link: https://dk.trustpilot.com/reviews/123, tak")])).toBe("https://dk.trustpilot.com/reviews/123");
-    expect(reviewLink([msg("https://trustpilot.com/r/1")])).toBe("https://trustpilot.com/r/1");
+  const link = (body: string) => reviewLink([msg(body)]);
+
+  it("godkender kun kendte anmeldelsesadresser", () => {
+    expect(link("Se https://www.google.com/maps/reviews/abc.")).toBe("https://www.google.com/maps/reviews/abc");
+    expect(link("https://google.com/maps/place/x")).toBe("https://google.com/maps/place/x");
+    expect(link("https://maps.google.com/maps?cid=1")).toBe("https://maps.google.com/maps?cid=1");
+    expect(link("https://g.page/r/xyz")).toBe("https://g.page/r/xyz");
+    expect(link("https://search.google.com/local/writereview?placeid=1")).toBe("https://search.google.com/local/writereview?placeid=1");
+    expect(link("https://business.google.com/reviews/l/1")).toBe("https://business.google.com/reviews/l/1");
+    expect(link("Link: https://dk.trustpilot.com/reviews/123, tak")).toBe("https://dk.trustpilot.com/reviews/123");
+    expect(link("https://trustpilot.com/review/phonespot.dk")).toBe("https://trustpilot.com/review/phonespot.dk");
   });
-  it("springer fremmede domæner og http over", () => {
-    expect(reviewLink([msg("https://evil.com/google.com https://google.com.evil.io/x http://g.page/a")])).toBeNull();
-    expect(reviewLink([msg("https://example.com/a https://g.page/ok")])).toBe("https://g.page/ok");
+
+  it("afviser alt andet, også på Googles og Trustpilots egne domæner", () => {
+    expect(link("https://www.google.com/url?q=https://evil.tld")).toBeNull();
+    expect(link("https://google.com/url?q=https://evil.tld")).toBeNull();
+    expect(link("https://docs.google.com/document/d/1")).toBeNull();
+    expect(link("https://sites.google.com/view/x")).toBeNull();
+    expect(link("https://www.google.com/mapsevil")).toBeNull();
+    expect(link("https://search.google.com/search?q=x")).toBeNull();
+    expect(link("https://trustpilot.com/r/1")).toBeNull();
+    expect(link("https://dk.trustpilot.com/reviewer/1")).toBeNull();
+    expect(link("https://evil.com/google.com https://google.com.evil.io/maps http://g.page/a https://eviltrustpilot.com/review/x")).toBeNull();
+    expect(link("https://user@g.page/x")).toBeNull();
   });
-  it("kigger kun i den første besked", () => {
+
+  it("tager første godkendte link og kigger kun i første besked", () => {
+    expect(link("https://example.com/a https://g.page/ok")).toBe("https://g.page/ok");
     expect(reviewLink([msg("ingen link"), msg("https://g.page/senere")])).toBeNull();
     expect(reviewLink([])).toBeNull();
+  });
+});
+
+describe("snoozeText", () => {
+  const now = new Date("2026-11-19T12:00:00Z"); // torsdag
+  it("i morgen, ugedag inden for en uge, dato derefter", () => {
+    expect(snoozeText("2026-11-20T08:00:00Z", now)).toBe("Udsat til i morgen kl. 9");
+    expect(snoozeText("2026-11-22T08:00:00Z", now)).toBe("Udsat til søndag kl. 9");
+    expect(snoozeText("2026-12-03T08:30:00Z", now)).toBe("Udsat til 3. dec. kl. 9.30");
+  });
+  it("null for fortid eller skrald", () => {
+    expect(snoozeText("2026-11-19T11:00:00Z", now)).toBeNull();
+    expect(snoozeText(null, now)).toBeNull();
+    expect(snoozeText("x", now)).toBeNull();
+  });
+});
+
+describe("statusLabel", () => {
+  it("dansk etiket eller ingenting", () => {
+    expect(statusLabel(ORDER_STATUS_LABELS, "picked_up")).toBe("Afhentet");
+    expect(statusLabel(ORDER_STATUS_LABELS, "abandoned")).toBeNull();
+    expect(statusLabel(INQUIRY_STATUS_LABELS, "venter_paa_svar")).toBe("Venter på svar");
+    expect(statusLabel(OFFER_STATUS_LABELS, "expired")).toBe("Udløbet");
+    expect(statusLabel(OFFER_STATUS_LABELS, "toString")).toBeNull();
+    expect(statusLabel(OFFER_STATUS_LABELS, null)).toBeNull();
   });
 });
 

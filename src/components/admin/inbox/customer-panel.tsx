@@ -2,8 +2,18 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Skeleton } from "@/components/admin/ui";
-import { CHANNEL_LABELS, formatKr, matchedByLabel, type CustomerInfo, type InboxDetail, type ThreadDraft } from "./inbox-helpers";
+import { Button, Skeleton } from "@/components/admin/ui";
+import {
+  CHANNEL_LABELS,
+  INQUIRY_STATUS_LABELS,
+  OFFER_STATUS_LABELS,
+  ORDER_STATUS_LABELS,
+  formatKr,
+  matchedByLabel,
+  statusLabel,
+  type CustomerInfo,
+  type InboxDetail,
+} from "./inbox-helpers";
 import { STATUS_LABELS } from "@/lib/repairs/status-labels";
 import { storeName } from "./saved-replies";
 
@@ -19,15 +29,13 @@ export interface CustomerPanelProps {
   detail: InboxDetail | null;
   customer: CustomerInfo | null;
   error: string | null;
-  /** Udkastet, hvis forklaring vises for en ukendt afsender. */
-  draft: ThreadDraft | null;
   onOpenConversation: (id: string) => void;
   /** Kun i skuffen (under 1240 px). */
   onClose?: () => void;
 }
 
-/** Kundekortet: kontakt og historik fra /customer, eller forklaringen for en ukendt afsender. */
-export function CustomerPanel({ detail, customer, error, draft, onOpenConversation, onClose }: CustomerPanelProps) {
+/** Kundekortet: kontakt og historik fra /customer. Statusser vises kun med danske navne, aldrig som rå koder. */
+export function CustomerPanel({ detail, customer, error, onOpenConversation, onClose }: CustomerPanelProps) {
   const inq = detail?.inquiry ?? null;
   const isPublic = inq?.channel === "google_review" || inq?.channel === "trustpilot_review";
   const store = storeName(inq?.store_id);
@@ -85,29 +93,32 @@ export function CustomerPanel({ detail, customer, error, draft, onOpenConversati
           <dd className="m-0">{store ?? "Ikke valgt"}</dd>
         </dl>
         {!customer.known ? (
-          <div className="mt-3 rounded-lg bg-[#FFF4E5] px-[11px] py-[9px] text-[13px] text-[#8A4B08]">
-            <p className="m-0">Ikke identificeret. Fiks giver ikke ordre- eller sagsoplysninger i denne samtale. Bed om mail eller telefon for at koble kunden.</p>
-            {draft?.reason && <p className="m-0 mt-1.5">Fiks: {draft.reason}</p>}
-          </div>
+          <p className="m-0 mt-3 rounded-lg bg-[#FFF4E5] px-[11px] py-[9px] text-[13px] text-[#8A4B08]">
+            {!email && !phone
+              ? "Ingen kontaktoplysninger på sagen. Bed kunden om mail eller telefon, før du slår noget op."
+              : "Ikke koblet til en kunde. Kunder slås kun op på mail eller telefon fra en mail, en formular eller en SMS."}
+          </p>
+        ) : customer.repairs.length + customer.orders.length + customer.buyback.length + customer.previous.length === 0 ? (
+          <p className="m-0 mt-3 text-[13px] text-[#5E6A63]">Ingen reparationer, ordrer, opkøb eller tidligere samtaler.</p>
         ) : (
           <>
             <Section title="Reparationer" items={customer.repairs.map((r) => ({
               id: r.id,
               href: r.href,
               title: join(r.ticketNumber != null ? `Sag ${r.ticketNumber}` : null, r.device) || "Reparation",
-              sub: join(r.issue, r.status ? (STATUS_LABELS as Record<string, string>)[r.status] ?? r.status : null, fmtDate(r.createdAt)),
+              sub: join(r.issue, statusLabel(STATUS_LABELS, r.status), fmtDate(r.createdAt)),
             }))} />
             <Section title="Ordrer" items={customer.orders.map((o) => ({
               id: o.id,
               href: o.href,
               title: o.orderNumber != null ? `Ordre ${o.orderNumber}` : "Ordre",
-              sub: join(formatKr(o.total), o.status, fmtDate(o.createdAt)),
+              sub: join(formatKr(o.total), statusLabel(ORDER_STATUS_LABELS, o.status), fmtDate(o.createdAt)),
             }))} />
             <Section title="Opkøb" items={customer.buyback.map((b) => ({
               id: b.id,
               href: b.href,
               title: b.subject || "Opkøb",
-              sub: join(b.offerAmount != null ? `Tilbud ${formatKr(b.offerAmount)}` : null, b.offerStatus ?? b.status, fmtDate(b.createdAt)),
+              sub: join(b.offerAmount != null ? `Tilbud ${formatKr(b.offerAmount)}` : null, b.offerStatus ? statusLabel(OFFER_STATUS_LABELS, b.offerStatus) : statusLabel(INQUIRY_STATUS_LABELS, b.status), fmtDate(b.createdAt)),
             }))} />
             <Section
               title="Tidligere samtaler"
@@ -116,7 +127,7 @@ export function CustomerPanel({ detail, customer, error, draft, onOpenConversati
                 // Tidligere samtaler åbnes her i Kundecenteret, ikke på den gamle side.
                 href: `/admin/kundecenter?id=${encodeURIComponent(c.id)}`,
                 title: c.subject || "Uden emne",
-                sub: join(CHANNEL_LABELS[c.channel ?? ""] ?? c.channel, fmtDate(c.createdAt)),
+                sub: join(CHANNEL_LABELS[c.channel ?? ""], statusLabel(INQUIRY_STATUS_LABELS, c.status), fmtDate(c.createdAt)),
                 onOpen: () => onOpenConversation(c.id),
               }))}
             />
@@ -131,9 +142,9 @@ export function CustomerPanel({ detail, customer, error, draft, onOpenConversati
       {onClose && (
         <div className="-mt-1 mb-2 flex items-center justify-between">
           <span className="text-[13px] text-[#5E6A63]">Kunde</span>
-          <button type="button" onClick={onClose} className="m-press m-tap h-8 rounded-lg px-2.5 text-[13px] font-medium hover:bg-[#F5F6F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F8F55]">
+          <Button size="sm" variant="quiet" onClick={onClose}>
             Luk
-          </button>
+          </Button>
         </div>
       )}
       {body}

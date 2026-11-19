@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Button, Skeleton, Textarea } from "@/components/admin/ui";
 import { menuItemClass, usePopoverMenu } from "@/components/admin/shell/use-popover-menu";
-import { buildThreadItems, CHANNEL_LABELS, snoozePresets, type InboxDetail, type ThreadDraft, type ThreadItem } from "./inbox-helpers";
+import { buildThreadItems, CHANNEL_LABELS, snoozePresets, snoozeText, type InboxDetail, type ThreadDraft, type ThreadItem } from "./inbox-helpers";
 
 const TZ = "Europe/Copenhagen";
 const dayKey = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
@@ -30,6 +30,8 @@ export interface ThreadProps {
   onBack: () => void;
   onCustomer: () => void;
   onTake: () => void;
+  onRelease: () => void;
+  onWake: () => void;
   onSnooze: (until: string, label: string) => void;
   onDone: () => void;
   onReopen: () => void;
@@ -80,6 +82,7 @@ export function Thread({ headingRef, detail, ...p }: ThreadProps) {
   const owner = inq.assigned_to ? (mine ? "din sag" : `hos ${inq.assigned_name || "en kollega"}`) : "ikke tildelt";
   const channel = CHANNEL_LABELS[inq.channel ?? "email"] ?? inq.channel;
   const rating = inq.channel === "google_review" ? googleRating(inq.metadata) : null;
+  const snoozed = closed ? null : snoozeText(inq.snoozed_until, new Date());
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -93,6 +96,7 @@ export function Thread({ headingRef, detail, ...p }: ThreadProps) {
           </h2>
           <p className="m-0 text-[13px] text-[#5E6A63]">
             {inq.name || "Ukendt afsender"} · {channel} · {owner}
+            {snoozed && ` · ${snoozed}`}
           </p>
         </div>
         {!closed && !mine && (
@@ -100,7 +104,18 @@ export function Thread({ headingRef, detail, ...p }: ThreadProps) {
             Tag den
           </Button>
         )}
-        {!closed && <SnoozeMenu disabled={p.busy !== null} onPick={p.onSnooze} />}
+        {!closed && mine && (
+          <Button size="sm" loading={p.busy === "release"} onClick={p.onRelease}>
+            Slip sagen
+          </Button>
+        )}
+        {snoozed ? (
+          <Button size="sm" loading={p.busy === "wake"} onClick={p.onWake}>
+            Væk nu
+          </Button>
+        ) : (
+          !closed && <SnoozeMenu disabled={p.busy !== null} onPick={p.onSnooze} />
+        )}
         {!closed && (
           <Button size="sm" loading={p.busy === "done"} onClick={p.onDone}>
             Færdig

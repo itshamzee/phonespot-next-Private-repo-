@@ -1,5 +1,7 @@
 import { inboxState, type InboxRow } from "@/lib/inquiries/inbox";
 
+export { INQUIRY_STATUS_LABELS, OFFER_STATUS_LABELS, ORDER_STATUS_LABELS, statusLabel } from "./status-labels";
+
 /**
  * Ren visningslogik til Kundecenterets klient: tråd, kanaler, ulæst, udsættelse.
  * Ingen I/O og ingen React, så alt kan testes direkte.
@@ -175,20 +177,35 @@ export function availableChannels(inq: { channel: string | null; email: string |
   return order.filter((c) => (c === "email" ? usableEmail(inq.email) : usablePhone(inq.phone)));
 }
 
-const REVIEW_HOSTS = ["google.com", "g.page", "trustpilot.com"];
+/**
+ * Kun kendte anmeldelsesadresser, forankret på vært og sti: g.page; google.com,
+ * www.google.com og maps.google.com under /maps; search.google.com under /local/;
+ * business.google.com; trustpilot.com og *.trustpilot.com under /review eller /reviews.
+ * Alt andet (docs.google.com, google.com/url?q=..., fremmede domæner) afvises.
+ */
+export function isReviewUrl(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.port) return false;
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname;
+  if (host === "g.page" || host === "business.google.com") return true;
+  if (host === "google.com" || host === "www.google.com" || host === "maps.google.com") return /^\/maps(\/|$)/.test(path);
+  if (host === "search.google.com") return path.startsWith("/local/");
+  if (host === "trustpilot.com" || host.endsWith(".trustpilot.com")) return /^\/reviews?(\/|$)/.test(path);
+  return false;
+}
 
-/** Første https-link til anmeldelsen (Google eller Trustpilot) i trådens første besked. */
+/** Første godkendte anmeldelseslink (https) i trådens første besked. */
 export function reviewLink(messages: ThreadMessage[]): string | null {
   const body = messages[0]?.body ?? "";
   for (const match of body.matchAll(/https:\/\/[^\s<>"')\]]+/g)) {
     const raw = match[0].replace(/[.,;:!?]+$/, "");
-    let host: string;
-    try {
-      host = new URL(raw).hostname.toLowerCase();
-    } catch {
-      continue;
-    }
-    if (REVIEW_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return raw;
+    if (isReviewUrl(raw)) return raw;
   }
   return null;
 }
@@ -256,6 +273,25 @@ export function snoozePresets(now: Date): { label: string; until: string }[] {
     { label: "Om 3 dage", until: at(3) },
     { label: "Næste mandag", until: at(toMonday) },
   ];
+}
+
+/** "Udsat til fredag kl. 9" (inden for en uge), ellers "Udsat til 3. dec. kl. 9.30". */
+export function snoozeText(iso: string | null | undefined, now: Date): string | null {
+  const t = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(t) || t <= now.getTime()) return null;
+  const p = cphParts(t);
+  const time = p.min ? `${p.h}.${String(p.min).padStart(2, "0")}` : `${p.h}`;
+  const n = cphParts(now.getTime());
+  const days = Math.round((Date.UTC(p.y, p.m - 1, p.d) - Date.UTC(n.y, n.m - 1, n.d)) / 86_400_000);
+  const day =
+    days === 0
+      ? "i dag"
+      : days === 1
+        ? "i morgen"
+        : days < 7
+          ? new Intl.DateTimeFormat("da-DK", { timeZone: TZ, weekday: "long" }).format(new Date(t))
+          : new Intl.DateTimeFormat("da-DK", { timeZone: TZ, day: "numeric", month: "short" }).format(new Date(t));
+  return `Udsat til ${day} kl. ${time}`;
 }
 
 /* ---------------------- små formateringer ---------------------- */

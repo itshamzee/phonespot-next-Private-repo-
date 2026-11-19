@@ -19,7 +19,7 @@ const EMPTY_COUNTS = { mine: 0, unassigned: 0, need: 0 };
 
 export type StoreFilter = "alle" | "vejle" | "slagelse";
 export type Counts = typeof EMPTY_COUNTS;
-type ListResponse = { rows?: InboxRow[]; counts?: Counts; me?: { id: string; name: string } };
+type ListResponse = { rows?: InboxRow[]; counts?: Counts; me?: { id: string; name: string }; truncated?: boolean };
 type ServerInquiry = { status?: InboxRow["status"]; assigned_to?: string | null; assigned_name?: string | null; snoozed_until?: string | null };
 
 function readStorage(key: string): string | null {
@@ -54,10 +54,14 @@ function isDetail(d: unknown): d is InboxDetail {
 
 export function useInbox(initialId: string | null) {
   const { me: scopeMe, scope, isOwner } = useStoreScope();
-  const [view, setViewState] = useState<InboxView>(() => {
+  // Uden gemt visning: start i Mine, og skift én gang til Ikke tildelt, hvis Mine er tom.
+  const [initialView] = useState<InboxView | null>(() => {
     const saved = readStorage(VIEW_KEY);
-    return isInboxView(saved) ? saved : "mine";
+    return isInboxView(saved) ? saved : null;
   });
+  const [view, setViewState] = useState<InboxView>(initialView ?? "mine");
+  const viewSettled = useRef(initialView !== null);
+  const [truncated, setTruncated] = useState(false);
   const [store, setStoreState] = useState<StoreFilter>("alle");
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -115,8 +119,19 @@ export function useInbox(initialId: string | null) {
         const r = await getJson<ListResponse>(listUrl, ctrl.signal, "Kunne ikke hente indbakken.");
         if (ctrl.signal.aborted || (mode === "poll" && busy.current > 0)) return;
         if (r.ok) {
+          const nextCounts = { ...EMPTY_COUNTS, ...(r.data.counts ?? {}) };
+          if (!viewSettled.current) {
+            viewSettled.current = true;
+            if (nextCounts.mine === 0 && view === "mine") {
+              // Skift visning; den nye hentning afløser denne.
+              setCounts(nextCounts);
+              setViewState("unassigned");
+              return;
+            }
+          }
           setRows(Array.isArray(r.data.rows) ? r.data.rows : []);
-          setCounts({ ...EMPTY_COUNTS, ...(r.data.counts ?? {}) });
+          setCounts(nextCounts);
+          setTruncated(r.data.truncated === true);
           if (r.data.me?.id) setApiMe(r.data.me);
           setListError(null);
           setListLoaded(true);
@@ -133,7 +148,7 @@ export function useInbox(initialId: string | null) {
         }
       }
     },
-    [listUrl],
+    [listUrl, view],
   );
 
   useEffect(() => {
@@ -223,6 +238,7 @@ export function useInbox(initialId: string | null) {
   }, []);
 
   const setView = useCallback((next: InboxView) => {
+    viewSettled.current = true;
     writeStorage(VIEW_KEY, next);
     setViewState(next);
     setRows([]);
@@ -274,8 +290,11 @@ export function useInbox(initialId: string | null) {
         if (r.ok) {
           const inq = (r.data as { inquiry?: ServerInquiry }).inquiry;
           if (inq) patchRow(id, rowPatch(inq));
-        } else if (optimistic) {
-          setRows(before);
+        } else {
+          // Serveren sagde nej: læg listen tilbage og hent både liste og tråd igen,
+          // så den åbne samtale aldrig står i en tilstand, serveren har afvist.
+          if (optimistic) setRows(before);
+          setDetailTick((n) => n + 1);
         }
         return r;
       } finally {
@@ -309,6 +328,7 @@ export function useInbox(initialId: string | null) {
     searching: debounced.length > 0,
     rows,
     counts,
+    truncated,
     meId,
     meName,
     listLoading,

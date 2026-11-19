@@ -22,7 +22,8 @@ function freshComposer(detail: InboxDetail): ComposerState {
   const pending = pendingDraft(detail.drafts);
   return {
     mode: "reply",
-    text: pending?.draft_body ?? "",
+    replyText: pending?.draft_body ?? "",
+    noteText: "",
     draftId: pending?.id ?? null,
     channel: availableChannels(detail.inquiry)[0] ?? null,
     error: null,
@@ -171,7 +172,6 @@ export function InboxScreen() {
       detail={current}
       customer={inbox.customer}
       error={inbox.customerError}
-      draft={current?.drafts[0] ?? null}
       onOpenConversation={(id) => open(id, false)}
     />
   );
@@ -192,6 +192,7 @@ export function InboxScreen() {
         <section aria-label="Samtaler" className={`min-h-0 min-w-0 flex-col border-r border-[#E2E5E0] bg-white min-[900px]:flex ${pane === "list" ? "flex" : "hidden"}`}>
           <ConversationList
             rows={inbox.rows}
+            truncated={inbox.truncated}
             view={inbox.view}
             counts={inbox.counts}
             onViewChange={inbox.setView}
@@ -225,6 +226,8 @@ export function InboxScreen() {
               onBack={() => setPane("list")}
               onCustomer={() => setCustOpen(true)}
               onTake={actions.take}
+              onRelease={actions.release}
+              onWake={actions.wake}
               onSnooze={actions.snooze}
               onDone={actions.done}
               onReopen={actions.reopen}
@@ -284,7 +287,6 @@ export function InboxScreen() {
             detail={current}
             customer={inbox.customer}
             error={inbox.customerError}
-            draft={current?.drafts[0] ?? null}
             onOpenConversation={(id) => open(id, false)}
             onClose={() => setCustOpen(false)}
           />

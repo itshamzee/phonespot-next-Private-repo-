@@ -38,6 +38,7 @@ const post = (body: unknown): RequestInit => ({
 
 export type InboxActionBody =
   | { type: "take"; expectAssignedTo: string | null }
+  | { type: "release"; expectAssignedTo: string | null }
   | { type: "snooze"; until: string }
   | { type: "unsnooze" }
   | { type: "done" }

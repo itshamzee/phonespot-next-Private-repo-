@@ -63,6 +63,9 @@ type Call = { url: string; method: string; body: Record<string, unknown> | null 
 let calls: Call[] = [];
 let takeStatus = 200;
 let approveResponse = () => json({ ok: true, transport: "onecom", filed: 0 });
+let actionResponse: ((body: Record<string, unknown> | null) => Response) | null = null;
+let listExtra: Record<string, unknown> = {};
+let customerData: Record<string, unknown> | null = null;
 let detailData: { inquiry: Record<string, unknown>; messages: typeof detail.messages; drafts: typeof detail.drafts } = detail;
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
@@ -71,6 +74,9 @@ beforeEach(() => {
   calls = [];
   takeStatus = 200;
   approveResponse = () => json({ ok: true, transport: "onecom", filed: 0 });
+  actionResponse = null;
+  listExtra = {};
+  customerData = null;
   detailData = detail;
   window.localStorage.clear();
   vi.stubGlobal(
@@ -80,15 +86,16 @@ beforeEach(() => {
       const method = init?.method ?? "GET";
       const body = typeof init?.body === "string" ? (JSON.parse(init.body) as Record<string, unknown>) : null;
       calls.push({ url, method, body });
-      if (url.startsWith("/api/admin/inbox?")) return json({ rows: [listRow], counts: { mine: 0, unassigned: 1, need: 0 }, me: { id: "me", name: "Mads" } });
+      if (url.startsWith("/api/admin/inbox?")) return json({ rows: [listRow], counts: { mine: 0, unassigned: 1, need: 0 }, me: { id: "me", name: "Mads" }, ...listExtra });
       if (url === "/api/admin/inbox/a") return json(detailData);
       if (url === "/api/admin/inbox/a/customer")
-        return json({ known: true, matchedBy: "email", name: "Camilla Holm", email: "camilla@eksempel.dk", phone: "20123456", repairs: [], orders: [], buyback: [], previous: [] });
+        return customerData ? json(customerData) : json({ known: true, matchedBy: "email", name: "Camilla Holm", email: "camilla@eksempel.dk", phone: "20123456", repairs: [], orders: [], buyback: [], previous: [] });
       if (url.startsWith("/api/admin/templates")) return json([]);
       if (url.endsWith("/approve")) return approveResponse();
       if (url.endsWith("/discard")) return json({ ok: true });
       if (url === "/api/contact/a/reply") return json({ id: "m2" }, 201);
       if (url === "/api/admin/inbox/a/action") {
+        if (actionResponse) return actionResponse(body);
         if (body?.type === "take" && takeStatus === 409) return json({ error: "Sagen er allerede taget af Sara.", assignedName: "Sara" }, 409);
         return json({ ok: true, inquiry: { id: "a", status: "ny", assigned_to: "me", assigned_name: "Mads", snoozed_until: null } });
       }
@@ -199,6 +206,122 @@ describe("InboxScreen", () => {
     expect(calls.find((c) => c.url === "/api/admin/inbox/a/action")?.body).toEqual({ type: "waiting" });
     expect(calls.some((c) => c.url.endsWith("/approve") || c.url.endsWith("/reply"))).toBe(false);
     open.mockRestore();
+  });
+
+  it("noten rører aldrig svaret: udkastet står der stadig og sendes via godkend-ruten", async () => {
+    const reply = await openFirst();
+    fireEvent.click(screen.getByRole("radio", { name: "Intern note" }));
+    fireEvent.change(screen.getByLabelText("Intern note"), { target: { value: "Ring efter frokost" } });
+    fireEvent.click(screen.getByRole("button", { name: "Gem note" }));
+    await screen.findByText("Noten er gemt.");
+    expect(calls.find((c) => c.body?.type === "note")?.body).toEqual({ type: "note", body: "Ring efter frokost" });
+    const back = screen.getByLabelText("Svar til kunden") as HTMLTextAreaElement;
+    expect(back.value).toBe(DRAFT);
+    expect(screen.getByText(/Udkast fra Fiks, ikke sendt/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Send og vent på kunden" }));
+    // Toasten for afsendelsen står i kø bag "Noten er gemt."; selve kaldet er det, der tæller.
+    await waitFor(() => expect(calls.find((c) => c.url.endsWith("/approve"))?.body).toEqual({ body: DRAFT, after: "waiting" }));
+    expect(calls.some((c) => c.url === "/api/contact/a/reply")).toBe(false);
+    expect(reply).toBeTruthy();
+  });
+
+  it("uden gemt visning skiftes til Ikke tildelt, når Mine er tom; en gemt visning bruges som den er", async () => {
+    await openFirst();
+    const views = calls.filter((c) => c.url.startsWith("/api/admin/inbox?")).map((c) => new URL(c.url, "http://x").searchParams.get("view"));
+    expect(views[0]).toBe("mine");
+    expect(views).toContain("unassigned");
+    cleanup();
+    calls = [];
+    window.localStorage.setItem("kundecenter.view", "waiting");
+    await openFirst();
+    const after = calls.filter((c) => c.url.startsWith("/api/admin/inbox?")).map((c) => new URL(c.url, "http://x").searchParams.get("view"));
+    expect(after.every((v) => v === "waiting")).toBe(true);
+  });
+
+  it("klippet liste får en rolig linje over rækkerne", async () => {
+    listExtra = { truncated: true };
+    await openFirst();
+    expect(screen.getByText("Viser de 200 længst ventende. Brug søgning for at finde resten.")).toBeTruthy();
+  });
+
+  it("fejler Færdig (500), står sagen åben, fejlen vises, og tråd og liste hentes igen", async () => {
+    actionResponse = () => json({ error: "Handlingen kunne ikke gennemføres. Prøv igen." }, 500);
+    await openFirst();
+    const detailsBefore = calls.filter((c) => c.url === "/api/admin/inbox/a").length;
+    const listsBefore = calls.filter((c) => c.url.startsWith("/api/admin/inbox?")).length;
+    const thread = screen.getByRole("region", { name: "Samtale" });
+    fireEvent.click(within(thread).getByRole("button", { name: "Færdig" }));
+    expect(await screen.findByText("Handlingen kunne ikke gennemføres. Prøv igen.")).toBeTruthy();
+    await waitFor(() => expect(calls.filter((c) => c.url === "/api/admin/inbox/a").length).toBeGreaterThan(detailsBefore));
+    await waitFor(() => expect(calls.filter((c) => c.url.startsWith("/api/admin/inbox?")).length).toBeGreaterThan(listsBefore));
+    expect(within(thread).getByRole("button", { name: "Færdig" })).toBeTruthy();
+    expect(within(screen.getByRole("list", { name: "Samtaler" })).getAllByRole("button")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Fortryd/ })).toBeNull();
+  });
+
+  it("Slip sagen sender den ansvarlige med og viser 409-teksten", async () => {
+    detailData = { ...detail, inquiry: { ...detail.inquiry, assigned_to: "me", assigned_name: "Mads" } };
+    actionResponse = (body) =>
+      body?.type === "release" ? json({ error: "Sagen er allerede taget af Sara.", assignedName: "Sara" }, 409) : json({ ok: true, inquiry: {} });
+    await openFirst();
+    expect(screen.queryByRole("button", { name: "Tag den" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Slip sagen" }));
+    expect(await screen.findByText("Sagen er allerede taget af Sara.")).toBeTruthy();
+    expect(calls.find((c) => c.body?.type === "release")?.body).toEqual({ type: "release", expectAssignedTo: "me" });
+  });
+
+  it("en udsat sag viser tidspunktet og Væk nu, som fjerner udsættelsen", async () => {
+    const until = new Date(Date.now() + 2 * 86_400_000).toISOString();
+    detailData = { ...detail, inquiry: { ...detail.inquiry, snoozed_until: until } };
+    await openFirst();
+    expect(screen.getByText(/Udsat til /)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Udsæt" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Væk nu" }));
+    await waitFor(() => expect(calls.some((c) => c.body?.type === "unsnooze")).toBe(true));
+  });
+
+  it("kundekortet viser danske statusser, aldrig rå koder", async () => {
+    customerData = {
+      known: true,
+      matchedBy: "both",
+      name: "Camilla Holm",
+      email: "camilla@eksempel.dk",
+      phone: "20123456",
+      repairs: [],
+      orders: [
+        { id: "o1", orderNumber: 1042, status: "shipped", total: 349900, createdAt: "2026-11-01T10:00:00Z", href: "/admin/platform/orders/o1" },
+        { id: "o2", orderNumber: 1043, status: "weird_code", total: null, createdAt: "2026-11-02T10:00:00Z", href: "/admin/platform/orders/o2" },
+      ],
+      buyback: [{ id: "b1", subject: "Sælg iPhone 13", status: "ny", offerStatus: "expired", offerAmount: 200000, createdAt: "2026-11-03T10:00:00Z", href: "/admin/opkoeb/b1" }],
+      previous: [{ id: "p1", subject: "Cover", status: "venter_paa_svar", channel: "email", createdAt: "2026-10-01T10:00:00Z", href: "/admin/henvendelser?id=p1" }],
+    };
+    await openFirst();
+    const card = screen.getByRole("complementary", { name: "Kunde" });
+    expect(await within(card).findByText("Fundet på mail og telefon")).toBeTruthy();
+    expect(within(card).getByText(/3\.499 kr\., Afsendt/)).toBeTruthy();
+    expect(within(card).queryByText(/weird_code/)).toBeNull();
+    expect(within(card).getByText(/Tilbud 2\.000 kr\., Udløbet/)).toBeTruthy();
+    expect(within(card).getByText(/Mail, Venter på svar/)).toBeTruthy();
+    expect(within(card).getByRole("link", { name: /Cover/ }).getAttribute("href")).toBe("/admin/kundecenter?id=p1");
+  });
+
+  it("kundekortet uden mail og telefon beder om kontaktoplysninger og nævner ikke Fiks", async () => {
+    customerData = { known: false, matchedBy: null, name: "Mads K.", email: null, phone: null, repairs: [], orders: [], buyback: [], previous: [] };
+    detailData = { ...detail, inquiry: { ...detail.inquiry, email: null, phone: null } };
+    render(
+      <StoreScopeProvider initialMe={me}>
+        <ToastProvider>
+          <InboxScreen />
+        </ToastProvider>
+      </StoreScopeProvider>,
+    );
+    const list = await screen.findByRole("list", { name: "Samtaler" });
+    fireEvent.click(within(list).getAllByRole("button")[0], { detail: 1 });
+    const card = screen.getByRole("complementary", { name: "Kunde" });
+    expect(
+      await within(card).findByText("Ingen kontaktoplysninger på sagen. Bed kunden om mail eller telefon, før du slår noget op."),
+    ).toBeTruthy();
+    expect(within(card).queryByText(/Fiks/)).toBeNull();
   });
 
   it("adressen følger den valgte samtale", async () => {

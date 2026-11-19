@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/admin/ui";
 
 export interface UndoItem {
   key: number;
@@ -47,16 +48,16 @@ export function UndoToast({ item, onDismiss }: { item: UndoItem | null; onDismis
           {item?.message ?? ""}
         </span>
         {item && (
-          <button
-            type="button"
+          <Button
+            size="sm"
+            className="tabular-nums"
             onClick={() => {
               item.onUndo();
               onDismiss();
             }}
-            className="m-press m-tap h-8 whitespace-nowrap rounded-lg border border-[#5E6A63] px-2.5 font-semibold tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Fortryd ({left})
-          </button>
+          </Button>
         )}
       </div>
     </div>

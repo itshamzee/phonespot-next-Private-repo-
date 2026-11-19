@@ -8,7 +8,7 @@ afterEach(cleanup);
 const DRAFT = "Skærmskift koster 1.169 kr.";
 
 function Harness(props: Partial<ComposerProps> & { initial?: Partial<ComposerState> }) {
-  const [state, setState] = useState<ComposerState>({ mode: "reply", text: "", channel: "email", draftId: null, error: null, ...props.initial });
+  const [state, setState] = useState<ComposerState>({ mode: "reply", replyText: "", noteText: "", channel: "email", draftId: null, error: null, ...props.initial });
   return (
     <Composer
       state={state}
@@ -31,7 +31,7 @@ function Harness(props: Partial<ComposerProps> & { initial?: Partial<ComposerSta
 
 describe("Composer", () => {
   it("viser forudfyldt udkast med mærke og Bygger på, og Oprindeligt udkast gendanner teksten", () => {
-    render(<Harness initial={{ text: DRAFT, draftId: "d1" }} draft={{ body: DRAFT, basedOn: "Bygger på: prisopslag reparation" }} />);
+    render(<Harness initial={{ replyText: DRAFT, draftId: "d1" }} draft={{ body: DRAFT, basedOn: "Bygger på: prisopslag reparation" }} />);
     expect(screen.getByText(/Udkast fra Fiks, ikke sendt\. Bygger på: prisopslag reparation/)).toBeTruthy();
     const box = screen.getByLabelText("Svar til kunden") as HTMLTextAreaElement;
     expect(box.value).toBe(DRAFT);
@@ -42,7 +42,7 @@ describe("Composer", () => {
   });
 
   it("kanalvælgeren viser kun de kanaler, sagen har adresse til, og SMS får tegntæller", () => {
-    render(<Harness channels={["sms"]} initial={{ channel: "sms", text: "hej" }} />);
+    render(<Harness channels={["sms"]} initial={{ channel: "sms", replyText: "hej" }} />);
     const select = screen.getByLabelText("Svar via") as HTMLSelectElement;
     expect([...select.options].map((o) => o.textContent)).toEqual(["SMS"]);
     expect(screen.getByText("3 tegn, 1 sms")).toBeTruthy();
@@ -69,14 +69,14 @@ describe("Composer", () => {
   });
 
   it("viser fejlen over feltet og beholder teksten", () => {
-    render(<Harness initial={{ text: "Min tekst", error: "Der er ingen mailadresse på henvendelsen" }} />);
+    render(<Harness initial={{ replyText: "Min tekst", error: "Der er ingen mailadresse på henvendelsen" }} />);
     expect(screen.getByRole("alert").textContent).toContain("Der er ingen mailadresse på henvendelsen");
     expect((screen.getByLabelText("Svar til kunden") as HTMLTextAreaElement).value).toBe("Min tekst");
   });
 
   it("anmeldelser: advarsel, ingen kanalvælger, kopier-knap", () => {
     const onReview = vi.fn();
-    render(<Harness publicChannel="Trustpilot" channels={[]} initial={{ text: "Tak, Mette." }} onReview={onReview} />);
+    render(<Harness publicChannel="Trustpilot" channels={[]} initial={{ replyText: "Tak, Mette." }} onReview={onReview} />);
     expect(screen.getByText(/bliver offentligt hos Trustpilot/)).toBeTruthy();
     expect(screen.queryByLabelText("Svar via")).toBeNull();
     expect(screen.queryByRole("button", { name: /Send/ })).toBeNull();

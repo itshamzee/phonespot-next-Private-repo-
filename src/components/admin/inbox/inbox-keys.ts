@@ -77,6 +77,8 @@ export function useInboxKeys({
     if (!enabled) return;
     function onKeyDown(ev: KeyboardEvent) {
       if (ev.defaultPrevented || ev.isComposing) return;
+      // Ingen genveje bag en åben dialog (hjælpen, "Nyt i admin" og andre).
+      if (document.querySelector("dialog[open]")) return;
       const target = ev.target as HTMLElement | null;
       const action = inboxKeyAction(
         {
