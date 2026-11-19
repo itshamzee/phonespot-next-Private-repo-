@@ -10,7 +10,7 @@ type CategoryHeroProps = {
 export function CategoryHero({ title, description, badge }: CategoryHeroProps) {
   return (
     <section className="bg-cream py-16 md:py-24">
-      <div className="mx-auto max-w-7xl px-4 text-center">
+      <div className="hero-rise mx-auto max-w-7xl px-4 text-center">
         {badge && (
           <FadeIn>
             <span className="inline-block rounded-full bg-green-eco/10 px-4 py-1 text-sm font-medium text-green-eco">

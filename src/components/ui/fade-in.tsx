@@ -9,27 +9,36 @@ interface FadeInProps {
   className?: string;
 }
 
+// Loft over varighed og forsinkelse, så ingen sektion venter eller trækker ud.
+const MAX_DURATION = 0.3;
+const MAX_DELAY = 0.12;
+
 /**
- * CSS-based fade-in on scroll. SSR-safe: renders visible by default,
- * then sets up intersection observer on mount.
+ * Lille glid op, når en sektion rulles ind i billedet.
+ *
+ * Indholdet er altid synligt: der animeres kun translate (8 px), aldrig
+ * opacity, så tekst kan læses af alle (også Google) uden JavaScript og uden
+ * at blive rullet frem. Det, der allerede er i billedet, når siden vises,
+ * står stille (ingen hop efter hydrering), og ved reduced motion sker intet.
  */
-export function FadeIn({ children, delay = 0, duration = 0.5, className }: FadeInProps) {
+export function FadeIn({ children, delay = 0, duration = 0.3, className }: FadeInProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // "idle": ingen effekt. "waiting": under folden, venter på at blive set.
+  // "shown": glider på plads.
+  const [phase, setPhase] = useState<"idle" | "waiting" | "shown">("idle");
 
   useEffect(() => {
-    setMounted(true);
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setHasAnimated(true);
-      return;
-    }
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    // Allerede (delvist) synlig ved montering: lad den stå.
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
 
+    setPhase("waiting");
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setHasAnimated(true);
+          setPhase("shown");
           observer.disconnect();
         }
       },
@@ -40,20 +49,25 @@ export function FadeIn({ children, delay = 0, duration = 0.5, className }: FadeI
     return () => observer.disconnect();
   }, []);
 
-  // Before mount (SSR), render fully visible — no flash of invisible content
-  const isVisible = !mounted || hasAnimated;
+  const d = Math.min(duration, MAX_DURATION);
+  const wait = Math.min(delay, MAX_DELAY);
 
   return (
     <div
       ref={ref}
       className={className}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? "none" : "translateY(10px)",
-        transition: mounted
-          ? `opacity ${duration}s ease ${delay}s, transform ${duration}s ease ${delay}s`
-          : "none",
-      }}
+      data-fade={phase}
+      style={
+        phase === "idle"
+          ? undefined
+          : {
+              translate: phase === "waiting" ? "0 8px" : "none",
+              transition:
+                phase === "shown"
+                  ? `translate ${d}s cubic-bezier(0.23, 1, 0.32, 1) ${wait}s`
+                  : "none",
+            }
+      }
     >
       {children}
     </div>
