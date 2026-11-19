@@ -46,7 +46,7 @@
 .video { border-radius: 10px; overflow: hidden; background: #eef0eb; border: 1px solid #dce3dc; }
 .video video, .video img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .video button { position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: pointer; background: #eef0eb; }
-.play { position: absolute; left: 14px; bottom: 14px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px; background: white; color: #1a3d2e; border-radius: 6px; box-shadow: 0 2px 12px #10281e18; font-size: 12px; font-weight: 600; }
+.play { position: absolute; left: 14px; bottom: 14px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 13px; background: white; color: #1a3d2e; border-radius: 6px; box-shadow: var(--shadow-floating); font-size: 12px; font-weight: 600; }
 .play svg { width: 20px; height: 20px; }
 .play small { font-size: 10px; font-weight: 400; }
 .video button:hover .play { background: #f2f5eb; }

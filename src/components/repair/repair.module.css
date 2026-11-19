@@ -294,7 +294,7 @@
   border: 1px solid #c8d0c9;
   border-radius: 10px;
   background: white;
-  box-shadow: 0 12px 30px #24272615;
+  box-shadow: var(--shadow-floating);
   overflow: hidden;
 }
 .searchResults > a {
@@ -339,9 +339,13 @@
   color: #242726;
 }
 @media (hover: hover) and (pointer: fine) {
+.brandCell {
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 200ms var(--ease-ps-out);
+}
 .brandCell:hover {
   border-color: #1a3d2e;
   background: #f4f7f2;
+  box-shadow: var(--shadow-raised);
 }
 }
 .brandCell img {
@@ -414,8 +418,12 @@
   text-align: center;
 }
 @media (hover: hover) and (pointer: fine) {
+.modelCell {
+  transition: border-color 150ms ease, box-shadow 200ms var(--ease-ps-out);
+}
 .modelCell:hover {
   border-color: #1a3d2e;
+  box-shadow: var(--shadow-raised);
 }
 }
 .modelPhoto {

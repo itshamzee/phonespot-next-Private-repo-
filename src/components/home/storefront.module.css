@@ -97,8 +97,8 @@
 .surface .departments svg{width:20px;height:20px}
 .surface .departments svg:last-child{width:14px;height:14px;margin-left:auto}
 .surface .products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
-.surface .product{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;background:white;transition:border-color .15s,box-shadow .15s}
-.surface .product:hover{border-color:#9aaa9b;box-shadow:0 5px 20px #183b2b0b}
+.surface .product{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;background:white;transition:border-color .15s,box-shadow 200ms var(--ease-ps-out)}
+.surface .product:hover{border-color:#9aaa9b}
 .surface .product>a{height:100%;display:flex;flex-direction:column}
 .surface .product-photo{height:212px;position:relative;display:flex;align-items:center;justify-content:center;background:#f7f7f8;padding:30px 23px 12px}
 .surface .product-photo img{height:100%;width:100%;object-fit:contain;mix-blend-mode:multiply}
@@ -363,6 +363,7 @@
 .surface .carousel-tabs button[aria-pressed=false]:hover{color:var(--green)}
 .surface .campaign-visual img{transition:scale 280ms var(--ease-ps-out)}
 .surface .campaign-visual:hover img{scale:1.02}
+.surface .product:hover{box-shadow:var(--shadow-raised)}
 }
 @media(prefers-reduced-motion:reduce){
 .surface .slide-next,.surface .slide-prev{animation:none}
