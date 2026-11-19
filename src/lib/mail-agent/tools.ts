@@ -271,45 +271,23 @@ export async function lookupCustomerImpl(ctx: ToolContext): Promise<string> {
   return `Kunde: ${data.name ?? "(uden navn)"}, oprettet ${day(data.created_at)}, ${count ?? 0} ordrer.`;
 }
 
-export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void): BetaRunnableTool[] {
-  /** Records every returned text in ctx.outputs. */
-  const rec =
-    <A extends unknown[]>(fn: (...args: A) => Promise<string>) =>
+/** Wraps a tool impl so every returned text is recorded in ctx.outputs (for the amount filter). */
+export function outputRecorder(ctx: ToolContext) {
+  return <A extends unknown[]>(fn: (...args: A) => Promise<string>) =>
     async (...args: A): Promise<string> => {
       const out = await fn(...args);
       ctx.outputs.push(out);
       return out;
     };
+}
+
+/**
+ * Tools that only read public data (prices, symptoms, the fact base) and never
+ * anything about a person. Shared by the mail agent and the public chat (Fiks).
+ */
+export function buildPublicDataTools(ctx: ToolContext): BetaRunnableTool[] {
+  const rec = outputRecorder(ctx);
   return [
-    betaZodTool({
-      name: "lookup_orders",
-      description:
-        "Slå afsenderens ordrer op. Uden ordrenummer: seneste 5 ordrer på afsenderens mail. Med ordrenummer: den ordre, hvis den tilhører afsenderen.",
-      inputSchema: z.object({
-        order_number: z.string().optional().describe("Ordrenummer som kunden nævner, fx PS-1001"),
-      }),
-      run: rec((input: { order_number?: string }) => lookupOrdersImpl(ctx, input)),
-    }),
-    betaZodTool({
-      name: "lookup_repairs",
-      description: "Slå afsenderens reparationssager op via mail, eller via telefonnummer hvis kunden nævner det.",
-      inputSchema: z.object({
-        phone: z.string().optional().describe("Telefonnummer hvis kunden nævner det"),
-      }),
-      run: rec((input: { phone?: string }) => lookupRepairsImpl(ctx, input)),
-    }),
-    betaZodTool({
-      name: "lookup_buyback",
-      description: "Slå afsenderens salgsforespørgsler, tilbud og opkøb op (Sælg din enhed).",
-      inputSchema: z.object({}),
-      run: rec(() => lookupBuybackImpl(ctx)),
-    }),
-    betaZodTool({
-      name: "lookup_customer",
-      description: "Slå afsenderens kundeprofil op: navn, oprettet, antal ordrer.",
-      inputSchema: z.object({}),
-      run: rec(() => lookupCustomerImpl(ctx)),
-    }),
     betaZodTool({
       name: "quote_repair",
       description:
@@ -354,6 +332,42 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
         return buildKnowledge();
       }),
     }),
+  ] as BetaRunnableTool[];
+}
+
+export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void): BetaRunnableTool[] {
+  const rec = outputRecorder(ctx);
+  return [
+    betaZodTool({
+      name: "lookup_orders",
+      description:
+        "Slå afsenderens ordrer op. Uden ordrenummer: seneste 5 ordrer på afsenderens mail. Med ordrenummer: den ordre, hvis den tilhører afsenderen.",
+      inputSchema: z.object({
+        order_number: z.string().optional().describe("Ordrenummer som kunden nævner, fx PS-1001"),
+      }),
+      run: rec((input: { order_number?: string }) => lookupOrdersImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "lookup_repairs",
+      description: "Slå afsenderens reparationssager op via mail, eller via telefonnummer hvis kunden nævner det.",
+      inputSchema: z.object({
+        phone: z.string().optional().describe("Telefonnummer hvis kunden nævner det"),
+      }),
+      run: rec((input: { phone?: string }) => lookupRepairsImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "lookup_buyback",
+      description: "Slå afsenderens salgsforespørgsler, tilbud og opkøb op (Sælg din enhed).",
+      inputSchema: z.object({}),
+      run: rec(() => lookupBuybackImpl(ctx)),
+    }),
+    betaZodTool({
+      name: "lookup_customer",
+      description: "Slå afsenderens kundeprofil op: navn, oprettet, antal ordrer.",
+      inputSchema: z.object({}),
+      run: rec(() => lookupCustomerImpl(ctx)),
+    }),
+    ...buildPublicDataTools(ctx),
     betaZodTool({
       name: "submit_assessment",
       description: "Afslut med din vurdering af mailen. Kald dette præcis én gang som sidste handling.",
