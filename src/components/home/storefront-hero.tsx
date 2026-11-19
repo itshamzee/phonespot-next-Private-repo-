@@ -24,16 +24,26 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
   const campaign = useBlackNovember(blackNovember);
   const daysLeft = useBlackNovemberDaysLeft();
   const [slide, setSlide] = useState(0);
+  // 0 indtil kunden skifter første gang: så spiller kun indgangen ved
+  // indlæsning (hero-rise, kun translate). Derefter glider det nye slide ind
+  // fra den side, kunden bevæger sig mod.
+  const [direction, setDirection] = useState<0 | 1 | -1>(0);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const category = categories[slide];
-  const select = (index: number) => setSlide((index + categories.length) % categories.length);
+  const select = (index: number, dir?: 1 | -1) => {
+    const next = (index + categories.length) % categories.length;
+    if (next === slide) return;
+    setDirection(dir ?? (index > slide ? 1 : -1));
+    setSlide(next);
+  };
+  const slideClass = direction === 0 ? "" : direction === 1 ? styles["slide-next"] : styles["slide-prev"];
 
   return <>
     <section className={`${styles.campaign} ${slide === 0 ? styles["is-iphone"] : slide === 1 ? styles["is-laptop"] : ""}`} aria-label="Udforsk vores enheder" aria-roledescription="karrusel">
       <div className={styles["campaign-stage"]} id="campaign-stage">
-        <div className={styles["campaign-copy"]}>
+        <div key={`copy-${slide}`} className={`${styles["campaign-copy"]} ${direction === 0 ? "hero-rise" : slideClass}`}>
           {campaign && (
-            <Link className={styles["bn-pill"]} href={BLACK_NOVEMBER.href}>
+            <Link className={`${styles["bn-pill"]} nudge`} href={BLACK_NOVEMBER.href}>
               <span className={styles["bn-pill-name"]}>Black November</span>
               <span className={styles["bn-pill-text"]}>{BLACK_NOVEMBER.repairPercent} % på alle reparationer</span>
               <StorefrontIcon kind="arrow" />
@@ -42,27 +52,28 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
           <span className={styles.eyebrow}>Refurbished. Klar til mere.</span>
           <h1>{category.title[0]}<br />{category.title[1]}</h1>
           <p>{category.description}</p>
-          <Link className={`${styles.button} ${styles["hero-link"]}`} href={category.href}>Se vores {category.name}<StorefrontIcon kind="arrow" /></Link>
+          <Link className={`${styles.button} ${styles["hero-link"]} nudge`} href={category.href}>Se vores {category.name}<StorefrontIcon kind="arrow" /></Link>
           <Link className={styles["quality-link"]} href="/kvalitet"><StorefrontIcon kind="check" />Testet, kontrolleret og klar til dig</Link>
         </div>
         <div className={styles["campaign-visual"]}>
           {/* The approved editorial images include external sources outside the product optimizer. */}
+          {/* Animationen ligger på billedet selv: på forælderen ville den isolere mix-blend-mode. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} decoding="async" />
-          <span className={styles["hero-caption"]}>{category.caption}</span>
+          <img key={`img-${slide}`} className={slideClass || undefined} src={category.image} alt={category.alt} fetchPriority={slide === 0 ? "high" : "auto"} decoding="async" />
+          <span key={`caption-${slide}`} className={slideClass ? `${styles["hero-caption"]} ${slideClass}` : styles["hero-caption"]}>{category.caption}</span>
         </div>
         <div className={styles["carousel-controls"]}>
           <span aria-live="polite" aria-atomic="true">{slide + 1} / 4 · {category.name}</span>
-          <button type="button" className={styles["previous-slide"]} onClick={() => select(slide - 1)} aria-label="Forrige kategori"><StorefrontIcon kind="arrow" /></button>
-          <button type="button" onClick={() => select(slide + 1)} aria-label="Næste kategori"><StorefrontIcon kind="arrow" /></button>
+          <button type="button" className={styles["previous-slide"]} onClick={() => select(slide - 1, -1)} aria-label="Forrige kategori"><StorefrontIcon kind="arrow" /></button>
+          <button type="button" onClick={() => select(slide + 1, 1)} aria-label="Næste kategori"><StorefrontIcon kind="arrow" /></button>
         </div>
       </div>
-      <div className={styles["carousel-tabs"]} aria-label="Kategorier i karrusellen">
+      <div className={styles["carousel-tabs"]} style={{ "--tab-i": slide } as React.CSSProperties} aria-label="Kategorier i karrusellen">
         {categories.map((item, index) => <button key={item.href} type="button" ref={node => { buttons.current[index] = node; }} aria-pressed={slide === index} aria-controls="campaign-stage" onClick={() => select(index)} onKeyDown={event => {
           if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
           event.preventDefault();
           const next = (index + (event.key === "ArrowRight" ? 1 : -1) + categories.length) % categories.length;
-          select(next);
+          select(next, event.key === "ArrowRight" ? 1 : -1);
           buttons.current[next]?.focus();
         }}><StorefrontIcon kind={item.icon} /><span>{item.label}</span><StorefrontIcon kind="arrow" /></button>)}
       </div>
@@ -73,7 +84,7 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
           <div className={styles["service-label"]}><StorefrontIcon kind="repair" />Reparation{campaign && <span className={styles["bn-chip"]}>{BLACK_NOVEMBER.repairPercent} % i november</span>}</div>
           <h2>Giv din telefon<br />mere tid.</h2>
           <p>Skærm, batteri eller noget andet?<br />Find hjælp til netop din model.</p>
-          <Link className={`${styles.button} ${styles.light}`} href="/reparation">Find din reparation<StorefrontIcon kind="arrow" /></Link>
+          <Link className={`${styles.button} ${styles.light} nudge`} href="/reparation">Find din reparation<StorefrontIcon kind="arrow" /></Link>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/repair/tekniker-reparerer.jpg" alt="En tekniker arbejder med reparation af en tablet" loading="lazy" />
@@ -84,7 +95,7 @@ export function StorefrontHero({ blackNovember = false }: { blackNovember?: bool
           <div className={styles["service-label"]}><StorefrontIcon kind="exchange" />Sælg din enhed</div>
           <h2>Din gamle enhed.<br />Stadig noget værd.</h2>
           <p>En iPhone, iPad eller computer i skuffen?<br />Få en vurdering, og giv den mulighed for et nyt liv.</p>
-          <Link className={styles.button} href="/saelg-din-enhed">Hvad er din enhed værd?<StorefrontIcon kind="arrow" /></Link>
+          <Link className={`${styles.button} nudge`} href="/saelg-din-enhed">Hvad er din enhed værd?<StorefrontIcon kind="arrow" /></Link>
         </div>
         <div className={styles["trade-symbol"]}><StorefrontIcon kind="exchange" /></div>
         <span className={styles["service-foot"]}>Start med model og stand</span>
