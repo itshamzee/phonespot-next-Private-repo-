@@ -17,7 +17,7 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/"
-            className="rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white press hover:bg-[#2D6B45] hover:shadow-lg"
+            className="rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white press hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
           >
             Gå til forsiden
           </Link>

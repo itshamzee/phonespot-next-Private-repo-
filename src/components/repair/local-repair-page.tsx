@@ -167,7 +167,7 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90"
             >
               {bookLabel}
             </Link>
@@ -342,7 +342,7 @@ export function LocalRepairPage({ town, prices }: Props) {
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link
                 href="/reparation/indsend"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
               >
                 {mailInLabel}
               </Link>
@@ -596,7 +596,7 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90"
             >
               {bookLabel}
             </Link>

@@ -161,7 +161,7 @@ export function LocalServicePage({ page, rows }: Props) {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90"
             >
               Book og kom forbi i {page.city}
             </Link>
@@ -362,7 +362,7 @@ export function LocalServicePage({ page, rows }: Props) {
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#6E6E73]">{page.mailInText}</p>
             <Link
               href="/reparation/indsend"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
             >
               Send den ind
             </Link>

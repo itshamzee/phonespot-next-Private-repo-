@@ -476,7 +476,7 @@ export function CheckoutForm() {
       <button
         type="submit"
         disabled={isSubmitting || cartState.items.length === 0}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold text-white press hover:opacity-90 hover:shadow-lg hover:shadow-green-eco/20 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 font-display text-base font-bold text-white press hover:opacity-90 hover-fine:shadow-raised active:shadow-none disabled:opacity-50"
       >
         {isSubmitting ? (
           <>

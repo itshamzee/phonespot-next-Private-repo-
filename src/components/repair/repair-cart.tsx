@@ -1537,7 +1537,7 @@ function BookingForm({
           type="button"
           onClick={onSubmitAndPay}
           disabled={!canSubmit || isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco py-3.5 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco py-3.5 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover-fine:shadow-raised active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? "Sender..." : `Betal nu — ${fmt(totalPrice)} kr.`}
         </button>

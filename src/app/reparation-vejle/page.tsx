@@ -271,7 +271,7 @@ export default async function ReparationVejlePage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/reparation/booking"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90"
             >
               Book reparation
             </Link>
@@ -441,7 +441,7 @@ export default async function ReparationVejlePage() {
           </div>
           <Link
             href="/reparation/indsend"
-            className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+            className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
           >
             Se hvordan det virker
           </Link>
@@ -547,7 +547,7 @@ export default async function ReparationVejlePage() {
           <div className="mt-10 text-center">
             <Link
               href="/reparation"
-              className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
             >
               Se alle priser og modeller
             </Link>
@@ -778,7 +778,7 @@ export default async function ReparationVejlePage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/reparation/booking"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90"
             >
               Book reparation
             </Link>
