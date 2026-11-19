@@ -42,7 +42,7 @@ export function BlackNovemberHero({ serverActive, headingLevel = "h2" }: { serve
         className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,#000_0%,#000_30%,rgba(0,0,0,0.6)_48%,transparent_62%)] md:block"
       />
 
-      <div className="relative order-1 px-6 pb-2 pt-6 md:max-w-[620px] md:px-12 md:pb-12 md:pt-9">
+      <div className="hero-rise relative order-1 px-6 pb-2 pt-6 md:max-w-[620px] md:px-12 md:pb-12 md:pt-9">
         <p className="flex items-baseline justify-between gap-4 text-[13px] text-white/65 md:justify-start md:gap-5">
           <span className="font-semibold text-[#8FBFA2]">Black November</span>
           <span aria-live="polite" className="tabular-nums">
@@ -72,7 +72,7 @@ export function BlackNovemberHero({ serverActive, headingLevel = "h2" }: { serve
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pb-1">
           <Link
             href="/reparation"
-            className="inline-flex min-h-12 items-center rounded-[8px] bg-white px-5 text-[15px] font-semibold !text-black transition-colors hover:bg-[#E3EFE7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8FBFA2]"
+            className="inline-flex min-h-12 items-center rounded-[8px] bg-white px-5 text-[15px] font-semibold !text-black press hover:bg-[#E3EFE7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8FBFA2]"
           >
             Find din model
           </Link>
