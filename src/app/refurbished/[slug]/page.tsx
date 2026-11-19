@@ -16,7 +16,7 @@ import { JsonLd, MERCHANT_RETURN_POLICY_JSONLD } from "@/components/seo/json-ld"
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
-import { effectiveGrade } from "@/lib/grades";
+import { effectiveGrade, GRADE_SHORT_LABEL } from "@/lib/grades";
 import {
   deviceUrl,
   groupDevices,
@@ -27,7 +27,8 @@ import {
   fallbackDeviceDescription,
   fallbackDeviceTitle,
 } from "@/lib/seo/device-meta";
-import { getDeviceFaq } from "@/lib/product/device-faq";
+import { getDeviceFaq, getDeviceModelFaq } from "@/lib/product/device-faq";
+import type { DeviceGrade } from "@/lib/supabase/platform-types";
 
 // 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
 export const revalidate = 600;
@@ -284,7 +285,12 @@ export default async function RefurbishedProductPage({ params }: Props) {
 
   const deviceType = getDeviceType(template.category);
 
-  const faqs = getDeviceFaq(template.display_name, template.category);
+  const faqs = [
+    ...getDeviceModelFaq(template.display_name, gradeMinPrices, (g) =>
+      g === "N" ? "fabriksny" : `stand ${g} (${(GRADE_SHORT_LABEL[g as DeviceGrade] ?? "").toLocaleLowerCase("da-DK")})`.replace(" ()", ""),
+    ),
+    ...getDeviceFaq(template.display_name, template.category),
+  ];
   return (
     <div className="font-body text-[#202421]">
       <JsonLd data={breadcrumbJsonLd} />
