@@ -10,6 +10,7 @@
 .navigation h2 { color: #fff; font-size: 13px; font-weight: 600; margin: 3px 0 13px; }
 .navigation ul { list-style: none; padding: 0; margin: 0; }
 .navigation a { display: inline-flex; align-items: center; min-height: 30px; }
+.footer a { text-decoration-line: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: color 150ms ease, text-decoration-color 150ms ease; }
 .footer a:hover { color: white; text-decoration: underline; text-underline-offset: 4px; }
 .footer :is(a,button):focus-visible { outline: 2px solid #d3e5b2; outline-offset: 4px; }
 .trust { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 22px 0; margin-top: 20px; border-bottom: 1px solid #ffffff20; }

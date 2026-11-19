@@ -30,6 +30,7 @@
 .surface .service a{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#edf1ed;color:var(--green);border-radius:4px}
 .surface .service a:first-child{background:var(--green);color:white}
 .surface .service svg{width:17px;height:17px}
+.surface .nav a{text-decoration-line:underline;text-decoration-color:transparent;text-underline-offset:4px;transition:text-decoration-color .15s ease,color .15s ease}
 .surface .nav a:hover{text-decoration:underline;text-underline-offset:4px}
 .surface .mobile-menu{display:none}
 .surface .intro{padding-top:24px}
