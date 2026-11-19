@@ -40,7 +40,7 @@ export default function QualityPage() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: QUALITY_FAQ.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Kvalitet</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Kvalitet hos PhoneSpot</span>
           <h1>Kend den enhed, du køber.</h1>
           <p className={styles.intro}>Vi tester funktionerne, vurderer den kosmetiske stand og måler batteriet. Tre forskellige oplysninger, der hjælper dig med at vælge.</p>

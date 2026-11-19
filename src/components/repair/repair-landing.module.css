@@ -14,7 +14,10 @@
 .heroCopy p { color: #d7e1d8; font-size: 15px; line-height: 1.7; max-width: 430px; margin-bottom: 26px; }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px 24px; }
 .actions a { font-size: 13px; min-height: 46px; display: inline-flex; align-items: center; gap: 20px; }
-.actions a:first-child { color: #1a3d2e; background: white; padding: 12px 20px; border-radius: 6px; font-weight: 600; }
+.actions a:first-child { color: #1a3d2e; background: white; padding: 12px 20px; border-radius: 6px; font-weight: 600; transition: background-color 150ms ease, scale 150ms var(--ease-ps-out); }
+.actions a:first-child:active { scale: 0.97; }
+@media (hover: hover) and (pointer: fine) { .actions a:first-child:hover { background: #edf2ef; } }
+@media (prefers-reduced-motion: reduce) { .actions a:first-child { transition: none; } .actions a:first-child:active { scale: none; } }
 .actions a:last-child { text-decoration: underline; text-underline-offset: 4px; }
 .actions a:focus-visible { outline-color: #d5e4bc; }
 .actions svg, .heroLocation svg { width: 18px; height: 18px; }

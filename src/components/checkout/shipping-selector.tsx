@@ -6,6 +6,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { getShippingOptions, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { STORES } from "@/lib/store-config";
 import { PickupPointPicker, type PickupPoint } from "./pickup-point-picker";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 
 export interface ShippingMethod {
@@ -137,6 +138,8 @@ export function ShippingSelector({
   const pickupMethods = getPickupMethods(items, skuStockByLocation, known);
   const allMethods = [...DELIVERY_METHODS, ...pickupMethods];
   const activeMethod = allMethods.find((m) => m.id === selected);
+  // Pakkeshop-panelet toner ind, når kunden selv vælger metoden (ikke ved indlæsning).
+  const methodChanged = useHasChanged(selected);
 
   return (
     <fieldset>
@@ -152,7 +155,7 @@ export function ShippingSelector({
             <label
               key={method.id}
               className={[
-                "flex items-center gap-4 rounded-xl border p-4 transition-colors",
+                "press flex items-center gap-4 rounded-xl border p-4",
                 isDisabled
                   ? "cursor-not-allowed border-stone-200 bg-stone-50 opacity-50"
                   : isSelected
@@ -206,7 +209,7 @@ export function ShippingSelector({
       </div>
 
       {activeMethod?.requiresPickupPoint && (
-        <div className="mt-3 rounded-xl border border-sand bg-warm-white p-4">
+        <div className={`mt-3 rounded-xl border border-sand bg-warm-white p-4${methodChanged ? " reveal-in" : ""}`}>
           <p className="mb-3 text-sm font-medium text-charcoal">Vælg pakkeshop</p>
           {onZipcode && (
             <div className="mb-3">

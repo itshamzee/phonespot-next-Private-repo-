@@ -1614,3 +1614,44 @@
   opacity: 0.55;
   white-space: nowrap;
 }
+
+/* ── Bevægelse på mærke- og modelvalg ────────────────────
+   Fliser giver efter ved tryk og skifter farve blødt ved hover (mus);
+   modelbilledet løfter sig en anelse. Søgeresultater toner baggrunden. */
+.brandCell,
+.modelCell,
+.categoryToggle {
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    scale 150ms var(--ease-ps-out);
+}
+.brandCell:active,
+.modelCell:active {
+  scale: 0.98;
+}
+.searchResults > a {
+  transition: background-color 150ms ease;
+}
+.modelPhoto img {
+  transition: scale 320ms var(--ease-ps-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .modelCell:hover .modelPhoto img {
+    scale: 1.03;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brandCell,
+  .modelCell,
+  .categoryToggle,
+  .searchResults > a,
+  .modelPhoto img {
+    transition: none;
+  }
+  .brandCell:active,
+  .modelCell:active,
+  .modelCell:hover .modelPhoto img {
+    scale: none;
+  }
+}

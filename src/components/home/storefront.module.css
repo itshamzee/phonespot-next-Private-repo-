@@ -58,7 +58,7 @@
 .surface .carousel-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #dce3dc}
 .surface .carousel-tabs button{border:0;border-right:1px solid #dce3dc;background:transparent;padding:16px 22px;display:flex;align-items:center;gap:12px;font-size:13px;min-height:59px;color:#657166}
 .surface .carousel-tabs button:last-child{border-right:0}
-.surface .carousel-tabs button[aria-pressed=true]{background:var(--green);color:white}
+.surface .carousel-tabs button[aria-pressed=true]{background:transparent;color:white}
 .surface .carousel-tabs button>svg:last-child{margin-left:auto;width:17px;height:17px}
 .surface .services{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .surface .service-card{border-radius:10px;position:relative;overflow:hidden;min-height:284px;padding:26px 30px 42px}
@@ -343,3 +343,37 @@
 /* Nypris ved siden af vores pris på forsidens produktkort. */
 .surface .product-body .new-price{font-size:12px;color:#667066;margin:auto 0 2px;line-height:1.2}
 .surface .product-body .new-price + .price{margin-top:0}
+
+/* ── Hero-bevægelse ──────────────────────────────────────
+   Den grønne markering under karrusellens faneblade glider til den valgte
+   fane (--tab-i sættes inline, så den står rigtigt fra første billede).
+   Nyt slide glider 12 px ind fra den side, kunden bevæger sig mod; første
+   slide ved indlæsning animeres ikke (billedet er LCP). */
+.surface .campaign-stage{transition:background-color 240ms ease}
+.surface .carousel-tabs{position:relative}
+.surface .carousel-tabs::before{content:"";position:absolute;top:0;bottom:0;left:0;width:25%;background:var(--green);transform:translateX(calc(var(--tab-i,0) * 100%));transition:transform 260ms var(--ease-ps-in-out);pointer-events:none}
+.surface .carousel-tabs button{position:relative;transition:color 200ms ease}
+.surface .carousel-controls button{transition:background-color .15s,scale .15s var(--ease-ps-out)}
+.surface .carousel-controls button:active{scale:.94}
+.surface .slide-next{animation:heroSlideNext 240ms var(--ease-ps-out)}
+.surface .slide-prev{animation:heroSlidePrev 240ms var(--ease-ps-out)}
+@keyframes heroSlideNext{from{opacity:0;translate:12px 0}}
+@keyframes heroSlidePrev{from{opacity:0;translate:-12px 0}}
+@media (hover:hover) and (pointer:fine){
+.surface .carousel-tabs button[aria-pressed=false]:hover{color:var(--green)}
+.surface .campaign-visual img{transition:scale 280ms var(--ease-ps-out)}
+.surface .campaign-visual:hover img{scale:1.02}
+}
+@media(prefers-reduced-motion:reduce){
+.surface .slide-next,.surface .slide-prev{animation:none}
+.surface .carousel-tabs::before{transition:none}
+.surface .campaign-visual:hover img{scale:none}
+}
+
+/* Søgefeltet i headeren: kanten og baggrunden skifter blødt ved fokus,
+   søgeknappen giver efter ved tryk. */
+.surface .search{transition:border-color 150ms ease,background-color 150ms ease}
+.surface .search:focus-within{border-color:#9aaa9b;background:#fff}
+.surface .search button{transition:scale 150ms var(--ease-ps-out)}
+.surface .search button:active{scale:.9}
+@media(prefers-reduced-motion:reduce){.surface .search button:active{scale:none}}

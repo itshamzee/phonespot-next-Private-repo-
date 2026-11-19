@@ -151,7 +151,7 @@ export function LocalRepairPage({ town, prices }: Props) {
 
       {/* Hero */}
       <section className="bg-[#1A3D2E] py-20 md:py-24">
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="hero-rise mx-auto max-w-4xl px-4">
           <p className="mb-4 text-sm font-semibold tracking-wide text-white/60">
             Telefon- og tabletreparation
           </p>
@@ -167,13 +167,13 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90 hover:shadow-lg"
             >
               {bookLabel}
             </Link>
             <Link
               href="/reparation/indsend"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm press hover:bg-white/20"
             >
               {mailInLabel}
             </Link>
@@ -596,13 +596,13 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90 hover:shadow-lg"
             >
               {bookLabel}
             </Link>
             <Link
               href="/reparation/indsend"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm press hover:bg-white/20"
             >
               {mailInLabel}
             </Link>

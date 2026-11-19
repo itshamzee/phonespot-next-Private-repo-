@@ -25,12 +25,12 @@ export function DeviceCollectionHero({ collection, title, intro, modelCount }: {
       <Link href="/">Forside</Link><span aria-hidden="true">/</span><span>{title}</span>
     </nav>
     <section className={styles.hero} aria-labelledby="collection-title">
-      <div className={styles.heroCopy}>
+      <div className={`${styles.heroCopy} hero-rise`}>
         <p className={styles.eyebrow}>{visual.eyebrow}</p>
         <h1 id="collection-title">{title}</h1>
         <p className={styles.intro}>{intro}</p>
         <div className={styles.heroActions}>
-          <a href="#udvalg" className={styles.primaryLink}>Se udvalget <StorefrontIcon kind="arrow" /></a>
+          <a href="#udvalg" className={`${styles.primaryLink} nudge`}>Se udvalget <StorefrontIcon kind="arrow" /></a>
           <span>{modelCount} {modelCount === 1 ? "model" : "modeller"} i udvalget</span>
         </div>
       </div>

@@ -140,7 +140,7 @@ export function RepairStoreFinder({
               : "Vis nærmeste butik først"}
         </button>
         {locating === "denied" && (
-          <p className={styles.hint} role="status">
+          <p className={`${styles.hint} reveal-in`} role="status">
             Vi kunne ikke se din placering. Butikkerne står i fast rækkefølge.
           </p>
         )}

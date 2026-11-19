@@ -192,12 +192,12 @@ export default async function ReparationPage() {
           </ol>
         </nav>
         <section className={landing.hero} aria-labelledby="repair-title">
-          <div className={landing.heroCopy}>
+          <div className={`${landing.heroCopy} hero-rise`}>
             <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
             <h1 id="repair-title">Mobilreparation.<br />Tilbage til hverdagen.</h1>
             <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder. Alle priser står på siden, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).{prices.screen && prices.battery ? ` Skærmskift koster fra ${kr(prices.screen)} og batteriskift fra ${kr(prices.battery)} på de mest solgte iPhones og Samsung.` : ""}</p>
             <div className={landing.actions}>
-              <a href="#find-din-pris">Find model og pris <StorefrontIcon kind="arrow" /></a>
+              <a href="#find-din-pris" className="nudge">Find model og pris <StorefrontIcon kind="arrow" /></a>
               <a href="#reparationsforloeb">Sådan foregår det</a>
             </div>
             <span className={landing.heroLocation}><StorefrontIcon kind="pin" /> I Vejle og Slagelse</span>

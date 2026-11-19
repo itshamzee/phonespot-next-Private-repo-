@@ -277,6 +277,133 @@ details[open]::details-content {
   }
 }
 
+/* ── Sideskift ───────────────────────────────────────────
+   Ved navigation inde på sitet (aldrig ved første indlæsning) toner det nye
+   indhold i <main> frem. Kun opacity: en transform på <main> ville gøre den
+   til reference for faste bjælker (kontaktbjælke, købsbjælke), så de hoppede.
+   Sættes og fjernes af usePageTransition; header, footer og kurv står stille. */
+@keyframes ps-page-in {
+  from {
+    opacity: 0.001;
+  }
+}
+main[data-page-enter] {
+  animation: ps-page-in 220ms var(--ease-ps-out);
+}
+
+/* ── Hero-indgang ────────────────────────────────────────
+   Overskrift, tekst og knapper glider 6 px op ved indlæsning, lidt forskudt.
+   Kun translate (ingen opacity), så teksten er synlig og læsbar fra første
+   billede, og det tæller ikke som layoutskift. Aldrig på hero-billedet. */
+@keyframes ps-rise {
+  from {
+    translate: 0 6px;
+  }
+}
+.hero-rise > * {
+  animation: ps-rise 260ms var(--ease-ps-out) backwards;
+}
+.hero-rise > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.hero-rise > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.hero-rise > :nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+
+/* ── Pil, der skubber sig frem ───────────────────────────
+   Knapper og links med en pil til sidst: pilen rykker 3 px mod højre ved
+   hover (kun mus) og ved tastaturfokus. Selve knappen beholder sin egen
+   hover-farve og tryk. */
+@utility nudge {
+  & > svg:last-child {
+    transition: translate var(--dur-ps-fast) var(--ease-ps-out);
+  }
+  &:focus-visible > svg:last-child {
+    translate: 3px 0;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover > svg:last-child {
+      translate: 3px 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > svg:last-child {
+      transition: none;
+      translate: none !important;
+    }
+  }
+}
+
+/* ── Værdier, der skifter ────────────────────────────────
+   Pris, lagerstatus og totaler, der skifter efter et valg, toner kort ind,
+   så øjet opdager ændringen. Elementet får en ny key ved hvert skift; ved
+   indlæsning sættes klassen ikke (se value-change). */
+.value-change {
+  animation: ps-value-in 200ms var(--ease-ps-out);
+}
+@keyframes ps-value-in {
+  from {
+    opacity: 0.35;
+  }
+}
+
+/* Hovedbilledet i et produktgalleri, når kunden vælger et andet billede
+   eller en anden farve: kort fade, så skiftet ikke blinker. */
+.swap-in {
+  animation: ps-swap-in 220ms var(--ease-ps-out);
+}
+@keyframes ps-swap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+/* ── Paneler, der åbner ved brugerhandling ───────────────
+   Søgeforslag, popovers og bannere: fade + 4 px fra deres kant. Bruges kun
+   på elementer, der monteres efter et klik eller indtastning. */
+.pop-in {
+  transition:
+    opacity 160ms var(--ease-ps-out),
+    transform 160ms var(--ease-ps-out);
+}
+@starting-style {
+  .pop-in {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+}
+.rise-in {
+  transition:
+    opacity 240ms var(--ease-ps-out),
+    transform 240ms var(--ease-ps-out);
+}
+@starting-style {
+  .rise-in {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main[data-page-enter],
+  .hero-rise > *,
+  .value-change,
+  .swap-in,
+  /* Pulserende indlæsningsfelter og løbende tekst står stille. */
+  .animate-pulse,
+  .animate-marquee {
+    animation: none;
+  }
+  .pop-in,
+  .rise-in {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drawer-enter-left,
   .card-media img,

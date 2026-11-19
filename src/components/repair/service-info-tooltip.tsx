@@ -41,7 +41,7 @@ export function ServiceInfoTooltip({ info }: { info: ServiceInfo }) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-soft-grey bg-white p-4 shadow-lg">
+        <div className="pop-in origin-top-left absolute left-0 top-full z-50 mt-2 w-72 rounded-xl border border-soft-grey bg-white p-4 shadow-lg">
           <div className="absolute -top-2 left-3 h-4 w-4 rotate-45 border-l border-t border-soft-grey bg-white" />
 
           {info.description && (

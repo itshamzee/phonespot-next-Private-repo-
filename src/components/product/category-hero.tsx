@@ -19,7 +19,7 @@ export function CategoryHero({
 
           {productCount !== undefined && productCount > 0 && (
             <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#1A3D2E]/20 bg-[#1A3D2E]/8 px-4 py-1.5 text-sm font-medium text-[#1A3D2E]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E] animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1A3D2E] motion-safe:animate-pulse" />
               {productCount} produkter på lager
             </span>
           )}
