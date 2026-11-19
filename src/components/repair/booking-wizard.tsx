@@ -195,7 +195,7 @@ function NavButtons({
         type="button"
         onClick={onNext}
         disabled={!canNext || isSubmitting}
-        className="press flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+        className="press flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white hover:bg-green-eco/90 hover-fine:shadow-raised active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
       >
         {isSubmitting ? (
           <>
@@ -292,7 +292,7 @@ function DeviceTabs({
               onClick={() => onSelect(i)}
               className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
                 i === activeDeviceIndex
-                  ? "bg-green-eco text-white shadow-sm"
+                  ? "bg-green-eco text-white shadow-rest"
                   : "border border-soft-grey bg-white text-charcoal hover:border-green-eco/30"
               }`}
             >
@@ -887,7 +887,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
   if (submitResult?.success) {
     return (
       <div ref={successRef} className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10 text-center">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-lg shadow-green-eco/25">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-raised">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -1491,7 +1491,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
           {/* Right column: sticky Oversigt sidebar (desktop only) */}
           <div className="hidden md:block">
-            <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-sm">
+            <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-rest">
               {/* Header */}
               <div className="border-b border-soft-grey px-5 py-3">
                 <div className="flex items-center gap-2">
@@ -1781,7 +1781,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     onClick={() => setStoreId(id)}
                     className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
-                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        ? "border-green-eco bg-green-eco/5 shadow-rest"
                         : "border-soft-grey hover:border-green-eco/30"
                     }`}
                   >
@@ -1845,7 +1845,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     onClick={() => setPreferredDate(date)}
                     className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
-                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        ? "border-green-eco bg-green-eco/5 shadow-rest"
                         : "border-soft-grey hover:border-green-eco/30"
                     }`}
                   >
@@ -2086,7 +2086,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                 type="button"
                 onClick={handleSubmitNoPay}
                 disabled={isSubmitting}
-                className="press mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                className="press mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white hover:bg-green-eco/90 hover-fine:shadow-raised active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               >
                 {isSubmitting ? "Sender..." : "Book nu og betal i butikken"}
               </button>

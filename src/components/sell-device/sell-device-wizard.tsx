@@ -738,7 +738,7 @@ function ConditionCardGrid({
               onClick={() => onChange(opt)}
               className={`flex flex-col items-center gap-2 rounded-md border p-4 text-center transition-all ${
                 isSelected
-                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5 shadow-sm"
+                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5 shadow-rest"
                   : "border-[#E5E5EA] hover:border-[#1A3D2E]/30"
               }`}
             >

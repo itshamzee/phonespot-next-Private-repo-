@@ -39,7 +39,7 @@ export function BuyButton({
   }
 
   const primaryClasses =
-    "bg-[#1A3D2E] text-white hover:bg-[#14301F] shadow-[0_8px_30px_-12px_rgba(26,61,46,0.6)]";
+    "bg-[#1A3D2E] text-white hover:bg-[#14301F] hover-fine:shadow-raised active:shadow-none";
   const ghostClasses =
     "bg-white text-[#0F2A20] border border-[#0F2A20]/15 hover:border-[#0F2A20]/40";
 

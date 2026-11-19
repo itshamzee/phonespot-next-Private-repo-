@@ -52,7 +52,7 @@ export function StorstromInsuranceTeaser({
     <div
       className={`flex flex-col gap-5 rounded-2xl border border-[#1A3D2E]/20 bg-[#1A3D2E]/5 p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-7 ${className}`}
     >
-      <div className="flex shrink-0 items-center justify-center rounded-2xl bg-white p-3 shadow-sm">
+      <div className="flex shrink-0 items-center justify-center rounded-2xl bg-white p-3 shadow-rest">
         <Image
           src="/brand/partners/storstrom-icon-primary.svg"
           alt="Storstrøm Forsikring"

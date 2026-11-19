@@ -488,7 +488,7 @@ export default async function TrusmiBlyantPage() {
             {[slagelse, vejle].map((store) => (
               <div
                 key={store.slug}
-                className="group flex flex-col rounded-3xl border border-[#0F2A20]/10 bg-[#F7F7F8] p-8 transition-shadow hover:shadow-lg sm:p-10"
+                className="group flex flex-col rounded-3xl border border-[#0F2A20]/10 bg-[#F7F7F8] p-8 card-raise sm:p-10"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
