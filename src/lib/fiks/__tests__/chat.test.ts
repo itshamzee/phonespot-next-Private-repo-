@@ -318,6 +318,20 @@ describe("fiksReply: limits and errors", () => {
     expect(db.tables.contact_inquiries).toHaveLength(MAX_NEW_SESSIONS_PER_HOUR);
   });
 
+  it("answers busy when one visitor opens too many sessions, but not for another visitor", async () => {
+    const sessions = Array.from({ length: 5 }, (_, i) => ({
+      id: `s${i}`, channel: "chat", status: "besvaret", external_thread_id: `t${i}`, created_at: "2026-11-19T10:10:00Z", metadata: { fiks_ip: "ip-a" },
+    }));
+    const { client, db } = fakeSupabase({ contact_inquiries: sessions });
+    const { anthropic, calls } = fakeAnthropic(() => "Hej.");
+    const blocked = await fiksReply({ supabase: client, sessionToken: null, message: "hej", anthropic, now, ipHash: "ip-a" });
+    expect(blocked.limited).toBe("busy");
+    expect(calls).toHaveLength(0);
+    const ok = await fiksReply({ supabase: client, sessionToken: null, message: "hej", anthropic, now, ipHash: "ip-b" });
+    expect(ok.limited).toBeUndefined();
+    expect((db.tables.contact_inquiries.at(-1) as { metadata: unknown }).metadata).toEqual({ fiks_ip: "ip-b" });
+  });
+
   it("returns the fallback text and stores it when the model call fails", async () => {
     const { client, db } = fakeSupabase();
     const { anthropic } = fakeAnthropic(() => {

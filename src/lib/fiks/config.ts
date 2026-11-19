@@ -19,6 +19,11 @@ export const MAX_MESSAGES_PER_SESSION = 30;
 export const MAX_MESSAGES_PER_HOUR = 300;
 /** New chat sessions in the rolling hour. */
 export const MAX_NEW_SESSIONS_PER_HOUR = 80;
+/** Nye sessioner pr. besøgende (IP) i en rullende time. */
+export const MAX_NEW_SESSIONS_PER_IP_PER_HOUR = 5;
+/** Beskeder pr. besøgende (IP) pr. 10 minutter, talt i funktionens hukommelse. */
+export const MAX_MESSAGES_PER_IP_PER_WINDOW = 20;
+export const IP_WINDOW_MS = 10 * 60_000;
 /** Messages (both sides) sent to the model, including the new one. */
 export const HISTORY_FOR_MODEL = 20;
 /** Messages loaded from the database per turn (history plus amount backing). */

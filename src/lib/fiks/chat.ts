@@ -22,6 +22,7 @@ import {
   MAX_MESSAGES_PER_SESSION,
   MAX_MESSAGE_CHARS,
   MAX_NEW_SESSIONS_PER_HOUR,
+  MAX_NEW_SESSIONS_PER_IP_PER_HOUR,
   MIN_MESSAGE_CHARS,
   OFF_TOPIC_SAFE_TEXT,
   SAFE_PRICE_TEXT,
@@ -36,6 +37,8 @@ export interface FiksReplyInput {
   sessionToken: string | null;
   message: string;
   anthropic?: Anthropic;
+  /** Hash af den besøgendes IP. Bruges kun til at begrænse nye sessioner pr. besøgende. */
+  ipHash?: string | null;
   /** For tests. */
   now?: () => Date;
 }
@@ -117,6 +120,7 @@ export async function loadHistory(
     .from("inquiry_messages")
     .select("sender, body, staff_name, is_internal, created_at")
     .eq("inquiry_id", inquiryId)
+    .eq("channel", FIKS_CHANNEL)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(`history load failed: ${error.message}`);
@@ -195,7 +199,8 @@ function finalText(
 
 let defaultClient: Anthropic | null = null;
 function client(): Anthropic {
-  if (!defaultClient) defaultClient = new Anthropic();
+  // Ruten må køre 60 sekunder: giv op før det, så den besøgende får reserveteksten og ikke en netværksfejl.
+  if (!defaultClient) defaultClient = new Anthropic({ timeout: 40_000, maxRetries: 0 });
   return defaultClient;
 }
 
@@ -254,7 +259,10 @@ export async function fiksReply(
       { channel: FIKS_CHANNEL },
       hourAgo,
     );
-    if (newSessions >= MAX_NEW_SESSIONS_PER_HOUR) {
+    const fromIp = input.ipHash
+      ? await countRows(supabase, "contact_inquiries", { channel: FIKS_CHANNEL, "metadata->>fiks_ip": input.ipHash }, hourAgo)
+      : 0;
+    if (newSessions >= MAX_NEW_SESSIONS_PER_HOUR || fromIp >= MAX_NEW_SESSIONS_PER_IP_PER_HOUR) {
       return {
         sessionToken: null,
         reply: BUSY_TEXT,
@@ -294,6 +302,7 @@ export async function fiksReply(
     if (error) throw new Error(`session update failed: ${error.message}`);
   } else {
     const token = crypto.randomUUID();
+    const newMetadata: Record<string, unknown> = input.ipHash ? { fiks_ip: input.ipHash } : {};
     const { data, error } = await supabase
       .from("contact_inquiries")
       .insert({
@@ -306,6 +315,7 @@ export async function fiksReply(
         message,
         status: "besvaret",
         last_inbound_at: nowIso,
+        metadata: newMetadata,
       })
       .select("id")
       .single();
@@ -315,7 +325,7 @@ export async function fiksReply(
       id: data.id as string,
       token,
       status: "besvaret",
-      metadata: {},
+      metadata: newMetadata,
     };
   }
 

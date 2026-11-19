@@ -88,6 +88,7 @@ async function matchBySender(
     .from("contact_inquiries")
     .select("id, subject, status")
     .ilike("email", pattern)
+    .neq("channel", "chat")
     .in("status", OPEN_STATUSES)
     .order("created_at", { ascending: false })
     .limit(5);
@@ -100,6 +101,7 @@ async function matchBySender(
     .from("contact_inquiries")
     .select("id, subject, status")
     .ilike("email", pattern)
+    .neq("channel", "chat")
     .eq("status", "lukket")
     .gte("last_inbound_at", since)
     .order("created_at", { ascending: false })

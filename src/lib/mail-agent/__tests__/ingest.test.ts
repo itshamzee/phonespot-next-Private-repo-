@@ -84,6 +84,10 @@ function fakeSupabase(seed: Record<string, Row[]>) {
         filters.push((r) => typeof r[col] === "string" && rx.test(r[col] as string));
         return api;
       },
+      neq(col: string, v: unknown) {
+        filters.push((r) => r[col] !== v);
+        return api;
+      },
       gte(col: string, v: unknown) {
         filters.push((r) => r[col] != null && String(r[col]) >= String(v));
         return api;
@@ -211,6 +215,17 @@ describe("ingestInboundEmail", () => {
       const r = await ingestInboundEmail(sb as never, { ...base, fromEmail: "kunde@example.dk" }, NOW);
       expect(r.created).toBe(false);
       expect(r.inquiryId).toBe("inq-1");
+    });
+
+    it("lægger aldrig en mail på en chat med samme adresse (adressen i chatten er ikke verificeret)", async () => {
+      const sb = fakeSupabase({
+        contact_inquiries: [
+          { id: "chat-1", channel: "chat", email: "kunde@example.dk", status: "ny", subject: "Min ordre", created_at: "2026-01-02" },
+        ],
+      });
+      const r = await ingestInboundEmail(sb as never, { ...base, fromEmail: "kunde@example.dk" }, NOW);
+      expect(r.created).toBe(true);
+      expect(r.inquiryId).not.toBe("chat-1");
     });
 
     it("behandler % og _ i adressen som almindelige tegn", async () => {

@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { fiksReply, loadVisibleMessages, validateMessage } from "@/lib/fiks/chat";
-import { HONEYPOT_TEXT, MAX_MESSAGE_CHARS, isFiksDisabled } from "@/lib/fiks/config";
+import { BUSY_TEXT, HONEYPOT_TEXT, IP_WINDOW_MS, MAX_MESSAGE_CHARS, MAX_MESSAGES_PER_IP_PER_WINDOW, isFiksDisabled } from "@/lib/fiks/config";
 
 /**
  * Public chat endpoint for Fiks. Deliberately outside the staff gate in
@@ -15,6 +16,26 @@ const NO_STORE = { "Cache-Control": "no-store" };
 
 const DISABLED_ERROR = "Chatten er lukket lige nu.";
 const GENERIC_ERROR = "Chatten kan ikke svare lige nu. Prøv igen om lidt, eller skriv til info@phonespot.dk.";
+
+/** Simpel bremse pr. IP i funktionens hukommelse. Den varige grænse (nye sessioner pr. IP) tælles i databasen. */
+const hits = new Map<string, { count: number; reset: number }>();
+function tooMany(key: string, now = Date.now()): boolean {
+  if (hits.size > 5000) for (const [k, v] of hits) if (v.reset <= now) hits.delete(k);
+  const entry = hits.get(key);
+  if (!entry || entry.reset <= now) {
+    hits.set(key, { count: 1, reset: now + IP_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > MAX_MESSAGES_PER_IP_PER_WINDOW;
+}
+
+/** IP'en gemmes aldrig i klartekst: kun en saltet hash, der bruges til at tælle. */
+function ipHashOf(request: Request): string | null {
+  const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
+  if (!ip) return null;
+  return createHash("sha256").update(`fiks:${process.env.FIKS_IP_SALT ?? "phonespot"}:${ip}`).digest("hex").slice(0, 32);
+}
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: NO_STORE });
@@ -42,9 +63,15 @@ export async function POST(request: Request) {
     return json({ error: `Skriv en besked på højst ${MAX_MESSAGE_CHARS} tegn.` }, 400);
   }
 
+  const ipHash = ipHashOf(request);
+  if (ipHash && tooMany(ipHash)) {
+    return json({ token: typeof body.token === "string" ? body.token : null, reply: BUSY_TEXT, handoff: false, limited: "busy" });
+  }
+
   try {
     const out = await fiksReply({
       supabase: createServerClient(),
+      ipHash,
       sessionToken: typeof body.token === "string" ? body.token : null,
       message,
     });

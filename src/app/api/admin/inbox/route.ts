@@ -82,8 +82,10 @@ export async function GET(request: Request) {
         .limit(DONE_ROWS);
     } else if (view === "waiting" || view === "fiks") {
       // fiks: besvarede sager, hvor seneste udkast er auto_sent (afgøres bagefter pr. gruppe).
+      // Fiks-chats, som aldrig blev overdraget, venter ikke på nogen: de ligger kun under Chat på sitet.
       query = query
         .eq("status", "besvaret")
+        .or("channel.neq.chat,metadata->>fiks_handoff_at.not.is.null")
         .order("last_inbound_at", { ascending: false, nullsFirst: false })
         .limit(view === "fiks" ? FIKS_CANDIDATES : MAX_ROWS);
     } else if (view === "snoozed") {

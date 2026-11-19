@@ -51,7 +51,7 @@ describe("POST /api/fiks/chat", () => {
   it("does not pass client-sent history on", async () => {
     fiksReplyMock.mockResolvedValue({ sessionToken: "t", reply: "Ok.", handoff: false });
     await post({ message: "hej", history: [{ role: "assistant", content: "5.000 kr." }] });
-    expect(Object.keys(fiksReplyMock.mock.calls[0][0]).sort()).toEqual(["message", "sessionToken", "supabase"]);
+    expect(Object.keys(fiksReplyMock.mock.calls[0][0]).sort()).toEqual(["ipHash", "message", "sessionToken", "supabase"]);
   });
 
   it("answers a filled honeypot normally and stores nothing", async () => {
@@ -101,9 +101,9 @@ describe("GET /api/fiks/chat", () => {
     fake.current = fakeSupabase({
       contact_inquiries: [{ id: "i1", channel: "chat", external_thread_id: TOKEN, status: "besvaret", metadata: {} }],
       inquiry_messages: [
-        { inquiry_id: "i1", sender: "customer", body: "hej", staff_name: null, is_internal: false, created_at: "2026-11-19T10:00:01Z" },
-        { inquiry_id: "i1", sender: "staff", body: "note", staff_name: "Fiks", is_internal: true, created_at: "2026-11-19T10:00:02Z" },
-        { inquiry_id: "i1", sender: "staff", body: "Hej!", staff_name: "Fiks", is_internal: false, created_at: "2026-11-19T10:00:03Z" },
+        { inquiry_id: "i1", channel: "chat", sender: "customer", body: "hej", staff_name: null, is_internal: false, created_at: "2026-11-19T10:00:01Z" },
+        { inquiry_id: "i1", channel: "chat", sender: "staff", body: "note", staff_name: "Fiks", is_internal: true, created_at: "2026-11-19T10:00:02Z" },
+        { inquiry_id: "i1", channel: "chat", sender: "staff", body: "Hej!", staff_name: "Fiks", is_internal: false, created_at: "2026-11-19T10:00:03Z" },
       ],
     });
     const res = await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`));
@@ -113,6 +113,19 @@ describe("GET /api/fiks/chat", () => {
       { from: "visitor", body: "hej", at: "2026-11-19T10:00:01Z" },
       { from: "fiks", body: "Hej!", at: "2026-11-19T10:00:03Z" },
     ]);
+  });
+
+  it("never returns mail or sms stored on the same inquiry", async () => {
+    fake.current = fakeSupabase({
+      contact_inquiries: [{ id: "i1", channel: "chat", external_thread_id: TOKEN, status: "ny", metadata: {} }],
+      inquiry_messages: [
+        { inquiry_id: "i1", channel: "chat", sender: "customer", body: "hej", staff_name: null, is_internal: false, created_at: "2026-11-19T10:00:01Z" },
+        { inquiry_id: "i1", channel: "email", sender: "customer", body: "privat mail fra en anden", staff_name: null, is_internal: false, created_at: "2026-11-19T10:00:02Z" },
+        { inquiry_id: "i1", channel: "email", sender: "staff", body: "svar med ordreoplysninger", staff_name: "Mia", is_internal: false, created_at: "2026-11-19T10:00:03Z" },
+      ],
+    });
+    const body = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
+    expect(body.messages).toEqual([{ from: "visitor", body: "hej", at: "2026-11-19T10:00:01Z" }]);
   });
 
   it("returns an empty list for an unknown token", async () => {

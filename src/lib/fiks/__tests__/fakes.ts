@@ -72,7 +72,10 @@ export function fakeSupabase(initial: Record<string, Row[]> = {}) {
         return api;
       },
       eq: (col: string, v: unknown) => {
-        filters.push((r) => r[col] === v);
+        // "metadata->>fiks_ip": JSON-felt som tekst, som i PostgREST.
+        const [base, key] = col.split("->>");
+        if (key) filters.push((r) => (r[base] as Record<string, unknown> | null | undefined)?.[key] === v);
+        else filters.push((r) => r[col] === v);
         return api;
       },
       neq: (col: string, v: unknown) => {

@@ -385,6 +385,11 @@ export default function PrivatlivspolitikPage() {
             </li>
             <li>Vi bruger ikke dine beskeder i chatten til annoncering eller markedsføring.</li>
             <li>
+              For at forhindre misbrug af chatten gemmer vi en krypteret (hashet) udgave af din
+              IP-adresse sammen med samtalen. Den kan ikke læses som en IP-adresse og bruges kun til
+              at begrænse antallet af samtaler.
+            </li>
+            <li>
               Dit navn, din e-mail eller dit telefonnummer gemmes kun, hvis du selv giver dem, fordi
               du gerne vil kontaktes af en medarbejder.
             </li>
