@@ -3,6 +3,7 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableTool";
 import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
+import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
 import type { LookupLog } from "./types";
 
@@ -273,6 +274,19 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
       description: "Slå afsenderens kundeprofil op: navn, oprettet, antal ordrer.",
       inputSchema: z.object({}),
       run: rec(() => lookupCustomerImpl(ctx)),
+    }),
+    betaZodTool({
+      name: "quote_repair",
+      description:
+        "Slå reparationspris og varighed op for en model. Brug kategori når du kender fejlen. Returnerer flere modeller, hvis navnet er tvetydigt; spørg da kunden.",
+      inputSchema: z.object({
+        model: z.string().describe("Modelnavn som kunden nævner, fx iPhone 13 Pro"),
+        category: z
+          .string()
+          .optional()
+          .describe("Reparationskategori, fx Skærmskift, Batteriskift, Opladerstik, Bagglas, Kamera"),
+      }),
+      run: rec((input: { model: string; category?: string }) => quoteRepairImpl(ctx, input)),
     }),
     betaZodTool({
       name: "get_knowledge",
