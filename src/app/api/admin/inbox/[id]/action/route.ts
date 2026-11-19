@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
 import { parseSnoozeUntil, staffDisplayName } from "@/lib/inquiries/inbox";
 
-const ACTIONS = ["take", "release", "snooze", "unsnooze", "done", "reopen", "note", "verdict"] as const;
+const ACTIONS = ["take", "release", "snooze", "unsnooze", "done", "waiting", "reopen", "note", "verdict"] as const;
 type ActionType = (typeof ACTIONS)[number];
 
 interface ActionBody {
@@ -14,6 +14,8 @@ interface ActionBody {
   verdict?: unknown;
   note?: unknown;
   expectAssignedTo?: unknown;
+  to?: unknown;
+  snoozedUntil?: unknown;
 }
 
 interface Current {
@@ -141,8 +143,26 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
     }
 
-    case "reopen":
-      return (await apply({ status: "ny" })) ? respond({ status: "ny" }) : bad(FAILED, 500);
+    case "waiting": {
+      // Fx en offentlig anmeldelse, hvor svaret er skrevet på anmeldelsessiden.
+      if (cur.status === "lukket") return bad(CLOSED, 409);
+      const patch: Record<string, unknown> = { status: "besvaret", snoozed_until: null };
+      if (!cur.assigned_to) Object.assign(patch, { assigned_to: staff.id, assigned_name: myName });
+      return (await apply(patch)) ? respond(patch as Partial<Current>) : bad(FAILED, 500);
+    }
+
+    case "reopen": {
+      // `to` gendanner forrige status ved fortryd; `snoozedUntil` gendanner en udsættelse.
+      const to = payload.to === undefined ? "ny" : payload.to;
+      if (to !== "ny" && to !== "venter_paa_svar" && to !== "besvaret") return bad("Ugyldig status.");
+      const patch: Record<string, unknown> = { status: to };
+      if (payload.snoozedUntil !== undefined && payload.snoozedUntil !== null) {
+        const until = parseSnoozeUntil(payload.snoozedUntil, now);
+        if (!until) return bad(SNOOZE_ERROR);
+        patch.snoozed_until = until;
+      }
+      return (await apply(patch)) ? respond(patch as Partial<Current>) : bad(FAILED, 500);
+    }
 
     case "note": {
       const text = typeof payload.body === "string" ? payload.body.trim() : "";

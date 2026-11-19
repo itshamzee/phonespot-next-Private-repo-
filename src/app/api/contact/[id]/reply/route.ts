@@ -48,7 +48,11 @@ export async function POST(
     let bookkept = false;
     try {
       bookkept = await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
+      // Svaret er sendt: ventende Fiks-udkast på tråden er nu overflødige. Samme kodevej som discard-ruten.
+      const { discardPendingDrafts } = await import("@/lib/mail-agent/draft-handling");
+      await discardPendingDrafts(supabase, id, staffName);
     } catch {
+      bookkept = false;
       console.error(`[reply route] bookkeeping threw for inquiry ${id}`);
     }
     return NextResponse.json(

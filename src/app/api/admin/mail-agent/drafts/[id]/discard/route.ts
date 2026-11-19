@@ -1,30 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { markDraft } from "@/lib/mail-agent/drafts";
-import { fileInquiryMail } from "@/lib/mail-agent/run";
+import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
+import { staffDisplayName } from "@/lib/inquiries/inbox";
+import { discardDraftRow } from "@/lib/mail-agent/draft-handling";
 
-/** POST /api/admin/mail-agent/drafts/[id]/discard — Body: { staff_name?: string }. */
+/**
+ * POST /api/admin/mail-agent/drafts/[id]/discard
+ * Kasserer et udkast i den loggede medarbejders navn (et evt. `staff_name` i body ignoreres).
+ * Response: { ok: true, filed: number }.
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const payload = (await req.json().catch(() => ({}))) as { staff_name?: string };
   const sb = createAdminClient();
+
+  const { data: draft } = await sb.from("ai_drafts").select("id, inquiry_id, status").eq("id", id).maybeSingle();
+  if (!draft) return NextResponse.json({ error: "Udkastet blev ikke fundet" }, { status: 404 });
+  const access = await requireInquiryAccess(req, draft.inquiry_id as string);
+  if (!access.ok) return access.response;
+  if (draft.status !== "pending") {
+    return NextResponse.json({ error: "Udkastet er allerede behandlet." }, { status: 409 });
+  }
+
   try {
-    await markDraft(sb, id, {
-      status: "discarded",
-      reviewed_by: payload.staff_name || "Admin",
-      reviewed_at: new Date().toISOString(),
-    });
-    const { data: draft } = await sb.from("ai_drafts").select("inquiry_id, category").eq("id", id).maybeSingle();
-    let filed = 0;
-    if (draft) {
-      try {
-        filed = await fileInquiryMail(sb, draft.inquiry_id, draft.category);
-      } catch (err) {
-        console.warn("[mail-agent] kunne ikke flytte mailen til mappe:", (err as Error).message);
-      }
-    }
+    const filed = await discardDraftRow(sb, id, staffDisplayName(access.staff));
     return NextResponse.json({ ok: true, filed });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    console.error(`[mail-agent] discard failed for draft ${id}:`, (err as Error).message);
+    return NextResponse.json({ error: "Udkastet kunne ikke kasseres. Prøv igen." }, { status: 500 });
   }
 }
