@@ -45,7 +45,7 @@ export function ProductCard({
   return (
     <Link
       href={href ?? `/${collectionHandle}/${product.handle}`}
-      className="card-lift group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white transition-shadow hover:shadow-md"
+      className="card-lift group relative flex h-full flex-col rounded-[16px] font-body border border-sand bg-white card-raise"
     >
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-[16px]" />
 

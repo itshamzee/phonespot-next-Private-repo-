@@ -175,7 +175,7 @@ export default async function ComparisonPage({ params }: PageProps) {
       <SectionWrapper>
         <div className="mx-auto max-w-4xl">
           {/* Intro paragraph */}
-          <p className="mb-12 rounded-2xl border-l-4 border-green-eco bg-white p-6 font-body text-lg leading-relaxed text-charcoal/80 shadow-sm md:p-8">
+          <p className="mb-12 rounded-2xl border-l-4 border-green-eco bg-white p-6 font-body text-lg leading-relaxed text-charcoal/80 shadow-rest md:p-8">
             {intro}
           </p>
 

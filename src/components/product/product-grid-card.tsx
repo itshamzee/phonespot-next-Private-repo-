@@ -240,14 +240,14 @@ export function ProductGridCard({
     <Link
       href={`/refurbished/${slug}`}
       data-product-card
-      className="card-lift group flex h-full flex-col overflow-hidden rounded-lg border border-[#DDE2DD] bg-white transition-[border-color,box-shadow] hover:border-[#91A094] hover:shadow-[0_5px_20px_rgba(24,59,43,0.06)]"
+      className="card-lift group flex h-full flex-col overflow-hidden rounded-lg border border-[#DDE2DD] bg-white card-raise hover:border-[#91A094]"
     >
       {/* Image */}
       <div data-product-image className="card-media relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
         {/* Category pill — bottom left, only when requested */}
         {showCategoryBadge && (
           <div className="absolute bottom-3 left-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-semibold text-[#1A3D2E] shadow-sm backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-semibold text-[#1A3D2E] shadow-rest backdrop-blur-sm">
               {categoryLabel(category)}
             </span>
           </div>

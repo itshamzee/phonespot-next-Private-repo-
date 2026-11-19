@@ -70,7 +70,7 @@ export default function ComparisonIndexPage() {
             <Link
               key={comparison.slug}
               href={`/sammenlign/${comparison.slug}`}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white card-raise"
             >
               {/* Card image */}
               <div className="relative aspect-[16/10] bg-cream">

@@ -115,9 +115,9 @@ function getReadingTime(content: string): number {
 
 function Callout({ children, type = "info" }: { children: React.ReactNode; type?: "info" | "tip" | "warning" }) {
   const styles = {
-    info: "border-[#1A3D2E] bg-[#1A3D2E]/10 shadow-sm",
-    tip: "border-amber-500 bg-amber-50 shadow-sm",
-    warning: "border-red-500 bg-red-50 shadow-sm",
+    info: "border-[#1A3D2E] bg-[#1A3D2E]/10 shadow-rest",
+    tip: "border-amber-500 bg-amber-50 shadow-rest",
+    warning: "border-red-500 bg-red-50 shadow-rest",
   };
   const icons = {
     info: (
@@ -198,7 +198,7 @@ function Figure({
 
 function ComparisonBox({ children }: { children: React.ReactNode }) {
   return (
-    <div className="not-prose my-8 overflow-hidden rounded-2xl border border-[#1A3D2E]/15 bg-[#f8f6f1] shadow-sm">
+    <div className="not-prose my-8 overflow-hidden rounded-2xl border border-[#1A3D2E]/15 bg-[#f8f6f1] shadow-rest">
       <div className="p-6 font-body text-sm leading-relaxed text-charcoal/80 [&>p]:m-0 [&>ul]:mt-2 [&>ul]:space-y-1 [&>ul]:pl-4 [&>li]:list-disc">{children}</div>
     </div>
   );
@@ -514,7 +514,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               <Link
                 key={related.frontmatter.slug}
                 href={`/blog/${related.frontmatter.slug}`}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white card-raise"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <BlogCover

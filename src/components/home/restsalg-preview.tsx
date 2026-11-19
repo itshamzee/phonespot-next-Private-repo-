@@ -63,7 +63,7 @@ export function RestsalgCard() {
   return (
     <Link
       href="/restsalg"
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#1A3D2E]/8 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#1A3D2E]/15 hover:shadow-[0_12px_32px_-12px_rgba(26,61,46,0.18)]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#1A3D2E]/8 bg-white card-raise hover:-translate-y-1 hover:border-[#1A3D2E]/15"
     >
       {/* Image area — 2x2 product collage */}
       <div className="relative h-36 bg-white p-3 sm:h-40">

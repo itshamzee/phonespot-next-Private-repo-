@@ -21,7 +21,7 @@ function HighlightedCard({
   return (
     <Link
       href={`/${collection}/${product.handle}`}
-      className="group relative flex flex-col overflow-hidden rounded-[16px] border border-sand bg-white transition-shadow hover:shadow-lg"
+      className="group relative flex flex-col overflow-hidden rounded-[16px] border border-sand bg-white card-raise"
     >
       {badge && (
         <div className="absolute left-3 top-3 z-10">

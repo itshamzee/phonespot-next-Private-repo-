@@ -458,7 +458,7 @@ function Hero({
                   <ul
                     id="outlet-suggestions"
                     role="listbox"
-                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[8px] border border-[#d1ded4] bg-white text-charcoal shadow-[0_16px_32px_-16px_rgba(26,61,46,0.35)]"
+                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[8px] border border-[#d1ded4] bg-white text-charcoal shadow-floating"
                   >
                     {matches.length ? (
                       matches.map((m, i) => (
