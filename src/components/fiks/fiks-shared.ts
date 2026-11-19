@@ -11,7 +11,7 @@ export const STARTERS = ["Hvad koster en ny skærm?", BUYBACK_STARTER, "Hvornår
 
 /** Mobile: bottom sheet up to 85dvh. From sm: a 380x580 panel anchored bottom-right, where the launcher sits. */
 export const PANEL_CLASS =
-  "fixed inset-x-0 bottom-0 z-[55] flex h-[85dvh] flex-col overflow-hidden rounded-t-[12px] border border-soft-grey bg-white text-charcoal shadow-lg print:hidden " +
+  "fixed inset-x-0 bottom-0 z-[55] flex h-[85dvh] flex-col overflow-hidden rounded-t-[12px] border border-soft-grey bg-white text-charcoal shadow-overlay print:hidden " +
   "sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[580px] sm:max-h-[calc(100dvh-3rem)] sm:w-[380px] sm:rounded-[12px]";
 
 export function readToken(): string | null {

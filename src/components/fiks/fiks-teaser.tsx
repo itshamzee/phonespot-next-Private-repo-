@@ -123,7 +123,7 @@ export function FiksTeaser({
       }}
       className={`${styles.teaser} fixed right-4 bottom-[calc(1.5rem+66px)] z-40 w-[min(280px,calc(100vw-2rem))] print:hidden sm:right-6`}
     >
-      <div className="relative rounded-[12px] border border-soft-grey bg-white p-4 text-charcoal shadow-md">
+      <div className="relative rounded-[12px] border border-soft-grey bg-white p-4 text-charcoal shadow-floating">
         <span aria-hidden="true" className={styles.teaserTail} />
         <div className="flex items-start gap-3 pr-6">
           <FiksFigure size={28} />
