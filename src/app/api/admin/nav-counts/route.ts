@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       .limit(1)
       .maybeSingle(),
     applyStoreScope(
-      supabase.from("contact_inquiries").select("id", head).eq("status", "ny").neq("source", "saelg-enhed"),
+      supabase.from("contact_inquiries").select("id", head).in("status", ["ny", "venter_paa_svar"]).neq("source", "saelg-enhed"),
       scope,
     ),
     applyStoreScope(

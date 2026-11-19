@@ -5,8 +5,15 @@ import type { NextRequest } from "next/server";
 const state = vi.hoisted(() => ({
   staff: null as null | Record<string, unknown>,
   client: null as unknown,
+  afterQueue: [] as (() => unknown)[],
 }));
 
+vi.mock("next/server", async (orig) => ({
+  ...(await orig<typeof import("next/server")>()),
+  after: (fn: () => unknown) => {
+    state.afterQueue.push(fn);
+  },
+}));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: vi.fn(async () => state.staff) }));
 vi.mock("@/lib/supabase/client", () => ({ createServerClient: () => state.client }));
 vi.mock("@/lib/gateway-api/client", () => ({

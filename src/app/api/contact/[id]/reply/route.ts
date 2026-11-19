@@ -1,5 +1,5 @@
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
-import { NextResponse } from "next/server";
+import { NextResponse, after as runAfter } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { sendReply, finalizeReply, ReplyError } from "@/lib/inquiries/reply";
 import { staffDisplayName } from "@/lib/inquiries/inbox";
@@ -48,9 +48,16 @@ export async function POST(
     let bookkept = false;
     try {
       bookkept = await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
-      // Svaret er sendt: ventende Fiks-udkast på tråden er nu overflødige. Samme kodevej som discard-ruten.
-      const { discardPendingDrafts } = await import("@/lib/mail-agent/draft-handling");
-      await discardPendingDrafts(supabase, id, staffName);
+      // Svaret er sendt: ventende Fiks-udkast på tråden er nu overflødige. Lukningen og mail-flytningen
+      // (IMAP) sker efter svaret, så en langsom postserver aldrig kan time ud et allerede sendt svar.
+      runAfter(async () => {
+        try {
+          const { discardPendingDrafts } = await import("@/lib/mail-agent/draft-handling");
+          await discardPendingDrafts(supabase, id, staffName);
+        } catch {
+          console.error(`[reply route] closing drafts failed for inquiry ${id}`);
+        }
+      });
     } catch {
       bookkept = false;
       console.error(`[reply route] bookkeeping threw for inquiry ${id}`);

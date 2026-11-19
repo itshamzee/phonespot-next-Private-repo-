@@ -181,11 +181,12 @@ export interface InboxDraftInput {
   status: "pending" | "sent" | "auto_sent" | "discarded";
   needs_human: boolean;
   reason: string | null;
-  draft_body: string | null;
+  draft_body?: string | null;
+  review_verdict?: "correct" | "wrong" | null;
   created_at: string;
 }
 
-const PREVIEW_LENGTH = 140;
+const PREVIEW_LENGTH = 160;
 
 function previewOf(body: string | null | undefined): string {
   const flat = (body ?? "").replace(/\s+/g, " ").trim();
@@ -225,7 +226,7 @@ export function buildInboxRows(
     const pending = ds.find((d) => d.status === "pending");
     const latestDraft = ds[0];
     let fiksAnswered = false;
-    if (latestDraft && latestDraft.status === "auto_sent") {
+    if (latestDraft && latestDraft.status === "auto_sent" && !latestDraft.review_verdict) {
       const newerMessage = msgs.some((m) => m.sender === "customer" && m.created_at > latestDraft.created_at);
       const newerInbound = !!q.last_inbound_at && q.last_inbound_at > latestDraft.created_at;
       fiksAnswered = !newerMessage && !newerInbound;

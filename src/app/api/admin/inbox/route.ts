@@ -19,6 +19,8 @@ const NEED_CANDIDATES = 1000;
 const FIKS_CANDIDATES = 600;
 const OPEN_STATUSES = ["ny", "venter_paa_svar"];
 
+const COUNT_COLUMNS =
+  "id, name, subject, status, channel, mailbox, store_id, assigned_to, assigned_name, snoozed_until, last_inbound_at, source, created_at";
 const PAGE_COLUMNS =
   "id, name, subject, message, status, channel, mailbox, store_id, assigned_to, assigned_name, snoozed_until, last_inbound_at, source, created_at";
 
@@ -86,7 +88,7 @@ export async function GET(request: Request) {
         .limit(view === "need" ? NEED_CANDIDATES : MAX_ROWS);
       if (view === "mine") query = query.eq("assigned_to", me.id);
       if (view === "unassigned") query = query.is("assigned_to", null);
-      // To .or() efter hinanden giver to `or`-parametre, som PostgREST OG'er (se rapporten).
+      // To .or() efter hinanden giver to `or`-parametre (postgrest-js append), som PostgREST OG'er.
       if (view === "mine" || view === "unassigned" || view === "need") {
         query = query.or(`snoozed_until.is.null,snoozed_until.lte.${nowIso}`);
       }
@@ -100,11 +102,16 @@ export async function GET(request: Request) {
     if (error) throw error;
     const candidates = (inquiries ?? []) as unknown as InboxInquiryInput[];
 
-    const rows = (await loadInboxRows(sb, candidates))
-      .filter((r) => matchesView(view, r, me.id, now))
-      .slice(0, MAX_ROWS);
+    const candidateLimit =
+      view === "done" ? DONE_ROWS : view === "fiks" ? FIKS_CANDIDATES : view === "need" ? NEED_CANDIDATES : MAX_ROWS;
+    const matching = (await loadInboxRows(sb, candidates, { withBody: true })).filter((r) =>
+      matchesView(view, r, me.id, now),
+    );
+    // true, når SQL-grænsen blev nået eller der var flere end siden viser: der kan være flere sager end de viste.
+    const truncated = candidates.length >= candidateLimit || matching.length > MAX_ROWS;
+    const rows = matching.slice(0, MAX_ROWS);
 
-    return NextResponse.json({ rows, counts, me }, { headers: NO_STORE });
+    return NextResponse.json({ rows, counts, me, truncated }, { headers: NO_STORE });
   } catch (err) {
     console.error("[admin/inbox] list failed:", err instanceof Error ? err.message : err);
     return NextResponse.json({ error: "Kunne ikke hente indbakken" }, { status: 500 });
@@ -121,12 +128,13 @@ async function countsFor(
   meId: string,
   now: Date,
 ) {
-  const { data, error } = await applyStoreScope(sb.from("contact_inquiries").select(PAGE_COLUMNS), scope)
+  // Tællerne skal ikke bruge tekst: ingen `message` og ingen besked-`body`.
+  const { data, error } = await applyStoreScope(sb.from("contact_inquiries").select(COUNT_COLUMNS), scope)
     .in("status", OPEN_STATUSES)
     .order("last_inbound_at", { ascending: true, nullsFirst: false })
     .limit(COUNT_ROWS);
   if (error) throw error;
   const open = (data ?? []) as unknown as InboxInquiryInput[];
   if (open.length === 0) return { mine: 0, unassigned: 0, need: 0 };
-  return viewCounts(await loadInboxRows(sb, open), meId, now);
+  return viewCounts(await loadInboxRows(sb, open, { withBody: false }), meId, now);
 }

@@ -14,6 +14,8 @@ export async function GET(
     .from("inquiry_messages")
     .select("*")
     .eq("inquiry_id", id)
+    // Interne noter vises kun i Kundecenter; de gamle sider viser alle personalerækker som sendte svar.
+    .eq("is_internal", false)
     .order("created_at", { ascending: true });
 
   if (error)

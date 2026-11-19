@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after as runAfter } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInquiryReply } from "@/lib/inquiries/send-reply";
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
@@ -50,16 +50,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Efter afsendelsen må intet blive en fejl, der inviterer til gensendelse.
   let bookkept = true;
-  let filed = 0;
   try {
     const now = new Date().toISOString();
     await markDraft(sb, id, { status: "sent", final_body: body, reviewed_by: staffName, reviewed_at: now, sent_at: now });
     bookkept = await finalizeReply(sb, draft.inquiry_id, after, { id: access.staff.id, name: staffName });
-    try {
-      filed = await fileInquiryMail(sb, draft.inquiry_id, draft.category);
-    } catch (err) {
-      console.warn("[mail-agent] kunne ikke flytte mailen til mappe:", (err as Error).message);
-    }
+    // Mail-flytningen (IMAP) sker efter svaret, så en langsom postserver ikke kan time ud en sendt mail.
+    runAfter(async () => {
+      try {
+        await fileInquiryMail(sb, draft.inquiry_id, draft.category);
+      } catch (err) {
+        console.warn("[mail-agent] kunne ikke flytte mailen til mappe:", (err as Error).message);
+      }
+    });
   } catch {
     bookkept = false;
     console.error(`[mail-agent] approve bookkeeping failed for draft ${id}`);
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json({
     ok: true,
     transport: sent.transport,
-    filed,
+    filed: 0, // mailen flyttes efter svaret; feltet bevares for den gamle side
     ...(bookkept ? {} : { warning: "Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden." }),
   });
 }

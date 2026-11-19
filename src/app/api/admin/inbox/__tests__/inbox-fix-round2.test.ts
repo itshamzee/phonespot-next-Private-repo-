@@ -5,10 +5,17 @@ import type { NextRequest } from "next/server";
 const state = vi.hoisted(() => ({
   staff: null as null | Record<string, unknown>,
   client: null as unknown,
+  afterQueue: [] as (() => unknown)[],
   sendCalls: [] as Record<string, unknown>[],
   sendError: null as null | Error,
 }));
 
+vi.mock("next/server", async (orig) => ({
+  ...(await orig<typeof import("next/server")>()),
+  after: (fn: () => unknown) => {
+    state.afterQueue.push(fn);
+  },
+}));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: vi.fn(async () => state.staff) }));
 vi.mock("@/lib/supabase/client", () => ({ createServerClient: () => state.client }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => state.client }));
@@ -78,6 +85,7 @@ beforeEach(() => {
   state.staff = VEJLE;
   state.sendCalls = [];
   state.sendError = null;
+  state.afterQueue = [];
   setup([inquiryRow("i1"), inquiryRow("i-s", { store_id: "slagelse" })], [draft("d1", "i1"), draft("d-s", "i-s")]);
 });
 
@@ -243,15 +251,21 @@ describe("C: discard", () => {
   });
 });
 
-describe("D: reply lukker ventende udkast", () => {
-  it("kasserer ventende udkast på tråden i sessionens navn, ikke andres", async () => {
+const runAfter = async () => {
+  for (const fn of state.afterQueue.splice(0)) await fn();
+};
+
+describe("D: reply lukker ventende udkast efter svaret", () => {
+  it("kasserer ventende udkast først i after(), i sessionens navn, ikke andres", async () => {
     const res = await reply(post({ body: "Hej", channel: "sms" }), params("i1"));
     expect(res.status).toBe(201);
     expect((await res.json()).warning).toBeUndefined();
+    expect(dr("d1").status).toBe("pending"); // endnu ikke: sker efter svaret
+    await runAfter();
     expect(dr("d1")).toMatchObject({ status: "discarded", reviewed_by: "Mads" });
     expect(dr("d-s").status).toBe("pending");
   });
-  it("fejl i udkastlukningen giver kun en advarsel", async () => {
+  it("fejl i udkastlukningen i after() påvirker ikke svaret", async () => {
     const real = state.client as { from: (t: string) => { update: (p: Row) => unknown } };
     state.client = {
       from: (t: string) => {
@@ -266,8 +280,17 @@ describe("D: reply lukker ventende udkast", () => {
     };
     const res = await reply(post({ body: "Hej", channel: "sms" }), params("i1"));
     expect(res.status).toBe(201);
-    const json = await res.json();
-    expect(json.id).toBeTruthy();
-    expect(json.warning).toBe("Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden.");
+    expect((await res.json()).id).toBeTruthy();
+    await expect(runAfter()).resolves.toBeUndefined();
+  });
+});
+
+describe("approve: mailflytning sker efter svaret", () => {
+  it("fileInquiryMail køres først i after()", async () => {
+    db.tables.mail_inbound.push({ id: "mi1", inquiry_id: "i1", mailbox: "info@phonespot.dk", imap_uid: 5, folder: null });
+    const res = await approve(post({}), params("d1"));
+    expect(res.status).toBe(200);
+    expect(state.afterQueue).toHaveLength(1);
+    await expect(runAfter()).resolves.toBeUndefined();
   });
 });
