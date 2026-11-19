@@ -24,6 +24,9 @@
 .button, .secondary { display: inline-flex; justify-content: center; align-items: center; padding: 12px 20px; border-radius: 8px; font-weight: 650; font-size: 14px; min-height: 44px; text-decoration: none; }
 .button { background: #1a3d2e; color: white; border: 1px solid #1a3d2e; }
 .button:hover { background: #254f3c; }
+.button, .secondary { transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease, scale 150ms var(--ease-ps-out); }
+.button:active:not(:disabled), .secondary:active { scale: .97; }
+@media (prefers-reduced-motion: reduce) { .button:active:not(:disabled), .secondary:active { scale: none; } }
 .button:disabled { opacity: .55; cursor: wait; }
 .secondary { background: white; border: 1px solid #dce1db; color: #242726; }
 .secondary:hover { border-color: #1a3d2e; }

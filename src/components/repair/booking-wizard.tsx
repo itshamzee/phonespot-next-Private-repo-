@@ -177,7 +177,7 @@ function NavButtons({
         <button
           type="button"
           onClick={onPrev}
-          className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
+          className="press flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal hover:bg-sand"
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
             <path
@@ -195,7 +195,7 @@ function NavButtons({
         type="button"
         onClick={onNext}
         disabled={!canNext || isSubmitting}
-        className="flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+        className="press flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
       >
         {isSubmitting ? (
           <>
@@ -978,7 +978,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
       {submitResult?.error && (
         <div
           role="alert"
-          className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          className="reveal-in mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
           <svg
             viewBox="0 0 20 20"
@@ -1209,7 +1209,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 2: Reparation ---- */}
       {step === 1 && (
-        <div className="md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
+        <div className="reveal-in md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
           {/* Left column: service list */}
           <div className="space-y-6">
             <div>
@@ -1646,7 +1646,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 3: Detaljer ---- */}
       {step === 2 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -1753,7 +1753,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 4: Butik & dato ---- */}
       {step === 3 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -1779,7 +1779,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setStoreId(id)}
-                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
                         ? "border-green-eco bg-green-eco/5 shadow-sm"
                         : "border-soft-grey hover:border-green-eco/30"
@@ -1843,7 +1843,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setPreferredDate(date)}
-                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
                         ? "border-green-eco bg-green-eco/5 shadow-sm"
                         : "border-soft-grey hover:border-green-eco/30"
@@ -1897,7 +1897,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 5: Bekræft & Betal ---- */}
       {step === 4 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -2086,7 +2086,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                 type="button"
                 onClick={handleSubmitNoPay}
                 disabled={isSubmitting}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                className="press mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               >
                 {isSubmitting ? "Sender..." : "Book nu og betal i butikken"}
               </button>
@@ -2116,7 +2116,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
             <button
               type="button"
               onClick={goPrev}
-              className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
+              className="press flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal hover:bg-sand"
             >
               <svg
                 viewBox="0 0 16 16"
