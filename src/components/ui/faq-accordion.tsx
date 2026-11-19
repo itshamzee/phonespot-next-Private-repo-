@@ -32,7 +32,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
               type="button"
               id={`${instanceId}-question-${index}`}
               onClick={() => toggle(index)}
-              className="flex min-h-14 w-full items-center justify-between gap-4 py-5 text-left transition-colors hover:text-[#1a3d2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1a3d2e]"
+              className="flex min-h-14 w-full items-center justify-between gap-4 py-5 text-left transition-colors duration-150 hover:text-[#1a3d2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1a3d2e]"
               aria-expanded={isOpen}
               aria-controls={`${instanceId}-answer-${index}`}
             >
@@ -47,7 +47,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`h-5 w-5 shrink-0 text-gray transition-transform duration-200 ${
+                className={`h-5 w-5 shrink-0 text-gray transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
                   isOpen ? "rotate-180" : ""
                 }`}
                 aria-hidden="true"
@@ -55,7 +55,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            <div id={`${instanceId}-answer-${index}`} role="region" aria-labelledby={`${instanceId}-question-${index}`} hidden={!isOpen} className="pb-5 pr-6">
+            <div id={`${instanceId}-answer-${index}`} role="region" aria-labelledby={`${instanceId}-question-${index}`} hidden={!isOpen} className="reveal-in pb-5 pr-6">
               <p className="text-sm leading-7 text-[#626a65]">{item.answer}</p>
             </div>
           </div>

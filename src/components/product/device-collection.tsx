@@ -93,7 +93,7 @@ export function DeviceCollectionDetails({
       <section data-collection-section="faq" className="border-t border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[minmax(14rem,0.7fr)_minmax(0,1.3fr)]">
           <div><p className="text-xs font-semibold text-[#1A3D2E]">Spørgsmål og svar</p><h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em] text-[#202421]">{faqTitle}</h2></div>
-          <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] group-open:rotate-45">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
+          <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-open:rotate-45 motion-reduce:transition-none">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
         </div>
       </section>
     </>

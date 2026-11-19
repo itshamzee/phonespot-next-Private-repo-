@@ -110,8 +110,8 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
       <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>
     </nav>
     {mobileOpen && <>
-      <div className={styles["menu-backdrop"]} onClick={() => setMobileOpen(false)} aria-hidden="true" />
-      <div ref={menuPanel} className={styles["menu-panel"]} role="dialog" aria-modal="true" aria-label="Menu" id="mobile-navigation">
+      <div className={`${styles["menu-backdrop"]} backdrop-enter`} onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      <div ref={menuPanel} className={`${styles["menu-panel"]} drawer-enter-left`} role="dialog" aria-modal="true" aria-label="Menu" id="mobile-navigation">
         <button type="button" ref={menuClose} className={styles["menu-close"]} onClick={() => setMobileOpen(false)} aria-label="Luk menu">Luk<StorefrontIcon kind="close" /></button>
         <nav aria-label="Mobilmenu">
           {NAV_CATEGORIES.map(item => {
