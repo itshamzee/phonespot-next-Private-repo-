@@ -172,18 +172,24 @@ export interface RepairComment {
 }
 
 // --- Inquiry types ---
-export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email";
-export type InquiryChannel = "email" | "sms" | "form";
+export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email" | "erhvervsreparation";
+export type InquiryChannel = "email" | "form" | "sms" | "messenger" | "google_review" | "trustpilot_review";
 export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 
 export interface ContactInquiry {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   subject: string | null;
   message: string;
   status: InquiryStatus;
+  /** Kanalen henvendelsen kom ind pa. */
+  channel: InquiryChannel;
+  /** Kanalens egen traad-id (fx telefonnummer eller Messenger-traad). */
+  external_thread_id: string | null;
+  /** Tidspunkt for seneste indgaaende besked. */
+  last_inbound_at: string | null;
   admin_notes: string | null;
   source: InquirySource;
   assigned_to: string | null;
@@ -204,6 +210,8 @@ export interface InquiryMessage {
   staff_name: string | null;
   message_id?: string | null;
   in_reply_to?: string | null;
+  external_message_id?: string | null;
+  delivery_status?: string | null;
   created_at: string;
 }
 

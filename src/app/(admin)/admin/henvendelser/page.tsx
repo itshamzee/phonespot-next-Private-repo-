@@ -57,6 +57,7 @@ const SOURCE_LABELS: Record<InquirySource | "alle", string> = {
   "reparation-booking": "Booking",
   manuel: "Manuel",
   elektronikforsikring: "Forsikring",
+  erhvervsreparation: "Erhverv",
 };
 
 const ALL_SOURCES: (InquirySource | "alle")[] = ["alle", "kontaktformular", "email", "saelg-enhed", "reparation-booking", "manuel", "elektronikforsikring"];
@@ -184,7 +185,7 @@ export default function AdminHenvendelserPage() {
       const q = search.toLowerCase();
       return (
         inq.name.toLowerCase().includes(q) ||
-        inq.email.toLowerCase().includes(q) ||
+        (inq.email ?? "").toLowerCase().includes(q) ||
         inq.message.toLowerCase().includes(q)
       );
     }
