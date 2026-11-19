@@ -97,7 +97,8 @@ export const NAV: NavArea[] = [
     ],
     children: [
       { href: "/admin/kunder", label: "Kunder" },
-      { href: "/admin/henvendelser", label: "Henvendelser", countKey: "inquiries" },
+      { href: "/admin/kundecenter", label: "Kundecenter", countKey: "inquiries" },
+      { href: "/admin/henvendelser", label: "Henvendelser" },
       { href: "/admin/b2b", label: "Erhverv" },
     ],
   },

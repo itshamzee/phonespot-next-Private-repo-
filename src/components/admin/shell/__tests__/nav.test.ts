@@ -102,6 +102,17 @@ describe("NAV", () => {
   });
 });
 
+describe("Kunder, Kundecenter", () => {
+  it("ligger lige over Henvendelser og har tallet, Henvendelser har ikke", () => {
+    const kunder = NAV.find((a) => a.key === "kunder");
+    const labels = kunder?.children?.map((c) => c.label) ?? [];
+    expect(labels.indexOf("Kundecenter")).toBe(labels.indexOf("Henvendelser") - 1);
+    expect(kunder?.children?.find((c) => c.label === "Kundecenter")?.countKey).toBe("inquiries");
+    expect(kunder?.children?.find((c) => c.label === "Henvendelser")?.countKey).toBeUndefined();
+    expect(at("/admin/kundecenter")).toEqual(["kunder", "Kundecenter"]);
+  });
+});
+
 describe("Varer, Reparationer", () => {
   it("ligger under Varer og erstatter den gamle Prisliste i Sagsstyring", () => {
     const varer = NAV.find((a) => a.key === "varer");
