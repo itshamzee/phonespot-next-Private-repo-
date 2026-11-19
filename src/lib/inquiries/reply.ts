@@ -4,12 +4,20 @@ import type { sendInquiryReply } from "@/lib/inquiries/send-reply";
 
 export type ReplyChannel = "email" | "sms";
 
-export type ReplyErrorCode = "not_found" | "no_email" | "no_phone" | "send_failed";
+export type ReplyErrorCode = "not_found" | "no_email" | "no_phone" | "send_failed" | "saved_failed";
+
+const MESSAGES: Record<ReplyErrorCode, string> = {
+  not_found: "Henvendelsen blev ikke fundet",
+  no_email: "Der er ingen mailadresse på henvendelsen",
+  no_phone: "Der er intet telefonnummer på henvendelsen",
+  send_failed: "Beskeden kunne ikke sendes. Prøv igen.",
+  saved_failed: "SMS'en er sendt, men kunne ikke gemmes i tråden. Send den ikke igen.",
+};
 
 export class ReplyError extends Error {
   code: ReplyErrorCode;
-  constructor(code: ReplyErrorCode, message: string) {
-    super(message);
+  constructor(code: ReplyErrorCode) {
+    super(MESSAGES[code]);
     this.name = "ReplyError";
     this.code = code;
   }
@@ -56,13 +64,14 @@ export async function sendReply(
       });
       return { messageRowId: result.messageRowId, channel: "email" };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Kunne ikke sende mailen";
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[sendReply] email failed for inquiry ${args.inquiryId}:`, err);
       const code: ReplyErrorCode = msg.includes("ikke fundet")
         ? "not_found"
         : msg.includes("Ingen email")
           ? "no_email"
           : "send_failed";
-      throw new ReplyError(code, msg);
+      throw new ReplyError(code);
     }
   }
 
@@ -73,21 +82,28 @@ export async function sendReply(
     .select("*")
     .eq("id", args.inquiryId)
     .single();
-  if (error || !inquiry) throw new ReplyError("not_found", "Henvendelse ikke fundet");
-  if (!inquiry.phone) throw new ReplyError("no_phone", "Ingen telefonnummer på henvendelsen");
+  if (error || !inquiry) throw new ReplyError("not_found");
+  if (!inquiry.phone) throw new ReplyError("no_phone");
 
-  const result = await send(inquiry.phone, args.body);
+  let result: Awaited<ReturnType<typeof sendSms>>;
+  try {
+    result = await send(inquiry.phone, args.body);
+  } catch (err) {
+    result = { success: false, messageId: null, error: err instanceof Error ? err.message : String(err) };
+  }
 
-  await sb.from("sms_log").insert({
+  const { error: logErr } = await sb.from("sms_log").insert({
     phone: inquiry.phone,
     message: args.body,
     provider_message_id: result.messageId,
     status: result.success ? "sent" : "failed",
     inquiry_id: args.inquiryId,
   });
+  if (logErr) console.error(`[sendReply] sms_log insert failed for inquiry ${args.inquiryId}:`, logErr);
 
   if (!result.success) {
-    throw new ReplyError("send_failed", result.error || "SMS kunne ikke sendes");
+    console.error(`[sendReply] sms failed for inquiry ${args.inquiryId}:`, result.error);
+    throw new ReplyError("send_failed");
   }
 
   const { data: message, error: msgErr } = await sb
@@ -101,8 +117,14 @@ export async function sendReply(
     })
     .select()
     .single();
-  if (msgErr || !message) throw new ReplyError("send_failed", msgErr?.message ?? "Kunne ikke gemme beskeden");
 
-  await sb.from("contact_inquiries").update({ status: "besvaret" }).eq("id", args.inquiryId);
+  // The customer has the SMS either way, so the inquiry counts as answered.
+  const { error: statusErr } = await sb.from("contact_inquiries").update({ status: "besvaret" }).eq("id", args.inquiryId);
+  if (statusErr) console.error(`[sendReply] status update failed for inquiry ${args.inquiryId}:`, statusErr);
+
+  if (msgErr || !message) {
+    console.error(`[sendReply] sms sent but thread insert failed for inquiry ${args.inquiryId}:`, msgErr);
+    throw new ReplyError("saved_failed");
+  }
   return { messageRowId: message.id as string, channel: "sms" };
 }
