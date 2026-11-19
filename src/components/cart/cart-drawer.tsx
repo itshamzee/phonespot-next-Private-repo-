@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { CartLineItem } from "@/components/cart/cart-line-item";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 import { CartUpsell } from "@/components/cart/cart-upsell";
 import { CartEmailCapture } from "@/components/cart/cart-email-capture";
 import { formatOere } from "@/lib/cart/utils";
@@ -58,6 +59,8 @@ export function CartDrawer() {
 
   const items = cartState.items;
   const totalItems = totals.itemCount;
+  // Totalen toner kort ind, når kurven ændrer sig (ikke ved første visning).
+  const totalChanged = useHasChanged(totals.total);
 
   // Prevent body scrolling when the drawer is open.
   useEffect(() => {
@@ -113,7 +116,7 @@ export function CartDrawer() {
             </h2>
             <button
               type="button"
-              className="-m-2 p-2.5 text-[#86868B] transition-colors hover:text-[#111111]"
+              className="press -m-2 p-2.5 text-[#86868B] hover:text-[#111111]"
               onClick={closeCart}
               aria-label="Luk kurv"
             >
@@ -138,12 +141,13 @@ export function CartDrawer() {
           <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5">
             {items.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <p className="text-sm text-[#86868B]">Din kurv er tom</p>
+                <p className="reveal-in text-sm text-[#86868B]">Din kurv er tom</p>
               </div>
             ) : (
               <div className="divide-y divide-[#E5E5EA]">
                 {items.map((item) => (
-                  <div key={cartItemKey(item)}>
+                  // Nye linjer glider ind (monteres kun ved brugerhandling eller i den lukkede kurv).
+                  <div key={cartItemKey(item)} className="rise-in">
                     {item.type === "device" && (
                       <div className="pt-3 pb-1">
                         <ReservationTimer reservedAt={(item as CartDeviceItem).reservedAt} />
@@ -223,7 +227,7 @@ export function CartDrawer() {
                 )}
                 <div className="flex items-center justify-between border-t border-[#E5E5EA] pt-1.5">
                   <span className="text-sm font-semibold text-[#111111]">I alt</span>
-                  <span className="text-lg font-semibold text-[#111111]">
+                  <span key={totals.total} className={`text-lg font-semibold text-[#111111]${totalChanged ? " value-change" : ""}`}>
                     {formatOere(totals.total)}
                   </span>
                 </div>
@@ -238,7 +242,7 @@ export function CartDrawer() {
               <Link
                 href="/kasse"
                 onClick={closeCart}
-                className="flex w-full items-center justify-center rounded-full bg-[#1A3D2E] px-6 py-3 min-h-[44px] font-display text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="press flex w-full items-center justify-center rounded-full bg-[#1A3D2E] px-6 py-3 min-h-[44px] font-display text-sm font-semibold text-white hover:opacity-90"
               >
                 Gå til kassen
               </Link>
