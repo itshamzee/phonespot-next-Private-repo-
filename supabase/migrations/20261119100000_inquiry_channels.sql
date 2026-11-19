@@ -15,6 +15,12 @@ ALTER TABLE public.contact_inquiries DROP CONSTRAINT IF EXISTS contact_inquiries
 ALTER TABLE public.contact_inquiries ADD CONSTRAINT contact_inquiries_channel_check
   CHECK (channel IN ('email', 'form', 'sms', 'messenger', 'google_review', 'trustpilot_review'));
 
+-- Status 'venter_paa_svar' (kunden har svaret paa en besvaret sag) bruges af koden og
+-- admin, men manglede i den oprindelige CHECK, saa opdateringen blev afvist i stilhed.
+ALTER TABLE public.contact_inquiries DROP CONSTRAINT IF EXISTS contact_inquiries_status_check;
+ALTER TABLE public.contact_inquiries ADD CONSTRAINT contact_inquiries_status_check
+  CHECK (status IN ('ny', 'besvaret', 'venter_paa_svar', 'lukket'));
+
 -- Backfill kanal: eksplicit kildeliste og external_thread_id IS NULL goer det idempotent,
 -- fanger formularraekker oprettet mellem migration og deploy ved genkoersel, og roerer
 -- aldrig rigtige mailtraade.
