@@ -172,8 +172,8 @@ export interface RepairComment {
 }
 
 // --- Inquiry types ---
-export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email" | "erhvervsreparation";
-export type InquiryChannel = "email" | "form" | "sms" | "messenger" | "google_review" | "trustpilot_review";
+export type InquirySource = "kontaktformular" | "saelg-enhed" | "reparation-booking" | "manuel" | "elektronikforsikring" | "email" | "erhvervsreparation" | "fiks-chat";
+export type InquiryChannel = "email" | "form" | "sms" | "messenger" | "google_review" | "trustpilot_review" | "chat";
 export type InquiryMessageChannel = InquiryChannel | "system";
 export type InquiryStatus = "ny" | "besvaret" | "venter_paa_svar" | "lukket";
 
