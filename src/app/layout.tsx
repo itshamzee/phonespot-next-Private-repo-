@@ -8,6 +8,7 @@ import { LayoutShell } from "@/components/layout/public-shell";
 import { getMegaMenu } from "@/lib/navigation/mega-menu-data";
 import { TrackingScripts } from "@/components/consent/tracking-scripts";
 import { GlobalClickTracker } from "@/components/tracking/global-click-tracker";
+import { SmoothAnchorScroll } from "@/components/layout/smooth-anchor-scroll";
 import "./globals.css";
 import { isBlackNovember } from "@/lib/campaign/black-november";
 
@@ -115,6 +116,8 @@ export default async function RootLayout({
         <TrackingScripts />
         {/* Delegeret klik-tracking: tel:, ruter, WhatsApp/Messenger + UTM-bevarelse. */}
         <GlobalClickTracker />
+        {/* Blødt rul til ankre på samme side; sideskift og tilbage/frem hopper som før. */}
+        <SmoothAnchorScroll />
         {/* Vercel Analytics — first-party traffic dashboard at vercel.com/<project>/analytics */}
         <VercelAnalytics />
       </body>
