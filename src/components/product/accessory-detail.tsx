@@ -243,7 +243,7 @@ function CrossSellCard({ product }: { product: CrossSellProduct }) {
     : "#";
 
   return (
-    <div className="flex flex-col rounded-2xl border border-sand bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col rounded-2xl border border-sand bg-white p-4 card-raise">
       <Link href={href} className="block">
         <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-xl bg-cream">
           {product.images[0] ? (
@@ -715,7 +715,7 @@ export function AccessoryDetail({
                           }}
                           className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border-2 object-cover transition-[border-color] duration-150 ${
                             isSelected
-                              ? "border-green-eco shadow-sm ring-2 ring-green-eco/20"
+                              ? "border-green-eco shadow-rest ring-2 ring-green-eco/20"
                               : "border-sand hover:border-charcoal/30"
                           }`}
                         >

@@ -139,7 +139,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <div className="mx-auto max-w-sm px-4 py-20">
-        <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-rest">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F2EC]">
               <svg className="h-6 w-6 text-[#1A3D2E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -287,7 +287,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       <div className="mx-auto max-w-6xl px-4 py-8 lg:flex lg:gap-8">
         {/* Desktop sidebar */}
         <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-8 rounded-2xl border border-[#E5E5EA] bg-white shadow-sm">
+          <div className="sticky top-8 rounded-2xl border border-[#E5E5EA] bg-white shadow-rest">
             {/* User info */}
             <div className="border-b border-[#E5E5EA] px-5 py-4">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1A3D2E]">

@@ -53,7 +53,7 @@ export function ZoomImage({ src, alt, hint = "Zoom" }: { src: string; alt: strin
         aria-label={`Se ${alt} tæt på`}
         className="absolute inset-0 z-[1] cursor-zoom-in"
       >
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-[4px] bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-charcoal shadow-sm">
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-[4px] bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-charcoal shadow-rest">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5" aria-hidden="true">
             <circle cx="8.5" cy="8.5" r="5.5" />
             <path d="M12.5 12.5 17 17M8.5 6v5M6 8.5h5" strokeLinecap="round" />

@@ -385,7 +385,7 @@ export default async function ProductPage({
         <Heading as="h2" size="md" className="mb-8 text-center">
           Spørgsmål om dette produkt
         </Heading>
-        <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-sm">
+        <div className="mx-auto max-w-2xl divide-y divide-sand rounded-2xl border border-sand bg-white shadow-rest">
           {(skuVariant === "device" ? getDeviceFaq(product.title) : getAccessoryFaq(product.title)).map((faq) => (
             <details key={faq.q} className="group">
               <summary className="flex cursor-pointer items-center justify-between px-6 py-5 font-semibold text-charcoal transition-colors hover:text-green-eco">

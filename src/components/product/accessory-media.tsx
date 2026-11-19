@@ -125,7 +125,7 @@ function Lightbox({
     };
   }, [onIndex, step]);
 
-  const arrow = "press absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-charcoal shadow-md hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco";
+  const arrow = "press absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-charcoal shadow-raised hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-eco";
 
   return (
     <div role="dialog" aria-modal="true" aria-label={`${title}, billede ${index + 1} af ${photos.length}`} className="backdrop-enter fixed inset-0 z-[80] bg-white">

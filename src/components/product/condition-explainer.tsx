@@ -442,7 +442,7 @@ function CompactVariant({ grades }: { grades: GradeData[] }) {
           {grades.map((g) => (
             <div
               key={g.grade}
-              className={`overflow-hidden rounded-2xl border ${g.color} bg-white shadow-sm`}
+              className={`overflow-hidden rounded-2xl border ${g.color} bg-white shadow-rest`}
             >
               <ImageSlider
                 displayImage={g.displayImage}

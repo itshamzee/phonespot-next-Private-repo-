@@ -140,7 +140,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               className={`flex items-center gap-3 rounded-xl border px-3 sm:px-4 py-3 text-left press cursor-pointer ${
                 isSelected
                   ? "border-green-eco bg-[#F4F5F2] "
-                  : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
+                  : "border-sand bg-white hover:border-charcoal/20 hover-fine:shadow-raised"
               }`}
             >
               {/* Radio dot */}

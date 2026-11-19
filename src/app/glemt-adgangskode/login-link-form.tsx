@@ -41,7 +41,7 @@ export function LoginLinkForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-sm">
+    <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-rest">
       {state === "verifying" ? (
         <p className="text-center text-sm text-[#6E6E73]">Logger dig ind...</p>
       ) : state === "sent" ? (

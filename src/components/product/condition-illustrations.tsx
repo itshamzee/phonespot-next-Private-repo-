@@ -100,7 +100,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
             onClick={() => setView("frame")}
             className={`rounded-full px-5 py-2 text-xs font-semibold transition-all ${
               view === "frame"
-                ? "bg-white text-charcoal shadow-sm"
+                ? "bg-white text-charcoal shadow-rest"
                 : "text-charcoal/50 hover:text-charcoal"
             }`}
           >
@@ -111,7 +111,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
             onClick={() => setView("display")}
             className={`rounded-full px-5 py-2 text-xs font-semibold transition-all ${
               view === "display"
-                ? "bg-white text-charcoal shadow-sm"
+                ? "bg-white text-charcoal shadow-rest"
                 : "text-charcoal/50 hover:text-charcoal"
             }`}
           >
@@ -129,7 +129,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
           return (
             <div
               key={grade}
-              className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm"
+              className="overflow-hidden rounded-2xl border border-sand bg-white shadow-rest"
             >
               {/* Condition image */}
               <div className="relative aspect-[4/3] bg-white">

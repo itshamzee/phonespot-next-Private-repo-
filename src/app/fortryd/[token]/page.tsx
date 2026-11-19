@@ -28,7 +28,7 @@ export default async function WithdrawalPage({ params }: Props) {
       <div className="mx-auto max-w-2xl">
         <Heading size="lg">Fortryd din ordre</Heading>
 
-        <div className="mt-8 rounded-xl border border-charcoal/10 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-xl border border-charcoal/10 bg-white p-6 shadow-rest">
           <h2 className="font-display text-lg font-bold text-charcoal">
             Ordre #{order.order_number}
           </h2>

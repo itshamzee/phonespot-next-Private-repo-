@@ -130,8 +130,8 @@ export function GradePicker({
               onClick={() => onSelect?.(grade, standValue)}
               className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all ${
                 isSelected
-                  ? `${meta.ring} ring-2 bg-white shadow-sm`
-                  : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
+                  ? `${meta.ring} ring-2 bg-white shadow-rest`
+                  : "border-sand bg-white hover:border-charcoal/20 hover-fine:shadow-raised"
               } ${isUnavailable ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
             >
               {/* Radio */}
