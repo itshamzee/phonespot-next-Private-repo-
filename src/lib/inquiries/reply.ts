@@ -128,3 +128,30 @@ export async function sendReply(
   }
   return { messageRowId: message.id as string, channel: "sms" };
 }
+
+export type ReplyAfter = "done" | "waiting";
+
+/**
+ * Efter et sendt svar: sæt status (standard besvaret, eller lukket), nulstil en
+ * evt. udsættelse og tildel sagen til afsenderen, hvis den var ledig.
+ * Beskeden er allerede sendt, så en fejl her logges kun (aldrig besked eller kontaktdata).
+ */
+export async function finalizeReply(
+  sb: SupabaseClient,
+  inquiryId: string,
+  after: ReplyAfter,
+  staff: { id: string; name: string },
+): Promise<void> {
+  const { error } = await sb
+    .from("contact_inquiries")
+    .update({ status: after === "done" ? "lukket" : "besvaret", snoozed_until: null })
+    .eq("id", inquiryId);
+  if (error) console.error(`[finalizeReply] status update failed for inquiry ${inquiryId}:`, error.message);
+
+  const { error: assignErr } = await sb
+    .from("contact_inquiries")
+    .update({ assigned_to: staff.id, assigned_name: staff.name })
+    .eq("id", inquiryId)
+    .is("assigned_to", null);
+  if (assignErr) console.error(`[finalizeReply] assign failed for inquiry ${inquiryId}:`, assignErr.message);
+}

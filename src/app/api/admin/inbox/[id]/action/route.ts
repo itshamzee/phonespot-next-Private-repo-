@@ -1,0 +1,176 @@
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/client";
+import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
+import { parseSnoozeUntil, staffDisplayName } from "@/lib/inquiries/inbox";
+
+const ACTIONS = ["take", "release", "snooze", "unsnooze", "done", "reopen", "note", "verdict"] as const;
+type ActionType = (typeof ACTIONS)[number];
+
+interface ActionBody {
+  type?: unknown;
+  until?: unknown;
+  body?: unknown;
+  draftId?: unknown;
+  verdict?: unknown;
+  note?: unknown;
+  expectAssignedTo?: unknown;
+}
+
+interface Current {
+  id: string;
+  status: string;
+  assigned_to: string | null;
+  assigned_name: string | null;
+  snoozed_until: string | null;
+}
+
+const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
+const FAILED = "Handlingen kunne ikke gennemføres. Prøv igen.";
+const SNOOZE_ERROR = "Vælg et tidspunkt i fremtiden, højst 30 dage frem.";
+
+/**
+ * POST /api/admin/inbox/[id]/action — tildeling, udsættelse, lukning, interne
+ * noter og dom over Fiks-udkast. Adgang og butiksafgrænsning via requireInquiryAccess.
+ */
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const access = await requireInquiryAccess(request, id);
+  if (!access.ok) return access.response;
+  const { staff } = access;
+
+  let payload: ActionBody;
+  try {
+    payload = (await request.json()) ?? {};
+  } catch {
+    return bad("Ugyldig forespørgsel");
+  }
+  const type = payload.type as ActionType;
+  if (typeof type !== "string" || !ACTIONS.includes(type)) return bad("Ukendt handling");
+
+  const sb = createServerClient();
+  const myName = staffDisplayName(staff);
+  const now = new Date();
+
+  const { data: current, error: loadErr } = await sb
+    .from("contact_inquiries")
+    .select("id, status, assigned_to, assigned_name, snoozed_until")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadErr) {
+    console.error("[admin/inbox] action load failed:", id, loadErr.message);
+    return bad(FAILED, 500);
+  }
+  if (!current) return bad("Henvendelse ikke fundet", 404);
+  const cur = current as Current;
+
+  const respond = (patch: Partial<Current>) =>
+    NextResponse.json({ ok: true, inquiry: { ...cur, ...patch } }, { headers: { "Cache-Control": "no-store" } });
+
+  async function apply(patch: Record<string, unknown>): Promise<boolean> {
+    const { error } = await sb.from("contact_inquiries").update(patch).eq("id", id);
+    if (error) console.error("[admin/inbox] action update failed:", id, type, error.message);
+    return !error;
+  }
+
+  switch (type) {
+    case "take": {
+      const expect = payload.expectAssignedTo;
+      const taken = (name: string | null) =>
+        NextResponse.json(
+          { error: `Sagen er allerede taget af ${name?.trim() || "en kollega"}.`, assignedName: name ?? null },
+          { status: 409 },
+        );
+      const hasExpectation = expect === null || typeof expect === "string";
+      if (cur.assigned_to === staff.id) return respond({}); // allerede min
+      if (hasExpectation && cur.assigned_to !== expect) return taken(cur.assigned_name);
+
+      const patch = { assigned_to: staff.id, assigned_name: myName };
+      let q = sb.from("contact_inquiries").update(patch).eq("id", id);
+      // Betinget skrivning: mister vi et kapløb, rører vi ingenting.
+      if (hasExpectation) q = expect === null ? q.is("assigned_to", null) : q.eq("assigned_to", cur.assigned_to as string);
+      const { data, error } = await q.select("id");
+      if (error) {
+        console.error("[admin/inbox] take failed:", id, error.message);
+        return bad(FAILED, 500);
+      }
+      if (hasExpectation && (data ?? []).length === 0) {
+        const { data: again } = await sb.from("contact_inquiries").select("assigned_name").eq("id", id).maybeSingle();
+        return taken((again?.assigned_name as string | null) ?? null);
+      }
+      return respond(patch);
+    }
+
+    case "release": {
+      const patch = { assigned_to: null, assigned_name: null };
+      return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
+    }
+
+    case "snooze": {
+      const until = parseSnoozeUntil(payload.until, now);
+      if (!until) return bad(SNOOZE_ERROR);
+      return (await apply({ snoozed_until: until })) ? respond({ snoozed_until: until }) : bad(FAILED, 500);
+    }
+
+    case "unsnooze":
+      return (await apply({ snoozed_until: null })) ? respond({ snoozed_until: null }) : bad(FAILED, 500);
+
+    case "done": {
+      const patch = { status: "lukket", snoozed_until: null };
+      return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
+    }
+
+    case "reopen":
+      return (await apply({ status: "ny" })) ? respond({ status: "ny" }) : bad(FAILED, 500);
+
+    case "note": {
+      const text = typeof payload.body === "string" ? payload.body.trim() : "";
+      if (!text) return bad("Skriv en note først");
+      if (text.length > 5000) return bad("Noten er for lang (højst 5000 tegn).");
+      const { data, error } = await sb
+        .from("inquiry_messages")
+        .insert({
+          inquiry_id: id,
+          sender: "staff",
+          channel: "system",
+          body: text,
+          staff_name: myName,
+          is_internal: true,
+        })
+        .select()
+        .single();
+      if (error || !data) {
+        console.error("[admin/inbox] note failed:", id, error?.message);
+        return bad("Noten blev ikke gemt. Prøv igen.", 500);
+      }
+      return NextResponse.json({ ok: true, message: data }, { status: 201 });
+    }
+
+    case "verdict": {
+      const verdict = payload.verdict;
+      const note = typeof payload.note === "string" ? payload.note.trim() : "";
+      if (typeof payload.draftId !== "string" || !payload.draftId) return bad("Udkast mangler");
+      if (verdict !== "correct" && verdict !== "wrong") return bad("Ugyldig dom");
+      if (verdict === "wrong" && !note) return bad("Skriv en kort note om, hvad der var forkert.");
+
+      const { data: draft } = await sb
+        .from("ai_drafts")
+        .select("id, inquiry_id")
+        .eq("id", payload.draftId)
+        .maybeSingle();
+      if (!draft || draft.inquiry_id !== id) return bad("Udkast ikke fundet", 404);
+
+      const { error } = await sb
+        .from("ai_drafts")
+        .update({ review_verdict: verdict, review_note: note || null, reviewed_verdict_by: staff.id })
+        .eq("id", payload.draftId);
+      if (error) {
+        console.error("[admin/inbox] verdict failed:", id, error.message);
+        return bad(FAILED, 500);
+      }
+      if (verdict === "correct") return respond({});
+
+      const patch = { status: "ny", assigned_to: staff.id, assigned_name: myName, snoozed_until: null };
+      return (await apply(patch)) ? respond(patch) : bad(FAILED, 500);
+    }
+  }
+}

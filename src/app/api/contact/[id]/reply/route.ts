@@ -1,7 +1,8 @@
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { sendReply, ReplyError } from "@/lib/inquiries/reply";
+import { sendReply, finalizeReply, ReplyError } from "@/lib/inquiries/reply";
+import { staffDisplayName } from "@/lib/inquiries/inbox";
 
 const STATUS_BY_CODE = {
   not_found: 404,
@@ -19,25 +20,31 @@ export async function POST(
   const access = await requireInquiryAccess(req, id);
   if (!access.ok) return access.response;
   const supabase = createServerClient();
-  let payload: { body?: unknown; channel?: unknown; staff_name?: unknown };
+  let payload: { body?: unknown; channel?: unknown; after?: unknown };
   try {
     payload = await req.json();
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
-  const { body, channel, staff_name } = payload ?? {};
+  // staff_name i body ignoreres bevidst: afsenderen er altid den loggede medarbejder.
+  const { body, channel, after } = payload ?? {};
 
   if (typeof body !== "string" || !body.trim() || (channel !== "email" && channel !== "sms")) {
     return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
+  if (after !== undefined && after !== "done" && after !== "waiting") {
+    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
+  }
+  const staffName = staffDisplayName(access.staff);
 
   try {
     const result = await sendReply(supabase, {
       inquiryId: id,
       body,
-      staffName: typeof staff_name === "string" && staff_name.trim() ? staff_name : "Admin",
+      staffName,
       channel,
     });
+    await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
     return NextResponse.json({ id: result.messageRowId }, { status: 201 });
   } catch (err) {
     if (err instanceof ReplyError) {
