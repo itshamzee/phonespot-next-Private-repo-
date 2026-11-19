@@ -100,7 +100,7 @@ export function ColorSelectorPlatform({
               aria-disabled={!isAvailable}
               aria-label={color}
               title={isAvailable ? color : `${color} — udsolgt`}
-              className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
+              className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 press ${
                 isSelected
                   ? "border-green-eco ring-2 ring-green-eco/20"
                   : isAvailable

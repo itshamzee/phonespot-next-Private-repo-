@@ -39,6 +39,7 @@ import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 import styles from "./device-detail.module.css";
 import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
 import { customerFacingError } from "@/lib/customer-facing-error";
+import { AddedCheckIcon, useAddedConfirmation } from "./use-added-confirmation";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -335,6 +336,9 @@ export function DeviceDetail({
   }, [buyEl]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
+  const [justAdded, confirmAdded] = useAddedConfirmation(
+    `${selectedGrade}|${selectedStorage}|${selectedColor}`,
+  );
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<
     "idle" | "submitting" | "done" | "error"
@@ -722,6 +726,7 @@ export function DeviceDetail({
       });
 
       setSelectedUpgrades({ ram: null, ssd: null });
+      confirmAdded();
 
       // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
@@ -936,7 +941,16 @@ export function DeviceDetail({
                     disabled={isAddingToCart}
                     className={styles.buyButton}
                   >
-                    {isAddingToCart ? "Reserverer..." : "Læg i kurv"}
+                    {isAddingToCart ? (
+                      "Reserverer..."
+                    ) : justAdded ? (
+                      <span className={`${styles.addedLabel} confirm-in`}>
+                        <AddedCheckIcon />
+                        Lagt i kurven
+                      </span>
+                    ) : (
+                      "Læg i kurv"
+                    )}
                   </button>
                 </div>
               </>

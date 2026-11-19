@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import type { CartSkuItem } from "@/lib/cart/types";
+import { AddedCheckIcon, useAddedConfirmation } from "./use-added-confirmation";
 
 type AddToCartButtonProps = {
   variantId: string;
@@ -27,6 +28,7 @@ export function AddToCartButton({
 }: AddToCartButtonProps) {
   const { addSku, openCart, openUpsell } = useCart();
   const [isLoading, setIsLoading] = useState(false);
+  const [justAdded, confirmAdded] = useAddedConfirmation(skuProductId ?? "");
 
   const handleAddToCart = useCallback(async () => {
     if (!availableForSale || !skuProductId) return;
@@ -43,6 +45,7 @@ export function AddToCartButton({
         variantLabel,
       };
       addSku(sku);
+      confirmAdded();
 
       if (showUpsellOnAdd) {
         openUpsell({ title: sku.title, image: sku.image, price: sku.price });
@@ -65,6 +68,7 @@ export function AddToCartButton({
     openCart,
     showUpsellOnAdd,
     openUpsell,
+    confirmAdded,
   ]);
 
   if (!availableForSale) {
@@ -84,9 +88,18 @@ export function AddToCartButton({
       type="button"
       onClick={handleAddToCart}
       disabled={isLoading}
-      className="w-full rounded-full bg-green-eco py-4 font-semibold text-white transition-colors hover:bg-green-light disabled:opacity-70"
+      className="press w-full rounded-full bg-green-eco py-4 font-semibold text-white hover:bg-green-light disabled:opacity-70"
     >
-      {isLoading ? "Tilføjer..." : "Læg i kurv"}
+      {isLoading ? (
+        "Tilføjer..."
+      ) : justAdded ? (
+        <span className="confirm-in inline-flex items-center justify-center gap-2">
+          <AddedCheckIcon className="h-[18px] w-[18px]" />
+          Lagt i kurven
+        </span>
+      ) : (
+        "Læg i kurv"
+      )}
     </button>
   );
 }

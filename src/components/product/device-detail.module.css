@@ -63,6 +63,10 @@
   border: 1px solid #dce2dc;
   border-radius: 6px;
   background: white;
+  transition: border-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.thumbnails button:active {
+  scale: 0.96;
 }
 .thumbnails .standThumb span {
   position: absolute;
@@ -164,6 +168,10 @@
   padding: 14px;
   font-size: 15px;
   font-weight: 600;
+  transition: background-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.buyButton:active:not(:disabled) {
+  scale: 0.98;
 }
 .buyButton:hover {
   background: #254e3c;
@@ -631,12 +639,33 @@
   padding: 0 22px;
   font-size: 15px;
   font-weight: 600;
+  transition: background-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.buyBarButton:active:not(:disabled) {
+  scale: 0.97;
 }
 .buyBarButton:hover {
   background: #254e3c;
 }
+/* Bekræftelse efter "Læg i kurv": flueben foran teksten. */
+.addedLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.addedLabel svg {
+  width: 18px;
+  height: 18px;
+}
 @media (prefers-reduced-motion: reduce) {
   .buyBar {
     transition: none;
+  }
+  .thumbnails button,
+  .buyButton,
+  .buyBarButton {
+    transition: none;
+    scale: none;
   }
 }

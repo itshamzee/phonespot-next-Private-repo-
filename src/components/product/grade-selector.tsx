@@ -137,7 +137,7 @@ export function GradeSelector({ grades, selected, onChange }: GradeSelectorProps
               aria-pressed={isSelected}
               title={meta.tooltip}
               onClick={() => onChange(grade)}
-              className={`flex items-center gap-3 rounded-xl border px-3 sm:px-4 py-3 text-left transition-all cursor-pointer ${
+              className={`flex items-center gap-3 rounded-xl border px-3 sm:px-4 py-3 text-left press cursor-pointer ${
                 isSelected
                   ? "border-green-eco bg-[#F4F5F2] "
                   : "border-sand bg-white hover:border-charcoal/20 hover:shadow-sm"
