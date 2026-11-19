@@ -40,17 +40,17 @@ describe("handlingFor", () => {
 
 describe("finalizeAssessment", () => {
   it("sets needs_human on forced categories and on scope mismatch", () => {
-    expect(finalizeAssessment({ ...ok, category: "retur_reklamation" }, { scopeMismatch: false, unbackedAmounts: [] }).needs_human).toBe(true);
-    const m = finalizeAssessment(ok, { scopeMismatch: true, unbackedAmounts: [] });
+    expect(finalizeAssessment({ ...ok, category: "retur_reklamation" }, { scopeMismatch: false, unbackedAmounts: [], unparseableAmount: false }).needs_human).toBe(true);
+    const m = finalizeAssessment(ok, { scopeMismatch: true, unbackedAmounts: [], unparseableAmount: false });
     expect(m.needs_human).toBe(true);
     expect(m.reason).toContain("anden adresse");
   });
 
   it("leaves a clean order assessment alone", () => {
-    expect(finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [] })).toEqual(ok);
+    expect(finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [], unparseableAmount: false })).toEqual(ok);
   });
 
   it("drops the draft for categories that never draft", () => {
-    expect(finalizeAssessment({ ...ok, category: "leverandoer_b2b" }, { scopeMismatch: false, unbackedAmounts: [] }).draft).toBeNull();
+    expect(finalizeAssessment({ ...ok, category: "leverandoer_b2b" }, { scopeMismatch: false, unbackedAmounts: [], unparseableAmount: false }).draft).toBeNull();
   });
 });

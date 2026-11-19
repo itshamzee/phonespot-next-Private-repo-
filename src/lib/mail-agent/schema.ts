@@ -50,11 +50,15 @@ export function handlingFor(category: MailCategory): Handling {
  */
 export function finalizeAssessment(
   a: Assessment,
-  opts: { scopeMismatch: boolean; unbackedAmounts: number[] },
+  opts: { scopeMismatch: boolean; unbackedAmounts: number[]; unparseableAmount: boolean },
 ): Assessment {
   const h = handlingFor(a.category);
   let needs_human = a.needs_human || h.forceHuman;
   let reason = a.reason;
+  if (opts.unparseableAmount) {
+    needs_human = true;
+    reason = `Udkastet nævner et beløb i ord eller forkortelse, som ikke kan kontrolleres mod et opslag. ${reason}`.trim();
+  }
   if (opts.unbackedAmounts.length > 0) {
     needs_human = true;
     const list = opts.unbackedAmounts.map(formatKroner);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractAmounts, unbackedAmounts, formatKroner } from "@/lib/mail-agent/amount-filter";
+import { extractAmounts, unbackedAmounts, formatKroner, hasUnparseableAmount } from "@/lib/mail-agent/amount-filter";
 import { finalizeAssessment } from "@/lib/mail-agent/schema";
 import type { Assessment } from "@/lib/mail-agent/types";
 
@@ -110,21 +110,126 @@ const ok: Assessment = {
 
 describe("finalizeAssessment with unbacked amounts", () => {
   it("forces a human, keeps the draft and starts the reason with the amount sentence", () => {
-    const r = finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [999] });
+    const r = finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [999], unparseableAmount: false });
     expect(r.needs_human).toBe(true);
     expect(r.reason.startsWith("Udkastet nævner 999 kr., som ikke kommer fra et opslag.")).toBe(true);
     expect(r.draft).toEqual(ok.draft);
   });
 
   it("lists several amounts with og before the last", () => {
-    const r = finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [999, 1500] });
+    const r = finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [999, 1500], unparseableAmount: false });
     expect(r.reason).toContain("Udkastet nævner 999 kr. og 1.500 kr., som ikke kommer fra et opslag.");
   });
 
   it("puts the scope sentence first when both apply", () => {
-    const r = finalizeAssessment(ok, { scopeMismatch: true, unbackedAmounts: [999] });
+    const r = finalizeAssessment(ok, { scopeMismatch: true, unbackedAmounts: [999], unparseableAmount: false });
     expect(r.needs_human).toBe(true);
     expect(r.reason.startsWith("Opslag matchede en anden adresse")).toBe(true);
     expect(r.reason.indexOf("Udkastet nævner 999 kr.")).toBeGreaterThan(0);
+  });
+});
+
+describe("fix round 1: broader spellings", () => {
+  it.each<[string, number[]]>([
+    ["1299 kroner", [1299]],
+    ["1.299 kroner", [1299]],
+    ["5 kroner", [5]],
+    ["1 krone", [1]],
+    ["pris: 1299", [1299]],
+    ["Prisen 1299", [1299]],
+    ["det koster 1299", [1299]],
+    ["det kostede 1299", [1299]],
+    ["i alt 1.299", [1299]],
+    ["total 1299", [1299]],
+    ["totalt: 1299", [1299]],
+    ["beløb 1299", [1299]],
+    ["beløbet 1299", [1299]],
+    ["du skal betale 1299", [1299]],
+    ["han betaler 1.299", [1299]],
+    ["1299.-", [1299]],
+    ["1.299.- kr", [1299]],
+    ["999.95 kr", [999.95]],
+    ["1.299 kr", [1299]],
+    ["899 til 1.299 kr", [899, 1299]],
+    ["mellem 899 og 1.299 kr", [899, 1299]],
+    ["899 eller 1.299 kr", [899, 1299]],
+    ["899-1.299 kr", [899, 1299]],
+    ["899–1.299 kr", [899, 1299]],
+    ["899—1.299 kr", [899, 1299]],
+  ])("extracts %s", (text, expected) => {
+    expect(extractAmounts(text)).toEqual(expected);
+  });
+
+  it.each([
+    "fra 2022",
+    "kun 3 dage",
+    "iPhone 13",
+    "128 GB",
+    "36 måneders garanti",
+    "30–60 minutter",
+    "tlf. 50 45 33 71",
+    "90 %",
+    "PS-1001",
+    "den 21. november",
+    "åbent 10–18",
+    "pris 5",
+    "fra 899",
+  ])("finds nothing in %s", (text) => {
+    expect(extractAmounts(text)).toEqual([]);
+    expect(hasUnparseableAmount(text)).toBe(false);
+  });
+
+  it("still catches fra/kun when a unit follows", () => {
+    expect(extractAmounts("fra 899 kr")).toEqual([899]);
+    expect(extractAmounts("kun 199 kroner")).toEqual([199]);
+  });
+
+  it.each([
+    "5 tusind kr",
+    "5 tusind kroner",
+    "5k kr",
+    "1,5 mio. kr",
+    "5 tkr",
+    "5 t.kr",
+    "pris 5k",
+    "koster 2 tusind",
+    "hundrede kroner",
+    "tusind kroner",
+    "to tusind kr",
+    "tohundrede og halvtreds kroner",
+  ])("flags %s as unparseable", (text) => {
+    expect(hasUnparseableAmount(text)).toBe(true);
+  });
+
+  it("does not flag ordinary amounts or a bare unit word", () => {
+    expect(hasUnparseableAmount("Det koster 1.299 kr.")).toBe(false);
+    expect(hasUnparseableAmount("Vi har krone-tilbud")).toBe(false);
+  });
+
+  it("backs only on exact numeric equality", () => {
+    expect(unbackedAmounts("Det koster 299 kr.", ["Skærmskift: 1.299 kr."])).toEqual([299]);
+    expect(unbackedAmounts("Det koster 999.95 kr", ["Pris: 999,95 kr."])).toEqual([]);
+  });
+
+  it("uses the price-word rule on the backing side too", () => {
+    expect(unbackedAmounts("Det koster 1.299 kr.", ["Pris: 1299"])).toEqual([]);
+  });
+
+  it("forces a human for an unbacked amount in the subject", () => {
+    const unbacked = unbackedAmounts("Tilbud: 999 kr.", ["Skærmskift: 1.299 kr."]);
+    expect(unbacked).toEqual([999]);
+    const r = finalizeAssessment(
+      { ...ok, draft: { subject: "Tilbud: 999 kr.", body: "Hej" } },
+      { scopeMismatch: false, unbackedAmounts: unbacked, unparseableAmount: false },
+    );
+    expect(r.needs_human).toBe(true);
+  });
+
+  it("adds the unparseable sentence and forces a human", () => {
+    const r = finalizeAssessment(ok, { scopeMismatch: false, unbackedAmounts: [], unparseableAmount: true });
+    expect(r.needs_human).toBe(true);
+    expect(r.reason).toContain(
+      "Udkastet nævner et beløb i ord eller forkortelse, som ikke kan kontrolleres mod et opslag.",
+    );
   });
 });
