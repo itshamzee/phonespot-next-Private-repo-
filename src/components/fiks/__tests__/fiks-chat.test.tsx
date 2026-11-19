@@ -130,6 +130,68 @@ describe("FiksPanel", () => {
     await waitFor(() => expect(onDisabled).toHaveBeenCalled());
   });
 
+  it("shows a sell card with the amount and a real link under the reply that carries an action", async () => {
+    const href = "/saelg-din-enhed?model=iPhone+13&storage=128GB&fiks=t-1#start";
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        token: "t-1",
+        reply: "Din iPhone 13 er vejledende 2.150 kr. værd.",
+        handoff: false,
+        action: { type: "sell", label: "Fortsæt til formularen", href, model: "iPhone 13", amount: 2150 },
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: STARTERS[1] }));
+    const link = await screen.findByRole("link", { name: "Fortsæt til formularen" });
+    expect(link).toHaveAttribute("href", href);
+    expect(screen.getByText("Vejledende pris")).toBeInTheDocument();
+    expect(screen.getByText("2.150 kr.")).toBeInTheDocument();
+    expect(screen.getByText("Den endelige pris afhænger af vores tjek af enheden.")).toBeInTheDocument();
+  });
+
+  it("ignores an action that does not point to the sell form", async () => {
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        token: "t-1",
+        reply: "Hej.",
+        action: { type: "sell", label: "Fortsæt til formularen", href: "https://evil.example/x", model: "iPhone 13", amount: 2150 },
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: STARTERS[1] }));
+    await screen.findByText("Hej.");
+    expect(screen.queryByRole("link", { name: "Fortsæt til formularen" })).toBeNull();
+  });
+
+  it("restores the sell card under Fiks' latest reply after a reload", async () => {
+    window.sessionStorage.setItem(FIKS_TOKEN_KEY, "t-3");
+    fetchMock.mockImplementation(() =>
+      jsonResponse({
+        messages: [
+          { from: "visitor", body: "Hvad er min iPhone værd?", at: "a" },
+          { from: "fiks", body: "Vejledende 1.850 kr.", at: "b" },
+        ],
+        action: { type: "sell", label: "Fortsæt til formularen", href: "/saelg-din-enhed?fiks=t-3#start", model: "iPhone 12", amount: 1850 },
+      }),
+    );
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    expect(await screen.findByRole("link", { name: "Fortsæt til formularen" })).toHaveAttribute("href", "/saelg-din-enhed?fiks=t-3#start");
+    expect(screen.getByText("1.850 kr.")).toBeInTheDocument();
+  });
+
+  it("shows a typing indicator while waiting", async () => {
+    let resolve: (v: Response) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise<Response>((r) => (resolve = r)));
+    render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: STARTERS[0] }));
+    expect(await screen.findByText("Fiks skriver…")).toBeInTheDocument();
+    await act(async () => {
+      resolve(new Response(JSON.stringify({ token: "t", reply: "Hvilken model?" }), { status: 200 }));
+    });
+    expect(await screen.findByText("Hvilken model?")).toBeInTheDocument();
+    expect(screen.queryByText("Fiks skriver…")).toBeNull();
+  });
+
   it("links to the privacy section and warns about CPR and card details", () => {
     render(<FiksPanel open onClose={vi.fn()} onDisabled={vi.fn()} />);
     expect(screen.getByRole("link", { name: "Privatlivspolitik" })).toHaveAttribute("href", "/privatlivspolitik#chat");
