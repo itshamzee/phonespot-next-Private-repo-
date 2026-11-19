@@ -1,12 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { hasUnparseableAmount, unbackedAmounts } from "@/lib/mail-agent/amount-filter";
+import {
+  hasUnparseableAmount,
+  unbackedAmounts,
+} from "@/lib/mail-agent/amount-filter";
 import { FORBIDDEN_WORDS } from "@/lib/mail-agent/knowledge";
 import type { ToolContext } from "@/lib/mail-agent/tools";
 import {
   BUSY_TEXT,
   FALLBACK_TEXT,
   FIKS_CHANNEL,
+  FIKS_FALLBACK_MODEL,
   FIKS_MODEL,
   FIKS_SOURCE,
   FIKS_STAFF_NAME,
@@ -59,14 +63,16 @@ interface Session {
   metadata: Record<string, unknown>;
 }
 
-const TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const TOKEN_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HOUR_MS = 3_600_000;
 
 /** Trimmed message, or null if it is empty or too long. */
 export function validateMessage(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const msg = raw.trim();
-  if (msg.length < MIN_MESSAGE_CHARS || msg.length > MAX_MESSAGE_CHARS) return null;
+  if (msg.length < MIN_MESSAGE_CHARS || msg.length > MAX_MESSAGE_CHARS)
+    return null;
   return msg;
 }
 
@@ -75,7 +81,10 @@ export function isSessionToken(raw: unknown): raw is string {
 }
 
 /** The open chat inquiry for a token, or null (unknown, malformed or closed). */
-export async function findSession(supabase: SupabaseClient, token: string | null | undefined): Promise<Session | null> {
+export async function findSession(
+  supabase: SupabaseClient,
+  token: string | null | undefined,
+): Promise<Session | null> {
   if (!isSessionToken(token)) return null;
   const { data, error } = await supabase
     .from("contact_inquiries")
@@ -86,12 +95,24 @@ export async function findSession(supabase: SupabaseClient, token: string | null
     .maybeSingle();
   if (error) throw new Error(`session lookup failed: ${error.message}`);
   if (!data) return null;
-  const metadata = data.metadata && typeof data.metadata === "object" ? (data.metadata as Record<string, unknown>) : {};
-  return { id: data.id as string, token, status: String(data.status), metadata };
+  const metadata =
+    data.metadata && typeof data.metadata === "object"
+      ? (data.metadata as Record<string, unknown>)
+      : {};
+  return {
+    id: data.id as string,
+    token,
+    status: String(data.status),
+    metadata,
+  };
 }
 
 /** Messages of one session, oldest first, internal notes included (callers filter). */
-export async function loadHistory(supabase: SupabaseClient, inquiryId: string, limit = HISTORY_LOAD_LIMIT): Promise<ChatMessageRow[]> {
+export async function loadHistory(
+  supabase: SupabaseClient,
+  inquiryId: string,
+  limit = HISTORY_LOAD_LIMIT,
+): Promise<ChatMessageRow[]> {
   const { data, error } = await supabase
     .from("inquiry_messages")
     .select("sender, body, staff_name, is_internal, created_at")
@@ -135,16 +156,24 @@ export function toPlainText(text: string): string {
 type ModelMessage = { role: "user" | "assistant"; content: string };
 
 /** Visible history as alternating turns, starting with the visitor, ending with the new message. */
-export function toModelMessages(history: ChatMessageRow[], latest: string): ModelMessage[] {
+export function toModelMessages(
+  history: ChatMessageRow[],
+  latest: string,
+): ModelMessage[] {
   const visible = history.filter((m) => !m.is_internal);
   const turns: ModelMessage[] = [
-    ...visible.map((m) => ({ role: m.sender === "customer" ? ("user" as const) : ("assistant" as const), content: m.body })),
+    ...visible.map((m) => ({
+      role:
+        m.sender === "customer" ? ("user" as const) : ("assistant" as const),
+      content: m.body,
+    })),
     { role: "user", content: latest },
   ].slice(-HISTORY_FOR_MODEL) as ModelMessage[];
   const merged: ModelMessage[] = [];
   for (const t of turns) {
     const prev = merged[merged.length - 1];
-    if (prev && prev.role === t.role) prev.content = `${prev.content}\n\n${t.content}`;
+    if (prev && prev.role === t.role)
+      prev.content = `${prev.content}\n\n${t.content}`;
     else merged.push({ ...t });
   }
   while (merged.length && merged[0].role === "assistant") merged.shift();
@@ -153,7 +182,9 @@ export function toModelMessages(history: ChatMessageRow[], latest: string): Mode
 
 type ContentBlock = { type: string; text?: string };
 
-function finalText(message: { content?: ContentBlock[]; stop_reason?: string | null } | null): string {
+function finalText(
+  message: { content?: ContentBlock[]; stop_reason?: string | null } | null,
+): string {
   if (!message || message.stop_reason === "tool_use") return "";
   return (message.content ?? [])
     .filter((b) => b.type === "text" && typeof b.text === "string")
@@ -191,7 +222,9 @@ async function insertMessage(
  * always read from the database by token, never taken from the browser.
  * Model and SDK errors become a fixed fallback text; database errors throw.
  */
-export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput> {
+export async function fiksReply(
+  input: FiksReplyInput,
+): Promise<FiksReplyOutput> {
   const { supabase } = input;
   const now = input.now ?? (() => new Date());
   const message = validateMessage(input.message);
@@ -202,19 +235,47 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
   let history: ChatMessageRow[] = [];
 
   if (session) {
-    const sent = await countRows(supabase, "inquiry_messages", { inquiry_id: session.id, sender: "customer" });
+    const sent = await countRows(supabase, "inquiry_messages", {
+      inquiry_id: session.id,
+      sender: "customer",
+    });
     if (sent >= MAX_MESSAGES_PER_SESSION) {
-      return { sessionToken: session.token, reply: SESSION_LIMIT_TEXT, handoff: false, limited: "session" };
+      return {
+        sessionToken: session.token,
+        reply: SESSION_LIMIT_TEXT,
+        handoff: false,
+        limited: "session",
+      };
     }
   } else {
-    const newSessions = await countRows(supabase, "contact_inquiries", { channel: FIKS_CHANNEL }, hourAgo);
+    const newSessions = await countRows(
+      supabase,
+      "contact_inquiries",
+      { channel: FIKS_CHANNEL },
+      hourAgo,
+    );
     if (newSessions >= MAX_NEW_SESSIONS_PER_HOUR) {
-      return { sessionToken: null, reply: BUSY_TEXT, handoff: false, limited: "busy" };
+      return {
+        sessionToken: null,
+        reply: BUSY_TEXT,
+        handoff: false,
+        limited: "busy",
+      };
     }
   }
-  const lastHour = await countRows(supabase, "inquiry_messages", { channel: FIKS_CHANNEL, sender: "customer" }, hourAgo);
+  const lastHour = await countRows(
+    supabase,
+    "inquiry_messages",
+    { channel: FIKS_CHANNEL, sender: "customer" },
+    hourAgo,
+  );
   if (lastHour >= MAX_MESSAGES_PER_HOUR) {
-    return { sessionToken: session?.token ?? null, reply: BUSY_TEXT, handoff: false, limited: "busy" };
+    return {
+      sessionToken: session?.token ?? null,
+      reply: BUSY_TEXT,
+      handoff: false,
+      limited: "busy",
+    };
   }
 
   const handedOffBefore = Boolean(session?.metadata.fiks_handoff_at);
@@ -224,8 +285,12 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
     history = await loadHistory(supabase, session.id);
     const update: Record<string, unknown> = { last_inbound_at: nowIso };
     // A handed-off chat that staff already answered goes back on the to-do list.
-    if (handedOffBefore && session.status !== "ny") update.status = "venter_paa_svar";
-    const { error } = await supabase.from("contact_inquiries").update(update).eq("id", session.id);
+    if (handedOffBefore && session.status !== "ny")
+      update.status = "venter_paa_svar";
+    const { error } = await supabase
+      .from("contact_inquiries")
+      .update(update)
+      .eq("id", session.id);
     if (error) throw new Error(`session update failed: ${error.message}`);
   } else {
     const token = crypto.randomUUID();
@@ -244,8 +309,14 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
       })
       .select("id")
       .single();
-    if (error || !data) throw new Error(`session insert failed: ${error?.message ?? "no row"}`);
-    session = { id: data.id as string, token, status: "besvaret", metadata: {} };
+    if (error || !data)
+      throw new Error(`session insert failed: ${error?.message ?? "no row"}`);
+    session = {
+      id: data.id as string,
+      token,
+      status: "besvaret",
+      metadata: {},
+    };
   }
 
   await insertMessage(supabase, session.id, "customer", message);
@@ -257,7 +328,11 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
     outputs: [],
     scopeMismatch: { value: false },
   };
-  const target: HandoffTarget = { supabase, inquiryId: session.id, metadata: session.metadata };
+  const target: HandoffTarget = {
+    supabase,
+    inquiryId: session.id,
+    metadata: session.metadata,
+  };
   let handedOff = false;
   const tools = buildPublicTools(ctx, async (h) => {
     const result = await handoffImpl(target, h);
@@ -266,29 +341,50 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
   });
 
   let reply = "";
-  try {
-    const anthropic = input.anthropic ?? client();
-    const sessionNote = buildSessionNote({ handedOff: handedOffBefore });
-    const runner = anthropic.beta.messages.toolRunner({
-      model: FIKS_MODEL,
-      max_tokens: 2000,
-      thinking: { type: "adaptive" as const },
-      output_config: { effort: "low" as const },
-      system: [
-        { type: "text" as const, text: buildFiksSystemPrompt(), cache_control: { type: "ephemeral" as const } },
-        ...(sessionNote ? [{ type: "text" as const, text: sessionNote }] : []),
-      ],
-      tools,
-      messages: toModelMessages(history, message),
-      max_iterations: 6,
-    });
-    type FinalMessage = { content?: ContentBlock[]; stop_reason?: string | null };
-    let last: FinalMessage | null = null;
-    for await (const m of runner) last = m as unknown as FinalMessage;
-    reply = toPlainText(finalText(last));
-  } catch (err) {
-    console.error("[fiks] model call failed", err instanceof Error ? err.message : err);
-    reply = "";
+  // Ukendt model-id (404) rammer før noget værktøj er kørt: prøv da én gang med mailassistentens model.
+  for (const model of [FIKS_MODEL, FIKS_FALLBACK_MODEL]) {
+    try {
+      const anthropic = input.anthropic ?? client();
+      const sessionNote = buildSessionNote({ handedOff: handedOffBefore });
+      const runner = anthropic.beta.messages.toolRunner({
+        model,
+        max_tokens: 2000,
+        thinking: { type: "adaptive" as const },
+        output_config: { effort: "low" as const },
+        system: [
+          {
+            type: "text" as const,
+            text: buildFiksSystemPrompt(),
+            cache_control: { type: "ephemeral" as const },
+          },
+          ...(sessionNote
+            ? [{ type: "text" as const, text: sessionNote }]
+            : []),
+        ],
+        tools,
+        messages: toModelMessages(history, message),
+        max_iterations: 6,
+      });
+      type FinalMessage = {
+        content?: ContentBlock[];
+        stop_reason?: string | null;
+      };
+      let last: FinalMessage | null = null;
+      for await (const m of runner) last = m as unknown as FinalMessage;
+      reply = toPlainText(finalText(last));
+      break;
+    } catch (err) {
+      console.error(
+        `[fiks] model call failed (${model})`,
+        err instanceof Error ? err.message : err,
+      );
+      reply = "";
+      if (
+        (err as { status?: number } | null)?.status !== 404 ||
+        model === FIKS_FALLBACK_MODEL
+      )
+        break;
+    }
   }
 
   if (!reply) {
@@ -296,9 +392,14 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
   } else {
     const backing = [
       ...ctx.outputs,
-      ...history.filter((m) => m.sender === "staff" && !m.is_internal).map((m) => m.body),
+      ...history
+        .filter((m) => m.sender === "staff" && !m.is_internal)
+        .map((m) => m.body),
     ];
-    if (unbackedAmounts(reply, backing).length > 0 || hasUnparseableAmount(reply)) {
+    if (
+      unbackedAmounts(reply, backing).length > 0 ||
+      hasUnparseableAmount(reply)
+    ) {
       reply = handedOff ? HANDOFF_CONFIRM_TEXT : SAFE_PRICE_TEXT;
     } else if (hasForbiddenWord(reply)) {
       reply = handedOff ? HANDOFF_CONFIRM_TEXT : OFF_TOPIC_SAFE_TEXT;
@@ -309,17 +410,29 @@ export async function fiksReply(input: FiksReplyInput): Promise<FiksReplyOutput>
   return { sessionToken: session.token, reply, handoff: handedOff };
 }
 
-export type VisibleMessage = { from: "visitor" | "fiks" | "staff"; body: string; at: string };
+export type VisibleMessage = {
+  from: "visitor" | "fiks" | "staff";
+  body: string;
+  at: string;
+};
 
 /** Non-internal messages of an open session, for restoring the widget. Empty for unknown tokens. */
-export async function loadVisibleMessages(supabase: SupabaseClient, token: string | null | undefined): Promise<VisibleMessage[]> {
+export async function loadVisibleMessages(
+  supabase: SupabaseClient,
+  token: string | null | undefined,
+): Promise<VisibleMessage[]> {
   const session = await findSession(supabase, token);
   if (!session) return [];
   const rows = await loadHistory(supabase, session.id, 100);
   return rows
     .filter((m) => !m.is_internal)
     .map((m) => ({
-      from: m.sender === "customer" ? "visitor" : m.staff_name === FIKS_STAFF_NAME ? "fiks" : "staff",
+      from:
+        m.sender === "customer"
+          ? "visitor"
+          : m.staff_name === FIKS_STAFF_NAME
+            ? "fiks"
+            : "staff",
       body: m.body,
       at: m.created_at,
     }));

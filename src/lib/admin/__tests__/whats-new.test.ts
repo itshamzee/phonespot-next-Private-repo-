@@ -30,6 +30,6 @@ describe("WHATS_NEW", () => {
   it("har unikke id'er og nyeste først", () => {
     const ids = WHATS_NEW.map((x) => x.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(WHATS_NEW[0]?.id).toBe("2026-11-19-kundecenter");
+    expect(WHATS_NEW[0]?.id).toBe("2026-11-19-mapper-fiks");
   });
 });

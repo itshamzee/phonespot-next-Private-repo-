@@ -2,6 +2,8 @@ import { COMPANY_EMAIL, STORES } from "@/lib/store-config";
 
 /** Model for the public chat. One place to change it. */
 export const FIKS_MODEL = "claude-sonnet-5-5";
+/** Bruges kun, hvis FIKS_MODEL afvises som ukendt (404). Samme model som mailassistenten. */
+export const FIKS_FALLBACK_MODEL = "claude-opus-5";
 
 export const FIKS_CHANNEL = "chat" as const;
 export const FIKS_SOURCE = "fiks-chat" as const;

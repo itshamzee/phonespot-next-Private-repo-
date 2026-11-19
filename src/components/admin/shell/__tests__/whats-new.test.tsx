@@ -22,7 +22,7 @@ describe("WhatsNew", () => {
   });
 
   it("viser intet, når alt er set", () => {
-    window.localStorage.setItem("ps_whats_new_seen_s1", JSON.stringify(["2026-11-19-kundecenter"]));
+    window.localStorage.setItem("ps_whats_new_seen_s1", JSON.stringify(["2026-11-19-mapper-fiks", "2026-11-19-kundecenter"]));
     render(<WhatsNew />);
     expect(screen.queryByText("Nyt i admin")).toBeNull();
   });

@@ -12,6 +12,21 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-19-mapper-fiks",
+    date: "2026-11-19",
+    title: "Mapper, flueben og Fiks på hjemmesiden",
+    cta: { label: "Åbn kundecenter", href: "/admin/kundecenter" },
+    items: [
+      { text: "Kundecenter har fået mapper: Opkøb, info@, slagelse@ og ha@. De viser alt, der ikke er færdigt, med det der skal besvares øverst." },
+      { text: "Fluebenet på hver række lukker sagen med ét klik, uden at du åbner den. Du kan fortryde i 10 sekunder." },
+      { text: "Mærket \"Kunden skrev sidst\" viser besvarede sager, hvor kunden har skrevet igen." },
+      {
+        text: "Messenger-knappen på hjemmesiden er erstattet af Fiks, en chatassistent der svarer på priser, opkøb, åbningstider og garanti. Samtalerne ligger under Chat på sitet.",
+      },
+      { text: "Beder en kunde om at blive kontaktet, lander chatten i Ikke tildelt med navn og mail eller telefon. Svar som på enhver anden sag." },
+    ],
+  },
+  {
     id: "2026-11-19-kundecenter",
     date: "2026-11-19",
     title: "Nyt kundecenter og en klogere assistent",
