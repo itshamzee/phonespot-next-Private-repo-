@@ -19,6 +19,7 @@ import {
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { JsonLd } from "@/components/seo/json-ld";
+import { extractBlogFaq } from "@/lib/blog-faq";
 import { BlogCover } from "@/components/blog/blog-cover";
 import { TransparencyPanel } from "@/components/blog/transparency-panel";
 
@@ -313,6 +314,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   const toc = getTableOfContents(content);
   const ctaKind = getPostCta(frontmatter);
   const cta = CTA[ctaKind];
+  const faq = extractBlogFaq(content);
+  const postUrl = `https://phonespot.dk/blog/${frontmatter.slug}`;
 
   return (
     <>
@@ -326,10 +329,27 @@ export default async function BlogPostPage({ params }: PageProps) {
           datePublished: frontmatter.date,
           dateModified: frontmatter.updated ?? frontmatter.date,
           ...(frontmatter.coverImage && { image: `https://phonespot.dk${frontmatter.coverImage}` }),
-          author: { "@type": "Organization", name: "PhoneSpot" },
+          mainEntityOfPage: postUrl,
+          inLanguage: "da-DK",
+          author: { "@type": "Organization", name: "PhoneSpot", url: "https://phonespot.dk/om-os" },
           publisher: { "@type": "Organization", name: "PhoneSpot", url: "https://phonespot.dk" },
         }}
       />
+
+      {/* FAQPage JSON-LD fra indlæggets synlige FAQ-afsnit */}
+      {faq.length > 0 && (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faq.map((f) => ({
+              "@type": "Question",
+              name: f.question,
+              acceptedAnswer: { "@type": "Answer", text: f.answer },
+            })),
+          }}
+        />
+      )}
 
       {/* BreadcrumbList JSON-LD */}
       <JsonLd
