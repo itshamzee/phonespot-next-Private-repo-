@@ -207,10 +207,12 @@ export async function writeReply(
 ): Promise<{ subject: string; body: string } | null> {
   const { data: msgs } = await sb
     .from("inquiry_messages")
-    .select("sender, body, created_at")
+    .select("sender, body, created_at, is_internal")
     .eq("inquiry_id", item.inquiryId)
+    .eq("is_internal", false) // interne noter må aldrig nå modellen
     .order("created_at", { ascending: true });
-  const thread = ((msgs ?? []) as { sender: string; body: string; created_at: string }[])
+  const thread = ((msgs ?? []) as { sender: string; body: string; created_at: string; is_internal?: boolean | null }[])
+    .filter((m) => !m.is_internal)
     .slice(-8)
     .map((m) => `[${m.sender === "staff" ? "PhoneSpot" : "Kunde"} · ${m.created_at.slice(0, 16)}]\n${m.body.slice(0, 3000)}`)
     .join("\n\n");

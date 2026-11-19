@@ -34,12 +34,15 @@ export async function POST(req: NextRequest) {
     if (!inq) return NextResponse.json({ error: "Henvendelse ikke fundet" }, { status: 404 });
     const { data: msgs } = await sb
       .from("inquiry_messages")
-      .select("sender, body, created_at")
+      .select("sender, body, created_at, is_internal")
       .eq("inquiry_id", inq.id)
+      .eq("is_internal", false) // interne noter må aldrig nå modellen
       .order("created_at", { ascending: true });
     const all: ThreadMessage[] = [
       { sender: "customer", body: inq.message as string, created_at: inq.created_at as string },
-      ...((msgs ?? []) as ThreadMessage[]),
+      ...((msgs ?? []) as (ThreadMessage & { is_internal?: boolean | null })[])
+        .filter((m) => !m.is_internal)
+        .map(({ sender, body, created_at }) => ({ sender, body, created_at })),
     ];
     senderEmail = inq.email ?? "";
     channel = (inq.channel as InquiryChannel | null) ?? "email";

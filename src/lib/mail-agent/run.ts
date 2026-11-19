@@ -164,10 +164,13 @@ export async function assessAndDraft(
 ): Promise<{ draft: AiDraftRow; assessment: Assessment }> {
   const { data: msgs } = await sb
     .from("inquiry_messages")
-    .select("sender, body, created_at")
+    .select("sender, body, created_at, is_internal")
     .eq("inquiry_id", args.inquiryId)
     .order("created_at", { ascending: true });
-  const thread = (msgs ?? []) as ThreadMessage[];
+  // Interne noter er kun til personalet og må aldrig nå modellen.
+  const thread = ((msgs ?? []) as (ThreadMessage & { is_internal?: boolean | null })[])
+    .filter((m) => !m.is_internal)
+    .map(({ sender, body, created_at }) => ({ sender, body, created_at })) as ThreadMessage[];
   const { data: inquiryRow, error: channelError } = await sb
     .from("contact_inquiries")
     .select("channel")

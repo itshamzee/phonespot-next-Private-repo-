@@ -297,5 +297,22 @@ describe("ingestInboundEmail", () => {
       await ingestInboundEmail(sb2 as never, base, NOW);
       expect(sb2._tables.contact_inquiries[0]).toMatchObject({ last_inbound_at: NOW.toISOString(), channel: "email" });
     });
+
+    it("indgående mail på en udsat tråd nulstiller snoozed_until", async () => {
+      const sb = fakeSupabase({
+        contact_inquiries: [
+          {
+            id: "inq-1",
+            email: "kunde@example.com",
+            status: "ny",
+            subject: "Min ordre",
+            snoozed_until: "2026-11-25T08:00:00.000Z",
+            created_at: "2026-01-01",
+          },
+        ],
+      });
+      await ingestInboundEmail(sb as never, base, NOW);
+      expect(sb._tables.contact_inquiries[0].snoozed_until).toBeNull();
+    });
   });
 });

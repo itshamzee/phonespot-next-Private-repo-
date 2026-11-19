@@ -171,7 +171,8 @@ export async function ingestInboundEmail(
 
   if (!created) {
     // channel is only set on creation; an existing thread keeps its own channel.
-    const patch: Record<string, unknown> = { last_inbound_at: nowIso };
+    // Ny indgående besked vækker en udsat sag.
+    const patch: Record<string, unknown> = { last_inbound_at: nowIso, snoozed_until: null };
     if (reopenedClosed) {
       patch.status = "ny";
       reopened = true;
