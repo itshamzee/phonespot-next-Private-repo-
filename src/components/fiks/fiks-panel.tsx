@@ -92,8 +92,8 @@ export function FiksPanel({
 
   // Restore an earlier conversation from this tab once, by token.
   useEffect(() => {
+    // Markeres først, når beskederne er lagt ind: en afbrudt første kørsel (Reacts dobbelte effekt) må gerne prøve igen.
     if (restored.current) return;
-    restored.current = true;
     const token = readToken();
     if (!token) return;
     let cancelled = false;
@@ -109,6 +109,8 @@ export function FiksPanel({
         const action = validAction(data.action);
         const lastFiks = restoredMessages.findLastIndex((m) => m.from === "fiks");
         if (action && lastFiks >= 0) restoredMessages[lastFiks] = { ...restoredMessages[lastFiks], action };
+        if (cancelled || restored.current) return;
+        restored.current = true;
         setMessages((current) => [...restoredMessages, ...current]);
       } catch {
         // Nothing to restore; the chat starts fresh.
