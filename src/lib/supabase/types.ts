@@ -193,7 +193,11 @@ export interface ContactInquiry {
   last_inbound_at: string | null;
   admin_notes: string | null;
   source: InquirySource;
+  /** Ansvarlig medarbejder (staff.id som tekst). */
   assigned_to: string | null;
+  assigned_name?: string | null;
+  /** Sagen skjules fra aabne visninger til dette tidspunkt. */
+  snoozed_until?: string | null;
   metadata: Record<string, unknown> | null;
   /** Hvilken af vores postkasser traaden lever i (null for kontaktformular). */
   mailbox?: string | null;
@@ -213,6 +217,8 @@ export interface InquiryMessage {
   in_reply_to?: string | null;
   external_message_id?: string | null;
   delivery_status?: string | null;
+  /** Intern note: vises kun for personalet, aldrig for kunden eller modellen. */
+  is_internal?: boolean;
   created_at: string;
 }
 
