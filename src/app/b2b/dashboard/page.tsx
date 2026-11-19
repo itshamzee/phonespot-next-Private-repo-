@@ -206,7 +206,7 @@ export default function B2BDashboardPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="group rounded-xl border border-[#E5E5EA] bg-white p-5 transition-shadow hover:shadow-md"
+            className="group rounded-xl border border-[#E5E5EA] bg-white p-5 card-raise"
           >
             <div className="flex items-center justify-between">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1A3D2E]/8 text-[#1A3D2E] transition-colors group-hover:bg-[#1A3D2E] group-hover:text-white">

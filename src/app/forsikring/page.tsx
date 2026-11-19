@@ -234,7 +234,7 @@ export default function ForsikringPage() {
 
             <FadeIn delay={0.1}>
               <div className="flex justify-center lg:justify-end">
-                <div className="overflow-hidden rounded-3xl shadow-sm">
+                <div className="overflow-hidden rounded-3xl shadow-rest">
                   <Image
                     src="/brand/partners/storstrom-forsikring-primary.svg"
                     alt="Storstrøm Forsikring"
@@ -294,7 +294,7 @@ export default function ForsikringPage() {
             {COVERED.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl bg-white p-5 shadow-sm"
+                className="rounded-2xl bg-white p-5 shadow-rest"
               >
                 <div className="flex items-center gap-2">
                   <CheckIcon />
@@ -400,7 +400,7 @@ export default function ForsikringPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-2xl bg-white p-6 text-center shadow-sm"
+                className="rounded-2xl bg-white p-6 text-center shadow-rest"
               >
                 <p className="font-display text-3xl font-bold text-[#1A3D2E]">
                   {stat.value}
@@ -416,7 +416,7 @@ export default function ForsikringPage() {
       <SectionWrapper background="cream">
         <div className="mx-auto grid max-w-4xl items-center gap-10 md:grid-cols-[200px_1fr]">
           <div className="flex justify-center">
-            <div className="overflow-hidden rounded-2xl shadow-sm">
+            <div className="overflow-hidden rounded-2xl shadow-rest">
               <Image
                 src="/brand/partners/storstrom-forsikring-primary.svg"
                 alt="Storstrøm Forsikring"
@@ -506,7 +506,7 @@ export default function ForsikringPage() {
               href={DOC_IPID_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5 text-left transition-shadow hover:shadow-md"
+              className="flex items-center gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5 text-left card-raise"
             >
               <DocumentIcon />
               <span>
@@ -522,7 +522,7 @@ export default function ForsikringPage() {
               href={DOC_TERMS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5 text-left transition-shadow hover:shadow-md"
+              className="flex items-center gap-4 rounded-2xl border border-[#E5E5EA] bg-white p-5 text-left card-raise"
             >
               <DocumentIcon />
               <span>

@@ -369,7 +369,7 @@ export default function OmOsPage() {
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {COMMITMENTS.map((c, i) => (
             <FadeIn key={c.title} delay={i * 0.08}>
-              <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-rest card-raise">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#1A3D2E]/10 text-[#1A3D2E]">
                   {ICON_MAP[c.icon]}
                 </div>
