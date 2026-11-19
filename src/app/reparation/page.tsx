@@ -71,7 +71,7 @@ function buildRepairFaq(prices: { screen: number | null; battery: number | null 
   {
     question: "Hvad koster en skærmudskiftning?",
     answer: priceText
-      ? `På de mest solgte iPhone- og Samsung-modeller koster ${priceText}. Prisen afhænger af modellen og den valgte skærmkvalitet (fx Budget, OEM eller Original), og den er fast og inklusive moms og reservedel. Se prisen for din model i modelvælgeren eller i den samlede prisliste på phonespot.dk/reparation/priser.`
+      ? `På de mest solgte iPhone- og Samsung-modeller koster ${priceText} Prisen afhænger af modellen og den valgte skærmkvalitet (fx Budget, OEM eller Original), og den er fast og inklusive moms og reservedel. Se prisen for din model i modelvælgeren eller i den samlede prisliste på phonespot.dk/reparation/priser.`
       : "Prisen afhænger af din model og den valgte reservedel. Find din model ovenfor for at se priser på skærmskift, batteriskift og andre reparationer. Priserne er i danske kroner inklusive moms.",
   },
   {

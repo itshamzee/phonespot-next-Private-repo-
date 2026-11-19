@@ -89,7 +89,7 @@ function buildFaqs(screen: string | null, battery: string | null) {
     {
       question: "Hvad koster et batteriskift?",
       answer: battery
-        ? `Batteriskift på de mest solgte modeller koster ${battery}. Se den præcise pris for din model på phonespot.dk/reparation.`
+        ? `Batteriskift på de mest solgte modeller koster ${battery} Se den præcise pris for din model på phonespot.dk/reparation.`
         : "Prisen afhænger af modellen. Se den præcise pris for din model på phonespot.dk/reparation.",
     },
     {
@@ -206,7 +206,7 @@ export default async function RepairFactsPage() {
             PhoneSpot reparerer telefoner og tablets i to butikker: Løversysselvej 3B i Vejle og
             VestsjællandsCentret i Slagelse. Du kan komme ind uden tidsbestilling, 90 % af skærm- og
             batteriskift er klar på 30 minutter, og der er livstidsgaranti på arbejde og dele.
-            {screenRange && ` Skærmskift koster fra ${screenRange}.`}
+            {screenRange && ` Skærmskift koster fra ${screenRange}`}
           </p>
           <p className="mt-4 text-sm text-[#6E6E73]">
             Priser opdateret: <time dateTime={new Date().toISOString().slice(0, 10)}>{updated}</time>
@@ -220,7 +220,7 @@ export default async function RepairFactsPage() {
             </h2>
             <ul className="mt-4 space-y-2 text-base leading-relaxed text-[#444449]">
               {screenRange && <li>Skærmskift: fra {screenRange} på modellerne herunder.</li>}
-              {batteryRange && <li>Batteriskift: {batteryRange}.</li>}
+              {batteryRange && <li>Batteriskift: {batteryRange}</li>}
               <li>Fuld diagnose: 249 kr. Hurtigt tjek ved disken er gratis.</li>
               <li>Alle priser er faste, inklusive moms, reservedel og garanti.</li>
             </ul>

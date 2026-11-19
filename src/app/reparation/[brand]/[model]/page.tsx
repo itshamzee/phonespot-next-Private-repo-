@@ -198,7 +198,8 @@ export default async function ModelPricePage({ params }: Props) {
         modelName: model.name,
         deviceType: brand.device_type,
         services,
-        storeCities,
+        // Vejle først: hovedbutikken og den by, folk oftest søger på.
+        storeCities: [STORES.vejle.city, STORES.slagelse.city],
       });
   const campaignActive = isBlackNovember();
   // Heroens pris skal matche det, folk kommer for: skærm og batteri, ikke den

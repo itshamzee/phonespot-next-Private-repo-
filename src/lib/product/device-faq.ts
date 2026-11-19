@@ -115,7 +115,7 @@ export function getDeviceModelFaq(
       parts.length > 1 ? `${parts.slice(0, -1).join(", ")} og ${parts[parts.length - 1]}` : parts[0];
     out.push({
       q: `Hvad koster en brugt ${displayName} hos PhoneSpot?`,
-      a: `Lige nu koster ${displayName} fra ${kr(min)} hos PhoneSpot. Pris pr. stand: ${list}. Alle enheder har 36 måneders garanti og 30 dages returret, og fragten er gratis.`,
+      a: `Lige nu koster ${displayName} fra ${kr(min)} hos PhoneSpot. Pris pr. stand: ${list} Alle enheder har 36 måneders garanti og 30 dages returret, og fragten er gratis.`,
     });
   }
   out.push({

@@ -158,8 +158,8 @@ const DEFINITIONS: Record<string, Definition> = {
     liquidMetal: true,
     about: (p) => [
       "PS5 Pro kom i november 2024 og er den mest kraftfulde PlayStation. Den kører tunge spil længe ad gangen, og derfor betyder køling og luftgennemstrømning meget. Larmer blæseren mere end før, eller bliver konsollen varm bag på, er det tid til en rens.",
-      `PS5 Pro har også flydende metal på chippen, og køleprofilen har fine riller, der skal holde metallet på plads. Ved en rens skifter vi termopuderne, tjekker det flydende metal og fornyer det kun, hvis det har flyttet sig.${p.clean ? ` Rens og ny køling koster ${kr(p.clean)}.` : ""}`,
-      `HDMI-porten på Pro kan knække på samme måde som på de andre PS5-modeller, hvis kablet bliver trukket skævt ud.${p.bundle ? ` Vi skifter den med mikrolodning og renser konsollen i samme omgang for ${kr(p.bundle)}.` : ""}`,
+      `PS5 Pro har også flydende metal på chippen, og køleprofilen har fine riller, der skal holde metallet på plads. Ved en rens skifter vi termopuderne, tjekker det flydende metal og fornyer det kun, hvis det har flyttet sig.${p.clean ? ` Rens og ny køling koster ${kr(p.clean)}` : ""}`,
+      `HDMI-porten på Pro kan knække på samme måde som på de andre PS5-modeller, hvis kablet bliver trukket skævt ud.${p.bundle ? ` Vi skifter den med mikrolodning og renser konsollen i samme omgang for ${kr(p.bundle)}` : ""}`,
     ],
     extraFaqs: () => [
       {
@@ -197,7 +197,7 @@ const DEFINITIONS: Record<string, Definition> = {
     liquidMetal: false,
     about: (p) => [
       "PS4 Pro er kendt for at larme, især i krævende spil. Det skyldes oftest støv i blæser og køleprofil og udtørret kølepasta, der får blæseren til at køre på fuld kraft.",
-      `Vi skiller konsollen ad, renser blæser og køleprofil og lægger ny kølepasta på chippen.${p.clean ? ` Rens og ny kølepasta koster ${kr(p.clean)}.` : ""} Får tv'et intet billede, skifter vi også HDMI-porten.`,
+      `Vi skiller konsollen ad, renser blæser og køleprofil og lægger ny kølepasta på chippen.${p.clean ? ` Rens og ny kølepasta koster ${kr(p.clean)}` : ""} Får tv'et intet billede, skifter vi også HDMI-porten.`,
     ],
     extraFaqs: () => [
       {
@@ -215,7 +215,7 @@ const DEFINITIONS: Record<string, Definition> = {
     liquidMetal: false,
     about: (p) => [
       "Xbox Series X trækker luft ind i bunden og blæser den ud gennem toppen med én stor blæser. Står den på et tæppe eller tæt inde i et tv-møbel, samler den støv, og så stiger både temperatur og støj.",
-      `Vi renser blæser og køleprofil og lægger ny kølepasta på.${p.clean ? ` Det koster ${kr(p.clean)}.` : ""} Får tv'et intet signal, skifter vi HDMI-porten med mikrolodning.`,
+      `Vi renser blæser og køleprofil og lægger ny kølepasta på.${p.clean ? ` Det koster ${kr(p.clean)}` : ""} Får tv'et intet signal, skifter vi HDMI-porten med mikrolodning.`,
     ],
     extraFaqs: () => [],
   },
@@ -279,7 +279,7 @@ export function getConsoleModelPage(
     prices.bundle
       ? `HDMI-port og indvendig rengøring koster ${kr(prices.bundle)} og tager 2-3 hverdage.`
       : prices.hdmi
-        ? `En ny HDMI-port koster ${kr(prices.hdmi)}.`
+        ? `En ny HDMI-port koster ${kr(prices.hdmi)}`
         : "",
     "Du får 2 års garanti, og du kan også sende konsollen ind.",
   ].filter(Boolean);
@@ -300,7 +300,7 @@ export function getConsoleModelPage(
       ? [
           {
             question: `Hvad koster det at rense en ${d.short}?`,
-            answer: `Rens og ny køling koster ${kr(prices.clean)}. Vi renser blæser, køleprofil og luftkanaler${d.liquidMetal ? ", skifter termopuderne og tjekker det flydende metal på chippen" : ", lægger ny kølepasta på chippen og skifter termopuder"}. Til sidst tester vi konsollen under belastning. Det tager 1-2 hverdage.`,
+            answer: `Rens og ny køling koster ${kr(prices.clean)} Vi renser blæser, køleprofil og luftkanaler${d.liquidMetal ? ", skifter termopuderne og tjekker det flydende metal på chippen" : ", lægger ny kølepasta på chippen og skifter termopuder"}. Til sidst tester vi konsollen under belastning. Det tager 1-2 hverdage.`,
           },
         ]
       : []),
@@ -310,7 +310,7 @@ export function getConsoleModelPage(
             question: `Hvad koster en ny HDMI-port på ${d.short}?`,
             answer: prices.bundle
               ? `HDMI-port og indvendig rengøring koster ${kr(prices.bundle)} i én pakke${prices.hdmi ? `. Porten alene koster ${kr(prices.hdmi)}` : ""}. Porten skiftes med mikrolodning, og det tager 2-3 hverdage.`
-              : `En ny HDMI-port koster ${kr(prices.hdmi!)}. Porten skiftes med mikrolodning.`,
+              : `En ny HDMI-port koster ${kr(prices.hdmi!)} Porten skiftes med mikrolodning.`,
           },
         ]
       : []),
