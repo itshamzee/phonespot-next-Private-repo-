@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { STORES, openingHoursJsonLd } from "@/lib/store-config";
 import { getFullPriceList, getRepairPriceSummaries, type RepairPriceSummary } from "@/lib/supabase/repairs";
 import { columnsForBrand, summarizeModel } from "@/lib/repairs/price-list";
+import { REPAIR_WARRANTY_ANSWER } from "@/lib/repairs/warranty-copy";
 
 // Prices come straight from the repair price list in the database; the page
 // is regenerated hourly, so "Priser opdateret" is the date they were read.
@@ -29,6 +30,8 @@ export const metadata: Metadata = {
 };
 
 const PRICE_FACT_MODELS = [
+  { brand: "iphone", model: "iphone-17-pro" },
+  { brand: "iphone", model: "iphone-17" },
   { brand: "iphone", model: "iphone-16-pro" },
   { brand: "iphone", model: "iphone-16" },
   { brand: "iphone", model: "iphone-15-pro" },
@@ -42,8 +45,8 @@ const PRICE_FACT_MODELS = [
   { brand: "samsung", model: "galaxy-a55" },
 ];
 
-const WARRANTY_TEXT =
-  "Telefon- og tabletreparationer har livstidsgaranti på arbejde og dele. Opstår den samme fejl igen på den del, vi har skiftet, reparerer vi den uden beregning, så længe du ejer enheden. Garantien dækker ikke nye skader som fald, tryk eller væske, og et batteris naturlige kapacitetsfald er ikke en fejl. Behandling af vandskade har 3 måneders garanti.";
+// Samme ordlyd som bysiderne og llms.txt (ejerbeslutning 2026-10-16).
+const WARRANTY_TEXT = REPAIR_WARRANTY_ANSWER;
 
 const WAIT_TEXT =
   "Du kan komme ind uden tidsbestilling i begge butikker. 90 % af skærm- og batteriskift er klar på 30 minutter. Andre reparationer tager længere tid, og vi giver dig et tidspunkt, når vi har set enheden.";
