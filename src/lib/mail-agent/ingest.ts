@@ -65,8 +65,13 @@ interface SenderMatch {
 function pickBySubject<T extends { subject: string | null }>(rows: T[], subject: string, fallbackToNewest: boolean): T | null {
   if (rows.length === 0) return null;
   const normalized = stripReplyPrefixes(subject);
+  // A row subject that is empty after stripping (e.g. "Re:") would match
+  // everything via includes(""), so it never counts as a subject match.
   const bySubject = normalized
-    ? rows.find((r) => r.subject && normalized.includes(stripReplyPrefixes(r.subject)))
+    ? rows.find((r) => {
+        const rowSubject = r.subject ? stripReplyPrefixes(r.subject) : "";
+        return rowSubject !== "" && normalized.includes(rowSubject);
+      })
     : undefined;
   return bySubject ?? (fallbackToNewest ? rows[0] : null);
 }
@@ -77,6 +82,8 @@ async function matchBySender(
   subject: string,
   now: Date,
 ): Promise<SenderMatch | null> {
+  // A sender without an address must never attach to a legacy row with email "".
+  if (!email.trim()) return null;
   const pattern = escapeLike(email);
 
   const { data } = await supabase
@@ -165,7 +172,8 @@ export async function ingestInboundEmail(
   }
 
   if (!created) {
-    const patch: Record<string, unknown> = { last_inbound_at: nowIso, channel: "email" };
+    // channel is only set on creation; an existing thread keeps its own channel.
+    const patch: Record<string, unknown> = { last_inbound_at: nowIso };
     if (reopenedClosed) {
       patch.status = "ny";
       reopened = true;
@@ -180,7 +188,10 @@ export async function ingestInboundEmail(
         reopened = true;
       }
     }
-    await supabase.from("contact_inquiries").update(patch).eq("id", inquiryId);
+    const { error: updateErr } = await supabase.from("contact_inquiries").update(patch).eq("id", inquiryId);
+    if (updateErr) {
+      console.error(`[ingest] kunne ikke opdatere henvendelse ${inquiryId}`, updateErr);
+    }
   }
 
   return { inquiryId, inquiryMessageId: msg.id as string, created, reopened };

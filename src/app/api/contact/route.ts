@@ -62,10 +62,11 @@ export async function POST(request: Request) {
     await dispatchAutoOffer(createAdminClient(), {
       id: inserted.id,
       name: inserted.name,
-      email: inserted.email,
+      // The column is nullable now; dispatchAutoOffer expects a string, as before.
+      email: inserted.email ?? "",
       metadata: inserted.metadata,
     });
-    await sendSellConfirmation(createAdminClient(), inserted);
+    await sendSellConfirmation(createAdminClient(), { ...inserted, email: inserted.email ?? "" });
   }
 
   try {

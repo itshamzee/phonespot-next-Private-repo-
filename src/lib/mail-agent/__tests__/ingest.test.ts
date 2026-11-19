@@ -234,6 +234,44 @@ describe("ingestInboundEmail", () => {
       expect(r.inquiryId).not.toBe("inq-closed");
     });
 
+    it("lukket sag uden last_inbound_at genåbnes ikke af afsendermatch", async () => {
+      const sb = fakeSupabase({
+        contact_inquiries: [{ ...closed(10), last_inbound_at: null }],
+      });
+      const r = await ingestInboundEmail(sb as never, { ...base, subject: "Re: Min ordre" }, NOW);
+      expect(r.created).toBe(true);
+      expect(r.inquiryId).not.toBe("inq-closed");
+      expect(sb._tables.contact_inquiries[0].status).toBe("lukket");
+    });
+
+    it("lukket sag med tomt emne efter Re: matcher ikke alt", async () => {
+      const sb = fakeSupabase({ contact_inquiries: [closed(10, "Re:")] });
+      const r = await ingestInboundEmail(sb as never, { ...base, subject: "Re: Min ordre" }, NOW);
+      expect(r.created).toBe(true);
+      expect(r.inquiryId).not.toBe("inq-closed");
+    });
+
+    it("tom afsender matcher aldrig en ældre række med tom email", async () => {
+      const sb = fakeSupabase({
+        contact_inquiries: [
+          { id: "inq-legacy", email: "", status: "ny", subject: "Min ordre", created_at: "2026-01-01" },
+        ],
+      });
+      const r = await ingestInboundEmail(sb as never, { ...base, fromEmail: "" }, NOW);
+      expect(r.created).toBe(true);
+      expect(r.inquiryId).not.toBe("inq-legacy");
+    });
+
+    it("eksisterende tråd beholder sin kanal", async () => {
+      const sb = fakeSupabase({
+        contact_inquiries: [
+          { id: "inq-1", email: "kunde@example.com", status: "ny", subject: "Min ordre", channel: "form", created_at: "2026-01-01" },
+        ],
+      });
+      await ingestInboundEmail(sb as never, base, NOW);
+      expect(sb._tables.contact_inquiries[0]).toMatchObject({ channel: "form", last_inbound_at: NOW.toISOString() });
+    });
+
     it("indgående mail sætter last_inbound_at og channel", async () => {
       const sb = fakeSupabase({
         contact_inquiries: [
@@ -241,7 +279,7 @@ describe("ingestInboundEmail", () => {
         ],
       });
       await ingestInboundEmail(sb as never, base, NOW);
-      expect(sb._tables.contact_inquiries[0]).toMatchObject({ last_inbound_at: NOW.toISOString(), channel: "email" });
+      expect(sb._tables.contact_inquiries[0]).toMatchObject({ last_inbound_at: NOW.toISOString() });
 
       const sb2 = fakeSupabase({});
       await ingestInboundEmail(sb2 as never, base, NOW);
