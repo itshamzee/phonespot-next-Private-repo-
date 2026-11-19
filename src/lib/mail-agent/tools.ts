@@ -5,6 +5,7 @@ import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
 import { escapeLike } from "./like";
 import { SUMMARY_CATEGORIES } from "@/lib/repairs/price-list";
+import { quoteBuybackImpl, type QuoteBuybackInput } from "./quote-buyback";
 import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
 import { SYMPTOMS, diagnoseImpl } from "./symptoms";
@@ -313,6 +314,22 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
         category: z.enum(SUMMARY_CATEGORIES).optional().describe("Reparationskategori når du kender fejlen"),
       }),
       run: rec((input: { model: string; category?: string }) => quoteRepairImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "quote_buyback",
+      description:
+        "Vejledende opkøbspris for en iPhone ud fra model, lagerplads og stand. Spørg kunden om det, du mangler, før du kalder.",
+      inputSchema: z.object({
+        model: z.string().describe("Modelnavn, fx iPhone 13 Pro"),
+        storage: z.string().describe("Lagerplads, fx 128GB eller 1TB"),
+        screen: z.enum(["Perfekt", "Små ridser", "Revnet", "Virker ikke"]).describe("Skærmens stand"),
+        back: z.enum(["Perfekt", "Små ridser", "Revnet"]).describe("Bagsidens stand"),
+        battery: z.enum(["God (80%+)", "Okay (60-80%)", "Dårligt (<60%)", "Ved ikke"]).describe("Batteriets tilstand"),
+        charging_broken: z.boolean().describe("Virker opladning ikke?"),
+        other_faults: z.boolean().describe("Er der andre fejl end opladning (kamera, højttaler, Face ID, tænder ikke osv.)?"),
+        cloud_locked: z.enum(["Ja", "Nej", "Ved ikke"]).describe("Er enheden låst til iCloud?"),
+      }),
+      run: rec((input: QuoteBuybackInput) => quoteBuybackImpl(ctx, input)),
     }),
     betaZodTool({
       name: "diagnose",

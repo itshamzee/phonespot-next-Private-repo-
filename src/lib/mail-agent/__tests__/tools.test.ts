@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   buildTools,
   lookupBuybackImpl,
@@ -228,7 +228,18 @@ describe("buildTools ctx.outputs", () => {
       quote_repair: { model: "iPhone 13" },
       diagnose: { symptom_key: undefined },
       get_knowledge: {},
+      quote_buyback: {
+        model: "iPhone 13",
+        storage: "128GB",
+        screen: "Perfekt",
+        back: "Perfekt",
+        battery: "God (80%+)",
+        charging_broken: false,
+        other_faults: false,
+        cloud_locked: "Nej",
+      },
     };
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const { SYMPTOMS } = await import("@/lib/mail-agent/symptoms");
     inputs.diagnose = { symptom_key: SYMPTOMS[0].key };
     let expected = 0;
@@ -240,8 +251,8 @@ describe("buildTools ctx.outputs", () => {
       expect(ctx.outputs[ctx.outputs.length - 1], t.name).toBe(ret);
       expected++;
     }
-    expect(expected).toBe(7);
-    expect(ctx.outputs).toHaveLength(7);
+    expect(expected).toBe(8);
+    expect(ctx.outputs).toHaveLength(8);
     const submit = tools.find((t) => t.name === "submit_assessment")!;
     expect(submit).toBeDefined();
   });
