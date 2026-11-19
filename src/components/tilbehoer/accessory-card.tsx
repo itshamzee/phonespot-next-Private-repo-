@@ -34,14 +34,14 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   // eslint-disable-next-line @next/next/no-img-element
   const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
   const campaignTag=black_november ? <span className="absolute left-3 top-3"><PriceTag size="sm" surface="light" tilt={-3} price="Black November"/></span> : null;
-  const tile="relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
+  const tile="card-media relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
   // Tilføjet-tilstanden må ikke ligne "udsolgt": den beholder farven og er kun låst for dobbeltklik.
   const buttonClass = added
     ? "bg-[#1A3D2E] text-white"
     : canBuy
       ? "bg-[#EDF2EE] text-[#1A3D2E] hover:bg-[#1A3D2E] hover:text-white"
       : "cursor-not-allowed bg-sand text-charcoal/55";
-  return <article className="flex h-full flex-col font-body">
+  return <article className="card-lift flex h-full flex-col font-body">
     {/* Product photographs are shown whole, without substitute device artwork. */}
     {href ? <Link href={href} className={tile}>{photo}{campaignTag}</Link> : <div className={tile}>{photo}{campaignTag}</div>}
     <div className="flex flex-1 flex-col px-1 pt-3 sm:pt-4">
