@@ -1,7 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchProducts } from "@/lib/supabase/product-queries";
+import {
+  buildSuggestProducts,
+  buildSuggestShortcuts,
+  parseSuggestLimit,
+  sanitizeSuggestQuery,
+  type SuggestResponse,
+} from "./suggest";
+
+const SUGGEST_CACHE = "public, s-maxage=60, stale-while-revalidate=300";
+
+/** Let tilstand til søgeforslag i headeren: ?suggest=1&limit=5&q=… */
+async function suggest(req: NextRequest) {
+  const q = sanitizeSuggestQuery(req.nextUrl.searchParams.get("q"));
+  const limit = parseSuggestLimit(req.nextUrl.searchParams.get("limit"));
+  const empty: SuggestResponse = { products: [], shortcuts: [] };
+  if (q.length < 2) {
+    return NextResponse.json(empty, { headers: { "Cache-Control": SUGGEST_CACHE } });
+  }
+  try {
+    const { templates, skuProducts } = await searchProducts(q);
+    const body: SuggestResponse = {
+      products: buildSuggestProducts(templates, skuProducts, limit),
+      shortcuts: buildSuggestShortcuts(q),
+    };
+    return NextResponse.json(body, { headers: { "Cache-Control": SUGGEST_CACHE } });
+  } catch {
+    return NextResponse.json(empty, { status: 500, headers: { "Cache-Control": "no-store" } });
+  }
+}
 
 export async function GET(req: NextRequest) {
+  if (req.nextUrl.searchParams.get("suggest") === "1") return suggest(req);
+
   const q = req.nextUrl.searchParams.get("q")?.trim();
 
   if (!q) {
