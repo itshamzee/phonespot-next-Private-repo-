@@ -89,6 +89,24 @@ describe("POST /api/fiks/chat", () => {
     expect(body.error).toContain("info@phonespot.dk");
   });
 
+  it("adds a sell action with the tool's amount when the turn priced a device", async () => {
+    fiksReplyMock.mockResolvedValue({
+      sessionToken: "tok-1",
+      reply: "Din iPhone 13 er vejledende 2.150 kr. værd.",
+      handoff: false,
+      quote: { model: "iPhone 13", storage: "128GB", answers: {}, amount: 2150, at: "x" },
+    });
+    const body = await (await post({ message: "ok" })).json();
+    expect(body.action).toEqual({
+      type: "sell",
+      label: "Fortsæt til formularen",
+      href: "/saelg-din-enhed?model=iPhone+13&storage=128GB&fiks=tok-1#start",
+      model: "iPhone 13",
+      amount: 2150,
+    });
+    expect(body).not.toHaveProperty("quote");
+  });
+
   it("allows long model calls", () => {
     expect(maxDuration).toBe(60);
   });
@@ -126,6 +144,24 @@ describe("GET /api/fiks/chat", () => {
     });
     const body = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
     expect(body.messages).toEqual([{ from: "visitor", body: "hej", at: "2026-11-19T10:00:01Z" }]);
+  });
+
+  it("returns the sell action for the latest stored quote, so the button survives a reload", async () => {
+    const quote = {
+      model: "iPhone 13",
+      storage: "128GB",
+      answers: { screen: "Perfekt", back: "Perfekt", battery: "God (80%+)", charging_broken: false, other_faults: false, cloud_locked: "Nej" },
+      amount: 2150,
+      at: "2026-11-19T10:00:03Z",
+    };
+    fake.current = fakeSupabase({
+      contact_inquiries: [{ id: "i1", channel: "chat", external_thread_id: TOKEN, status: "besvaret", metadata: { fiks_quote: quote } }],
+      inquiry_messages: [
+        { inquiry_id: "i1", channel: "chat", sender: "staff", body: "2.150 kr.", staff_name: "Fiks", is_internal: false, created_at: "2026-11-19T10:00:03Z" },
+      ],
+    });
+    const body = await (await GET(new Request(`https://phonespot.dk/api/fiks/chat?token=${TOKEN}`))).json();
+    expect(body.action).toMatchObject({ type: "sell", model: "iPhone 13", amount: 2150, href: expect.stringContaining(`fiks=${TOKEN}`) });
   });
 
   it("returns an empty list for an unknown token", async () => {

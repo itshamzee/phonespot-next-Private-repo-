@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { fiksReply, loadVisibleMessages, validateMessage } from "@/lib/fiks/chat";
+import { fiksReply, loadQuoteForToken, loadVisibleMessages, validateMessage } from "@/lib/fiks/chat";
+import { sellAction } from "@/lib/fiks/quote-shared";
 import { BUSY_TEXT, HONEYPOT_TEXT, IP_WINDOW_MS, MAX_MESSAGE_CHARS, MAX_MESSAGES_PER_IP_PER_WINDOW, isFiksDisabled } from "@/lib/fiks/config";
 
 /**
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
       reply: out.reply,
       handoff: out.handoff,
       ...(out.limited ? { limited: out.limited } : {}),
+      ...(out.quote && out.sessionToken ? { action: sellAction(out.quote, out.sessionToken) } : {}),
     });
   } catch (err) {
     console.error("[fiks] chat turn failed", err instanceof Error ? err.message : err);
@@ -91,8 +93,11 @@ export async function GET(request: Request) {
   if (isFiksDisabled()) return json({ error: DISABLED_ERROR }, 503);
   const token = new URL(request.url).searchParams.get("token");
   try {
-    const messages = await loadVisibleMessages(createServerClient(), token);
-    return json({ messages });
+    const supabase = createServerClient();
+    const messages = await loadVisibleMessages(supabase, token);
+    // The button to the sell form survives a reload: it belongs to the latest stored quote.
+    const quote = messages.length && token ? await loadQuoteForToken(supabase, token) : null;
+    return json({ messages, ...(quote && token ? { action: sellAction(quote, token) } : {}) });
   } catch (err) {
     console.error("[fiks] history load failed", err instanceof Error ? err.message : err);
     return json({ messages: [] });

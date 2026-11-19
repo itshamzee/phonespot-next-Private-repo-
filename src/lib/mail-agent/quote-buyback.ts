@@ -91,10 +91,18 @@ export async function quoteBuybackImpl(ctx: ToolContext, input: QuoteBuybackInpu
 
   if (result.status === "priced") {
     ctx.log.push({ tool: "quote_buyback", input: { ...input }, hits: 1 });
+    // The chat shows a button to the sell form instead of a pasted address.
+    const formLine = ctx.buybackQuotes
+      ? "Under dit svar får kunden en knap, der åbner sælg-formularen med model, stand og pris udfyldt. Skriv ikke adressen til formularen."
+      : `Kunden kan få et tilbud inden for 24 timer via sælg-formularen: ${SELL_URL}.`;
+    ctx.buybackQuotes?.push({
+      input: { ...input, model: input.model.trim(), storage: input.storage.trim() },
+      amount: Math.round(result.amountOre / 100),
+    });
     return [
       `Vejledende opkøbspris: ${kroner(result.amountOre)}.`,
       "Sig tydeligt til kunden, at prisen er vejledende, og at det endelige tilbud først kommer, når vi har tjekket enheden.",
-      `Kunden kan få et tilbud inden for 24 timer via sælg-formularen: ${SELL_URL}.`,
+      formLine,
     ].join("\n");
   }
 

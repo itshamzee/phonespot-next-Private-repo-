@@ -30,7 +30,9 @@ import {
   SUBJECT_CHARS,
 } from "./config";
 import { buildFiksSystemPrompt, buildSessionNote } from "./prompt";
+import { readStoredQuote, toStoredQuote, type StoredFiksQuote } from "./quote";
 import { buildPublicTools, handoffImpl, type HandoffTarget } from "./tools";
+import type { PricedBuybackQuote } from "@/lib/mail-agent/tools";
 
 export interface FiksReplyInput {
   supabase: SupabaseClient;
@@ -49,6 +51,8 @@ export interface FiksReplyOutput {
   reply: string;
   handoff: boolean;
   limited?: "session" | "busy";
+  /** Set when quote_buyback priced a device in this turn and the reply passed the checks. */
+  quote?: StoredFiksQuote;
 }
 
 export interface ChatMessageRow {
@@ -331,12 +335,14 @@ export async function fiksReply(
 
   await insertMessage(supabase, session.id, "customer", message);
 
+  const buybackQuotes: PricedBuybackQuote[] = [];
   const ctx: ToolContext = {
     supabase,
     verified: { emails: [] },
     log: [],
     outputs: [],
     scopeMismatch: { value: false },
+    buybackQuotes,
   };
   const target: HandoffTarget = {
     supabase,
@@ -397,9 +403,12 @@ export async function fiksReply(
     }
   }
 
+  // The button to the sell form only goes with a reply the model wrote and the checks let through.
+  let replyPassed = false;
   if (!reply) {
     reply = handedOff ? HANDOFF_CONFIRM_TEXT : FALLBACK_TEXT;
   } else {
+    replyPassed = true;
     const backing = [
       ...ctx.outputs,
       ...history
@@ -411,13 +420,41 @@ export async function fiksReply(
       hasUnparseableAmount(reply)
     ) {
       reply = handedOff ? HANDOFF_CONFIRM_TEXT : SAFE_PRICE_TEXT;
+      replyPassed = false;
     } else if (hasForbiddenWord(reply)) {
       reply = handedOff ? HANDOFF_CONFIRM_TEXT : OFF_TOPIC_SAFE_TEXT;
+      replyPassed = false;
+    }
+  }
+
+  // The amount comes from the tool's structured result, never from the model's text.
+  const priced = replyPassed ? buybackQuotes.at(-1) : undefined;
+  let quote: StoredFiksQuote | undefined;
+  if (priced) {
+    quote = toStoredQuote(priced, nowIso);
+    // target.metadata already carries a handoff made in this turn.
+    const metadata = { ...target.metadata, fiks_quote: quote };
+    const { error } = await supabase.from("contact_inquiries").update({ metadata }).eq("id", session.id);
+    if (error) {
+      // Without a stored quote the form cannot be prefilled; the reply still stands.
+      console.error("[fiks] quote store failed", { code: error.code, message: error.message });
+      quote = undefined;
+    } else {
+      target.metadata = metadata;
     }
   }
 
   await insertMessage(supabase, session.id, "staff", reply);
-  return { sessionToken: session.token, reply, handoff: handedOff };
+  return { sessionToken: session.token, reply, handoff: handedOff, ...(quote ? { quote } : {}) };
+}
+
+/** The latest stored quote of an open chat session, by token. Null for unknown, malformed or closed sessions. */
+export async function loadQuoteForToken(
+  supabase: SupabaseClient,
+  token: string | null | undefined,
+): Promise<StoredFiksQuote | null> {
+  const session = await findSession(supabase, token);
+  return session ? readStoredQuote(session.metadata) : null;
 }
 
 export type VisibleMessage = {

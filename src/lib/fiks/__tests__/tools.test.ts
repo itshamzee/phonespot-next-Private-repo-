@@ -64,4 +64,9 @@ describe("Fiks system prompt", () => {
     expect(p).toContain('"foxway"');
     expect(p).toContain("Nævn kun et beløb, som et værktøj har returneret");
   });
+  it("hands a buyback price over to the form button instead of a pasted link", () => {
+    expect(p).toContain("knappen under beskeden fører til sælg-formularen");
+    expect(p).toContain("Skriv ikke adressen til formularen");
+    expect(p).toContain("saml spørgsmålene i én besked");
+  });
 });

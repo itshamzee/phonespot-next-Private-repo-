@@ -24,6 +24,18 @@ export interface ToolContext {
   /** Every tool's returned text, for the amount filter. */
   outputs: string[];
   scopeMismatch: { value: boolean };
+  /**
+   * Only set by the public chat (Fiks): every priced quote_buyback call lands
+   * here as structured data, so the chat can offer the sell form with the
+   * model and amount without parsing the tool's text. The mail agent leaves it unset.
+   */
+  buybackQuotes?: PricedBuybackQuote[];
+}
+
+export interface PricedBuybackQuote {
+  input: QuoteBuybackInput;
+  /** Whole kroner, rounded exactly as in the tool's text. */
+  amount: number;
 }
 
 const MISMATCH =
