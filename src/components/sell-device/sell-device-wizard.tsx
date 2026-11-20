@@ -6,7 +6,7 @@ import { normalizeStoreId } from "@/lib/stores";
 import { getAttribution, normalizeTrackStore, trackLead, trackSellWizardStep } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { customerFacingError } from "@/lib/customer-facing-error";
-import { GuidePricePanel } from "@/components/sell-device/guide-price-panel";
+import { GuidePricePanel, GuidePriceTeaser } from "@/components/sell-device/guide-price-panel";
 import { formatKroner, type FiksQuotePublic } from "@/lib/fiks/quote-shared";
 
 /* ------------------------------------------------------------------ */
@@ -1689,6 +1689,10 @@ export function SellDeviceWizard({
               </>
             )}
 
+            {!activeDevice.device.useCustom && activeDevice.device.model && (
+              <GuidePriceTeaser device={activeDevice.device} />
+            )}
+
             {/* Add another device button */}
             {(activeDevice.device.model ||
               (activeDevice.device.useCustom &&
@@ -1887,11 +1891,10 @@ export function SellDeviceWizard({
               ready={
                 !!(
                   activeCondition.screen &&
-                  activeCondition.back &&
-                  activeCondition.battery &&
+                  (hasOuterCondition || (activeCondition.back && activeCondition.battery)) &&
                   activeCondition.allWorking &&
                   (activeCondition.allWorking !== "Nej" || activeCondition.brokenParts.length > 0) &&
-                  activeCondition.cloudLocked
+                  (!showCloudLock || activeCondition.cloudLocked)
                 )
               }
             />

@@ -157,6 +157,7 @@ describe("quoteBuybackImpl against the real engine", () => {
       ilike: () => api,
       in: () => api,
       eq: () => api,
+      limit: () => api,
       then: (resolve: (v: unknown) => void) => resolve({ data: catalog, error: null }),
     };
     return { from: () => api } as never;

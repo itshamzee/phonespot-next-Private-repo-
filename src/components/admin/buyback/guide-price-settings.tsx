@@ -15,6 +15,8 @@ const SOURCE_NOTE: Record<GuideTableRow["source"], string> = {
   exact: "",
   "smaller-storage": "Regnet fra mindre lagerstørrelse",
   "larger-storage": "Regnet fra større lagerstørrelse",
+  reference: "Referencepris (Opkøb → Priser)",
+  "reference-approx": "Referencepris, nabolager",
 };
 
 const storageLabel = (gb: number) => (gb >= 1024 ? `${gb / 1024} TB` : `${gb} GB`);
@@ -52,7 +54,7 @@ export function GuidePriceSettings({ settings, saving, patch }: Props) {
           <h3 className="text-sm font-semibold text-charcoal">Vejledende pris i sælg-formularen</h3>
           <p className="mt-1 text-[13px] text-charcoal/50">
             {settings.publicPriceEnabled
-              ? "Kunden ser prisen, når standen er udfyldt. Gælder iPhone 12 til 17."
+              ? "Kunden ser prisen, når standen er udfyldt. iPhone 12-17 ud fra vores salgspriser, alle andre modeller ud fra referencelisten under Priser."
               : "Kunden ser ingen pris. Tilbud sendes på mail som hidtil."}
           </p>
         </div>
@@ -90,7 +92,7 @@ export function GuidePriceSettings({ settings, saving, patch }: Props) {
       <div className="mt-5">
         <p className="text-[13px] font-medium text-charcoal">Priserne lige nu, fin stand</p>
         <p className="mt-1 text-[12px] text-charcoal/50">
-          Regnet på vores listede salgspriser i stand A og B. Modeller med færre end 3 listede enheder får ingen pris.
+          Regnet på vores listede salgspriser i stand A og B (mindst 3 enheder). Andre modeller regnes på referenceprisen i Opkøb → Priser, som er markedets salgspris for en brugt enhed i fin stand.
         </p>
         {loadError && <p className="mt-3 text-[13px] text-red-700">Kunne ikke hente priserne.</p>}
         {!loadError && rows === null && <p className="mt-3 text-[13px] text-charcoal/50">Henter priser…</p>}
@@ -102,7 +104,7 @@ export function GuidePriceSettings({ settings, saving, patch }: Props) {
                 <tr>
                   <th className="py-2 pr-3 font-medium">Model</th>
                   <th className="py-2 pr-3 font-medium">Lager</th>
-                  <th className="py-2 pr-3 text-right font-medium">Vores salgspris</th>
+                  <th className="py-2 pr-3 text-right font-medium">Salgspris</th>
                   <th className="py-2 pr-3 text-right font-medium">Kunden ser</th>
                   <th className="py-2 pr-3 text-right font-medium">Fortjeneste</th>
                   <th className="py-2 font-medium">Note</th>
@@ -110,9 +112,9 @@ export function GuidePriceSettings({ settings, saving, patch }: Props) {
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={`${row.model}-${row.storageGb}`} className="border-t border-stone-100 text-charcoal">
+                  <tr key={`${row.source}-${row.model}-${row.storageGb}`} className="border-t border-stone-100 text-charcoal">
                     <td className="py-2 pr-3">{row.model}</td>
-                    <td className="py-2 pr-3">{storageLabel(row.storageGb)}</td>
+                    <td className="py-2 pr-3">{row.storageGb > 0 ? storageLabel(row.storageGb) : "–"}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{kr(row.baseDkk)}</td>
                     <td className="py-2 pr-3 text-right font-semibold tabular-nums">{row.priced ? kr(row.amountDkk) : "Ingen pris"}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{kr(row.marginDkk)}</td>

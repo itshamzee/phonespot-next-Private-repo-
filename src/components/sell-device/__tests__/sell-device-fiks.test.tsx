@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SellDeviceWizard, fiksPrefill } from "../sell-device-wizard";
 
 // The live guide price has its own tests; here only the Fiks quote and the form's own submit use fetch.
-vi.mock("@/components/sell-device/guide-price-panel", () => ({ GuidePricePanel: () => null }));
+vi.mock("@/components/sell-device/guide-price-panel", () => ({ GuidePricePanel: () => null, GuidePriceTeaser: () => null }));
 
 const QUOTE = {
   model: "iPhone 13",

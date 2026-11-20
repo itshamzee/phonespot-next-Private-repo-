@@ -6,6 +6,8 @@ import { IPHONE_SELL_PAGES } from "../models";
 vi.mock("@/components/sell-device/sell-device-wizard", () => ({
   SellDeviceWizard: () => <div data-testid="sell-wizard" />,
 }));
+// Uden database giver prisopslaget en tom tabel, og siden vises som før.
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 afterEach(cleanup);
 
 const BANNED = [/foxway/i, /dropship/i, /panserglas/i, /certificerede teknikere/i, /30\+ tests/i, /esbjerg/i, /original kasse/i];

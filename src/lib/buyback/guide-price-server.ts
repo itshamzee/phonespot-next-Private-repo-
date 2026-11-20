@@ -10,7 +10,9 @@ import { loadBuybackSettings } from "./settings";
 import {
   DEFAULT_GUIDE_FACTOR,
   GUIDE_PRICE,
+  OUTER_CONDITION_TYPES,
   baseFromListings,
+  baseFromReferences,
   computeGuidePrice,
   effectiveFactor,
   guideFamily,
@@ -19,6 +21,7 @@ import {
   storageGb,
   type BaseValue,
   type GuidePrice,
+  type ReferencePrice,
 } from "./guide-price";
 
 type SupabaseAdmin = ReturnType<typeof createAdminClient>;
@@ -59,70 +62,165 @@ export function guideFactor(settings: BuybackSettings): number {
   return factor > 0 && factor < 1 ? factor : DEFAULT_GUIDE_FACTOR;
 }
 
+/** Aktive referencepriser (markedets salgspris i fin stand) fra Admin → Opkøb → Priser. */
+export async function loadReferencePrices(client: SupabaseAdmin): Promise<ReferencePrice[]> {
+  const { data, error } = await client
+    .from("buyback_prices")
+    .select("device_type, brand, model, storage, ram, base_price, active")
+    .eq("active", true)
+    .limit(5000);
+  if (error || !data) return [];
+  return (data as { device_type: string; brand: string; model: string; storage: string | null; ram: string | null; base_price: number; active: boolean }[])
+    .filter((row) => row.active === true && row.base_price > 0)
+    .map((row) => ({
+      deviceType: row.device_type,
+      brand: row.brand,
+      model: row.model,
+      storage: row.storage,
+      ram: row.ram,
+      baseOre: row.base_price,
+    }));
+}
+
+const lower = (value: string | null | undefined) => (value ?? "").trim().toLowerCase();
+
+/** Enheder, hvor prisen afhænger af lagerpladsen, så den skal være oplyst først. */
+const STORAGE_TYPES = new Set(["Telefon", "Tablet", "Laptop"]);
+
 /** Årsager til, at en enhed aldrig får en pris på forhånd, uanset data. */
 function blockedReason(device: BuybackDevice, condition: BuybackCondition): string | null {
   if (device.useCustom) return "Model skrevet i fritekst";
-  if ((device.deviceType ?? "") !== "Telefon" || (device.brand ?? "").trim().toLowerCase() !== "apple") return "Kun iPhone i første runde";
-  if (guideFamily(device.model) == null) return "Model uden for iPhone 12-17";
-  if (storageGb(device.storage) == null) return "Lagerplads mangler";
-  if ((condition.cloudLocked ?? "").trim().toLowerCase() === "ja") return "iCloud-låst";
-  if ((condition.screen ?? "").trim().toLowerCase() === "virker ikke") return "Skærmen virker ikke";
+  if (!device.model.trim() || !device.brand.trim() || !device.deviceType.trim()) return "Model mangler";
+  // Mail-assistenten spørger efter lagerplads ud fra netop denne årsag.
+  if (STORAGE_TYPES.has(device.deviceType) && storageGb(device.storage) == null) return "Lagerplads mangler";
+  if (lower(condition.cloudLocked) === "ja") return "iCloud-låst";
+  const screen = lower(condition.screen);
+  if (screen === "virker ikke" || screen === "knækket") return "Skærm eller kabinet i stykker";
+  if (device.deviceType === "Laptop" && screen === "skærmfejl") return "Skærmfejl på computer";
+  if (OUTER_CONDITION_TYPES.has(device.deviceType) && (condition.brokenParts ?? []).length > 0) return "Fejl, vi ikke kan prissætte på forhånd";
   if (unpriceableBrokenParts(condition).length > 0) return "Fejl, vi ikke kan prissætte på forhånd";
+  if (lower(condition.allWorking) === "nej" && (condition.brokenParts ?? []).length === 0) return "Ukendt fejl";
   return null;
 }
 
-export type GuideEstimate = GuidePrice & { base?: BaseValue };
+/** iPhone 12-17 med lagerplads: kan prissættes ud fra vores egne salgspriser. */
+function ownDataEligible(device: BuybackDevice): boolean {
+  return (
+    device.deviceType === "Telefon" &&
+    lower(device.brand) === "apple" &&
+    guideFamily(device.model) != null &&
+    storageGb(device.storage) != null
+  );
+}
+
+export type GuideEstimate = GuidePrice & { base?: BaseValue; topOre?: number };
+
+/**
+ * Salgsprisen, buddet regnes ud fra. Rækkefølge: vores egne salgspriser på
+ * præcis den lagerstørrelse, referencelisten på præcis den, derefter de
+ * tilnærmede (nabolager) fra egne data og til sidst fra referencelisten.
+ */
+export function chooseBase(
+  device: BuybackDevice,
+  listings: GuideListing[],
+  references: ReferencePrice[],
+): { base: BaseValue; catalogModel: string } | null {
+  const own = ownDataEligible(device)
+    ? listings.filter((listing) => listing.model === normalizeModelName(device.model))
+    : [];
+  const ownBase = own.length > 0 ? baseFromListings(own, storageGb(device.storage) as number) : null;
+  const refBase = baseFromReferences(references, device);
+  const catalogModel = own[0]?.catalogModel ?? device.model;
+  if (ownBase?.source === "exact") return { base: ownBase, catalogModel };
+  // Mere lagerplads må aldrig give en lavere pris end den mindre variant, vi selv sælger.
+  if (refBase?.source === "reference" && ownBase?.source === "smaller-storage" && ownBase.baseOre > refBase.baseOre) {
+    return { base: ownBase, catalogModel };
+  }
+  if (refBase?.source === "reference") return { base: refBase, catalogModel };
+  if (ownBase) return { base: ownBase, catalogModel };
+  if (refBase) return { base: refBase, catalogModel };
+  return null;
+}
 
 /**
  * Vejledende pris for én enhed. Viser ingen pris, når funktionen er slået fra
  * (medmindre `ignoreSwitch` er sat, som admin-oversigten bruger).
+ * `topOre` er prisen for samme enhed i fin stand uden fejl, så formularen kan
+ * vise, hvad standen koster.
  */
 export async function estimateGuidePrice(
   client: SupabaseAdmin,
   device: BuybackDevice,
   condition: BuybackCondition,
   settings: BuybackSettings,
-  options: { ignoreSwitch?: boolean; listings?: GuideListing[] } = {},
+  options: { ignoreSwitch?: boolean; listings?: GuideListing[]; references?: ReferencePrice[] } = {},
 ): Promise<GuideEstimate> {
   if (!settings.publicPriceEnabled && !options.ignoreSwitch) return { status: "none", reason: "Slået fra" };
   const blocked = blockedReason(device, condition);
   if (blocked) return { status: "none", reason: blocked };
 
-  const family = guideFamily(device.model) as number;
-  const wantedGb = storageGb(device.storage) as number;
-  const listings = options.listings ?? (await loadGuideListings(client));
-  const model = normalizeModelName(device.model);
-  const own = listings.filter((listing) => listing.model === model);
-  const base = baseFromListings(own, wantedGb);
-  if (!base) return { status: "none", reason: "For få salgspriser på modellen" };
+  const listings = ownDataEligible(device) ? (options.listings ?? (await loadGuideListings(client))) : [];
+  const references = options.references ?? (await loadReferencePrices(client));
+  const chosen = chooseBase(device, listings, references);
+  if (!chosen) return { status: "none", reason: "Ingen salgspris eller referencepris på modellen" };
+  const { base, catalogModel } = chosen;
 
-  const catalogModel = own[0]?.catalogModel ?? device.model;
+  // Udvendig stand (konsoller m.fl.) har ingen dele at trække fra; fejl er afvist ovenfor.
+  const faults = OUTER_CONDITION_TYPES.has(device.deviceType) ? [] : conditionToFaults(condition);
   const partPricesOre: number[] = [];
-  for (const fault of conditionToFaults(condition)) {
+  for (const fault of faults) {
     const partOre = await lookupPartPriceOre(client, catalogModel, fault);
     if (partOre == null) return { status: "none", reason: `Ingen reservedelspris for ${fault}` };
     partPricesOre.push(partOre);
   }
 
-  return {
-    ...computeGuidePrice({ baseOre: base.baseOre, partPricesOre, factor: effectiveFactor(family, guideFactor(settings)), worn: isWorn(condition) }),
-    base,
-  };
+  const family = guideFamily(device.model);
+  const factor = family != null ? effectiveFactor(family, guideFactor(settings)) : guideFactor(settings);
+  const price = computeGuidePrice({ baseOre: base.baseOre, partPricesOre, factor, worn: isWorn(condition) });
+  const top = computeGuidePrice({ baseOre: base.baseOre, partPricesOre: [], factor });
+  return { ...price, base, topOre: top.status === "priced" ? top.amountOre : undefined };
 }
 
 /**
  * Pristabel til en offentlig sælg-side. Tom liste, når prisen på forhånd er slået
  * fra, modellen ikke er med, eller databasen ikke svarer: siden virker som før.
  */
-export async function loadSellPagePrices(client: SupabaseAdmin, model: string): Promise<ModelPriceRow[]> {
+export async function loadSellPagePrices(
+  client: SupabaseAdmin,
+  model: string,
+  device: { deviceType: string; brand: string } = { deviceType: "Telefon", brand: "Apple" },
+): Promise<ModelPriceRow[]> {
   try {
-    if (guideFamily(model) == null) return [];
     const settings = await loadBuybackSettings(client);
     if (!settings.publicPriceEnabled) return [];
-    return guidePricesForModel(await loadGuideListings(client), settings, model);
+    if (device.deviceType === "Telefon" && device.brand === "Apple" && guideFamily(model) != null) {
+      const own = guidePricesForModel(await loadGuideListings(client), settings, model);
+      if (own.length > 0) return own;
+    }
+    return referencePricesForModel(await loadReferencePrices(client), settings, { ...device, model });
   } catch {
     return [];
   }
+}
+
+/** Som guidePricesForModel, men fra referencelisten: kun lagerstørrelser med egen række. */
+export function referencePricesForModel(
+  references: ReferencePrice[],
+  settings: BuybackSettings,
+  device: { deviceType: string; brand: string; model: string },
+): ModelPriceRow[] {
+  const family = guideFamily(device.model);
+  const factor = family != null ? effectiveFactor(family, guideFactor(settings)) : guideFactor(settings);
+  const rows: ModelPriceRow[] = [];
+  for (const gb of TABLE_STORAGES) {
+    const base = baseFromReferences(references, { ...device, storage: `${gb >= 1024 ? gb / 1024 : gb}${gb >= 1024 ? "TB" : "GB"}` });
+    if (!base || base.source !== "reference") continue;
+    const perfect = computeGuidePrice({ baseOre: base.baseOre, partPricesOre: [], factor });
+    if (perfect.status !== "priced") continue;
+    const worn = computeGuidePrice({ baseOre: base.baseOre, partPricesOre: [], factor, worn: true });
+    rows.push({ storageGb: gb, perfectDkk: perfect.amountOre / 100, wornDkk: worn.status === "priced" ? worn.amountOre / 100 : null });
+  }
+  return rows;
 }
 
 export type ModelPriceRow ={ storageGb: number; perfectDkk: number; wornDkk: number | null };
@@ -195,6 +293,41 @@ export function guidePriceTable(listings: GuideListing[], settings: BuybackSetti
         reason: price.status === "none" ? price.reason : null,
       });
     }
+  }
+  return rows.sort((a, b) => a.model.localeCompare(b.model, "da", { numeric: true }) || a.storageGb - b.storageGb);
+}
+
+/**
+ * Referencelistens rækker til admin-oversigten, i samme form som egne data.
+ * Rækker, hvor vi selv har en præcis salgspris, springes over: dér bruges vores egen.
+ */
+export function referencePriceTable(
+  references: ReferencePrice[],
+  settings: BuybackSettings,
+  ownRows: GuideTableRow[],
+): GuideTableRow[] {
+  const ownExact = new Set(
+    ownRows.filter((row) => row.source === "exact").map((row) => `${normalizeModelName(row.model)}|${row.storageGb}`),
+  );
+  const rows: GuideTableRow[] = [];
+  for (const ref of references) {
+    const gb = storageGb(ref.storage) ?? 0;
+    if (ref.deviceType === "Telefon" && lower(ref.brand) === "apple" && ownExact.has(`${normalizeModelName(ref.model)}|${gb}`)) continue;
+    const family = guideFamily(ref.model);
+    const factor = family != null ? effectiveFactor(family, guideFactor(settings)) : guideFactor(settings);
+    const price = computeGuidePrice({ baseOre: ref.baseOre, partPricesOre: [], factor });
+    const label = lower(ref.model).startsWith(lower(ref.brand)) || lower(ref.brand) === "apple" ? ref.model : `${ref.brand} ${ref.model}`;
+    rows.push({
+      model: [label, ref.ram ? `${ref.ram} RAM` : ""].filter(Boolean).join(" "),
+      storageGb: gb,
+      baseDkk: Math.round(ref.baseOre / 100),
+      dataPoints: 0,
+      source: "reference",
+      priced: price.status === "priced",
+      amountDkk: price.status === "priced" ? price.amountOre / 100 : null,
+      marginDkk: price.status === "priced" ? Math.round(price.marginOre / 100) : null,
+      reason: price.status === "none" ? price.reason : null,
+    });
   }
   return rows.sort((a, b) => a.model.localeCompare(b.model, "da", { numeric: true }) || a.storageGb - b.storageGb);
 }

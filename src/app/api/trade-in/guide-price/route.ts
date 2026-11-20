@@ -50,7 +50,15 @@ export async function POST(request: Request) {
     const settings = await loadBuybackSettings(client);
     const estimate = await estimateGuidePrice(client, lead.device, lead.condition, settings);
     if (estimate.status !== "priced") return none();
-    return NextResponse.json({ priced: true, amountDkk: estimate.amountOre / 100 }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      {
+        priced: true,
+        amountDkk: estimate.amountOre / 100,
+        // Prisen i fin stand, så formularen kan vise, hvad standen koster.
+        topDkk: estimate.topOre != null ? estimate.topOre / 100 : null,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch {
     return none();
   }

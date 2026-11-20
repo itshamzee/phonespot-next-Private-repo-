@@ -75,7 +75,7 @@ function median(values: number[]): number {
   return sorted[Math.floor((sorted.length - 1) / 2)];
 }
 
-export type BaseSource = "exact" | "smaller-storage" | "larger-storage";
+export type BaseSource = "exact" | "smaller-storage" | "larger-storage" | "reference" | "reference-approx";
 export type BaseValue = { baseOre: number; dataPoints: number; source: BaseSource; fromGb: number };
 
 /**
@@ -116,6 +116,82 @@ export function baseFromListings(
   return null;
 }
 
+/**
+ * Referencepris: markedets salgspris for en brugt enhed i fin stand (tabellen
+ * buyback_prices, Admin → Opkøb → Priser). Bruges, når vi ikke selv har nok
+ * salgspriser på modellen, så kunden alligevel får en pris med det samme.
+ */
+export type ReferencePrice = {
+  deviceType: string;
+  brand: string;
+  model: string;
+  storage: string | null;
+  ram: string | null;
+  baseOre: number;
+};
+
+/** Enheder, hvor formularen kun spørger om udvendig stand (gemt i condition.screen). */
+export const OUTER_CONDITION_TYPES = new Set(["Konsol", "Controller", "Høretelefoner", "Dyson", "Smart home"]);
+
+const textKey = (value: string | null | undefined) => (value ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+
+/**
+ * Finder referenceprisen for kundens enhed. Mangler den præcise lagerstørrelse,
+ * bruges nærmeste mindre uden tillæg, ellers nærmeste større med fradrag pr.
+ * lagertrin, ligesom for vores egne salgspriser. Flere rækker på samme lager
+ * (fx forskellig RAM) giver den laveste pris, så vi aldrig lover for meget.
+ */
+export function baseFromReferences(
+  references: ReferencePrice[],
+  device: { deviceType: string; brand: string; model: string; storage: string; ram?: string },
+): BaseValue | null {
+  const ram = textKey(device.ram);
+  const candidates = references.filter(
+    (row) =>
+      row.baseOre > 0 &&
+      textKey(row.deviceType) === textKey(device.deviceType) &&
+      textKey(row.brand) === textKey(device.brand) &&
+      textKey(row.model) === textKey(device.model) &&
+      (!ram || !textKey(row.ram) || textKey(row.ram) === ram),
+  );
+  if (candidates.length === 0) return null;
+
+  const lowest = (rows: ReferencePrice[]) => Math.min(...rows.map((row) => row.baseOre));
+  const wantedGb = storageGb(device.storage);
+  const sized = candidates
+    .map((row) => ({ row, gb: storageGb(row.storage) }))
+    .filter((entry): entry is { row: ReferencePrice; gb: number } => entry.gb != null);
+
+  // Enheder uden lagervalg (ure, høretelefoner) eller rækker uden lager.
+  if (wantedGb == null || sized.length === 0) {
+    const unsized = candidates.filter((row) => storageGb(row.storage) == null);
+    if (unsized.length > 0) return { baseOre: lowest(unsized), dataPoints: 0, source: "reference", fromGb: 0 };
+    // Kunden har ikke valgt lager: den mindste variant er det sikre bud.
+    const smallestGb = Math.min(...sized.map((entry) => entry.gb));
+    const smallest = sized.filter((entry) => entry.gb === smallestGb).map((entry) => entry.row);
+    return { baseOre: lowest(smallest), dataPoints: 0, source: "reference-approx", fromGb: smallestGb };
+  }
+
+  const exact = sized.filter((entry) => entry.gb === wantedGb).map((entry) => entry.row);
+  if (exact.length > 0) return { baseOre: lowest(exact), dataPoints: 0, source: "reference", fromGb: wantedGb };
+
+  const smallerGb = Math.max(...sized.filter((entry) => entry.gb < wantedGb).map((entry) => entry.gb), -1);
+  if (smallerGb > 0) {
+    const rows = sized.filter((entry) => entry.gb === smallerGb).map((entry) => entry.row);
+    return { baseOre: lowest(rows), dataPoints: 0, source: "reference-approx", fromGb: smallerGb };
+  }
+
+  const largerGb = Math.min(...sized.map((entry) => entry.gb));
+  const rows = sized.filter((entry) => entry.gb === largerGb).map((entry) => entry.row);
+  const steps = Math.max(1, Math.round(Math.log2(largerGb / wantedGb)));
+  return {
+    baseOre: lowest(rows) - steps * GUIDE_PRICE.storageStepOre,
+    dataPoints: 0,
+    source: "reference-approx",
+    fromGb: largerGb,
+  };
+}
+
 const WORN = new Set(["små ridser", "ridser", "buler/ridser"]);
 
 /** Sandt, når skærm eller bagside har ridser, men ikke er i stykker. */
@@ -141,7 +217,9 @@ export function computeGuidePrice(input: { baseOre: number; partPricesOre: numbe
   const faultCostOre = partPricesOre.reduce((sum, part) => sum + part + GUIDE_PRICE.laborPerFaultOre, 0);
   const costOre = GUIDE_PRICE.prepOre + faultCostOre + GUIDE_PRICE.shippingOre;
   const poolOre = (GUIDE_PRICE.netShare * baseOre - costOre) / GUIDE_PRICE.bidCostShare;
-  const amountOre = roundOfferDown(poolOre * factor);
+  // Billige modeller: buddet sænkes, til mindste fortjeneste holder, i stedet for at kunden ingen pris får.
+  const marginCapOre = poolOre - GUIDE_PRICE.minMarginOre / GUIDE_PRICE.bidCostShare;
+  const amountOre = roundOfferDown(Math.min(poolOre * factor, marginCapOre));
   const marginOre = Math.round(GUIDE_PRICE.bidCostShare * (poolOre - amountOre));
 
   if (amountOre < GUIDE_PRICE.minOfferOre) return { status: "none", reason: "Under mindste bud" };
