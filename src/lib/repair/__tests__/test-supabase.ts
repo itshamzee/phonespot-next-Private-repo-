@@ -27,6 +27,8 @@ export function makeSupabase(catalog: CatalogService[]) {
     };
     const chain: Record<string, unknown> = {
       select: () => chain,
+      update: () => chain,
+      eq: () => chain,
       in: (_c: string, v: string[]) => ((ids = v), chain),
       insert: (v: Record<string, unknown> | Record<string, unknown>[]) => {
         rows = Array.isArray(v) ? v : [v];

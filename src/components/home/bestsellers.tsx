@@ -220,21 +220,21 @@ function ProductCard({ product }: { product: HomepageProduct }) {
   return (
     <Link
       href={product.href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white transition-all duration-200 hover:border-[#1A3D2E]/20 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white card-raise hover:border-[#1A3D2E]/20"
     >
       {/* Image area */}
       <div className="relative aspect-square overflow-hidden bg-[#F7F7F8]">
         {/* Stock badge */}
         {product.deviceCount > 3 && (
           <div className="absolute left-2.5 top-2.5 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#1A3D2E] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+            <span className="inline-flex items-center rounded-full bg-[#1A3D2E] px-2.5 py-1 text-[10px] font-bold text-white shadow-rest">
               {product.deviceCount} på lager
             </span>
           </div>
         )}
         {product.deviceCount > 0 && product.deviceCount <= 3 && (
           <div className="absolute right-2.5 top-2.5 z-10">
-            <span className="inline-flex items-center rounded-full bg-[#FFF8F0] px-2.5 py-1 text-[10px] font-bold text-[#B45309] shadow-sm">
+            <span className="inline-flex items-center rounded-full bg-[#FFF8F0] px-2.5 py-1 text-[10px] font-bold text-[#B45309] shadow-rest">
               Kun {product.deviceCount} tilbage
             </span>
           </div>

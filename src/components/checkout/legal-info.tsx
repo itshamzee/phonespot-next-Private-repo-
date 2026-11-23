@@ -28,7 +28,7 @@ export function CheckoutLegalInfo({ tcVersionId, onAccept }: CheckoutLegalInfoPr
     <div className="space-y-4 rounded-xl border border-charcoal/10 bg-charcoal/[0.02] p-5">
       {/* Business info summary */}
       <div className="text-xs text-charcoal/60">
-        <p><strong>PhoneSpot ApS</strong> &middot; CVR: 38688766 &middot; {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</p>
+        <p><strong>Fixon ApS</strong> &middot; CVR: 46079019 &middot; {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}</p>
         <p>Telefon: +45 61 10 00 48 &middot; E-mail: info@phonespot.dk</p>
       </div>
 

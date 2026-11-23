@@ -74,7 +74,7 @@ export default async function WarrantyVerificationPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl border border-charcoal/10 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-xl border border-charcoal/10 bg-white p-6 shadow-rest">
           <h2 className="font-display text-lg font-bold text-charcoal">
             {warranty.guarantee_number}
           </h2>

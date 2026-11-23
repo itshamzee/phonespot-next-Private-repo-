@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-context";
 import { STORE } from "@/lib/store-config";
 import { DispatchCountdown } from "./dispatch-countdown";
@@ -12,6 +11,7 @@ import styles from "@/components/home/storefront.module.css";
 import type { MegaMenu } from "@/lib/navigation/mega-menu";
 import { MegaNav, NAV_CATEGORIES, SALE_TEXT, TILBEHOER_PANEL } from "./mega-nav";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
+import { HeaderSearch } from "./header-search";
 
 const menuLinks = [
   { label: "Beskyttelsesglas", href: "/beskyttelsesglas" },
@@ -29,8 +29,6 @@ const menuLinks = [
 export function Header({ menu = null, campaignActive = false }: { menu?: MegaMenu | null; campaignActive?: boolean }) {
   const blackNovember = useBlackNovember(campaignActive);
   const { totals, openCart } = useCart();
-  const router = useRouter();
-  const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const menuPanel = useRef<HTMLDivElement>(null);
@@ -82,13 +80,7 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
     <div className={`${styles.brandrow} ${styles.wrap}`}>
       <button type="button" ref={menuButton} className={styles["mobile-menu"]} aria-label="Åbn menu" aria-expanded={mobileOpen} aria-controls="mobile-navigation" onClick={() => setMobileOpen(true)}><StorefrontIcon kind="menu" /></button>
       <Link className={styles.logo} href="/"><Image src="/brand/logo.svg" alt="PhoneSpot" width={187} height={36} /></Link>
-      <form role="search" className={styles.search} action="/soeg" onSubmit={event => {
-        event.preventDefault();
-        if (query.trim()) router.push(`/soeg?q=${encodeURIComponent(query.trim())}`);
-      }}>
-        <input type="search" name="q" aria-label="Søg efter model eller tilbehør" placeholder="Søg efter model eller tilbehør" value={query} onChange={event => setQuery(event.target.value)} />
-        <button type="submit" aria-label="Søg"><StorefrontIcon kind="search" /></button>
-      </form>
+      <HeaderSearch />
       <div className={styles.utilities}>
         <Link href="/butik" aria-label="Find butik"><StorefrontIcon kind="pin" /><span>Find butik</span></Link>
         <Link className={styles.account} href="/konto" aria-label="Min konto"><StorefrontIcon kind="person" /><span>Min konto</span></Link>
@@ -98,7 +90,7 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
       </div>
     </div>
     <div className={`${styles.navwrap} relative z-40`}><nav className={`${styles.nav} ${styles.wrap}`} aria-label="Kategorier">
-      <MegaNav menu={menu} campaign={blackNovember} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-[0_24px_40px_-24px_rgba(17,17,17,0.25)]" />
+      <MegaNav menu={menu} campaign={blackNovember} panelClassName="absolute inset-x-0 top-full z-50 border-t border-[#e5e5ea] bg-white shadow-floating" />
       <span className={styles.service}>
         <Link href="/reparation"><StorefrontIcon kind="repair" />Reparation</Link>
         <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>
@@ -110,8 +102,8 @@ export function Header({ menu = null, campaignActive = false }: { menu?: MegaMen
       <Link href="/saelg-din-enhed"><StorefrontIcon kind="exchange" />Sælg din enhed</Link>
     </nav>
     {mobileOpen && <>
-      <div className={styles["menu-backdrop"]} onClick={() => setMobileOpen(false)} aria-hidden="true" />
-      <div ref={menuPanel} className={styles["menu-panel"]} role="dialog" aria-modal="true" aria-label="Menu" id="mobile-navigation">
+      <div className={`${styles["menu-backdrop"]} backdrop-enter`} onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      <div ref={menuPanel} className={`${styles["menu-panel"]} drawer-enter-left`} role="dialog" aria-modal="true" aria-label="Menu" id="mobile-navigation">
         <button type="button" ref={menuClose} className={styles["menu-close"]} onClick={() => setMobileOpen(false)} aria-label="Luk menu">Luk<StorefrontIcon kind="close" /></button>
         <nav aria-label="Mobilmenu">
           {NAV_CATEGORIES.map(item => {

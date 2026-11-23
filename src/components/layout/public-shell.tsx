@@ -8,26 +8,43 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUpsellRouter } from "@/components/cart/cart-upsell-router";
 import type { MegaMenu } from "@/lib/navigation/mega-menu";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { MessengerChat } from "@/components/ui/messenger-chat";
+import { FiksChat } from "@/components/fiks/fiks-chat";
 import { BlackNovemberBar } from "@/components/campaign/black-november";
+import { CheckoutHeader, CheckoutFooter } from "@/components/checkout/checkout-chrome";
+import { usePageTransition } from "@/components/layout/page-transition";
 
 export function LayoutShell({ children, menu = null, campaignActive = false }: { children: React.ReactNode; menu?: MegaMenu | null; campaignActive?: boolean }) {
   const pathname = usePathname();
+  // Hooks før de tidlige returns; ref'en hæftes kun på den offentlige <main>.
+  const mainRef = usePageTransition<HTMLElement>();
 
   if (pathname.startsWith("/admin")) {
     return <>{children}</>;
+  }
+
+  // Kassen får en slank ramme: ingen menu, kampagnebjælke, upsell eller
+  // chatboble, der kan lede kunden væk midt i betalingen.
+  if (pathname === "/kasse") {
+    return (
+      <CartProvider>
+        <CheckoutHeader />
+        <main id="indhold" tabIndex={-1} className="overflow-x-clip">{children}</main>
+        <CheckoutFooter />
+        <CookieConsent />
+      </CartProvider>
+    );
   }
 
   return (
     <CartProvider>
       <BlackNovemberBar serverActive={campaignActive} />
       <Header menu={menu} campaignActive={campaignActive} />
-      <main id="indhold" tabIndex={-1} className="overflow-x-clip">{children}</main>
+      <main ref={mainRef} id="indhold" tabIndex={-1} className="overflow-x-clip">{children}</main>
       <Footer />
       <CartDrawer />
       <CartUpsellRouter />
       <CookieConsent />
-      <MessengerChat />
+      <FiksChat />
     </CartProvider>
   );
 }

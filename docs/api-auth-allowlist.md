@@ -36,7 +36,7 @@ be touched:
 | `POST /api/webhooks/gatewayapi` | HMAC-nøgle i URL (afledt af GATEWAYAPI_TOKEN) |
 | `GET /api/feeds/partner` | `PARTNER_FEED_TOKEN` |
 | `/api/cron/*`, `GET /api/seo/sync` | `CRON_SECRET` bearer |
-| `/api/customers*`, `/api/trade-in/*` (staff subset) | `requireStaff()` in-route |
+| `/api/customers*`, `/api/trade-in/*` (staff subset) | `requireStaff()` in-route; `/api/trade-in/receipts`, `/api/trade-in/receipts/:id/*`, `/api/trade-in/price-suggestion` and `/api/trade-in/:id/upload-label` are also in the middleware matcher (2026-11-09, D2) |
 | `/api/dashboard`, `/api/pos/*`, `/api/refund`, `/api/labels`, `/api/warranty/generate`, `/api/warranty/send`, `/api/gdpr/*`, `/api/export/transactions`, `/api/orders/recent`, `/api/discount-codes`, `/api/accounting/saft`, `/api/b2b`, `/api/customer`, `/api/reklamation`, `/api/dashboard/ga4` | in-route bearer + `staff` lookup |
 
 ### Cron cross-check

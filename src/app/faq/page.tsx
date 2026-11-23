@@ -15,7 +15,7 @@ const sections = [
     id: "enheder", title: "Enheder og stand",
     items: [
       { question: 'Hvad betyder "refurbished"?', answer: "Refurbished betyder, at enheden er professionelt inspiceret, testet og klargjort til videresalg. Vores refurbished enheder gennemgår en grundig kvalitetskontrol." },
-      { question: "Hvilken stand er jeres enheder i?", answer: "Grade P er premiumstand med minimale eller ingen brugsspor. Grade A fremstår som ny. Grade B har lette brugsspor, og Grade C har synlige brugsspor. Grade N er fabriksny og er ikke refurbished. Se de tilgængelige grader ved den enkelte model." },
+      { question: "Hvilken stand er jeres enheder i?", answer: "Stand P (premiumstand) har minimale eller ingen brugsspor. Stand A (som ny) har ingen synlige brugsspor. Stand B (god stand) har lette brugsspor, og stand C (brugt stand) har synlige brugsspor. Fabriksnye enheder er ikke refurbished. Se de tilgængelige stande ved den enkelte model, og læs mere i guiden på phonespot.dk/blog/stand-a-b-c-og-batteri." },
       { question: "Siger graden noget om batteriet?", answer: "Nej. Batterisundheden måles for den enkelte enhed og beskrives separat på produktsiden. Den kosmetiske grade er ikke en batteriprocent. Kontakt os, hvis du mangler en måling før køb." },
       { question: "Hvad er jeres Outlet?", answer: "Vores Outlet indeholder produkter med særligt gode priser – det kan være restlager, udgåede modeller eller produkter med mindre kosmetiske fejl." },
     ],
@@ -38,7 +38,7 @@ export default function FaqPage() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: sections.flatMap((section) => section.items).map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Spørgsmål og svar</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Hjælp hos PhoneSpot</span>
           <h1>Spørgsmål og svar.</h1>
           <p className={styles.intro}>Find svar om enheder, køb og hjælp efter levering. Du kan også kontakte os, hvis dit spørgsmål kræver et personligt svar.</p>

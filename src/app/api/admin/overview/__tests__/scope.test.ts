@@ -182,5 +182,73 @@ describe("loadOverview", () => {
     expect(data.kind).toBe("store");
     if (data.kind === "store") expect(data.scope).toBe("ingen");
     expect(db.log.filter((l) => l.startsWith("orders."))).toEqual([]);
+    expect(JSON.stringify(data)).not.toContain("profit");
+  });
+});
+
+describe("profit, margin og kostpris er kun til ejeren", () => {
+  const OWNER_ONLY = ["profit", "marginPct", "cost", "revenueExVat", "brugtmoms", "vatStandard"];
+  // Kostpris, så profit og margin ikke er trivielle.
+  const withCost = () => {
+    const s = seed();
+    const o = s.db.tables.orders.find((r) => r.id === "o-v")!;
+    (o.order_items as Record<string, unknown>[])[0].purchase_price = 40_000;
+    return s;
+  };
+
+  it("medarbejderens payload indeholder ingen ejer-felter, heller ikke uden butik", async () => {
+    state.client = withCost().client;
+    for (const scope of ["vejle", "slagelse", "webshop", "ingen"] as const) {
+      const json = JSON.stringify(await loadOverview({ scope, isOwner: false }, "dag", NOW));
+      for (const word of OWNER_ONLY) expect(json, `${scope}: ${word}`).not.toContain(word);
+    }
+  });
+
+  it("medarbejderen beholder omsætning, antal og kurv (det butiksvisningen viser), ikke moms og depositum", async () => {
+    state.client = withCost().client;
+    const data = await loadOverview({ scope: "vejle", isOwner: false }, "dag", NOW);
+    if (data.kind !== "store") throw new Error("forventede butik");
+    expect(data.kpis).toEqual({
+      revenue: 100_000,
+      salesCount: 1,
+      creditCount: 0,
+      avgBasket: 100_000,
+    });
+    expect(data.cash.state).toBe("open");
+    expect(data.ready.total).toBe(1);
+  });
+
+  it("ejeren får stadig profit, margin og kostpris med uændrede værdier", async () => {
+    state.client = withCost().client;
+    const data = await loadOverview({ scope: "vejle", isOwner: true }, "dag", NOW);
+    if (data.kind !== "store") throw new Error("forventede butik");
+    expect(data.kpis).toMatchObject({ revenue: 100_000, revenueExVat: 100_000, cost: 40_000, profit: 60_000, marginPct: 60 });
+    // Momsopdeling og depositum står uændret i ejerens payload.
+    expect(data.kpis).toMatchObject({ vatStandard: 0, brugtmoms: 0, deposits: 0 });
+  });
+
+  it("API'et sender medarbejderen den afskårne form og ejeren den fulde", async () => {
+    state.client = withCost().client;
+    state.staff = VEJLE;
+    const staffBody = await (await call()).json();
+    expect(staffBody.kind).toBe("store");
+    expect(Object.keys(staffBody.kpis).sort()).toEqual(
+      ["avgBasket", "creditCount", "revenue", "salesCount"],
+    );
+    const text = JSON.stringify(staffBody);
+    for (const word of OWNER_ONLY) expect(text, word).not.toContain(word);
+
+    state.staff = OWNER;
+    const ownerBody = await (await call("", "ps_store=vejle")).json();
+    expect(ownerBody.kpis).toMatchObject({ cost: 40_000, profit: 60_000, marginPct: 60 });
+  });
+
+  it("en medarbejder kan ikke få Alle butikker via ?store=alle eller cookien", async () => {
+    state.staff = VEJLE;
+    const body = await (await call("?store=alle", "ps_store=alle")).json();
+    expect(body.kind).toBe("store");
+    expect(body.scope).toBe("vejle");
+    expect(body.stores).toBeUndefined();
+    expect(JSON.stringify(body)).not.toContain("profit");
   });
 });

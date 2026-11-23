@@ -1,13 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render as rtlRender, screen, within } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { ToastProvider } from "@/components/admin/ui/toast";
 import { StoreOverviewView } from "../store-overview";
 import { AllStoresOverviewView } from "../all-stores-overview";
 import { OVERBLIK_PERIODS, periodRange } from "@/lib/admin/overview/period";
 import { computeKpis } from "@/lib/admin/overview/kpi";
 import type { AllOverview, StoreOverview } from "@/lib/admin/overview/load";
 import { formatKr, formatTimeWindow, readyLabel, ticketLabel } from "@/lib/admin/overview/format";
+
+// Arkivér-knappen i bookingpanelet viser en toast og skal derfor have ToastProvider over sig.
+const render = (ui: ReactElement) => rtlRender(ui, { wrapper: ToastProvider });
 
 const NOW = new Date("2026-10-04T10:00:00Z");
 
@@ -172,6 +177,32 @@ describe("Overblik for en butik", () => {
     const heads = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
     expect(heads[0]).toBe("Nye reparationsanmodninger");
     expect(heads).not.toContain("Nye webshop-ordrer");
+  });
+
+  it("ejeren ser profit og margin", () => {
+    const { container } = render(<StoreOverviewView data={store} />);
+    expect(screen.getByText("Profit")).toBeTruthy();
+    expect(container.textContent).toMatch(/profit|margin|fortjeneste/i);
+  });
+
+  it("medarbejderens payload uden ejer-felter viser ingen profit, margin eller forklaring, men resten er der", () => {
+    const k = store.kpis;
+    const staffKpis = {
+      revenue: k.revenue,
+      salesCount: k.salesCount,
+      creditCount: k.creditCount,
+      avgBasket: k.avgBasket,
+      vatStandard: k.vatStandard,
+      brugtmoms: k.brugtmoms,
+      deposits: k.deposits,
+    };
+    const { container } = render(<StoreOverviewView data={{ ...store, kpis: staffKpis }} />);
+    expect(container.textContent).not.toMatch(/profit|margin|fortjeneste/i);
+    expect(screen.queryByText("36 % af omsætning")).toBeNull();
+    expect(screen.getByText("Omsætning inkl. moms")).toBeTruthy();
+    expect(screen.getByText("Antal salg")).toBeTruthy();
+    expect(screen.getByText("Gns. kurv 639 kr.")).toBeTruthy();
+    expect(screen.getByText("Kassen")).toBeTruthy();
   });
 
   it("medarbejder uden butik får en forklaring i stedet for tal", () => {

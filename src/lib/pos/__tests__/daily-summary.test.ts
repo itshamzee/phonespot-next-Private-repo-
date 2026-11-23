@@ -184,6 +184,40 @@ describe("Dinero journal CSV", () => {
     expect(csv).toContain("V1-000001 til V1-000003");
   });
 
+  it("books a modregnet opkøb as its own payment line, never as cash", () => {
+    const withOffset = aggregateDailySummary(
+      [
+        {
+          ...base,
+          id: "t1",
+          order_number: "V1-000010",
+          receipt_number: "V1-000010",
+          receipt_no: 10,
+          type: "pos",
+          total: 500000,
+          brugtmoms_total: 40000,
+          order_items: [{ item_type: "device", quantity: 1, total_price: 500000, discount_amount: 0, vat_scheme: "brugtmoms" }],
+          order_payments: [
+            { type: "opkoeb", amount_oere: 300000 },
+            { type: "kontant", amount_oere: 200000 },
+          ],
+        },
+      ],
+      [],
+      meta,
+    );
+    const by = Object.fromEntries(withOffset.payments.map((p) => [p.type, p]));
+    expect(by.opkoeb).toEqual({ type: "opkoeb", received: 300000, refunded: 0, net: 300000 });
+    expect(by.kontant.net).toBe(200000);
+
+    const rows = buildJournalRows(withOffset);
+    const offset = rows.filter((r) => r.account === "[KONTO-OPKOEB-AFREGNING]");
+    expect(offset).toEqual([expect.objectContaining({ debit: 300000, credit: 0, text: "Afregning opkøb (modregnet i salg)" })]);
+    const cash = rows.filter((r) => r.account === "[KONTO-KASSEBEHOLDNING]");
+    expect(cash.reduce((a, r) => a + r.debit - r.credit, 0)).toBe(200000);
+    expect(rows.reduce((a, r) => a + r.debit - r.credit, 0)).toBe(0);
+  });
+
   it("flips a negative net payment to the credit side", () => {
     const refundOnly = aggregateDailySummary([orders[2]], [], meta);
     const cash = buildJournalRows(refundOnly).find((r) => r.account === "[KONTO-KASSEBEHOLDNING]");

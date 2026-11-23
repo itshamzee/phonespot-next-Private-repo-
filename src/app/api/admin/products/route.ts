@@ -16,6 +16,7 @@ import {
   type StockSpec,
 } from "@/lib/admin/products/create";
 import { modelsForProduct } from "@/lib/admin/products/update";
+import { applyProductListFilter } from "@/lib/admin/products/list-filter";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { addToBox, currentOpenBox } from "@/lib/lagersalg/boxes";
@@ -96,21 +97,15 @@ export async function GET(req: NextRequest) {
   const stock = p.get("stock");
 
   const supabase = createAdminClient();
-  let query = supabase
-    .from("checkout_sku_inventory")
-    .select(
-      "id, title, slug, subcategory, brand, selling_price, sale_price, always_in_stock, images, compatible_models, status, is_active, created_at, store_stock, online_stock, total_stock",
-      { count: "exact" },
-    )
-    .eq("category", type);
-  if (type === "accessory") query = query.neq("subcategory", "spare-part");
-  if (search) query = query.or(`title.ilike.%${search.replace(/[%,]/g, " ")}%,brand.ilike.%${search.replace(/[%,]/g, " ")}%`);
-  if (subcategory) query = query.eq("subcategory", subcategory);
-  if (brand) query = query.ilike("brand", brand);
-  if (status === "published" || status === "draft") query = query.eq("status", status);
-  if (stock === "in") query = query.gt("total_stock", 0);
-  else if (stock === "out") query = query.eq("total_stock", 0).eq("always_in_stock", false);
-  else if (stock === "order") query = query.eq("always_in_stock", true);
+  const query = applyProductListFilter(
+    supabase
+      .from("checkout_sku_inventory")
+      .select(
+        "id, title, slug, subcategory, brand, selling_price, sale_price, always_in_stock, images, compatible_models, status, is_active, created_at, store_stock, online_stock, total_stock",
+        { count: "exact" },
+      ),
+    { type, search, subcategory, brand, status, stock },
+  );
 
   const from = (page - 1) * limit;
   const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, from + limit - 1);

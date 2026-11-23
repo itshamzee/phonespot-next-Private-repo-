@@ -8,7 +8,16 @@ import type { AppliedDepositLine, CartLine, CartTotals, CaseStockSummary, Paymen
 import { lineTotal } from "@/lib/pos/kasse-logic";
 import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { CustomerPick } from "./dialogs";
+import { Spinner } from "@/components/admin/ui/spinner";
 import { fmt, fmtKr, shortDate } from "./format";
+
+/**
+ * Antalsknap: berøringsfladen er mindst 32 px med mus og 44 px på touch (.m-tap),
+ * mens den synlige 24 px-boks er uændret.
+ */
+const qtyButton = "m-press m-tap group inline-flex min-h-8 min-w-8 items-center justify-center";
+const qtyGlyph =
+  "flex h-6 w-6 items-center justify-center rounded-md border border-[#C9D0C7] leading-none group-hover:bg-[#F5F6F4]";
 
 const QUICK_METHODS: Array<{ type: PaymentType; label: string }> = [
   { type: "kontant", label: "Kontant" },
@@ -42,6 +51,8 @@ type Props = {
   onDiscount: () => void;
   onMethod: (type: PaymentType) => void;
   onSplit: () => void;
+  /** Opens the split payment with a "Modregnet opkøb" line (slutseddel number). */
+  onOffset?: () => void;
   onCharge: () => void;
 };
 
@@ -120,7 +131,7 @@ export function CartPanel(p: Props) {
           <p className="py-6 text-center text-[#5E6A63]">Kurven er tom. Scan en vare, eller vælg et felt.</p>
         )}
         {p.lines.map((l) => (
-          <div key={l.key} className="flex items-start justify-between gap-3 border-b border-[#EEF0EC] py-3">
+          <div key={l.key} className="m-row-in flex items-start justify-between gap-3 border-b border-[#EEF0EC] py-3">
             <div className="min-w-0">
               <b className="break-words">
                 {l.type === "repair_service" ? `Sag ${l.ticketNumber}` : l.name}
@@ -128,24 +139,25 @@ export function CartPanel(p: Props) {
               <div className="text-[#5E6A63]">
                 {l.type === "repair_service" && l.detail}
                 {l.type === "device" && l.detail}
+                {l.type === "device" && l.imei && <span className="block tabular-nums">IMEI/serienr. {l.imei}</span>}
+                {l.type === "device" && l.needsIdentifier && !l.imei && (
+                  <span className="block font-semibold text-[#8A5A00]">Mangler IMEI eller serienummer</span>
+                )}
+                {l.type === "device" && l.missingPurchaseDocument && (
+                  <span className="block font-semibold text-[#8A5A00]">Mangler indkøbsbilag</span>
+                )}
                 {(l.type === "sku_product" || l.type === "free_text") && (
-                  <span className="inline-flex items-center gap-2">
-                    <button
-                      type="button"
-                      aria-label="Færre"
-                      onClick={() => p.onQty(l.key, -1)}
-                      className="h-6 w-6 rounded-md border border-[#C9D0C7] leading-none"
-                    >
-                      −
+                  <span className="-mx-1 inline-flex items-center gap-1">
+                    <button type="button" aria-label="Færre" onClick={() => p.onQty(l.key, -1)} className={qtyButton}>
+                      <span aria-hidden="true" className={qtyGlyph}>
+                        −
+                      </span>
                     </button>
                     <span className="tabular-nums">{l.quantity} stk.</span>
-                    <button
-                      type="button"
-                      aria-label="Flere"
-                      onClick={() => p.onQty(l.key, 1)}
-                      className="h-6 w-6 rounded-md border border-[#C9D0C7] leading-none"
-                    >
-                      +
+                    <button type="button" aria-label="Flere" onClick={() => p.onQty(l.key, 1)} className={qtyButton}>
+                      <span aria-hidden="true" className={qtyGlyph}>
+                        +
+                      </span>
                     </button>
                   </span>
                 )}
@@ -246,7 +258,7 @@ export function CartPanel(p: Props) {
                   type="button"
                   aria-pressed={active}
                   onClick={() => p.onMethod(m.type)}
-                  className={`h-11 rounded-[10px] text-sm font-semibold ${
+                  className={`m-press h-11 rounded-[10px] text-sm font-semibold ${
                     active ? "border-2 border-[#1A3D2E] bg-[#E7EFE9]" : "border border-[#C9D0C7] bg-white hover:bg-[#F5F6F4]"
                   }`}
                 >
@@ -270,6 +282,11 @@ export function CartPanel(p: Props) {
               Del betaling · Faktura · Klarna · Tilgodebevis
             </button>
           )
+        )}
+        {!zero && p.onOffset && (
+          <button type="button" onClick={p.onOffset} className="text-center text-[13px] text-[#1A3D2E] hover:text-[#2D6B45]">
+            Modregn opkøb
+          </button>
         )}
 
         {single === "kontant" && !zero && (
@@ -297,8 +314,10 @@ export function CartPanel(p: Props) {
           type="button"
           disabled={!p.canCharge}
           onClick={p.onCharge}
-          className="h-[60px] rounded-xl bg-[#1A3D2E] text-[19px] font-bold text-white transition-colors hover:bg-[#2D6B45] disabled:cursor-not-allowed disabled:opacity-40"
+          aria-busy={p.processing || undefined}
+          className="m-press inline-flex h-[60px] items-center justify-center gap-2.5 rounded-xl bg-[#1A3D2E] text-[19px] font-bold text-white transition-colors hover:bg-[#2D6B45] disabled:cursor-not-allowed disabled:opacity-40"
         >
+          {p.processing && <Spinner className="h-4 w-4" />}
           {p.processing ? "Behandler..." : zero ? "Afslut salget" : `Opkræv ${fmtKr(p.totals.total)}`}
         </button>
         {hint && <span className="text-center text-xs text-[#5E6A63]">{hint}</span>}

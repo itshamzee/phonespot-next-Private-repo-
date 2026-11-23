@@ -6,6 +6,7 @@ vi.mock("@/lib/supabase/repairs", () => ({
     { brandSlug: "iphone", modelSlug: "iphone-15", modelName: "iPhone 15", screenFrom: 999, screenOriginal: 1799, battery: 499 },
     { brandSlug: "iphone", modelSlug: "iphone-13", modelName: "iPhone 13", screenFrom: 699, screenOriginal: null, battery: 449 },
   ]),
+  getFullPriceList: vi.fn(async () => []),
 }));
 
 import FactsPage, { metadata } from "../page";
@@ -25,6 +26,7 @@ describe("/reparation/priser", () => {
     expect(text).toContain("699 kr. til 999 kr.");
     expect(text).toContain("livstidsgaranti på arbejde og dele");
     expect(text).toContain("3 måneders garanti");
+    expect(text).toContain("Batteriskift har 6 måneders garanti");
     expect(text).toContain("90 % af skærm- og batteriskift er klar på 30 minutter");
     expect(text).toContain("Løversysselvej 3B");
     expect(text).toContain("VestsjællandsCentret 10A, 103");

@@ -27,6 +27,46 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
+/* ── Skygger (offentligt site) ───────────────────────────
+   Fire trin, tonet med den mørkegrønne i stedet for sort, og altid i to lag:
+   en tæt kontaktskygge og en bred, blød. Fladen er stadig flad: kort har
+   kanten som hvile og får `raised` ved hover (kun mus, se card-raise).
+     rest      – det mindste løft, kun hvor et kort uden kant står på tonet bund
+     raised    – kort ved hover
+     floating  – ting over siden: søgeforslag, mega-menu, popovers, faste
+                 bjælker, Fiks-knap (floating-up til bjælker i bunden)
+     overlay   – skuffer, dialoger, lysboks, mobilmenu, filterark, chatpanel
+   Ingen skygger på mørke flader, sektioner eller tekst. `static`, så
+   variablerne også findes for CSS-modulerne. Admin bruger dem ikke. */
+@theme static {
+  --shadow-rest: 0 1px 2px rgba(16, 40, 30, 0.04);
+  --shadow-raised: 0 1px 2px rgba(16, 40, 30, 0.04), 0 6px 16px -8px rgba(16, 40, 30, 0.1);
+  --shadow-floating: 0 2px 6px rgba(16, 40, 30, 0.05), 0 12px 28px -12px rgba(16, 40, 30, 0.14);
+  --shadow-floating-up: 0 -1px 4px rgba(16, 40, 30, 0.04), 0 -10px 24px -12px rgba(16, 40, 30, 0.12);
+  --shadow-overlay: 0 4px 12px rgba(16, 40, 30, 0.06), 0 20px 32px -12px rgba(16, 40, 30, 0.18);
+}
+
+/* Hover kun med mus (ikke touch, ikke pen-tablets der "hover'er" ved tryk). */
+@custom-variant hover-fine {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* ── Bevægelse ───────────────────────────────────────────
+   Én kurve til ting der kommer ind (hurtig start, blød landing), én til ting
+   der flytter sig på skærmen, og drawer-kurven til ark og paneler. Kun
+   transform, opacity og farver animeres; intet spiller ved sideindlæsning. */
+:root {
+  --ease-ps-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-ps-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-ps-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-ps-fast: 150ms;
+  --dur-ps-panel: 240ms;
+}
+
 /* `clip` hides horizontal overflow like `hidden`, but without turning the element
    into a scroll container — `hidden` here silently disabled every
    position: sticky on the site. `hidden` stays as the fallback for browsers
@@ -153,5 +193,278 @@ body {
   .sheet-enter,
   .backdrop-enter {
     transition: none;
+  }
+}
+
+/* Mobilmenuen kommer fra venstre kant, samme kurve som kurven fra højre. */
+.drawer-enter-left {
+  transition: transform 260ms var(--ease-ps-drawer);
+}
+@starting-style {
+  .drawer-enter-left {
+    transform: translateX(-100%);
+  }
+}
+
+/* ── Tryk-feedback ───────────────────────────────────────
+   Knapper, fliser og vælgere giver lidt efter, når man trykker. Erstatter
+   elementets egen transition-* klasse (farver og skala i én). */
+@utility press {
+  transition-property: color, background-color, border-color, outline-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, scale;
+  transition-duration: var(--dur-ps-fast);
+  transition-timing-function: var(--ease-ps-out);
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    scale: 0.97;
+  }
+}
+
+/* ── Kort, der hæver sig ─────────────────────────────────
+   Hviler fladt med sin kant; ved hover (kun mus) får det `raised`. Erstatter
+   kortets egen transition-* klasse: farver, kant, skygge og transform i én,
+   200 ms ease-out. Skyggen er ingen bevægelse, så den bliver ved reduceret
+   bevægelse. */
+@utility card-raise {
+  transition-property: color, background-color, border-color, box-shadow,
+    transform, translate, scale;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-ps-out);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: var(--shadow-raised);
+    }
+  }
+}
+
+/* ── Produktkort ─────────────────────────────────────────
+   .card-lift er hele kortet, .card-media billedfladen. Billedet løfter sig
+   en anelse ved hover, og har kortet et ekstra billede (CardHoverImage),
+   tones det frem over det første. Kun med mus, aldrig på touch. Uden
+   :has() vises det ekstra billede slet ikke, så de to aldrig ligger oven i
+   hinanden. */
+.card-media {
+  overflow: hidden;
+}
+.card-media img {
+  transition:
+    opacity 220ms ease,
+    transform 320ms var(--ease-ps-out);
+}
+.card-hover-img {
+  padding: inherit;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-lift:hover .card-media img {
+    transform: scale(1.03);
+  }
+  @supports selector(:has(*)) {
+    .card-lift:hover .card-hover-img[data-loaded] {
+      opacity: 1;
+    }
+    .card-lift:hover .card-media:has(.card-hover-img[data-loaded]) > img {
+      opacity: 0;
+    }
+  }
+}
+
+/* ── Ting der folder sig ud ──────────────────────────────
+   <details> toner indholdet frem, når det åbnes (lukning er øjeblikkelig).
+   Det er en transition, så intet spiller ved sideindlæsning, og indholdet
+   ligger i HTML'en som før. Browsere uden ::details-content ignorerer det. */
+details::details-content {
+  opacity: 0;
+}
+details[open]::details-content {
+  opacity: 1;
+  transition:
+    opacity 220ms var(--ease-ps-out),
+    content-visibility 220ms allow-discrete;
+}
+
+/* Svar i FaqAccordion og fejltekster i formularer: glider 3 px og tones ind,
+   når de vises (kun ved brugerhandling; de er skjulte ved indlæsning). */
+.reveal-in {
+  transition:
+    opacity 220ms var(--ease-ps-out),
+    transform 220ms var(--ease-ps-out);
+}
+@starting-style {
+  .reveal-in {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+/* Mega-menuens panel: kort fade ned fra menulinjen første gang det åbner.
+   Skift mellem kategorier sker uden animation (klassen sættes ikke). */
+.mega-enter {
+  transition:
+    opacity 180ms var(--ease-ps-out),
+    transform 180ms var(--ease-ps-out);
+}
+@starting-style {
+  .mega-enter {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Bekræftelse på knapper ("Lagt i kurven"): flueben tegner sig ind. */
+.confirm-in {
+  animation: ps-confirm-in 200ms var(--ease-ps-out);
+}
+@keyframes ps-confirm-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* ── Sideskift ───────────────────────────────────────────
+   Ved navigation inde på sitet (aldrig ved første indlæsning) toner det nye
+   indhold i <main> frem. Kun opacity: en transform på <main> ville gøre den
+   til reference for faste bjælker (kontaktbjælke, købsbjælke), så de hoppede.
+   Sættes og fjernes af usePageTransition; header, footer og kurv står stille. */
+@keyframes ps-page-in {
+  from {
+    opacity: 0.001;
+  }
+}
+main[data-page-enter] {
+  animation: ps-page-in 220ms var(--ease-ps-out);
+}
+
+/* ── Hero-indgang ────────────────────────────────────────
+   Overskrift, tekst og knapper glider 6 px op ved indlæsning, lidt forskudt.
+   Kun translate (ingen opacity), så teksten er synlig og læsbar fra første
+   billede, og det tæller ikke som layoutskift. Aldrig på hero-billedet. */
+@keyframes ps-rise {
+  from {
+    translate: 0 6px;
+  }
+}
+.hero-rise > * {
+  animation: ps-rise 260ms var(--ease-ps-out) backwards;
+}
+.hero-rise > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.hero-rise > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.hero-rise > :nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+
+/* ── Pil, der skubber sig frem ───────────────────────────
+   Knapper og links med en pil til sidst: pilen rykker 3 px mod højre ved
+   hover (kun mus) og ved tastaturfokus. Selve knappen beholder sin egen
+   hover-farve og tryk. */
+@utility nudge {
+  & > svg:last-child {
+    transition: translate var(--dur-ps-fast) var(--ease-ps-out);
+  }
+  &:focus-visible > svg:last-child {
+    translate: 3px 0;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover > svg:last-child {
+      translate: 3px 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > svg:last-child {
+      transition: none;
+      translate: none !important;
+    }
+  }
+}
+
+/* ── Værdier, der skifter ────────────────────────────────
+   Pris, lagerstatus og totaler, der skifter efter et valg, toner kort ind,
+   så øjet opdager ændringen. Elementet får en ny key ved hvert skift; ved
+   indlæsning sættes klassen ikke (se value-change). */
+.value-change {
+  animation: ps-value-in 200ms var(--ease-ps-out);
+}
+@keyframes ps-value-in {
+  from {
+    opacity: 0.35;
+  }
+}
+
+/* Hovedbilledet i et produktgalleri, når kunden vælger et andet billede
+   eller en anden farve: kort fade, så skiftet ikke blinker. */
+.swap-in {
+  animation: ps-swap-in 220ms var(--ease-ps-out);
+}
+@keyframes ps-swap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+/* ── Paneler, der åbner ved brugerhandling ───────────────
+   Søgeforslag, popovers og bannere: fade + 4 px fra deres kant. Bruges kun
+   på elementer, der monteres efter et klik eller indtastning. */
+.pop-in {
+  transition:
+    opacity 160ms var(--ease-ps-out),
+    transform 160ms var(--ease-ps-out);
+}
+@starting-style {
+  .pop-in {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+}
+.rise-in {
+  transition:
+    opacity 240ms var(--ease-ps-out),
+    transform 240ms var(--ease-ps-out);
+}
+@starting-style {
+  .rise-in {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main[data-page-enter],
+  .hero-rise > *,
+  .value-change,
+  .swap-in,
+  /* Pulserende indlæsningsfelter og løbende tekst står stille. */
+  .animate-pulse,
+  .animate-marquee {
+    animation: none;
+  }
+  .pop-in,
+  .rise-in {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-enter-left,
+  .card-media img,
+  .card-hover-img,
+  .reveal-in,
+  .mega-enter,
+  details[open]::details-content {
+    transition: none;
+  }
+  .confirm-in {
+    animation: none;
+  }
+  .card-lift:hover .card-media img {
+    transform: none;
+  }
+  .press:active {
+    scale: none;
   }
 }

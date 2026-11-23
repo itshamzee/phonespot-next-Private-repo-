@@ -40,6 +40,7 @@ vi.mock("@/lib/pos/client", () => ({
   posJson: vi.fn(async (url: string, init?: { body?: string }) => {
     const body = init?.body ? JSON.parse(init.body) : undefined;
     api.calls.push({ url, body });
+    if (url === "/api/pos/locations") return { locations: [{ id: LOC, slug: "vejle", name: "PhoneSpot Vejle", registers: [] }] };
     if (url.startsWith("/api/pos/session")) {
       return {
         registers: [

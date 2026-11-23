@@ -139,6 +139,8 @@ export interface FrisbiiSessionInput {
   /** Ingen adresse at sende videre ved afhentning i butik. */
   shippingAddress: boolean;
   recovery?: boolean;
+  /** Meta-sporing (samtykke, fbp/fbc, IP, UA) — tom uden marketing-samtykke. */
+  trackingMetadata?: Record<string, string>;
 }
 
 /**
@@ -168,6 +170,7 @@ export async function createFrisbiiSession(input: FrisbiiSessionInput): Promise<
         order_id: input.orderId,
         order_number: input.orderNumber,
         ...(input.recovery ? { recovery: "true" } : {}),
+        ...(input.trackingMetadata ?? {}),
       },
       ...(address ? { billing_address: address, ...(input.shippingAddress ? { shipping_address: address } : {}) } : {}),
     },
@@ -210,5 +213,6 @@ export function createFrisbiiCheckoutSession(
     total: params.total,
     lines: buildFrisbiiOrderLines(params),
     shippingAddress: params.shippingAddress,
+    trackingMetadata: params.trackingMetadata,
   });
 }

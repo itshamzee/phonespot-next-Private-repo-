@@ -213,6 +213,19 @@ export const frisbii = {
     }
   },
 
+  /** Metadata sat på ordren, da sessionen blev oprettet. Tom, hvis der ingen er. */
+  async getInvoiceMetadata(handle: string): Promise<Record<string, string>> {
+    try {
+      const raw = await request<Record<string, unknown> | null>("api", `/invoice/${enc(handle)}/metadata`, "GET");
+      const out: Record<string, string> = {};
+      for (const [k, v] of Object.entries(raw ?? {})) if (typeof v === "string") out[k] = v;
+      return out;
+    } catch (err) {
+      if (err instanceof FrisbiiError && err.status === 404) return {};
+      throw err;
+    }
+  },
+
   settleCharge(handle: string, body: { key?: string; amount?: number } = {}): Promise<FrisbiiCharge> {
     return request("api", `/charge/${enc(handle)}/settle`, "POST", body);
   },

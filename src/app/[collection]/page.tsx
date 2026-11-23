@@ -5,7 +5,8 @@ import { getCollectionConfig, getAllCollectionSlugs, DEVICE_CATEGORIES } from "@
 import { getPublishedSkuProducts, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { templateToProduct, skuProductToProduct } from "@/lib/supabase/product-adapter";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 import { CategoryHero } from "@/components/collection/category-hero";
 import { SortSelector } from "@/components/collection/sort-selector";
 import { ProductGrid } from "@/components/collection/product-grid";
@@ -60,11 +61,12 @@ export async function generateMetadata({
   // the 36-month device warranty, so the collection description must not
   // claim it (same fix as the product-page/TrustBar variant split).
   const isDeviceCollection = DEVICE_CATEGORIES.has(SLUG_TO_CATEGORY[collection] ?? "");
-  const description = isDeviceCollection
+  const description = config.metaDescription ? config.metaDescription : isDeviceCollection
     ? `Udforsk vores udvalg af ${config.title.toLowerCase()}. Alle produkter er kvalitetstestede med 36 måneders garanti.`
     : `Udforsk vores udvalg af ${config.title.toLowerCase()}. Hurtig levering og 2 års reklamationsret.`;
 
-  const title = `${config.title} - Køb brugte ${config.title} hos PhoneSpot`;
+  // "Køb brugte Outlet" gav ingen mening for tilbehør: kategorier kan sætte deres egen titel.
+  const title = config.metaTitle ?? (isDeviceCollection ? `${config.title} - Køb brugte ${config.title} hos PhoneSpot` : `${config.title} | PhoneSpot`);
 
   return {
     title,
@@ -86,13 +88,10 @@ export async function generateMetadata({
 
 export default async function CollectionPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ collection: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { collection: slug } = await params;
-  const { sort } = await searchParams;
 
   const config = getCollectionConfig(slug);
   if (!config) {

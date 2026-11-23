@@ -36,7 +36,7 @@ describe("Header", () => {
   });
   it("submits a trimmed, encoded search to the existing search route", () => {
     render(<Header />);
-    fireEvent.change(screen.getByRole("searchbox", { name: "Søg efter model eller tilbehør" }), { target: { value: "  iPhone 17  " } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Søg efter model eller tilbehør" }), { target: { value: "  iPhone 17  " } });
     fireEvent.submit(screen.getByRole("search"));
     expect(push).toHaveBeenCalledWith("/soeg?q=iPhone%2017");
   });

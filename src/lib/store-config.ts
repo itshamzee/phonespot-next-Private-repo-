@@ -1,4 +1,5 @@
 import { normalizeStoreId } from "@/lib/stores";
+import { LEGAL_ENTITY } from "@/lib/company";
 
 // Declared before the store tables because UPCOMING_STORES uses it.
 const COMPANY_EMAIL_ADDRESS = "info@phonespot.dk";
@@ -35,7 +36,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
   slagelse: {
     slug: "slagelse",
     name: "PhoneSpot Slagelse",
-    company: "PhoneSpot ApS",
+    company: LEGAL_ENTITY.name,
     mall: "VestsjællandsCentret",
     street: "VestsjællandsCentret 10A, 103",
     city: "Slagelse",
@@ -65,7 +66,7 @@ export const STORES: Record<string, StoreLocationConfig> = {
   vejle: {
     slug: "vejle",
     name: "PhoneSpot Vejle",
-    company: "PhoneSpot ApS",
+    company: LEGAL_ENTITY.name,
     mall: null,
     street: "Løversysselvej 3B",
     city: "Vejle",
@@ -128,7 +129,7 @@ export const UPCOMING_STORES: Record<string, UpcomingStoreConfig> = {
   esbjerg: {
     slug: "esbjerg",
     name: "PhoneSpot Esbjerg",
-    company: "PhoneSpot ApS",
+    company: LEGAL_ENTITY.name,
     // Location deliberately not public yet (owner decision 2026-10-29): only
     // the town is announced. Fill in mall/street/zip/maps when it is.
     mall: null,

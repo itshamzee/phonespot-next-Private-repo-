@@ -3,9 +3,11 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { StorefrontIcon } from "@/components/ui/storefront-icon";
 import { normalizeStoreId } from "@/lib/stores";
-import { getAttribution, normalizeTrackStore, trackLead } from "@/lib/tracking/events";
+import { getAttribution, normalizeTrackStore, trackLead, trackSellWizardStep } from "@/lib/tracking/events";
 import { STORES } from "@/lib/store-config";
 import { customerFacingError } from "@/lib/customer-facing-error";
+import { GuidePricePanel, GuidePriceTeaser } from "@/components/sell-device/guide-price-panel";
+import { formatKroner, type FiksQuotePublic } from "@/lib/fiks/quote-shared";
 
 /* ------------------------------------------------------------------ */
 /*  Types & Constants                                                  */
@@ -246,6 +248,8 @@ const BRANDS_BY_TYPE: Record<string, BrandEntry[]> = {
         "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13 mini", "iPhone 13",
         "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12 mini", "iPhone 12",
         "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
+        "iPhone XS Max", "iPhone XS", "iPhone XR", "iPhone X",
+        "iPhone 8 Plus", "iPhone 8",
         "iPhone SE (3. gen)", "iPhone SE (2. gen)",
       ],
     },
@@ -552,6 +556,77 @@ const BRANDS_BY_TYPE: Record<string, BrandEntry[]> = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Prefill from a Fiks chat quote                                     */
+/* ------------------------------------------------------------------ */
+
+const CLOUD_OPTIONS = ["Ja", "Nej", "Ved ikke"];
+const squash = (v: string) => v.trim().replace(/\s+/g, " ").toLowerCase();
+
+export interface FiksPrefill {
+  device: DeviceInfo;
+  condition: ConditionInfo;
+  amount: number;
+  /** Step to land on: the first one that still needs an answer. */
+  step: number;
+}
+
+/**
+ * Maps Fiks' stored quote onto the form. Only values the form itself offers
+ * are used; anything else stays empty for the visitor to choose. Null when the
+ * model is not an iPhone the form lists or the data is not usable.
+ */
+export function fiksPrefill(raw: unknown): FiksPrefill | null {
+  const q = raw as Partial<FiksQuotePublic> | null;
+  if (!q || typeof q.model !== "string" || typeof q.storage !== "string") return null;
+  if (typeof q.amount !== "number" || !Number.isFinite(q.amount) || q.amount <= 0) return null;
+  const wanted = squash(q.model);
+  const apple = BRANDS_BY_TYPE.Telefon.find((b) => b.name === "Apple")?.models ?? [];
+  const model = apple.find((m) => squash(m) === wanted);
+  if (!model) return null;
+  const wantedStorage = q.storage.replace(/\s+/g, "").toLowerCase();
+  const storage = STORAGE_OPTIONS.Telefon.find((s) => s.toLowerCase() === wantedStorage) ?? "";
+  const a = (q.answers ?? {}) as Partial<FiksQuotePublic["answers"]>;
+  const pick = (options: string[], v: unknown) => (typeof v === "string" && options.includes(v) ? v : "");
+  const knownFaults = typeof a.charging_broken === "boolean" && typeof a.other_faults === "boolean";
+  const brokenParts = knownFaults ? [...(a.charging_broken ? ["Opladning"] : []), ...(a.other_faults ? ["Andet"] : [])] : [];
+  const condition: ConditionInfo = {
+    screen: pick(SCREEN_OPTIONS.Telefon, a.screen),
+    back: pick(BACK_OPTIONS.Telefon, a.back),
+    battery: pick(BATTERY_OPTIONS, a.battery),
+    allWorking: knownFaults ? (brokenParts.length ? "Nej" : "Ja") : "",
+    brokenParts,
+    cloudLocked: pick(CLOUD_OPTIONS, a.cloud_locked),
+  };
+  const conditionDone = !!(condition.screen && condition.back && condition.battery && condition.allWorking && condition.cloudLocked);
+  return {
+    device: { ...EMPTY_DEVICE, deviceType: "Telefon", brand: "Apple", model, storage },
+    condition,
+    amount: Math.round(q.amount),
+    step: !storage ? 0 : conditionDone ? 2 : 1,
+  };
+}
+
+/** True while the first device still matches what Fiks priced. */
+function matchesPrefill(entry: DeviceEntry | undefined, prefill: FiksPrefill): boolean {
+  if (!entry) return false;
+  const d = entry.device;
+  const c = entry.condition;
+  const p = prefill.condition;
+  return (
+    !d.useCustom &&
+    d.deviceType === prefill.device.deviceType &&
+    d.model === prefill.device.model &&
+    d.storage === prefill.device.storage &&
+    c.screen === p.screen &&
+    c.back === p.back &&
+    c.battery === p.battery &&
+    c.allWorking === p.allWorking &&
+    c.cloudLocked === p.cloudLocked &&
+    [...c.brokenParts].sort().join() === [...p.brokenParts].sort().join()
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Progress Bar                                                       */
 /* ------------------------------------------------------------------ */
 
@@ -663,7 +738,7 @@ function ConditionCardGrid({
               onClick={() => onChange(opt)}
               className={`flex flex-col items-center gap-2 rounded-md border p-4 text-center transition-all ${
                 isSelected
-                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5 shadow-sm"
+                  ? "border-[#1A3D2E] bg-[#1A3D2E]/5 shadow-rest"
                   : "border-[#E5E5EA] hover:border-[#1A3D2E]/30"
               }`}
             >
@@ -811,7 +886,7 @@ function SearchableSelect({
         </button>
         {open && (
           <div
-            className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-soft-grey bg-white shadow-lg"
+            className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-soft-grey bg-white shadow-floating"
             onKeyDown={keyboard}
           >
             <div className="border-b border-soft-grey p-2">
@@ -890,6 +965,20 @@ export function SellDeviceWizard({
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const wizardRef = useRef<HTMLDivElement>(null);
   const previousStep = useRef(step);
+  // Mål hvert trin første gang, kunden når det (frem og tilbage tæller ikke igen).
+  const furthestTracked = useRef(-1);
+  useEffect(() => {
+    if (step <= furthestTracked.current) return;
+    furthestTracked.current = step;
+    trackSellWizardStep({
+      stepNumber: step + 1,
+      stepName: STEPS[step],
+      deviceType: devices[0]?.device.deviceType || undefined,
+      devices: devices.length,
+    });
+    // Kun når trinnet skifter; enhedslisten må ikke udløse nye hændelser.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   useEffect(() => {
     if (previousStep.current !== step) {
       // Fokus må ikke selv rulle siden: det sendte kunden op til sidens top.
@@ -901,13 +990,53 @@ export function SellDeviceWizard({
   }, [step]);
   const [activeDeviceIndex, setActiveDeviceIndex] = useState(0);
 
+  // A quote from the Fiks chat (?fiks=<token>): fetched from the server, never read from the URL.
+  const [fiks, setFiks] = useState<FiksPrefill | null>(null);
+  const devicesRef = useRef(devices);
+  useEffect(() => {
+    devicesRef.current = devices;
+  }, [devices]);
+  useEffect(() => {
+    let token: string | null = null;
+    try {
+      token = new URLSearchParams(window.location.search).get("fiks");
+    } catch {
+      return;
+    }
+    if (!token) return;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/fiks/quote?token=${encodeURIComponent(token)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const prefill = fiksPrefill(await res.json());
+        if (!prefill) return;
+        // Never overwrite something the visitor has already started on.
+        const current = devicesRef.current;
+        if (current.length !== 1 || current[0].device.model || current[0].device.modelCustom) return;
+        setDevices([{ ...current[0], device: prefill.device, condition: prefill.condition }]);
+        setActiveDeviceIndex(0);
+        setFiks(prefill);
+        setStep(prefill.step);
+      } catch {
+        // No quote: the form works as usual.
+      }
+    })();
+    return () => controller.abort();
+  }, []);
+  const fiksValid = fiks !== null && devices.length === 1 && matchesPrefill(devices[0], fiks);
+
   const [contact, setContact] = useState<ContactInfo>({
     name: "",
     email: "",
     phone: "",
     preferredContact: "Ring mig",
     deliveryMethod: "",
-    preferredStore: "Slagelse",
+    // Ingen forvalgt butik: standarden "Slagelse" gjorde Vejle-efterspørgslen usynlig (opkøbsanalyse 10/11).
+    preferredStore: "",
     comment: "",
   });
 
@@ -985,7 +1114,8 @@ export function SellDeviceWizard({
           contact.name.trim() &&
           contact.email.trim() &&
           contact.phone.trim() &&
-          contact.deliveryMethod
+          contact.deliveryMethod &&
+          (contact.deliveryMethod !== "Aflever i butik" || contact.preferredStore)
         );
       default:
         return false;
@@ -1027,7 +1157,9 @@ export function SellDeviceWizard({
       contact.comment ? `Kommentar: ${contact.comment}` : null,
     ];
 
-    return [...parts, ...deliveryLines.filter(Boolean)].join("\n");
+    const fiksLines = fiksValid ? ["", `Vejledende pris fra Fiks: ${formatKroner(fiks.amount)}`] : [];
+
+    return [...parts, ...fiksLines, ...deliveryLines.filter(Boolean)].join("\n");
   }
 
   /* ---- submit ---- */
@@ -1060,7 +1192,7 @@ export function SellDeviceWizard({
               condition: e.condition,
             })),
             deliveryMethod: contact.deliveryMethod,
-            preferredStore: contact.preferredStore,
+            preferredStore: contact.deliveryMethod === "Aflever i butik" ? contact.preferredStore : null,
             preferredContact: contact.preferredContact,
             comment: contact.comment,
             attribution: getAttribution(),
@@ -1163,6 +1295,17 @@ export function SellDeviceWizard({
   return (
     <div ref={wizardRef} className="scroll-mt-4 rounded-xl border border-soft-grey bg-white p-5 font-body sm:p-7">
       <ProgressBar current={step} />
+      {fiksValid && (
+        <p
+          role="status"
+          className="mb-6 flex items-center gap-2 rounded-md bg-green-pale px-4 py-3 text-sm text-green-eco"
+        >
+          <StorefrontIcon kind="check" className="h-4 w-4 shrink-0" />
+          <span>
+            Vejledende pris fra Fiks: <strong className="font-semibold">{formatKroner(fiks.amount)}</strong>
+          </span>
+        </p>
+      )}
       <fieldset disabled={status === "submitting"} className="min-w-0">
         {status === "error" && (
           <div
@@ -1546,6 +1689,10 @@ export function SellDeviceWizard({
               </>
             )}
 
+            {!activeDevice.device.useCustom && activeDevice.device.model && (
+              <GuidePriceTeaser device={activeDevice.device} />
+            )}
+
             {/* Add another device button */}
             {(activeDevice.device.model ||
               (activeDevice.device.useCustom &&
@@ -1738,6 +1885,20 @@ export function SellDeviceWizard({
               </>
             )}
 
+            <GuidePricePanel
+              device={activeDevice.device}
+              condition={activeCondition}
+              ready={
+                !!(
+                  activeCondition.screen &&
+                  (hasOuterCondition || (activeCondition.back && activeCondition.battery)) &&
+                  activeCondition.allWorking &&
+                  (activeCondition.allWorking !== "Nej" || activeCondition.brokenParts.length > 0) &&
+                  (!showCloudLock || activeCondition.cloudLocked)
+                )
+              }
+            />
+
             {/* Progress across devices when multiple */}
             {devices.length > 1 && (
               <div className="rounded-md border border-soft-grey bg-charcoal/[0.02] p-4">
@@ -1915,11 +2076,14 @@ export function SellDeviceWizard({
                   }
                   className={inputStyles}
                 >
-                  <option value="Slagelse">
-                    PhoneSpot Slagelse — {STORES.slagelse.street}
+                  <option value="" disabled>
+                    Vælg butik
                   </option>
                   <option value="Vejle">
                     PhoneSpot Vejle — {STORES.vejle.street}
+                  </option>
+                  <option value="Slagelse">
+                    PhoneSpot Slagelse — {STORES.slagelse.street}
                   </option>
                 </select>
               </div>

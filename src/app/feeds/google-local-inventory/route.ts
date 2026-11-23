@@ -49,7 +49,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "text/tab-separated-values; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

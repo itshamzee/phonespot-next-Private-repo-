@@ -167,7 +167,7 @@ export default function BlogIndexPage() {
               <Link
                 key={post.frontmatter.slug}
                 href={`/blog/${post.frontmatter.slug}`}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white transition-shadow hover:shadow-lg"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-sand/50 bg-white card-raise"
               >
                 {/* Card image */}
                 <div className="relative aspect-[16/10] overflow-hidden">

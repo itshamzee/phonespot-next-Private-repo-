@@ -16,6 +16,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { createPosSale, type CreateSaleInput, type SaleResult } from "./create-sale";
 import { createPosReturn, type CreateReturnInput, type ReturnResult } from "./create-return";
 import { PosError, toPosError } from "./errors";
+import type { PaymentLineInput } from "./calc";
 import {
   captureCardPayments,
   getPaymentTerminal,
@@ -54,6 +55,7 @@ export async function createSaleWithTerminal(
   const ctx = { reference: terminalReference(given), locationSlug };
   const payments = await captureCardPayments(terminal, sale.payments, ctx);
   const charged = terminalTransactionIds(sale.payments, payments);
+  await guardAgainstReusedTransactions(terminal, payments, ctx, charged);
 
   try {
     return await createPosSale({ ...sale, payments });
@@ -92,6 +94,17 @@ export async function createReturnWithTerminal(
   const originalTransactionIds = await originalCardTransactionIds(ret.originalOrderId);
   const ctx = { reference: terminalReference(given), locationSlug, originalTransactionIds };
   const refunds = await refundCardPayments(terminal, ret.refunds, ctx);
+  const refunded = terminalTransactionIds(ret.refunds, refunds);
+  const reused = await usedTransactionIds(refunded).catch(() => null);
+  if (reused === null || reused.size > 0) {
+    // A refund cannot be pulled back from the customer's card.
+    console.error("[pos-terminal] refund transaction check failed or id reused", { reference: ctx.reference, reused });
+    throw new PosError(
+      "terminal_refund_unrecorded",
+      "Terminalens svar på returneringen kunne ikke godkendes, og kreditnotaen er ikke oprettet. Kontakt ejeren, før du prøver igen.",
+      409,
+    );
+  }
   try {
     return await createPosReturn({ ...ret, refunds });
   } catch (err) {
@@ -104,6 +117,60 @@ export async function createReturnWithTerminal(
       pos?.status ?? 500,
     );
   }
+}
+
+/**
+ * A terminal transaction may back exactly one payment line. Ids already saved
+ * on another payment mean the terminal answered with an earlier payment (a
+ * reused reference): no new money was taken for those. Fails safe: whatever was
+ * charged in this run and is not someone else's payment is voided before we
+ * refuse, so a customer is never left charged without a sale.
+ */
+async function guardAgainstReusedTransactions(
+  terminal: PaymentTerminal,
+  payments: PaymentLineInput[],
+  ctx: { reference: string; locationSlug: string },
+  charged: ReadonlySet<string>,
+): Promise<void> {
+  if (charged.size === 0) return;
+  let reused: Set<string>;
+  try {
+    reused = await usedTransactionIds(charged);
+  } catch (err) {
+    console.error("[pos-terminal] duplicate check failed:", err);
+    const released = await releaseCardPayments(terminal, payments, ctx, charged);
+    throw new PosError(
+      released ? "terminal_voided" : "terminal_void_failed",
+      released
+        ? "Kortbetalingen kunne ikke kontrolleres og er ført tilbage på terminalen. Salget er ikke gemt."
+        : "Kortbetalingen kunne ikke kontrolleres, og den kunne ikke føres tilbage automatisk. Refunder beløbet på terminalen. Salget er ikke gemt.",
+      503,
+    );
+  }
+  if (reused.size === 0) return;
+  const fresh = new Set([...charged].filter((id) => !reused.has(id)));
+  const released = fresh.size === 0 || (await releaseCardPayments(terminal, payments, ctx, fresh));
+  console.error("[pos-terminal] terminal transaction already used", { reference: ctx.reference, reused: [...reused], released });
+  throw new PosError(
+    "terminal_duplicate",
+    released
+      ? "Terminalen svarede med en betaling, der allerede hører til et andet salg. Salget er ikke gemt. Prøv igen."
+      : "Terminalen svarede med en betaling, der allerede hører til et andet salg, og en anden kortbetaling kunne ikke føres tilbage. Refunder den på terminalen. Salget er ikke gemt.",
+    409,
+  );
+}
+
+/** The ids among `ids` that are already saved on a card payment. Throws on a database error. */
+async function usedTransactionIds(ids: ReadonlySet<string>): Promise<Set<string>> {
+  if (ids.size === 0) return new Set();
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from("order_payments")
+    .select("reference")
+    .eq("type", CARD)
+    .in("reference", [...ids]);
+  if (error) throw new Error(error.message);
+  return new Set(((data ?? []) as Array<{ reference: string | null }>).map((r) => r.reference ?? "").filter((r) => ids.has(r)));
 }
 
 /** Terminal transaction ids saved on the original sale's card lines. */

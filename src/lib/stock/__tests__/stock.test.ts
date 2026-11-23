@@ -13,8 +13,18 @@ import {
   queryOverview,
   requestSources,
   searchTokens,
+  STOCK_VIEW_SLUGS,
   type OverviewRow,
 } from "../overview";
+
+const qtys = (vejle: number, slagelse: number, webshop: number) => ({ vejle, slagelse, webshop, "vejle-gaagade": 0, esbjerg: 0 });
+const mins = (vejle: number | null, slagelse: number | null, webshop: number | null) => ({
+  vejle,
+  slagelse,
+  webshop,
+  "vejle-gaagade": null,
+  esbjerg: null,
+});
 
 function row(over: Partial<OverviewRow> = {}): OverviewRow {
   return {
@@ -31,8 +41,8 @@ function row(over: Partial<OverviewRow> = {}): OverviewRow {
     price: 9900,
     priceMax: 9900,
     alwaysInStock: false,
-    qty: { vejle: 14, slagelse: 1, webshop: 40 },
-    min: { vejle: 5, slagelse: 5, webshop: null },
+    qty: qtys(14, 1, 40),
+    min: mins(5, 5, null),
     inTransit: 0,
     ...over,
   };
@@ -45,13 +55,13 @@ describe("low stock highlight", () => {
     expect(isLow(row(), "webshop")).toBe(false); // no minimum set
   });
   it("never flags always-in-stock items or a zero minimum", () => {
-    expect(isLow(row({ alwaysInStock: true, qty: { vejle: 0, slagelse: 0, webshop: 0 } }), "vejle")).toBe(false);
-    expect(isLow(row({ min: { vejle: 0, slagelse: 0, webshop: 0 } }), "slagelse")).toBe(false);
+    expect(isLow(row({ alwaysInStock: true, qty: qtys(0, 0, 0) }), "vejle")).toBe(false);
+    expect(isLow(row({ min: mins(0, 0, 0) }), "slagelse")).toBe(false);
   });
 });
 
 describe("Anmod", () => {
-  const device = row({ kind: "device", qty: { vejle: 0, slagelse: 2, webshop: 1 }, min: { vejle: null, slagelse: null, webshop: null } });
+  const device = row({ kind: "device", qty: qtys(0, 2, 1), min: mins(null, null, null) });
 
   it("is offered when my store has 0 and another store has stock", () => {
     expect(canRequestRow(device, "vejle")).toBe(true);
@@ -59,11 +69,11 @@ describe("Anmod", () => {
   });
   it("is not offered when my store has stock, nobody else has, or I have no store", () => {
     expect(canRequestRow(row(), "vejle")).toBe(false);
-    expect(canRequestRow(row({ qty: { vejle: 0, slagelse: 0, webshop: 0 } }), "vejle")).toBe(false);
+    expect(canRequestRow(row({ qty: qtys(0, 0, 0) }), "vejle")).toBe(false);
     expect(canRequestRow(device, null)).toBe(false);
   });
   it("is not offered for always-in-stock items", () => {
-    expect(canRequestRow(row({ alwaysInStock: true, qty: { vejle: 0, slagelse: 5, webshop: 5 } }), "vejle")).toBe(false);
+    expect(canRequestRow(row({ alwaysInStock: true, qty: qtys(0, 5, 5) }), "vejle")).toBe(false);
   });
 });
 
@@ -139,5 +149,32 @@ describe("queryOverview cost privacy", () => {
       expect(selects[0]).toContain("cost_price");
       expect(res.canSeeCost).toBe(true);
     }
+  });
+});
+
+describe("stores without stock_overview columns", () => {
+  it("mapOverviewRow only has keys for the stores in the view", () => {
+    const r = mapOverviewRow({ row_key: "k", name: "x" });
+    expect(Object.keys(r.qty).sort()).toEqual([...STOCK_VIEW_SLUGS].sort());
+    expect(Object.keys(r.min).sort()).toEqual([...STOCK_VIEW_SLUGS].sort());
+  });
+
+  it("queryOverview for vejle-gaagade returns [] and never references an invalid column", async () => {
+    const used: string[] = [];
+    const q: Record<string, unknown> = {};
+    for (const m of ["order", "range", "ilike", "or", "select"]) {
+      q[m] = (...a: unknown[]) => {
+        used.push(...a.filter((x): x is string => typeof x === "string"));
+        return q;
+      };
+    }
+    q.then = (resolve: (v: unknown) => void) => resolve({ data: [], error: null, count: 0 });
+    const db = { from: () => q } as never;
+    for (const slug of ["vejle-gaagade", "esbjerg"] as const) {
+      const res = await queryOverview({ role: "employee" }, { onlyStore: slug }, db);
+      expect(res.rows).toEqual([]);
+      expect(res.total).toBe(0);
+    }
+    expect(used.filter((u) => u.includes("-"))).toEqual([]);
   });
 });

@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { createServerClient } from "@/lib/supabase/client";
 import { PosReceiptPDF, type PosReceiptProps } from "./receipt-pdf";
 import { PAYMENT_LABELS, isPaymentType } from "./constants";
+import { receiptLegalLine } from "@/lib/legal-entity";
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 
 type OrderItemRow = {
@@ -36,7 +37,7 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
     .select(
       `id, order_number, type, receipt_number, confirmed_at, created_at, subtotal, discount_amount,
        discount_reason, total, vat_total, payment_method, register_id, location_id, staff_id,
-       customer_id, original_order_id, credit_reason, bundle_discount_amount,
+       customer_id, original_order_id, credit_reason, bundle_discount_amount, legal_name, legal_cvr,
        order_items ( item_type, device_id, sku_product_id, quantity, unit_price, total_price, vat_scheme, description ),
        order_payments ( type, amount_oere, reference )`,
     )
@@ -129,6 +130,7 @@ export async function loadReceiptProps(orderId: string): Promise<PosReceiptProps
     date: order.confirmed_at ?? order.created_at,
     locationName: location.data?.name ?? "PhoneSpot",
     locationAddress: location.data?.address ?? "",
+    legalLine: receiptLegalLine({ legal_name: order.legal_name ?? null, legal_cvr: order.legal_cvr ?? null }),
     registerName: register.data?.name,
     staffName: staff.data?.name ?? "PhoneSpot",
     items: receiptItems,

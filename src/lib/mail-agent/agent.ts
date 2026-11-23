@@ -1,15 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { hasUnparseableAmount, unbackedAmounts } from "./amount-filter";
 import { buildSystemPrompt } from "./prompt";
 import { assessmentSchema, finalizeAssessment } from "./schema";
 import { buildTools, type ToolContext } from "./tools";
+import type { InquiryChannel } from "@/lib/supabase/types";
 import type { Assessment, LookupLog } from "./types";
 
 export const MODEL = "claude-opus-5";
 
 export interface AssessInput {
   supabase: SupabaseClient;
-  senderEmail: string;
+  /** Null for a phone-only inquiry. */
+  senderEmail: string | null;
+  /** Decides whether senderEmail counts as verified for lookups. */
+  channel: InquiryChannel;
   senderName: string | null;
   mailbox: string;
   displayName: string;
@@ -17,6 +22,12 @@ export interface AssessInput {
   /** Earlier messages in the thread, oldest first. The latest customer mail goes in `latest`. */
   thread: { sender: "customer" | "staff"; body: string; created_at: string }[];
   latest: string;
+}
+
+/** Addresses that count as verified for lookups: only email and form senders. */
+export function verifiedEmailsFor(channel: InquiryChannel, senderEmail: string | null | undefined): string[] {
+  if (channel !== "email" && channel !== "form") return [];
+  return [(senderEmail ?? "").trim().toLowerCase()].filter(Boolean);
 }
 
 export interface AssessOutput {
@@ -69,8 +80,9 @@ function client(): Anthropic {
 export async function assessMessage(input: AssessInput, anthropic: Anthropic = client()): Promise<AssessOutput> {
   const ctx: ToolContext = {
     supabase: input.supabase,
-    senderEmail: input.senderEmail,
+    verified: { emails: verifiedEmailsFor(input.channel, input.senderEmail) },
     log: [],
+    outputs: [],
     scopeMismatch: { value: false },
   };
   let submitted: unknown = null;
@@ -122,8 +134,17 @@ export async function assessMessage(input: AssessInput, anthropic: Anthropic = c
   }
 
   const parsed = assessmentSchema.safeParse(submitted);
-  const assessment = finalizeAssessment(parsed.success ? parsed.data : FALLBACK, {
+  const checked = parsed.success ? parsed.data : FALLBACK;
+  // Amounts a customer or staff member already wrote in the thread may be repeated.
+  const backingTexts = [...ctx.outputs, ...input.thread.map((m) => m.body), input.latest, input.subject];
+  // Subject and body are checked separately so a price word at the end of one cannot pair with a number in the other.
+  const draftTexts = checked.draft ? [checked.draft.subject, checked.draft.body] : [];
+  const unbacked: number[] = [];
+  for (const t of draftTexts) for (const v of unbackedAmounts(t, backingTexts)) if (!unbacked.includes(v)) unbacked.push(v);
+  const assessment = finalizeAssessment(checked, {
     scopeMismatch: ctx.scopeMismatch.value,
+    unbackedAmounts: unbacked,
+    unparseableAmount: draftTexts.some(hasUnparseableAmount),
   });
   return { assessment, lookups: ctx.log, usage, model: MODEL };
 }

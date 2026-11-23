@@ -5,12 +5,17 @@ import ReparationPage, { metadata } from "@/app/reparation/page";
 vi.mock("@/lib/supabase/repairs", () => ({
   getActiveBrands: async () => [{ id: "iphone", name: "iPhone", slug: "iphone", device_type: "smartphone" }],
   getAllModelsWithBrand: async () => [{ id: "15", name: "iPhone 15", slug: "iphone-15", brand_slug: "iphone", brand_name: "iPhone" }],
+  getRepairPriceSummaries: async () => [
+    { brandSlug: "iphone", modelSlug: "iphone-15", modelName: "iPhone 15", screenFrom: 1599, screenOriginal: 3499, battery: 899 },
+    { brandSlug: "iphone", modelSlug: "iphone-13", modelName: "iPhone 13", screenFrom: 999, screenOriginal: null, battery: 699 },
+  ],
 }));
 
 describe("Reparationssiden", () => {
   it("bevarer søgning og sender kunden til den valgte models reparationer", async () => {
     render(await ReparationPage());
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mobilreparation.");
+    expect(document.body.textContent).toContain("Skærmskift koster fra 999 kr. og batteriskift fra 699 kr.");
     expect(screen.getByRole("link", { name: "Find model og pris" })).toHaveAttribute("href", "#find-din-pris");
     fireEvent.change(screen.getByRole("textbox", { name: "Søg efter model" }), { target: { value: "iPhone 15" } });
     expect(screen.getByRole("link", { name: /iPhone 15 iPhone/ })).toHaveAttribute("href", "/reparation/iphone/iphone-15");
@@ -24,8 +29,8 @@ describe("Reparationssiden", () => {
     const schemas = [...container.querySelectorAll('script[type="application/ld+json"]')].map(s => JSON.parse(s.textContent!));
     const faq = schemas.find(s => s["@type"] === "FAQPage");
     const details = [...container.querySelectorAll("details")];
-    expect(faq.mainEntity).toHaveLength(6);
-    expect(details).toHaveLength(6);
+    expect(faq.mainEntity).toHaveLength(7);
+    expect(details).toHaveLength(7);
     faq.mainEntity.forEach((q: { name: string; acceptedAnswer: { text: string } }, index: number) => {
       expect(details[index].querySelector("summary")).toHaveTextContent(q.name);
       expect(details[index].querySelector("p")).toHaveTextContent(q.acceptedAnswer.text);

@@ -15,6 +15,16 @@ export type BrandHubContent = {
   /** By-sektion: hvad der er særligt for mærket i butikkerne. */
   cityNote: string;
   faqs: HubFaq[];
+  /** Guides og nært beslægtede sider, vist som links under modellerne. */
+  guides?: { href: string; label: string }[];
+  /** Egen garantilinje, når mærket ikke følger telefon/tablet/apparat (fx konsoller). */
+  warrantyLine?: string;
+};
+
+const CONSOLE_WARRANTY_FAQ: HubFaq = {
+  question: "Hvilken garanti får jeg på en konsolreparation?",
+  answer:
+    "Konsolreparation har 2 års garanti. Garantien dækker ikke nye skader, fx hvis HDMI-kablet bliver revet ud igen.",
 };
 
 export const WARRANTY_PHONE_TABLET = "livstidsgaranti på arbejde og dele";
@@ -285,6 +295,52 @@ export const BRAND_HUB_CONTENT: Record<string, BrandHubContent> = {
           "Ja. Bor du uden for Vejle og Slagelse, kan du sende computeren ind. Vi aftaler vilkår og pris med dig, før vi går i gang.",
       },
     ],
+  },
+  // Konsoller: GSC nov 2026 viser "ps5 reparation", "playstation 4 reparation"
+  // og "ps5 rens" på plads 7-20. Priserne i teksten følger repair_services pr.
+  // 17/11 2026 (rens 899, PS5 HDMI-pakke 1.300, port alene 1.599).
+  playstation: {
+    label: "PlayStation",
+    answer: (p) =>
+      `Vi reparerer PS5, PS5 Digital, PS5 Pro og PS4 i Vejle og Slagelse${p ? `, fra ${p}` : ""}. Rens og ny køling koster 899 kr. og tager 1-2 hverdage. HDMI-port og rengøring på PS5 koster 1.300 kr. Du får en fast pris, før vi går i gang, og 2 års garanti på konsolreparation.`,
+    body: [
+      "To fejl går igen: sort skærm og en konsol, der larmer. Sort skærm skyldes oftest en knækket HDMI-port, som sidder loddet på bundkortet og skiftes med mikrolodning. Larm og varme skyldes støv i blæser og køleprofil, og at kølingen på chippen er blevet dårligere.",
+      "PS5 har flydende metal på chippen fra fabrikken, mens PS4 har almindelig kølepasta. Derfor behandler vi kølingen efter modellen, når vi renser. Vi reparerer også DualSense- og DualSense Edge-controllere med stick-drift.",
+    ],
+    categoryNotes: {},
+    cityNote:
+      "Tag kun selve konsollen med i butikken. Controller, kabler og stativ kan blive hjemme.",
+    faqs: [
+      {
+        question: "Hvad koster det at rense en PS5?",
+        answer:
+          "Rens og ny køling koster 899 kr. Vi renser blæser, køleprofil og luftkanaler, skifter termopuder, tjekker kølingen på chippen og tester konsollen under belastning. Det tager 1-2 hverdage og gælder PS5, PS5 Digital, PS5 Pro, PS4 og PS4 Pro.",
+      },
+      {
+        question: "Hvad koster en ny HDMI-port på PS5?",
+        answer:
+          "HDMI-port og indvendig rengøring koster 1.300 kr. i én pakke. Porten alene koster 1.599 kr. Det tager 2-3 hverdage, og prisen gælder PS5, PS5 Digital og PS5 Pro.",
+      },
+      {
+        question: "Mister jeg mine spil og gemte filer?",
+        answer:
+          "Nej. Vi rører ikke lagringen, når vi skifter HDMI-port, blæser eller renser konsollen. Har du PS Plus, ligger gemte spil også i skyen.",
+      },
+      {
+        question: "Kan I reparere en DualSense-controller med stick-drift?",
+        answer:
+          "Ja. Vi reparerer DualSense og DualSense Edge. Find controlleren på siden for at se prisen.",
+      },
+      CONSOLE_WARRANTY_FAQ,
+      MAIL_IN_FAQ("PlayStation"),
+    ],
+    guides: [
+      { href: "/blog/gta-6-klar-ps5-rens-koelepasta", label: "Gør din PS5 klar til GTA 6: rens og ny køling" },
+      { href: "/blog/ps5-sort-skaerm-hdmi-reparation", label: "Sort skærm på PS5? Så er det ofte HDMI-porten" },
+      { href: "/reparation/xbox", label: "Xbox-reparation" },
+      { href: "/reparation/nintendo", label: "Nintendo-reparation" },
+    ],
+    warrantyLine: "2 års garanti på konsolreparation.",
   },
   ...APPLIANCE_HUB_CONTENT,
 };

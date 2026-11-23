@@ -39,7 +39,7 @@ describe("Modelsider under /saelg-din-enhed/[device]/[model]", () => {
       const text = container.textContent ?? "";
       expect(text, page.slug).toMatch(/defekt/i);
       expect(text, page.slug).not.toMatch(/\d[\d.]*\s*(kr\b|kroner)/i);
-      expect(text, page.slug).not.toMatch(/med det samme|samme dag|øjeblikkelig/i);
+      expect(text, page.slug).not.toMatch(/med det samme|øjeblikkelig/i); // "samme dag" er tilladt fra 10/11-2026 (ejerbeslutning: pengene samme dag, som vi modtager enheden)
       for (const pattern of BANNED) expect(text).not.toMatch(pattern);
       expect(text).not.toMatch(/\p{Extended_Pictographic}/u);
       unmount();

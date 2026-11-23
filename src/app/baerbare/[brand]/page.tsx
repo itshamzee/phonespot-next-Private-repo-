@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { getPublishedSkuProducts, getSkuProductBySlug, getPublishedTemplates } from "@/lib/supabase/product-queries";
 import { skuProductToProduct, templateToProduct } from "@/lib/supabase/product-adapter";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 export const dynamicParams = true;
 
 import type { Product } from "@/lib/shopify/types";

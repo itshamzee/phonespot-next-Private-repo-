@@ -30,6 +30,7 @@
 .surface .service a{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#edf1ed;color:var(--green);border-radius:4px}
 .surface .service a:first-child{background:var(--green);color:white}
 .surface .service svg{width:17px;height:17px}
+.surface .nav a{text-decoration-line:underline;text-decoration-color:transparent;text-underline-offset:4px;transition:text-decoration-color .15s ease,color .15s ease}
 .surface .nav a:hover{text-decoration:underline;text-underline-offset:4px}
 .surface .mobile-menu{display:none}
 .surface .intro{padding-top:24px}
@@ -39,7 +40,8 @@
 .surface .eyebrow{font-size:12px;font-weight:600;color:var(--green);display:block;letter-spacing:.3px;margin-bottom:14px}
 .surface .campaign h1{font-size:clamp(39px,4.5vw,60px);font-weight:550;letter-spacing:-2.9px;line-height:1.03;margin:0 0 20px}
 .surface .campaign p{color:#505c53;font-size:15px;max-width:345px;margin:0 0 25px}
-.surface .button{display:inline-flex;min-height:46px;padding:12px 19px;align-items:center;justify-content:space-between;gap:24px;background:var(--green);color:#fff;border:0;border-radius:5px;font-size:13px;font-weight:600;transition:background .15s}
+.surface .button{display:inline-flex;min-height:46px;padding:12px 19px;align-items:center;justify-content:space-between;gap:24px;background:var(--green);color:#fff;border:0;border-radius:5px;font-size:13px;font-weight:600;transition:background .15s,scale .15s var(--ease-ps-out)}
+.surface .button:active{scale:.97}
 .surface .button:hover{background:#294d39}
 .surface .button.light{background:white;color:var(--green)}
 .surface .button.light:hover{background:#edf2ef}
@@ -56,7 +58,7 @@
 .surface .carousel-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #dce3dc}
 .surface .carousel-tabs button{border:0;border-right:1px solid #dce3dc;background:transparent;padding:16px 22px;display:flex;align-items:center;gap:12px;font-size:13px;min-height:59px;color:#657166}
 .surface .carousel-tabs button:last-child{border-right:0}
-.surface .carousel-tabs button[aria-pressed=true]{background:var(--green);color:white}
+.surface .carousel-tabs button[aria-pressed=true]{background:transparent;color:white}
 .surface .carousel-tabs button>svg:last-child{margin-left:auto;width:17px;height:17px}
 .surface .services{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
 .surface .service-card{border-radius:10px;position:relative;overflow:hidden;min-height:284px;padding:26px 30px 42px}
@@ -89,13 +91,14 @@
 .surface .departments{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid;grid-template-rows:repeat(7,1fr);background:#fff}
 .surface .departments button,.surface .departments a{padding:14px 16px;display:flex;align-items:center;gap:10px;border:0;border-bottom:1px solid var(--line);background:white;color:#586158;font-size:13px;text-align:left;min-height:51px}
 .surface .departments a:last-child{border-bottom:0}
+.surface .departments button,.surface .departments a{transition:background-color .15s,color .15s}
 .surface .departments button[aria-pressed=true]{background:var(--green);color:white}
 .surface .departments button:hover,.surface .departments a:hover{background:#edf2ee;color:var(--green)}
 .surface .departments svg{width:20px;height:20px}
 .surface .departments svg:last-child{width:14px;height:14px;margin-left:auto}
 .surface .products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
-.surface .product{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;background:white;transition:border-color .15s,box-shadow .15s}
-.surface .product:hover{border-color:#9aaa9b;box-shadow:0 5px 20px #183b2b0b}
+.surface .product{border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;background:white;transition:border-color .15s,box-shadow 200ms var(--ease-ps-out)}
+.surface .product:hover{border-color:#9aaa9b}
 .surface .product>a{height:100%;display:flex;flex-direction:column}
 .surface .product-photo{height:212px;position:relative;display:flex;align-items:center;justify-content:center;background:#f7f7f8;padding:30px 23px 12px}
 .surface .product-photo img{height:100%;width:100%;object-fit:contain;mix-blend-mode:multiply}
@@ -304,7 +307,7 @@
 .surface .catalog-state { grid-column: 1 / -1; min-height: 450px; padding: 40px 24px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; border: 1px solid var(--line); border-radius: 8px; width: 100%; }
 .surface .catalog-state p { margin: 0; font-size: 14px; }
 .surface .menu-backdrop { position: fixed; inset: 0; z-index: 70; background: #1116; }
-.surface .menu-panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(390px, 100%); z-index: 71; background: white; padding: 24px; overflow-y: auto; }
+.surface .menu-panel { position: fixed; top: 0; bottom: 0; left: 0; width: min(390px, 100%); z-index: 71; background: white; box-shadow: var(--shadow-overlay); padding: 24px; overflow-y: auto; }
 .surface .menu-panel nav { display: flex; flex-direction: column; }
 .surface .menu-panel a { min-height: 48px; padding-block: 12px; border-bottom: 1px solid var(--line); }
 .surface .menu-close { display: flex; align-items: center; gap: 12px; min-height: 44px; margin: 0 0 16px auto; border: 0; background: transparent; }
@@ -328,3 +331,54 @@
   .surface .topline .storeLocations .upcomingStore { display: none; }
   .surface .topline .phoneLink { margin-left: auto; }
 }
+
+/* Black November: mærket hænger på den faste top, intet andet ændres. */
+.surface .bn-pill{display:inline-flex;align-items:center;gap:10px;max-width:100%;margin-bottom:22px;padding:4px 12px 4px 4px;background:#fff;border:1px solid #dfe5dc;border-radius:999px;color:var(--green);font-size:12.5px;line-height:1.2;transition:border-color .15s}
+.surface .bn-pill:hover{border-color:#5a8c6f}
+.surface .bn-pill-name{padding:5px 10px;background:var(--green);color:#fff;border-radius:999px;font-weight:600;white-space:nowrap}
+.surface .bn-pill-text{font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.surface .bn-pill svg{width:15px;height:15px;color:#5a8c6f}
+.surface .bn-chip{margin-left:6px;padding:3px 9px;border:1px solid rgba(255,255,255,.28);border-radius:999px;font-size:11.5px;font-weight:550;color:#fff}
+@media(max-width:760px){.surface .bn-pill{margin-bottom:18px;font-size:12px}}
+/* Nypris ved siden af vores pris på forsidens produktkort. */
+.surface .product-body .new-price{font-size:12px;color:#667066;margin:auto 0 2px;line-height:1.2}
+.surface .product-body .new-price + .price{margin-top:0}
+
+/* ── Hero-bevægelse ──────────────────────────────────────
+   Den grønne markering under karrusellens faneblade glider til den valgte
+   fane (--tab-i sættes inline, så den står rigtigt fra første billede).
+   Nyt slide glider 12 px ind fra den side, kunden bevæger sig mod; første
+   slide ved indlæsning animeres ikke (billedet er LCP). */
+.surface .campaign-stage{transition:background-color 240ms ease}
+.surface .carousel-tabs{position:relative}
+.surface .carousel-tabs::before{content:"";position:absolute;top:0;bottom:0;left:0;width:25%;background:var(--green);transform:translateX(calc(var(--tab-i,0) * 100%));transition:transform 260ms var(--ease-ps-in-out);pointer-events:none}
+.surface .carousel-tabs button{position:relative;transition:color 200ms ease}
+.surface .carousel-controls button{transition:background-color .15s,scale .15s var(--ease-ps-out)}
+.surface .carousel-controls button:active{scale:.94}
+.surface .slide-next{animation:heroSlideNext 240ms var(--ease-ps-out)}
+.surface .slide-prev{animation:heroSlidePrev 240ms var(--ease-ps-out)}
+@keyframes heroSlideNext{from{opacity:0;translate:12px 0}}
+@keyframes heroSlidePrev{from{opacity:0;translate:-12px 0}}
+@media (hover:hover) and (pointer:fine){
+.surface .carousel-tabs button[aria-pressed=false]:hover{color:var(--green)}
+.surface .campaign-visual img{transition:scale 280ms var(--ease-ps-out)}
+.surface .campaign-visual:hover img{scale:1.02}
+.surface .product:hover{box-shadow:var(--shadow-raised)}
+}
+@media(prefers-reduced-motion:reduce){
+.surface .slide-next,.surface .slide-prev{animation:none}
+.surface .carousel-tabs::before{transition:none}
+.surface .campaign-visual:hover img{scale:none}
+}
+
+/* Søgefeltet i headeren: kanten og baggrunden skifter blødt ved fokus,
+   søgeknappen giver efter ved tryk. */
+.surface .search{transition:border-color 150ms ease,background-color 150ms ease}
+.surface .search:focus-within{border-color:#9aaa9b;background:#fff}
+.surface .search button{transition:scale 150ms var(--ease-ps-out)}
+.surface .search button:active{scale:.9}
+@media(prefers-reduced-motion:reduce){.surface .search button:active{scale:none}}
+/* Søgeforslagene placeres under feltet; touch-skærme (også iPad) får 16 px,
+   så iOS ikke zoomer ind ved fokus. */
+.surface .search{position:relative}
+@media(pointer:coarse){.surface .search input{font-size:16px}}

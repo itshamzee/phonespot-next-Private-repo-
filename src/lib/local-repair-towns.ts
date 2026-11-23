@@ -28,7 +28,7 @@ export type LocalRepairTown = {
   /** Korte omegnsbyer, der nævnes naturligt på siden. */
   nearbyLine?: string;
   /** Ekstra tekstsektioner (fx iPad, MacBook, vandskade) uden egne URL'er. */
-  extraSections?: { heading: string; text: string }[];
+  extraSections?: { heading: string; text: string; links?: { href: string; label: string }[] }[];
   mailIn: { heading: string; text: string };
   faqs: LocalRepairFaq[];
 };
@@ -40,10 +40,10 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     path: "/reparation-horsens",
     metaTitle: "Mobil- og telefonreparation for Horsens | PhoneSpot",
     metaDescription:
-      "Ca. 25 min. ad E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. Skærm og batteri klar på 30 min. Gratis parkering.",
+      "Ca. 25 min. ad E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. 90 % af skærm- og batteriskift klar på 30 min.",
     h1: "Mobilreparation til dig i Horsens",
     heroLead:
-      "Vores værksted ligger i Vejle, ca. 25 minutter fra Horsens ad E45. Kom forbi uden tidsbestilling, og få 90% af skærm- og batteriskift klar på 30 minutter. Foretrækker du ikke at køre, sender du enheden ind med en gratis fragtlabel.",
+      "Vores værksted ligger i Vejle, ca. 25 minutter fra Horsens ad E45. Kom forbi uden tidsbestilling, og få 90 % af skærm- og batteriskift klar på 30 minutter. Foretrækker du ikke at køre, sender du enheden ind med en gratis fragtlabel.",
     intro: [
       "Har du knust skærmen eller et batteri, der ikke holder dagen, behøver du ikke vente på en tid. PhoneSpot i Vejle tager imod reparationer uden tidsbestilling, og de fleste skærm- og batteriskift er færdige på 30 minutter. Du kan derfor tage turen fra Horsens, få telefonen repareret og køre hjem igen.",
       "Du vælger selv skærmkvaliteten: budget, OEM eller original. Prisen er fast og oplyst, før vi går i gang, og du får livstidsgaranti på arbejde og dele. Her på siden kan du se aktuelle priser for de mest almindelige modeller.",
@@ -71,7 +71,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg komme forbi fra Horsens uden tidsbestilling?",
         answer:
-          "Ja, du kan komme som walk-in. 90% af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken og køre hjem med en repareret telefon. Vil du være sikker på, at vi har tid, kan du også booke online og vælge Vejle.",
+          "Ja, du kan komme som walk-in. 90 % af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken og køre hjem med en repareret telefon. Vil du være sikker på, at vi har tid, kan du også booke online og vælge Vejle.",
       },
       {
         question: "Er der gratis parkering ved butikken i Vejle?",
@@ -102,12 +102,12 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     path: "/reparation-kolding",
     metaTitle: "Mobil- og telefonreparation for Kolding | PhoneSpot",
     metaDescription:
-      "Ca. 25 min. ad E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. Skærm og batteri klar på 30 min. Gratis parkering.",
+      "Ca. 25 min. ad E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. 90 % af skærm- og batteriskift klar på 30 min.",
     h1: "Mobilreparation til dig i Kolding",
     heroLead:
       "Fra Kolding er der ca. 25 minutter ad E45 til vores værksted i Vejle. Kom forbi uden tidsbestilling, eller book en tid online. Vil du ikke køre, kan du sende din telefon ind med en gratis fragtlabel.",
     intro: [
-      "En knust skærm eller et træt batteri skal ikke tage en hel dag. Kører du fra Kolding nordpå ad E45, når du PhoneSpot i Vejle på ca. 25 minutter, og 90% af skærm- og batteriskift er klar på 30 minutter. Det gør turen til et ærinde, der kan klares på en formiddag eller i en eftermiddagspause.",
+      "En knust skærm eller et træt batteri skal ikke tage en hel dag. Kører du fra Kolding nordpå ad E45, når du PhoneSpot i Vejle på ca. 25 minutter, og 90 % af skærm- og batteriskift er klar på 30 minutter. Det gør turen til et ærinde, der kan klares på en formiddag eller i en eftermiddagspause.",
       "Du bestemmer selv, om skærmen skal være budget, OEM eller original, og vi oplyser en fast pris, inden vi begynder. Reparationen følges af livstidsgaranti på arbejde og dele. Se aktuelle priser længere nede på siden.",
     ],
     travel: {
@@ -131,7 +131,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg vente, mens min telefon bliver repareret?",
         answer:
-          "Ja. Du kan komme uden tidsbestilling, og 90% af skærm- og batteriskift er klar på 30 minutter. Så kan du vente i butikken og tage telefonen med hjem samme dag.",
+          "Ja. Du kan komme uden tidsbestilling, og 90 % af skærm- og batteriskift er klar på 30 minutter. Så kan du vente i butikken og tage telefonen med hjem samme dag.",
       },
       {
         question: "Er der gratis parkering i Vejle?",
@@ -162,12 +162,12 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     path: "/reparation-fredericia",
     metaTitle: "Mobil- og telefonreparation for Fredericia | PhoneSpot",
     metaDescription:
-      "Ca. 25 min. via E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. Skærm og batteri klar på 30 min. Gratis parkering.",
+      "Ca. 25 min. via E45 til PhoneSpot i Vejle, eller send telefonen ind med gratis fragtlabel. 90 % af skærm- og batteriskift klar på 30 min.",
     h1: "Mobilreparation til dig i Fredericia",
     heroLead:
       "Fra Fredericia er der ca. 25 minutter til vores værksted i Vejle via E45 og Vejle Fjordbro. Kom forbi uden tidsbestilling, eller send telefonen ind med en gratis fragtlabel.",
     intro: [
-      "Er skærmen revnet, eller holder batteriet ikke længere? Fra Fredericia kører du til PhoneSpot i Vejle på ca. 25 minutter, og 90% af skærm- og batteriskift er klar på 30 minutter. Du kan komme som walk-in og vente, mens vi arbejder.",
+      "Er skærmen revnet, eller holder batteriet ikke længere? Fra Fredericia kører du til PhoneSpot i Vejle på ca. 25 minutter, og 90 % af skærm- og batteriskift er klar på 30 minutter. Du kan komme som walk-in og vente, mens vi arbejder.",
       "Prisen er fast og oplyses, før reparationen begynder. Du vælger selv mellem budget, OEM og original skærm, og du får livstidsgaranti på arbejde og dele. Se priser på de mest almindelige modeller længere nede.",
     ],
     travel: {
@@ -193,7 +193,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg komme forbi uden at bestille tid?",
         answer:
-          "Ja, du kan komme som walk-in. 90% af skærm- og batteriskift er klar på 30 minutter. Vil du være sikker på, at vi har tid, kan du booke online og vælge Vejle.",
+          "Ja, du kan komme som walk-in. 90 % af skærm- og batteriskift er klar på 30 minutter. Vil du være sikker på, at vi har tid, kan du booke online og vælge Vejle.",
       },
       {
         question: "Er der parkering ved butikken?",
@@ -227,7 +227,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       "Fra Hedensted er der ca. 15 min ad E45 til PhoneSpot i Vejle. Skærm- og batteriskift mens du venter, livstidsgaranti og gratis parkering.",
     h1: "Mobilreparation til dig i Hedensted",
     heroLead:
-      "Vores værksted i Vejle ligger ca. 15 minutter fra Hedensted ad E45. Kom forbi uden tidsbestilling, og få 90% af skærm- og batteriskift klar på 30 minutter. Vil du hellere blive hjemme, sender du telefonen ind med en gratis fragtlabel.",
+      "Vores værksted i Vejle ligger ca. 15 minutter fra Hedensted ad E45. Kom forbi uden tidsbestilling, og få 90 % af skærm- og batteriskift klar på 30 minutter. Vil du hellere blive hjemme, sender du telefonen ind med en gratis fragtlabel.",
     intro: [
       "Bor du i Hedensted, er PhoneSpot i Vejle det nærmeste værksted med skærm- og batteriskift, mens du venter. Turen tager ca. 15 minutter, og de fleste reparationer er klar på 30 minutter, så du er hjemme igen, før du ville have nået at sende telefonen afsted.",
       "Du vælger selv skærmkvaliteten: budget, OEM eller original. Prisen er fast og oplyst, før vi går i gang, og du får livstidsgaranti på arbejde og dele. Længere nede kan du se aktuelle priser på de mest almindelige modeller.",
@@ -255,7 +255,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg komme forbi uden at bestille tid?",
         answer:
-          "Ja, du kan komme som walk-in. 90% af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken. Vil du være sikker på, at vi har tid, kan du booke online og vælge Vejle.",
+          "Ja, du kan komme som walk-in. 90 % af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken. Vil du være sikker på, at vi har tid, kan du booke online og vælge Vejle.",
       },
       {
         question: "Er der gratis parkering ved butikken?",
@@ -284,17 +284,25 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     name: "Slagelse",
     storeSlug: "slagelse",
     path: "/reparation-slagelse",
-    metaTitle: "Mobil-, iPhone- og computerreparation Slagelse | PhoneSpot",
+    metaTitle: "Mobil- og iPhone-reparation i Slagelse | PhoneSpot",
     metaDescription:
-      "PhoneSpot i VestsjællandsCentret reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. Skærm og batteri klar på 30 min. Åbent alle ugens dage.",
+      "Mobilreparation i VestsjællandsCentret, Slagelse: iPhone, Samsung, iPad og computer uden tidsbestilling. 90 % af skærm- og batteriskift klar på 30 min.",
     h1: "Mobil- og iPhone-reparation i Slagelse, mens du venter",
     heroLead:
-      "Kom forbi PhoneSpot i VestsjællandsCentret uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
+      "Kom forbi PhoneSpot i VestsjællandsCentret uden tidsbestilling. 90 % af skærm- og batteriskift er klar på 30 minutter, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     intro: [
       "PhoneSpot Slagelse ligger i VestsjællandsCentret. Du kan komme forbi med din iPhone, Samsung, iPad eller MacBook uden at bestille tid, og vi tjekker fejlen gratis ved disken, før vi giver dig en fast pris.",
-      "Vi skifter skærme, batterier og opladerstik, og du vælger selv skærmkvaliteten: budget, OEM eller original. 90% af skærm- og batteriskift er klar på 30 minutter, så du kan gøre andre ærinder i centret, mens du venter. Butikken har åbent alle ugens dage, på hverdage til kl. 19.",
+      "Vi skifter skærme, batterier og opladerstik, og du vælger selv skærmkvaliteten: budget, OEM eller original. 90 % af skærm- og batteriskift er klar på 30 minutter, så du kan gøre andre ærinder i centret, mens du venter. Butikken har åbent alle ugens dage, på hverdage til kl. 19.",
     ],
     extraSections: [
+      {
+        heading: "Reparation af porte",
+        text: "Lader telefonen eller iPaden ikke, eller skal kablet holdes i en bestemt vinkel, er det ofte ladestikket. Vi skifter ladestik på iPhone, Samsung og iPad, og på iPad koster det 899 kr. uanset model. Konsoller med sort skærm får ny HDMI-port, se konsolafsnittet længere nede.",
+        links: [
+          { href: "/reparation-slagelse/ipad", label: "Ladestik på iPad i Slagelse" },
+          { href: "/reparation-slagelse/playstation", label: "HDMI-port på PS5 i Slagelse" },
+        ],
+      },
       {
         heading: "Vandskade",
         text: "Har telefonen været i vand, så kom forbi hurtigst muligt og sluk den, til den er tjekket. Vi renser og behandler enheden. Behandling af vandskade har 3 måneders garanti. Kræver fejlen en fuld diagnose, koster den 249 kr., og det aftaler vi med dig først.",
@@ -323,7 +331,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg komme forbi uden tidsbestilling?",
         answer:
-          "Ja, vi tager imod reparationer uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter.",
+          "Ja, vi tager imod reparationer uden tidsbestilling. 90 % af skærm- og batteriskift er klar på 30 minutter.",
       },
       {
         question: "Hvad er jeres åbningstider i Slagelse?",
@@ -343,7 +351,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Reparerer I computere og MacBook i Slagelse?",
         answer:
-          "Ja. Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en anden bærbar, så kom forbi, så vurderer vi den ved disken og giver dig en pris, før vi går i gang.",
+          "Ja. Vi skifter batteri, skærm, tastatur og ladestik på MacBook Air og MacBook Pro og renser computere, der bliver varme eller larmer. Har du en bærbar pc fra et andet mærke, så kom forbi, så vurderer vi den ved disken og giver dig en pris, før vi går i gang.",
       },
       {
         question: "Kan jeg sende min telefon ind i stedet?",
@@ -364,7 +372,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
     heroLead:
       "Vi har ikke en butik i Næstved. Vores nærmeste værksted ligger i VestsjællandsCentret i Slagelse, ca. 30 minutter ad rute 22. Butikken har åbent alle ugens dage, på hverdage til kl. 19. Vil du ikke køre, sender du telefonen ind med en gratis fragtlabel.",
     intro: [
-      "Siden her er til dig i Næstved, der vil vide, om turen til Slagelse kan betale sig. Kommer du forbi, er 90% af skærm- og batteriskift klar på 30 minutter, så du kan vente i centret og køre hjem med telefonen samme dag. Fordi vi også har åbent om aftenen og i weekenden, kan turen lægges uden for arbejdstid.",
+      "Siden her er til dig i Næstved, der vil vide, om turen til Slagelse kan betale sig. Kommer du forbi, er 90 % af skærm- og batteriskift klar på 30 minutter, så du kan vente i centret og køre hjem med telefonen samme dag. Fordi vi også har åbent om aftenen og i weekenden, kan turen lægges uden for arbejdstid.",
       "Er det ikke besværet værd at køre, er indsendelse det oplagte valg. Du booker online, får en gratis fragtlabel og afleverer pakken i en pakkeshop i Næstved. Prisen og garantien er de samme som i butikken: fast pris, før vi går i gang, og livstidsgaranti på arbejde og dele (6 måneder på batteriskift).",
     ],
     travel: {
@@ -395,7 +403,7 @@ export const LOCAL_REPAIR_TOWNS: Record<string, LocalRepairTown> = {
       {
         question: "Kan jeg vente, mens telefonen bliver repareret?",
         answer:
-          "Ja. 90% af skærm- og batteriskift er klar på 30 minutter. Vil du være sikker på, at vi har tid, kan du booke online og vælge Slagelse.",
+          "Ja. 90 % af skærm- og batteriskift er klar på 30 minutter. Vil du være sikker på, at vi har tid, kan du booke online og vælge Slagelse.",
       },
       {
         question: "Hvordan sender jeg min telefon ind fra Næstved?",

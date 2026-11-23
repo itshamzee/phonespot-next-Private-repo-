@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { loadDailySummary } from "@/lib/pos/daily-summary-data";
 import { copenhagenDateString, isValidDateString } from "@/lib/pos/copenhagen";
-import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+import { assertLocationAccess, assertOwnerForAllStores, resolveRegister } from "@/lib/pos/pos-context";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -13,8 +13,8 @@ import { uuidSchema } from "@/lib/pos/schemas";
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
 
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get("location_id");
@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get("date") ?? copenhagenDateString();
 
     if (!locationId && !registerId) {
+      assertOwnerForAllStores(pos.actor);
       return NextResponse.json({ error: "location_id påkrævet" }, { status: 400 });
     }
     if (locationId && !uuidSchema.safeParse(locationId).success) {
@@ -33,6 +34,9 @@ export async function GET(request: NextRequest) {
     if (!isValidDateString(date)) {
       return NextResponse.json({ error: "Ugyldig dato" }, { status: 400 });
     }
+
+    if (registerId) await resolveRegister(pos.actor, registerId);
+    if (locationId) await assertLocationAccess(pos.actor, locationId);
 
     const summary = await loadDailySummary({ date, locationId, registerId });
     return NextResponse.json({ date, locationId, registerId, summary });

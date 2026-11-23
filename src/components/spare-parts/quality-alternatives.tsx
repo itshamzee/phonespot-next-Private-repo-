@@ -104,7 +104,7 @@ export function QualityAlternatives({
             <Link
               key={alt.id}
               href={href}
-              className="flex items-center gap-2.5 rounded-xl border border-[#E5E5EA] bg-white px-3 py-2 transition-all hover:border-[#1A3D2E]/40 hover:shadow-sm"
+              className="flex items-center gap-2.5 rounded-xl border border-[#E5E5EA] bg-white px-3 py-2 card-raise hover:border-[#1A3D2E]/40"
             >
               {/* Thumbnail */}
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#F7F7F8]">

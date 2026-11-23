@@ -4,6 +4,7 @@ import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 import { cartItemKey } from "@/lib/cart/types";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal, calcBundleDiscounts } from "@/lib/cart/utils";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 
 // ---------------------------------------------------------------------------
 // Grade badge colours
@@ -54,7 +55,7 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      className="flex-shrink-0 self-start p-2 -m-2 text-gray transition-colors hover:text-charcoal"
+      className="press flex-shrink-0 self-start p-2 -m-2 text-gray hover:text-charcoal"
       onClick={onClick}
       aria-label="Fjern fra kurv"
     >
@@ -148,6 +149,9 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
 
   const rawTotal = lineTotal(item);
   const discountedTotal = rawTotal - discountOere;
+  // Antal og linjepris toner kort ind, når kunden trykker + eller −.
+  const qtyChanged = useHasChanged(item.quantity);
+  const totalChanged = useHasChanged(discountedTotal);
 
   return (
     <div className="flex gap-3 sm:gap-4 py-4">
@@ -177,7 +181,7 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
                 <path fillRule="evenodd" d="M4 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H4.75A.75.75 0 0 1 4 10Z" clipRule="evenodd" />
               </svg>
             </button>
-            <span className="w-6 text-center text-sm font-medium text-charcoal">{item.quantity}</span>
+            <span key={item.quantity} className={`w-6 text-center text-sm font-medium text-charcoal${qtyChanged ? " value-change" : ""}`}>{item.quantity}</span>
             <button
               type="button"
               className="relative flex h-9 w-9 items-center justify-center rounded-full border border-sand text-charcoal transition-[background-color,transform] duration-100 ease-out hover:bg-cream active:scale-[0.94] disabled:opacity-40 after:absolute after:-inset-1 after:content-['']"
@@ -195,7 +199,7 @@ function SkuLineItem({ item }: { item: CartSkuItem }) {
             {discountOere > 0 && (
               <span className="text-xs text-charcoal/40 line-through">{formatOere(rawTotal)}</span>
             )}
-            <span className="text-sm font-semibold text-charcoal">
+            <span key={discountedTotal} className={`text-sm font-semibold text-charcoal${totalChanged ? " value-change" : ""}`}>
               {formatOere(discountedTotal)}
             </span>
           </div>

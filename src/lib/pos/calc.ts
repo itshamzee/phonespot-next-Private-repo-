@@ -178,7 +178,7 @@ export function validatePayments(payments: PaymentLineInput[], total: number): P
       return {
         ok: false,
         code: "payment_reference_required",
-        message: "Angiv nummer/kode på tilgodebevis eller gavekort",
+        message: p.type === "opkoeb" ? "Angiv slutseddelnummeret" : "Angiv nummer/kode på tilgodebevis eller gavekort",
         sum,
       };
     }

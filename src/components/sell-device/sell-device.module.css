@@ -94,6 +94,46 @@
   font-size: 12px;
   margin: 25px 0 0;
 }
+.prices {
+  margin-top: 28px;
+  border-top: 1px solid #d9e0d5;
+  padding-top: 22px;
+}
+.prices h2 {
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  margin: 0 0 12px;
+}
+.prices table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.prices th,
+.prices td {
+  text-align: left;
+  padding: 9px 0;
+  border-bottom: 1px solid #d9e0d5;
+}
+.prices th {
+  font-size: 12px;
+  font-weight: 600;
+  color: #576354;
+}
+.prices td:not(:first-child),
+.prices th:not(:first-child) {
+  text-align: right;
+}
+.prices td strong {
+  font-weight: 600;
+  color: #1a3d2e;
+}
+.prices p {
+  font-size: 12px;
+  color: #576354;
+  margin: 12px 0 0;
+}
 .formStart {
   min-width: 0;
   scroll-margin-top: 140px;
@@ -387,7 +427,7 @@
 .methodVideo { align-self: center; min-width: 0; background: #eef0eb; }
 .methodVideo video, .methodVideo img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .methodVideo button { position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: pointer; background: #eef0eb; }
-.playVideo { position: absolute; bottom: 16px; left: 16px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 11px 14px; background: #fff; color: #1a3d2e; border-radius: 6px; box-shadow: 0 2px 12px #10281e18; font-size: 12px; font-weight: 600; }
+.playVideo { position: absolute; bottom: 16px; left: 16px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 11px 14px; background: #fff; color: #1a3d2e; border-radius: 6px; box-shadow: var(--shadow-floating); font-size: 12px; font-weight: 600; }
 .playVideo svg { width: 20px; height: 20px; }
 .playVideo small { font-size: 10px; font-weight: 400; }
 .methodVideo button:hover .playVideo { background: #f2f5eb; }

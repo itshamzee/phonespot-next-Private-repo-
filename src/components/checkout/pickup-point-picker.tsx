@@ -81,7 +81,7 @@ export function PickupPointPicker({ zipcode, selected, onSelect }: Props) {
   if (!/^\d{4}$/.test(zipcode)) {
     return (
       <p className="rounded-xl bg-warm-white px-4 py-3 text-sm text-gray-500">
-        Udfyld postnummeret ovenfor, så viser vi pakkeshops i nærheden.
+        Skriv dit postnummer, så viser vi pakkeshops i nærheden.
       </p>
     );
   }
@@ -113,7 +113,7 @@ export function PickupPointPicker({ zipcode, selected, onSelect }: Props) {
   const shown = showAll ? points : points.slice(0, 4);
 
   return (
-    <div className="space-y-2">
+    <div className="reveal-in space-y-2">
       {shown.map((point) => {
         const isSelected = selected?.id === point.id;
         const hours = todayHours(point.opening_hours);
@@ -121,7 +121,7 @@ export function PickupPointPicker({ zipcode, selected, onSelect }: Props) {
           <label
             key={`${point.carrier_code}-${point.id}`}
             className={[
-              "flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors",
+              "press flex cursor-pointer items-start gap-3 rounded-xl border p-3.5",
               isSelected
                 ? "border-green-eco bg-green-eco/5"
                 : "border-sand bg-white hover:border-charcoal/30",

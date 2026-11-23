@@ -238,7 +238,7 @@ export async function getSkuProductBySlug(slug: string): Promise<SkuProduct | nu
 }
 
 export async function searchProducts(query: string): Promise<{
-  templates: ProductTemplate[];
+  templates: (ProductTemplate & { min_price?: number | null; device_count?: number })[];
   skuProducts: SkuProduct[];
 }> {
   const supabase = createAdminClient();
@@ -262,8 +262,30 @@ export async function searchProducts(query: string): Promise<{
   if (templatesRes.error) throw templatesRes.error;
   if (skuRes.error) throw skuRes.error;
 
+  // Samme "fra"-pris som kategorisiderne: den billigste enhed på lager, ikke skabelonens grundpris.
+  const templateIds = (templatesRes.data || []).map((t) => t.id);
+  const stock = new Map<string, { count: number; minPrice: number | null }>();
+  if (templateIds.length > 0) {
+    const { data: deviceStats } = await supabase
+      .from("devices")
+      .select("template_id, selling_price, grade, condition_notes, source")
+      .in("template_id", templateIds)
+      .eq("status", "listed");
+    for (const raw of deviceStats || []) {
+      const d = withBlackNovemberDevice(raw);
+      const entry = stock.get(d.template_id) || { count: 0, minPrice: null };
+      entry.count++;
+      if (d.selling_price && (entry.minPrice === null || d.selling_price < entry.minPrice)) entry.minPrice = d.selling_price;
+      stock.set(d.template_id, entry);
+    }
+  }
+
   return {
-    templates: (templatesRes.data || []).map((t) => withBlackNovemberTemplate(t)),
+    templates: (templatesRes.data || []).map((raw) => {
+      const t = withBlackNovemberTemplate(raw);
+      const s = stock.get(t.id);
+      return { ...t, device_count: s?.count ?? 0, min_price: s?.minPrice ?? t.base_price_a ?? null };
+    }),
     skuProducts: withoutSpareParts(skuRes.data || []).map((p) => withBlackNovemberSku(p)),
   };
 }

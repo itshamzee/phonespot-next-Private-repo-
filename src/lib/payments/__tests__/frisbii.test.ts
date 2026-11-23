@@ -126,6 +126,7 @@ const m = vi.hoisted(() => ({
   cancelCharge: vi.fn(),
   createRefund: vi.fn(),
   settleCharge: vi.fn(),
+  getInvoiceMetadata: vi.fn(),
   stripeRefund: vi.fn(),
   finalize: vi.fn(),
   pushover: vi.fn(async () => {}),
@@ -142,6 +143,7 @@ vi.mock("../frisbii/client", async (orig) => {
       cancelCharge: m.cancelCharge,
       createRefund: m.createRefund,
       settleCharge: m.settleCharge,
+      getInvoiceMetadata: m.getInvoiceMetadata,
       createChargeSession: vi.fn(),
     },
   };
@@ -240,7 +242,34 @@ describe("completeFrisbiiOrder", () => {
     const { completeFrisbiiOrder } = await import("../frisbii/order-payment");
     m.getCharge.mockResolvedValue(charge({ state: "authorized", authorized_amount: 50000 }));
     await expect(completeFrisbiiOrder("S-1001")).resolves.toBe("completed");
-    expect(m.finalize).toHaveBeenCalledWith({ orderId: "order-1", sessionId: "cs_abc", paymentId: "S-1001" });
+    expect(m.finalize).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-1", sessionId: "cs_abc", paymentId: "S-1001", recovered: false }),
+    );
+  });
+
+  it("markerer en gendannet kurv (handle med suffiks) som genoptaget", async () => {
+    const { completeFrisbiiOrder } = await import("../frisbii/order-payment");
+    m.order = { ...m.order, stripe_payment_id: "S-1001-ab12" };
+    m.getCharge.mockResolvedValue(charge({ handle: "S-1001-ab12", state: "authorized", authorized_amount: 50000 }));
+    await expect(completeFrisbiiOrder("S-1001-ab12")).resolves.toBe("completed");
+    expect(m.finalize).toHaveBeenCalledWith(expect.objectContaining({ paymentId: "S-1001-ab12", recovered: true }));
+  });
+
+  it("henter Meta-kontekst fra Frisbii-metadata, og en fejl dér vælter ikke ordren", async () => {
+    const { completeFrisbiiOrder } = await import("../frisbii/order-payment");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    m.getCharge.mockResolvedValue(charge({ state: "authorized", authorized_amount: 50000 }));
+    await completeFrisbiiOrder("S-1001");
+    const { metaContext } = m.finalize.mock.calls[0][0] as { metaContext: () => Promise<unknown> };
+
+    m.getInvoiceMetadata.mockResolvedValueOnce({ meta_consent: "1", meta_fbp: "fb.1.2.3", order_id: "order-1" });
+    await expect(metaContext()).resolves.toMatchObject({ consent: true, fbp: "fb.1.2.3" });
+
+    m.getInvoiceMetadata.mockResolvedValueOnce({ order_id: "order-1" });
+    await expect(metaContext()).resolves.toMatchObject({ consent: false });
+
+    m.getInvoiceMetadata.mockRejectedValueOnce(new Error("timeout"));
+    await expect(metaContext()).resolves.toBeNull();
   });
 
   it("bekræfter ikke, hvis betalingen ikke er gennemført", async () => {

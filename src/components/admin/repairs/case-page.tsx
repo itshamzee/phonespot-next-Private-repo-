@@ -21,6 +21,10 @@ import type { CaseItemView } from "@/lib/repairs/new-case-types";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { PrintModal } from "@/components/admin/repairs/print-modal";
 import { SmsThread } from "@/components/admin/repairs/sms-thread";
+import { CaseInfoForm } from "@/components/admin/repairs/case-info-form";
+import { Dialog } from "@/components/admin/ui/dialog";
+import { Skeleton } from "@/components/admin/ui/skeleton";
+import { useToast } from "@/components/admin/ui/toast";
 
 /** Er adgangskoden noteret? Selve koden gemmes og vises aldrig her. */
 function passcodeLabel(detail: CaseDetail): string {
@@ -43,6 +47,9 @@ function conditionSummary(detail: CaseDetail): string | null {
 export default function CasePage({ id }: { id: string }) {
   const router = useRouter();
   const { isOwner } = useStoreScope();
+  // Bekræftelser glider ind og lukker selv (toast). Fejl og advarsler, der kræver handling,
+  // står i `notice` som en fast boks med role="alert" og bevæger sig ikke.
+  const toast = useToast();
   const [detail, setDetail] = useState<CaseDetail | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "missing" | "error">("loading");
   const [notice, setNotice] = useState<string | null>(null);
@@ -55,6 +62,14 @@ export default function CasePage({ id }: { id: string }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quote, setQuote] = useState({ price: "", days: "", notes: "" });
   const [noteText, setNoteText] = useState("");
+  const [editing, setEditing] = useState<"kunde" | "detaljer" | null>(null);
+
+  async function savedInfo(warning: string | null) {
+    setEditing(null);
+    setNotice(warning);
+    if (!warning) toast("Ændringerne er gemt");
+    await load();
+  }
 
   const load = useCallback(async () => {
     try {
@@ -114,7 +129,15 @@ export default function CasePage({ id }: { id: string }) {
     setBusy(null);
   }
 
-  async function postJson(url: string, method: string, body: unknown, failMessage: string, key: string): Promise<boolean> {
+  /** `success` vises som toast, når kaldet lykkes uden advarsel. */
+  async function postJson(
+    url: string,
+    method: string,
+    body: unknown,
+    failMessage: string,
+    key: string,
+    success?: string,
+  ): Promise<boolean> {
     setBusy(key);
     setNotice(null);
     let ok = false;
@@ -125,6 +148,7 @@ export default function CasePage({ id }: { id: string }) {
         ok = true;
         const data = (await res.json().catch(() => ({}))) as { warning?: string };
         if (data.warning) setNotice(data.warning);
+        else if (success) toast(success);
         await load();
       }
     } catch {
@@ -151,7 +175,7 @@ export default function CasePage({ id }: { id: string }) {
     setBusy(null);
   }
 
-  if (state === "loading") return <p className="p-8 text-sm text-[#5E6A63]">Henter sag...</p>;
+  if (state === "loading") return <CaseSkeleton />;
   if (state === "missing")
     return (
       <div className="p-8 text-sm">
@@ -342,6 +366,7 @@ export default function CasePage({ id }: { id: string }) {
               { price_dkk: Number(quote.price), estimated_days: quote.days ? Number(quote.days) : null, notes: quote.notes || null },
               "Tilbuddet blev ikke sendt. Prøv igen.",
               "quote",
+              "Tilbuddet er sendt til kunden",
             );
             if (ok) {
               setQuoteOpen(false);
@@ -373,7 +398,30 @@ export default function CasePage({ id }: { id: string }) {
       )}
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
-        <Card title="Detaljer">
+        <Card
+          title="Detaljer"
+          aside={
+            editing !== "detaljer" && (
+              <Btn size="sm" onClick={() => setEditing("detaljer")} aria-label="Rediger enhed og fejl">
+                Rediger
+              </Btn>
+            )
+          }
+        >
+          {editing === "detaljer" ? (
+            <CaseInfoForm
+              ticketId={id}
+              fields={[
+                { name: "device_model", label: "Enhed", value: t.device_model ?? "" },
+                ...(t.device_id
+                  ? [{ name: "serial_number" as const, label: "IMEI / serienr.", value: detail.device?.serial_number ?? "" }]
+                  : []),
+                { name: "issue_description", label: "Fejl", value: t.issue_description ?? "", type: "textarea" as const },
+              ]}
+              onCancel={() => setEditing(null)}
+              onSaved={savedInfo}
+            />
+          ) : (
           <Dl
             rows={[
               ["Enhed", <b key="e">{[t.device_model || t.device_type, detail.device?.color].filter(Boolean).join(" · ")}</b>],
@@ -386,8 +434,31 @@ export default function CasePage({ id }: { id: string }) {
               ["Garanti", detail.warranty || "Ikke angivet på ydelsen"],
             ]}
           />
+          )}
         </Card>
-        <Card title="Kunde">
+        <Card
+          title="Kunde"
+          aside={
+            editing !== "kunde" && (
+              <Btn size="sm" onClick={() => setEditing("kunde")} aria-label="Rediger kundeoplysninger">
+                Rediger
+              </Btn>
+            )
+          }
+        >
+          {editing === "kunde" ? (
+            <CaseInfoForm
+              ticketId={id}
+              customerId={t.customer_id}
+              fields={[
+                { name: "customer_name", label: "Navn", value: t.customer_name ?? "", required: true },
+                { name: "customer_phone", label: "Telefon", value: t.customer_phone ?? "", type: "tel" },
+                { name: "customer_email", label: "E-mail", value: t.customer_email ?? "", type: "email" },
+              ]}
+              onCancel={() => setEditing(null)}
+              onSaved={savedInfo}
+            />
+          ) : (
           <Dl
             rows={[
               ["Navn", <b key="n">{t.customer_name}</b>],
@@ -407,7 +478,8 @@ export default function CasePage({ id }: { id: string }) {
               ],
             ]}
           />
-          {t.customer_id && (
+          )}
+          {editing !== "kunde" && t.customer_id && (
             <div className="mt-3 text-sm">
               <Link href={`/admin/kunder/${t.customer_id}`} className="text-[#1A3D2E] underline">
                 Åbn kunde
@@ -526,7 +598,7 @@ export default function CasePage({ id }: { id: string }) {
           onSubmit={async (e) => {
             e.preventDefault();
             if (!noteText.trim()) return;
-            if (await postJson(`/api/admin/repairs/${id}`, "POST", { note: noteText.trim() }, "Noten blev ikke gemt. Prøv igen.", "note")) setNoteText("");
+            if (await postJson(`/api/admin/repairs/${id}`, "POST", { note: noteText.trim() }, "Noten blev ikke gemt. Prøv igen.", "note", "Noten er gemt")) setNoteText("");
           }}
         >
           <input aria-label="Tilføj note" placeholder="Tilføj note" value={noteText} onChange={(e) => setNoteText(e.target.value)} className="h-10 min-w-0 flex-1 rounded-lg border border-[#C9D0C7] px-3 text-sm" />
@@ -548,32 +620,63 @@ export default function CasePage({ id }: { id: string }) {
             rest_oere: totals.rest_oere,
           }}
           onClose={() => setMeldKlar(false)}
-          onDone={async ({ warning }) => {
+          onDone={async ({ status: next, warning }) => {
             setMeldKlar(false);
             setNotice(warning ?? null);
+            if (!warning) toast(next === "afhentet" ? "Sagen er afsluttet" : "Sagen er meldt klar");
             await load();
           }}
         />
       )}
       {print && <PrintModal detail={detail} type={print} onClose={() => setPrint(null)} />}
-      {photos && (
-        <div role="dialog" aria-modal="true" aria-label="Fotos" className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4" onKeyDown={(e) => e.key === "Escape" && setPhotos(false)}>
-          <div className="mx-auto max-w-3xl rounded-xl bg-white p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="m-0 text-[17px] font-semibold">Fotos</h2>
-              <Btn autoFocus onClick={() => setPhotos(false)}>
-                Luk
-              </Btn>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {photoUrls.map((u, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={u} alt={`Foto ${i + 1} fra indlevering`} className="w-full rounded-lg border border-[#E2E5E0]" />
-              ))}
-            </div>
-          </div>
+      <Dialog open={photos} onClose={() => setPhotos(false)} title="Fotos" dismissOnBackdrop={false} style={{ maxWidth: 768 }}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {photoUrls.map((u, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={u} alt={`Foto ${i + 1} fra indlevering`} className="w-full rounded-lg border border-[#E2E5E0]" />
+          ))}
         </div>
-      )}
+      </Dialog>
+    </div>
+  );
+}
+
+/** Første indlæsning: sagens egne flader (titel, handlinger, to kort og opgaver), så siden ikke er tom. */
+function CaseSkeleton() {
+  const card = "rounded-xl border border-[#E2E5E0] bg-white p-5";
+  return (
+    <div data-skeleton aria-busy="true" aria-label="Henter sag" className="flex flex-col gap-5 px-4 py-6 sm:px-8 sm:py-7">
+      <Skeleton className="h-4 w-28 rounded-md" />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Skeleton className="h-10 w-64 rounded-lg" />
+        <div className="flex gap-2">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-10 w-20 rounded-lg" />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-[34px] w-36 rounded-lg" />
+        ))}
+      </div>
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+        {[0, 1].map((i) => (
+          <div key={i} className={card}>
+            <Skeleton className="h-5 w-28 rounded-md" />
+            {[0, 1, 2, 3, 4].map((j) => (
+              <div key={j} className="mt-3 flex gap-4">
+                <Skeleton className="h-4 w-24 rounded-md" />
+                <Skeleton className="h-4 flex-1 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className={card}>
+        <Skeleton className="h-5 w-40 rounded-md" />
+        <Skeleton className="mt-4 h-16 w-full rounded-md" />
+      </div>
     </div>
   );
 }

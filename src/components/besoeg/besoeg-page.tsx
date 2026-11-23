@@ -103,7 +103,7 @@ export function BesoegPage({ slug }: { slug: BesoegSlug }) {
 
       {/* Hero + besøgsboks */}
       <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-12 pt-10 md:px-8 md:pt-16 lg:grid-cols-[1.15fr_1fr] lg:items-end lg:gap-16">
-        <div>
+        <div className="hero-rise">
           <p className="mb-4 text-sm font-semibold text-[#1a3d2e]">
             {store.mall ? `I ${store.mall}` : store.street}, {store.city}
           </p>
@@ -129,13 +129,13 @@ export function BesoegPage({ slug }: { slug: BesoegSlug }) {
               href={store.googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1a3d2e] px-5 text-sm font-semibold text-white hover:bg-[#254f3c]"
+              className="press inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1a3d2e] px-5 text-sm font-semibold text-white hover:bg-[#254f3c]"
             >
               Find vej
             </a>
             <a
               href={`tel:${tel}`}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#dce1db] px-5 text-sm font-semibold hover:border-[#1a3d2e]"
+              className="press inline-flex min-h-11 items-center justify-center rounded-lg border border-[#dce1db] px-5 text-sm font-semibold hover:border-[#1a3d2e]"
             >
               {store.phone}
             </a>
@@ -224,7 +224,7 @@ export function BesoegPage({ slug }: { slug: BesoegSlug }) {
             </p>
             <Link
               href="/saelg-din-enhed"
-              className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-white px-5 text-sm font-semibold text-[#1a3d2e] hover:bg-white/90"
+              className="press mt-5 inline-flex min-h-11 items-center rounded-lg bg-white px-5 text-sm font-semibold text-[#1a3d2e] hover:bg-white/90"
             >
               Få en vurdering
             </Link>

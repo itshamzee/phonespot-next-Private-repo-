@@ -18,6 +18,8 @@ export class PosError extends Error {
 type Entry = { status: number; message: (detail?: string) => string };
 
 const CATALOG: Record<string, Entry> = {
+  return_other_entity: { status: 403, message: () => "Returen skal laves i en butik under samme firma som købet" },
+  store_forbidden: { status: 403, message: () => "Du har ikke adgang til denne butik." },
   register_not_found: { status: 404, message: () => "Kassen findes ikke eller er inaktiv" },
   register_location_mismatch: { status: 400, message: () => "Kassen hører ikke til den valgte lokation" },
   staff_not_found: { status: 403, message: () => "Medarbejderen er ikke aktiv" },
@@ -43,7 +45,10 @@ const CATALOG: Record<string, Entry> = {
   discount_exceeds_total: { status: 400, message: () => "Rabatten kan ikke overstige varernes værdi" },
   invalid_payment_type: { status: 400, message: () => "Ugyldig betalingstype" },
   invalid_payment_amount: { status: 400, message: () => "Beløb skal være større end 0" },
-  payment_reference_required: { status: 400, message: () => "Angiv nummer/kode på tilgodebevis eller gavekort" },
+  payment_reference_required: {
+    status: 400,
+    message: () => "Angiv nummer/kode på tilgodebevis eller gavekort, eller slutseddelnummeret ved modregning",
+  },
   payment_mismatch: { status: 400, message: () => "Betalingerne skal give præcis totalen" },
   customer_required_for_invoice: { status: 400, message: () => "Vælg en kunde for at betale med faktura" },
   insufficient_stock: { status: 409, message: (d) => `Ikke nok på lager: ${d ?? "varen"}` },
@@ -116,6 +121,62 @@ const CATALOG: Record<string, Entry> = {
   stock_below_reserved: {
     status: 409,
     message: (d) => `${d ?? "Noget"} af lageret er reserveret til reparationssager. Fjern reservationen først.`,
+  },
+  // Opkøb (trade_in_confirm / trade_in_void)
+  receipt_not_found: { status: 404, message: () => "Slutsedlen findes ikke" },
+  receipt_not_draft: { status: 409, message: () => "Slutsedlen er ikke længere en kladde" },
+  receipt_empty: { status: 400, message: () => "Tilføj mindst én vare" },
+  item_invalid: {
+    status: 400,
+    message: (d) =>
+      `${d ? `Vare ${d}` : "En vare"}: vælg model, skriv et gyldigt IMEI eller serienummer, og angiv en pris`,
+  },
+  seller_missing: { status: 400, message: () => "Udfyld sælgers navn og adresse" },
+  age_missing: { status: 400, message: () => "Bekræft, at sælger er fyldt 18" },
+  business_fields_missing: {
+    status: 400,
+    message: () => "Udfyld firmaets CVR-nummer (8 cifre) og vælg fakturatype",
+  },
+  checks_missing: { status: 400, message: () => "Tjek Find My og spærring, og sæt kryds" },
+  id_required: { status: 400, message: () => "ID kræves, når opkøbet er over 2.000 kr." },
+  id_incomplete: { status: 400, message: () => "Udfyld ID-type, ID-nummer og udløbsdato" },
+  id_expired: { status: 400, message: () => "ID'et er udløbet" },
+  imei_in_stock: {
+    status: 409,
+    message: (d) => (d ? `IMEI'et ${d} findes allerede på en enhed på lager` : "IMEI'et findes allerede på en enhed på lager"),
+  },
+  location_missing: { status: 400, message: () => "Butikken mangler et firma med nummerserie til slutsedler" },
+  receipt_not_voidable: {
+    status: 409,
+    message: () =>
+      "Slutsedlen kan ikke annulleres. Den er udbetalt, modregnet eller allerede annulleret, eller en enhed er ikke længere i modtagelse.",
+  },
+  void_reason_required: { status: 400, message: () => "Skriv en begrundelse for annulleringen" },
+  // Kassen: spærrede enheder, IMEI på bonen og modregning af opkøb (pos_create_sale)
+  device_blocked: { status: 409, message: (d) => `Enheden ${d ?? ""} er spærret og kan ikke sælges` },
+  imei_required: { status: 400, message: (d) => `Skriv IMEI eller serienummer på enheden ${d ?? ""}` },
+  imei_mismatch: { status: 409, message: (d) => `IMEI eller serienummer passer ikke med enheden ${d ?? ""}` },
+  imei_invalid: { status: 400, message: (d) => `Ugyldigt IMEI eller serienummer på enheden ${d ?? ""}` },
+  trade_in_not_found: { status: 404, message: (d) => `Slutseddel ${d ?? ""} findes ikke` },
+  trade_in_not_settleable: {
+    status: 409,
+    message: (d) =>
+      `Slutseddel ${d ?? ""} kan ikke modregnes. Den skal være bekræftet i denne butik, have sit bilag og må ikke være modregnet, udbetalt eller spærret.`,
+  },
+  trade_in_remainder_no_account: {
+    status: 409,
+    message: () =>
+      "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.",
+  },
+  // pos_create_return: opkøbsandelen af et salg kommer kun retur som tilgodebevis
+  opkoeb_refund_tilgodebevis: {
+    status: 409,
+    message: () => "Den del af købet, der blev betalt med et opkøb, kan kun refunderes som tilgodebevis",
+  },
+  trade_in_amount_too_high: {
+    status: 400,
+    message: (d) =>
+      `Modregningen kan højst være slutsedlens total${d ? ` på ${(Number(d) / 100).toLocaleString("da-DK", { minimumFractionDigits: 2 })} kr.` : ""}`,
   },
 };
 

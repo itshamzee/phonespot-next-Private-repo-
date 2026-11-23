@@ -3,7 +3,8 @@ import { DeviceCollection, type CollectionFaq } from "@/components/product/devic
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Brugt bærbar og refurbished laptop – 36 mdr. garanti | PhoneSpot",
@@ -37,6 +38,6 @@ export default async function BaerbarePage({ searchParams }: { searchParams: Pro
   return <>
     <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" }, { "@type": "ListItem", position: 2, name: "Brugte bærbare", item: "https://phonespot.dk/baerbare" }] }} />
     <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
-    <DeviceCollection deviceType="laptop" templates={templates} initialBrand={initialBrand} title="Brugte og refurbished bærbare" intro="En ny arbejdsdag kræver ikke en ny computer. Find din næste brugte laptop eller MacBook, og sammenlign skærm, RAM og lagerplads med det, du skal bruge den til." collectionHeading="Aktuelle brugte bærbare" guideTitle="Sådan vælger du bærbar" guideIntro="Start med dine programmer og den måde, computeren skal bruges på. Filtrene hjælper dig videre til de modeller, der matcher." choices={CHOICES} faqs={FAQS} />
+    <DeviceCollection deviceType="laptop" templates={templates} initialBrand={initialBrand} title="Brugte og refurbished bærbare" intro="En ny arbejdsdag kræver ikke en ny computer. Find din næste brugte laptop eller MacBook, og sammenlign skærm, RAM og lagerplads med det, du skal bruge den til." collectionHeading="Aktuelle brugte bærbare" guideTitle="Sådan vælger du bærbar" guideIntro="Start med dine programmer og den måde, computeren skal bruges på. Filtrene hjælper dig videre til de modeller, der matcher." choices={CHOICES} faqs={FAQS} localLinks={[{ href: "/baerbare-vejle", label: "Brugte bærbare i Vejle" }, { href: "/baerbare-slagelse", label: "Brugte bærbare i Slagelse" }]} />
   </>;
 }

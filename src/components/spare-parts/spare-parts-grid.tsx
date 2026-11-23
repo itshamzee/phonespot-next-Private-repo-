@@ -118,7 +118,7 @@ function ProductCard({ product, onAddToCart, addedId }: ProductCardProps) {
   const productUrl = buildProductUrl(product);
 
   return (
-    <Link href={productUrl} className="group relative flex flex-col rounded-xl border border-[#E5E5EA] bg-white transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+    <Link href={productUrl} className="group relative flex flex-col rounded-xl border border-[#E5E5EA] bg-white card-raise hover:border-[#1A3D2E]/30">
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-xl" />
 
       {/* Image */}
@@ -264,7 +264,7 @@ function ProductRow({ product, onAddToCart, addedId }: ProductCardProps) {
   const productUrl = buildProductUrl(product);
 
   return (
-    <Link href={productUrl} className="relative flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 transition-all hover:border-[#1A3D2E]/30 hover:shadow-md">
+    <Link href={productUrl} className="relative flex items-center gap-4 rounded-xl border border-[#E5E5EA] bg-white p-4 card-raise hover:border-[#1A3D2E]/30">
       <LinkPendingBar className="absolute inset-x-0 top-0 z-20 h-[3px] overflow-hidden rounded-t-xl" />
 
       {/* Image */}

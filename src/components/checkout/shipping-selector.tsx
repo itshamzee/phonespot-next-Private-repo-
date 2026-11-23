@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { formatOere } from "@/lib/cart/utils";
-import { getShippingOptions } from "@/lib/shipping";
+import { useCart } from "@/components/cart/cart-context";
+import { getShippingOptions, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { STORES } from "@/lib/store-config";
 import { PickupPointPicker, type PickupPoint } from "./pickup-point-picker";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 import type { CartItem, CartDeviceItem, CartSkuItem } from "@/lib/cart/types";
 
 export interface ShippingMethod {
@@ -26,6 +28,7 @@ const STORE_LOCATIONS = Object.values(STORES).map((store) => ({
 function getPickupMethods(
   items: CartItem[],
   skuStockByLocation: Record<string, string[]>,
+  known: boolean,
 ): ShippingMethod[] {
   const deviceItems = items.filter((i): i is CartDeviceItem => i.type === "device");
   const skuItems = items.filter((i): i is CartSkuItem => i.type === "sku_product");
@@ -52,7 +55,11 @@ function getPickupMethods(
     return {
       id: `pickup_${store.id}`,
       label: `Hent i ${store.name} (gratis)`,
-      description: readyNow
+      // Før kurven er kendt (serveren ser altid en tom kurv) vises kun adressen,
+      // så server og klient renderer det samme.
+      description: !known
+        ? store.address
+        : readyNow
         ? `${store.address} — klar til afhentning`
         : `${store.address} — klar om 2-4 hverdage, du får besked på mail`,
       cost: 0,
@@ -85,6 +92,8 @@ interface ShippingSelectorProps {
   zipcode?: string;
   pickupPoint?: PickupPoint | null;
   onPickupPoint?: (point: PickupPoint) => void;
+  /** Leveringen vælges før adressen, så pakkeshop-blokken har sit eget postnummerfelt. */
+  onZipcode?: (zip: string) => void;
 }
 
 export function ShippingSelector({
@@ -94,8 +103,15 @@ export function ShippingSelector({
   zipcode = "",
   pickupPoint = null,
   onPickupPoint,
+  onZipcode,
 }: ShippingSelectorProps) {
   const [skuStockByLocation, setSkuStockByLocation] = useState<Record<string, string[]>>({});
+  // Samme regel som kurven og checkout-serveren: over 500 kr. (eller med en
+  // fri-fragt-kode) er levering til døren gratis. Listen viste før 39 kr.
+  const { totals, cartState } = useCart();
+  const net = totals.subtotal - totals.discountAmount - totals.bundleDiscountAmount;
+  const freeShipping =
+    net > 0 && (net >= FREE_SHIPPING_THRESHOLD || cartState.discount?.type === "free_shipping");
 
   // Fetch per-location stock for SKU items to validate pickup availability
   const skuItems = items.filter((i): i is CartSkuItem => i.type === "sku_product");
@@ -117,14 +133,18 @@ export function ShippingSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(skuProductIds)]);
 
-  const pickupMethods = getPickupMethods(items, skuStockByLocation);
-  const allMethods = [...pickupMethods, ...DELIVERY_METHODS];
+  const [known, setKnown] = useState(false);
+  useEffect(() => setKnown(true), []);
+  const pickupMethods = getPickupMethods(items, skuStockByLocation, known);
+  const allMethods = [...DELIVERY_METHODS, ...pickupMethods];
   const activeMethod = allMethods.find((m) => m.id === selected);
+  // Pakkeshop-panelet toner ind, når kunden selv vælger metoden (ikke ved indlæsning).
+  const methodChanged = useHasChanged(selected);
 
   return (
     <fieldset>
       <legend className="mb-3 font-display text-lg font-bold tracking-tight text-charcoal">
-        Leveringsmetode
+        Levering
       </legend>
       <div className="space-y-2">
         {allMethods.map((method) => {
@@ -135,7 +155,7 @@ export function ShippingSelector({
             <label
               key={method.id}
               className={[
-                "flex items-center gap-4 rounded-xl border p-4 transition-colors",
+                "press flex items-center gap-4 rounded-xl border p-4",
                 isDisabled
                   ? "cursor-not-allowed border-stone-200 bg-stone-50 opacity-50"
                   : isSelected
@@ -171,7 +191,16 @@ export function ShippingSelector({
                   "shrink-0 text-sm font-semibold",
                   isDisabled ? "text-stone-400" : "text-charcoal",
                 ].join(" ")}>
-                  {method.cost === 0 ? "Gratis" : formatOere(method.cost)}
+                  {method.cost === 0 ? (
+                    "Gratis"
+                  ) : freeShipping ? (
+                    <>
+                      Gratis{" "}
+                      <s className="ml-1 font-normal text-stone-400">{formatOere(method.cost)}</s>
+                    </>
+                  ) : (
+                    formatOere(method.cost)
+                  )}
                 </span>
               </div>
             </label>
@@ -180,8 +209,26 @@ export function ShippingSelector({
       </div>
 
       {activeMethod?.requiresPickupPoint && (
-        <div className="mt-3 rounded-xl border border-sand bg-warm-white p-4">
+        <div className={`mt-3 rounded-xl border border-sand bg-warm-white p-4${methodChanged ? " reveal-in" : ""}`}>
           <p className="mb-3 text-sm font-medium text-charcoal">Vælg pakkeshop</p>
+          {onZipcode && (
+            <div className="mb-3">
+              <label htmlFor="pickup-zip" className="mb-1 block text-xs font-medium text-charcoal">
+                Dit postnummer
+              </label>
+              <input
+                id="pickup-zip"
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={4}
+                value={zipcode}
+                onChange={(e) => onZipcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="w-32 rounded-lg border border-sand bg-white px-3 py-2 text-base sm:text-sm text-charcoal placeholder-gray-400 focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco"
+                placeholder="7100"
+              />
+            </div>
+          )}
           <PickupPointPicker
             zipcode={zipcode}
             selected={pickupPoint}

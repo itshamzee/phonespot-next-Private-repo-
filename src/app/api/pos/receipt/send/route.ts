@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { renderReceiptPdf } from "@/lib/pos/receipt-data";
 import { receiptUrl } from "@/lib/pos/receipt-link";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 import { createServerClient } from "@/lib/supabase/client";
+import { assertLocationAccess } from "@/lib/pos/pos-context";
 
 const bodySchema = z.discriminatedUnion("channel", [
   z.object({ channel: z.literal("email"), orderId: uuidSchema, to: z.string().trim().email("Ugyldig e-mailadresse") }),
@@ -24,8 +24,8 @@ const bodySchema = z.discriminatedUnion("channel", [
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
     const parsed = await parseBody(request, bodySchema);
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
@@ -33,12 +33,15 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient();
     const { data: order } = await supabase
       .from("orders")
-      .select("id, type, receipt_number, order_number")
+      .select("id, type, receipt_number, order_number, location_id")
       .eq("id", body.orderId)
       .maybeSingle();
     if (!order || (order.type !== "pos" && order.type !== "credit_note")) {
       return NextResponse.json({ error: "Salget findes ikke" }, { status: 404 });
     }
+    // Only staff with access to the sale's store may send its receipt (customer data).
+    if (order.location_id) await assertLocationAccess(pos.actor, order.location_id);
+    else if (pos.actor.role !== "owner") return NextResponse.json({ error: "Salget findes ikke" }, { status: 404 });
     const number = order.receipt_number ?? order.order_number;
 
     if (body.channel === "email") {

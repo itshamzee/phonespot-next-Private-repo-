@@ -15,6 +15,43 @@ function daysSince(iso: string | null, now: number): number {
   return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 86_400_000));
 }
 
+type ReceiptToPayRow = {
+  receipt_number: string;
+  seller_name: string;
+  seller_bank_reg: string | null;
+  seller_bank_account: string | null;
+  total_amount: number;
+  offset_amount: number | null;
+  payout_method: string | null;
+  status: string;
+};
+
+/** The digest is a mail: never the full account number, only the last four digits. */
+export function maskAccount(account: string | null): string {
+  if (!account) return "";
+  return account.length > 4 ? `••••${account.slice(-4)}` : "••••";
+}
+
+/**
+ * Confirmed slips that still need a bank transfer, with what is left to pay.
+ * A 'modregning' slip waits for the till: until it has been offset there is
+ * nothing to transfer. After a partial offset only the remainder is paid out.
+ */
+export function receiptsToPay(rows: ReceiptToPayRow[]): DigestData["toPay"] {
+  return rows
+    .filter((r) => r.status === "confirmed")
+    .filter((r) => !(r.payout_method === "modregning" && r.offset_amount == null))
+    .map((r) => ({ r, remainder: r.total_amount - (r.offset_amount ?? 0) }))
+    .filter(({ remainder }) => remainder > 0)
+    .map(({ r, remainder }) => ({
+      sellerName: r.seller_name,
+      bankReg: r.seller_bank_reg ?? "",
+      bankAccount: maskAccount(r.seller_bank_account),
+      amountKr: Math.round(remainder / 100),
+      receiptNumber: r.receipt_number,
+    }));
+}
+
 // Gathers the day's work list. Everything here is derived from data that already
 // exists — the digest reports the state of the business, it does not invent one.
 export async function collectDigestData(client: SupabaseAdmin): Promise<DigestData> {
@@ -24,22 +61,11 @@ export async function collectDigestData(client: SupabaseAdmin): Promise<DigestDa
   /* --- Money out: confirmed receipts waiting to be paid --- */
   const { data: receipts } = await client
     .from("trade_in_receipts")
-    .select("receipt_number, seller_name, seller_bank_reg, seller_bank_account, total_amount, status, inquiry_id")
-    .eq("status", "confirmed");
+    .select("receipt_number, seller_name, seller_bank_reg, seller_bank_account, total_amount, offset_amount, payout_method, status")
+    .eq("status", "confirmed")
+    .is("suspected_at", null);
 
-  const toPay = ((receipts ?? []) as {
-    receipt_number: string;
-    seller_name: string;
-    seller_bank_reg: string | null;
-    seller_bank_account: string | null;
-    total_amount: number;
-  }[]).map((r) => ({
-    sellerName: r.seller_name,
-    bankReg: r.seller_bank_reg ?? "",
-    bankAccount: r.seller_bank_account ?? "",
-    amountKr: Math.round(r.total_amount / 100),
-    receiptNumber: r.receipt_number,
-  }));
+  const toPay = receiptsToPay((receipts ?? []) as ReceiptToPayRow[]);
 
   /* --- Devices on their way in: accepted offers with no receipt yet --- */
   const { data: acceptedOffers } = await client

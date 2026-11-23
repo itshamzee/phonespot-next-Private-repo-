@@ -1,7 +1,9 @@
 import { createServerClient } from "@/lib/supabase/client";
 import { finalizeCheckoutOrder } from "@/lib/checkout/finalize-order";
 import { sendPushover } from "@/lib/notifications/pushover";
+import { metaContextFromMetadata } from "@/lib/tracking/meta-capi";
 import { chargeAmount, frisbii, isChargePaid } from "./client";
+import { frisbiiHandle } from "./checkout-session";
 
 /**
  * Frisbii-ordrer genbruger de eksisterende kolonner, så der ikke kræves en
@@ -79,6 +81,19 @@ export async function completeFrisbiiOrder(handle: string): Promise<FrisbiiCompl
     orderId: order.id,
     sessionId: order.stripe_checkout_session_id,
     paymentId: handle,
+    // En gendannet kurv får et handle med suffiks (S-1234-ab12); det første
+    // forsøg bruger ordrenummeret direkte.
+    recovered: handle !== frisbiiHandle(order.order_number),
+    // Hentes først, når ordren faktisk færdiggøres. Fejler opslaget, sendes
+    // købet blot ikke til Meta fra serveren — betalingen påvirkes ikke.
+    metaContext: async () => {
+      try {
+        return metaContextFromMetadata(await frisbii.getInvoiceMetadata(handle));
+      } catch (err) {
+        console.warn("[frisbii] kunne ikke hente metadata til Meta-sporing:", handle, err);
+        return null;
+      }
+    },
   });
   return "completed";
 }

@@ -11,10 +11,10 @@ import { TransferError } from "../errors";
 import { cancelTransfer, listTransfers, receiveTransfer, requestTransfer, sendTransfer } from "../service";
 
 const L = { vejle: "L-v", slagelse: "L-s", webshop: "L-w" };
-const OWNER: StaffIdentity = { id: "o", role: "owner", name: "Ejer", email: null, location_id: null, location_slug: null };
-const VEJLE: StaffIdentity = { id: "v", role: "employee", name: "Mikkel", email: null, location_id: L.vejle, location_slug: "vejle" };
-const SLAGELSE: StaffIdentity = { id: "s", role: "employee", name: "Sara", email: null, location_id: L.slagelse, location_slug: "slagelse" };
-const WEB: StaffIdentity = { id: "w", role: "employee", name: "Web", email: null, location_id: L.webshop, location_slug: "webshop" };
+const OWNER: StaffIdentity = { id: "o", role: "owner", name: "Ejer", email: null, location_id: null, location_slug: null, permissions: [] };
+const VEJLE: StaffIdentity = { id: "v", role: "employee", name: "Mikkel", email: null, location_id: L.vejle, location_slug: "vejle", permissions: [] };
+const SLAGELSE: StaffIdentity = { id: "s", role: "employee", name: "Sara", email: null, location_id: L.slagelse, location_slug: "slagelse", permissions: [] };
+const WEB: StaffIdentity = { id: "w", role: "employee", name: "Web", email: null, location_id: L.webshop, location_slug: "webshop", permissions: [] };
 
 const SKU = "11111111-1111-4111-8111-111111111111";
 

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { findReturnableOrder } from "@/lib/pos/create-return";
 import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
 import { returnBodySchema } from "@/lib/pos/schemas";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { resolveRegister } from "@/lib/pos/pos-context";
+import { assertReturnEntity, assertReturnLookupEntity } from "@/lib/pos/return-entity";
+import { hasPermission } from "@/lib/auth/permissions";
+import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+
+// An integrated card terminal waits for the customer (Flatpay: up to ~100 s).
+export const maxDuration = 120;
 
 /**
  * GET /api/pos/return?q=<receipt number or order number>
@@ -14,10 +19,11 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
     const q = new URL(request.url).searchParams.get("q") ?? "";
     const order = await findReturnableOrder(q);
+    await assertReturnLookupEntity(pos.actor, order.id);
     return NextResponse.json({ order, terminalKind: paymentTerminalKind() });
   } catch (err) {
     return posErrorResponse(err, "Fejl ved opslag af salg");
@@ -29,7 +35,7 @@ export async function GET(request: NextRequest) {
  * Return = credit note (kreditnota). The original order is never modified.
  *
  * Body: {
- *   originalOrderId, locationId, registerId,
+ *   originalOrderId, registerId,   // locationId is ignored: the server uses the register's own location
  *   lines: Array<{ orderItemId, quantity, restock }>,   // restock: accessories back on the shelf /
  *                                                       // device back to "listed"; false parks a device as "returned"
  *   refunds: Array<{ type: kontant|kort_terminal|mobilepay|tilgodebevis, amountOere, reference? }>,
@@ -42,18 +48,24 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
+    if (!hasPermission(actor, "lave_retur")) return FORBIDDEN("Du har ikke tilladelse til at lave retur");
 
     const parsed = await parseBody(request, returnBodySchema);
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
+    const register = await resolveRegister(actor, body.registerId);
+
+    await assertReturnEntity(register.locationId, body.originalOrderId);
+
     const result = await createReturnWithTerminal({
       originalOrderId: body.originalOrderId,
-      locationId: body.locationId,
-      registerId: body.registerId,
-      staffId: staff.id,
+      locationId: register.locationId,
+      registerId: register.registerId,
+      staffId: actor.id,
       lines: body.lines,
       refunds: body.refunds,
       reason: body.reason,

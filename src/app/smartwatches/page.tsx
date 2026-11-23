@@ -3,11 +3,12 @@ import { DeviceCollection, type CollectionFaq } from "@/components/product/devic
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Refurbished smartwatches med 36 måneders garanti | PhoneSpot",
-  description: "Sammenlign aktuelle refurbished smartwatches efter pris, stand og tilgængelighed hos PhoneSpot.",
+  title: "Brugt Apple Watch og smartwatch – 36 mdr. garanti | PhoneSpot",
+  description: "Køb et brugt Apple Watch eller Galaxy Watch, testet og istandsat. 36 mdr. garanti og 30 dages returret. Sammenlign pris, størrelse og stand.",
   alternates: { canonical: "https://phonespot.dk/smartwatches" },
   openGraph: { title: "Refurbished smartwatches | PhoneSpot", description: "Find et kvalitetstestet smartwatch i det aktuelle udvalg.", url: "https://phonespot.dk/smartwatches" },
 };

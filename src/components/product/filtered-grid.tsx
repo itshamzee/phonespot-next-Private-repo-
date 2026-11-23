@@ -123,6 +123,7 @@ export function FilteredGrid({ templates, heading, promos, initialBrand }: Filte
                     key={item.template.id}
                     slug={item.template.slug}
                     image={item.template.images[0]}
+                    hoverImage={item.template.images[1]}
                     imageSizes="(min-width: 1320px) 310px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 360px) 50vw, 100vw"
                     title={item.template.display_name}
                     minPrice={item.template.min_price}

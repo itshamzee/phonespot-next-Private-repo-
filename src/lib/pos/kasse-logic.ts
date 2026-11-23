@@ -18,7 +18,22 @@ import { threeForTwo, type ThreeForTwoLine, type ThreeForTwoResult } from "@/lib
 export const DEFAULT_DEPOSIT_SUGGESTION_OERE = 50_000;
 
 export type CartLine =
-  | { key: string; type: "device"; deviceId: string; name: string; detail?: string; price: number; vatScheme: "brugtmoms" | "regular"; repairTicketItemId?: string }
+  | {
+      key: string;
+      type: "device";
+      deviceId: string;
+      name: string;
+      detail?: string;
+      price: number;
+      vatScheme: "brugtmoms" | "regular";
+      repairTicketItemId?: string;
+      /** IMEI or serial number typed at the till (only for a unit without one on file). */
+      imei?: string;
+      /** Brugtmoms unit from a repair case without IMEI/serial number: the till asks before charging. */
+      needsIdentifier?: boolean;
+      /** No purchase document (indkøbsbilag) on file: warned about, never blocks the sale. */
+      missingPurchaseDocument?: boolean;
+    }
   | {
       key: string;
       type: "sku_product";
@@ -237,7 +252,14 @@ export function toSaleItems(lines: CartLine[], applied: AppliedDepositLine[]): S
   const items: SaleItem[] = lines.flatMap((l): SaleItem[] => {
     switch (l.type) {
       case "device":
-        return [{ type: "device", deviceId: l.deviceId, ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}) }];
+        return [
+          {
+            type: "device",
+            deviceId: l.deviceId,
+            ...(l.repairTicketItemId ? { repairTicketItemId: l.repairTicketItemId } : {}),
+            ...(l.imei ? { imei: l.imei } : {}),
+          },
+        ];
       case "sku_product": {
         const free = bundle.byKey[l.key];
         if (free && free.freeUnits > 0 && !l.repairTicketItemId) {
@@ -311,6 +333,7 @@ export function casePaymentLines(c: CaseContext, key = `case-${c.id}`): CartLine
         price: l.unit_oere,
         vatScheme: l.vat_scheme ?? "brugtmoms",
         repairTicketItemId: l.item_id,
+        ...((l.vat_scheme ?? "brugtmoms") === "brugtmoms" && l.has_identifier === false ? { needsIdentifier: true } : {}),
       });
     } else if (l.kind === "product" && l.sku_product_id) {
       out.push({
@@ -431,4 +454,67 @@ export function parseKasseParams(params: { get(name: string): string | null }): 
   const caseId = raw && /^[0-9a-z-]{3,40}$/i.test(raw.trim()) ? raw.trim() : null;
   const dep = params.get("depositum");
   return { caseId, openDeposit: !!caseId && (dep === "1" || dep === "true") };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Opkøb: IMEI on the receipt and offsetting a slutseddel              */
+/* ------------------------------------------------------------------ */
+
+/** A brugtmoms unit must carry an IMEI or serial number on the receipt; ask for it when none is on file. */
+export function deviceNeedsIdentifier(d: { vatScheme: string | null; hasIdentifier: boolean }): boolean {
+  return d.vatScheme === "brugtmoms" && !d.hasIdentifier;
+}
+
+/** The first device line that still needs an IMEI/serial number before the sale can be charged. */
+export function lineNeedingIdentifier(lines: CartLine[]): Extract<CartLine, { type: "device" }> | null {
+  for (const l of lines) if (l.type === "device" && l.needsIdentifier && !l.imei) return l;
+  return null;
+}
+
+/** Slutseddel numbers are upper case (SS-2026-0001); typed or scanned input is matched without case. */
+export function normalizeReceiptNumber(raw: string): string {
+  return raw.trim().toUpperCase();
+}
+
+/** GET /api/trade-in/receipts?number= (one row, only in the actor's stores). */
+export type TradeInLookup = {
+  id: string;
+  receipt_number: string;
+  status: string;
+  total_amount: number;
+  offset_amount: number | null;
+  location_id: string | null;
+  attestation: string | null;
+  seller_type: string;
+  has_signed_scan: boolean;
+  has_invoice: boolean;
+  /** Reg.nr. and account on the slip: needed when only part of it is offset (the rest goes to bank). */
+  has_bank_account?: boolean;
+  suspected?: boolean;
+};
+
+export const REMAINDER_NO_ACCOUNT_MESSAGE =
+  "Opkøbet er større end købet, og slutsedlen mangler konto til restbeløbet. Lav en ny slutseddel med konto.";
+
+/** An offset below the slip's total leaves a remainder that is paid by bank, so the slip needs an account. */
+export function tradeInRemainderProblem(r: TradeInLookup, amountOere: number): string | null {
+  return amountOere < r.total_amount && !r.has_bank_account ? REMAINDER_NO_ACCOUNT_MESSAGE : null;
+}
+
+/**
+ * Why a slutseddel cannot be offset in a sale at this store, or null when it can.
+ * Mirrors the check in pos_create_sale (which decides).
+ */
+export function tradeInOffsetProblem(r: TradeInLookup, locationId: string): string | null {
+  if (r.suspected) return "Slutsedlen er spærret ved mistanke";
+  if (r.status === "voided") return "Slutsedlen er annulleret";
+  if (r.status === "draft") return "Slutsedlen er ikke bekræftet endnu";
+  if (r.status !== "confirmed" || r.offset_amount != null) return "Slutsedlen er allerede udbetalt eller modregnet";
+  if (r.location_id !== locationId) return "Slutsedlen hører til en anden butik";
+  if (r.seller_type === "business") {
+    if (!r.has_invoice) return "Læg firmaets faktura op, før den kan modregnes";
+  } else if (r.attestation !== "online_accept" && !r.has_signed_scan) {
+    return "Læg den underskrevne slutseddel op, før den kan modregnes";
+  }
+  return null;
 }

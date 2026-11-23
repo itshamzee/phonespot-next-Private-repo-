@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { InquiryChannel } from "@/lib/supabase/types";
 import { assessMessage } from "@/lib/mail-agent/agent";
 import { displayNameFor } from "@/lib/mail-agent/config";
 import { CENTRAL_INBOX } from "@/lib/email/staff-routing";
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
   const payload = await req.json().catch(() => ({}));
 
   let senderEmail = "";
+  let channel: InquiryChannel = "email";
   let senderName: string | null = null;
   let mailbox: string = CENTRAL_INBOX;
   let subject = "";
@@ -32,14 +34,18 @@ export async function POST(req: NextRequest) {
     if (!inq) return NextResponse.json({ error: "Henvendelse ikke fundet" }, { status: 404 });
     const { data: msgs } = await sb
       .from("inquiry_messages")
-      .select("sender, body, created_at")
+      .select("sender, body, created_at, is_internal")
       .eq("inquiry_id", inq.id)
+      .eq("is_internal", false) // interne noter må aldrig nå modellen
       .order("created_at", { ascending: true });
     const all: ThreadMessage[] = [
       { sender: "customer", body: inq.message as string, created_at: inq.created_at as string },
-      ...((msgs ?? []) as ThreadMessage[]),
+      ...((msgs ?? []) as (ThreadMessage & { is_internal?: boolean | null })[])
+        .filter((m) => !m.is_internal)
+        .map(({ sender, body, created_at }) => ({ sender, body, created_at })),
     ];
-    senderEmail = inq.email;
+    senderEmail = inq.email ?? "";
+    channel = (inq.channel as InquiryChannel | null) ?? "email";
     senderName = inq.name;
     mailbox = (inq.mailbox as string | null) ?? mailbox;
     subject = inq.subject ?? "";
@@ -58,6 +64,7 @@ export async function POST(req: NextRequest) {
     const out = await assessMessage({
       supabase: sb,
       senderEmail,
+      channel,
       senderName,
       mailbox,
       displayName: displayNameFor(mailbox),

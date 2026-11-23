@@ -40,7 +40,7 @@ export function GET() {
 - Brugte og refurbished iPhones, iPads, MacBooks, Android-telefoner og smartwatches, testet og istandsat på eget værksted.
 - 36 måneders garanti på enheder. Tilbehør har 2 års reklamationsret.
 - 30 dages returret på enheder (ud over den lovpligtige fortrydelsesret på 14 dage).
-- Kosmetisk stand A, B eller C. Batteri min. 90 % ved levering; under 90 % skiftes batteriet uden beregning.
+- Kosmetisk stand: P (premiumstand), A (som ny), B (god stand: perfekt skærm, lette spor på kabinettet), C (brugt stand: synlige spor). Alle stande er fuldt funktionelle og testet på over 30 punkter. Batteri min. 90 % ved levering; under 90 % skiftes batteriet uden beregning. Guide: ${SITE}/blog/stand-a-b-c-og-batteri · Kvalitet: ${SITE}/kvalitet
 - Køb online med levering, eller se og afhent enheden i Vejle eller Slagelse.
 - Brugte iPhones: ${SITE}/iphones · Android: ${SITE}/smartphones · Guide: ${SITE}/blog/koeb-brugt-iphone
 
@@ -48,7 +48,7 @@ export function GET() {
 ${PHONESPOT_PROMISES.map((p, i) => `${i + 1}. ${p.title}: ${p.detail}`).join("\n")}
 
 ## Reparation — fakta
-- Walk-in uden tidsbestilling i begge butikker. 90% af alle skærm- og batteriskift er klar på 30 minutter.
+- Walk-in uden tidsbestilling i begge butikker. 90 % af skærm- og batteriskift er klar på 30 minutter.
 - ${REPAIR_WARRANTY_ANSWER}
 - Kunden vælger selv skærmkvalitet (budget, OEM eller original), og prisen er fast og oplyst før reparationen.
 - Gratis hurtigt tjek ved disken i butikken. En fuld diagnose (fx printfejl) koster 249 kr.
@@ -62,16 +62,21 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Komplet prisliste som tekst](${SITE}/llms-full.txt): pris på hver reparation for hver model (iPhone, Samsung, iPad, MacBook, konsoller m.fl.), én linje pr. ydelse
 - [Reparationspriser og fakta](${SITE}/reparation/priser): prisliste for alle modeller, garanti, ventetid, adresser og åbningstider samlet på én side
 - [Reparation — find model og pris](${SITE}/reparation): priser på skærmskift, batteriskift m.m. for alle modeller
-- [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
-- [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90% af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
+- [Reparation i Vejle](${SITE}/reparation-vejle): Løversysselvej 3B, 7100 Vejle. Walk-in, 90 % af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele, gratis parkering
+- [Reparation i Slagelse](${SITE}/reparation-slagelse): VestsjællandsCentret 10A, 103, 4200 Slagelse. Walk-in, 90 % af skærm- og batteriskift klar på 30 min, livstidsgaranti på arbejde og dele
 - [Reparation Hedensted](${SITE}/reparation-hedensted): værkstedet i Vejle, ca. 15 min ad E45 fra Hedensted, livstidsgaranti, gratis parkering
 - [Reparation Horsens](${SITE}/reparation-horsens): værkstedet i Vejle, ca. 25 min ad E45 fra Horsens, livstidsgaranti, gratis parkering
 - [Reparation Kolding](${SITE}/reparation-kolding): værkstedet i Vejle, ca. 25 min ad E45 fra Kolding, livstidsgaranti, gratis parkering
 - [Reparation Fredericia](${SITE}/reparation-fredericia): værkstedet i Vejle, ca. 25 min fra Fredericia, livstidsgaranti, gratis parkering
 - [Reparation for Næstved](${SITE}/reparation-naestved): ingen butik i Næstved; butikken i VestsjællandsCentret, Slagelse, ligger ca. 30 min ad rute 22, åbent alle ugens dage, eller send ind med gratis fragtlabel
+- [iPad-reparation i Vejle](${SITE}/reparation-vejle/ipad) og [i Slagelse](${SITE}/reparation-slagelse/ipad): ladestik 899 kr. på alle iPad-modeller, mikrolodning, 2-3 hverdage, livstidsgaranti; skærm og batteri med faste priser pr. model
+- [PS5- og konsolreparation i Vejle](${SITE}/reparation-vejle/playstation) og [i Slagelse](${SITE}/reparation-slagelse/playstation): rens + ny køling 899 kr. (1-2 hverdage) på PS5, PS5 Digital, PS5 Pro, PS4 og Xbox Series X/S; sort skærm på PS5 = oftest HDMI-porten; HDMI-port + indvendig rengøring 1.300 kr., 2-3 hverdage; 2 års garanti på konsolreparation; kan sendes ind
+- [PS5-reparation](${SITE}/reparation/playstation/playstation-5), [PS5 Digital](${SITE}/reparation/playstation/playstation-5-digital) og [PS5 Pro](${SITE}/reparation/playstation/playstation-5-pro): faste priser pr. model; PS5 har flydende metal på chippen fra fabrikken
+- [Guide: PS5 rens før GTA 6](${SITE}/blog/gta-6-klar-ps5-rens-koelepasta): hvad en rens med ny køling indeholder, og hvornår konsollen trænger
+- [Computer- og pc-reparation i Vejle](${SITE}/reparation-vejle/computer) og [i Slagelse](${SITE}/reparation-slagelse/computer): batteri, skærm, tastatur og rensning af MacBook; bærbare pc'er fra andre mærker vurderes ved disken
 - [Send enheden ind til reparation](${SITE}/reparation/indsend): gratis fragtlabel, samme livstidsgaranti som i butikken, for kunder uden for Vejle og Slagelse
 - [Dyson-reparation](${SITE}/reparation/dyson): Dyson-støvsugere med fast pris pr. model, 12 måneders garanti på dele og arbejde, uafhængigt værksted
-- [Xbox-reparation](${SITE}/reparation/xbox): Xbox-konsoller og controllere i Vejle og Slagelse
+- [Xbox-reparation](${SITE}/reparation/xbox): Xbox Series X og S og controllere i Vejle og Slagelse; rens + ny køling 899 kr., 2 års garanti
 - [iPhone-reparation](${SITE}/reparation/iphone): alle iPhone-modeller med priser
 - [Samsung-reparation](${SITE}/reparation/samsung): alle Galaxy-modeller med priser
 - [iPad-reparation](${SITE}/reparation/ipad): alle iPad-modeller med priser
@@ -81,10 +86,19 @@ ${[...storeLines(), ...upcomingStoreLines()].join("\n\n")}
 - [Book reparation](${SITE}/reparation/booking)
 - [Refurbished iPhones](${SITE}/iphones): med 36 måneders garanti
 - [Garanti](${SITE}/garanti): garanti på refurbished enheder
-- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte telefoner, tablets og computere
+- [Sælg din enhed](${SITE}/saelg-din-enhed): vi køber brugte og nu også nye, uåbnede telefoner, tablets, computere, konsoller, høretelefoner, Dyson og smart home. Fast pris, gratis fragtlabel, pengene samme dag som vi modtager enheden, gratis retur hvis du afviser. Aflever i Vejle eller Slagelse (snart også Esbjerg), eller send med post
 - [Erhverv](${SITE}/erhverv): reparation og enheder til virksomheder
 - [Butikker](${SITE}/butik)
 - [Blog og guides](${SITE}/blog)
+
+## Guides med konkrete svar
+- [Overfør data til ny iPhone](${SITE}/blog/overfoer-data-til-ny-iphone): Hurtig start, iCloud og Flyt til iOS trin for trin, og hvad du gør, hvis den gamle iPhones skærm er i stykker
+- [Hvad er refurbished?](${SITE}/blog/hvad-er-refurbished): refurbished vs. brugt, standerne P/A/B/C, originale dele, tjekliste ved modtagelse
+- [Køb brugt iPhone: det skal du tjekke](${SITE}/blog/koeb-brugt-iphone) · [Bedste refurbished iPhone 2026](${SITE}/blog/bedste-refurbished-iphone-2026) · [Refurbished iPad](${SITE}/blog/refurbished-ipad-guide)
+- [Black Friday iPhone 2026](${SITE}/blog/black-friday-iphone-2026): danske nypriser, hvordan du tjekker en førpris, ny eller brugt
+- [Hvad er din brugte iPhone værd?](${SITE}/blog/hvad-er-din-brugte-iphone-vaerd) · [Sælg iPhone med ødelagt skærm](${SITE}/blog/saelg-iphone-med-oedelagt-skaerm)
+- [Hvornår skal iPhone-batteriet skiftes?](${SITE}/blog/hvornaar-skifte-batteri-iphone) · [Hvad koster MacBook-reparation?](${SITE}/blog/hvad-koster-macbook-reparation) · [MacBook-batteriskift](${SITE}/blog/macbook-batteriskift-guide)
+- Hver reparationsside pr. model (fx ${SITE}/reparation/iphone/iphone-15) starter med et kort svar: pris på skærm- og batteriskift, tid og garanti, efterfulgt af hele prislisten og en FAQ.
 
 ## Anmeldelser og profiler
 - Trustpilot: https://dk.trustpilot.com/review/phonespot.dk

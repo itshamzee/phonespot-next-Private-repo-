@@ -3,7 +3,8 @@ import { DeviceCollection, type CollectionFaq } from "@/components/product/devic
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Brugt iPhone med 36 mdr. garanti – refurbished | PhoneSpot",
@@ -48,6 +49,7 @@ export default async function IphonesPage() {
       guideIntro="Modelnavne fortæller ikke hele historien. Tag udgangspunkt i de funktioner, du bruger hver dag, og sammenlign derefter de konkrete enheder."
       choices={CHOICES}
       faqs={FAQS}
+      localLinks={[{ href: "/iphones-vejle", label: "Brugte iPhones i Vejle" }, { href: "/iphones-slagelse", label: "Brugte iPhones i Slagelse" }]}
      
     />
   </>;

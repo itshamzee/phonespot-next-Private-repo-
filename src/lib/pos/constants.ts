@@ -11,6 +11,8 @@ export const PAYMENT_TYPES = [
   "faktura",
   "tilgodebevis",
   "gavekort",
+  // Modregning af en bekræftet slutseddel (opkøb). Reference = slutseddelnummeret.
+  "opkoeb",
 ] as const;
 export type PaymentType = (typeof PAYMENT_TYPES)[number];
 
@@ -22,14 +24,15 @@ export const PAYMENT_LABELS: Record<PaymentType, string> = {
   faktura: "Faktura",
   tilgodebevis: "Tilgodebevis",
   gavekort: "Gavekort",
+  opkoeb: "Modregnet opkøb",
 };
 
-/** Refund methods allowed on a credit note (money going back to the customer). */
+/** Refund methods allowed on a credit note (money going back to the customer). Never "opkoeb". */
 export const REFUND_TYPES = ["kontant", "kort_terminal", "mobilepay", "tilgodebevis"] as const;
 export type RefundType = (typeof REFUND_TYPES)[number];
 
-/** Payment types that require a reference (voucher / gift card code). */
-export const REFERENCE_REQUIRED_TYPES: readonly PaymentType[] = ["tilgodebevis", "gavekort"];
+/** Payment types that require a reference (voucher / gift card code / slutseddel number). */
+export const REFERENCE_REQUIRED_TYPES: readonly PaymentType[] = ["tilgodebevis", "gavekort", "opkoeb"];
 
 export const DISCOUNT_REASONS = ["Fejl", "Kundeservice", "Tilbud", "Partner", "Andet"] as const;
 export type DiscountReason = (typeof DISCOUNT_REASONS)[number];
@@ -56,7 +59,7 @@ export const STRIPE_TERMINAL_ENABLED = process.env.NEXT_PUBLIC_POS_STRIPE_TERMIN
  * terminal itself. Chosen server side by POS_TERMINAL_PROVIDER (see
  * src/lib/pos/payment-terminal.ts); the client only ever receives the kind.
  */
-export const PAYMENT_TERMINAL_KINDS = ["manual", "worldline"] as const;
+export const PAYMENT_TERMINAL_KINDS = ["manual", "worldline", "flatpay"] as const;
 export type PaymentTerminalKind = (typeof PAYMENT_TERMINAL_KINDS)[number];
 
 export function isIntegratedTerminal(kind: PaymentTerminalKind | null | undefined): boolean {

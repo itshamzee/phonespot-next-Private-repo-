@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import type { PublicAccessory } from "@/lib/product/public-accessory";
 import { listPriceSaving } from "@/lib/product/list-price";
+import { PriceTag } from "@/components/campaign/price-tag";
 type AccessoryCardProps = Omit<PublicAccessory, "created_at"> & {
   /** Dokumenteret vejledende pris i kr. (kun ægte mærkevarer på lagersalg). */
   listPriceKr?: number | null;
@@ -32,16 +33,17 @@ export function AccessoryCard({id,name,slug,category,price,sale_price,image_url,
   }
   // eslint-disable-next-line @next/next/no-img-element
   const photo=image_url ? <img src={image_url} alt={name} className="h-full w-full object-contain p-4 sm:p-7" loading="lazy"/> : <span className="text-sm text-charcoal/50">Billede mangler</span>;
-  const tile="relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
+  const campaignTag=black_november ? <span className="absolute left-3 top-3"><PriceTag size="sm" surface="light" tilt={-3} price="Black November"/></span> : null;
+  const tile="card-media relative flex aspect-square items-center justify-center rounded-2xl bg-[#f5f5f2]";
   // Tilføjet-tilstanden må ikke ligne "udsolgt": den beholder farven og er kun låst for dobbeltklik.
   const buttonClass = added
     ? "bg-[#1A3D2E] text-white"
     : canBuy
       ? "bg-[#EDF2EE] text-[#1A3D2E] hover:bg-[#1A3D2E] hover:text-white"
       : "cursor-not-allowed bg-sand text-charcoal/55";
-  return <article className="flex h-full flex-col font-body">
+  return <article className="card-lift flex h-full flex-col font-body">
     {/* Product photographs are shown whole, without substitute device artwork. */}
-    {href ? <Link href={href} className={tile}>{photo}</Link> : <div className={tile}>{photo}</div>}
+    {href ? <Link href={href} className={tile}>{photo}{campaignTag}</Link> : <div className={tile}>{photo}{campaignTag}</div>}
     <div className="flex flex-1 flex-col px-1 pt-3 sm:pt-4">
       <p className="mb-1.5 min-h-4 text-xs text-charcoal/60">{brand}</p>
       <h2 className="min-h-12 text-sm sm:text-base font-semibold leading-5 sm:leading-6 text-charcoal">{href ? <Link href={href}>{name}</Link> : name}</h2>

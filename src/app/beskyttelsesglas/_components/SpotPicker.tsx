@@ -172,7 +172,7 @@ function ModelSearch({
               if(event.key === "ArrowDown") { event.preventDefault(); buttons[(index+1)%buttons.length]?.focus(); }
               if(event.key === "ArrowUp") { event.preventDefault(); if(index<=0) searchRef.current?.focus(); else buttons[index-1]?.focus(); }
               if(event.key === "Escape") { event.preventDefault(); setQ(""); searchRef.current?.focus(); }
-            }} className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-xl">
+            }} className="absolute left-0 right-0 top-full z-20 mt-2 max-h-[320px] overflow-auto rounded-2xl border border-black/[0.06] bg-white shadow-floating">
               {matches.map((m) => (
                 <li key={m.slug}>
                   <button
@@ -336,7 +336,7 @@ function ModelConfigurator({
                     aria-pressed={active}
                     className={`flex flex-col items-start rounded-xl border px-4 py-3.5 text-left transition-all ${
                       active
-                        ? "border-[#1A3D2E] bg-[#1A3D2E] text-white shadow-[0_4px_16px_-6px_rgba(26,61,46,0.35)]"
+                        ? "border-[#1A3D2E] bg-[#1A3D2E] text-white shadow-rest"
                         : "border-black/[0.08] bg-white hover:border-[#1A3D2E]/40"
                     }`}
                   >
@@ -436,7 +436,7 @@ function ModelConfigurator({
             type="button"
             onClick={handleAddToCart}
             disabled={adding}
-            className="mt-6 w-full rounded-lg bg-[#1A3D2E] py-4 text-base font-bold text-white shadow-[0_10px_30px_-12px_rgba(26,61,46,0.5)] transition-all hover:bg-[#2a5c47] active:scale-[0.98] disabled:opacity-60"
+            className="mt-6 w-full rounded-lg bg-[#1A3D2E] py-4 text-base font-bold text-white transition-all hover-fine:shadow-raised active:shadow-none hover:bg-[#2a5c47] active:scale-[0.98] disabled:opacity-60"
           >
             {adding ? "Lagt i kurv ✓" : `Læg i kurv · ${totalKr} kr`}
           </button>

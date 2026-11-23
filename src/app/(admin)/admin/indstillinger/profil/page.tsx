@@ -9,9 +9,59 @@ export default function ProfilPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const [pinState, setPinState] = useState({ hasPin: false, pinLocked: false });
+  const [pin, setPin] = useState("");
+  const [currentPin, setCurrentPin] = useState("");
+  const [password, setPassword] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinMessage, setPinMessage] = useState<{ ok: boolean; text: string } | null>(null);
+
   useEffect(() => {
     loadProfile();
+    loadPinState();
   }, []);
+
+  async function loadPinState() {
+    try {
+      const res = await fetch("/api/admin/me", { cache: "no-store" });
+      if (!res.ok) return;
+      const me = await res.json();
+      setPinState({ hasPin: Boolean(me.hasPin), pinLocked: Boolean(me.pinLocked) });
+    } catch {
+      // Uden status viser siden bare feltet til ny pinkode.
+    }
+  }
+
+  async function handlePinSave() {
+    setPinSaving(true);
+    setPinMessage(null);
+    try {
+      const body: Record<string, string> = { pin };
+      if (pinState.hasPin && pinState.pinLocked) body.password = password;
+      else if (pinState.hasPin) body.currentPin = currentPin;
+      const res = await fetch("/api/admin/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setPinMessage({ ok: true, text: "Pinkoden er gemt." });
+        setPin("");
+        setCurrentPin("");
+        setPassword("");
+      } else {
+        setPinMessage({ ok: false, text: json.error ?? "Pinkoden kunne ikke gemmes. Prøv igen." });
+      }
+    } catch {
+      setPinMessage({ ok: false, text: "Pinkoden kunne ikke gemmes, fordi forbindelsen fejlede." });
+    }
+    setPinSaving(false);
+    await loadPinState();
+  }
+
+  const pinReady =
+    /^\d{4,6}$/.test(pin) && (!pinState.hasPin || (pinState.pinLocked ? password !== "" : currentPin !== ""));
 
   async function loadProfile() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -70,6 +120,39 @@ export default function ProfilPage() {
         {saving ? "Gemmer..." : "Gem profil"}
       </button>
       {message && <p style={{ marginTop: 8, color: message.includes("Fejl") ? "red" : "#5A8C6F" }}>{message}</p>}
+
+      <h2 style={{ fontSize: 18, fontWeight: 700, margin: "40px 0 8px" }}>Pinkode</h2>
+      <p style={{ color: "#666", marginBottom: 16, fontSize: 14 }}>
+        Pinkoden på 4 til 6 cifre bruges, når du skifter ekspedient i kassen.
+        {pinState.hasPin && !pinState.pinLocked && " Du har en pinkode. Skriv den nuværende for at skifte til en ny."}
+        {pinState.hasPin && pinState.pinLocked && " Din pinkode er låst. Skriv din adgangskode til dette login for at sætte en ny."}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
+        {pinState.hasPin && !pinState.pinLocked && (
+          <div>
+            <label style={labelStyle}>Nuværende pinkode</label>
+            <input style={inputStyle} type="password" inputMode="numeric" autoComplete="off" value={currentPin}
+              onChange={e => setCurrentPin(e.target.value.replace(/\D/g, "").slice(0, 6))} />
+          </div>
+        )}
+        {pinState.hasPin && pinState.pinLocked && (
+          <div>
+            <label style={labelStyle}>Adgangskode</label>
+            <input style={inputStyle} type="password" autoComplete="current-password" value={password}
+              onChange={e => setPassword(e.target.value)} />
+          </div>
+        )}
+        <div>
+          <label style={labelStyle}>{pinState.hasPin ? "Ny pinkode" : "Pinkode"}</label>
+          <input style={inputStyle} type="password" inputMode="numeric" autoComplete="off" value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} />
+        </div>
+      </div>
+      <button onClick={handlePinSave} disabled={pinSaving || !pinReady}
+        style={{ marginTop: 16, padding: "10px 24px", background: "#3A3D38", color: "#fff", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>
+        {pinSaving ? "Gemmer..." : pinState.hasPin ? "Skift pinkode" : "Sæt pinkode"}
+      </button>
+      {pinMessage && <p style={{ marginTop: 8, color: pinMessage.ok ? "#5A8C6F" : "red" }}>{pinMessage.text}</p>}
     </div>
   );
 }

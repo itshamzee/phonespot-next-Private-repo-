@@ -17,7 +17,7 @@ type FormFieldProps = {
 };
 
 const inputStyles =
-  "w-full rounded-radius-md border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco transition-colors";
+  "w-full rounded-radius-md border border-soft-grey bg-white px-4 py-3 text-charcoal placeholder:text-gray focus:border-green-eco focus:outline-none focus:ring-1 focus:ring-green-eco transition-[color,background-color,border-color,box-shadow] duration-150 ease-out";
 
 export function FormField({
   label,

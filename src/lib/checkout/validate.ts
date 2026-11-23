@@ -69,7 +69,7 @@ export async function validateCart(items: CartItem[]): Promise<ValidationResult>
         errors.push(`${item.title} er ikke tilgængelig`);
         continue;
       }
-      // Black November: 5 % på brugte enheder. Serverprisen er den eneste, der betales.
+      // Black November-enhedsrabat (0 % siden 11/11). Serverprisen er den eneste, der betales.
       const devicePrice = blackNovemberDevicePrice(db.selling_price, effectiveGrade(db as { grade: string | null; condition_notes?: string | null }));
       if (db.source === "foxway") {
         // Foxway devices: validate stock instead of reservation

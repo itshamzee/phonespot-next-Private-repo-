@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { resolveStaff, OWNER_EMAIL_WHITELIST } from "../resolve-staff";
 
-type FakeRow = { id: string; auth_id: string; role: string };
+type FakeRow = { id: string; auth_id: string; role: string; is_active?: boolean };
 
 function makeSupabase(opts: {
   staffByAuthId?: Record<string, FakeRow>;
@@ -96,5 +96,16 @@ describe("resolveStaff", () => {
     const { client } = makeSupabase({ staffByAuthId: {} });
     const result = await resolveStaff(client as never, { id: "auth-5", email: null });
     expect(result).toBeNull();
+  });
+});
+
+describe("resolveStaff, deaktiverede medarbejdere", () => {
+  it("afviser en række med is_active false (og provisionerer ikke igen)", async () => {
+    const { client, insertCalls } = makeSupabase({
+      staffByAuthId: { "auth-9": { id: "s-9", auth_id: "auth-9", role: "employee", is_active: false } },
+    });
+    const result = await resolveStaff(client as never, { id: "auth-9", email: "x@phonespot.dk" });
+    expect(result).toBeNull();
+    expect(insertCalls).toEqual([]);
   });
 });

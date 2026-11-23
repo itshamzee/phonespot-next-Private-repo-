@@ -32,7 +32,7 @@ export default function ButikPage() {
       <JsonLd data={organizationJsonLd} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Butikker</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>PhoneSpot tæt på dig</span>
           <h1>Kom forbi i Vejle eller Slagelse.</h1>
           <p className={styles.intro}>Se enhederne, få hjælp til en reparation eller lad os vurdere din brugte elektronik. Her finder du vej til begge butikker{upcomingList.length > 0 && <> – og til {upcomingList.map((s) => `${s.city}, hvor vi åbner i ${s.opens}`).join(" og ")}</>}.</p>

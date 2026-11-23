@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe/client";
 import { convertDraftToOrder } from "@/lib/draft-orders/convert";
 import { handleRepairPayment } from "@/lib/stripe/repair-payment";
 import { finalizeCheckoutOrder, type CheckoutOrderItem } from "@/lib/checkout/finalize-order";
+import { metaContextFromMetadata } from "@/lib/tracking/meta-capi";
 
 export async function handleCheckoutCompleted(
   session: Stripe.Checkout.Session,
@@ -34,6 +35,9 @@ export async function handleCheckoutCompleted(
     sessionId: session.id,
     paymentId: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
     resolveBatteryItemIds: (orderItems) => resolveStripeBatteryItemIds(session.id, orderItems),
+    // Betalt via kurv-påmindelsens link: først nu er ordren reelt genoptaget.
+    recovered: session.metadata?.recovery === "true",
+    metaContext: metaContextFromMetadata(session.metadata),
   });
 }
 

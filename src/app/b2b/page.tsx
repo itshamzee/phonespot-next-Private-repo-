@@ -123,7 +123,7 @@ export default function B2BLandingPage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/b2b/registrer"
-                  className="rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] shadow-lg shadow-black/10 transition-all hover:bg-white/95 hover:shadow-xl"
+                  className="rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/95"
                 >
                   Bliv forhandler
                 </Link>
@@ -167,7 +167,7 @@ export default function B2BLandingPage() {
                 <Link
                   key={cat.slug}
                   href={`/reservedele/${cat.slug}`}
-                  className="group flex items-start gap-4 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6 transition-all hover:border-[#1A3D2E]/25 hover:bg-white hover:shadow-md"
+                  className="group flex items-start gap-4 rounded-2xl border border-[#E5E5EA] bg-[#F7F7F8] p-6 card-raise hover:border-[#1A3D2E]/25 hover:bg-white"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1A3D2E]/8 text-[#1A3D2E] transition-colors group-hover:bg-[#1A3D2E] group-hover:text-white">
                     <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
@@ -212,7 +212,7 @@ export default function B2BLandingPage() {
               {QUALITY_TIERS.map((tier) => (
                 <div
                   key={tier.name}
-                  className="relative overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white p-6 transition-shadow hover:shadow-md"
+                  className="relative overflow-hidden rounded-2xl border border-[#E5E5EA] bg-white p-6 card-raise"
                 >
                   {/* Color accent line */}
                   <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: tier.color }} />
@@ -261,7 +261,7 @@ export default function B2BLandingPage() {
                 { n: "3", title: "Bestil", body: "Se engrospriser og bestil direkte. Betal online eller på kredit.", icon: "M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" },
               ].map((step) => (
                 <div key={step.n} className="relative flex flex-col items-center text-center">
-                  <div className="relative z-10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1A3D2E] text-white shadow-lg shadow-[#1A3D2E]/20">
+                  <div className="relative z-10 mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1A3D2E] text-white shadow-raised">
                     <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-7 w-7">
                       <path strokeLinecap="round" strokeLinejoin="round" d={step.icon} />
                     </svg>
@@ -275,7 +275,7 @@ export default function B2BLandingPage() {
             <div className="mt-12 text-center">
               <Link
                 href="/b2b/registrer"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-[#1A3D2E]/15 transition-all hover:shadow-lg"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-8 py-3.5 text-sm font-bold text-white transition-all hover-fine:shadow-raised active:shadow-none"
               >
                 Opret gratis B2B-konto
                 <svg fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
@@ -289,7 +289,7 @@ export default function B2BLandingPage() {
         {/* ── VEJLE PICKUP — with image ── */}
         <section className="bg-[#F7F7F8] px-4 py-16 md:py-20">
           <div className="mx-auto max-w-7xl">
-            <div className="overflow-hidden rounded-3xl border border-[#E5E5EA] bg-white shadow-sm">
+            <div className="overflow-hidden rounded-3xl border border-[#E5E5EA] bg-white shadow-rest">
               <div className="grid lg:grid-cols-2">
                 <div className="p-8 md:p-12 lg:p-14">
                   <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#1A3D2E]/8 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#1A3D2E]">
@@ -388,7 +388,7 @@ export default function B2BLandingPage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/b2b/registrer"
-                className="rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] shadow-lg shadow-black/15 transition-all hover:shadow-xl"
+                className="rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all"
               >
                 Registrer dig gratis
               </Link>

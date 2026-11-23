@@ -52,7 +52,7 @@ export default function KontaktPage() {
     <div className={styles.shell}>
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Kontakt</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Vi hjælper dig videre</span>
           <h1>Kontakt os.</h1>
           <p className={styles.intro}>Spørgsmål til en ordre, en enhed eller en reparation? Skriv til os, ring eller kom forbi i Vejle eller Slagelse.</p>
@@ -81,7 +81,7 @@ export default function KontaktPage() {
                     </div>
                     <FormField label="Besked" name="message" type="textarea" required placeholder="Skriv din besked her..." value={formData.message} onChange={handleChange} />
                   </fieldset>
-                  {status === "error" && <p role="alert" className="mt-5! rounded-lg bg-red-50 p-4 text-sm text-red-800!">Beskeden kunne ikke sendes. Dine oplysninger er gemt her i formularen. Prøv igen, eller kontakt os på telefon eller e-mail.</p>}
+                  {status === "error" && <p role="alert" className="reveal-in mt-5! rounded-lg bg-red-50 p-4 text-sm text-red-800!">Beskeden kunne ikke sendes. Dine oplysninger er gemt her i formularen. Prøv igen, eller kontakt os på telefon eller e-mail.</p>}
                   <div className={styles.actions}><button type="submit" disabled={status === "submitting"} className={styles.button}>{status === "submitting" ? "Sender..." : "Send besked"}</button></div>
                 </form>
               )}

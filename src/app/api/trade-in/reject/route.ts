@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { logBuybackEvent } from "@/lib/buyback/events";
-import { pauseAutomation } from "@/lib/buyback/pause";
+import { pauseAutomation, shouldPauseAfterReject } from "@/lib/buyback/pause";
 import { formatDKK } from "@/lib/supabase/trade-in-types";
 import { createServerClient } from "@/lib/supabase/client";
 import { Resend } from "resend";
@@ -56,17 +56,27 @@ export async function POST(req: Request) {
     offerId: offer.id,
   });
 
-  const { data: recentAnswers } = await supabase
-    .from("buyback_events")
-    .select("type")
-    .in("type", ["rejected", "accepted"])
-    .gte("created_at", new Date(Date.now() - 86_400_000).toISOString())
-    .order("created_at", { ascending: false })
-    .limit(3);
+  // Kun automatiske bud tæller. Før talte manuelle afvisninger med, og pausen
+  // blev udløst af manuelle iPad-bud (31/7 og 7/9), selv om motoren aldrig
+  // havde sendt et bud (opkøbsanalyse 10/11-2026).
+  if (offer.auto_sent) {
+    const { data: recentAnswers } = await supabase
+      .from("buyback_events")
+      .select("type, offer_id")
+      .in("type", ["rejected", "accepted"])
+      .gte("created_at", new Date(Date.now() - 86_400_000).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(30);
 
-  const answers = (recentAnswers ?? []) as { type: string }[];
-  if (answers.length === 3 && answers.every((e) => e.type === "rejected")) {
-    await pauseAutomation(supabase, "Tre auto-bud afvist i træk");
+    const events = (recentAnswers ?? []) as { type: string; offer_id: string | null }[];
+    const offerIds = [...new Set(events.map((e) => e.offer_id).filter((id): id is string => Boolean(id)))];
+    const { data: autoOffers } = offerIds.length
+      ? await supabase.from("trade_in_offers").select("id").in("id", offerIds).eq("auto_sent", true)
+      : { data: [] as { id: string }[] };
+    const autoIds = new Set((autoOffers ?? []).map((o) => o.id));
+    if (shouldPauseAfterReject(events, autoIds)) {
+      await pauseAutomation(supabase, "Tre auto-bud afvist i træk");
+    }
   }
 
   // Fetch inquiry and notify admin

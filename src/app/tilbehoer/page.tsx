@@ -3,7 +3,8 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { HubPageClient } from "@/components/tilbehoer/hub-page-client";
 import { CoversSaleBanner } from "@/components/tilbehoer/covers-sale-banner";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Tilbehør til iPhone, iPad og Samsung | PhoneSpot",

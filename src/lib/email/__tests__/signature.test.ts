@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { buildSignature, signatureText, displayPhone } from "@/lib/email/signature";
 
-const company = { company_name: "PhoneSpot", phone: "+45 61 10 00 48", email: "info@phonespot.dk", website: "https://phonespot.dk", cvr: "38688766", trustpilot_url: "https://dk.trustpilot.com/evaluate/phonespot.dk" };
+const company = { company_name: "PhoneSpot", phone: "+45 61 10 00 48", email: "info@phonespot.dk", website: "https://phonespot.dk", cvr: "46079019", trustpilot_url: "https://dk.trustpilot.com/evaluate/phonespot.dk" };
 
 describe("buildSignature", () => {
   it("signs personally when a staff profile is bound to the mailbox", () => {
     const s = buildSignature({ mailbox: "ha@phonespot.dk", staff: { display_name: "Hamza", title: "", phone: "+45 50 45 33 71" }, company });
-    expect(s).toMatchObject({ name: "Hamza", title: null, phone: "+45 61 10 00 48", mobile: "+45 50 45 33 71", email: "ha@phonespot.dk", cvr: "38688766" });
+    expect(s).toMatchObject({ name: "Hamza", title: null, phone: "+45 61 10 00 48", mobile: "+45 50 45 33 71", email: "ha@phonespot.dk", cvr: "46079019" });
   });
 
   it("signs as the store for a store mailbox", () => {
@@ -42,7 +42,7 @@ describe("signatureText", () => {
     expect(t).toContain("Tlf. 61 10 00 48");
     expect(t).toContain("Mobil 50 45 33 71");
     expect(t).toContain("Mail ha@phonespot.dk");
-    expect(t).toContain("CVR 38688766");
+    expect(t).toContain("CVR 46079019");
     expect(t).toContain("Skriv en anmeldelse: https://dk.trustpilot.com/evaluate/phonespot.dk");
     expect(t).not.toMatch(/[\u{1F300}-\u{1FAFF}]/u);
   });

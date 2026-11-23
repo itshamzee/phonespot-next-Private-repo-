@@ -1,91 +1,147 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { posErrorResponse, requirePosStaff, UNAUTHORIZED } from "@/lib/pos/route-helpers";
+import { receiptDraftSchema } from "@/lib/opkoeb/schemas";
+import {
+  assertInquiryLinkable,
+  attestationFor,
+  checkStamps,
+  offerUsedConflict,
+  touchedChecks,
+  draftColumns,
+  itemRows,
+  itemsTotal,
+  loadReceiptForActor,
+  sanitizeReceipt,
+  withStaffNames,
+  type ReceiptRow,
+} from "@/lib/opkoeb/receipt-access";
 
-/* PATCH /api/trade-in/receipts/[id] — update draft receipt */
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const body = await req.json();
-  const { items, ...receiptFields } = body;
+type Ctx = { params: Promise<{ id: string }> };
 
+const LOCKED = () => NextResponse.json({ error: "Slutsedlen er bekræftet og kan ikke rettes" }, { status: 409 });
+
+async function loadWithItems(id: string): Promise<ReceiptRow> {
   const supabase = createServerClient();
-
-  // Check receipt exists and is draft
-  const { data: existing } = await supabase
-    .from("trade_in_receipts")
-    .select("status")
-    .eq("id", id)
-    .single();
-
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.status !== "draft") {
-    return NextResponse.json({ error: "Can only edit draft receipts" }, { status: 400 });
-  }
-
-  // Update receipt fields
-  if (Object.keys(receiptFields).length > 0) {
-    // Recalculate total if items provided
-    if (items && Array.isArray(items)) {
-      receiptFields.total_amount = items.reduce((sum: number, i: { price: number }) => sum + i.price, 0);
-    }
-    const { error } = await supabase
-      .from("trade_in_receipts")
-      .update(receiptFields)
-      .eq("id", id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Replace items if provided
-  if (items && Array.isArray(items)) {
-    // Delete existing items
-    await supabase.from("trade_in_receipt_items").delete().eq("receipt_id", id);
-    // Insert new items
-    const itemRows = items.map((item: any) => ({
-      receipt_id: id,
-      imei_serial: item.imei_serial || null,
-      brand: item.brand,
-      model: item.model,
-      storage: item.storage || null,
-      ram: item.ram || null,
-      condition_grade: item.condition_grade || null,
-      color: item.color || null,
-      condition_notes: item.condition_notes || null,
-      price: item.price,
-    }));
-    await supabase.from("trade_in_receipt_items").insert(itemRows);
-  }
-
-  // Return updated receipt
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("trade_in_receipts")
     .select("*, trade_in_receipt_items(*)")
     .eq("id", id)
     .single();
-
-  return NextResponse.json(data);
+  if (error || !data) throw new Error(error?.message ?? "Failed to load receipt");
+  return data as ReceiptRow;
 }
 
-/* DELETE /api/trade-in/receipts/[id] — delete draft only */
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = createServerClient();
-
-  const { data: existing } = await supabase
-    .from("trade_in_receipts")
-    .select("status")
-    .eq("id", id)
-    .single();
-
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.status !== "draft") {
-    return NextResponse.json({ error: "Can only delete draft receipts" }, { status: 400 });
+/* GET /api/trade-in/receipts/[id] — én seddel med varer; ID-nummer og kontonummer maskeres, når den er låst */
+export async function GET(req: Request, { params }: Ctx) {
+  try {
+    const staff = await requirePosStaff(req);
+    if (!staff) return UNAUTHORIZED();
+    const { id } = await params;
+    await loadReceiptForActor(staff.actor, id);
+    const [named] = await withStaffNames([sanitizeReceipt(await loadWithItems(id), { bankAccount: "draft-only" })], [
+      "created_by",
+      "confirmed_by",
+      "paid_by",
+    ]);
+    return NextResponse.json(named);
+  } catch (err) {
+    return posErrorResponse(err, "Kunne ikke hente slutsedlen");
   }
+}
 
-  await supabase.from("trade_in_receipts").delete().eq("id", id);
-  return NextResponse.json({ success: true });
+/* PATCH /api/trade-in/receipts/[id] — ret en kladde. Sendes items, erstattes varerne helt. */
+export async function PATCH(req: Request, { params }: Ctx) {
+  try {
+    const staff = await requirePosStaff(req);
+    if (!staff) return UNAUTHORIZED();
+    const { actor } = staff;
+    const { id } = await params;
+    const existing = await loadReceiptForActor(actor, id);
+    if (existing.status !== "draft") return LOCKED();
+
+    let raw: unknown;
+    try {
+      raw = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
+    }
+    const parsed = receiptDraftSchema.safeParse(raw);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return NextResponse.json(
+        { error: issue?.message || "Ugyldig forespørgsel", path: issue?.path.join(".") },
+        { status: 400 },
+      );
+    }
+    const { items, ...draft } = parsed.data;
+
+    const fields = draftColumns(draft);
+    // En ny kobling til en henvendelse kræver adgang til den (et uændret felt er tjekket, da det blev sat).
+    if ("inquiry_id" in fields && (fields.inquiry_id ?? null) !== (existing.inquiry_id ?? null)) {
+      await assertInquiryLinkable(actor, fields.inquiry_id);
+    }
+    const total = items ? itemsTotal(items) : (existing.total_amount as number | null) ?? 0;
+    // Kun når tilbud, henvendelse eller total ændres; et almindeligt autogem rører den ikke.
+    const relinked = ["offer_id", "inquiry_id"].some((k) => k in fields && (fields[k] ?? null) !== (existing[k] ?? null));
+    if (relinked || total !== existing.total_amount) {
+      const linked = { ...existing, ...fields };
+      fields.attestation = await attestationFor({
+        offerId: linked.offer_id,
+        inquiryId: linked.inquiry_id,
+        receiptId: id,
+        totalOere: total,
+      });
+    }
+    const merged = { ...existing, ...fields };
+    const update: Record<string, unknown> = {
+      ...fields,
+      ...checkStamps(merged, existing, actor.id, new Date().toISOString(), touchedChecks(fields, existing)),
+    };
+    if (items) update.total_amount = total;
+
+    const supabase = createServerClient();
+    if (Object.keys(update).length > 0) {
+      const { data: updated, error } = await supabase
+        .from("trade_in_receipts")
+        .update(update)
+        .eq("id", id)
+        .eq("status", "draft")
+        .select("id");
+      if (error) throw offerUsedConflict(error) ?? new Error(error.message);
+      // Bekræftet imellem tjekket og skrivningen: rør ikke varerne.
+      if (!updated || updated.length === 0) return LOCKED();
+    }
+
+    if (items) {
+      const { error: delErr } = await supabase.from("trade_in_receipt_items").delete().eq("receipt_id", id);
+      if (delErr) throw new Error(delErr.message);
+      if (items.length > 0) {
+        const { error: insErr } = await supabase.from("trade_in_receipt_items").insert(itemRows(id, items));
+        if (insErr) throw new Error(insErr.message);
+      }
+    }
+
+    return NextResponse.json(sanitizeReceipt(await loadWithItems(id), { bankAccount: "draft-only" }));
+  } catch (err) {
+    return posErrorResponse(err, "Kunne ikke rette kladden");
+  }
+}
+
+/* DELETE /api/trade-in/receipts/[id] — kun kladder */
+export async function DELETE(req: Request, { params }: Ctx) {
+  try {
+    const staff = await requirePosStaff(req);
+    if (!staff) return UNAUTHORIZED();
+    const { id } = await params;
+    const existing = await loadReceiptForActor(staff.actor, id);
+    if (existing.status !== "draft") return LOCKED();
+
+    const supabase = createServerClient();
+    const { error } = await supabase.from("trade_in_receipts").delete().eq("id", id).eq("status", "draft");
+    if (error) throw new Error(error.message);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return posErrorResponse(err, "Kunne ikke slette kladden");
+  }
 }

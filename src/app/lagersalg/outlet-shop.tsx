@@ -458,7 +458,7 @@ function Hero({
                   <ul
                     id="outlet-suggestions"
                     role="listbox"
-                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[8px] border border-[#d1ded4] bg-white text-charcoal shadow-[0_16px_32px_-16px_rgba(26,61,46,0.35)]"
+                    className="absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-[8px] border border-[#d1ded4] bg-white text-charcoal shadow-floating"
                   >
                     {matches.length ? (
                       matches.map((m, i) => (
@@ -734,7 +734,7 @@ function FilterDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="outlet-drawer-title"
-        className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-[16px] bg-white shadow-2xl"
+        className="absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col rounded-t-[16px] bg-white shadow-overlay"
       >
         <div className="flex items-center justify-between border-b border-sand px-4 py-3">
           <h2 id="outlet-drawer-title" className="text-[17px] font-semibold text-charcoal">

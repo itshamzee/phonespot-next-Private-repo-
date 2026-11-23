@@ -55,13 +55,14 @@ const kr = (n: number) => `${n.toLocaleString("da-DK")} kr.`;
 export function MegaNav({ menu, panelClassName, campaign = false }: { menu: MegaMenu | null; panelClassName: string; campaign?: boolean }) {
   const pathname = usePathname();
   // Åbent panel hører til den side, det blev åbnet på; et sideskift lukker det.
-  const [openState, setOpenState] = useState<{ path: string; href: string } | null>(null);
+  // `switched`: panelet afløste et andet åbent panel og vises uden animation.
+  const [openState, setOpenState] = useState<{ path: string; href: string; switched?: boolean } | null>(null);
   const open = openState?.path === pathname ? openState.href : null;
   const setOpen = (next: string | null | ((o: string | null) => string | null)) =>
     setOpenState((prev) => {
       const current = prev?.path === pathname ? prev.href : null;
       const value = typeof next === "function" ? next(current) : next;
-      return value ? { path: pathname, href: value } : null;
+      return value ? { path: pathname, href: value, switched: current != null } : null;
     });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const canHover = useRef(false);
@@ -133,7 +134,7 @@ export function MegaNav({ menu, panelClassName, campaign = false }: { menu: Mega
               {item.label}
             </Link>
             {isOpen && panel && (
-              <div className={panelClassName}>
+              <div className={openState?.switched ? panelClassName : `${panelClassName} mega-enter`}>
                 <PanelBody panel={panel} onNavigate={() => setOpen(null)} />
               </div>
             )}

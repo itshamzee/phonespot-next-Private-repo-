@@ -85,14 +85,16 @@ export async function POST(request: Request) {
     coverageLine,
   ].join("\n");
 
-  // Reuse the existing contact_inquiries table. email is NOT NULL, so store the
-  // e-mail there when given and keep the phone in the phone column otherwise.
+  // Reuse the existing contact_inquiries table. email is nullable, so store the
+  // e-mail there (trimmed, lower-cased) when given and keep the phone in the phone column otherwise.
   // TODO: move insurance leads to a dedicated insurance_leads table if volume
   // grows and we want structured fields (device, chosen coverage, etc.).
   const supabase = createServerClient();
   await supabase.from("contact_inquiries").insert({
     name: navn || "Forsikringslead",
-    email: kontaktIsEmail ? kontakt : "",
+    email: kontaktIsEmail ? kontakt.trim().toLowerCase() || null : null,
+    channel: "form",
+    last_inbound_at: new Date().toISOString(),
     phone: kontaktIsEmail ? null : kontakt,
     subject: "Elektronikforsikring — interesse",
     message,

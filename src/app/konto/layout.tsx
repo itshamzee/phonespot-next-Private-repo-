@@ -139,7 +139,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <div className="mx-auto max-w-sm px-4 py-20">
-        <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[#E5E5EA] bg-white p-8 shadow-rest">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F2EC]">
               <svg className="h-6 w-6 text-[#1A3D2E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -163,7 +163,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm text-[#111111] placeholder-[#AEAEB2] transition focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+                className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-base sm:text-sm text-[#111111] placeholder-[#AEAEB2] transition focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
                 placeholder="din@email.dk"
               />
             </div>
@@ -183,17 +183,17 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-sm text-[#111111] transition focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
+                className="mt-1.5 w-full rounded-lg border border-[#E5E5EA] bg-white px-4 py-2.5 text-base sm:text-sm text-[#111111] transition focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10"
                 placeholder="••••••••"
               />
             </div>
             {loginError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700">{loginError}</p>
+              <p className="reveal-in rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700">{loginError}</p>
             )}
             <button
               type="submit"
               disabled={loggingIn}
-              className="w-full rounded-lg bg-[#1A3D2E] py-2.5 text-sm font-semibold text-white transition hover:bg-[#143324] disabled:opacity-50"
+              className="press w-full rounded-lg bg-[#1A3D2E] py-2.5 text-sm font-semibold text-white hover:bg-[#143324] disabled:opacity-50"
             >
               {loggingIn ? "Logger ind..." : "Log ind"}
             </button>
@@ -230,10 +230,10 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       {mobileNavOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="backdrop-enter absolute inset-0 bg-black/40"
             onClick={() => setMobileNavOpen(false)}
           />
-          <div className="relative z-10 flex w-72 flex-col bg-white shadow-xl">
+          <div className="drawer-enter-left relative z-10 flex w-72 flex-col bg-white shadow-overlay">
             <div className="flex items-center justify-between border-b border-[#E5E5EA] px-5 py-4">
               <span className="font-semibold text-[#1A3D2E]">Min konto</span>
               <button
@@ -287,7 +287,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       <div className="mx-auto max-w-6xl px-4 py-8 lg:flex lg:gap-8">
         {/* Desktop sidebar */}
         <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-8 rounded-2xl border border-[#E5E5EA] bg-white shadow-sm">
+          <div className="sticky top-8 rounded-2xl border border-[#E5E5EA] bg-white shadow-rest">
             {/* User info */}
             <div className="border-b border-[#E5E5EA] px-5 py-4">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1A3D2E]">

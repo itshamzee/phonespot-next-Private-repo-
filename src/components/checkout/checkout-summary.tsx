@@ -1,15 +1,20 @@
 "use client";
 
+import { gradeDisplayLabel } from "@/lib/grades";
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal } from "@/lib/cart/utils";
 import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 
 export function CheckoutSummary() {
   const { cartState, totals } = useCart();
 
   const { items, discount } = cartState;
   const { subtotal, discountAmount, bundleDiscountAmount, shippingCost, total } = totals;
+  // Fragt og total toner kort ind, når kunden skifter levering eller rabat.
+  const shippingChanged = useHasChanged(shippingCost);
+  const totalChanged = useHasChanged(total);
 
   return (
     <div className="rounded-2xl border border-sand bg-cream p-6 space-y-5">
@@ -69,7 +74,7 @@ export function CheckoutSummary() {
 
                   {item.type === "device" && (
                     <p className="text-xs text-gray">
-                      {[`Stand ${item.grade}`, item.color, item.storage].filter(Boolean).join(" · ")}
+                      {[gradeDisplayLabel(item.grade), item.color, item.storage].filter(Boolean).join(" · ")}
                     </p>
                   )}
 
@@ -122,12 +127,12 @@ export function CheckoutSummary() {
 
         <div className="flex items-center justify-between text-gray">
           <span>Fragt</span>
-          <span>{shippingCost === 0 ? "Gratis" : formatOere(shippingCost)}</span>
+          <span key={shippingCost} className={shippingChanged ? "value-change" : undefined}>{shippingCost === 0 ? "Gratis" : formatOere(shippingCost)}</span>
         </div>
 
         <div className="flex items-center justify-between border-t border-sand pt-2 text-base font-bold text-charcoal">
           <span>I alt</span>
-          <span>{formatOere(total)}</span>
+          <span key={total} className={totalChanged ? "value-change" : undefined}>{formatOere(total)}</span>
         </div>
       </div>
     </div>

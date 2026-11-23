@@ -11,6 +11,7 @@ import type { CustomerInfo } from "@/lib/checkout/order";
 import { createServerClient } from "@/lib/supabase/client";
 import { getShippingPrice, getShippingOption, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import type { ShippingMethod as ShippingMethodId } from "@/lib/shipmondo/types";
+import { clientIpFromHeaders, metaCheckoutMetadata } from "@/lib/tracking/meta-capi";
 
 // Prices come from lib/shipping, which is also what the checkout page renders.
 // They were listed here as well, so the price shown and the price charged were
@@ -29,6 +30,8 @@ interface CheckoutSessionRequest {
     city: string;
     carrier_code: string;
   };
+  /** true når kunden har accepteret marketing-cookies (styrer Meta CAPI). */
+  marketingConsent?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -173,6 +176,13 @@ export async function POST(req: NextRequest) {
       discountAmount,
       bundleDiscountAmount,
       total,
+      trackingMetadata: metaCheckoutMetadata({
+        consent: body.marketingConsent === true,
+        fbp: req.cookies.get("_fbp")?.value,
+        fbc: req.cookies.get("_fbc")?.value,
+        clientIp: clientIpFromHeaders(req.headers),
+        userAgent: req.headers.get("user-agent"),
+      }),
     };
     const isPickup = shippingMethod.startsWith("pickup_") || shippingMethod.startsWith("click_collect_");
     const checkoutSession = provider === "frisbii"

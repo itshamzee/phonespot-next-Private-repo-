@@ -36,7 +36,7 @@ export function MobileContactBar({ phone, bookingHref, storeName }: Props) {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E5EA] bg-white/95 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E5EA] bg-white/95 backdrop-blur shadow-floating-up md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       role="region"
       aria-label={`Kontakt ${storeName}`}
@@ -44,13 +44,13 @@ export function MobileContactBar({ phone, bookingHref, storeName }: Props) {
       <div className="mx-auto flex h-14 max-w-4xl items-center gap-3 px-4">
         <a
           href={`tel:${phone.replace(/\s/g, "")}`}
-          className="flex h-10 flex-1 items-center justify-center rounded-full border border-[#1A3D2E] text-sm font-bold text-[#1A3D2E]"
+          className="press flex h-10 flex-1 items-center justify-center rounded-full border border-[#1A3D2E] text-sm font-bold text-[#1A3D2E]"
         >
           Ring
         </a>
         <Link
           href={bookingHref}
-          className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#1A3D2E] text-sm font-bold text-white"
+          className="press flex h-10 flex-1 items-center justify-center rounded-full bg-[#1A3D2E] text-sm font-bold text-white"
         >
           Book tid
         </Link>

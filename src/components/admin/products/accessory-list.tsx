@@ -7,6 +7,7 @@ import { ACCESSORY_SUBCATEGORIES } from "@/lib/admin/products/attributes";
 import { ACCESSORY_CATEGORY_TO_SLUG, TILBEHOER_DEVICES } from "@/lib/tilbehoer-config";
 import { Button, DataTable, Input, Notice, PageHeader, Pagination, Segmented, Select, Tag, type Column } from "@/components/admin/ui";
 import { formatOere } from "./create/money";
+import { BulkEditBar, type BulkChangeInput } from "./bulk-edit-bar";
 
 interface Row {
   id: string;
@@ -56,6 +57,12 @@ export function AccessoryList() {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Row | null>(null);
+  // Masseændring: afkrydsede rækker, eller "alle der matcher filtrene".
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [allMatching, setAllMatching] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkResult, setBulkResult] = useState<{ updated: number; failed: number; skipped: { id: string; title: string; reason: string }[] } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => { setQuery(search.trim()); setPage(1); }, 300);
@@ -89,6 +96,71 @@ export function AccessoryList() {
   }, [page, query, subcategory, brand, status, stock]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Et nyt filter giver en ny liste; et gammelt valg må ikke hænge ved usynligt.
+  useEffect(() => {
+    setSelected(new Set());
+    setAllMatching(false);
+  }, [query, subcategory, brand, status, stock]);
+
+  function toggle(id: string) {
+    setAllMatching(false);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const pageAllSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+
+  function togglePage() {
+    setAllMatching(false);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const r of rows) {
+        if (pageAllSelected) next.delete(r.id);
+        else next.add(r.id);
+      }
+      return next;
+    });
+  }
+
+  function closeBulk() {
+    setBulkMode(false);
+    setSelected(new Set());
+    setAllMatching(false);
+  }
+
+  async function applyBulk(change: BulkChangeInput) {
+    setBulkBusy(true);
+    setError(null);
+    setBulkResult(null);
+    try {
+      const filter: Record<string, string> = {};
+      if (query) filter.search = query;
+      if (subcategory) filter.subcategory = subcategory;
+      if (brand) filter.brand = brand;
+      if (status) filter.status = status;
+      if (stock) filter.stock = stock;
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "accessory", ...(allMatching ? { filter } : { ids: [...selected] }), change }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data?.error ?? "Ændringen blev ikke gemt."); return; }
+      setBulkResult({ updated: data.updated ?? 0, failed: data.failed ?? 0, skipped: data.skipped ?? [] });
+      setSelected(new Set());
+      setAllMatching(false);
+      await load();
+    } catch {
+      setError("Ingen forbindelse. Prøv igen.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   async function patch(row: Row, body: Record<string, unknown>, failText: string) {
     setBusyId(row.id);
@@ -134,6 +206,25 @@ export function AccessoryList() {
   }
 
   const columns = useMemo<Column<Row>[]>(() => [
+    ...(bulkMode
+      ? [{
+          key: "select",
+          header: (
+            <input type="checkbox" aria-label="Vælg alle på siden" className="h-4 w-4 cursor-pointer accent-[#1A3D2E]" checked={allMatching || pageAllSelected} onChange={togglePage} />
+          ),
+          className: "w-8",
+          render: (r: Row) => (
+            <input
+              type="checkbox"
+              aria-label={`Vælg ${r.title}`}
+              className="h-4 w-4 cursor-pointer accent-[#1A3D2E]"
+              checked={allMatching || selected.has(r.id)}
+              onClick={(e) => e.stopPropagation()}
+              onChange={() => toggle(r.id)}
+            />
+          ),
+        } satisfies Column<Row>]
+      : []),
     {
       key: "product",
       header: "Produkt",
@@ -227,7 +318,7 @@ export function AccessoryList() {
         </div>
       ),
     },
-  ], [busyId]); // eslint-disable-line react-hooks/exhaustive-deps
+  ], [busyId, bulkMode, selected, allMatching, pageAllSelected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mx-auto max-w-[1200px]">
@@ -235,7 +326,10 @@ export function AccessoryList() {
         title="Tilbehør"
         description="Alt tilbehør på webshoppen og i butikkerne. Klik på en række for at rette."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant={bulkMode ? "primary" : "secondary"} aria-pressed={bulkMode} onClick={() => (bulkMode ? closeBulk() : setBulkMode(true))}>
+              Masseændring
+            </Button>
             <Link href="/admin/produkter/kasser" className="inline-flex h-10 items-center rounded-lg border border-sand bg-white px-4 text-[14px] font-medium text-charcoal hover:bg-cream">
               Kasser
             </Link>
@@ -284,6 +378,38 @@ export function AccessoryList() {
 
       {error && <div className="mb-4"><Notice tone="danger" action={<Button size="sm" onClick={() => void load()}>Prøv igen</Button>}>{error}</Notice></div>}
 
+      {bulkResult && (
+        <div className="mb-4">
+          <Notice
+            tone={bulkResult.failed > 0 || (bulkResult.updated === 0 && bulkResult.skipped.length > 0) ? "warning" : "success"}
+            title={`${bulkResult.updated === 1 ? "1 produkt" : `${bulkResult.updated} produkter`} ændret${bulkResult.skipped.length ? `, ${bulkResult.skipped.length} sprunget over` : ""}${bulkResult.failed ? `, ${bulkResult.failed} fejlede` : ""}`}
+            action={<Button size="sm" onClick={() => setBulkResult(null)}>Luk</Button>}
+          >
+            {bulkResult.skipped.length > 0 && (
+              <ul className="mt-1 space-y-0.5 text-[13px]">
+                {bulkResult.skipped.slice(0, 5).map((s) => <li key={s.id}>{s.title}: {s.reason}</li>)}
+                {bulkResult.skipped.length > 5 && <li>… og {bulkResult.skipped.length - 5} mere</li>}
+              </ul>
+            )}
+            {bulkResult.failed > 0 && <p className="text-[13px]">Prøv igen på dem, der fejlede.</p>}
+          </Notice>
+        </div>
+      )}
+
+      {bulkMode && (
+        <BulkEditBar
+          count={allMatching ? total : selected.size}
+          pageCount={rows.length}
+          total={total}
+          allMatching={allMatching}
+          busy={bulkBusy}
+          onSelectAllMatching={() => setAllMatching(true)}
+          onClear={() => { setSelected(new Set()); setAllMatching(false); }}
+          onClose={closeBulk}
+          onApply={applyBulk}
+        />
+      )}
+
       {confirmDelete && (
         <div className="mb-4">
           <Notice
@@ -306,7 +432,7 @@ export function AccessoryList() {
         rows={rows}
         rowKey={(r) => r.id}
         loading={loading}
-        onRowClick={openEdit}
+        onRowClick={bulkMode ? (r) => toggle(r.id) : openEdit}
         empty={{
           title: query || subcategory || brand || status || stock ? "Ingen produkter matcher" : "Intet tilbehør endnu",
           description: query || subcategory || brand || status || stock ? "Prøv at fjerne et filter." : "Opret det første, så er det på webshoppen med det samme.",

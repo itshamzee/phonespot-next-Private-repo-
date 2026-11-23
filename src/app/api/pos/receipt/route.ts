@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { renderReceiptPdf } from "@/lib/pos/receipt-data";
-import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 import { uuidSchema } from "@/lib/pos/schemas";
 
 /**
@@ -10,8 +9,8 @@ import { uuidSchema } from "@/lib/pos/schemas";
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
 
     const orderId = new URL(request.url).searchParams.get("order_id");
     if (!orderId || !uuidSchema.safeParse(orderId).success) {

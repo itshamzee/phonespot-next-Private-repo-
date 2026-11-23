@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SCOPE_LABELS, SCOPE_SLUGS, type ScopeSlug } from "@/lib/auth/store-scope";
+import { SCOPE_LABELS, type ScopeSlug } from "@/lib/auth/store-scope";
+import { STOCK_VIEW_SLUGS } from "@/lib/stock/rules";
 import { parseDKKToOere } from "@/lib/platform/format";
 import { postJson } from "@/lib/transfers/client";
 import { Modal } from "./modal";
@@ -131,7 +132,7 @@ export function GoodsReceiptDialog({
                 onChange={(e) => setLocation(e.target.value as ScopeSlug)}
                 className="h-10 rounded-lg border border-[#C9D0C7] bg-white px-3 disabled:bg-[#F5F6F4]"
               >
-                {SCOPE_SLUGS.map((s) => (
+                {STOCK_VIEW_SLUGS.map((s) => (
                   <option key={s} value={s}>
                     {SCOPE_LABELS[s]}
                   </option>

@@ -43,8 +43,8 @@ const QUICK_PRICES = [
 ] as const;
 
 const GRADES: { grade: Grade; label: string; description: string }[] = [
-  { grade: "A", label: "Stand A", description: "Meget flot" },
-  { grade: "B", label: "Stand B", description: "Almindelige brugsspor" },
+  { grade: "A", label: "Stand A", description: "Som ny" },
+  { grade: "B", label: "Stand B", description: "God stand, lette brugsspor" },
   { grade: "C", label: "Stand C", description: "Tydelige brugsspor" },
 ];
 
@@ -356,12 +356,12 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
 
         {isLaptop && options.screens.length > 0 && <div>
           <SectionButton label="Skærmstørrelse" open={openSections.screen} controls={section("screen")} onClick={() => toggleSection("screen")} />
-          {openSections.screen && <div id={section("screen")} className="flex flex-wrap gap-2 pb-4">{options.screens.map((value) => <button type="button" key={value} aria-pressed={filters.screenSizes.has(value)} onClick={() => toggleSet("screenSizes", value, !filters.screenSizes.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+          {openSections.screen && <div id={section("screen")} className="flex flex-wrap gap-2 pb-4">{options.screens.map((value) => <button type="button" key={value} aria-pressed={filters.screenSizes.has(value)} onClick={() => toggleSet("screenSizes", value, !filters.screenSizes.has(value))} className="press rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
         </div>}
 
         {isLaptop && options.ram.length > 0 && <div>
           <SectionButton label="RAM" open={openSections.ram} controls={section("ram")} onClick={() => toggleSection("ram")} />
-          {openSections.ram && <div id={section("ram")} className="flex flex-wrap gap-2 pb-4">{options.ram.map((value) => <button type="button" key={value} aria-pressed={filters.ramOptions.has(value)} onClick={() => toggleSet("ramOptions", value, !filters.ramOptions.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+          {openSections.ram && <div id={section("ram")} className="flex flex-wrap gap-2 pb-4">{options.ram.map((value) => <button type="button" key={value} aria-pressed={filters.ramOptions.has(value)} onClick={() => toggleSet("ramOptions", value, !filters.ramOptions.has(value))} className="press rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
         </div>}
 
         {isLaptop && options.processors.length > 0 && <div>
@@ -372,7 +372,7 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
         <div>
           <SectionButton label="Pris" open={openSections.price} controls={section("price")} onClick={() => toggleSection("price")} />
           {openSections.price && <div id={section("price")} className="space-y-3 pb-4">
-            <div className="flex flex-wrap gap-1.5">{QUICK_PRICES.map((price) => <button type="button" key={price.label} onClick={() => setFilters((current) => ({ ...current, priceMin: price.min, priceMax: price.max }))} className="rounded-md border border-[#DDE2DD] px-2.5 py-2 text-xs">{price.label}</button>)}</div>
+            <div className="flex flex-wrap gap-1.5">{QUICK_PRICES.map((price) => <button type="button" key={price.label} onClick={() => setFilters((current) => ({ ...current, priceMin: price.min, priceMax: price.max }))} className="press rounded-md border border-[#DDE2DD] px-2.5 py-2 text-xs">{price.label}</button>)}</div>
             <div className="grid grid-cols-2 gap-2">
               <label className="text-xs text-[#687069]">Minimumspris<input aria-label="Minimumspris" inputMode="numeric" value={filters.priceMin} onChange={(event) => setFilters((current) => ({ ...current, priceMin: event.target.value }))} className="mt-1 w-full rounded-md border border-[#DDE2DD] px-3 py-2 text-sm text-[#202421]" /></label>
               <label className="text-xs text-[#687069]">Maksimumspris<input aria-label="Maksimumspris" inputMode="numeric" value={filters.priceMax} onChange={(event) => setFilters((current) => ({ ...current, priceMax: event.target.value }))} className="mt-1 w-full rounded-md border border-[#DDE2DD] px-3 py-2 text-sm text-[#202421]" /></label>
@@ -387,7 +387,7 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
 
         {options.storage.length > 0 && <div>
           <SectionButton label="Lagerplads" open={openSections.storage} controls={section("storage")} onClick={() => toggleSection("storage")} />
-          {openSections.storage && <div id={section("storage")} className="flex flex-wrap gap-2 pb-4">{options.storage.map((value) => <button type="button" key={value} aria-pressed={filters.storageOptions.has(value)} onClick={() => toggleSet("storageOptions", value, !filters.storageOptions.has(value))} className="rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
+          {openSections.storage && <div id={section("storage")} className="flex flex-wrap gap-2 pb-4">{options.storage.map((value) => <button type="button" key={value} aria-pressed={filters.storageOptions.has(value)} onClick={() => toggleSet("storageOptions", value, !filters.storageOptions.has(value))} className="press rounded-md border border-[#DDE2DD] px-3 py-2 text-xs aria-pressed:border-[#1A3D2E] aria-pressed:bg-[#1A3D2E] aria-pressed:text-white">{value}</button>)}</div>}
         </div>}
 
         <div>
@@ -402,10 +402,10 @@ export function CategoryFilters({ templates, onFilter, resultCount, heading, ini
 
   const resultLabel = `${resultCount} ${resultCount === 1 ? "model" : "modeller"}`;
   return <>
-    <div className="sticky top-0 z-30 col-span-full -mx-4 flex items-center justify-between gap-3 border-y border-[#DDE2DD] bg-white px-4 py-3 lg:hidden"><div><p className="text-sm font-semibold text-[#202421]">{resultLabel}</p>{heading && <p className="text-xs text-[#687069]">{heading}</p>}</div><button ref={triggerRef} type="button" aria-label={activeCount ? `Filtre, ${activeCount} valgt` : "Filtre"} aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="mr-14 min-h-11 rounded-md border border-[#BFC8C0] bg-white px-4 text-sm font-semibold text-[#1A3D2E]">Filtre{activeCount > 0 ? ` (${activeCount})` : ""}</button></div>
+    <div className="sticky top-0 z-30 col-span-full -mx-4 flex items-center justify-between gap-3 border-y border-[#DDE2DD] bg-white px-4 py-3 lg:hidden"><div><p className="text-sm font-semibold text-[#202421]">{resultLabel}</p>{heading && <p className="text-xs text-[#687069]">{heading}</p>}</div><button ref={triggerRef} type="button" aria-label={activeCount ? `Filtre, ${activeCount} valgt` : "Filtre"} aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="press mr-14 min-h-11 rounded-md border border-[#BFC8C0] bg-white px-4 text-sm font-semibold text-[#1A3D2E]">Filtre{activeCount > 0 ? ` (${activeCount})` : ""}</button></div>
 
     <aside aria-label="Produktfiltre" className="hidden w-64 shrink-0 lg:block"><div className="sticky top-4 border-t border-[#1A3D2E] py-1"><div className="flex items-center justify-between border-b border-[#DDE2DD] py-3"><h2 className="text-sm font-semibold text-[#202421]">Filtre</h2>{activeCount > 0 && <button type="button" onClick={reset} className="text-xs font-semibold text-[#1A3D2E]">Ryd filtre</button>}</div>{panel("desktop")}</div></aside>
 
-    {drawerOpen && <div ref={layerRef} className="contents"><button type="button" tabIndex={-1} aria-label="Luk filtre" onClick={closeDrawer} className="fixed inset-0 z-40 bg-black/45" /><div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Produktfiltre" className="fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl bg-white shadow-2xl lg:hidden"><div className="flex items-center justify-between border-b border-[#DDE2DD] px-5 py-4"><div><h2 className="text-base font-semibold text-[#202421]">Filtre</h2><p className="text-xs text-[#687069]">{resultLabel}</p></div><button ref={closeRef} type="button" onClick={closeDrawer} aria-label="Luk filtre" className="min-h-11 min-w-11 text-2xl text-[#1A3D2E]">×</button></div><div className="overflow-y-auto px-5">{panel("mobile")}</div><div className="border-t border-[#DDE2DD] p-4"><button type="button" onClick={closeDrawer} className="min-h-11 w-full rounded-md bg-[#1A3D2E] px-4 text-sm font-semibold text-white">Vis {resultLabel}</button></div></div></div>}
+    {drawerOpen && <div ref={layerRef} className="contents"><button type="button" tabIndex={-1} aria-label="Luk filtre" onClick={closeDrawer} className="backdrop-enter fixed inset-0 z-40 bg-black/45" /><div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Produktfiltre" className="sheet-enter fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-2xl bg-white shadow-overlay lg:hidden"><div className="flex items-center justify-between border-b border-[#DDE2DD] px-5 py-4"><div><h2 className="text-base font-semibold text-[#202421]">Filtre</h2><p className="text-xs text-[#687069]">{resultLabel}</p></div><button ref={closeRef} type="button" onClick={closeDrawer} aria-label="Luk filtre" className="min-h-11 min-w-11 text-2xl text-[#1A3D2E]">×</button></div><div className="overflow-y-auto px-5">{panel("mobile")}</div><div className="border-t border-[#DDE2DD] p-4"><button type="button" onClick={closeDrawer} className="press min-h-11 w-full rounded-md bg-[#1A3D2E] px-4 text-sm font-semibold text-white">Vis {resultLabel}</button></div></div></div>}
   </>;
 }

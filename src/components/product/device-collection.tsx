@@ -1,5 +1,3 @@
-import { BlackNovemberStrip } from "@/components/campaign/black-november";
-import { isBlackNovember } from "@/lib/campaign/black-november";
 import Link from "next/link";
 import Image from "next/image";
 import { ConditionExplainer } from "@/components/product/condition-explainer";
@@ -20,6 +18,8 @@ interface CollectionDetailsProps {
   choices: { title: string; body: string }[];
   faqs: CollectionFaq[];
   serviceLink?: { href: string; label: string; body: string };
+  /** Lokale købssider for kategorien, fx "Brugte iPhones i Vejle". */
+  localLinks?: { href: string; label: string }[];
 }
 
 interface DeviceCollectionProps extends CollectionDetailsProps {
@@ -38,6 +38,7 @@ export function DeviceCollectionDetails({
   choices,
   faqs,
   serviceLink,
+  localLinks,
   deviceType = "phone",
 }: CollectionDetailsProps) {
   return (
@@ -81,6 +82,7 @@ export function DeviceCollectionDetails({
               <div className="mt-7 divide-y divide-white/20 border-y border-white/20">
                 <Link href="/butik/vejle" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Vejle <span aria-hidden="true">&rarr;</span></Link>
                 <Link href="/butik/slagelse" className="flex min-h-12 items-center justify-between text-sm font-semibold">PhoneSpot Slagelse <span aria-hidden="true">&rarr;</span></Link>
+                {localLinks?.map((link) => <Link key={link.href} href={link.href} className="flex min-h-12 items-center justify-between text-sm font-semibold">{link.label} <span aria-hidden="true">&rarr;</span></Link>)}
               </div>
               {serviceLink && <div className="mt-7 border-t border-white/20 pt-6"><p className="text-sm leading-6 text-white/75">{serviceLink.body}</p><Link href={serviceLink.href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold">{serviceLink.label} <span aria-hidden="true">&rarr;</span></Link></div>}
             </aside>
@@ -91,7 +93,7 @@ export function DeviceCollectionDetails({
       <section data-collection-section="faq" className="border-t border-[#DDE2DD] bg-[#F4F5F2] py-12 sm:py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 lg:grid-cols-[minmax(14rem,0.7fr)_minmax(0,1.3fr)]">
           <div><p className="text-xs font-semibold text-[#1A3D2E]">Spørgsmål og svar</p><h2 className="mt-2 font-body text-3xl font-semibold tracking-[-0.035em] text-[#202421]">{faqTitle}</h2></div>
-          <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] group-open:rotate-45">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
+          <div className="border-t border-[#BFC8C0]">{faqs.map((item) => <details key={item.question} className="group border-b border-[#BFC8C0]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-sm font-semibold text-[#202421]">{item.question}<span aria-hidden="true" className="text-xl font-normal text-[#1A3D2E] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-open:rotate-45 motion-reduce:transition-none">+</span></summary><p className="max-w-2xl pb-5 text-sm leading-6 text-[#566159]">{item.answer}</p></details>)}</div>
         </div>
       </section>
     </>
@@ -110,6 +112,7 @@ export function DeviceCollection({
   faqs,
   initialBrand,
   serviceLink,
+  localLinks,
   deviceType = "phone",
   collection = deviceType === "phone" ? "iphone" : deviceType,
 }: DeviceCollectionProps) {
@@ -125,7 +128,6 @@ export function DeviceCollection({
 
       <section id="udvalg" className={styles.products} aria-label={collectionHeading}>
         <div className={styles.wrap}>
-          <BlackNovemberStrip kind="devices" serverActive={isBlackNovember()} />
           <FilteredGrid templates={templates} heading={collectionHeading} initialBrand={initialBrand} promos={promos} />
         </div>
       </section>
@@ -138,6 +140,7 @@ export function DeviceCollection({
         choices={choices}
         faqs={faqs}
         serviceLink={serviceLink}
+        localLinks={localLinks}
       />
     </div>
   );

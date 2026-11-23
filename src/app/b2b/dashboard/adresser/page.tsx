@@ -319,7 +319,7 @@ export default function AdresserPage() {
           {addresses.map((addr) => (
             <div
               key={addr.id}
-              className={`relative rounded-xl border bg-white p-5 transition-shadow hover:shadow-md ${
+              className={`relative rounded-xl border bg-white p-5 card-raise ${
                 addr.isDefault
                   ? "border-[#1A3D2E]/30 ring-1 ring-[#1A3D2E]/20"
                   : "border-[#E5E5EA]"

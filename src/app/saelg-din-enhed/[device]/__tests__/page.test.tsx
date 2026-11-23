@@ -76,7 +76,7 @@ describe("Enhedssider under /saelg-din-enhed/[device]", () => {
     for (const slug of SLUGS) {
       const { container, unmount } = render(await Page(params(slug)));
       const text = container.textContent ?? "";
-      expect(text).toContain("Udbetaling inden 2 hverdage, og gratis retur hvis du afviser");
+      expect(text).toContain("Pengene samme dag, som vi modtager enheden, og gratis retur hvis du afviser");
       expect(text).not.toMatch(/\d[\d.]*\s*(kr\b|kroner)/i);
       expect(text).not.toMatch(/med det samme|øjeblikkelig|automatisk (pris|tilbud)/i);
       unmount();

@@ -21,6 +21,8 @@ const SERVICE_LINKS = [
   { label: "Reparation", href: "/reparation" },
   { label: "Reparation Vejle", href: "/reparation-vejle" },
   { label: "Reparation Slagelse", href: "/reparation-slagelse" },
+  { label: "Brugte iPhones i Vejle", href: "/iphones-vejle" },
+  { label: "Brugte iPhones i Slagelse", href: "/iphones-slagelse" },
   { label: "Erhverv", href: "/erhverv" },
   { label: "Reklamation", href: "/reklamation" },
   { label: "Kontakt", href: "/kontakt" },
@@ -94,7 +96,7 @@ export function Footer() {
           </div>
         </div>
         <div className={styles.bottom}>
-          <p>© {new Date().getFullYear()} PhoneSpot ApS · CVR: 38688766</p>
+          <p>© {new Date().getFullYear()} Fixon ApS · CVR: 46079019</p>
           <nav aria-label="Vilkår og privatliv">{LEGAL_LINKS.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}<CookieSettingsButton /></nav>
         </div>
       </div>

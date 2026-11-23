@@ -70,7 +70,7 @@ function HeroInner({ title, description, productCount, headingLevel: Heading = "
       <div className="relative mx-auto max-w-[1280px] px-5 sm:px-9 py-6 md:py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           {/* Left: title + description */}
-          <div className="max-w-xl">
+          <div className="hero-rise max-w-xl">
             <Heading className="font-body text-3xl font-bold tracking-tight text-charcoal md:text-4xl">
               {title}
             </Heading>

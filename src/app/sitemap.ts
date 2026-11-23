@@ -9,6 +9,7 @@ import { CAMPAIGN_OFFERS } from "@/app/black-november/[tilbud]/offers";
 import { IPHONE_SELL_PAGES } from "@/app/saelg-din-enhed/iphone/[model]/models";
 import { SELL_MODEL_PAGES } from "@/app/saelg-din-enhed/[device]/[model]/models";
 import { NEW_CATEGORY_PAGES } from "@/app/saelg-din-enhed/[device]/new-categories";
+import { getAllLocalServicePages } from "@/lib/local-service-pages";
 import { COMPARISONS } from "@/lib/comparisons";
 import { getActiveBrands, getAllModelSlugs } from "@/lib/supabase/repairs";
 import { SPOT_HUB_TILES, TILBEHOER_DEVICES, PUBLIC_TILBEHOER_DEVICES, accessoryProductPath } from "@/lib/tilbehoer-config";
@@ -308,6 +309,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
+    // Lokale ydelsessider (iPad, konsol, computer pr. by), 2026-11-10.
+    ...getAllLocalServicePages().map((page) => ({
+      url: `${BASE_URL}${page.path}`,
+      lastModified: new Date("2026-11-10"),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${BASE_URL}/reparation/priser`,
       lastModified: new Date("2026-10-15"),
@@ -343,6 +351,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/saelg-din-enhed/vejle`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    ...["slagelse", "kolding", "horsens", "fredericia"].map((city) => ({
+      url: `${BASE_URL}/saelg-din-enhed/${city}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    })),
     ...NEW_CATEGORY_PAGES.map((page) => ({
       url: `${BASE_URL}/saelg-din-enhed/${page.slug}`,
       lastModified: STATIC_LAST_MODIFIED,
@@ -429,6 +449,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${BASE_URL}/baerbare-vejle`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/iphones-slagelse`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/baerbare-slagelse`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 0.8,

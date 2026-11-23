@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/client";
+import { LEGAL_ENTITY } from "@/lib/company";
 import { STORES } from "@/lib/store-config";
 
 /**
@@ -64,8 +65,8 @@ export async function exportCustomerData(customerId: string) {
   return {
     exportedAt: new Date().toISOString(),
     dataController: {
-      name: "PhoneSpot ApS",
-      cvr: "38688766",
+      name: LEGAL_ENTITY.name,
+      cvr: LEGAL_ENTITY.cvr,
       address: `${STORES.slagelse.street}, ${STORES.slagelse.zip} ${STORES.slagelse.city}`,
       email: "info@phonespot.dk",
     },

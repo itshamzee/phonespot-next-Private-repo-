@@ -30,7 +30,7 @@ describe("GradeSelector", () => {
     // A ("Som ny") is sold out and must not be advertised.
     expect(screen.queryByText("Som ny")).not.toBeInTheDocument();
     expect(screen.queryByText(/Udsolgt/i)).not.toBeInTheDocument();
-    expect(screen.getByText("God")).toBeInTheDocument();
+    expect(screen.getByText(/Stand B · God stand/)).toBeInTheDocument();
   });
 
   it("renders a single available grade as a statement, not a choice", () => {

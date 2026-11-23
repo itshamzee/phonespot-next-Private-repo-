@@ -36,6 +36,14 @@ export const GRADE_SHORT_LABEL: Record<DeviceGrade, string> = {
   C: "Brugt stand",
 };
 
+/** "Stand B · God stand" — samme navn i kurv, checkout, kvittering og mail. */
+export function gradeDisplayLabel(grade: string | null | undefined): string {
+  if (!grade) return "";
+  if (grade === "N") return GRADE_SHORT_LABEL.N;
+  const name = GRADE_SHORT_LABEL[grade as DeviceGrade];
+  return name ? `Stand ${grade} · ${name}` : `Stand ${grade}`;
+}
+
 /**
  * Standen, som produktsiden viser for en enhed. Nogle fabriksnye enheder er
  * registreret som grade A med "fabriksny" i condition_notes; siden behandler

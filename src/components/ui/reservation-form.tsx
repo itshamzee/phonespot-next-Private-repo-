@@ -86,7 +86,7 @@ export function ReservationForm({
       }}
     >
       {/* Panel */}
-      <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-white shadow-overlay sm:rounded-2xl">
         {/* Top accent bar */}
         <div className="h-[3px] bg-gradient-to-r from-emerald-400 to-emerald-600" />
 
@@ -145,7 +145,7 @@ export function ReservationForm({
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-5 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/15 transition-all hover:brightness-110 active:scale-[0.98]"
+                className="mt-5 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.98]"
               >
                 Luk
               </button>
@@ -230,7 +230,7 @@ export function ReservationForm({
                 <button
                   type="submit"
                   disabled={submitting || !name.trim() || !phone.trim()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-500/15 transition-all hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3.5 text-sm font-bold text-white transition-all hover-fine:shadow-raised active:shadow-none hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? (
                     <>

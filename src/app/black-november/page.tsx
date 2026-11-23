@@ -7,13 +7,14 @@ import { BLACK_NOVEMBER, isBlackNovember, isCampaignCover } from "@/lib/campaign
 import { isLagersalg } from "@/lib/lagersalg/is-lagersalg";
 import { CAMPAIGN_OFFERS } from "./[tilbud]/offers";
 import styles from "./black-november.module.css";
+import { BlackNovemberHero } from "@/components/campaign/black-november-hero";
 
 // Siden skifter tilstand ved midnat 1. og 1. december; frisk hvert 5. minut.
 export const revalidate = 300;
 
 const TITLE = "Black Friday 2026 hele november: tilbud på iPhone | PhoneSpot";
 const DESCRIPTION =
-  "Black November hos PhoneSpot 1.–30. november: 10 % på alle reparationer, 5 % på brugte iPhones og andre enheder, covers og beskyttelsesglas til 199 kr. I Vejle, Slagelse og online.";
+  "Black November hos PhoneSpot 1.–30. november: 10 % på alle reparationer og covers og beskyttelsesglas til 199 kr. I Vejle, Slagelse og online.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -71,7 +72,7 @@ const FAQ = [
   },
   {
     q: "Skal jeg bruge en rabatkode?",
-    a: "Nej. Priserne på brugte enheder, covers og beskyttelsesglas er allerede nedsat på siden, og reparationsrabatten trækkes automatisk, når du booker eller betaler i butikken.",
+    a: "Nej. Priserne på covers og beskyttelsesglas er allerede nedsat på siden, og reparationsrabatten trækkes automatisk, når du booker eller betaler i butikken.",
   },
   {
     q: "Hvad koster et skærmskift i november?",
@@ -133,44 +134,46 @@ export default async function BlackNovemberPage() {
       <JsonLd data={faqJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
 
-      <section className={styles.hero} aria-labelledby="bn-title">
+      {active ? (
         <div className={styles.wrap}>
-          <div className={styles.heroFrame}>
-          <div className={styles.heroCopy}>
-          <p className={styles.status}>
-            <span className={styles.tag}>{status}</span>
-            <span>Vejle · Slagelse · phonespot.dk</span>
-          </p>
-          <h1 id="bn-title" className={styles.title}>
-            Black November.
-          </h1>
-          <p className={styles.lead}>
-            {ended
-              ? "Tak fordi du handlede med os i november. Vores normale priser gælder igen, og garantien er den samme."
-              : "En hel måned med lavere priser på det, vi laver hver dag: reparationer, brugte enheder med garanti og tilbehør, der passer."}
-          </p>
-          </div>
-          <div className={styles.heroPhoto}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={IPHONE_IMAGE} alt="Brugt iPhone 17 Pro i sølv" fetchPriority="high" />
-          </div>
-          <ol className={styles.ledger} aria-label="Tilbuddene">
-            <li>
-              <span className={styles.figure}>{BLACK_NOVEMBER.repairPercent} %</span>
-              <span>på alle reparationer</span>
-            </li>
-            <li>
-              <span className={styles.figure}>{BLACK_NOVEMBER.devicePercent} %</span>
-              <span>på alle brugte enheder</span>
-            </li>
-            <li>
-              <span className={styles.figure}>{BLACK_NOVEMBER.accessoryPriceKr} kr.</span>
-              <span>for covers og beskyttelsesglas</span>
-            </li>
-          </ol>
-          </div>
+          <BlackNovemberHero serverActive headingLevel="h1" />
         </div>
-      </section>
+      ) : (
+      <section className={styles.hero} aria-labelledby="bn-title">
+          <div className={styles.wrap}>
+            <div className={styles.heroFrame}>
+            <div className={styles.heroCopy}>
+            <p className={styles.status}>
+              <span className={styles.tag}>{status}</span>
+              <span>Vejle · Slagelse · phonespot.dk</span>
+            </p>
+            <h1 id="bn-title" className={styles.title}>
+              Black November.
+            </h1>
+            <p className={styles.lead}>
+              {ended
+                ? "Tak fordi du handlede med os i november. Vores normale priser gælder igen, og garantien er den samme."
+                : "En hel måned med lavere priser på det, vi laver hver dag: reparationer og tilbehør, der passer."}
+            </p>
+            </div>
+            <div className={styles.heroPhoto}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={IPHONE_IMAGE} alt="Brugt iPhone 17 Pro i sølv" fetchPriority="high" />
+            </div>
+            <ol className={styles.ledger} aria-label="Tilbuddene">
+              <li>
+                <span className={styles.figure}>{BLACK_NOVEMBER.repairPercent} %</span>
+                <span>på alle reparationer</span>
+              </li>
+              <li>
+                <span className={styles.figure}>{BLACK_NOVEMBER.accessoryPriceKr} kr.</span>
+                <span>for covers og beskyttelsesglas</span>
+              </li>
+            </ol>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className={styles.chapter} aria-labelledby="bn-repair">
         <div className={`${styles.wrap} ${styles.chapterGrid}`}>
@@ -200,35 +203,6 @@ export default async function BlackNovemberPage() {
           <div className={styles.photo}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/repair/telefon-med-smadret-skaerm.jpg" alt="Telefon med smadret skærm klar til reparation" loading="lazy" />
-          </div>
-        </div>
-      </section>
-
-      <section className={`${styles.chapter} ${styles.chapterAlt}`} aria-labelledby="bn-devices">
-        <div className={`${styles.wrap} ${styles.chapterGrid} ${styles.reverse}`}>
-          <div className={styles.chapterCopy}>
-            <p className={styles.kicker}>Brugte enheder</p>
-            <h2 id="bn-devices">{BLACK_NOVEMBER.devicePercent} % på alle brugte enheder</h2>
-            <p>
-              iPhones, iPads, bærbare og ure, testet og klar, med 36 måneders garanti og batteri på
-              mindst 90 %. Priserne på siden er allerede nedsat, og du kan se den normale pris ved
-              hver enhed.
-            </p>
-            <div className={styles.actions}>
-              <Link className={styles.primary} href="/iphones">
-                Se brugte iPhones
-              </Link>
-              <Link className={styles.secondary} href="/ipads">
-                iPads
-              </Link>
-              <Link className={styles.secondary} href="/baerbare">
-                Bærbare
-              </Link>
-            </div>
-          </div>
-          <div className={`${styles.photo} ${styles.cutout}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={IPHONE_IMAGE} alt="Brugt iPhone 17 Pro i sølv" loading="lazy" />
           </div>
         </div>
       </section>
@@ -286,7 +260,6 @@ export default async function BlackNovemberPage() {
             <li>Gælder 1.–30. november 2026, online og i butikkerne i Vejle og Slagelse.</li>
             <li>Ingen rabatkode. Priserne er nedsat på siden, og reparationsrabatten trækkes automatisk.</li>
             <li>10 % på alle reparationer. Ved tre eller flere reparationer på samme booking gælder 15 % i stedet. Rabatterne lægges ikke sammen.</li>
-            <li>5 % på alle brugte enheder. Fabriksnye enheder er ikke med.</li>
             <li>Covers og beskyttelsesglas koster højst 199 kr. Varer, der i forvejen koster mindre, beholder deres pris.</li>
             <li>Bookcovers (pungcovers) og lagersalg er ikke med. Lagersalg har sine egne priser og 3 for 2.</li>
             <li>

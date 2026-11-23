@@ -10,6 +10,7 @@ function receipt(itemName: string): PosReceiptProps {
     date: "2026-10-21T10:01:26.000Z",
     locationName: "PhoneSpot Vejle",
     locationAddress: "Vejle",
+    legalLine: "Fixon ApS · CVR: 46079019",
     registerName: "Kasse 1",
     staffName: "Admin",
     items: [{ name: itemName, quantity: 1, unitPrice: 150000, lineTotal: 150000, vatScheme: "regular", kind: "repair_service" }],

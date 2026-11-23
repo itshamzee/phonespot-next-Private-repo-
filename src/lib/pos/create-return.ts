@@ -92,6 +92,10 @@ export type ReturnableOrder = {
   total: number;
   locationId: string | null;
   customerName: string | null;
+  /** Det af salget, der blev betalt ved modregning af et opkøb (positive øre). Kommer kun retur som tilgodebevis. */
+  opkoebPaid: number;
+  /** Tidligere returers tilbagebetalinger som kontant, kort eller MobilePay (positive øre). */
+  nonVoucherRefunded: number;
   lines: Array<OriginalLine & { returned: ReturnedSoFar; remaining: number; deviceStatus: string | null; lagersalg: boolean }>;
 };
 
@@ -167,6 +171,21 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
   }
   const returned = sumReturned(creditItems);
 
+  // Betalinger på salget og dets kreditnotaer: opkøbsandelen må kun refunderes som tilgodebevis.
+  const { data: payRows } = await supabase
+    .from("order_payments")
+    .select("order_id, type, amount_oere")
+    .in("order_id", [order.id, ...creditIds]);
+  let opkoebPaid = 0;
+  let nonVoucherRefunded = 0;
+  for (const p of (payRows ?? []) as Array<{ order_id: string; type: string; amount_oere: number }>) {
+    if (p.order_id === order.id) {
+      if (p.type === "opkoeb") opkoebPaid += p.amount_oere;
+    } else if (p.type !== "tilgodebevis") {
+      nonVoucherRefunded += -p.amount_oere;
+    }
+  }
+
   // Deposit lines: what is left of them (applied to a case payment = not refundable).
   const depositIds = rows.filter((r) => r.item_type === "deposit").map((r) => r.id);
   const appliedBy = new Map<string, number[]>();
@@ -201,6 +220,8 @@ export async function findReturnableOrder(rawQuery: string): Promise<ReturnableO
     total: order.total,
     locationId: order.location_id,
     customerName,
+    opkoebPaid,
+    nonVoucherRefunded,
     lines: rows.map((r) => {
       const so = returned[r.id] ?? { quantity: 0, total: 0, discount: 0, vat: 0 };
       return {

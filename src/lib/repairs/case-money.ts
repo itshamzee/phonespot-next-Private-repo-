@@ -19,6 +19,8 @@ export type CaseLine = {
   stock_status?: string;
   /** Enhedens momsordning (kun device-linjer); brugtmoms regnes i kassen. */
   vat_scheme?: "brugtmoms" | "regular";
+  /** Enheden har IMEI eller serienummer (kun device-linjer). false: kassen spørger om det. */
+  has_identifier?: boolean;
   /** Allerede solgt i kassen: tæller ikke med i det der står til betaling. */
   sold?: boolean;
 };
@@ -36,6 +38,7 @@ export type CaseItemRow = {
   device_id?: string | null;
   created_at?: string;
   vat_scheme?: "brugtmoms" | "regular";
+  has_identifier?: boolean;
 };
 
 /** Linjer der indgår i ÉN repair_service-linje i kassen (reparation, fritekst og ældre sagers linjer). */
@@ -117,6 +120,7 @@ export function caseLines(ticket: TicketForMoney, quotes: QuoteForMoney[] = [], 
         device_id: i.device_id ?? null,
         stock_status: i.stock_status,
         vat_scheme: i.kind === "device" ? (i.vat_scheme ?? "brugtmoms") : undefined,
+        ...(i.kind === "device" && i.has_identifier !== undefined ? { has_identifier: i.has_identifier } : {}),
         sold: i.stock_status === "sold",
       }));
   }

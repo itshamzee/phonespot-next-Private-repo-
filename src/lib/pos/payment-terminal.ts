@@ -15,13 +15,17 @@
  * pos_create_sale / pos_create_return functions already store a per-line
  * reference, so no SQL change is needed).
  *
- * Provider selection: POS_TERMINAL_PROVIDER = "manual" (default) | "worldline".
+ * FlatpayTerminal (./flatpay-terminal.ts) does the same against Flatpay's
+ * Socket API and is the first integrated terminal that is actually wired up.
+ *
+ * Provider selection: POS_TERMINAL_PROVIDER = "manual" (default) | "flatpay" | "worldline".
  * Any other or missing value falls back to "manual", so a typo never changes
  * how staff work.
  */
 import { PosError } from "./errors";
 import type { PaymentLineInput } from "./calc";
 import type { PaymentTerminalKind } from "./constants";
+import { FlatpayTerminal } from "./flatpay-terminal";
 
 export type TerminalStatus = "approved" | "declined" | "cancelled" | "error";
 
@@ -160,12 +164,14 @@ type Env = Record<string, string | undefined>;
 /** The configured provider. Unknown or missing values mean "manual". */
 export function paymentTerminalKind(env: Env = process.env): PaymentTerminalKind {
   const raw = env.POS_TERMINAL_PROVIDER?.trim().toLowerCase();
-  return raw === "worldline" ? "worldline" : "manual";
+  return raw === "worldline" || raw === "flatpay" ? raw : "manual";
 }
 
 /** The terminal for a store (locationSlug = locations.slug, e.g. "vejle"). Server side only. */
 export function getPaymentTerminal(locationSlug: string, env: Env = process.env): PaymentTerminal {
   switch (paymentTerminalKind(env)) {
+    case "flatpay":
+      return new FlatpayTerminal(locationSlug, env);
     case "worldline":
       return new WorldlineTerminal(locationSlug);
     default:

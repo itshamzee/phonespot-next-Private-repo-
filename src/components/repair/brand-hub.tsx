@@ -133,7 +133,19 @@ export function CommonRepairs({
   );
 }
 
-export function CityLinks({ label, note }: { label: string; note: string }) {
+export function CityLinks({
+  label,
+  note,
+  serviceKey = null,
+}: {
+  label: string;
+  note: string;
+  /** Lokal ydelsesside (fx "ipad"), så bylinks går til /reparation-vejle/ipad. */
+  serviceKey?: string | null;
+}) {
+  const vejleHref = serviceKey ? `/reparation-vejle/${serviceKey}` : "/reparation-vejle";
+  const slagelseHref = serviceKey ? `/reparation-slagelse/${serviceKey}` : "/reparation-slagelse";
+  const linkLabel = serviceKey ? `${label}-reparation` : "Reparation";
   return (
     <section className={hub.block} aria-labelledby="by">
       <div>
@@ -152,16 +164,16 @@ export function CityLinks({ label, note }: { label: string; note: string }) {
           </p>
         </div>
         <div className={styles.storeLinks}>
-          <Link href="/reparation-vejle">
+          <Link href={vejleHref}>
             <span>
-              <strong>Reparation i Vejle</strong>
+              <strong>{linkLabel} i Vejle</strong>
               <small>Løversysselvej 3B, gratis parkering</small>
             </span>
             <span aria-hidden="true">→</span>
           </Link>
-          <Link href="/reparation-slagelse">
+          <Link href={slagelseHref}>
             <span>
-              <strong>Reparation i Slagelse</strong>
+              <strong>{linkLabel} i Slagelse</strong>
               <small>VestsjællandsCentret 10A, 103</small>
             </span>
             <span aria-hidden="true">→</span>

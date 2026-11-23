@@ -1,5 +1,6 @@
 "use client";
 
+import { gradeDisplayLabel } from "@/lib/grades";
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,6 +29,8 @@ interface OrderItem {
   color: string | null;
   storage: string | null;
   upgrade_details?: Array<{ label: string; price_oere: number }> | null;
+  /** Katalog-id til Meta (skabelon-id for enheder, sku_product-id for tilbehør). */
+  content_id?: string;
 }
 
 interface Order {
@@ -57,7 +60,8 @@ export function ConfirmationView({ order }: { order: Order }) {
     trackPurchase({
       orderId: order.id,
       value: order.total / 100,
-      contentIds: order.order_items.map((i) => i.id),
+      contentIds: [...new Set(order.order_items.map((i) => i.content_id ?? i.id))],
+      numItems: order.order_items.reduce((n, i) => n + i.quantity, 0),
     });
 
     trackAdsPurchase({
@@ -168,7 +172,7 @@ export function ConfirmationView({ order }: { order: Order }) {
                   (item.grade || item.color || item.storage) && (
                     <p className="text-xs text-gray-500">
                       {[
-                        item.grade && `Stand ${item.grade}`,
+                        item.grade && gradeDisplayLabel(item.grade),
                         item.color,
                         item.storage,
                       ]

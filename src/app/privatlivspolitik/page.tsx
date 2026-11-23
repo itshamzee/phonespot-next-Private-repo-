@@ -26,21 +26,21 @@ export default function PrivatlivspolitikPage() {
       >
         <div>
           <Heading size="lg">Privatlivspolitik</Heading>
-          <p className="mt-2 text-sm text-gray">Sidst opdateret: 12. marts 2026</p>
+          <p className="mt-2 text-sm text-gray">Sidst opdateret: 19. november 2026</p>
         </div>
 
         {/* 1. Dataansvarlig */}
         <div>
           <h2>1. Dataansvarlig</h2>
           <p className="mt-3">
-            PhoneSpot ApS er dataansvarlig for behandlingen af de personoplysninger, som vi modtager
+            Fixon ApS er dataansvarlig for behandlingen af de personoplysninger, som vi modtager
             om dig.
           </p>
           <div className="mt-3 space-y-1">
             <p>
-              <strong>PhoneSpot ApS</strong>
+              <strong>Fixon ApS</strong>
             </p>
-            <p>CVR-nr.: 38688766</p>
+            <p>CVR-nr.: 46079019</p>
             <p>{STORES.slagelse.street}</p>
             <p>{STORES.slagelse.zip} {STORES.slagelse.city}</p>
             <p>
@@ -187,6 +187,10 @@ export default function PrivatlivspolitikPage() {
             <li>
               <strong>Vercel, Inc.</strong> — hosting af vores hjemmeside og serverinfrastruktur.
             </li>
+            <li>
+              <strong>Anthropic, PBC</strong> — AI-tjeneste, der danner svarene i chatten med Fiks
+              (se afsnit 11).
+            </li>
           </ul>
           <p className="mt-3">
             Vi sælger, udlejer eller videregiver aldrig dine personoplysninger til tredjeparter
@@ -236,7 +240,7 @@ export default function PrivatlivspolitikPage() {
             </li>
             <li>
               <strong>Ret til sletning (art. 17):</strong> Du har i visse tilfælde ret til at få
-              dine personoplysninger slettet ("retten til at blive glemt").
+              dine personoplysninger slettet (&quot;retten til at blive glemt&quot;).
             </li>
             <li>
               <strong>Ret til begrænsning af behandling (art. 18):</strong> Du har i visse
@@ -341,9 +345,67 @@ export default function PrivatlivspolitikPage() {
           </p>
         </div>
 
-        {/* 10. Ændringer */}
+        {/* 10. Opkøb */}
         <div>
-          <h2>10. Ændringer i denne privatlivspolitik</h2>
+          <h2>10. Når du sælger en enhed til os</h2>
+          <p className="mt-3">
+            Når du sælger en brugt enhed til os i en af vores butikker, udfylder vi en
+            slutseddel sammen med dig. Vi gemmer følgende oplysninger på den:
+          </p>
+          <ul className="mt-3 space-y-1">
+            <li>dit navn, din adresse og dine kontaktoplysninger</li>
+            <li>ID-type, ID-nummer og udløbsdato (vi gemmer aldrig CPR-nummer)</li>
+            <li>reg.nr. og kontonummer, hvis beløbet udbetales til din bankkonto</li>
+            <li>oplysninger om de enheder, du sælger, og prisen</li>
+          </ul>
+          <p className="mt-3">
+            Vi gør det, fordi loven om handel med brugte genstande og bogføringsloven kræver, at vi
+            kan dokumentere, hvem vi har købt fra. Retsgrundlaget er art. 6(1)(c) — retlig
+            forpligtelse. Slutsedlen og bilagene gemmes i 5 år, og ID-oplysningerne slettes efter 5
+            år. Du får en kopi af slutsedlen på e-mail, hvis du oplyser din e-mailadresse.
+          </p>
+        </div>
+
+        {/* 11. Chat med Fiks */}
+        <div id="chat" className="scroll-mt-28">
+          <h2>11. Chat med Fiks</h2>
+          <p className="mt-3">
+            Fiks, chatten på vores hjemmeside, er en AI-assistent og ikke et menneske. Fiks kan
+            svare på spørgsmål om priser på reparation, opkøb, levering, garanti og vores butikker,
+            men kan ikke se dine ordrer eller sager.
+          </p>
+          <ul className="mt-3 space-y-2">
+            <li>
+              Det, du skriver i chatten, gemmes sammen med vores øvrige kundehenvendelser, så vores
+              medarbejdere kan følge op på samtalen.
+            </li>
+            <li>
+              Teksten behandles af vores AI-leverandør Anthropic, PBC som databehandler, alene for at
+              danne Fiks&apos; svar.
+            </li>
+            <li>Vi bruger ikke dine beskeder i chatten til annoncering eller markedsføring.</li>
+            <li>
+              For at forhindre misbrug af chatten gemmer vi en krypteret (hashet) udgave af din
+              IP-adresse sammen med samtalen. Den kan ikke læses som en IP-adresse og bruges kun til
+              at begrænse antallet af samtaler.
+            </li>
+            <li>
+              Dit navn, din e-mail eller dit telefonnummer gemmes kun, hvis du selv giver dem, fordi
+              du gerne vil kontaktes af en medarbejder.
+            </li>
+            <li>
+              Chatten opbevares efter samme regler som andre henvendelser til kundeservice: 2 år
+              efter sagens afslutning (se afsnit 3).
+            </li>
+          </ul>
+          <p className="mt-3">
+            Skriv ikke helbredsoplysninger, CPR-nummer eller kortoplysninger i chatten.
+          </p>
+        </div>
+
+        {/* 12. Ændringer */}
+        <div>
+          <h2>12. Ændringer i denne privatlivspolitik</h2>
           <p className="mt-3">
             Vi forbeholder os ret til at opdatere denne privatlivspolitik, efterhånden som vores
             tjenester og lovgivningen udvikler sig. Den seneste version vil altid være tilgængelig

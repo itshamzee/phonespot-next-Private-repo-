@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { canAccessStore } from "@/lib/auth/store-scope";
 import { findCaseRows, loadPosCase } from "@/lib/pos/case-data";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
-import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
+import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
  * GET /api/pos/case?q=<case reference>
@@ -18,14 +17,15 @@ import { UNAUTHORIZED, posErrorResponse } from "@/lib/pos/route-helpers";
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const q = new URL(request.url).searchParams.get("q") ?? "";
     const ref = parseCaseReference(q);
     if (!ref) return NextResponse.json({ error: "Skriv et sagsnummer, fx PS-2026-0123 eller #1189" }, { status: 400 });
 
-    const rows = (await findCaseRows(ref)).filter((r) => canAccessStore(staff, r.store_id));
+    const rows = (await findCaseRows(ref)).filter((r) => canAccessStore(actor, r.store_id));
     if (rows.length === 0) return NextResponse.json({ error: "Sagen blev ikke fundet" }, { status: 404 });
     if (rows.length > 1) {
       return NextResponse.json({

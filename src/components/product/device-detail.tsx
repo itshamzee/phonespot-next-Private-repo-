@@ -12,6 +12,8 @@ import type { PublicSkuProduct } from "@/lib/product/public-sku";
 import { ACCESSORY_CATEGORY_TO_SLUG } from "@/lib/tilbehoer-config";
 import { useCart } from "@/components/cart/cart-context";
 import { GradeSelector } from "./grade-selector";
+import { CONDITION_IMAGES } from "./condition-illustrations";
+import { ZoomImage } from "./zoom-image";
 import { StorageSelector } from "./storage-selector";
 import { ColorSelectorPlatform } from "./color-selector-platform";
 import { SpecificationsTable } from "./specifications-table";
@@ -37,6 +39,8 @@ import { trackViewContent, trackAddToCart } from "@/lib/tracking/fbq";
 import styles from "./device-detail.module.css";
 import { UpgradeSelector, type UpgradeOption } from "./upgrade-selector";
 import { customerFacingError } from "@/lib/customer-facing-error";
+import { AddedCheckIcon, useAddedConfirmation } from "./use-added-confirmation";
+import { useHasChanged } from "@/components/ui/use-has-changed";
 
 export type RelatedInStockProduct = {
   id: string;
@@ -82,6 +86,8 @@ type DeviceDetailProps = {
   relatedInStock?: RelatedInStockProduct[];
   /** RAM/SSD-opgraderingstilvalg (kun laptops). */
   upgradeOptions?: UpgradeOption[];
+  /** Tilbehør med Black November-pris lige nu (sat af serveren). */
+  campaignAccessoryIds?: string[];
 };
 
 function formatDKK(oere: number): string {
@@ -199,6 +205,7 @@ export function DeviceDetail({
   accessories,
   relatedInStock = [],
   upgradeOptions = [],
+  campaignAccessoryIds = [],
 }: DeviceDetailProps) {
   const { addDevice, openCart, openUpsell, cartState } = useCart();
 
@@ -313,8 +320,26 @@ export function DeviceDetail({
     ssd: string | null;
   }>({ ram: null, ssd: null });
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  // Fast købsbjælke: vises, når "Læg i kurv" er scrollet ud af syne opad.
+  const [buyEl, setBuyEl] = useState<HTMLDivElement | null>(null);
+  const [showBuyBar, setShowBuyBar] = useState(false);
+  useEffect(() => {
+    const el = buyEl;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setShowBuyBar(false);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => {
+      setShowBuyBar(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [buyEl]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
+  const [justAdded, confirmAdded] = useAddedConfirmation(
+    `${selectedGrade}|${selectedStorage}|${selectedColor}`,
+  );
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<
     "idle" | "submitting" | "done" | "error"
@@ -516,7 +541,23 @@ export function DeviceDetail({
       : null;
   const images =
     colorImages ?? (template.images.length > 0 ? template.images : []);
-  const mainImage = images[mainImageIndex] ?? null;
+  // Eksempelfotos af den valgte stand (A/B/C) ligger sidst i galleriet.
+  const standKey = selectedGrade === "A" || selectedGrade === "B" || selectedGrade === "C" ? selectedGrade : null;
+  const standImages = standKey
+    ? [
+        { src: CONDITION_IMAGES[getDeviceType(template.category)][standKey].frame, side: "bagside" },
+        { src: CONDITION_IMAGES[getDeviceType(template.category)][standKey].display, side: "forside" },
+      ]
+    : [];
+  const standIndex = mainImageIndex - images.length;
+  const standImage = standIndex >= 0 ? standImages[standIndex] ?? null : null;
+  const mainImage = standImage ? null : images[mainImageIndex] ?? images[0] ?? null;
+  // Kort overgang, når kunden skifter billede, farve, stand eller lagerplads.
+  // Ved indlæsning er alt som før (hovedbilledet er LCP).
+  const shownImage = standImage?.src ?? mainImage;
+  const imageChanged = useHasChanged(shownImage);
+  const priceChanged = useHasChanged(price);
+  const stockChanged = useHasChanged(matchingDevices.length);
   const inStock = matchingDevices.length > 0;
   const gradeDetail = GRADE_DETAILS[selectedGrade];
   // Per-unit battery statement for the specific device that would actually
@@ -692,6 +733,7 @@ export function DeviceDetail({
       });
 
       setSelectedUpgrades({ ram: null, ssd: null });
+      confirmAdded();
 
       // Only show screen protector upsell for phones/smartphones
       if (deviceType === "phone") {
@@ -739,13 +781,32 @@ export function DeviceDetail({
         </header>
 
         <div className={styles.gallery}>
-          <div className={styles.imageStage}>
-            {mainImage ? (
+          <div className={styles.imageStage} style={standImage ? { background: "#fff", border: "1px solid #e5e5ea" } : undefined}>
+            {standImage ? (
+              <>
+                <Image
+                  key={standImage.src}
+                  src={standImage.src}
+                  alt={`Eksempel på ${gradeDetail?.label.toLowerCase() ?? "standen"}, ${standImage.side}`}
+                  fill
+                  className={`object-contain p-3 sm:p-5${imageChanged ? " swap-in" : ""}`}
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                />
+                <ZoomImage
+                  src={standImage.src}
+                  alt={`Eksempel på stand ${standKey}, ${standImage.side}`}
+                />
+                <span className={styles.standCaption}>
+                  Eksempel på stand {standKey} · {gradeDetail?.label}
+                </span>
+              </>
+            ) : mainImage ? (
               <Image
+                key={mainImage}
                 src={mainImage}
                 alt={template.display_name}
                 fill
-                className="object-contain p-5 sm:p-8"
+                className={`object-contain p-5 sm:p-8${imageChanged ? " swap-in" : ""}`}
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 priority
               />
@@ -753,7 +814,7 @@ export function DeviceDetail({
               <p>Billede kommer snart</p>
             )}
           </div>
-          {images.length > 1 && (
+          {images.length + standImages.length > 1 && (
             <div className={styles.thumbnails} aria-label="Produktbilleder">
               {images.map((img, i) => (
                 <button
@@ -770,6 +831,19 @@ export function DeviceDetail({
                     className="object-contain p-2"
                     sizes="64px"
                   />
+                </button>
+              ))}
+              {standImages.map((img, i) => (
+                <button
+                  key={img.src}
+                  type="button"
+                  onClick={() => setMainImageIndex(images.length + i)}
+                  aria-label={`Vis eksempel på stand ${standKey}, ${img.side}`}
+                  aria-pressed={images.length + i === mainImageIndex}
+                  className={styles.standThumb}
+                >
+                  <Image src={img.src} alt="" fill className="object-contain p-1" sizes="64px" />
+                  <span>Stand {standKey}</span>
                 </button>
               ))}
             </div>
@@ -825,7 +899,7 @@ export function DeviceDetail({
               <p className={styles.small}>Grundpris for enheden</p>
             )}
             <div className={styles.priceLine}>
-              <span className={styles.price}>
+              <span key={String(price)} className={priceChanged ? `${styles.price} value-change` : styles.price}>
                 {price != null ? formatDKK(price) : "Pris ikke tilgængelig"}
               </span>
               {compareAtPrice && (
@@ -859,19 +933,35 @@ export function DeviceDetail({
                 nypris
               </p>
             )}
+            {compareAtPrice && price && compareAtPrice > price && (
+              <p className={styles.small}>
+                Nypris er producentens danske pris, da modellen kom på markedet.
+              </p>
+            )}
             {inStock ? (
               <>
-                <p className={styles.stock}>
+                <p key={matchingDevices.length} className={stockChanged ? `${styles.stock} value-change` : styles.stock}>
                   {matchingDevices.length} på lager i den valgte variant
                 </p>
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className={styles.buyButton}
-                >
-                  {isAddingToCart ? "Reserverer..." : "Læg i kurv"}
-                </button>
+                <div ref={setBuyEl}>
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart}
+                    className={styles.buyButton}
+                  >
+                    {isAddingToCart ? (
+                      "Reserverer..."
+                    ) : justAdded ? (
+                      <span className={`${styles.addedLabel} confirm-in`}>
+                        <AddedCheckIcon />
+                        Lagt i kurven
+                      </span>
+                    ) : (
+                      "Læg i kurv"
+                    )}
+                  </button>
+                </div>
               </>
             ) : (
               <div className={styles.soldOut}>
@@ -1109,7 +1199,15 @@ export function DeviceDetail({
         </aside>
       </div>
 
-      {accessories.length > 0 && (
+      {campaignAccessoryIds.length > 0 ? (
+        <BlackNovemberAccessories
+          modelName={template.display_name}
+          accessories={[
+            ...accessories.filter((acc) => campaignAccessoryIds.includes(acc.id)),
+            ...accessories.filter((acc) => !campaignAccessoryIds.includes(acc.id)),
+          ]}
+        />
+      ) : accessories.length > 0 ? (
         <section className={styles.related}>
           <div className={styles.sectionHeading}>
             <h2>Kompatibelt tilbehør</h2>
@@ -1155,7 +1253,105 @@ export function DeviceDetail({
               ))}
           </div>
         </section>
+      ) : null}
+      {inStock && price != null && (
+        <div
+          className={`${styles.buyBar} ${showBuyBar ? styles.buyBarVisible : ""}`}
+          aria-hidden={!showBuyBar}
+        >
+          <div className={styles.buyBarInner}>
+            {(images[0] ?? null) && (
+              <div className={styles.buyBarThumb}>
+                <Image src={images[0]} alt="" fill className="object-contain p-1" sizes="48px" />
+              </div>
+            )}
+            <div className={styles.buyBarText}>
+              <p className={styles.buyBarMeta}>
+                {[selectedStorage, selectedColor, gradeDetail?.label].filter(Boolean).join(" | ")}
+              </p>
+              <p className={styles.buyBarPrice}>
+                {formatDKK(price + selectedUpgradeTotal)}
+                <span>2–4 hverdage</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAddingToCart}
+              tabIndex={showBuyBar ? 0 : -1}
+              className={styles.buyBarButton}
+            >
+              {isAddingToCart ? "..." : "Køb"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
+  );
+}
+
+/* ================================================================== */
+/*  Black November: mørkt tilbehørsafsnit (kun i november)            */
+/* ================================================================== */
+
+function BlackNovemberAccessories({
+  modelName,
+  accessories,
+}: {
+  modelName: string;
+  accessories: PublicSkuProduct[];
+}) {
+  const items = accessories.filter((acc) => acc.slug).slice(0, 4);
+  return (
+    <section className={styles.bnBand} aria-labelledby="bn-tilbehoer">
+      <div className={styles.bnHead}>
+        <div>
+          <p className={styles.bnKicker}>Black November er grøn hos PhoneSpot</p>
+          <h2 id="bn-tilbehoer">Beskyt den fra dag ét.</h2>
+          <p className={styles.bnLead}>
+            Jo længere din telefon holder, jo færre nye skal laves. Cover og
+            beskyttelsesglas til {modelName}, højst {BLACK_NOVEMBER.accessoryPriceKr} kr.
+            til og med 30. november.
+          </p>
+        </div>
+        <Link href={BLACK_NOVEMBER.href} className={styles.bnLink}>
+          Se alle tilbud <span aria-hidden="true">&rarr;</span>
+        </Link>
+      </div>
+      <div className={styles.bnGrid}>
+        {items.map((acc) => {
+          const price = acc.sale_price ?? acc.selling_price;
+          const before =
+            acc.sale_price != null && acc.sale_price < acc.selling_price ? acc.selling_price : null;
+          return (
+            <Link
+              key={acc.id}
+              href={`/tilbehoer/${ACCESSORY_CATEGORY_TO_SLUG[acc.subcategory ?? ""] ?? "covers"}/${acc.slug}`}
+              className={styles.bnCard}
+            >
+              <div className={styles.bnImage}>
+                {acc.images[0] ? (
+                  <Image
+                    src={acc.images[0]}
+                    alt={acc.title}
+                    fill
+                    className="object-contain p-5"
+                    sizes="(min-width: 1024px) 22vw, 60vw"
+                  />
+                ) : (
+                  <p>Billede kommer snart</p>
+                )}
+              </div>
+              <h3>{acc.title}</h3>
+              <p className={styles.bnPrice}>
+                {formatDKK(price)}
+                {before != null && <s>{formatDKK(before)}</s>}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+      <p className={styles.bnFoot}>Tilbehør har 2 års reklamationsret.</p>
+    </section>
   );
 }

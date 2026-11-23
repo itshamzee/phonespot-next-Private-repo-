@@ -152,7 +152,7 @@ export function SalesTable({ rows, empty }: { rows: SaleListRow[]; empty: string
           {rows.map((r) => {
             const { date, time } = formatSaleDate(r.createdAt);
             return (
-              <tr key={r.id} className="border-b border-black/[0.04] last:border-0 hover:bg-[#faf9f7]">
+              <tr key={r.id} className="border-b border-black/[0.04] last:border-0 hover:bg-[#faf9f7] motion-safe:transition-colors">
                 <td className="px-4 py-3 font-semibold">
                   <Link href={`/admin/kasse/salg/${r.id}`} className="text-[#1A3D2E] hover:underline">
                     {r.orderNumber}

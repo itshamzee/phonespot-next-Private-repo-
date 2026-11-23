@@ -11,6 +11,11 @@ import NewOrdersWatcher from "@/components/admin/new-orders-watcher";
 import { StoreScopeProvider, useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { NewBookingToast, type LatestWebBooking } from "@/components/admin/shell/new-booking-toast";
 import { INTERN_HOME, INTERN_ROLE, internMayOpenPage } from "@/lib/auth/intern-access";
+import { PageSkeleton } from "@/components/admin/ui/skeleton";
+import { ToastProvider } from "@/components/admin/ui/toast";
+import { WhatsNew } from "@/components/admin/shell/whats-new";
+import { NavPendingBar, NavPendingProvider } from "@/components/admin/shell/nav-pending";
+import "@/app/admin-motion.css";
 
 const EMPTY_COUNTS: NavCounts = { orders: 0, repairs: 0, newRepairs: 0, webBookings: 0, inquiries: 0, buyback: 0 };
 /** Menu-tallene hentes igen så ofte, mens fanen er synlig, så en ny booking dukker op uden at skifte side. */
@@ -259,24 +264,41 @@ function AuthedShell({
 
   return (
     <SaveBarProvider>
-      <div className="flex h-dvh flex-col overflow-hidden bg-[#F5F6F4] font-body text-[#15211B]">
-        <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
+      <NavPendingProvider>
+        <div className="flex h-dvh flex-col overflow-hidden bg-[#F5F6F4] font-body text-[#15211B]">
+          <ToastProvider>
+            <Topbar email={email} counts={navCounts} onMenu={() => setSidebarOpen((v) => !v)} onLogout={onLogout} />
 
-        <div className="relative flex min-h-0 flex-1">
-          {sidebarOpen && (
-            <div className="fixed inset-0 top-14 z-30 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          )}
-          <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
+            <div className="relative flex min-h-0 flex-1">
+              {/* Navigation i gang: 2 px streg øverst i indholdskolonnen, absolut placeret.
+                  lg:left-[232px] = sidemenuens bredde (w-[232px] i sidebar.tsx); under lg er
+                  menuen en skuffe ovenpå, så kolonnen er hele bredden. */}
+              <NavPendingBar className="inset-x-0 lg:left-[232px]" />
+              {/* Altid monteret, så den kan tone ind og ud (.m-backdrop). */}
+              <div
+                aria-hidden="true"
+                data-open={sidebarOpen}
+                className="m-backdrop fixed inset-0 top-14 z-30 bg-black/30 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <Sidebar pathname={pathname} counts={navCounts} open={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
 
-          <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-            {scopeLoading ? null : children}
-          </main>
+              <main key={scope} className="min-w-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+                {/* Sidens rod glider ind (.m-page), også når den afløser skelettet; nøglen på stien
+                    genstarter det ved hver navigation uden at genmontere rammen. */}
+                <div key={pathname} className="m-page">
+                  {scopeLoading ? <PageSkeleton /> : children}
+                </div>
+              </main>
+            </div>
+
+            {/* Real-time new-order toast watcher */}
+            <NewOrdersWatcher />
+            <NewBookingToast latest={latestBooking} />
+            <WhatsNew />
+          </ToastProvider>
         </div>
-
-        {/* Real-time new-order toast watcher */}
-        <NewOrdersWatcher />
-        <NewBookingToast latest={latestBooking} />
-      </div>
+      </NavPendingProvider>
     </SaveBarProvider>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { CheckoutSummary } from "@/components/checkout/checkout-summary";
-import { STORES } from "@/lib/store-config";
 import { useCart } from "@/components/cart/cart-context";
 
 export default function KassePage() {
@@ -32,9 +31,9 @@ export default function KassePage() {
   }, [cartState.items]);
   return (
     <div className="min-h-screen bg-warm-white">
-      <div className="mx-auto max-w-6xl px-4 py-12 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
         {/* Page title with lock icon */}
-        <div className="mb-10 flex items-center gap-3">
+        <div className="mb-8 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-eco/10">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-green-eco">
               <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
@@ -140,8 +139,8 @@ export default function KassePage() {
                       <path d="M11.983 1.907a.75.75 0 0 0-1.292-.657l-8.5 9.5A.75.75 0 0 0 2.75 12h6.572l-1.305 6.093a.75.75 0 0 0 1.292.657l8.5-9.5A.75.75 0 0 0 17.25 8h-6.572l1.305-6.093Z" />
                     </svg>
                   ),
-                  title: "Afsendes inden for 1-2 hverdage",
-                  sub: "Med sporing, eller hent gratis i Vejle og Slagelse",
+                  title: "Levering på 2-4 hverdage",
+                  sub: "Gratis til pakkeshop, eller hent gratis i Vejle og Slagelse",
                 },
                 {
                   icon: (
@@ -149,8 +148,10 @@ export default function KassePage() {
                       <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H4.598a.75.75 0 0 0-.75.75v3.634a.75.75 0 0 0 1.5 0v-2.033l.312.311a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.06-7.795a.75.75 0 0 0-1.5 0v2.033l-.312-.31A7 7 0 0 0 2.838 8.49a.75.75 0 0 0 1.449.39A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h3.634a.75.75 0 0 0 .75-.75V3.63Z" clipRule="evenodd" />
                     </svg>
                   ),
-                  title: "14 dages fortrydelsesret",
-                  sub: "Returfragt betales af kunden ved fortrydelse",
+                  title: hasDevice ? "30 dages returret" : "14 dages fortrydelsesret",
+                  sub: hasDevice
+                    ? "På enheder. Heraf 14 dages lovpligtig fortrydelsesret"
+                    : "Returfragt betales af kunden ved fortrydelse",
                 },
                 {
                   icon: (
@@ -175,7 +176,7 @@ export default function KassePage() {
             {/* Seller info compact */}
             <div className="rounded-2xl border border-sand bg-warm-white px-4 py-3 text-xs text-gray">
               <p>
-                <span className="font-semibold text-charcoal">PhoneSpot ApS</span> · CVR: 38688766 · {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
+                <span className="font-semibold text-charcoal">Fixon ApS</span> · CVR: 46079019 · Løversysselvej 3C, 7100 Vejle
               </p>
               <p className="mt-1">
                 Solgt under brugtmomsordningen. Køber har ikke fradragsret for moms.

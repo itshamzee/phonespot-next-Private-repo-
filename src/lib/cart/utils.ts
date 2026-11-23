@@ -98,16 +98,16 @@ const SHIPPING_COST_OERE = getShippingPrice("postnord") ?? 3900;
  * Fragt ud fra beløbet EFTER rabatkode og 3 for 2 — samme regel som
  * checkout-serveren (api/checkout/session), så kurv, checkout og Stripe er enige.
  */
-export function resolveShippingCost(netSubtotal: number): number {
+export function resolveShippingCost(netSubtotal: number, methodPrice: number = SHIPPING_COST_OERE): number {
   if (netSubtotal <= 0) return 0;
-  return netSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST_OERE;
+  return netSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : methodPrice;
 }
 
 /** Kurvens totaler med fragt afgjort på nettobeløbet (efter alle rabatter). */
-export function calcCartTotals(state: CartState): CartTotals {
+export function calcCartTotals(state: CartState, methodPrice?: number | null): CartTotals {
   const base = calcTotals(state, 0);
   const net = base.subtotal - base.discountAmount - base.bundleDiscountAmount;
-  return calcTotals(state, resolveShippingCost(net));
+  return calcTotals(state, resolveShippingCost(net, methodPrice ?? undefined));
 }
 
 export function formatOere(oere: number): string {

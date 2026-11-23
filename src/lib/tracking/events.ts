@@ -10,6 +10,7 @@
  * kun til Meta, når besøgende aktivt har accepteret.
  */
 import { readStoredConsent } from "@/lib/consent-client";
+import { whenFbqReady } from "./fbq";
 
 type Params = Record<string, unknown>;
 
@@ -40,9 +41,10 @@ function sendGtag(name: string, params: Params): void {
 }
 
 function sendMeta(name: string, params: Params, eventId: string): void {
-  if (typeof window === "undefined" || typeof window.fbq !== "function") return;
+  if (typeof window === "undefined") return;
   if (readStoredConsent() !== "accepted") return;
-  window.fbq("track", name, clean(params), { eventID: eventId });
+  // Vent på pixlen: ved hård sideindlæsning findes fbq først efter sidens egne effects.
+  whenFbqReady((fbq) => fbq("track", name, clean(params), { eventID: eventId }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -51,9 +53,13 @@ function sendMeta(name: string, params: Params, eventId: string): void {
 
 const ATTRIBUTION_KEY = "ps-attribution";
 const ATTRIBUTION_FIELDS = ["utm_source", "utm_medium", "utm_campaign", "gclid", "fbclid"] as const;
-export type Attribution = Partial<Record<(typeof ATTRIBUTION_FIELDS)[number], string>>;
+export type Attribution = Partial<Record<(typeof ATTRIBUTION_FIELDS)[number] | "referrer" | "landing_page", string>>;
 
-/** Gem første utm_*, gclid og fbclid i sessionStorage. Overskriver aldrig. */
+/**
+ * Gem første utm_*, gclid og fbclid samt henvisende domæne og landingsside i
+ * sessionStorage. Overskriver aldrig. Henviseren gemmes kun som domæne (fx
+ * www.google.com), så organiske leads kan skelnes fra annoncer uden persondata.
+ */
 export function captureAttribution(): void {
   try {
     if (sessionStorage.getItem(ATTRIBUTION_KEY)) return;
@@ -63,7 +69,14 @@ export function captureAttribution(): void {
       const value = search.get(field);
       if (value) found[field] = value.slice(0, 200);
     }
-    if (Object.keys(found).length > 0) sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(found));
+    try {
+      const ref = document.referrer ? new URL(document.referrer).hostname : "";
+      if (ref && ref !== window.location.hostname) found.referrer = ref.slice(0, 100);
+    } catch {
+      // Ugyldig henviser: ignorér.
+    }
+    found.landing_page = window.location.pathname.slice(0, 200);
+    sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(found));
   } catch {
     // Privat tilstand / blokeret storage: ingen kildedata, ingen fejl.
   }
@@ -189,6 +202,25 @@ export function trackMessagingClick(input: {
   sendGtag(`click_to_${input.channel}`, { store: input.store, page_path: input.pagePath, event_id: eventId });
   sendMeta("Contact", { content_category: input.channel, store: input.store }, eventId);
   return eventId;
+}
+
+/**
+ * Trin i sælg-guiden (kun GA4). Uden dem kunne vi se, at folk landede på
+ * sælg-siden og at nogle sendte en forespørgsel, men ikke hvor resten faldt fra.
+ * step_number starter ved 1, så det matcher trinviseren på siden.
+ */
+export function trackSellWizardStep(input: { stepNumber: number; stepName: string; deviceType?: string; devices?: number }): void {
+  sendGtag("sell_wizard_step", {
+    step_number: input.stepNumber,
+    step_name: input.stepName,
+    device_type: input.deviceType,
+    devices: input.devices,
+  });
+}
+
+/** GA4: hvor langt kunden når i reparationsbookingen (fyres én gang pr. trin). */
+export function trackRepairBookingStep(input: { stepNumber: number; stepName: string }): void {
+  sendGtag("repair_booking_step", { step_number: input.stepNumber, step_name: input.stepName });
 }
 
 export interface Ga4Item {

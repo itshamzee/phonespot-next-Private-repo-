@@ -3,7 +3,12 @@ import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaRunnableTool } from "@anthropic-ai/sdk/lib/tools/BetaRunnableTool";
 import { z } from "zod";
 import { buildKnowledge } from "./knowledge";
+import { escapeLike, hasLikeWildcardStar } from "./like";
+import { SUMMARY_CATEGORIES } from "@/lib/repairs/price-list";
+import { quoteBuybackImpl, type QuoteBuybackInput } from "./quote-buyback";
+import { quoteRepairImpl } from "./quote-repair";
 import { assessmentSchema } from "./schema";
+import { SYMPTOMS, diagnoseImpl } from "./symptoms";
 import type { LookupLog } from "./types";
 
 /**
@@ -13,13 +18,43 @@ import type { LookupLog } from "./types";
  */
 export interface ToolContext {
   supabase: SupabaseClient;
-  senderEmail: string;
+  /** Lowercase addresses the sender has proven control of. Empty = anonymous sender. */
+  verified: { emails: string[] };
   log: LookupLog[];
+  /** Every tool's returned text, for the amount filter. */
+  outputs: string[];
   scopeMismatch: { value: boolean };
+  /**
+   * Only set by the public chat (Fiks): every priced quote_buyback call lands
+   * here as structured data, so the chat can offer the sell form with the
+   * model and amount without parsing the tool's text. The mail agent leaves it unset.
+   */
+  buybackQuotes?: PricedBuybackQuote[];
+}
+
+export interface PricedBuybackQuote {
+  input: QuoteBuybackInput;
+  /** Whole kroner, rounded exactly as in the tool's text. */
+  amount: number;
 }
 
 const MISMATCH =
   "Fundet, men registreret på en anden adresse end afsenderens. Oplys ikke detaljer; bed kunden skrive fra den mail der er brugt ved købet, eller lad en medarbejder tage over.";
+
+const NOT_VERIFIED =
+  "Afsenderen er ikke verificeret på denne kanal. Oplys ingen ordre-, sags- eller kundeoplysninger; bed kunden skrive fra den mailadresse, der er brugt ved købet, eller ringe til butikken.";
+
+/** Verified addresses that are safe in a LIKE filter; "*" would act as a wildcard in PostgREST. */
+function usableEmails(ctx: ToolContext): string[] {
+  return ctx.verified.emails.filter((e) => !hasLikeWildcardStar(e));
+}
+
+/** Shared guard: anonymous senders get no personal data and the mail goes to a human. */
+function unverified(ctx: ToolContext): boolean {
+  if (usableEmails(ctx).length > 0) return false;
+  ctx.scopeMismatch.value = true;
+  return true;
+}
 
 const ORDER_STATUS: Record<string, string> = {
   pending: "afventer betaling",
@@ -42,9 +77,26 @@ function day(v: unknown): string {
   return v ? String(v).slice(0, 10) : "-";
 }
 
-async function customerIdFor(sb: SupabaseClient, email: string): Promise<string | null> {
-  const { data } = await sb.from("customers").select("id").ilike("email", email).maybeSingle();
-  return (data?.id as string | undefined) ?? null;
+/**
+ * Customer ids for the verified addresses. The address is escaped for ilike and
+ * the returned row's email is re-checked; a row that is not the sender's sets
+ * scopeMismatch and is dropped.
+ */
+async function customerIdsFor(ctx: ToolContext): Promise<{ ids: string[]; mismatch: boolean }> {
+  const ids: string[] = [];
+  let mismatch = false;
+  for (const e of usableEmails(ctx)) {
+    const { data } = await ctx.supabase.from("customers").select("id, email").ilike("email", escapeLike(e)).maybeSingle();
+    if (!data) continue;
+    if (!usableEmails(ctx).includes(String(data.email ?? "").toLowerCase())) {
+      ctx.scopeMismatch.value = true;
+      mismatch = true;
+      continue;
+    }
+    const id = data.id as string;
+    if (!ids.includes(id)) ids.push(id);
+  }
+  return { ids, mismatch };
 }
 
 function formatOrders(orders: Row[]): string {
@@ -71,55 +123,69 @@ async function orderOwnerEmail(sb: SupabaseClient, order: Row): Promise<string |
 }
 
 export async function lookupOrdersImpl(ctx: ToolContext, input: { order_number?: string }): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
 
   if (input.order_number) {
     const { data: order } = await sb
       .from("orders")
       .select("*")
-      .ilike("order_number", input.order_number.trim())
+      .ilike("order_number", escapeLike(input.order_number.trim()))
       .maybeSingle();
     ctx.log.push({ tool: "lookup_orders", input, hits: order ? 1 : 0 });
     if (!order) return `Ingen ordre med nummer ${input.order_number}.`;
     const owner = await orderOwnerEmail(sb, order as Row);
-    if (owner !== email) {
+    if (!owner || !usableEmails(ctx).includes(owner)) {
       ctx.scopeMismatch.value = true;
       return MISMATCH;
     }
     return formatOrders([order as Row]);
   }
 
-  const customerId = await customerIdFor(sb, email);
-  if (!customerId) {
+  const { ids: customerIds, mismatch } = await customerIdsFor(ctx);
+  if (!customerIds.length) {
     ctx.log.push({ tool: "lookup_orders", input, hits: 0 });
-    return "Ingen ordrer registreret på afsenderens adresse.";
+    return mismatch ? MISMATCH : "Ingen ordrer registreret på afsenderens adresse.";
   }
-  const { data } = await sb
-    .from("orders")
-    .select("*")
-    .eq("customer_id", customerId)
-    .order("created_at", { ascending: false })
-    .limit(5);
-  const orders = (data ?? []) as Row[];
+  const orders: Row[] = [];
+  for (const customerId of customerIds) {
+    const { data } = await sb
+      .from("orders")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    orders.push(...((data ?? []) as Row[]));
+  }
+  orders.sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
+  orders.splice(5);
   ctx.log.push({ tool: "lookup_orders", input, hits: orders.length });
   return orders.length ? formatOrders(orders) : "Ingen ordrer registreret på afsenderens adresse.";
 }
 
 export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: string }): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
-  const base = sb
-    .from("repair_tickets")
-    .select("id, device_model, issue_description, status, created_at, updated_at, customer_email, customer_phone")
-    .order("created_at", { ascending: false })
-    .limit(5);
-  const { data } = input.phone ? await base.eq("customer_phone", input.phone) : await base.ilike("customer_email", email);
-  const rows = (data ?? []) as Row[];
-  const mine = rows.filter((r) => String(r.customer_email ?? "").toLowerCase() === email);
+  const base = () =>
+    sb
+      .from("repair_tickets")
+      .select("id, device_model, issue_description, status, created_at, updated_at, customer_email, customer_phone")
+      .order("created_at", { ascending: false })
+      .limit(5);
+  const rows: Row[] = [];
+  if (input.phone) {
+    const { data } = await base().eq("customer_phone", input.phone);
+    rows.push(...((data ?? []) as Row[]));
+  } else {
+    for (const email of usableEmails(ctx)) {
+      const { data } = await base().ilike("customer_email", escapeLike(email));
+      rows.push(...((data ?? []) as Row[]));
+    }
+  }
+  const mine = rows.filter((r) => usableEmails(ctx).includes(String(r.customer_email ?? "").toLowerCase()));
 
+  if (mine.length < rows.length) ctx.scopeMismatch.value = true;
   if (rows.length && mine.length === 0) {
-    ctx.scopeMismatch.value = true;
     ctx.log.push({ tool: "lookup_repairs", input, hits: rows.length });
     return MISMATCH;
   }
@@ -134,18 +200,26 @@ export async function lookupRepairsImpl(ctx: ToolContext, input: { phone?: strin
 }
 
 export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
+  if (unverified(ctx)) return NOT_VERIFIED;
   const sb = ctx.supabase;
-  const email = ctx.senderEmail.toLowerCase();
   const lines: string[] = [];
 
-  const { data: inquiries } = await sb
-    .from("contact_inquiries")
-    .select("id, subject, status, created_at")
-    .ilike("email", email)
-    .eq("source", "saelg-enhed")
-    .order("created_at", { ascending: false })
-    .limit(3);
-  for (const i of (inquiries ?? []) as Row[]) {
+  let mismatch = false;
+  const inquiries: Row[] = [];
+  for (const email of usableEmails(ctx)) {
+    const { data } = await sb
+      .from("contact_inquiries")
+      .select("id, subject, status, created_at, email")
+      .ilike("email", escapeLike(email))
+      .eq("source", "saelg-enhed")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    for (const r of (data ?? []) as Row[]) {
+      if (usableEmails(ctx).includes(String(r.email ?? "").toLowerCase())) inquiries.push(r);
+      else mismatch = true;
+    }
+  }
+  for (const i of inquiries) {
     const { data: offers } = await sb
       .from("trade_in_offers")
       .select("offer_amount, status, created_at, responded_at")
@@ -158,8 +232,10 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
     );
   }
 
-  const customerId = await customerIdFor(sb, email);
-  if (customerId) {
+  const customers = await customerIdsFor(ctx);
+  if (customers.mismatch) mismatch = true;
+  if (mismatch) ctx.scopeMismatch.value = true;
+  for (const customerId of customers.ids) {
     const { data: tradeIns } = await sb
       .from("trade_ins")
       .select("device_description, offered_price, status, received_at, paid_at, created_at")
@@ -174,25 +250,105 @@ export async function lookupBuybackImpl(ctx: ToolContext): Promise<string> {
   }
 
   ctx.log.push({ tool: "lookup_buyback", input: {}, hits: lines.length });
+  if (!lines.length && mismatch) return MISMATCH;
   return lines.length ? lines.join("\n") : "Ingen salgsforespørgsler eller opkøb på afsenderens adresse.";
 }
 
 export async function lookupCustomerImpl(ctx: ToolContext): Promise<string> {
-  const { data } = await ctx.supabase
-    .from("customers")
-    .select("id, name, created_at")
-    .ilike("email", ctx.senderEmail.toLowerCase())
-    .maybeSingle();
+  if (unverified(ctx)) return NOT_VERIFIED;
+  let data: Row | null = null;
+  let mismatch = false;
+  for (const email of usableEmails(ctx)) {
+    const res = await ctx.supabase
+      .from("customers")
+      .select("id, name, created_at, email")
+      .ilike("email", escapeLike(email))
+      .maybeSingle();
+    if (!res.data) continue;
+    if (!usableEmails(ctx).includes(String(res.data.email ?? "").toLowerCase())) {
+      ctx.scopeMismatch.value = true;
+      mismatch = true;
+      continue;
+    }
+    data = res.data as Row;
+    break;
+  }
   ctx.log.push({ tool: "lookup_customer", input: {}, hits: data ? 1 : 0 });
+  if (!data && mismatch) return MISMATCH;
   if (!data) return "Ukendt kunde – ingen profil på adressen.";
   const { count } = await ctx.supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("customer_id", data.id);
+    .eq("customer_id", data.id as string);
   return `Kunde: ${data.name ?? "(uden navn)"}, oprettet ${day(data.created_at)}, ${count ?? 0} ordrer.`;
 }
 
+/** Wraps a tool impl so every returned text is recorded in ctx.outputs (for the amount filter). */
+export function outputRecorder(ctx: ToolContext) {
+  return <A extends unknown[]>(fn: (...args: A) => Promise<string>) =>
+    async (...args: A): Promise<string> => {
+      const out = await fn(...args);
+      ctx.outputs.push(out);
+      return out;
+    };
+}
+
+/**
+ * Tools that only read public data (prices, symptoms, the fact base) and never
+ * anything about a person. Shared by the mail agent and the public chat (Fiks).
+ */
+export function buildPublicDataTools(ctx: ToolContext): BetaRunnableTool[] {
+  const rec = outputRecorder(ctx);
+  return [
+    betaZodTool({
+      name: "quote_repair",
+      description:
+        "Slå reparationspris og varighed op for en model. Brug kategori når du kender fejlen. Returnerer flere modeller, hvis navnet er tvetydigt; spørg da kunden.",
+      inputSchema: z.object({
+        model: z.string().describe("Modelnavn som kunden nævner, fx iPhone 13 Pro"),
+        category: z.enum(SUMMARY_CATEGORIES).optional().describe("Reparationskategori når du kender fejlen"),
+      }),
+      run: rec((input: { model: string; category?: string }) => quoteRepairImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "quote_buyback",
+      description:
+        "Vejledende opkøbspris for en iPhone ud fra model, lagerplads og stand. Spørg kunden om det, du mangler, før du kalder.",
+      inputSchema: z.object({
+        model: z.string().describe("Modelnavn, fx iPhone 13 Pro"),
+        storage: z.string().describe("Lagerplads, fx 128GB eller 1TB"),
+        screen: z.enum(["Perfekt", "Små ridser", "Revnet", "Virker ikke"]).describe("Skærmens stand"),
+        back: z.enum(["Perfekt", "Små ridser", "Revnet"]).describe("Bagsidens stand"),
+        battery: z.enum(["God (80%+)", "Okay (60-80%)", "Dårligt (<60%)", "Ved ikke"]).describe("Batteriets tilstand"),
+        charging_broken: z.boolean().describe("Virker opladning ikke?"),
+        other_faults: z.boolean().describe("Skal være true ved vandskade, en telefon der ikke tænder, fejl på Face ID/Touch ID, kamera, højttaler eller mikrofon, eller andet der ikke dækkes af de øvrige felter. Ellers false."),
+        cloud_locked: z.enum(["Ja", "Nej", "Ved ikke"]).describe("Er enheden låst til iCloud?"),
+      }),
+      run: rec((input: QuoteBuybackInput) => quoteBuybackImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "diagnose",
+      description: `Koble en beskrevet fejl til en reparationskategori. Vælg den række, der passer bedst: ${SYMPTOMS.map((s) => `${s.key}: ${s.label}`).join("; ")}. Kald derefter quote_repair for pris, hvis svaret beder om det.`,
+      inputSchema: z.object({
+        symptom_key: z.enum(SYMPTOMS.map((s) => s.key) as [string, ...string[]]),
+      }),
+      run: rec((input: { symptom_key: string }) => diagnoseImpl(ctx, input)),
+    }),
+    betaZodTool({
+      name: "get_knowledge",
+      description:
+        "Hent PhoneSpots faktabase: butikker, åbningstider, garanti, retur, levering, opkøb, forsikring og ordvalg.",
+      inputSchema: z.object({}),
+      run: rec(async () => {
+        ctx.log.push({ tool: "get_knowledge", input: {}, hits: 1 });
+        return buildKnowledge();
+      }),
+    }),
+  ] as BetaRunnableTool[];
+}
+
 export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void): BetaRunnableTool[] {
+  const rec = outputRecorder(ctx);
   return [
     betaZodTool({
       name: "lookup_orders",
@@ -201,7 +357,7 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
       inputSchema: z.object({
         order_number: z.string().optional().describe("Ordrenummer som kunden nævner, fx PS-1001"),
       }),
-      run: (input) => lookupOrdersImpl(ctx, input),
+      run: rec((input: { order_number?: string }) => lookupOrdersImpl(ctx, input)),
     }),
     betaZodTool({
       name: "lookup_repairs",
@@ -209,30 +365,21 @@ export function buildTools(ctx: ToolContext, onAssessment: (a: unknown) => void)
       inputSchema: z.object({
         phone: z.string().optional().describe("Telefonnummer hvis kunden nævner det"),
       }),
-      run: (input) => lookupRepairsImpl(ctx, input),
+      run: rec((input: { phone?: string }) => lookupRepairsImpl(ctx, input)),
     }),
     betaZodTool({
       name: "lookup_buyback",
       description: "Slå afsenderens salgsforespørgsler, tilbud og opkøb op (Sælg din enhed).",
       inputSchema: z.object({}),
-      run: () => lookupBuybackImpl(ctx),
+      run: rec(() => lookupBuybackImpl(ctx)),
     }),
     betaZodTool({
       name: "lookup_customer",
       description: "Slå afsenderens kundeprofil op: navn, oprettet, antal ordrer.",
       inputSchema: z.object({}),
-      run: () => lookupCustomerImpl(ctx),
+      run: rec(() => lookupCustomerImpl(ctx)),
     }),
-    betaZodTool({
-      name: "get_knowledge",
-      description:
-        "Hent PhoneSpots faktabase: butikker, åbningstider, garanti, retur, levering, opkøb, forsikring og ordvalg.",
-      inputSchema: z.object({}),
-      run: async () => {
-        ctx.log.push({ tool: "get_knowledge", input: {}, hits: 1 });
-        return buildKnowledge();
-      },
-    }),
+    ...buildPublicDataTools(ctx),
     betaZodTool({
       name: "submit_assessment",
       description: "Afslut med din vurdering af mailen. Kald dette præcis én gang som sidste handling.",

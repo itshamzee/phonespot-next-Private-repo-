@@ -21,6 +21,8 @@
 .heroActions > span { font-size: 12px; color: #526358; }
 .primaryLink { display: inline-flex; gap: 26px; align-items: center; justify-content: space-between; min-height: 44px; padding: 12px 17px; border-radius: 5px; font-size: 13px; font-weight: 600; background: #1a3d2e; color: white; }
 .primaryLink:hover { background: #2a503b; }
+.primaryLink { transition: background-color 150ms ease, scale 150ms var(--ease-ps-out); }
+.primaryLink:active { scale: 0.97; }
 .heroVisual { display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0; padding: 20px 30px 17px; min-width: 0; position: relative; }
 .heroImage { width: 100%; height: 266px; object-fit: contain; mix-blend-mode: multiply; }
 .collection[data-category="iphone"] .heroImage { transform: scale(1.14); }
@@ -43,8 +45,9 @@
 .collection a:focus-visible { outline: 3px solid #65866f; outline-offset: 4px; }
 
 /* Editorial cards occupy a single product cell, including on narrow grids. */
-.promo { display: flex; flex-direction: column; height: 100%; border: 1px solid #d1dccb; border-radius: 8px; overflow: hidden; color: #1a3d2e; background: #e8efdf; transition: border-color .15s; }
+.promo { display: flex; flex-direction: column; height: 100%; border: 1px solid #d1dccb; border-radius: 8px; overflow: hidden; color: #1a3d2e; background: #e8efdf; transition: border-color .15s, box-shadow 200ms var(--ease-ps-out); }
 .promo:hover { border-color: #849b89; }
+@media (hover: hover) and (pointer: fine) { .promo:hover { box-shadow: var(--shadow-raised); } }
 .accessories { background: #f3e9d9; border-color: #e4d5bf; }
 .promoVisual { position: relative; width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .promoVisual img { width: 100%; height: 100%; object-fit: contain; padding: 20px; mix-blend-mode: multiply; }
@@ -97,5 +100,9 @@
   .hero h1 { font-size: 27px; }
   .primaryLink { font-size: 12px; padding-inline: 13px; gap: 14px; }
 }
-@media (prefers-reduced-motion: reduce) { .promo { transition: none; } }
+@media (hover: hover) and (pointer: fine) {
+  .heroImage { transition: scale 280ms var(--ease-ps-out); }
+  .heroVisual:hover .heroImage { scale: 1.02; }
+}
+@media (prefers-reduced-motion: reduce) { .promo { transition: none; } .primaryLink, .heroImage { transition: none; } .primaryLink:active, .heroVisual:hover .heroImage { scale: none; } }
 @media (max-width: 340px) { .hero h1 { font-size: 25px; } }

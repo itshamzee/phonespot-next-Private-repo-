@@ -32,6 +32,7 @@ export const TIMELINE_ACTIONS = [
   "repair_case_item_removed",
   "repair_case_price_changed",
   "repair_case_part_swapped",
+  "repair_case_details_changed",
 ] as const;
 
 export type TimelineItem = {
@@ -100,6 +101,19 @@ export function activityText(a: Pick<CaseActivity, "action" | "details">): strin
   }
   if (a.action === "repair_case_item_added") return `${name} tilføjet (${kr(d.unit_oere)})`;
   if (a.action === "repair_case_part_swapped") return "Del skiftet";
+  if (a.action === "repair_case_details_changed") {
+    const changes = Array.isArray(d.changes) ? (d.changes as Record<string, unknown>[]) : [];
+    const parts = changes.map((c) => {
+      const from = str(c.from);
+      const to = str(c.to);
+      // Fejlbeskrivelser kan være lange: vis kun at de er rettet.
+      if (c.field === "issue_description") return `${str(c.label)} rettet`;
+      return `${str(c.label)}: ${from ? clip(from, 40) : "tom"} til ${to ? clip(to, 40) : "tom"}`;
+    });
+    if (parts.length === 0) return null;
+    const card = d.customer_card_updated === true ? " Kundekortet er også rettet." : "";
+    return `Oplysninger rettet. ${parts.join("; ")}.${card}`;
+  }
   return null;
 }
 

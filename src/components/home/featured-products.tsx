@@ -14,6 +14,7 @@ export async function FeaturedProducts() {
   let allProducts: {
     slug: string;
     image?: string;
+    hoverImage?: string;
     title: string;
     minPrice: number | null;
     compareAtPrice?: number | null;
@@ -82,6 +83,7 @@ export async function FeaturedProducts() {
     allProducts = interleaved.map((t) => ({
       slug: t.slug,
       image: t.images?.[0],
+      hoverImage: t.images?.[1],
       title: t.display_name,
       minPrice: t.min_price ?? t.base_price_a ?? null,
       // Real recommended retail price only — never base_price_a, which is
@@ -119,6 +121,7 @@ export async function FeaturedProducts() {
             key={product.slug}
             slug={product.slug}
             image={product.image}
+            hoverImage={product.hoverImage}
             title={product.title}
             minPrice={product.minPrice}
             compareAtPrice={product.compareAtPrice}

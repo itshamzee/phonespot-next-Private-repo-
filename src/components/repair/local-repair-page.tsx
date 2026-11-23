@@ -104,7 +104,7 @@ export function LocalRepairPage({ town, prices }: Props) {
 
   const heroTiles = [
     { title: "Livstidsgaranti", desc: "Arbejde og dele, batteri 6 mdr." },
-    { title: "30 minutter", desc: "90% klar mens du venter" },
+    { title: "30 minutter", desc: "90 % af skærm- og batteriskift" },
     { title: "Gratis hurtigt tjek", desc: "Ved disken, uden tidsbestilling" },
     isVejle
       ? { title: "Gratis parkering", desc: "Ved butikken i Vejle" }
@@ -151,7 +151,7 @@ export function LocalRepairPage({ town, prices }: Props) {
 
       {/* Hero */}
       <section className="bg-[#1A3D2E] py-20 md:py-24">
-        <div className="mx-auto max-w-4xl px-4">
+        <div className="hero-rise mx-auto max-w-4xl px-4">
           <p className="mb-4 text-sm font-semibold tracking-wide text-white/60">
             Telefon- og tabletreparation
           </p>
@@ -167,13 +167,13 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90"
             >
               {bookLabel}
             </Link>
             <Link
               href="/reparation/indsend"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm press hover:bg-white/20"
             >
               {mailInLabel}
             </Link>
@@ -194,8 +194,8 @@ export function LocalRepairPage({ town, prices }: Props) {
       <section className="border-b border-[#E5E5EA] bg-white">
         <p className="mx-auto max-w-3xl px-4 py-8 text-base leading-relaxed text-[#111111]">
           {isHomeTown
-            ? `${store.name}, ${store.street}, ${store.zip} ${store.city}, reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. 90% af skærm- og batteriskift er klar på 30 minutter.`
-            : `Fra ${town.name} er der ${town.travel.headline.toLowerCase()} til ${store.name}, ${store.street}, ${store.zip} ${store.city}. Kom uden tidsbestilling: 90% af skærm- og batteriskift er klar på 30 minutter.`}
+            ? `${store.name}, ${store.street}, ${store.zip} ${store.city}, reparerer iPhone, Samsung, iPad og MacBook uden tidsbestilling. 90 % af skærm- og batteriskift er klar på 30 minutter.`
+            : `Fra ${town.name} er der ${town.travel.headline.toLowerCase()} til ${store.name}, ${store.street}, ${store.zip} ${store.city}. Kom uden tidsbestilling: 90 % af skærm- og batteriskift er klar på 30 minutter.`}
           {fromPrice !== null && ` Skærmskift starter fra ${formatKr(fromPrice)}`}
           {` Du får ${REPAIR_WARRANTY_SHORT}`}
           {isHomeTown ? ". " : ", og du kan også sende enheden ind med en gratis fragtlabel."}
@@ -227,6 +227,15 @@ export function LocalRepairPage({ town, prices }: Props) {
                 <p className="mt-3 text-base leading-relaxed text-[#6E6E73]">
                   {section.text}
                 </p>
+                {section.links && section.links.length > 0 && (
+                  <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm font-semibold text-[#1A3D2E]">
+                    {section.links.map((l) => (
+                      <Link key={l.href} href={l.href} className="underline underline-offset-4">
+                        {l.label}
+                      </Link>
+                    ))}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -333,7 +342,7 @@ export function LocalRepairPage({ town, prices }: Props) {
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link
                 href="/reparation/indsend"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover:shadow-lg"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1A3D2E] px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#2D6B45] hover-fine:shadow-raised active:shadow-none"
               >
                 {mailInLabel}
               </Link>
@@ -521,6 +530,14 @@ export function LocalRepairPage({ town, prices }: Props) {
               <Link href="/butik/slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
                 butikken i Slagelse
               </Link>
+              . Vi sælger også{" "}
+              <Link href="/iphones-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+                brugte iPhones i Slagelse
+              </Link>{" "}
+              og{" "}
+              <Link href="/baerbare-slagelse" className="font-semibold text-[#1A3D2E] hover:underline">
+                brugte bærbare i Slagelse
+              </Link>
               .
             </p>
           )}
@@ -579,13 +596,13 @@ export function LocalRepairPage({ town, prices }: Props) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={bookingHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] transition-all hover:bg-white/90 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#1A3D2E] press hover:bg-white/90"
             >
               {bookLabel}
             </Link>
             <Link
               href="/reparation/indsend"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-sm press hover:bg-white/20"
             >
               {mailInLabel}
             </Link>

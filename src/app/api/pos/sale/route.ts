@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import { createSaleWithTerminal } from "@/lib/pos/terminal-flow";
 import { saleBodySchema } from "@/lib/pos/schemas";
-import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { resolveRegister } from "@/lib/pos/pos-context";
+import { UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
+
+// An integrated card terminal waits for the customer (Flatpay: up to ~100 s).
+export const maxDuration = 120;
 
 /**
  * POST /api/pos/sale
@@ -17,7 +20,7 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  *   >,
  *   payments: Array<{ type: kontant|kort_terminal|mobilepay|klarna|faktura|tilgodebevis|gavekort,
  *                     amountOere, reference? }>,    // must sum to the total
- *   locationId, registerId, customerId?,
+ *   registerId, customerId?,   // locationId is ignored: the server uses the register's own location
  *   discountAmount?: number (oere), discountReason?: "Fejl"|"Kundeservice"|"Tilbud"|"Partner"|"Andet",
  *   notes?,
  *   terminalReference?   // only with an integrated terminal: lets the Kasse cancel a pending charge
@@ -34,23 +37,26 @@ import { UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpe
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const parsed = await parseBody(request, saleBodySchema);
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
+    const register = await resolveRegister(actor, body.registerId);
+
     const result = await createSaleWithTerminal({
       items: body.items,
       payments: body.payments,
-      locationId: body.locationId,
-      registerId: body.registerId,
+      locationId: register.locationId,
+      registerId: register.registerId,
       customerId: body.customerId ?? null,
       discountAmount: body.discountAmount ?? 0,
       discountReason: body.discountReason ?? null,
       notes: body.notes ?? null,
-      staffId: staff.id,
+      staffId: actor.id,
       terminalReference: body.terminalReference ?? null,
     });
 

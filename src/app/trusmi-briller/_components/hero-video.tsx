@@ -61,7 +61,7 @@ export function HeroVideo({ src, poster, className }: Props) {
           aria-label="Afspil video"
           className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity hover:bg-black/40"
         >
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 text-[#0F2A20] shadow-2xl">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 text-[#0F2A20] shadow-floating">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="ml-1 h-9 w-9">
               <path d="M8 5v14l11-7z" />
             </svg>

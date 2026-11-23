@@ -471,7 +471,7 @@ function AccessoryProductDetails({
         {highlights.map((h) => (
           <div
             key={h.title}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-sand bg-white px-4 py-5 text-center shadow-sm"
+            className="flex flex-col items-center gap-2 rounded-2xl border border-sand bg-white px-4 py-5 text-center shadow-rest"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-eco/8">
               <HighlightIcon type={h.icon} />
@@ -487,7 +487,7 @@ function AccessoryProductDetails({
       {/* ---- Spec table — only the accessory's OWN attributes, never a
               device template's specs. Omitted entirely if there are none. ---- */}
       {specs && specs.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-rest">
           <div className="border-b border-sand bg-sand/30 px-5 py-3.5">
             <h3 className="font-display text-sm font-bold text-charcoal">
               Specifikationer
@@ -571,7 +571,7 @@ export function ProductDetails({
         {data.highlights.map((h) => (
           <div
             key={h.title}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-sand bg-white px-4 py-5 text-center shadow-sm"
+            className="flex flex-col items-center gap-2 rounded-2xl border border-sand bg-white px-4 py-5 text-center shadow-rest"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-eco/8">
               <HighlightIcon type={h.icon} />
@@ -585,7 +585,7 @@ export function ProductDetails({
       </div>
 
       {/* ---- Spec table ---- */}
-      <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-sand bg-white shadow-rest">
         <div className="border-b border-sand bg-sand/30 px-5 py-3.5">
           <h3 className="font-display text-sm font-bold text-charcoal">
             Specifikationer

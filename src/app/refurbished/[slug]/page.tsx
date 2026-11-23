@@ -16,7 +16,7 @@ import { JsonLd, MERCHANT_RETURN_POLICY_JSONLD } from "@/components/seo/json-ld"
 import { ConditionExplainer } from "@/components/product/condition-explainer";
 import { ProductGridCard } from "@/components/product/product-grid-card";
 import { devicesToItemCondition, gradeToItemCondition } from "@/lib/seo/item-condition";
-import { effectiveGrade } from "@/lib/grades";
+import { effectiveGrade, GRADE_SHORT_LABEL } from "@/lib/grades";
 import {
   deviceUrl,
   groupDevices,
@@ -27,9 +27,11 @@ import {
   fallbackDeviceDescription,
   fallbackDeviceTitle,
 } from "@/lib/seo/device-meta";
-import { getDeviceFaq } from "@/lib/product/device-faq";
+import { getDeviceFaq, getDeviceModelFaq } from "@/lib/product/device-faq";
+import type { DeviceGrade } from "@/lib/supabase/platform-types";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -283,7 +285,12 @@ export default async function RefurbishedProductPage({ params }: Props) {
 
   const deviceType = getDeviceType(template.category);
 
-  const faqs = getDeviceFaq(template.display_name, template.category);
+  const faqs = [
+    ...getDeviceModelFaq(template.display_name, gradeMinPrices, (g) =>
+      g === "N" ? "fabriksny" : `stand ${g} (${(GRADE_SHORT_LABEL[g as DeviceGrade] ?? "").toLocaleLowerCase("da-DK")})`.replace(" ()", ""),
+    ),
+    ...getDeviceFaq(template.display_name, template.category),
+  ];
   return (
     <div className="font-body text-[#202421]">
       <JsonLd data={breadcrumbJsonLd} />
@@ -325,6 +332,9 @@ export default async function RefurbishedProductPage({ params }: Props) {
           accessories={accessories.map(toPublicSkuProduct)}
           relatedInStock={relatedInStock}
           upgradeOptions={upgradeOptions}
+          campaignAccessoryIds={accessories
+            .filter((acc) => "black_november" in acc && acc.black_november)
+            .map((acc) => acc.id)}
         />
       </section>
 
@@ -343,8 +353,14 @@ export default async function RefurbishedProductPage({ params }: Props) {
               beskrivelsen af den konkrete enhed, når du vælger ovenfor.
             </p>
             <Link
+              href="/blog/stand-a-b-c-og-batteri"
+              className="mt-5 flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
+            >
+              Sådan vurderer vi stand og batteri &rarr;
+            </Link>
+            <Link
               href="/kvalitet"
-              className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-[#1A3D2E]"
             >
               Læs om vores kvalitet &rarr;
             </Link>
@@ -412,6 +428,7 @@ async function RelatedProducts({
             key={t.id}
             slug={t.slug}
             image={t.images[0]}
+            hoverImage={t.images[1]}
             title={t.display_name}
             minPrice={t.min_price}
             deviceCount={t.device_count}

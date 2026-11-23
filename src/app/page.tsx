@@ -1,4 +1,3 @@
-import { BlackNovemberSlider } from "@/components/campaign/black-november-slider";
 import { isBlackNovember } from "@/lib/campaign/black-november";
 import type { Metadata } from "next";
 import { ShopTabs } from "@/components/home/shop-tabs";
@@ -30,7 +29,7 @@ const baseMetadata: Metadata = {
 export async function generateMetadata(): Promise<Metadata> {
   if (!isBlackNovember()) return baseMetadata;
   const description =
-    "Black Friday hele november: 10 % på alle reparationer, 5 % på brugte iPhones og enheder, covers og glas 199 kr. 36 måneders garanti. Vejle og Slagelse.";
+    "Black Friday hele november: 10 % på alle reparationer, covers og glas 199 kr. 36 måneders garanti. Vejle og Slagelse.";
   return { ...baseMetadata, description, openGraph: { ...baseMetadata.openGraph, description } };
 }
 
@@ -38,8 +37,7 @@ export default async function HomePage() {
   const initialProducts = await getHomepageProducts("iphones", 8).catch(() => []);
   return <div className={styles.surface}>
     <div className={`${styles.wrap} ${styles.intro}`}>
-      <StorefrontHero />
-      <BlackNovemberSlider serverActive={isBlackNovember()} />
+      <StorefrontHero blackNovember={isBlackNovember()} />
       <ShopTabs initialProducts={initialProducts} />
       <LagersalgHomeStrip />
       <StorefrontSections />

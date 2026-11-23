@@ -49,7 +49,13 @@ export function toRpcItems(items: SaleItem[]) {
   return items.map((i) => {
     switch (i.type) {
       case "device":
-        return { type: "device", device_id: i.deviceId, ...(i.repairTicketItemId ? { repair_ticket_item_id: i.repairTicketItemId } : {}) };
+        return {
+          type: "device",
+          device_id: i.deviceId,
+          ...(i.repairTicketItemId ? { repair_ticket_item_id: i.repairTicketItemId } : {}),
+          // IMEI or serial number from the till, only for a unit without one on file.
+          ...(i.imei ? { imei: i.imei } : {}),
+        };
       case "sku_product":
         return {
           type: "sku_product",

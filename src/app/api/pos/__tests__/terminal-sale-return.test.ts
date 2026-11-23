@@ -10,21 +10,43 @@ import { NextRequest } from "next/server";
 import type { PaymentTerminal } from "@/lib/pos/payment-terminal";
 
 const requireStaffMock = vi.fn();
+vi.mock("@/lib/pos/return-entity", () => ({
+  assertReturnEntity: async () => undefined,
+  assertReturnLookupEntity: async () => undefined,
+}));
+// Butik/kasse-opslaget (src/lib/pos/pos-context.ts) har egne tests; her er det en gennemstilling til Vejle-lokationen.
+vi.mock("@/lib/pos/pos-context", () => ({
+  resolveRegister: async (_actor: unknown, registerId: string) => ({
+    registerId,
+    locationId: "00000000-0000-4000-8000-000000000020",
+    locationSlug: "vejle",
+  }),
+  assertLocationAccess: async () => "vejle",
+}));
 vi.mock("@/lib/auth/require-staff", () => ({ requireStaff: (...a: unknown[]) => requireStaffMock(...a) }));
 
 const rpcMock = vi.fn();
 const tables = vi.hoisted(() => ({
   reads: [] as string[],
   rows: {} as Record<string, unknown>,
+  /** Tables whose list query answers with a database error. */
+  failing: new Set<string>(),
 }));
 function query(table: string) {
   tables.reads.push(table);
   const b: Record<string, unknown> = {};
-  for (const m of ["select", "eq", "in", "or", "limit"]) b[m] = () => b;
-  const row = tables.rows[table];
+  for (const m of ["select", "eq", "or", "limit"]) b[m] = () => b;
+  let row = tables.rows[table];
+  // .in(column, values) filters array rows, so the duplicate-transaction check sees real matches.
+  b.in = (column: string, values: unknown[]) => {
+    if (Array.isArray(row)) row = row.filter((r) => values.includes((r as Record<string, unknown>)[column]));
+    return b;
+  };
   b.maybeSingle = async () => ({ data: Array.isArray(row) ? (row[0] ?? null) : (row ?? null), error: null });
   b.then = (resolve: (v: unknown) => unknown) =>
-    Promise.resolve({ data: Array.isArray(row) ? row : [], error: null }).then(resolve);
+    Promise.resolve(
+      tables.failing.has(table) ? { data: null, error: { message: "db down" } } : { data: Array.isArray(row) ? row : [], error: null },
+    ).then(resolve);
   return b;
 }
 vi.mock("@/lib/supabase/client", () => ({
@@ -179,6 +201,33 @@ describe("integrated terminal with a transaction id", () => {
       { type: "kontant", amount_oere: 50_000, reference: null },
       { type: "kort_terminal", amount_oere: 40_000, reference: "WL-TX-777" },
     ]);
+  });
+
+  it("refuses a terminal transaction that is already saved on another payment", async () => {
+    const refund = vi.fn<PaymentTerminal["refund"]>(async () => ({ status: "approved" }));
+    fake.terminal = { kind: "worldline", charge: async () => ({ status: "approved", transactionId: "WL-OLD" }), refund };
+    tables.rows.order_payments = [{ reference: "WL-OLD" }];
+
+    const res = await salePOST(req("/api/pos/sale", saleBody));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe("terminal_duplicate");
+    expect(rpcMock).not.toHaveBeenCalled();
+    expect(refund).not.toHaveBeenCalled();
+  });
+
+  it("voids the new charge when the duplicate check cannot run", async () => {
+    const refund = vi.fn<PaymentTerminal["refund"]>(async () => ({ status: "approved" }));
+    fake.terminal = { kind: "worldline", charge: async () => ({ status: "approved", transactionId: "WL-NEW" }), refund };
+    tables.failing.add("order_payments");
+    try {
+      const res = await salePOST(req("/api/pos/sale", saleBody));
+      expect(res.status).toBe(503);
+      expect((await res.json()).code).toBe("terminal_voided");
+      expect(rpcMock).not.toHaveBeenCalled();
+      expect(refund).toHaveBeenCalledWith(expect.objectContaining({ originalTransactionId: "WL-NEW" }));
+    } finally {
+      tables.failing.delete("order_payments");
+    }
   });
 
   it("voids the card payment when the database refuses the sale", async () => {

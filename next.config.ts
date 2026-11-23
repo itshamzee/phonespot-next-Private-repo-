@@ -116,9 +116,12 @@ const nextConfig: NextConfig = {
       // from the earlier sitemap. Redirect them to the static landing pages
       // or to the brand-level model detail.
       { source: "/reparation/vejle", destination: "/reparation-vejle", permanent: true },
-      { source: "/reparation/slagelse", destination: "/reparation", permanent: true },
+      { source: "/reparation/slagelse", destination: "/reparation-slagelse", permanent: true },
       // /reparation-slagelse is a real landing page again (2026-10), so the old
       // redirect to /reparation was removed.
+      // Apple er et forældermærke i vælgeren, ikke et repair_brands-slug
+      // (iphone/ipad/macbook/apple-watch). /reparation/apple gav 404.
+      { source: "/reparation/apple", destination: "/reparation/iphone", permanent: true },
       { source: "/reparation/vejle/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/slagelse/:brand", destination: "/reparation/:brand", permanent: true },
       { source: "/reparation/vejle/:brand/:model", destination: "/reparation/:brand/:model", permanent: true },

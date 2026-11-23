@@ -195,7 +195,7 @@ export default async function RepairStatusPage({
         </div>
 
         {/* Device card */}
-        <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-rest">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-eco/10 text-green-eco">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
@@ -214,7 +214,7 @@ export default async function RepairStatusPage({
         </div>
 
         {/* Status timeline */}
-        <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-rest">
           <h2 className="mb-6 font-display text-lg font-bold text-charcoal">
             Status
           </h2>
@@ -250,7 +250,7 @@ export default async function RepairStatusPage({
                     ) : isCurrent ? (
                       <div className="relative flex h-4 w-4 items-center justify-center">
                         <div className="absolute h-4 w-4 animate-ping rounded-full bg-green-eco/40" />
-                        <div className="h-4 w-4 rounded-full bg-green-eco shadow-md shadow-green-eco/30" />
+                        <div className="h-4 w-4 rounded-full bg-green-eco" />
                       </div>
                     ) : (
                       <div className="h-4 w-4 rounded-full border-2 border-soft-grey bg-white" />
@@ -298,7 +298,7 @@ export default async function RepairStatusPage({
 
         {/* Comments */}
         {comments.length > 0 && (
-          <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-sm">
+          <div className="mb-8 rounded-2xl border border-soft-grey bg-white p-6 shadow-rest">
             <h2 className="mb-4 font-display text-lg font-bold text-charcoal">
               Beskeder
             </h2>
@@ -320,7 +320,7 @@ export default async function RepairStatusPage({
         )}
 
         {/* Contact section */}
-        <div className="rounded-2xl border border-soft-grey bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-soft-grey bg-white p-6 shadow-rest">
           <h2 className="mb-4 font-display text-lg font-bold text-charcoal">
             Har du spørgsmål?
           </h2>

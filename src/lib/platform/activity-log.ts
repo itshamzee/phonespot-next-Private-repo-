@@ -15,7 +15,12 @@ export type ActivityAction =
   | "sku_update"
   | "sku_delete"
   | "stock_adjust"
-  | "afregningsbilag_generated";
+  | "afregningsbilag_generated"
+  | "opkoeb_upload"
+  | "opkoeb_paid"
+  | "opkoeb_suspicion"
+  | "opkoeb_suspicion_released"
+  | "opkoeb_voided";
 
 export interface LogActivityParams {
   supabase: SupabaseClient;

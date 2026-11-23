@@ -39,7 +39,10 @@ export const config = {
     "/api/seo/:path*",
     "/api/repairs/:id/:action(status|quote|comments)",
     "/api/contact/:id/:path*",
+    // Opkøb i butikken (D2): slutseddellisten/-oprettelsen og prisforslaget.
+    "/api/trade-in/receipts",
     "/api/trade-in/receipts/:id/:path*",
+    "/api/trade-in/price-suggestion",
     "/api/trade-in/:id/upload-label",
   ],
 };

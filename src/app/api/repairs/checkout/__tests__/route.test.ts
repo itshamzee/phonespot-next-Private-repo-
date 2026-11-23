@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { makeSupabase, type CatalogService } from "@/lib/repair/__tests__/test-supabase";
 
@@ -24,6 +24,7 @@ vi.mock("@/lib/stripe/client", () => ({
 }));
 
 import { POST } from "../route";
+import { hashRecoveryToken } from "@/lib/repair/payment-recovery";
 
 const catalog: CatalogService[] = [
   { id: "a", name: "Skærmskift", price_dkk: 1000, active: true, repair_models: { name: "iPhone 15" } },
@@ -48,7 +49,10 @@ const post = (body: unknown) =>
   POST(new NextRequest("http://x/api/repairs/checkout", { method: "POST", body: JSON.stringify(body) }));
 
 let state: ReturnType<typeof makeSupabase>["state"];
+// Black November giver 10 % fra første reparation; testene forudsætter den normale rabatregel.
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-10T10:00:00Z"));
   vi.clearAllMocks();
   const s = makeSupabase(catalog);
   m.client = s.client;
@@ -119,5 +123,25 @@ describe("POST /api/repairs/checkout", () => {
 
     const sum = state.tickets.reduce((s, t) => s + ((t.booking_details as { total_price_dkk: number }).total_price_dkk), 0);
     expect(sum).toBe(2699 - 405);
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe("POST /api/repairs/checkout recovery link", () => {
+  it("sends a cancel_url with a token whose hash (never the token) is stored on the ticket", async () => {
+    await post({ ...base, selected_services: [svc("a", 1)], total_price_dkk: 1 });
+    const args = m.sessionCreate.mock.calls[0][0];
+    const url = new URL(args.cancel_url);
+    expect(url.pathname).toBe("/api/repairs/recovery/start");
+    expect(url.searchParams.get("ticket_id")).toBe("ticket-1");
+    const token = url.searchParams.get("token") ?? "";
+    expect(token.length).toBeGreaterThanOrEqual(16);
+    const d = state.tickets[0].booking_details as Record<string, unknown>;
+    expect(d.payment_flow).toBe("online");
+    expect(d.recovery_token_hash).toBe(hashRecoveryToken(token));
+    expect(JSON.stringify(d)).not.toContain(token);
   });
 });

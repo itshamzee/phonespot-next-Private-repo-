@@ -28,7 +28,7 @@ export function RelatedGuides({
           <Link
             key={guide.href}
             href={guide.href}
-            className="rounded-2xl bg-white p-5 text-left transition-shadow hover:shadow-md"
+            className="rounded-2xl bg-white p-5 text-left card-raise"
           >
             <p className="font-display text-sm font-bold text-charcoal">
               {guide.title}

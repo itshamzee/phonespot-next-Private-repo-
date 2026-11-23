@@ -63,6 +63,36 @@
   border: 1px solid #dce2dc;
   border-radius: 6px;
   background: white;
+  transition: border-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.thumbnails button:active {
+  scale: 0.96;
+}
+.thumbnails .standThumb span {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border-radius: 3px;
+  background: rgba(26, 61, 46, 0.9);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+.standCaption {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a3d2e;
 }
 .thumbnails button[aria-pressed="true"] {
   border: 2px solid #1a3d2e;
@@ -138,6 +168,10 @@
   padding: 14px;
   font-size: 15px;
   font-weight: 600;
+  transition: background-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.buyButton:active:not(:disabled) {
+  scale: 0.98;
 }
 .buyButton:hover {
   background: #254e3c;
@@ -397,4 +431,241 @@
 }
 .campaignLine s {
   color: #77776f;
+}
+
+/* Black November: mørkt tilbehørsafsnit i Apple-stil. Lyset i baggrunden er
+   PhoneSpots grønne (#5A8C6F), svagt og kun i ét hjørne. */
+.bnBand {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 56px;
+  padding: 44px 22px 30px;
+  border-radius: 24px;
+  background: #000;
+  color: #f5f5f7;
+}
+.bnBand::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -45%;
+  width: 140%;
+  aspect-ratio: 1;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(90, 140, 111, 0.4), rgba(90, 140, 111, 0));
+  pointer-events: none;
+}
+.bnHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px 32px;
+}
+.bnKicker {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8fb89f;
+}
+.bnBand h2 {
+  margin-top: 6px;
+  font-size: clamp(30px, 4.4vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.bnLead {
+  max-width: 34rem;
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #a1a1a6;
+}
+.bnLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bnLink:hover {
+  background: #fff;
+}
+.bnGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 66%);
+  gap: 14px;
+  overflow-x: auto;
+  margin: 30px -22px 0;
+  padding: 0 22px 6px;
+  scrollbar-width: none;
+}
+.bnCard {
+  display: block;
+  padding: 10px 10px 16px;
+  border-radius: 18px;
+  background: #161617;
+  transition: background 0.2s;
+}
+.bnCard:hover {
+  background: #1d1d1f;
+}
+.bnImage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 190px;
+  border-radius: 12px;
+  background: #f5f5f7;
+  font-size: 12px;
+  color: #6e6e73;
+}
+.bnCard h3 {
+  margin: 14px 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #f5f5f7;
+}
+.bnPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 6px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.bnPrice s {
+  font-size: 13px;
+  font-weight: 400;
+  color: #86868b;
+}
+.bnFoot {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #86868b;
+}
+@media (min-width: 900px) {
+  .bnBand {
+    padding: 56px 48px 40px;
+  }
+  .bnBand::before {
+    top: -45%;
+    right: -15%;
+    width: 75%;
+  }
+  .bnGrid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 36px 0 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+/* Fast købsbjælke (som hos de store: variant, pris og Køb altid inden for rækkevidde). */
+.buyBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 60;
+  transform: translateY(-110%);
+  transition: transform 0.22s ease-out;
+  background: #fff;
+  border-bottom: 1px solid #e5e5ea;
+  box-shadow: var(--shadow-floating);
+  padding-top: env(safe-area-inset-top);
+}
+.buyBarVisible {
+  transform: translateY(0);
+}
+.buyBarInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+.buyBarThumb {
+  position: relative;
+  flex: 0 0 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #f4f5f2;
+}
+.buyBarText {
+  min-width: 0;
+  flex: 1;
+}
+.buyBarMeta {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: #3d433f;
+}
+.buyBarPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+}
+.buyBarPrice span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #5a8c6f;
+}
+.buyBarButton {
+  flex: 0 0 auto;
+  min-height: 46px;
+  min-width: 86px;
+  border-radius: 6px;
+  background: #1a3d2e;
+  color: #fff;
+  padding: 0 22px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 150ms ease, scale 150ms var(--ease-ps-out);
+}
+.buyBarButton:active:not(:disabled) {
+  scale: 0.97;
+}
+.buyBarButton:hover {
+  background: #254e3c;
+}
+/* Bekræftelse efter "Læg i kurv": flueben foran teksten. */
+.addedLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.addedLabel svg {
+  width: 18px;
+  height: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .buyBar {
+    transition: none;
+  }
+  .thumbnails button,
+  .buyButton,
+  .buyBarButton {
+    transition: none;
+    scale: none;
+  }
 }

@@ -20,7 +20,7 @@ import { useBlackNovember } from "@/lib/campaign/use-black-november";
 
 /** Samme prisformat som prissiderne: 1.899 kr. */
 const kr = (n: number) => n.toLocaleString("da-DK") + " kr.";
-import { normalizeTrackStore, trackRepairBooking } from "@/lib/tracking/events";
+import { normalizeTrackStore, trackRepairBooking, trackRepairBookingStep } from "@/lib/tracking/events";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -177,7 +177,7 @@ function NavButtons({
         <button
           type="button"
           onClick={onPrev}
-          className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
+          className="press flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal hover:bg-sand"
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
             <path
@@ -195,7 +195,7 @@ function NavButtons({
         type="button"
         onClick={onNext}
         disabled={!canNext || isSubmitting}
-        className="flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+        className="press flex items-center gap-2 rounded-full bg-green-eco px-8 py-3 text-sm font-bold text-white hover:bg-green-eco/90 hover-fine:shadow-raised active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
       >
         {isSubmitting ? (
           <>
@@ -292,7 +292,7 @@ function DeviceTabs({
               onClick={() => onSelect(i)}
               className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-all ${
                 i === activeDeviceIndex
-                  ? "bg-green-eco text-white shadow-sm"
+                  ? "bg-green-eco text-white shadow-rest"
                   : "border border-soft-grey bg-white text-charcoal hover:border-green-eco/30"
               }`}
             >
@@ -869,6 +869,14 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
     }
   };
 
+  // Mål frafald pr. trin: hvert trin sendes kun første gang kunden når det.
+  const furthestTracked = useRef(-1);
+  useEffect(() => {
+    if (step <= furthestTracked.current) return;
+    furthestTracked.current = step;
+    trackRepairBookingStep({ stepNumber: step + 1, stepName: STEPS[step].label });
+  }, [step]);
+
   const goNext = () => setStep((s) => Math.min(s + 1, 4));
   const goPrev = () => setStep((s) => Math.max(s - 1, 0));
 
@@ -879,7 +887,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
   if (submitResult?.success) {
     return (
       <div ref={successRef} className="rounded-2xl border border-green-eco/20 bg-green-eco/5 p-10 text-center">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-lg shadow-green-eco/25">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-eco shadow-raised">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -970,7 +978,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
       {submitResult?.error && (
         <div
           role="alert"
-          className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          className="reveal-in mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
         >
           <svg
             viewBox="0 0 20 20"
@@ -1201,7 +1209,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 2: Reparation ---- */}
       {step === 1 && (
-        <div className="md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
+        <div className="reveal-in md:grid md:grid-cols-[1fr_280px] md:gap-8 md:items-start">
           {/* Left column: service list */}
           <div className="space-y-6">
             <div>
@@ -1483,7 +1491,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
           {/* Right column: sticky Oversigt sidebar (desktop only) */}
           <div className="hidden md:block">
-            <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-sm">
+            <div className="sticky top-4 overflow-hidden rounded-2xl border border-soft-grey bg-white shadow-rest">
               {/* Header */}
               <div className="border-b border-soft-grey px-5 py-3">
                 <div className="flex items-center gap-2">
@@ -1638,7 +1646,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 3: Detaljer ---- */}
       {step === 2 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -1745,7 +1753,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 4: Butik & dato ---- */}
       {step === 3 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -1771,9 +1779,9 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setStoreId(id)}
-                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
-                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        ? "border-green-eco bg-green-eco/5 shadow-rest"
                         : "border-soft-grey hover:border-green-eco/30"
                     }`}
                   >
@@ -1835,9 +1843,9 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => setPreferredDate(date)}
-                    className={`rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`press rounded-xl border-2 p-4 text-left ${
                       isSelected
-                        ? "border-green-eco bg-green-eco/5 shadow-sm"
+                        ? "border-green-eco bg-green-eco/5 shadow-rest"
                         : "border-soft-grey hover:border-green-eco/30"
                     }`}
                   >
@@ -1889,7 +1897,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
 
       {/* ---- Step 5: Bekræft & Betal ---- */}
       {step === 4 && (
-        <div className="space-y-6">
+        <div className="reveal-in space-y-6">
           <div>
             <h2
               tabIndex={-1}
@@ -1898,7 +1906,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
               Bekræft din booking
             </h2>
             <p className="mt-1 text-sm text-gray">
-              Gennemgå dine valg og vælg betalingsmetode.
+              Gennemgå dine valg, og vælg hvordan du vil betale.
             </p>
           </div>
 
@@ -2020,10 +2028,12 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
                   <dd className="min-w-0 text-right font-medium text-charcoal [overflow-wrap:anywhere]">{value}</dd>
                 </div>
               ))}
-              <div>
-                <dt className="text-gray">Beskrivelse</dt>
-                <dd className="mt-1 text-charcoal">{customer.description}</dd>
-              </div>
+              {customer.description.trim() && (
+                <div>
+                  <dt className="text-gray">Beskrivelse</dt>
+                  <dd className="mt-1 text-charcoal [overflow-wrap:anywhere]">{customer.description}</dd>
+                </div>
+              )}
             </dl>
           </div>
 
@@ -2051,129 +2061,53 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
             </div>
           </div>
 
-          {/* Payment buttons */}
+          {/* Betalingsvalg: betal i butikken er primær (ingen betaling nu, ingen afbrydelse), betal nu er ligestillet alternativ */}
           <div className="space-y-4">
-            <button
-              type="button"
-              onClick={handleSubmitAndPay}
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white transition-all hover:bg-green-eco/90 hover:shadow-lg hover:shadow-green-eco/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Sender...
-                </>
-              ) : (
-                <>Betal nu — {kr(totalPrice)}</>
+            <div className="rounded-2xl border-2 border-green-eco bg-white p-5">
+              <p className="font-body text-base font-bold text-charcoal">
+                Betal i butikken
+                {selectedStore ? ` i ${selectedStore.city}` : ""}
+              </p>
+              <p className="mt-1 text-sm text-gray">
+                Du booker din tid nu og betaler først, når du afhenter din
+                enhed. Prisen er den samme
+                {discountPercent > 0 ? `, også med din rabat på ${discountPercent} %` : ""}.
+              </p>
+              {selectedStore && (
+                <p className="mt-2 text-xs text-gray">
+                  {selectedStore.street}, {selectedStore.zip} {selectedStore.city}
+                  {" · "}
+                  {storeHoursLine(selectedStore.hours)}
+                  {" · "}
+                  {selectedStore.phone.replace("+45 ", "")}
+                </p>
               )}
-            </button>
-            <p className="text-center text-xs text-gray">
-              Betal sikkert med Klarna, kort eller MobilePay
-            </p>
-
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-soft-grey" />
-              <span className="text-sm text-gray">eller</span>
-              <div className="h-px flex-1 bg-soft-grey" />
-            </div>
-
-            {/* Betal i butikken — with store info */}
-            <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-eco/10">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    className="h-5 w-5 text-green-eco"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="font-body text-sm font-bold text-charcoal">
-                    Aflever i butikken
-                    {selectedStore ? ` — ${selectedStore.city}` : ""}
-                  </p>
-                  {selectedStore && (
-                    <p className="mt-0.5 text-xs text-gray">
-                      {selectedStore.street}, {selectedStore.zip}{" "}
-                      {selectedStore.city}
-                    </p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray">
-                    {selectedStore && (
-                      <span className="flex items-center gap-1">
-                        <svg
-                          viewBox="0 0 16 16"
-                          fill="currentColor"
-                          className="h-3 w-3 text-green-eco"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4a.75.75 0 011.5 0v3.44l2.03 2.03a.75.75 0 01-1.06 1.06l-2.22-2.22A.75.75 0 017.25 8V4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        {storeHoursLine(selectedStore.hours)}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <svg
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        className="h-3 w-3 text-green-eco"
-                      >
-                        <path d="M1.885 1.32A.5.5 0 012.32.885l3 1a.5.5 0 01.316.381l.5 3a.5.5 0 01-.142.447l-1.35 1.35a8.513 8.513 0 004.293 4.293l1.35-1.35a.5.5 0 01.447-.142l3 .5a.5.5 0 01.381.316l1 3a.5.5 0 01-.435.633A12.5 12.5 0 011.32 2.32a.5.5 0 01.565-.999z" />
-                      </svg>
-                      {selectedStore
-                        ? selectedStore.phone.replace("+45 ", "")
-                        : "61 10 00 48"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               <button
                 type="button"
                 onClick={handleSubmitNoPay}
                 disabled={isSubmitting}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-charcoal bg-charcoal px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-charcoal/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="press mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green-eco px-8 py-4 text-base font-bold text-white hover:bg-green-eco/90 hover-fine:shadow-raised active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               >
-                {isSubmitting ? "Sender..." : "Book og betal i butikken"}
+                {isSubmitting ? "Sender..." : "Book nu og betal i butikken"}
               </button>
-              <p className="mt-2 text-center text-xs text-gray">
-                Ingen betaling nu — du betaler, når du afhenter din enhed
+            </div>
+
+            <div className="rounded-2xl border-2 border-soft-grey bg-white p-5">
+              <p className="font-body text-base font-bold text-charcoal">
+                Betal online nu
               </p>
+              <p className="mt-1 text-sm text-gray">
+                Betal sikkert med kort, MobilePay eller Klarna. Din tid er først
+                booket, når betalingen er gennemført.
+              </p>
+              <button
+                type="button"
+                onClick={handleSubmitAndPay}
+                disabled={isSubmitting}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-2 border-charcoal bg-white px-8 py-3.5 text-sm font-bold text-charcoal transition-all hover:bg-charcoal/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? "Sender..." : `Betal nu, ${kr(totalPrice)}`}
+              </button>
             </div>
           </div>
 
@@ -2182,7 +2116,7 @@ export function BookingWizard({ campaignActive = false }: { campaignActive?: boo
             <button
               type="button"
               onClick={goPrev}
-              className="flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal transition-colors hover:bg-sand"
+              className="press flex items-center gap-2 rounded-full border border-soft-grey bg-white px-6 py-3 text-sm font-bold text-charcoal hover:bg-sand"
             >
               <svg
                 viewBox="0 0 16 16"

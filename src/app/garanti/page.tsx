@@ -53,7 +53,7 @@ const WARRANTY_FAQ = [
   {
     question: "Dækker garantien batteriet?",
     answer:
-      "Ja. Alle enheder har mindst 90 % batterikapacitet ved levering. Er den lavere, skifter vi batteriet uden beregning. Den målte værdi står på produktsiden, når vi har den. Hvis batterikapaciteten i løbet af garantiperioden falder under forringelsesgrænsen for den grade, du har købt, er det dækket af garantien. Grænserne for forringelse i garantiperioden er: Grade A: 85%, Grade B: 80%, Grade C: 75% af den oprindelige kapacitet.",
+      "Ja. Alle enheder har mindst 90 % batterikapacitet ved levering. Er den lavere, skifter vi batteriet uden beregning. Den målte værdi står på produktsiden, når vi har den. Hvis batterikapaciteten i løbet af garantiperioden falder under forringelsesgrænsen for den stand, du har købt, er det dækket af garantien. Grænserne for forringelse i garantiperioden er: stand A: 85 %, stand B: 80 %, stand C: 75 % af den oprindelige kapacitet.",
   },
   {
     question: "Kan jeg få pengene tilbage i stedet?",
@@ -91,7 +91,7 @@ export default function GarantiPage() {
       <JsonLd data={faqJsonLd} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Garanti</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Hjælp efter købet</span>
           <h1>36 måneders garanti på enheder.</h1>
           <p className={styles.intro}>Her kan du se, hvad garantien dækker, og hvordan du får hjælp ved en fejl. Tilbehør har 2 års reklamationsret.</p>

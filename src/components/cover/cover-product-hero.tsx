@@ -52,7 +52,7 @@ export function CoverProductHero({
                   onClick={() => setSelectedImage(i)}
                   className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition-all md:h-[72px] md:w-[72px] ${
                     i === selectedImage
-                      ? "border-green-eco shadow-sm"
+                      ? "border-green-eco shadow-rest"
                       : "border-sand hover:border-charcoal/20"
                   }`}
                 >

@@ -53,12 +53,16 @@ export async function resolveStaff(
 ): Promise<StaffRow | null> {
   const { data: existing, error: lookupError } = await admin
     .from("staff")
-    .select("id, auth_id, role")
+    .select("id, auth_id, role, is_active")
     .eq("auth_id", user.id)
     .maybeSingle();
 
   if (lookupError) throw new Error(`staff lookup failed: ${lookupError.message}`);
-  if (existing) return existing as StaffRow;
+  if (existing) {
+    // Deaktiverede medarbejdere har ingen adgang (som i require-staff).
+    const { is_active, ...row } = existing as StaffRow & { is_active?: boolean | null };
+    return is_active === false ? null : (row as StaffRow);
+  }
 
   if (!user.email) return null;
   const owner = isOwnerEmail(user.email);

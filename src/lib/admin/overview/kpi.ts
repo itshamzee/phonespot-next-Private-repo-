@@ -14,7 +14,16 @@
  * momsopgørelsen men ikke i omsætning ekskl. moms.
  */
 
+import type { ScopeSlug } from "@/lib/auth/store-scope";
+import { storeSlugForOrder } from "./sale-rules";
+
 export type OverviewItem = {
+  id?: string;
+  repair_ticket_id?: string | null;
+  /** Linjens visningsnavn (order_items.description). */
+  name?: string | null;
+  device_id?: string | null;
+  sku_product_id?: string | null;
   item_type?: string | null;
   quantity?: number | null;
   total_price?: number | null;
@@ -31,6 +40,12 @@ export type OverviewOrder = {
   vat_total?: number | null;
   brugtmoms_total?: number | null;
   location_id?: string | null;
+  confirmed_at?: string | null;
+  staff_id?: string | null;
+  shipping_method?: string | null;
+  shipping_cost?: number | null;
+  payment_method?: string | null;
+  original_order_id?: string | null;
   order_items?: OverviewItem[] | null;
 };
 
@@ -130,14 +145,17 @@ export function pctChange(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 100);
 }
 
-/** Grupperer ordrer pr. butik-slug; ordrer uden fysisk lokation hører til webshoppen. */
-export function groupByStore<T extends { location_id?: string | null }>(
+/**
+ * Grupperer ordrer pr. butik-slug efter storeSlugForOrder: online-ordrer til
+ * afhentning hører til afhentningsbutikken; ordrer uden fysisk lokation til webshoppen.
+ */
+export function groupByStore<T extends { type?: string; location_id?: string | null; shipping_method?: string | null }>(
   orders: T[],
-  slugOf: (locationId: string | null | undefined) => string | null,
+  slugOf: (locationId: string | null | undefined) => ScopeSlug | null,
 ): Record<string, T[]> {
   const out: Record<string, T[]> = {};
   for (const o of orders) {
-    const slug = slugOf(o.location_id) ?? "webshop";
+    const slug = storeSlugForOrder(o, slugOf);
     (out[slug] ??= []).push(o);
   }
   return out;

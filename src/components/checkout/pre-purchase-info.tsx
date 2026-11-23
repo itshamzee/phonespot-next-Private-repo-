@@ -65,7 +65,7 @@ export function PrePurchaseInfo() {
           <div>
             <p className="font-semibold">Sælger</p>
             <p className="text-gray text-xs mt-0.5">
-              PhoneSpot ApS · CVR: 38688766
+              Fixon ApS · CVR: 46079019
               <br />
               {STORES.slagelse.street}, {STORES.slagelse.zip} {STORES.slagelse.city}
             </p>
@@ -76,6 +76,7 @@ export function PrePurchaseInfo() {
             <p className="font-semibold">Dine rettigheder</p>
             <ul className="mt-1 space-y-1 text-xs text-gray list-disc list-inside">
               <li>14 dages fortrydelsesret fra modtagelse</li>
+              {hasDevice && <li>30 dages returret på enheder (udvidet returret fra PhoneSpot)</li>}
               <li>24 måneders reklamationsret (mangelsansvar)</li>
               {hasDevice && <li>36 måneders garanti fra PhoneSpot på refurbished enheder</li>}
             </ul>

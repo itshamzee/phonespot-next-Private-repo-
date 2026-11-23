@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PERIOD_LABELS, type PeriodKey } from "@/lib/admin/overview/period";
+import { NavPendingSignal } from "@/components/admin/shell/nav-pending";
 
 /**
  * Byggeklodser til Overblik, Alle butikker og Økonomi (server components).
@@ -18,7 +19,11 @@ export function PageHeading({ children, aside }: { children: ReactNode; aside?: 
   );
 }
 
-/** Periodevælger som links, så valget bor i URL'en og siden forbliver en server component. */
+/**
+ * Periodevælger som links, så valget bor i URL'en og siden forbliver en server component.
+ * Hvert link melder sin status (NavPendingSignal) til PeriodPendingScope, så indholdet
+ * dæmpes, mens den nye periode hentes.
+ */
 export function PeriodToggle({ periods, current, basePath }: { periods: PeriodKey[]; current: PeriodKey; basePath: string }) {
   return (
     <div role="group" aria-label="Periode" className="flex gap-1 rounded-[10px] bg-[#E9ECE7] p-1">
@@ -30,11 +35,12 @@ export function PeriodToggle({ periods, current, basePath }: { periods: PeriodKe
             href={`${basePath}?periode=${p}`}
             aria-current={active ? "true" : undefined}
             scroll={false}
-            className={`flex h-[34px] items-center rounded-lg px-3.5 text-[14px] ${
+            className={`m-press flex h-[34px] items-center rounded-lg px-3.5 text-[14px] ${
               active ? "bg-white font-semibold text-[#15211B]" : "text-[#3D4842] hover:text-[#15211B]"
             }`}
           >
             {PERIOD_LABELS[p]}
+            <NavPendingSignal />
           </Link>
         );
       })}

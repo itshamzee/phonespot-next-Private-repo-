@@ -13,6 +13,8 @@
  * repairs = åbne sager i butikken; newRepairs = ikke-modtagne, til notifikationer;
  * webBookings = nye reparationsanmodninger fra hjemmesiden (Sagsstyrings menu-tal).
  */
+import type { Permission } from "@/lib/auth/permissions";
+
 export type CountKey = "orders" | "repairs" | "newRepairs" | "webBookings" | "inquiries" | "buyback";
 
 export interface NavChild {
@@ -40,6 +42,8 @@ export interface NavArea {
   pinned?: boolean;
   /** Kun ejeren ser området. */
   ownerOnly?: boolean;
+  /** Ejeren, eller medarbejdere med denne tilladelse, ser området. */
+  permission?: Permission;
 }
 
 export const NAV: NavArea[] = [
@@ -47,6 +51,7 @@ export const NAV: NavArea[] = [
     key: "overblik",
     label: "Overblik",
     href: "/admin",
+    // /admin/platform selv omdirigeres til Statistik; matchet dækker kun undersider uden eget menupunkt.
     match: ["/admin/platform"],
     icon: ["m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"],
   },
@@ -92,7 +97,8 @@ export const NAV: NavArea[] = [
     ],
     children: [
       { href: "/admin/kunder", label: "Kunder" },
-      { href: "/admin/henvendelser", label: "Henvendelser", countKey: "inquiries" },
+      { href: "/admin/kundecenter", label: "Kundecenter", countKey: "inquiries" },
+      { href: "/admin/henvendelser", label: "Henvendelser" },
       { href: "/admin/b2b", label: "Erhverv" },
     ],
   },
@@ -126,6 +132,7 @@ export const NAV: NavArea[] = [
     children: [
       { href: "/admin/opkoeb", label: "Pipeline" },
       { href: "/admin/opkoeb/ko", label: "Kø" },
+      { href: "/admin/opkoeb/slutsedler", label: "Slutsedler" },
       { href: "/admin/opkoeb/priser", label: "Priser" },
       { href: "/admin/opkoeb/indstillinger", label: "Automatik" },
     ],
@@ -134,6 +141,7 @@ export const NAV: NavArea[] = [
     key: "statistik",
     label: "Statistik",
     href: "/admin/statistik",
+    permission: "se_statistik",
     icon: ["M4 20V10M10 20V4M16 20v-8M22 20H2"],
     children: [
       { href: "/admin/statistik", label: "Salg" },
@@ -168,11 +176,14 @@ export const NAV: NavArea[] = [
   },
 ];
 
-/** Menuen som den ser ud for en rolle: ejer-områder og -punkter skjules for alle andre. */
-export function visibleNav(isOwner: boolean, nav: NavArea[] = NAV): NavArea[] {
+/**
+ * Menuen som den ser ud for en rolle: ejer-områder og -punkter skjules for alle andre,
+ * og områder med `permission` kræver at tilladelsen findes i `permissions`.
+ */
+export function visibleNav(isOwner: boolean, nav: NavArea[] = NAV, permissions: readonly string[] = []): NavArea[] {
   if (isOwner) return nav;
   return nav
-    .filter((area) => !area.ownerOnly)
+    .filter((area) => !area.ownerOnly && (!area.permission || permissions.includes(area.permission)))
     .map((area) => (area.children ? { ...area, children: area.children.filter((c) => !c.ownerOnly) } : area));
 }
 

@@ -81,7 +81,7 @@ export async function POST(req: Request) {
   try {
     const sent = await resend.emails.send({
       from: "PhoneSpot <info@phonespot.dk>",
-      to: inquiry.email,
+      to: inquiry.email ?? "",
       replyTo: "info@phonespot.dk",
       subject,
       html,
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     emailSent = !sent.error;
     await supabase.from("mail_log").insert({
       inquiry_id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: html,
       status: emailSent ? "delivered" : "failed",
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
   } catch {
     await supabase.from("mail_log").insert({
       inquiry_id,
-      to_email: inquiry.email,
+      to_email: inquiry.email ?? "",
       subject,
       body: html,
       status: "failed",

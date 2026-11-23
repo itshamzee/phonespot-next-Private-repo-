@@ -2,27 +2,28 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ZoomImage } from "@/components/product/zoom-image";
 
 const GRADES = [
   {
     grade: "A",
     title: "Som ny",
     desc: "Ingen synlige brugstegn. Skærm og kabinet er fejlfrie.",
-    image: "/quality/grade-a.png",
+    image: "/quality/grade-a.webp",
     color: "bg-green-eco",
   },
   {
     grade: "B",
     title: "God stand",
     desc: "Skærmen er perfekt. Kabinettet kan have lette brugsridser.",
-    image: "/quality/grade-b.png",
+    image: "/quality/grade-b.webp",
     color: "bg-green-light",
   },
   {
     grade: "C",
     title: "Brugt stand",
     desc: "Lette skærmridser og synlige brugsspor. Det mest budgetvenlige valg.",
-    image: "/quality/grade-c.png",
+    image: "/quality/grade-c.webp",
     color: "bg-gray",
   },
 ];
@@ -46,8 +47,9 @@ export function GradeSlider() {
             }`}
           />
         ))}
+        <ZoomImage src={current.image} alt={`Stand ${current.grade}, ${current.title}`} />
         {/* Grade badge overlay */}
-        <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 shadow-md backdrop-blur-sm">
+        <div className="pointer-events-none absolute left-4 top-4 z-[2] flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 shadow-raised backdrop-blur-sm">
           <span className={`flex h-8 w-8 items-center justify-center rounded-full ${current.color} font-display text-sm font-bold text-white`}>
             {current.grade}
           </span>
@@ -70,7 +72,7 @@ export function GradeSlider() {
             onClick={() => setActive(i)}
             className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
               i === active
-                ? "bg-charcoal text-white shadow-md"
+                ? "bg-charcoal text-white shadow-rest"
                 : "bg-sand/60 text-charcoal hover:bg-sand"
             }`}
           >

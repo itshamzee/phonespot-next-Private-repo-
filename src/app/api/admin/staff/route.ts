@@ -15,6 +15,9 @@ import {
   resolveLocationId,
   unauthorizedResponse,
 } from "@/lib/auth/store-scope-server";
+import { PERMISSIONS, parsePermissions } from "@/lib/auth/permissions";
+import { hashPin, isValidPin } from "@/lib/auth/pin";
+import { isPinLocked } from "@/lib/auth/pin-attempts";
 import { isStaffRole, passwordProblem, validateNewStaff } from "@/lib/auth/staff-admin";
 
 /**
@@ -24,7 +27,10 @@ import { isStaffRole, passwordProblem, validateNewStaff } from "@/lib/auth/staff
  * GET   -> { staff: [...], stores: [{ slug, label }] }
  * POST  -> { name, email, role: 'employee' | 'manager', location_slug, password }
  *          Opretter login (Supabase Auth, e-mail bekræftet) + staff-række.
- * PATCH -> { id, location_slug?, role?, is_active?, password? }
+ * PATCH -> { id, location_slug?, role?, is_active?, password?, permissions?, pin? }
+ *          permissions: kun eksplicitte tilladelser (rollens standard gemmes ikke).
+ *          pin: 4-6 cifre sætter/nulstiller (også en lås); null fjerner pinkoden.
+ *          Pinkoden bor kun i staff_pins og returneres aldrig.
  */
 
 type OwnerCheck = { ok: true } | { ok: false; response: NextResponse };
@@ -45,7 +51,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("staff")
-    .select("id, name, email, role, is_active, location_id")
+    .select("id, name, email, role, is_active, location_id, permissions")
     .order("is_active", { ascending: false })
     .order("name", { ascending: true });
 
@@ -54,11 +60,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Kunne ikke hente medarbejdere" }, { status: 500 });
   }
 
+  const { data: pinRows, error: pinError } = await supabase
+    .from("staff_pins")
+    .select("staff_id, failed_attempts, locked_until");
+  if (pinError) {
+    console.error("[admin/staff] pin list failed:", pinError);
+    return NextResponse.json({ error: "Kunne ikke hente medarbejdere" }, { status: 500 });
+  }
+  const pins = new Map(
+    ((pinRows ?? []) as Array<{ staff_id: string; failed_attempts: number; locked_until: string | null }>).map((p) => [p.staff_id, p]),
+  );
+  const nowMs = Date.now();
+
   const index = await loadLocationIndex();
-  const staff = (data ?? []).map((row) => ({
-    ...row,
-    location_slug: slugForLocationId(index, row.location_id),
-  }));
+  const staff = (data ?? []).map((row) => {
+    const pin = pins.get(row.id);
+    return {
+      ...row,
+      permissions: parsePermissions(row.permissions),
+      hasPin: Boolean(pin),
+      pinLocked: pin ? isPinLocked(pin, nowMs) : false,
+      location_slug: slugForLocationId(index, row.location_id),
+    };
+  });
   const stores = SCOPE_SLUGS.map((slug) => ({ slug, label: SCOPE_LABELS[slug], available: Boolean(index.idBySlug[slug]) }));
 
   return NextResponse.json({ staff, stores }, { headers: { "Cache-Control": "no-store" } });
@@ -160,7 +184,23 @@ export async function PATCH(request: NextRequest) {
     const problem = passwordProblem(body.password);
     if (problem) return NextResponse.json({ error: problem }, { status: 400 });
   }
-  if (Object.keys(update).length === 0 && !("password" in body)) {
+  let permissions: string[] | null = null;
+  if ("permissions" in body) {
+    const raw = body.permissions;
+    const known: readonly string[] = PERMISSIONS;
+    if (!Array.isArray(raw) || !raw.every((p) => typeof p === "string" && known.includes(p))) {
+      return NextResponse.json({ error: "Ukendt tilladelse" }, { status: 400 });
+    }
+    permissions = Array.from(new Set(raw as string[]));
+    update.permissions = permissions;
+  }
+  let pin: string | null | undefined;
+  if ("pin" in body) {
+    if (body.pin === null) pin = null;
+    else if (typeof body.pin === "string" && isValidPin(body.pin)) pin = body.pin;
+    else return NextResponse.json({ error: "Pinkoden skal være 4–6 cifre" }, { status: 400 });
+  }
+  if (Object.keys(update).length === 0 && !("password" in body) && pin === undefined) {
     return NextResponse.json({ error: "Intet at gemme" }, { status: 400 });
   }
 
@@ -182,6 +222,19 @@ export async function PATCH(request: NextRequest) {
     if (error) {
       console.error("[admin/staff] update failed:", id, error);
       return NextResponse.json({ error: "Kunne ikke gemme ændringen" }, { status: 500 });
+    }
+  }
+  if (pin !== undefined) {
+    const result =
+      pin === null
+        ? await supabase.from("staff_pins").delete().eq("staff_id", id)
+        : await supabase.from("staff_pins").upsert(
+            { staff_id: id, pin_hash: hashPin(pin), failed_attempts: 0, locked_until: null, updated_at: new Date().toISOString() },
+            { onConflict: "staff_id" },
+          );
+    if (result.error) {
+      console.error("[admin/staff] pin save failed:", id, result.error);
+      return NextResponse.json({ error: "Kunne ikke gemme pinkoden" }, { status: 500 });
     }
   }
   return NextResponse.json({ success: true, ...("location_slug" in body ? { location_slug: slug } : {}) });

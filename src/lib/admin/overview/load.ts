@@ -14,6 +14,13 @@ import {
 } from "@/lib/auth/store-scope";
 import { finalDifference } from "@/lib/pos/cash-session";
 import { computeKpis, groupByStore, pctChange, type Kpis, type OverviewOrder } from "./kpi";
+import {
+  PICKUP_METHODS,
+  applyRepairCosts,
+  prepaidRepairOrders,
+  storeSlugForOrder,
+  type PrepaidTicket,
+} from "./sale-rules";
 import { calendarDaysSince, formatClock, ticketLabel } from "./format";
 import { periodRange, type PeriodKey, type PeriodRange } from "./period";
 import { splitWebBookings, type WebBookingRaw, type WebBookings } from "./web-bookings";
@@ -33,9 +40,9 @@ import {
 type Supabase = ReturnType<typeof createServerClient>;
 
 /** Ordrer der tæller som salg: gennemført POS/webshop og kreditnotaer. */
-const SALE_STATUSES = ["confirmed", "shipped", "picked_up", "delivered"];
+export const SALE_STATUSES = ["confirmed", "shipped", "picked_up", "delivered"];
 const ORDER_COLS =
-  "id, type, total, vat_total, brugtmoms_total, location_id, order_items ( item_type, quantity, total_price, discount_amount, purchase_price, vat_amount, vat_scheme )";
+  "id, type, total, vat_total, brugtmoms_total, location_id, confirmed_at, staff_id, shipping_method, shipping_cost, payment_method, original_order_id, order_items ( id, item_type, quantity, total_price, discount_amount, purchase_price, vat_amount, vat_scheme, repair_ticket_id, name:description, device_id, sku_product_id )";
 /** Sager der ikke længere er åbne. */
 export const CLOSED_REPAIR_STATUSES = ["afhentet", "reklamation_loest"];
 
@@ -57,12 +64,21 @@ export type CashInfo = { state: CashState; detail: string };
 export type ReadyCase = { id: string; label: string; title: string; days: number; overdue: boolean };
 export type TransferLine = { id: string; text: string; action: "Modtag" | "Send" | null };
 
+/**
+ * Nøgletal, kun ejeren får (se forViewer): kostpris og profit, og momsopdelingen, fordi
+ * brugtmoms × 5 er avancen på brugte enheder, og omsætning − moms er omsætning ekskl. moms.
+ * Depositum vises heller ikke for medarbejdere i butiksvisningen.
+ */
+export type OwnerKpiField = "revenueExVat" | "cost" | "profit" | "marginPct" | "vatStandard" | "brugtmoms" | "deposits";
+/** Butikkens nøgletal: ejer-felterne findes kun i ejerens payload. */
+export type StoreKpis = Omit<Kpis, OwnerKpiField> & Partial<Pick<Kpis, OwnerKpiField>>;
+
 export type StoreOverview = {
   kind: "store";
   scope: StoreScope;
   period: PeriodKey;
   range: PeriodRange;
-  kpis: Kpis;
+  kpis: StoreKpis;
   /** Procent mod forrige periode; null uden sammenligningsgrundlag. */
   revenueDeltaPct: number | null;
   cash: CashInfo;
@@ -115,34 +131,189 @@ export type OverviewPayload = StoreOverview | AllOverview;
 
 type Result<T> = { data: T[] | null; error: { message: string } | null };
 
-async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Result<T>>): Promise<T[]> {
+/**
+ * Henter alle rækker side for side (PostgREST giver højst 1.000 ad gangen).
+ * Forespørgslen skal have en entydig sortering (fx ... .order("id")), så siderne
+ * er stabile. Er sidste tilladte side fuld, kastes en fejl i stedet for at
+ * returnere et ufuldstændigt resultat.
+ */
+export async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<Result<T>>): Promise<T[]> {
   const out: T[] = [];
   for (let i = 0; i < MAX_PAGES; i++) {
     const { data, error } = await page(i * PAGE, i * PAGE + PAGE - 1);
     if (error) throw new Error(error.message);
     out.push(...(data ?? []));
-    if (!data || data.length < PAGE) break;
+    if (!data || data.length < PAGE) return out;
   }
-  return out;
+  throw new Error(`fetchAll: for mange rækker (over ${MAX_PAGES * PAGE})`);
 }
 
-async function loadOrders(
+/**
+ * Salg i [startIso, endIso) for scopet, efter de fælles salgsregler (sale-rules.ts):
+ *  - butikken afgøres af storeSlugForOrder, så en webshop-ordre til afhentning i
+ *    Vejle/Slagelse tæller hos butikken og ikke i Webshop;
+ *  - reparationer betalt online på forhånd (uden kasselinje) er med som "repair_prepaid";
+ *  - reservedele brugt på en sag lægges på sagens linje som kostpris.
+ */
+export async function loadOrders(
   supabase: Supabase,
   scope: StoreScope,
   index: LocationIndex,
   startIso: string,
   endIso: string,
 ): Promise<OverviewOrder[]> {
-  return fetchAll<OverviewOrder>((from, to) => {
-    const q = supabase
+  return (await loadOrdersWithMeta(supabase, scope, index, startIso, endIso)).orders;
+}
+
+/**
+ * Som loadOrders, plus antallet af forudbetalte sager uden beløb
+ * (booking_details.total_price_dkk mangler), som ikke kan tælles med.
+ */
+export async function loadOrdersWithMeta(
+  supabase: Supabase,
+  scope: StoreScope,
+  index: LocationIndex,
+  startIso: string,
+  endIso: string,
+): Promise<{ orders: OverviewOrder[]; prepaidWithoutAmount: number }> {
+  if (scope === "ingen") return { orders: [], prepaidWithoutAmount: 0 };
+  const slugOf = (id: string | null | undefined) => slugForLocationId(index, id);
+  const saleQuery = () =>
+    supabase
       .from("orders")
       .select(ORDER_COLS)
       .in("type", ["pos", "online", "credit_note"])
       .in("status", SALE_STATUSES)
       .gte("confirmed_at", startIso)
       .lt("confirmed_at", endIso);
-    return applyLocationScope(q, scope, index).order("confirmed_at", { ascending: true }).range(from, to);
+
+  const pickupMethods = scope === "vejle" || scope === "slagelse" ? [...PICKUP_METHODS[scope]] : [];
+  const [located, pickedUp, prepaid] = await Promise.all([
+    fetchAll<OverviewOrder>((from, to) =>
+      applyLocationScope(saleQuery(), scope, index).order("confirmed_at", { ascending: true }).order("id").range(from, to),
+    ),
+    pickupMethods.length === 0
+      ? Promise.resolve([] as OverviewOrder[])
+      : fetchAll<OverviewOrder>((from, to) =>
+          saleQuery()
+            .eq("type", "online")
+            .in("shipping_method", pickupMethods)
+            .order("confirmed_at", { ascending: true })
+            .order("id")
+            .range(from, to),
+        ),
+    loadPrepaidRepairs(supabase, scope, index, startIso, endIso),
+  ]);
+
+  const seen = new Set<string>();
+  const real: OverviewOrder[] = [];
+  for (const o of [...located, ...pickedUp]) {
+    if (o.id) {
+      if (seen.has(o.id)) continue;
+      seen.add(o.id);
+    }
+    if (scope === "alle" || storeSlugForOrder(o, slugOf) === scope) real.push(o);
+  }
+  real.sort((a, b) => (a.confirmed_at ?? "").localeCompare(b.confirmed_at ?? ""));
+
+  const orders = [...real, ...prepaid.orders];
+  return {
+    orders: applyRepairCosts(orders, await loadRepairPartsCost(supabase, orders)),
+    prepaidWithoutAmount: prepaid.withoutAmount,
+  };
+}
+
+/**
+ * Sager, der er solgt ved kassen: deres repair_service-linjer i POS-ordrer og
+ * kreditnotaer med salgsstatus giver tilsammen en positiv mængde. Depositumlinjer,
+ * kladder, annullerede ordrer og en sag der er solgt og krediteret igen tæller ikke.
+ */
+type TillOrder = { type: string | null; status: string | null };
+type TillLine = {
+  repair_ticket_id: string | null;
+  item_type: string | null;
+  quantity: number | null;
+  orders: TillOrder | TillOrder[] | null;
+};
+
+function tillPaidTickets(rows: TillLine[]): Set<string> {
+  const net = new Map<string, number>();
+  for (const r of rows) {
+    const o = Array.isArray(r.orders) ? r.orders[0] : r.orders;
+    if (!r.repair_ticket_id || r.item_type !== "repair_service" || !o) continue;
+    if ((o.type !== "pos" && o.type !== "credit_note") || !SALE_STATUSES.includes(o.status ?? "")) continue;
+    net.set(r.repair_ticket_id, (net.get(r.repair_ticket_id) ?? 0) + (r.quantity ?? 0));
+  }
+  return new Set([...net].filter(([, q]) => q > 0).map(([id]) => id));
+}
+
+/**
+ * Sager betalt online på forhånd (repair-payment.ts sætter kun paid/paid_at). Sager
+ * der er solgt ved kassen (tillPaidTickets) er allerede med som kassesalg og springes over.
+ */
+async function loadPrepaidRepairs(
+  supabase: Supabase,
+  scope: StoreScope,
+  index: LocationIndex,
+  startIso: string,
+  endIso: string,
+): Promise<{ orders: OverviewOrder[]; withoutAmount: number }> {
+  type Raw = { id: string; paid_at: string; location_id: string | null; total_price_dkk: unknown };
+  const tickets = await fetchAll<Raw>((from, to) => {
+    const q = supabase
+      .from("repair_tickets")
+      .select("id, paid_at, location_id, total_price_dkk:booking_details->total_price_dkk")
+      .eq("paid", true)
+      .gte("paid_at", startIso)
+      .lt("paid_at", endIso)
+      .neq("status", "annulleret");
+    return applyLocationScope(q, scope, index).order("paid_at", { ascending: true }).order("id").range(from, to);
   });
+  if (tickets.length === 0) return { orders: [], withoutAmount: 0 };
+
+  const { data: linked, error } = await fetchInChunks<TillLine>(
+    tickets.map((t) => t.id),
+    (chunk) =>
+      supabase
+        .from("order_items")
+        .select("repair_ticket_id, item_type, quantity, orders!inner(type, status)")
+        .eq("item_type", "repair_service")
+        .in("repair_ticket_id", chunk),
+  );
+  if (error) throw new Error(error.message);
+  const onTill = tillPaidTickets(linked);
+
+  const prepaid = tickets
+    .filter((t) => !onTill.has(t.id))
+    .map<PrepaidTicket>((t) => {
+      const kr = t.total_price_dkk == null || t.total_price_dkk === "" ? NaN : Number(t.total_price_dkk);
+      return { id: t.id, paid_at: t.paid_at, location_id: t.location_id, total_price_dkk: Number.isFinite(kr) ? kr : null };
+    });
+  return prepaidRepairOrders(prepaid);
+}
+
+/** Reservedelskost (øre) pr. sag for de sager, der optræder i ordrerne. Frigivne dele er ikke brugt. */
+async function loadRepairPartsCost(supabase: Supabase, orders: OverviewOrder[]): Promise<Map<string, number>> {
+  const ids = new Set<string>();
+  for (const o of orders) for (const it of o.order_items ?? []) if (it.repair_ticket_id) ids.add(it.repair_ticket_id);
+  const cost = new Map<string, number>();
+  if (ids.size === 0) return cost;
+  const { data, error } = await fetchInChunks<{ ticket_id: string; cost_oere: number | null; qty: number | null }>(
+    [...ids],
+    (chunk) =>
+      supabase
+        .from("repair_ticket_items")
+        .select("ticket_id, cost_oere, qty")
+        .eq("kind", "part")
+        .neq("stock_status", "released")
+        .in("ticket_id", chunk),
+  );
+  if (error) throw new Error(error.message);
+  for (const p of data) {
+    if (p.cost_oere == null) continue;
+    cost.set(p.ticket_id, (cost.get(p.ticket_id) ?? 0) + p.cost_oere * (p.qty ?? 1));
+  }
+  return cost;
 }
 
 type RegisterRow = { id: string; name: string; location_id: string };
@@ -295,7 +466,7 @@ async function loadWebBookings(supabase: Supabase, scope: StoreScope, today: str
   if (scope === "ingen") return { groups: [], stale: 0 };
   const q = supabase
     .from("repair_tickets")
-    .select("id, ticket_number, customer_name, device_model, service_type, store_id, created_at, booking_details")
+    .select("id, ticket_number, customer_name, device_model, service_type, store_id, created_at, paid, booking_details")
     .eq("status", "modtaget")
     .not("booking_details", "is", null);
   const { data } = await applyStoreScope(q, scope).order("created_at", { ascending: false }).limit(500);
@@ -337,7 +508,7 @@ async function countOpenCases(supabase: Supabase, scope: StoreScope): Promise<Re
       .from("repair_tickets")
       .select("store_id")
       .not("status", "in", `(${CLOSED_REPAIR_STATUSES.join(",")})`);
-    return applyStoreScope(q, scope).range(from, to);
+    return applyStoreScope(q, scope).order("id").range(from, to);
   });
   for (const r of rows) {
     const key = r.store_id === "vejle" || r.store_id === "slagelse" ? r.store_id : "webshop";
@@ -618,11 +789,36 @@ async function loadAllOverview(period: PeriodKey, now: Date): Promise<AllOvervie
 /* ------------------------------------------------------------------ */
 
 /**
- * Den eneste vej ind: afgør, hvad den aktuelle bruger må se.
- *  - scope "ingen" (medarbejder uden butik): tom visning, ingen forespørgsler.
- *  - scope "alle" kræver ejer; ellers behandles det som "ingen" (fail closed).
+ * Payload til viewer. Ejeren får den uændret. For alle andre bygges den op af
+ * navngivne felter, så kostpris, profit, margin, omsætning ekskl. moms og momsopdelingen
+ * (standardmoms, brugtmoms) aldrig forlader serveren; kun det, butiksvisningen viser
+ * medarbejderen, kommer med; Alle butikker (med profit pr. butik) bliver til den tomme visning.
  */
-export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Date = new Date()): Promise<OverviewPayload> {
+export function forViewer(payload: OverviewPayload, isOwner: boolean): OverviewPayload {
+  if (isOwner) return payload;
+  if (payload.kind === "alle") return forViewer(emptyStore("ingen", payload.period, payload.range), false);
+  const k = payload.kpis;
+  return {
+    kind: "store",
+    scope: payload.scope,
+    period: payload.period,
+    range: payload.range,
+    kpis: {
+      revenue: k.revenue,
+      salesCount: k.salesCount,
+      creditCount: k.creditCount,
+      avgBasket: k.avgBasket,
+    },
+    revenueDeltaPct: payload.revenueDeltaPct,
+    cash: payload.cash,
+    ready: payload.ready,
+    webBookings: payload.webBookings,
+    webshopOrders: payload.webshopOrders,
+    transfers: payload.transfers,
+  };
+}
+
+async function loadForScope(ctx: OverviewCtx, period: PeriodKey, now: Date): Promise<OverviewPayload> {
   const { scope } = ctx;
   if (scope === "alle") {
     if (!ctx.isOwner) return emptyStore("ingen", period, periodRange(period, now));
@@ -630,5 +826,15 @@ export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Dat
   }
   if (scope === "ingen") return emptyStore("ingen", period, periodRange(period, now));
   return loadStoreOverview(scope, period, now);
+}
+
+/**
+ * Den eneste vej ind: afgør, hvad den aktuelle bruger må se.
+ *  - scope "ingen" (medarbejder uden butik): tom visning, ingen forespørgsler.
+ *  - scope "alle" kræver ejer; ellers behandles det som "ingen" (fail closed).
+ *  - kostpris, profit og margin er kun til ejeren (forViewer, eneste udgang).
+ */
+export async function loadOverview(ctx: OverviewCtx, period: PeriodKey, now: Date = new Date()): Promise<OverviewPayload> {
+  return forViewer(await loadForScope(ctx, period, now), ctx.isOwner);
 }
 

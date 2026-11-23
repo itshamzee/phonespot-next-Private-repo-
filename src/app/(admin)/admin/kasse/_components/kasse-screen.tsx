@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { posFetch, posJson } from "@/lib/pos/client";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
@@ -17,7 +16,9 @@ import {
   caseStockSummary,
   casePaymentLines,
   checkPayments,
+  deviceNeedsIdentifier,
   discountableBase,
+  lineNeedingIdentifier,
   mergeSkuLine,
   paymentsNeedCustomer,
   parseKasseParams,
@@ -32,6 +33,8 @@ import {
 } from "@/lib/pos/kasse-logic";
 import { withTerminalReceipt } from "@/lib/pos/terminal-receipt";
 import { CartPanel } from "./cart-panel";
+import { OperatorSwitch } from "./operator-switch";
+import { exactSlugMatch, fallbackLocation } from "./default-location";
 import {
   CardDialog,
   CaseDialog,
@@ -40,6 +43,7 @@ import {
   DiscountDialog,
   DoneDialog,
   FreeTextDialog,
+  IdentifierDialog,
   SplitDialog,
   btnPrimary,
   fieldClass,
@@ -59,6 +63,9 @@ type LookupDevice = {
   id: string;
   barcode: string | null;
   imei: string | null;
+  serial_number: string | null;
+  blocked: boolean;
+  has_purchase_document: boolean;
   grade: string | null;
   storage: string | null;
   color: string | null;
@@ -95,13 +102,41 @@ type Dialog =
   | "discount"
   | "customer"
   | "split"
-  | "card";
+  | "card"
+  | "identifier";
+
+/** A unit on its way into the cart (from a scan, the search list or a device tile). */
+type DeviceToAdd = {
+  id: string;
+  name: string;
+  grade: string | null;
+  storage: string | null;
+  priceOere: number;
+  vatScheme: string | null;
+  hasIdentifier: boolean;
+  hasPurchaseDocument: boolean;
+  blocked?: boolean;
+};
+
+function fromLookup(d: LookupDevice): DeviceToAdd {
+  return {
+    id: d.id,
+    name: d.product_templates?.display_name ?? "Enhed",
+    grade: d.grade,
+    storage: d.storage,
+    priceOere: d.selling_price,
+    vatScheme: d.vat_scheme,
+    hasIdentifier: !!(d.imei?.trim() || d.serial_number?.trim()),
+    hasPurchaseDocument: d.has_purchase_document !== false,
+    blocked: d.blocked === true,
+  };
+}
 
 const CHIP_QUICK = "__quick";
 const CHIP_DEVICES = "__devices";
 
 const tileClass =
-  "flex h-[108px] flex-col justify-between rounded-xl border border-[#E2E5E0] bg-white p-3.5 text-left transition-colors hover:border-[#1A3D2E]/40 hover:bg-[#FBFCFB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1A3D2E]";
+  "m-press flex h-[108px] flex-col justify-between rounded-xl border border-[#E2E5E0] bg-white p-3.5 text-left transition-colors hover:border-[#1A3D2E]/40 hover:bg-[#FBFCFB] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1A3D2E]";
 
 function effectiveSkuPrice(s: { selling_price: number; sale_price: number | null }) {
   return s.sale_price != null && s.sale_price < s.selling_price ? s.sale_price : s.selling_price;
@@ -117,7 +152,6 @@ function shortStoreName(name: string) {
 
 export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: PaymentTerminalKind } = {}) {
   const integratedTerminal = isIntegratedTerminal(terminalKind);
-  const supabase = useMemo(() => createBrowserClient(), []);
   const router = useRouter();
   const params = useSearchParams();
   const { scope, ownSlug } = useStoreScope();
@@ -160,6 +194,13 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   const [dialogError, setDialogError] = useState("");
   const [dialogBusy, setDialogBusy] = useState(false);
   const [depositCase, setDepositCase] = useState<CaseContext | null>(null);
+  // A brugtmoms unit without IMEI/serial number waits here while the cashier scans it:
+  // a unit about to be added, or a device line already in the cart (from a repair case).
+  const [identifierFor, setIdentifierFor] = useState<
+    { kind: "new"; device: DeviceToAdd } | { kind: "line"; key: string; name: string } | null
+  >(null);
+  // Case lines whose prompt the cashier closed: not reopened by itself, only when charging.
+  const [identifierDismissed, setIdentifierDismissed] = useState<string[]>([]);
   const [splitInitial, setSplitInitial] = useState<ReturnType<typeof newPaymentLine>[]>([]);
   const [processing, setProcessing] = useState(false);
   // Integrated terminal only: the key of the charge that is waiting on the terminal.
@@ -174,30 +215,48 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
 
   /* ----- Location, registers ----- */
 
+  const loadLocations = useCallback(async () => {
+    try {
+      const data = await posJson<{ locations: Array<{ id: string; name: string; slug: string | null }> }>("/api/pos/locations");
+      setLocations([...data.locations].sort((a, b) => a.name.localeCompare(b.name, "da")));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kunne ikke hente butikker");
+    }
+  }, []);
+
   useEffect(() => {
+    void loadLocations();
+  }, [loadLocations]);
+
+  useEffect(() => {
+    if (locations.length === 0) return;
+    const wanted = scope !== "alle" && scope !== "ingen" ? scope : ownSlug;
+    const match = exactSlugMatch(locations, wanted);
+    if (match) {
+      setLocationId((cur) => (cur !== match.id ? match.id : cur));
+      return;
+    }
+    if (locationId && locations.some((l) => l.id === locationId)) return;
+    // Ejer med "alle": foretræk en butik med åben kasse, ellers Vejle, ellers den første.
     let cancelled = false;
     (async () => {
-      let rows: Loc[] = [];
-      const withSlug = await supabase.from("locations").select("id, name, slug").eq("type", "store");
-      if (!withSlug.error) {
-        rows = (withSlug.data ?? []) as Loc[];
-      } else {
-        // locations.slug comes with migration 20261003100000; fall back to names before it is applied.
-        const legacy = await supabase.from("locations").select("id, name").eq("type", "store");
-        rows = ((legacy.data ?? []) as Array<{ id: string; name: string }>).map((l) => ({ ...l, slug: null }));
-      }
-      if (!cancelled) setLocations(rows.sort((a, b) => a.name.localeCompare(b.name, "da")));
+      const open = new Set<string>();
+      await Promise.all(
+        locations.map(async (l) => {
+          try {
+            const data = await posJson<{ registers: RegisterInfo[] }>(`/api/pos/session?location_id=${l.id}`);
+            if (data.registers.some((r) => r.openSession)) open.add(l.id);
+          } catch {
+            // Butikken springes over.
+          }
+        }),
+      );
+      if (!cancelled) setLocationId((cur) => (locations.some((l) => l.id === cur) ? cur : fallbackLocation(locations, open).id));
     })();
     return () => {
       cancelled = true;
     };
-  }, [supabase]);
-
-  useEffect(() => {
-    if (locations.length === 0) return;
-    const wanted = scope === "vejle" || scope === "slagelse" ? scope : ownSlug;
-    const match = wanted ? locations.find((l) => (l.slug ?? l.name).toLowerCase().includes(wanted)) : null;
-    setLocationId((cur) => (match && cur !== match.id ? match.id : locations.some((l) => l.id === cur) ? cur : (match ?? locations[0]).id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- locationId læses kun som startværdi
   }, [locations, scope, ownSlug]);
 
   const loadRegisters = useCallback(async () => {
@@ -215,6 +274,11 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   useEffect(() => {
     void loadRegisters();
   }, [loadRegisters]);
+
+  // Ekspedienten er skiftet: tilladte butikker og kasser kan have ændret sig.
+  const onOperatorChanged = useCallback(async () => {
+    await Promise.all([loadLocations(), loadRegisters()]);
+  }, [loadLocations, loadRegisters]);
 
   async function openRegister() {
     if (!register) return;
@@ -382,7 +446,22 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     clearScan();
   }
 
-  function addDevice(d: { id: string; name: string; grade: string | null; storage: string | null; priceOere: number; vatScheme: string | null }) {
+  /**
+   * A blocked unit is refused. A brugtmoms unit without IMEI/serial number asks for it first
+   * (the receipt must carry it); units that have one go straight in, with no extra round trip.
+   */
+  function addDevice(d: DeviceToAdd, imei?: string) {
+    if (d.blocked) {
+      setError("Enheden er spærret og kan ikke sælges");
+      clearScan();
+      return;
+    }
+    if (!imei && deviceNeedsIdentifier(d) && !lines.some((l) => l.type === "device" && l.deviceId === d.id)) {
+      setIdentifierFor({ kind: "new", device: d });
+      setDialog("identifier");
+      clearScan();
+      return;
+    }
     setLines((prev) =>
       prev.some((l) => l.type === "device" && l.deviceId === d.id)
         ? prev
@@ -396,6 +475,8 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
               detail: [d.storage, d.grade ? `Grade ${d.grade}` : null].filter(Boolean).join(" · "),
               price: d.priceOere,
               vatScheme: d.vatScheme === "brugtmoms" ? "brugtmoms" : "regular",
+              ...(imei ? { imei } : {}),
+              ...(d.hasPurchaseDocument ? {} : { missingPurchaseDocument: true }),
             },
           ],
     );
@@ -509,14 +590,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
       const exactDevice = devs.length === 1 && skus.length === 0 ? devs[0] : null;
       const exactSku = skus.length === 1 && devs.length === 0 ? skus[0] : null;
       if (exactDevice) {
-        addDevice({
-          id: exactDevice.id,
-          name: exactDevice.product_templates?.display_name ?? "Enhed",
-          grade: exactDevice.grade,
-          storage: exactDevice.storage,
-          priceOere: exactDevice.selling_price,
-          vatScheme: exactDevice.vat_scheme,
-        });
+        addDevice(fromLookup(exactDevice));
       } else if (exactSku) {
         addSku({ id: exactSku.id, title: exactSku.title, priceOere: effectiveSkuPrice(exactSku), lagersalg: exactSku.lagersalg === true });
       } else {
@@ -529,6 +603,16 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
       setSearching(false);
     }
   }
+
+  // A repair case brought a brugtmoms unit without IMEI/serial number into the cart: ask for it.
+  useEffect(() => {
+    if (dialog || done) return;
+    const missing = lineNeedingIdentifier(lines);
+    if (missing && !identifierDismissed.includes(missing.key)) {
+      setIdentifierFor({ kind: "line", key: missing.key, name: missing.name });
+      setDialog("identifier");
+    }
+  }, [lines, dialog, done, identifierDismissed]);
 
   // Keyboard: F2 focuses the scan field, Esc clears it when no dialog is open.
   useEffect(() => {
@@ -552,6 +636,11 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
     if (!dialog && !done && openSession) scanRef.current?.focus();
   }, [dialog, done, openSession, lines.length]);
 
+  // Ekspedientskiftet er sin egen dialog (ikke `dialog`): samme regel, når den lukker.
+  const focusScanAfterOperator = useCallback(() => {
+    if (!dialog && !done && openSession) scanRef.current?.focus();
+  }, [dialog, done, openSession]);
+
   /* ----- Payment + sale ----- */
 
   function pickMethod(type: PaymentType) {
@@ -570,6 +659,13 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   function requestCharge() {
     if (!canCharge) return;
     setError("");
+    // A brugtmoms unit from a repair case without IMEI/serial number: ask before charging.
+    const missing = lineNeedingIdentifier(lines);
+    if (missing) {
+      setIdentifierFor({ kind: "line", key: missing.key, name: missing.name });
+      setDialog("identifier");
+      return;
+    }
     if (usesCardTerminal(payments)) {
       setDialogError("");
       setDialog("card");
@@ -743,7 +839,16 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
             {openSession.openedByName ? ` af ${openSession.openedByName}` : ""} · startbeholdning {fmtKr(openSession.openingFloat)}
           </span>
         )}
+        <OperatorSwitch locationId={locationId} onChanged={() => void onOperatorChanged()} onClosed={focusScanAfterOperator} />
         <div className="flex-1" />
+        {locationId && (
+          <Link
+            href={`/admin/opkoeb/slutsedler/ny?location=${locationId}`}
+            className="inline-flex h-9 items-center rounded-lg border border-[#E2E5E0] bg-white px-3 text-sm font-semibold text-[#1A3D2E] hover:bg-[#F5F6F4]"
+          >
+            Nyt opkøb
+          </Link>
+        )}
         <Link href="/admin/kasse/salg" className="text-sm text-[#1A3D2E] hover:text-[#2D6B45]">
           Salgshistorik
         </Link>
@@ -816,7 +921,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
               {showResults && (
                 <div className="absolute inset-x-0 top-[52px] z-20 max-h-[360px] overflow-y-auto rounded-xl border border-[#E2E5E0] bg-white shadow-lg">
                   {caseHit && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3">
+                    <div className="m-row-in flex flex-wrap items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3">
                       <div className="min-w-0 text-sm">
                         <b>Sag {caseHit.ticketNumber}</b>
                         <div className="truncate text-[#5E6A63]">
@@ -852,26 +957,18 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                       </div>
                     </div>
                   )}
-                  {caseHitError && !caseHit && <p className="px-4 py-3 text-sm text-[#5E6A63]">{caseHitError}</p>}
+                  {caseHitError && !caseHit && <p className="m-row-in px-4 py-3 text-sm text-[#5E6A63]">{caseHitError}</p>}
                   {lookup?.devices.map((d) => (
                     <button
                       key={d.id}
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
-                      onClick={() =>
-                        addDevice({
-                          id: d.id,
-                          name: d.product_templates?.display_name ?? "Enhed",
-                          grade: d.grade,
-                          storage: d.storage,
-                          priceOere: d.selling_price,
-                          vatScheme: d.vat_scheme,
-                        })
-                      }
+                      className="m-row-in flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
+                      onClick={() => addDevice(fromLookup(d))}
                     >
                       <span>
                         <b>{d.product_templates?.display_name ?? "Enhed"}</b>
                         <span className="block text-[#5E6A63]">{[d.storage, d.color, d.grade ? `Grade ${d.grade}` : null, d.barcode].filter(Boolean).join(" · ")}</span>
+                        {d.blocked && <span className="block font-semibold text-red-700">Spærret</span>}
                       </span>
                       <span className="tabular-nums">{fmt(d.selling_price)}</span>
                     </button>
@@ -880,7 +977,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                     <button
                       key={s.id}
                       type="button"
-                      className="flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
+                      className="m-row-in flex w-full items-center justify-between gap-3 border-b border-[#EEF0EC] px-4 py-3 text-left text-sm hover:bg-[#F5F6F4]"
                       onClick={() => addSku({ id: s.id, title: s.title, priceOere: effectiveSkuPrice(s), lagersalg: s.lagersalg === true })}
                     >
                       <span>
@@ -907,7 +1004,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                   role="tab"
                   aria-selected={chip === c.id}
                   onClick={() => setChip(c.id)}
-                  className={`h-[38px] rounded-full px-4 text-sm ${
+                  className={`m-press m-tap h-[38px] rounded-full px-4 text-sm ${
                     chip === c.id ? "bg-[#1A3D2E] font-semibold text-white" : "border border-[#C9D0C7] bg-white hover:bg-[#FBFCFB]"
                   }`}
                 >
@@ -976,7 +1073,18 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
                     key={d.id}
                     type="button"
                     className={tileClass}
-                    onClick={() => addDevice({ id: d.id, name: d.name, grade: d.grade, storage: d.storage, priceOere: d.priceOere, vatScheme: d.vatScheme })}
+                    onClick={() =>
+                      addDevice({
+                        id: d.id,
+                        name: d.name,
+                        grade: d.grade,
+                        storage: d.storage,
+                        priceOere: d.priceOere,
+                        vatScheme: d.vatScheme,
+                        hasIdentifier: d.hasIdentifier,
+                        hasPurchaseDocument: d.hasPurchaseDocument,
+                      })
+                    }
                   >
                     <span>
                       <b className="text-[15px]">{d.name}</b>
@@ -1023,6 +1131,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
             onDiscount={() => setDialog("discount")}
             onMethod={pickMethod}
             onSplit={() => openSplit()}
+            onOffset={() => openSplit("opkoeb")}
             onCharge={requestCharge}
           />
         </div>
@@ -1074,6 +1183,7 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
         <SplitDialog
           total={totals.total}
           hasCustomer={!!customer}
+          locationId={locationId}
           initialLines={splitInitial}
           onClose={() => setDialog(null)}
           onConfirm={(ls) => {
@@ -1092,6 +1202,26 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
           onCancelTerminal={() => void cancelTerminal()}
           onClose={() => setDialog(null)}
           onApproved={(r) => void submitSale({ card: true, terminalReceipt: r })}
+        />
+      )}
+      {dialog === "identifier" && identifierFor && (
+        <IdentifierDialog
+          deviceName={identifierFor.kind === "new" ? identifierFor.device.name : identifierFor.name}
+          onClose={() => {
+            if (identifierFor.kind === "line") {
+              const key = identifierFor.key;
+              setIdentifierDismissed((ks) => (ks.includes(key) ? ks : [...ks, key]));
+            }
+            setIdentifierFor(null);
+            setDialog(null);
+          }}
+          onConfirm={(imei) => {
+            const target = identifierFor;
+            setIdentifierFor(null);
+            setDialog(null);
+            if (target.kind === "new") addDevice(target.device, imei);
+            else setLines((prev) => prev.map((l) => (l.key === target.key && l.type === "device" ? { ...l, imei } : l)));
+          }}
         />
       )}
       {done && <DoneDialog sale={done} onNew={newCustomer} />}

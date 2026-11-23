@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { LEGAL_ENTITY } from "@/lib/company";
 import type { CompanySettings, StaffProfile } from "@/lib/supabase/email-types";
 import { STORES, COMPANY_EMAIL } from "@/lib/store-config";
 
@@ -31,7 +32,7 @@ const DEFAULT_COMPANY: Pick<CompanySettings, "company_name" | "phone" | "email" 
   phone: "+45 61 10 00 48",
   email: COMPANY_EMAIL,
   website: "https://phonespot.dk",
-  cvr: "38688766",
+  cvr: LEGAL_ENTITY.cvr,
   trustpilot_url: "https://dk.trustpilot.com/evaluate/phonespot.dk",
 };
 

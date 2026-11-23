@@ -5,6 +5,11 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/client";
 import type { ContactInquiry, InquiryMessage } from "@/lib/supabase/types";
+import {
+  STATUS_LABELS as RECEIPT_STATUS_LABELS,
+  draftHref,
+  receiptHref,
+} from "../slutsedler/_components/receipt-status";
 import type { TradeInOffer, TradeInOfferStatus, TradeInReceipt, TradeInDerivedStatus } from "@/lib/supabase/trade-in-types";
 import {
   formatDKK,
@@ -18,6 +23,7 @@ import { staffFetch } from "@/lib/buyback/admin-fetch";
 import { readLeadDevices, deviceLabel } from "@/lib/buyback/lead-devices";
 import { trackingUrlFor } from "@/lib/shipmondo/carriers";
 import SellerAddressEditor from "@/components/admin/buyback/SellerAddressEditor";
+import { useToast } from "@/components/admin/ui";
 
 /** What GET /api/trade-in/suggest answers with. */
 interface LeadSuggestionResponse {
@@ -86,6 +92,7 @@ function formatDate(dateStr: string) {
 /* ------------------------------------------------------------------ */
 
 export default function AdminOpkoebDetailPage() {
+  const toast = useToast();
   const params = useParams();
   const inquiryId = params.id as string;
   const supabase = useMemo(() => createBrowserClient(), []);
@@ -154,12 +161,13 @@ export default function AdminOpkoebDetailPage() {
   }
 
   async function loadReceipts() {
-    const { data } = await supabase
-      .from("trade_in_receipts")
-      .select("*")
-      .eq("inquiry_id", inquiryId)
-      .order("created_at", { ascending: false });
-    setReceipts((data as TradeInReceipt[]) ?? []);
+    // Slutsedler læses via serveren (butiksadgang og maskering), nyeste først.
+    try {
+      const res = await staffFetch(`/api/trade-in/receipts?inquiry_id=${inquiryId}`);
+      setReceipts(res.ok ? ((await res.json()) as TradeInReceipt[]) : []);
+    } catch {
+      setReceipts([]);
+    }
   }
 
   async function loadDeclines() {
@@ -391,9 +399,18 @@ export default function AdminOpkoebDetailPage() {
       if (res.ok) {
         setReplyText("");
         await loadMessages();
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const message = data.error || "Kunne ikke sende svaret";
+        if (res.status === 500 && message.startsWith("SMS'en er sendt")) {
+          // The SMS went out although saving failed: do not invite a second send.
+          setReplyText("");
+          await loadMessages();
+        }
+        toast(message, { tone: "error" });
       }
     } catch {
-      // Silently handle
+      toast("Kunne ikke sende svaret — prøv igen", { tone: "error" });
     }
     setReplySending(false);
   }
@@ -1089,7 +1106,7 @@ export default function AdminOpkoebDetailPage() {
               {receipts.map((r) => (
                 <div key={r.id} className="flex items-center justify-between rounded-lg border border-stone-100 p-3">
                   <div>
-                    <span className="text-sm font-medium text-charcoal">{r.receipt_number}</span>
+                    <span className="text-sm font-medium text-charcoal">{r.receipt_number ?? "Kladde"}</span>
                     <span className="ml-2 text-xs text-stone-400">{formatDKK(r.total_amount)}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1097,15 +1114,16 @@ export default function AdminOpkoebDetailPage() {
                       r.status === "paid" ? "bg-emerald-100 text-emerald-700"
                       : r.status === "confirmed" ? "bg-blue-100 text-blue-700"
                       : r.status === "completed" ? "bg-green-100 text-green-700"
+                      : r.status === "voided" ? "bg-red-50 text-red-700"
                       : "bg-stone-100 text-stone-500"
                     }`}>
-                      {r.status === "draft" ? "Kladde" : r.status === "confirmed" ? "Bekraeftet" : r.status === "paid" ? "Betalt" : "Faerdig"}
+                      {RECEIPT_STATUS_LABELS[r.status] ?? r.status}
                     </span>
                     <Link
-                      href={`/admin/opkoeb/${inquiryId}/slutseddel`}
+                      href={r.status === "draft" ? draftHref(r.id) : receiptHref(r.id)}
                       className="text-xs text-green-eco hover:underline"
                     >
-                      Abn
+                      Åbn
                     </Link>
                   </div>
                 </div>

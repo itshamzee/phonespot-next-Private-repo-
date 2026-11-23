@@ -9,12 +9,12 @@ import { STORES } from "@/lib/store-config";
 import styles from "@/components/sell-device/sell-device.module.css";
 
 export const metadata: Metadata = {
-  title: "Sælg brugt elektronik – iPhone, Samsung og MacBook | PhoneSpot",
+  title: "Sælg din telefon, tablet eller computer | PhoneSpot",
   description:
-    "Sælg din brugte iPhone, Samsung, iPad, MacBook eller smartwatch. Fast pris, udbetaling inden 2 hverdage og gratis retur, hvis du afviser. Vejle, Slagelse eller med post.",
+    "Sælg din brugte telefon, tablet, computer eller konsol, også ny og uåbnet. Fast pris, gratis label og pengene samme dag, vi modtager den. Vejle eller Slagelse.",
   alternates: { canonical: "https://phonespot.dk/saelg-din-enhed" },
   openGraph: {
-    title: "Sælg din brugte elektronik | PhoneSpot",
+    title: "Sælg din telefon, tablet eller computer | PhoneSpot",
     description:
       "Din gamle enhed. Stadig noget værd. Fortæl os om din model og stand, så gennemgår vi den og vender tilbage med en vurdering.",
     url: "https://phonespot.dk/saelg-din-enhed",
@@ -35,6 +35,11 @@ const questions = [
       "Ja. Vælg din første enhed og tryk på Tilføj endnu en enhed. Du kan beskrive standen for hver enhed og sende dem i én samlet anmodning.",
   },
   {
+    question: "Køber I også ny og uåbnet elektronik?",
+    answer:
+      "Ja. Vi køber nu også nye og uåbnede enheder, fx en gave, du ikke skal bruge. Vælg den bedste stand i formularen, og skriv i kommentarfeltet, at enheden er ny, og om æsken er uåbnet. Gem gerne kvitteringen.",
+  },
+  {
     question: "Min model er ikke på listen. Hvad gør jeg?",
     answer:
       "Vælg enhedstype og tryk på Min enhed findes ikke på listen. Så kan du selv skrive mærke og model. Listen er en hjælp til formularen; vi vurderer din konkrete enhed.",
@@ -47,7 +52,7 @@ const questions = [
   {
     question: "Hvordan afleverer eller sender jeg enheden?",
     answer:
-      "Vælg din foretrukne løsning i formularen. Når der er en aftale, får du oplysninger om aflevering i Vejle eller Slagelse eller om indsendelse med en forsendelseslabel.",
+      "Vælg din foretrukne løsning i formularen. Når der er en aftale, får du oplysninger om aflevering i Vejle eller Slagelse eller om indsendelse med en forsendelseslabel. Snart kan du også aflevere i vores nye butik i Esbjerg.",
   },
   {
     question: "Hvordan gør jeg min enhed klar til salg?",
@@ -57,7 +62,7 @@ const questions = [
   {
     question: "Hvornår aftaler vi pris og betaling?",
     answer:
-      "Formularen er en anmodning om vurdering. Du får et tilbud, og siger du ja, holder prisen, medmindre enheden afviger fra din beskrivelse. Vi udbetaler inden 2 hverdage, efter vi har modtaget og tjekket enheden. Afviser du tilbuddet efter vores tjek, sender vi enheden gratis retur.",
+      "Formularen er en anmodning om vurdering. Du får et tilbud, og siger du ja, holder prisen, medmindre enheden afviger fra din beskrivelse. Du får pengene samme dag, som vi modtager enheden og har tjekket den. Afviser du tilbuddet efter vores tjek, sender vi enheden gratis retur.",
   },
   {
     question: "Hvorfor sælge en enhed, der stadig virker?",
@@ -98,7 +103,7 @@ export default function SaelgDinEnhedPage() {
               Sælg din enhed
             </p>
             <h1 id="sell-title">
-              Sælg din brugte elektronik.
+              Sælg din telefon, tablet eller computer.
             </h1>
             <p className={styles.lead}>
               Din gamle enhed kan stadig være noget værd. Fortæl os om din
@@ -109,7 +114,8 @@ export default function SaelgDinEnhedPage() {
               <p>
                 Telefon, tablet, laptop, smartwatch, spillekonsol, controller,
                 høretelefoner, Dyson eller smart home, virkende eller defekte.
-                Du kan tilføje flere enheder i samme anmodning.
+                Nu køber vi også ny og uåbnet elektronik. Du kan tilføje flere
+                enheder i samme anmodning.
               </p>
               <div>
                 <StorefrontIcon kind="person" />
@@ -118,14 +124,15 @@ export default function SaelgDinEnhedPage() {
               <div>
                 <StorefrontIcon kind="pin" />
                 <span>
-                  Aflever i Vejle eller Slagelse, eller send efter aftale.
+                  Aflever i <Link href="/saelg-din-enhed/vejle">Vejle</Link> eller{" "}
+                  <Link href="/saelg-din-enhed/slagelse">Slagelse</Link>, snart også Esbjerg, eller send med gratis label.
                 </span>
               </div>
               <div>
                 <StorefrontIcon kind="check" />
                 <span>
-                  Fast pris, udbetaling inden 2 hverdage, gratis retur hvis du
-                  afviser.
+                  Fast pris, gratis label og pengene samme dag, som vi
+                  modtager enheden.
                 </span>
               </div>
               <p className={styles.note}>
@@ -149,7 +156,7 @@ export default function SaelgDinEnhedPage() {
         </section>
         <section className={styles.process} aria-labelledby="process-title">
           <div>
-            <p className={styles.eyebrow}>Fra vurdering til aftale</p>
+            <p className={styles.eyebrow}>Tre trin, når du har sagt ja</p>
             <h2 id="process-title">Sådan foregår det</h2>
             <div className={styles.processImage}>
               <Image src="/images/buyback/groenne-traeer.jpg" alt="Sollys gennem grønne trækroner" fill sizes="(max-width: 600px) 90vw, 450px" />
@@ -159,30 +166,30 @@ export default function SaelgDinEnhedPage() {
             <li>
               <span>01</span>
               <div>
-                <h3>Vi vurderer din enhed</h3>
+                <h3>Gratis label</h3>
                 <p>
-                  Vi ser på model, stand og dine oplysninger og kontakter dig om
-                  en vurdering.
+                  Siger du ja til tilbuddet, sender vi en gratis fragtlabel. Du
+                  kan også aflevere i Vejle eller Slagelse.
                 </p>
               </div>
             </li>
             <li>
               <span>02</span>
               <div>
-                <h3>Du tager stilling</h3>
+                <h3>Vi modtager enheden</h3>
                 <p>
-                  Modtager du et tilbud, kan du gennemgå det og vælge, om du vil
-                  gå videre.
+                  Vi tjekker, at enheden svarer til din beskrivelse. Gør den ikke,
+                  får du et nyt tilbud, eller vi sender den gratis retur.
                 </p>
               </div>
             </li>
             <li>
               <span>03</span>
               <div>
-                <h3>Aflever eller send</h3>
+                <h3>Du får pengene</h3>
                 <p>
-                  Vi aftaler aflevering eller indsendelse og gennemgår enheden
-                  som del af handlen.
+                  Samme dag, som vi modtager enheden. Pengene går til den konto,
+                  du oplyser, når du accepterer tilbuddet.
                 </p>
               </div>
             </li>

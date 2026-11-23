@@ -30,7 +30,7 @@ export function BrandGrid() {
           <Link
             key={tile.id}
             href={`/beskyttelsesglas/${tile.id}`}
-            className="group relative block min-h-[140px] overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-black/[0.12] hover:shadow-[0_20px_40px_-20px_rgba(26,61,46,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3D2E] focus-visible:ring-offset-2 md:min-h-[180px] md:p-8"
+            className="group relative block min-h-[140px] overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-black/[0.12] hover-fine:shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A3D2E] focus-visible:ring-offset-2 md:min-h-[180px] md:p-8"
           >
             {/* Soft radial accent — appears on hover */}
             <div

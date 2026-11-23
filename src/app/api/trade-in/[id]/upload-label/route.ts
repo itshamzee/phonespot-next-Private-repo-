@@ -1,11 +1,14 @@
 // src/app/api/trade-in/[id]/upload-label/route.ts
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
+import { requireStaff } from "@/lib/auth/require-staff";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const staff = await requireStaff(req);
+  if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id: offerId } = await params;
   const supabase = createServerClient();
 

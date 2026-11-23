@@ -99,7 +99,7 @@ function HeroShell({
 }
 
 const SEARCH_INPUT_CLASS =
-  "w-full rounded-xl border border-[#E5E5EA] bg-white py-3.5 pl-11 pr-4 text-base text-[#111111] shadow-sm placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10";
+  "w-full rounded-xl border border-[#E5E5EA] bg-white py-3.5 pl-11 pr-4 text-base text-[#111111] placeholder:text-[#86868B] focus:border-[#1A3D2E] focus:outline-none focus:ring-2 focus:ring-[#1A3D2E]/10";
 
 /* ------------------------------------------------------------------ */
 /*  Interactive version — needs useSearchParams, so it must live       */

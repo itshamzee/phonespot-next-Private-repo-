@@ -3,7 +3,8 @@ import { DeviceCollection, type CollectionFaq } from "@/components/product/devic
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedTemplates } from "@/lib/supabase/product-queries";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Brugte telefoner med 36 mdr. garanti – iPhone og Android | PhoneSpot",
@@ -36,6 +37,6 @@ export default async function SmartphonesPage() {
   return <>
     <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" }, { "@type": "ListItem", position: 2, name: "Brugte telefoner", item: "https://phonespot.dk/smartphones" }] }} />
     <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
-    <DeviceCollection collection="smartphone" templates={templates} title="Brugte telefoner" intro="Find din næste brugte telefon blandt iPhones, Samsung og andre mærker. Testet og istandsat, med 36 måneders garanti og 30 dages returret." collectionHeading="Aktuelle brugte telefoner" guideTitle="Sådan vælger du brugt telefon" guideIntro="Tag udgangspunkt i de funktioner, der betyder mest i din hverdag. Vælg derefter blandt de konkrete modeller og enheder på lager." choices={CHOICES} faqs={FAQS} />
+    <DeviceCollection collection="smartphone" templates={templates} title="Brugte telefoner" intro="Find din næste brugte telefon blandt iPhones, Samsung og andre mærker. Testet og istandsat, med 36 måneders garanti og 30 dages returret." collectionHeading="Aktuelle brugte telefoner" guideTitle="Sådan vælger du brugt telefon" guideIntro="Tag udgangspunkt i de funktioner, der betyder mest i din hverdag. Vælg derefter blandt de konkrete modeller og enheder på lager." choices={CHOICES} faqs={FAQS} localLinks={[{ href: "/iphones-vejle", label: "Brugte iPhones i Vejle" }, { href: "/iphones-slagelse", label: "Brugte iPhones i Slagelse" }]} />
   </>;
 }

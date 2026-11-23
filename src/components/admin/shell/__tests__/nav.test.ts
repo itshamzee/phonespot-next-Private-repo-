@@ -18,6 +18,8 @@ describe("resolveActive", () => {
     expect(at("/admin/platform/pos/cashup")).toEqual(["kasse", "Dagsopgørelse"]);
     expect(at("/admin/platform/pos")).toEqual(["kasse", "Kasseapparat"]);
     expect(at("/admin/opkoeb/ko")).toEqual(["opkoeb", "Kø"]);
+    expect(at("/admin/opkoeb/slutsedler")).toEqual(["opkoeb", "Slutsedler"]);
+    expect(at("/admin/opkoeb/slutsedler/ny")).toEqual(["opkoeb", "Slutsedler"]);
     expect(at("/admin/opkoeb/8f3a/slutseddel")).toEqual(["opkoeb", "Pipeline"]);
   });
 
@@ -87,9 +89,27 @@ describe("NAV", () => {
     expect(ownerNav.flatMap((a) => (a.children ?? []).map((c) => c.label))).toContain("Medarbejdere");
   });
 
+  it("Statistik kræver se_statistik for andre end ejeren", () => {
+    expect(visibleNav(false).map((a) => a.key)).not.toContain("statistik");
+    expect(visibleNav(false, NAV, ["lave_retur"]).map((a) => a.key)).not.toContain("statistik");
+    expect(visibleNav(false, NAV, ["se_statistik"]).map((a) => a.key)).toContain("statistik");
+    expect(visibleNav(true).map((a) => a.key)).toContain("statistik");
+  });
+
   it("menuen bruger ingen versaler i etiketter (ingen skrigende navigation)", () => {
     const labels = NAV.flatMap((a) => [a.label, ...(a.children ?? []).map((c) => c.label)]);
     expect(labels.filter((l) => l === l.toUpperCase() && l.length > 3)).toEqual([]);
+  });
+});
+
+describe("Kunder, Kundecenter", () => {
+  it("ligger lige over Henvendelser og har tallet, Henvendelser har ikke", () => {
+    const kunder = NAV.find((a) => a.key === "kunder");
+    const labels = kunder?.children?.map((c) => c.label) ?? [];
+    expect(labels.indexOf("Kundecenter")).toBe(labels.indexOf("Henvendelser") - 1);
+    expect(kunder?.children?.find((c) => c.label === "Kundecenter")?.countKey).toBe("inquiries");
+    expect(kunder?.children?.find((c) => c.label === "Henvendelser")?.countKey).toBeUndefined();
+    expect(at("/admin/kundecenter")).toEqual(["kunder", "Kundecenter"]);
   });
 });
 

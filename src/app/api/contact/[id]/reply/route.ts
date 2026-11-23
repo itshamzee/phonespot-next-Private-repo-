@@ -1,8 +1,16 @@
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
-import { NextResponse } from "next/server";
+import { NextResponse, after as runAfter } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
-import { sendSms } from "@/lib/gateway-api/client";
-import { sendInquiryReply } from "@/lib/inquiries/send-reply";
+import { sendReply, finalizeReply, ReplyError } from "@/lib/inquiries/reply";
+import { staffDisplayName } from "@/lib/inquiries/inbox";
+
+const STATUS_BY_CODE = {
+  not_found: 404,
+  no_email: 400,
+  no_phone: 400,
+  send_failed: 502,
+  saved_failed: 500,
+} as const;
 
 export async function POST(
   req: Request,
@@ -12,88 +20,59 @@ export async function POST(
   const access = await requireInquiryAccess(req, id);
   if (!access.ok) return access.response;
   const supabase = createServerClient();
-  const { body, channel, staff_name } = await req.json();
-
-  if (!body || !channel) {
-    return NextResponse.json(
-      { error: "body and channel required" },
-      { status: 400 },
-    );
+  let payload: { body?: unknown; channel?: unknown; after?: unknown };
+  try {
+    payload = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
+  // staff_name i body ignoreres bevidst: afsenderen er altid den loggede medarbejder.
+  const { body, channel, after } = payload ?? {};
 
-  if (channel === "email") {
-    try {
-      const result = await sendInquiryReply(supabase, {
-        inquiryId: id,
-        body,
-        staffName: staff_name || "Admin",
-      });
-      return NextResponse.json(
-        { id: result.messageRowId, transport: result.transport },
-        { status: 201 },
-      );
-    } catch (err) {
-      const msg = (err as Error).message;
-      const status = msg.includes("ikke fundet") ? 404 : msg.includes("Ingen email") ? 400 : 502;
-      return NextResponse.json({ error: msg }, { status });
-    }
+  if (typeof body !== "string" || !body.trim() || (channel !== "email" && channel !== "sms")) {
+    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
-
-  // SMS: unchanged behaviour.
-  const { data: inquiry, error: inquiryError } = await supabase
-    .from("contact_inquiries")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (inquiryError || !inquiry) {
-    return NextResponse.json(
-      { error: "Henvendelse ikke fundet" },
-      { status: 404 },
-    );
+  if (after !== undefined && after !== "done" && after !== "waiting") {
+    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
+  const staffName = staffDisplayName(access.staff);
 
-  const { data: message, error: messageError } = await supabase
-    .from("inquiry_messages")
-    .insert({
-      inquiry_id: id,
-      sender: "staff",
-      channel,
+  try {
+    const result = await sendReply(supabase, {
+      inquiryId: id,
       body,
-      staff_name: staff_name || null,
-    })
-    .select()
-    .single();
-
-  if (messageError) {
-    return NextResponse.json(
-      { error: messageError.message },
-      { status: 500 },
-    );
-  }
-
-  if (channel === "sms") {
-    if (!inquiry.phone) {
-      return NextResponse.json(
-        { error: "Ingen telefonnummer paa henvendelsen" },
-        { status: 400 },
-      );
-    }
-
-    const result = await sendSms(inquiry.phone, body);
-
-    await supabase.from("sms_log").insert({
-      phone: inquiry.phone,
-      message: body,
-      provider_message_id: result.messageId,
-      status: result.success ? "sent" : "failed",
+      staffName,
+      channel,
     });
+    // Efter afsendelsen må intet gøre svaret til en fejl, der inviterer til gensendelse.
+    let bookkept = false;
+    try {
+      bookkept = await finalizeReply(supabase, id, after ?? "waiting", { id: access.staff.id, name: staffName });
+      // Svaret er sendt: ventende Fiks-udkast på tråden er nu overflødige. Lukningen og mail-flytningen
+      // (IMAP) sker efter svaret, så en langsom postserver aldrig kan time ud et allerede sendt svar.
+      runAfter(async () => {
+        try {
+          const { discardPendingDrafts } = await import("@/lib/mail-agent/draft-handling");
+          await discardPendingDrafts(supabase, id, staffName);
+        } catch {
+          console.error(`[reply route] closing drafts failed for inquiry ${id}`);
+        }
+      });
+    } catch {
+      bookkept = false;
+      console.error(`[reply route] bookkeeping threw for inquiry ${id}`);
+    }
+    return NextResponse.json(
+      bookkept
+        ? { id: result.messageRowId }
+        : { id: result.messageRowId, warning: "Svaret er sendt, men sagen kunne ikke opdateres. Opdater siden." },
+      { status: 201 },
+    );
+  } catch (err) {
+    if (err instanceof ReplyError) {
+      return NextResponse.json({ error: err.message }, { status: STATUS_BY_CODE[err.code] });
+    }
+    console.error(`[reply route] unexpected error for inquiry ${id}:`, err);
+    return NextResponse.json({ error: "Der opstod en fejl. Prøv igen." }, { status: 500 });
   }
-
-  await supabase
-    .from("contact_inquiries")
-    .update({ status: "besvaret" })
-    .eq("id", id);
-
-  return NextResponse.json(message, { status: 201 });
 }

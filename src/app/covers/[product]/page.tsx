@@ -12,7 +12,8 @@ import { KlarnaBanner } from "@/components/ui/klarna-banner";
 import { ITEM_CONDITION } from "@/lib/seo/item-condition";
 
 export const dynamicParams = true;
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 // ---------------------------------------------------------------------------
 // Helpers

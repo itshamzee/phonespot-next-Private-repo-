@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/seo/json-ld";
 import { isBlackNovember } from "@/lib/campaign/black-november";
 import styles from "../black-november.module.css";
-import { CAMPAIGN_OFFERS, getCampaignOffer } from "./offers";
+import { CAMPAIGN_OFFERS, RETIRED_OFFER_SLUGS, getCampaignOffer } from "./offers";
 
 const BASE_URL = "https://phonespot.dk";
 
@@ -14,7 +14,8 @@ export const revalidate = 300;
 type PageProps = { params: Promise<{ tilbud: string }> };
 
 export function generateStaticParams() {
-  return CAMPAIGN_OFFERS.map(({ slug }) => ({ tilbud: slug }));
+  // Nedlagte undersider bygges også, så de kan sende videre i stedet for 404.
+  return [...CAMPAIGN_OFFERS.map(({ slug }) => slug), ...RETIRED_OFFER_SLUGS].map((tilbud) => ({ tilbud }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -40,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CampaignOfferPage({ params }: PageProps) {
   const { tilbud } = await params;
+  if (RETIRED_OFFER_SLUGS.has(tilbud)) permanentRedirect("/black-november");
   const offer = getCampaignOffer(tilbud);
   if (!offer) notFound();
 

@@ -57,7 +57,7 @@ export default async function SearchPage({ searchParams }: SearchProps) {
     <div className={styles.shell}>
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Søg</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Find dit næste produkt</span>
           <h1>{query ? "Søgeresultater." : "Hvad leder du efter?"}</h1>
           <p className={styles.intro}>Søg i vores produkter. Leder du efter en reparation, kan du <Link href="/reparation" className={styles.textLink}>finde model og pris her</Link>.</p>

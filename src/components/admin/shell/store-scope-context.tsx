@@ -24,6 +24,8 @@ export type AdminMe = {
   /** Medarbejderens egen butik; null for ejeren eller en medarbejder uden tildeling. */
   ownSlug: ScopeSlug | null;
   scope: StoreScope;
+  /** Gældende tilladelser fra /api/admin/me (rollestandard + individuelle). */
+  permissions?: string[];
 };
 
 export type StoreScopeValue = {

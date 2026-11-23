@@ -236,7 +236,7 @@ export default function AdresserPage() {
 
       {/* Add / edit form */}
       {form && (
-        <div className="rounded-xl border border-[#1A3D2E]/20 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-[#1A3D2E]/20 bg-white p-5 shadow-rest">
           <h2 className="mb-4 text-base font-semibold text-[#111111]">
             {editingId ? "Rediger adresse" : "Ny adresse"}
           </h2>

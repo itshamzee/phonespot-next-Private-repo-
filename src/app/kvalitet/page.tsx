@@ -4,6 +4,7 @@ import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FaqAccordion } from "@/components/ui/faq-accordion";
 import { GRADE_SHORT_LABEL } from "@/lib/grades";
+import { ConditionExplainer } from "@/components/product/condition-explainer";
 import styles from "@/components/ui/information.module.css";
 
 export const metadata: Metadata = {
@@ -23,13 +24,13 @@ const grades = [
 
 const QUALITY_FAQ = [
   { question: "Hvad er forskellen på refurbished og brugt?", answer: "En refurbished enhed fra PhoneSpot er inspiceret, testet, rengjort og klargjort til videresalg. Vores refurbished enheder leveres med 36 måneders garanti." },
-  { question: "Hvad betyder Grade A, B og C?", answer: "Graden beskriver den kosmetiske stand. Grade A fremstår som ny uden synlige brugsspor. Grade B har lette brugsspor som små ridser eller mærker. Grade C har synlige brugsspor. Batterikapaciteten måles separat for den enkelte enhed." },
-  { question: "Er Grade N også refurbished?", answer: "Nej. Grade N er en fabriksny enhed, som er forseglet og aldrig brugt. Grade P er refurbished i premiumstand med minimale eller ingen brugsspor." },
+  { question: "Hvad betyder stand A, B og C?", answer: "Standen beskriver de kosmetiske brugsspor. Stand A (som ny) har ingen synlige brugsspor. Stand B (god stand) har lette brugsspor som små ridser eller mærker. Stand C (brugt stand) har synlige brugsspor. Alle stande er fuldt funktionelle, og batteriet måles for sig på den enkelte enhed." },
+  { question: "Er fabriksnye enheder også refurbished?", answer: "Nej. En fabriksny enhed er forseglet og aldrig brugt. Stand P er refurbished i premiumstand med minimale eller ingen brugsspor." },
   { question: "Hvordan ved jeg, hvor godt batteriet er?", answer: "Batteriets sundhed måles individuelt. Se den oplyste batterikapacitet for den konkrete enhed på produktsiden. Graden siger ikke noget om batteriprocenten. Kontakt os før køb, hvis du mangler en måling." },
   { question: "Tester I også bærbare og iPads?", answer: "Ja. Testene tilpasses enheden. På bærbare kontrolleres blandt andet tastatur, trackpad, skærmhængsler og porte ud over skærm, batteri og forbindelser." },
   { question: "Tjekker I for vandskade?", answer: "Enhederne inspiceres for vandskadeindikatorer som del af vores testproces. Enheder med tegn på vandskade sælges ikke som refurbished hos PhoneSpot." },
   { question: "Hvad gør jeg, hvis min enhed har en fejl?", answer: "Kontakt os eller opret en reklamation. Enheder har 36 måneders garanti på fabrikationsfejl og funktionelle mangler efter vores garantivilkår. Tilbehør har 2 års reklamationsret." },
-  { question: "Har jeg fortrydelsesret?", answer: "Ved køb online har du 14 dages fortrydelsesret fra leveringsdagen. Læs vores returpolitik for fremgangsmåde og vilkår." },
+  { question: "Har jeg fortrydelsesret?", answer: "Ved køb online har du 30 dages returret på enheder og 14 dages fortrydelsesret på tilbehør og reservedele, regnet fra leveringsdagen. Læs vores returpolitik for fremgangsmåde og vilkår." },
   { question: "Hvorfor vælge en enhed, der allerede er brugt?", answer: "Når en fungerende enhed bliver testet og taget i brug igen, forlænges dens levetid. Det giver eksisterende elektronik mere tid i brug." },
 ];
 
@@ -39,7 +40,7 @@ export default function QualityPage() {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: QUALITY_FAQ.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / Kvalitet</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Kvalitet hos PhoneSpot</span>
           <h1>Kend den enhed, du køber.</h1>
           <p className={styles.intro}>Vi tester funktionerne, vurderer den kosmetiske stand og måler batteriet. Tre forskellige oplysninger, der hjælper dig med at vælge.</p>
@@ -57,12 +58,17 @@ export default function QualityPage() {
         </section>
         <section id="stand" className={styles.section}>
           <div className={styles.grid}>
-            <div><h2>Standen handler om det, du kan se.</h2><p className={styles.intro}>Graden beskriver de kosmetiske brugsspor. De refurbished enheder er testet for funktion i alle grader, mens batteriet vurderes separat. De tilgængelige grader fremgår ved den enkelte model.</p><div className={styles.notice} style={{ marginTop: 24 }}><h3>{GRADE_SHORT_LABEL.N} · Grade N</h3><p>En forseglet enhed, som aldrig har været brugt. Grade N er ny og sælges derfor ikke som refurbished.</p></div></div>
-            <div className={styles.rows}>{grades.map(({ grade, description }) => <div key={grade}><h3>{GRADE_SHORT_LABEL[grade]} · Grade {grade}</h3><p>{description}</p></div>)}</div>
+            <div><h2>Standen handler om det, du kan se.</h2><p className={styles.intro}>Standen beskriver de kosmetiske brugsspor. De refurbished enheder er testet for funktion i alle stande, mens batteriet vurderes separat. De tilgængelige stande fremgår ved den enkelte model.</p><div className={styles.notice} style={{ marginTop: 24 }}><h3>{GRADE_SHORT_LABEL.N}</h3><p>En forseglet enhed, som aldrig har været brugt. Den er ny og sælges derfor ikke som refurbished.</p></div></div>
+            <div className={styles.rows}>{grades.map(({ grade, description }) => <div key={grade}><h3>Stand {grade} · {GRADE_SHORT_LABEL[grade]}</h3><p>{description}</p></div>)}</div>
+          </div>
+          <div style={{ marginTop: 40 }}>
+            <h3 style={{ marginBottom: 16 }}>Se forskellen på stand A, B og C</h3>
+            <ConditionExplainer deviceType="phone" />
+            <p style={{ marginTop: 16 }}><Link className={styles.textLink} href="/blog/stand-a-b-c-og-batteri">Læs guiden: sådan vurderer vi stand og batteri →</Link></p>
           </div>
         </section>
         <section id="batteri" className={styles.section}>
-          <div className={styles.notice}><h2>Batteriet måles for sig.</h2><p className={styles.intro}>To enheder med samme grade kan have forskellig batterisundhed. Derfor skal du se den målte kapacitet for netop den enhed, du overvejer. Er målingen ikke oplyst, hjælper vi dig med at afklare den før køb.</p><div className={styles.actions}><Link className={styles.textLink} href="/kontakt">Spørg til en enhed →</Link><Link className={styles.textLink} href="/garanti">Læs batteriets garantivilkår →</Link></div></div>
+          <div className={styles.notice}><h2>Batteriet måles for sig.</h2><p className={styles.intro}>To enheder i samme stand kan have forskellig batterisundhed. Derfor skal du se den målte kapacitet for netop den enhed, du overvejer. Er målingen ikke oplyst, hjælper vi dig med at afklare den før køb.</p><div className={styles.actions}><Link className={styles.textLink} href="/kontakt">Spørg til en enhed →</Link><Link className={styles.textLink} href="/garanti">Læs batteriets garantivilkår →</Link></div></div>
         </section>
         <section className={styles.section}><div className={styles.grid}>
           <figure className={styles.photo}><Image src="/images/store/butik-indvendig.jpg" alt="Enheder og tilbehør hos PhoneSpot" width={1000} height={650} sizes="(max-width: 700px) 100vw, 50vw" /><figcaption>Se enhederne og få rådgivning hos PhoneSpot.</figcaption></figure>

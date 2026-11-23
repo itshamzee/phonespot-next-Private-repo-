@@ -5,9 +5,9 @@ import { ConditionExplainer } from "../condition-explainer";
 describe("ConditionExplainer", () => {
   it("renders all three grades", () => {
     render(<ConditionExplainer />);
-    expect(screen.getByText("Som ny")).toBeInTheDocument();
-    expect(screen.getByText("God stand")).toBeInTheDocument();
-    expect(screen.getByText("Brugt stand")).toBeInTheDocument();
+    expect(screen.getAllByText("Som ny").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("God stand").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Brugt stand").length).toBeGreaterThan(0);
   });
 
   it("renders compact variant", () => {

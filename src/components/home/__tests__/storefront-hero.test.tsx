@@ -27,4 +27,15 @@ describe("StorefrontHero", () => {
     expect(screen.getByRole("link", { name: "Find din reparation" })).toHaveAttribute("href", "/reparation");
     expect(screen.getByRole("link", { name: "Hvad er din enhed værd?" })).toHaveAttribute("href", "/saelg-din-enhed");
   });
+
+  it("plays the load entrance only until the customer changes slide, and keeps the tab indicator in sync", () => {
+    const { container } = render(<StorefrontHero />);
+    const copy = () => screen.getByRole("heading", { level: 1 }).parentElement!;
+    const tabs = () => container.querySelector('[aria-label="Kategorier i karrusellen"]') as HTMLElement;
+    expect(copy()).toHaveClass("hero-rise");
+    expect(tabs().style.getPropertyValue("--tab-i")).toBe("0");
+    fireEvent.click(screen.getByRole("button", { name: "Næste kategori" }));
+    expect(copy()).not.toHaveClass("hero-rise");
+    expect(tabs().style.getPropertyValue("--tab-i")).toBe("1");
+  });
 });

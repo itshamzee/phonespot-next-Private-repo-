@@ -14,7 +14,7 @@ import { fetchInChunks } from "@/lib/supabase/in-chunks";
 import { Notice } from "@/components/admin/ui";
 import { readLeadDevices } from "@/lib/buyback/lead-devices";
 import { DECLINE_REASONS, type DeclineReasonCode } from "@/lib/buyback/decline-reasons";
-import { staffFetch } from "@/lib/buyback/admin-fetch";
+import { fetchReceiptsByInquiry, staffFetch } from "@/lib/buyback/admin-fetch";
 import {
   LeadCard,
   type LeadDraft,
@@ -115,9 +115,7 @@ export default function OpkoebQueuePage() {
         fetchInChunks<{ inquiry_id: string; status: string }>(ids, (c) =>
           supabase.from("trade_in_offers").select("inquiry_id, status").in("inquiry_id", c),
         ),
-        fetchInChunks<{ inquiry_id: string; status: string }>(ids, (c) =>
-          supabase.from("trade_in_receipts").select("inquiry_id, status").in("inquiry_id", c),
-        ),
+        fetchReceiptsByInquiry<{ inquiry_id: string; status: string }>(ids),
         fetchInChunks<{ id: string; inquiry_id: string }>(ids, (c) =>
           supabase.from("buyback_declines").select("id, inquiry_id").in("inquiry_id", c),
         ),

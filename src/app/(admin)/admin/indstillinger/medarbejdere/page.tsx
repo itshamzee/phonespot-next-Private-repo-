@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, DataTable, Field, FieldRow, Input, Notice, PageHeader, Select, Tag, type Column } from "@/components/admin/ui";
 import { MIN_PASSWORD_LENGTH, generatePassword } from "@/lib/auth/staff-admin";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
+import type { Permission } from "@/lib/auth/permissions";
+import { StaffAccessPanel } from "./staff-access-panel";
 
 type StaffRow = {
   id: string;
@@ -12,6 +14,9 @@ type StaffRow = {
   role: string;
   is_active: boolean;
   location_slug: string | null;
+  permissions: Permission[];
+  hasPin: boolean;
+  pinLocked: boolean;
 };
 
 type StoreOption = { slug: string; label: string; available: boolean };
@@ -35,6 +40,7 @@ export default function MedarbejderePage() {
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [accessId, setAccessId] = useState<string | null>(null);
   /** Vises én gang efter oprettelse eller ny kode, så ejeren kan give den videre. */
   const [handover, setHandover] = useState<{ name: string; email: string; password: string } | null>(null);
 
@@ -109,6 +115,8 @@ export default function MedarbejderePage() {
     );
   }
 
+  const accessRow = rows.find((r) => r.id === accessId && r.role !== "owner") ?? null;
+
   const columns: Column<StaffRow>[] = [
     {
       key: "name",
@@ -175,10 +183,13 @@ export default function MedarbejderePage() {
     {
       key: "actions",
       header: "",
-      className: "w-[200px]",
+      className: "w-[330px]",
       render: (r) =>
         r.role === "owner" ? null : (
           <div className="flex justify-end gap-2">
+            <Button size="sm" variant="quiet" onClick={() => setAccessId(accessId === r.id ? null : r.id)}>
+              Tilladelser og pinkode
+            </Button>
             <Button size="sm" variant="quiet" disabled={savingId === r.id} onClick={() => void resetPassword(r)}>
               Ny kode
             </Button>
@@ -236,7 +247,7 @@ export default function MedarbejderePage() {
           stores={stores}
           onCancel={() => setShowNew(false)}
           onCreated={(row, password) => {
-            setRows((prev) => [row, ...prev]);
+            setRows((prev) => [{ ...row, permissions: [], hasPin: false, pinLocked: false }, ...prev]);
             setShowNew(false);
             setHandover({ name: row.name, email: row.email, password });
           }}
@@ -253,6 +264,15 @@ export default function MedarbejderePage() {
             Medarbejdere uden butik kan logge ind, men ser ingen sager, før de har fået tildelt en butik.
           </Notice>
         </div>
+      )}
+      {accessRow && (
+        <StaffAccessPanel
+          key={accessRow.id}
+          row={accessRow}
+          saving={savingId === accessRow.id}
+          onSave={(changes, local) => patch(accessRow, changes, local)}
+          onClose={() => setAccessId(null)}
+        />
       )}
       <DataTable
         columns={columns}

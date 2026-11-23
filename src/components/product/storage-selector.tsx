@@ -35,7 +35,7 @@ export function StorageSelector({
               disabled={!isAvailable}
               aria-disabled={!isAvailable}
               title={isAvailable ? opt : `${opt} — udsolgt`}
-              className={`relative rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+              className={`press relative rounded-lg border-2 px-4 py-2 text-sm font-medium ${
                 isSelected
                   ? "border-green-eco bg-green-eco text-white"
                   : isAvailable

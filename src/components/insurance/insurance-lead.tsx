@@ -88,7 +88,7 @@ export function InsuranceLead({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`${shell} flex w-full items-center gap-3 text-left transition-all hover:border-[#1A3D2E]/30 hover:shadow-sm`}
+        className={`${shell} flex w-full items-center gap-3 text-left card-raise hover:border-[#1A3D2E]/30`}
       >
         <ShieldIcon />
         <div className="min-w-0">

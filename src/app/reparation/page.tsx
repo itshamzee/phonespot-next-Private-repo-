@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { STORE, STORES, openingHoursJsonLd } from "@/lib/store-config";
-import { getActiveBrands, getAllModelsWithBrand } from "@/lib/supabase/repairs";
+import { getActiveBrands, getAllModelsWithBrand, getRepairPriceSummaries } from "@/lib/supabase/repairs";
 import { BrandPicker } from "./brand-picker";
 import styles from "@/components/repair/repair.module.css";
 import { RepairMethodVideo } from "@/components/repair/repair-method-video";
@@ -38,16 +38,46 @@ export const metadata: Metadata = {
 // FAQ data
 // ---------------------------------------------------------------------------
 
-const REPAIR_FAQ = [
+// "Fra"-priserne i svaret hentes fra de mest solgte modeller, så hubben kan
+// citeres med et konkret tal, der altid følger prislisten.
+const HUB_PRICE_MODELS = [
+  { brand: "iphone", model: "iphone-17" },
+  { brand: "iphone", model: "iphone-16" },
+  { brand: "iphone", model: "iphone-15" },
+  { brand: "iphone", model: "iphone-14" },
+  { brand: "iphone", model: "iphone-13" },
+  { brand: "iphone", model: "iphone-12" },
+  { brand: "iphone", model: "iphone-11" },
+  { brand: "samsung", model: "galaxy-s24" },
+  { brand: "samsung", model: "galaxy-s23" },
+];
+
+const kr = (n: number) => `${n.toLocaleString("da-DK")} kr.`;
+
+function hubPrices(summaries: { screenFrom: number | null; battery: number | null }[]) {
+  const min = (xs: (number | null)[]) => {
+    const n = xs.filter((x): x is number => typeof x === "number" && x > 0);
+    return n.length ? Math.min(...n) : null;
+  };
+  return { screen: min(summaries.map((s) => s.screenFrom)), battery: min(summaries.map((s) => s.battery)) };
+}
+
+function buildRepairFaq(prices: { screen: number | null; battery: number | null }) {
+  const priceText = [
+    prices.screen && `skærmskift fra ${kr(prices.screen)}`,
+    prices.battery && `batteriskift fra ${kr(prices.battery)}`,
+  ].filter(Boolean).join(" og ");
+  return [
   {
     question: "Hvad koster en skærmudskiftning?",
-    answer:
-      "Prisen afhænger af din model og den valgte reservedel. Find din model ovenfor for at se priser på skærmskift, batteriskift og andre reparationer. Priserne er i danske kroner inklusive moms.",
+    answer: priceText
+      ? `På de mest solgte iPhone- og Samsung-modeller koster ${priceText} Prisen afhænger af modellen og den valgte skærmkvalitet (fx Budget, OEM eller Original), og den er fast og inklusive moms og reservedel. Se prisen for din model i modelvælgeren eller i den samlede prisliste på phonespot.dk/reparation/priser.`
+      : "Prisen afhænger af din model og den valgte reservedel. Find din model ovenfor for at se priser på skærmskift, batteriskift og andre reparationer. Priserne er i danske kroner inklusive moms.",
   },
   {
     question: "Hvor lang tid tager en reparation?",
     answer:
-      "Tiden afhænger af fejlen, modellen og om reservedelen er på lager. Du kan se det forventede tidsforbrug ved den enkelte reparation, når det er oplyst. Kontakt butikken, hvis du har brug for at kende tiden inden dit besøg.",
+      "90 % af skærm- og batteriskift er klar på 30 minutter, så du kan vente i butikken. Andre reparationer tager længere tid, og vi giver dig et tidspunkt, når vi har set enheden. Det forventede tidsforbrug står ved hver reparation på modelsiden.",
   },
   {
     question: "Hvilken garanti gælder for reparationen?",
@@ -56,7 +86,7 @@ const REPAIR_FAQ = [
   {
     question: "Kan jeg komme forbi uden tidsbestilling?",
     answer:
-      "Du kan komme forbi vores butikker i Vejle og Slagelse. Du kan også booke online og vælge, hvilken butik du vil aflevere i.",
+      "Ja. Du kan komme ind uden tidsbestilling i begge butikker i Vejle og Slagelse. Du kan også booke online og vælge, hvilken butik du vil aflevere i, eller sende enheden ind med en gratis fragtlabel.",
   },
   {
     question: "Skal jeg tage backup først?",
@@ -68,7 +98,13 @@ const REPAIR_FAQ = [
     answer:
       "Ja. Vælg Apple og derefter din enhedstype i modelvælgeren. Find din model for at se de tilgængelige reparationer, eller kontakt os for hjælp.",
   },
+  {
+    question: "Reparerer I PS5 og andre konsoller?",
+    answer:
+      "Ja. Larmer konsollen eller bliver den varm, renser vi den og fornyer kølingen for 899 kr. Det gælder PS5, PS5 Digital, PS5 Pro, PS4 og Xbox Series X og S. Sort skærm på PS5 skyldes oftest HDMI-porten, og port og rengøring koster 1.300 kr.",
+  },
 ];
+}
 
 const REPAIR_SERVICE_JSONLD = [STORES.vejle, STORES.slagelse].map((store) => ({
   "@context": "https://schema.org",
@@ -116,10 +152,13 @@ const REPAIR_SERVICE_JSONLD = [STORES.vejle, STORES.slagelse].map((store) => ({
 // ---------------------------------------------------------------------------
 
 export default async function ReparationPage() {
-  const [brands, allModels] = await Promise.all([
+  const [brands, allModels, priceSummaries] = await Promise.all([
     getActiveBrands(),
     getAllModelsWithBrand(),
+    getRepairPriceSummaries(HUB_PRICE_MODELS),
   ]);
+  const prices = hubPrices(priceSummaries);
+  const REPAIR_FAQ = buildRepairFaq(prices);
 
   return (
     <div className={`${styles.shell} ${landing.page}`}>
@@ -153,12 +192,12 @@ export default async function ReparationPage() {
           </ol>
         </nav>
         <section className={landing.hero} aria-labelledby="repair-title">
-          <div className={landing.heroCopy}>
+          <div className={`${landing.heroCopy} hero-rise`}>
             <span className={styles.eyebrow}>Reparation hos PhoneSpot</span>
             <h1 id="repair-title">Mobilreparation.<br />Tilbage til hverdagen.</h1>
-            <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder. Alle priser står på siden, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).</p>
+            <p>Telefonreparation af iPhone og Samsung, og reparation af iPad og MacBook i Vejle og Slagelse. En ny skærm, et nyt batteri eller hjælp til en fejl, du ikke kender. Find din model og se dine muligheder. Alle priser står på siden, og du får livstidsgaranti på arbejde og dele (6 måneder på batteriskift).{prices.screen && prices.battery ? ` Skærmskift koster fra ${kr(prices.screen)} og batteriskift fra ${kr(prices.battery)} på de mest solgte iPhones og Samsung.` : ""}</p>
             <div className={landing.actions}>
-              <a href="#find-din-pris">Find model og pris <StorefrontIcon kind="arrow" /></a>
+              <a href="#find-din-pris" className="nudge">Find model og pris <StorefrontIcon kind="arrow" /></a>
               <a href="#reparationsforloeb">Sådan foregår det</a>
             </div>
             <span className={landing.heroLocation}><StorefrontIcon kind="pin" /> I Vejle og Slagelse</span>
@@ -175,7 +214,7 @@ export default async function ReparationPage() {
         </div>
         <section id="find-din-pris" className={landing.finder} aria-labelledby="finder-title">
           <div className={landing.sectionHeading}>
-            <div><h2 id="finder-title">Hvad skal vi reparere?</h2><p>Find din model for at se reparationer, reservedele og priser.</p></div>
+            <div><h2 id="finder-title">Hvad skal vi reparere?</h2><p>Find din model for at se reparationer, reservedele og priser. Apple finder du under <Link href="/reparation/iphone">iPhone</Link>, <Link href="/reparation/ipad">iPad</Link> og <Link href="/reparation/macbook">MacBook</Link>.</p></div>
             <Link href="/kontakt">Kan du ikke finde din model? <StorefrontIcon kind="arrow" /></Link>
           </div>
           <BrandPicker brands={brands} models={allModels} />
@@ -225,12 +264,13 @@ export default async function ReparationPage() {
           </div>
         </section>
         <section className={landing.deviceGuide} aria-labelledby="repair-devices-title">
-          <h2 id="repair-devices-title">Reparation af telefoner, tablets og bærbare</h2>
+          <h2 id="repair-devices-title">Reparation af telefoner, tablets, bærbare og konsoller</h2>
           <div>
-            <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/android">Android-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/samsung">Samsung-reparation <StorefrontIcon kind="arrow" /></Link></article>
-            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><a href="#find-din-pris">Find din iPad eller MacBook <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/tablet">Tablet-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/macbook">MacBook-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article><h3>iPhone og Samsung</h3><p>Find reparation til din iPhone eller Samsung Galaxy. Vælg den præcise model, så du ser de rigtige skærme, batterier og andre reservedele. Du kan også søge efter modeller fra blandt andre Google, OnePlus og Huawei i modelvælgeren.</p><a href="#find-din-pris">Find din telefon <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/iphone">Apple iPhone-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/android">Android-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/samsung">Samsung-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article><h3>iPad og MacBook</h3><p>Vi hjælper også med reparation af iPad, MacBook Air og MacBook Pro. Vælg Apple og derefter din enhedstype. Beskriv gerne problemer med skærm, batteri, tastatur eller opladning, så vi kan hjælpe dig videre.</p><a href="#find-din-pris">Find din iPad eller MacBook <StorefrontIcon kind="arrow" /></a> <Link href="/reparation/ipad">iPad-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/tablet">Tablet-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/macbook">MacBook-reparation <StorefrontIcon kind="arrow" /></Link></article>
+            <article className={landing.consoleGuide}><h3>PS5, Xbox og andre konsoller</h3><p>Larmer din PS5 eller Xbox, eller er tv&apos;et sort, selvom konsollen tænder? Vi renser konsollen og fornyer kølingen for 899 kr. og skifter HDMI-porten med mikrolodning. Aflever den i Vejle eller Slagelse, eller send den ind.</p><Link href="/reparation/playstation/playstation-5">PS5-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/playstation">PlayStation-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/reparation/xbox">Xbox-reparation <StorefrontIcon kind="arrow" /></Link> <Link href="/blog/gta-6-klar-ps5-rens-koelepasta">PS5 rens før GTA 6 <StorefrontIcon kind="arrow" /></Link></article>
           </div>
-          <p className={landing.longerLife}>Vi reparerer også <Link href="/reparation/dyson">Dyson</Link>, <Link href="/reparation/roborock">Roborock</Link>, <Link href="/reparation/irobot">iRobot</Link>, <Link href="/reparation/nespresso">Nespresso</Link>, <Link href="/reparation/delonghi">De&apos;Longhi</Link> og <Link href="/reparation/xbox">Xbox</Link>. <Link href="/reparation/dyson">Se apparater <StorefrontIcon kind="arrow" /></Link></p>
+          <p className={landing.longerLife}>Vi reparerer også <Link href="/reparation/dyson">Dyson</Link>, <Link href="/reparation/roborock">Roborock</Link>, <Link href="/reparation/irobot">iRobot</Link>, <Link href="/reparation/nespresso">Nespresso</Link> og <Link href="/reparation/delonghi">De&apos;Longhi</Link>. <Link href="/reparation/dyson">Se apparater <StorefrontIcon kind="arrow" /></Link></p>
           <p className={landing.longerLife}>Når en reparation holder din enhed i brug, får du mere ud af det, du allerede har. Er reparation ikke den rette løsning for dig, kan du også <Link href="/saelg-din-enhed">få din brugte enhed vurderet</Link>.</p>
         </section>
         <section className={`${styles.faq} ${landing.faq}`}>

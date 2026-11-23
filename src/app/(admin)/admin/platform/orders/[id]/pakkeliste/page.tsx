@@ -233,7 +233,7 @@ export default function PakkelistePage() {
         {/* Thank you */}
         <div style={{ textAlign: "center", marginTop: 40, paddingTop: 20, borderTop: "1px solid #eee" }}>
           <div style={{ fontSize: 16, fontWeight: "bold", color: "#1a1a2e", marginBottom: 4 }}>Tak for din ordre!</div>
-          <div style={{ fontSize: 12, color: "#999" }}>PhoneSpot / PhoneGo ApS | CVR: 38688766 | info@phonespot.dk | phonespot.dk</div>
+          <div style={{ fontSize: 12, color: "#999" }}>PhoneSpot / Fixon ApS | CVR: 46079019 | info@phonespot.dk | phonespot.dk</div>
         </div>
 
         {/* Print button */}

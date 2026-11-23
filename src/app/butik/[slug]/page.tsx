@@ -8,6 +8,7 @@ import { FaqAccordion } from "@/components/ui/faq-accordion";
 import { STORES, UPCOMING_STORES, openingHoursJsonLd, type StoreLocationConfig } from "@/lib/store-config";
 import styles from "@/components/ui/information.module.css";
 import { UpcomingStorePage } from "./upcoming-store-page";
+import { localBuyPagesForStore } from "@/lib/local-buy-pages";
 
 export function generateStaticParams() {
   return [...Object.values(STORES), ...Object.values(UPCOMING_STORES)].map((store) => ({
@@ -44,9 +45,9 @@ export async function generateMetadata({
 
   if (slug === "vejle") {
     return {
-      title: "PhoneSpot Vejle — Brugt elektronik og iPhone-reparation | Løversysselvej",
+      title: "PhoneSpot Vejle – mobilbutik, reparation og brugt elektronik",
       description:
-        "Besøg PhoneSpot Vejle på Løversysselvej 3B. iPhone-reparation med livstidsgaranti på arbejde og dele, refurbished enheder med 36 måneders garanti og opkøb af din brugte enhed. Åbent man-fre 10-17:30, weekend 10-15.",
+        "PhoneSpot Vejle på Løversysselvej 3B: brugte iPhones, iPads og bærbare, reparation mens du venter og opkøb af din gamle telefon. Gratis parkering ved døren.",
       alternates: {
         canonical: "https://phonespot.dk/butik/vejle",
       },
@@ -60,8 +61,12 @@ export async function generateMetadata({
     };
   }
 
-  const title = `${store.name} — besøg os${store.mall ? ` i ${store.mall}` : ""}`;
-  const description = `Besøg ${store.name}${store.mall ? ` i ${store.mall}` : ""}, ${store.city}. Reparation med livstidsgaranti på arbejde og dele, personlig rådgivning og refurbished elektronik med 36 mdr. garanti.`;
+  const title = slug === "slagelse"
+    ? "PhoneSpot Slagelse – mobilbutik i VestsjællandsCentret"
+    : `${store.name} — besøg os${store.mall ? ` i ${store.mall}` : ""}`;
+  const description = slug === "slagelse"
+    ? "PhoneSpot i VestsjællandsCentret, Slagelse: brugte iPhones og bærbare, reparation mens du venter og opkøb af din gamle telefon. Åbent alle ugens dage."
+    : `Besøg ${store.name}${store.mall ? ` i ${store.mall}` : ""}, ${store.city}. Reparation med livstidsgaranti på arbejde og dele, personlig rådgivning og refurbished elektronik med 36 mdr. garanti.`;
 
   return {
     title,
@@ -162,6 +167,7 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "ElectronicsRepair",
+    "@id": `https://phonespot.dk/butik/${store.slug}#store`,
     name: store.name,
     image: "https://phonespot.dk/brand/logo.png",
     url: `https://phonespot.dk/butik/${store.slug}`,
@@ -180,19 +186,26 @@ function buildJsonLd(store: StoreLocationConfig): Record<string, unknown> {
       longitude: store.coordinates.lng,
     },
     openingHoursSpecification: openingHoursJsonLd(store.hours),
-    priceRange: "$$",
+    hasMap: store.googleMapsUrl,
+    priceRange: "$",
   };
 }
 
 function StorePage({ store }: { store: StoreLocationConfig }) {
+  const buyPages = localBuyPagesForStore(store.slug);
   const faqs = store.slug === "vejle" ? getVejleFAQs() : store.slug === "slagelse" ? getSlagelseFAQs() : getGenericFAQs(store);
   return (
     <div className={styles.shell}>
       <JsonLd data={buildJsonLd(store)} />
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Forside", item: "https://phonespot.dk" },
+        { "@type": "ListItem", position: 2, name: "Butikker", item: "https://phonespot.dk/butik" },
+        { "@type": "ListItem", position: 3, name: store.name, item: `https://phonespot.dk/butik/${store.slug}` },
+      ] }} />
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / <Link href="/butik">Butikker</Link> / {store.city}</nav>
-        <header className={styles.header}><span className={styles.eyebrow}>Din lokale PhoneSpot</span><h1>{store.name}</h1><p className={styles.intro}>Køb en enhed, få den repareret eller sælg din brugte elektronik. Vi hjælper dig {store.mall ? `i ${store.mall}` : `på ${store.street}`}.</p></header>
+        <header className={`${styles.header} hero-rise`}><span className={styles.eyebrow}>Din lokale PhoneSpot</span><h1>{store.name}</h1><p className={styles.intro}>Køb en enhed, få den repareret eller sælg din brugte elektronik. Vi hjælper dig {store.mall ? `i ${store.mall}` : `på ${store.street}`}.</p></header>
         <section className={styles.section} aria-label="Planlæg dit besøg">
           <div className={styles.grid}>
             <div className={styles.panel}>
@@ -208,7 +221,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
           </div>
         </section>
         <section className={styles.services} aria-label="Hjælp i butikken">
-          <div><h2>Køb refurbished</h2><p>Se og prøv vores enheder. Vi hjælper med model, kosmetisk stand og batteri.</p><Link href="/iphones" className={styles.textLink}>Se iPhones →</Link></div>
+          <div><h2>Køb refurbished</h2><p>Se og prøv vores enheder. Vi hjælper med model, kosmetisk stand og batteri.</p>{buyPages.map((entry) => <span key={entry.path}><Link href={`/${entry.path}`} className={styles.textLink}>{entry.h1} →</Link><br /></span>)}<Link href="/iphones" className={styles.textLink}>Se alle iPhones →</Link></div>
           <div><h2>Reparation</h2><p>Find skærmskift, batteriskift og andre reparationer. Tid og garanti fremgår ved den valgte service.</p><Link href={`/reparation-${store.slug}`} className={styles.textLink}>Mobilreparation i {store.city}: priser →</Link></div>
           <div><h2>Sælg din enhed</h2><p>Vi vurderer din enhed ud fra model og stand. Send en forespørgsel eller kom forbi butikken.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Få en vurdering →</Link></div>
         </section>
@@ -220,7 +233,7 @@ function StorePage({ store }: { store: StoreLocationConfig }) {
         <div className={styles.reading}>
           <section><h2>iPhone-reparation i {store.city}</h2><p>Vi hjælper med skærme, batterier og opladningsporte på din iPhone. Du kan komme forbi i butikken eller booke en tid. Tiden afhænger af model, fejl og reservedelens tilgængelighed.</p><Link href={`/reparation-${store.slug}`} className={styles.textLink}>iPhone-reparation i {store.city}: priser og garanti →</Link></section>
           <section><h2>Køb brugte iPhones i {store.city}</h2><p>Vores refurbished enheder er testet og renset, og enhederne har 36 måneders garanti. Se og prøv dem i butikken, og læs om stand og den enkelte enheds batteri, inden du vælger.</p><div className={styles.actions}><Link href="/kvalitet" className={styles.textLink}>Sådan vurderer vi kvalitet →</Link><Link href="/garanti" className={styles.textLink}>Læs garantivilkårene →</Link></div></section>
-          <section><h2>Sælg din brugte telefon i {store.city}</h2><p>Har du en iPhone, Samsung eller iPad liggende? Kig forbi {store.street} for en gratis og uforpligtende vurdering. Du kan også sende oplysninger om din enhed online. Vi gennemgår din forespørgsel og vender tilbage med et tilbud.</p><Link href="/saelg-din-enhed" className={styles.textLink}>Fortæl os om din enhed →</Link></section>
+          <section><h2>Sælg din brugte telefon i {store.city}</h2><p>Har du en iPhone, Samsung eller iPad liggende? Kig forbi {store.street} for en gratis og uforpligtende vurdering. Du kan også sende oplysninger om din enhed online. Vi gennemgår din forespørgsel og vender tilbage med et tilbud.</p><Link href={store.slug === "vejle" || store.slug === "slagelse" ? `/saelg-din-enhed/${store.slug}` : "/saelg-din-enhed"} className={styles.textLink}>Fortæl os om din enhed →</Link></section>
           <section><h2>Afhentning i butikken</h2><p>Vælg afhentning, når du bestiller online, og afvent besked om, at din ordre er klar. Kontakt os, hvis du har spørgsmål til afhentning i {store.city}.</p></section>
           <section><h2>Spørgsmål om butikken</h2><FaqAccordion items={faqs} /></section>
         </div>

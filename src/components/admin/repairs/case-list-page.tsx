@@ -24,6 +24,7 @@ import { useCaseListKeys, type ListKeyAction } from "@/components/admin/repairs/
 import { ArchiveBookingButton } from "@/components/admin/overview/archive-booking-button";
 import { MeldKlarDialog } from "@/components/admin/repairs/meld-klar-dialog";
 import { SidePanel } from "@/components/admin/repairs/side-panel";
+import { Skeleton } from "@/components/admin/ui/skeleton";
 
 type ListResponse = {
   rows: CaseRow[];
@@ -200,17 +201,25 @@ export default function CaseListPage() {
                   aria-controls="sager-panel"
                   tabIndex={active ? 0 : -1}
                   onClick={() => changeTab(t.id)}
-                  className={`h-10 border-b-2 bg-transparent px-3.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2F8F55] ${
-                    active ? "border-[#1A3D2E] font-semibold text-[#1A3D2E]" : "border-transparent text-[#3D4842] hover:text-[#1A3D2E]"
+                  className={`relative -mb-px h-10 bg-transparent px-3.5 text-sm motion-safe:transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2F8F55] ${
+                    active ? "font-semibold text-[#1A3D2E]" : "text-[#3D4842] hover:text-[#1A3D2E]"
                   }`}
                 >
                   {t.label} ({counts[t.id]})
+                  {/* Understregningen vokser frem under den valgte fane og trækker sig ud af den forrige. */}
+                  <span
+                    aria-hidden="true"
+                    data-active={active}
+                    className={`pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-center bg-[#1A3D2E] motion-safe:transition-[transform,opacity] motion-safe:duration-[var(--dur-base)] motion-safe:ease-[var(--ease-out)] ${
+                      active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0"
+                    }`}
+                  />
                 </button>
               );
             })}
           </div>
 
-          <div id="sager-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} aria-busy={loading} className="overflow-x-auto">
+          <div id="sager-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} aria-busy={loading} className="m-busy overflow-x-auto">
             {error ? (
               <div role="alert" className="flex items-center justify-between gap-3 rounded-lg bg-[#FDECEC] p-3 text-sm text-[#B42318]">
                 <span>{error}</span>
@@ -219,7 +228,7 @@ export default function CaseListPage() {
                 </Btn>
               </div>
             ) : !data ? (
-              <p className="m-0 py-6 text-sm text-[#5E6A63]">Henter sager...</p>
+              <CaseListSkeleton />
             ) : rows.length === 0 ? (
               <p className="m-0 py-6 text-sm text-[#5E6A63]">
                 {debounced.trim() ? `Ingen sager matcher "${debounced.trim()}" i denne fane.` : "Ingen sager i denne fane."}
@@ -248,10 +257,11 @@ export default function CaseListPage() {
                           key={row.id}
                           role="row"
                           data-row-id={row.id}
+                          data-archive-row
                           aria-selected={isSel}
                           tabIndex={isSel || (!selectedId && row.id === ids[0]) ? 0 : -1}
                           onClick={() => select(row.id)}
-                          className={`${COLS} cursor-pointer items-center border-b border-[#EEF0EC] px-2 py-3 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#2F8F55] ${
+                          className={`${COLS} m-busy cursor-pointer items-center border-b border-[#EEF0EC] px-2 py-3 outline-none motion-safe:transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#2F8F55] ${
                             isSel ? "bg-[#F1F8F3]" : "hover:bg-[#FAFBF9]"
                           }`}
                         >
@@ -356,19 +366,21 @@ export default function CaseListPage() {
         </section>
       </div>
 
+      {/* Mobil: baggrunden er altid monteret, så den kan tone ind og ud (.m-backdrop). */}
+      <button
+        type="button"
+        aria-label="Luk sidepanel"
+        aria-hidden={selected ? undefined : true}
+        tabIndex={-1}
+        data-open={Boolean(selected)}
+        onClick={() => setSelectedId(null)}
+        className="m-backdrop fixed inset-0 z-30 bg-black/20 lg:hidden"
+      />
       {selected ? (
-        <>
-          <button
-            type="button"
-            aria-label="Luk sidepanel"
-            tabIndex={-1}
-            onClick={() => setSelectedId(null)}
-            className="fixed inset-0 z-30 bg-black/20 lg:hidden"
-          />
-          <div className="fixed inset-y-0 right-0 z-40 w-full max-w-[420px] overflow-y-auto border-l border-[#E2E5E0] shadow-xl lg:static lg:z-auto lg:w-[400px] lg:max-w-none lg:shrink-0 lg:shadow-none">
-            <SidePanel row={selected} refreshKey={reload} onClose={() => setSelectedId(null)} onMeldKlar={(r) => setMeldKlarId(r.id)} />
-          </div>
-        </>
+        // Mobil: skuffe fra højre (--ease-sheet); desktop: panelet toner ind i kolonnen (.m-sheet).
+        <div className="m-sheet fixed inset-y-0 right-0 z-40 w-full max-w-[420px] overflow-y-auto border-l border-[#E2E5E0] lg:static lg:z-auto lg:w-[400px] lg:max-w-none lg:shrink-0">
+          <SidePanel row={selected} refreshKey={reload} onClose={() => setSelectedId(null)} onMeldKlar={(r) => setMeldKlarId(r.id)} />
+        </div>
       ) : (
         <aside
           aria-label="Sag i sidepanel"
@@ -389,6 +401,32 @@ export default function CaseListPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+/** Første indlæsning: rækker i listens egne mål, så panelet ikke står tomt. */
+function CaseListSkeleton() {
+  return (
+    <div data-skeleton aria-label="Henter sager" className="min-w-[620px]">
+      <span className="sr-only">Henter sager...</span>
+      <div className={`${COLS} px-2 pb-2`}>
+        <Skeleton className="h-3.5 w-6 rounded" />
+        <Skeleton className="h-3.5 w-16 rounded" />
+        <Skeleton className="h-3.5 w-12 rounded" />
+        <Skeleton className="h-3.5 w-14 rounded" />
+        <span />
+      </div>
+      <Skeleton className="h-8 w-full" />
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className={`${COLS} items-center border-b border-[#EEF0EC] px-2 py-3`}>
+          <Skeleton className="h-4 w-20 rounded-md" />
+          <Skeleton className="h-4 w-4/5 rounded-md" />
+          <Skeleton className="h-4 w-3/4 rounded-md" />
+          <Skeleton className="h-4 w-14 rounded-md" />
+          <Skeleton className="h-8 w-full rounded-lg" />
+        </div>
+      ))}
     </div>
   );
 }

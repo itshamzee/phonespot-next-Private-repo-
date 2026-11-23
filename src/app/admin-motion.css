@@ -1,0 +1,281 @@
+/*
+ * Fælles bevægelse i admin (trin 1: rammen og de delte primitiver).
+ * Samme kurve og ro som Statistik (components/admin/statistik/statistik.css).
+ *
+ * Regler: kun transform og opacity bevæger sig (plus farver ved hover), ingen
+ * uendelige animationer (Skeleton er den ene undtagelse), ingen forskydning.
+ * Hvilende og synlige tilstande står uden for bevægelsesblokken, så alt under
+ * prefers-reduced-motion: reduce bare er der med det samme.
+ *
+ * Kontrakter:
+ * - .m-pop / .m-backdrop / .m-toast styres med data-open="true|false" og bliver
+ *   i DOM'en, når de er lukket, så de kan tone ud. Komponenten sætter aria-hidden.
+ * - .m-busy dæmpes med aria-busy="true".
+ * - .m-page på indholdsfeltet: direkte børn glider ind, undtagen [data-skeleton].
+ */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1); /* samme kurve som Statistik */
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1); /* skuffer, som .sheet-enter i globals.css */
+  --dur-press: 100ms;
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+}
+
+/* ---------- Hvilende tilstande ---------- */
+
+.m-pop {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+.m-pop[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.m-backdrop {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.m-backdrop[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.m-toast {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+.m-toast[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.m-busy[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+/*
+ * Navigation i gang: 2 px streg øverst i indholdet. Ligger absolut, så intet flytter sig.
+ * Vandret placering (left/right) sættes af komponenten, så den kan følge indholdskolonnen.
+ */
+.m-pending-bar {
+  position: absolute;
+  top: 0;
+  z-index: 20;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.m-pending-bar::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background: #1a3d2e;
+  transform-origin: left;
+  transform: scaleX(0.8);
+}
+
+/* Fælles dialog (components/admin/ui/dialog.tsx): rolig baggrund uden blur. */
+.m-dialog::backdrop {
+  background: rgba(21, 33, 27, 0.35);
+}
+
+/* Berøringsflader på touch-skærme ved disken; uændret med mus. */
+@media (pointer: coarse) {
+  .m-tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ---------- Bevægelse ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes m-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes m-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes m-pending {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(0.8);
+    }
+  }
+  @keyframes m-skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  /* backwards: efter animationen står der ingen transform tilbage, så position: fixed i siden virker som før. */
+  .m-enter {
+    animation: m-enter var(--dur-base) var(--ease-out) backwards;
+  }
+  /*
+   * Rammens indholdsfelt: hvert direkte barn glider ind, når det monteres — også den
+   * rigtige side, når den afløser skelettet. Skeletter (data-skeleton) står bare der.
+   */
+  .m-page > :not([data-skeleton]) {
+    animation: m-enter var(--dur-base) var(--ease-out) backwards;
+  }
+  .m-row-in {
+    animation: m-fade-in var(--dur-fast) ease-out backwards;
+  }
+
+  .m-press {
+    transition:
+      transform var(--dur-press) var(--ease-out),
+      color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      border-color var(--dur-fast) ease;
+  }
+  .m-press:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  /* Synligheden skifter først, når udtoningen er færdig. Ind på --dur-base, ud på --dur-fast. */
+  .m-pop {
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      visibility 0s linear var(--dur-fast);
+  }
+  .m-pop[data-open="true"] {
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      visibility 0s;
+  }
+
+  .m-backdrop {
+    transition:
+      opacity var(--dur-fast) ease-out,
+      visibility 0s linear var(--dur-fast);
+  }
+  .m-backdrop[data-open="true"] {
+    transition:
+      opacity var(--dur-fast) ease-out,
+      visibility 0s;
+  }
+
+  .m-toast {
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      visibility 0s linear var(--dur-fast);
+  }
+  .m-toast[data-open="true"] {
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      visibility 0s;
+  }
+
+  .m-busy {
+    transition: opacity var(--dur-fast) ease;
+  }
+
+  .m-pending-bar::before {
+    animation: m-pending 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /*
+   * Dialog: ind med opacity + 8 px løft på --dur-base fra @starting-style, ud på --dur-fast.
+   * allow-discrete holder display/overlay, til udtoningen er færdig.
+   */
+  .m-dialog,
+  .m-dialog::backdrop {
+    transition-property: opacity, transform, overlay, display;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+    transition-behavior: allow-discrete;
+  }
+  .m-dialog:not([open]) {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .m-dialog:not([open])::backdrop {
+    opacity: 0;
+  }
+  .m-dialog[open],
+  .m-dialog[open]::backdrop {
+    transition-duration: var(--dur-base);
+  }
+  @starting-style {
+    .m-dialog[open] {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    .m-dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Sidepanel (Sagsstyring): på mobil glider det ind fra højre som en skuffe
+   * (--ease-sheet, --dur-slow); i desktopkolonnen toner det blot ind.
+   */
+  @keyframes m-sheet-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  .m-sheet {
+    animation: m-fade-in var(--dur-fast) ease-out backwards;
+  }
+  @media (max-width: 1023.98px) {
+    .m-sheet {
+      animation: m-sheet-in var(--dur-slow) var(--ease-sheet) backwards;
+    }
+  }
+
+  /* Den ene undtagelse fra "ingen uendelige animationer": rolig puls på 1,4 s. */
+  .m-skeleton {
+    animation: m-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+/* Sikkerhedsnet: under reduceret bevægelse bevæger intet sig, uanset rækkefølge. */
+@media (prefers-reduced-motion: reduce) {
+  .m-enter,
+  .m-page > *,
+  .m-row-in,
+  .m-press,
+  .m-pop,
+  .m-backdrop,
+  .m-toast,
+  .m-busy,
+  .m-pending-bar::before,
+  .m-skeleton,
+  .m-dialog,
+  .m-dialog::backdrop,
+  .m-sheet {
+    transition: none !important;
+    animation: none !important;
+  }
+}

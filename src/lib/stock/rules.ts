@@ -1,4 +1,11 @@
-import { SCOPE_SLUGS, isOwner, normalizeScopeSlug, type ScopeSlug, type ScopedStaff, type StoreScope } from "@/lib/auth/store-scope";
+import { isOwner, normalizeScopeSlug, type ScopeSlug, type ScopedStaff, type StoreScope } from "@/lib/auth/store-scope";
+
+/**
+ * Butikker der har kolonner (qty_<slug>, min_<slug>) i viewet stock_overview.
+ * Vejle Gågade og Esbjerg kommer først med i lagerprojektet; indtil da må ingen
+ * lagerkode bygge kolonner eller mål for dem.
+ */
+export const STOCK_VIEW_SLUGS: readonly ScopeSlug[] = ["vejle", "slagelse", "webshop"];
 
 export type ItemType = "serievare" | "reservedel" | "tilbehoer";
 
@@ -63,7 +70,7 @@ export function isLow(row: Pick<OverviewRow, "qty" | "min" | "alwaysInStock">, s
 /** Hvor kan "Anmod" tilbyde varer fra? Butikker (ikke min egen) med lager. */
 export function requestSources(row: Pick<OverviewRow, "qty" | "alwaysInStock">, mine: ScopeSlug): ScopeSlug[] {
   if (row.alwaysInStock) return [];
-  return SCOPE_SLUGS.filter((s) => s !== mine && row.qty[s] > 0);
+  return STOCK_VIEW_SLUGS.filter((s) => s !== mine && row.qty[s] > 0);
 }
 
 /** Vis Anmod-knappen når min butik står på 0 og en anden butik har lager. */

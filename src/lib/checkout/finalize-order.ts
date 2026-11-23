@@ -4,6 +4,7 @@ import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { generateWarrantiesForOrder } from "@/lib/warranty/generate";
 import { notifyNewOrder, sendPushover } from "@/lib/notifications/pushover";
 import { sendStaffOrderNotification } from "@/lib/email/staff-order-notification";
+import { sendPurchaseToMeta, type MetaBrowserContext } from "@/lib/tracking/meta-capi";
 
 export interface CheckoutOrderItem {
   id: string;
@@ -20,6 +21,14 @@ export interface FinalizeCheckoutOrderParams {
   paymentId: string | null;
   /** Udbyder-specifik opslag af batteritilvalg (kun Stripe-sessioner har dem som linjemetadata). */
   resolveBatteryItemIds?: (items: CheckoutOrderItem[]) => Promise<Set<string>>;
+  /** Betalt via kurv-påmindelsens link — markér ordren som genoptaget. */
+  recovered?: boolean;
+  /**
+   * Browser-kontekst til Meta Conversions API (samtykke, fbp/fbc, IP, UA).
+   * Kan være en funktion, så den først hentes, når ordren faktisk er
+   * færdiggjort (ikke ved genforsøg).
+   */
+  metaContext?: MetaBrowserContext | (() => Promise<MetaBrowserContext | null>);
 }
 
 /**
@@ -35,6 +44,8 @@ export async function finalizeCheckoutOrder({
   sessionId,
   paymentId,
   resolveBatteryItemIds,
+  recovered,
+  metaContext,
 }: FinalizeCheckoutOrderParams): Promise<void> {
   const supabase = createServerClient();
 
@@ -100,6 +111,15 @@ export async function finalizeCheckoutOrder({
   }
   for (const item of orderItems) if (batteryItemIds.has(item.id)) item.battery_upgrade = true;
 
+  // Betalt via kurv-påmindelsens link: først nu er ordren reelt genoptaget.
+  if (recovered) {
+    const { error: recoveryErr } = await supabase
+      .from("orders")
+      .update({ recovery_status: "recovered" })
+      .eq("id", orderId);
+    if (recoveryErr) console.error("[webhook] failed to mark order recovered:", recoveryErr);
+  }
+
   // 7. Increment discount code usage
   if (order.discount_code_id) {
     const { error: discountError } = await supabase.rpc(
@@ -133,6 +153,9 @@ export async function finalizeCheckoutOrder({
     new Intl.NumberFormat("da-DK", { style: "currency", currency: "DKK" }).format(ore / 100);
 
   const itemNames: string[] = [];
+  // Katalog-id'er til Meta (samme som ViewContent/AddToCart: skabelon-id for
+  // enheder, sku_product-id for tilbehør).
+  const metaContentIds: string[] = [];
   const enrichedItems: Array<{
     id: string;
     itemType: "device" | "sku_product";
@@ -160,10 +183,11 @@ export async function finalizeCheckoutOrder({
     if (item.item_type === "device" && item.device_id) {
       const { data: dev } = await supabase
         .from("devices")
-        .select("storage, color, grade, template:product_templates(brand, model, display_name, images)")
+        .select("storage, color, grade, template:product_templates(id, brand, model, display_name, images)")
         .eq("id", item.device_id)
         .single();
       const t = (dev as any)?.template;
+      if (t?.id) metaContentIds.push(t.id);
       if (t) {
         const parts = [t.display_name || [t.brand, t.model].filter(Boolean).join(" ")];
         if (dev?.storage) parts.push(dev.storage);
@@ -174,6 +198,7 @@ export async function finalizeCheckoutOrder({
         itemNames.push(`• ${title} — ${fmtKr(item.unit_price)}`);
       }
     } else if (item.sku_product_id) {
+      metaContentIds.push(item.sku_product_id);
       const { data: sku } = await supabase
         .from("sku_products")
         .select("title, images, category")
@@ -276,6 +301,31 @@ export async function finalizeCheckoutOrder({
     });
   } catch (staffEmailErr) {
     console.error("[webhook] staff order notification email failed:", staffEmailErr);
+  }
+
+  // 14. Meta Conversions API — Purchase, deduplikeret med browserens pixel via
+  // event_id purchase_<order.id>. Kører kun her, efter complete_checkout_order
+  // har returneret "completed" (genforsøg returnerer tidligt ovenfor), så hvert
+  // køb sendes én gang. Tracking må aldrig vælte betalingen.
+  try {
+    const context = typeof metaContext === "function" ? await metaContext() : metaContext;
+    if (context) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://phonespot.dk";
+      await sendPurchaseToMeta({
+        orderId,
+        orderNumber: order.order_number,
+        totalOere: order.total,
+        contentIds: [...new Set(metaContentIds)],
+        numItems: orderItems.reduce((n, i) => n + i.quantity, 0),
+        email: customer?.email,
+        phone: customer?.phone,
+        customerId: order.customer_id,
+        context,
+        eventSourceUrl: `${siteUrl}/ordre/bekraeftelse`,
+      });
+    }
+  } catch (metaErr) {
+    console.error("[webhook] meta purchase failed:", metaErr);
   }
 
   console.log("[webhook] order confirmed:", order.order_number);

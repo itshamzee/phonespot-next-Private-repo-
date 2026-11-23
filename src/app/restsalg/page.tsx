@@ -7,7 +7,8 @@ import { Heading } from "@/components/ui/heading";
 import { TrustBar } from "@/components/ui/trust-bar";
 import { JsonLd } from "@/components/seo/json-ld";
 
-export const revalidate = 60;
+// 10 min: Vercel Fast Origin Transfer (Hobby-pause 13/11). Checkout tjekker lager atomisk.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Restsalg - Skarpe priser på refurbished enheder | PhoneSpot",

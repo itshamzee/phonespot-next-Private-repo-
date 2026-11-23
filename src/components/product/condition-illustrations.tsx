@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ZoomImage } from "./zoom-image";
 
 type Grade = "A" | "B" | "C";
 type DeviceType = "watch" | "phone" | "ipad" | "laptop";
@@ -24,7 +25,7 @@ const DEFAULT_GRADE_META: Record<Grade, GradeMeta> = {
     ringColor: "ring-amber-500",
   },
   C: {
-    label: "Okay stand",
+    label: "Brugt stand",
     description: "Enheden har tydelige brugsspor såsom ridser eller små mærker. Alle funktioner virker perfekt. Bedste pris.",
     badgeBg: "bg-gray/10",
     badgeColor: "text-gray",
@@ -48,7 +49,7 @@ const LAPTOP_GRADE_META: Record<Grade, GradeMeta> = {
     ringColor: "ring-amber-500",
   },
   C: {
-    label: "Okay stand",
+    label: "Brugt stand",
     description: "Den bærbare har tydelige brugsspor på låg og kabinet. Skærm og tastatur kan have lette ridser. Alle funktioner virker perfekt. Bedste pris.",
     badgeBg: "bg-gray/10",
     badgeColor: "text-gray",
@@ -60,26 +61,26 @@ function getGradeMeta(deviceType: DeviceType): Record<Grade, GradeMeta> {
   return deviceType === "laptop" ? LAPTOP_GRADE_META : DEFAULT_GRADE_META;
 }
 
-const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; frame: string }>> = {
+export const CONDITION_IMAGES: Record<DeviceType, Record<Grade, { display: string; frame: string }>> = {
   watch: {
-    A: { display: "/quality/watch-grade-a-display.png", frame: "/quality/watch-grade-a-frame.png" },
-    B: { display: "/quality/watch-grade-b-display.png", frame: "/quality/watch-grade-b-frame.png" },
-    C: { display: "/quality/watch-grade-c-display.png", frame: "/quality/watch-grade-c-frame.png" },
+    A: { display: "/quality/watch-grade-a-display.webp", frame: "/quality/watch-grade-a-frame.webp" },
+    B: { display: "/quality/watch-grade-b-display.webp", frame: "/quality/watch-grade-b-frame.webp" },
+    C: { display: "/quality/watch-grade-c-display.webp", frame: "/quality/watch-grade-c-frame.webp" },
   },
   phone: {
-    A: { display: "/quality/grade-a-display.png", frame: "/quality/grade-a-frame.png" },
-    B: { display: "/quality/grade-b-display.png", frame: "/quality/grade-b-frame.png" },
-    C: { display: "/quality/grade-c-display.png", frame: "/quality/grade-c-frame.png" },
+    A: { display: "/quality/grade-a-display.webp", frame: "/quality/grade-a-frame.webp" },
+    B: { display: "/quality/grade-b-display.webp", frame: "/quality/grade-b-frame.webp" },
+    C: { display: "/quality/grade-c-display.webp", frame: "/quality/grade-c-frame.webp" },
   },
   ipad: {
-    A: { display: "/quality/ipad-grade-a-display.png", frame: "/quality/ipad-grade-a-frame.png" },
-    B: { display: "/quality/ipad-grade-b-display.png", frame: "/quality/ipad-grade-b-frame.png" },
-    C: { display: "/quality/ipad-grade-c-display.png", frame: "/quality/ipad-grade-c-frame.png" },
+    A: { display: "/quality/ipad-grade-a-display.webp", frame: "/quality/ipad-grade-a-frame.webp" },
+    B: { display: "/quality/ipad-grade-b-display.webp", frame: "/quality/ipad-grade-b-frame.webp" },
+    C: { display: "/quality/ipad-grade-c-display.webp", frame: "/quality/ipad-grade-c-frame.webp" },
   },
   laptop: {
-    A: { display: "/quality/laptop-grade-a-display.png", frame: "/quality/laptop-grade-a-frame.png" },
-    B: { display: "/quality/laptop-grade-b-display.png", frame: "/quality/laptop-grade-b-frame.png" },
-    C: { display: "/quality/laptop-grade-c-display.png", frame: "/quality/laptop-grade-c-frame.png" },
+    A: { display: "/quality/laptop-grade-a-display.webp", frame: "/quality/laptop-grade-a-frame.webp" },
+    B: { display: "/quality/laptop-grade-b-display.webp", frame: "/quality/laptop-grade-b-frame.webp" },
+    C: { display: "/quality/laptop-grade-c-display.webp", frame: "/quality/laptop-grade-c-frame.webp" },
   },
 };
 
@@ -99,7 +100,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
             onClick={() => setView("frame")}
             className={`rounded-full px-5 py-2 text-xs font-semibold transition-all ${
               view === "frame"
-                ? "bg-white text-charcoal shadow-sm"
+                ? "bg-white text-charcoal shadow-rest"
                 : "text-charcoal/50 hover:text-charcoal"
             }`}
           >
@@ -110,7 +111,7 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
             onClick={() => setView("display")}
             className={`rounded-full px-5 py-2 text-xs font-semibold transition-all ${
               view === "display"
-                ? "bg-white text-charcoal shadow-sm"
+                ? "bg-white text-charcoal shadow-rest"
                 : "text-charcoal/50 hover:text-charcoal"
             }`}
           >
@@ -128,16 +129,20 @@ export function ConditionIllustrations({ deviceType = "phone" }: { deviceType?: 
           return (
             <div
               key={grade}
-              className="overflow-hidden rounded-2xl border border-sand bg-white shadow-sm"
+              className="overflow-hidden rounded-2xl border border-sand bg-white shadow-rest"
             >
               {/* Condition image */}
-              <div className="relative aspect-[4/3] bg-sand/30">
+              <div className="relative aspect-[4/3] bg-white">
                 <Image
                   src={view === "frame" ? imgs.frame : imgs.display}
                   alt={`${meta.label} — ${view === "frame" ? "bagside" : "forside"}`}
                   fill
-                  className="object-cover"
+                  className="object-contain p-2"
                   sizes="(max-width: 768px) 100vw, 33vw"
+                />
+                <ZoomImage
+                  src={view === "frame" ? imgs.frame : imgs.display}
+                  alt={`Stand ${grade}, ${meta.label}, ${view === "frame" ? "bagside" : "forside"}`}
                 />
                 {/* Grade badge overlay */}
                 <div className="absolute top-3 left-3">

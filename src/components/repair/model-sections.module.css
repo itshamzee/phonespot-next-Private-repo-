@@ -336,3 +336,38 @@
   font-size: 13px;
   color: #626a65;
 }
+
+/* Find nærmeste butik: knappen skifter farve blødt og giver efter ved tryk. */
+.locateButton {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    scale 150ms var(--ease-ps-out);
+}
+.locateButton:active:not(:disabled) {
+  scale: 0.97;
+}
+@media (prefers-reduced-motion: reduce) {
+  .locateButton {
+    transition: none;
+  }
+  .locateButton:active:not(:disabled) {
+    scale: none;
+  }
+}
+
+/* Prislisten: rækken under musen får en svag baggrund, så øjet kan følge
+   linjen fra reparation til pris. */
+.priceTable tbody tr {
+  transition: background-color 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .priceTable tbody tr:hover {
+    background: #f6f8f5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .priceTable tbody tr {
+    transition: none;
+  }
+}

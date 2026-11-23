@@ -45,7 +45,8 @@ export function WebBookingsPanel({ data }: { data: WebBookings }) {
             {g.items.map((b) => (
               <div
                 key={b.id}
-                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-[#EEF0EC] px-5 py-3 text-[14px] md:grid-cols-[140px_minmax(0,1fr)_120px_90px_auto] ${
+                data-archive-row
+                className={`m-busy grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-[#EEF0EC] px-5 py-3 text-[14px] md:grid-cols-[140px_minmax(0,1fr)_120px_90px_auto] ${
                   g.kind === "idag" ? "bg-[#FFFBF2]" : ""
                 }`}
               >
@@ -57,6 +58,19 @@ export function WebBookingsPanel({ data }: { data: WebBookings }) {
                     <Link href={`/admin/reparationer/${b.id}`} className="font-semibold text-inherit no-underline hover:underline">
                       {b.customer}
                     </Link>
+                    {b.payment === "afventer" ? (
+                      <span className="rounded-full bg-[#FDF3E1] px-2 py-px text-[12px] font-semibold text-[#8A5A00]">
+                        Afventer onlinebetaling
+                      </span>
+                    ) : b.payment === "butik" ? (
+                      <span className="rounded-full bg-[#EAF2ED] px-2 py-px text-[12px] font-semibold text-[#1A3D2E]">
+                        Betaler i butikken
+                      </span>
+                    ) : b.payment === "betalt" ? (
+                      <span className="rounded-full bg-[#EAF2ED] px-2 py-px text-[12px] font-semibold text-[#1A3D2E]">
+                        Betalt online
+                      </span>
+                    ) : null}
                     {b.isNew ? (
                       <span className="rounded-full bg-[#EAF2ED] px-2 py-px text-[12px] font-semibold text-[#1A3D2E]">Ny</span>
                     ) : null}

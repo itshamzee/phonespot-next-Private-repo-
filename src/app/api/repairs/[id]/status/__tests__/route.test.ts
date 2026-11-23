@@ -126,7 +126,7 @@ describe("PATCH /api/repairs/[id]/status notifications", () => {
       expect(sendSms).toHaveBeenCalledTimes(1);
       expect(sendSms.mock.calls[0][1]).toContain("PhoneSpot Vejle");
       expect(sendSms.mock.calls[0][1]).toContain("iPhone 13");
-      expect(sendSms.mock.calls[0][1]).toContain("https://g.page/r/vejle/review");
+      expect(sendSms.mock.calls[0][1]).toContain("phonespot.dk/anmeld/vejle");
     });
 
     it("respects skip_sms and does not repeat when already afhentet", async () => {

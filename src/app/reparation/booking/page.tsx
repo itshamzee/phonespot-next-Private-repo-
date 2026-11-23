@@ -46,9 +46,9 @@ export default async function BookingPage({
               role="status"
               className="mb-6 rounded-xl border border-[#E8D9B5] bg-[#FBF6EA] px-4 py-3 text-sm text-charcoal"
             >
-              Betalingen blev afbrudt, og du er ikke blevet trukket. Din
-              booking er modtaget — du kan betale i butikken, eller ringe til
-              os, hvis du vil ændre noget.
+              Betalingen blev ikke gennemført. Din tid er ikke booket endnu, og du
+              er ikke blevet trukket. Book igen herunder og vælg &quot;Betal i
+              butikken&quot;, eller ring til os på 61 10 00 48.
             </p>
           )}
           <Suspense

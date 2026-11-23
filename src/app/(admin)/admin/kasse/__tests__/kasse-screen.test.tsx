@@ -58,6 +58,7 @@ vi.mock("@/lib/pos/client", () => ({
   posJson: vi.fn(async (url: string, init?: { body?: string }) => {
     const body = init?.body ? JSON.parse(init.body) : undefined;
     api.calls.push({ url, body });
+    if (url === "/api/pos/locations") return { locations: [{ id: LOC, slug: "vejle", name: "PhoneSpot Vejle", registers: [] }] };
     if (url.startsWith("/api/pos/session")) {
       return {
         registers: [
@@ -106,6 +107,12 @@ describe("Kasse screen", () => {
     // top sellers from the API, as quick tiles
     expect(await screen.findByText("USB-C kabel 1 m")).toBeTruthy();
     expect(document.activeElement).toBe(screen.getByLabelText("Scan eller søg"));
+  });
+
+  it("links 'Nyt opkøb' to the buyback editor with the register's store", async () => {
+    render(<KasseScreen />);
+    const link = await screen.findByRole("link", { name: "Nyt opkøb" });
+    expect(link.getAttribute("href")).toBe(`/admin/opkoeb/slutsedler/ny?location=${LOC}`);
   });
 
   it("asks for the opening float when the till is closed", async () => {

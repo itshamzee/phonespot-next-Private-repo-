@@ -86,7 +86,7 @@ export function ImageGallery({ images, title, activeIndex, variant = "device" }:
                 onClick={() => switchImage(i)}
                 className={`group relative flex-shrink-0 h-[56px] w-[56px] sm:h-[72px] sm:w-[72px] rounded-xl overflow-hidden bg-cream transition-all duration-200 ${
                   i === selectedIndex
-                    ? "ring-[2.5px] ring-green-eco shadow-md"
+                    ? "ring-[2.5px] ring-green-eco shadow-rest"
                     : "ring-1 ring-charcoal/10 hover:ring-2 hover:ring-green-eco/50"
                 }`}
                 aria-label={`Vis billede ${i + 1} af ${images.length}`}

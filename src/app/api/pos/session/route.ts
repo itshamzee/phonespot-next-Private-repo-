@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth/require-staff";
 import {
   addSessionAdjustment,
   closeCashSession,
@@ -7,9 +6,11 @@ import {
   openCashSession,
   recentSessions,
 } from "@/lib/pos/sessions";
+import { assertLocationAccess, assertSessionAccess, resolveRegister } from "@/lib/pos/pos-context";
+import { hasPermission } from "@/lib/auth/permissions";
 import { sessionActionSchema, uuidSchema } from "@/lib/pos/schemas";
 import { validateCashClose } from "@/lib/pos/cash-session";
-import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/route-helpers";
+import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
  * GET /api/pos/session?location_id=<id>[&register_id=<id>]
@@ -18,8 +19,9 @@ import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse } from "@/lib/pos/
  */
 export async function GET(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get("location_id");
@@ -30,6 +32,9 @@ export async function GET(request: NextRequest) {
     if (registerId && !uuidSchema.safeParse(registerId).success) {
       return NextResponse.json({ error: "Ugyldigt register_id" }, { status: 400 });
     }
+
+    await assertLocationAccess(actor, locationId);
+    if (registerId) await resolveRegister(actor, registerId);
 
     const registers = await listRegisters(locationId);
     const history = registerId ? await recentSessions(registerId) : [];
@@ -47,23 +52,27 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const staff = await requireStaff(request);
-    if (!staff) return UNAUTHORIZED();
+    const pos = await requirePosStaff(request);
+    if (!pos) return UNAUTHORIZED();
+    const { actor } = pos;
 
     const parsed = await parseBody(request, sessionActionSchema);
     if (!parsed.ok) return parsed.response;
     const body = parsed.data;
 
     if (body.action === "open") {
+      await resolveRegister(actor, body.registerId);
       const res = await openCashSession({
         registerId: body.registerId,
-        staffId: staff.id,
+        staffId: actor.id,
         openingFloat: body.openingFloat,
       });
       return NextResponse.json({ sessionId: res.session_id });
     }
 
     if (body.action === "close") {
+      if (!hasPermission(actor, "lukke_dagen")) return FORBIDDEN("Du har ikke tilladelse til at lukke dagen");
+      await assertSessionAccess(actor, body.sessionId);
       const check = validateCashClose({
         countedCash: body.countedCash,
         cashToBank: body.cashToBank,
@@ -73,7 +82,7 @@ export async function POST(request: NextRequest) {
 
       const res = await closeCashSession({
         sessionId: body.sessionId,
-        staffId: staff.id,
+        staffId: actor.id,
         countedCash: body.countedCash,
         cashToBank: body.cashToBank,
         expenses: body.expenses,
@@ -93,12 +102,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!["manager", "owner"].includes(staff.role)) {
+    if (!["manager", "owner"].includes(actor.role)) {
       return FORBIDDEN("Kun managere og ejere kan justere en lukket kassesession");
     }
+    await assertSessionAccess(actor, body.sessionId);
     const res = await addSessionAdjustment({
       sessionId: body.sessionId,
-      staffId: staff.id,
+      staffId: actor.id,
       amountOere: body.amountOere,
       reason: body.reason,
     });

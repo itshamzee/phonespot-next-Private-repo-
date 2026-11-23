@@ -76,7 +76,7 @@ export function UpcomingStorePage({ store }: { store: UpcomingStoreConfig }) {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((faq) => ({ "@type": "Question", name: faq.question, acceptedAnswer: { "@type": "Answer", text: faq.answer } })) }} />
       <div className={styles.container}>
         <nav aria-label="Brødkrumme" className={styles.breadcrumb}><Link href="/">Forside</Link> / <Link href="/butik">Butikker</Link> / {town}</nav>
-        <header className={styles.header}>
+        <header className={`${styles.header} hero-rise`}>
           <span className={styles.eyebrow}>Åbner {store.opens}</span>
           <h1>{store.name}</h1>
           <p className={styles.intro}>Vi åbner i {town} i {store.opens}. Her kan du få repareret din telefon, købe refurbished elektronik med garanti og sælge din brugte enhed – samme sted.</p>
