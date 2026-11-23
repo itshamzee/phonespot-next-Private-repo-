@@ -5,6 +5,7 @@ const LOC = "00000000-0000-4000-8000-000000000020";
 const RID = "00000000-0000-4000-8000-000000000050";
 const TPL = "00000000-0000-4000-8000-000000000070";
 const VALID_IMEI = "490154203237518";
+const OTHER_TPL = "00000000-0000-4000-8000-000000000071";
 
 const nav = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -35,7 +36,10 @@ vi.mock("@/lib/buyback/admin-fetch", () => ({
     if (url === `/api/trade-in/receipts/${RID}` && method === "PATCH") return json(200, { id: RID, status: "draft" });
     if (url === `/api/trade-in/receipts/${RID}/confirm`) return json(api.confirm.status, api.confirm.body);
     if (url.startsWith("/api/platform/templates")) {
-      return json(200, [{ id: TPL, brand: "Apple", model: "iPhone 13", display_name: "iPhone 13", storage_options: ["128GB", "256GB"] }]);
+      return json(200, [
+        { id: TPL, brand: "Apple", model: "iPhone 13", display_name: "iPhone 13", category: "iphone", storage_options: ["128GB", "256GB"] },
+        { id: OTHER_TPL, brand: "Andet", model: "Andet (telefon)", display_name: "Andet (telefon)", category: "smartphone", storage_options: [] },
+      ]);
     }
     if (url === "/api/trade-in/price-suggestion") {
       return json(200, {
@@ -74,18 +78,21 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const pickCondition = (name: string) =>
+  fireEvent.click(within(screen.getByRole("radiogroup", { name: "Stand, vare 1" })).getByRole("radio", { name }));
+
 async function pickModel() {
   type("Model, vare 1", "iPhone 13");
   fireEvent.click(await screen.findByRole("option", { name: /iPhone 13/ }));
   // Prisforslaget hentes ikke, før lageret er valgt.
-  fireEvent.change(await screen.findByLabelText("Lager, vare 1"), { target: { value: "128GB" } });
+  fireEvent.click(within(await screen.findByRole("radiogroup", { name: "Lager, vare 1" })).getByRole("radio", { name: "128GB" }));
 }
 
 /** Fills in a complete private receipt for 2.400 kr. through the UI. */
 async function fillComplete() {
   type("IMEI eller serienummer, vare 1", VALID_IMEI);
   await pickModel();
-  fireEvent.change(screen.getByLabelText("Stand, vare 1"), { target: { value: "God" } });
+  pickCondition("God");
   await waitFor(() => expect(field("Pris, vare 1").value).toBe("2.400"));
   type("Navn", "Mette Hansen");
   type("Adresse", "Vestergade 1");
@@ -108,8 +115,9 @@ describe("ReceiptEditor", () => {
     expect(document.activeElement).toBe(field("IMEI eller serienummer, vare 1"));
   });
 
-  it("shows no ID fields at 2.000 kr., but does at 2.000,01 kr., with the CPR warning", () => {
+  it("shows no ID fields at 2.000 kr., but does at 2.000,01 kr., with the CPR warning", async () => {
     render(<ReceiptEditor locationId={LOC} />);
+    await pickModel();
     type("Pris, vare 1", "2000");
     expect(screen.queryByLabelText("ID-nummer")).toBeNull();
     type("Pris, vare 1", "2000,01");
@@ -137,7 +145,7 @@ describe("ReceiptEditor", () => {
   it("fetches a price suggestion once model and condition are chosen, with the Green.dk link and the note", async () => {
     render(<ReceiptEditor locationId={LOC} />);
     await pickModel();
-    fireEvent.change(screen.getByLabelText("Stand, vare 1"), { target: { value: "Acceptabel" } });
+    pickCondition("Acceptabel");
     const link = (await screen.findByRole("link", { name: "Se Green.dk's pris" })) as HTMLAnchorElement;
     expect(link.href).toContain("green.dk");
     expect(link.target).toBe("_blank");
@@ -202,16 +210,38 @@ describe("ReceiptEditor", () => {
     expect(api.calls.filter((c) => c.url.startsWith("/api/trade-in/receipts")).length).toBe(before);
   });
 
-  it("MitID hides the expiry field", () => {
+  it("picks a model with one click from the list, without typing", async () => {
     render(<ReceiptEditor locationId={LOC} />);
+    const list = await screen.findByRole("group", { name: "Vælg model, vare 1" });
+    fireEvent.click(within(list).getByRole("button", { name: "iPhone 13" }));
+    expect(screen.getByText("Apple iPhone 13")).toBeTruthy();
+    expect(within(screen.getByRole("radiogroup", { name: "Lager, vare 1" })).getAllByRole("radio").map((r) => r.textContent)).toEqual(["128GB", "256GB"]);
+    expect(within(screen.getByRole("radiogroup", { name: "Stand, vare 1" })).getAllByRole("radio")).toHaveLength(4);
+  });
+
+  it("takes a model that is not on the list as free text, and saves it on the 'Andet' template", async () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Modellen står ikke på listen" }));
+    type("Model som fritekst, vare 1", "Nothing Phone 2");
+    fireEvent.click(screen.getByRole("button", { name: "Brug" }));
+    expect(screen.getByText("Nothing Phone 2")).toBeTruthy();
+    await waitFor(() => expect(api.calls.some((c) => c.url === "/api/trade-in/receipts" && c.method === "POST")).toBe(true), { timeout: 3000 });
+    const created = api.calls.find((c) => c.url === "/api/trade-in/receipts" && c.method === "POST")!;
+    expect((created.body!.items as Array<Record<string, unknown>>)[0]).toMatchObject({ template_id: OTHER_TPL, model: "Nothing Phone 2", brand: null });
+  });
+
+  it("MitID hides the expiry field", async () => {
+    render(<ReceiptEditor locationId={LOC} />);
+    await pickModel();
     type("Pris, vare 1", "2500");
     expect(screen.getByLabelText("Udløbsdato")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("ID-type"), { target: { value: "mitid" } });
     expect(screen.queryByLabelText("Udløbsdato")).toBeNull();
   });
 
-  it("shows an error for a battery health above 100 %", () => {
+  it("shows an error for a battery health above 100 %", async () => {
     render(<ReceiptEditor locationId={LOC} />);
+    await pickModel();
     type("Batteri, vare 1", "150");
     expect(screen.getByText("Batteri skal være mellem 0 og 100 %")).toBeTruthy();
     type("Batteri, vare 1", "88");

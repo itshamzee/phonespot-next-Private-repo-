@@ -10,9 +10,15 @@ export async function GET(request: NextRequest) {
   const supabase = createServerClient();
   const search = request.nextUrl.searchParams.get("search");
 
+  // ?fields=slim: kun det, en modelvælger skal bruge (hele kataloget hentes på én gang).
+  const columns =
+    request.nextUrl.searchParams.get("fields") === "slim"
+      ? "id, brand, model, display_name, category, storage_options"
+      : "*";
+
   let query = supabase
     .from("product_templates")
-    .select("*")
+    .select(columns)
     .order("brand")
     .order("model");
 
