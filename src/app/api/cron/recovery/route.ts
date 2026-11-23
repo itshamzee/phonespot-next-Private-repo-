@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSms } from "@/lib/sms/gateway-api";
 import { sendRecoveryEmail } from "@/lib/recovery/send-recovery-email";
+import { isFrisbiiConfigured } from "@/lib/payments/frisbii/client";
+import { sweepStaleFrisbiiOrders } from "@/lib/payments/frisbii/order-payment";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://phonespot.dk";
 
@@ -9,6 +11,20 @@ export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Frisbii sender ingen "session udløbet"-webhook, som Stripe gør. Dette job
+  // kører hver halve time, så her ryddes forladte Frisbii-betalinger op:
+  // reservationer frigives, kurven bliver klar til påmindelse, og en betalt
+  // ordre, hvis webhook aldrig nåede frem, bliver færdiggjort.
+  let frisbii: Awaited<ReturnType<typeof sweepStaleFrisbiiOrders>> | { error: string } | null = null;
+  if (isFrisbiiConfigured()) {
+    try {
+      frisbii = await sweepStaleFrisbiiOrders();
+    } catch (err) {
+      console.error("[recovery] frisbii sweep failed:", err);
+      frisbii = { error: err instanceof Error ? err.message : String(err) };
+    }
   }
 
   const supabase = createAdminClient();
@@ -167,5 +183,5 @@ export async function GET(req: NextRequest) {
   }
 
   console.log(`[recovery] Done. emails=${emailsSent}, sms=${smsSent}, errors=${errors}`);
-  return NextResponse.json({ emailsSent, smsSent, errors });
+  return NextResponse.json({ emailsSent, smsSent, errors, frisbii });
 }
