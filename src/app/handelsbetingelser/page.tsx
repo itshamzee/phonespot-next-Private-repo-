@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
+import { getCheckoutProvider } from "@/lib/payments/provider";
 
 export const metadata: Metadata = {
   title: "Handelsbetingelser - PhoneSpot",
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function HandelsbetingelserPage() {
+  // Teksten følger den udbyder, webshoppen faktisk bruger (PAYMENT_PROVIDER).
+  const paymentProcessor =
+    getCheckoutProvider() === "frisbii" ? "Flatpay ApS (betalingsplatformen Frisbii)" : "Stripe, Inc.";
   return (
     <SectionWrapper>
       <div
@@ -143,7 +147,7 @@ export default function HandelsbetingelserPage() {
           </ol>
           <p className="mt-3">
             Vi accepterer følgende betalingsmetoder: Visa, Mastercard, Dankort og MobilePay.
-            Alle betalinger behandles sikkert via Stripe, Inc. og er krypteret med TLS. Vi
+            Alle betalinger behandles sikkert via {paymentProcessor} og er krypteret med TLS. Vi
             gemmer aldrig dine fulde kortoplysninger.
           </p>
           <p className="mt-3">

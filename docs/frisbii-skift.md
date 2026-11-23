@@ -7,6 +7,26 @@ Frisbii er Flatpays online-betalingsplatform (tidligere Reepay / Billwerk+
 Optimize). Docs: https://docs.frisbii.com/docs/new-web-shop og
 https://docs.frisbii.com/docs/billwerk-checkout.
 
+## Status 2026-11-23: API-adgang modtaget
+
+- Kontoen `phonespotdk-5156689` er **live** (der findes ingen testkonto på nøglen).
+  Test sker derfor med et rigtigt kort: reservér, og annullér reservationen bagefter.
+- Aktive betalingsmetoder på kontoen: kort (inkl. Dankort), MobilePay, Apple Pay, Google Pay.
+  **Klarna er ikke med.** Siden reklamerer med Klarna-rater flere steder
+  (`/kasse`, `/delbetaling`, produktsider, footer); det skal afklares før skiftet.
+- Frisbii accepterer vores ordrelinjer inkl. negativ rabatlinje (prøvet mod live-kontoen).
+- `FRISBII_PRIVATE_KEY` og `FRISBII_WEBHOOK_SECRET` ligger i Vercel (Production + Preview,
+  sensitive). Webhook-secret er kontoens eksisterende; den må **ikke** regenereres,
+  for Flatpays egen webhook (`data-api.flatpay.dk`) er signeret med den samme.
+- Kontoens webhook-liste har i forvejen Flatpays egen URL. Vores URL skal lægges til
+  ved siden af (API: `PUT /v1/account/webhook_settings` med begge URL'er), aldrig erstatte den.
+- Preview for grenen `feat/frisbii-betaling` kører med `PAYMENT_PROVIDER=frisbii` og
+  `NEXT_PUBLIC_SITE_URL` sat til grenens preview-adresse, så hele forløbet bliver på preview.
+  Preview deler database med produktion: en testordre er en rigtig ordre og skal annulleres.
+- Handelsbetingelser og privatlivspolitik følger nu `PAYMENT_PROVIDER` automatisk.
+- Meta Purchase (server) og "gendannet kurv" virker for begge udbydere via
+  `finalizeCheckoutOrder`.
+
 ## Hvad er bygget
 
 | Flow | Stripe i dag | Frisbii |
@@ -87,10 +107,9 @@ hæves den), eller annullér hele beløbet.
 3. **Skift produktion**
    - Sæt de samme tre variabler med live-nøgler i Vercel Production og redeploy.
    - Lad `STRIPE_*` stå: gamle ordrer, reparationer, kladdeordrer og POS bruger dem.
-4. **Juridisk tekst, samme dag**
-   - `/handelsbetingelser` (afsnit om betaling nævner "Stripe, Inc.") og
-     `/privatlivspolitik` (Stripe som databehandler): tilføj Frisbii/Flatpay
-     som betalingsbehandler, og behold Stripe så længe reparationer/POS kører der.
+4. **Juridisk tekst**: sker automatisk. `/handelsbetingelser` og `/privatlivspolitik`
+   læser `PAYMENT_PROVIDER` og nævner Flatpay/Frisbii, når skiftet er sket (Stripe bliver
+   stående som behandler for reparationer, butik og ældre ordrer).
 5. **Rul tilbage**: sæt `PAYMENT_PROVIDER=stripe` og redeploy. Ordrer, der
    allerede er betalt med Frisbii, kan stadig refunderes og hæves, så længe
    `FRISBII_PRIVATE_KEY` er sat.

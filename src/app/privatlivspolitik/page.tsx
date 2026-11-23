@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SectionWrapper } from "@/components/ui/section-wrapper";
 import { Heading } from "@/components/ui/heading";
 import { STORES } from "@/lib/store-config";
+import { getCheckoutProvider } from "@/lib/payments/provider";
 
 export const metadata: Metadata = {
   title: "Privatlivspolitik - PhoneSpot",
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function PrivatlivspolitikPage() {
+  // Webshoppens betalinger går gennem Flatpay/Frisbii, når PAYMENT_PROVIDER=frisbii.
+  // Stripe står der fortsat: reparationsbetaling, kassen og ældre ordrer kører dér.
+  const usesFrisbii = getCheckoutProvider() === "frisbii";
   return (
     <SectionWrapper>
       <div
@@ -72,7 +76,7 @@ export default function PrivatlivspolitikPage() {
             </li>
             <li>
               <strong>Betalingsoplysninger:</strong> korttype og de sidste fire cifre (vi gemmer
-              aldrig fulde kortoplysninger — det håndteres krypteret af Stripe)
+              aldrig fulde kortoplysninger — det håndteres krypteret af vores betalingsudbyder)
             </li>
             <li>
               <strong>Brugsdata:</strong> IP-adresse, browsertype, enhedstype, sidevisninger og
@@ -154,9 +158,17 @@ export default function PrivatlivspolitikPage() {
             behandler data på vores vegne og i overensstemmelse med vores instruktioner:
           </p>
           <ul className="mt-3 space-y-2">
+            {usesFrisbii && (
+              <li>
+                <strong>Flatpay ApS</strong> (betalingsplatformen Frisbii) — betalingsbehandling i
+                webshoppen. Dine kortoplysninger krypteres og håndteres udelukkende af Flatpay og
+                Frisbii.
+              </li>
+            )}
             <li>
-              <strong>Stripe, Inc.</strong> — betalingsbehandling. Dine kortoplysninger krypteres og
-              håndteres udelukkende af Stripe.
+              <strong>Stripe, Inc.</strong> — betalingsbehandling
+              {usesFrisbii ? " af reparationer, køb i butik og ældre ordrer" : ""}. Dine
+              kortoplysninger krypteres og håndteres udelukkende af Stripe.
             </li>
             <li>
               <strong>Supabase, Inc.</strong> — databasehosting og brugerautentificering.
