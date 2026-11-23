@@ -77,6 +77,8 @@ afterEach(() => {
 async function pickModel() {
   type("Model, vare 1", "iPhone 13");
   fireEvent.click(await screen.findByRole("option", { name: /iPhone 13/ }));
+  // Prisforslaget hentes ikke, før lageret er valgt.
+  fireEvent.change(await screen.findByLabelText("Lager, vare 1"), { target: { value: "128GB" } });
 }
 
 /** Fills in a complete private receipt for 2.400 kr. through the UI. */

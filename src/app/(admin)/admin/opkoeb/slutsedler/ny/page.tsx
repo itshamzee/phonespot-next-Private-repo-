@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Notice, PageHeader } from "@/components/admin/ui";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { staffFetch } from "@/lib/buyback/admin-fetch";
-import { ReceiptEditor, type StoreOption } from "../_components/receipt-editor";
+import { LAST_STORE_KEY, ReceiptEditor, type StoreOption } from "../_components/receipt-editor";
 
 type Loc = { id: string; slug: string; name: string };
 
@@ -14,7 +14,8 @@ type Loc = { id: string; slug: string; name: string };
  *   ?location=<id>  butikken fra kassen
  *   ?inquiry=<id>   udfyld fra en online-henvendelse
  *   ?kladde=<id>    åbn en gemt kladde igen (sættes af editoren)
- * Uden ?location bruges medarbejderens egen butik; ejeren vælger.
+ * Uden ?location bruges medarbejderens egen butik. Ejeren får butikken fra
+ * butiksvælgeren i toppen eller den sidst brugte; ellers skal den vælges.
  */
 function NewReceipt() {
   const params = useSearchParams();
@@ -22,7 +23,7 @@ function NewReceipt() {
   const inquiryId = params.get("inquiry") ?? undefined;
   // Læses kun ved første visning: editoren sætter selv ?kladde=, når kladden er oprettet.
   const [draftId] = useState(() => params.get("kladde") ?? undefined);
-  const { isOwner, ownSlug, loading: scopeLoading } = useStoreScope();
+  const { ownSlug, scope, loading: scopeLoading } = useStoreScope();
   const [locations, setLocations] = useState<Loc[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,17 +80,26 @@ function NewReceipt() {
     );
   }
 
+  let remembered: string | null = null;
+  try {
+    remembered = window.localStorage.getItem(LAST_STORE_KEY);
+  } catch {
+    // Uden lager huskes butikken ikke.
+  }
+  // Aldrig en tilfældig butik: kan den ikke afgøres, vælger man selv, før kladden oprettes.
   const chosen =
     locations.find((l) => l.id === wantedLocation) ??
     locations.find((l) => l.slug === ownSlug) ??
-    locations[0];
+    locations.find((l) => l.slug === scope) ??
+    locations.find((l) => l.id === remembered) ??
+    (locations.length === 1 ? locations[0] : undefined);
   // Kun navne vises her, aldrig adresser.
-  const stores: StoreOption[] = isOwner || locations.length > 1 ? locations.map((l) => ({ id: l.id, name: l.name })) : [{ id: chosen.id, name: chosen.name }];
+  const stores: StoreOption[] = locations.map((l) => ({ id: l.id, name: l.name }));
 
   return (
     <>
       {header}
-      <ReceiptEditor locationId={chosen.id} inquiryId={inquiryId} draftId={draftId} stores={stores} />
+      <ReceiptEditor locationId={chosen?.id ?? ""} inquiryId={inquiryId} draftId={draftId} stores={stores} />
     </>
   );
 }

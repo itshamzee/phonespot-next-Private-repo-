@@ -206,7 +206,7 @@ describe("POST /api/trade-in/receipts/[id]/confirm", () => {
     rows.trade_in_receipt_items[0].price = 0;
     const res = await POST(req(), ctx(U(50)));
     expect(res.status).toBe(409);
-    expect((await res.json()).error).toBe("Vare 1: pris mangler");
+    expect((await res.json()).error).toBe("Enhed 1: pris mangler");
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
@@ -230,7 +230,7 @@ describe("POST /api/trade-in/receipts/[id]/confirm", () => {
     Object.assign(rows.trade_in_receipts[0], { total_amount: 100000 });
     const res = await POST(req(), ctx(U(50)));
     expect(res.status).toBe(409);
-    expect((await res.json()).error).toBe("Vare 2: pris mangler");
+    expect((await res.json()).error).toBe("Enhed 2: pris mangler");
   });
 
   it("downgrades online_accept to paper_scan before the rpc when the total exceeds the accepted offer", async () => {

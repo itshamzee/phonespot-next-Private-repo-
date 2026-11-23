@@ -149,7 +149,7 @@ describe("confirmBlockers", () => {
     expect(confirmBlockers(receipt({ account_owner_confirmed: false }), TODAY)).toContain("Bekræft at kontoen står i sælgers navn");
   });
   it("checks items and numbers them", () => {
-    expect(has(confirmBlockers(receipt({ items: [] }), TODAY), "mindst én vare")).toBe(true);
+    expect(has(confirmBlockers(receipt({ items: [] }), TODAY), "mindst én enhed")).toBe(true);
     const items = [
       { template_id: "t1", imei_serial: "490154203237518", price: 1000 },
       { template_id: null, imei_serial: "490154203237518", price: 1000 },
@@ -157,10 +157,10 @@ describe("confirmBlockers", () => {
       { template_id: "t1", imei_serial: "490154203237518", price: 0 },
     ];
     const b = confirmBlockers(receipt({ items }), TODAY);
-    expect(b.filter((m) => m.includes("Vare 1"))).toEqual([]);
-    expect(has(b, "Vare 2")).toBe(true);
-    expect(has(b, "Vare 3")).toBe(true);
-    expect(has(b, "Vare 4")).toBe(true);
+    expect(b.filter((m) => m.includes("Enhed 1"))).toEqual([]);
+    expect(has(b, "Enhed 2")).toBe(true);
+    expect(has(b, "Enhed 3")).toBe(true);
+    expect(has(b, "Enhed 4")).toBe(true);
   });
 });
 

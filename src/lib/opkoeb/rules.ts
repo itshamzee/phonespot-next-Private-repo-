@@ -167,14 +167,13 @@ export function confirmBlockers(r: ReceiptForRules, today: string): string[] {
     }
   }
 
-  if (r.items.length === 0) out.push("Tilføj mindst én vare");
+  if (r.items.length === 0) out.push("Tilføj mindst én enhed");
   r.items.forEach((item, i) => {
     const n = i + 1;
-    if (!item.template_id) out.push(`Vare ${n}: vælg model`);
-    if (!item.imei_serial || !normalizeIdentifier(item.imei_serial)) {
-      out.push(`Vare ${n}: IMEI eller serienummer er ugyldigt`);
-    }
-    if (!item.price || item.price <= 0) out.push(`Vare ${n}: pris mangler`);
+    if (!item.template_id) out.push(`Enhed ${n}: vælg model`);
+    if (!item.imei_serial || item.imei_serial.trim() === "") out.push(`Enhed ${n}: IMEI eller serienummer mangler`);
+    else if (!normalizeIdentifier(item.imei_serial)) out.push(`Enhed ${n}: IMEI eller serienummer er ugyldigt`);
+    if (!item.price || item.price <= 0) out.push(`Enhed ${n}: pris mangler`);
   });
 
   // Kontooplysningerne låses ved bekræftelsen, så de skal være på plads inden.

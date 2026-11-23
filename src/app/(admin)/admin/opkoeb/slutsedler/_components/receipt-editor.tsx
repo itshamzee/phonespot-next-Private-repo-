@@ -32,6 +32,16 @@ export type StoreOption = { id: string; name: string };
 
 const detailHref = (id: string) => `/admin/opkoeb/slutsedler/${id}`;
 
+/** Sidst valgte butik huskes på enheden, så ejeren ikke vælger den hver gang. */
+export const LAST_STORE_KEY = "ps_opkoeb_butik";
+function rememberStore(id: string) {
+  try {
+    window.localStorage.setItem(LAST_STORE_KEY, id);
+  } catch {
+    // Privat vindue eller spærret lager: valget gælder så kun denne gang.
+  }
+}
+
 async function errorMessage(res: Response, fallback: string): Promise<string> {
   const body = (await res.json().catch(() => null)) as { error?: string } | null;
   return body?.error || fallback;
@@ -175,6 +185,11 @@ export function ReceiptEditor({
       try {
         const payload = toDraftPayload(formRef.current);
         const id = receiptIdRef.current;
+        // Uden butik kan kladden ikke oprettes; den gemmes, så snart butikken er valgt.
+        if (!id && !locationRef.current) {
+          setSave({ kind: "idle" });
+          return false;
+        }
         const res = id
           ? await staffFetch(`/api/trade-in/receipts/${id}`, {
               method: "PATCH",
@@ -217,7 +232,7 @@ export function ReceiptEditor({
       timer.current = null;
       void persist();
     }, AUTOSAVE_MS);
-  }, [form, persist]);
+  }, [form, location, persist]);
 
   useEffect(
     () => () => {
@@ -280,7 +295,11 @@ export function ReceiptEditor({
   /* ---- Afledt ---- */
   const total = totalOere(form);
   const needsId = idRequired(total);
-  const blockers = useMemo(() => confirmBlockers(toRulesInput(form), copenhagenDateString()), [form]);
+  const blockers = useMemo(() => {
+    const list = confirmBlockers(toRulesInput(form), copenhagenDateString());
+    return location ? list : ["Vælg butik", ...list];
+  }, [form, location]);
+  const checklistRef = useRef<HTMLDivElement>(null);
   const business = form.seller_type === "business";
   const locked = confirmed || confirming || loading;
 
@@ -332,7 +351,16 @@ export function ReceiptEditor({
         <div className="max-w-[320px]">
           <Field label="Butik" hint={receiptId ? "Butikken kan ikke skiftes, når kladden er oprettet." : undefined}>
             {(id) => (
-              <Select id={id} value={location} disabled={!!receiptId || locked} onChange={(e) => setLocation(e.target.value)}>
+              <Select
+                id={id}
+                value={location}
+                disabled={!!receiptId || locked}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  if (e.target.value) rememberStore(e.target.value);
+                }}
+              >
+                {!location && <option value="">Vælg butik</option>}
                 {stores.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -540,31 +568,45 @@ export function ReceiptEditor({
         )}
       </Section>
 
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-4 border-t border-sand bg-cream px-4 py-5 sm:mx-0 sm:px-0">
-        <div className="flex items-baseline justify-between gap-4">
-          <p className="text-[14px] text-gray">Total</p>
-          <p className="text-[26px] font-semibold tabular-nums text-charcoal">{formatKr(total)}</p>
-        </div>
-
-        {blockers.length > 0 ? (
-          <ul aria-label="Mangler før bekræftelse" className="flex flex-col gap-1 text-[13px] text-[#8A4B08]">
+      {blockers.length > 0 && (
+        <div ref={checklistRef} className="scroll-mt-4 border-t border-sand pt-6">
+          <h2 className="text-[16px] font-semibold text-charcoal">Mangler før bekræftelse</h2>
+          <ul aria-label="Mangler før bekræftelse" className="mt-3 flex list-disc flex-col gap-1 pl-5 text-[14px] text-[#8A4B08]">
             {blockers.map((b, i) => (
               <li key={i}>{b}</li>
             ))}
           </ul>
-        ) : (
-          <p className="text-[13px] text-green-eco">Alt er udfyldt. Klar til at bekræfte.</p>
-        )}
+        </div>
+      )}
 
+      {/* Bjælken er bevidst lav: den må aldrig dække felterne, man er ved at udfylde. */}
+      <div className="sticky bottom-0 -mx-4 flex flex-col gap-3 border-t border-sand bg-cream px-4 py-3 sm:mx-0 sm:px-0">
         {confirmError && <Notice tone="danger" title="Opkøbet er ikke bekræftet">{confirmError}</Notice>}
 
-        <div className="flex items-center justify-between gap-4">
-          <p aria-live="polite" className={`text-[13px] ${save.kind === "error" ? "text-[#B42318]" : "text-gray"}`}>
-            {save.kind === "saving" ? "Gemmer …" : save.kind === "saved" ? "Gemt" : save.kind === "error" ? save.message : ""}
-          </p>
-          <Button variant="primary" onClick={() => void confirmAndPrint()} disabled={blockers.length > 0 || locked} loading={confirming}>
-            Bekræft og print
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <div className="flex items-baseline gap-3">
+            <p className="text-[13px] text-gray">Total</p>
+            <p className="text-[20px] font-semibold tabular-nums text-charcoal">{formatKr(total)}</p>
+            <p aria-live="polite" className={`text-[13px] ${save.kind === "error" ? "text-[#B42318]" : "text-gray"}`}>
+              {save.kind === "saving" ? "Gemmer …" : save.kind === "saved" ? "Gemt" : save.kind === "error" ? save.message : ""}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {blockers.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => checklistRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="rounded text-[13px] text-[#8A4B08] underline underline-offset-2 hover:text-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-light"
+              >
+                {blockers.length === 1 ? "1 ting mangler" : `${blockers.length} ting mangler`}
+              </button>
+            ) : (
+              <p className="text-[13px] text-green-eco">Alt er udfyldt. Klar til at bekræfte.</p>
+            )}
+            <Button variant="primary" onClick={() => void confirmAndPrint()} disabled={blockers.length > 0 || locked} loading={confirming}>
+              Bekræft og print
+            </Button>
+          </div>
         </div>
       </div>
     </div>

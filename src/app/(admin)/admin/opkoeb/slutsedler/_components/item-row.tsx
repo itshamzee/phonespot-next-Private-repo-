@@ -26,6 +26,14 @@ type Suggestion = {
 const SEARCH_DEBOUNCE_MS = 250;
 const MAX_RESULTS = 8;
 
+/** "Apple" + "Apple iPhone 13" skal stå som "Apple iPhone 13", ikke med mærket to gange. */
+export function templateLabel(t: { brand: string | null; model: string | null; display_name?: string | null }): string {
+  const name = (t.display_name ?? t.model ?? "").trim();
+  const brand = (t.brand ?? "").trim();
+  if (!brand || name.toLowerCase().startsWith(brand.toLowerCase())) return name || brand;
+  return `${brand} ${name}`.trim();
+}
+
 const labelClass = "text-[13px] font-medium text-charcoal";
 
 /**
@@ -52,6 +60,7 @@ export function ItemRow({
   const n = index + 1;
   const imeiRef = useRef<HTMLInputElement>(null);
   const modelRef = useRef<HTMLInputElement>(null);
+  const storageRef = useRef<HTMLSelectElement>(null);
   const conditionRef = useRef<HTMLSelectElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
 
@@ -96,17 +105,19 @@ export function ItemRow({
 
   function pickTemplate(t: Template) {
     const options = t.storage_options ?? [];
+    const storage = options.includes(item.storage) ? item.storage : options.length === 1 ? options[0] : "";
     onChange({
       template_id: t.id,
       brand: t.brand ?? "",
       model: t.model ?? "",
       storage_options: options,
-      storage: options.includes(item.storage) ? item.storage : options.length === 1 ? options[0] : "",
+      storage,
     });
     setQuery("");
     setResults([]);
     setSearchOpen(false);
-    requestAnimationFrame(() => conditionRef.current?.focus());
+    // Lager først, når det mangler: prisforslaget afhænger af det.
+    requestAnimationFrame(() => ((options.length > 0 && !storage ? storageRef.current : null) ?? conditionRef.current)?.focus());
   }
 
   function clearTemplate() {
@@ -122,8 +133,10 @@ export function ItemRow({
   latest.current = { item, onChange };
 
   const battery = /^\d{1,3}$/.test(item.battery.trim()) ? Number(item.battery.trim()) : undefined;
+  // Et forslag uden lager ville være prisen på en anden variant.
+  const needsStorage = item.storage_options.length > 0 && !item.storage;
   useEffect(() => {
-    if (!item.template_id || !item.condition) {
+    if (!item.template_id || !item.condition || needsStorage) {
       setSuggestion(null);
       return;
     }
@@ -167,7 +180,7 @@ export function ItemRow({
     return () => {
       cancelled = true;
     };
-  }, [item.template_id, item.condition, item.storage, battery]);
+  }, [item.template_id, item.condition, item.storage, battery, needsStorage]);
 
   const enterTo = (next: () => void) => (e: KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -266,7 +279,7 @@ export function ItemRow({
                         onClick={() => pickTemplate(t)}
                         className="w-full px-3 py-2 text-left text-[14px] text-charcoal hover:bg-cream focus:bg-cream focus:outline-none"
                       >
-                        {[t.brand, t.display_name ?? t.model].filter(Boolean).join(" ")}
+                        {templateLabel(t)}
                       </button>
                     </li>
                   ))}
@@ -292,11 +305,13 @@ export function ItemRow({
           </label>
           {item.storage_options.length > 0 ? (
             <Select
+              ref={storageRef}
               id={`storage-${item.key}`}
               aria-label={`Lager, vare ${n}`}
               value={item.storage}
               disabled={disabled}
               onChange={(e) => onChange({ storage: e.target.value })}
+              onKeyDown={enterTo(() => conditionRef.current?.focus())}
             >
               <option value="">Vælg</option>
               {item.storage_options.map((s) => (
@@ -364,8 +379,8 @@ export function ItemRow({
         <div className="flex flex-col gap-1.5">
           <p className={labelClass}>Prisforslag</p>
           <div className="flex min-h-10 flex-col justify-center text-[14px]">
-            {!item.template_id || !item.condition ? (
-              <span className="text-gray">Vælg model og stand</span>
+            {!item.template_id || !item.condition || needsStorage ? (
+              <span className="text-gray">{needsStorage && item.template_id ? "Vælg lager og stand" : "Vælg model og stand"}</span>
             ) : loadingSuggestion ? (
               <span className="text-gray">Henter forslag …</span>
             ) : suggestionError ? (
@@ -373,7 +388,7 @@ export function ItemRow({
             ) : suggestion?.status === "ok" ? (
               <span className="tabular-nums text-charcoal">
                 {formatKr(suggestion.aim_oere)}
-                <span className="text-gray"> · bund {formatKr(suggestion.floor_oere)}</span>
+                <span className="text-gray"> · giv højst {formatKr(suggestion.floor_oere)}</span>
               </span>
             ) : suggestion ? (
               <span className="text-[#8A4B08]">{suggestion.manual_reason ?? "Prissættes manuelt"}</span>
