@@ -4,7 +4,7 @@
  *
  * Model:
  *  - `locations` er kilden til sandhed (uuid). `locations.slug` er den stabile
- *    nøgle: 'vejle' | 'slagelse' | 'webshop' | 'vejle-gaagade' | 'esbjerg'.
+ *    nøgle: 'vejle' | 'slagelse' | 'webshop' | 'vejle-gaagade' | 'esbjerg' | 'vejle-kontor'.
  *  - De fysiske tekst-kolonner (`repair_tickets.store_id` m.fl.) bruger kun
  *    'vejle' | 'slagelse' (src/lib/stores.ts) og NULL for "generel".
  *  - Ejeren (role 'owner') er den ENESTE super-admin: ser alt eller vælger én
@@ -14,12 +14,12 @@
  * store-scope-server.ts.
  */
 
-export type ScopeSlug = "vejle" | "slagelse" | "webshop" | "vejle-gaagade" | "esbjerg";
+export type ScopeSlug = "vejle" | "slagelse" | "webshop" | "vejle-gaagade" | "esbjerg" | "vejle-kontor";
 
 /** "alle" = ejerens samlede overblik, "ingen" = medarbejder uden tildelt butik (fail closed). */
 export type StoreScope = ScopeSlug | "alle" | "ingen";
 
-export const SCOPE_SLUGS: readonly ScopeSlug[] = ["vejle", "slagelse", "webshop", "vejle-gaagade", "esbjerg"];
+export const SCOPE_SLUGS: readonly ScopeSlug[] = ["vejle", "slagelse", "webshop", "vejle-gaagade", "esbjerg", "vejle-kontor"];
 
 /** Cookie der husker ejerens valg i topbjælken. Ikke httpOnly: klienten skriver den, serveren læser den. */
 export const STORE_SCOPE_COOKIE = "ps_store";
@@ -31,6 +31,7 @@ export const SCOPE_LABELS: Record<ScopeSlug | "alle" | "ingen", string> = {
   webshop: "Webshop",
   "vejle-gaagade": "Vejle Gågade",
   esbjerg: "Esbjerg",
+  "vejle-kontor": "Vejle Kontor",
   ingen: "Ingen butik",
 };
 
@@ -141,6 +142,7 @@ export function deriveLocationSlug(row: LocationRow): ScopeSlug | null {
   const name = (row.name ?? "").trim().toLowerCase();
   if (name === "vejle" || name === "slagelse" || name === "esbjerg") return name;
   if (name === "vejle gågade" || name === "vejle gaagade") return "vejle-gaagade";
+  if (name === "vejle kontor") return "vejle-kontor";
   if (name === "webshop" || name === "online") return "webshop";
   return null;
 }

@@ -17,13 +17,14 @@ import {
   type OverviewRow,
 } from "../overview";
 
-const qtys = (vejle: number, slagelse: number, webshop: number) => ({ vejle, slagelse, webshop, "vejle-gaagade": 0, esbjerg: 0 });
+const qtys = (vejle: number, slagelse: number, webshop: number) => ({ vejle, slagelse, webshop, "vejle-gaagade": 0, esbjerg: 0, "vejle-kontor": 0 });
 const mins = (vejle: number | null, slagelse: number | null, webshop: number | null) => ({
   vejle,
   slagelse,
   webshop,
   "vejle-gaagade": null,
   esbjerg: null,
+  "vejle-kontor": null,
 });
 
 function row(over: Partial<OverviewRow> = {}): OverviewRow {

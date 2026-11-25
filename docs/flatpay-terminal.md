@@ -14,7 +14,8 @@ serienummer. GUID'erne ligger kun i Vercel, ikke i repoet.
 
 | Butik (`locations.slug`) | Flatpay-navn | TID | Env-nøgler |
 | --- | --- | --- | --- |
-| `vejle` (Løversysselvej 3C) | Phonespot Vejle 1 | 1855059452 | `FLATPAY_TERMINAL_VEJLE`, `FLATPAY_GUID_VEJLE` |
+| `vejle-kontor` (Løversysselvej 3C) | Phonespot Vejle 1 | 1855059452 | `FLATPAY_TERMINAL_VEJLE_KONTOR`, `FLATPAY_GUID_VEJLE_KONTOR` |
+| `vejle` (den gamle profil) | ingen | | kører manuelt |
 | `vejle-gaagade` | Phonespot Vejle 2 | 1855122811 | `FLATPAY_TERMINAL_VEJLE_GAAGADE`, `FLATPAY_GUID_VEJLE_GAAGADE` |
 | `esbjerg` | Phonespot Esbjerg | 1855055308 | `FLATPAY_TERMINAL_ESBJERG`, `FLATPAY_GUID_ESBJERG` |
 | `slagelse` | ingen endnu | | kører manuelt |
