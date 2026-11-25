@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { physicalStoreFor } from "@/lib/auth/store-scope";
 import { BoxBar } from "@/components/admin/products/quick-intake/box-bar";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { Button, DataTable, Notice, PageHeader, Segmented, Tag, type Column } from "@/components/admin/ui";
@@ -22,7 +23,8 @@ export default function KasserPage() {
   const [storeReady, setStoreReady] = useState(false);
   useEffect(() => {
     if (scopeLoading || storeReady) return;
-    if (ownSlug === "vejle" || ownSlug === "slagelse") setStore(ownSlug);
+    const own = physicalStoreFor(ownSlug);
+    if (own) setStore(own);
     setStoreReady(true);
   }, [scopeLoading, ownSlug, storeReady]);
   const [rows, setRows] = useState<Row[]>([]);

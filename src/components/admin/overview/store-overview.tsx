@@ -12,7 +12,7 @@ import { WebshopOrdersPanel } from "./webshop-orders-panel";
 /** Overblik for én butik: hilsen, nye reparationsanmodninger, fire nøgletal og to paneler. */
 export function StoreOverviewView({ data }: { data: StoreOverview }) {
   const { kpis, cash, scope } = data;
-  const hasCash = cash.state !== "none" || scope === "vejle" || scope === "slagelse";
+  const hasCash = cash.state !== "none" || scope === "vejle" || scope === "slagelse" || scope === "vejle-kontor";
   const heading = scope === "ingen" ? "Hej" : `Hej ${SCOPE_LABELS[scope]}`;
 
   if (scope === "ingen") {

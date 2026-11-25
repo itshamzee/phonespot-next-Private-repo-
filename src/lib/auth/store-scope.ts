@@ -70,6 +70,23 @@ export function staffStoreSlug(staff: ScopedStaff): ScopeSlug | null {
 }
 
 /**
+ * Den kundevendte butik ('vejle' | 'slagelse') bag en admin-butik. Sager,
+ * henvendelser og reservationer gemmes med den kundevendte butik i tekst-
+ * kolonnen `store_id`. "Vejle Kontor" er disken i Vejle-butikken: egen kasse,
+ * egne salg og eget lager, men samme sager og henvendelser som Vejle.
+ */
+const PHYSICAL_STORE: Partial<Record<ScopeSlug, "vejle" | "slagelse">> = {
+  vejle: "vejle",
+  slagelse: "slagelse",
+  "vejle-kontor": "vejle",
+};
+
+export function physicalStoreFor(slug: unknown): "vejle" | "slagelse" | null {
+  const s = normalizeScopeSlug(slug);
+  return (s && PHYSICAL_STORE[s]) ?? null;
+}
+
+/**
  * Hvilken afgrænsning gælder for denne medarbejder?
  *  - ejer: det ønskede slug eller 'alle' (standard 'alle')
  *  - alle andre: ALTID egen butik; ønsker om andre butikker ignoreres.
@@ -88,7 +105,8 @@ export function canAccessStore(staff: ScopedStaff, rowStore: string | null | und
   const row = normalizeScopeSlug(rowStore ?? null);
   // Webshop-medarbejdere har også de rækker, der ikke er knyttet til en fysisk butik.
   if (own === "webshop") return row === null || row === "webshop";
-  return row === own;
+  // Vejle Kontor arbejder på Vejles sager og henvendelser (og kan slå Vejles gamle salg op).
+  return row === own || (row !== null && row === physicalStoreFor(own));
 }
 
 export class StoreAccessError extends Error {
@@ -115,12 +133,13 @@ export function storeForNewRecord(
   scope: StoreScope,
   requested?: string | null,
 ): "vejle" | "slagelse" | null {
-  const physical = (v: unknown): "vejle" | "slagelse" | null => {
+  // Ejeren vælger kun mellem de kundevendte butikker; en medarbejder får sin butiks kundevendte butik.
+  const exact = (v: unknown): "vejle" | "slagelse" | null => {
     const slug = normalizeScopeSlug(v);
     return slug === "vejle" || slug === "slagelse" ? slug : null;
   };
-  if (isOwner(staff)) return physical(requested) ?? physical(scope);
-  return physical(staffStoreSlug(staff));
+  if (isOwner(staff)) return exact(requested) ?? physicalStoreFor(scope);
+  return physicalStoreFor(staffStoreSlug(staff));
 }
 
 /* ------------------------------------------------------------------ */

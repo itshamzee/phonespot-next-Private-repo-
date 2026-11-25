@@ -74,6 +74,10 @@ describe("applyStoreScope", () => {
   });
   it("webshop: rows without a physical store", async () => expect(await ids("webshop")).toEqual(["c"]));
   it("ingen: nothing", async () => expect(await ids("ingen")).toEqual([]));
+  it("vejle-kontor reads Vejle's rows; esbjerg has none", async () => {
+    expect(await ids("vejle-kontor")).toEqual(["a"]);
+    expect(await ids("esbjerg")).toEqual([]);
+  });
 });
 
 describe("applyLocationScope", () => {

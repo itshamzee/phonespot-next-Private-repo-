@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { physicalStoreFor } from "@/lib/auth/store-scope";
 import Link from "next/link";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { formatKr } from "@/lib/repairs/case-money";
@@ -41,7 +42,7 @@ type Done =
   | { kind: "group"; result: CreateRepairCaseGroupResponse; request: CreateRepairCaseGroupRequest };
 
 function physical(v: unknown): LocationSlug | null {
-  return v === "vejle" || v === "slagelse" ? v : null;
+  return physicalStoreFor(v);
 }
 
 export default function NewCasePage() {

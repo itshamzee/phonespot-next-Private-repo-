@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { physicalStoreFor } from "@/lib/auth/store-scope";
 import { useToast } from "@/components/admin/ui";
 import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import type {
@@ -335,7 +336,7 @@ export default function AdminHenvendelserPage() {
           ...newForm,
           source: "manuel",
           // En manuelt oprettet henvendelse får oprettets butik, ellers kan oprettet ikke selv se den.
-          store_id: scope === "vejle" || scope === "slagelse" ? scope : ownSlug === "vejle" || ownSlug === "slagelse" ? ownSlug : null,
+          store_id: physicalStoreFor(scope) ?? physicalStoreFor(ownSlug),
         }),
       });
       if (res.ok) {

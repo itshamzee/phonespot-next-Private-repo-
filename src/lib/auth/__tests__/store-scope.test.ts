@@ -11,6 +11,7 @@ import {
   locationIdForSlug,
   normalizeScopeSlug,
   parseRequestedScope,
+  physicalStoreFor,
   slugForLocationId,
   storeForNewRecord,
   type ScopedStaff,
@@ -201,5 +202,43 @@ describe("nye butikker (Vejle Gågade, Esbjerg)", () => {
     expect(SCOPE_LABELS["vejle-gaagade"]).toBe("Vejle Gågade");
     expect(SCOPE_LABELS.esbjerg).toBe("Esbjerg");
     expect(storeForNewRecord({ role: "employee", location_slug: "esbjerg" }, "esbjerg")).toBeNull();
+  });
+});
+
+describe("Vejle Kontor (disken i Vejle-butikken)", () => {
+  const kontor: ScopedStaff = { role: "manager", location_slug: "vejle-kontor" };
+  const esbjerg: ScopedStaff = { role: "manager", location_slug: "esbjerg" };
+
+  it("maps admin stores to the customer-facing store", () => {
+    expect(physicalStoreFor("vejle-kontor")).toBe("vejle");
+    expect(physicalStoreFor("vejle")).toBe("vejle");
+    expect(physicalStoreFor("slagelse")).toBe("slagelse");
+    expect(physicalStoreFor("esbjerg")).toBeNull();
+    expect(physicalStoreFor("alle")).toBeNull();
+    expect(physicalStoreFor(null)).toBeNull();
+  });
+
+  it("works on Vejle's cases and its own rows, never Slagelse's or general ones", () => {
+    expect(getStoreScope(kontor, "slagelse")).toBe("vejle-kontor");
+    expect(canAccessStore(kontor, "vejle-kontor")).toBe(true);
+    expect(canAccessStore(kontor, "vejle")).toBe(true);
+    expect(canAccessStore(kontor, "slagelse")).toBe(false);
+    expect(canAccessStore(kontor, "vejle-gaagade")).toBe(false);
+    expect(canAccessStore(kontor, null)).toBe(false);
+  });
+
+  it("does not open Vejle Kontor's kasse to the old Vejle staff, nor anything to Esbjerg", () => {
+    expect(canAccessStore(vejle, "vejle-kontor")).toBe(false);
+    expect(canAccessStore(esbjerg, "vejle")).toBe(false);
+    expect(canAccessStore(esbjerg, null)).toBe(false);
+  });
+
+  it("creates new cases in the customer-facing Vejle store", () => {
+    expect(storeForNewRecord(kontor, "vejle-kontor")).toBe("vejle");
+    expect(storeForNewRecord(kontor, "vejle-kontor", "slagelse")).toBe("vejle");
+    expect(storeForNewRecord(esbjerg, "esbjerg")).toBeNull();
+    expect(storeForNewRecord(owner, "vejle-kontor")).toBe("vejle");
+    expect(storeForNewRecord(owner, "alle", "slagelse")).toBe("slagelse");
+    expect(storeForNewRecord(owner, "alle")).toBeNull();
   });
 });

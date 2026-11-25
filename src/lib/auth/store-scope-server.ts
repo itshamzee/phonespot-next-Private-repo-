@@ -8,6 +8,7 @@ import {
   canAccessStore,
   getStoreScope,
   locationIdForSlug,
+  physicalStoreFor,
   slugForLocationId,
   type LocationIndex,
   type LocationRow,
@@ -101,7 +102,7 @@ type ScopableQuery<Q> = {
  * Lægger butiksfilteret på en forespørgsel mod en tekst-kolonne som
  * `store_id` ('vejle' | 'slagelse' | NULL).
  *  - alle: ingen filtrering
- *  - vejle/slagelse: kun den butik
+ *  - vejle/slagelse: kun den butik (vejle-kontor: Vejles rækker)
  *  - webshop: rækker uden fysisk butik (store_id IS NULL)
  *  - ingen: ingen rækker
  */
@@ -116,7 +117,8 @@ export function applyStoreScope<Q extends object>(builder: Q, scope: StoreScope,
     case "ingen":
       return query.in(column, []);
     default:
-      return query.eq(column, scope);
+      // Tekst-kolonnen kender kun de kundevendte butikker; Vejle Kontor læser Vejles rækker.
+      return query.eq(column, physicalStoreFor(scope) ?? scope);
   }
 }
 
