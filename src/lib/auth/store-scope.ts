@@ -105,8 +105,19 @@ export function canAccessStore(staff: ScopedStaff, rowStore: string | null | und
   const row = normalizeScopeSlug(rowStore ?? null);
   // Webshop-medarbejdere har også de rækker, der ikke er knyttet til en fysisk butik.
   if (own === "webshop") return row === null || row === "webshop";
-  // Vejle Kontor arbejder på Vejles sager og henvendelser (og kan slå Vejles gamle salg op).
-  return row === own || (row !== null && row === physicalStoreFor(own));
+  return row === own;
+}
+
+/**
+ * Som canAccessStore, men til rækker med den kundevendte butik i tekst-kolonnen
+ * `store_id` (sager, henvendelser, reservationer). Vejle Kontor arbejder på
+ * Vejles rækker her; kasse, salg og lager følger stadig canAccessStore, så
+ * login'et ikke får adgang til den gamle Vejle-butiks kasse eller lager.
+ */
+export function canAccessCaseStore(staff: ScopedStaff, rowStore: string | null | undefined): boolean {
+  if (canAccessStore(staff, rowStore)) return true;
+  const row = normalizeScopeSlug(rowStore ?? null);
+  return row !== null && row === physicalStoreFor(staffStoreSlug(staff));
 }
 
 export class StoreAccessError extends Error {

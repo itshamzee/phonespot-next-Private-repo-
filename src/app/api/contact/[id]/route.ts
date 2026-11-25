@@ -1,5 +1,5 @@
 import { requireInquiryAccess } from "@/lib/inquiries/inquiry-access";
-import { canAccessStore } from "@/lib/auth/store-scope";
+import { canAccessCaseStore } from "@/lib/auth/store-scope";
 import { normalizeStoreId } from "@/lib/stores";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
@@ -14,7 +14,7 @@ export async function PATCH(
   const body = await request.json();
 
   // Man kan ikke flytte en henvendelse til en butik man ikke selv hører til.
-  if (body && typeof body === "object" && "store_id" in body && !canAccessStore(access.staff, normalizeStoreId(body.store_id))) {
+  if (body && typeof body === "object" && "store_id" in body && !canAccessCaseStore(access.staff, normalizeStoreId(body.store_id))) {
     return NextResponse.json({ error: "Du kan kun knytte henvendelser til din egen butik." }, { status: 403 });
   }
   const supabase = createServerClient();

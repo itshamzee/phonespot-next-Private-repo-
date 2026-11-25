@@ -39,7 +39,7 @@ vi.mock("@/lib/warranty/generate", () => ({ generateWarrantiesForOrder: vi.fn().
 vi.mock("@/lib/pos/receipt-data", () => ({ renderReceiptPdf: vi.fn().mockResolvedValue(Buffer.from("PDF")) }));
 
 const canAccessMock = vi.fn(() => true);
-vi.mock("@/lib/auth/store-scope", () => ({ canAccessStore: (...a: unknown[]) => canAccessMock(...(a as [])) }));
+vi.mock("@/lib/auth/store-scope", () => ({ canAccessCaseStore: (...a: unknown[]) => canAccessMock(...(a as [])) }));
 
 const findCaseRowsMock = vi.fn();
 const loadPosCaseMock = vi.fn();

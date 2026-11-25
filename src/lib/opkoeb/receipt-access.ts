@@ -1,6 +1,6 @@
 import { createServerClient } from "@/lib/supabase/client";
 import type { StaffIdentity } from "@/lib/auth/require-staff";
-import { buildLocationIndex, canAccessStore, isOwner } from "@/lib/auth/store-scope";
+import { buildLocationIndex, canAccessCaseStore, canAccessStore, isOwner } from "@/lib/auth/store-scope";
 import { assertLocationAccess } from "@/lib/pos/pos-context";
 import { PosError } from "@/lib/pos/errors";
 import type { ReceiptDraft } from "./schemas";
@@ -268,7 +268,7 @@ export async function assertInquiryLinkable(actor: StaffIdentity, inquiryId: unk
   if (!data) throw notFoundInquiry();
   const storeId = (data as { store_id?: string | null }).store_id ?? null;
   if (isOwner(actor) || storeId === null) return;
-  if (!canAccessStore(actor, storeId)) throw notFoundInquiry();
+  if (!canAccessCaseStore(actor, storeId)) throw notFoundInquiry();
 }
 
 export type Attestation = "online_accept" | "paper_scan";

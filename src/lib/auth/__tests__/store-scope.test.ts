@@ -4,6 +4,7 @@ import {
   StoreAccessError,
   assertStoreAccess,
   buildLocationIndex,
+  canAccessCaseStore,
   canAccessStore,
   deriveLocationSlug,
   getStoreScope,
@@ -220,16 +221,26 @@ describe("Vejle Kontor (disken i Vejle-butikken)", () => {
 
   it("works on Vejle's cases and its own rows, never Slagelse's or general ones", () => {
     expect(getStoreScope(kontor, "slagelse")).toBe("vejle-kontor");
+    expect(canAccessCaseStore(kontor, "vejle")).toBe(true);
+    expect(canAccessCaseStore(kontor, "vejle-kontor")).toBe(true);
+    expect(canAccessCaseStore(kontor, "slagelse")).toBe(false);
+    expect(canAccessCaseStore(kontor, "vejle-gaagade")).toBe(false);
+    expect(canAccessCaseStore(kontor, null)).toBe(false);
+    expect(canAccessCaseStore(owner, "slagelse")).toBe(true);
+    expect(canAccessCaseStore(vejle, "vejle")).toBe(true);
+    expect(canAccessCaseStore(slagelse, "vejle")).toBe(false);
+  });
+
+  it("stays out of the old Vejle store's kasse, sales and stock", () => {
     expect(canAccessStore(kontor, "vejle-kontor")).toBe(true);
-    expect(canAccessStore(kontor, "vejle")).toBe(true);
+    expect(canAccessStore(kontor, "vejle")).toBe(false);
     expect(canAccessStore(kontor, "slagelse")).toBe(false);
-    expect(canAccessStore(kontor, "vejle-gaagade")).toBe(false);
     expect(canAccessStore(kontor, null)).toBe(false);
   });
 
   it("does not open Vejle Kontor's kasse to the old Vejle staff, nor anything to Esbjerg", () => {
     expect(canAccessStore(vejle, "vejle-kontor")).toBe(false);
-    expect(canAccessStore(esbjerg, "vejle")).toBe(false);
+    expect(canAccessCaseStore(esbjerg, "vejle")).toBe(false);
     expect(canAccessStore(esbjerg, null)).toBe(false);
   });
 

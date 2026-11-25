@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/client";
 import { requireStaff } from "@/lib/auth/require-staff";
 import { DETAIL_FIELDS, buildTicketPatch } from "@/lib/repairs/patch";
 import { applyStoreScope, forbiddenResponse } from "@/lib/auth/store-scope-server";
-import { canAccessStore, getStoreScope } from "@/lib/auth/store-scope";
+import { canAccessCaseStore, getStoreScope } from "@/lib/auth/store-scope";
 
 // Stien er ikke dækket af middleware-matcheren, så personale-tjekket ligger her.
 // (/api/repairs/[id]/public er bevidst offentlig og røres ikke.)
@@ -32,7 +32,7 @@ export async function PATCH(
   if (error) return NextResponse.json({ error }, { status: 400 });
 
   // Butiksafgrænsning: man må ikke flytte en sag til en butik man ikke selv hører til ...
-  if (typeof patch.store_id !== "undefined" && !canAccessStore(staff, patch.store_id as string | null)) {
+  if (typeof patch.store_id !== "undefined" && !canAccessCaseStore(staff, patch.store_id as string | null)) {
     return forbiddenResponse("Du kan kun knytte sager til din egen butik.");
   }
 

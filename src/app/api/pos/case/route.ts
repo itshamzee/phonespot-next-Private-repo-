@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { canAccessStore } from "@/lib/auth/store-scope";
+import { canAccessCaseStore } from "@/lib/auth/store-scope";
 import { findCaseRows, loadPosCase } from "@/lib/pos/case-data";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
 import { UNAUTHORIZED, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const ref = parseCaseReference(q);
     if (!ref) return NextResponse.json({ error: "Skriv et sagsnummer, fx PS-2026-0123 eller #1189" }, { status: 400 });
 
-    const rows = (await findCaseRows(ref)).filter((r) => canAccessStore(actor, r.store_id));
+    const rows = (await findCaseRows(ref)).filter((r) => canAccessCaseStore(actor, r.store_id));
     if (rows.length === 0) return NextResponse.json({ error: "Sagen blev ikke fundet" }, { status: 404 });
     if (rows.length > 1) {
       return NextResponse.json({

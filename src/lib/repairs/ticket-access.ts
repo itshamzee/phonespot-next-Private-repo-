@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/client";
 import { requireStaff, type StaffIdentity } from "@/lib/auth/require-staff";
-import { canAccessStore } from "@/lib/auth/store-scope";
+import { canAccessCaseStore } from "@/lib/auth/store-scope";
 
 /**
  * Adgangskontrol til én reparationssag. Bruges af alle personale-ruter under
@@ -38,7 +38,7 @@ export async function requireTicketAccess(request: Request, ticketId: string): P
     return { ok: false, response: NextResponse.json({ error: "Kunne ikke hente sagen" }, { status: 500 }) };
   }
   const storeId = (data as { store_id?: string | null } | null)?.store_id ?? null;
-  if (!data || !canAccessStore(staff, storeId)) {
+  if (!data || !canAccessCaseStore(staff, storeId)) {
     return { ok: false, response: NextResponse.json({ error: "Sag ikke fundet" }, { status: 404 }) };
   }
   return { ok: true, staff, ticketStoreId: storeId };
