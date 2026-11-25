@@ -20,11 +20,13 @@
  *
  * Provider selection: POS_TERMINAL_PROVIDER = "manual" (default) | "flatpay" | "worldline".
  * Any other or missing value falls back to "manual", so a typo never changes
- * how staff work.
+ * how staff work. With "flatpay", a store without FLATPAY_TERMINAL_<STORE> stays
+ * "manual" (paymentTerminalKindFor), so terminals can be rolled out store by store.
  */
 import { PosError } from "./errors";
 import type { PaymentLineInput } from "./calc";
 import type { PaymentTerminalKind } from "./constants";
+import { flatpayConfig, flatpayTerminalId } from "./flatpay";
 import { FlatpayTerminal } from "./flatpay-terminal";
 
 export type TerminalStatus = "approved" | "declined" | "cancelled" | "error";
@@ -167,9 +169,19 @@ export function paymentTerminalKind(env: Env = process.env): PaymentTerminalKind
   return raw === "worldline" || raw === "flatpay" ? raw : "manual";
 }
 
+/**
+ * The provider one store runs with. A store that has no Flatpay terminal set up
+ * keeps the manual flow, so one store can go live before the others.
+ */
+export function paymentTerminalKindFor(locationSlug: string, env: Env = process.env): PaymentTerminalKind {
+  const kind = paymentTerminalKind(env);
+  if (kind === "flatpay" && !flatpayTerminalId(flatpayConfig(env), locationSlug)) return "manual";
+  return kind;
+}
+
 /** The terminal for a store (locationSlug = locations.slug, e.g. "vejle"). Server side only. */
 export function getPaymentTerminal(locationSlug: string, env: Env = process.env): PaymentTerminal {
-  switch (paymentTerminalKind(env)) {
+  switch (paymentTerminalKindFor(locationSlug, env)) {
     case "flatpay":
       return new FlatpayTerminal(locationSlug, env);
     case "worldline":

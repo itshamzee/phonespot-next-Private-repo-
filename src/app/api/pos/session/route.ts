@@ -10,12 +10,15 @@ import { assertLocationAccess, assertSessionAccess, resolveRegister } from "@/li
 import { hasPermission } from "@/lib/auth/permissions";
 import { sessionActionSchema, uuidSchema } from "@/lib/pos/schemas";
 import { validateCashClose } from "@/lib/pos/cash-session";
+import { terminalKindForLocation } from "@/lib/pos/terminal-flow";
 import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff } from "@/lib/pos/route-helpers";
 
 /**
  * GET /api/pos/session?location_id=<id>[&register_id=<id>]
  * Registers of the location with their open cash session (and live expected
  * cash). With register_id also the recent session history incl. adjustments.
+ * terminalKind tells the Kasse whether this store's card payments go to an
+ * integrated terminal or are confirmed by hand.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     const registers = await listRegisters(locationId);
     const history = registerId ? await recentSessions(registerId) : [];
-    return NextResponse.json({ registers, history });
+    return NextResponse.json({ registers, history, terminalKind: await terminalKindForLocation(locationId) });
   } catch (err) {
     return posErrorResponse(err, "Fejl ved hentning af kassestatus");
   }

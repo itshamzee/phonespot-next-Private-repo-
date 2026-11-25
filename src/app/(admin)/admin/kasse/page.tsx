@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
 import { KasseScreen } from "./_components/kasse-screen";
 import { KasseSkeleton } from "./_components/kasse-skeleton";
 
@@ -10,14 +9,14 @@ export const dynamic = "force-dynamic";
  * /admin/platform/pos omdirigerer hertil. ?sag=<id> henter en reparationssag til
  * betaling; &depositum=1 åbner depositum-dialogen for sagen.
  *
- * terminalKind (server side, POS_TERMINAL_PROVIDER) styrer kortflowet: "manual"
- * = "Kortet er godkendt" som i dag; en integreret terminal = beløbet sendes til
- * terminalen med mulighed for at annullere.
+ * Kortflowet afgøres pr. butik af serveren (terminalKind fra /api/pos/session):
+ * "manual" = "Kortet er godkendt"; en integreret terminal = beløbet sendes til
+ * butikkens terminal med mulighed for at annullere.
  */
 export default function KassePage() {
   return (
     <Suspense fallback={<KasseSkeleton />}>
-      <KasseScreen terminalKind={paymentTerminalKind()} />
+      <KasseScreen />
     </Suspense>
   );
 }

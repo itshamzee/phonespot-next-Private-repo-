@@ -19,6 +19,7 @@ import {
   FlatpayClient,
   FlatpayError,
   flatpayConfig,
+  flatpayStoreConfig,
   flatpayTerminalId,
   flatpayTransactionReference,
   type FlatpayDeps,
@@ -55,7 +56,7 @@ export class FlatpayTerminal implements PaymentTerminal {
     env: Env = process.env,
     deps: FlatpayDeps = {},
   ) {
-    this.client = new FlatpayClient(flatpayConfig(env), deps);
+    this.client = new FlatpayClient(flatpayStoreConfig(flatpayConfig(env), locationSlug), deps);
   }
 
   private terminalId(): string | undefined {

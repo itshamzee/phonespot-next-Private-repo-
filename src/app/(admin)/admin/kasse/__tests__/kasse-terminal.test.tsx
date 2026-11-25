@@ -32,6 +32,7 @@ vi.mock("@/lib/supabase/client", () => ({
 const api = vi.hoisted(() => ({
   calls: [] as Array<{ url: string; body: Record<string, unknown> | undefined }>,
   sale: null as null | (() => Promise<unknown>),
+  terminalKind: undefined as string | undefined,
 }));
 
 vi.mock("@/lib/pos/client", () => ({
@@ -43,6 +44,7 @@ vi.mock("@/lib/pos/client", () => ({
     if (url === "/api/pos/locations") return { locations: [{ id: LOC, slug: "vejle", name: "PhoneSpot Vejle", registers: [] }] };
     if (url.startsWith("/api/pos/session")) {
       return {
+        terminalKind: api.terminalKind,
         registers: [
           {
             id: REG,
@@ -93,6 +95,7 @@ async function chargeButton() {
 beforeEach(() => {
   api.calls = [];
   api.sale = null;
+  api.terminalKind = undefined;
   nav.query = `sag=${TICKET}`;
 });
 afterEach(cleanup);
@@ -132,7 +135,8 @@ describe("Kasse card terminal", () => {
   it("integrated: sends the amount to the terminal at once, can cancel, and a refused charge shows a calm error", async () => {
     let reject!: (e: Error) => void;
     api.sale = () => new Promise((_, r) => (reject = r));
-    render(<KasseScreen terminalKind="worldline" />);
+    api.terminalKind = "worldline";
+    render(<KasseScreen />);
     expect(await screen.findByText("Beløbet sendes til terminalen, når du trykker opkræv")).toBeTruthy();
     fireEvent.click(await chargeButton());
 

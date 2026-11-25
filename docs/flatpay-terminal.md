@@ -7,28 +7,40 @@ først, når terminalen har godkendt kortet.
 Bygget 11/11-2026 og slået fra. Kassen kører manuelt, indtil
 `POS_TERMINAL_PROVIDER=flatpay` er sat i Vercel.
 
-## Sådan slås det til
+## Terminalerne (modtaget 25/11-2026)
 
-1. Få brugernavn og adgangskode til Flatpays Socket API (partner-/integrationsbruger) fra Flatpay.
-2. Kør lokalt:
+Flatpay udsteder én GUID pr. terminal (pr. indløsningsaftale). TID er terminalens
+serienummer. GUID'erne ligger kun i Vercel, ikke i repoet.
+
+| Butik (`locations.slug`) | Flatpay-navn | TID | Env-nøgler |
+| --- | --- | --- | --- |
+| `vejle` (Løversysselvej 3C) | Phonespot Vejle 1 | 1855059452 | `FLATPAY_TERMINAL_VEJLE`, `FLATPAY_GUID_VEJLE` |
+| `vejle-gaagade` | Phonespot Vejle 2 | 1855122811 | `FLATPAY_TERMINAL_VEJLE_GAAGADE`, `FLATPAY_GUID_VEJLE_GAAGADE` |
+| `esbjerg` | Phonespot Esbjerg | 1855055308 | `FLATPAY_TERMINAL_ESBJERG`, `FLATPAY_GUID_ESBJERG` |
+| `slagelse` | ingen endnu | | kører manuelt |
+
+## Sådan slås en butik til
+
+1. Tænd terminalen og sæt den på nettet. Tjek, at den er forbundet:
    ```
-   FLATPAY_USERNAME=... FLATPAY_PASSWORD=... node scripts/flatpay-setup.mjs
+   FLATPAY_GUID=<butikkens GUID> node scripts/flatpay-setup.mjs
    ```
-   Den viser GUID'en (partner-nøglen), terminalerne og om de er forbundet.
-3. Prøv en rigtig betaling på 1 kr. på terminalen:
+2. Prøv en rigtig betaling på 1 kr. på terminalen:
    ```
-   FLATPAY_GUID=... node scripts/flatpay-setup.mjs --test <TID> 100
+   FLATPAY_GUID=<butikkens GUID> node scripts/flatpay-setup.mjs --test <TID> 100
    ```
-4. Sæt i Vercel (Production):
-   - `FLATPAY_GUID` (eller `FLATPAY_USERNAME` + `FLATPAY_PASSWORD`)
-   - `FLATPAY_TERMINAL_VEJLE`, `FLATPAY_TERMINAL_SLAGELSE` (TID pr. butik; nøglen er `locations.slug` med store bogstaver)
-   - `POS_TERMINAL_PROVIDER=flatpay`
+3. Sæt i Vercel (Production):
+   - `FLATPAY_TERMINAL_<BUTIK>` = TID og `FLATPAY_GUID_<BUTIK>` = butikkens GUID
+     (nøglen er `locations.slug` med store bogstaver, bindestreg bliver til `_`).
+     `FLATPAY_GUID` uden butik bruges kun, hvis butikken ikke har sin egen.
+   - `POS_TERMINAL_PROVIDER=flatpay` (sættes én gang)
    - valgfrit `FLATPAY_TIMEOUT_MS` (standard 90000, maks. 100000)
-5. Redeploy, og lav et salg og en retur i Kassen.
+4. Redeploy, og lav et salg og en retur i Kassen.
 
-En butik uden `FLATPAY_TERMINAL_<BUTIK>` kan ikke tage kort, når flaget er slået til.
-Kassen siger så "Der er ingen Flatpay-terminal sat op for butikken". Slå derfor
-først flaget til, når alle butikker har en terminal.
+En butik uden `FLATPAY_TERMINAL_<BUTIK>` fortsætter manuelt ("Kortet er godkendt"),
+selv om flaget er slået til. Butikkerne kan derfor slås til én ad gangen. Kassen
+får butikkens kortflow fra `/api/pos/session` (`terminalKind`), retursiden fra
+`/api/pos/return?register_id=`.
 
 ## Sådan virker det
 
@@ -38,6 +50,7 @@ først flaget til, når alle butikker har en terminal.
 - Kassen godtager kun en godkendt betaling, hvis beløb, type (SALE/REFUND) og terminal er dem, der blev bedt om, og betalingen er oprettet efter kaldet startede (med 1 minuts margin for urforskel). Svarer Flatpay "allerede startet" (202), afvises betalingen. Et betalings-id, der allerede står på en anden betaling i `order_payments`, afvises (`terminal_duplicate`), og nye træk fra samme salg føres tilbage. Kan tjekket ikke køre, føres kortbetalingen tilbage, så kunden aldrig står med et træk uden et salg. Det forhindrer, at en genbrugt reference får et nyt salg til at se betalt ud.
 - Retur sendes som en `REFUND`. Kunden skal holde kortet til terminalen igen, fordi Flatpay ikke kobler en retur til det oprindelige køb.
 - Hvis et salg ikke kan gemmes efter et godkendt kort, laver Kassen automatisk en `REFUND`. Kunden skal også her holde kortet til terminalen.
+- Hver butik har sin egen GUID (`FLATPAY_GUID_<BUTIK>`), fordi Flatpay udsteder én pr. terminal.
 - `/api/pos/sale` og `/api/pos/return` har `maxDuration = 120`.
 
 ## Ikke bygget endnu

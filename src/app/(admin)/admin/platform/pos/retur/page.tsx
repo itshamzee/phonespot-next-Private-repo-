@@ -60,7 +60,7 @@ function ReturnPageInner() {
     setOrder(null);
     try {
       const data = await posJson<{ order: ReturnableOrder; terminalKind?: PaymentTerminalKind }>(
-        `/api/pos/return?q=${encodeURIComponent(query)}`,
+        `/api/pos/return?q=${encodeURIComponent(query)}${registerId ? `&register_id=${registerId}` : ""}`,
       );
       setOrder(data.order);
       setTerminalKind(

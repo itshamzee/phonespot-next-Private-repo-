@@ -7,7 +7,7 @@ import { useStoreScope } from "@/components/admin/shell/store-scope-context";
 import { posFetch, posJson } from "@/lib/pos/client";
 import { parseCaseReference } from "@/lib/pos/case-lookup";
 import { oereToInput, parseKr } from "@/lib/pos/money";
-import { isIntegratedTerminal, type DiscountReason, type PaymentTerminalKind, type PaymentType } from "@/lib/pos/constants";
+import { PAYMENT_TERMINAL_KINDS, isIntegratedTerminal, type DiscountReason, type PaymentTerminalKind, type PaymentType } from "@/lib/pos/constants";
 import type { RegisterInfo } from "@/lib/pos/sessions";
 import type { QuickTile, DeviceTile, TileCategory } from "@/lib/pos/quick-tiles";
 import {
@@ -150,7 +150,9 @@ function shortStoreName(name: string) {
 /*  Screen                                                             */
 /* ------------------------------------------------------------------ */
 
-export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: PaymentTerminalKind } = {}) {
+export function KasseScreen() {
+  // Butikkens kortflow; hentes sammen med kasserne, når butikken vælges.
+  const [terminalKind, setTerminalKind] = useState<PaymentTerminalKind>("manual");
   const integratedTerminal = isIntegratedTerminal(terminalKind);
   const router = useRouter();
   const params = useSearchParams();
@@ -262,8 +264,13 @@ export function KasseScreen({ terminalKind = "manual" }: { terminalKind?: Paymen
   const loadRegisters = useCallback(async () => {
     if (!locationId) return;
     try {
-      const data = await posJson<{ registers: RegisterInfo[] }>(`/api/pos/session?location_id=${locationId}`);
+      const data = await posJson<{ registers: RegisterInfo[]; terminalKind?: PaymentTerminalKind }>(
+        `/api/pos/session?location_id=${locationId}`,
+      );
       setRegisters(data.registers);
+      setTerminalKind(
+        data.terminalKind && (PAYMENT_TERMINAL_KINDS as readonly string[]).includes(data.terminalKind) ? data.terminalKind : "manual",
+      );
       setRegisterId((cur) => (data.registers.some((r) => r.id === cur) ? cur : (data.registers[0]?.id ?? "")));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kunne ikke hente kasser");

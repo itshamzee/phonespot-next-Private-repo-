@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findReturnableOrder } from "@/lib/pos/create-return";
-import { paymentTerminalKind } from "@/lib/pos/payment-terminal";
-import { createReturnWithTerminal } from "@/lib/pos/terminal-flow";
-import { returnBodySchema } from "@/lib/pos/schemas";
+import { createReturnWithTerminal, terminalKindForLocation } from "@/lib/pos/terminal-flow";
+import { returnBodySchema, uuidSchema } from "@/lib/pos/schemas";
 import { resolveRegister } from "@/lib/pos/pos-context";
 import { assertReturnEntity, assertReturnLookupEntity } from "@/lib/pos/return-entity";
 import { hasPermission } from "@/lib/auth/permissions";
@@ -12,7 +11,7 @@ import { FORBIDDEN, UNAUTHORIZED, parseBody, posErrorResponse, requirePosStaff }
 export const maxDuration = 120;
 
 /**
- * GET /api/pos/return?q=<receipt number or order number>
+ * GET /api/pos/return?q=<receipt number or order number>[&register_id=<id>]
  * Finds a POS sale and what can still be returned on each line, plus which card
  * terminal integration is configured (terminalKind) so the page knows whether a
  * card refund is done by hand or sent to the terminal.
@@ -21,10 +20,17 @@ export async function GET(request: NextRequest) {
   try {
     const pos = await requirePosStaff(request);
     if (!pos) return UNAUTHORIZED();
-    const q = new URL(request.url).searchParams.get("q") ?? "";
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get("q") ?? "";
+    const registerId = searchParams.get("register_id");
     const order = await findReturnableOrder(q);
     await assertReturnLookupEntity(pos.actor, order.id);
-    return NextResponse.json({ order, terminalKind: paymentTerminalKind() });
+    // The refund goes out on the terminal of the register doing the return.
+    const terminalKind =
+      registerId && uuidSchema.safeParse(registerId).success
+        ? await terminalKindForLocation((await resolveRegister(pos.actor, registerId)).locationId)
+        : "manual";
+    return NextResponse.json({ order, terminalKind });
   } catch (err) {
     return posErrorResponse(err, "Fejl ved opslag af salg");
   }

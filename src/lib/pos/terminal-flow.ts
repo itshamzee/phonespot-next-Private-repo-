@@ -17,6 +17,7 @@ import { createPosSale, type CreateSaleInput, type SaleResult } from "./create-s
 import { createPosReturn, type CreateReturnInput, type ReturnResult } from "./create-return";
 import { PosError, toPosError } from "./errors";
 import type { PaymentLineInput } from "./calc";
+import type { PaymentTerminalKind } from "./constants";
 import {
   captureCardPayments,
   getPaymentTerminal,
@@ -38,6 +39,11 @@ export async function terminalForLocation(locationId: string): Promise<{ termina
   const { data } = await supabase.from("locations").select("slug").eq("id", locationId).maybeSingle();
   const locationSlug = (data as { slug?: string | null } | null)?.slug ?? "";
   return { terminal: getPaymentTerminal(locationSlug), locationSlug };
+}
+
+/** Which card flow the Kasse UI must use for a store: "manual" or an integrated terminal. */
+export async function terminalKindForLocation(locationId: string): Promise<PaymentTerminalKind> {
+  return (await terminalForLocation(locationId)).terminal.kind;
 }
 
 function terminalReference(given?: string | null) {

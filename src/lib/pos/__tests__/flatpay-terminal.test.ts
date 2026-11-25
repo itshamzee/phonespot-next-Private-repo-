@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { flatpayConfig, flatpayTerminalId, flatpayTransactionReference, resetFlatpayGuidCache } from "../flatpay";
 import { FLATPAY_NO_TERMINAL, FlatpayTerminal } from "../flatpay-terminal";
-import { captureCardPayments, getPaymentTerminal, paymentTerminalKind } from "../payment-terminal";
+import { ManualTerminal, captureCardPayments, getPaymentTerminal, paymentTerminalKind, paymentTerminalKindFor } from "../payment-terminal";
 
 const ENV = {
   POS_TERMINAL_PROVIDER: "flatpay",
@@ -57,6 +57,28 @@ describe("config and references", () => {
     expect(paymentTerminalKind({ POS_TERMINAL_PROVIDER: "Flatpay" })).toBe("flatpay");
     expect(getPaymentTerminal("vejle", ENV)).toBeInstanceOf(FlatpayTerminal);
     expect(paymentTerminalKind({})).toBe("manual");
+  });
+
+  it("keeps a store without a terminal on the manual flow", () => {
+    expect(paymentTerminalKindFor("vejle", ENV)).toBe("flatpay");
+    expect(paymentTerminalKindFor("slagelse", ENV)).toBe("manual");
+    expect(getPaymentTerminal("slagelse", ENV)).toBeInstanceOf(ManualTerminal);
+    expect(paymentTerminalKindFor("vejle", { ...ENV, POS_TERMINAL_PROVIDER: "" })).toBe("manual");
+  });
+
+  it("uses the store's own GUID when it has one", async () => {
+    const env = { ...ENV, FLATPAY_GUID_VEJLE_GAAGADE: "guid-gaagade", FLATPAY_TERMINAL_VEJLE_GAAGADE: "TID-GAAGADE" };
+    const guids: Record<string, unknown> = {};
+    for (const slug of ["vejle", "vejle-gaagade"]) {
+      const { calls, deps } = fakeFlatpay(scripted([{ status: "COMPLETED" }]));
+      const r = await new FlatpayTerminal(slug, env, deps).charge({ amountOere: 100, reference: `r-${slug}`, locationSlug: slug });
+      expect(r.status).toBe("approved");
+      const start = calls.find((c) => c.path === "/socket/transaction/start");
+      guids[slug] = start?.body?.guid;
+      expect(calls.filter((c) => c.method === "GET").every((c) => c.query.guid === start?.body?.guid)).toBe(true);
+      if (slug === "vejle-gaagade") expect(start?.body?.terminalId).toBe("TID-GAAGADE");
+    }
+    expect(guids).toEqual({ vejle: "guid-123", "vejle-gaagade": "guid-gaagade" });
   });
 
   it("reads one terminal per store and caps the wait", () => {

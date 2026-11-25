@@ -14,6 +14,8 @@
  *   FLATPAY_GUID                     partner token; or, if not set:
  *   FLATPAY_USERNAME / FLATPAY_PASSWORD  exchanged for a GUID on first use
  *   FLATPAY_TERMINAL_<STORE>         terminal id per store, e.g. FLATPAY_TERMINAL_VEJLE
+ *   FLATPAY_GUID_<STORE>             that store's own token (Flatpay issues one GUID per
+ *                                    terminal/merchant agreement); falls back to FLATPAY_GUID
  *   FLATPAY_API_URL                  optional, defaults to production
  *   FLATPAY_TIMEOUT_MS               optional, how long we wait for the customer (default 90 s)
  */
@@ -55,13 +57,16 @@ export type FlatpayConfig = {
   password?: string;
   timeoutMs: number;
   terminals: Record<string, string>;
+  /** Per-store tokens (FLATPAY_GUID_<STORE>), keyed like terminals. */
+  guids: Record<string, string>;
 };
 
 export function flatpayConfig(env: Env = process.env): FlatpayConfig {
   const terminals: Record<string, string> = {};
+  const guids: Record<string, string> = {};
   for (const [key, value] of Object.entries(env)) {
-    const m = /^FLATPAY_TERMINAL_([A-Z0-9_]+)$/.exec(key);
-    if (m && value?.trim()) terminals[m[1].toLowerCase()] = value.trim();
+    const m = /^FLATPAY_(TERMINAL|GUID)_([A-Z0-9_]+)$/.exec(key);
+    if (m && value?.trim()) (m[1] === "TERMINAL" ? terminals : guids)[m[2].toLowerCase()] = value.trim();
   }
   const timeout = Number(env.FLATPAY_TIMEOUT_MS);
   return {
@@ -71,12 +76,21 @@ export function flatpayConfig(env: Env = process.env): FlatpayConfig {
     password: env.FLATPAY_PASSWORD || undefined,
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? Math.min(timeout, MAX_TIMEOUT_MS) : FLATPAY_DEFAULT_TIMEOUT_MS,
     terminals,
+    guids,
   };
+}
+
+const storeKey = (locationSlug: string) => locationSlug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+
+/** The config one store's terminal runs with: its own GUID when it has one. */
+export function flatpayStoreConfig(config: FlatpayConfig, locationSlug: string): FlatpayConfig {
+  const guid = config.guids[storeKey(locationSlug)];
+  return guid ? { ...config, guid } : config;
 }
 
 /** Terminal id for a store slug ("vejle" -> FLATPAY_TERMINAL_VEJLE). Dashes become underscores. */
 export function flatpayTerminalId(config: FlatpayConfig, locationSlug: string): string | undefined {
-  const key = locationSlug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const key = storeKey(locationSlug);
   return key ? config.terminals[key] : undefined;
 }
 

@@ -91,7 +91,7 @@ async function main() {
     const c = await call("GET", "/socket/terminal/connection", { query: { terminalId: tid, guid } });
     console.log(`  ${tid}: ${c?.isTerminalConnected ? "forbundet" : "IKKE forbundet"}`);
   }
-  console.log("\nSæt FLATPAY_TERMINAL_VEJLE / FLATPAY_TERMINAL_SLAGELSE til den rigtige TID i Vercel.");
+  console.log("\nSæt FLATPAY_TERMINAL_<BUTIK> (TID) og FLATPAY_GUID_<BUTIK> i Vercel. Se docs/flatpay-terminal.md.");
 }
 
 main().catch((err) => {
