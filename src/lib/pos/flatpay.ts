@@ -47,6 +47,25 @@ export type FlatpayTransaction = {
   errorCode?: string | null;
 };
 
+/** POST /socket/xreport og /socket/zreport: terminalens tællere siden sidste Z-rapport (beløb i øre). */
+export type FlatpayReport = {
+  resultType?: string;
+  reportType?: string;
+  reportResponse?: boolean;
+  saleCount?: number;
+  saleAmount?: number;
+  refundCount?: number;
+  refundAmount?: number;
+  reversalSaleCount?: number;
+  reversalSaleAmount?: number;
+  reversalRefundCount?: number;
+  reversalRefundAmount?: number;
+  sequentialId?: number;
+};
+
+/** Terminalen svarer selv på en rapport, så kaldet kan tage længere end en almindelig forespørgsel. */
+const REPORT_TIMEOUT_MS = 45_000;
+
 type Env = Record<string, string | undefined>;
 type FetchFn = typeof fetch;
 
@@ -255,12 +274,29 @@ export class FlatpayClient {
     return ((await res.json().catch(() => null)) as FlatpayTransaction | null) ?? null;
   }
 
+  /**
+   * X-rapport ("x") aflæser tællerne uden at røre dem. Z-rapport ("z") afslutter
+   * dagen: terminalen nulstiller tællerne, og rapporten kan ikke hentes igen.
+   * Terminalen udskriver ikke selv rapporten.
+   */
+  async report(kind: "x" | "z", terminalId: string, objectType?: string): Promise<FlatpayReport> {
+    const guid = await this.guid();
+    const res = await this.request(
+      "POST",
+      kind === "z" ? "/socket/zreport" : "/socket/xreport",
+      { body: { terminalId, guid, objectType: objectType ?? (kind === "z" ? "ZReport" : "XReport"), disableTerminalPrints: true } },
+      REPORT_TIMEOUT_MS,
+    );
+    return ((await res.json().catch(() => ({}))) as FlatpayReport) ?? {};
+  }
+
   /* ---------------- transport ---------------- */
 
   private async request(
     method: "GET" | "POST",
     path: string,
     opts: { query?: Record<string, string>; body?: unknown },
+    timeoutMs: number = REQUEST_TIMEOUT_MS,
   ): Promise<Response> {
     const url = new URL(this.config.baseUrl + path);
     for (const [k, v] of Object.entries(opts.query ?? {})) url.searchParams.set(k, v);
@@ -270,7 +306,7 @@ export class FlatpayClient {
         method,
         headers: { Accept: "application/json", ...(opts.body ? { "Content-Type": "application/json" } : {}) },
         body: opts.body ? JSON.stringify(opts.body) : undefined,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
         cache: "no-store",
       });
     } catch (err) {
