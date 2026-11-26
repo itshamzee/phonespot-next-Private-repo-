@@ -35,7 +35,9 @@ function ProductCard({ product }: { product: HomepageProduct }) {
   return <article className={`${styles.product} card-lift`}>
     <Link href={product.href}>
       <div className={`${styles["product-photo"]} card-media`}>
-        <span className={styles["product-tag"]} style={blackWeek ? { background: "#000", color: "#fff" } : undefined}>{blackWeek ? "Black Week" : isAccessory ? "Tilbehør" : "Refurbished"}</span>
+        {blackWeek && !isAccessory
+          ? <span className="absolute left-3 top-3 inline-flex h-[22px] items-center rounded-full bg-black px-2.5 text-[11.5px] font-semibold leading-none text-white">Black Week</span>
+          : <span className={styles["product-tag"]}>{isAccessory ? "Tilbehør" : "Refurbished"}</span>}
         {product.image && !failedImage
           // API images can originate from several verified product storage hosts.
           // eslint-disable-next-line @next/next/no-img-element

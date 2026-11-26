@@ -248,9 +248,8 @@ export function ProductGridCard({
     >
       {/* Image */}
       <div data-product-image className="card-media relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
-        <BlackWeekBadge serverActive={blackWeek} />
         {/* Category pill — bottom left, only when requested */}
-        {showCategoryBadge && (
+        {showCategoryBadge && !blackWeek && (
           <div className="absolute bottom-3 left-3 z-10">
             <span className="inline-flex items-center rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-semibold text-[#1A3D2E] shadow-rest backdrop-blur-sm">
               {categoryLabel(category)}
@@ -280,7 +279,8 @@ export function ProductGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
+      <div className={`@container relative flex flex-1 flex-col p-4 sm:p-5 ${blackWeek ? "pt-6 sm:pt-7" : ""}`}>
+        <BlackWeekBadge title={title} serverActive={blackWeek} />
         <p className="text-[11px] font-medium text-[#687069]">
           {brand} · {categoryLabel(category)}
         </p>
